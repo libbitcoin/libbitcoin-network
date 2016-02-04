@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_address.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_events.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_ping.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_seed.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_timer.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_version.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\sessions\session.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\sessions\session_batch.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\sessions\session_inbound.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\sessions\session_manual.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\sessions\session_outbound.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\sessions\session_seed.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\acceptor.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\channel.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\connections.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\connector.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\hosts.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\logging.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\message_subscriber.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\p2p.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\pending_channels.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\pending_sockets.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\proxy.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\settings.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp">
+      <Filter>include\bitcoin</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_events.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_seed.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_timer.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_batch.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_manual.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_outbound.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_seed.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\acceptor.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\channel.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\connections.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\connector.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\hosts.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\logging.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\message_subscriber.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\p2p.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\pending_channels.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\pending_sockets.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\proxy.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\shared_const_buffer.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{ed047bf6-82f2-4749-bd6b-22011518957b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin">
+      <UniqueIdentifier>{bd82d9f8-ea70-4211-97bd-25cb4e09cc13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network">
+      <UniqueIdentifier>{fe498a8f-269c-4e37-bace-3b5681312697}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{41a5eff6-da3d-488b-bcb1-859e530fa5a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sessions">
+      <UniqueIdentifier>{e8e0e4bf-9c2d-44a2-8a9a-a7cda2bd1c04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\protocols">
+      <UniqueIdentifier>{393e9e3e-07fb-465a-890e-c8baaeb237ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\sessions">
+      <UniqueIdentifier>{55ba33d6-e7d3-4752-8746-d15e12df9cc5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\protocols">
+      <UniqueIdentifier>{438861a1-6a4d-4639-8af8-cd55aa20bc04}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

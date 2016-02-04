@@ -17,5 +17,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#define BOOST_TEST_MODULE libbitcoin_network_test
-#include <boost/test/unit_test.hpp>
+#ifndef LIBBITCOIN_NETWORK_LOGGING_HPP
+#define LIBBITCOIN_NETWORK_LOGGING_HPP
+
+#include <fstream>
+#include <iostream>
+#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/network/define.hpp>
+
+namespace libbitcoin {
+namespace network {
+
+/// Constant for logging file open mode (append output).
+BC_CONSTEXPR std::ofstream::openmode log_open_mode =
+    std::ofstream::out | std::ofstream::app;
+
+/// Set up global logging.
+BCT_API void initialize_logging(std::ofstream& debug, std::ofstream& error,
+    std::ostream& output_stream, std::ostream& error_stream);
+
+} // namespace network
+} // namespace libbitcoin
+
+#endif

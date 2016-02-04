@@ -144,14 +144,14 @@ Libbitcoin is now installed in `/usr/local/`.
 
 The install script itself is commented so that the manual build steps for each dependency can be inferred by a developer.
 
-You can run the install script from any directory on your system. By default this will build libbitcoin in a subdirectory named `build-libbitcoin` and install it to `/usr/local/`. The install script requires `sudo` only if you do not have access to the installation location, which you can change using the `--prefix` option on the installer command line.
+You can run the install script from any directory on your system. By default this will build libbitcoin-network in a subdirectory named `build-libbitcoin-network` and install it to `/usr/local/`. The install script requires `sudo` only if you do not have access to the installation location, which you can change using the `--prefix` option on the installer command line.
 
 The build script clones, builds and installs two unpackaged repositories, namely:
 
-- [libbitcoin/secp256k1](https://github.com/libbitcoin/secp256k1)
 - [libbitcoin/libbitcoin](https://github.com/libbitcoin/libbitcoin)
+- [libbitcoin/libbitcoin-network](https://github.com/libbitcoin/libbitcoin-network)
 
-The script builds from the head of their `version4` and `version2` branches respectively. The `master` branch is a staging area for changes. The version branches are considered release quality.
+The script builds from the head of their `version3` branches. The `master` branch is a staging area for changes. The version branches are considered release quality.
 
 #### Build Options
 
@@ -160,25 +160,15 @@ Any set of `./configure` options can be passed via the build script, for example
 $ ./install.sh CFLAGS="-Og -g" --prefix=/home/me/myprefix
 ```
 
-#### Compiling for Testnet
+#### Testnet
 
-Currently libbitcoin cannot work with both [testnet](https://en.bitcoin.it/wiki/Testnet) and mainnet. This restriction will be lifted in a future version. In order to work with testnet in the interim libbitcoin must be recompiled with the testnet option:
+Libbitcoin no longer requires conditional compilation for testnet.
+
+#### Building Boost
+
+The installer can download and install Boost. This is a large dependency that is not typically preinstalled at a sufficient level. It is recommended to use a prefix directory when building Boost.
 ```sh
-$ ./install.sh --enable-testnet
-```
-
-#### Compiling with ICU (International Components for Unicode)
-
-Since the addition of [BIP-39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) and later [BIP-38](https://github.com/bitcoin/bips/blob/master/bip-0038.mediawiki) support, libbitcoin conditionally incorporates [ICU](http://site.icu-project.org). To use the BIP-38 and BIP-39 passphrase normalization features libbitcoin must be compiled with ICU support. Currently [libbitcoin-explorer] is the only other library that accesses this feature, so if you do not intend to use passphrase normalization ICU can be avoided:
-```sh
-$ ./install.sh --with-icu
-```
-
-#### Building ICU and/or Boost
-
-The installer can download and install ICU and/or Boost. These are large dependencies that are not typically preinstalled at a sufficient level. It is recommended to use a prefix directory when building these components.
-```sh
-$ ./install.sh --with-icu --build-icu --build-boost --prefix=/home/me/myprefix
+$ ./install.sh --build-boost --prefix=/home/me/myprefix
 ```
 
 ### Windows
@@ -210,8 +200,6 @@ The required set of NuGet packages can be viewed using the [NuGet package manage
  * [boost\_regex-vc120](http://www.nuget.org/packages/boost_regex-vc120)
  * [boost\_system-vc120](http://www.nuget.org/packages/boost_system-vc120)
  * [boost\_unit\_test\_framework-vc120](http://www.nuget.org/packages/boost_unit_test_framework-vc120)
-* Packages maintained by [evoskuil](http://www.nuget.org/profiles/evoskuil)
- * [secp256k1\_vc120](http://www.nuget.org/packages/secp256k1_vc120)
 
 #### Build Libbitcoin Projects
 
@@ -220,11 +208,3 @@ After cloning the the repository the libbitcoin build can be performed manually 
 > Tip: The `buildall.bat` script builds *all* valid configurations. The build time can be significantly reduced by disabling all but the desired configuration in `buildbase.bat`.
 
 > The libbitcoin dynamic (DLL) build configurations do not compile, as the exports have not yet been fully implemented. These are currently disabled in the build scripts but you will encounter numerous errors if you build then manually.
-
-#### Optional: Building secp256k1
-
-The secp256k1 package above is maintained using the same [Visual Studio template](https://github.com/evoskuil/visual-studio-template) as all libbitcoin libraries. If so desired it can be built locally, in the same manner as libbitcoin. The repository of secp256k1 used by libbitcoin is forked from [bitcoin/secp256k1](https://github.com/bitcoin/secp256k1) in order to control for changes and to incorporate the necessary Visual Studio build and cross-compile compatibility fixes:
-
-* [libbitcoin/secp256k1/version4](https://github.com/libbitcoin/secp256k1/tree/version4)
-
-This change is properly accomplished by disabling the "NuGet Dependencies" in the Visual Studio properties user interface and then importing `secp256k1.import.props`, which references `secp256k1.import.xml`.

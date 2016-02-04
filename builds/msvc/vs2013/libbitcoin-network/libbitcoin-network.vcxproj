@@ -1,0 +1,153 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <NuGetPackageImportStamp>530f0611</NuGetPackageImportStamp>
+    <PlatformToolset>CTP_Nov2013</PlatformToolset>
+    <ProjectGuid>{564EB540-D6B6-425C-B8DB-B0BEE8970C18}</ProjectGuid>
+    <ProjectName>libbitcoin-network</ProjectName>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugDLL|Win32">
+      <Configuration>DebugDLL</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseDLL|Win32">
+      <Configuration>ReleaseDLL</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugDLL|x64">
+      <Configuration>DebugDLL</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseDLL|x64">
+      <Configuration>ReleaseDLL</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugLTCG|Win32">
+      <Configuration>DebugLTCG</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseLTCG|Win32">
+      <Configuration>ReleaseLTCG</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugLTCG|x64">
+      <Configuration>DebugLTCG</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseLTCG|x64">
+      <Configuration>ReleaseLTCG</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugLIB|Win32">
+      <Configuration>DebugLIB</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseLIB|Win32">
+      <Configuration>ReleaseLIB</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugLIB|x64">
+      <Configuration>DebugLIB</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseLIB|x64">
+      <Configuration>ReleaseLIB</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType Condition="$(Configuration.IndexOf('DLL')) == -1">StaticLibrary</ConfigurationType>
+    <ConfigurationType Condition="$(Configuration.IndexOf('DLL')) != -1">DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(ProjectDir)..\..\properties\$(Configuration).props" />
+    <Import Project="$(ProjectDir)..\..\properties\Output.props" />
+    <Import Project="$(ProjectDir)$(ProjectName).props" />
+  </ImportGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\acceptor.cpp" />
+    <ClCompile Include="..\..\..\..\src\channel.cpp" />
+    <ClCompile Include="..\..\..\..\src\connections.cpp" />
+    <ClCompile Include="..\..\..\..\src\connector.cpp" />
+    <ClCompile Include="..\..\..\..\src\hosts.cpp" />
+    <ClCompile Include="..\..\..\..\src\logging.cpp" />
+    <ClCompile Include="..\..\..\..\src\message_subscriber.cpp" />
+    <ClCompile Include="..\..\..\..\src\p2p.cpp" />
+    <ClCompile Include="..\..\..\..\src\pending_channels.cpp" />
+    <ClCompile Include="..\..\..\..\src\pending_sockets.cpp" />
+    <ClCompile Include="..\..\..\..\src\proxy.cpp" />
+    <ClCompile Include="..\..\..\..\src\settings.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_address.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_events.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_ping.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_seed.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_timer.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_version.cpp" />
+    <ClCompile Include="..\..\..\..\src\sessions\session.cpp" />
+    <ClCompile Include="..\..\..\..\src\sessions\session_batch.cpp" />
+    <ClCompile Include="..\..\..\..\src\sessions\session_inbound.cpp" />
+    <ClCompile Include="..\..\..\..\src\sessions\session_manual.cpp" />
+    <ClCompile Include="..\..\..\..\src\sessions\session_outbound.cpp" />
+    <ClCompile Include="..\..\..\..\src\sessions\session_seed.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\acceptor.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\channel.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\connections.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\connector.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\hosts.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\logging.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\message_subscriber.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\p2p.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\pending_channels.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\pending_sockets.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\proxy.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\shared_const_buffer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_events.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_seed.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_timer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_batch.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_manual.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_outbound.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_seed.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="..\..\..\..\..\..\nuget\boost_date_time-vc120.1.56.0.0\build\native\boost_date_time-vc120.targets" Condition="Exists('..\..\..\..\..\..\nuget\boost_date_time-vc120.1.56.0.0\build\native\boost_date_time-vc120.targets')" />
+    <Import Project="..\..\..\..\..\..\nuget\boost_filesystem-vc120.1.56.0.0\build\native\boost_filesystem-vc120.targets" Condition="Exists('..\..\..\..\..\..\nuget\boost_filesystem-vc120.1.56.0.0\build\native\boost_filesystem-vc120.targets')" />
+    <Import Project="..\..\..\..\..\..\nuget\boost_locale-vc120.1.56.0.0\build\native\boost_locale-vc120.targets" Condition="Exists('..\..\..\..\..\..\nuget\boost_locale-vc120.1.56.0.0\build\native\boost_locale-vc120.targets')" />
+    <Import Project="..\..\..\..\..\..\nuget\boost_program_options-vc120.1.56.0.0\build\native\boost_program_options-vc120.targets" Condition="Exists('..\..\..\..\..\..\nuget\boost_program_options-vc120.1.56.0.0\build\native\boost_program_options-vc120.targets')" />
+    <Import Project="..\..\..\..\..\..\nuget\boost_regex-vc120.1.56.0.0\build\native\boost_regex-vc120.targets" Condition="Exists('..\..\..\..\..\..\nuget\boost_regex-vc120.1.56.0.0\build\native\boost_regex-vc120.targets')" />
+    <Import Project="..\..\..\..\..\..\nuget\boost_system-vc120.1.56.0.0\build\native\boost_system-vc120.targets" Condition="Exists('..\..\..\..\..\..\nuget\boost_system-vc120.1.56.0.0\build\native\boost_system-vc120.targets')" />
+    <Import Project="..\..\..\..\..\..\nuget\boost.1.56.0.0\build\native\boost.targets" Condition="Exists('..\..\..\..\..\..\nuget\boost.1.56.0.0\build\native\boost.targets')" />
+    <Import Project="..\..\..\..\..\..\nuget\secp256k1_vc120.0.1.0.13\build\native\secp256k1_vc120.targets" Condition="Exists('..\..\..\..\..\..\nuget\secp256k1_vc120.0.1.0.13\build\native\secp256k1_vc120.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\..\..\..\..\nuget\boost_date_time-vc120.1.56.0.0\build\native\boost_date_time-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\..\..\nuget\boost_date_time-vc120.1.56.0.0\build\native\boost_date_time-vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\..\..\..\nuget\boost_filesystem-vc120.1.56.0.0\build\native\boost_filesystem-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\..\..\nuget\boost_filesystem-vc120.1.56.0.0\build\native\boost_filesystem-vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\..\..\..\nuget\boost_regex-vc120.1.56.0.0\build\native\boost_regex-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\..\..\nuget\boost_regex-vc120.1.56.0.0\build\native\boost_regex-vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\..\..\..\nuget\boost_system-vc120.1.56.0.0\build\native\boost_system-vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\..\..\nuget\boost_system-vc120.1.56.0.0\build\native\boost_system-vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\..\..\..\nuget\secp256k1_vc120.0.1.0.13\build\native\secp256k1_vc120.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\..\..\nuget\secp256k1_vc120.0.1.0.13\build\native\secp256k1_vc120.targets'))" />
+    <Error Condition="!Exists('..\..\..\..\..\..\nuget\boost.1.56.0.0\build\native\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\..\..\nuget\boost.1.56.0.0\build\native\boost.targets'))" />
+  </Target>
+</Project>
