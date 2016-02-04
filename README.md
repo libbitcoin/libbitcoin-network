@@ -1,10 +1,10 @@
-[![Build Status](https://travis-ci.org/libbitcoin/libbitcoin.svg?branch=master)](https://travis-ci.org/libbitcoin/libbitcoin)
+[![Build Status](https://travis-ci.org/libbitcoin/libbitcoin-network.svg?branch=master)](https://travis-ci.org/libbitcoin/libbitcoin-network)
 
-[![Coverage Status](https://coveralls.io/repos/libbitcoin/libbitcoin/badge.svg)](https://coveralls.io/r/libbitcoin/libbitcoin)
+[![Coverage Status](https://coveralls.io/repos/libbitcoin/libbitcoin-network/badge.svg)](https://coveralls.io/r/libbitcoin/libbitcoin-network)
 
-# Libbitcoin
+# Libbitcoin Network
 
-*The Bitcoin Development Library*
+*Bitcoin P2P Network Library*
 
 **License Overview**
 
@@ -13,6 +13,10 @@ All files in this repository fall under the license specified in [COPYING](COPYI
 **About Libbitcoin**
 
 The libbitcoin toolkit is a set of cross platform C++ libraries for building bitcoin applications. The toolkit consists of several libraries, most of which depend on the foundational [libbitcoin](https://github.com/libbitcoin/libbitcoin) library. Each library's repository can be cloned and built using common [automake](http://www.gnu.org/software/automake) 1.14+ instructions. There are no packages yet in distribution however each library includes an installation script (described below) which is regularly verified in the automated build.
+
+**About Libbitcoin Network**
+
+Libbitcoin Network is a partial implementation of the Bitcoin P2P network protocol. Excluded are all protocols that require access to a blockchain. The [libbitcoin-node](https://github.com/libbitcoin/libbitcoin-node) library extends the P2P networking capability and incorporates [libbitcoin-blockchain](https://github.com/libbitcoin/libbitcoin-blockchain) in order to implement a full node. The [libbitcoin-explorer](https://github.com/libbitcoin/libbitcoin-explorer) library uses the P2P networking capability to post transactions to the P2P network.
 
 ## Installation
 
@@ -106,9 +110,9 @@ Next install the [Boost](http://www.boost.org) (1.54.0 or newer) development pac
 ```sh
 $ brew install boost
 ```
-Next download the [install script](https://github.com/libbitcoin/libbitcoin/blob/version2/install.sh) and enable execution:
+Next download the [install script](https://github.com/libbitcoin/libbitcoin-network/blob/master/install.sh) and enable execution:
 ```sh
-$ wget https://raw.githubusercontent.com/libbitcoin/libbitcoin/version2/install.sh
+$ wget https://raw.githubusercontent.com/libbitcoin/libbitcoin-network/master/install.sh
 $ chmod +x install.sh
 ```
 Finally install libbitcoin:
@@ -129,9 +133,9 @@ Next install the [Boost](http://www.boost.org) (1.54.0 or newer) development pac
 ```sh
 $ sudo port install boost -no_single -no_static -python27
 ```
-Next download the [install script](https://github.com/libbitcoin/libbitcoin/blob/version2/install.sh) and enable execution:
+Next download the [install script](https://github.com/libbitcoin/libbitcoin-network/blob/master/install.sh) and enable execution:
 ```sh
-$ wget https://raw.githubusercontent.com/libbitcoin/libbitcoin/version2/install.sh
+$ wget https://raw.githubusercontent.com/libbitcoin/libbitcoin-network/master/install.sh
 $ chmod +x install.sh
 ```
 Finally install libbitcoin:
@@ -151,7 +155,7 @@ The build script clones, builds and installs two unpackaged repositories, namely
 - [libbitcoin/libbitcoin](https://github.com/libbitcoin/libbitcoin)
 - [libbitcoin/libbitcoin-network](https://github.com/libbitcoin/libbitcoin-network)
 
-The script builds from the head of their `version3` branches. The `master` branch is a staging area for changes. The version branches are considered release quality.
+The script builds from the head of their `master` branches. The `master` branch is a staging area for changes. The version branches are considered release quality, although this repository is not yet released as such (pending `version3`).
 
 #### Build Options
 
