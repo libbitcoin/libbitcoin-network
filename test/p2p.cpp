@@ -196,6 +196,16 @@ static int send_result(const Message& message, p2p& network, int channels)
     return result;
 }
 
+// Trivial tests just validate static inits.
+BOOST_AUTO_TEST_SUITE(empty_tests)
+
+BOOST_AUTO_TEST_CASE(empty_test)
+{
+    BOOST_REQUIRE(true);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_FIXTURE_TEST_SUITE(p2p_tests, log_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(p2p__height__default__zero)
