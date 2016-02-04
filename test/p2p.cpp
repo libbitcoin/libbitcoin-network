@@ -29,7 +29,7 @@ using namespace bc::message;
 using namespace bc::network;
 
 #define TEST_SET_NAME \
-    "network_tests"
+    "p2p_tests"
 
 #define TEST_NAME \
     boost::unit_test::framework::current_test_case().p_name
