@@ -1,0 +1,37 @@
+###############################################################################
+#  Copyright (c) 2014-2015 libbitcoin-network developers (see COPYING).
+#
+#         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
+#
+###############################################################################
+
+# Substitutions
+#==============================================================================
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+
+# Metadata
+#==============================================================================
+Name: libbitcoin-network
+Description: Bitcoin P2P Network Library
+URL: https://github.com/libbitcoin/libbitcoin-network
+Version: @PACKAGE_VERSION@
+
+
+# Variables
+#==============================================================================
+# Dependencies that publish package configuration.
+#------------------------------------------------------------------------------
+Requires: libbitcoin >= 3.0.0
+
+# Include directory and any other required compiler flags.
+#------------------------------------------------------------------------------
+Cflags: -I${includedir}
+
+# Lib directory, lib and any required that do not publish pkg-config.
+#------------------------------------------------------------------------------
+Libs: -L${libdir} -lbitcoin-network
+

@@ -1,5 +1,5 @@
 ###############################################################################
-#  Copyright (c) 2014-2015 libbitcoin developers (see COPYING).
+#  Copyright (c) 2014-2015 libbitcoin-network developers (see COPYING).
 #
 #         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 #
@@ -13,7 +13,7 @@
 AC_PREREQ([2.65])
 
 # Process command-line arguments and perform initialization and verification.
-AC_INIT([libbitcoin], [3.0.0], [eric@voskuil.org])
+AC_INIT([libbitcoin-network], [3.0.0], [eric@voskuil.org])
 
 # Do compilation tests.
 AC_LANG(C++)
@@ -88,29 +88,6 @@ AC_ARG_WITH([tests],
 AC_MSG_RESULT([$with_tests])
 AM_CONDITIONAL([WITH_TESTS], [test x$with_tests != xno])
 
-# Implement --with-examples and declare WITH_EXAMPLES.
-#------------------------------------------------------------------------------
-AC_MSG_CHECKING([--with-examples option])
-AC_ARG_WITH([examples],
-    AS_HELP_STRING([--with-examples],
-        [Compile with examples. @<:@default=yes@:>@]),
-    [with_examples=$withval],
-    [with_examples=yes])
-AC_MSG_RESULT([$with_examples])
-AM_CONDITIONAL([WITH_EXAMPLES], [test x$with_examples != xno])
-
-# Implement --with-icu and define BOOST_HAS_ICU and output ${icu}.
-#------------------------------------------------------------------------------
-AC_MSG_CHECKING([--with-icu option])
-AC_ARG_WITH([icu],
-    AS_HELP_STRING([--with-icu],
-        [Compile with International Components for Unicode. @<:@default=no@:>@]),
-    [with_icu=$withval],
-    [with_icu=no])
-AC_MSG_RESULT([$with_icu])
-AS_CASE([${with_icu}], [yes], AC_DEFINE([BOOST_HAS_ICU]))
-AS_CASE([${with_icu}], [yes], AC_SUBST([icu], [-DWITH_ICU]))
-
 # Implement --enable-ndebug and define NDEBUG.
 #------------------------------------------------------------------------------
 AC_MSG_CHECKING([--enable-ndebug option])
@@ -149,94 +126,19 @@ AS_CASE([${CC}], [*clang*],
          AC_MSG_NOTICE([boost_LDFLAGS : ${boost_LDFLAGS}])],
         [AC_MSG_ERROR([Boost 1.54.0 or later is required but was not found.])])])
 
-AX_BOOST_CHRONO
-AC_SUBST([boost_chrono_LIBS], [${BOOST_CHRONO_LIB}])
-AC_MSG_NOTICE([boost_chrono_LIBS : ${boost_chrono_LIBS}])
-
-AX_BOOST_DATE_TIME
-AC_SUBST([boost_date_time_LIBS], [${BOOST_DATE_TIME_LIB}])
-AC_MSG_NOTICE([boost_date_time_LIBS : ${boost_date_time_LIBS}])
-
-AX_BOOST_FILESYSTEM
-AC_SUBST([boost_filesystem_LIBS], [${BOOST_FILESYSTEM_LIB}])
-AC_MSG_NOTICE([boost_filesystem_LIBS : ${boost_filesystem_LIBS}])
-
-AX_BOOST_IOSTREAMS
-AC_SUBST([boost_iostreams_LIBS], [${BOOST_IOSTREAMS_LIB}])
-AC_MSG_NOTICE([boost_iostreams_LIBS : ${boost_iostreams_LIBS}])
-
-AX_BOOST_LOCALE
-AC_SUBST([boost_locale_LIBS], [${BOOST_LOCALE_LIB}])
-AC_MSG_NOTICE([boost_locale_LIBS : ${boost_locale_LIBS}])
-
-AX_BOOST_PROGRAM_OPTIONS
-AC_SUBST([boost_program_options_LIBS], [${BOOST_PROGRAM_OPTIONS_LIB}])
-AC_MSG_NOTICE([boost_program_options_LIBS : ${boost_program_options_LIBS}])
-
-AX_BOOST_REGEX
-AC_SUBST([boost_regex_LIBS], [${BOOST_REGEX_LIB}])
-AC_MSG_NOTICE([boost_regex_LIBS : ${boost_regex_LIBS}])
-
-AX_BOOST_SYSTEM
-AC_SUBST([boost_system_LIBS], [${BOOST_SYSTEM_LIB}])
-AC_MSG_NOTICE([boost_system_LIBS : ${boost_system_LIBS}])
-
-AX_BOOST_THREAD
-AC_SUBST([boost_thread_LIBS], [${BOOST_THREAD_LIB}])
-AC_MSG_NOTICE([boost_thread_LIBS : ${boost_thread_LIBS}])
-
 AS_CASE([${with_tests}], [yes],
     [AX_BOOST_UNIT_TEST_FRAMEWORK
      AC_SUBST([boost_unit_test_framework_LIBS], [${BOOST_UNIT_TEST_FRAMEWORK_LIB}])
      AC_MSG_NOTICE([boost_unit_test_framework_LIBS : ${boost_unit_test_framework_LIBS}])],
     [AC_SUBST([boost_unit_test_framework_LIBS], [])])
 
-# Require pthread and output ${pthread_CPPFLAGS/LIBS}.
+# Require bitcoin of at least version 3.0.0 and output ${bitcoin_CPPFLAGS/LIBS/PKG}.
 #------------------------------------------------------------------------------
-AX_PTHREAD(
-    [AC_SUBST([pthread_CPPFLAGS], [${PTHREAD_CPPFLAGS}])
-     AC_SUBST([pthread_LIBS], [${PTHREAD_LIBS}])
-     AC_MSG_NOTICE([pthread_CPPFLAGS : ${pthread_CPPFLAGS}])
-     AC_MSG_NOTICE([pthread_LIBS : ${pthread_LIBS}])],
-    [AC_MSG_ERROR([pthread library is required but was not found.])])
-# Hard wired -lpthread because AX_PTHREAD does not do it.
-AC_SUBST([pthread_LIBS], [-lpthread])
-
-# Require rt if on linux and output ${rt_LIBS}.
-#------------------------------------------------------------------------------
-AS_CASE([${host_os}], [*linux*],
-    [AC_CHECK_LIB([rt], [clock_gettime],
-        [AC_SUBST([rt_LIBS], [-lrt])
-         AC_MSG_NOTICE([rt_LIBS : ${rt_LIBS}])], 
-        [AC_MSG_ERROR([rt library is required but was not found.])])],
-    [AC_SUBST([rt_LIBS], [])])
-
-# Require icu-i18n of at least version 51.2 and output ${icu_i18n_CPPFLAGS/LIBS/PKG}.
-#------------------------------------------------------------------------------
-AS_CASE([${with_icu}], [yes],
-    [PKG_CHECK_MODULES([icu_i18n], [icu-i18n >= 51.2])
-     AC_SUBST([icu_i18n_PKG], ['icu-i18n >= 51.2'])
-     AC_SUBST([icu_i18n_CPPFLAGS], [${icu_i18n_CFLAGS}])
-     AC_MSG_NOTICE([icu_i18n_CPPFLAGS : ${icu_i18n_CPPFLAGS}])
-     AC_MSG_NOTICE([icu_i18n_LIBS : ${icu_i18n_LIBS}])],
-    [AC_SUBST([icu_i18n_PKG], [])])
-
-# Require dl if on linux and output ${dl_LIBS}.
-#------------------------------------------------------------------------------
-AS_CASE([${host_os}], [*linux*],
-    [AC_CHECK_LIB([dl], [dlopen],
-        [AC_SUBST([dl_LIBS], [-ldl])
-         AC_MSG_NOTICE([dl_LIBS : ${dl_LIBS}])], 
-        [AC_MSG_ERROR([dl library is required but was not found.])])],
-    [AC_SUBST([dl_LIBS], [])])
-
-# Require secp256k1 of at least version 0.0.1 and output ${secp256k1_CPPFLAGS/LIBS/PKG}.
-#------------------------------------------------------------------------------
-PKG_CHECK_MODULES([secp256k1], [libsecp256k1 >= 0.0.1])
-AC_SUBST([secp256k1_PKG], ['libsecp256k1 >= 0.0.1'])
-AC_SUBST([secp256k1_CPPFLAGS], [${secp256k1_CFLAGS}])
-AC_MSG_NOTICE([secp256k1_CPPFLAGS : ${secp256k1_CPPFLAGS}])
-AC_MSG_NOTICE([secp256k1_LIBS : ${secp256k1_LIBS}])
+PKG_CHECK_MODULES([bitcoin], [libbitcoin >= 3.0.0])
+AC_SUBST([bitcoin_PKG], ['libbitcoin >= 3.0.0'])
+AC_SUBST([bitcoin_CPPFLAGS], [${bitcoin_CFLAGS}])
+AC_MSG_NOTICE([bitcoin_CPPFLAGS : ${bitcoin_CPPFLAGS}])
+AC_MSG_NOTICE([bitcoin_LIBS : ${bitcoin_LIBS}])
 
 
 # Set flags.
@@ -246,18 +148,6 @@ AC_MSG_NOTICE([secp256k1_LIBS : ${secp256k1_LIBS}])
 AS_CASE([${CC}], [*],
     [AX_CHECK_COMPILE_FLAG([-std=c++11],
         [CXXFLAGS="$CXXFLAGS -std=c++11"])])
-
-# Clean up boost 1.54 headers. Enabled in clang only.
-#------------------------------------------------------------------------------
-AS_CASE([${CC}], [*clang*],
-    [AX_CHECK_COMPILE_FLAG([-Wno-deprecated-register],
-        [CXXFLAGS="$CXXFLAGS -Wno-deprecated-register"])])
-
-# Clean up boost 1.55 headers. Enabled in gcc only.
-#------------------------------------------------------------------------------
-AS_CASE([${CC}], [*gcc*],
-    [AX_CHECK_COMPILE_FLAG([-Wno-deprecated-declarations],
-        [CXXFLAGS="$CXXFLAGS -Wno-deprecated-declarations"])])
 
 # Warn on all stuff.
 #------------------------------------------------------------------------------
@@ -276,14 +166,6 @@ AS_CASE([${CC}], [*],
 AS_CASE([${CC}], [*],
     [AX_CHECK_COMPILE_FLAG([-Wpedantic],
         [CFLAGS="$CFLAGS -Wpedantic"],
-        [AX_CHECK_COMPILE_FLAG([-pedantic],
-            [CFLAGS="$CFLAGS -pedantic"])])])
-
-# Allow use of C99 'long long' type.
-#------------------------------------------------------------------------------
-AS_CASE([${CC}], [*],
-    [AX_CHECK_COMPILE_FLAG([-Wno-long-long],
-        [CFLAGS="$CFLAGS -Wno-long-long"],
         [AX_CHECK_COMPILE_FLAG([-pedantic],
             [CFLAGS="$CFLAGS -pedantic"])])])
 
@@ -323,14 +205,8 @@ AS_CASE([${CC}], [*gcc*],
     [AX_CHECK_COMPILE_FLAG([-fvisibility-inlines-hidden],
         [CXXFLAGS="$CXXFLAGS -fvisibility-inlines-hidden"])])
 
-# Limit delays and warnings. Enabled in gcc only.
-#------------------------------------------------------------------------------
-AS_CASE([${CC}], [*gcc*],
-    [AX_CHECK_COMPILE_FLAG([-fno-var-tracking-assignments],
-        [CXXFLAGS="$CXXFLAGS -fno-var-tracking-assignments"])])
-
 
 # Process outputs into templates.
 #==============================================================================
-AC_CONFIG_FILES([Makefile libbitcoin.pc])
+AC_CONFIG_FILES([Makefile libbitcoin-network.pc])
 AC_OUTPUT

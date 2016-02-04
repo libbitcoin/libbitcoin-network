@@ -1,5 +1,5 @@
 ###############################################################################
-#  Copyright (c) 2014-2015 libbitcoin developers (see COPYING).
+#  Copyright (c) 2014-2015 libbitcoin-network developers (see COPYING).
 #
 #         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 #
@@ -11,11 +11,11 @@ language:
 os:
     - osx
     - linux
-    
+
 compiler:
     - clang
     - gcc
-    
+
 env:
     - LINK=static
     - LINK=dynamic
@@ -58,21 +58,18 @@ install:
     - if [[ $LINUX && $CLANG ]]; then sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-3.4 50; fi
     - if [[ $LINUX && $CLANG ]]; then sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-3.4 50; fi
 
-    # Download and install packages for osx/clang/dynamic.
-    - if [[ $OSX   && $CLANG && $DYNAMIC ]]; then brew unlink boost; brew install boost; fi
-
     # Download and install packages for linux/clang/dynamic.
     - if [[ $LINUX && $CLANG && $DYNAMIC ]]; then sudo apt-get -qq install boost1.54; fi
 
 script:
 
-    # Download and build libbitcoin and all dependencies.
-    - if [[ $OSX   && $CLANG && $STATIC  ]]; then ./install.sh --with-icu --build-icu --build-boost --disable-shared --prefix=$TRAVIS_BUILD_DIR/my-prefix; fi
-    - if [[ $LINUX && $CLANG && $STATIC  ]]; then ./install.sh --with-icu --build-icu --build-boost --disable-shared --prefix=$TRAVIS_BUILD_DIR/my-prefix CFLAGS='-Os' LDLIBS='-lstdc++' CXXFLAGS='-Os -stdlib=libstdc++'; fi
-    - if [[ $LINUX && $GCC   && $STATIC  ]]; then ./install.sh --with-icu --build-icu --build-boost --disable-shared --build-dir=my-build --prefix=$TRAVIS_BUILD_DIR/my-prefix CFLAGS='-O0 -g -static --coverage' CXXFLAGS='-O0 -g -static --coverage'; fi
+    # Download and build libbitcoin-network and all dependencies.
+    - if [[ $OSX   && $CLANG && $STATIC  ]]; then ./install.sh --disable-shared --build-boost --prefix=$TRAVIS_BUILD_DIR/my-prefix; fi
+    - if [[ $LINUX && $CLANG && $STATIC  ]]; then ./install.sh --disable-shared --build-boost --prefix=$TRAVIS_BUILD_DIR/my-prefix CFLAGS='-Os' LDLIBS='-lstdc++' CXXFLAGS='-Os -stdlib=libstdc++'; fi
+    - if [[ $LINUX && $GCC   && $STATIC  ]]; then ./install.sh --build-boost --disable-shared --build-dir=my-build --prefix=$TRAVIS_BUILD_DIR/my-prefix CFLAGS='-O0 -g -static --coverage' CXXFLAGS='-O0 -g -static --coverage'; fi
     - if [[ $OSX   && $CLANG && $DYNAMIC ]]; then ./install.sh ; fi
-    - if [[ $LINUX && $CLANG && $DYNAMIC ]]; then sudo CXX=$CXX CC=$CC ./install.sh --with-icu --build-icu --disable-ndebug --disable-static CFLAGS='-Os' LDLIBS='-lstdc++' CXXFLAGS='-Os -stdlib=libstdc++'; fi
-    - if [[ $LINUX && $GCC   && $DYNAMIC ]]; then sudo CXX=$CXX CC=$CC ./install.sh --build-boost; fi
+    - if [[ $LINUX && $CLANG && $DYNAMIC ]]; then sudo CXX=$CXX CC=$CC ./install.sh --disable-ndebug --disable-static CFLAGS='-Os' LDLIBS='-lstdc++' CXXFLAGS='-Os -stdlib=libstdc++'; fi
+    - if [[ $LINUX && $GCC   && $DYNAMIC ]]; then sudo CXX=$CXX CC=$CC ./install.sh --disable-static --build-boost CFLAGS='-Os -s' CXXFLAGS='-Os -s'; fi
 
 after_success:
 
@@ -84,8 +81,8 @@ after_success:
 
     # Capture coverage info, filter out system and test code, and debug before upload.
     - if [[ $LINUX && $GCC   && $STATIC  ]]; then lcov --directory . --capture --output-file coverage.info; fi
-    - if [[ $LINUX && $GCC   && $STATIC  ]]; then lcov --remove coverage.info "/usr/*" "$TRAVIS_BUILD_DIR/my-prefix/*" "my-build/*" "examples/*" "test/*" --output-file coverage.info; fi
+    - if [[ $LINUX && $GCC   && $STATIC  ]]; then lcov --remove coverage.info "/usr/*" "$TRAVIS_BUILD_DIR/my-prefix/*" "my-build/*" "test/*" --output-file coverage.info; fi
     - if [[ $LINUX && $GCC   && $STATIC  ]]; then lcov --list coverage.info; fi
-    
+
     # Upload coverage info to coveralls service (--repo-token <private coveralls repo token>).
     - if [[ $LINUX && $GCC   && $STATIC  ]]; then coveralls-lcov coverage.info; fi

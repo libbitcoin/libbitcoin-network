@@ -1,14 +1,13 @@
 #!/bin/bash
 ###############################################################################
-#  Copyright (c) 2014-2015 libbitcoin developers (see COPYING).
+#  Copyright (c) 2014-2015 libbitcoin-network developers (see COPYING).
 #
 #         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 #
 ###############################################################################
-# Script to build and install libbitcoin.
+# Script to build and install libbitcoin-network.
 #
 # Script options:
-# --build-icu              Builds ICU libraries.
 # --build-boost            Builds Boost libraries.
 # --build-dir=<path>       Location of downloaded and intermediate files.
 # --prefix=<absolute-path> Library install location (defaults to /usr/local).
@@ -29,14 +28,7 @@
 #==============================================================================
 # The default build directory.
 #------------------------------------------------------------------------------
-BUILD_DIR="build-libbitcoin"
-
-# ICU archive.
-#------------------------------------------------------------------------------
-ICU_URL="http://download.icu-project.org/files/icu4c/55.1/icu4c-55_1-src.tgz"
-ICU_ARCHIVE="icu4c-55_1-src.tgz"
-ICU_STANDARD=\
-"CXXFLAGS=-std=c++0x"
+BUILD_DIR="build-libbitcoin-network"
 
 # Boost archive for gcc.
 #------------------------------------------------------------------------------
@@ -206,18 +198,6 @@ echo "  with_pkgconfigdir: ${with_pkgconfigdir}"
 
 # Define build options.
 #==============================================================================
-# Define icu options.
-#------------------------------------------------------------------------------
-ICU_OPTIONS=\
-"--enable-draft "\
-"--enable-tools "\
-"--disable-extras "\
-"--disable-icuio "\
-"--disable-layout "\
-"--disable-layoutex "\
-"--disable-tests "\
-"--disable-samples "
-
 # Define boost options for gcc.
 #------------------------------------------------------------------------------
 BOOST_OPTIONS_GCC=\
@@ -229,7 +209,6 @@ BOOST_OPTIONS_GCC=\
 "--with-program_options "\
 "--with-regex "\
 "--with-system "\
-"--with-thread "\
 "--with-test "
 
 # Define boost options for clang.
@@ -243,18 +222,19 @@ BOOST_OPTIONS_CLANG=\
 "--with-program_options "\
 "--with-regex "\
 "--with-system "\
-"--with-thread "\
 "--with-test "
-
-# Define secp256k1 options.
-#------------------------------------------------------------------------------
-SECP256K1_OPTIONS=\
-"--disable-tests "\
-"--enable-module-recovery "
 
 # Define bitcoin options.
 #------------------------------------------------------------------------------
 BITCOIN_OPTIONS=\
+"--without-tests "\
+"--without-examples "\
+"${with_boost} "\
+"${with_pkgconfigdir} "
+
+# Define bitcoin-network options.
+#------------------------------------------------------------------------------
+BITCOIN_NETWORK_OPTIONS=\
 "${with_boost} "\
 "${with_pkgconfigdir} "
 
@@ -567,10 +547,9 @@ build_from_travis()
 #==============================================================================
 build_all()
 {
-    build_from_tarball_icu $ICU_URL $ICU_ARCHIVE icu $PARALLEL $ICU_OPTIONS
     build_from_tarball_boost $BOOST_URL $BOOST_ARCHIVE boost $PARALLEL $BOOST_OPTIONS
-    build_from_github libbitcoin secp256k1 version4 $PARALLEL "$@" $SECP256K1_OPTIONS
-    build_from_travis libbitcoin libbitcoin sync $PARALLEL "$@" $BITCOIN_OPTIONS
+    build_from_github libbitcoin libbitcoin master $PARALLEL "$@" $BITCOIN_OPTIONS
+    build_from_travis libbitcoin libbitcoin-network master $PARALLEL "$@" $BITCOIN_NETWORK_OPTIONS
 }
 
 
