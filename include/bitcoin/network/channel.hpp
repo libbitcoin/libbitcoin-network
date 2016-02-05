@@ -47,10 +47,6 @@ public:
     channel(threadpool& pool, asio::socket_ptr socket,
         const settings& settings);
 
-    /// This class is not copyable.
-    channel(const channel&) = delete;
-    void operator=(const channel&) = delete;
-
     void start(result_handler handler) override;
 
     virtual bool notify() const;
