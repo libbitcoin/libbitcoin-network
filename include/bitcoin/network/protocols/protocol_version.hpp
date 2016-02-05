@@ -53,7 +53,8 @@ public:
      * @param[in]  height   Our current blockchain height.
      * @param[in]  handler  Invoked upon stop or receipt of version and verack.
      */
-    void start(const settings& settings, size_t height, event_handler handler);
+    virtual void start(const settings& settings, size_t height,
+        event_handler handler);
 
 private:
     static message::version template_factory(

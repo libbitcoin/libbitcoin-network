@@ -39,9 +39,9 @@ public:
     pending_sockets(const pending_sockets&) = delete;
     void operator=(const pending_sockets&) = delete;
 
-    void clear();
-    void store(asio::socket_ptr socket);
-    void remove(asio::socket_ptr socket);
+    virtual void clear();
+    virtual void store(asio::socket_ptr socket);
+    virtual void remove(asio::socket_ptr socket);
 
 private:
     typedef std::vector<asio::socket_ptr> list;

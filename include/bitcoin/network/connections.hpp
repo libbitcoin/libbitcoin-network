@@ -66,11 +66,11 @@ public:
             handle_channel, handle_complete);
     }
 
-    void stop(const code& ec);
-    void count(count_handler handler);
-    void store(channel::ptr channel, result_handler handler);
-    void remove(channel::ptr channel, result_handler handler);
-    void exists(const authority& authority, truth_handler handler);
+    virtual void stop(const code& ec);
+    virtual void count(count_handler handler);
+    virtual void store(channel::ptr channel, result_handler handler);
+    virtual void remove(channel::ptr channel, result_handler handler);
+    virtual void exists(const authority& authority, truth_handler handler);
 
 private:
     typedef std::vector<channel::ptr> list;

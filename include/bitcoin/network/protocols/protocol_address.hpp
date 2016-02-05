@@ -52,7 +52,7 @@ public:
      * Start the protocol.
      * @param[in]  settings  Configuration settings.
      */
-    void start(const settings& settings);
+    virtual void start(const settings& settings);
 
 private:
     void handle_send_address(const code& ec);

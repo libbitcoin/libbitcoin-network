@@ -43,7 +43,7 @@ protected:
         bool persistent);
 
     /// Create a channel from the configured number of concurrent attempts.
-    void connect(connector::ptr connect, channel_handler handler);
+    virtual void connect(connector::ptr connect, channel_handler handler);
 
 private:
 

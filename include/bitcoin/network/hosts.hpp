@@ -55,13 +55,13 @@ public:
     hosts(const hosts&) = delete;
     void operator=(const hosts&) = delete;
 
-    void count(count_handler handler);
-    void store(const address& host, result_handler handler);
-    void store(const address::list& hosts, result_handler handler);
-    void remove(const address& host, result_handler handler);
-    void load(result_handler handler);
-    void save(result_handler handler);
-    void fetch(fetch_handler handler);
+    virtual void count(count_handler handler);
+    virtual void store(const address& host, result_handler handler);
+    virtual void store(const address::list& hosts, result_handler handler);
+    virtual void remove(const address& host, result_handler handler);
+    virtual void load(result_handler handler);
+    virtual void save(result_handler handler);
+    virtual void fetch(fetch_handler handler);
 
 private:
     typedef boost::circular_buffer<address> list;

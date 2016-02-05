@@ -51,7 +51,7 @@ public:
      * Start the protocol.
      * @param[in]  settings  Configuration settings.
      */
-    void start(const settings& settings);
+    virtual void start(const settings& settings);
 
 private:
     void send_ping(const code& ec);

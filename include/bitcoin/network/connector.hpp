@@ -50,15 +50,15 @@ public:
     void operator=(const connector&) = delete;
 
     /// Try to connect to the endpoint.
-    void connect(const config::endpoint& endpoint,
+    virtual void connect(const config::endpoint& endpoint,
         connect_handler handler);
 
     /// Try to connect to the authority.
-    void connect(const config::authority& authority,
+    virtual void connect(const config::authority& authority,
         connect_handler handler);
 
     /// Try to connect to host:port.
-    void connect(const std::string& hostname, uint16_t port,
+    virtual void connect(const std::string& hostname, uint16_t port,
         connect_handler handler);
 
     /// Cancel all outstanding connection attempts.

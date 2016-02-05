@@ -53,13 +53,13 @@ public:
     void operator=(const acceptor&) = delete;
 
     /// Start the listener on the specified port.
-    void listen(uint16_t port, result_handler handler);
+    virtual void listen(uint16_t port, result_handler handler);
 
     /// Accept the next connection available, until canceled.
-    void accept(accept_handler handler);
+    virtual void accept(accept_handler handler);
 
     /// Cancel the listener and all outstanding accept attempts.
-    void stop();
+    virtual void stop();
 
 private:
     bool stopped();

@@ -45,9 +45,9 @@ public:
     pending_channels(const pending_channels&) = delete;
     void operator=(const pending_channels&) = delete;
 
-    void exists(uint64_t version_nonce, truth_handler handler);
-    void store(channel::ptr channel, result_handler handler);
-    void remove(channel::ptr channel, result_handler handler);
+    virtual void exists(uint64_t version_nonce, truth_handler handler);
+    virtual void store(channel::ptr channel, result_handler handler);
+    virtual void remove(channel::ptr channel, result_handler handler);
 
 private:
     typedef std::vector<channel::ptr> list;

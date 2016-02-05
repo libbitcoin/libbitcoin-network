@@ -113,7 +113,7 @@ public:
      * Broadcast a default message instance with the specified error code.
      * @param[in]  ec  The error code to broadcast.
      */
-    void broadcast(const code& ec);
+    virtual void broadcast(const code& ec);
 
     /*
      * Load a stream of the specified command type.
@@ -123,12 +123,12 @@ public:
      * @param[in]  stream  The stream from which to load the message.
      * @return             Returns error::bad_stream if failed.
      */
-    code load(message::message_type type, std::istream& stream) const;
+    virtual code load(message::message_type type, std::istream& stream) const;
 
     /**
      * Stop all subscribers so that they no longer accept subscription.
      */
-    void stop();
+    virtual void stop();
 
 private:
     DEFINE_SUBSCRIBER_OVERLOAD(address);

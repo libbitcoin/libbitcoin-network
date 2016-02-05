@@ -48,13 +48,13 @@ public:
     session_manual(threadpool& pool, p2p& network, const settings& settings);
 
     /// Start the manual session.
-    void start(result_handler handler);
+    void start(result_handler handler) override;
 
     /// Maintain connection to a node.
-    void connect(const std::string& hostname, uint16_t port);
+    virtual void connect(const std::string& hostname, uint16_t port);
 
     /// Maintain connection to a node with callback on first connect.
-    void connect(const std::string& hostname, uint16_t port,
+    virtual void connect(const std::string& hostname, uint16_t port,
         channel_handler handler);
 
 private:

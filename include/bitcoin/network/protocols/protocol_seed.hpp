@@ -53,7 +53,7 @@ public:
      * @param[in]  settings  Configuration settings.
      * @param[in]  handler   Invoked upon stop or complete.
      */
-    void start(const settings& settings, event_handler handler);
+    virtual void start(const settings& settings, event_handler handler);
 
 private:
     void send_own_address(const settings& settings);
