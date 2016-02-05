@@ -53,10 +53,10 @@ public:
 
     void start(result_handler handler) override;
 
-    bool notify() const;
+    virtual bool notify() const;
     virtual void set_notify(bool value);
 
-    uint64_t nonce() const;
+    virtual uint64_t nonce() const;
     virtual void set_nonce(uint64_t value);
 
     virtual const message::version& version() const;
