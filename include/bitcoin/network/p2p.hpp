@@ -41,6 +41,7 @@ namespace network {
 
 /// Top level public networking interface, partly thread safe.
 class BCT_API p2p
+  : public enable_shared_from_base<p2p>
 {
 public:
     typedef message::network_address address;
