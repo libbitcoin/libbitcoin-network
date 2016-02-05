@@ -84,6 +84,9 @@ public:
     /// Set the current block height, for use in version messages.
     virtual void set_height(size_t value);
 
+    /// Determine if the network is stopped.
+    virtual bool stopped() const;
+
     // ------------------------------------------------------------------------
 
     /// Invoke startup and seeding sequence, call from constructing thread.
@@ -155,9 +158,6 @@ protected:
 
     /// No-operation handler, used in default stop handling.
     static result_handler unhandled;
-
-    /// Determine if the network is stopped. This is not thread safe.
-    virtual bool stopped() const;
 
 private:
     template <typename Message>

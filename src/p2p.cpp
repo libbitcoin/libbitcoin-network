@@ -77,7 +77,6 @@ void p2p::set_height(size_t value)
     height_ = value;
 }
 
-// protected:
 bool p2p::stopped() const
 {
     return stopped_;
