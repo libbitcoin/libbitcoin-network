@@ -36,7 +36,7 @@ namespace network {
 
 /// Create outbound socket connections, thread and lock safe.
 class BCT_API connector
-  : public std::enable_shared_from_this<connector>, track<connector>
+  : public enable_shared_from_base<connector>, track<connector>
 {
 public:
     typedef std::shared_ptr<connector> ptr;

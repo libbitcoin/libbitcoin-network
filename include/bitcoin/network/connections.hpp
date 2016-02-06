@@ -37,7 +37,7 @@ namespace network {
 
 /// Pool of active connections, thread and lock safe.
 class BCT_API connections
-  : public std::enable_shared_from_this<connections>
+  : public enable_shared_from_base<connections>
 {
 public:
     typedef config::authority authority;
