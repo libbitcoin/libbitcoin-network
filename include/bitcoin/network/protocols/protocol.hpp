@@ -52,6 +52,7 @@ class BCT_API protocol
 protected:
     typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> event_handler;
+    typedef std::function<void(const code&, size_t)> count_handler;
 
     /// Construct an instance.
     protocol(threadpool& pool, channel::ptr channel,
