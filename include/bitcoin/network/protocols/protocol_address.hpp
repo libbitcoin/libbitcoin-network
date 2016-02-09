@@ -25,10 +25,11 @@
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
-#include <bitcoin/network/p2p.hpp>
 
 namespace libbitcoin {
 namespace network {
+
+class p2p;
 
 /**
  * Address protocol.
@@ -42,17 +43,15 @@ public:
 
     /**
      * Construct an address protocol instance.
-     * @param[in]  pool      The thread pool used by the protocol.
      * @param[in]  network   The network interface.
      * @param[in]  channel   The channel on which to start the protocol.
      */
-    protocol_address(threadpool& pool, p2p& network, channel::ptr channel);
+    protocol_address(p2p& network, channel::ptr channel);
 
     /**
      * Start the protocol.
-     * @param[in]  settings  Configuration settings.
      */
-    virtual void start(const settings& settings);
+    virtual void start();
 
 private:
     void handle_send_address(const code& ec);

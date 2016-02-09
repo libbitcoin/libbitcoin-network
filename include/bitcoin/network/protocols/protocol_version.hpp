@@ -26,12 +26,13 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
+
+class p2p;
 
 class BCT_API protocol_version
   : public protocol_timer, track<protocol_version>
@@ -41,20 +42,16 @@ public:
 
     /**
      * Construct a version protocol instance.
-     * @param[in]  pool      The thread pool used by the protocol.
      * @param[in]  network   The network interface.
      * @param[in]  channel   The channel on which to start the protocol.
      */
-    protocol_version(threadpool& pool, p2p&, channel::ptr channel);
+    protocol_version(p2p& network, channel::ptr channel);
     
     /**
      * Start the protocol.
-     * @param[in]  settings Configuration settings.
-     * @param[in]  height   Our current blockchain height.
      * @param[in]  handler  Invoked upon stop or receipt of version and verack.
      */
-    virtual void start(const settings& settings, size_t height,
-        event_handler handler);
+    virtual void start(event_handler handler);
 
 private:
     static message::version template_factory(
@@ -69,6 +66,7 @@ private:
     bool handle_receive_verack(const code& ec, const message::verack&);
 
     static const message::version template_;
+    p2p& network_;
 };
 
 } // namespace network

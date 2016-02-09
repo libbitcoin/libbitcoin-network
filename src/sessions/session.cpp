@@ -44,15 +44,14 @@ namespace network {
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-session::session(threadpool& pool, p2p& network, const settings& settings,
-    bool outgoing, bool persistent)
+session::session(p2p& network, bool outgoing, bool persistent)
   : stopped_(true),
     incoming_(!outgoing),
     notify_(persistent),
-    pool_(pool),
     network_(network),
-    dispatch_(pool, NAME),
-    settings_(settings)
+    settings_(network.configuration_settings()),
+    pool_(network.thread_pool()),
+    dispatch_(pool_, NAME)
 {
 }
 
@@ -230,9 +229,8 @@ void session::handle_pend(const code& ec, channel::ptr channel,
 void session::handle_channel_start(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
-    attach<protocol_version>(channel)->
-        start(settings_, network_.height(),
-            BIND_3(handle_handshake, _1, channel, handle_started));
+    attach<protocol_version>(channel)->start(
+        BIND_3(handle_handshake, _1, channel, handle_started));
 }
 
 void session::handle_handshake(const code& ec, channel::ptr channel,

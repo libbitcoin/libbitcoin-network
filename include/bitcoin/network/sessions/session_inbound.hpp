@@ -43,7 +43,7 @@ public:
     typedef std::shared_ptr<session_inbound> ptr;
 
     /// Construct an instance.
-    session_inbound(threadpool& pool, p2p& network, const settings& settings);
+    session_inbound(p2p& network);
 
     /// Start the session.
     void start(result_handler handler) override;

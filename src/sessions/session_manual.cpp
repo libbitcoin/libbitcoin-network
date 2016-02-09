@@ -38,9 +38,8 @@ namespace network {
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-session_manual::session_manual(threadpool& pool, p2p& network,
-    const settings& settings)
-  : session_batch(pool, network, settings, true),
+session_manual::session_manual(p2p& network)
+  : session_batch(network, true),
     CONSTRUCT_TRACK(session_manual)
 {
 }
@@ -135,8 +134,9 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
         BIND3(handle_channel_stop, _1, hostname, port));
 }
 
-void session_manual::handle_channel_start(const code& ec, const std::string& hostname,
-    uint16_t port, channel::ptr channel, channel_handler handler)
+void session_manual::handle_channel_start(const code& ec,
+    const std::string& hostname, uint16_t port, channel::ptr channel,
+    channel_handler handler)
 {
     // Treat a start failure just like a stop, but preserve the start handler.
     if (ec)
@@ -153,8 +153,8 @@ void session_manual::handle_channel_start(const code& ec, const std::string& hos
     handler(error::success, channel);
 
     // This is the beginning of the connect cycle.
-    attach<protocol_ping>(channel)->start(settings_);
-    attach<protocol_address>(channel)->start(settings_);
+    attach<protocol_ping>(channel)->start();
+    attach<protocol_address>(channel)->start();
 }
 
 // After a stop we don't use the caller's start handler, but keep connecting.

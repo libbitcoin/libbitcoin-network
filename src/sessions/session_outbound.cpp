@@ -36,9 +36,8 @@ namespace network {
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-session_outbound::session_outbound(threadpool& pool, p2p& network,
-    const settings& settings)
-  : session_batch(pool, network, settings, true),
+session_outbound::session_outbound(p2p& network)
+  : session_batch(network, true),
     CONSTRUCT_TRACK(session_outbound)
 {
 }
@@ -123,8 +122,8 @@ void session_outbound::handle_channel_start(const code& ec,
         return;
     }
 
-    attach<protocol_ping>(channel)->start(settings_);
-    attach<protocol_address>(channel)->start(settings_);
+    attach<protocol_ping>(channel)->start();
+    attach<protocol_address>(channel)->start();
 }
 
 void session_outbound::handle_channel_stop(const code& ec,

@@ -39,8 +39,7 @@ class BCT_API session_batch
 protected:
 
     /// Construct an instance.
-    session_batch(threadpool& pool, p2p& network, const settings& settings,
-        bool persistent);
+    session_batch(p2p& network, bool persistent);
 
     /// Create a channel from the configured number of concurrent attempts.
     virtual void connect(connector::ptr connect, channel_handler handler);

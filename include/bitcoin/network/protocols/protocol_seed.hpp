@@ -24,11 +24,12 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 
 namespace libbitcoin {
 namespace network {
+
+class p2p;
 
 /**
  * Seeding protocol.
@@ -42,18 +43,16 @@ public:
 
     /**
      * Construct a seed protocol instance.
-     * @param[in]  pool      The thread pool used by the protocol.
      * @param[in]  network   The network interface.
      * @param[in]  channel   The channel on which to start the protocol.
      */
-    protocol_seed(threadpool& pool, p2p& network, channel::ptr channel);
+    protocol_seed(p2p& network, channel::ptr channel);
 
     /**
      * Start the protocol.
-     * @param[in]  settings  Configuration settings.
      * @param[in]  handler   Invoked upon stop or complete.
      */
-    virtual void start(const settings& settings, event_handler handler);
+    virtual void start(event_handler handler);
 
 private:
     void send_own_address(const settings& settings);

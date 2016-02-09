@@ -44,6 +44,7 @@ class BCT_API p2p
   : public enable_shared_from_base<p2p>
 {
 public:
+    typedef std::shared_ptr<p2p> ptr;
     typedef message::network_address address;
     typedef std::function<void(bool)> truth_handler;
     typedef std::function<void(size_t)> count_handler;
@@ -79,6 +80,9 @@ public:
 
     // ------------------------------------------------------------------------
 
+    /// Return a reference to the network configuration settings.
+    virtual const settings& configuration_settings() const;
+
     /// Return the current block height.
     virtual size_t height() const;
 
@@ -87,6 +91,9 @@ public:
 
     /// Determine if the network is stopped.
     virtual bool stopped() const;
+
+    /// Return a reference to the network threadpool.
+    virtual threadpool& thread_pool();
 
     // ------------------------------------------------------------------------
 
@@ -153,8 +160,7 @@ protected:
     template <class Session, typename... Args>
     typename Session::ptr attach(Args&&... args)
     {
-        return std::make_shared<Session>(threadpool_, *this,
-            std::forward<Args>(args)...);
+        return std::make_shared<Session>(*this, std::forward<Args>(args)...);
     }
 
     /// No-operation handler, used in default stop handling.

@@ -34,9 +34,8 @@ using namespace bc::config;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-session_batch::session_batch(threadpool& pool, p2p& network,
-    const settings& settings, bool persistent)
-  : session(pool, network, settings, true, persistent)
+session_batch::session_batch(p2p& network, bool persistent)
+  : session(network, true, persistent)
 {
 }
 

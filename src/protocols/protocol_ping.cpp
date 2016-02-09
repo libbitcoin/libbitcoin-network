@@ -38,15 +38,16 @@ using namespace bc::message;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-protocol_ping::protocol_ping(threadpool& pool, p2p&, channel::ptr channel)
-  : protocol_timer(pool, channel, true, NAME),
+protocol_ping::protocol_ping(p2p& network, channel::ptr channel)
+  : protocol_timer(network, channel, true, NAME),
+    settings_(network.configuration_settings()),
     CONSTRUCT_TRACK(protocol_ping)
 {
 }
 
-void protocol_ping::start(const settings& settings)
+void protocol_ping::start()
 {
-    protocol_timer::start(settings.channel_heartbeat(), BIND1(send_ping, _1));
+    protocol_timer::start(settings_.channel_heartbeat(), BIND1(send_ping, _1));
 
     SUBSCRIBE2(ping, handle_receive_ping, _1, _2);
 

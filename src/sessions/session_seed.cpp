@@ -39,9 +39,8 @@ namespace network {
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-session_seed::session_seed(threadpool& pool, p2p& network,
-    const settings& settings)
-  : session(pool, network, settings, true, false),
+session_seed::session_seed(p2p& network)
+  : session(network, true, false),
     CONSTRUCT_TRACK(session_seed)
 {
 }
@@ -169,8 +168,8 @@ void session_seed::handle_channel_start(const code& ec, channel::ptr channel,
         return;
     }
 
-    attach<protocol_ping>(channel)->start(settings_);
-    attach<protocol_seed>(channel)->start(settings_, handler);
+    attach<protocol_ping>(channel)->start();
+    attach<protocol_seed>(channel)->start(handler);
 };
 
 void session_seed::handle_channel_stop(const code& ec)

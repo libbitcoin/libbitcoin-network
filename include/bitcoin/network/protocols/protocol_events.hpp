@@ -29,6 +29,8 @@
 namespace libbitcoin {
 namespace network {
 
+class p2p;
+
 /**
  * Base class for stateful protocol implementation, thread and lock safe.
  */
@@ -39,11 +41,11 @@ protected:
 
     /**
      * Construct a protocol instance.
-     * @param[in]  pool     The thread pool used by the dispacher.
-     * @param[in]  channel  The channel on which to start the protocol.
-     * @param[in]  name     The instance name for logging purposes.
+     * @param[in]  network   The network interface.
+     * @param[in]  channel   The channel on which to start the protocol.
+     * @param[in]  name      The instance name for logging purposes.
      */
-    protocol_events(threadpool& pool, channel::ptr channel,
+    protocol_events(p2p& network, channel::ptr channel,
         const std::string& name);
 
     /**

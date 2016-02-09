@@ -45,7 +45,7 @@ public:
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
 
     /// Construct an instance.
-    session_manual(threadpool& pool, p2p& network, const settings& settings);
+    session_manual(p2p& network);
 
     /// Start the manual session.
     void start(result_handler handler) override;

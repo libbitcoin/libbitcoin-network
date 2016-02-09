@@ -76,6 +76,7 @@ class BCT_API session
   : public enable_shared_from_base<session>
 {
 public:
+    typedef std::shared_ptr<session> ptr;
     typedef config::authority authority;
     typedef std::function<void()> stop_handler;
     typedef std::function<void(bool)> truth_handler;
@@ -94,8 +95,7 @@ public:
 protected:
 
     /// Construct an instance.
-    session(threadpool& pool, p2p& network, const settings& settings,
-        bool outgoing, bool persistent);
+    session(p2p& network, bool outgoing, bool persistent);
 
     /// Validate session stopped.
     ~session();
@@ -108,7 +108,7 @@ protected:
     template <class Protocol, typename... Args>
     typename Protocol::ptr attach(channel::ptr channel, Args&&... args)
     {
-        return std::make_shared<Protocol>(pool_, network_, channel,
+        return std::make_shared<Protocol>(network_, channel,
             std::forward<Args>(args)...);
     }
 
@@ -153,6 +153,7 @@ protected:
     const settings& settings_;
 
 private:
+
     /// Bind a method in the base class.
     template <typename Handler, typename... Args>
     auto base_bind(Handler&& handler, Args&&... args) ->
@@ -201,8 +202,8 @@ private:
     std::atomic<bool> stopped_;
     const bool incoming_;
     const bool notify_;
-    threadpool& pool_;
     p2p& network_;
+    threadpool& pool_;
     dispatcher dispatch_;
     pending_channels pending_;
 };

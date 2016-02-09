@@ -40,6 +40,7 @@ class BCT_API connections
   : public enable_shared_from_base<connections>
 {
 public:
+    typedef std::shared_ptr<connections> ptr;
     typedef config::authority authority;
     typedef std::function<void(bool)> truth_handler;
     typedef std::function<void(size_t)> count_handler;

@@ -23,6 +23,7 @@
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 
 namespace libbitcoin {
@@ -32,9 +33,9 @@ namespace network {
 
 using std::placeholders::_1;
 
-protocol_events::protocol_events(threadpool& pool, channel::ptr channel,
+protocol_events::protocol_events(p2p& network, channel::ptr channel,
     const std::string& name)
-  : protocol(pool, channel, name)
+  : protocol(network, channel, name)
 {
 }
 

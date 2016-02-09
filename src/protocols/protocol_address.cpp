@@ -38,9 +38,8 @@ using namespace bc::message;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-protocol_address::protocol_address(threadpool& pool, p2p& network,
-    channel::ptr channel)
-  : protocol_events(pool, channel, NAME),
+protocol_address::protocol_address(p2p& network, channel::ptr channel)
+  : protocol_events(network, channel, NAME),
     network_(network),
     CONSTRUCT_TRACK(protocol_address)
 {
@@ -49,8 +48,10 @@ protocol_address::protocol_address(threadpool& pool, p2p& network,
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_address::start(const settings& settings)
+void protocol_address::start()
 {
+    const auto& settings = network_.configuration_settings();
+
     // This protocol doesn't care about stop events.
     const auto unhandled = [](code){};
     protocol_events::start(unhandled);
