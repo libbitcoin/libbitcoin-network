@@ -45,18 +45,20 @@ namespace network {
 #define BOUND_PROTOCOL_TYPE(handler, args) \
     std::bind(PROTOCOL_ARGS_TYPE(handler, args))
 
+class p2p;
+
 /// Virtual base class for protocol implementation, mostly thread safe.
 class BCT_API protocol
   : public enable_shared_from_base<protocol>
 {
 protected:
+    typedef std::shared_ptr<protocol> ptr;
     typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> event_handler;
     typedef std::function<void(const code&, size_t)> count_handler;
 
     /// Construct an instance.
-    protocol(threadpool& pool, channel::ptr channel,
-        const std::string& name);
+    protocol(p2p& network, channel::ptr channel, const std::string& name);
 
     /// This class is not copyable.
     protocol(const protocol&) = delete;

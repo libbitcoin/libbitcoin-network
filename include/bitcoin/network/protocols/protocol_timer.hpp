@@ -29,6 +29,8 @@
 namespace libbitcoin {
 namespace network {
 
+class p2p;
+
 /**
  * Base class for timed protocol implementation.
  */
@@ -39,13 +41,13 @@ protected:
 
     /**
      * Construct a timed protocol instance.
-     * @param[in]  pool       The thread pool used by the dispacher.
+     * @param[in]  network   The network interface.
      * @param[in]  channel    The channel on which to start the protocol.
      * @param[in]  perpetual  Set for automatic timer reset unless stopped.
      * @param[in]  name       The instance name for logging purposes.
      */
-    protocol_timer(threadpool& pool, channel::ptr channel,
-        bool perpetual, const std::string& name);
+    protocol_timer(p2p& network, channel::ptr channel, bool perpetual,
+        const std::string& name);
 
     /**
      * Define the event handler and start the protocol and timer.

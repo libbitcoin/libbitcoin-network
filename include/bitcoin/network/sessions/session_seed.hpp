@@ -42,7 +42,7 @@ public:
     typedef std::shared_ptr<session_seed> ptr;
 
     /// Construct an instance.
-    session_seed(threadpool& pool, p2p& network, const settings& settings);
+    session_seed(p2p& network);
 
     /// Start the session.
     void start(result_handler handler) override;

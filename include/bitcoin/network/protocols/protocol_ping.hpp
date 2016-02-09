@@ -24,12 +24,14 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
-        
+
+class p2p;
+
 /**
  * Ping-pong protocol.
  * Attach this to a channel immediately following handshake completion.
@@ -42,16 +44,15 @@ public:
 
     /**
      * Construct a ping protocol instance.
-     * @param[in]  pool      The thread pool used by the protocol.
+     * @param[in]  network   The network interface.
      * @param[in]  channel   The channel on which to start the protocol.
      */
-    protocol_ping(threadpool& pool, p2p&, channel::ptr channel);
+    protocol_ping(p2p& network, channel::ptr channel);
 
     /**
      * Start the protocol.
-     * @param[in]  settings  Configuration settings.
      */
-    virtual void start(const settings& settings);
+    virtual void start();
 
 private:
     void send_ping(const code& ec);
@@ -62,6 +63,8 @@ private:
     bool handle_receive_ping(const code& ec, const message::ping& message);
     bool handle_receive_pong(const code& ec, const message::pong& message,
         uint64_t nonce);
+
+    const settings& settings_;
 };
 
 } // namespace network

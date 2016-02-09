@@ -38,9 +38,8 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 
 // Require three callbacks (or any error) before calling complete.
-protocol_seed::protocol_seed(threadpool& pool, p2p& network,
-    channel::ptr channel)
-  : protocol_timer(pool, channel, false, NAME),
+protocol_seed::protocol_seed(p2p& network, channel::ptr channel)
+  : protocol_timer(network, channel, false, NAME),
     network_(network),
     CONSTRUCT_TRACK(protocol_seed)
 {
@@ -49,8 +48,10 @@ protocol_seed::protocol_seed(threadpool& pool, p2p& network,
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_seed::start(const settings& settings, event_handler handler)
+void protocol_seed::start(event_handler handler)
 {
+    const auto& settings = network_.configuration_settings();
+
     auto complete = BIND2(handle_seeding_complete, _1, handler);
 
     if (settings.host_pool_capacity == 0)

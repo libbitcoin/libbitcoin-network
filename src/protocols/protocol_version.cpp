@@ -79,9 +79,9 @@ version protocol_version::template_factory(const config::authority& authority,
     return version;
 }
 
-protocol_version::protocol_version(threadpool& pool, p2p&,
-    channel::ptr channel)
-  : protocol_timer(pool, channel, false, NAME),
+protocol_version::protocol_version(p2p& network, channel::ptr channel)
+  : protocol_timer(network, channel, false, NAME),
+    network_(network),
     CONSTRUCT_TRACK(protocol_version)
 {
 }
@@ -89,9 +89,11 @@ protocol_version::protocol_version(threadpool& pool, p2p&,
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_version::start(const settings& settings, size_t height,
-    event_handler handler)
+void protocol_version::start(event_handler handler)
 {
+    const auto& height = network_.height();
+    const auto& settings = network_.configuration_settings();
+
     // The handler is invoked in the context of the last message receipt.
     protocol_timer::start(settings.channel_handshake(),
         synchronize(handler, 2, NAME));

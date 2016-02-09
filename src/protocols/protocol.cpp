@@ -22,13 +22,14 @@
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/p2p.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-protocol::protocol(threadpool& pool, channel::ptr channel,
+protocol::protocol(p2p& network, channel::ptr channel,
     const std::string& name)
-  : pool_(pool),
+  : pool_(network.thread_pool()),
     channel_(channel),
     name_(name)
 {

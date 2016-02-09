@@ -24,6 +24,7 @@
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
 
 namespace libbitcoin {
@@ -32,9 +33,9 @@ namespace network {
 #define CLASS protocol_timer
 using std::placeholders::_1;
 
-protocol_timer::protocol_timer(threadpool& pool, channel::ptr channel,
+protocol_timer::protocol_timer(p2p& network, channel::ptr channel,
     bool perpetual, const std::string& name)
-  : protocol_events(pool, channel, name),
+  : protocol_events(network, channel, name),
     perpetual_(perpetual)
 {
 }

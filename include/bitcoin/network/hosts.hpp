@@ -22,8 +22,8 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <string>
 #include <functional>
+#include <string>
 #include <vector>
 #include <boost/circular_buffer.hpp>
 #include <boost/filesystem.hpp>

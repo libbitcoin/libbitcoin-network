@@ -65,6 +65,11 @@ p2p::p2p(const settings& settings)
 // Properties.
 // ----------------------------------------------------------------------------
 
+const settings& p2p::configuration_settings() const
+{
+    return settings_;
+}
+
 // The blockchain height is set in our version message for handshake.
 size_t p2p::height() const
 {
@@ -80,6 +85,11 @@ void p2p::set_height(size_t value)
 bool p2p::stopped() const
 {
     return stopped_;
+}
+
+threadpool& p2p::thread_pool()
+{
+    return threadpool_;
 }
 
 // Start sequence.
@@ -118,7 +128,7 @@ void p2p::start(result_handler handler)
             this, _1, handler);
 
     // This instance is retained by stop handler and member references.
-    auto manual = attach<session_manual>(settings_);
+    auto manual = attach<session_manual>();
     manual->start(manual_started_handler);
     manual_.store(manual);
 }
@@ -161,7 +171,7 @@ void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
     }
 
     // The instance is retained by the stop handler (until shutdown).
-    attach<session_seed>(settings_)->start(
+    attach<session_seed>()->start(
         std::bind(&p2p::handle_hosts_seeded,
             this, _1, handler));
 }
@@ -192,7 +202,7 @@ void p2p::handle_hosts_seeded(const code& ec, result_handler handler)
 void p2p::run(result_handler handler)
 {
     // This instance is retained by the stop handler (until shutdown).
-    attach<session_inbound>(settings_)->start(
+    attach<session_inbound>()->start(
         std::bind(&p2p::handle_inbound_started,
             this, _1, handler));
 }
@@ -208,7 +218,7 @@ void p2p::handle_inbound_started(const code& ec, result_handler handler)
     }
 
     // This instance is retained by the stop handler (until shutdown).
-    attach<session_outbound>(settings_)->start(
+    attach<session_outbound>()->start(
         std::bind(&p2p::handle_outbound_started,
             this, _1, handler));
 }
