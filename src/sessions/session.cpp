@@ -49,7 +49,7 @@ session::session(p2p& network, bool outgoing, bool persistent)
     incoming_(!outgoing),
     notify_(persistent),
     network_(network),
-    settings_(network.configuration_settings()),
+    settings_(network.network_settings()),
     pool_(network.thread_pool()),
     dispatch_(pool_, NAME)
 {
