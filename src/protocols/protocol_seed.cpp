@@ -50,7 +50,7 @@ protocol_seed::protocol_seed(p2p& network, channel::ptr channel)
 
 void protocol_seed::start(event_handler handler)
 {
-    const auto& settings = network_.configuration_settings();
+    const auto& settings = network_.network_settings();
 
     auto complete = BIND2(handle_seeding_complete, _1, handler);
 

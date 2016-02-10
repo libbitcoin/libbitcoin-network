@@ -65,7 +65,7 @@ p2p::p2p(const settings& settings)
 // Properties.
 // ----------------------------------------------------------------------------
 
-const settings& p2p::configuration_settings() const
+const settings& p2p::network_settings() const
 {
     return settings_;
 }

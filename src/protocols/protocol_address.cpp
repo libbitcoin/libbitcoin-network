@@ -50,7 +50,7 @@ protocol_address::protocol_address(p2p& network, channel::ptr channel)
 
 void protocol_address::start()
 {
-    const auto& settings = network_.configuration_settings();
+    const auto& settings = network_.network_settings();
 
     // This protocol doesn't care about stop events.
     const auto unhandled = [](code){};

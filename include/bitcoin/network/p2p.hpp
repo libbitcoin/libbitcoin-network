@@ -81,7 +81,7 @@ public:
     // ------------------------------------------------------------------------
 
     /// Return a reference to the network configuration settings.
-    virtual const settings& configuration_settings() const;
+    virtual const settings& network_settings() const;
 
     /// Return the current block height.
     virtual size_t height() const;

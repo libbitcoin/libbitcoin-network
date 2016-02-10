@@ -40,7 +40,7 @@ using std::placeholders::_2;
 
 protocol_ping::protocol_ping(p2p& network, channel::ptr channel)
   : protocol_timer(network, channel, true, NAME),
-    settings_(network.configuration_settings()),
+    settings_(network.network_settings()),
     CONSTRUCT_TRACK(protocol_ping)
 {
 }

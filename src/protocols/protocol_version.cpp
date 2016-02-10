@@ -92,7 +92,7 @@ protocol_version::protocol_version(p2p& network, channel::ptr channel)
 void protocol_version::start(event_handler handler)
 {
     const auto& height = network_.height();
-    const auto& settings = network_.configuration_settings();
+    const auto& settings = network_.network_settings();
 
     // The handler is invoked in the context of the last message receipt.
     protocol_timer::start(settings.channel_handshake(),
