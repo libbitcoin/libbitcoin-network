@@ -32,7 +32,7 @@
 namespace libbitcoin {
 namespace network {
 
-// Guard against concurrent stream writes.
+// Guard against concurrent console writes.
 static std::mutex console_mutex;
 
 // Guard against concurrent file writes.
