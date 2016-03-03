@@ -25,9 +25,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
@@ -111,8 +111,8 @@ private:
     bool safe_exists(const authority& address);
 
     list channels_;
-    std::mutex mutex_;
     dispatcher dispatch_;
+    boost::shared_mutex mutex_;
 };
 
 } // namespace network

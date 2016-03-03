@@ -25,9 +25,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <boost/iostreams/stream.hpp>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
@@ -83,7 +83,7 @@ public:
         ///////////////////////////////////////////////////////////////////////
         if (true)
         {
-            std::lock_guard<std::mutex> lock(mutex_);
+            boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
             if (!stopped())
             {
@@ -152,7 +152,7 @@ private:
     // The mutex ensures no registration will occur after stop broadcasts.
     message_subscriber message_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
-    std::mutex mutex_;
+    boost::shared_mutex mutex_;
 };
 
 } // namespace network

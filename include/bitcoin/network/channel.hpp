@@ -23,7 +23,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <mutex>
 #include <utility>
 #include <string>
 #include <bitcoin/bitcoin.hpp>
@@ -96,10 +95,8 @@ private:
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
     deadline::ptr poll_;
-    hash_digest own_threshold_;
-    hash_digest peer_threshold_;
-    std::mutex own_threshold_mutex_;
-    std::mutex peer_threshold_mutex_;
+    bc::atomic<hash_digest> own_threshold_;
+    bc::atomic<hash_digest> peer_threshold_;
 
     // Deperecated.
     bc::atomic<result_handler> poll_handler_;

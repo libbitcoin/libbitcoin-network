@@ -20,7 +20,7 @@
 #include <bitcoin/network/connections.hpp>
 
 #include <algorithm>
-#include <mutex>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 
@@ -43,7 +43,7 @@ connections::list connections::safe_copy()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
     return channels_;
     ///////////////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ bool connections::safe_exists(const authority& address)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     const auto it = std::find_if(channels_.begin(), channels_.end(), match);
     return it != channels_.end();
@@ -83,7 +83,7 @@ bool connections::safe_remove(channel::ptr channel)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     const auto it = std::find(channels_.begin(), channels_.end(), channel);
     const auto found = it != channels_.end();
@@ -110,7 +110,7 @@ bool connections::safe_store(channel::ptr channel)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     const auto it = std::find_if(channels_.begin(), channels_.end(), match);
     const auto found = it != channels_.end();
@@ -131,7 +131,7 @@ size_t connections::safe_count()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
     return channels_.size();
     ///////////////////////////////////////////////////////////////////////////

@@ -24,8 +24,8 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <boost/iostreams/stream.hpp>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/shared_const_buffer.hpp>
 
@@ -127,7 +127,7 @@ void proxy::stop(const code& ec)
     ///////////////////////////////////////////////////////////////////////////
     if (true)
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
         // Short circuit new subscriptions, since they will not get cleared.
         stopped_ = true;
@@ -178,7 +178,7 @@ void proxy::subscribe_stop(result_handler handler)
     ///////////////////////////////////////////////////////////////////////////
     if (true)
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
         if (!stopped())
         {

@@ -25,9 +25,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connections.hpp>
@@ -198,7 +198,7 @@ private:
 
     // Subscriber registration/stop is protected by mutex.
     channel_subscriber::ptr subscriber_;
-    std::mutex mutex_;
+    boost::shared_mutex mutex_;
 };
 
 } // namespace network

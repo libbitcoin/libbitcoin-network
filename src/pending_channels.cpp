@@ -22,7 +22,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
-#include <mutex>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 
@@ -48,7 +48,7 @@ bool pending_channels::safe_store(channel::ptr channel)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     const auto it = std::find_if(channels_.begin(), channels_.end(), match);
     const auto found = it != channels_.end();
@@ -69,7 +69,7 @@ bool pending_channels::safe_remove(channel::ptr channel)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
 
     const auto it = std::find(channels_.begin(), channels_.end(), channel);
     const auto found = it != channels_.end();
@@ -95,7 +95,7 @@ bool pending_channels::safe_exists(uint64_t version_nonce)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
 
     const auto it = std::find_if(channels_.begin(), channels_.end(), match);
     return it != channels_.end();

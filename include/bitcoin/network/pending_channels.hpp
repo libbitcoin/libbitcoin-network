@@ -22,8 +22,8 @@
 
 #include <cstdint>
 #include <functional>
-#include <mutex>
 #include <vector>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
@@ -57,7 +57,7 @@ private:
     bool safe_exists(uint64_t version_nonce);
 
     list channels_;
-    std::mutex mutex_;
+    boost::shared_mutex mutex_;
 };
 
 } // namespace network
