@@ -24,7 +24,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connections.hpp>
@@ -104,7 +103,7 @@ void p2p::start(result_handler handler)
     ///////////////////////////////////////////////////////////////////////////
     if (true)
     {
-        boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+        unique_lock lock(mutex_);
 
         // stopped_/subscriber_ is the guarded relation.
         if (stopped())
@@ -246,7 +245,7 @@ void p2p::subscribe_connections(connect_handler handler)
     ///////////////////////////////////////////////////////////////////////////
     if (true)
     {
-        boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+        shared_lock lock(mutex_);
 
         // stopped_/subscriber_ is the guarded relation.
         if (!stopped())
@@ -298,7 +297,7 @@ void p2p::stop(result_handler handler)
     ///////////////////////////////////////////////////////////////////////////
     if (true)
     {
-        boost::shared_lock<boost::shared_mutex> unique_lock(mutex_);
+        unique_lock lock(mutex_);
 
         // stopped_/subscriber_ is the guarded relation.
         if (!stopped())

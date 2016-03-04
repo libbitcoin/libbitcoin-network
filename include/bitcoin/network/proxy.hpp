@@ -83,7 +83,7 @@ public:
         ///////////////////////////////////////////////////////////////////////
         if (true)
         {
-            boost::shared_lock<boost::shared_mutex> shared_lock(mutex_);
+            shared_lock lock(mutex_);
 
             if (!stopped())
             {
