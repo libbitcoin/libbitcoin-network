@@ -31,8 +31,8 @@
     value##_subscriber_(std::make_shared<value##_subscriber_type>( \
         pool, #value "_sub"))
 
-#define RELAY_MESSAGE(code, value) \
-    value##_subscriber_->relay(code, message::value())
+#define RELAY_CODE(code, value) \
+    value##_subscriber_->relay(code, nullptr)
 
 #define CASE_LOAD_STREAM(stream, value) \
     case message_type::value: \
@@ -95,27 +95,27 @@ message_subscriber::message_subscriber(threadpool& pool)
 
 void message_subscriber::broadcast(const code& ec)
 {
-    RELAY_MESSAGE(ec, address);
-    RELAY_MESSAGE(ec, alert);
-    RELAY_MESSAGE(ec, block);
-    RELAY_MESSAGE(ec, filter_add);
-    RELAY_MESSAGE(ec, filter_clear);
-    RELAY_MESSAGE(ec, filter_load);
-    RELAY_MESSAGE(ec, get_address);
-    RELAY_MESSAGE(ec, get_blocks);
-    RELAY_MESSAGE(ec, get_data);
-    RELAY_MESSAGE(ec, get_headers);
-    RELAY_MESSAGE(ec, headers);
-    RELAY_MESSAGE(ec, inventory);
-    RELAY_MESSAGE(ec, memory_pool);
-    RELAY_MESSAGE(ec, merkle_block);
-    RELAY_MESSAGE(ec, not_found);
-    RELAY_MESSAGE(ec, ping);
-    RELAY_MESSAGE(ec, pong);
-    RELAY_MESSAGE(ec, reject);
-    RELAY_MESSAGE(ec, transaction);
-    RELAY_MESSAGE(ec, verack);
-    RELAY_MESSAGE(ec, version);
+    RELAY_CODE(ec, address);
+    RELAY_CODE(ec, alert);
+    RELAY_CODE(ec, block);
+    RELAY_CODE(ec, filter_add);
+    RELAY_CODE(ec, filter_clear);
+    RELAY_CODE(ec, filter_load);
+    RELAY_CODE(ec, get_address);
+    RELAY_CODE(ec, get_blocks);
+    RELAY_CODE(ec, get_data);
+    RELAY_CODE(ec, get_headers);
+    RELAY_CODE(ec, headers);
+    RELAY_CODE(ec, inventory);
+    RELAY_CODE(ec, memory_pool);
+    RELAY_CODE(ec, merkle_block);
+    RELAY_CODE(ec, not_found);
+    RELAY_CODE(ec, ping);
+    RELAY_CODE(ec, pong);
+    RELAY_CODE(ec, reject);
+    RELAY_CODE(ec, transaction);
+    RELAY_CODE(ec, verack);
+    RELAY_CODE(ec, version);
 }
 
 code message_subscriber::load(message_type type, std::istream& stream) const

@@ -108,7 +108,7 @@ void protocol_version::start(event_handler handler)
 // ----------------------------------------------------------------------------
 
 bool protocol_version::handle_receive_version(const code& ec,
-    const version& message)
+    version::ptr message)
 {
     if (stopped())
         return false;
@@ -123,10 +123,10 @@ bool protocol_version::handle_receive_version(const code& ec,
     }
 
     log::debug(LOG_PROTOCOL)
-        << "Peer [" << authority() << "] version (" << message.value
-        << ") services (" << message.services << ") " << message.user_agent;
+        << "Peer [" << authority() << "] version (" << message->value
+        << ") services (" << message->services << ") " << message->user_agent;
 
-    set_peer_version(message);
+    set_peer_version(*message);
     SEND1(verack(), handle_verack_sent, _1);
 
     // 1 of 2
@@ -135,7 +135,7 @@ bool protocol_version::handle_receive_version(const code& ec,
 }
 
 bool protocol_version::handle_receive_verack(const code& ec,
-    const message::verack&)
+    message::verack::ptr)
 {
     if (stopped())
         return false;

@@ -32,7 +32,7 @@ namespace libbitcoin {
 namespace network {
 
 #define DEFINE_SUBSCRIBER_TYPE(value) \
-    typedef resubscriber<const code&, const message::value&> \
+    typedef resubscriber<const code&, message::value::ptr> \
         value##_subscriber_type
 
 #define DEFINE_SUBSCRIBER_OVERLOAD(value) \
@@ -102,10 +102,10 @@ public:
     template <class Message, class Subscriber>
     code load(std::istream& stream, Subscriber subscriber) const
     {
-        Message message;
-        const bool parsed = message.from_data(stream);
+        const auto message_ptr = std::make_shared<Message>();
+        const bool parsed = message_ptr->from_data(stream);
         const code ec(parsed ? error::success : error::bad_stream);
-        subscriber->relay(ec, message);
+        subscriber->relay(ec, message_ptr);
         return ec;
     }
 

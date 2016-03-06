@@ -41,7 +41,9 @@ class BCT_API proxy
 {
 public:
     template <class Message>
-    using message_handler = std::function<bool(const code&, const Message&)>;
+    using message_handler = std::function<bool(const code&,
+        std::shared_ptr<Message>)>;
+
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void()> completion_handler;
     typedef subscriber<const code&> stop_subscriber;
@@ -94,7 +96,7 @@ public:
         }
         ///////////////////////////////////////////////////////////////////////
 
-        handler(error::channel_stopped, Message());
+        handler(error::channel_stopped, nullptr);
     }
 
     /// Subscribe to the stop event.

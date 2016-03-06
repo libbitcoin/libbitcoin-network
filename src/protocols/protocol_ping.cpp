@@ -77,7 +77,7 @@ void protocol_ping::send_ping(const code& ec)
 }
 
 bool protocol_ping::handle_receive_ping(const code& ec,
-    const message::ping& message)
+    message::ping::ptr message)
 {
     if (stopped())
         return false;
@@ -91,14 +91,14 @@ bool protocol_ping::handle_receive_ping(const code& ec,
         return false;
     }
 
-    SEND1(pong(message.nonce), handle_send_pong, _1);
+    SEND1(pong(message->nonce), handle_send_pong, _1);
 
     // RESUBSCRIBE
     return true;
 }
 
 bool protocol_ping::handle_receive_pong(const code& ec,
-    const message::pong& message, uint64_t nonce)
+    message::pong::ptr message, uint64_t nonce)
 {
     if (stopped())
         return false;
@@ -112,7 +112,7 @@ bool protocol_ping::handle_receive_pong(const code& ec,
         return false;
     }
 
-    if (message.nonce != nonce)
+    if (message->nonce != nonce)
     {
         log::warning(LOG_PROTOCOL)
             << "Invalid pong nonce from [" << authority() << "]";

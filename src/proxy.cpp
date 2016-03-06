@@ -300,11 +300,8 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
         return;
     }
 
-    // We must copy the payload before restarting the reader.
-    const auto payload_copy = payload_buffer_;
-
     // Parse and publish the payload to message subscribers.
-    payload_source source(payload_copy);
+    payload_source source(payload_buffer_);
     payload_stream istream(source);
 
     // Notify subscribers of the new message.
@@ -323,7 +320,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
         else
             log::debug(LOG_NETWORK)
             << "Valid " << head.command << " payload from ["
-                << authority() << "] (" << payload_copy.size() << " bytes)";
+                << authority() << "] (" << payload_buffer_.size() << " bytes)";
     }
 
     if (ec)
