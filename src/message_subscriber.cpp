@@ -34,9 +34,13 @@
 #define RELAY_CODE(code, value) \
     value##_subscriber_->relay(code, nullptr)
 
-#define CASE_LOAD_STREAM(stream, value) \
+#define CASE_HANDLE_MESSAGE(stream, value) \
     case message_type::value: \
-        return load<message::value>(stream, value##_subscriber_)
+        return handle<message::value>(stream, value##_subscriber_)
+
+#define CASE_RELAY_MESSAGE(stream, value) \
+    case message_type::value: \
+        return relay<message::value>(stream, value##_subscriber_)
 
 #define STOP_SUBSCRIBER(value) \
     value##_subscriber_->stop()
@@ -122,27 +126,27 @@ code message_subscriber::load(message_type type, std::istream& stream) const
 {
     switch (type)
     {
-        CASE_LOAD_STREAM(stream, address);
-        CASE_LOAD_STREAM(stream, alert);
-        CASE_LOAD_STREAM(stream, block);
-        CASE_LOAD_STREAM(stream, filter_add);
-        CASE_LOAD_STREAM(stream, filter_clear);
-        CASE_LOAD_STREAM(stream, filter_load);
-        CASE_LOAD_STREAM(stream, get_address);
-        CASE_LOAD_STREAM(stream, get_blocks);
-        CASE_LOAD_STREAM(stream, get_data);
-        CASE_LOAD_STREAM(stream, get_headers);
-        CASE_LOAD_STREAM(stream, headers);
-        CASE_LOAD_STREAM(stream, inventory);
-        CASE_LOAD_STREAM(stream, memory_pool);
-        CASE_LOAD_STREAM(stream, merkle_block);
-        CASE_LOAD_STREAM(stream, not_found);
-        CASE_LOAD_STREAM(stream, ping);
-        CASE_LOAD_STREAM(stream, pong);
-        CASE_LOAD_STREAM(stream, reject);
-        CASE_LOAD_STREAM(stream, transaction);
-        CASE_LOAD_STREAM(stream, verack);
-        CASE_LOAD_STREAM(stream, version);
+        CASE_RELAY_MESSAGE(stream, address);
+        CASE_RELAY_MESSAGE(stream, alert);
+        CASE_HANDLE_MESSAGE(stream, block);
+        CASE_RELAY_MESSAGE(stream, filter_add);
+        CASE_RELAY_MESSAGE(stream, filter_clear);
+        CASE_RELAY_MESSAGE(stream, filter_load);
+        CASE_RELAY_MESSAGE(stream, get_address);
+        CASE_RELAY_MESSAGE(stream, get_blocks);
+        CASE_RELAY_MESSAGE(stream, get_data);
+        CASE_RELAY_MESSAGE(stream, get_headers);
+        CASE_RELAY_MESSAGE(stream, headers);
+        CASE_RELAY_MESSAGE(stream, inventory);
+        CASE_RELAY_MESSAGE(stream, memory_pool);
+        CASE_RELAY_MESSAGE(stream, merkle_block);
+        CASE_RELAY_MESSAGE(stream, not_found);
+        CASE_RELAY_MESSAGE(stream, ping);
+        CASE_RELAY_MESSAGE(stream, pong);
+        CASE_RELAY_MESSAGE(stream, reject);
+        CASE_RELAY_MESSAGE(stream, transaction);
+        CASE_RELAY_MESSAGE(stream, verack);
+        CASE_RELAY_MESSAGE(stream, version);
         case message_type::unknown:
         default:
             return error::not_found;
