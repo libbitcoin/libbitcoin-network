@@ -67,7 +67,6 @@ proxy::proxy(threadpool& pool, asio::socket_ptr socket, uint32_t magic)
   : stopped_(true),
     magic_(magic),
     authority_(authority_factory(socket)),
-    dispatch_(pool, NAME),
     socket_(socket),
     message_subscriber_(pool),
     stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_sub"))
@@ -94,15 +93,22 @@ const config::authority& proxy::authority() const
 // public:
 void proxy::start(result_handler handler)
 {
-    // No critical section because proxy is not restartable (see asio socket).
-    if (!stopped())
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    if (true)
     {
-        handler(error::operation_failed);
-        return;
-    }
+        unique_lock lock(mutex_);
 
-    // Must indicate start before invoking start handler.
-    stopped_ = false;
+        if (!stopped_)
+        {
+            handler(error::operation_failed);
+            return;
+        }
+
+        // Must indicate start before invoking start handler.
+        stopped_ = false;
+    }
+    ///////////////////////////////////////////////////////////////////////////
 
     // Allow for subscription before first read, so no messages are missed.
     handler(error::success);
@@ -119,14 +125,14 @@ void proxy::stop(const code& ec)
 {
     BITCOIN_ASSERT_MSG(ec, "The stop code must be an error code.");
 
-    if (stopped())
-        return;
-
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     if (true)
     {
         unique_lock lock(mutex_);
+
+        if (stopped_)
+            return;
 
         // Short circuit new subscriptions, since they will not get cleared.
         stopped_ = true;
@@ -148,13 +154,13 @@ void proxy::stop(const code& ec)
     // Give channel opportunity to terminate timers.
     handle_stopping();
 
-    // The socket_ must be guarded against concurrent use.
-    dispatch_.ordered(&proxy::do_close, shared_from_this());
-}
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(mutex_);
 
-void proxy::do_close()
-{
+    // The socket_ must be guarded against concurrent use.
     proxy::close(socket_);
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 void proxy::stop(const boost_code& ec)
@@ -164,7 +170,12 @@ void proxy::stop(const boost_code& ec)
 
 bool proxy::stopped() const
 {
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock lock(mutex_);
+
     return stopped_;
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 // Stop subscription sequence.
@@ -177,9 +188,9 @@ void proxy::subscribe_stop(result_handler handler)
     ///////////////////////////////////////////////////////////////////////////
     if (true)
     {
-        shared_lock lock(mutex_);
+        unique_lock lock(mutex_);
 
-        if (!stopped())
+        if (!stopped_)
         {
             stop_subscriber_->subscribe(handler);
             return;
@@ -195,48 +206,19 @@ void proxy::subscribe_stop(result_handler handler)
 
 void proxy::read_heading()
 {
-    if (stopped())
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(mutex_);
+
+    if (stopped_)
         return;
 
-    dispatch_.ordered(
-        std::bind(&proxy::do_read_heading,
-            shared_from_this()));
-}
-
-void proxy::do_read_heading()
-{
-    if (stopped())
-        return;
-
-    // The socket is protected by an ordered strand.
+    // The socket_ must be guarded against concurrent use.
     using namespace boost::asio;
     async_read(*socket_, buffer(heading_buffer_),
-        dispatch_.ordered_delegate(&proxy::handle_read_heading,
+        std::bind(&proxy::handle_read_heading,
             shared_from_this(), _1, _2));
-}
-
-void proxy::read_payload(const heading& head)
-{
-    if (stopped())
-        return;
-
-    dispatch_.ordered(
-        std::bind(&proxy::do_read_payload,
-            shared_from_this(), head));
-}
-
-void proxy::do_read_payload(const heading& head)
-{
-    if (stopped())
-        return;
-
-    payload_buffer_.resize(head.payload_size);
-
-    // The socket is protected by an ordered strand.
-    using namespace boost::asio;
-    async_read(*socket_, buffer(payload_buffer_, head.payload_size),
-        dispatch_.ordered_delegate(&proxy::handle_read_payload,
-            shared_from_this(), _1, _2, head));
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 void proxy::handle_read_heading(const boost_code& ec, size_t)
@@ -281,6 +263,25 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
 
     read_payload(head);
     handle_activity();
+}
+
+void proxy::read_payload(const heading& head)
+{
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(mutex_);
+
+    if (stopped_)
+        return;
+
+    payload_buffer_.resize(head.payload_size);
+
+    // The socket_ must be guarded against concurrent use.
+    using namespace boost::asio;
+    async_read(*socket_, buffer(payload_buffer_, head.payload_size),
+        std::bind(&proxy::handle_read_payload,
+            shared_from_this(), _1, _2, head));
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 void proxy::handle_read_payload(const boost_code& ec, size_t,
@@ -350,21 +351,29 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
 void proxy::do_send(const data_chunk& message, result_handler handler,
     const std::string& command)
 {
-    if (stopped())
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    if (true)
     {
-        handler(error::channel_stopped);
-        return;
+        unique_lock lock(mutex_);
+
+        if (stopped_)
+        {
+            handler(error::channel_stopped);
+            return;
+        }
+
+        // The socket_ must be guarded against concurrent use.
+        const shared_const_buffer buffer(message);
+        async_write(*socket_, buffer,
+            std::bind(&proxy::handle_send,
+                shared_from_this(), _1, handler));
     }
+    ///////////////////////////////////////////////////////////////////////////
 
     log::debug(LOG_NETWORK)
-        << "Sending " << command << " to [" << authority() << "] ("
+        << "Sent " << command << " to [" << authority() << "] ("
         << message.size() << " bytes)";
-
-    // The socket is protected by an ordered strand.
-    const shared_const_buffer buffer(message);
-    async_write(*socket_, buffer,
-        std::bind(&proxy::handle_send,
-            shared_from_this(), _1, handler));
 }
 
 void proxy::handle_send(const boost_code& ec, result_handler handler)

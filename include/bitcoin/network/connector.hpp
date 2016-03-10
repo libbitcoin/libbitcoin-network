@@ -23,7 +23,6 @@
 #include <atomic>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
@@ -85,7 +84,7 @@ private:
     pending_sockets pending_;
     dispatcher dispatch_;
     std::shared_ptr<asio::resolver> resolver_;
-    std::mutex mutex_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace network

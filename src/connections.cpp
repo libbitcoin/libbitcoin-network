@@ -38,7 +38,7 @@ connections::~connections()
     BITCOIN_ASSERT_MSG(channels_.empty(), "Connections was not cleared.");
 }
 
-connections::list connections::safe_copy()
+connections::list connections::safe_copy() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -57,7 +57,7 @@ void connections::stop(const code& ec)
         channel->stop(ec);
 }
 
-bool connections::safe_exists(const authority& address)
+bool connections::safe_exists(const authority& address) const
 {
     const auto match = [&address](channel::ptr entry)
     {
@@ -66,14 +66,14 @@ bool connections::safe_exists(const authority& address)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    shared_lock lock(mutex_);
 
     const auto it = std::find_if(channels_.begin(), channels_.end(), match);
     return it != channels_.end();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void connections::exists(const authority& address, truth_handler handler)
+void connections::exists(const authority& address, truth_handler handler) const
 {
     handler(safe_exists(address));
 }
@@ -126,7 +126,7 @@ void connections::store(channel::ptr channel, result_handler handler)
     handler(safe_store(channel) ? error::address_in_use : error::success);
 }
 
-size_t connections::safe_count()
+size_t connections::safe_count() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -136,7 +136,7 @@ size_t connections::safe_count()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void connections::count(count_handler handler)
+void connections::count(count_handler handler) const
 {
     handler(safe_count());
 }

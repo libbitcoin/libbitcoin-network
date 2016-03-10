@@ -85,7 +85,7 @@ void pending_channels::remove(channel::ptr channel, result_handler handler)
     handler(safe_remove(channel) ? error::success : error::not_found);
 }
 
-bool pending_channels::safe_exists(uint64_t version_nonce)
+bool pending_channels::safe_exists(uint64_t version_nonce) const
 {
     const auto match = [version_nonce](channel::ptr entry)
     {
@@ -101,7 +101,8 @@ bool pending_channels::safe_exists(uint64_t version_nonce)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void pending_channels::exists(uint64_t version_nonce, truth_handler handler)
+void pending_channels::exists(uint64_t version_nonce,
+    truth_handler handler) const
 {
     // This is an optimization that requires we always set a non-zero nonce.
     handler(version_nonce == 0 ? false : safe_exists(version_nonce));

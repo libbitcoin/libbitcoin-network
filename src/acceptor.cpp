@@ -22,7 +22,6 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/proxy.hpp>
@@ -62,7 +61,7 @@ void acceptor::stop()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    unique_lock lock(mutex_);
 
     // This will asynchronously invoke the handler of each pending accept.
     acceptor_->close();
@@ -84,7 +83,7 @@ code acceptor::safe_listen(uint16_t port)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    unique_lock lock(mutex_);
 
     if (acceptor_->is_open())
         return error::operation_failed;
@@ -114,6 +113,7 @@ code acceptor::safe_listen(uint16_t port)
 void acceptor::accept(accept_handler handler)
 {
     // We preserve the asynchronous contract of the async_accept.
+        // Dispatch ensures job does not execute in the current thread.
     if (!safe_accept(handler))
         dispatch_.concurrent(handler, error::service_stopped, nullptr);
 }
@@ -122,7 +122,7 @@ bool acceptor::safe_accept(accept_handler handler)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    unique_lock lock(mutex_);
 
     if (!acceptor_->is_open())
         return false;

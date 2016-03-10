@@ -198,7 +198,7 @@ private:
 
     // Subscriber registration/stop is protected by mutex.
     channel_subscriber::ptr subscriber_;
-    boost::shared_mutex mutex_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace network

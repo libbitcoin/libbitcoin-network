@@ -21,7 +21,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
@@ -65,7 +64,7 @@ void connector::safe_stop()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    unique_lock lock(mutex_);
 
     // This will asynchronously invoke the handler of each pending resolve.
     resolver_->cancel();
@@ -100,7 +99,8 @@ void connector::connect(const std::string& hostname, uint16_t port,
     if (stopped())
     {
         // We preserve the asynchronous contract of the async_resolve.
-        dispatch_.unordered(handler, error::service_stopped, nullptr);
+        // Dispatch ensures job does not execute in the current thread.
+        dispatch_.concurrent(handler, error::service_stopped, nullptr);
         return;
     }
 
@@ -113,7 +113,7 @@ void connector::safe_resolve(asio::query_ptr query, connect_handler handler)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    unique_lock lock(mutex_);
 
     // async_resolve will not invoke the handler within this function.
     resolver_->async_resolve(*query,
@@ -127,7 +127,7 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
 {
     if (stopped())
     {
-        dispatch_.unordered(handler, error::service_stopped, nullptr);
+        dispatch_.concurrent(handler, error::service_stopped, nullptr);
         return;
     }
 

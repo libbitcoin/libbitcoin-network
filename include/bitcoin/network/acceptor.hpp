@@ -24,7 +24,6 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
@@ -73,7 +72,7 @@ private:
     const settings& settings_;
     dispatcher dispatch_;
     asio::acceptor_ptr acceptor_;
-    std::mutex mutex_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace network

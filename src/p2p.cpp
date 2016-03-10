@@ -83,7 +83,12 @@ void p2p::set_height(size_t value)
 
 bool p2p::stopped() const
 {
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock lock(mutex_);
+
     return stopped_;
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 threadpool& p2p::thread_pool()
@@ -106,7 +111,7 @@ void p2p::start(result_handler handler)
         unique_lock lock(mutex_);
 
         // stopped_/subscriber_ is the guarded relation.
-        if (stopped())
+        if (stopped_)
             stopped_ = false;
         else
             failed = true;
@@ -248,7 +253,7 @@ void p2p::subscribe_connections(connect_handler handler)
         shared_lock lock(mutex_);
 
         // stopped_/subscriber_ is the guarded relation.
-        if (!stopped())
+        if (!stopped_)
         {
             subscriber_->subscribe(handler);
             return;
@@ -300,7 +305,7 @@ void p2p::stop(result_handler handler)
         unique_lock lock(mutex_);
 
         // stopped_/subscriber_ is the guarded relation.
-        if (!stopped())
+        if (!stopped_)
         {
             stopped_ = true;
             subscriber_->stop();

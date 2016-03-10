@@ -20,7 +20,6 @@
 #include <bitcoin/network/pending_sockets.hpp>
 
 #include <algorithm>
-#include <mutex>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/proxy.hpp>
 
@@ -40,7 +39,7 @@ void pending_sockets::clear()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    unique_lock lock(mutex_);
 
     // This will asynchronously invoke the handler of each pending connect.
     for (auto socket: sockets_)
@@ -54,7 +53,7 @@ void pending_sockets::store(asio::socket_ptr socket)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    unique_lock lock(mutex_);
 
     // We could test the list for the socket, which should not exist.
     sockets_.push_back(socket);
@@ -65,7 +64,7 @@ void pending_sockets::remove(asio::socket_ptr socket)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    unique_lock lock(mutex_);
 
     auto it = std::find(sockets_.begin(), sockets_.end(), socket);
 

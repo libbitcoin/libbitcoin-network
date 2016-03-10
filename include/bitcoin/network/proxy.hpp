@@ -65,16 +65,8 @@ public:
     template <class Message>
     void send(const Message& packet, result_handler handler)
     {
-        const auto command = packet.command;
-        const auto self = shared_from_this();
-        const auto data = message::serialize(packet, magic_);
-        auto sender = [self, command, data](result_handler handler)
-        {
-            self->do_send(data, handler, command);
-        };
-
-        // The socket is protected and suspended by an ordered strand.
-        dispatch_.ordered(sender, handler);
+        // Sends are not buffered.
+        do_send(message::serialize(packet, magic_), handler, packet.command);
     }
 
     /// Subscribe to messages of the specified type on the socket.
@@ -87,7 +79,7 @@ public:
         {
             shared_lock lock(mutex_);
 
-            if (!stopped())
+            if (!stopped_)
             {
                 auto stopped = std::forward<message_handler<Message>>(handler);
                 message_subscriber_.subscribe<Message>(stopped);
@@ -128,11 +120,9 @@ private:
     void stop(const boost_code& ec);
 
     void read_heading();
-    void do_read_heading();
     void handle_read_heading(const boost_code& ec, size_t);
 
     void read_payload(const message::heading& head);
-    void do_read_payload(const message::heading& head);
     void handle_read_payload(const boost_code& ec, size_t,
         const message::heading& head);
 
@@ -145,16 +135,14 @@ private:
     const uint32_t magic_;
     const config::authority authority_;
 
-    // The socket and buffers are protected by an ordered strand.
-    dispatcher dispatch_;
+    // The socket, buffers and registration are protected by mutex.
+    mutable shared_mutex mutex_;
+
     asio::socket_ptr socket_;
     data_chunk payload_buffer_;
     message::heading::buffer heading_buffer_;
-
-    // The mutex ensures no registration will occur after stop broadcasts.
     message_subscriber message_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
-    boost::shared_mutex mutex_;
 };
 
 } // namespace network
