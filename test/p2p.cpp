@@ -161,6 +161,20 @@ static int subscribe_result(p2p& network)
     return promise.get_future().get().value();
 }
 
+static int subscribe_run_result(p2p& network)
+{
+    std::promise<code> promise;
+    const auto handler = [&promise](code ec, channel::ptr)
+    {
+        promise.set_value(ec);
+        return false;
+    };
+    network.subscribe_connections(handler);
+    const auto unhandled = [](code){};
+    network.run(unhandled);
+    return promise.get_future().get().value();
+}
+
 static int subscribe_connect_result(p2p& network, const config::endpoint& host)
 {
     std::promise<code> promise;
@@ -429,15 +443,14 @@ BOOST_AUTO_TEST_CASE(p2p__broadcast__ping_two_distinct_hosts__two_sends_and_succ
     BOOST_REQUIRE_EQUAL(send_result(ping(0), network, 2), error::success);
 }
 
-// This will hang for a long time if all connections are created before subscription.
-////BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_TWO_THREADS_ONE_SEED_OUTBOUND(configuration);
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(run_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(subscribe_result(network), error::success);
-////}
+// This test may be a little slow.
+BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
+{
+    print_headers(TEST_NAME);
+    SETTINGS_TESTNET_TWO_THREADS_ONE_SEED_OUTBOUND(configuration);
+    p2p network(configuration);
+    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+    BOOST_REQUIRE_EQUAL(subscribe_run_result(network), error::success);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
