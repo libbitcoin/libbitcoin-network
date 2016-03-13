@@ -27,8 +27,6 @@
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
-INITIALIZE_TRACK(bc::network::connector);
-
 namespace libbitcoin {
 namespace network {
 

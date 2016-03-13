@@ -24,9 +24,6 @@
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 
-#define TRACK_SUBSCRIBER(value) \
-    INITIALIZE_TRACK(bc::network::message_subscriber::value##_subscriber_type)
-
 #define INITIALIZE_SUBSCRIBER(pool, value) \
     value##_subscriber_(std::make_shared<value##_subscriber_type>( \
         pool, #value "_sub"))
@@ -47,28 +44,6 @@
 
 #define STOP_SUBSCRIBER(value) \
     value##_subscriber_->stop()
-
-TRACK_SUBSCRIBER(address)
-TRACK_SUBSCRIBER(alert)
-TRACK_SUBSCRIBER(block)
-TRACK_SUBSCRIBER(filter_add)
-TRACK_SUBSCRIBER(filter_clear)
-TRACK_SUBSCRIBER(filter_load)
-TRACK_SUBSCRIBER(get_address)
-TRACK_SUBSCRIBER(get_blocks)
-TRACK_SUBSCRIBER(get_data)
-TRACK_SUBSCRIBER(get_headers)
-TRACK_SUBSCRIBER(headers)
-TRACK_SUBSCRIBER(inventory)
-TRACK_SUBSCRIBER(memory_pool)
-TRACK_SUBSCRIBER(merkle_block)
-TRACK_SUBSCRIBER(not_found)
-TRACK_SUBSCRIBER(ping)
-TRACK_SUBSCRIBER(pong)
-TRACK_SUBSCRIBER(reject)
-TRACK_SUBSCRIBER(transaction)
-TRACK_SUBSCRIBER(verack)
-TRACK_SUBSCRIBER(version)
 
 namespace libbitcoin {
 namespace network {

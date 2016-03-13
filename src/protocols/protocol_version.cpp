@@ -28,8 +28,6 @@
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 #include <bitcoin/network/settings.hpp>
 
-INITIALIZE_TRACK(bc::network::protocol_version);
-
 namespace libbitcoin {
 namespace network {
 

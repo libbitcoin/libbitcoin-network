@@ -26,8 +26,6 @@
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 
-INITIALIZE_TRACK(bc::network::protocol_ping);
-
 namespace libbitcoin {
 namespace network {
 

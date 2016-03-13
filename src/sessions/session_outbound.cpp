@@ -26,8 +26,6 @@
 #include <bitcoin/network/protocols/protocol_address.hpp>
 #include <bitcoin/network/protocols/protocol_ping.hpp>
 
-INITIALIZE_TRACK(bc::network::session_outbound);
-
 namespace libbitcoin {
 namespace network {
 

@@ -38,8 +38,6 @@
 #include <bitcoin/network/sessions/session_seed.hpp>
 #include <bitcoin/network/settings.hpp>
 
-INITIALIZE_TRACK(bc::network::p2p::channel_subscriber);
-
 namespace libbitcoin {
 namespace network {
 

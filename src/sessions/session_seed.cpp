@@ -28,8 +28,6 @@
 #include <bitcoin/network/protocols/protocol_seed.hpp>
 #include <bitcoin/network/proxy.hpp>
 
-INITIALIZE_TRACK(bc::network::session_seed);
-
 namespace libbitcoin {
 namespace network {
 

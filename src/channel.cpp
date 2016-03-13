@@ -28,9 +28,6 @@
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
-// This must be declared in the global namespace.
-INITIALIZE_TRACK(bc::network::channel);
-
 namespace libbitcoin {
 namespace network {
 

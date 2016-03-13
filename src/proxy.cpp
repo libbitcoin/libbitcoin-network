@@ -28,9 +28,6 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/shared_const_buffer.hpp>
 
-// This must be declared in the global namespace.
-INITIALIZE_TRACK(bc::network::proxy::stop_subscriber)
-
 namespace libbitcoin {
 namespace network {
 

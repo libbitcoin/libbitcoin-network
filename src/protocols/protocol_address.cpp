@@ -26,8 +26,6 @@
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
 
-INITIALIZE_TRACK(bc::network::protocol_address);
-
 namespace libbitcoin {
 namespace network {
 
