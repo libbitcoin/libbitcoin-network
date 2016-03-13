@@ -298,15 +298,15 @@ void session::do_unpend(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
     channel->set_nonce(0);
-    handle_started(ec);
     pending_.remove(channel, BIND_1(handle_unpend, _1));
+    handle_started(ec);
 }
 
 void session::do_remove(const code& ec, channel::ptr channel,
     result_handler handle_stopped)
 {
-    handle_stopped(ec);
     network_.remove(channel, BIND_1(handle_remove, _1));
+    handle_stopped(ec);
 }
 
 void session::handle_unpend(const code& ec)
