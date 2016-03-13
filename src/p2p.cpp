@@ -279,8 +279,6 @@ void p2p::stop(result_handler handler)
     hosts_.save(
         std::bind(&p2p::handle_hosts_saved,
             this, _1, handler));
-
-    threadpool_.shutdown();
 }
 
 void p2p::handle_hosts_saved(const code& ec, result_handler handler)
@@ -288,6 +286,9 @@ void p2p::handle_hosts_saved(const code& ec, result_handler handler)
     if (ec)
         log::error(LOG_NETWORK)
             << "Error saving hosts file: " << ec.message();
+
+    // Cannot shut down new work until hosts are saved.
+    threadpool_.shutdown();
 
     // This is the end of the stop sequence.
     handler(ec);
