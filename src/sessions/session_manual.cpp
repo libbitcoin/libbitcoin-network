@@ -145,6 +145,13 @@ void session_manual::handle_channel_start(const code& ec,
             << "Manual channel failed to start [" << channel->authority()
             << "] " << ec.message();
 
+        // Special case for already connected, do not keep trying.
+        if (ec == error::address_in_use)
+        {
+            handler(ec, channel);
+            return;
+        }
+
         connect(hostname, port, handler);
         return;
     }
