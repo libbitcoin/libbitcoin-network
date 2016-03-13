@@ -52,15 +52,15 @@ static const settings mainnet_defaults()
     value.blacklists = { {} };
 
     // Seeds based on bitcoinstats.com/network/dns-servers
-    value.seeds = 
-    {
-        { "seed.bitchannels.io", 8333 },
-        { "seed.bitcoinstats.com", 8333 },
-        { "seed.bitcoin.sipa.be", 8333 },
-        { "dnsseed.bluematt.me", 8333 },
-        { "seed.bitcoin.jonasschnelli.ch", 8333 },
-        { "dnsseed.bitcoin.dashjr.org", 8333 }
-    };
+    // Use push_back due to initializer_list bug:
+    // stackoverflow.com/a/20168627/1172329
+    value.seeds.reserve(6);
+    value.seeds.push_back({ "seed.bitchannels.io", 8333 });
+    value.seeds.push_back({ "seed.bitcoinstats.com", 8333 });
+    value.seeds.push_back({ "seed.bitcoin.sipa.be", 8333 });
+    value.seeds.push_back({ "dnsseed.bluematt.me", 8333 });
+    value.seeds.push_back({ "seed.bitcoin.jonasschnelli.ch", 8333 });
+    value.seeds.push_back({ "dnsseed.bitcoin.dashjr.org", 8333 });
     return value;
 };
 
@@ -69,12 +69,13 @@ static const settings testnet_defaults()
     auto value = mainnet_defaults();
     value.identifier = 118034699;
     value.inbound_port = 18333;
-    value.seeds =
-    {
-        { "testnet-seed.bitcoin.petertodd.org", 18333 },
-        { "testnet-seed.bitcoin.schildbach.de", 18333 },
-        { "testnet-seed.bluematt.me", 18333 }
-    };
+
+    // Use push_back due to initializer_list bug:
+    // stackoverflow.com/a/20168627/1172329
+    value.seeds.reserve(3);
+    value.seeds.push_back({ "testnet-seed.bitcoin.petertodd.org", 18333 });
+    value.seeds.push_back({ "testnet-seed.bitcoin.schildbach.de", 18333 });
+    value.seeds.push_back({ "testnet-seed.bluematt.me", 18333 });
     return value;
 };
 
