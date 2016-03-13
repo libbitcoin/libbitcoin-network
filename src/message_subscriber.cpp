@@ -42,6 +42,9 @@
     case message_type::value: \
         return relay<message::value>(stream, value##_subscriber_)
 
+#define START_SUBSCRIBER(value) \
+    value##_subscriber_->start()
+
 #define STOP_SUBSCRIBER(value) \
     value##_subscriber_->stop()
 
@@ -151,6 +154,31 @@ code message_subscriber::load(message_type type, std::istream& stream) const
         default:
             return error::not_found;
     }
+}
+
+void message_subscriber::start()
+{
+    START_SUBSCRIBER(address);
+    START_SUBSCRIBER(alert);
+    START_SUBSCRIBER(block);
+    START_SUBSCRIBER(filter_add);
+    START_SUBSCRIBER(filter_clear);
+    START_SUBSCRIBER(filter_load);
+    START_SUBSCRIBER(get_address);
+    START_SUBSCRIBER(get_blocks);
+    START_SUBSCRIBER(get_data);
+    START_SUBSCRIBER(get_headers);
+    START_SUBSCRIBER(headers);
+    START_SUBSCRIBER(inventory);
+    START_SUBSCRIBER(memory_pool);
+    START_SUBSCRIBER(merkle_block);
+    START_SUBSCRIBER(not_found);
+    START_SUBSCRIBER(ping);
+    START_SUBSCRIBER(pong);
+    START_SUBSCRIBER(reject);
+    START_SUBSCRIBER(transaction);
+    START_SUBSCRIBER(verack);
+    START_SUBSCRIBER(version);
 }
 
 void message_subscriber::stop()

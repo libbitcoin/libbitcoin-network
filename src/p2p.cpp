@@ -83,12 +83,7 @@ void p2p::set_height(size_t value)
 
 bool p2p::stopped() const
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
-
     return stopped_;
-    ///////////////////////////////////////////////////////////////////////////
 }
 
 threadpool& p2p::thread_pool()
@@ -101,28 +96,14 @@ threadpool& p2p::thread_pool()
 
 void p2p::start(result_handler handler)
 {
-    // This is used to invoke the handler outside of the critical section.
-    auto failed = false;
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
-    {
-        unique_lock lock(mutex_);
-
-        // stopped_/subscriber_ is the guarded relation.
-        if (stopped_)
-            stopped_ = false;
-        else
-            failed = true;
-    }
-    ///////////////////////////////////////////////////////////////////////////
-
-    if (failed)
+    if (!stopped())
     {
         handler(error::operation_failed);
         return;
     }
+
+    stopped_ = false;
+    subscriber_->start();
 
     threadpool_.join();
     threadpool_.spawn(settings_.threads, thread_priority::low);
@@ -196,6 +177,11 @@ void p2p::handle_hosts_seeded(const code& ec, result_handler handler)
         return;
     }
 
+    // There is no way to guarantee subscription before handler execution.
+    // So currently subscription for seed node connections is not supported.
+    // Subscription after this return will capture connections established via
+    // subsequent "run" and "connect" calls, and will clear on close/destruct.
+
     // This is the end of the start sequence.
     handler(error::success);
 }
@@ -246,22 +232,7 @@ void p2p::handle_outbound_started(const code& ec, result_handler handler)
 
 void p2p::subscribe_connections(connect_handler handler)
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
-    {
-        shared_lock lock(mutex_);
-
-        // stopped_/subscriber_ is the guarded relation.
-        if (!stopped_)
-        {
-            subscriber_->subscribe(handler);
-            return;
-        }
-    }
-    ///////////////////////////////////////////////////////////////////////////
-
-    handler(error::service_stopped, nullptr);
+    subscriber_->subscribe(handler, error::service_stopped, nullptr);
 }
 
 // Manual connections.
@@ -298,32 +269,20 @@ void p2p::connect(const std::string& hostname, uint16_t port,
 
 void p2p::stop(result_handler handler)
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
-    {
-        unique_lock lock(mutex_);
+    // Stop is thread safe and idempotent, allows subscription to be unguarded.
 
-        // stopped_/subscriber_ is the guarded relation.
-        if (!stopped_)
-        {
-            stopped_ = true;
-            subscriber_->stop();
-            subscriber_->relay(error::service_stopped, nullptr);
-            connections_->stop(error::service_stopped);
-            manual_.store(nullptr);
+    stopped_ = true;
+    subscriber_->stop();
+    subscriber_->relay(error::service_stopped, nullptr);
+    connections_->stop(error::service_stopped);
 
-            hosts_.save(
-                std::bind(&p2p::handle_hosts_saved,
-                    this, _1, handler));
+    manual_.store(nullptr);
 
-            threadpool_.shutdown();
-            return;
-        }
-    }
-    ///////////////////////////////////////////////////////////////////////////
+    hosts_.save(
+        std::bind(&p2p::handle_hosts_saved,
+            this, _1, handler));
 
-    handler(error::service_stopped);
+    threadpool_.shutdown();
 }
 
 void p2p::handle_hosts_saved(const code& ec, result_handler handler)

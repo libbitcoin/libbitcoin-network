@@ -191,14 +191,9 @@ private:
     // These are thread safe.
     threadpool threadpool_;
     dispatcher dispatch_;
-
-    // These are thread safe (internal strand).
     hosts hosts_;
     std::shared_ptr<connections> connections_;
-
-    // Subscriber registration/stop is protected by mutex.
     channel_subscriber::ptr subscriber_;
-    mutable shared_mutex mutex_;
 };
 
 } // namespace network

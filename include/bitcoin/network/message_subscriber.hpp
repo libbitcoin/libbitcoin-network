@@ -39,7 +39,8 @@ namespace network {
     template <typename Handler> \
     void subscribe(message::value&&, Handler&& handler) \
     { \
-        value##_subscriber_->subscribe(std::forward<Handler>(handler)); \
+        value##_subscriber_->subscribe(std::forward<Handler>(handler), \
+            error::channel_stopped, nullptr); \
     }
 
 #define DECLARE_SUBSCRIBER(value) \
@@ -140,6 +141,11 @@ public:
      * @return             Returns error::bad_stream if failed.
      */
     virtual code load(message::message_type type, std::istream& stream) const;
+
+    /**
+     * Start all subscribers so that they accept subscription.
+     */
+    virtual void start();
 
     /**
      * Stop all subscribers so that they no longer accept subscription.

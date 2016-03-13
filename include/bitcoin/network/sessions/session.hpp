@@ -202,6 +202,8 @@ private:
     std::atomic<bool> stopped_;
     const bool incoming_;
     const bool notify_;
+
+    // These are thread safe.
     p2p& network_;
     threadpool& pool_;
     dispatcher dispatch_;

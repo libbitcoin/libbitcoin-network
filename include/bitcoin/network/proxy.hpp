@@ -65,7 +65,6 @@ public:
     template <class Message>
     void send(const Message& packet, result_handler handler)
     {
-        // Sends are not buffered.
         do_send(message::serialize(packet, magic_), handler, packet.command);
     }
 
@@ -73,22 +72,8 @@ public:
     template <class Message>
     void subscribe(message_handler<Message>&& handler)
     {
-        // Critical Section
-        ///////////////////////////////////////////////////////////////////////
-        if (true)
-        {
-            shared_lock lock(mutex_);
-
-            if (!stopped_)
-            {
-                auto stopped = std::forward<message_handler<Message>>(handler);
-                message_subscriber_.subscribe<Message>(stopped);
-                return;
-            }
-        }
-        ///////////////////////////////////////////////////////////////////////
-
-        handler(error::channel_stopped, nullptr);
+        auto stopped = std::forward<message_handler<Message>>(handler);
+        message_subscriber_.subscribe<Message>(stopped);
     }
 
     /// Subscribe to the stop event.
@@ -135,12 +120,13 @@ private:
     const uint32_t magic_;
     const config::authority authority_;
 
-    // The socket, buffers and registration are protected by mutex.
-    mutable shared_mutex mutex_;
-
+    // The socket and buffers are protected by mutex.
     asio::socket_ptr socket_;
     data_chunk payload_buffer_;
     message::heading::buffer heading_buffer_;
+    mutable shared_mutex mutex_;
+
+    // Subscribers are thread safe.
     message_subscriber message_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
 };

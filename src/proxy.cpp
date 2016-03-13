@@ -93,22 +93,15 @@ const config::authority& proxy::authority() const
 // public:
 void proxy::start(result_handler handler)
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
+    if (!stopped())
     {
-        unique_lock lock(mutex_);
-
-        if (!stopped_)
-        {
-            handler(error::operation_failed);
-            return;
-        }
-
-        // Must indicate start before invoking start handler.
-        stopped_ = false;
+        handler(error::operation_failed);
+        return;
     }
-    ///////////////////////////////////////////////////////////////////////////
+
+    stopped_ = false;
+    stop_subscriber_->start();
+    message_subscriber_.start();
 
     // Allow for subscription before first read, so no messages are missed.
     handler(error::success);
@@ -125,31 +118,21 @@ void proxy::stop(const code& ec)
 {
     BITCOIN_ASSERT_MSG(ec, "The stop code must be an error code.");
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
-    {
-        unique_lock lock(mutex_);
+    // Stop is thread safe and idempotent, allows subscription to be unguarded.
 
-        if (stopped_)
-            return;
+    stopped_ = true;
 
-        // Short circuit new subscriptions, since they will not get cleared.
-        stopped_ = true;
+    // This prevents resubscription after stop is relayed.
+    message_subscriber_.stop();
 
-        // This prevents resubscription after stop is relayed.
-        message_subscriber_.stop();
+    // This fires all message subscriptions with the channel_stopped code.
+    message_subscriber_.broadcast(error::channel_stopped);
 
-        // This fires all message subscriptions with the channel_stopped code.
-        message_subscriber_.broadcast(error::channel_stopped);
+    // This prevents resubscription after stop is relayed.
+    stop_subscriber_->stop();
 
-        // This prevents resubscription after stop is relayed.
-        stop_subscriber_->stop();
-
-        // This fires all stop subscriptions with the channel stop reason code.
-        stop_subscriber_->relay(ec);
-    }
-    ///////////////////////////////////////////////////////////////////////////
+    // This fires all stop subscriptions with the channel stop reason code.
+    stop_subscriber_->relay(ec);
 
     // Give channel opportunity to terminate timers.
     handle_stopping();
@@ -170,12 +153,7 @@ void proxy::stop(const boost_code& ec)
 
 bool proxy::stopped() const
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
-
     return stopped_;
-    ///////////////////////////////////////////////////////////////////////////
 }
 
 // Stop subscription sequence.
@@ -184,21 +162,7 @@ bool proxy::stopped() const
 // public:
 void proxy::subscribe_stop(result_handler handler)
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
-    {
-        unique_lock lock(mutex_);
-
-        if (!stopped_)
-        {
-            stop_subscriber_->subscribe(handler);
-            return;
-        }
-    }
-    ///////////////////////////////////////////////////////////////////////////
-
-    handler(error::channel_stopped);
+    stop_subscriber_->subscribe(handler, error::channel_stopped);
 }
 
 // Read cycle (read continues until stop).
@@ -206,12 +170,12 @@ void proxy::subscribe_stop(result_handler handler)
 
 void proxy::read_heading()
 {
+    if (stopped())
+        return;
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
-
-    if (stopped_)
-        return;
 
     // The socket_ must be guarded against concurrent use.
     using namespace boost::asio;
@@ -267,12 +231,12 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
 
 void proxy::read_payload(const heading& head)
 {
+    if (stopped())
+        return;
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
-
-    if (stopped_)
-        return;
 
     payload_buffer_.resize(head.payload_size);
 
@@ -351,29 +315,26 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
 void proxy::do_send(const data_chunk& message, result_handler handler,
     const std::string& command)
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
+    if (stopped())
     {
-        unique_lock lock(mutex_);
-
-        if (stopped_)
-        {
-            handler(error::channel_stopped);
-            return;
-        }
-
-        // The socket_ must be guarded against concurrent use.
-        const shared_const_buffer buffer(message);
-        async_write(*socket_, buffer,
-            std::bind(&proxy::handle_send,
-                shared_from_this(), _1, handler));
+        handler(error::channel_stopped);
+        return;
     }
-    ///////////////////////////////////////////////////////////////////////////
 
     log::debug(LOG_NETWORK)
-        << "Sent " << command << " to [" << authority() << "] ("
+        << "Sending " << command << " to [" << authority() << "] ("
         << message.size() << " bytes)";
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(mutex_);
+
+    // The socket_ must be guarded against concurrent use.
+    const shared_const_buffer buffer(message);
+    async_write(*socket_, buffer,
+        std::bind(&proxy::handle_send,
+            shared_from_this(), _1, handler));
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 void proxy::handle_send(const boost_code& ec, result_handler handler)
