@@ -112,20 +112,15 @@ code acceptor::safe_listen(uint16_t port)
 // public:
 void acceptor::accept(accept_handler handler)
 {
-    // We preserve the asynchronous contract of the async_accept.
-        // Dispatch ensures job does not execute in the current thread.
-    if (!safe_accept(handler))
-        dispatch_.concurrent(handler, error::service_stopped, nullptr);
-}
-
-bool acceptor::safe_accept(accept_handler handler)
-{
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
 
     if (!acceptor_->is_open())
-        return false;
+    {
+        dispatch_.concurrent(handler, error::service_stopped, nullptr);
+        return;
+    }
 
     auto socket = std::make_shared<asio::socket>(pool_.service());
 
@@ -133,8 +128,6 @@ bool acceptor::safe_accept(accept_handler handler)
     acceptor_->async_accept(*socket,
         std::bind(&acceptor::handle_accept,
             shared_from_this(), _1, socket, handler));
-
-    return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 

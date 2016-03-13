@@ -84,7 +84,7 @@ private:
     pending_sockets pending_;
     dispatcher dispatch_;
     std::shared_ptr<asio::resolver> resolver_;
-    mutable shared_mutex mutex_;
+    mutable upgrade_mutex mutex_;
 };
 
 } // namespace network
