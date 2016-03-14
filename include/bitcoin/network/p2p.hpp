@@ -174,6 +174,7 @@ private:
         connections_->broadcast(message, handle_channel, handle_complete);
     }
 
+    void handle_stopped(const code& ec);
     void handle_manual_started(const code& ec, result_handler handler);
     void handle_inbound_started(const code& ec, result_handler handler);
     void handle_outbound_started(const code& ec, result_handler handler);

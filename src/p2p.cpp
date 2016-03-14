@@ -114,6 +114,8 @@ void p2p::start(result_handler handler)
     auto manual = attach<session_manual>();
     manual->start(manual_started_handler);
     manual_.store(manual);
+
+    ////handle_manual_started(error::success, handler);
 }
 
 void p2p::handle_manual_started(const code& ec, result_handler handler)
@@ -132,9 +134,7 @@ void p2p::handle_manual_started(const code& ec, result_handler handler)
         return;
     }
 
-    hosts_.load(
-        std::bind(&p2p::handle_hosts_loaded,
-            this, _1, handler));
+    handle_hosts_loaded(hosts_.load(), handler);
 }
 
 void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
@@ -193,6 +193,8 @@ void p2p::run(result_handler handler)
     attach<session_inbound>()->start(
         std::bind(&p2p::handle_inbound_started,
             this, _1, handler));
+
+    ////handle_inbound_started(error::success, handler);
 }
 
 void p2p::handle_inbound_started(const code& ec, result_handler handler)
@@ -269,25 +271,19 @@ void p2p::stop(result_handler handler)
 {
     // Stop is thread safe and idempotent, allows subscription to be unguarded.
 
-    stopped_ = true;
     subscriber_->stop();
     subscriber_->relay(error::service_stopped, nullptr);
     connections_->stop(error::service_stopped);
-
     manual_.store(nullptr);
 
-    hosts_.save(
-        std::bind(&p2p::handle_hosts_saved,
-            this, _1, handler));
-}
+    // Host save is expensive, so prevent repeat.
+    const auto ec = stopped_ ? error::success : hosts_.save();
+    stopped_ = true;
 
-void p2p::handle_hosts_saved(const code& ec, result_handler handler)
-{
     if (ec)
         log::error(LOG_NETWORK)
             << "Error saving hosts file: " << ec.message();
 
-    // Cannot shut down new work until hosts are saved.
     threadpool_.shutdown();
 
     // This is the end of the stop sequence.
@@ -297,20 +293,25 @@ void p2p::handle_hosts_saved(const code& ec, result_handler handler)
 // Destruct sequence.
 // ----------------------------------------------------------------------------
 
-void p2p::close()
-{
-    p2p::stop(unhandled);
-
-    // This is the end of the destruct sequence.
-    threadpool_.join();
-}
-
 p2p::~p2p()
 {
     // A reference cycle cannot exist with this class, since we don't capture
     // shared pointers to it. Therefore this will always clear subscriptions.
     // This allows for shutdown based on destruct without need to call stop.
     p2p::close();
+}
+
+void p2p::close()
+{
+    p2p::stop(
+        std::bind(&p2p::handle_stopped,
+            this, _1));
+}
+
+void p2p::handle_stopped(const code&)
+{
+    // This is the end of the destruct sequence.
+    threadpool_.join();
 }
 
 // Connections collection.
@@ -355,12 +356,13 @@ void p2p::connected_count(count_handler handler)
 
 void p2p::fetch_address(address_handler handler)
 {
-    hosts_.fetch(handler);
+    address out;
+    handler(hosts_.fetch(out), out);
 }
 
 void p2p::store(const address& address, result_handler handler)
 {
-    hosts_.store(address, handler);
+    handler(hosts_.store(address));
 }
 
 void p2p::store(const address::list& addresses, result_handler handler)
@@ -370,12 +372,12 @@ void p2p::store(const address::list& addresses, result_handler handler)
 
 void p2p::remove(const address& address, result_handler handler)
 {
-    hosts_.remove(address, handler);
+    handler(hosts_.remove(address));
 }
 
 void p2p::address_count(count_handler handler)
 {
-    hosts_.count(handler);
+    handler(hosts_.count());
 }
 
 } // namespace network

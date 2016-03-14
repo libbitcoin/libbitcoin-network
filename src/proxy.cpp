@@ -116,6 +116,8 @@ void proxy::stop(const code& ec)
     BITCOIN_ASSERT_MSG(ec, "The stop code must be an error code.");
 
     // Stop is thread safe and idempotent, allows subscription to be unguarded.
+    if (stopped())
+        return;
 
     stopped_ = true;
 
