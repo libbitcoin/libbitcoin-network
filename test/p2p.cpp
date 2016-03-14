@@ -161,20 +161,6 @@ static int subscribe_result(p2p& network)
     return promise.get_future().get().value();
 }
 
-static int subscribe_run_result(p2p& network)
-{
-    std::promise<code> promise;
-    const auto handler = [&promise](code ec, channel::ptr)
-    {
-        promise.set_value(ec);
-        return false;
-    };
-    network.subscribe_connections(handler);
-    const auto unhandled = [](code){};
-    network.run(unhandled);
-    return promise.get_future().get().value();
-}
-
 static int subscribe_connect_result(p2p& network, const config::endpoint& host)
 {
     std::promise<code> promise;
@@ -411,8 +397,8 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__started_stop__service_stopped)
         BOOST_REQUIRE(!channel);
         BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
 
-        // Resubscribe attempt should be bypassed due to shutdown.
-        return true;
+        // Resubscribe attempt here would prevent subscriber clearance.
+        return false;
     };
 
     // Expect queued handler until destruct because service is started.
@@ -450,7 +436,24 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
     SETTINGS_TESTNET_TWO_THREADS_ONE_SEED_OUTBOUND(configuration);
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-    BOOST_REQUIRE_EQUAL(subscribe_run_result(network), error::success);
+
+    std::promise<code> subscribe;
+    const auto subscribe_handler = [&subscribe, &network](code ec, channel::ptr)
+    {
+        subscribe.set_value(ec);
+        return false;
+    };
+    network.subscribe_connections(subscribe_handler);
+
+    std::promise<code> run;
+    const auto run_handler = [&run, &network](code ec)
+    {
+        run.set_value(ec);
+    };
+    network.run(run_handler);
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get().value(), error::success);
+    BOOST_REQUIRE_EQUAL(subscribe.get_future().get().value(), error::success);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
