@@ -147,17 +147,20 @@ code hosts::remove(const address& host)
 
 code hosts::store(const address& host)
 {
+    if (!host.is_valid())
+    {
+        log::debug(LOG_PROTOCOL)
+            << "Invalid host address from peer";
+
+        // We don't treat invalid address as an error, just log it.
+        return error::success;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
     mutex_.lock_upgrade();
 
-    if (!host.is_valid())
-        log::debug(LOG_PROTOCOL)
-            << "Invalid host address from peer";
-    else if (find(host) != buffer_.end())
-        log::debug(LOG_PROTOCOL)
-            << "Redundant host address from peer";
-    else
+    if (find(host) == buffer_.end())
     {
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         mutex_.unlock_upgrade_and_lock();
@@ -170,7 +173,10 @@ code hosts::store(const address& host)
     mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
 
-    // We don't treat invalid address as an error, just log it.
+    log::debug(LOG_PROTOCOL)
+        << "Redundant host address from peer";
+
+    // We don't treat redundant address as an error, just log it.
     return error::success;
 }
 
