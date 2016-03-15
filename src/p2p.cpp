@@ -271,12 +271,15 @@ void p2p::stop(result_handler handler)
 {
     // Stop is thread safe and idempotent, allows subscription to be unguarded.
 
+    // Prevent subscription after stop.
     subscriber_->stop();
     subscriber_->relay(error::service_stopped, nullptr);
+
+    // Must be after subscriber stop (why?).
     connections_->stop(error::service_stopped);
     manual_.store(nullptr);
 
-    // Host save is expensive, so prevent repeat.
+    // Host save is expensive, so minimize repeats.
     const auto ec = stopped_ ? error::success : hosts_.save();
     stopped_ = true;
 

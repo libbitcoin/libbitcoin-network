@@ -173,6 +173,8 @@ bool session::handle_connect_event(const code& ec, channel::ptr,
     }
 
     // Resubscribe to connection events.
+    // This is a problem if the subscriber stops and doesn't reregister.
+    // We get new channels after subscriber stop (that aren't service stop).
     return true;
 }
 
