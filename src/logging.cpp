@@ -21,7 +21,6 @@
 
 #include <functional>
 #include <iostream>
-#include <mutex>
 #include <utility>
 #include <sstream>
 #include <string>
@@ -32,11 +31,11 @@
 namespace libbitcoin {
 namespace network {
 
-// Guard against concurrent stream writes.
-static std::mutex console_mutex;
+// Guard against concurrent console writes.
+static shared_mutex console_mutex;
 
 // Guard against concurrent file writes.
-static std::mutex file_mutex;
+static shared_mutex file_mutex;
 
 static std::string make_log_string(log::level level, const std::string& domain,
     const std::string& body)
@@ -67,7 +66,7 @@ static void log_to_file(std::ofstream& file, log::level level,
         
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
-        std::lock_guard<std::mutex> lock_file(file_mutex);
+        unique_lock lock_file(file_mutex);
 
         file << message;
         file.flush();
@@ -90,7 +89,7 @@ static void log_to_both(std::ostream& device, std::ofstream& file,
 
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
-        std::lock_guard<std::mutex> lock_console(console_mutex);
+        unique_lock lock_console(console_mutex);
 
         device << message;
         device.flush();
@@ -104,7 +103,7 @@ static void log_to_both(std::ostream& device, std::ofstream& file,
 
         // Critical Section
         ///////////////////////////////////////////////////////////////////////
-        std::lock_guard<std::mutex> lock_file(file_mutex);
+        unique_lock lock_file(file_mutex);
 
         file << message;
         file.flush();

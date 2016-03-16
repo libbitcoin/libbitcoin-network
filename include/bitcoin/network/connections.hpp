@@ -25,9 +25,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
@@ -68,10 +68,11 @@ public:
     }
 
     virtual void stop(const code& ec);
-    virtual void count(count_handler handler);
+    virtual void count(count_handler handler) const;
     virtual void store(channel::ptr channel, result_handler handler);
     virtual void remove(channel::ptr channel, result_handler handler);
-    virtual void exists(const authority& authority, truth_handler handler);
+    virtual void exists(const authority& authority,
+        truth_handler handler) const;
 
 private:
     typedef std::vector<channel::ptr> list;
@@ -104,15 +105,15 @@ private:
         }
     }
 
-    list safe_copy();
-    size_t safe_count();
+    list safe_copy() const;
+    size_t safe_count() const;
     bool safe_store(channel::ptr channel);
     bool safe_remove(channel::ptr channel);
-    bool safe_exists(const authority& address);
+    bool safe_exists(const authority& address) const;
 
     list channels_;
-    std::mutex mutex_;
     dispatcher dispatch_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace network

@@ -25,8 +25,6 @@
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 
-INITIALIZE_TRACK(bc::network::protocol_seed);
-
 namespace libbitcoin {
 namespace network {
 
@@ -91,7 +89,7 @@ void protocol_seed::handle_seeding_complete(const code& ec,
 }
 
 bool protocol_seed::handle_receive_address(const code& ec,
-    const address& message)
+    address::ptr message)
 {
     if (stopped())
         return false;
@@ -107,10 +105,10 @@ bool protocol_seed::handle_receive_address(const code& ec,
 
     log::debug(LOG_PROTOCOL)
         << "Storing addresses from seed [" << authority() << "] ("
-        << message.addresses.size() << ")";
+        << message->addresses.size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.store(message.addresses, BIND1(handle_store_addresses, _1));
+    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
 
     return false;
 }

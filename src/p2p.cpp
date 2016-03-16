@@ -22,7 +22,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 #include <bitcoin/bitcoin.hpp>
@@ -38,8 +37,6 @@
 #include <bitcoin/network/sessions/session_outbound.hpp>
 #include <bitcoin/network/sessions/session_seed.hpp>
 #include <bitcoin/network/settings.hpp>
-
-INITIALIZE_TRACK(bc::network::p2p::channel_subscriber);
 
 namespace libbitcoin {
 namespace network {
@@ -97,28 +94,14 @@ threadpool& p2p::thread_pool()
 
 void p2p::start(result_handler handler)
 {
-    // This is used to invoke the handler outside of the critical section.
-    auto failed = false;
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-
-        // stopped_/subscriber_ is the guarded relation.
-        if (stopped())
-            stopped_ = false;
-        else
-            failed = true;
-    }
-    ///////////////////////////////////////////////////////////////////////////
-
-    if (failed)
+    if (!stopped())
     {
         handler(error::operation_failed);
         return;
     }
+
+    stopped_ = false;
+    subscriber_->start();
 
     threadpool_.join();
     threadpool_.spawn(settings_.threads, thread_priority::low);
@@ -131,6 +114,8 @@ void p2p::start(result_handler handler)
     auto manual = attach<session_manual>();
     manual->start(manual_started_handler);
     manual_.store(manual);
+
+    ////handle_manual_started(error::success, handler);
 }
 
 void p2p::handle_manual_started(const code& ec, result_handler handler)
@@ -149,9 +134,7 @@ void p2p::handle_manual_started(const code& ec, result_handler handler)
         return;
     }
 
-    hosts_.load(
-        std::bind(&p2p::handle_hosts_loaded,
-            this, _1, handler));
+    handle_hosts_loaded(hosts_.load(), handler);
 }
 
 void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
@@ -192,6 +175,11 @@ void p2p::handle_hosts_seeded(const code& ec, result_handler handler)
         return;
     }
 
+    // There is no way to guarantee subscription before handler execution.
+    // So currently subscription for seed node connections is not supported.
+    // Subscription after this return will capture connections established via
+    // subsequent "run" and "connect" calls, and will clear on close/destruct.
+
     // This is the end of the start sequence.
     handler(error::success);
 }
@@ -205,6 +193,8 @@ void p2p::run(result_handler handler)
     attach<session_inbound>()->start(
         std::bind(&p2p::handle_inbound_started,
             this, _1, handler));
+
+    ////handle_inbound_started(error::success, handler);
 }
 
 void p2p::handle_inbound_started(const code& ec, result_handler handler)
@@ -242,22 +232,7 @@ void p2p::handle_outbound_started(const code& ec, result_handler handler)
 
 void p2p::subscribe_connections(connect_handler handler)
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-
-        // stopped_/subscriber_ is the guarded relation.
-        if (!stopped())
-        {
-            subscriber_->subscribe(handler);
-            return;
-        }
-    }
-    ///////////////////////////////////////////////////////////////////////////
-
-    handler(error::service_stopped, nullptr);
+    subscriber_->subscribe(handler, error::service_stopped, nullptr);
 }
 
 // Manual connections.
@@ -294,39 +269,25 @@ void p2p::connect(const std::string& hostname, uint16_t port,
 
 void p2p::stop(result_handler handler)
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
+    // Stop is thread safe and idempotent, allows subscription to be unguarded.
 
-        // stopped_/subscriber_ is the guarded relation.
-        if (!stopped())
-        {
-            stopped_ = true;
-            subscriber_->stop();
-            subscriber_->relay(error::service_stopped, nullptr);
-            connections_->stop(error::service_stopped);
-            manual_.store(nullptr);
+    // Prevent subscription after stop.
+    subscriber_->stop();
+    subscriber_->relay(error::service_stopped, nullptr);
 
-            hosts_.save(
-                std::bind(&p2p::handle_hosts_saved,
-                    this, _1, handler));
+    // Must be after subscriber stop (why?).
+    connections_->stop(error::service_stopped);
+    manual_.store(nullptr);
 
-            threadpool_.shutdown();
-            return;
-        }
-    }
-    ///////////////////////////////////////////////////////////////////////////
+    // Host save is expensive, so minimize repeats.
+    const auto ec = stopped_ ? error::success : hosts_.save();
+    stopped_ = true;
 
-    handler(error::service_stopped);
-}
-
-void p2p::handle_hosts_saved(const code& ec, result_handler handler)
-{
     if (ec)
         log::error(LOG_NETWORK)
             << "Error saving hosts file: " << ec.message();
+
+    threadpool_.shutdown();
 
     // This is the end of the stop sequence.
     handler(ec);
@@ -335,20 +296,25 @@ void p2p::handle_hosts_saved(const code& ec, result_handler handler)
 // Destruct sequence.
 // ----------------------------------------------------------------------------
 
-void p2p::close()
-{
-    p2p::stop(unhandled);
-
-    // This is the end of the destruct sequence.
-    threadpool_.join();
-}
-
 p2p::~p2p()
 {
     // A reference cycle cannot exist with this class, since we don't capture
     // shared pointers to it. Therefore this will always clear subscriptions.
     // This allows for shutdown based on destruct without need to call stop.
     p2p::close();
+}
+
+void p2p::close()
+{
+    p2p::stop(
+        std::bind(&p2p::handle_stopped,
+            this, _1));
+}
+
+void p2p::handle_stopped(const code&)
+{
+    // This is the end of the destruct sequence.
+    threadpool_.join();
 }
 
 // Connections collection.
@@ -393,12 +359,13 @@ void p2p::connected_count(count_handler handler)
 
 void p2p::fetch_address(address_handler handler)
 {
-    hosts_.fetch(handler);
+    address out;
+    handler(hosts_.fetch(out), out);
 }
 
 void p2p::store(const address& address, result_handler handler)
 {
-    hosts_.store(address, handler);
+    handler(hosts_.store(address));
 }
 
 void p2p::store(const address::list& addresses, result_handler handler)
@@ -408,12 +375,12 @@ void p2p::store(const address::list& addresses, result_handler handler)
 
 void p2p::remove(const address& address, result_handler handler)
 {
-    hosts_.remove(address, handler);
+    handler(hosts_.remove(address));
 }
 
 void p2p::address_count(count_handler handler)
 {
-    hosts_.count(handler);
+    handler(hosts_.count());
 }
 
 } // namespace network

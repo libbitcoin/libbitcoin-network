@@ -25,9 +25,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connections.hpp>
@@ -174,6 +174,7 @@ private:
         connections_->broadcast(message, handle_channel, handle_complete);
     }
 
+    void handle_stopped(const code& ec);
     void handle_manual_started(const code& ec, result_handler handler);
     void handle_inbound_started(const code& ec, result_handler handler);
     void handle_outbound_started(const code& ec, result_handler handler);
@@ -191,14 +192,9 @@ private:
     // These are thread safe.
     threadpool threadpool_;
     dispatcher dispatch_;
-
-    // These are thread safe (internal strand).
     hosts hosts_;
     std::shared_ptr<connections> connections_;
-
-    // Subscriber registration/stop is protected by mutex.
     channel_subscriber::ptr subscriber_;
-    std::mutex mutex_;
 };
 
 } // namespace network

@@ -22,8 +22,8 @@
 
 #include <cstdint>
 #include <functional>
-#include <mutex>
 #include <vector>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
@@ -45,19 +45,19 @@ public:
     pending_channels(const pending_channels&) = delete;
     void operator=(const pending_channels&) = delete;
 
-    virtual void exists(uint64_t version_nonce, truth_handler handler);
     virtual void store(channel::ptr channel, result_handler handler);
     virtual void remove(channel::ptr channel, result_handler handler);
+    virtual void exists(uint64_t version_nonce, truth_handler handler) const;
 
 private:
     typedef std::vector<channel::ptr> list;
 
     bool safe_store(channel::ptr channel);
     bool safe_remove(channel::ptr channel);
-    bool safe_exists(uint64_t version_nonce);
+    bool safe_exists(uint64_t version_nonce) const;
 
     list channels_;
-    std::mutex mutex_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace network

@@ -28,8 +28,6 @@
 #include <bitcoin/network/protocols/protocol_address.hpp>
 #include <bitcoin/network/protocols/protocol_ping.hpp>
 
-INITIALIZE_TRACK(bc::network::session_manual);
-
 namespace libbitcoin {
 namespace network {
 
@@ -144,6 +142,13 @@ void session_manual::handle_channel_start(const code& ec,
         log::info(LOG_NETWORK)
             << "Manual channel failed to start [" << channel->authority()
             << "] " << ec.message();
+
+        // Special case for already connected, do not keep trying.
+        if (ec == error::address_in_use)
+        {
+            handler(ec, channel);
+            return;
+        }
 
         connect(hostname, port, handler);
         return;

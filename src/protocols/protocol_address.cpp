@@ -26,8 +26,6 @@
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
 
-INITIALIZE_TRACK(bc::network::protocol_address);
-
 namespace libbitcoin {
 namespace network {
 
@@ -75,7 +73,7 @@ void protocol_address::start()
 // ----------------------------------------------------------------------------
 
 bool protocol_address::handle_receive_address(const code& ec,
-    const address& message)
+    address::ptr message)
 {
     if (stopped())
         return false;
@@ -91,17 +89,17 @@ bool protocol_address::handle_receive_address(const code& ec,
 
     log::debug(LOG_PROTOCOL)
         << "Storing addresses from [" << authority() << "] ("
-        << message.addresses.size() << ")";
+        << message->addresses.size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.store(message.addresses, BIND1(handle_store_addresses, _1));
+    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
 
     // RESUBSCRIBE
     return true;
 }
 
 bool protocol_address::handle_receive_get_address(const code& ec,
-    const get_address& message)
+    get_address::ptr message)
 {
     if (stopped())
         return false;

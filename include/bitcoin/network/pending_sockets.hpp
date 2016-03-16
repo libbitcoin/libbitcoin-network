@@ -20,7 +20,6 @@
 #ifndef LIBBITCOIN_NETWORK_PENDING_SOCKETS_HPP
 #define LIBBITCOIN_NETWORK_PENDING_SOCKETS_HPP
 
-#include <mutex>
 #include <vector>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
@@ -51,7 +50,7 @@ private:
     bool safe_remove(asio::socket_ptr socket);
 
     list sockets_;
-    std::mutex mutex_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace network

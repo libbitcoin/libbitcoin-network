@@ -28,8 +28,6 @@
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 #include <bitcoin/network/settings.hpp>
 
-INITIALIZE_TRACK(bc::network::protocol_version);
-
 namespace libbitcoin {
 namespace network {
 
@@ -91,7 +89,7 @@ protocol_version::protocol_version(p2p& network, channel::ptr channel)
 
 void protocol_version::start(event_handler handler)
 {
-    const auto& height = network_.height();
+    const auto height = network_.height();
     const auto& settings = network_.network_settings();
 
     // The handler is invoked in the context of the last message receipt.
@@ -108,7 +106,7 @@ void protocol_version::start(event_handler handler)
 // ----------------------------------------------------------------------------
 
 bool protocol_version::handle_receive_version(const code& ec,
-    const version& message)
+    version::ptr message)
 {
     if (stopped())
         return false;
@@ -123,10 +121,10 @@ bool protocol_version::handle_receive_version(const code& ec,
     }
 
     log::debug(LOG_PROTOCOL)
-        << "Peer [" << authority() << "] version (" << message.value
-        << ") services (" << message.services << ") " << message.user_agent;
+        << "Peer [" << authority() << "] version (" << message->value
+        << ") services (" << message->services << ") " << message->user_agent;
 
-    set_peer_version(message);
+    set_peer_version(*message);
     SEND1(verack(), handle_verack_sent, _1);
 
     // 1 of 2
@@ -135,7 +133,7 @@ bool protocol_version::handle_receive_version(const code& ec,
 }
 
 bool protocol_version::handle_receive_verack(const code& ec,
-    const message::verack&)
+    message::verack::ptr)
 {
     if (stopped())
         return false;

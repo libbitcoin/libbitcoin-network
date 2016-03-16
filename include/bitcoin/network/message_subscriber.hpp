@@ -32,14 +32,15 @@ namespace libbitcoin {
 namespace network {
 
 #define DEFINE_SUBSCRIBER_TYPE(value) \
-    typedef resubscriber<const code&, const message::value&> \
+    typedef resubscriber<const code&, message::value::ptr> \
         value##_subscriber_type
 
 #define DEFINE_SUBSCRIBER_OVERLOAD(value) \
     template <typename Handler> \
     void subscribe(message::value&&, Handler&& handler) \
     { \
-        value##_subscriber_->subscribe(std::forward<Handler>(handler)); \
+        value##_subscriber_->subscribe(std::forward<Handler>(handler), \
+            error::channel_stopped, nullptr); \
     }
 
 #define DECLARE_SUBSCRIBER(value) \
@@ -100,12 +101,28 @@ public:
      * @return                 Returns error::bad_stream if failed.
      */
     template <class Message, class Subscriber>
-    code load(std::istream& stream, Subscriber subscriber) const
+    code relay(std::istream& stream, Subscriber subscriber) const
     {
-        Message message;
-        const bool parsed = message.from_data(stream);
+        const auto message_ptr = std::make_shared<Message>();
+        const bool parsed = message_ptr->from_data(stream);
         const code ec(parsed ? error::success : error::bad_stream);
-        subscriber->relay(ec, message);
+        subscriber->relay(ec, message_ptr);
+        return ec;
+    }
+
+    /**
+     * Load a stream into a message instance and invoke subscribers.
+     * @param[in]  stream      The stream from which to load the message.
+     * @param[in]  subscriber  The subscriber for the message type.
+     * @return                 Returns error::bad_stream if failed.
+     */
+    template <class Message, class Subscriber>
+    code handle(std::istream& stream, Subscriber subscriber) const
+    {
+        const auto message_ptr = std::make_shared<Message>();
+        const bool parsed = message_ptr->from_data(stream);
+        const code ec(parsed ? error::success : error::bad_stream);
+        subscriber->do_relay(ec, message_ptr);
         return ec;
     }
 
@@ -124,6 +141,11 @@ public:
      * @return             Returns error::bad_stream if failed.
      */
     virtual code load(message::message_type type, std::istream& stream) const;
+
+    /**
+     * Start all subscribers so that they accept subscription.
+     */
+    virtual void start();
 
     /**
      * Stop all subscribers so that they no longer accept subscription.

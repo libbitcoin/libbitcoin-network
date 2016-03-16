@@ -173,6 +173,8 @@ bool session::handle_connect_event(const code& ec, channel::ptr,
     }
 
     // Resubscribe to connection events.
+    // This is a problem if the subscriber stops and doesn't reregister.
+    // We get new channels after subscriber stop (that aren't service stop).
     return true;
 }
 
@@ -298,15 +300,15 @@ void session::do_unpend(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
     channel->set_nonce(0);
-    handle_started(ec);
     pending_.remove(channel, BIND_1(handle_unpend, _1));
+    handle_started(ec);
 }
 
 void session::do_remove(const code& ec, channel::ptr channel,
     result_handler handle_stopped)
 {
-    handle_stopped(ec);
     network_.remove(channel, BIND_1(handle_remove, _1));
+    handle_stopped(ec);
 }
 
 void session::handle_unpend(const code& ec)

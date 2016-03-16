@@ -24,44 +24,26 @@
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 
-#define TRACK_SUBSCRIBER(value) \
-    INITIALIZE_TRACK(bc::network::message_subscriber::value##_subscriber_type)
-
 #define INITIALIZE_SUBSCRIBER(pool, value) \
     value##_subscriber_(std::make_shared<value##_subscriber_type>( \
         pool, #value "_sub"))
 
-#define RELAY_MESSAGE(code, value) \
-    value##_subscriber_->relay(code, message::value())
+#define RELAY_CODE(code, value) \
+    value##_subscriber_->relay(code, nullptr)
 
-#define CASE_LOAD_STREAM(stream, value) \
+#define CASE_HANDLE_MESSAGE(stream, value) \
     case message_type::value: \
-        return load<message::value>(stream, value##_subscriber_)
+        return handle<message::value>(stream, value##_subscriber_)
+
+#define CASE_RELAY_MESSAGE(stream, value) \
+    case message_type::value: \
+        return relay<message::value>(stream, value##_subscriber_)
+
+#define START_SUBSCRIBER(value) \
+    value##_subscriber_->start()
 
 #define STOP_SUBSCRIBER(value) \
     value##_subscriber_->stop()
-
-TRACK_SUBSCRIBER(address)
-TRACK_SUBSCRIBER(alert)
-TRACK_SUBSCRIBER(block)
-TRACK_SUBSCRIBER(filter_add)
-TRACK_SUBSCRIBER(filter_clear)
-TRACK_SUBSCRIBER(filter_load)
-TRACK_SUBSCRIBER(get_address)
-TRACK_SUBSCRIBER(get_blocks)
-TRACK_SUBSCRIBER(get_data)
-TRACK_SUBSCRIBER(get_headers)
-TRACK_SUBSCRIBER(headers)
-TRACK_SUBSCRIBER(inventory)
-TRACK_SUBSCRIBER(memory_pool)
-TRACK_SUBSCRIBER(merkle_block)
-TRACK_SUBSCRIBER(not_found)
-TRACK_SUBSCRIBER(ping)
-TRACK_SUBSCRIBER(pong)
-TRACK_SUBSCRIBER(reject)
-TRACK_SUBSCRIBER(transaction)
-TRACK_SUBSCRIBER(verack)
-TRACK_SUBSCRIBER(version)
 
 namespace libbitcoin {
 namespace network {
@@ -95,58 +77,83 @@ message_subscriber::message_subscriber(threadpool& pool)
 
 void message_subscriber::broadcast(const code& ec)
 {
-    RELAY_MESSAGE(ec, address);
-    RELAY_MESSAGE(ec, alert);
-    RELAY_MESSAGE(ec, block);
-    RELAY_MESSAGE(ec, filter_add);
-    RELAY_MESSAGE(ec, filter_clear);
-    RELAY_MESSAGE(ec, filter_load);
-    RELAY_MESSAGE(ec, get_address);
-    RELAY_MESSAGE(ec, get_blocks);
-    RELAY_MESSAGE(ec, get_data);
-    RELAY_MESSAGE(ec, get_headers);
-    RELAY_MESSAGE(ec, headers);
-    RELAY_MESSAGE(ec, inventory);
-    RELAY_MESSAGE(ec, memory_pool);
-    RELAY_MESSAGE(ec, merkle_block);
-    RELAY_MESSAGE(ec, not_found);
-    RELAY_MESSAGE(ec, ping);
-    RELAY_MESSAGE(ec, pong);
-    RELAY_MESSAGE(ec, reject);
-    RELAY_MESSAGE(ec, transaction);
-    RELAY_MESSAGE(ec, verack);
-    RELAY_MESSAGE(ec, version);
+    RELAY_CODE(ec, address);
+    RELAY_CODE(ec, alert);
+    RELAY_CODE(ec, block);
+    RELAY_CODE(ec, filter_add);
+    RELAY_CODE(ec, filter_clear);
+    RELAY_CODE(ec, filter_load);
+    RELAY_CODE(ec, get_address);
+    RELAY_CODE(ec, get_blocks);
+    RELAY_CODE(ec, get_data);
+    RELAY_CODE(ec, get_headers);
+    RELAY_CODE(ec, headers);
+    RELAY_CODE(ec, inventory);
+    RELAY_CODE(ec, memory_pool);
+    RELAY_CODE(ec, merkle_block);
+    RELAY_CODE(ec, not_found);
+    RELAY_CODE(ec, ping);
+    RELAY_CODE(ec, pong);
+    RELAY_CODE(ec, reject);
+    RELAY_CODE(ec, transaction);
+    RELAY_CODE(ec, verack);
+    RELAY_CODE(ec, version);
 }
 
 code message_subscriber::load(message_type type, std::istream& stream) const
 {
     switch (type)
     {
-        CASE_LOAD_STREAM(stream, address);
-        CASE_LOAD_STREAM(stream, alert);
-        CASE_LOAD_STREAM(stream, block);
-        CASE_LOAD_STREAM(stream, filter_add);
-        CASE_LOAD_STREAM(stream, filter_clear);
-        CASE_LOAD_STREAM(stream, filter_load);
-        CASE_LOAD_STREAM(stream, get_address);
-        CASE_LOAD_STREAM(stream, get_blocks);
-        CASE_LOAD_STREAM(stream, get_data);
-        CASE_LOAD_STREAM(stream, get_headers);
-        CASE_LOAD_STREAM(stream, headers);
-        CASE_LOAD_STREAM(stream, inventory);
-        CASE_LOAD_STREAM(stream, memory_pool);
-        CASE_LOAD_STREAM(stream, merkle_block);
-        CASE_LOAD_STREAM(stream, not_found);
-        CASE_LOAD_STREAM(stream, ping);
-        CASE_LOAD_STREAM(stream, pong);
-        CASE_LOAD_STREAM(stream, reject);
-        CASE_LOAD_STREAM(stream, transaction);
-        CASE_LOAD_STREAM(stream, verack);
-        CASE_LOAD_STREAM(stream, version);
+        CASE_RELAY_MESSAGE(stream, address);
+        CASE_RELAY_MESSAGE(stream, alert);
+        CASE_HANDLE_MESSAGE(stream, block);
+        CASE_RELAY_MESSAGE(stream, filter_add);
+        CASE_RELAY_MESSAGE(stream, filter_clear);
+        CASE_RELAY_MESSAGE(stream, filter_load);
+        CASE_RELAY_MESSAGE(stream, get_address);
+        CASE_RELAY_MESSAGE(stream, get_blocks);
+        CASE_RELAY_MESSAGE(stream, get_data);
+        CASE_RELAY_MESSAGE(stream, get_headers);
+        CASE_RELAY_MESSAGE(stream, headers);
+        CASE_RELAY_MESSAGE(stream, inventory);
+        CASE_RELAY_MESSAGE(stream, memory_pool);
+        CASE_RELAY_MESSAGE(stream, merkle_block);
+        CASE_RELAY_MESSAGE(stream, not_found);
+        CASE_RELAY_MESSAGE(stream, ping);
+        CASE_RELAY_MESSAGE(stream, pong);
+        CASE_RELAY_MESSAGE(stream, reject);
+        CASE_RELAY_MESSAGE(stream, transaction);
+        CASE_RELAY_MESSAGE(stream, verack);
+        CASE_RELAY_MESSAGE(stream, version);
         case message_type::unknown:
         default:
             return error::not_found;
     }
+}
+
+void message_subscriber::start()
+{
+    START_SUBSCRIBER(address);
+    START_SUBSCRIBER(alert);
+    START_SUBSCRIBER(block);
+    START_SUBSCRIBER(filter_add);
+    START_SUBSCRIBER(filter_clear);
+    START_SUBSCRIBER(filter_load);
+    START_SUBSCRIBER(get_address);
+    START_SUBSCRIBER(get_blocks);
+    START_SUBSCRIBER(get_data);
+    START_SUBSCRIBER(get_headers);
+    START_SUBSCRIBER(headers);
+    START_SUBSCRIBER(inventory);
+    START_SUBSCRIBER(memory_pool);
+    START_SUBSCRIBER(merkle_block);
+    START_SUBSCRIBER(not_found);
+    START_SUBSCRIBER(ping);
+    START_SUBSCRIBER(pong);
+    START_SUBSCRIBER(reject);
+    START_SUBSCRIBER(transaction);
+    START_SUBSCRIBER(verack);
+    START_SUBSCRIBER(version);
 }
 
 void message_subscriber::stop()

@@ -58,10 +58,9 @@ private:
     void handle_send_get_address(const code& ec);
     void handle_store_addresses(const code& ec);
 
-    bool handle_receive_address(const code& ec,
-        const message::address& address);
+    bool handle_receive_address(const code& ec, message::address::ptr address);
     bool handle_receive_get_address(const code& ec,
-        const message::get_address& message);
+        message::get_address::ptr message);
 
     p2p& network_;
     message::address self_;

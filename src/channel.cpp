@@ -24,13 +24,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
-
-// This must be declared in the global namespace.
-INITIALIZE_TRACK(bc::network::channel);
 
 namespace libbitcoin {
 namespace network {
@@ -115,38 +111,22 @@ void channel::set_version(const message::version& value)
 
 hash_digest channel::own_threshold()
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(own_threshold_mutex_);
-    return own_threshold_;
-    ///////////////////////////////////////////////////////////////////////////
+    return own_threshold_.load();
 }
 
 void channel::set_own_threshold(const hash_digest& threshold)
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(own_threshold_mutex_);
-    own_threshold_ = threshold;
-    ///////////////////////////////////////////////////////////////////////////
+    own_threshold_.store(threshold);
 }
 
 hash_digest channel::peer_threshold()
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(peer_threshold_mutex_);
-    return peer_threshold_;
-    ///////////////////////////////////////////////////////////////////////////
+    return peer_threshold_.load();
 }
 
 void channel::set_peer_threshold(const hash_digest& threshold)
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(peer_threshold_mutex_);
-    peer_threshold_ = threshold;
-    ///////////////////////////////////////////////////////////////////////////
+    peer_threshold_.store(threshold);
 }
 
 // Proxy pure virtual protected and ordered handlers.

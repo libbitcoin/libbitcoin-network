@@ -62,10 +62,9 @@ private:
     void handle_store_addresses(const code& ec);
     void handle_seeding_complete(const code& ec, event_handler handler);
 
-    bool handle_receive_address(const code& ec,
-        const message::address& address);
+    bool handle_receive_address(const code& ec, message::address::ptr address);
     ////bool handle_receive_get_address(const code& ec,
-    ////    const message::get_address& message);
+    ////    message::get_address::ptr message);
 
     p2p& network_;
     const config::authority self_;

@@ -24,13 +24,9 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <boost/iostreams/stream.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/shared_const_buffer.hpp>
-
-// This must be declared in the global namespace.
-INITIALIZE_TRACK(bc::network::proxy::stop_subscriber)
 
 namespace libbitcoin {
 namespace network {
@@ -68,7 +64,6 @@ proxy::proxy(threadpool& pool, asio::socket_ptr socket, uint32_t magic)
   : stopped_(true),
     magic_(magic),
     authority_(authority_factory(socket)),
-    dispatch_(pool, NAME),
     socket_(socket),
     message_subscriber_(pool),
     stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_sub"))
@@ -95,15 +90,15 @@ const config::authority& proxy::authority() const
 // public:
 void proxy::start(result_handler handler)
 {
-    // No critical section because proxy is not restartable (see asio socket).
     if (!stopped())
     {
         handler(error::operation_failed);
         return;
     }
 
-    // Must indicate start before invoking start handler.
     stopped_ = false;
+    stop_subscriber_->start();
+    message_subscriber_.start();
 
     // Allow for subscription before first read, so no messages are missed.
     handler(error::success);
@@ -120,42 +115,34 @@ void proxy::stop(const code& ec)
 {
     BITCOIN_ASSERT_MSG(ec, "The stop code must be an error code.");
 
+    // Stop is thread safe and idempotent, allows subscription to be unguarded.
     if (stopped())
         return;
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
+    stopped_ = true;
 
-        // Short circuit new subscriptions, since they will not get cleared.
-        stopped_ = true;
+    // This prevents resubscription after stop is relayed.
+    message_subscriber_.stop();
 
-        // This prevents resubscription after stop is relayed.
-        message_subscriber_.stop();
+    // This fires all message subscriptions with the channel_stopped code.
+    message_subscriber_.broadcast(error::channel_stopped);
 
-        // This fires all message subscriptions with the channel_stopped code.
-        message_subscriber_.broadcast(error::channel_stopped);
+    // This prevents resubscription after stop is relayed.
+    stop_subscriber_->stop();
 
-        // This prevents resubscription after stop is relayed.
-        stop_subscriber_->stop();
-
-        // This fires all stop subscriptions with the channel stop reason code.
-        stop_subscriber_->relay(ec);
-    }
-    ///////////////////////////////////////////////////////////////////////////
+    // This fires all stop subscriptions with the channel stop reason code.
+    stop_subscriber_->relay(ec);
 
     // Give channel opportunity to terminate timers.
     handle_stopping();
 
-    // The socket_ must be guarded against concurrent use.
-    dispatch_.ordered(&proxy::do_close, shared_from_this());
-}
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(mutex_);
 
-void proxy::do_close()
-{
+    // The socket_ must be guarded against concurrent use.
     proxy::close(socket_);
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 void proxy::stop(const boost_code& ec)
@@ -174,21 +161,7 @@ bool proxy::stopped() const
 // public:
 void proxy::subscribe_stop(result_handler handler)
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    if (true)
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-
-        if (!stopped())
-        {
-            stop_subscriber_->subscribe(handler);
-            return;
-        }
-    }
-    ///////////////////////////////////////////////////////////////////////////
-
-    handler(error::channel_stopped);
+    stop_subscriber_->subscribe(handler, error::channel_stopped);
 }
 
 // Read cycle (read continues until stop).
@@ -199,45 +172,16 @@ void proxy::read_heading()
     if (stopped())
         return;
 
-    dispatch_.ordered(
-        std::bind(&proxy::do_read_heading,
-            shared_from_this()));
-}
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(mutex_);
 
-void proxy::do_read_heading()
-{
-    if (stopped())
-        return;
-
-    // The socket is protected by an ordered strand.
+    // The socket_ must be guarded against concurrent use.
     using namespace boost::asio;
     async_read(*socket_, buffer(heading_buffer_),
-        dispatch_.ordered_delegate(&proxy::handle_read_heading,
+        std::bind(&proxy::handle_read_heading,
             shared_from_this(), _1, _2));
-}
-
-void proxy::read_payload(const heading& head)
-{
-    if (stopped())
-        return;
-
-    dispatch_.ordered(
-        std::bind(&proxy::do_read_payload,
-            shared_from_this(), head));
-}
-
-void proxy::do_read_payload(const heading& head)
-{
-    if (stopped())
-        return;
-
-    payload_buffer_.resize(head.payload_size);
-
-    // The socket is protected by an ordered strand.
-    using namespace boost::asio;
-    async_read(*socket_, buffer(payload_buffer_, head.payload_size),
-        dispatch_.ordered_delegate(&proxy::handle_read_payload,
-            shared_from_this(), _1, _2, head));
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 void proxy::handle_read_heading(const boost_code& ec, size_t)
@@ -284,6 +228,25 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
     handle_activity();
 }
 
+void proxy::read_payload(const heading& head)
+{
+    if (stopped())
+        return;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(mutex_);
+
+    payload_buffer_.resize(head.payload_size);
+
+    // The socket_ must be guarded against concurrent use.
+    using namespace boost::asio;
+    async_read(*socket_, buffer(payload_buffer_, head.payload_size),
+        std::bind(&proxy::handle_read_payload,
+            shared_from_this(), _1, _2, head));
+    ///////////////////////////////////////////////////////////////////////////
+}
+
 void proxy::handle_read_payload(const boost_code& ec, size_t,
     const heading& head)
 {
@@ -301,11 +264,8 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
         return;
     }
 
-    // We must copy the payload before restarting the reader.
-    const auto payload_copy = payload_buffer_;
-
     // Parse and publish the payload to message subscribers.
-    payload_source source(payload_copy);
+    payload_source source(payload_buffer_);
     payload_stream istream(source);
 
     // Notify subscribers of the new message.
@@ -324,7 +284,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
         else
             log::debug(LOG_NETWORK)
             << "Valid " << head.command << " payload from ["
-                << authority() << "] (" << payload_copy.size() << " bytes)";
+                << authority() << "] (" << payload_buffer_.size() << " bytes)";
     }
 
     if (ec)
@@ -364,11 +324,16 @@ void proxy::do_send(const data_chunk& message, result_handler handler,
         << "Sending " << command << " to [" << authority() << "] ("
         << message.size() << " bytes)";
 
-    // The socket is protected by an ordered strand.
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(mutex_);
+
+    // The socket_ must be guarded against concurrent use.
     const shared_const_buffer buffer(message);
     async_write(*socket_, buffer,
         std::bind(&proxy::handle_send,
             shared_from_this(), _1, handler));
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 void proxy::handle_send(const boost_code& ec, result_handler handler)

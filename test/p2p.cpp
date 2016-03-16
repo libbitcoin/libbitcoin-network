@@ -161,7 +161,7 @@ static int subscribe_result(p2p& network)
     return promise.get_future().get().value();
 }
 
-static int subscribe_result(p2p& network, const config::endpoint& host)
+static int subscribe_connect_result(p2p& network, const config::endpoint& host)
 {
     std::promise<code> promise;
     const auto handler = [&promise](code ec, channel::ptr)
@@ -210,12 +210,14 @@ BOOST_FIXTURE_TEST_SUITE(p2p_tests, log_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(p2p__height__default__zero)
 {
+    print_headers(TEST_NAME);
     p2p network;
     BOOST_REQUIRE_EQUAL(network.height(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__set_height__value__expected)
 {
+    print_headers(TEST_NAME);
     p2p network;
     const size_t expected_height = 42;
     network.set_height(expected_height);
@@ -372,23 +374,45 @@ BOOST_AUTO_TEST_CASE(p2p__connect__started__success)
 ////    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::address_in_use);
 ////}
 
-BOOST_AUTO_TEST_CASE(p2p__subscribe__connect__success)
+BOOST_AUTO_TEST_CASE(p2p__subscribe__stopped__service_stopped)
+{
+    print_headers(TEST_NAME);
+    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+    p2p network(configuration);
+
+    // Expect immediate return because service is not started.
+    BOOST_REQUIRE_EQUAL(subscribe_result(network), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__subscribe__started_stop__service_stopped)
+{
+    print_headers(TEST_NAME);
+    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+    p2p network(configuration);
+    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+
+    std::promise<code> promise;
+    const auto handler = [](code ec, channel::ptr channel)
+    {
+        BOOST_REQUIRE(!channel);
+        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
+
+        // Resubscribe attempt here would prevent subscriber clearance.
+        return false;
+    };
+
+    // Expect queued handler until destruct because service is started.
+    network.subscribe_connections(handler);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__subscribe__started_connect__success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
     p2p network(configuration);
     const config::endpoint host(SEED1);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-    BOOST_REQUIRE_EQUAL(run_result(network), error::success);
-    BOOST_REQUIRE_EQUAL(subscribe_result(network, host), error::success);
-}
-
-BOOST_AUTO_TEST_CASE(p2p__subscribe__not_started__service_stopped)
-{
-    print_headers(TEST_NAME);
-    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(subscribe_result(network), error::service_stopped);
+    BOOST_REQUIRE_EQUAL(subscribe_connect_result(network, host), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__broadcast__ping_two_distinct_hosts__two_sends_and_successful_completion)
@@ -405,15 +429,31 @@ BOOST_AUTO_TEST_CASE(p2p__broadcast__ping_two_distinct_hosts__two_sends_and_succ
     BOOST_REQUIRE_EQUAL(send_result(ping(0), network, 2), error::success);
 }
 
-// This will hang for a long time if all connections are created before subscription.
-////BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_TWO_THREADS_ONE_SEED_OUTBOUND(configuration);
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(run_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(subscribe_result(network), error::success);
-////}
+// This test may be a little slow.
+BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
+{
+    print_headers(TEST_NAME);
+    SETTINGS_TESTNET_TWO_THREADS_ONE_SEED_OUTBOUND(configuration);
+    p2p network(configuration);
+    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+
+    std::promise<code> subscribe;
+    const auto subscribe_handler = [&subscribe, &network](code ec, channel::ptr)
+    {
+        subscribe.set_value(ec);
+        return false;
+    };
+    network.subscribe_connections(subscribe_handler);
+
+    std::promise<code> run;
+    const auto run_handler = [&run, &network](code ec)
+    {
+        run.set_value(ec);
+    };
+    network.run(run_handler);
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get().value(), error::success);
+    BOOST_REQUIRE_EQUAL(subscribe.get_future().get().value(), error::success);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

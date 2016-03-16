@@ -39,6 +39,7 @@ hosts::hosts(threadpool& pool, const settings& settings)
 {
 }
 
+// private
 hosts::iterator hosts::find(const address& host)
 {
     const auto found = [&host](const address& entry)
@@ -49,26 +50,44 @@ hosts::iterator hosts::find(const address& host)
     return std::find_if(buffer_.begin(), buffer_.end(), found);
 }
 
-void hosts::load(result_handler handler)
+size_t hosts::count()
 {
-    dispatch_.ordered(&hosts::do_load,
-        this, file_path_.string(), handler);
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section
+    shared_lock lock(mutex_);
+
+    return buffer_.size();
+    ///////////////////////////////////////////////////////////////////////////
 }
 
-void hosts::do_load(const path& file_path, result_handler handler)
+code hosts::fetch(address& out)
+{
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section
+    shared_lock lock(mutex_);
+
+    if (buffer_.empty())
+        return error::not_found;
+
+    // Randomly select an address from the buffer.
+    const auto index = static_cast<size_t>(pseudo_random() % buffer_.size());
+    out = buffer_[index];
+    return error::success;
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+code hosts::load()
 {
     if (disabled_)
-    {
-        handler(error::success);
-        return;
-    }
+        return error::success;
 
-    bc::ifstream file(file_path.string());
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section
+    unique_lock lock(mutex_);
+
+    bc::ifstream file(file_path_.string());
     if (file.bad())
-    {
-        handler(error::file_system);
-        return;
-    }
+        return error::file_system;
 
     // Formerly each address was randomly-queued for insert here.
     std::string line;
@@ -79,111 +98,98 @@ void hosts::do_load(const path& file_path, result_handler handler)
             buffer_.push_back(host.to_network_address());
     }
 
-    handler(error::success);
+    return error::success;
+    ///////////////////////////////////////////////////////////////////////////
 }
 
-void hosts::save(result_handler handler)
-{
-    dispatch_.ordered(&hosts::do_save,
-        this, file_path_.string(), handler);
-}
-
-void hosts::do_save(const path& path, result_handler handler)
+code hosts::save()
 {
     if (disabled_)
-    {
-        handler(error::success);
-        return;
-    }
+        return error::success;
 
-    bc::ofstream file(path.string());
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section
+    unique_lock lock(mutex_);
+
+    bc::ofstream file(file_path_.string());
     if (file.bad())
-    {
-        handler(error::file_system);
-        return;
-    }
+        return error::file_system;
 
     for (const auto& entry: buffer_)
         file << config::authority(entry) << std::endl;
 
-    handler(error::success);
+    return error::success;
+    ///////////////////////////////////////////////////////////////////////////
 }
 
-void hosts::remove(const address& host, result_handler handler)
+code hosts::remove(const address& host)
 {
-    dispatch_.unordered(&hosts::do_remove,
-        this, host, handler);
-}
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section
+    mutex_.lock_upgrade();
 
-void hosts::do_remove(const address& host, result_handler handler)
-{
     auto it = find(host);
-    if (it == buffer_.end())
+    if (it != buffer_.end())
     {
-        handler(error::not_found);
-        return;
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        mutex_.unlock_upgrade_and_lock();
+        buffer_.erase(it);
+        mutex_.unlock();
+        //---------------------------------------------------------------------
+        return error::success;
     }
 
-    buffer_.erase(it);
-    handler(error::success);
+    mutex_.unlock_upgrade();
+    ///////////////////////////////////////////////////////////////////////////
+
+    return error::not_found;
 }
 
-void hosts::store(const address& host, result_handler handler)
+code hosts::store(const address& host)
 {
-    dispatch_.unordered(&hosts::do_store,
-        this, host, handler);
+    if (!host.is_valid())
+    {
+        log::debug(LOG_PROTOCOL)
+            << "Invalid host address from peer";
+
+        // We don't treat invalid address as an error, just log it.
+        return error::success;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section
+    mutex_.lock_upgrade();
+
+    if (find(host) == buffer_.end())
+    {
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        mutex_.unlock_upgrade_and_lock();
+        buffer_.push_back(host);
+        mutex_.unlock();
+        //---------------------------------------------------------------------
+        return error::success;
+    }
+
+    mutex_.unlock_upgrade();
+    ///////////////////////////////////////////////////////////////////////////
+
+    log::debug(LOG_PROTOCOL)
+        << "Redundant host address from peer";
+
+    // We don't treat redundant address as an error, just log it.
+    return error::success;
+}
+
+void hosts::do_store(const address& host, result_handler handler)
+{
+    handler(store(host));
 }
 
 void hosts::store(const address::list& hosts, result_handler handler)
 {
     // We disperse here to allow other addresses messages to interleave hosts.
-    dispatch_.disperse(hosts, "hosts", handler,
+    dispatch_.parallel(hosts, "hosts", handler,
         &hosts::do_store, this);
-}
-
-void hosts::do_store(const address& host, result_handler handler)
-{
-    if (!host.is_valid())
-        log::debug(LOG_PROTOCOL)
-            << "Invalid host address from peer";
-    else if (find(host) != buffer_.end())
-        log::debug(LOG_PROTOCOL)
-            << "Redundant host address from peer";
-    else
-        buffer_.push_back(host);
-
-    // We don't treat invalid address as an error, just log it.
-    handler(error::success);
-}
-
-void hosts::fetch(fetch_handler handler)
-{
-    dispatch_.unordered(&hosts::do_fetch,
-        this, handler);
-}
-
-void hosts::do_fetch(fetch_handler handler)
-{
-    if (buffer_.empty())
-    {
-        handler(error::not_found, address());
-        return;
-    }
-
-    // Randomly select an address from the buffer.
-    const auto index = static_cast<size_t>(pseudo_random() % buffer_.size());
-    handler(error::success, buffer_[index]);
-}
-
-void hosts::count(count_handler handler)
-{
-    dispatch_.ordered(&hosts::do_count,
-        this, handler);
-}
-
-void hosts::do_count(count_handler handler)
-{
-    handler(buffer_.size());
 }
 
 } // namespace network

@@ -21,14 +21,11 @@
 
 #include <cstdint>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
-
-INITIALIZE_TRACK(bc::network::connector);
 
 namespace libbitcoin {
 namespace network {
@@ -65,17 +62,25 @@ void connector::safe_stop()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    unique_lock lock(mutex_);
 
-    // This will asynchronously invoke the handler of each pending resolve.
-    resolver_->cancel();
-    stopped_ = true;
+    if (!stopped_)
+    {
+        // This will asynchronously invoke the handler of each pending resolve.
+        resolver_->cancel();
+        stopped_ = true;
+    }
     ///////////////////////////////////////////////////////////////////////////
 }
 
 bool connector::stopped()
 {
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    shared_lock lock(mutex_);
+
     return stopped_;
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 // Connect sequence.
@@ -97,37 +102,42 @@ void connector::connect(const authority& authority, connect_handler handler)
 void connector::connect(const std::string& hostname, uint16_t port,
     connect_handler handler)
 {
-    if (stopped())
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_upgrade();
+
+    if (stopped_)
     {
         // We preserve the asynchronous contract of the async_resolve.
-        dispatch_.unordered(handler, error::service_stopped, nullptr);
+        // Dispatch ensures job does not execute in the current thread.
+        dispatch_.concurrent(handler, error::service_stopped, nullptr);
         return;
     }
 
     auto query = std::make_shared<asio::query>(hostname, std::to_string(port));
 
-    safe_resolve(query, handler);
-}
-
-void connector::safe_resolve(asio::query_ptr query, connect_handler handler)
-{
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    mutex_.unlock_upgrade_and_lock();
 
     // async_resolve will not invoke the handler within this function.
     resolver_->async_resolve(*query,
         std::bind(&connector::handle_resolve,
             shared_from_this(), _1, _2, handler));
+
+    mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 }
 
 void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     connect_handler handler)
 {
-    if (stopped())
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_upgrade();
+
+    if (stopped_)
     {
-        dispatch_.unordered(handler, error::service_stopped, nullptr);
+        dispatch_.concurrent(handler, error::service_stopped, nullptr);
         return;
     }
 
@@ -152,10 +162,16 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
         std::bind(&connector::handle_timer,
             shared_from_this(), _1, socket, handle_connect));
 
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    mutex_.unlock_upgrade_and_lock();
+
     // This is branch #2 of the connnect sequence.
     boost::asio::async_connect(*socket, iterator,
         std::bind(&connector::handle_connect,
             shared_from_this(), _1, _2, socket, timer, handle_connect));
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 // Timer sequence.
@@ -171,12 +187,12 @@ void connector::handle_timer(const code& ec, asio::socket_ptr socket,
     else
         handler(error::channel_timeout, nullptr);
 
-    // BUGBUG: asio::socket is not thread safe, so this will cause a failure in
-    // the case where the channel has been created and a method on the socket
-    // is  executing concurrently with this close call. The only way to guard
-    // against this issue is to create a socket wrapper class (lighter than
-    // channel).
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(mutex_);
+
     proxy::close(socket);
+    ///////////////////////////////////////////////////////////////////////////
 }
 
 // Connect sequence.

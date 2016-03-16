@@ -25,9 +25,9 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <boost/iostreams/stream.hpp>
+#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
@@ -41,7 +41,9 @@ class BCT_API proxy
 {
 public:
     template <class Message>
-    using message_handler = std::function<bool(const code&, const Message&)>;
+    using message_handler = std::function<bool(const code&,
+        std::shared_ptr<Message>)>;
+
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void()> completion_handler;
     typedef subscriber<const code&> stop_subscriber;
@@ -63,38 +65,15 @@ public:
     template <class Message>
     void send(const Message& packet, result_handler handler)
     {
-        const auto command = packet.command;
-        const auto self = shared_from_this();
-        const auto data = message::serialize(packet, magic_);
-        auto sender = [self, command, data](result_handler handler)
-        {
-            self->do_send(data, handler, command);
-        };
-
-        // The socket is protected and suspended by an ordered strand.
-        dispatch_.ordered(sender, handler);
+        do_send(message::serialize(packet, magic_), handler, packet.command);
     }
 
     /// Subscribe to messages of the specified type on the socket.
     template <class Message>
     void subscribe(message_handler<Message>&& handler)
     {
-        // Critical Section
-        ///////////////////////////////////////////////////////////////////////
-        if (true)
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-
-            if (!stopped())
-            {
-                auto stopped = std::forward<message_handler<Message>>(handler);
-                message_subscriber_.subscribe<Message>(stopped);
-                return;
-            }
-        }
-        ///////////////////////////////////////////////////////////////////////
-
-        handler(error::channel_stopped, Message());
+        auto stopped = std::forward<message_handler<Message>>(handler);
+        message_subscriber_.subscribe<Message>(stopped);
     }
 
     /// Subscribe to the stop event.
@@ -126,11 +105,9 @@ private:
     void stop(const boost_code& ec);
 
     void read_heading();
-    void do_read_heading();
     void handle_read_heading(const boost_code& ec, size_t);
 
     void read_payload(const message::heading& head);
-    void do_read_payload(const message::heading& head);
     void handle_read_payload(const boost_code& ec, size_t,
         const message::heading& head);
 
@@ -143,16 +120,15 @@ private:
     const uint32_t magic_;
     const config::authority authority_;
 
-    // The socket and buffers are protected by an ordered strand.
-    dispatcher dispatch_;
+    // The socket and buffers are protected by mutex.
     asio::socket_ptr socket_;
     data_chunk payload_buffer_;
     message::heading::buffer heading_buffer_;
+    mutable shared_mutex mutex_;
 
-    // The mutex ensures no registration will occur after stop broadcasts.
+    // Subscribers are thread safe.
     message_subscriber message_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
-    std::mutex mutex_;
 };
 
 } // namespace network

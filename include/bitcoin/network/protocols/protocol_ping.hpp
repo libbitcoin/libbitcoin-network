@@ -60,8 +60,8 @@ private:
     void handle_send_ping(const code& ec);
     void handle_send_pong(const code& ec);
 
-    bool handle_receive_ping(const code& ec, const message::ping& message);
-    bool handle_receive_pong(const code& ec, const message::pong& message,
+    bool handle_receive_ping(const code& ec, message::ping::ptr message);
+    bool handle_receive_pong(const code& ec, message::pong::ptr message,
         uint64_t nonce);
 
     const settings& settings_;

@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
-#include <mutex>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 
@@ -48,7 +47,7 @@ bool pending_channels::safe_store(channel::ptr channel)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    unique_lock lock(mutex_);
 
     const auto it = std::find_if(channels_.begin(), channels_.end(), match);
     const auto found = it != channels_.end();
@@ -69,7 +68,7 @@ bool pending_channels::safe_remove(channel::ptr channel)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    unique_lock lock(mutex_);
 
     const auto it = std::find(channels_.begin(), channels_.end(), channel);
     const auto found = it != channels_.end();
@@ -86,7 +85,7 @@ void pending_channels::remove(channel::ptr channel, result_handler handler)
     handler(safe_remove(channel) ? error::success : error::not_found);
 }
 
-bool pending_channels::safe_exists(uint64_t version_nonce)
+bool pending_channels::safe_exists(uint64_t version_nonce) const
 {
     const auto match = [version_nonce](channel::ptr entry)
     {
@@ -95,14 +94,15 @@ bool pending_channels::safe_exists(uint64_t version_nonce)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    std::lock_guard<std::mutex> lock(mutex_);
+    shared_lock lock(mutex_);
 
     const auto it = std::find_if(channels_.begin(), channels_.end(), match);
     return it != channels_.end();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void pending_channels::exists(uint64_t version_nonce, truth_handler handler)
+void pending_channels::exists(uint64_t version_nonce,
+    truth_handler handler) const
 {
     // This is an optimization that requires we always set a non-zero nonce.
     handler(version_nonce == 0 ? false : safe_exists(version_nonce));

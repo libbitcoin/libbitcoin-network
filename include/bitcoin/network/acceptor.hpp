@@ -24,7 +24,6 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
@@ -64,7 +63,6 @@ public:
 private:
     bool stopped();
     code safe_listen(uint16_t port);
-    bool safe_accept(accept_handler handler);
     void handle_accept(const boost_code& ec, asio::socket_ptr socket,
         accept_handler handler);
 
@@ -73,7 +71,7 @@ private:
     const settings& settings_;
     dispatcher dispatch_;
     asio::acceptor_ptr acceptor_;
-    std::mutex mutex_;
+    mutable shared_mutex mutex_;
 };
 
 } // namespace network
