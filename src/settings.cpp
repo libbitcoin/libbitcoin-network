@@ -29,7 +29,7 @@ using namespace asio;
 static const settings mainnet_defaults()
 {
     settings value;
-    value.threads = 4;
+    value.threads = 50;
     value.identifier = 3652501241;
     value.inbound_port = 8333;
     value.connection_limit = 16;
@@ -49,7 +49,7 @@ static const settings mainnet_defaults()
     value.debug_file = { "debug.log" };
     value.error_file = { "error.log" };
     value.self = unspecified_network_address;
-    value.blacklists = { {} };
+    ////value.blacklists = { {} };
 
     // Seeds based on bitcoinstats.com/network/dns-servers
     // Use push_back due to initializer_list bug:
