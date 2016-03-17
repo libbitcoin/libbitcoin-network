@@ -78,7 +78,6 @@ proxy::~proxy()
 // Properties.
 // ----------------------------------------------------------------------------
 
-// public:
 const config::authority& proxy::authority() const
 {
     return authority_;
@@ -87,7 +86,6 @@ const config::authority& proxy::authority() const
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-// public:
 void proxy::start(result_handler handler)
 {
     if (!stopped())
@@ -107,58 +105,9 @@ void proxy::start(result_handler handler)
     read_heading();
 }
 
-// Stop sequence.
+// Stop subscription.
 // ----------------------------------------------------------------------------
 
-// public:
-void proxy::stop(const code& ec)
-{
-    BITCOIN_ASSERT_MSG(ec, "The stop code must be an error code.");
-
-    // Stop is thread safe and idempotent, allows subscription to be unguarded.
-    if (stopped())
-        return;
-
-    stopped_ = true;
-
-    // This prevents resubscription after stop is relayed.
-    message_subscriber_.stop();
-
-    // This fires all message subscriptions with the channel_stopped code.
-    message_subscriber_.broadcast(error::channel_stopped);
-
-    // This prevents resubscription after stop is relayed.
-    stop_subscriber_->stop();
-
-    // This fires all stop subscriptions with the channel stop reason code.
-    stop_subscriber_->relay(ec);
-
-    // Give channel opportunity to terminate timers.
-    handle_stopping();
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-
-    // The socket_ must be guarded against concurrent use.
-    proxy::close(socket_);
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-void proxy::stop(const boost_code& ec)
-{
-    stop(error::boost_to_error_code(ec));
-}
-
-bool proxy::stopped() const
-{
-    return stopped_;
-}
-
-// Stop subscription sequence.
-// ----------------------------------------------------------------------------
-
-// public:
 void proxy::subscribe_stop(result_handler handler)
 {
     stop_subscriber_->subscribe(handler, error::channel_stopped);
@@ -346,6 +295,47 @@ void proxy::handle_send(const boost_code& ec, result_handler handler)
             << error.message();
 
     handler(error);
+}
+
+// Stop sequence.
+// ----------------------------------------------------------------------------
+
+// public:
+void proxy::stop(const code& ec)
+{
+    BITCOIN_ASSERT_MSG(ec, "The stop code must be an error code.");
+
+    // Stop is thread safe and idempotent, allows stop to be unguarded.
+    stopped_ = true;
+
+    // Prevent subscription after stop.
+    message_subscriber_.stop();
+    message_subscriber_.broadcast(error::channel_stopped);
+
+    // Prevent subscription after stop.
+    stop_subscriber_->stop();
+    stop_subscriber_->relay(ec);
+
+    // Give channel opportunity to terminate timers.
+    handle_stopping();
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    unique_lock lock(mutex_);
+
+    // The socket_ must be guarded against concurrent use.
+    proxy::close(socket_);
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+void proxy::stop(const boost_code& ec)
+{
+    stop(error::boost_to_error_code(ec));
+}
+
+bool proxy::stopped() const
+{
+    return stopped_;
 }
 
 } // namespace network
