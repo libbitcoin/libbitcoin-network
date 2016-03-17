@@ -44,10 +44,10 @@ public:
     using message_handler = std::function<bool(const code&,
         std::shared_ptr<Message>)>;
 
-    typedef std::function<void(const code&)> result_handler;
-    typedef std::function<void()> completion_handler;
-    typedef subscriber<const code&> stop_subscriber;
     typedef std::shared_ptr<proxy> ptr;
+    typedef std::function<void()> completion_handler;
+    typedef std::function<void(const code&)> result_handler;
+    typedef subscriber<const code&> stop_subscriber;
 
     static void close(asio::socket_ptr socket);
 

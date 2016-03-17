@@ -78,7 +78,6 @@ class BCT_API session
 public:
     typedef std::shared_ptr<session> ptr;
     typedef config::authority authority;
-    typedef std::function<void()> stop_handler;
     typedef std::function<void(bool)> truth_handler;
     typedef std::function<void(size_t)> count_handler;
     typedef std::function<void(const code&)> result_handler;
@@ -90,7 +89,7 @@ public:
     virtual void start(result_handler handler);
 
     /// Subscribe to receive session stop notification.
-    virtual void subscribe_stop(stop_handler handler);
+    virtual void subscribe_stop(result_handler handler);
 
 protected:
 
@@ -163,15 +162,11 @@ private:
     }
 
     // Socket creators.
-    void do_stop_acceptor(acceptor::ptr connect);
-    void do_stop_connector(connector::ptr connect);
+    void do_stop_acceptor(const code& ec, acceptor::ptr connect);
+    void do_stop_connector(const code& ec, connector::ptr connect);
 
     // Start sequence.
-    void do_stop_session();
-
-    // Stop sequence
-    bool handle_connect_event(const code& ec, channel::ptr channel,
-        stop_handler handler);
+    void do_stop_session(const code&);
 
     // Connect sequence
     void new_connect(connector::ptr connect, channel_handler handler);

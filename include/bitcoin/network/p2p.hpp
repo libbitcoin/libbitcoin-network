@@ -46,12 +46,14 @@ class BCT_API p2p
 public:
     typedef std::shared_ptr<p2p> ptr;
     typedef message::network_address address;
+    typedef std::function<void()> stop_handler;
     typedef std::function<void(bool)> truth_handler;
     typedef std::function<void(size_t)> count_handler;
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, const address&)> address_handler;
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
     typedef std::function<bool(const code&, channel::ptr)> connect_handler;
+    typedef subscriber<const code&> stop_subscriber;
     typedef resubscriber<const code&, channel::ptr> channel_subscriber;
 
     // ------------------------------------------------------------------------
@@ -100,11 +102,14 @@ public:
     /// Invoke startup and seeding sequence, call from constructing thread.
     virtual void start(result_handler handler);
 
+    /// Subscribe to connection creation events.
+    virtual void subscribe_connection(connect_handler handler);
+
+    /// Subscribe to service stop event.
+    virtual void subscribe_stop(result_handler handler);
+
     /// Begin long running sessions, call from start handler.
     virtual void run(result_handler handler);
-
-    /// Subscribe to connection creation and service stop events.
-    virtual void subscribe_connections(connect_handler handler);
 
     /// Maintain a connection to hostname:port.
     virtual void connect(const std::string& hostname, uint16_t port);
@@ -194,7 +199,8 @@ private:
     dispatcher dispatch_;
     hosts hosts_;
     std::shared_ptr<connections> connections_;
-    channel_subscriber::ptr subscriber_;
+    stop_subscriber::ptr stop_subscriber_;
+    channel_subscriber::ptr channel_subscriber_;
 };
 
 } // namespace network
