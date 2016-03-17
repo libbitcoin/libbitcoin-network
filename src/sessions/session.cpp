@@ -97,11 +97,11 @@ bool session::blacklisted(const authority& authority) const
 acceptor::ptr session::create_acceptor()
 {
     const auto accept = std::make_shared<acceptor>(pool_, settings_);
-    subscribe_stop(BIND_1(do_stop_acceptor, accept));
+    subscribe_stop(BIND_2(do_stop_acceptor, _1, accept));
     return accept;
 }
 
-void session::do_stop_acceptor(acceptor::ptr accept)
+void session::do_stop_acceptor(const code&, acceptor::ptr accept)
 {
     accept->stop();
 }
@@ -110,11 +110,11 @@ void session::do_stop_acceptor(acceptor::ptr accept)
 connector::ptr session::create_connector()
 {
     const auto connect = std::make_shared<connector>(pool_, settings_);
-    subscribe_stop(BIND_1(do_stop_connector, connect));
+    subscribe_stop(BIND_2(do_stop_connector, _1, connect));
     return connect;
 }
 
-void session::do_stop_connector(connector::ptr connect)
+void session::do_stop_connector(const code&, connector::ptr connect)
 {
     connect->stop();
 }
@@ -123,7 +123,6 @@ void session::do_stop_connector(connector::ptr connect)
 // ----------------------------------------------------------------------------
 // Must not change context before subscribing.
 
-// public:
 void session::start(result_handler handler)
 {
     if (!stopped())
@@ -133,14 +132,16 @@ void session::start(result_handler handler)
     }
 
     stopped_ = false;
-    subscribe_stop(BIND_0(do_stop_session));
+    subscribe_stop(BIND_1(do_stop_session, _1));
 
     // This is the end of the start sequence.
     handler(error::success);
 }
 
-void session::do_stop_session()
+void session::do_stop_session(const code&)
 {
+    // This signals the session to stop creating connections, but does not stop
+    // the session. Channels are stopped resulting in session losing scope.
     stopped_ = true;
 }
 
@@ -151,31 +152,10 @@ bool session::stopped() const
 
 // Subscribe Stop sequence.
 // ----------------------------------------------------------------------------
-// Must not change context before resubscribing.
-// Must not change context in event handler (use bind).
 
-// public:
-void session::subscribe_stop(stop_handler handler)
+void session::subscribe_stop(result_handler handler)
 {
-    // This uses the channel subscriber to detect stop.
-    network_.subscribe_connections(
-        BIND_3(handle_connect_event, _1, _2, handler));
-}
-
-bool session::handle_connect_event(const code& ec, channel::ptr,
-    stop_handler handler)
-{
-    if (ec == error::service_stopped)
-    {
-        // This is the end of the subscribe stop sequence.
-        handler();
-        return false;
-    }
-
-    // Resubscribe to connection events.
-    // This is a problem if the subscriber stops and doesn't reregister.
-    // We get new channels after subscriber stop (that aren't service stop).
-    return true;
+    network_.subscribe_stop(handler);
 }
 
 // Registration sequence.

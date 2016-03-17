@@ -55,7 +55,8 @@ p2p::p2p(const settings& settings)
     dispatch_(threadpool_, NAME),
     hosts_(threadpool_, settings_),
     connections_(std::make_shared<connections>(threadpool_)),
-    subscriber_(std::make_shared<channel_subscriber>(threadpool_, NAME "_sub"))
+    stop_subscriber_(std::make_shared<stop_subscriber>(threadpool_, NAME "_stop_sub")),
+    channel_subscriber_(std::make_shared<channel_subscriber>(threadpool_, NAME "_sub"))
 {
 }
 
@@ -100,22 +101,20 @@ void p2p::start(result_handler handler)
         return;
     }
 
-    stopped_ = false;
-    subscriber_->start();
-
     threadpool_.join();
     threadpool_.spawn(settings_.threads, thread_priority::low);
 
-    const auto manual_started_handler =
-        std::bind(&p2p::handle_manual_started,
-            this, _1, handler);
+    stopped_ = false;
+    stop_subscriber_->start();
+    channel_subscriber_->start();
 
     // This instance is retained by stop handler and member references.
-    auto manual = attach<session_manual>();
-    manual->start(manual_started_handler);
+    const auto manual = attach<session_manual>();
     manual_.store(manual);
 
-    ////handle_manual_started(error::success, handler);
+    manual->start(
+        std::bind(&p2p::handle_manual_started,
+            this, _1, handler));
 }
 
 void p2p::handle_manual_started(const code& ec, result_handler handler)
@@ -193,8 +192,6 @@ void p2p::run(result_handler handler)
     attach<session_inbound>()->start(
         std::bind(&p2p::handle_inbound_started,
             this, _1, handler));
-
-    ////handle_inbound_started(error::success, handler);
 }
 
 void p2p::handle_inbound_started(const code& ec, result_handler handler)
@@ -227,12 +224,17 @@ void p2p::handle_outbound_started(const code& ec, result_handler handler)
     handler(error::success);
 }
 
-// Channel subscription.
+// Subscriptions.
 // ----------------------------------------------------------------------------
 
-void p2p::subscribe_connections(connect_handler handler)
+void p2p::subscribe_connection(connect_handler handler)
 {
-    subscriber_->subscribe(handler, error::service_stopped, nullptr);
+    channel_subscriber_->subscribe(handler, error::service_stopped, nullptr);
+}
+
+void p2p::subscribe_stop(result_handler handler)
+{
+    stop_subscriber_->subscribe(handler, error::service_stopped);
 }
 
 // Manual connections.
@@ -269,24 +271,27 @@ void p2p::connect(const std::string& hostname, uint16_t port,
 
 void p2p::stop(result_handler handler)
 {
-    // Stop is thread safe and idempotent, allows subscription to be unguarded.
-
-    // Prevent subscription after stop.
-    subscriber_->stop();
-    subscriber_->relay(error::service_stopped, nullptr);
-
-    // Must be after subscriber stop (why?).
-    connections_->stop(error::service_stopped);
-    manual_.store(nullptr);
-
     // Host save is expensive, so minimize repeats.
     const auto ec = stopped_ ? error::success : hosts_.save();
-    stopped_ = true;
 
     if (ec)
         log::error(LOG_NETWORK)
-            << "Error saving hosts file: " << ec.message();
+        << "Error saving hosts file: " << ec.message();
 
+    // Stop is thread safe and idempotent, allows subscription to be unguarded.
+    stopped_ = true;
+
+    // Prevent subscription after stop.
+    stop_subscriber_->stop();
+    stop_subscriber_->relay(error::service_stopped);
+
+    // Prevent subscription after stop.
+    channel_subscriber_->stop();
+    channel_subscriber_->relay(error::service_stopped, nullptr);
+
+    // Must be after subscriber stop.
+    connections_->stop(error::service_stopped);
+    manual_.store(nullptr);
     threadpool_.shutdown();
 
     // This is the end of the stop sequence.
@@ -341,7 +346,7 @@ void p2p::handle_new_connection(const code& ec, channel::ptr channel,
     handler(ec);
     
     if (!ec && channel->notify())
-        subscriber_->relay(error::success, channel);
+        channel_subscriber_->relay(error::success, channel);
 }
 
 void p2p::remove(channel::ptr channel, result_handler handler)

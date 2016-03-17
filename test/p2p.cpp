@@ -157,7 +157,7 @@ static int subscribe_result(p2p& network)
         promise.set_value(ec);
         return false;
     };
-    network.subscribe_connections(handler);
+    network.subscribe_connection(handler);
     return promise.get_future().get().value();
 }
 
@@ -169,7 +169,7 @@ static int subscribe_connect_result(p2p& network, const config::endpoint& host)
         promise.set_value(ec);
         return false;
     };
-    network.subscribe_connections(handler);
+    network.subscribe_connection(handler);
     network.connect(host.host(), host.port());
     return promise.get_future().get().value();
 }
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__started_stop__service_stopped)
     };
 
     // Expect queued handler until destruct because service is started.
-    network.subscribe_connections(handler);
+    network.subscribe_connection(handler);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__subscribe__started_connect__success)
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
         subscribe.set_value(ec);
         return false;
     };
-    network.subscribe_connections(subscribe_handler);
+    network.subscribe_connection(subscribe_handler);
 
     std::promise<code> run;
     const auto run_handler = [&run, &network](code ec)
