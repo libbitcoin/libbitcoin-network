@@ -56,7 +56,8 @@ using namespace bc::network;
     config.threads = 1; \
     config.host_pool_capacity = 0; \
     config.outbound_connections = 0; \
-    config.connection_limit = 0
+    config.connection_limit = 0; \
+    config.manual_retry_limit = 2
 
 #define SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(config) \
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(config); \
@@ -64,11 +65,11 @@ using namespace bc::network;
     config.seeds = { { SEED1 } }; \
     config.hosts_file = get_log_path(TEST_NAME, "hosts")
 
-#define SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_TWO_OUTBOUND(config) \
+#define SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(config) \
     auto config = settings::testnet; \
     config.threads = 3; \
     config.connection_limit = 0; \
-    config.outbound_connections = 2; \
+    config.outbound_connections = 5; \
     config.seeds = { { SEED1 } }; \
     config.hosts_file = get_log_path(TEST_NAME, "hosts")
 
@@ -431,7 +432,7 @@ BOOST_AUTO_TEST_CASE(p2p__broadcast__ping_two_distinct_hosts__two_sends_and_succ
 BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
 {
     print_headers(TEST_NAME);
-    SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_TWO_OUTBOUND(configuration);
+    SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(configuration);
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 
