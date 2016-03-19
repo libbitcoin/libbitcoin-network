@@ -61,12 +61,10 @@ public:
     virtual void stop();
 
 private:
-    bool stopped();
     code safe_listen(uint16_t port);
     void handle_accept(const boost_code& ec, asio::socket_ptr socket,
         accept_handler handler);
 
-    std::atomic<bool> stopped_;
     threadpool& pool_;
     const settings& settings_;
     dispatcher dispatch_;

@@ -37,8 +37,7 @@ using std::placeholders::_1;
 static const auto reuse_address = asio::acceptor::reuse_address(true);
 
 acceptor::acceptor(threadpool& pool, const settings& settings)
-  : stopped_(true),
-    pool_(pool),
+  : pool_(pool),
     settings_(settings),
     dispatch_(pool, NAME),
     acceptor_(std::make_shared<asio::acceptor>(pool_.service())),
