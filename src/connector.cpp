@@ -120,7 +120,6 @@ void connector::connect(const std::string& hostname, uint16_t port,
         // We preserve the asynchronous contract of the async_resolve.
         // Dispatch ensures job does not execute in the current thread.
         dispatch_.concurrent(handler, error::service_stopped, nullptr);
-
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
         return;
@@ -150,7 +149,6 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     if (stopped_)
     {
         dispatch_.concurrent(handler, error::service_stopped, nullptr);
-
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
         return;
@@ -159,7 +157,6 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     if (ec)
     {
         dispatch_.concurrent(handler, error::resolve_failed, nullptr);
-
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
         return;
@@ -173,7 +170,7 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     pending_.store(socket);
 
     // Manage the socket-timer race.
-    const auto handle_connect = synchronize(handler, 1, NAME);
+    const auto handle_connect = synchronize(handler, 1, NAME, false);
 
     // This is branch #1 of the connnect sequence.
     timer->start(
@@ -205,12 +202,16 @@ void connector::handle_timer(const code& ec, asio::socket_ptr socket,
     else
         handler(error::channel_timeout, nullptr);
 
+    log::info(LOG_NETWORK) << "connector::handle_timer - close socket";
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
 
     proxy::close(socket);
     ///////////////////////////////////////////////////////////////////////////
+
+    log::info(LOG_NETWORK) << "connector::handle_timer - closed socket";
 }
 
 // Connect sequence.

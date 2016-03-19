@@ -46,9 +46,12 @@ session_batch::session_batch(p2p& network, bool persistent)
 void session_batch::connect(connector::ptr connect, channel_handler handler)
 {
     const auto batch = std::max(settings_.connect_batch_size, 1u);
-    const auto complete = synchronize(handler, 1, NAME);
 
-    // We can't use dispatch::race because it doesn't increment the refcount.
+    // BUGBUG: connections that lose this race are orphaned until shutdown.
+    // The completion handler is only invoked on successful connection.
+    // Otherwise it just loops over connections until externally stopped.
+    const auto complete = synchronize(handler, 1, NAME, false);
+
     for (uint32_t host = 0; host < batch; ++host)
         new_connect(connect, complete);
 }
@@ -78,7 +81,7 @@ void session_batch::start_connect(const code& ec, const authority& host,
         return;
     }
 
-    // This could create a tight loop in the case of a small pool.
+    // This creates a tight loop in the case of a small address pool.
     if (blacklisted(host))
     {
         log::debug(LOG_NETWORK)

@@ -94,7 +94,7 @@ void protocol_version::start(event_handler handler)
 
     // The handler is invoked in the context of the last message receipt.
     protocol_timer::start(settings.channel_handshake(),
-        synchronize(handler, 2, NAME));
+        synchronize(handler, 2, NAME, false));
 
     const auto self = template_factory(authority(), settings, nonce(), height);
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
