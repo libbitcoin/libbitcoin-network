@@ -26,16 +26,47 @@
 namespace libbitcoin {
 namespace network {
 
+using namespace bc::config;
+
 #define NAME "connections"
 
-connections::connections(threadpool& pool)
-  : dispatch_(pool, NAME)
+connections::connections()
+  : stopped_(false)
 {
 }
 
 connections::~connections()
 {
     BITCOIN_ASSERT_MSG(channels_.empty(), "Connections was not cleared.");
+}
+
+// This is idempotent.
+void connections::stop(const code& ec)
+{
+    connections::list channels;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_upgrade();
+
+    if (!stopped_)
+    {
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        mutex_.unlock_upgrade_and_lock();
+        stopped_ = true;
+        mutex_.unlock_and_lock_upgrade(); 
+        //---------------------------------------------------------------------
+
+        // Once stopped this list cannot change, but must copy to escape lock.
+        channels = channels_;
+    }
+
+    mutex_.unlock_upgrade();
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Channel stop handlers should remove channels from list.
+    for (const auto channel: channels)
+        channel->stop(ec);
 }
 
 connections::list connections::safe_copy() const
@@ -46,15 +77,6 @@ connections::list connections::safe_copy() const
 
     return channels_;
     ///////////////////////////////////////////////////////////////////////////
-}
-
-void connections::stop(const code& ec)
-{
-    // The list is copied, which protects the iteration without a lock.
-    auto channels = safe_copy();
-
-    for (auto channel: channels)
-        channel->stop(ec);
 }
 
 bool connections::safe_exists(const authority& address) const
@@ -82,16 +104,25 @@ bool connections::safe_remove(channel::ptr channel)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    mutex_.lock_upgrade();
 
     const auto it = std::find(channels_.begin(), channels_.end(), channel);
     const auto found = it != channels_.end();
 
     if (found)
+    {
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        mutex_.unlock_upgrade_and_lock();
         channels_.erase(it);
+        mutex_.unlock();
+        //---------------------------------------------------------------------
+        return true;
+    }
 
-    return found;
+    mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
+
+    return false;
 }
 
 void connections::remove(channel::ptr channel, result_handler handler)
@@ -99,7 +130,7 @@ void connections::remove(channel::ptr channel, result_handler handler)
     handler(safe_remove(channel) ? error::success : error::not_found);
 }
 
-bool connections::safe_store(channel::ptr channel)
+code connections::safe_store(channel::ptr channel)
 {
     const auto address = channel->authority();
     const auto match = [&address](channel::ptr entry)
@@ -109,21 +140,36 @@ bool connections::safe_store(channel::ptr channel)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    mutex_.lock_upgrade();
 
-    const auto it = std::find_if(channels_.begin(), channels_.end(), match);
-    const auto found = it != channels_.end();
+    const auto stopped = stopped_.load();
 
-    if (!found)
-        channels_.push_back(channel);
+    if (!stopped)
+    {
+        auto it = std::find_if(channels_.begin(), channels_.end(), match);
+        const auto found = it != channels_.end();
 
-    return found;
+        if (!found)
+        {
+            //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            mutex_.unlock_upgrade_and_lock();
+            channels_.push_back(channel);
+            mutex_.unlock();
+            //---------------------------------------------------------------------
+            return error::success;
+        }
+    }
+
+    mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
+
+    // Stopped and found are the only ways to get here.
+    return stopped ? error::service_stopped : error::address_in_use;
 }
 
 void connections::store(channel::ptr channel, result_handler handler)
 {
-    handler(safe_store(channel) ? error::address_in_use : error::success);
+    handler(safe_store(channel));
 }
 
 size_t connections::safe_count() const

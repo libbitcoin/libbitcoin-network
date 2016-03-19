@@ -47,37 +47,55 @@ bool pending_channels::safe_store(channel::ptr channel)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    mutex_.lock_upgrade();
 
     const auto it = std::find_if(channels_.begin(), channels_.end(), match);
     const auto found = it != channels_.end();
 
     if (!found)
+    {
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        mutex_.unlock_upgrade_and_lock();
         channels_.push_back(channel);
+        mutex_.unlock();
+        //---------------------------------------------------------------------
+        return true;
+    }
 
-    return found;
+    mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
+
+    return false;
 }
 
 void pending_channels::store(channel::ptr channel, result_handler handler)
 {
-    handler(safe_store(channel) ? error::address_in_use : error::success);
+    handler(safe_store(channel) ? error::success : error::address_in_use);
 }
 
 bool pending_channels::safe_remove(channel::ptr channel)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    mutex_.lock_upgrade();
 
     const auto it = std::find(channels_.begin(), channels_.end(), channel);
     const auto found = it != channels_.end();
 
     if (found)
+    {
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        mutex_.unlock_upgrade_and_lock();
         channels_.erase(it);
+        mutex_.unlock();
+        //---------------------------------------------------------------------
+        return true;
+    }
 
-    return found;
+    mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
+
+    return false;
 }
 
 void pending_channels::remove(channel::ptr channel, result_handler handler)

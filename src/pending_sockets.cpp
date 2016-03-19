@@ -64,13 +64,23 @@ void pending_sockets::remove(asio::socket_ptr socket)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    mutex_.lock_upgrade();
 
     auto it = std::find(sockets_.begin(), sockets_.end(), socket);
+    const auto found = it != sockets_.end();
 
     // Clear can be called at any time, so the entry may not be found.
-    if (it != sockets_.end())
+    if (found)
+    {
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        mutex_.unlock_upgrade_and_lock();
         sockets_.erase(it);
+        mutex_.unlock();
+        //---------------------------------------------------------------------
+        return;
+    }
+
+    mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
 }
 

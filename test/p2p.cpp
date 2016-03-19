@@ -64,10 +64,11 @@ using namespace bc::network;
     config.seeds = { { SEED1 } }; \
     config.hosts_file = get_log_path(TEST_NAME, "hosts")
 
-#define SETTINGS_TESTNET_TWO_THREADS_ONE_SEED_OUTBOUND(config) \
+#define SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_TWO_OUTBOUND(config) \
     auto config = settings::testnet; \
-    config.threads = 2; \
+    config.threads = 3; \
     config.connection_limit = 0; \
+    config.outbound_connections = 2; \
     config.seeds = { { SEED1 } }; \
     config.hosts_file = get_log_path(TEST_NAME, "hosts")
 
@@ -184,12 +185,12 @@ static int send_result(const Message& message, p2p& network, int channels)
     };
 
     std::promise<code> promise;
-    const auto completion_counter = [&promise](code ec)
+    const auto completion_handler = [&promise](code ec)
     {
         promise.set_value(ec);
     };
 
-    network.broadcast(message, channel_counter, completion_counter);
+    network.broadcast(message, channel_counter, completion_handler);
     const auto result = promise.get_future().get().value();
 
     BOOST_REQUIRE_EQUAL(channels, 0);
@@ -396,8 +397,6 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__started_stop__service_stopped)
     {
         BOOST_REQUIRE(!channel);
         BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
-
-        // Resubscribe attempt here would prevent subscriber clearance.
         return false;
     };
 
@@ -429,17 +428,17 @@ BOOST_AUTO_TEST_CASE(p2p__broadcast__ping_two_distinct_hosts__two_sends_and_succ
     BOOST_REQUIRE_EQUAL(send_result(ping(0), network, 2), error::success);
 }
 
-// This test may be a little slow.
 BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
 {
     print_headers(TEST_NAME);
-    SETTINGS_TESTNET_TWO_THREADS_ONE_SEED_OUTBOUND(configuration);
+    SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_TWO_OUTBOUND(configuration);
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 
     std::promise<code> subscribe;
     const auto subscribe_handler = [&subscribe, &network](code ec, channel::ptr)
     {
+        // Fires on first connection.
         subscribe.set_value(ec);
         return false;
     };
@@ -448,12 +447,16 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
     std::promise<code> run;
     const auto run_handler = [&run, &network](code ec)
     {
+        // Fires once the session is started.
         run.set_value(ec);
     };
     network.run(run_handler);
 
     BOOST_REQUIRE_EQUAL(run.get_future().get().value(), error::success);
     BOOST_REQUIRE_EQUAL(subscribe.get_future().get().value(), error::success);
+
+    // ~network blocks on stopping all channels.
+    // during channel.stop each channel removes itself from the collection.
 }
 
 BOOST_AUTO_TEST_SUITE_END()

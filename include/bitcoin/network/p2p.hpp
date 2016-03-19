@@ -70,14 +70,12 @@ public:
 
     // ------------------------------------------------------------------------
 
-    /// Send message to all connections, handler invoked for each channel.
+    /// Send message to all connections.
     template <typename Message>
     void broadcast(const Message& message, channel_handler handle_channel,
         result_handler handle_complete)
     {
-        dispatch_.ordered(
-            std::bind(&network::p2p::do_broadcast<Message>,
-                this, message, handle_channel, handle_complete));
+        connections_->broadcast(message, handle_channel, handle_complete);
     }
 
     // ------------------------------------------------------------------------
@@ -168,17 +166,7 @@ protected:
         return std::make_shared<Session>(*this, std::forward<Args>(args)...);
     }
 
-    /// No-operation handler, used in default stop handling.
-    static result_handler unhandled;
-
 private:
-    template <typename Message>
-    void do_broadcast(const Message& message, channel_handler handle_channel,
-        result_handler handle_complete)
-    {
-        connections_->broadcast(message, handle_channel, handle_complete);
-    }
-
     void handle_stopped(const code& ec);
     void handle_manual_started(const code& ec, result_handler handler);
     void handle_inbound_started(const code& ec, result_handler handler);
@@ -196,9 +184,8 @@ private:
 
     // These are thread safe.
     threadpool threadpool_;
-    dispatcher dispatch_;
-    hosts hosts_;
-    std::shared_ptr<connections> connections_;
+    hosts::ptr hosts_;
+    connections::ptr connections_;
     stop_subscriber::ptr stop_subscriber_;
     channel_subscriber::ptr channel_subscriber_;
 };
