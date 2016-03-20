@@ -303,8 +303,6 @@ void p2p::stop(result_handler handler)
 
 p2p::~p2p()
 {
-    // A reference cycle cannot exist with this class, since we don't capture
-    // shared pointers to it. Therefore this will always clear subscriptions.
     // This allows for shutdown based on destruct without need to call stop.
     p2p::close();
 }
