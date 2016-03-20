@@ -57,7 +57,7 @@ private:
     bool safe_exists(uint64_t version_nonce) const;
 
     list channels_;
-    mutable shared_mutex mutex_;
+    mutable upgrade_mutex mutex_;
 };
 
 } // namespace network

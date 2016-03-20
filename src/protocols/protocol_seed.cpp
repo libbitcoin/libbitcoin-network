@@ -59,7 +59,7 @@ void protocol_seed::start(event_handler handler)
     }
 
     protocol_timer::start(settings.channel_germination(),
-        synchronize(complete, 3, NAME));
+        synchronize(complete, 3, NAME, false));
 
     SUBSCRIBE2(address, handle_receive_address, _1, _2);
     send_own_address(settings);

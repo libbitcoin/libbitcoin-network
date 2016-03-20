@@ -37,8 +37,7 @@ using std::placeholders::_1;
 static const auto reuse_address = asio::acceptor::reuse_address(true);
 
 acceptor::acceptor(threadpool& pool, const settings& settings)
-  : stopped_(true),
-    pool_(pool),
+  : pool_(pool),
     settings_(settings),
     dispatch_(pool, NAME),
     acceptor_(std::make_shared<asio::acceptor>(pool_.service())),
@@ -136,9 +135,14 @@ void acceptor::handle_accept(const boost_code& ec, asio::socket_ptr socket,
     if (ec)
         handler(error::boost_to_error_code(ec), nullptr);
     else
-        handler(error::success,
-            std::make_shared<channel>(pool_, socket, settings_));
+        handler(error::success, new_channel(socket));
 }
+
+std::shared_ptr<channel> acceptor::new_channel(asio::socket_ptr socket)
+{
+    return std::make_shared<channel>(pool_, socket, settings_);
+}
+
 
 } // namespace network
 } // namespace libbitcoin

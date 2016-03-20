@@ -112,6 +112,9 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
             << "Failure connecting [" << config::endpoint(hostname, port)
             << "] manually: " << ec.message();
 
+        // TODO: rename manual_retry_limit to manual_connection_attempts
+        // and treat zero as infinity. Retry is misleading in this case.
+
         // Retry logic.
         if (settings_.manual_retry_limit == 0)
             start_connect(hostname, port, handler, 0);

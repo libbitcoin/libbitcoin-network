@@ -45,16 +45,12 @@ namespace network {
 
 using std::placeholders::_1;
 
-// No-operation handler, used in default stop handling.
-p2p::result_handler p2p::unhandled = [](code){};
-
 p2p::p2p(const settings& settings)
   : stopped_(true),
     height_(0),
     settings_(settings),
-    dispatch_(threadpool_, NAME),
-    hosts_(threadpool_, settings_),
-    connections_(std::make_shared<connections>(threadpool_)),
+    hosts_(std::make_shared<hosts>(threadpool_, settings_)),
+    connections_(std::make_shared<connections>()),
     stop_subscriber_(std::make_shared<stop_subscriber>(threadpool_, NAME "_stop_sub")),
     channel_subscriber_(std::make_shared<channel_subscriber>(threadpool_, NAME "_sub"))
 {
@@ -133,7 +129,7 @@ void p2p::handle_manual_started(const code& ec, result_handler handler)
         return;
     }
 
-    handle_hosts_loaded(hosts_.load(), handler);
+    handle_hosts_loaded(hosts_->load(), handler);
 }
 
 void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
@@ -269,16 +265,19 @@ void p2p::connect(const std::string& hostname, uint16_t port,
 // All shutdown actions must be queued by the end of the stop call.
 // IOW queued shutdown operations must not enqueue additional work.
 
+// This is not short-circuited by a stop test because we need to ensure it
+// completes at least once before invoking the handler. This requires a unique
+// lock be taken around the entire section, which poses a deadlock risk.
+// Instead this is thread safe and idempotent, allowing it to be unguarded.
 void p2p::stop(result_handler handler)
 {
     // Host save is expensive, so minimize repeats.
-    const auto ec = stopped_ ? error::success : hosts_.save();
+    const auto ec = stopped_ ? error::success : hosts_->save();
 
     if (ec)
         log::error(LOG_NETWORK)
-        << "Error saving hosts file: " << ec.message();
+            << "Error saving hosts file: " << ec.message();
 
-    // Stop is thread safe and idempotent, allows subscription to be unguarded.
     stopped_ = true;
 
     // Prevent subscription after stop.
@@ -289,8 +288,9 @@ void p2p::stop(result_handler handler)
     channel_subscriber_->stop();
     channel_subscriber_->relay(error::service_stopped, nullptr);
 
-    // Must be after subscriber stop.
+    // Stop accepting channels and stop those that exist (self-clearing).
     connections_->stop(error::service_stopped);
+
     manual_.store(nullptr);
     threadpool_.shutdown();
 
@@ -365,27 +365,27 @@ void p2p::connected_count(count_handler handler)
 void p2p::fetch_address(address_handler handler)
 {
     address out;
-    handler(hosts_.fetch(out), out);
+    handler(hosts_->fetch(out), out);
 }
 
 void p2p::store(const address& address, result_handler handler)
 {
-    handler(hosts_.store(address));
+    handler(hosts_->store(address));
 }
 
 void p2p::store(const address::list& addresses, result_handler handler)
 {
-    hosts_.store(addresses, handler);
+    hosts_->store(addresses, handler);
 }
 
 void p2p::remove(const address& address, result_handler handler)
 {
-    handler(hosts_.remove(address));
+    handler(hosts_->remove(address));
 }
 
 void p2p::address_count(count_handler handler)
 {
-    handler(hosts_.count());
+    handler(hosts_->count());
 }
 
 } // namespace network

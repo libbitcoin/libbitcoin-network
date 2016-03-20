@@ -300,12 +300,14 @@ void proxy::handle_send(const boost_code& ec, result_handler handler)
 // Stop sequence.
 // ----------------------------------------------------------------------------
 
-// public:
+// This is not short-circuited by a stop test because we need to ensure it
+// completes at least once before invoking the handler. This requires a unique
+// lock be taken around the entire section, which poses a deadlock risk.
+// Instead this is thread safe and idempotent, allowing it to be unguarded.
 void proxy::stop(const code& ec)
 {
     BITCOIN_ASSERT_MSG(ec, "The stop code must be an error code.");
 
-    // Stop is thread safe and idempotent, allows stop to be unguarded.
     stopped_ = true;
 
     // Prevent subscription after stop.

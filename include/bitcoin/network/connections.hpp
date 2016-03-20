@@ -41,14 +41,13 @@ class BCT_API connections
 {
 public:
     typedef std::shared_ptr<connections> ptr;
-    typedef config::authority authority;
     typedef std::function<void(bool)> truth_handler;
     typedef std::function<void(size_t)> count_handler;
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
 
     /// Construct an instance.
-    connections(threadpool& pool);
+    connections();
 
     /// Validate connections stopped.
     ~connections();
@@ -57,63 +56,47 @@ public:
     connections(const connections&) = delete;
     void operator=(const connections&) = delete;
 
-    /// Completion handler returns operation_failed if any channel send failed.
+    /// Completion handler always returns success.
     template <typename Message>
     void broadcast(const Message& message, channel_handler handle_channel,
         result_handler handle_complete)
     {
-        const auto method = &connections::do_broadcast<Message>;
-        dispatch_.concurrent(method, shared_from_this(), message,
-            handle_channel, handle_complete);
-    }
+        // We cannot use a synchronizer here because handler closure in loop.
+        auto counter = std::make_shared<std::atomic<size_t>>(channels_.size());
 
-    virtual void stop(const code& ec);
-    virtual void count(count_handler handler) const;
-    virtual void store(channel::ptr channel, result_handler handler);
-    virtual void remove(channel::ptr channel, result_handler handler);
-    virtual void exists(const authority& authority,
-        truth_handler handler) const;
-
-private:
-    typedef std::vector<channel::ptr> list;
-
-    template <typename Message>
-    void do_broadcast(const Message& message, channel_handler handle_channel,
-        result_handler handle_complete)
-    {
-        // The list is copied, which protects the iteration without a lock.
-        auto channels = safe_copy();
-        const auto size = channels.size();
-        const auto counter = std::make_shared<std::atomic<size_t>>(size);
-        const auto result = std::make_shared<std::atomic<error::error_code_t>>(
-            error::success);
-
-        for (const auto channel: channels)
+        for (const auto channel: safe_copy())
         {
-            const auto handle_send = [=](const code ec)
+            const auto handle_send = [=](code ec)
             {
                 handle_channel(ec, channel);
 
-                if (ec)
-                    result->store(error::operation_failed);
-
                 if (counter->fetch_sub(1) == 1)
-                    handle_complete(result->load());
+                    handle_complete(error::success);
             };
 
             channel->send(message, handle_send);
         }
     }
 
+    virtual void stop(const code& ec);
+    virtual void count(count_handler handler) const;
+    virtual void store(channel::ptr channel, result_handler handler);
+    virtual void remove(channel::ptr channel, result_handler handler);
+    virtual void exists(const config::authority& authority,
+        truth_handler handler) const;
+
+private:
+    typedef std::vector<channel::ptr> list;
+
     list safe_copy() const;
     size_t safe_count() const;
-    bool safe_store(channel::ptr channel);
+    code safe_store(channel::ptr channel);
     bool safe_remove(channel::ptr channel);
-    bool safe_exists(const authority& address) const;
+    bool safe_exists(const config::authority& address) const;
 
     list channels_;
-    dispatcher dispatch_;
-    mutable shared_mutex mutex_;
+    std::atomic<bool> stopped_;
+    mutable upgrade_mutex mutex_;
 };
 
 } // namespace network

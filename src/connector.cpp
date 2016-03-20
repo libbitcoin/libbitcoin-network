@@ -62,14 +62,23 @@ void connector::safe_stop()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    mutex_.lock_upgrade();
 
     if (!stopped_)
     {
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        mutex_.unlock_upgrade_and_lock();
+
         // This will asynchronously invoke the handler of each pending resolve.
         resolver_->cancel();
         stopped_ = true;
+
+        mutex_.unlock();
+        //---------------------------------------------------------------------
+        return;
     }
+
+    mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -111,6 +120,8 @@ void connector::connect(const std::string& hostname, uint16_t port,
         // We preserve the asynchronous contract of the async_resolve.
         // Dispatch ensures job does not execute in the current thread.
         dispatch_.concurrent(handler, error::service_stopped, nullptr);
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
         return;
     }
 
@@ -138,12 +149,16 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     if (stopped_)
     {
         dispatch_.concurrent(handler, error::service_stopped, nullptr);
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
         return;
     }
 
     if (ec)
     {
         dispatch_.concurrent(handler, error::resolve_failed, nullptr);
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
         return;
     }
 
@@ -155,7 +170,7 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     pending_.store(socket);
 
     // Manage the socket-timer race.
-    const auto handle_connect = synchronize(handler, 1, NAME);
+    const auto handle_connect = synchronize(handler, 1, NAME, false);
 
     // This is branch #1 of the connnect sequence.
     timer->start(

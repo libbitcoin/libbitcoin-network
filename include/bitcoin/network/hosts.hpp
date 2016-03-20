@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 #include <boost/circular_buffer.hpp>
@@ -40,8 +41,10 @@ namespace network {
 /// The file is a line-oriented set of config::authority serializations.
 /// Duplicate addresses and those with zero-valued ports are disacarded.
 class BCT_API hosts
+  : public enable_shared_from_base<hosts>
 {
 public:
+    typedef std::shared_ptr<hosts> ptr;
     typedef message::network_address address;
     typedef std::function<void(const code&)> result_handler;
 
@@ -54,7 +57,7 @@ public:
 
     virtual code load();
     virtual code save();
-    virtual size_t count();
+    virtual size_t count() const;
     virtual code fetch(address& out);
     virtual code remove(const address& host);
     virtual code store(const address& host);

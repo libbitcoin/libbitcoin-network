@@ -50,7 +50,7 @@ hosts::iterator hosts::find(const address& host)
     return std::find_if(buffer_.begin(), buffer_.end(), found);
 }
 
-size_t hosts::count()
+size_t hosts::count() const
 {
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
@@ -187,9 +187,10 @@ void hosts::do_store(const address& host, result_handler handler)
 
 void hosts::store(const address::list& hosts, result_handler handler)
 {
+    // The handler is invoked once all calls to do_store are completed.
     // We disperse here to allow other addresses messages to interleave hosts.
     dispatch_.parallel(hosts, "hosts", handler,
-        &hosts::do_store, this);
+        &hosts::do_store, shared_from_this());
 }
 
 } // namespace network
