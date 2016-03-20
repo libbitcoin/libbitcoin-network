@@ -202,16 +202,12 @@ void connector::handle_timer(const code& ec, asio::socket_ptr socket,
     else
         handler(error::channel_timeout, nullptr);
 
-    log::info(LOG_NETWORK) << "connector::handle_timer - close socket";
-
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     unique_lock lock(mutex_);
 
     proxy::close(socket);
     ///////////////////////////////////////////////////////////////////////////
-
-    log::info(LOG_NETWORK) << "connector::handle_timer - closed socket";
 }
 
 // Connect sequence.
