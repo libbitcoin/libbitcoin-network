@@ -34,7 +34,7 @@ static const settings mainnet_defaults()
     value.inbound_port = 8333;
     value.connection_limit = 16;
     value.outbound_connections = 8;
-    value.manual_retry_limit = 0;
+    value.manual_attempt_limit = 0;
     value.connect_batch_size = 5;
     value.connect_timeout_seconds = 5;
     value.channel_handshake_seconds = 30;

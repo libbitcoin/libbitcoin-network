@@ -57,7 +57,7 @@ using namespace bc::network;
     config.host_pool_capacity = 0; \
     config.outbound_connections = 0; \
     config.connection_limit = 0; \
-    config.manual_retry_limit = 2
+    config.manual_attempt_limit = 2
 
 #define SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(config) \
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(config); \

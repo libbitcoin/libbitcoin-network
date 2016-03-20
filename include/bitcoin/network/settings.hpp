@@ -41,7 +41,7 @@ struct BCT_API settings
     uint16_t inbound_port;
     uint32_t connection_limit;
     uint32_t outbound_connections;
-    uint32_t manual_retry_limit;
+    uint32_t manual_attempt_limit;
     uint32_t connect_batch_size;
     uint32_t connect_timeout_seconds;
     uint32_t channel_handshake_seconds;
