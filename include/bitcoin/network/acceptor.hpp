@@ -62,6 +62,7 @@ public:
 
 private:
     code safe_listen(uint16_t port);
+    std::shared_ptr<channel> new_channel(asio::socket_ptr socket);
     void handle_accept(const boost_code& ec, asio::socket_ptr socket,
         accept_handler handler);
 
