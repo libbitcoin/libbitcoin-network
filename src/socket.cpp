@@ -17,65 +17,62 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/pending_sockets.hpp>
-
-#include <algorithm>
-#include <bitcoin/bitcoin.hpp>
-#include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/socket.hpp>
+
+#include <boost/asio.hpp>
+#include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-pending_sockets::pending_sockets()
+#define NAME "socket"
+
+socket::socket(threadpool& pool)
+  : socket_(pool.service()),
+    CONSTRUCT_TRACK(socket)
 {
 }
 
-pending_sockets::~pending_sockets()
+config::authority socket::get_authority() const
 {
-    BITCOIN_ASSERT_MSG(sockets_.empty(), "Pending sockets not cleared.");
+    boost_code ec;
+    const auto endpoint = socket_.remote_endpoint(ec);
+    return ec ? config::authority() : config::authority(endpoint);
 }
 
-void pending_sockets::clear()
+// TODO: replace this with the return of a class that unlocks on destruct.
+asio::socket& socket::get_locked_socket()
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-
-    // This will asynchronously invoke the handler of each pending connect.
-    for (auto socket: sockets_)
-        socket->close();
-
-    sockets_.clear();
-    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock();
+    return socket_;
 }
 
-void pending_sockets::store(socket::ptr socket)
+// TODO: replace this with the return of a class that unlocks on destruct.
+void socket::unlock_socket()
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-
-    // We could test the list for the socket, which should not exist.
-    sockets_.push_back(socket);
-    ///////////////////////////////////////////////////////////////////////////
+    mutex_.unlock();
 }
 
-void pending_sockets::remove(socket::ptr socket)
+// BUGBUG: socket::cancel fails with error::operation_not_supported
+// on Windows XP and Windows Server 2003, but handler invocation is required.
+// We should enable BOOST_ASIO_ENABLE_CANCELIO and BOOST_ASIO_DISABLE_IOCP
+// on these platforms only. See: bit.ly/1YC0p9e
+void socket::close()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
 
-    auto it = std::find(sockets_.begin(), sockets_.end(), socket);
-    const auto found = it != sockets_.end();
-
-    // Clear can be called at any time, so the entry may not be found.
-    if (found)
+    if (socket_.is_open())
     {
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         mutex_.unlock_upgrade_and_lock();
-        sockets_.erase(it);
+
+        // Ignoring socket error codes creates exception safety.
+        boost_code ignore;
+        socket_.shutdown(asio::socket::shutdown_both, ignore);
+        socket_.cancel(ignore);
+
         mutex_.unlock();
         //---------------------------------------------------------------------
         return;

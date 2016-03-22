@@ -27,6 +27,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -39,7 +40,7 @@ static deadline::ptr alarm(threadpool& pool, const asio::duration& duration)
     return std::make_shared<deadline>(pool, pseudo_randomize(duration));
 }
 
-channel::channel(threadpool& pool, asio::socket_ptr socket,
+channel::channel(threadpool& pool, socket::ptr socket,
     const settings& settings)
   : proxy(pool, socket, settings.identifier),
     notify_(false),

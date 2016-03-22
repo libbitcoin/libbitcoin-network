@@ -26,6 +26,7 @@
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -144,12 +145,12 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
+    mutex_.lock_shared();
 
     if (stopped_)
     {
         dispatch_.concurrent(handler, error::service_stopped, nullptr);
-        mutex_.unlock_upgrade();
+        mutex_.unlock_shared();
         //---------------------------------------------------------------------
         return;
     }
@@ -157,14 +158,14 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     if (ec)
     {
         dispatch_.concurrent(handler, error::resolve_failed, nullptr);
-        mutex_.unlock_upgrade();
+        mutex_.unlock_shared();
         //---------------------------------------------------------------------
         return;
     }
 
     const auto timeout = settings_.connect_timeout();
     const auto timer = std::make_shared<deadline>(pool_, timeout);
-    const auto socket = std::make_shared<asio::socket>(pool_.service());
+    const auto socket = std::make_shared<network::socket>(pool_);
 
     // Retain a socket reference until connected, allowing connect cancelation.
     pending_.store(socket);
@@ -177,23 +178,34 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
         std::bind(&connector::handle_timer,
             shared_from_this(), _1, socket, handle_connect));
 
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    mutex_.unlock_upgrade_and_lock();
+    safe_connect(iterator, socket, timer, handle_connect);
+
+    mutex_.unlock_shared();
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+void connector::safe_connect(asio::iterator iterator, socket::ptr socket,
+    deadline::ptr timer, connect_handler handler)
+{
+    // Critical Section (external)
+    /////////////////////////////////////////////////////////////////////////// 
+    auto& asio_socket = socket->get_locked_socket();
 
     // This is branch #2 of the connnect sequence.
-    boost::asio::async_connect(*socket, iterator,
+    boost::asio::async_connect(asio_socket, iterator,
         std::bind(&connector::handle_connect,
-            shared_from_this(), _1, _2, socket, timer, handle_connect));
+            shared_from_this(), _1, _2, socket, timer, handler));
 
-    mutex_.unlock();
-    ///////////////////////////////////////////////////////////////////////////
+    // This guards the asio_socket against concurrent use.
+    socket->unlock_socket();
+    /////////////////////////////////////////////////////////////////////////// 
 }
 
 // Timer sequence.
 // ----------------------------------------------------------------------------
 
 // private:
-void connector::handle_timer(const code& ec, asio::socket_ptr socket,
+void connector::handle_timer(const code& ec, socket::ptr socket,
    connect_handler handler)
 {
     // This is the end of the timer sequence.
@@ -202,12 +214,7 @@ void connector::handle_timer(const code& ec, asio::socket_ptr socket,
     else
         handler(error::channel_timeout, nullptr);
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-
-    proxy::close(socket);
-    ///////////////////////////////////////////////////////////////////////////
+    socket->close();
 }
 
 // Connect sequence.
@@ -215,7 +222,7 @@ void connector::handle_timer(const code& ec, asio::socket_ptr socket,
 
 // private:
 void connector::handle_connect(const boost_code& ec, asio::iterator,
-    asio::socket_ptr socket, deadline::ptr timer, connect_handler handler)
+    socket::ptr socket, deadline::ptr timer, connect_handler handler)
 {
     pending_.remove(socket);
 
@@ -228,7 +235,7 @@ void connector::handle_connect(const boost_code& ec, asio::iterator,
     timer->stop();
 }
 
-std::shared_ptr<channel> connector::new_channel(asio::socket_ptr socket)
+std::shared_ptr<channel> connector::new_channel(socket::ptr socket)
 {
     return std::make_shared<channel>(pool_, socket, settings_);
 }

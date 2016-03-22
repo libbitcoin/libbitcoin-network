@@ -29,6 +29,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/pending_sockets.hpp>
 #include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -65,18 +66,20 @@ public:
 
 private:
     bool stopped();
-    void close_socket(asio::socket_ptr socket);
-    std::shared_ptr<channel> new_channel(asio::socket_ptr socket);
+    void close_socket(socket socket);
+    std::shared_ptr<channel> new_channel(socket::ptr socket);
 
     void safe_stop();
     void safe_resolve(asio::query_ptr query, connect_handler handler);
+    void safe_connect(asio::iterator iterator, socket::ptr socket,
+        deadline::ptr timer, connect_handler handler);
 
     void handle_resolve(const boost_code& ec, asio::iterator iterator,
         connect_handler handler);
-    void handle_timer(const code& ec, asio::socket_ptr socket,
+    void handle_timer(const code& ec, socket::ptr socket,
         connect_handler handler);
     void handle_connect(const boost_code& ec, asio::iterator iterator,
-        asio::socket_ptr socket, deadline::ptr timer, connect_handler handler);
+        socket::ptr socket, deadline::ptr timer, connect_handler handler);
 
     std::atomic<bool> stopped_;
     threadpool& pool_;

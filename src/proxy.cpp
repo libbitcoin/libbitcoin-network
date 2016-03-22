@@ -27,6 +27,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/shared_const_buffer.hpp>
+#include <bitcoin/network/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -40,30 +41,10 @@ using std::placeholders::_2;
 // TODO: this is made up, configure payload size guard for DoS protection.
 static constexpr size_t max_payload_size = 10 * 1024 * 1024;
 
-// BUGBUG: socket::cancel fails with error::operation_not_supported
-// on Windows XP and Windows Server 2003, but handler invocation is required.
-// We should enable BOOST_ASIO_ENABLE_CANCELIO and BOOST_ASIO_DISABLE_IOCP
-// on these platforms only. See: bit.ly/1YC0p9e
-void proxy::close(asio::socket_ptr socket)
-{
-    // Ignoring socket error codes creates exception safety.
-    boost_code ignore;
-    socket->shutdown(asio::socket::shutdown_both, ignore);
-    socket->cancel(ignore);
-}
-
-// Cache the address for logging after stop.
-config::authority proxy::authority_factory(asio::socket_ptr socket)
-{
-    boost_code ec;
-    const auto endpoint = socket->remote_endpoint(ec);
-    return ec ? config::authority() : config::authority(endpoint);
-}
-
-proxy::proxy(threadpool& pool, asio::socket_ptr socket, uint32_t magic)
+proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t magic)
   : stopped_(true),
     magic_(magic),
-    authority_(authority_factory(socket)),
+    authority_(socket->get_authority()),
     socket_(socket),
     message_subscriber_(pool),
     stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_sub"))
@@ -123,13 +104,14 @@ void proxy::read_heading()
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    auto& asio_socket = socket_->get_locked_socket();
 
-    // The socket_ must be guarded against concurrent use.
     using namespace boost::asio;
-    async_read(*socket_, buffer(heading_buffer_),
+    async_read(asio_socket, buffer(heading_buffer_),
         std::bind(&proxy::handle_read_heading,
             shared_from_this(), _1, _2));
+
+    socket_->unlock_socket();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -184,15 +166,17 @@ void proxy::read_payload(const heading& head)
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    auto& asio_socket = socket_->get_locked_socket();
 
-    payload_buffer_.resize(head.payload_size);
+    const auto size = head.payload_size;
+    payload_buffer_.resize(size);
 
-    // The socket_ must be guarded against concurrent use.
     using namespace boost::asio;
-    async_read(*socket_, buffer(payload_buffer_, head.payload_size),
+    async_read(asio_socket, buffer(payload_buffer_, size),
         std::bind(&proxy::handle_read_payload,
             shared_from_this(), _1, _2, head));
+
+    socket_->unlock_socket();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -275,13 +259,14 @@ void proxy::do_send(const data_chunk& message, result_handler handler,
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    auto& asio_socket = socket_->get_locked_socket();
 
-    // The socket_ must be guarded against concurrent use.
     const shared_const_buffer buffer(message);
-    async_write(*socket_, buffer,
+    async_write(asio_socket, buffer,
         std::bind(&proxy::handle_send,
             shared_from_this(), _1, handler));
+
+    socket_->unlock_socket();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -321,13 +306,8 @@ void proxy::stop(const code& ec)
     // Give channel opportunity to terminate timers.
     handle_stopping();
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-
-    // The socket_ must be guarded against concurrent use.
-    proxy::close(socket_);
-    ///////////////////////////////////////////////////////////////////////////
+    // The socket_ is internally guarded against concurrent use.
+    socket_->close();
 }
 
 void proxy::stop(const boost_code& ec)

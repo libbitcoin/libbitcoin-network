@@ -31,6 +31,7 @@
 #include <bitcoin/network/message_subscriber.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/shared_const_buffer.hpp>
+#include <bitcoin/network/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -43,8 +44,7 @@ public:
     typedef std::shared_ptr<channel> ptr;
 
     /// Construct an instance.
-    channel(threadpool& pool, asio::socket_ptr socket,
-        const settings& settings);
+    channel(threadpool& pool, socket::ptr socket, const settings& settings);
 
     void start(result_handler handler) override;
 
