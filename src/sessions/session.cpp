@@ -140,8 +140,8 @@ void session::start(result_handler handler)
 
 void session::do_stop_session(const code&)
 {
-    // This signals the session to stop creating connections, but does not stop
-    // the session. Channels are stopped resulting in session losing scope.
+    // This signals the session to stop creating connections, but does not
+    // close the session. Channels are stopped resulting in session lost scope.
     stopped_ = true;
 }
 
