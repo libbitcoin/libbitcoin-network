@@ -282,11 +282,11 @@ void p2p::stop(result_handler handler)
 
     // Prevent subscription after stop.
     stop_subscriber_->stop();
-    stop_subscriber_->relay(error::service_stopped);
+    stop_subscriber_->do_relay(error::service_stopped);
 
     // Prevent subscription after stop.
     channel_subscriber_->stop();
-    channel_subscriber_->relay(error::service_stopped, nullptr);
+    channel_subscriber_->do_relay(error::service_stopped, nullptr);
 
     // Stop accepting channels and stop those that exist (self-clearing).
     connections_->stop(error::service_stopped);
