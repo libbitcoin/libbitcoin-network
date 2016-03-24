@@ -28,6 +28,7 @@
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -62,8 +63,9 @@ public:
 
 private:
     code safe_listen(uint16_t port);
-    std::shared_ptr<channel> new_channel(asio::socket_ptr socket);
-    void handle_accept(const boost_code& ec, asio::socket_ptr socket,
+    void safe_accept(socket::ptr socket, accept_handler handler);
+    std::shared_ptr<channel> new_channel(socket::ptr socket);
+    void handle_accept(const boost_code& ec, socket::ptr socket,
         accept_handler handler);
 
     threadpool& pool_;

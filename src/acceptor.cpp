@@ -26,6 +26,7 @@
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -47,7 +48,8 @@ acceptor::acceptor(threadpool& pool, const settings& settings)
 
 acceptor::~acceptor()
 {
-    BITCOIN_ASSERT_MSG(!acceptor_->is_open(), "The acceptor was not stopped.");
+    stop();
+    ////BITCOIN_ASSERT_MSG(!acceptor_->is_open(), "The acceptor was not stopped.");
 }
 
 // Stop sequence.
@@ -111,24 +113,40 @@ void acceptor::accept(accept_handler handler)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    mutex_.lock();
 
     if (!acceptor_->is_open())
     {
         dispatch_.concurrent(handler, error::service_stopped, nullptr);
+        mutex_.unlock();
+        //---------------------------------------------------------------------
         return;
     }
 
-    auto socket = std::make_shared<asio::socket>(pool_.service());
+    const auto socket = std::make_shared<network::socket>(pool_);
+    safe_accept(socket, handler);
 
-    // async_accept will not invoke the handler within this function.
-    acceptor_->async_accept(*socket,
-        std::bind(&acceptor::handle_accept,
-            shared_from_this(), _1, socket, handler));
+    mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void acceptor::handle_accept(const boost_code& ec, asio::socket_ptr socket,
+void acceptor::safe_accept(socket::ptr socket, accept_handler handler)
+{
+    // Critical Section (external)
+    /////////////////////////////////////////////////////////////////////////// 
+    auto& asio_socket = socket->get_locked_socket();
+
+    // async_accept will not invoke the handler within this function.
+    acceptor_->async_accept(asio_socket,
+        std::bind(&acceptor::handle_accept,
+            shared_from_this(), _1, socket, handler));
+
+    // This guards the asio_socket against concurrent use.
+    socket->unlock_socket();
+    /////////////////////////////////////////////////////////////////////////// 
+}
+
+void acceptor::handle_accept(const boost_code& ec, socket::ptr socket,
     accept_handler handler)
 {
     // This is the end of the accept sequence.
@@ -138,11 +156,10 @@ void acceptor::handle_accept(const boost_code& ec, asio::socket_ptr socket,
         handler(error::success, new_channel(socket));
 }
 
-std::shared_ptr<channel> acceptor::new_channel(asio::socket_ptr socket)
+std::shared_ptr<channel> acceptor::new_channel(socket::ptr socket)
 {
     return std::make_shared<channel>(pool_, socket, settings_);
 }
-
 
 } // namespace network
 } // namespace libbitcoin

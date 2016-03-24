@@ -93,6 +93,7 @@
     <ClCompile Include="..\..\..\..\src\sessions\session_manual.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_outbound.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_seed.cpp" />
+    <ClCompile Include="..\..\..\..\src\socket.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp" />
@@ -123,6 +124,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_manual.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_outbound.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_seed.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\socket.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

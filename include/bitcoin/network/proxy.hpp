@@ -31,6 +31,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
+#include <bitcoin/network/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -48,11 +49,9 @@ public:
     typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> result_handler;
     typedef subscriber<const code&> stop_subscriber;
-
-    static void close(asio::socket_ptr socket);
-
+    
     /// Construct an instance.
-    proxy(threadpool& pool, asio::socket_ptr socket, uint32_t magic);
+    proxy(threadpool& pool, socket::ptr socket, uint32_t magic);
 
     /// Validate proxy stopped.
     ~proxy();
@@ -99,7 +98,7 @@ private:
     typedef byte_source<data_chunk> payload_source;
     typedef boost::iostreams::stream<payload_source> payload_stream;
 
-    static config::authority authority_factory(asio::socket_ptr socket);
+    static config::authority authority_factory(socket::ptr socket);
 
     void do_close();
     void stop(const boost_code& ec);
@@ -120,11 +119,10 @@ private:
     const uint32_t magic_;
     const config::authority authority_;
 
-    // The socket and buffers are protected by mutex.
-    asio::socket_ptr socket_;
+    // The socket and buffers are protected by the socket mutex.
+    socket::ptr socket_;
     data_chunk payload_buffer_;
     message::heading::buffer heading_buffer_;
-    mutable shared_mutex mutex_;
 
     // Subscribers are thread safe.
     message_subscriber message_subscriber_;

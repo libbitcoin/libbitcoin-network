@@ -29,6 +29,7 @@
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/shared_const_buffer.hpp>
+#include <bitcoin/network/socket.hpp>
 #include <bitcoin/network/version.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/protocols/protocol_address.hpp>

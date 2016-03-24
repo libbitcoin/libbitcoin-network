@@ -47,6 +47,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/pending_sockets.cpp \
     src/proxy.cpp \
     src/settings.cpp \
+    src/socket.cpp \
     src/protocols/protocol.cpp \
     src/protocols/protocol_address.cpp \
     src/protocols/protocol_events.cpp \
@@ -98,6 +99,7 @@ include_bitcoin_network_HEADERS = \
     include/bitcoin/network/proxy.hpp \
     include/bitcoin/network/settings.hpp \
     include/bitcoin/network/shared_const_buffer.hpp \
+    include/bitcoin/network/socket.hpp \
     include/bitcoin/network/version.hpp
 
 include_bitcoin_network_protocolsdir = ${includedir}/bitcoin/network/protocols

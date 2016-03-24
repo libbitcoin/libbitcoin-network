@@ -76,6 +76,9 @@
     <ClCompile Include="..\..\..\..\src\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\socket.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp">
@@ -160,6 +163,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\socket.hpp">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
