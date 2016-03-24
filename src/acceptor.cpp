@@ -48,8 +48,7 @@ acceptor::acceptor(threadpool& pool, const settings& settings)
 
 acceptor::~acceptor()
 {
-    stop();
-    ////BITCOIN_ASSERT_MSG(!acceptor_->is_open(), "The acceptor was not stopped.");
+    BITCOIN_ASSERT_MSG(!acceptor_->is_open(), "The acceptor was not stopped.");
 }
 
 // Stop sequence.
