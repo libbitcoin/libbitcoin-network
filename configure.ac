@@ -106,25 +106,15 @@ AS_CASE([${enable_shared}], [yes], AC_DEFINE([BOOST_TEST_DYN_LINK]))
 
 # Check dependencies.
 #==============================================================================
-# Require Boost of at least version 1.55.0 if in gcc and output ${boost_CPPFLAGS/LDFLAGS}.
+# Require Boost of at least version 1.56.0 and output ${boost_CPPFLAGS/LDFLAGS}.
 #------------------------------------------------------------------------------
-AS_CASE([${CC}], [*gcc*],
-    [AX_BOOST_BASE([1.55.0],
+AS_CASE([${CC}], [*],
+    [AX_BOOST_BASE([1.56.0],
         [AC_SUBST([boost_CPPFLAGS], [${BOOST_CPPFLAGS}])
          AC_SUBST([boost_LDFLAGS], [${BOOST_LDFLAGS}])
          AC_MSG_NOTICE([boost_CPPFLAGS : ${boost_CPPFLAGS}])
          AC_MSG_NOTICE([boost_LDFLAGS : ${boost_LDFLAGS}])],
-        [AC_MSG_ERROR([Boost 1.55.0 or later is required but was not found.])])])
-
-# Require Boost of at least version 1.54.0 if in clang and output ${boost_CPPFLAGS/LDFLAGS}.
-#------------------------------------------------------------------------------
-AS_CASE([${CC}], [*clang*],
-    [AX_BOOST_BASE([1.54.0],
-        [AC_SUBST([boost_CPPFLAGS], [${BOOST_CPPFLAGS}])
-         AC_SUBST([boost_LDFLAGS], [${BOOST_LDFLAGS}])
-         AC_MSG_NOTICE([boost_CPPFLAGS : ${boost_CPPFLAGS}])
-         AC_MSG_NOTICE([boost_LDFLAGS : ${boost_LDFLAGS}])],
-        [AC_MSG_ERROR([Boost 1.54.0 or later is required but was not found.])])])
+        [AC_MSG_ERROR([Boost 1.56.0 or later is required but was not found.])])])
 
 AS_CASE([${with_tests}], [yes],
     [AX_BOOST_UNIT_TEST_FRAMEWORK
