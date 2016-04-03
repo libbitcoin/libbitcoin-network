@@ -28,12 +28,12 @@
 namespace libbitcoin {
 namespace network {
 
-/// Common network configuration settings, thread safe.
-struct BCT_API settings
+/// Common database configuration settings, properties not thread safe.
+class BCT_API settings
 {
-    /// Default instances.
-    static const settings mainnet;
-    static const settings testnet;
+public:
+    settings();
+    settings(bc::settings context);
 
     /// Properties.
     uint32_t threads;

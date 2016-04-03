@@ -59,11 +59,11 @@ public:
     // ------------------------------------------------------------------------
 
     /// Construct an instance.
-    p2p(const settings& settings=settings::mainnet);
+    p2p(const settings& settings);
 
     /// Ensure all threads are coalesced.
     ~p2p();
-    
+
     /// This class is not copyable.
     p2p(const p2p&) = delete;
     void operator=(const p2p&) = delete;
