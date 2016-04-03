@@ -26,61 +26,71 @@ namespace network {
 
 using namespace asio;
 
-static const settings mainnet_defaults()
+// Common default values (no settings context).
+settings::settings()
+  : threads(50),
+    connection_limit(16),
+    outbound_connections(8),
+    manual_attempt_limit(0),
+    connect_batch_size(5),
+    connect_timeout_seconds(5),
+    channel_handshake_seconds(30),
+    channel_poll_seconds(1),
+    channel_heartbeat_minutes(5),
+    channel_inactivity_minutes(10),
+    channel_expiration_minutes(1440),
+    channel_germination_seconds(30),
+    host_pool_capacity(1000),
+    relay_transactions(true),
+    hosts_file("hosts.cache"),
+    debug_file("debug.log"),
+    error_file("error.log"),
+    self(unspecified_network_address)
 {
-    settings value;
-    value.threads = 50;
-    value.identifier = 3652501241;
-    value.inbound_port = 8333;
-    value.connection_limit = 16;
-    value.outbound_connections = 8;
-    value.manual_attempt_limit = 0;
-    value.connect_batch_size = 5;
-    value.connect_timeout_seconds = 5;
-    value.channel_handshake_seconds = 30;
-    value.channel_poll_seconds = 1;
-    value.channel_heartbeat_minutes = 5;
-    value.channel_inactivity_minutes = 10;
-    value.channel_expiration_minutes = 1440;
-    value.channel_germination_seconds = 30;
-    value.host_pool_capacity = 1000;
-    value.relay_transactions = true;
-    value.hosts_file = { "hosts.cache" };
-    value.debug_file = { "debug.log" };
-    value.error_file = { "error.log" };
-    value.self = unspecified_network_address;
-    ////value.blacklists = { {} };
+}
 
-    // Seeds based on bitcoinstats.com/network/dns-servers
-    // Use push_back due to initializer_list bug:
-    // stackoverflow.com/a/20168627/1172329
-    value.seeds.reserve(6);
-    value.seeds.push_back({ "seed.bitchannels.io", 8333 });
-    value.seeds.push_back({ "seed.bitcoinstats.com", 8333 });
-    value.seeds.push_back({ "seed.bitcoin.sipa.be", 8333 });
-    value.seeds.push_back({ "dnsseed.bluematt.me", 8333 });
-    value.seeds.push_back({ "seed.bitcoin.jonasschnelli.ch", 8333 });
-    value.seeds.push_back({ "dnsseed.bitcoin.dashjr.org", 8333 });
-    return value;
-};
-
-static const settings testnet_defaults()
+// Use push_back due to initializer_list bug:
+// stackoverflow.com/a/20168627/1172329
+settings::settings(bc::settings context)
+  : settings()
 {
-    auto value = mainnet_defaults();
-    value.identifier = 118034699;
-    value.inbound_port = 18333;
+    // Handle deviations from common defaults.
+    switch (context)
+    {
+        case bc::settings::mainnet:
+        {
+            identifier = 3652501241;
+            inbound_port = 8333;
 
-    // Use push_back due to initializer_list bug:
-    // stackoverflow.com/a/20168627/1172329
-    value.seeds.reserve(3);
-    value.seeds.push_back({ "testnet-seed.bitcoin.petertodd.org", 18333 });
-    value.seeds.push_back({ "testnet-seed.bitcoin.schildbach.de", 18333 });
-    value.seeds.push_back({ "testnet-seed.bluematt.me", 18333 });
-    return value;
-};
+            // Seeds based on bitcoinstats.com/network/dns-servers
+            seeds.reserve(6);
+            seeds.push_back({ "seed.bitchannels.io", 8333 });
+            seeds.push_back({ "seed.bitcoinstats.com", 8333 });
+            seeds.push_back({ "seed.bitcoin.sipa.be", 8333 });
+            seeds.push_back({ "dnsseed.bluematt.me", 8333 });
+            seeds.push_back({ "seed.bitcoin.jonasschnelli.ch", 8333 });
+            seeds.push_back({ "dnsseed.bitcoin.dashjr.org", 8333 });
+            break;
+        }
 
-const settings settings::mainnet = mainnet_defaults();
-const settings settings::testnet = testnet_defaults();
+        case bc::settings::testnet:
+        {
+            identifier = 118034699;
+            inbound_port = 18333;
+
+            seeds.reserve(3);
+            seeds.push_back({ "testnet-seed.bitcoin.petertodd.org", 18333 });
+            seeds.push_back({ "testnet-seed.bitcoin.schildbach.de", 18333 });
+            seeds.push_back({ "testnet-seed.bluematt.me", 18333 });
+            break;
+        }
+
+        default:
+        case bc::settings::none:
+        {
+        }
+    }
+}
 
 duration settings::connect_timeout() const
 {

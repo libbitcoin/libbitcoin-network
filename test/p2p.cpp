@@ -52,7 +52,7 @@ using namespace bc::network;
     }
 
 #define SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(config) \
-    auto config = settings::testnet; \
+    auto config = network::settings(bc::settings::testnet); \
     config.threads = 1; \
     config.host_pool_capacity = 0; \
     config.outbound_connections = 0; \
@@ -66,7 +66,7 @@ using namespace bc::network;
     config.hosts_file = get_log_path(TEST_NAME, "hosts")
 
 #define SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(config) \
-    auto config = settings::testnet; \
+    auto config = network::settings(bc::settings::testnet); \
     config.threads = 3; \
     config.connection_limit = 0; \
     config.outbound_connections = 5; \
@@ -213,14 +213,16 @@ BOOST_FIXTURE_TEST_SUITE(p2p_tests, log_setup_fixture)
 BOOST_AUTO_TEST_CASE(p2p__height__default__zero)
 {
     print_headers(TEST_NAME);
-    p2p network;
+    const network::settings configuration;
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(network.height(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__set_height__value__expected)
 {
     print_headers(TEST_NAME);
-    p2p network;
+    const network::settings configuration;
+    p2p network(configuration);
     const size_t expected_height = 42;
     network.set_height(expected_height);
     BOOST_REQUIRE_EQUAL(network.height(), expected_height);
