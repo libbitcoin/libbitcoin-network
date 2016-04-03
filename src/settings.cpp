@@ -42,9 +42,9 @@ settings::settings()
     channel_germination_seconds(30),
     host_pool_capacity(1000),
     relay_transactions(true),
-    hosts_file({ "hosts.cache" }),
-    debug_file({ "debug.log" }),
-    error_file({ "error.log" }),
+    hosts_file("hosts.cache"),
+    debug_file("debug.log"),
+    error_file("error.log"),
     self(unspecified_network_address)
 {
 }
