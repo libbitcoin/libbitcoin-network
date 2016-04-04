@@ -212,17 +212,6 @@ private:
 #undef BASE_ARGS_TYPE
 #undef BOUND_BASE_TYPE
 
-#define BIND_0(method) \
-    base_bind(&CLASS::method)
-#define BIND_1(method, p1) \
-    base_bind(&CLASS::method, p1)
-#define BIND_2(method, p1, p2) \
-    base_bind(&CLASS::method, p1, p2)
-#define BIND_3(method, p1, p2, p3) \
-    base_bind(&CLASS::method, p1, p2, p3)
-#define BIND_4(method, p1, p2, p3, p4) \
-    base_bind(&CLASS::method, p1, p2, p3, p4)
-
 // Derived session types.
 
 #undef SESSION_ARGS

@@ -38,8 +38,19 @@
 namespace libbitcoin {
 namespace network {
 
-#define CLASS session
 #define NAME "session"
+
+// Base class binders.
+#define BIND_0(method) \
+    base_bind(&session::method)
+#define BIND_1(method, p1) \
+    base_bind(&session::method, p1)
+#define BIND_2(method, p1, p2) \
+    base_bind(&session::method, p1, p2)
+#define BIND_3(method, p1, p2, p3) \
+    base_bind(&session::method, p1, p2, p3)
+#define BIND_4(method, p1, p2, p3, p4) \
+    base_bind(&session::method, p1, p2, p3, p4)
 
 using std::placeholders::_1;
 using std::placeholders::_2;
