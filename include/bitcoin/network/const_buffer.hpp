@@ -17,9 +17,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SHARED_CONST_BUFFER_HPP
-#define LIBBITCOIN_NETWORK_SHARED_CONST_BUFFER_HPP
+#ifndef LIBBITCOIN_NETWORK_CONST_BUFFER_HPP
+#define LIBBITCOIN_NETWORK_CONST_BUFFER_HPP
 
+#include <cstddef>
 #include <memory>
 #include <boost/asio.hpp>
 #include <bitcoin/bitcoin.hpp>
@@ -28,30 +29,20 @@
 namespace libbitcoin {
 namespace network {
 
-// A reference-counted non-modifiable buffer class, not thread safe.
-class BCT_API shared_const_buffer
+// A shared boost::asio write buffer, thread safe.
+class BCT_API const_buffer
 {
 public:
-    /// Implementation of ConstBufferSequence requirements.
+
+    // Required by ConstBufferSequence.
     typedef boost::asio::const_buffer value_type;
     typedef const value_type* const_iterator;
 
-    /// Construct an instance.
-    explicit shared_const_buffer(const data_chunk& data)
-      : data_(std::make_shared<data_chunk>(data.begin(), data.end())),
-        buffer_(boost::asio::buffer(*data_))
-    {
-    }
+    const_buffer(data_chunk&& data);
 
-    const_iterator begin() const
-    {
-        return &buffer_;
-    }
-
-    const_iterator end() const
-    {
-        return &buffer_ + 1;
-    }
+    size_t size() const;
+    const_iterator begin() const;
+    const_iterator end() const;
 
 private:
     std::shared_ptr<data_chunk> data_;

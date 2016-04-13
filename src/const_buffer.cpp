@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -17,46 +17,36 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SOCKET_HPP
-#define LIBBITCOIN_NETWORK_SOCKET_HPP
+#include <bitcoin/network/const_buffer.hpp>
 
+#include <memory>
+#include <utility>
 #include <boost/asio.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/network/define.hpp>
-#include <bitcoin/network/locked_socket.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// A thread safe asio socket.
-class BCT_API socket
-  : public track<socket>
+const_buffer::const_buffer(data_chunk&& data)
+  : data_(std::make_shared<data_chunk>(std::move(data))),
+    buffer_(boost::asio::buffer(*data_))
 {
-public:
-    typedef std::shared_ptr<socket> ptr;
+}
 
-    /// Construct an instance.
-    socket(threadpool& pool);
+size_t const_buffer::size() const
+{
+    return data_->size();
+}
 
-    /// This class is not copyable.
-    socket(const socket&) = delete;
-    void operator=(const socket&) = delete;
+const_buffer::const_iterator const_buffer::begin() const
+{
+    return &buffer_;
+}
 
-    /// Obtain an exclusive reference to the socket.
-    locked_socket::ptr get_socket();
-
-    /// Obtain the authority of the remote endpoint.
-    config::authority get_authority() const;
-
-    /// Close the contained socket.
-    virtual void close();
-
-private:
-    asio::socket socket_;
-    mutable upgrade_mutex mutex_;
-};
+const_buffer::const_iterator const_buffer::end() const
+{
+    return &buffer_ + 1;
+}
 
 } // namespace network
 } // namespace libbitcoin
-
-#endif

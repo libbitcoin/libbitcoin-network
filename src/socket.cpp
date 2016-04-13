@@ -19,13 +19,13 @@
  */
 #include <bitcoin/network/socket.hpp>
 
+#include <memory>
 #include <boost/asio.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/network/locked_socket.hpp>
 
 namespace libbitcoin {
 namespace network {
-
-#define NAME "socket"
 
 socket::socket(threadpool& pool)
   : socket_(pool.service()),
@@ -40,17 +40,9 @@ config::authority socket::get_authority() const
     return ec ? config::authority() : config::authority(endpoint);
 }
 
-// TODO: replace this with the return of a class that unlocks on destruct.
-asio::socket& socket::get_locked_socket()
+locked_socket::ptr socket::get_socket()
 {
-    mutex_.lock();
-    return socket_;
-}
-
-// TODO: replace this with the return of a class that unlocks on destruct.
-void socket::unlock_socket()
-{
-    mutex_.unlock();
+    return std::make_shared<locked_socket>(socket_, mutex_);
 }
 
 // BUGBUG: socket::cancel fails with error::operation_not_supported

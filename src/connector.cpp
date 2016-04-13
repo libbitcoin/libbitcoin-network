@@ -189,15 +189,12 @@ void connector::safe_connect(asio::iterator iterator, socket::ptr socket,
 {
     // Critical Section (external)
     /////////////////////////////////////////////////////////////////////////// 
-    auto& asio_socket = socket->get_locked_socket();
+    const auto locked = socket->get_socket();
 
     // This is branch #2 of the connnect sequence.
-    boost::asio::async_connect(asio_socket, iterator,
+    boost::asio::async_connect(locked->get(), iterator,
         std::bind(&connector::handle_connect,
             shared_from_this(), _1, _2, socket, timer, handler));
-
-    // This guards the asio_socket against concurrent use.
-    socket->unlock_socket();
     /////////////////////////////////////////////////////////////////////////// 
 }
 

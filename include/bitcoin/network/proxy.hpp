@@ -29,6 +29,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/network/const_buffer.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
 #include <bitcoin/network/socket.hpp>
@@ -110,8 +111,9 @@ private:
     void handle_read_payload(const boost_code& ec, size_t,
         const message::heading& head);
 
-    void handle_send(const boost_code& ec, result_handler handler);
-    void do_send(const data_chunk& message, result_handler handler,
+    void handle_send(const boost_code& ec, const_buffer buffer,
+        result_handler handler);
+    void do_send(data_chunk&& message, result_handler handler,
         const std::string& command);
     
     std::atomic<bool> stopped_;
@@ -119,14 +121,14 @@ private:
     const uint32_t magic_;
     const config::authority authority_;
 
-    // The socket and buffers are protected by the socket mutex.
+    // These are thread safe.
     socket::ptr socket_;
-    data_chunk payload_buffer_;
-    message::heading::buffer heading_buffer_;
-
-    // Subscribers are thread safe.
     message_subscriber message_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
+
+    // These are protected by sequential ordering.
+    data_chunk payload_buffer_;
+    message::heading::buffer heading_buffer_;
 };
 
 } // namespace network

@@ -17,46 +17,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SOCKET_HPP
-#define LIBBITCOIN_NETWORK_SOCKET_HPP
+#include <bitcoin/network/locked_socket.hpp>
 
 #include <boost/asio.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/network/define.hpp>
-#include <bitcoin/network/locked_socket.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// A thread safe asio socket.
-class BCT_API socket
-  : public track<socket>
+locked_socket::locked_socket(asio::socket& socket, upgrade_mutex& mutex)
+  : socket_(socket),
+    mutex_(mutex),
+    CONSTRUCT_TRACK(locked_socket)
 {
-public:
-    typedef std::shared_ptr<socket> ptr;
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock();
+}
 
-    /// Construct an instance.
-    socket(threadpool& pool);
+asio::socket& locked_socket::get()
+{
+    return socket_;
+}
 
-    /// This class is not copyable.
-    socket(const socket&) = delete;
-    void operator=(const socket&) = delete;
-
-    /// Obtain an exclusive reference to the socket.
-    locked_socket::ptr get_socket();
-
-    /// Obtain the authority of the remote endpoint.
-    config::authority get_authority() const;
-
-    /// Close the contained socket.
-    virtual void close();
-
-private:
-    asio::socket socket_;
-    mutable upgrade_mutex mutex_;
-};
+locked_socket::~locked_socket()
+{
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
+}
 
 } // namespace network
 } // namespace libbitcoin
-
-#endif

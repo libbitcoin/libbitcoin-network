@@ -26,7 +26,7 @@
 #include <memory>
 #include <boost/iostreams/stream.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/network/shared_const_buffer.hpp>
+#include <bitcoin/network/const_buffer.hpp>
 #include <bitcoin/network/socket.hpp>
 
 namespace libbitcoin {
@@ -102,16 +102,14 @@ void proxy::read_heading()
     if (stopped())
         return;
 
-    // Critical Section
+    // Critical Section (external)
     ///////////////////////////////////////////////////////////////////////////
-    auto& asio_socket = socket_->get_locked_socket();
+    const auto socket = socket_->get_socket();
 
     using namespace boost::asio;
-    async_read(asio_socket, buffer(heading_buffer_),
+    async_read(socket->get(), buffer(heading_buffer_),
         std::bind(&proxy::handle_read_heading,
             shared_from_this(), _1, _2));
-
-    socket_->unlock_socket();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -164,19 +162,19 @@ void proxy::read_payload(const heading& head)
     if (stopped())
         return;
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    auto& asio_socket = socket_->get_locked_socket();
-
     const auto size = head.payload_size;
+
+    // The payload buffer is protected by ordering, not the critial section.
     payload_buffer_.resize(size);
 
+    // Critical Section (external)
+    ///////////////////////////////////////////////////////////////////////////
+    const auto socket = socket_->get_socket();
+
     using namespace boost::asio;
-    async_read(asio_socket, buffer(payload_buffer_, size),
+    async_read(socket->get(), buffer(payload_buffer_, size),
         std::bind(&proxy::handle_read_payload,
             shared_from_this(), _1, _2, head));
-
-    socket_->unlock_socket();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -244,7 +242,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
 // Message send sequence.
 // ----------------------------------------------------------------------------
 
-void proxy::do_send(const data_chunk& message, result_handler handler,
+void proxy::do_send(data_chunk&& message, result_handler handler,
     const std::string& command)
 {
     if (stopped())
@@ -253,31 +251,32 @@ void proxy::do_send(const data_chunk& message, result_handler handler,
         return;
     }
 
+    // The buffer must be kept in scope until the handler is invoked.
+    const auto buffer = const_buffer(std::move(message));
+
     log::debug(LOG_NETWORK)
         << "Sending " << command << " to [" << authority() << "] ("
-        << message.size() << " bytes)";
+        << buffer.size() << " bytes)";
 
-    // Critical Section
+    // Critical Section (external)
     ///////////////////////////////////////////////////////////////////////////
-    auto& asio_socket = socket_->get_locked_socket();
+    const auto socket = socket_->get_socket();
 
-    const shared_const_buffer buffer(message);
-    async_write(asio_socket, buffer,
+    async_write(socket->get(), buffer,
         std::bind(&proxy::handle_send,
-            shared_from_this(), _1, handler));
-
-    socket_->unlock_socket();
+            shared_from_this(), _1, buffer, handler));
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void proxy::handle_send(const boost_code& ec, result_handler handler)
+void proxy::handle_send(const boost_code& ec, const_buffer buffer,
+    result_handler handler)
 {
     const auto error = code(error::boost_to_error_code(ec));
 
     if (error)
         log::debug(LOG_NETWORK)
-            << "Failure sending message to [" << authority() << "] "
-            << error.message();
+            << "Failure sending " << buffer.size() << " byte message to ["
+            << authority() << "] " << error.message();
 
     handler(error);
 }
