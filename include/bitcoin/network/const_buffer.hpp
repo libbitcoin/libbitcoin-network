@@ -38,7 +38,9 @@ public:
     typedef boost::asio::const_buffer value_type;
     typedef const value_type* const_iterator;
 
-    const_buffer(data_chunk&& data);
+    const_buffer();
+    explicit const_buffer(data_chunk&& data);
+    ////explicit const_buffer(const data_chunk& data);
 
     size_t size() const;
     const_iterator begin() const;
