@@ -192,7 +192,8 @@ void connector::safe_connect(asio::iterator iterator, socket::ptr socket,
     const auto locked = socket->get_socket();
 
     // This is branch #2 of the connnect sequence.
-    boost::asio::async_connect(locked->get(), iterator,
+    using namespace boost::asio;
+    async_connect(locked->get(), iterator,
         std::bind(&connector::handle_connect,
             shared_from_this(), _1, _2, socket, timer, handler));
     /////////////////////////////////////////////////////////////////////////// 
