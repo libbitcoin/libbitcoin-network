@@ -19,7 +19,6 @@
  */
 #include <bitcoin/network/locked_socket.hpp>
 
-#include <boost/asio.hpp>
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
