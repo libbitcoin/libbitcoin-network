@@ -22,7 +22,6 @@
 
 #include <cstddef>
 #include <memory>
-#include <boost/asio.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -35,12 +34,12 @@ class BCT_API const_buffer
 public:
 
     // Required by ConstBufferSequence.
-    typedef boost::asio::const_buffer value_type;
+    typedef asio::const_buffer value_type;
     typedef const value_type* const_iterator;
 
     const_buffer();
     explicit const_buffer(data_chunk&& data);
-    ////explicit const_buffer(const data_chunk& data);
+    explicit const_buffer(const data_chunk& data);
 
     size_t size() const;
     const_iterator begin() const;
