@@ -37,9 +37,12 @@ namespace network {
 using namespace message;
 using std::placeholders::_1;
 using std::placeholders::_2;
+using std::placeholders::_3;
+using std::placeholders::_4;
 
 // TODO: this is made up, configure payload size guard for DoS protection.
 static constexpr size_t max_payload_size = 10 * 1024 * 1024;
+static const auto nop = [](code){};
 
 proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t magic)
   : stopped_(true),
@@ -47,7 +50,8 @@ proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t magic)
     authority_(socket->get_authority()),
     socket_(socket),
     message_subscriber_(pool),
-    stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_sub"))
+    send_subscriber_(std::make_shared<send_subscriber>(pool, NAME "_send")),
+    stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_stop"))
 {
 }
 
@@ -75,9 +79,15 @@ void proxy::start(result_handler handler)
         return;
     }
 
+    const auto sender = 
+        std::bind(&proxy::do_send,
+            shared_from_this(), _1, _2, _3,_4);
+
     stopped_ = false;
     stop_subscriber_->start();
     message_subscriber_.start();
+    send_subscriber_->start();
+    send_subscriber_->subscribe(sender, error::channel_stopped, {}, {}, nop);
 
     // Allow for subscription before first read, so no messages are missed.
     handler(error::success);
@@ -241,36 +251,62 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
 
 // Message send sequence.
 // ----------------------------------------------------------------------------
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+// THIS REQUIRES AT LEAST TWO NETWORK THREADS TO PREVENT THREAD STARVATION.
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-void proxy::do_send(data_chunk&& message, result_handler handler,
-    const std::string& command)
+// The send subscriber pushes queued writes to the writer instead of having
+// writer pull them from a passive queue. This is less thread-efficient but it
+// allows us to reuse the subscriber and facilitates bypass of subscriber
+// queuing for large message types such as blocks, as we do with reads.
+bool proxy::do_send(const code& ec, const std::string& command,
+    const_buffer buffer, result_handler handler)
 {
     if (stopped())
     {
         handler(error::channel_stopped);
-        return;
+        return false;
     }
 
-    // The buffer must be kept in scope until the handler is invoked.
-    const auto buffer = const_buffer(std::move(message));
+    if (ec)
+    {
+        log::debug(LOG_NETWORK)
+            << "Send dequeue failure [" << authority() << "] " << ec.message();
+        handler(ec);
+        stop(ec);
+        return false;
+    }
 
     log::debug(LOG_NETWORK)
         << "Sending " << command << " to [" << authority() << "] ("
         << buffer.size() << " bytes)";
 
-    // Critical Section (external)
+    // Critical Section (protect writer)
+    //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    // The lock must be held until the handler is invoked.
+    const auto lock = std::make_shared<scope_lock>(mutex_);
+
+    // Critical Section (protect socket)
     ///////////////////////////////////////////////////////////////////////////
+    // The socket is locked until async_write returns.
     const auto socket = socket_->get_socket();
 
+    // The shared buffer must be kept in scope until the handler is invoked.
+    using namespace boost::asio;
     async_write(socket->get(), buffer,
         std::bind(&proxy::handle_send,
-            shared_from_this(), _1, buffer, handler));
+            shared_from_this(), _1, buffer, lock, handler));
+
+    return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 
 void proxy::handle_send(const boost_code& ec, const_buffer buffer,
-    result_handler handler)
+    scope_lock::ptr lock, result_handler handler)
 {
+    lock = nullptr;
+    //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
     const auto error = code(error::boost_to_error_code(ec));
 
     if (error)
@@ -297,6 +333,10 @@ void proxy::stop(const code& ec)
     // Prevent subscription after stop.
     message_subscriber_.stop();
     message_subscriber_.broadcast(error::channel_stopped);
+
+    // Prevent subscription after stop.
+    send_subscriber_->stop();
+    send_subscriber_->relay(ec, {}, {}, nop);
 
     // Prevent subscription after stop.
     stop_subscriber_->stop();

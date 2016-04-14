@@ -28,7 +28,8 @@ namespace libbitcoin {
 namespace network {
 
 const_buffer::const_buffer()
-  : const_buffer(data_chunk{})
+  : data_(std::make_shared<data_chunk>(data_chunk{0})),
+    buffer_(boost::asio::buffer(*data_))
 {
 }
 

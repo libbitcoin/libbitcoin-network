@@ -53,7 +53,7 @@ using namespace bc::network;
 
 #define SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(config) \
     auto config = network::settings(bc::settings::testnet); \
-    config.threads = 1; \
+    config.threads = 2; \
     config.host_pool_capacity = 0; \
     config.outbound_connections = 0; \
     config.connection_limit = 0; \
