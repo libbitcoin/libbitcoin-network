@@ -42,7 +42,7 @@ using std::placeholders::_4;
 
 // TODO: this is made up, configure payload size guard for DoS protection.
 static constexpr size_t max_payload_size = 10 * 1024 * 1024;
-static const auto nop = [](code){};
+////static const auto nop = [](code){};
 
 proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t magic)
   : stopped_(true),
@@ -50,7 +50,7 @@ proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t magic)
     authority_(socket->get_authority()),
     socket_(socket),
     message_subscriber_(pool),
-    send_subscriber_(std::make_shared<send_subscriber>(pool, NAME "_send")),
+    ////send_subscriber_(std::make_shared<send_subscriber>(pool, NAME "_send")),
     stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_stop"))
 {
 }
@@ -86,8 +86,8 @@ void proxy::start(result_handler handler)
     stopped_ = false;
     stop_subscriber_->start();
     message_subscriber_.start();
-    send_subscriber_->start();
-    send_subscriber_->subscribe(sender, error::channel_stopped, {}, {}, nop);
+    ////send_subscriber_->start();
+    ////send_subscriber_->subscribe(sender, error::channel_stopped, {}, {}, nop);
 
     // Allow for subscription before first read, so no messages are missed.
     handler(error::success);
@@ -130,12 +130,15 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        log::warning(LOG_NETWORK)
             << "Heading read failure [" << authority() << "] "
             << code(error::boost_to_error_code(ec)).message();
         stop(ec);
         return;
     }
+
+    ////log::debug(LOG_NETWORK)
+    ////    << "Read (" << size << ") heading bytes from [" << authority() << "]";
 
     heading head;
     heading_stream istream(heading_buffer_);
@@ -159,9 +162,9 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    ////log::debug(LOG_NETWORK)
-    ////    << "Valid " << head.command << " heading from ["
-    ////    << authority() << "] (" << head.payload_size << " bytes)";
+    log::debug(LOG_NETWORK)
+        << "Valid " << head.command << " heading from ["
+        << authority() << "] (" << head.payload_size << " bytes)";
 
     read_payload(head);
     handle_activity();
@@ -194,7 +197,18 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
     if (stopped())
         return;
 
-    // Ignore read error here, client may have disconnected.
+    ////// Ignore read error here, client may have disconnected.
+    ////if (ec)
+    ////{
+    ////    log::warning(LOG_NETWORK)
+    ////        << "Payload read failure [" << authority() << "] "
+    ////        << code(error::boost_to_error_code(ec)).message();
+    ////    stop(ec);
+    ////    return;
+    ////}
+
+    ////log::debug(LOG_NETWORK)
+    ////    << "Read (" << size << ") payload bytes from [" << authority() << "] ";
 
     if (head.checksum != bitcoin_checksum(payload_buffer_))
     {
@@ -251,14 +265,14 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
 
 // Message send sequence.
 // ----------------------------------------------------------------------------
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-// THIS REQUIRES AT LEAST TWO NETWORK THREADS TO PREVENT THREAD STARVATION.
-// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-// The send subscriber pushes queued writes to the writer instead of having
-// writer pull them from a passive queue. This is less thread-efficient but it
-// allows us to reuse the subscriber and facilitates bypass of subscriber
-// queuing for large message types such as blocks, as we do with reads.
+////// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+////// THIS REQUIRES AT LEAST TWO NETWORK THREADS TO PREVENT THREAD STARVATION.
+////// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+////// The send subscriber pushes queued writes to the writer instead of having
+////// writer pull them from a passive queue. This is less thread-efficient but it
+////// allows us to reuse the subscriber and facilitates bypass of subscriber
+////// queuing for large message types such as blocks, as we do with reads.
 bool proxy::do_send(const code& ec, const std::string& command,
     const_buffer buffer, result_handler handler)
 {
@@ -281,10 +295,10 @@ bool proxy::do_send(const code& ec, const std::string& command,
         << "Sending " << command << " to [" << authority() << "] ("
         << buffer.size() << " bytes)";
 
-    // Critical Section (protect writer)
-    //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    // The lock must be held until the handler is invoked.
-    const auto lock = std::make_shared<scope_lock>(mutex_);
+    ////// Critical Section (protect writer)
+    //////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    ////// The lock must be held until the handler is invoked.
+    ////const auto lock = std::make_shared<scope_lock>(mutex_);
 
     // Critical Section (protect socket)
     ///////////////////////////////////////////////////////////////////////////
@@ -295,22 +309,22 @@ bool proxy::do_send(const code& ec, const std::string& command,
     using namespace boost::asio;
     async_write(socket->get(), buffer,
         std::bind(&proxy::handle_send,
-            shared_from_this(), _1, buffer, lock, handler));
+            shared_from_this(), _1, buffer, /*lock,*/ handler));
 
     return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 
 void proxy::handle_send(const boost_code& ec, const_buffer buffer,
-    scope_lock::ptr lock, result_handler handler)
+    /*scope_lock::ptr lock,*/ result_handler handler)
 {
-    lock = nullptr;
-    //\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    ////lock = nullptr;
+    //////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
     const auto error = code(error::boost_to_error_code(ec));
 
     if (error)
-        log::debug(LOG_NETWORK)
+        log::info(LOG_NETWORK)
             << "Failure sending " << buffer.size() << " byte message to ["
             << authority() << "] " << error.message();
 
@@ -334,9 +348,9 @@ void proxy::stop(const code& ec)
     message_subscriber_.stop();
     message_subscriber_.broadcast(error::channel_stopped);
 
-    // Prevent subscription after stop.
-    send_subscriber_->stop();
-    send_subscriber_->relay(ec, {}, {}, nop);
+    ////// Prevent subscription after stop.
+    ////send_subscriber_->stop();
+    ////send_subscriber_->relay(ec, {}, {}, nop);
 
     // Prevent subscription after stop.
     stop_subscriber_->stop();

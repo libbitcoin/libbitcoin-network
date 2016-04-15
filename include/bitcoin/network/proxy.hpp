@@ -70,12 +70,13 @@ public:
         const auto success = error::success;
         const auto& command = packet.command;
         const auto buffer = const_buffer(message::serialize(packet, magic_));
+        do_send(success, command, buffer, handler);
 
-        // Bypass queuing for block messages.
-        if (packet.command == chain::block::command)
-            send_subscriber_->do_relay(success, command, buffer, handler);
-        else
-            send_subscriber_->relay(success, command, buffer, handler);
+        ////// Bypass queuing for block messages.
+        ////if (packet.command == chain::block::command)
+        ////    send_subscriber_->do_relay(success, command, buffer, handler);
+        ////else
+        ////    send_subscriber_->relay(success, command, buffer, handler);
     }
 
     /// Subscribe to messages of the specified type on the socket.
@@ -124,7 +125,7 @@ private:
     bool do_send(const code& ec, const std::string& command,
         const_buffer buffer, result_handler handler);
     void handle_send(const boost_code& ec, const_buffer buffer,
-        scope_lock::ptr lock, result_handler handler);
+        /*scope_lock::ptr lock,*/ result_handler handler);
 
     shared_mutex mutex_;
     std::atomic<bool> stopped_;
@@ -134,7 +135,7 @@ private:
 
     // These are thread safe.
     socket::ptr socket_;
-    send_subscriber::ptr send_subscriber_;
+    ////send_subscriber::ptr send_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
     message_subscriber message_subscriber_;
 
