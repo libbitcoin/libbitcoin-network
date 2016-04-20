@@ -130,7 +130,7 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
 
     if (ec)
     {
-        log::warning(LOG_NETWORK)
+        log::debug(LOG_NETWORK)
             << "Heading read failure [" << authority() << "] "
             << code(error::boost_to_error_code(ec)).message();
         stop(ec);
@@ -162,9 +162,9 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    log::debug(LOG_NETWORK)
-        << "Valid " << head.command << " heading from ["
-        << authority() << "] (" << head.payload_size << " bytes)";
+    ////log::debug(LOG_NETWORK)
+    ////    << "Valid " << head.command << " heading from ["
+    ////    << authority() << "] (" << head.payload_size << " bytes)";
 
     read_payload(head);
     handle_activity();
@@ -200,7 +200,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
     ////// Ignore read error here, client may have disconnected.
     ////if (ec)
     ////{
-    ////    log::warning(LOG_NETWORK)
+    ////    log::debug(LOG_NETWORK)
     ////        << "Payload read failure [" << authority() << "] "
     ////        << code(error::boost_to_error_code(ec)).message();
     ////    stop(ec);
@@ -244,7 +244,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
 
     if (ec)
     {
-        log::warning(LOG_NETWORK)
+        log::debug(LOG_NETWORK)
             << "Payload read failure [" << authority() << "] "
             << code(error::boost_to_error_code(ec)).message();
         stop(ec);
@@ -273,7 +273,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
 ////// writer pull them from a passive queue. This is less thread-efficient but it
 ////// allows us to reuse the subscriber and facilitates bypass of subscriber
 ////// queuing for large message types such as blocks, as we do with reads.
-bool proxy::do_send(const code& ec, const std::string& command,
+bool proxy::do_send(const code&, const std::string& command,
     const_buffer buffer, result_handler handler)
 {
     if (stopped())
@@ -282,14 +282,14 @@ bool proxy::do_send(const code& ec, const std::string& command,
         return false;
     }
 
-    if (ec)
-    {
-        log::debug(LOG_NETWORK)
-            << "Send dequeue failure [" << authority() << "] " << ec.message();
-        handler(ec);
-        stop(ec);
-        return false;
-    }
+    ////if (ec)
+    ////{
+    ////    log::debug(LOG_NETWORK)
+    ////        << "Send dequeue failure [" << authority() << "] " << ec.message();
+    ////    handler(ec);
+    ////    stop(ec);
+    ////    return false;
+    ////}
 
     log::debug(LOG_NETWORK)
         << "Sending " << command << " to [" << authority() << "] ("
@@ -324,7 +324,7 @@ void proxy::handle_send(const boost_code& ec, const_buffer buffer,
     const auto error = code(error::boost_to_error_code(ec));
 
     if (error)
-        log::info(LOG_NETWORK)
+        log::debug(LOG_NETWORK)
             << "Failure sending " << buffer.size() << " byte message to ["
             << authority() << "] " << error.message();
 
