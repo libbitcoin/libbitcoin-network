@@ -52,7 +52,6 @@ channel::channel(threadpool& pool, socket::ptr socket,
     located_stop_(null_hash),
     expiration_(alarm(pool, settings.channel_expiration())),
     inactivity_(alarm(pool, settings.channel_inactivity())),
-    poll_(alarm(pool, settings.channel_poll())),
     CONSTRUCT_TRACK(channel)
 {
 }
@@ -72,7 +71,6 @@ void channel::start(result_handler handler)
 void channel::do_start(const code& ec, result_handler handler)
 {
     start_expiration();
-    start_poll();
     start_inactivity();
     handler(error::success);
 }
@@ -138,8 +136,6 @@ void channel::handle_stopping()
 {
     expiration_->stop();
     inactivity_->stop();
-    poll_->stop();
-    poll_handler_.store(nullptr);
 }
 
 void channel::handle_activity()
@@ -190,51 +186,6 @@ void channel::handle_inactivity(const code& ec)
         << "Channel inactivity timeout [" << authority() << "]";
 
     stop(error::channel_timeout);
-}
-
-// Poll timer (set/reset is thread unsafe, deprecated).
-// ----------------------------------------------------------------------------
-
-// public:
-void channel::reset_poll()
-{
-    if (stopped())
-        return;
-
-    start_poll();
-}
-
-// public:
-void channel::set_poll_handler(result_handler handler)
-{
-    poll_handler_.store(handler);
-}
-
-void channel::start_poll()
-{
-    if (stopped())
-        return;
-
-    poll_->start(
-        std::bind(&channel::handle_poll,
-            shared_from_base<channel>(), _1));
-}
-
-void channel::handle_poll(const code& ec)
-{
-    if (stopped())
-        return;
-
-    auto poll = poll_handler_.load();
-
-    if (!poll)
-        return;
-
-    log::debug(LOG_NETWORK)
-        << "Channel poll invoked [" << authority() << "]";
-
-    poll(ec);
-    reset_poll();
 }
 
 // Location tracking (thread unsafe, deprecated).

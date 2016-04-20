@@ -63,9 +63,6 @@ public:
     virtual hash_digest peer_threshold();
     virtual void set_peer_threshold(const hash_digest& threshold);
 
-    virtual void reset_poll();
-    virtual void set_poll_handler(result_handler handler);
-
     virtual bool located(const hash_digest& start,
         const hash_digest& stop) const;
     virtual void set_located(const hash_digest& start,
@@ -84,9 +81,6 @@ private:
     void start_inactivity();
     void handle_inactivity(const code& ec);
 
-    void start_poll();
-    void handle_poll(const code& ec);
-
     bool notify_;
     uint64_t nonce_;
     hash_digest located_start_;
@@ -94,12 +88,8 @@ private:
     message::version version_;
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
-    deadline::ptr poll_;
     bc::atomic<hash_digest> own_threshold_;
     bc::atomic<hash_digest> peer_threshold_;
-
-    // Deperecated.
-    bc::atomic<result_handler> poll_handler_;
 };
 
 } // namespace network

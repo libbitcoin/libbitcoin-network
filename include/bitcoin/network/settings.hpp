@@ -39,13 +39,12 @@ public:
     uint32_t threads;
     uint32_t identifier;
     uint16_t inbound_port;
-    uint32_t connection_limit;
+    uint32_t inbound_connections;
     uint32_t outbound_connections;
     uint32_t manual_attempt_limit;
     uint32_t connect_batch_size;
     uint32_t connect_timeout_seconds;
     uint32_t channel_handshake_seconds;
-    uint32_t channel_poll_seconds;
     uint32_t channel_heartbeat_minutes;
     uint32_t channel_inactivity_minutes;
     uint32_t channel_expiration_minutes;
@@ -62,7 +61,6 @@ public:
     /// Helpers.
     asio::duration connect_timeout() const;
     asio::duration channel_handshake() const;
-    asio::duration channel_poll() const;
     asio::duration channel_heartbeat() const;
     asio::duration channel_inactivity() const;
     asio::duration channel_expiration() const;

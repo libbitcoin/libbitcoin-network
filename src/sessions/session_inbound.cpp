@@ -46,7 +46,7 @@ session_inbound::session_inbound(p2p& network)
 
 void session_inbound::start(result_handler handler)
 {
-    if (settings_.inbound_port == 0 || settings_.connection_limit == 0)
+    if (settings_.inbound_port == 0 || settings_.inbound_connections == 0)
     {
         log::info(LOG_NETWORK)
             << "Not configured for accepting incoming connections.";
@@ -131,7 +131,10 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel,
 void session_inbound::handle_connection_count(size_t connections,
     channel::ptr channel)
 {
-    if (connections >= settings_.connection_limit)
+    const auto connection_limit = settings_.inbound_connections + 
+        settings_.outbound_connections;
+
+    if (connections >= connection_limit)
     {
         log::debug(LOG_NETWORK)
             << "Rejected inbound connection from ["
