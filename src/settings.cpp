@@ -29,13 +29,12 @@ using namespace asio;
 // Common default values (no settings context).
 settings::settings()
   : threads(50),
-    connection_limit(16),
+    inbound_connections(8),
     outbound_connections(8),
     manual_attempt_limit(0),
     connect_batch_size(5),
     connect_timeout_seconds(5),
     channel_handshake_seconds(30),
-    channel_poll_seconds(1),
     channel_heartbeat_minutes(5),
     channel_inactivity_minutes(10),
     channel_expiration_minutes(1440),
@@ -100,11 +99,6 @@ duration settings::connect_timeout() const
 duration settings::channel_handshake() const
 {
     return seconds(channel_handshake_seconds);
-}
-
-duration settings::channel_poll() const
-{
-    return seconds(channel_poll_seconds);
 }
 
 duration settings::channel_heartbeat() const

@@ -17,43 +17,37 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SOCKET_HPP
-#define LIBBITCOIN_NETWORK_SOCKET_HPP
+#ifndef LIBBITCOIN_NETWORK_CONST_BUFFER_HPP
+#define LIBBITCOIN_NETWORK_CONST_BUFFER_HPP
 
-#include <boost/asio.hpp>
+#include <cstddef>
+#include <memory>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/locked_socket.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// A thread safe asio socket.
-class BCT_API socket
-  : public track<socket>
+// A shared boost::asio write buffer, thread safe.
+class BCT_API const_buffer
 {
 public:
-    typedef std::shared_ptr<socket> ptr;
 
-    /// Construct an instance.
-    socket(threadpool& pool);
+    // Required by ConstBufferSequence.
+    typedef asio::const_buffer value_type;
+    typedef const value_type* const_iterator;
 
-    /// This class is not copyable.
-    socket(const socket&) = delete;
-    void operator=(const socket&) = delete;
+    const_buffer();
+    explicit const_buffer(data_chunk&& data);
+    explicit const_buffer(const data_chunk& data);
 
-    /// Obtain an exclusive reference to the socket.
-    locked_socket::ptr get_socket();
-
-    /// Obtain the authority of the remote endpoint.
-    config::authority get_authority() const;
-
-    /// Close the contained socket.
-    virtual void close();
+    size_t size() const;
+    const_iterator begin() const;
+    const_iterator end() const;
 
 private:
-    asio::socket socket_;
-    mutable upgrade_mutex mutex_;
+    std::shared_ptr<data_chunk> data_;
+    value_type buffer_;
 };
 
 } // namespace network

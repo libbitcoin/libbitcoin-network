@@ -26,7 +26,7 @@
 #include <memory>
 #include <boost/iostreams/stream.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/network/shared_const_buffer.hpp>
+#include <bitcoin/network/const_buffer.hpp>
 #include <bitcoin/network/socket.hpp>
 
 namespace libbitcoin {
@@ -37,9 +37,12 @@ namespace network {
 using namespace message;
 using std::placeholders::_1;
 using std::placeholders::_2;
+using std::placeholders::_3;
+using std::placeholders::_4;
 
 // TODO: this is made up, configure payload size guard for DoS protection.
 static constexpr size_t max_payload_size = 10 * 1024 * 1024;
+////static const auto nop = [](code){};
 
 proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t magic)
   : stopped_(true),
@@ -47,7 +50,8 @@ proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t magic)
     authority_(socket->get_authority()),
     socket_(socket),
     message_subscriber_(pool),
-    stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_sub"))
+    ////send_subscriber_(std::make_shared<send_subscriber>(pool, NAME "_send")),
+    stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_stop"))
 {
 }
 
@@ -75,9 +79,15 @@ void proxy::start(result_handler handler)
         return;
     }
 
+    const auto sender = 
+        std::bind(&proxy::do_send,
+            shared_from_this(), _1, _2, _3,_4);
+
     stopped_ = false;
     stop_subscriber_->start();
     message_subscriber_.start();
+    ////send_subscriber_->start();
+    ////send_subscriber_->subscribe(sender, error::channel_stopped, {}, {}, nop);
 
     // Allow for subscription before first read, so no messages are missed.
     handler(error::success);
@@ -102,16 +112,14 @@ void proxy::read_heading()
     if (stopped())
         return;
 
-    // Critical Section
+    // Critical Section (external)
     ///////////////////////////////////////////////////////////////////////////
-    auto& asio_socket = socket_->get_locked_socket();
+    const auto socket = socket_->get_socket();
 
     using namespace boost::asio;
-    async_read(asio_socket, buffer(heading_buffer_),
+    async_read(socket->get(), buffer(heading_buffer_),
         std::bind(&proxy::handle_read_heading,
             shared_from_this(), _1, _2));
-
-    socket_->unlock_socket();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -128,6 +136,9 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         stop(ec);
         return;
     }
+
+    ////log::debug(LOG_NETWORK)
+    ////    << "Read (" << size << ") heading bytes from [" << authority() << "]";
 
     heading head;
     heading_stream istream(heading_buffer_);
@@ -164,19 +175,19 @@ void proxy::read_payload(const heading& head)
     if (stopped())
         return;
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    auto& asio_socket = socket_->get_locked_socket();
-
     const auto size = head.payload_size;
+
+    // The payload buffer is protected by ordering, not the critial section.
     payload_buffer_.resize(size);
 
+    // Critical Section (external)
+    ///////////////////////////////////////////////////////////////////////////
+    const auto socket = socket_->get_socket();
+
     using namespace boost::asio;
-    async_read(asio_socket, buffer(payload_buffer_, size),
+    async_read(socket->get(), buffer(payload_buffer_, size),
         std::bind(&proxy::handle_read_payload,
             shared_from_this(), _1, _2, head));
-
-    socket_->unlock_socket();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -186,7 +197,18 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
     if (stopped())
         return;
 
-    // Ignore read error here, client may have disconnected.
+    ////// Ignore read error here, client may have disconnected.
+    ////if (ec)
+    ////{
+    ////    log::debug(LOG_NETWORK)
+    ////        << "Payload read failure [" << authority() << "] "
+    ////        << code(error::boost_to_error_code(ec)).message();
+    ////    stop(ec);
+    ////    return;
+    ////}
+
+    ////log::debug(LOG_NETWORK)
+    ////    << "Read (" << size << ") payload bytes from [" << authority() << "] ";
 
     if (head.checksum != bitcoin_checksum(payload_buffer_))
     {
@@ -222,7 +244,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
 
     if (ec)
     {
-        log::warning(LOG_NETWORK)
+        log::debug(LOG_NETWORK)
             << "Payload read failure [" << authority() << "] "
             << code(error::boost_to_error_code(ec)).message();
         stop(ec);
@@ -244,40 +266,67 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
 // Message send sequence.
 // ----------------------------------------------------------------------------
 
-void proxy::do_send(const data_chunk& message, result_handler handler,
-    const std::string& command)
+////// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+////// THIS REQUIRES AT LEAST TWO NETWORK THREADS TO PREVENT THREAD STARVATION.
+////// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+////// The send subscriber pushes queued writes to the writer instead of having
+////// writer pull them from a passive queue. This is less thread-efficient but it
+////// allows us to reuse the subscriber and facilitates bypass of subscriber
+////// queuing for large message types such as blocks, as we do with reads.
+bool proxy::do_send(const code&, const std::string& command,
+    const_buffer buffer, result_handler handler)
 {
     if (stopped())
     {
         handler(error::channel_stopped);
-        return;
+        return false;
     }
+
+    ////if (ec)
+    ////{
+    ////    log::debug(LOG_NETWORK)
+    ////        << "Send dequeue failure [" << authority() << "] " << ec.message();
+    ////    handler(ec);
+    ////    stop(ec);
+    ////    return false;
+    ////}
 
     log::debug(LOG_NETWORK)
         << "Sending " << command << " to [" << authority() << "] ("
-        << message.size() << " bytes)";
+        << buffer.size() << " bytes)";
 
-    // Critical Section
+    ////// Critical Section (protect writer)
+    //////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+    ////// The lock must be held until the handler is invoked.
+    ////const auto lock = std::make_shared<scope_lock>(mutex_);
+
+    // Critical Section (protect socket)
     ///////////////////////////////////////////////////////////////////////////
-    auto& asio_socket = socket_->get_locked_socket();
+    // The socket is locked until async_write returns.
+    const auto socket = socket_->get_socket();
 
-    const shared_const_buffer buffer(message);
-    async_write(asio_socket, buffer,
+    // The shared buffer must be kept in scope until the handler is invoked.
+    using namespace boost::asio;
+    async_write(socket->get(), buffer,
         std::bind(&proxy::handle_send,
-            shared_from_this(), _1, handler));
+            shared_from_this(), _1, buffer, /*lock,*/ handler));
 
-    socket_->unlock_socket();
+    return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void proxy::handle_send(const boost_code& ec, result_handler handler)
+void proxy::handle_send(const boost_code& ec, const_buffer buffer,
+    /*scope_lock::ptr lock,*/ result_handler handler)
 {
+    ////lock = nullptr;
+    //////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
     const auto error = code(error::boost_to_error_code(ec));
 
     if (error)
         log::debug(LOG_NETWORK)
-            << "Failure sending message to [" << authority() << "] "
-            << error.message();
+            << "Failure sending " << buffer.size() << " byte message to ["
+            << authority() << "] " << error.message();
 
     handler(error);
 }
@@ -298,6 +347,10 @@ void proxy::stop(const code& ec)
     // Prevent subscription after stop.
     message_subscriber_.stop();
     message_subscriber_.broadcast(error::channel_stopped);
+
+    ////// Prevent subscription after stop.
+    ////send_subscriber_->stop();
+    ////send_subscriber_->relay(ec, {}, {}, nop);
 
     // Prevent subscription after stop.
     stop_subscriber_->stop();

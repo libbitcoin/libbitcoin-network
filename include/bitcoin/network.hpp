@@ -19,8 +19,10 @@
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connections.hpp>
 #include <bitcoin/network/connector.hpp>
+#include <bitcoin/network/const_buffer.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/hosts.hpp>
+#include <bitcoin/network/locked_socket.hpp>
 #include <bitcoin/network/logging.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
 #include <bitcoin/network/p2p.hpp>
@@ -28,7 +30,6 @@
 #include <bitcoin/network/pending_sockets.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
-#include <bitcoin/network/shared_const_buffer.hpp>
 #include <bitcoin/network/socket.hpp>
 #include <bitcoin/network/version.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>

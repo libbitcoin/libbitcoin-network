@@ -29,6 +29,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/network/const_buffer.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
 #include <bitcoin/network/socket.hpp>
@@ -49,7 +50,9 @@ public:
     typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> result_handler;
     typedef subscriber<const code&> stop_subscriber;
-    
+    typedef resubscriber<const code&, const std::string&, const_buffer,
+        result_handler> send_subscriber;
+
     /// Construct an instance.
     proxy(threadpool& pool, socket::ptr socket, uint32_t magic);
 
@@ -64,7 +67,16 @@ public:
     template <class Message>
     void send(const Message& packet, result_handler handler)
     {
-        do_send(message::serialize(packet, magic_), handler, packet.command);
+        const auto success = error::success;
+        const auto& command = packet.command;
+        const auto buffer = const_buffer(message::serialize(packet, magic_));
+        do_send(success, command, buffer, handler);
+
+        ////// Bypass queuing for block messages.
+        ////if (packet.command == chain::block::command)
+        ////    send_subscriber_->do_relay(success, command, buffer, handler);
+        ////else
+        ////    send_subscriber_->relay(success, command, buffer, handler);
     }
 
     /// Subscribe to messages of the specified type on the socket.
@@ -110,23 +122,26 @@ private:
     void handle_read_payload(const boost_code& ec, size_t,
         const message::heading& head);
 
-    void handle_send(const boost_code& ec, result_handler handler);
-    void do_send(const data_chunk& message, result_handler handler,
-        const std::string& command);
-    
+    bool do_send(const code& ec, const std::string& command,
+        const_buffer buffer, result_handler handler);
+    void handle_send(const boost_code& ec, const_buffer buffer,
+        /*scope_lock::ptr lock,*/ result_handler handler);
+
+    shared_mutex mutex_;
     std::atomic<bool> stopped_;
 
     const uint32_t magic_;
     const config::authority authority_;
 
-    // The socket and buffers are protected by the socket mutex.
+    // These are thread safe.
     socket::ptr socket_;
+    ////send_subscriber::ptr send_subscriber_;
+    stop_subscriber::ptr stop_subscriber_;
+    message_subscriber message_subscriber_;
+
+    // These are protected by sequential ordering.
     data_chunk payload_buffer_;
     message::heading::buffer heading_buffer_;
-
-    // Subscribers are thread safe.
-    message_subscriber message_subscriber_;
-    stop_subscriber::ptr stop_subscriber_;
 };
 
 } // namespace network

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -17,43 +17,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SOCKET_HPP
-#define LIBBITCOIN_NETWORK_SOCKET_HPP
+#ifndef LIBBITCOIN_LOCKED_SOCKET_HPP
+#define LIBBITCOIN_LOCKED_SOCKET_HPP
 
+#include <memory>
 #include <boost/asio.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/locked_socket.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// A thread safe asio socket.
-class BCT_API socket
-  : public track<socket>
+/// A wrapper to lock the socket until out of scope.
+class BCT_API locked_socket
+  : track<locked_socket>
 {
 public:
-    typedef std::shared_ptr<socket> ptr;
+    typedef std::shared_ptr<locked_socket> ptr;
 
-    /// Construct an instance.
-    socket(threadpool& pool);
+    locked_socket(asio::socket& socket, upgrade_mutex& mutex);
+    ~locked_socket();
 
-    /// This class is not copyable.
-    socket(const socket&) = delete;
-    void operator=(const socket&) = delete;
-
-    /// Obtain an exclusive reference to the socket.
-    locked_socket::ptr get_socket();
-
-    /// Obtain the authority of the remote endpoint.
-    config::authority get_authority() const;
-
-    /// Close the contained socket.
-    virtual void close();
+    /// Obtain exclusive reference to the socket.
+    /// The wrapper must be kept in scope while this reference is in use.
+    asio::socket& get();
 
 private:
-    asio::socket socket_;
-    mutable upgrade_mutex mutex_;
+    asio::socket& socket_;
+    upgrade_mutex& mutex_;
 };
 
 } // namespace network

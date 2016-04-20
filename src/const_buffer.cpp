@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2015 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2016 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -17,48 +17,48 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SHARED_CONST_BUFFER_HPP
-#define LIBBITCOIN_NETWORK_SHARED_CONST_BUFFER_HPP
+#include <bitcoin/network/const_buffer.hpp>
 
 #include <memory>
+#include <utility>
 #include <boost/asio.hpp>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-// A reference-counted non-modifiable buffer class, not thread safe.
-class BCT_API shared_const_buffer
+const_buffer::const_buffer()
+  : data_(std::make_shared<data_chunk>(data_chunk{0})),
+    buffer_(boost::asio::buffer(*data_))
 {
-public:
-    /// Implementation of ConstBufferSequence requirements.
-    typedef boost::asio::const_buffer value_type;
-    typedef const value_type* const_iterator;
+}
 
-    /// Construct an instance.
-    explicit shared_const_buffer(const data_chunk& data)
-      : data_(std::make_shared<data_chunk>(data.begin(), data.end())),
-        buffer_(boost::asio::buffer(*data_))
-    {
-    }
+const_buffer::const_buffer(data_chunk&& data)
+  : data_(std::make_shared<data_chunk>(std::move(data))),
+    buffer_(boost::asio::buffer(*data_))
+{
+}
 
-    const_iterator begin() const
-    {
-        return &buffer_;
-    }
+const_buffer::const_buffer(const data_chunk& data)
+  : data_(std::make_shared<data_chunk>(data)),
+    buffer_(boost::asio::buffer(*data_))
+{
+}
 
-    const_iterator end() const
-    {
-        return &buffer_ + 1;
-    }
+size_t const_buffer::size() const
+{
+    return data_->size();
+}
 
-private:
-    std::shared_ptr<data_chunk> data_;
-    value_type buffer_;
-};
+const_buffer::const_iterator const_buffer::begin() const
+{
+    return &buffer_;
+}
+
+const_buffer::const_iterator const_buffer::end() const
+{
+    return &buffer_ + 1;
+}
 
 } // namespace network
 } // namespace libbitcoin
-
-#endif
