@@ -149,6 +149,9 @@ protected:
     virtual void register_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
 
+    // TODO: create session_timer base class.
+    threadpool& pool_;
+
     const settings& settings_;
 
 private:
@@ -200,7 +203,6 @@ private:
 
     // These are thread safe.
     p2p& network_;
-    threadpool& pool_;
     dispatcher dispatch_;
     pending_channels pending_;
 };
