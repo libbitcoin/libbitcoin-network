@@ -108,6 +108,7 @@ void p2p::start(result_handler handler)
     const auto manual = attach<session_manual>();
     manual_.store(manual);
 
+    // This is invoked on a new thread.
     manual->start(
         std::bind(&p2p::handle_manual_started,
             this, _1, handler));
@@ -148,6 +149,7 @@ void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
         return;
     }
 
+    // This is invoked on a new thread.
     // The instance is retained by the stop handler (until shutdown).
     attach<session_seed>()->start(
         std::bind(&p2p::handle_hosts_seeded,
@@ -184,6 +186,7 @@ void p2p::handle_hosts_seeded(const code& ec, result_handler handler)
 
 void p2p::run(result_handler handler)
 {
+    // This is invoked on a new thread.
     // This instance is retained by the stop handler (until shutdown).
     attach<session_inbound>()->start(
         std::bind(&p2p::handle_inbound_started,
@@ -200,6 +203,7 @@ void p2p::handle_inbound_started(const code& ec, result_handler handler)
         return;
     }
 
+    // This is invoked on a new thread.
     // This instance is retained by the stop handler (until shutdown).
     attach<session_outbound>()->start(
         std::bind(&p2p::handle_outbound_started,
@@ -257,7 +261,10 @@ void p2p::connect(const std::string& hostname, uint16_t port,
 
     auto manual = manual_.load();
     if (manual)
+    {
+        // Connect is invoked on a new thread.
         manual->connect(hostname, port, handler);
+    }
 }
 
 // Stop sequence.
@@ -373,6 +380,7 @@ void p2p::store(const address& address, result_handler handler)
 
 void p2p::store(const address::list& addresses, result_handler handler)
 {
+    // Store is invoked on a new thread.
     hosts_->store(addresses, handler);
 }
 
