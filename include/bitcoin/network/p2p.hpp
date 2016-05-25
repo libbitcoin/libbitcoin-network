@@ -56,20 +56,6 @@ public:
     typedef subscriber<const code&> stop_subscriber;
     typedef resubscriber<const code&, channel::ptr> channel_subscriber;
 
-    // ------------------------------------------------------------------------
-
-    /// Construct an instance.
-    p2p(const settings& settings);
-
-    /// Ensure all threads are coalesced.
-    ~p2p();
-
-    /// This class is not copyable.
-    p2p(const p2p&) = delete;
-    void operator=(const p2p&) = delete;
-
-    // ------------------------------------------------------------------------
-
     /// Send message to all connections.
     template <typename Message>
     void broadcast(const Message& message, channel_handler handle_channel,
@@ -80,7 +66,39 @@ public:
 
     // ------------------------------------------------------------------------
 
-    /// Return a reference to the network configuration settings.
+    /// Construct an instance.
+    p2p(const settings& settings);
+
+    /// Ensure all threads are coalesced.
+    virtual ~p2p();
+
+    /// This class is not copyable.
+    p2p(const p2p&) = delete;
+    void operator=(const p2p&) = delete;
+
+    // Start/Run/Stop/Close sequences.
+    // ------------------------------------------------------------------------
+
+    /// Invoke startup and seeding sequence, call from constructing thread.
+    virtual void start(result_handler handler);
+
+    /// Synchronize the blockchain and then begin long running sessions,
+    /// call from start result handler. Call base method to skip sync.
+    virtual void run(result_handler handler);
+
+    /// Non-blocking call to coalesce all work, start may be reinvoked after.
+    /// Handler returns the result of file save operations.
+    virtual void stop(result_handler handler);
+
+    /// Blocking call to coalesce all work and then terminate all threads.
+    /// Call from thread that constructed this class, or don't call at all.
+    /// This calls stop, and start may be reinvoked after calling this.
+    virtual void close();
+
+    // Properties.
+    // ------------------------------------------------------------------------
+
+    /// Network configuration settings.
     virtual const settings& network_settings() const;
 
     /// Return the current block height.
@@ -95,10 +113,8 @@ public:
     /// Return a reference to the network threadpool.
     virtual threadpool& thread_pool();
 
+    // Subscriptions.
     // ------------------------------------------------------------------------
-
-    /// Invoke startup and seeding sequence, call from constructing thread.
-    virtual void start(result_handler handler);
 
     /// Subscribe to connection creation events.
     virtual void subscribe_connection(connect_handler handler);
@@ -106,8 +122,8 @@ public:
     /// Subscribe to service stop event.
     virtual void subscribe_stop(result_handler handler);
 
-    /// Begin long running sessions, call from start handler.
-    virtual void run(result_handler handler);
+    // Manual connections.
+    // ----------------------------------------------------------------------------
 
     /// Maintain a connection to hostname:port.
     virtual void connect(const std::string& hostname, uint16_t port);
@@ -117,15 +133,7 @@ public:
     virtual void connect(const std::string& hostname, uint16_t port,
         channel_handler handler);
 
-    /// Non-blocking call to coalesce all work, start may be reinvoked after
-    /// handler fired. Handler returns the result of host file save operation.
-    virtual void stop(result_handler handler);
-
-    /// Blocking call to coalesce all work and then terminate all threads.
-    /// Call from thread that constructed this class, or don't call at all.
-    /// This calls stop, and start may be reinvoked after calling this.
-    virtual void close();
-
+    // Connections collection.
     // ------------------------------------------------------------------------
 
     /// Determine if there exists a connection to the address.
@@ -140,6 +148,7 @@ public:
     /// Get the number of connections.
     virtual void connected_count(count_handler handler);
 
+    // Hosts collection.
     // ------------------------------------------------------------------------
 
     /// Get a randomly-selected adress.
@@ -167,15 +176,17 @@ protected:
     }
 
 private:
-    void handle_stopped(const code& ec);
     void handle_manual_started(const code& ec, result_handler handler);
     void handle_inbound_started(const code& ec, result_handler handler);
-    void handle_outbound_started(const code& ec, result_handler handler);
     void handle_hosts_loaded(const code& ec, result_handler handler);
-    void handle_hosts_seeded(const code& ec, result_handler handler);
     void handle_hosts_saved(const code& ec, result_handler handler);
     void handle_new_connection(const code& ec, channel::ptr channel,
         result_handler handler);
+
+    void handle_started(const code& ec, result_handler handler);
+    void handle_running(const code& ec, result_handler handler);
+    void handle_stopped(const code& ec, result_handler handler);
+    void handle_closing(const code& ec);
 
     std::atomic<bool> stopped_;
     std::atomic<size_t> height_;

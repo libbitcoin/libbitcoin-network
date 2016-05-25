@@ -56,36 +56,6 @@ p2p::p2p(const settings& settings)
 {
 }
 
-// Properties.
-// ----------------------------------------------------------------------------
-
-const settings& p2p::network_settings() const
-{
-    return settings_;
-}
-
-// The blockchain height is set in our version message for handshake.
-size_t p2p::height() const
-{
-    return height_;
-}
-
-// The height is set externally and is safe as an atomic.
-void p2p::set_height(size_t value)
-{
-    height_ = value;
-}
-
-bool p2p::stopped() const
-{
-    return stopped_;
-}
-
-threadpool& p2p::thread_pool()
-{
-    return threadpool_;
-}
-
 // Start sequence.
 // ----------------------------------------------------------------------------
 
@@ -152,11 +122,11 @@ void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
     // This is invoked on a new thread.
     // The instance is retained by the stop handler (until shutdown).
     attach<session_seed>()->start(
-        std::bind(&p2p::handle_hosts_seeded,
+        std::bind(&p2p::handle_started,
             this, _1, handler));
 }
 
-void p2p::handle_hosts_seeded(const code& ec, result_handler handler)
+void p2p::handle_started(const code& ec, result_handler handler)
 {
     if (stopped())
     {
@@ -206,11 +176,11 @@ void p2p::handle_inbound_started(const code& ec, result_handler handler)
     // This is invoked on a new thread.
     // This instance is retained by the stop handler (until shutdown).
     attach<session_outbound>()->start(
-        std::bind(&p2p::handle_outbound_started,
+        std::bind(&p2p::handle_running,
             this, _1, handler));
 }
 
-void p2p::handle_outbound_started(const code& ec, result_handler handler)
+void p2p::handle_running(const code& ec, result_handler handler)
 {
     if (ec)
     {
@@ -222,6 +192,106 @@ void p2p::handle_outbound_started(const code& ec, result_handler handler)
 
     // This is the end of the run sequence.
     handler(error::success);
+}
+
+// Stop sequence.
+// ----------------------------------------------------------------------------
+// All shutdown actions must be queued by the end of the stop call.
+// IOW queued shutdown operations must not enqueue additional work.
+
+// This is not short-circuited by a stop test because we need to ensure it
+// completes at least once before invoking the handler. This requires a unique
+// lock be taken around the entire section, which poses a deadlock risk.
+// Instead this is thread safe and idempotent, allowing it to be unguarded.
+void p2p::stop(result_handler handler)
+{
+    // Host save is expensive, so minimize repeats.
+    const auto ec = stopped_ ? error::success : hosts_->save();
+
+    if (ec)
+        log::error(LOG_NETWORK)
+            << "Error saving hosts file: " << ec.message();
+
+    stopped_ = true;
+
+    // Prevent subscription after stop.
+    stop_subscriber_->stop();
+    stop_subscriber_->do_relay(error::service_stopped);
+
+    // Prevent subscription after stop.
+    channel_subscriber_->stop();
+    channel_subscriber_->do_relay(error::service_stopped, nullptr);
+
+    // Stop accepting channels and stop those that exist (self-clearing).
+    connections_->stop(error::service_stopped);
+
+    manual_.store(nullptr);
+    threadpool_.shutdown();
+
+    // This indirection is not required but presented for consistency.
+    handle_stopped(ec, handler);
+}
+
+void p2p::handle_stopped(const code& ec, result_handler handler)
+{
+    // This is the end of the stop sequence.
+    handler(ec);
+}
+
+// Close sequence.
+// ----------------------------------------------------------------------------
+
+// This allows for shutdown based on destruct without need to call stop.
+p2p::~p2p()
+{
+    p2p::close();
+}
+
+// This must block until handle_closing completes.
+// This must be called from the thread that constructed this class (see join).
+void p2p::close()
+{
+    // Stop must either complete sequentially or we must wait here for closed.
+    p2p::stop(
+        std::bind(&p2p::handle_closing,
+            this, _1));
+}
+
+// Okay to ignore code as we are in the destructor, use stop if code is needed.
+void p2p::handle_closing(const code&)
+{
+    // This is the end of the close sequence.
+    threadpool_.join();
+}
+
+// Properties.
+// ----------------------------------------------------------------------------
+
+const settings& p2p::network_settings() const
+{
+    return settings_;
+}
+
+// The blockchain height is set in our version message for handshake.
+size_t p2p::height() const
+{
+    return height_;
+}
+
+// The height is set externally and is safe as an atomic.
+void p2p::set_height(size_t value)
+{
+    height_ = value;
+}
+
+bool p2p::stopped() const
+{
+    return stopped_;
+}
+
+threadpool& p2p::thread_pool()
+{
+    return threadpool_;
 }
 
 // Subscriptions.
@@ -265,66 +335,6 @@ void p2p::connect(const std::string& hostname, uint16_t port,
         // Connect is invoked on a new thread.
         manual->connect(hostname, port, handler);
     }
-}
-
-// Stop sequence.
-// ----------------------------------------------------------------------------
-// All shutdown actions must be queued by the end of the stop call.
-// IOW queued shutdown operations must not enqueue additional work.
-
-// This is not short-circuited by a stop test because we need to ensure it
-// completes at least once before invoking the handler. This requires a unique
-// lock be taken around the entire section, which poses a deadlock risk.
-// Instead this is thread safe and idempotent, allowing it to be unguarded.
-void p2p::stop(result_handler handler)
-{
-    // Host save is expensive, so minimize repeats.
-    const auto ec = stopped_ ? error::success : hosts_->save();
-
-    if (ec)
-        log::error(LOG_NETWORK)
-            << "Error saving hosts file: " << ec.message();
-
-    stopped_ = true;
-
-    // Prevent subscription after stop.
-    stop_subscriber_->stop();
-    stop_subscriber_->do_relay(error::service_stopped);
-
-    // Prevent subscription after stop.
-    channel_subscriber_->stop();
-    channel_subscriber_->do_relay(error::service_stopped, nullptr);
-
-    // Stop accepting channels and stop those that exist (self-clearing).
-    connections_->stop(error::service_stopped);
-
-    manual_.store(nullptr);
-    threadpool_.shutdown();
-
-    // This is the end of the stop sequence.
-    handler(ec);
-}
-
-// Destruct sequence.
-// ----------------------------------------------------------------------------
-
-p2p::~p2p()
-{
-    // This allows for shutdown based on destruct without need to call stop.
-    p2p::close();
-}
-
-void p2p::close()
-{
-    p2p::stop(
-        std::bind(&p2p::handle_stopped,
-            this, _1));
-}
-
-void p2p::handle_stopped(const code&)
-{
-    // This is the end of the destruct sequence.
-    threadpool_.join();
 }
 
 // Connections collection.
