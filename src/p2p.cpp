@@ -249,7 +249,7 @@ p2p::~p2p()
 }
 
 // This must be called from the thread that constructed this class (see join).
-code p2p::close()
+void p2p::close()
 {
     std::promise<code> wait;
 
@@ -258,7 +258,7 @@ code p2p::close()
             this, _1, std::ref(wait)));
 
     // This blocks until handle_closing completes.
-    return wait.get_future().get();
+    wait.get_future();
 }
 
 void p2p::handle_closing(const code& ec, std::promise<code>& wait)
