@@ -21,6 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <future>
 #include <memory>
 #include <string>
 #include <vector>
@@ -247,21 +248,25 @@ p2p::~p2p()
     p2p::close();
 }
 
-// This must block until handle_closing completes.
 // This must be called from the thread that constructed this class (see join).
-void p2p::close()
+code p2p::close()
 {
-    // Stop must either complete sequentially or we must wait here for closed.
+    std::promise<code> wait;
+
     p2p::stop(
         std::bind(&p2p::handle_closing,
-            this, _1));
+            this, _1, std::ref(wait)));
+
+    // This blocks until handle_closing completes.
+    return wait.get_future().get();
 }
 
-// Okay to ignore code as we are in the destructor, use stop if code is needed.
-void p2p::handle_closing(const code&)
+void p2p::handle_closing(const code& ec, std::promise<code>& wait)
 {
-    // This is the end of the close sequence.
     threadpool_.join();
+
+    // This is the end of the derived close sequence.
+    wait.set_value(ec);
 }
 
 // Properties.
