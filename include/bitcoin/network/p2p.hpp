@@ -24,6 +24,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <future>
 #include <memory>
 #include <string>
 #include <vector>
@@ -93,7 +94,7 @@ public:
     /// Blocking call to coalesce all work and then terminate all threads.
     /// Call from thread that constructed this class, or don't call at all.
     /// This calls stop, and start may be reinvoked after calling this.
-    virtual void close();
+    virtual code close();
 
     // Properties.
     // ------------------------------------------------------------------------
@@ -186,7 +187,7 @@ private:
     void handle_started(const code& ec, result_handler handler);
     void handle_running(const code& ec, result_handler handler);
     void handle_stopped(const code& ec, result_handler handler);
-    void handle_closing(const code& ec);
+    void handle_closing(const code& ec, std::promise<code>& wait);
 
     std::atomic<bool> stopped_;
     std::atomic<size_t> height_;
