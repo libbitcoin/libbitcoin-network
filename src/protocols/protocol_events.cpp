@@ -61,7 +61,7 @@ void protocol_events::start(event_handler handler)
 
 void protocol_events::handle_stopped(const code& ec)
 {
-    log::debug(LOG_PROTOCOL)
+    log::debug(LOG_NETWORK)
         << "Stop protocol_" << name() << " on [" << authority() << "] "
         << ec.message();
     

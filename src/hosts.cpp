@@ -149,7 +149,7 @@ code hosts::store(const address& host)
 {
     if (!host.is_valid())
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Invalid host address from peer";
 
         // We don't treat invalid address as an error, just log it.
@@ -173,7 +173,7 @@ code hosts::store(const address& host)
     mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
 
-    log::debug(LOG_PROTOCOL)
+    log::debug(LOG_NETWORK)
         << "Redundant host address from peer";
 
     // We don't treat redundant address as an error, just log it.

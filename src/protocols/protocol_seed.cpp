@@ -96,14 +96,14 @@ bool protocol_seed::handle_receive_address(const code& ec,
 
     if (ec)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure receiving addresses from seed [" << authority() << "] "
             << ec.message();
         set_event(ec);
         return false;
     }
 
-    log::debug(LOG_PROTOCOL)
+    log::debug(LOG_NETWORK)
         << "Storing addresses from seed [" << authority() << "] ("
         << message->addresses.size() << ")";
 
@@ -120,7 +120,7 @@ void protocol_seed::handle_send_address(const code& ec)
 
     if (ec)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure sending address to seed [" << authority() << "] "
             << ec.message();
         set_event(ec);
@@ -138,7 +138,7 @@ void protocol_seed::handle_send_get_address(const code& ec)
 
     if (ec)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure sending get_address to seed [" << authority() << "] "
             << ec.message();
         set_event(ec);
@@ -156,14 +156,14 @@ void protocol_seed::handle_store_addresses(const code& ec)
 
     if (ec)
     {
-        log::error(LOG_PROTOCOL)
+        log::error(LOG_NETWORK)
             << "Failure storing addresses from seed [" << authority() << "] "
             << ec.message();
         set_event(ec);
         return;
     }
 
-    log::debug(LOG_PROTOCOL)
+    log::debug(LOG_NETWORK)
         << "Stopping completed seed [" << authority() << "] ";
 
     // 3 of 3
