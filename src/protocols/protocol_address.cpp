@@ -80,14 +80,14 @@ bool protocol_address::handle_receive_address(const code& ec,
 
     if (ec)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure receiving address message from ["
             << authority() << "] " << ec.message();
         stop(ec);
         return false;
     }
 
-    log::debug(LOG_PROTOCOL)
+    log::debug(LOG_NETWORK)
         << "Storing addresses from [" << authority() << "] ("
         << message->addresses.size() << ")";
 
@@ -106,7 +106,7 @@ bool protocol_address::handle_receive_get_address(const code& ec,
 
     if (ec)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure receiving get_address message from ["
             << authority() << "] " << ec.message();
         stop(ec);
@@ -120,7 +120,7 @@ bool protocol_address::handle_receive_get_address(const code& ec,
     if (self_.addresses.empty())
         return false;
 
-    log::debug(LOG_PROTOCOL)
+    log::debug(LOG_NETWORK)
         << "Sending addresses to [" << authority() << "] ("
         << self_.addresses.size() << ")";
 
@@ -137,7 +137,7 @@ void protocol_address::handle_send_address(const code& ec)
 
     if (ec)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure sending address [" << authority() << "] "
             << ec.message();
         stop(ec);
@@ -151,7 +151,7 @@ void protocol_address::handle_send_get_address(const code& ec)
 
     if (ec)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure sending get_address [" << authority() << "] "
             << ec.message();
         stop(ec);
@@ -165,7 +165,7 @@ void protocol_address::handle_store_addresses(const code& ec)
 
     if (ec)
     {
-        log::error(LOG_PROTOCOL)
+        log::error(LOG_NETWORK)
             << "Failure storing addresses from [" << authority() << "] "
             << ec.message();
         stop(ec);

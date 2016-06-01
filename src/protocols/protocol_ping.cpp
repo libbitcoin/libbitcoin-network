@@ -61,7 +61,7 @@ void protocol_ping::send_ping(const code& ec)
 
     if (ec && ec != error::channel_timeout)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure in ping timer for [" << authority() << "] "
             << ec.message();
         stop(ec);
@@ -82,7 +82,7 @@ bool protocol_ping::handle_receive_ping(const code& ec,
 
     if (ec)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure getting ping from [" << authority() << "] "
             << ec.message();
         stop(ec);
@@ -103,7 +103,7 @@ bool protocol_ping::handle_receive_pong(const code& ec,
 
     if (ec)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure getting pong from [" << authority() << "] "
             << ec.message();
         stop(ec);
@@ -112,7 +112,7 @@ bool protocol_ping::handle_receive_pong(const code& ec,
 
     if (message->nonce != nonce)
     {
-        log::warning(LOG_PROTOCOL)
+        log::warning(LOG_NETWORK)
             << "Invalid pong nonce from [" << authority() << "]";
 
         // This could result from message overlap due to a short period,
@@ -130,7 +130,7 @@ void protocol_ping::handle_send_ping(const code& ec)
 
     if (ec)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure sending ping to [" << authority() << "] "
             << ec.message();
         stop(ec);
@@ -145,7 +145,7 @@ void protocol_ping::handle_send_pong(const code& ec)
 
     if (ec)
     {
-        log::debug(LOG_PROTOCOL)
+        log::debug(LOG_NETWORK)
             << "Failure sending pong to [" << authority() << "] "
             << ec.message();
         stop(ec);
