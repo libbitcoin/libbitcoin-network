@@ -42,16 +42,15 @@ using std::placeholders::_4;
 
 // TODO: this is made up, configure payload size guard for DoS protection.
 static constexpr size_t max_payload_size = 10 * 1024 * 1024;
-////static const auto nop = [](code){};
 
 proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t magic)
-  : stopped_(true),
-    magic_(magic),
+  : magic_(magic),
     authority_(socket->get_authority()),
+    stopped_(true),
     socket_(socket),
     message_subscriber_(pool),
-    ////send_subscriber_(std::make_shared<send_subscriber>(pool, NAME "_send")),
     stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_stop"))
+    ////send_subscriber_(std::make_shared<send_subscriber>(pool, NAME "_send"))
 {
 }
 
@@ -197,15 +196,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
     if (stopped())
         return;
 
-    ////// Ignore read error here, client may have disconnected.
-    ////if (ec)
-    ////{
-    ////    log::debug(LOG_NETWORK)
-    ////        << "Payload read failure [" << authority() << "] "
-    ////        << code(error::boost_to_error_code(ec)).message();
-    ////    stop(ec);
-    ////    return;
-    ////}
+    // Ignore read error here, client may have disconnected.
 
     ////log::debug(LOG_NETWORK)
     ////    << "Read (" << size << ") payload bytes from [" << authority() << "] ";
@@ -266,13 +257,14 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
 // Message send sequence.
 // ----------------------------------------------------------------------------
 
-////// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-////// THIS REQUIRES AT LEAST TWO NETWORK THREADS TO PREVENT THREAD STARVATION.
-////// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-////// The send subscriber pushes queued writes to the writer instead of having
-////// writer pull them from a passive queue. This is less thread-efficient but it
-////// allows us to reuse the subscriber and facilitates bypass of subscriber
-////// queuing for large message types such as blocks, as we do with reads.
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+// SEND SUBSCRIBER REQUIRES TWO NETWORK THREADS TO PREVENT THREAD STARVATION.
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+// The send subscriber pushes queued writes to the writer instead of having
+// writer pull them from a passive queue. This is less thread-efficient but it
+// allows us to reuse the subscriber and facilitates bypass of subscriber
+// queuing for large message types such as blocks, as we do with reads.
+
 bool proxy::do_send(const code&, const std::string& command,
     const_buffer buffer, result_handler handler)
 {
@@ -282,45 +274,30 @@ bool proxy::do_send(const code&, const std::string& command,
         return false;
     }
 
-    ////if (ec)
-    ////{
-    ////    log::debug(LOG_NETWORK)
-    ////        << "Send dequeue failure [" << authority() << "] " << ec.message();
-    ////    handler(ec);
-    ////    stop(ec);
-    ////    return false;
-    ////}
+    // Ignore read error here, client may have disconnected.
 
     log::debug(LOG_NETWORK)
         << "Sending " << command << " to [" << authority() << "] ("
         << buffer.size() << " bytes)";
-
-    ////// Critical Section (protect writer)
-    //////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-    ////// The lock must be held until the handler is invoked.
-    ////const auto lock = std::make_shared<scope_lock>(mutex_);
 
     // Critical Section (protect socket)
     ///////////////////////////////////////////////////////////////////////////
     // The socket is locked until async_write returns.
     const auto socket = socket_->get_socket();
 
-    // The shared buffer must be kept in scope until the handler is invoked.
+    // The shared buffer is kept in scope until the handler is invoked.
     using namespace boost::asio;
     async_write(socket->get(), buffer,
         std::bind(&proxy::handle_send,
-            shared_from_this(), _1, buffer, /*lock,*/ handler));
+            shared_from_this(), _1, buffer, handler));
 
     return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 
 void proxy::handle_send(const boost_code& ec, const_buffer buffer,
-    /*scope_lock::ptr lock,*/ result_handler handler)
+    result_handler handler)
 {
-    ////lock = nullptr;
-    //////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
     const auto error = code(error::boost_to_error_code(ec));
 
     if (error)
