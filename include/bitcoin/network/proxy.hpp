@@ -125,19 +125,17 @@ private:
     bool do_send(const code& ec, const std::string& command,
         const_buffer buffer, result_handler handler);
     void handle_send(const boost_code& ec, const_buffer buffer,
-        /*scope_lock::ptr lock,*/ result_handler handler);
-
-    shared_mutex mutex_;
-    std::atomic<bool> stopped_;
+        result_handler handler);
 
     const uint32_t magic_;
     const config::authority authority_;
 
     // These are thread safe.
+    std::atomic<bool> stopped_;
     socket::ptr socket_;
-    ////send_subscriber::ptr send_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
     message_subscriber message_subscriber_;
+    ////send_subscriber::ptr send_subscriber_;
 
     // These are protected by sequential ordering.
     data_chunk payload_buffer_;
