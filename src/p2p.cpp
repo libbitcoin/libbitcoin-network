@@ -21,7 +21,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <future>
 #include <memory>
 #include <string>
 #include <vector>
@@ -47,14 +46,20 @@ namespace network {
 using std::placeholders::_1;
 
 p2p::p2p(const settings& settings)
-  : stopped_(true),
+  : settings_(settings),
+    stopped_(true),
     height_(0),
-    settings_(settings),
     hosts_(std::make_shared<hosts>(threadpool_, settings_)),
     connections_(std::make_shared<connections>()),
     stop_subscriber_(std::make_shared<stop_subscriber>(threadpool_, NAME "_stop_sub")),
     channel_subscriber_(std::make_shared<channel_subscriber>(threadpool_, NAME "_sub"))
 {
+}
+
+// This allows for shutdown based on destruct without need to call stop.
+p2p::~p2p()
+{
+    p2p::close();
 }
 
 // Start sequence.
@@ -101,7 +106,7 @@ void p2p::handle_manual_started(const code& ec, result_handler handler)
         return;
     }
 
-    handle_hosts_loaded(hosts_->load(), handler);
+    handle_hosts_loaded(hosts_->start(), handler);
 }
 
 void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
@@ -195,25 +200,23 @@ void p2p::handle_running(const code& ec, result_handler handler)
     handler(error::success);
 }
 
-// Stop sequence.
+// Shutdown.
 // ----------------------------------------------------------------------------
 // All shutdown actions must be queued by the end of the stop call.
 // IOW queued shutdown operations must not enqueue additional work.
 
-// This is not short-circuited by a stop test because we need to ensure it
-// completes at least once before invoking the handler. This requires a unique
-// lock be taken around the entire section, which poses a deadlock risk.
-// Instead this is thread safe and idempotent, allowing it to be unguarded.
-void p2p::stop(result_handler handler)
+// This is not short-circuited by a stopped test because we need to ensure it
+// completes at least once before returning. This requires a unique lock be 
+// taken around the entire section, which poses a deadlock risk. Instead this
+// is thread safe and idempotent, allowing it to be unguarded.
+bool p2p::stop()
 {
-    // Host save is expensive, so minimize repeats.
-    const auto ec = stopped_ ? error::success : hosts_->save();
+    // This is the only stop operation that can fail.
+    const auto result = (hosts_->stop() == error::success);
 
-    if (ec)
-        log::error(LOG_NETWORK)
-            << "Error saving hosts file: " << ec.message();
-
+    // Signal all current work to stop and free manual session.
     stopped_ = true;
+    manual_.store(nullptr);
 
     // Prevent subscription after stop.
     stop_subscriber_->stop();
@@ -226,47 +229,20 @@ void p2p::stop(result_handler handler)
     // Stop accepting channels and stop those that exist (self-clearing).
     connections_->stop(error::service_stopped);
 
-    manual_.store(nullptr);
+    // Signal threadpool to stop accepting work now that subscribers are clear.
     threadpool_.shutdown();
-
-    // This indirection is not required but presented for consistency.
-    handle_stopped(ec, handler);
-}
-
-void p2p::handle_stopped(const code& ec, result_handler handler)
-{
-    // This is the end of the stop sequence.
-    handler(ec);
-}
-
-// Close sequence.
-// ----------------------------------------------------------------------------
-
-// This allows for shutdown based on destruct without need to call stop.
-p2p::~p2p()
-{
-    p2p::close();
+    return result;
 }
 
 // This must be called from the thread that constructed this class (see join).
-void p2p::close()
+bool p2p::close()
 {
-    std::promise<code> wait;
+    // Signal current work to stop and threadpool to stop accepting new work.
+    const auto result = p2p::stop();
 
-    p2p::stop(
-        std::bind(&p2p::handle_closing,
-            this, _1, std::ref(wait)));
-
-    // This blocks until handle_closing completes.
-    wait.get_future();
-}
-
-void p2p::handle_closing(const code& ec, std::promise<code>& wait)
-{
+    // Block on join of all threads in the threadpool.
     threadpool_.join();
-
-    // This is the end of the derived close sequence.
-    wait.set_value(ec);
+    return result;
 }
 
 // Properties.

@@ -118,17 +118,6 @@ static int start_result(p2p& network)
     return promise.get_future().get().value();
 }
 
-static int stop_result(p2p& network)
-{
-    std::promise<code> promise;
-    const auto handler = [&promise](code ec)
-    {
-        promise.set_value(ec);
-    };
-    network.stop(handler);
-    return promise.get_future().get().value();
-}
-
 static int connect_result(p2p& network, const config::endpoint& host)
 {
     std::promise<code> promise;
@@ -242,7 +231,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__no_connections__start_stop_success)
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-    BOOST_REQUIRE_EQUAL(stop_result(network), error::success);
+    BOOST_REQUIRE(network.stop());
 }
 
 BOOST_AUTO_TEST_CASE(p2p__start__no_sessions__start_success_start_operation_fail)
@@ -260,7 +249,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session__start_stop_start_success)
     SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-    BOOST_REQUIRE_EQUAL(stop_result(network), error::success);
+    BOOST_REQUIRE(network.stop());
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 }
 
@@ -277,7 +266,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_handshake_timeout__start_operation
     BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
 
     // The service never started but stop will still succeed (and is optional).
-    BOOST_REQUIRE_EQUAL(stop_result(network), error::success);
+    BOOST_REQUIRE(network.stop());
 }
 
 BOOST_AUTO_TEST_CASE(p2p__start__seed_session_connect_timeout__start_operation_fail_stop_success)
@@ -287,7 +276,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_connect_timeout__start_operation_f
     configuration.connect_timeout_seconds = 0;
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
-    BOOST_REQUIRE_EQUAL(stop_result(network), error::success);
+    BOOST_REQUIRE(network.stop());
 }
 
 BOOST_AUTO_TEST_CASE(p2p__start__seed_session_germination_timeout__start_operation_fail_stop_success)
@@ -297,7 +286,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_germination_timeout__start_operati
     configuration.channel_germination_seconds = 0;
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
-    BOOST_REQUIRE_EQUAL(stop_result(network), error::success);
+    BOOST_REQUIRE(network.stop());
 }
 
 BOOST_AUTO_TEST_CASE(p2p__start__seed_session_inactivity_timeout__start_operation_fail_stop_success)
@@ -307,7 +296,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_inactivity_timeout__start_operatio
     configuration.channel_inactivity_minutes = 0;
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
-    BOOST_REQUIRE_EQUAL(stop_result(network), error::success);
+    BOOST_REQUIRE(network.stop());
 }
 
 BOOST_AUTO_TEST_CASE(p2p__start__seed_session_expiration_timeout__start_operation_fail_stop_success)
@@ -317,7 +306,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_expiration_timeout__start_operatio
     configuration.channel_expiration_minutes = 0;
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
-    BOOST_REQUIRE_EQUAL(stop_result(network), error::success);
+    BOOST_REQUIRE(network.stop());
 }
 
 // Disabled for live test reliability.
@@ -332,7 +321,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_expiration_timeout__start_operatio
 ////    configuration.blacklists = SEED1_AUTHORITIES;
 ////    p2p network(configuration);
 ////    BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
-////    BOOST_REQUIRE_EQUAL(stop_result(network), error::success);
+////    BOOST_REQUIRE(network.stop());
 ////}
 
 BOOST_AUTO_TEST_CASE(p2p__start__outbound_no_seeds__success)

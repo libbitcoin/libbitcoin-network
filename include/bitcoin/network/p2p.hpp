@@ -24,7 +24,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <future>
 #include <memory>
 #include <string>
 #include <vector>
@@ -77,7 +76,7 @@ public:
     p2p(const p2p&) = delete;
     void operator=(const p2p&) = delete;
 
-    // Start/Run/Stop/Close sequences.
+    // Start/Run sequences.
     // ------------------------------------------------------------------------
 
     /// Invoke startup and seeding sequence, call from constructing thread.
@@ -87,14 +86,17 @@ public:
     /// call from start result handler. Call base method to skip sync.
     virtual void run(result_handler handler);
 
-    /// Non-blocking call to coalesce all work, start may be reinvoked after.
-    /// Handler returns the result of file save operations.
-    virtual void stop(result_handler handler);
+    // Shutdown.
+    // ------------------------------------------------------------------------
+
+    /// Idempotent call to signal work stop, start may be reinvoked after.
+    /// Returns the result of file save operation.
+    virtual bool stop();
 
     /// Blocking call to coalesce all work and then terminate all threads.
     /// Call from thread that constructed this class, or don't call at all.
     /// This calls stop, and start may be reinvoked after calling this.
-    virtual void close();
+    virtual bool close();
 
     // Properties.
     // ------------------------------------------------------------------------
@@ -186,15 +188,13 @@ private:
 
     void handle_started(const code& ec, result_handler handler);
     void handle_running(const code& ec, result_handler handler);
-    void handle_stopped(const code& ec, result_handler handler);
-    void handle_closing(const code& ec, std::promise<code>& wait);
 
-    std::atomic<bool> stopped_;
-    std::atomic<size_t> height_;
-    bc::atomic<session_manual::ptr> manual_;
     const settings& settings_;
 
     // These are thread safe.
+    std::atomic<bool> stopped_;
+    std::atomic<size_t> height_;
+    bc::atomic<session_manual::ptr> manual_;
     threadpool threadpool_;
     hosts::ptr hosts_;
     connections::ptr connections_;
