@@ -20,6 +20,7 @@
 #ifndef LIBBITCOIN_NETWORK_HOSTS_HPP
 #define LIBBITCOIN_NETWORK_HOSTS_HPP
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -55,8 +56,12 @@ public:
     hosts(const hosts&) = delete;
     void operator=(const hosts&) = delete;
 
-    virtual code load();
-    virtual code save();
+    /// Load hosts file if found.
+    virtual code start();
+
+    // Save hosts to file.
+    virtual code stop();
+
     virtual size_t count() const;
     virtual code fetch(address& out);
     virtual code remove(const address& host);
@@ -70,8 +75,9 @@ private:
     iterator find(const address& host);
     void do_store(const address& host, result_handler handler);
 
-    // The buffer is protected by a mutex.
+    // These are protected by a mutex.
     list buffer_;
+    std::atomic<bool> stopped_;
     mutable upgrade_mutex mutex_;
 
     // This is thread safe.

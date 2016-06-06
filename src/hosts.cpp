@@ -33,6 +33,7 @@ namespace network {
 
 hosts::hosts(threadpool& pool, const settings& settings)
   : buffer_(std::max(settings.host_pool_capacity, 1u)),
+    stopped_(true),
     dispatch_(pool, NAME),
     file_path_(settings.hosts_file),
     disabled_(settings.host_pool_capacity == 0)
@@ -66,6 +67,9 @@ code hosts::fetch(address& out)
     // Critical Section
     shared_lock lock(mutex_);
 
+    if (stopped_)
+        return error::service_stopped;
+
     if (buffer_.empty())
         return error::not_found;
 
@@ -76,50 +80,97 @@ code hosts::fetch(address& out)
     ///////////////////////////////////////////////////////////////////////////
 }
 
-code hosts::load()
+// load
+code hosts::start()
 {
     if (disabled_)
         return error::success;
 
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
-    unique_lock lock(mutex_);
+    mutex_.lock_upgrade();
 
-    bc::ifstream file(file_path_.string());
-    if (file.bad())
-        return error::file_system;
-
-    // Formerly each address was randomly-queued for insert here.
-    std::string line;
-    while (std::getline(file, line))
+    if (!stopped_)
     {
-        config::authority host(line);
-        if (host.port() != 0)
-            buffer_.push_back(host.to_network_address());
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        return error::operation_failed;
+    }
+
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    stopped_ = false;
+    bc::ifstream file(file_path_.string());
+    const auto file_error = file.bad();
+
+    if (!file_error)
+    {
+        std::string line;
+
+        while (std::getline(file, line))
+        {
+            config::authority host(line);
+
+            if (host.port() != 0)
+                buffer_.push_back(host.to_network_address());
+        }
+    }
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
+
+    if (file_error)
+    {
+        log::debug(LOG_NETWORK)
+            << "Failed to save hosts file.";
+        return error::file_system;
     }
 
     return error::success;
-    ///////////////////////////////////////////////////////////////////////////
 }
 
-code hosts::save()
+// load
+code hosts::stop()
 {
     if (disabled_)
         return error::success;
 
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
-    unique_lock lock(mutex_);
+    mutex_.lock_upgrade();
 
+    if (stopped_)
+    {
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        return error::success;
+    }
+
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    stopped_ = true;
     bc::ofstream file(file_path_.string());
-    if (file.bad())
-        return error::file_system;
+    const auto file_error = file.bad();
 
-    for (const auto& entry: buffer_)
-        file << config::authority(entry) << std::endl;
+    if (!file_error)
+    {
+        for (const auto& entry: buffer_)
+            file << config::authority(entry) << std::endl;
+
+        buffer_.clear();
+    }
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
+
+    if (file_error)
+    {
+        log::debug(LOG_NETWORK)
+            << "Failed to load hosts file.";
+        return error::file_system;
+    }
 
     return error::success;
-    ///////////////////////////////////////////////////////////////////////////
 }
 
 code hosts::remove(const address& host)
@@ -128,12 +179,21 @@ code hosts::remove(const address& host)
     // Critical Section
     mutex_.lock_upgrade();
 
+    if (stopped_)
+    {
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        return error::service_stopped;
+    }
+
     auto it = find(host);
+
     if (it != buffer_.end())
     {
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         mutex_.unlock_upgrade_and_lock();
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         buffer_.erase(it);
+
         mutex_.unlock();
         //---------------------------------------------------------------------
         return error::success;
@@ -160,11 +220,19 @@ code hosts::store(const address& host)
     // Critical Section
     mutex_.lock_upgrade();
 
+    if (stopped_)
+    {
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        return error::service_stopped;
+    }
+
     if (find(host) == buffer_.end())
     {
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         mutex_.unlock_upgrade_and_lock();
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         buffer_.push_back(host);
+
         mutex_.unlock();
         //---------------------------------------------------------------------
         return error::success;
@@ -180,15 +248,19 @@ code hosts::store(const address& host)
     return error::success;
 }
 
+// private
 void hosts::do_store(const address& host, result_handler handler)
 {
     handler(store(host));
 }
 
+// The handler is invoked once all calls to do_store are completed.
+// We disperse here to allow other addresses messages to interleave hosts.
 void hosts::store(const address::list& hosts, result_handler handler)
 {
-    // The handler is invoked once all calls to do_store are completed.
-    // We disperse here to allow other addresses messages to interleave hosts.
+    if (stopped_)
+        return;
+
     dispatch_.parallel(hosts, "hosts", handler,
         &hosts::do_store, shared_from_this());
 }
