@@ -43,10 +43,6 @@ class BCT_API proxy
   : public enable_shared_from_base<proxy>
 {
 public:
-    template <class Message>
-    using message_handler = std::function<bool(const code&,
-        std::shared_ptr<Message>)>;
-
     typedef std::shared_ptr<proxy> ptr;
     typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> result_handler;
