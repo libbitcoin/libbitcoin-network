@@ -24,9 +24,8 @@
 #include <utility>
 #include <sstream>
 #include <string>
-#include <boost/date_time.hpp>
-#include <boost/format.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -138,9 +137,7 @@ static void error_both(std::ofstream& file, std::ostream& error,
 void initialize_logging(std::ofstream& debug, std::ofstream& error,
     std::ostream& output_stream, std::ostream& error_stream)
 {
-    using std::placeholders::_1;
-    using std::placeholders::_2;
-    using std::placeholders::_3;
+    using namespace std::placeholders;
 
     // debug|info => debug_log
     log::debug("").set_output_function(std::bind(output_file,

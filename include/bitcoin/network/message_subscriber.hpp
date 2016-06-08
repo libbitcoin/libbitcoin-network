@@ -21,6 +21,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGE_SUBSCRIBER_HPP
 
 #include <istream>
+#include <functional>
 #include <map>
 #include <memory>
 #include <utility>
@@ -45,6 +46,10 @@ namespace network {
 
 #define DECLARE_SUBSCRIBER(value) \
     value##_subscriber_type::ptr value##_subscriber_
+
+template <class Message>
+using message_handler = std::function<bool(const code&,
+    std::shared_ptr<Message>)>;
 
 /// Aggregation of subscribers by messasge type, thread safe.
 class BCT_API message_subscriber

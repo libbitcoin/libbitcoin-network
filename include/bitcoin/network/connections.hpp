@@ -27,7 +27,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
@@ -56,9 +55,10 @@ public:
     connections(const connections&) = delete;
     void operator=(const connections&) = delete;
 
-    /// Completion handler always returns success.
+    /// Send a message to all channels, with completion handlers.
+    /// Complete always returns success, use channel handler for failure codes.
     template <typename Message>
-    void broadcast(const Message& message, channel_handler handle_channel,
+    void broadcast(Message&& message, channel_handler handle_channel,
         result_handler handle_complete)
     {
         // We cannot use a synchronizer here because handler closure in loop.
@@ -74,8 +74,17 @@ public:
                     handle_complete(error::success);
             };
 
-            channel->send(message, handle_send);
+            channel->send(std::forward<Message>(message), handle_send);
         }
+    }
+
+    /// Subscribe to all incoming messages of a type.
+    template <class Message>
+    void subscribe(message_handler<Message>&& handler)
+    {
+        for (const auto channel: safe_copy())
+            channel->subscribe(
+                std::forward<message_handler<Message>>(handler));
     }
 
     virtual void stop(const code& ec);

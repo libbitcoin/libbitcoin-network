@@ -21,7 +21,6 @@
 #define LIBBITCOIN_NETWORK_SETTINGS_HPP
 
 #include <cstdint>
-#include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
 

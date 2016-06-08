@@ -31,7 +31,7 @@ namespace network {
 
 #define CLASS protocol_events
 
-using std::placeholders::_1;
+using namespace std::placeholders;
 
 protocol_events::protocol_events(p2p& network, channel::ptr channel,
     const std::string& name)

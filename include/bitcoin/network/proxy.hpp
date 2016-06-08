@@ -26,8 +26,7 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <boost/iostreams/stream.hpp>
-#include <boost/thread.hpp>
+#include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/const_buffer.hpp>
 #include <bitcoin/network/define.hpp>
@@ -42,10 +41,6 @@ class BCT_API proxy
   : public enable_shared_from_base<proxy>
 {
 public:
-    template <class Message>
-    using message_handler = std::function<bool(const code&,
-        std::shared_ptr<Message>)>;
-
     typedef std::shared_ptr<proxy> ptr;
     typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> result_handler;
@@ -65,15 +60,16 @@ public:
 
     /// Send a message on the socket.
     template <class Message>
-    void send(const Message& packet, result_handler handler)
+    void send(Message&& packet, result_handler handler)
     {
-        const auto success = error::success;
-        const auto& command = packet.command;
-        const auto buffer = const_buffer(message::serialize(packet, magic_));
-        do_send(success, command, buffer, handler);
+        const auto message = std::forward<Message>(packet);
+        const auto& command = message.command;
+        const auto buffer = const_buffer(message::serialize(message, magic_));
+        do_send(error::success, command, buffer, handler);
 
         ////// Bypass queuing for block messages.
-        ////if (packet.command == chain::block::command)
+        //// const auto success = error::success;
+        ////if (message.command == chain::block::command)
         ////    send_subscriber_->do_relay(success, command, buffer, handler);
         ////else
         ////    send_subscriber_->relay(success, command, buffer, handler);

@@ -21,7 +21,6 @@
 #define LIBBITCOIN_LOCKED_SOCKET_HPP
 
 #include <memory>
-#include <boost/asio.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
 

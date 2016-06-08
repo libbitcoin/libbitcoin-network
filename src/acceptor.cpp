@@ -20,6 +20,7 @@
 #include <bitcoin/network/acceptor.hpp>
 
 #include <cstdint>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <bitcoin/bitcoin.hpp>
@@ -33,7 +34,7 @@ namespace network {
 
 #define NAME "acceptor"
 
-using std::placeholders::_1;
+using namespace std::placeholders;
 
 static const auto reuse_address = asio::acceptor::reuse_address(true);
 

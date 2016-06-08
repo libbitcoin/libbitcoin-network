@@ -20,7 +20,6 @@
 #ifndef LIBBITCOIN_NETWORK_SOCKET_HPP
 #define LIBBITCOIN_NETWORK_SOCKET_HPP
 
-#include <boost/asio.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/locked_socket.hpp>

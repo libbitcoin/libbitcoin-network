@@ -32,8 +32,7 @@ namespace network {
 
 #define CLASS session_inbound
 
-using std::placeholders::_1;
-using std::placeholders::_2;
+using namespace std::placeholders;
 
 session_inbound::session_inbound(p2p& network)
   : session(network, true, true),

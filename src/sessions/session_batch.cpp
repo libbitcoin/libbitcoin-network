@@ -33,8 +33,7 @@ namespace network {
 #define NAME "session_batch"
 
 using namespace bc::config;
-using std::placeholders::_1;
-using std::placeholders::_2;
+using namespace std::placeholders;
 
 session_batch::session_batch(p2p& network, bool persistent)
   : session(network, true, persistent),

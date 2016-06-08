@@ -52,8 +52,7 @@ namespace network {
 #define BIND_4(method, p1, p2, p3, p4) \
     base_bind(&session::method, p1, p2, p3, p4)
 
-using std::placeholders::_1;
-using std::placeholders::_2;
+using namespace std::placeholders;
 
 session::session(p2p& network, bool outgoing, bool persistent)
   : stopped_(true),

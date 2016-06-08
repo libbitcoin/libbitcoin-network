@@ -34,9 +34,7 @@ namespace network {
 #define CLASS session_seed
 #define NAME "session_seed"
 
-using std::placeholders::_1;
-using std::placeholders::_2;
-
+using namespace std::placeholders;
 session_seed::session_seed(p2p& network)
   : session(network, true, false),
     CONSTRUCT_TRACK(session_seed)

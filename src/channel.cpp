@@ -32,7 +32,7 @@
 namespace libbitcoin {
 namespace network {
 
-using std::placeholders::_1;
+using namespace std::placeholders;
 
 // Factory for deadline timer pointer construction.
 static deadline::ptr alarm(threadpool& pool, const asio::duration& duration)
@@ -188,19 +188,19 @@ void channel::handle_inactivity(const code& ec)
     stop(error::channel_timeout);
 }
 
-// Location tracking (thread unsafe, deprecated).
-// ----------------------------------------------------------------------------
-
-bool channel::located(const hash_digest& start, const hash_digest& stop) const
-{
-    return located_start_ == start && located_stop_ == stop;
-}
-
-void channel::set_located(const hash_digest& start, const hash_digest& stop)
-{
-    located_start_ = start;
-    located_stop_ = stop;
-}
+////// Location tracking (thread unsafe, deprecated).
+////// ----------------------------------------------------------------------------
+////
+////bool channel::located(const hash_digest& start, const hash_digest& stop) const
+////{
+////    return located_start_ == start && located_stop_ == stop;
+////}
+////
+////void channel::set_located(const hash_digest& start, const hash_digest& stop)
+////{
+////    located_start_ = start;
+////    located_stop_ = stop;
+////}
 
 } // namespace network
 } // namespace libbitcoin
