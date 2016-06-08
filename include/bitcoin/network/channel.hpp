@@ -63,10 +63,10 @@ public:
     virtual hash_digest peer_threshold();
     virtual void set_peer_threshold(const hash_digest& threshold);
 
-    virtual bool located(const hash_digest& start,
-        const hash_digest& stop) const;
-    virtual void set_located(const hash_digest& start,
-        const hash_digest& stop);
+    ////virtual bool located(const hash_digest& start,
+    ////    const hash_digest& stop) const;
+    ////virtual void set_located(const hash_digest& start,
+    ////    const hash_digest& stop);
 
 protected:
     virtual void handle_activity();
