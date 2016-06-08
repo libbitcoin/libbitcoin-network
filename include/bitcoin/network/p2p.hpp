@@ -71,7 +71,8 @@ public:
     template <class Message>
     void subscribe(message_handler<Message>&& handler)
     {
-        connections_->subscribe(handler);
+        connections_->subscribe(
+            std::forward<message_handler<Message>>(handler));
     }
 
     // Constructors.

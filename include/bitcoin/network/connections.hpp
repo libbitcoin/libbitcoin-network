@@ -74,7 +74,7 @@ public:
                     handle_complete(error::success);
             };
 
-            channel->send(message, handle_send);
+            channel->send(std::forward<Message>(message), handle_send);
         }
     }
 
@@ -83,7 +83,8 @@ public:
     void subscribe(message_handler<Message>&& handler)
     {
         for (const auto channel: safe_copy())
-            channel->subscribe(handler);
+            channel->subscribe(
+                std::forward<message_handler<Message>>(handler));
     }
 
     virtual void stop(const code& ec);
