@@ -56,7 +56,7 @@ public:
     void operator=(const connections&) = delete;
 
     /// Send a message to all channels, with completion handlers.
-    /// Completealways returns success, use channel handler for failure codes.
+    /// Complete always returns success, use channel handler for failure codes.
     template <typename Message>
     void broadcast(Message&& message, channel_handler handle_channel,
         result_handler handle_complete)
