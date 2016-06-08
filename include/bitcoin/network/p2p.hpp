@@ -58,7 +58,7 @@ public:
 
     /// Send message to all connections.
     template <typename Message>
-    void broadcast(const Message& message, channel_handler handle_channel,
+    void broadcast(Message&& message, channel_handler handle_channel,
         result_handler handle_complete)
     {
         connections_->broadcast(message, handle_channel, handle_complete);

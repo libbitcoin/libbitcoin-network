@@ -58,7 +58,7 @@ public:
 
     /// Completion handler always returns success.
     template <typename Message>
-    void broadcast(const Message& message, channel_handler handle_channel,
+    void broadcast(Message&& message, channel_handler handle_channel,
         result_handler handle_complete)
     {
         // We cannot use a synchronizer here because handler closure in loop.
