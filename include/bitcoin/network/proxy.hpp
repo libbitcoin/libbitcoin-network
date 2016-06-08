@@ -27,8 +27,6 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <boost/iostreams/stream.hpp>
-#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/const_buffer.hpp>
 #include <bitcoin/network/define.hpp>

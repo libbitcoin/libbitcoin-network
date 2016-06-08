@@ -38,8 +38,7 @@ namespace network {
 #define UNSPECIFIED_NONCE 0
 
 using namespace bc::message;
-using std::placeholders::_1;
-using std::placeholders::_2;
+using namespace std::placeholders;
 
 const version protocol_version::template_
 {

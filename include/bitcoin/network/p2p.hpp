@@ -27,7 +27,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connections.hpp>

@@ -33,8 +33,7 @@ namespace network {
 
 #define CLASS session_manual
 
-using std::placeholders::_1;
-using std::placeholders::_2;
+using namespace std::placeholders;
 
 session_manual::session_manual(p2p& network)
   : session_batch(network, true),

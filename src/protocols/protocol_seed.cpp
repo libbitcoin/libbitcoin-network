@@ -32,8 +32,7 @@ namespace network {
 #define CLASS protocol_seed
 
 using namespace bc::message;
-using std::placeholders::_1;
-using std::placeholders::_2;
+using namespace std::placeholders;
 
 // Require three callbacks (or any error) before calling complete.
 protocol_seed::protocol_seed(p2p& network, channel::ptr channel)

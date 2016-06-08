@@ -33,8 +33,7 @@ namespace network {
 #define CLASS protocol_address
 
 using namespace bc::message;
-using std::placeholders::_1;
-using std::placeholders::_2;
+using namespace std::placeholders;
 
 protocol_address::protocol_address(p2p& network, channel::ptr channel)
   : protocol_events(network, channel, NAME),

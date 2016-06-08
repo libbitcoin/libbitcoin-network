@@ -19,14 +19,16 @@
  */
 #include <bitcoin/network/proxy.hpp>
 
+#define BOOST_BIND_NO_PLACEHOLDERS
+
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
 #include <memory>
-#include <boost/iostreams/stream.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/const_buffer.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/socket.hpp>
 
 namespace libbitcoin {
@@ -35,10 +37,7 @@ namespace network {
 #define NAME "proxy"
 
 using namespace message;
-using std::placeholders::_1;
-using std::placeholders::_2;
-using std::placeholders::_3;
-using std::placeholders::_4;
+using namespace std::placeholders;
 
 // TODO: this is made up, configure payload size guard for DoS protection.
 static constexpr size_t max_payload_size = 10 * 1024 * 1024;

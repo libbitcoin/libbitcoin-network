@@ -33,8 +33,7 @@ namespace network {
 #define CLASS protocol_ping
 
 using namespace bc::message;
-using std::placeholders::_1;
-using std::placeholders::_2;
+using namespace std::placeholders;
 
 protocol_ping::protocol_ping(p2p& network, channel::ptr channel)
   : protocol_timer(network, channel, true, NAME),

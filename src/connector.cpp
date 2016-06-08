@@ -20,6 +20,7 @@
 #include <bitcoin/network/connector.hpp>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <bitcoin/bitcoin.hpp>
@@ -34,8 +35,7 @@ namespace network {
 #define NAME "connector"
     
 using namespace bc::config;
-using std::placeholders::_1;
-using std::placeholders::_2;
+using namespace std::placeholders;
 
 // The resolver_, pending_, and stopped_ members are protected.
 

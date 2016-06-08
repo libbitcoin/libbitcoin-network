@@ -41,4 +41,14 @@
 // Log name.
 #define LOG_NETWORK "network"
 
+// Avoid namespace conflict between boost::placeholders and std::placeholders. 
+#define BOOST_BIND_NO_PLACEHOLDERS
+
+// Include boost only here, so placeholders exclusion works.
+#include <boost/asio.hpp>
+#include <boost/circular_buffer.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/thread.hpp>
+
 #endif

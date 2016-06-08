@@ -31,8 +31,7 @@ namespace network {
 
 #define CLASS session_outbound
 
-using std::placeholders::_1;
-using std::placeholders::_2;
+using namespace std::placeholders;
 
 session_outbound::session_outbound(p2p& network)
   : session_batch(network, true),

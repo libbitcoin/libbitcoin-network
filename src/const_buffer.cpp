@@ -21,8 +21,8 @@
 
 #include <memory>
 #include <utility>
-#include <boost/asio.hpp>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {

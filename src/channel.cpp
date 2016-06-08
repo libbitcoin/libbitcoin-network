@@ -32,7 +32,7 @@
 namespace libbitcoin {
 namespace network {
 
-using std::placeholders::_1;
+using namespace std::placeholders;
 
 // Factory for deadline timer pointer construction.
 static deadline::ptr alarm(threadpool& pool, const asio::duration& duration)

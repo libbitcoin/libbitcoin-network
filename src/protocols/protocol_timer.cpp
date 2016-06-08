@@ -31,7 +31,7 @@ namespace libbitcoin {
 namespace network {
 
 #define CLASS protocol_timer
-using std::placeholders::_1;
+using namespace std::placeholders;
 
 protocol_timer::protocol_timer(p2p& network, channel::ptr channel,
     bool perpetual, const std::string& name)
