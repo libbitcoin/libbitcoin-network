@@ -56,7 +56,8 @@ public:
     connections(const connections&) = delete;
     void operator=(const connections&) = delete;
 
-    /// Completion handler always returns success.
+    /// Send a message to all channels, with completion handlers.
+    /// Completealways returns success, use channel handler for failure codes.
     template <typename Message>
     void broadcast(Message&& message, channel_handler handle_channel,
         result_handler handle_complete)
@@ -76,6 +77,14 @@ public:
 
             channel->send(message, handle_send);
         }
+    }
+
+    /// Subscribe to all incoming messages of a type.
+    template <class Message>
+    void subscribe(message_handler<Message>&& handler)
+    {
+        for (const auto channel: safe_copy())
+            channel->subscribe(handler);
     }
 
     virtual void stop(const code& ec);

@@ -33,6 +33,7 @@
 #include <bitcoin/network/connections.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/hosts.hpp>
+#include <bitcoin/network/message_subscriber.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -56,6 +57,9 @@ public:
     typedef subscriber<const code&> stop_subscriber;
     typedef resubscriber<const code&, channel::ptr> channel_subscriber;
 
+    // Templates (send/receive).
+    // ------------------------------------------------------------------------
+
     /// Send message to all connections.
     template <typename Message>
     void broadcast(Message&& message, channel_handler handle_channel,
@@ -64,17 +68,25 @@ public:
         connections_->broadcast(message, handle_channel, handle_complete);
     }
 
+    /// Subscribe to all incoming messages of a type.
+    template <class Message>
+    void subscribe(message_handler<Message>&& handler)
+    {
+        connections_->subscribe(handler);
+    }
+
+    // Constructors.
     // ------------------------------------------------------------------------
 
     /// Construct an instance.
     p2p(const settings& settings);
 
-    /// Ensure all threads are coalesced.
-    virtual ~p2p();
-
     /// This class is not copyable.
     p2p(const p2p&) = delete;
     void operator=(const p2p&) = delete;
+
+    /// Ensure all threads are coalesced.
+    virtual ~p2p();
 
     // Start/Run sequences.
     // ------------------------------------------------------------------------
