@@ -26,6 +26,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <boost/iostreams/stream.hpp>
 #include <boost/thread.hpp>
 #include <bitcoin/bitcoin.hpp>
@@ -65,15 +66,16 @@ public:
 
     /// Send a message on the socket.
     template <class Message>
-    void send(const Message& packet, result_handler handler)
+    void send(Message&& packet, result_handler handler)
     {
-        const auto success = error::success;
-        const auto& command = packet.command;
-        const auto buffer = const_buffer(message::serialize(packet, magic_));
-        do_send(success, command, buffer, handler);
+        const auto message = std::forward<Message>(packet);
+        const auto& command = message.command;
+        const auto buffer = const_buffer(message::serialize(message, magic_));
+        do_send(error::success, command, buffer, handler);
 
         ////// Bypass queuing for block messages.
-        ////if (packet.command == chain::block::command)
+        //// const auto success = error::success;
+        ////if (message.command == chain::block::command)
         ////    send_subscriber_->do_relay(success, command, buffer, handler);
         ////else
         ////    send_subscriber_->relay(success, command, buffer, handler);
