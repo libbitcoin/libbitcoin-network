@@ -24,6 +24,7 @@
 #include <utility>
 #include <sstream>
 #include <string>
+#include <boost/date_time.hpp>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
 
