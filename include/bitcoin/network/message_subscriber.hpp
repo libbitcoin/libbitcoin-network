@@ -127,7 +127,7 @@ public:
         const auto message_ptr = std::make_shared<Message>();
         const bool parsed = message_ptr->from_data(stream);
         const code ec(parsed ? error::success : error::bad_stream);
-        subscriber->do_relay(ec, message_ptr);
+        subscriber->invoke(ec, message_ptr);
         return ec;
     }
 
