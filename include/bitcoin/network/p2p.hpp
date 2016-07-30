@@ -33,7 +33,10 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/hosts.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
+#include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
+#include <bitcoin/network/sessions/session_outbound.hpp>
+#include <bitcoin/network/sessions/session_seed.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -189,6 +192,12 @@ protected:
     {
         return std::make_shared<Session>(*this, std::forward<Args>(args)...);
     }
+
+    /// Override to attach specialized sessions.
+    virtual session_manual::ptr attach_manual_session();
+    virtual session_seed::ptr attach_seed_session();
+    virtual session_inbound::ptr attach_inbound_session();
+    virtual session_outbound::ptr attach_outbound_session();
 
 private:
     void handle_manual_started(const code& ec, result_handler handler);

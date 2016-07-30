@@ -83,7 +83,7 @@ void p2p::start(result_handler handler)
     channel_subscriber_->start();
 
     // This instance is retained by stop handler and member references.
-    const auto manual = attach<session_manual>();
+    const auto manual = attach_manual_session();
     manual_.store(manual);
 
     // This is invoked on a new thread.
@@ -127,9 +127,11 @@ void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
         return;
     }
 
-    // This is invoked on a new thread.
     // The instance is retained by the stop handler (until shutdown).
-    attach<session_seed>()->start(
+    const auto seed = attach_seed_session();
+
+    // This is invoked on a new thread.
+    seed->start(
         std::bind(&p2p::handle_started,
             this, _1, handler));
 }
@@ -164,9 +166,11 @@ void p2p::handle_started(const code& ec, result_handler handler)
 
 void p2p::run(result_handler handler)
 {
+    // The instance is retained by the stop handler (until shutdown).
+    const auto inbound = attach_inbound_session();
+
     // This is invoked on a new thread.
-    // This instance is retained by the stop handler (until shutdown).
-    attach<session_inbound>()->start(
+    inbound->start(
         std::bind(&p2p::handle_inbound_started,
             this, _1, handler));
 }
@@ -181,9 +185,11 @@ void p2p::handle_inbound_started(const code& ec, result_handler handler)
         return;
     }
 
+    // The instance is retained by the stop handler (until shutdown).
+    const auto outbound = attach_outbound_session();
+
     // This is invoked on a new thread.
-    // This instance is retained by the stop handler (until shutdown).
-    attach<session_outbound>()->start(
+    outbound->start(
         std::bind(&p2p::handle_running,
             this, _1, handler));
 }
@@ -200,6 +206,30 @@ void p2p::handle_running(const code& ec, result_handler handler)
 
     // This is the end of the run sequence.
     handler(error::success);
+}
+
+// Specializations.
+// ----------------------------------------------------------------------------
+// Create derived sessions and override these to inject from derived p2p class.
+
+session_manual::ptr p2p::attach_manual_session()
+{
+    return attach<session_manual>();
+}
+
+session_seed::ptr p2p::attach_seed_session()
+{
+    return attach<session_seed>();
+}
+
+session_inbound::ptr p2p::attach_inbound_session()
+{
+    return attach<session_inbound>();
+}
+
+session_outbound::ptr p2p::attach_outbound_session()
+{
+    return attach<session_outbound>();
 }
 
 // Shutdown.
