@@ -119,6 +119,11 @@ void session_outbound::handle_channel_start(const code& ec,
         return;
     }
 
+    attach_protocols(channel);
+};
+
+void session_outbound::attach_protocols(channel::ptr channel)
+{
     attach<protocol_ping>(channel)->start();
     attach<protocol_address>(channel)->start();
 }

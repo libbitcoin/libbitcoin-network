@@ -156,7 +156,12 @@ void session_manual::handle_channel_start(const code& ec,
     // This is the end of the connect sequence (the handler goes out of scope).
     handler(error::success, channel);
 
-    // This is the beginning of the connect cycle.
+    // This is the beginning of the connect sequence.
+    attach_protocols(channel);
+};
+
+void session_manual::attach_protocols(channel::ptr channel)
+{
     attach<protocol_ping>(channel)->start();
     attach<protocol_address>(channel)->start();
 }

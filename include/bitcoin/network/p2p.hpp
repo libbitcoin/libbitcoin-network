@@ -194,8 +194,8 @@ protected:
     }
 
     /// Override to attach specialized sessions.
-    virtual session_manual::ptr attach_manual_session();
     virtual session_seed::ptr attach_seed_session();
+    virtual session_manual::ptr attach_manual_session();
     virtual session_inbound::ptr attach_inbound_session();
     virtual session_outbound::ptr attach_outbound_session();
 
