@@ -57,6 +57,10 @@ public:
     virtual void connect(const std::string& hostname, uint16_t port,
         channel_handler handler);
 
+protected:
+    /// Override to attach specialized protocols upon channel start.
+    virtual void attach_protocols(channel::ptr channel);
+
 private:
     void handle_started(const code& ec, result_handler handler);
     void start_connect(const std::string& hostname, uint16_t port,

@@ -46,6 +46,10 @@ public:
     /// Start the session.
     void start(result_handler handler) override;
 
+protected:
+    /// Override to attach specialized protocols upon channel start.
+    virtual void attach_protocols(channel::ptr channel);
+
 private:
     void new_connection(connector::ptr connect);
     void handle_started(const code& ec, result_handler handler);

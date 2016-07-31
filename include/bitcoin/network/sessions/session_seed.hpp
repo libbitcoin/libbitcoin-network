@@ -47,6 +47,11 @@ public:
     /// Start the session.
     void start(result_handler handler) override;
 
+protected:
+    /// Override to attach specialized protocols upon channel start.
+    virtual void attach_protocols(channel::ptr channel,
+        result_handler handler);
+
 private:
     void handle_count(size_t start_size, result_handler handler);
     void start_seeding(size_t start_size, connector::ptr connect,

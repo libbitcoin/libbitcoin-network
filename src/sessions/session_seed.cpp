@@ -164,9 +164,15 @@ void session_seed::handle_channel_start(const code& ec, channel::ptr channel,
         return;
     }
 
+    attach_protocols(channel, handler);
+};
+
+void session_seed::attach_protocols(channel::ptr channel,
+    result_handler handler)
+{
     attach<protocol_ping>(channel)->start();
     attach<protocol_seed>(channel)->start(handler);
-};
+}
 
 void session_seed::handle_channel_stop(const code& ec)
 {
