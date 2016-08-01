@@ -166,6 +166,10 @@ void p2p::handle_started(const code& ec, result_handler handler)
 
 void p2p::run(result_handler handler)
 {
+    // Start node.peer persistent connections.
+    for (const auto& peer: settings_.peers)
+        connect(peer);
+
     // The instance is retained by the stop handler (until shutdown).
     const auto inbound = attach_inbound_session();
 
@@ -322,6 +326,11 @@ void p2p::subscribe_stop(result_handler handler)
 
 // Manual connections.
 // ----------------------------------------------------------------------------
+
+void p2p::connect(const config::endpoint& peer)
+{
+    connect(peer.host(), peer.port());
+}
 
 void p2p::connect(const std::string& hostname, uint16_t port)
 {

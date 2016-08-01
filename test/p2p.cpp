@@ -152,7 +152,7 @@ static int subscribe_result(p2p& network)
     return promise.get_future().get().value();
 }
 
-static int subscribe_connect_result(p2p& network, const config::endpoint& host)
+static int subscribe_connect1_result(p2p& network, const config::endpoint& host)
 {
     std::promise<code> promise;
     const auto handler = [&promise](code ec, channel::ptr)
@@ -162,6 +162,19 @@ static int subscribe_connect_result(p2p& network, const config::endpoint& host)
     };
     network.subscribe_connection(handler);
     network.connect(host.host(), host.port());
+    return promise.get_future().get().value();
+}
+
+static int subscribe_connect2_result(p2p& network, const config::endpoint& host)
+{
+    std::promise<code> promise;
+    const auto handler = [&promise](code ec, channel::ptr)
+    {
+        promise.set_value(ec);
+        return false;
+    };
+    network.subscribe_connection(handler);
+    network.connect(host);
     return promise.get_future().get().value();
 }
 
@@ -396,14 +409,24 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__started_stop__service_stopped)
     network.subscribe_connection(handler);
 }
 
-BOOST_AUTO_TEST_CASE(p2p__subscribe__started_connect__success)
+BOOST_AUTO_TEST_CASE(p2p__subscribe__started_connect1__success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
     p2p network(configuration);
     const config::endpoint host(SEED1);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-    BOOST_REQUIRE_EQUAL(subscribe_connect_result(network, host), error::success);
+    BOOST_REQUIRE_EQUAL(subscribe_connect1_result(network, host), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__subscribe__started_connect2__success)
+{
+    print_headers(TEST_NAME);
+    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+    p2p network(configuration);
+    const config::endpoint host(SEED1);
+    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+    BOOST_REQUIRE_EQUAL(subscribe_connect2_result(network, host), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__broadcast__ping_two_distinct_hosts__two_sends_and_successful_completion)
