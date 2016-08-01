@@ -144,6 +144,9 @@ public:
     // ----------------------------------------------------------------------------
 
     /// Maintain a connection to hostname:port.
+    virtual void connect(const config::endpoint& peer);
+
+    /// Maintain a connection to hostname:port.
     virtual void connect(const std::string& hostname, uint16_t port);
 
     /// Maintain a connection to hostname:port.
@@ -169,7 +172,7 @@ public:
     // Hosts collection.
     // ------------------------------------------------------------------------
 
-    /// Get a randomly-selected adress.
+    /// Get a randomly-selected address.
     virtual void fetch_address(address_handler handler);
 
     /// Store an address.

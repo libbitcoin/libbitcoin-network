@@ -55,6 +55,7 @@ public:
     boost::filesystem::path error_file;
     config::authority self;
     config::authority::list blacklists;
+    config::endpoint::list peers;
     config::endpoint::list seeds;
 
     /// Helpers.
