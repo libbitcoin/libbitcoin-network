@@ -19,6 +19,7 @@
  */
 #include <bitcoin/network/protocols/protocol_ping.hpp>
 
+#include <cstdint>
 #include <functional>
 #include <string>
 #include <bitcoin/bitcoin.hpp>

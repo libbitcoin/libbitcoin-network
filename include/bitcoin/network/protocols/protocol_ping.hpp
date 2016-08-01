@@ -20,6 +20,7 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_PING_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_PING_HPP
 
+#include <cstdint>
 #include <memory>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>

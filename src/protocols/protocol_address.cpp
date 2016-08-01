@@ -49,9 +49,10 @@ void protocol_address::start()
 {
     const auto& settings = network_.network_settings();
 
-    // This protocol doesn't care about stop events.
-    const auto unhandled = [](code){};
-    protocol_events::start(unhandled);
+    // This protocol doesn't need to handle the stop event but it does need to
+    // detect stopped, so it builds on the event protocol.
+    const auto stop_handler = [](code){};
+    protocol_events::start(stop_handler);
 
     if (settings.self.port() != 0)
     {
