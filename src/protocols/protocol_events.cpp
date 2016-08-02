@@ -84,5 +84,23 @@ void protocol_events::set_event(const code& ec)
     handler(ec);
 }
 
+// Send Handler.
+// ----------------------------------------------------------------------------
+
+void protocol_events::handle_send(const code& ec, const std::string& command)
+{
+    if (stopped())
+        return;
+
+    if (ec)
+    {
+        log::debug(LOG_NETWORK)
+            << "Failure sending '" << command << "' to [" << authority()
+            << "] " << ec.message();
+        stop(ec);
+        return;
+    }
+}
+
 } // namespace network
 } // namespace libbitcoin

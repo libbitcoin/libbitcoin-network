@@ -57,7 +57,7 @@ void protocol_address::start()
     if (settings.self.port() != 0)
     {
         self_ = address({ { settings.self.to_network_address() } });
-        SEND1(self_, handle_send_address, _1);
+        SEND2(self_, handle_send, _1, self_.command);
     }
 
     // If we can't store addresses we don't ask for or handle them.
@@ -66,7 +66,7 @@ void protocol_address::start()
 
     SUBSCRIBE2(address, handle_receive_address, _1, _2);
     SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
-    SEND1(get_address(), handle_send_get_address, _1);
+    SEND2(get_address(), handle_send, _1, get_address::command);
 }
 
 // Protocol.
@@ -124,38 +124,10 @@ bool protocol_address::handle_receive_get_address(const code& ec,
         << "Sending addresses to [" << authority() << "] ("
         << self_.addresses.size() << ")";
 
-    SEND1(self_, handle_send_address, _1);
+    SEND2(self_, handle_send, _1, self_.command);
 
     // RESUBSCRIBE
     return true;
-}
-
-void protocol_address::handle_send_address(const code& ec)
-{
-    if (stopped())
-        return;
-
-    if (ec)
-    {
-        log::debug(LOG_NETWORK)
-            << "Failure sending address [" << authority() << "] "
-            << ec.message();
-        stop(ec);
-    }
-}
-
-void protocol_address::handle_send_get_address(const code& ec)
-{
-    if (stopped())
-        return;
-
-    if (ec)
-    {
-        log::debug(LOG_NETWORK)
-            << "Failure sending get_address [" << authority() << "] "
-            << ec.message();
-        stop(ec);
-    }
 }
 
 void protocol_address::handle_store_addresses(const code& ec)
