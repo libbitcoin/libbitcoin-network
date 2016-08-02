@@ -54,11 +54,14 @@ message_subscriber::message_subscriber(threadpool& pool)
   : INITIALIZE_SUBSCRIBER(pool, address),
     INITIALIZE_SUBSCRIBER(pool, alert),
     INITIALIZE_SUBSCRIBER(pool, block),
+    INITIALIZE_SUBSCRIBER(pool, block_transactions),
+    INITIALIZE_SUBSCRIBER(pool, compact_block),
     INITIALIZE_SUBSCRIBER(pool, filter_add),
     INITIALIZE_SUBSCRIBER(pool, filter_clear),
     INITIALIZE_SUBSCRIBER(pool, filter_load),
     INITIALIZE_SUBSCRIBER(pool, get_address),
     INITIALIZE_SUBSCRIBER(pool, get_blocks),
+    INITIALIZE_SUBSCRIBER(pool, get_block_transactions),
     INITIALIZE_SUBSCRIBER(pool, get_data),
     INITIALIZE_SUBSCRIBER(pool, get_headers),
     INITIALIZE_SUBSCRIBER(pool, headers),
@@ -69,6 +72,8 @@ message_subscriber::message_subscriber(threadpool& pool)
     INITIALIZE_SUBSCRIBER(pool, ping),
     INITIALIZE_SUBSCRIBER(pool, pong),
     INITIALIZE_SUBSCRIBER(pool, reject),
+    INITIALIZE_SUBSCRIBER(pool, send_headers),
+    INITIALIZE_SUBSCRIBER(pool, send_compact_blocks),
     INITIALIZE_SUBSCRIBER(pool, transaction),
     INITIALIZE_SUBSCRIBER(pool, verack),
     INITIALIZE_SUBSCRIBER(pool, version)
@@ -80,11 +85,14 @@ void message_subscriber::broadcast(const code& ec)
     RELAY_CODE(ec, address);
     RELAY_CODE(ec, alert);
     RELAY_CODE(ec, block);
+    RELAY_CODE(ec, block_transactions),
+    RELAY_CODE(ec, compact_block),
     RELAY_CODE(ec, filter_add);
     RELAY_CODE(ec, filter_clear);
     RELAY_CODE(ec, filter_load);
     RELAY_CODE(ec, get_address);
     RELAY_CODE(ec, get_blocks);
+    RELAY_CODE(ec, get_block_transactions),
     RELAY_CODE(ec, get_data);
     RELAY_CODE(ec, get_headers);
     RELAY_CODE(ec, headers);
@@ -95,6 +103,8 @@ void message_subscriber::broadcast(const code& ec)
     RELAY_CODE(ec, ping);
     RELAY_CODE(ec, pong);
     RELAY_CODE(ec, reject);
+    RELAY_CODE(ec, send_headers),
+    RELAY_CODE(ec, send_compact_blocks),
     RELAY_CODE(ec, transaction);
     RELAY_CODE(ec, verack);
     RELAY_CODE(ec, version);
@@ -107,11 +117,14 @@ code message_subscriber::load(message_type type, std::istream& stream) const
         CASE_RELAY_MESSAGE(stream, address);
         CASE_RELAY_MESSAGE(stream, alert);
         CASE_HANDLE_MESSAGE(stream, block);
+        CASE_RELAY_MESSAGE(stream, block_transactions);
+        CASE_RELAY_MESSAGE(stream, compact_block);
         CASE_RELAY_MESSAGE(stream, filter_add);
         CASE_RELAY_MESSAGE(stream, filter_clear);
         CASE_RELAY_MESSAGE(stream, filter_load);
         CASE_RELAY_MESSAGE(stream, get_address);
         CASE_RELAY_MESSAGE(stream, get_blocks);
+        CASE_RELAY_MESSAGE(stream, get_block_transactions);
         CASE_RELAY_MESSAGE(stream, get_data);
         CASE_RELAY_MESSAGE(stream, get_headers);
         CASE_RELAY_MESSAGE(stream, headers);
@@ -122,6 +135,8 @@ code message_subscriber::load(message_type type, std::istream& stream) const
         CASE_RELAY_MESSAGE(stream, ping);
         CASE_RELAY_MESSAGE(stream, pong);
         CASE_RELAY_MESSAGE(stream, reject);
+        CASE_RELAY_MESSAGE(stream, send_headers);
+        CASE_RELAY_MESSAGE(stream, send_compact_blocks);
         CASE_RELAY_MESSAGE(stream, transaction);
         CASE_RELAY_MESSAGE(stream, verack);
         CASE_RELAY_MESSAGE(stream, version);
@@ -136,11 +151,14 @@ void message_subscriber::start()
     START_SUBSCRIBER(address);
     START_SUBSCRIBER(alert);
     START_SUBSCRIBER(block);
+    START_SUBSCRIBER(block_transactions),
+    START_SUBSCRIBER(compact_block),
     START_SUBSCRIBER(filter_add);
     START_SUBSCRIBER(filter_clear);
     START_SUBSCRIBER(filter_load);
     START_SUBSCRIBER(get_address);
     START_SUBSCRIBER(get_blocks);
+    START_SUBSCRIBER(get_block_transactions),
     START_SUBSCRIBER(get_data);
     START_SUBSCRIBER(get_headers);
     START_SUBSCRIBER(headers);
@@ -151,6 +169,8 @@ void message_subscriber::start()
     START_SUBSCRIBER(ping);
     START_SUBSCRIBER(pong);
     START_SUBSCRIBER(reject);
+    START_SUBSCRIBER(send_headers);
+    START_SUBSCRIBER(send_compact_blocks);
     START_SUBSCRIBER(transaction);
     START_SUBSCRIBER(verack);
     START_SUBSCRIBER(version);
@@ -161,11 +181,14 @@ void message_subscriber::stop()
     STOP_SUBSCRIBER(address);
     STOP_SUBSCRIBER(alert);
     STOP_SUBSCRIBER(block);
+    STOP_SUBSCRIBER(block_transactions),
+    STOP_SUBSCRIBER(compact_block),
     STOP_SUBSCRIBER(filter_add);
     STOP_SUBSCRIBER(filter_clear);
     STOP_SUBSCRIBER(filter_load);
     STOP_SUBSCRIBER(get_address);
     STOP_SUBSCRIBER(get_blocks);
+    STOP_SUBSCRIBER(get_block_transactions),
     STOP_SUBSCRIBER(get_data);
     STOP_SUBSCRIBER(get_headers);
     STOP_SUBSCRIBER(headers);
@@ -176,6 +199,8 @@ void message_subscriber::stop()
     STOP_SUBSCRIBER(ping);
     STOP_SUBSCRIBER(pong);
     STOP_SUBSCRIBER(reject);
+    STOP_SUBSCRIBER(send_headers);
+    STOP_SUBSCRIBER(send_compact_blocks);
     STOP_SUBSCRIBER(transaction);
     STOP_SUBSCRIBER(verack);
     STOP_SUBSCRIBER(version);
