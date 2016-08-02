@@ -74,6 +74,8 @@ public:
                     handle_complete(error::success);
             };
 
+            // TODO: optimize this by serializing above and passing to a lower
+            // level channel send. This will prevent copying and reserializing.
             channel->send(std::forward<Message>(message), handle_send);
         }
     }
