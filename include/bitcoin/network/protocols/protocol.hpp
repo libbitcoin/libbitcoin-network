@@ -139,6 +139,8 @@ private:
     send<CLASS>(message, &CLASS::method, p1)
 #define SEND2(message, method, p1, p2) \
     send<CLASS>(message, &CLASS::method, p1, p2)
+#define SEND3(message, method, p1, p2, p3) \
+    send<CLASS>(message, &CLASS::method, p1, p2, p3)
 
 #define SUBSCRIBE2(message, method, p1, p2) \
     subscribe<CLASS, message>(&CLASS::method, p1, p2)
