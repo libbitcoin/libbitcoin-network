@@ -71,7 +71,7 @@ void protocol_ping::send_ping(const code& ec)
     const auto nonce = pseudo_random();
 
     SUBSCRIBE3(pong, handle_receive_pong, _1, _2, nonce);
-    SEND1(ping(nonce), handle_send_ping, _1);
+    SEND2(ping(nonce), handle_send, _1, pong::command);
 }
 
 bool protocol_ping::handle_receive_ping(const code& ec,
@@ -89,7 +89,7 @@ bool protocol_ping::handle_receive_ping(const code& ec,
         return false;
     }
 
-    SEND1(pong(message->nonce), handle_send_pong, _1);
+    SEND2(pong(message->nonce), handle_send, _1, pong::command);
 
     // RESUBSCRIBE
     return true;
@@ -121,35 +121,6 @@ bool protocol_ping::handle_receive_pong(const code& ec,
     }
 
     return false;
-}
-
-void protocol_ping::handle_send_ping(const code& ec)
-{
-    if (stopped())
-        return;
-
-    if (ec)
-    {
-        log::debug(LOG_NETWORK)
-            << "Failure sending ping to [" << authority() << "] "
-            << ec.message();
-        stop(ec);
-        return;
-    }
-}
-
-void protocol_ping::handle_send_pong(const code& ec)
-{
-    if (stopped())
-        return;
-
-    if (ec)
-    {
-        log::debug(LOG_NETWORK)
-            << "Failure sending pong to [" << authority() << "] "
-            << ec.message();
-        stop(ec);
-    }
 }
 
 } // namespace network

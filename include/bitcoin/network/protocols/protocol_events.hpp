@@ -66,6 +66,9 @@ protected:
      */
     virtual bool stopped();
 
+protected:
+    void handle_send(const code& ec, const std::string& command);
+
 private:
     void handle_started(completion_handler handler);
     void handle_stopped(const code& ec);
