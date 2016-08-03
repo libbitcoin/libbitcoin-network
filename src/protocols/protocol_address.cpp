@@ -49,10 +49,8 @@ void protocol_address::start()
 {
     const auto& settings = network_.network_settings();
 
-    // This protocol doesn't need to handle the stop event but it does need to
-    // detect stopped, so it builds on the event protocol.
-    const auto stop_handler = [](code){};
-    protocol_events::start(stop_handler);
+    // Must have a handler to capture a shared self pointer in stop subscriber.
+    protocol_events::start(BIND1(handle_stop, _1));
 
     if (settings.self.port() != 0)
     {
@@ -142,6 +140,12 @@ void protocol_address::handle_store_addresses(const code& ec)
             << ec.message();
         stop(ec);
     }
+}
+
+void protocol_address::handle_stop(const code&)
+{
+    log::debug(LOG_NETWORK)
+        << "Stopped addresss protocol";
 }
 
 } // namespace network

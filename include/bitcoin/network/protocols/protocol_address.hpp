@@ -54,6 +54,7 @@ public:
     virtual void start();
 
 private:
+    void handle_stop(const code& ec);
     void handle_store_addresses(const code& ec);
 
     bool handle_receive_address(const code& ec, message::address::ptr address);
