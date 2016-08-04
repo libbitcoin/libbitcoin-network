@@ -60,19 +60,13 @@ public:
 
     /// Send a message on the socket.
     template <class Message>
-    void send(Message&& packet, result_handler handler)
+    void send(const Message& message, result_handler handler)
     {
-        const auto message = std::forward<Message>(packet);
-        const auto& command = message.command;
+        ///////////////////////////////////////////////////////////////////////
+        // TODO: pass protocol version to serializer for proper targeting.
+        ///////////////////////////////////////////////////////////////////////
         const auto buffer = const_buffer(message::serialize(message, magic_));
-        do_send(error::success, command, buffer, handler);
-
-        ////// Bypass queuing for block messages.
-        //// const auto success = error::success;
-        ////if (message.command == chain::block::command)
-        ////    send_subscriber_->do_relay(success, command, buffer, handler);
-        ////else
-        ////    send_subscriber_->relay(success, command, buffer, handler);
+        do_send(message.command, buffer, handler);
     }
 
     /// Subscribe to messages of the specified type on the socket.
@@ -101,8 +95,6 @@ protected:
     virtual void handle_stopping() = 0;
 
 private:
-    typedef byte_source<message::heading::buffer> heading_source;
-    typedef boost::iostreams::stream<heading_source> heading_stream;
     typedef byte_source<data_chunk> payload_source;
     typedef boost::iostreams::stream<payload_source> payload_stream;
 
@@ -112,19 +104,23 @@ private:
     void stop(const boost_code& ec);
 
     void read_heading();
-    void handle_read_heading(const boost_code& ec, size_t);
+    void handle_read_heading(const boost_code& ec, size_t payload_size);
 
     void read_payload(const message::heading& head);
     void handle_read_payload(const boost_code& ec, size_t,
         const message::heading& head);
 
-    bool do_send(const code& ec, const std::string& command,
-        const_buffer buffer, result_handler handler);
+    void do_send(const std::string& command, const_buffer buffer,
+        result_handler handler);
     void handle_send(const boost_code& ec, const_buffer buffer,
         result_handler handler);
 
     const uint32_t magic_;
     const config::authority authority_;
+
+    // These are protected by sequential ordering.
+    data_chunk heading_buffer_;
+    data_chunk payload_buffer_;
 
     // These are thread safe.
     std::atomic<bool> stopped_;
@@ -132,10 +128,6 @@ private:
     stop_subscriber::ptr stop_subscriber_;
     message_subscriber message_subscriber_;
     ////send_subscriber::ptr send_subscriber_;
-
-    // These are protected by sequential ordering.
-    data_chunk payload_buffer_;
-    message::heading::buffer heading_buffer_;
 };
 
 } // namespace network

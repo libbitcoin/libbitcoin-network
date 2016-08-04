@@ -39,12 +39,11 @@ namespace network {
 using namespace message;
 using namespace std::placeholders;
 
-// TODO: this is made up, configure payload size guard for DoS protection.
-static constexpr size_t max_payload_size = 10 * 1024 * 1024;
-
 proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t magic)
   : magic_(magic),
     authority_(socket->get_authority()),
+    heading_buffer_(heading::serialized_size()),
+    payload_buffer_(heading::maximum_payload_size()),
     stopped_(true),
     socket_(socket),
     message_subscriber_(pool),
@@ -77,15 +76,9 @@ void proxy::start(result_handler handler)
         return;
     }
 
-    const auto sender = 
-        std::bind(&proxy::do_send,
-            shared_from_this(), _1, _2, _3,_4);
-
     stopped_ = false;
     stop_subscriber_->start();
     message_subscriber_.start();
-    ////send_subscriber_->start();
-    ////send_subscriber_->subscribe(sender, error::channel_stopped, {}, {}, nop);
 
     // Allow for subscription before first read, so no messages are missed.
     handler(error::success);
@@ -110,12 +103,14 @@ void proxy::read_heading()
     if (stopped())
         return;
 
+    // The heading buffer is protected by ordering, not the critial section.
+
     // Critical Section (external)
     ///////////////////////////////////////////////////////////////////////////
     const auto socket = socket_->get_socket();
 
     using namespace boost::asio;
-    async_read(socket->get(), buffer(heading_buffer_),
+    async_read(socket->get(), buffer(heading_buffer_, heading_buffer_.size()),
         std::bind(&proxy::handle_read_heading,
             shared_from_this(), _1, _2));
     ///////////////////////////////////////////////////////////////////////////
@@ -135,14 +130,9 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    ////log::debug(LOG_NETWORK)
-    ////    << "Read (" << size << ") heading bytes from [" << authority() << "]";
+    const auto head = heading::factory_from_data(heading_buffer_);
 
-    heading head;
-    heading_stream istream(heading_buffer_);
-    const auto parsed = head.from_data(istream);
-
-    if (!parsed || head.magic != magic_)
+    if (!head.is_valid())
     {
         log::warning(LOG_NETWORK) 
             << "Invalid heading from [" << authority() << "]";
@@ -150,7 +140,16 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    if (head.payload_size > max_payload_size)
+    if (head.magic != magic_)
+    {
+        log::warning(LOG_NETWORK)
+            << "Invalid heading magic (" << head.magic << ") from ["
+            << authority() << "]";
+        stop(error::bad_stream);
+        return;
+    }
+
+    if (head.payload_size > payload_buffer_.capacity())
     {
         log::warning(LOG_NETWORK)
             << "Oversized payload indicated by " << head.command
@@ -159,10 +158,6 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         stop(error::bad_stream);
         return;
     }
-
-    ////log::debug(LOG_NETWORK)
-    ////    << "Valid " << head.command << " heading from ["
-    ////    << authority() << "] (" << head.payload_size << " bytes)";
 
     read_payload(head);
     handle_activity();
@@ -173,64 +168,27 @@ void proxy::read_payload(const heading& head)
     if (stopped())
         return;
 
-    const auto size = head.payload_size;
+    // This does not cause a reallocation.
+    payload_buffer_.resize(head.payload_size);
 
     // The payload buffer is protected by ordering, not the critial section.
-    payload_buffer_.resize(size);
 
     // Critical Section (external)
     ///////////////////////////////////////////////////////////////////////////
     const auto socket = socket_->get_socket();
 
     using namespace boost::asio;
-    async_read(socket->get(), buffer(payload_buffer_, size),
+    async_read(socket->get(), buffer(payload_buffer_, head.payload_size),
         std::bind(&proxy::handle_read_payload,
             shared_from_this(), _1, _2, head));
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void proxy::handle_read_payload(const boost_code& ec, size_t,
+void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
     const heading& head)
 {
     if (stopped())
         return;
-
-    // Ignore read error here, client may have disconnected.
-
-    ////log::debug(LOG_NETWORK)
-    ////    << "Read (" << size << ") payload bytes from [" << authority() << "] ";
-
-    if (head.checksum != bitcoin_checksum(payload_buffer_))
-    {
-        log::warning(LOG_NETWORK) 
-            << "Invalid " << head.command << " checksum from ["
-            << authority() << "]";
-        stop(error::bad_stream);
-        return;
-    }
-
-    // Parse and publish the payload to message subscribers.
-    payload_source source(payload_buffer_);
-    payload_stream istream(source);
-
-    // Notify subscribers of the new message.
-    const auto parse_error = message_subscriber_.load(head.type(), istream);
-    const auto unconsumed = istream.peek() != std::istream::traits_type::eof();
-
-    if (stopped())
-        return;
-
-    if (!parse_error)
-    {
-        if (unconsumed)
-            log::warning(LOG_NETWORK)
-            << "Valid " << head.command << " payload from ["
-                << authority() << "] unused bytes remain.";
-        else
-            log::debug(LOG_NETWORK)
-            << "Valid " << head.command << " payload from ["
-                << authority() << "] (" << payload_buffer_.size() << " bytes)";
-    }
 
     if (ec)
     {
@@ -241,13 +199,48 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
         return;
     }
 
-    if (parse_error)
+    if (head.checksum != bitcoin_checksum(payload_buffer_))
+    {
+        log::warning(LOG_NETWORK) 
+            << "Invalid " << head.command << " payload from [" << authority()
+            << "] bad checksum.";
+        stop(error::bad_stream);
+        return;
+    }
+    
+    ///////////////////////////////////////////////////////////////////////////
+    // TODO: we aren't getting a stream benefit if we read the full payload
+    // before parsing the message. Should just make this a message parse.
+    // TODO: pass protocol version to parser for validation.
+    ///////////////////////////////////////////////////////////////////////////
+
+    // Notify subscribers of the new message.
+    payload_source source(payload_buffer_);
+    payload_stream istream(source);
+    const auto parse_code = message_subscriber_.load(head.type(), istream);
+    const auto unconsumed = istream.peek() != std::istream::traits_type::eof();
+
+    if (parse_code)
     {
         log::warning(LOG_NETWORK)
-            << "Invalid " << head.command << " stream from ["
-            << authority() << "] " << parse_error.message();
-        stop(parse_error);
+            << "Invalid " << head.command << " payload from [" << authority()
+            << "] " << parse_code.message();
+        stop(parse_code);
+        return;
     }
+
+    if (unconsumed)
+    {
+        log::warning(LOG_NETWORK)
+            << "Invalid " << head.command << " payload from [" << authority()
+            << "] trailing bytes.";
+        stop(error::bad_stream);
+        return;
+    }
+
+    log::debug(LOG_NETWORK)
+        << "Valid " << head.command << " payload from [" << authority()
+        << "] (" << payload_size << " bytes)";
 
     handle_activity();
     read_heading();
@@ -256,24 +249,14 @@ void proxy::handle_read_payload(const boost_code& ec, size_t,
 // Message send sequence.
 // ----------------------------------------------------------------------------
 
-// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-// SEND SUBSCRIBER REQUIRES TWO NETWORK THREADS TO PREVENT THREAD STARVATION.
-// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-// The send subscriber pushes queued writes to the writer instead of having
-// writer pull them from a passive queue. This is less thread-efficient but it
-// allows us to reuse the subscriber and facilitates bypass of subscriber
-// queuing for large message types such as blocks, as we do with reads.
-
-bool proxy::do_send(const code&, const std::string& command,
-    const_buffer buffer, result_handler handler)
+void proxy::do_send(const std::string& command, const_buffer buffer,
+    result_handler handler)
 {
     if (stopped())
     {
         handler(error::channel_stopped);
-        return false;
+        return;
     }
-
-    // Ignore read error here, client may have disconnected.
 
     log::debug(LOG_NETWORK)
         << "Sending " << command << " to [" << authority() << "] ("
@@ -289,8 +272,6 @@ bool proxy::do_send(const code&, const std::string& command,
     async_write(socket->get(), buffer,
         std::bind(&proxy::handle_send,
             shared_from_this(), _1, buffer, handler));
-
-    return true;
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -311,7 +292,7 @@ void proxy::handle_send(const boost_code& ec, const_buffer buffer,
 // ----------------------------------------------------------------------------
 
 // This is not short-circuited by a stop test because we need to ensure it
-// completes at least once before invoking the handler. This requires a unique
+// completes at least once before invoking the handler. That would require a
 // lock be taken around the entire section, which poses a deadlock risk.
 // Instead this is thread safe and idempotent, allowing it to be unguarded.
 void proxy::stop(const code& ec)
@@ -323,10 +304,6 @@ void proxy::stop(const code& ec)
     // Prevent subscription after stop.
     message_subscriber_.stop();
     message_subscriber_.broadcast(error::channel_stopped);
-
-    ////// Prevent subscription after stop.
-    ////send_subscriber_->stop();
-    ////send_subscriber_->relay(ec, {}, {}, nop);
 
     // Prevent subscription after stop.
     stop_subscriber_->stop();
