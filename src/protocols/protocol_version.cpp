@@ -19,6 +19,7 @@
  */
 #include <bitcoin/network/protocols/protocol_version.hpp>
 
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
@@ -53,16 +54,28 @@ const version protocol_version::template_
     RELAY_TRUE
 };
 
+// TODO: move to libbitcoin utlity with similar blockchain function.
+static uint64_t time_stamp()
+{
+    // Use system clock because we require accurate time of day.
+    typedef std::chrono::system_clock wall_clock;
+    const auto now = wall_clock::now();
+    return wall_clock::to_time_t(now);
+}
+
 version protocol_version::template_factory(const config::authority& authority,
     const settings& settings, uint64_t nonce, size_t height)
 {
     auto version = protocol_version::template_;
 
+    // Give peer our time as a hint for its own clock validation.
+    version.timestamp = time_stamp();
+
     // The timestamp should not used here and there's no need to set services.
-    version.address_you = authority.to_network_address();
+    version.address_recevier = authority.to_network_address();
 
     // The timestamp should not used here and services should be set in config.
-    version.address_me = settings.self.to_network_address();
+    version.address_sender = settings.self.to_network_address();
 
     // It is expected that the version is constructed shortly before use.
     BITCOIN_ASSERT_MSG(height < max_uint32, "Time to upgrade the protocol.");
@@ -121,7 +134,8 @@ bool protocol_version::handle_receive_version(const code& ec,
 
     log::debug(LOG_NETWORK)
         << "Peer [" << authority() << "] version (" << message->value
-        << ") services (" << message->services << ") " << message->user_agent;
+        << ") services (" << message->services_sender << ") time ("
+        << message->timestamp << ") " << message->user_agent;
 
     set_peer_version(*message);
     SEND1(verack(), handle_verack_sent, _1);

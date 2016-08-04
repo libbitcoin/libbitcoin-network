@@ -58,7 +58,7 @@ public:
     /// Send a message to all channels, with completion handlers.
     /// Complete always returns success, use channel handler for failure codes.
     template <typename Message>
-    void broadcast(Message&& message, channel_handler handle_channel,
+    void broadcast(const Message& message, channel_handler handle_channel,
         result_handler handle_complete)
     {
         // We cannot use a synchronizer here because handler closure in loop.
@@ -74,9 +74,8 @@ public:
                     handle_complete(error::success);
             };
 
-            // TODO: optimize this by serializing above and passing to a lower
-            // level channel send. This will prevent copying and reserializing.
-            channel->send(std::forward<Message>(message), handle_send);
+            // No pre-serialize, channels may have different protocol versions.
+            channel->send(message, handle_send);
         }
     }
 
