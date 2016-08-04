@@ -121,6 +121,7 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
     if (stopped())
         return;
 
+    // TODO: verify client quick disconnect.
     if (ec)
     {
         log::debug(LOG_NETWORK)
@@ -190,6 +191,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
     if (stopped())
         return;
 
+    // TODO: verify client quick disconnect.
     if (ec)
     {
         log::debug(LOG_NETWORK)
