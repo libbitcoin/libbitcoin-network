@@ -120,7 +120,7 @@ void session_batch::start_connect(const code& ec, const authority& host,
     // This termination prevents a tight loop in the empty address pool case.
     if (ec)
     {
-        log::error(LOG_NETWORK)
+        log::warning(LOG_NETWORK)
             << "Failure fetching new address: " << ec.message();
         handler(ec, nullptr);
         return;
