@@ -114,7 +114,7 @@ public:
     code relay(std::istream& stream, Subscriber subscriber) const
     {
         const auto message_ptr = std::make_shared<Message>();
-        const bool parsed = message_ptr->from_data(stream);
+        const bool parsed = message_ptr->from_data(protocol_version, stream);
         const code ec(parsed ? error::success : error::bad_stream);
         subscriber->relay(ec, message_ptr);
         return ec;
@@ -130,7 +130,7 @@ public:
     code handle(std::istream& stream, Subscriber subscriber) const
     {
         const auto message_ptr = std::make_shared<Message>();
-        const bool parsed = message_ptr->from_data(stream);
+        const bool parsed = message_ptr->from_data(protocol_version, stream);
         const code ec(parsed ? error::success : error::bad_stream);
         subscriber->invoke(ec, message_ptr);
         return ec;
