@@ -270,6 +270,7 @@ void session::handle_is_pending(bool pending, channel::ptr channel,
         return;
     }
 
+    // This will fail if the IP address or nonce is already connected.
     network_.store(channel, handle_started);
 }
 
@@ -289,7 +290,6 @@ void session::handle_start(const code& ec, channel::ptr channel,
 void session::do_unpend(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
-    channel->set_nonce(0);
     pending_.remove(channel, BIND_1(handle_unpend, _1));
     handle_started(ec);
 }
