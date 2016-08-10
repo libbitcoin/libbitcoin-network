@@ -42,7 +42,7 @@ using namespace std::placeholders;
 proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t magic)
   : magic_(magic),
     authority_(socket->get_authority()),
-    heading_buffer_(heading::serialized_size()),
+    heading_buffer_(heading::serialized_size(protocol_version)),
     payload_buffer_(heading::maximum_payload_size()),
     stopped_(true),
     socket_(socket),
@@ -131,7 +131,7 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    const auto head = heading::factory_from_data(heading_buffer_);
+    const auto head = heading::factory_from_data(protocol_version, heading_buffer_);
 
     if (!head.is_valid())
     {

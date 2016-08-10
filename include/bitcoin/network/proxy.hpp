@@ -65,7 +65,8 @@ public:
         ///////////////////////////////////////////////////////////////////////
         // TODO: pass protocol version to serializer for proper targeting.
         ///////////////////////////////////////////////////////////////////////
-        const auto buffer = const_buffer(message::serialize(message, magic_));
+        const auto buffer = const_buffer(message::serialize(protocol_version,
+            message, magic_));
         do_send(message.command, buffer, handler);
     }
 
