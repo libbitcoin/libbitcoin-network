@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -32,6 +33,7 @@
 namespace libbitcoin {
 namespace network {
 
+using namespace bc::message;
 using namespace std::placeholders;
 
 // Factory for deadline timer pointer construction.
@@ -42,14 +44,9 @@ static deadline::ptr alarm(threadpool& pool, const asio::duration& duration)
 
 channel::channel(threadpool& pool, socket::ptr socket,
     const settings& settings)
-  : proxy(pool, socket, settings.identifier),
+  : proxy(pool, socket, settings.identifier, settings.protocol),
     notify_(false),
     nonce_(0),
-    version_({ 0 }),
-    own_threshold_(null_hash),
-    peer_threshold_(null_hash),
-    located_start_(null_hash),
-    located_stop_(null_hash),
     expiration_(alarm(pool, settings.channel_expiration())),
     inactivity_(alarm(pool, settings.channel_inactivity())),
     CONSTRUCT_TRACK(channel)
@@ -98,40 +95,10 @@ void channel::set_nonce(uint64_t value)
     nonce_ = value;
 }
 
-const message::version& channel::version() const
-{
-    return version_;
-}
-
-void channel::set_version(const message::version& value)
-{
-    version_ = value;
-}
-
-hash_digest channel::own_threshold()
-{
-    return own_threshold_.load();
-}
-
-void channel::set_own_threshold(const hash_digest& threshold)
-{
-    own_threshold_.store(threshold);
-}
-
-hash_digest channel::peer_threshold()
-{
-    return peer_threshold_.load();
-}
-
-void channel::set_peer_threshold(const hash_digest& threshold)
-{
-    peer_threshold_.store(threshold);
-}
-
 // Proxy pure virtual protected and ordered handlers.
 // ----------------------------------------------------------------------------
 
-// It is possible that this may be called multipled times.
+// It is possible that this may be called multiple times.
 void channel::handle_stopping()
 {
     expiration_->stop();
@@ -187,20 +154,6 @@ void channel::handle_inactivity(const code& ec)
 
     stop(error::channel_timeout);
 }
-
-////// Location tracking (thread unsafe, deprecated).
-////// ----------------------------------------------------------------------------
-////
-////bool channel::located(const hash_digest& start, const hash_digest& stop) const
-////{
-////    return located_start_ == start && located_stop_ == stop;
-////}
-////
-////void channel::set_located(const hash_digest& start, const hash_digest& stop)
-////{
-////    located_start_ = start;
-////    located_stop_ = stop;
-////}
 
 } // namespace network
 } // namespace libbitcoin

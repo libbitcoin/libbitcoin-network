@@ -34,27 +34,11 @@ namespace network {
 
 #define NAME "version"
 #define CLASS protocol_version
-#define RELAY_TRUE true
-#define GENESIS_HEIGHT 0
-#define UNSPECIFIED_NONCE 0
 
 using namespace bc::message;
 using namespace std::placeholders;
 
-const version protocol_version::template_
-{
-    bc::protocol_version,
-    services::node_network,
-    no_timestamp,
-    bc::unspecified_network_address,
-    bc::unspecified_network_address,
-    UNSPECIFIED_NONCE,
-    BC_USER_AGENT,
-    GENESIS_HEIGHT,
-    RELAY_TRUE
-};
-
-// TODO: move to libbitcoin utlity with similar blockchain function.
+// TODO: move to libbitcoin utility with similar blockchain function.
 static uint64_t time_stamp()
 {
     // Use system clock because we require accurate time of day.
@@ -63,30 +47,25 @@ static uint64_t time_stamp()
     return wall_clock::to_time_t(now);
 }
 
-version protocol_version::template_factory(const config::authority& authority,
-    const settings& settings, uint64_t nonce, size_t height)
+message::version protocol_version::version_factory(
+    const config::authority& authority, const settings& settings,
+    uint64_t nonce, size_t height)
 {
-    auto version = protocol_version::template_;
-
-    // Give peer our time as a hint for its own clock validation.
-    version.timestamp = time_stamp();
-
-    // The timestamp should not used here and there's no need to set services.
-    version.address_recevier = authority.to_network_address();
-
-    // The timestamp should not used here and services should be set in config.
-    version.address_sender = settings.self.to_network_address();
-
-    // It is expected that the version is constructed shortly before use.
     BITCOIN_ASSERT_MSG(height < max_uint32, "Time to upgrade the protocol.");
-    version.start_height = static_cast<uint32_t>(height);
+    const auto height32 = static_cast<uint32_t>(height);
 
-    // Set required transaction relay policy for the connection.
-    version.relay = settings.relay_transactions;
-
-    // A non-zero nonce is used to detect connections to self.
-    version.nonce = nonce;
-    return version;
+    return
+    {
+        settings.protocol,
+        services::node_network,
+        time_stamp(),
+        authority.to_network_address(),
+        settings.self.to_network_address(),
+        nonce,
+        BC_USER_AGENT,
+        height32,
+        settings.relay_transactions
+    };
 }
 
 protocol_version::protocol_version(p2p& network, channel::ptr channel)
@@ -108,7 +87,7 @@ void protocol_version::start(event_handler handler)
     protocol_timer::start(settings.channel_handshake(),
         synchronize(handler, 2, NAME, false));
 
-    const auto self = template_factory(authority(), settings, nonce(), height);
+    const auto self = version_factory(authority(), settings, nonce(), height);
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
     SUBSCRIBE2(verack, handle_receive_verack, _1, _2);
     SEND1(self, handle_version_sent, _1);
@@ -134,10 +113,10 @@ bool protocol_version::handle_receive_version(const code& ec,
 
     log::debug(LOG_NETWORK)
         << "Peer [" << authority() << "] version (" << message->value
-        << ") services (" << message->services_sender << ") time ("
+        << ") services (" << message->services << ") time ("
         << message->timestamp << ") " << message->user_agent;
 
-    set_peer_version(*message);
+    set_peer_version(message);
     SEND1(verack(), handle_verack_sent, _1);
 
     // 1 of 2
@@ -145,8 +124,7 @@ bool protocol_version::handle_receive_version(const code& ec,
     return false;
 }
 
-bool protocol_version::handle_receive_verack(const code& ec,
-    message::verack::ptr)
+bool protocol_version::handle_receive_verack(const code& ec, verack::ptr)
 {
     if (stopped())
         return false;

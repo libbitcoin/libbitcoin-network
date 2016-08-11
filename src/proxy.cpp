@@ -39,16 +39,18 @@ namespace network {
 using namespace message;
 using namespace std::placeholders;
 
-proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t magic)
-  : magic_(magic),
+proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t protocol_magic,
+    uint32_t protocol_version)
+  : protocol_magic_(protocol_magic),
+    protocol_version_(protocol_version),
     authority_(socket->get_authority()),
-    heading_buffer_(heading::serialized_size(protocol_version)),
-    payload_buffer_(heading::maximum_payload_size()),
-    stopped_(true),
+    heading_buffer_(heading::maximum_size()),
+    payload_buffer_(heading::maximum_payload_size(protocol_version_)),
     socket_(socket),
+    stopped_(true),
+    peer_protocol_version_(message::version::level::maximum),
     message_subscriber_(pool),
-    stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_stop"))
-    ////send_subscriber_(std::make_shared<send_subscriber>(pool, NAME "_send"))
+    stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME))
 {
 }
 
@@ -63,6 +65,19 @@ proxy::~proxy()
 const config::authority& proxy::authority() const
 {
     return authority_;
+}
+
+message::version proxy::version() const
+{
+    const auto version = peer_version_message_.load();
+    BITCOIN_ASSERT_MSG(version, "Peer version read before set.");
+    return *version;
+}
+
+void proxy::set_version(message::version::ptr value)
+{
+    peer_version_message_.store(value);
+    peer_protocol_version_.store(value->value);
 }
 
 // Start sequence.
@@ -131,7 +146,7 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    const auto head = heading::factory_from_data(protocol_version, heading_buffer_);
+    const auto head = heading::factory_from_data(heading_buffer_);
 
     if (!head.is_valid())
     {
@@ -141,7 +156,7 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    if (head.magic != magic_)
+    if (head.magic != protocol_magic_)
     {
         log::warning(LOG_NETWORK)
             << "Invalid heading magic (" << head.magic << ") from ["
@@ -213,25 +228,25 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
     ///////////////////////////////////////////////////////////////////////////
     // TODO: we aren't getting a stream benefit if we read the full payload
     // before parsing the message. Should just make this a message parse.
-    // TODO: pass protocol version to parser for validation.
     ///////////////////////////////////////////////////////////////////////////
 
     // Notify subscribers of the new message.
     payload_source source(payload_buffer_);
     payload_stream istream(source);
-    const auto parse_code = message_subscriber_.load(head.type(), istream);
-    const auto unconsumed = istream.peek() != std::istream::traits_type::eof();
+    const auto version = peer_protocol_version_.load();
+    const auto code = message_subscriber_.load(head.type(), version, istream);
+    const auto consumed = istream.peek() == std::istream::traits_type::eof();
 
-    if (parse_code)
+    if (code)
     {
         log::warning(LOG_NETWORK)
             << "Invalid " << head.command << " payload from [" << authority()
-            << "] " << parse_code.message();
-        stop(parse_code);
+            << "] " << code.message();
+        stop(code);
         return;
     }
 
-    if (unconsumed)
+    if (!consumed)
     {
         log::warning(LOG_NETWORK)
             << "Invalid " << head.command << " payload from [" << authority()
