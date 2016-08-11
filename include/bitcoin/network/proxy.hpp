@@ -49,7 +49,8 @@ public:
         result_handler> send_subscriber;
 
     /// Construct an instance.
-    proxy(threadpool& pool, socket::ptr socket, uint32_t magic);
+    proxy(threadpool& pool, socket::ptr socket, uint32_t protocol_magic,
+        uint32_t protocol_version);
 
     /// Validate proxy stopped.
     ~proxy();
@@ -62,11 +63,8 @@ public:
     template <class Message>
     void send(const Message& message, result_handler handler)
     {
-        ///////////////////////////////////////////////////////////////////////
-        // TODO: pass protocol version to serializer for proper targeting.
-        ///////////////////////////////////////////////////////////////////////
-        const auto buffer = const_buffer(message::serialize(protocol_version,
-            message, magic_));
+        const auto buffer = const_buffer(message::serialize(protocol_version_,
+            message, protocol_magic_));
         do_send(message.command, buffer, handler);
     }
 
@@ -83,6 +81,12 @@ public:
 
     /// Get the authority of the far end of this socket.
     virtual const config::authority& authority() const;
+
+    /// Get the p2p protocol version object of the peer.
+    virtual message::version version() const;
+
+    /// Save the p2p protocol version object of the peer.
+    virtual void set_version(message::version::ptr value);
 
     /// Read messages from this socket.
     virtual void start(result_handler handler);
@@ -116,7 +120,8 @@ private:
     void handle_send(const boost_code& ec, const_buffer buffer,
         result_handler handler);
 
-    const uint32_t magic_;
+    const uint32_t protocol_magic_;
+    const uint32_t protocol_version_;
     const config::authority authority_;
 
     // These are protected by sequential ordering.
@@ -124,11 +129,12 @@ private:
     data_chunk payload_buffer_;
 
     // These are thread safe.
-    std::atomic<bool> stopped_;
     socket::ptr socket_;
-    stop_subscriber::ptr stop_subscriber_;
+    std::atomic<bool> stopped_;
+    std::atomic<uint32_t> peer_protocol_version_;
+    bc::atomic<message::version::ptr> peer_version_message_;
     message_subscriber message_subscriber_;
-    ////send_subscriber::ptr send_subscriber_;
+    stop_subscriber::ptr stop_subscriber_;
 };
 
 } // namespace network

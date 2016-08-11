@@ -221,6 +221,21 @@ void session::handle_pend(const code& ec, channel::ptr channel,
 void session::handle_channel_start(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
+    if (ec)
+    {
+        log::info(LOG_NETWORK)
+            << "Channel failed to start [" << channel->authority() << "] "
+            << ec.message();
+        handle_started(ec);
+        return;
+    }
+
+    attach_handshake_protocols(channel, handle_started);
+}
+
+void session::attach_handshake_protocols(channel::ptr channel,
+    result_handler handle_started)
+{
     attach<protocol_version>(channel)->start(
         BIND_3(handle_handshake, _1, channel, handle_started));
 }
@@ -259,17 +274,18 @@ void session::handle_is_pending(bool pending, channel::ptr channel,
         return;
     }
 
-    const auto version = channel->version();
-    if (version.value < bc::peer_minimum_version)
+    const auto& version = channel->version();
+
+    if (version.value < version.minimum)
     {
         log::debug(LOG_NETWORK)
             << "Peer version (" << version.value << ") below minimum ("
-            << bc::peer_minimum_version << ") [" 
-            << channel->authority() << "]";
+            << version.minimum << ") [" << channel->authority() << "]";
         handle_started(error::accept_failed);
         return;
     }
 
+    // This will fail if the IP address or nonce is already connected.
     network_.store(channel, handle_started);
 }
 
@@ -289,7 +305,6 @@ void session::handle_start(const code& ec, channel::ptr channel,
 void session::do_unpend(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
-    channel->set_nonce(0);
     pending_.remove(channel, BIND_1(handle_unpend, _1));
     handle_started(ec);
 }

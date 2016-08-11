@@ -54,20 +54,6 @@ public:
     virtual uint64_t nonce() const;
     virtual void set_nonce(uint64_t value);
 
-    virtual const message::version& version() const;
-    virtual void set_version(const message::version& value);
-
-    virtual hash_digest own_threshold();
-    virtual void set_own_threshold(const hash_digest& threshold);
-
-    virtual hash_digest peer_threshold();
-    virtual void set_peer_threshold(const hash_digest& threshold);
-
-    ////virtual bool located(const hash_digest& start,
-    ////    const hash_digest& stop) const;
-    ////virtual void set_located(const hash_digest& start,
-    ////    const hash_digest& stop);
-
 protected:
     virtual void handle_activity();
     virtual void handle_stopping();
@@ -83,13 +69,8 @@ private:
 
     bool notify_;
     uint64_t nonce_;
-    hash_digest located_start_;
-    hash_digest located_stop_;
-    message::version version_;
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
-    bc::atomic<hash_digest> own_threshold_;
-    bc::atomic<hash_digest> peer_threshold_;
 };
 
 } // namespace network

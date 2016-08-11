@@ -108,11 +108,11 @@ protected:
 
     /// Set the channel version. This method is NOT thread safe and must
     /// complete before any other thread could read the peer version.
-    virtual void set_peer_version(const message::version& value);
+    virtual void set_peer_version(message::version::ptr value);
 
     /// Get the peer version message. This method is NOT thread safe and must
     /// not be called if any other thread could write the peer version.
-    virtual const message::version& peer_version();
+    virtual message::version peer_version();
 
     /// Stop the channel (and the protocol).
     virtual void stop(const code& ec);

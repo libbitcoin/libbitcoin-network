@@ -24,11 +24,13 @@
 namespace libbitcoin {
 namespace network {
 
-using namespace asio;
+using namespace bc::asio;
+using namespace bc::message;
 
 // Common default values (no settings context).
 settings::settings()
   : threads(50),
+    protocol(version::level::maximum),
     inbound_connections(8),
     outbound_connections(8),
     manual_attempt_limit(0),

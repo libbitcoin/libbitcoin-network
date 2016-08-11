@@ -145,6 +145,10 @@ protected:
     virtual acceptor::ptr create_acceptor();
     virtual connector::ptr create_connector();
 
+    /// Override to attach specialized handshake protocols upon session start.
+    virtual void attach_handshake_protocols(channel::ptr channel,
+        result_handler handle_started);
+
     /// Register a new channel with the session and bind its handlers.
     virtual void register_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);

@@ -54,7 +54,7 @@ public:
     virtual void start(event_handler handler);
 
 private:
-    static message::version template_factory(
+    static message::version version_factory(
         const config::authority& authority, const settings& settings,
         uint64_t nonce, size_t height);
 
@@ -64,7 +64,6 @@ private:
     bool handle_receive_version(const code& ec, message::version::ptr version);
     bool handle_receive_verack(const code& ec, message::verack::ptr);
 
-    static const message::version template_;
     p2p& network_;
 };
 

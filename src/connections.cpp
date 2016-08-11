@@ -132,10 +132,11 @@ void connections::remove(channel::ptr channel, result_handler handler)
 
 code connections::safe_store(channel::ptr channel)
 {
+    const auto nonce = channel->nonce();
     const auto address = channel->authority();
-    const auto match = [&address](channel::ptr entry)
+    const auto match = [&address, nonce](channel::ptr entry)
     {
-        return entry->authority() == address;
+        return entry->authority() == address || entry->nonce() == nonce;
     };
 
     // Critical Section
@@ -151,11 +152,11 @@ code connections::safe_store(channel::ptr channel)
 
         if (!found)
         {
-            //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             mutex_.unlock_upgrade_and_lock();
             channels_.push_back(channel);
             mutex_.unlock();
-            //---------------------------------------------------------------------
+            //-----------------------------------------------------------------
             return error::success;
         }
     }

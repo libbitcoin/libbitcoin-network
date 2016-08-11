@@ -152,7 +152,6 @@ void session_inbound::handle_connection_count(size_t connections,
 void session_inbound::handle_channel_start(const code& ec,
     channel::ptr channel)
 {
-    
     if (ec)
     {
         log::info(LOG_NETWORK)
