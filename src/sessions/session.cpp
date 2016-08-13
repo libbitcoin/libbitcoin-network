@@ -233,6 +233,7 @@ void session::handle_channel_start(const code& ec, channel::ptr channel,
     attach_handshake_protocols(channel, handle_started);
 }
 
+// Sessions that desire to customize the version message must override this.
 void session::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {

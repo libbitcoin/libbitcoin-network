@@ -42,6 +42,12 @@ static deadline::ptr alarm(threadpool& pool, const asio::duration& duration)
     return std::make_shared<deadline>(pool, pseudo_randomize(duration));
 }
 
+// TODO: configure settings.protocol_maximum and settings.protocol_minimum.
+// Limit to version::limit::maximum and version::limit::minimum respectively
+// and if protocol_maximum is then below protocol_minimum return a failure. 
+// On handshake send peer version.maxiumum and on receipt of protocol_peer
+// if it is below protocol_minimum drop the channel, otherwise set
+// protocol_version to the lesser of protocol_maximum and protocol_peer.
 channel::channel(threadpool& pool, socket::ptr socket,
     const settings& settings)
   : proxy(pool, socket, settings.identifier, settings.protocol),
