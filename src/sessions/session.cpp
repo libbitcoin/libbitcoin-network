@@ -233,6 +233,7 @@ void session::handle_channel_start(const code& ec, channel::ptr channel,
     attach_handshake_protocols(channel, handle_started);
 }
 
+// Sessions that desire to customize the version message must override this.
 void session::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {
@@ -292,11 +293,15 @@ void session::handle_is_pending(bool pending, channel::ptr channel,
 void session::handle_start(const code& ec, channel::ptr channel,
     result_handler handle_started, result_handler handle_stopped)
 {
-    // Must either stop or subscribe the channel for stop before returning.
     if (ec)
+    {
         channel->stop(ec);
+        handle_stopped(ec);
+    }
     else
+    {
         channel->subscribe_stop(handle_stopped);
+    }
 
     // This is the end of the registration sequence.
     handle_started(ec);

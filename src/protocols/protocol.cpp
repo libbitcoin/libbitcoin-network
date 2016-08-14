@@ -60,7 +60,6 @@ message::version protocol::peer_version()
     return channel_->version();
 }
 
-// Not thread safe, isolate from peer_version reads.
 void protocol::set_peer_version(message::version::ptr value)
 {
     channel_->set_version(value);
