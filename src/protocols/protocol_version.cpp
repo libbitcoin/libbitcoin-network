@@ -87,9 +87,13 @@ void protocol_version::start(event_handler handler)
     protocol_timer::start(settings.channel_handshake(),
         synchronize(handler, 2, NAME, false));
 
-    const auto self = version_factory(authority(), settings, nonce(), height);
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
     SUBSCRIBE2(verack, handle_receive_verack, _1, _2);
+    send_version(version_factory(authority(), settings, nonce(), height));
+}
+
+void protocol_version::send_version(const message::version& self)
+{
     SEND1(self, handle_version_sent, _1);
 }
 

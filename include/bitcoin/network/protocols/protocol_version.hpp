@@ -53,6 +53,10 @@ public:
      */
     virtual void start(event_handler handler);
 
+protected:
+    /// Override to vary the version message.
+    virtual void send_version(const message::version& self);
+
 private:
     static message::version version_factory(
         const config::authority& authority, const settings& settings,
