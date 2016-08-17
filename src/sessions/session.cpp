@@ -230,15 +230,17 @@ void session::handle_channel_start(const code& ec, channel::ptr channel,
         return;
     }
 
-    attach_handshake_protocols(channel, handle_started);
+    result_handler handshake_handler =
+        BIND_3(handle_handshake, _1, channel, handle_started);
+
+    attach_handshake_protocols(channel, handshake_handler);
 }
 
 // Sessions that desire to customize the version message must override this.
 void session::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {
-    attach<protocol_version>(channel)->start(
-        BIND_3(handle_handshake, _1, channel, handle_started));
+    attach<protocol_version>(channel)->start(handle_started);
 }
 
 void session::handle_handshake(const code& ec, channel::ptr channel,
