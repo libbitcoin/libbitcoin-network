@@ -133,10 +133,10 @@ void connections::remove(channel::ptr channel, result_handler handler)
 code connections::safe_store(channel::ptr channel)
 {
     const auto nonce = channel->nonce();
-    const auto address = channel->authority();
-    const auto match = [&address, nonce](channel::ptr entry)
+    const auto& authority = channel->authority();
+    const auto match = [&authority, nonce](channel::ptr entry)
     {
-        return entry->authority() == address || entry->nonce() == nonce;
+        return entry->authority() == authority || entry->nonce() == nonce;
     };
 
     // Critical Section
