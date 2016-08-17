@@ -54,12 +54,16 @@ message::version protocol_version::version_factory(
     BITCOIN_ASSERT_MSG(height < max_uint32, "Time to upgrade the protocol.");
     const auto height32 = static_cast<uint32_t>(height);
 
+    // TODO: move services to authority member in base protocol (passed in).
+    auto self = authority.to_network_address();
+    self.services = services::node_network;
+
     return
     {
         settings.protocol,
-        services::node_network,
+        self.services,
         time_stamp(),
-        authority.to_network_address(),
+        self,
         settings.self.to_network_address(),
         nonce,
         BC_USER_AGENT,
