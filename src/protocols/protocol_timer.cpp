@@ -64,7 +64,7 @@ void protocol_timer::handle_notify(const code& ec, event_handler handler)
 // Timer.
 // ----------------------------------------------------------------------------
 
-// private:
+// protected:
 void protocol_timer::reset_timer()
 {
     if (stopped())
