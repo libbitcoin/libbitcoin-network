@@ -101,18 +101,18 @@ protected:
     virtual const std::string& name() const;
 
     /// Get the channel nonce.
-    virtual uint64_t nonce();
+    virtual uint64_t nonce() const;
 
-    /// Get the threadpool.
-    virtual threadpool& pool();
+    /// Get the peer version message. This method is NOT thread safe and must
+    /// not be called if any other thread could write the peer version.
+    virtual message::version peer_version() const;
 
     /// Set the channel version. This method is NOT thread safe and must
     /// complete before any other thread could read the peer version.
     virtual void set_peer_version(message::version::ptr value);
 
-    /// Get the peer version message. This method is NOT thread safe and must
-    /// not be called if any other thread could write the peer version.
-    virtual message::version peer_version();
+    /// Get the threadpool.
+    virtual threadpool& pool();
 
     /// Stop the channel (and the protocol).
     virtual void stop(const code& ec);

@@ -45,17 +45,12 @@ const std::string& protocol::name() const
     return name_;
 }
 
-uint64_t protocol::nonce()
+uint64_t protocol::nonce() const
 {
     return channel_->nonce();
 }
 
-threadpool& protocol::pool()
-{
-    return pool_;
-}
-
-message::version protocol::peer_version()
+message::version protocol::peer_version() const
 {
     return channel_->version();
 }
@@ -63,6 +58,11 @@ message::version protocol::peer_version()
 void protocol::set_peer_version(message::version::ptr value)
 {
     channel_->set_version(value);
+}
+
+threadpool& protocol::pool()
+{
+    return pool_;
 }
 
 // Stop the channel.
