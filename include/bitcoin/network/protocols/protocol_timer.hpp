@@ -58,8 +58,10 @@ protected:
      */
     virtual void start(const asio::duration& timeout, event_handler handler);
 
-private:
+protected:
     void reset_timer();
+
+private:
     void handle_timer(const code& ec);
     void handle_notify(const code& ec, event_handler handler);
 
