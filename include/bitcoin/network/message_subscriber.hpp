@@ -60,6 +60,7 @@ public:
     DEFINE_SUBSCRIBER_TYPE(block_message);
     DEFINE_SUBSCRIBER_TYPE(block_transactions);
     DEFINE_SUBSCRIBER_TYPE(compact_block);
+    DEFINE_SUBSCRIBER_TYPE(fee_filter);
     DEFINE_SUBSCRIBER_TYPE(filter_add);
     DEFINE_SUBSCRIBER_TYPE(filter_clear);
     DEFINE_SUBSCRIBER_TYPE(filter_load);
@@ -174,6 +175,7 @@ private:
     DEFINE_SUBSCRIBER_OVERLOAD(block_message);
     DEFINE_SUBSCRIBER_OVERLOAD(block_transactions);
     DEFINE_SUBSCRIBER_OVERLOAD(compact_block);
+    DEFINE_SUBSCRIBER_OVERLOAD(fee_filter);
     DEFINE_SUBSCRIBER_OVERLOAD(filter_add);
     DEFINE_SUBSCRIBER_OVERLOAD(filter_clear);
     DEFINE_SUBSCRIBER_OVERLOAD(filter_load);
@@ -201,6 +203,7 @@ private:
     DECLARE_SUBSCRIBER(block_message);
     DECLARE_SUBSCRIBER(block_transactions);
     DECLARE_SUBSCRIBER(compact_block);
+    DECLARE_SUBSCRIBER(fee_filter);
     DECLARE_SUBSCRIBER(filter_add);
     DECLARE_SUBSCRIBER(filter_clear);
     DECLARE_SUBSCRIBER(filter_load);
