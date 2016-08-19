@@ -114,7 +114,7 @@ void session_batch::new_connect(connector::ptr connect,
 void session_batch::start_connect(const code& ec, const authority& host,
     connector::ptr connect, atomic_counter_ptr counter, channel_handler handler)
 {
-    if (counter->load() == batch_size_)
+    if (counter->load() == batch_size_ || ec == error::service_stopped)
         return;
 
     // This termination prevents a tight loop in the empty address pool case.
