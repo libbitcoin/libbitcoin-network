@@ -39,16 +39,16 @@ namespace network {
 using namespace message;
 using namespace std::placeholders;
 
+// payload_buffer_ sizing assumes monotonically increasing size by version.
 proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t protocol_magic,
-    uint32_t protocol_version)
+    uint32_t protocol_maximum)
   : protocol_magic_(protocol_magic),
-    protocol_version_(protocol_version),
     authority_(socket->get_authority()),
     heading_buffer_(heading::maximum_size()),
-    payload_buffer_(heading::maximum_payload_size(protocol_version_)),
+    payload_buffer_(heading::maximum_payload_size(protocol_maximum)),
     socket_(socket),
     stopped_(true),
-    peer_protocol_version_(message::version::level::maximum),
+    version_(protocol_maximum),
     message_subscriber_(pool),
     stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME))
 {
@@ -67,17 +67,14 @@ const config::authority& proxy::authority() const
     return authority_;
 }
 
-message::version proxy::version() const
+uint32_t proxy::negotiated_version() const
 {
-    const auto version = peer_version_message_.load();
-    BITCOIN_ASSERT_MSG(version, "Peer version read before set.");
-    return *version;
+    return version_.load();
 }
 
-void proxy::set_version(message::version::ptr value)
+void proxy::set_negotiated_version(uint32_t value)
 {
-    peer_version_message_.store(value);
-    peer_protocol_version_.store(value->value);
+    version_.store(value);
 }
 
 // Start sequence.
@@ -233,8 +230,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
     // Notify subscribers of the new message.
     payload_source source(payload_buffer_);
     payload_stream istream(source);
-    const auto version = peer_protocol_version_.load();
-    const auto code = message_subscriber_.load(head.type(), version, istream);
+    const auto code = message_subscriber_.load(head.type(), version_, istream);
     const auto consumed = istream.peek() == std::istream::traits_type::eof();
 
     if (code)
