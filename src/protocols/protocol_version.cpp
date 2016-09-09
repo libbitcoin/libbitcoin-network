@@ -19,6 +19,7 @@
  */
 #include <bitcoin/network/protocols/protocol_version.hpp>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
@@ -51,25 +52,28 @@ message::version protocol_version::version_factory(
     const config::authority& authority, const settings& settings,
     uint64_t nonce, size_t height)
 {
-    BITCOIN_ASSERT_MSG(height < max_uint32, "Time to upgrade the protocol.");
-    const auto height32 = static_cast<uint32_t>(height);
+    BITCOIN_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
 
-    // TODO: move services to authority member in base protocol (passed in).
-    auto self = authority.to_network_address();
-    self.services = services::node_network;
+    message::version version;
+    version.value = settings.protocol_maximum;
+    version.services = settings.services;
+    version.timestamp = time_stamp();
+    version.address_recevier = authority.to_network_address();
+    version.address_sender = settings.self.to_network_address();
+    version.nonce = nonce;
+    version.user_agent = BC_USER_AGENT;
+    version.start_height = static_cast<uint32_t>(height);
 
-    return
-    {
-        settings.protocol,
-        self.services,
-        time_stamp(),
-        self,
-        settings.self.to_network_address(),
-        nonce,
-        BC_USER_AGENT,
-        height32,
-        settings.relay_transactions
-    };
+    // This is not serialized below version::level::bip61.
+    version.relay = settings.relay_transactions;
+
+    // The peer's services cannot be reflected, so zero it.
+    version.address_recevier.services = version::service::none;
+
+    // We always match the services declared in our version.services.
+    version.address_sender.services = settings.services;
+
+    return version;
 }
 
 protocol_version::protocol_version(p2p& network, channel::ptr channel)
@@ -120,11 +124,43 @@ bool protocol_version::handle_receive_version(const code& ec,
     }
 
     log::debug(LOG_NETWORK)
-        << "Peer [" << authority() << "] version (" << message->value
-        << ") services (" << message->services << ") time ("
-        << message->timestamp << ") " << message->user_agent;
+        << "Peer [" << authority() << "] user agent: " << message->user_agent;
 
-    set_peer_version(message);
+    const auto& settings = network_.network_settings();
+
+    if ((message->services & settings.services) != settings.services)
+    {
+        log::debug(LOG_NETWORK)
+            << "Insufficient peer network services (" << message->services
+            << ") for [" << authority() << "]";
+        set_event(error::channel_stopped);
+        return false;
+    }
+
+    if (message->value < settings.protocol_minimum)
+    {
+        log::debug(LOG_NETWORK)
+            << "Insufficient peer protocol version (" << message->value
+            << ") for [" << authority() << "]";
+        set_event(error::channel_stopped);
+        return false;
+    }
+
+    if (settings.protocol_minimum > settings.protocol_maximum)
+    {
+        log::error(LOG_NETWORK)
+            << "Invalid protocol version configuration.";
+        set_event(error::channel_stopped);
+        return false;
+    }
+
+    const auto version = std::min(message->value, settings.protocol_maximum);
+    set_negotiated_version(version);
+
+    log::debug(LOG_NETWORK)
+        << "Negotiated protocol version (" << version
+        << ") for [" << authority() << "]";
+
     SEND1(verack(), handle_verack_sent, _1);
 
     // 1 of 2

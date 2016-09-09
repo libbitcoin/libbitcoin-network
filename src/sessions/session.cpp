@@ -260,7 +260,7 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
 
     // The loopback test is for incoming channels only.
     if (incoming_)
-        pending_.exists(channel->version().nonce, handler);
+        pending_.exists(channel->peer_version().nonce, handler);
     else
         handler(false);
 }
@@ -273,17 +273,6 @@ void session::handle_is_pending(bool pending, channel::ptr channel,
         log::debug(LOG_NETWORK)
             << "Rejected connection from [" << channel->authority()
             << "] as loopback.";
-        handle_started(error::accept_failed);
-        return;
-    }
-
-    const auto& version = channel->version();
-
-    if (version.value < version.minimum)
-    {
-        log::debug(LOG_NETWORK)
-            << "Peer version (" << version.value << ") below minimum ("
-            << version.minimum << ") [" << channel->authority() << "]";
         handle_started(error::accept_failed);
         return;
     }

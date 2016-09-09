@@ -63,7 +63,7 @@ public:
     template <class Message>
     void send(const Message& message, result_handler handler)
     {
-        const auto buffer = const_buffer(message::serialize(protocol_version_,
+        const auto buffer = const_buffer(message::serialize(version_,
             message, protocol_magic_));
         do_send(message.command, buffer, handler);
     }
@@ -82,11 +82,12 @@ public:
     /// Get the authority of the far end of this socket.
     virtual const config::authority& authority() const;
 
-    /// Get the p2p protocol version object of the peer.
-    virtual message::version version() const;
+    /// Get the negotiated protocol version of this socket.
+    /// The value should be the lesser of own max and peer min.
+    uint32_t negotiated_version() const;
 
-    /// Save the p2p protocol version object of the peer.
-    virtual void set_version(message::version::ptr value);
+    /// Save the negotiated protocol version.
+    virtual void set_negotiated_version(uint32_t value);
 
     /// Read messages from this socket.
     virtual void start(result_handler handler);
@@ -121,7 +122,6 @@ private:
         result_handler handler);
 
     const uint32_t protocol_magic_;
-    const uint32_t protocol_version_;
     const config::authority authority_;
 
     // These are protected by sequential ordering.
@@ -131,8 +131,7 @@ private:
     // These are thread safe.
     socket::ptr socket_;
     std::atomic<bool> stopped_;
-    std::atomic<uint32_t> peer_protocol_version_;
-    bc::atomic<message::version::ptr> peer_version_message_;
+    std::atomic<uint32_t> version_;
     message_subscriber message_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
 };

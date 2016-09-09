@@ -30,8 +30,10 @@ using namespace bc::message;
 // Common default values (no settings context).
 settings::settings()
   : threads(50),
-    protocol(version::level::maximum),
-    inbound_connections(8),
+    protocol_maximum(version::level::maximum),
+    protocol_minimum(version::level::minimum),
+    services(version::service::none),
+    inbound_connections(0),
     outbound_connections(8),
     manual_attempt_limit(0),
     connect_batch_size(5),
@@ -41,8 +43,8 @@ settings::settings()
     channel_inactivity_minutes(10),
     channel_expiration_minutes(1440),
     channel_germination_seconds(30),
-    host_pool_capacity(1000),
-    relay_transactions(true),
+    host_pool_capacity(0),
+    relay_transactions(false),
     hosts_file("hosts.cache"),
     debug_file("debug.log"),
     error_file("error.log"),

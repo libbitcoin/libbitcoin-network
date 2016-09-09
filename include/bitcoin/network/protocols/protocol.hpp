@@ -103,13 +103,17 @@ protected:
     /// Get the channel nonce.
     virtual uint64_t nonce() const;
 
-    /// Get the peer version message. This method is NOT thread safe and must
-    /// not be called if any other thread could write the peer version.
+    /// Get the peer version message.
     virtual message::version peer_version() const;
 
-    /// Set the channel version. This method is NOT thread safe and must
-    /// complete before any other thread could read the peer version.
+    /// Set the peer version message.
     virtual void set_peer_version(message::version::ptr value);
+
+    /// Get the negotiated protocol version.
+    virtual uint32_t negotiated_version() const;
+
+    /// Set the negotiated protocol version.
+    virtual void set_negotiated_version(uint32_t value);
 
     /// Get the threadpool.
     virtual threadpool& pool();
