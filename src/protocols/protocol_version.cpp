@@ -19,6 +19,7 @@
  */
 #include <bitcoin/network/protocols/protocol_version.hpp>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
@@ -54,7 +55,7 @@ message::version protocol_version::version_factory(
     BITCOIN_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
 
     message::version version;
-    version.value = settings.protocol;
+    version.value = settings.protocol_maximum;
     version.services = settings.services;
     version.timestamp = time_stamp();
     version.address_recevier = authority.to_network_address();
@@ -123,11 +124,34 @@ bool protocol_version::handle_receive_version(const code& ec,
     }
 
     log::debug(LOG_NETWORK)
-        << "Peer [" << authority() << "] version (" << message->value
-        << ") services (" << message->services << ") time ("
-        << message->timestamp << ") " << message->user_agent;
+        << "Peer [" << authority() << "] user agent: " << message->user_agent;
 
-    set_peer_version(message);
+    const auto& settings = network_.network_settings();
+
+    if ((message->services & settings.services) != settings.services)
+    {
+        log::debug(LOG_NETWORK)
+            << "Insufficient peer network services (" << message->services
+            << ") for [" << authority() << "]";
+        set_event(error::channel_stopped);
+        return false;
+    }
+
+    if (message->value < settings.protocol_minimum)
+    {
+        log::debug(LOG_NETWORK)
+            << "Insufficient peer protocol version (" << message->value
+            << ") for [" << authority() << "]";
+        set_event(error::channel_stopped);
+        return false;
+    }
+
+    const auto version = std::min(message->value, settings.protocol_maximum);
+    set_negotiated_version(version);
+
+    log::debug(LOG_NETWORK)
+        << "Negotiated protocol version (" << version << ").";
+
     SEND1(verack(), handle_verack_sent, _1);
 
     // 1 of 2
