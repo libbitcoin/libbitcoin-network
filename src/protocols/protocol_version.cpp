@@ -68,7 +68,7 @@ message::version protocol_version::version_factory(
     version.relay = settings.relay_transactions;
 
     // The peer's services cannot be reflected, so zero it.
-    version.address_recevier.services = version::services::none;
+    version.address_recevier.services = version::service::none;
 
     // We always match the services declared in our version.services.
     version.address_sender.services = settings.services;

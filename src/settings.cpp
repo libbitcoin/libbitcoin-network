@@ -32,7 +32,7 @@ settings::settings()
   : threads(50),
     protocol_maximum(version::level::maximum),
     protocol_minimum(version::level::minimum),
-    services(version::services::none),
+    services(version::service::none),
     inbound_connections(0),
     outbound_connections(8),
     manual_attempt_limit(0),
