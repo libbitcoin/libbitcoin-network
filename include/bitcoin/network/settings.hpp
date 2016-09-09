@@ -38,6 +38,7 @@ public:
     /// Properties.
     uint32_t threads;
     uint32_t protocol;
+    uint64_t services;
     uint32_t identifier;
     uint16_t inbound_port;
     uint32_t inbound_connections;

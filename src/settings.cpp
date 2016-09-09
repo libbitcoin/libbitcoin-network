@@ -31,6 +31,7 @@ using namespace bc::message;
 settings::settings()
   : threads(50),
     protocol(version::level::maximum),
+    services(version::services::node_network),
     inbound_connections(8),
     outbound_connections(8),
     manual_attempt_limit(0),
