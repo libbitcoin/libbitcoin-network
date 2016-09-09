@@ -63,7 +63,7 @@ public:
     template <class Message>
     void send(const Message& message, result_handler handler)
     {
-        const auto buffer = const_buffer(message::serialize(protocol_version_,
+        const auto buffer = const_buffer(message::serialize(version_,
             message, protocol_magic_));
         do_send(message.command, buffer, handler);
     }
@@ -122,7 +122,6 @@ private:
         result_handler handler);
 
     const uint32_t protocol_magic_;
-    const uint32_t protocol_version_;
     const config::authority authority_;
 
     // These are protected by sequential ordering.
