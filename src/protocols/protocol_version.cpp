@@ -158,7 +158,8 @@ bool protocol_version::handle_receive_version(const code& ec,
     set_negotiated_version(version);
 
     log::debug(LOG_NETWORK)
-        << "Negotiated protocol version (" << version << ").";
+        << "Negotiated protocol version (" << version
+        << ") for [" << authority() << "]";
 
     SEND1(verack(), handle_verack_sent, _1);
 
