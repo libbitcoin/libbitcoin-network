@@ -51,21 +51,19 @@ message::version protocol_version::version_factory(
     const config::authority& authority, const settings& settings,
     uint64_t nonce, size_t height)
 {
-    BITCOIN_ASSERT_MSG(height < max_uint32, "Time to upgrade the protocol.");
-    const auto height32 = static_cast<uint32_t>(height);
+    BITCOIN_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
 
-    return
-    {
-        settings.protocol,
-        settings.services,
-        time_stamp(),
-        authority.to_network_address(),
-        settings.self.to_network_address(),
-        nonce,
-        BC_USER_AGENT,
-        height32,
-        settings.relay_transactions
-    };
+    message::version version;
+    version.value = settings.protocol;
+    version.services = settings.services;
+    version.timestamp = time_stamp();
+    version.address_recevier = authority.to_network_address();
+    version.address_sender = settings.self.to_network_address();
+    version.nonce = nonce;
+    version.user_agent = BC_USER_AGENT;
+    version.start_height = static_cast<uint32_t>(height);
+    version.relay = settings.relay_transactions;
+    return version;
 }
 
 protocol_version::protocol_version(p2p& network, channel::ptr channel)
