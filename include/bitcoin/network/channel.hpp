@@ -20,6 +20,7 @@
 #ifndef LIBBITCOIN_NETWORK_CHANNEL_HPP
 #define LIBBITCOIN_NETWORK_CHANNEL_HPP
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -48,11 +49,16 @@ public:
 
     void start(result_handler handler) override;
 
+    // Properties.
+
     virtual bool notify() const;
     virtual void set_notify(bool value);
 
     virtual uint64_t nonce() const;
     virtual void set_nonce(uint64_t value);
+
+    virtual message::version peer_version() const;
+    virtual void set_peer_version(message::version::ptr value);
 
 protected:
     virtual void handle_activity();
@@ -67,8 +73,9 @@ private:
     void start_inactivity();
     void handle_inactivity(const code& ec);
 
-    bool notify_;
-    uint64_t nonce_;
+    std::atomic<bool> notify_;
+    std::atomic<uint64_t> nonce_;
+    bc::atomic<message::version::ptr> peer_version_;
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
 };

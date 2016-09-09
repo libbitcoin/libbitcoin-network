@@ -42,15 +42,9 @@ static deadline::ptr alarm(threadpool& pool, const asio::duration& duration)
     return std::make_shared<deadline>(pool, pseudo_randomize(duration));
 }
 
-// TODO: configure settings.protocol_maximum and settings.protocol_minimum.
-// Limit to version::limit::maximum and version::limit::minimum respectively
-// and if protocol_maximum is then below protocol_minimum return a failure. 
-// On handshake send peer version.maxiumum and on receipt of protocol_peer
-// if it is below protocol_minimum drop the channel, otherwise set
-// protocol_version to the lesser of protocol_maximum and protocol_peer.
 channel::channel(threadpool& pool, socket::ptr socket,
     const settings& settings)
-  : proxy(pool, socket, settings.identifier, settings.protocol),
+  : proxy(pool, socket, settings.identifier, settings.protocol_maximum),
     notify_(false),
     nonce_(0),
     expiration_(alarm(pool, settings.channel_expiration())),
@@ -78,27 +72,39 @@ void channel::do_start(const code& ec, result_handler handler)
     handler(error::success);
 }
 
-// Properties (version write is thread unsafe, isolate from read).
+// Properties.
 // ----------------------------------------------------------------------------
 
 bool channel::notify() const
 {
-    return notify_;
+    return notify_.load();
 }
 
 void channel::set_notify(bool value)
 {
-    notify_ = value;
+    notify_.store(value);
 }
 
 uint64_t channel::nonce() const
 {
-    return nonce_;
+    return nonce_.load();
 }
 
 void channel::set_nonce(uint64_t value)
 {
-    nonce_ = value;
+    nonce_.store(value);
+}
+
+message::version channel::peer_version() const
+{
+    const auto version = peer_version_.load();
+    BITCOIN_ASSERT_MSG(version, "Read peer version before set.");
+    return *version;
+}
+
+void channel::set_peer_version(message::version::ptr value)
+{
+    peer_version_.store(value);
 }
 
 // Proxy pure virtual protected and ordered handlers.
