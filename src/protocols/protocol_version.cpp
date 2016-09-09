@@ -59,11 +59,19 @@ message::version protocol_version::version_factory(
     version.timestamp = time_stamp();
     version.address_recevier = authority.to_network_address();
     version.address_sender = settings.self.to_network_address();
-    version.address_sender.services = settings.services;
     version.nonce = nonce;
     version.user_agent = BC_USER_AGENT;
     version.start_height = static_cast<uint32_t>(height);
+
+    // This is not serialized below version::level::bip61.
     version.relay = settings.relay_transactions;
+
+    // The peer's services cannot be reflected, so zero it.
+    version.address_recevier.services = version::services::none;
+
+    // We always match the services declared in our version.services.
+    version.address_sender.services = settings.services;
+
     return version;
 }
 
