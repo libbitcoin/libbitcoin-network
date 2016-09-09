@@ -30,9 +30,8 @@
 #include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/proxy.hpp>
-#include <bitcoin/network/protocols/protocol_address.hpp>
-#include <bitcoin/network/protocols/protocol_ping.hpp>
-#include <bitcoin/network/protocols/protocol_version.hpp>
+#include <bitcoin/network/protocols/protocol_version_31402.hpp>
+#include <bitcoin/network/protocols/protocol_version_70002.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -240,7 +239,10 @@ void session::handle_channel_start(const code& ec, channel::ptr channel,
 void session::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {
-    attach<protocol_version>(channel)->start(handle_started);
+    if (settings_.protocol_maximum >= message::version::level::bip61)
+        attach<protocol_version_70002>(channel)->start(handle_started);
+    else
+        attach<protocol_version_31402>(channel)->start(handle_started);
 }
 
 void session::handle_handshake(const code& ec, channel::ptr channel,

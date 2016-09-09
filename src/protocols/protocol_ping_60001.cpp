@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/protocols/protocol_ping.hpp>
+#include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 
 #include <cstdint>
 #include <functional>
@@ -25,36 +25,26 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/p2p.hpp>
+#include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-#define NAME "ping"
-#define CLASS protocol_ping
+#define NAME "protocol_ping_60001"
+#define CLASS protocol_ping_60001
 
 using namespace bc::message;
 using namespace std::placeholders;
 
-protocol_ping::protocol_ping(p2p& network, channel::ptr channel)
-  : protocol_timer(network, channel, true, NAME),
-    settings_(network.network_settings()),
-    CONSTRUCT_TRACK(protocol_ping)
+protocol_ping_60001::protocol_ping_60001(p2p& network, channel::ptr channel)
+  : protocol_ping_31402(network, channel),
+    CONSTRUCT_TRACK(protocol_ping_60001)
 {
-}
-
-void protocol_ping::start()
-{
-    protocol_timer::start(settings_.channel_heartbeat(), BIND1(send_ping, _1));
-
-    SUBSCRIBE2(ping, handle_receive_ping, _1, _2);
-
-    // Send initial ping message by simulating first heartbeat.
-    set_event(error::success);
 }
 
 // This is fired by the callback (i.e. base timer and stop handler).
-void protocol_ping::send_ping(const code& ec)
+void protocol_ping_60001::send_ping(const code& ec)
 {
     if (stopped())
         return;
@@ -69,12 +59,11 @@ void protocol_ping::send_ping(const code& ec)
     }
 
     const auto nonce = pseudo_random();
-
     SUBSCRIBE3(pong, handle_receive_pong, _1, _2, nonce);
     SEND2(ping{ nonce }, handle_send, _1, pong::command);
 }
 
-bool protocol_ping::handle_receive_ping(const code& ec,
+bool protocol_ping_60001::handle_receive_ping(const code& ec,
     message::ping::ptr message)
 {
     if (stopped())
@@ -90,12 +79,10 @@ bool protocol_ping::handle_receive_ping(const code& ec,
     }
 
     SEND2(pong{ message->nonce }, handle_send, _1, pong::command);
-
-    // RESUBSCRIBE
     return true;
 }
 
-bool protocol_ping::handle_receive_pong(const code& ec,
+bool protocol_ping_60001::handle_receive_pong(const code& ec,
     message::pong::ptr message, uint64_t nonce)
 {
     if (stopped())

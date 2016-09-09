@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/protocols/protocol_address.hpp>
+#include <bitcoin/network/protocols/protocol_address_31402.hpp>
 
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
@@ -29,23 +29,24 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "address"
-#define CLASS protocol_address
+#define NAME "protocol_address_31402"
+#define CLASS protocol_address_31402
 
 using namespace bc::message;
 using namespace std::placeholders;
 
-protocol_address::protocol_address(p2p& network, channel::ptr channel)
+protocol_address_31402::protocol_address_31402(p2p& network,
+    channel::ptr channel)
   : protocol_events(network, channel, NAME),
     network_(network),
-    CONSTRUCT_TRACK(protocol_address)
+    CONSTRUCT_TRACK(protocol_address_31402)
 {
 }
 
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_address::start()
+void protocol_address_31402::start()
 {
     const auto& settings = network_.network_settings();
 
@@ -64,13 +65,13 @@ void protocol_address::start()
 
     SUBSCRIBE2(address, handle_receive_address, _1, _2);
     SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
-    SEND2(get_address(), handle_send, _1, get_address::command);
+    SEND2(get_address{}, handle_send, _1, get_address::command);
 }
 
 // Protocol.
 // ----------------------------------------------------------------------------
 
-bool protocol_address::handle_receive_address(const code& ec,
+bool protocol_address_31402::handle_receive_address(const code& ec,
     address::ptr message)
 {
     if (stopped())
@@ -96,7 +97,7 @@ bool protocol_address::handle_receive_address(const code& ec,
     return true;
 }
 
-bool protocol_address::handle_receive_get_address(const code& ec,
+bool protocol_address_31402::handle_receive_get_address(const code& ec,
     get_address::ptr message)
 {
     if (stopped())
@@ -128,7 +129,7 @@ bool protocol_address::handle_receive_get_address(const code& ec,
     return true;
 }
 
-void protocol_address::handle_store_addresses(const code& ec)
+void protocol_address_31402::handle_store_addresses(const code& ec)
 {
     if (stopped())
         return;
@@ -142,7 +143,7 @@ void protocol_address::handle_store_addresses(const code& ec)
     }
 }
 
-void protocol_address::handle_stop(const code&)
+void protocol_address_31402::handle_stop(const code&)
 {
     log::debug(LOG_NETWORK)
         << "Stopped addresss protocol";
