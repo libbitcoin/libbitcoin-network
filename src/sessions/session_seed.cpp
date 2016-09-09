@@ -24,8 +24,9 @@
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/protocols/protocol_ping.hpp>
-#include <bitcoin/network/protocols/protocol_seed.hpp>
+#include <bitcoin/network/protocols/protocol_ping_31402.hpp>
+#include <bitcoin/network/protocols/protocol_ping_60001.hpp>
+#include <bitcoin/network/protocols/protocol_seed_31402.hpp>
 #include <bitcoin/network/proxy.hpp>
 
 namespace libbitcoin {
@@ -170,8 +171,12 @@ void session_seed::handle_channel_start(const code& ec, channel::ptr channel,
 void session_seed::attach_protocols(channel::ptr channel,
     result_handler handler)
 {
-    attach<protocol_ping>(channel)->start();
-    attach<protocol_seed>(channel)->start(handler);
+    if (settings_.protocol_maximum >= message::version::level::bip31)
+        attach<protocol_ping_60001>(channel)->start();
+    else
+        attach<protocol_ping_31402>(channel)->start();
+
+    attach<protocol_seed_31402>(channel)->start(handler);
 }
 
 void session_seed::handle_channel_stop(const code& ec)

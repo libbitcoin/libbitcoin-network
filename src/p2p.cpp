@@ -30,10 +30,12 @@
 #include <bitcoin/network/connections.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/hosts.hpp>
-#include <bitcoin/network/protocols/protocol_address.hpp>
-#include <bitcoin/network/protocols/protocol_ping.hpp>
-#include <bitcoin/network/protocols/protocol_seed.hpp>
-#include <bitcoin/network/protocols/protocol_version.hpp>
+#include <bitcoin/network/protocols/protocol_address_31402.hpp>
+#include <bitcoin/network/protocols/protocol_ping_31402.hpp>
+#include <bitcoin/network/protocols/protocol_ping_60001.hpp>
+#include <bitcoin/network/protocols/protocol_seed_31402.hpp>
+#include <bitcoin/network/protocols/protocol_version_31402.hpp>
+#include <bitcoin/network/protocols/protocol_version_70002.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
 #include <bitcoin/network/sessions/session_outbound.hpp>

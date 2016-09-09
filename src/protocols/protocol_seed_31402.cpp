@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/protocols/protocol_seed.hpp>
+#include <bitcoin/network/protocols/protocol_seed_31402.hpp>
 
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
@@ -28,24 +28,24 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "seed"
-#define CLASS protocol_seed
+#define NAME "protocol_seed_31402"
+#define CLASS protocol_seed_31402
 
 using namespace bc::message;
 using namespace std::placeholders;
 
 // Require three callbacks (or any error) before calling complete.
-protocol_seed::protocol_seed(p2p& network, channel::ptr channel)
+protocol_seed_31402::protocol_seed_31402(p2p& network, channel::ptr channel)
   : protocol_timer(network, channel, false, NAME),
     network_(network),
-    CONSTRUCT_TRACK(protocol_seed)
+    CONSTRUCT_TRACK(protocol_seed_31402)
 {
 }
 
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_seed::start(event_handler handler)
+void protocol_seed_31402::start(event_handler handler)
 {
     const auto& settings = network_.network_settings();
 
@@ -68,7 +68,7 @@ void protocol_seed::start(event_handler handler)
 // Protocol.
 // ----------------------------------------------------------------------------
 
-void protocol_seed::send_own_address(const settings& settings)
+void protocol_seed_31402::send_own_address(const settings& settings)
 {
     if (settings.self.port() == 0)
     {
@@ -80,14 +80,14 @@ void protocol_seed::send_own_address(const settings& settings)
     SEND1(self, handle_send_address, _1);
 }
 
-void protocol_seed::handle_seeding_complete(const code& ec,
+void protocol_seed_31402::handle_seeding_complete(const code& ec,
     event_handler handler)
 {
     handler(ec);
     stop(ec);
 }
 
-bool protocol_seed::handle_receive_address(const code& ec,
+bool protocol_seed_31402::handle_receive_address(const code& ec,
     address::ptr message)
 {
     if (stopped())
@@ -112,7 +112,7 @@ bool protocol_seed::handle_receive_address(const code& ec,
     return false;
 }
 
-void protocol_seed::handle_send_address(const code& ec)
+void protocol_seed_31402::handle_send_address(const code& ec)
 {
     if (stopped())
         return;
@@ -130,7 +130,7 @@ void protocol_seed::handle_send_address(const code& ec)
     set_event(error::success);
 }
 
-void protocol_seed::handle_send_get_address(const code& ec)
+void protocol_seed_31402::handle_send_get_address(const code& ec)
 {
     if (stopped())
         return;
@@ -148,7 +148,7 @@ void protocol_seed::handle_send_get_address(const code& ec)
     set_event(error::success);
 }
 
-void protocol_seed::handle_store_addresses(const code& ec)
+void protocol_seed_31402::handle_store_addresses(const code& ec)
 {
     if (stopped())
         return;

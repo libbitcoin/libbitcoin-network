@@ -17,55 +17,61 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_HPP
+#ifndef LIBBITCOIN_NETWORK_PROTOCOL_VERSION_31402_HPP
+#define LIBBITCOIN_NETWORK_PROTOCOL_VERSION_31402_HPP
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/protocols/protocol_events.hpp>
+#include <bitcoin/network/protocols/protocol_timer.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 class p2p;
 
-/**
- * Address protocol.
- * Attach this to a channel immediately following handshake completion.
- */
-class BCT_API protocol_address
-  : public protocol_events, track<protocol_address>
+class BCT_API protocol_version_31402
+  : public protocol_timer, track<protocol_version_31402>
 {
 public:
-    typedef std::shared_ptr<protocol_address> ptr;
+    typedef std::shared_ptr<protocol_version_31402> ptr;
 
     /**
-     * Construct an address protocol instance.
+     * Construct a version protocol instance.
      * @param[in]  network   The network interface.
      * @param[in]  channel   The channel on which to start the protocol.
      */
-    protocol_address(p2p& network, channel::ptr channel);
-
+    protocol_version_31402(p2p& network, channel::ptr channel);
+    
     /**
      * Start the protocol.
+     * @param[in]  handler  Invoked upon stop or receipt of version and verack.
      */
-    virtual void start();
+    virtual void start(event_handler handler);
 
-private:
-    void handle_stop(const code& ec);
-    void handle_store_addresses(const code& ec);
+protected:
+    static message::version version_factory(
+        const config::authority& authority, const settings& settings,
+            uint64_t nonce, size_t height);
 
-    bool handle_receive_address(const code& ec, message::address::ptr address);
-    bool handle_receive_get_address(const code& ec,
-        message::get_address::ptr message);
+    virtual void send_version(const message::version& self);
+
+    virtual void handle_version_sent(const code& ec);
+    virtual void handle_verack_sent(const code& ec);
+
+    virtual bool handle_receive_version(const code& ec,
+        message::version::ptr version);
+    virtual bool handle_receive_verack(const code& ec, message::verack::ptr);
 
     p2p& network_;
-    message::address self_;
 };
 
 } // namespace network
 } // namespace libbitcoin
 
 #endif
+

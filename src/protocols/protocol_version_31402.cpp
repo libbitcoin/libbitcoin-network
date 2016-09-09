@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/protocols/protocol_version.hpp>
+#include <bitcoin/network/protocols/protocol_version_31402.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -33,8 +33,8 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "version"
-#define CLASS protocol_version
+#define NAME "protocol_version_31402"
+#define CLASS protocol_version_31402
 
 using namespace bc::message;
 using namespace std::placeholders;
@@ -48,7 +48,7 @@ static uint64_t time_stamp()
     return wall_clock::to_time_t(now);
 }
 
-message::version protocol_version::version_factory(
+message::version protocol_version_31402::version_factory(
     const config::authority& authority, const settings& settings,
     uint64_t nonce, size_t height)
 {
@@ -64,9 +64,6 @@ message::version protocol_version::version_factory(
     version.user_agent = BC_USER_AGENT;
     version.start_height = static_cast<uint32_t>(height);
 
-    // This is not serialized below version::level::bip61.
-    version.relay = settings.relay_transactions;
-
     // The peer's services cannot be reflected, so zero it.
     version.address_recevier.services = version::service::none;
 
@@ -76,17 +73,18 @@ message::version protocol_version::version_factory(
     return version;
 }
 
-protocol_version::protocol_version(p2p& network, channel::ptr channel)
+protocol_version_31402::protocol_version_31402(p2p& network,
+    channel::ptr channel)
   : protocol_timer(network, channel, false, NAME),
     network_(network),
-    CONSTRUCT_TRACK(protocol_version)
+    CONSTRUCT_TRACK(protocol_version_31402)
 {
 }
 
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_version::start(event_handler handler)
+void protocol_version_31402::start(event_handler handler)
 {
     const auto height = network_.height();
     const auto& settings = network_.network_settings();
@@ -100,7 +98,7 @@ void protocol_version::start(event_handler handler)
     send_version(version_factory(authority(), settings, nonce(), height));
 }
 
-void protocol_version::send_version(const message::version& self)
+void protocol_version_31402::send_version(const message::version& self)
 {
     SEND1(self, handle_version_sent, _1);
 }
@@ -108,7 +106,7 @@ void protocol_version::send_version(const message::version& self)
 // Protocol.
 // ----------------------------------------------------------------------------
 
-bool protocol_version::handle_receive_version(const code& ec,
+bool protocol_version_31402::handle_receive_version(const code& ec,
     version::ptr message)
 {
     if (stopped())
@@ -168,7 +166,7 @@ bool protocol_version::handle_receive_version(const code& ec,
     return false;
 }
 
-bool protocol_version::handle_receive_verack(const code& ec, verack::ptr)
+bool protocol_version_31402::handle_receive_verack(const code& ec, verack::ptr)
 {
     if (stopped())
         return false;
@@ -187,7 +185,7 @@ bool protocol_version::handle_receive_verack(const code& ec, verack::ptr)
     return false;
 }
 
-void protocol_version::handle_version_sent(const code& ec)
+void protocol_version_31402::handle_version_sent(const code& ec)
 {
     if (stopped())
         return;
@@ -202,7 +200,7 @@ void protocol_version::handle_version_sent(const code& ec)
     }
 }
 
-void protocol_version::handle_verack_sent(const code& ec)
+void protocol_version_31402::handle_verack_sent(const code& ec)
 {
     if (stopped())
         return;

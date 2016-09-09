@@ -17,8 +17,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_SEED_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_SEED_HPP
+#ifndef LIBBITCOIN_NETWORK_PROTOCOL_SEED_31402_HPP
+#define LIBBITCOIN_NETWORK_PROTOCOL_SEED_31402_HPP
 
 #include <memory>
 #include <bitcoin/bitcoin.hpp>
@@ -35,18 +35,18 @@ class p2p;
  * Seeding protocol.
  * Attach this to a channel immediately following seed handshake completion.
  */
-class BCT_API protocol_seed
-  : public protocol_timer, track<protocol_seed>
+class BCT_API protocol_seed_31402
+  : public protocol_timer, track<protocol_seed_31402>
 {
 public:
-    typedef std::shared_ptr<protocol_seed> ptr;
+    typedef std::shared_ptr<protocol_seed_31402> ptr;
 
     /**
      * Construct a seed protocol instance.
      * @param[in]  network   The network interface.
      * @param[in]  channel   The channel on which to start the protocol.
      */
-    protocol_seed(p2p& network, channel::ptr channel);
+    protocol_seed_31402(p2p& network, channel::ptr channel);
 
     /**
      * Start the protocol.
@@ -54,16 +54,18 @@ public:
      */
     virtual void start(event_handler handler);
 
-private:
-    void send_own_address(const settings& settings);
+protected:
+    virtual void send_own_address(const settings& settings);
 
-    void handle_send_address(const code& ec);
-    void handle_send_get_address(const code& ec);
-    void handle_store_addresses(const code& ec);
-    void handle_seeding_complete(const code& ec, event_handler handler);
+    virtual void handle_send_address(const code& ec);
+    virtual void handle_send_get_address(const code& ec);
+    virtual void handle_store_addresses(const code& ec);
+    virtual void handle_seeding_complete(const code& ec,
+        event_handler handler);
 
-    bool handle_receive_address(const code& ec, message::address::ptr address);
-    ////bool handle_receive_get_address(const code& ec,
+    virtual bool handle_receive_address(const code& ec,
+        message::address::ptr address);
+    ////virtual bool handle_receive_get_address(const code& ec,
     ////    message::get_address::ptr message);
 
     p2p& network_;

@@ -23,8 +23,9 @@
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/protocols/protocol_address.hpp>
-#include <bitcoin/network/protocols/protocol_ping.hpp>
+#include <bitcoin/network/protocols/protocol_address_31402.hpp>
+#include <bitcoin/network/protocols/protocol_ping_31402.hpp>
+#include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -124,8 +125,12 @@ void session_outbound::handle_channel_start(const code& ec,
 
 void session_outbound::attach_protocols(channel::ptr channel)
 {
-    attach<protocol_ping>(channel)->start();
-    attach<protocol_address>(channel)->start();
+    if (settings_.protocol_maximum >= message::version::level::bip31)
+        attach<protocol_ping_60001>(channel)->start();
+    else
+        attach<protocol_ping_31402>(channel)->start();
+
+    attach<protocol_address_31402>(channel)->start();
 }
 
 void session_outbound::handle_channel_stop(const code& ec,
