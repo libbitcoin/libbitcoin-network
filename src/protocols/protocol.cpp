@@ -19,6 +19,7 @@
  */
 #include <bitcoin/network/protocols/protocol.hpp>
 
+#include <cstdint>
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
@@ -52,12 +53,22 @@ uint64_t protocol::nonce() const
 
 message::version protocol::peer_version() const
 {
-    return channel_->version();
+    return channel_->peer_version();
 }
 
 void protocol::set_peer_version(message::version::ptr value)
 {
-    channel_->set_version(value);
+    channel_->set_peer_version(value);
+}
+
+uint32_t protocol::negotiated_version() const
+{
+    return channel_->negotiated_version();
+}
+
+void protocol::set_negotiated_version(uint32_t value)
+{
+    channel_->set_negotiated_version(value);
 }
 
 threadpool& protocol::pool()
