@@ -146,6 +146,14 @@ bool protocol_version::handle_receive_version(const code& ec,
         return false;
     }
 
+    if (settings.protocol_minimum > settings.protocol_maximum)
+    {
+        log::error(LOG_NETWORK)
+            << "Invalid protocol version configuration.";
+        set_event(error::channel_stopped);
+        return false;
+    }
+
     const auto version = std::min(message->value, settings.protocol_maximum);
     set_negotiated_version(version);
 
