@@ -57,12 +57,6 @@ public:
      */
     protocol_version_70002(p2p& network, channel::ptr channel,
         uint32_t minimum_version, uint64_t minimum_services);
-    
-    /**
-     * Start the protocol.
-     * @param[in]  handler  Invoked upon stop or receipt of version and verack.
-     */
-    virtual void start(event_handler handler);
 
 protected:
     static message::version version_factory(

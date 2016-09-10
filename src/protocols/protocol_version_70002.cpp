@@ -69,22 +69,5 @@ protocol_version_70002::protocol_version_70002(p2p& network,
 {
 }
 
-// Start sequence.
-// ----------------------------------------------------------------------------
-
-void protocol_version_70002::start(event_handler handler)
-{
-    const auto height = network_.height();
-    const auto& settings = network_.network_settings();
-
-    // The handler is invoked in the context of the last message receipt.
-    protocol_timer::start(settings.channel_handshake(),
-        synchronize(handler, 2, NAME, false));
-
-    SUBSCRIBE2(version, handle_receive_version, _1, _2);
-    SUBSCRIBE2(verack, handle_receive_verack, _1, _2);
-    send_version(version_factory(authority(), settings, nonce(), height));
-}
-
 } // namespace network
 } // namespace libbitcoin
