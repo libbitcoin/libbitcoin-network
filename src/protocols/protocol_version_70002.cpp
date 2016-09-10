@@ -55,7 +55,16 @@ message::version protocol_version_70002::version_factory(
 
 protocol_version_70002::protocol_version_70002(p2p& network,
     channel::ptr channel)
-  : protocol_version_31402(network, channel),
+  : protocol_version_70002(network, channel,
+        network.network_settings().protocol_minimum,
+        network.network_settings().services)
+{
+}
+
+protocol_version_70002::protocol_version_70002(p2p& network,
+    channel::ptr channel, uint32_t minimum_version, uint64_t minimum_services)
+  : protocol_version_31402(network, channel, minimum_version,
+        minimum_services),
     CONSTRUCT_TRACK(protocol_version_70002)
 {
 }
