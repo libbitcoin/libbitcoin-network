@@ -27,6 +27,8 @@
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 #include <bitcoin/network/protocols/protocol_seed_31402.hpp>
+#include <bitcoin/network/protocols/protocol_version_31402.hpp>
+#include <bitcoin/network/protocols/protocol_version_70002.hpp>
 #include <bitcoin/network/proxy.hpp>
 
 namespace libbitcoin {
@@ -67,6 +69,20 @@ void session_seed::handle_started(const code& ec, result_handler handler)
     }
 
     address_count(BIND2(handle_count, _1, handler));
+}
+
+void session_seed::attach_handshake_protocols(channel::ptr channel,
+    result_handler handle_started)
+{
+    const auto version = message::version::level::minimum;
+    const auto service = message::version::service::none;
+
+    if (settings_.protocol_maximum >= message::version::level::bip61)
+        attach<protocol_version_70002>(channel, version, service)->
+            start(handle_started);
+    else
+        attach<protocol_version_31402>(channel, version, service)->
+            start(handle_started);
 }
 
 void session_seed::handle_count(size_t start_size, result_handler handler)
