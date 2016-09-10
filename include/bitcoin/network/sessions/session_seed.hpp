@@ -48,6 +48,10 @@ public:
     void start(result_handler handler) override;
 
 protected:
+    /// Overridden to set service and version mins upon session start.
+    void attach_handshake_protocols(channel::ptr channel,
+        result_handler handle_started) override;
+
     /// Override to attach specialized protocols upon channel start.
     virtual void attach_protocols(channel::ptr channel,
         result_handler handler);
