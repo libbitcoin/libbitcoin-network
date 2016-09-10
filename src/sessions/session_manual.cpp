@@ -113,6 +113,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
             << "] manually: " << ec.message();
 
         // Retry logic.
+        // The handler invoke is the failure end of the connect sequence.
         if (settings_.manual_attempt_limit == 0)
             start_connect(hostname, port, handler, 0);
         else if (retries > 0)
@@ -136,28 +137,18 @@ void session_manual::handle_channel_start(const code& ec,
     const std::string& hostname, uint16_t port, channel::ptr channel,
     channel_handler handler)
 {
-    // Treat a start failure just like a stop, but preserve the start handler.
+    // The start failure is also caught by handle_channel_stop.
+    // Treat a start failure like a stop, but preserve the start handler.
     if (ec)
     {
         log::info(LOG_NETWORK)
             << "Manual channel failed to start [" << channel->authority()
             << "] " << ec.message();
-
-        // Special case for already connected, do not keep trying.
-        if (ec == error::address_in_use)
-        {
-            handler(ec, channel);
-            return;
-        }
-
-        connect(hostname, port, handler);
         return;
     }
 
-    // This is the end of the connect sequence (the handler goes out of scope).
+    // This is the success end of the connect sequence.
     handler(error::success, channel);
-
-    // This is the beginning of the connect sequence.
     attach_protocols(channel);
 };
 
@@ -171,14 +162,16 @@ void session_manual::attach_protocols(channel::ptr channel)
     attach<protocol_address_31402>(channel)->start();
 }
 
-// After a stop we don't use the caller's start handler, but keep connecting.
 void session_manual::handle_channel_stop(const code& ec,
     const std::string& hostname, uint16_t port)
 {
     log::debug(LOG_NETWORK)
         << "Manual channel stopped: " << ec.message();
 
-    connect(hostname, port);
+    // Special case for already connected, do not keep trying.
+    // After a stop we don't use the caller's start handler, but keep connecting.
+    if (ec != error::address_in_use)
+        connect(hostname, port);
 }
 
 } // namespace network

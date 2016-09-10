@@ -253,6 +253,9 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
         log::debug(LOG_NETWORK)
             << "Failure in handshake with [" << channel->authority()
             << "] " << ec.message();
+
+        // TODO: this invokes do_remove, producing the bogus error:
+        // "Failed to remove a channel : object does not exist"
         handle_started(ec);
         return;
     }
@@ -286,6 +289,9 @@ void session::handle_is_pending(bool pending, channel::ptr channel,
 void session::handle_start(const code& ec, channel::ptr channel,
     result_handler handle_started, result_handler handle_stopped)
 {
+    // Must either stop or subscribe the channel for stop before returning.
+    // All closures must eventually be invoked as otherwise it is a leak.
+    // Therefore upon start failure one can expect a start failure and a stop.
     if (ec)
     {
         channel->stop(ec);

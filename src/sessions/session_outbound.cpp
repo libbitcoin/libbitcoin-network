@@ -109,14 +109,12 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
 void session_outbound::handle_channel_start(const code& ec,
     connector::ptr connect, channel::ptr channel)
 {
-    // Treat a start failure just like a stop.
+    // The start failure is also caught by handle_channel_stop. 
     if (ec)
     {
         log::debug(LOG_NETWORK)
             << "Outbound channel failed to start ["
             << channel->authority() << "] " << ec.message();
-
-        new_connection(connect);
         return;
     }
 
