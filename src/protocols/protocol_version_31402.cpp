@@ -33,7 +33,7 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "protocol_version_31402"
+#define NAME "version"
 #define CLASS protocol_version_31402
 
 using namespace bc::message;

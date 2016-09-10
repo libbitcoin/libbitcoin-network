@@ -28,7 +28,7 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "protocol_ping_31402"
+#define NAME "ping"
 #define CLASS protocol_ping_31402
 
 using namespace bc::message;
