@@ -139,11 +139,50 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     const auto& settings = network_.network_settings();
 
-    if ((message->services & settings.services) != settings.services)
+    // TODO: move these three checks to initialization.
+    //-------------------------------------------------------------------------
+    if (settings.protocol_minimum < version::level::minimum)
+    {
+        log::error(LOG_NETWORK)
+            << "Invalid protocol version configuration, minimum below ("
+            << version::level::minimum << ").";
+        set_event(error::channel_stopped);
+        return false;
+    }
+
+    if (settings.protocol_maximum > version::level::maximum)
+    {
+        log::error(LOG_NETWORK)
+            << "Invalid protocol version configuration, maximum above ("
+            << version::level::maximum << ").";
+        set_event(error::channel_stopped);
+        return false;
+    }
+
+    if (settings.protocol_minimum > settings.protocol_maximum)
+    {
+        log::error(LOG_NETWORK)
+            << "Invalid protocol version configuration, "
+            << "minimum exceeds maximum.";
+        set_event(error::channel_stopped);
+        return false;
+    }
+    //-------------------------------------------------------------------------
+
+    if ((message->services & minimum_services_) != minimum_services_)
     {
         log::debug(LOG_NETWORK)
             << "Insufficient peer network services (" << message->services
             << ") for [" << authority() << "]";
+
+        static const message::reject rejection
+        {
+            version::command,
+            reject::reason_code::obsolete,
+            "insufficient-services"
+        };
+
+        SEND2(rejection, handle_send, _1, rejection.command);
         set_event(error::channel_stopped);
         return false;
     }
@@ -162,14 +201,6 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         };
 
         SEND2(rejection, handle_send, _1, rejection.command);
-        set_event(error::channel_stopped);
-        return false;
-    }
-
-    if (settings.protocol_minimum > settings.protocol_maximum)
-    {
-        log::error(LOG_NETWORK)
-            << "Invalid protocol version configuration.";
         set_event(error::channel_stopped);
         return false;
     }
