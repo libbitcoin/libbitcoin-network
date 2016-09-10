@@ -29,7 +29,7 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "protocol_address_31402"
+#define NAME "address"
 #define CLASS protocol_address_31402
 
 using namespace bc::message;

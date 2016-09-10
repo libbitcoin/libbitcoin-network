@@ -31,7 +31,6 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "protocol_ping_60001"
 #define CLASS protocol_ping_60001
 
 using namespace bc::message;
@@ -100,7 +99,7 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
     if (message->nonce != nonce)
     {
         log::warning(LOG_NETWORK)
-            << "Invalid pong nonce from [" << authority() << "]";
+            << "Invalid or overlapped pong nonce from [" << authority() << "]";
 
         // This could result from message overlap due to a short period,
         // but we assume the response is not as expected and terminate.

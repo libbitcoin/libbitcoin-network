@@ -34,9 +34,6 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "protocol_version_70002"
-#define CLASS protocol_version_70002
-
 using namespace bc::message;
 using namespace std::placeholders;
 

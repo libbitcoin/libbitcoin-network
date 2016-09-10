@@ -28,7 +28,7 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "protocol_seed_31402"
+#define NAME "seed"
 #define CLASS protocol_seed_31402
 
 using namespace bc::message;
