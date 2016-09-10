@@ -41,11 +41,21 @@ public:
     typedef std::shared_ptr<protocol_version_31402> ptr;
 
     /**
-     * Construct a version protocol instance.
+     * Construct a version protocol instance using configured minimums.
      * @param[in]  network   The network interface.
      * @param[in]  channel   The channel on which to start the protocol.
      */
     protocol_version_31402(p2p& network, channel::ptr channel);
+
+    /**
+     * Construct a version protocol instance.
+     * @param[in]  network   The network interface.
+     * @param[in]  channel   The channel on which to start the protocol.
+     * @param[in]  version   The required minimum peer version.
+     * @param[in]  services  The required minimum peer services.
+     */
+    protocol_version_31402(p2p& network, channel::ptr channel,
+        uint32_t minimum_version, uint64_t minimum_services);
     
     /**
      * Start the protocol.
@@ -68,6 +78,8 @@ protected:
     virtual bool handle_receive_verack(const code& ec, message::verack::ptr);
 
     p2p& network_;
+    const uint32_t minimum_version_;
+    const uint64_t minimum_services_;
 };
 
 } // namespace network

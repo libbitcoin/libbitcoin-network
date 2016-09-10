@@ -42,17 +42,21 @@ public:
     typedef std::shared_ptr<protocol_version_70002> ptr;
 
     /**
-     * Construct a version protocol instance.
+     * Construct a version protocol instance using configured minimums.
      * @param[in]  network   The network interface.
      * @param[in]  channel   The channel on which to start the protocol.
      */
     protocol_version_70002(p2p& network, channel::ptr channel);
-    
+
     /**
-     * Start the protocol.
-     * @param[in]  handler  Invoked upon stop or receipt of version and verack.
+     * Construct a version protocol instance.
+     * @param[in]  network   The network interface.
+     * @param[in]  channel   The channel on which to start the protocol.
+     * @param[in]  version   The required minimum peer version.
+     * @param[in]  services  The required minimum peer services.
      */
-    virtual void start(event_handler handler);
+    protocol_version_70002(p2p& network, channel::ptr channel,
+        uint32_t minimum_version, uint64_t minimum_services);
 
 protected:
     static message::version version_factory(

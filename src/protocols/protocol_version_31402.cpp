@@ -73,10 +73,23 @@ message::version protocol_version_31402::version_factory(
     return version;
 }
 
+// Require the configured minimum and services by default.
+// Configured min version is our own but we may require higer for some stuff.
+// Configured services are our own and may not always make sense to require.
 protocol_version_31402::protocol_version_31402(p2p& network,
     channel::ptr channel)
+  : protocol_version_31402(network, channel,
+        network.network_settings().protocol_minimum,
+        network.network_settings().services)
+{
+}
+
+protocol_version_31402::protocol_version_31402(p2p& network,
+    channel::ptr channel, uint32_t minimum_version, uint64_t minimum_services)
   : protocol_timer(network, channel, false, NAME),
     network_(network),
+    minimum_version_(minimum_version),
+    minimum_services_(minimum_services),
     CONSTRUCT_TRACK(protocol_version_31402)
 {
 }
@@ -126,20 +139,22 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     const auto& settings = network_.network_settings();
 
-    if ((message->services & settings.services) != settings.services)
+    // TODO: move these three checks to initialization.
+    //-------------------------------------------------------------------------
+    if (settings.protocol_minimum < version::level::minimum)
     {
-        log::debug(LOG_NETWORK)
-            << "Insufficient peer network services (" << message->services
-            << ") for [" << authority() << "]";
+        log::error(LOG_NETWORK)
+            << "Invalid protocol version configuration, minimum below ("
+            << version::level::minimum << ").";
         set_event(error::channel_stopped);
         return false;
     }
 
-    if (message->value < settings.protocol_minimum)
+    if (settings.protocol_maximum > version::level::maximum)
     {
-        log::debug(LOG_NETWORK)
-            << "Insufficient peer protocol version (" << message->value
-            << ") for [" << authority() << "]";
+        log::error(LOG_NETWORK)
+            << "Invalid protocol version configuration, maximum above ("
+            << version::level::maximum << ").";
         set_event(error::channel_stopped);
         return false;
     }
@@ -147,7 +162,45 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     if (settings.protocol_minimum > settings.protocol_maximum)
     {
         log::error(LOG_NETWORK)
-            << "Invalid protocol version configuration.";
+            << "Invalid protocol version configuration, "
+            << "minimum exceeds maximum.";
+        set_event(error::channel_stopped);
+        return false;
+    }
+    //-------------------------------------------------------------------------
+
+    if ((message->services & minimum_services_) != minimum_services_)
+    {
+        log::debug(LOG_NETWORK)
+            << "Insufficient peer network services (" << message->services
+            << ") for [" << authority() << "]";
+
+        static const message::reject rejection
+        {
+            version::command,
+            reject::reason_code::obsolete,
+            "insufficient-services"
+        };
+
+        SEND2(rejection, handle_send, _1, rejection.command);
+        set_event(error::channel_stopped);
+        return false;
+    }
+
+    if (message->value < minimum_version_)
+    {
+        log::debug(LOG_NETWORK)
+            << "Insufficient peer protocol version (" << message->value
+            << ") for [" << authority() << "]";
+
+        static const message::reject rejection
+        {
+            version::command,
+            reject::reason_code::obsolete,
+            "insufficient-version"
+        };
+
+        SEND2(rejection, handle_send, _1, rejection.command);
         set_event(error::channel_stopped);
         return false;
     }
