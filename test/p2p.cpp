@@ -54,9 +54,7 @@ using namespace bc::network;
 #define SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(config) \
     auto config = network::settings(bc::settings::testnet); \
     config.threads = 1; \
-    config.host_pool_capacity = 0; \
     config.outbound_connections = 0; \
-    config.inbound_connections = 0; \
     config.manual_attempt_limit = 2
 
 #define SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(config) \
@@ -68,7 +66,7 @@ using namespace bc::network;
 #define SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(config) \
     auto config = network::settings(bc::settings::testnet); \
     config.threads = 3; \
-    config.inbound_connections = 0; \
+    config.host_pool_capacity = 42; \
     config.outbound_connections = 5; \
     config.seeds = { { SEED1 } }; \
     config.hosts_file = get_log_path(TEST_NAME, "hosts")
