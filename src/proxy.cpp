@@ -233,6 +233,11 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
     const auto code = message_subscriber_.load(head.type(), version_, istream);
     const auto consumed = istream.peek() == std::istream::traits_type::eof();
 
+    // For finding agents of bad versions.
+    ////const auto agent =
+    ////    ((!code && consumed) || head.command != version::command) ? "" : " " +
+    ////        std::string(payload_buffer_.begin(), payload_buffer_.end());
+
     if (code)
     {
         log::warning(LOG_NETWORK)
