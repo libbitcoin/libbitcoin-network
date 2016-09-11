@@ -34,8 +34,8 @@ namespace network {
 
 using namespace std::placeholders;
 
-session_outbound::session_outbound(p2p& network)
-  : session_batch(network, true),
+session_outbound::session_outbound(p2p& network, bool notify_on_connect)
+  : session_batch(network, notify_on_connect),
     CONSTRUCT_TRACK(session_outbound)
 {
 }

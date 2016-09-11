@@ -35,8 +35,8 @@ namespace network {
 
 using namespace std::placeholders;
 
-session_inbound::session_inbound(p2p& network)
-  : session(network, true),
+session_inbound::session_inbound(p2p& network, bool notify_on_connect)
+  : session(network, notify_on_connect),
     CONSTRUCT_TRACK(session_inbound)
 {
 }
