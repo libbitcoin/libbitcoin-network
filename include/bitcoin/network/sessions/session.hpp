@@ -197,7 +197,7 @@ private:
         result_handler handle_started);
     void handle_start(const code& ec, channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
-    void handle_remove(const code& ec);
+    void handle_remove(const code& ec, channel::ptr channel);
 
     std::atomic<bool> stopped_;
     const bool notify_on_connect_;

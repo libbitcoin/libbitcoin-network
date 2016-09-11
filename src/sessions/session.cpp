@@ -281,15 +281,16 @@ void session::handle_start(const code& ec, channel::ptr channel,
 void session::do_remove(const code& ec, channel::ptr channel,
     result_handler handle_stopped)
 {
-    network_.remove(channel, BIND_1(handle_remove, _1));
+    network_.remove(channel, BIND_2(handle_remove, _1, channel));
     handle_stopped(ec);
 }
 
-void session::handle_remove(const code& ec)
+void session::handle_remove(const code& ec, channel::ptr channel)
 {
     if (ec)
         log::debug(LOG_NETWORK)
-            << "Failed to remove a channel: " << ec.message();
+            << "Failed to remove channel [" << channel->authority() << "] "
+            << ec.message();
 }
 
 } // namespace network
