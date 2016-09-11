@@ -146,7 +146,7 @@ void protocol_address_31402::handle_store_addresses(const code& ec)
 void protocol_address_31402::handle_stop(const code&)
 {
     log::debug(LOG_NETWORK)
-        << "Stopped addresss protocol";
+        << "Stopped address protocol";
 }
 
 } // namespace network
