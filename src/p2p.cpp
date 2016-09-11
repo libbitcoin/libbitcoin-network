@@ -361,6 +361,24 @@ void p2p::connect(const std::string& hostname, uint16_t port,
     }
 }
 
+// Pending connections collection.
+// ----------------------------------------------------------------------------
+
+void p2p::pend(channel::ptr channel, result_handler handler)
+{
+    pending_.store(channel, handler);
+}
+
+void p2p::unpend(channel::ptr channel, result_handler handler)
+{
+    pending_.remove(channel, handler);
+}
+
+void p2p::pending(uint64_t version_nonce, truth_handler handler) const
+{
+    pending_.exists(version_nonce, handler);
+}
+
 // Connections collection.
 // ----------------------------------------------------------------------------
 

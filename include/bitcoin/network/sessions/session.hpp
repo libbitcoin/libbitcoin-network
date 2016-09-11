@@ -30,7 +30,6 @@
 #include <bitcoin/network/connections.hpp>
 #include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/pending_channels.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -145,6 +144,9 @@ protected:
     virtual acceptor::ptr create_acceptor();
     virtual connector::ptr create_connector();
 
+    // Registration sequence.
+    //-------------------------------------------------------------------------
+
     /// Register a new channel with the session and bind its handlers.
     virtual void register_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
@@ -153,6 +155,7 @@ protected:
     virtual void pend_channel(channel::ptr channel,
         result_handler handle_started);
 
+    /// Start the channel, override to perform pending check.
     virtual void start_channel(channel::ptr channel,
         result_handler handle_started);
 
@@ -169,11 +172,9 @@ protected:
 
     // TODO: create session_timer base class.
     threadpool& pool_;
-
     const settings& settings_;
 
 private:
-
     /// Bind a method in the base class.
     template <typename Handler, typename... Args>
     auto base_bind(Handler&& handler, Args&&... args) ->
@@ -219,7 +220,6 @@ private:
     // These are thread safe.
     p2p& network_;
     dispatcher dispatch_;
-    pending_channels pending_;
 };
 
 // Base session type.

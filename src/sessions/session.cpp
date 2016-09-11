@@ -199,7 +199,7 @@ void session::pend_channel(channel::ptr channel,
     result_handler unpend_handler =
         BIND_3(do_unpend, _1, channel, handle_started);
 
-    pending_.store(channel,
+    network_.pend(channel,
         BIND_3(handle_pend, _1, channel, unpend_handler));
 }
 
@@ -271,7 +271,7 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
 // protected:
 void session::is_pending(channel::ptr channel, truth_handler handler)
 {
-    pending_.exists(channel->peer_version().nonce, handler);
+    network_.pending(channel->peer_version().nonce, handler);
 }
 
 // protected:
@@ -305,7 +305,7 @@ void session::handle_start(const code& ec, channel::ptr channel,
 void session::do_unpend(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
-    pending_.remove(channel, BIND_1(handle_unpend, _1));
+    network_.unpend(channel, BIND_1(handle_unpend, _1));
     handle_started(ec);
 }
 

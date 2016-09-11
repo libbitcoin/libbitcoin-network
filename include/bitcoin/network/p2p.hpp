@@ -33,6 +33,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/hosts.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
+#include <bitcoin/network/pending_channels.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
 #include <bitcoin/network/sessions/session_outbound.hpp>
@@ -154,6 +155,18 @@ public:
     virtual void connect(const std::string& hostname, uint16_t port,
         channel_handler handler);
 
+    // Pending connections collection.
+    // ------------------------------------------------------------------------
+
+    /// Store a pending connection reference.
+    virtual void pend(channel::ptr channel, result_handler handler);
+
+    /// Free a pending connection reference.
+    virtual void unpend(channel::ptr channel, result_handler handler);
+
+    /// Test for a pending connection reference.
+    virtual void pending(uint64_t version_nonce, truth_handler handler) const;
+
     // Connections collection.
     // ------------------------------------------------------------------------
 
@@ -221,6 +234,7 @@ private:
     bc::atomic<session_manual::ptr> manual_;
     threadpool threadpool_;
     hosts::ptr hosts_;
+    pending_channels pending_;
     connections::ptr connections_;
     stop_subscriber::ptr stop_subscriber_;
     channel_subscriber::ptr channel_subscriber_;
