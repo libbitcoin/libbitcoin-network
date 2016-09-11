@@ -53,10 +53,9 @@ namespace network {
 
 using namespace std::placeholders;
 
-session::session(p2p& network, bool outgoing, bool persistent)
+session::session(p2p& network, bool notify_on_connect)
   : stopped_(true),
-    incoming_(!outgoing),
-    notify_(persistent),
+    notify_on_connect_(notify_on_connect),
     network_(network),
     settings_(network.network_settings()),
     pool_(network.thread_pool()),
@@ -150,7 +149,7 @@ void session::start(result_handler handler)
 void session::do_stop_session(const code&)
 {
     // This signals the session to stop creating connections, but does not
-    // close the session. Channels are stopped resulting in session lost scope.
+    // close the session. Channels stop, resulting in session scope loss.
     stopped_ = true;
 }
 
@@ -187,17 +186,18 @@ void session::register_channel(channel::ptr channel,
         return;
     }
 
-    if (incoming_)
-    {
-        handle_pend(error::success, channel, start_handler);
-        return;
-    }
+    pend_channel(channel, start_handler);
+}
 
-    channel->set_notify(notify_);
+// protected:
+void session::pend_channel(channel::ptr channel,
+    result_handler handle_started)
+{
+    channel->set_notify(notify_on_connect_);
     channel->set_nonce(nonzero_pseudo_random());
 
     result_handler unpend_handler =
-        BIND_3(do_unpend, _1, channel, start_handler);
+        BIND_3(do_unpend, _1, channel, handle_started);
 
     pending_.store(channel,
         BIND_3(handle_pend, _1, channel, unpend_handler));
@@ -212,6 +212,13 @@ void session::handle_pend(const code& ec, channel::ptr channel,
         return;
     }
 
+    start_channel(channel, handle_started);
+}
+
+// protected:
+void session::start_channel(channel::ptr channel,
+    result_handler handle_started)
+{
     // The channel starts, invokes the handler, then starts the read cycle.
     channel->start(
         BIND_3(handle_channel_start, _1, channel, handle_started));
@@ -229,13 +236,11 @@ void session::handle_channel_start(const code& ec, channel::ptr channel,
         return;
     }
 
-    result_handler handshake_handler =
-        BIND_3(handle_handshake, _1, channel, handle_started);
-
-    attach_handshake_protocols(channel, handshake_handler);
+    attach_handshake_protocols(channel,
+        BIND_3(handle_handshake, _1, channel, handle_started));
 }
 
-// Sessions that desire to customize the version message must override this.
+// protected:
 void session::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {
@@ -260,28 +265,19 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
         return;
     }
 
-    truth_handler handler = 
-        BIND_3(handle_is_pending, _1, channel, handle_started);
-
-    // The loopback test is for incoming channels only.
-    if (incoming_)
-        pending_.exists(channel->peer_version().nonce, handler);
-    else
-        handler(false);
+    store_channel(channel, handle_started);
 }
 
-void session::handle_is_pending(bool pending, channel::ptr channel,
+// protected:
+void session::is_pending(channel::ptr channel, truth_handler handler)
+{
+    pending_.exists(channel->peer_version().nonce, handler);
+}
+
+// protected:
+void session::store_channel(channel::ptr channel,
     result_handler handle_started)
 {
-    if (pending)
-    {
-        log::debug(LOG_NETWORK)
-            << "Rejected connection from [" << channel->authority()
-            << "] as loopback.";
-        handle_started(error::accept_failed);
-        return;
-    }
-
     // This will fail if the IP address or nonce is already connected.
     network_.store(channel, handle_started);
 }
@@ -291,7 +287,7 @@ void session::handle_start(const code& ec, channel::ptr channel,
 {
     // Must either stop or subscribe the channel for stop before returning.
     // All closures must eventually be invoked as otherwise it is a leak.
-    // Therefore upon start failure one can expect a start failure and a stop.
+    // Therefore upon start failure expect start failure and stop callbacks.
     if (ec)
     {
         channel->stop(ec);

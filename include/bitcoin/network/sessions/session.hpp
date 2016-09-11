@@ -94,7 +94,7 @@ public:
 protected:
 
     /// Construct an instance.
-    session(p2p& network, bool outgoing, bool persistent);
+    session(p2p& network, bool notify_on_connect);
 
     /// Validate session stopped.
     ~session();
@@ -145,13 +145,27 @@ protected:
     virtual acceptor::ptr create_acceptor();
     virtual connector::ptr create_connector();
 
+    /// Register a new channel with the session and bind its handlers.
+    virtual void register_channel(channel::ptr channel,
+        result_handler handle_started, result_handler handle_stopped);
+
+    /// Override to bypass pending for inbound channels.
+    virtual void pend_channel(channel::ptr channel,
+        result_handler handle_started);
+
+    virtual void start_channel(channel::ptr channel,
+        result_handler handle_started);
+
     /// Override to attach specialized handshake protocols upon session start.
     virtual void attach_handshake_protocols(channel::ptr channel,
         result_handler handle_started);
 
-    /// Register a new channel with the session and bind its handlers.
-    virtual void register_channel(channel::ptr channel,
-        result_handler handle_started, result_handler handle_stopped);
+    /// Call from inbound connection to determine if the channel is loopback.
+    virtual void is_pending(channel::ptr channel, truth_handler handler);
+
+    /// Override to implement pending test for inbound channels.
+    virtual void store_channel(channel::ptr channel,
+        result_handler handle_started);
 
     // TODO: create session_timer base class.
     threadpool& pool_;
@@ -184,13 +198,11 @@ private:
         channel_handler handler);
 
     // Registration sequence.
-    void handle_channel_start(const code& ec, channel::ptr channel,
-        result_handler handle_started);
     void handle_pend(const code& ec, channel::ptr channel,
         result_handler handle_started);
-    void handle_handshake(const code& ec, channel::ptr channel,
+    void handle_channel_start(const code& ec, channel::ptr channel,
         result_handler handle_started);
-    void handle_is_pending(bool pending, channel::ptr channel,
+    void handle_handshake(const code& ec, channel::ptr channel,
         result_handler handle_started);
     void handle_start(const code& ec, channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
@@ -202,8 +214,7 @@ private:
     void handle_remove(const code& ec);
 
     std::atomic<bool> stopped_;
-    const bool incoming_;
-    const bool notify_;
+    const bool notify_on_connect_;
 
     // These are thread safe.
     p2p& network_;

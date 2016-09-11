@@ -52,10 +52,20 @@ protected:
     /// Override to attach specialized protocols upon channel start.
     virtual void attach_protocols(channel::ptr channel);
 
+    /// Overridden to disable pending for inbound channels.
+    void pend_channel(channel::ptr channel,
+        result_handler handle_started) override;
+
+    /// Overridden to implement pending test for inbound channels.
+    void store_channel(channel::ptr channel,
+        result_handler handle_started) override;
+
 private:
     void start_accept(const code& ec, acceptor::ptr accept);
     void handle_started(const code& ec, result_handler handler);
-    void handle_is_loopback(bool loopback, channel::ptr channel);
+    void handle_is_pending(bool pending, channel::ptr channel,
+        result_handler handle_started);
+
     void handle_connection_count(size_t connections, channel::ptr channel);
     void handle_accept(const code& ec, channel::ptr channel,
         acceptor::ptr accept);
