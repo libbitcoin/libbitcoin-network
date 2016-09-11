@@ -192,19 +192,15 @@ void session::subscribe_stop(result_handler handler)
 void session::register_channel(channel::ptr channel,
     result_handler handle_started, result_handler handle_stopped)
 {
-    result_handler stop_handler =
-        BIND_3(do_remove, _1, channel, handle_stopped);
-
-    result_handler start_handler =
-        BIND_4(handle_start, _1, channel, handle_started, stop_handler);
-
     if (stopped())
     {
-        start_handler(error::service_stopped);
+        handle_started(error::service_stopped);
+        handle_stopped(error::service_stopped);
         return;
     }
 
-    start_channel(channel, start_handler);
+    start_channel(channel,
+        BIND_4(handle_start, _1, channel, handle_started, handle_stopped));
 }
 
 // protected:
@@ -253,8 +249,6 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
             << "Failure in handshake with [" << channel->authority()
             << "] " << ec.message();
 
-        // TODO: this invokes do_remove, producing the bogus error:
-        // "Failed to remove a channel : object does not exist"
         handle_started(ec);
         return;
     }
@@ -276,7 +270,8 @@ void session::handle_start(const code& ec, channel::ptr channel,
     }
     else
     {
-        channel->subscribe_stop(handle_stopped);
+        channel->subscribe_stop(
+            BIND_3(do_remove, _1, channel, handle_stopped));
     }
 
     // This is the end of the registration sequence.
