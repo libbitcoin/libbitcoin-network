@@ -127,6 +127,24 @@ void session::do_stop_connector(const code&, connector::ptr connect)
     connect->stop();
 }
 
+// Pending connections collection.
+// ----------------------------------------------------------------------------
+
+void session::pend(channel::ptr channel, result_handler handler)
+{
+    network_.pend(channel, handler);
+}
+
+void session::unpend(channel::ptr channel, result_handler handler)
+{
+    network_.unpend(channel, handler);
+}
+
+void session::pending(uint64_t version_nonce, truth_handler handler) const
+{
+    network_.pending(version_nonce, handler);
+}
+
 // Start sequence.
 // ----------------------------------------------------------------------------
 // Must not change context before subscribing.
@@ -186,45 +204,21 @@ void session::register_channel(channel::ptr channel,
         return;
     }
 
-    pend_channel(channel, start_handler);
-}
-
-// protected:
-void session::pend_channel(channel::ptr channel,
-    result_handler handle_started)
-{
-    channel->set_notify(notify_on_connect_);
-    channel->set_nonce(nonzero_pseudo_random());
-
-    result_handler unpend_handler =
-        BIND_3(do_unpend, _1, channel, handle_started);
-
-    network_.pend(channel,
-        BIND_3(handle_pend, _1, channel, unpend_handler));
-}
-
-void session::handle_pend(const code& ec, channel::ptr channel,
-    result_handler handle_started)
-{
-    if (ec)
-    {
-        handle_started(ec);
-        return;
-    }
-
-    start_channel(channel, handle_started);
+    start_channel(channel, start_handler);
 }
 
 // protected:
 void session::start_channel(channel::ptr channel,
     result_handler handle_started)
 {
+    channel->set_notify(notify_on_connect_);
+
     // The channel starts, invokes the handler, then starts the read cycle.
     channel->start(
-        BIND_3(handle_channel_start, _1, channel, handle_started));
+        BIND_3(handle_starting, _1, channel, handle_started));
 }
 
-void session::handle_channel_start(const code& ec, channel::ptr channel,
+void session::handle_starting(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
     if (ec)
@@ -265,19 +259,6 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
         return;
     }
 
-    store_channel(channel, handle_started);
-}
-
-// protected:
-void session::is_pending(channel::ptr channel, truth_handler handler)
-{
-    network_.pending(channel->peer_version().nonce, handler);
-}
-
-// protected:
-void session::store_channel(channel::ptr channel,
-    result_handler handle_started)
-{
     // This will fail if the IP address or nonce is already connected.
     network_.store(channel, handle_started);
 }
@@ -302,25 +283,11 @@ void session::handle_start(const code& ec, channel::ptr channel,
     handle_started(ec);
 }
 
-void session::do_unpend(const code& ec, channel::ptr channel,
-    result_handler handle_started)
-{
-    network_.unpend(channel, BIND_1(handle_unpend, _1));
-    handle_started(ec);
-}
-
 void session::do_remove(const code& ec, channel::ptr channel,
     result_handler handle_stopped)
 {
     network_.remove(channel, BIND_1(handle_remove, _1));
     handle_stopped(ec);
-}
-
-void session::handle_unpend(const code& ec)
-{
-    if (ec)
-        log::debug(LOG_NETWORK)
-            << "Failed to unpend a channel: " << ec.message();
 }
 
 void session::handle_remove(const code& ec)

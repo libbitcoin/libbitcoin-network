@@ -144,6 +144,18 @@ protected:
     virtual acceptor::ptr create_acceptor();
     virtual connector::ptr create_connector();
 
+    // Pending connections collection.
+    // ------------------------------------------------------------------------
+
+    /// Store a pending connection reference.
+    virtual void pend(channel::ptr channel, result_handler handler);
+
+    /// Free a pending connection reference.
+    virtual void unpend(channel::ptr channel, result_handler handler);
+
+    /// Test for a pending connection reference.
+    virtual void pending(uint64_t version_nonce, truth_handler handler) const;
+
     // Registration sequence.
     //-------------------------------------------------------------------------
 
@@ -151,23 +163,12 @@ protected:
     virtual void register_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
 
-    /// Override to bypass pending for inbound channels.
-    virtual void pend_channel(channel::ptr channel,
-        result_handler handle_started);
-
-    /// Start the channel, override to perform pending check.
+    /// Start the channel, override to perform pending or loopback check.
     virtual void start_channel(channel::ptr channel,
         result_handler handle_started);
 
     /// Override to attach specialized handshake protocols upon session start.
     virtual void attach_handshake_protocols(channel::ptr channel,
-        result_handler handle_started);
-
-    /// Call from inbound connection to determine if the channel is loopback.
-    virtual void is_pending(channel::ptr channel, truth_handler handler);
-
-    /// Override to implement pending test for inbound channels.
-    virtual void store_channel(channel::ptr channel,
         result_handler handle_started);
 
     // TODO: create session_timer base class.
@@ -183,35 +184,19 @@ private:
         return BOUND_BASE(handler, args);
     }
 
-    // Socket creators.
     void do_stop_acceptor(const code& ec, acceptor::ptr connect);
     void do_stop_connector(const code& ec, connector::ptr connect);
 
-    // Start sequence.
     void do_stop_session(const code&);
+    void do_remove(const code& ec, channel::ptr channel,
+        result_handler handle_stopped);
 
-    // Connect sequence
-    void new_connect(connector::ptr connect, channel_handler handler);
-    void start_connect(const code& ec, const authority& host,
-        connector::ptr connect, channel_handler handler);
-    void handle_connect(const code& ec, channel::ptr channel,
-        const authority& host, connector::ptr connect,
-        channel_handler handler);
-
-    // Registration sequence.
-    void handle_pend(const code& ec, channel::ptr channel,
-        result_handler handle_started);
-    void handle_channel_start(const code& ec, channel::ptr channel,
+    void handle_starting(const code& ec, channel::ptr channel,
         result_handler handle_started);
     void handle_handshake(const code& ec, channel::ptr channel,
         result_handler handle_started);
     void handle_start(const code& ec, channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
-    void do_unpend(const code& ec, channel::ptr channel,
-        result_handler handle_started);
-    void do_remove(const code& ec, channel::ptr channel,
-        result_handler handle_stopped);
-    void handle_unpend(const code& ec);
     void handle_remove(const code& ec);
 
     std::atomic<bool> stopped_;

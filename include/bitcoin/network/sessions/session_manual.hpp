@@ -58,13 +58,18 @@ public:
         channel_handler handler);
 
 protected:
+    /// Overridden to implement pending outbound channels.
+    void start_channel(channel::ptr channel,
+        result_handler handle_started) override;
+
     /// Override to attach specialized protocols upon channel start.
     virtual void attach_protocols(channel::ptr channel);
 
 private:
-    void handle_started(const code& ec, result_handler handler);
     void start_connect(const std::string& hostname, uint16_t port,
         channel_handler handler, uint32_t retries);
+
+    void handle_started(const code& ec, result_handler handler);
     void handle_connect(const code& ec, channel::ptr channel,
         const std::string& hostname, uint16_t port,
         channel_handler handler, uint32_t retries);

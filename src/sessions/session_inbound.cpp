@@ -180,21 +180,14 @@ void session_inbound::handle_channel_stop(const code& ec)
         << "Inbound channel stopped: " << ec.message();
 }
 
-// Loopback sequence.
+// Channel start sequence.
 // ----------------------------------------------------------------------------
+// Loopback test required for incoming connections.
 
-void session_inbound::pend_channel(channel::ptr channel,
+void session_inbound::start_channel(channel::ptr channel,
     result_handler handle_started)
 {
-    // Pending is for outgoing channels only, so just start the channel.
-    start_channel(channel, handle_started);
-}
-
-void session_inbound::store_channel(channel::ptr channel,
-    result_handler handle_started)
-{
-    // The loopback test is for incoming channels, test for pending.
-    is_pending(channel,
+    pending(channel->peer_version().nonce,
         BIND3(handle_is_pending, _1, channel, handle_started));
 }
 
@@ -210,7 +203,7 @@ void session_inbound::handle_is_pending(bool pending, channel::ptr channel,
         return;
     }
 
-    session::store_channel(channel, handle_started);
+    session::start_channel(channel, handle_started);
 }
 
 } // namespace network

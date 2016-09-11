@@ -174,5 +174,16 @@ void session_manual::handle_channel_stop(const code& ec,
         connect(hostname, port);
 }
 
+// Channel start sequence.
+// ----------------------------------------------------------------------------
+// Pending not implemented for manual connections (ok to connect to self).
+
+void session_manual::start_channel(channel::ptr channel,
+    result_handler handle_started)
+{
+    channel->set_nonce(nonzero_pseudo_random());
+    session::start_channel(channel, handle_started);
+}
+
 } // namespace network
 } // namespace libbitcoin
