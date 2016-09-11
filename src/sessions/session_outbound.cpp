@@ -141,5 +141,46 @@ void session_outbound::handle_channel_stop(const code& ec,
     new_connection(connect);
 }
 
+// Channel start sequence.
+// ----------------------------------------------------------------------------
+// Pend outgoing connections so we can detect connection to self.
+
+void session_outbound::start_channel(channel::ptr channel,
+    result_handler handle_started)
+{
+    channel->set_nonce(nonzero_pseudo_random());
+
+    result_handler unpend_handler =
+        BIND3(do_unpend, _1, channel, handle_started);
+
+    pend(channel, BIND3(handle_pend, _1, channel, unpend_handler));
+}
+
+void session_outbound::handle_pend(const code& ec, channel::ptr channel,
+    result_handler handle_started)
+{
+    if (ec)
+    {
+        handle_started(ec);
+        return;
+    }
+
+    session::start_channel(channel, handle_started);
+}
+
+void session_outbound::do_unpend(const code& ec, channel::ptr channel,
+    result_handler handle_started)
+{
+    unpend(channel, BIND1(handle_unpend, _1));
+    handle_started(ec);
+}
+
+void session_outbound::handle_unpend(const code& ec)
+{
+    if (ec)
+        log::debug(LOG_NETWORK)
+            << "Failed to unpend a channel: " << ec.message();
+}
+
 } // namespace network
 } // namespace libbitcoin

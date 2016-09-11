@@ -35,8 +35,8 @@ namespace network {
 using namespace bc::config;
 using namespace std::placeholders;
 
-session_batch::session_batch(p2p& network, bool persistent)
-  : session(network, true, persistent),
+session_batch::session_batch(p2p& network, bool notify_on_connect)
+  : session(network, notify_on_connect),
     batch_size_(std::max(settings_.connect_batch_size, 1u))
 {
 }

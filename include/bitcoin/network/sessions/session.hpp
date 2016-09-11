@@ -30,7 +30,6 @@
 #include <bitcoin/network/connections.hpp>
 #include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/pending_channels.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -94,7 +93,7 @@ public:
 protected:
 
     /// Construct an instance.
-    session(p2p& network, bool outgoing, bool persistent);
+    session(p2p& network, bool notify_on_connect);
 
     /// Validate session stopped.
     ~session();
@@ -145,21 +144,38 @@ protected:
     virtual acceptor::ptr create_acceptor();
     virtual connector::ptr create_connector();
 
-    /// Override to attach specialized handshake protocols upon session start.
-    virtual void attach_handshake_protocols(channel::ptr channel,
-        result_handler handle_started);
+    // Pending connections collection.
+    // ------------------------------------------------------------------------
+
+    /// Store a pending connection reference.
+    virtual void pend(channel::ptr channel, result_handler handler);
+
+    /// Free a pending connection reference.
+    virtual void unpend(channel::ptr channel, result_handler handler);
+
+    /// Test for a pending connection reference.
+    virtual void pending(uint64_t version_nonce, truth_handler handler) const;
+
+    // Registration sequence.
+    //-------------------------------------------------------------------------
 
     /// Register a new channel with the session and bind its handlers.
     virtual void register_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
 
+    /// Start the channel, override to perform pending or loopback check.
+    virtual void start_channel(channel::ptr channel,
+        result_handler handle_started);
+
+    /// Override to attach specialized handshake protocols upon session start.
+    virtual void attach_handshake_protocols(channel::ptr channel,
+        result_handler handle_started);
+
     // TODO: create session_timer base class.
     threadpool& pool_;
-
     const settings& settings_;
 
 private:
-
     /// Bind a method in the base class.
     template <typename Handler, typename... Args>
     auto base_bind(Handler&& handler, Args&&... args) ->
@@ -168,47 +184,27 @@ private:
         return BOUND_BASE(handler, args);
     }
 
-    // Socket creators.
     void do_stop_acceptor(const code& ec, acceptor::ptr connect);
     void do_stop_connector(const code& ec, connector::ptr connect);
 
-    // Start sequence.
     void do_stop_session(const code&);
+    void do_remove(const code& ec, channel::ptr channel,
+        result_handler handle_stopped);
 
-    // Connect sequence
-    void new_connect(connector::ptr connect, channel_handler handler);
-    void start_connect(const code& ec, const authority& host,
-        connector::ptr connect, channel_handler handler);
-    void handle_connect(const code& ec, channel::ptr channel,
-        const authority& host, connector::ptr connect,
-        channel_handler handler);
-
-    // Registration sequence.
-    void handle_channel_start(const code& ec, channel::ptr channel,
-        result_handler handle_started);
-    void handle_pend(const code& ec, channel::ptr channel,
+    void handle_starting(const code& ec, channel::ptr channel,
         result_handler handle_started);
     void handle_handshake(const code& ec, channel::ptr channel,
         result_handler handle_started);
-    void handle_is_pending(bool pending, channel::ptr channel,
-        result_handler handle_started);
     void handle_start(const code& ec, channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
-    void do_unpend(const code& ec, channel::ptr channel,
-        result_handler handle_started);
-    void do_remove(const code& ec, channel::ptr channel,
-        result_handler handle_stopped);
-    void handle_unpend(const code& ec);
-    void handle_remove(const code& ec);
+    void handle_remove(const code& ec, channel::ptr channel);
 
     std::atomic<bool> stopped_;
-    const bool incoming_;
-    const bool notify_;
+    const bool notify_on_connect_;
 
     // These are thread safe.
     p2p& network_;
     dispatcher dispatch_;
-    pending_channels pending_;
 };
 
 // Base session type.

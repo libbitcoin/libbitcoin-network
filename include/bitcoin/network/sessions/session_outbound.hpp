@@ -47,14 +47,25 @@ public:
     void start(result_handler handler) override;
 
 protected:
+    /// Overridden to implement pending outbound channels.
+    void start_channel(channel::ptr channel,
+        result_handler handle_started) override;
+
     /// Override to attach specialized protocols upon channel start.
     virtual void attach_protocols(channel::ptr channel);
 
 private:
     void new_connection(connector::ptr connect);
+
     void handle_started(const code& ec, result_handler handler);
     void handle_connect(const code& ec, channel::ptr channel,
         connector::ptr connect);
+    void handle_pend(const code& ec, channel::ptr channel,
+        result_handler handle_started);
+    void handle_unpend(const code& ec);
+
+    void do_unpend(const code& ec, channel::ptr channel,
+        result_handler handle_started);
 
     void handle_channel_stop(const code& ec, connector::ptr connect,
         channel::ptr channel);
