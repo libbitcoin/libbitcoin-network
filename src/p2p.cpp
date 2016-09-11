@@ -225,17 +225,17 @@ session_seed::ptr p2p::attach_seed_session()
 
 session_manual::ptr p2p::attach_manual_session()
 {
-    return attach<session_manual>();
+    return attach<session_manual>(true);
 }
 
 session_inbound::ptr p2p::attach_inbound_session()
 {
-    return attach<session_inbound>();
+    return attach<session_inbound>(true);
 }
 
 session_outbound::ptr p2p::attach_outbound_session()
 {
-    return attach<session_outbound>();
+    return attach<session_outbound>(true);
 }
 
 // Shutdown.
