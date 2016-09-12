@@ -208,6 +208,7 @@ void session::start_channel(channel::ptr channel,
     result_handler handle_started)
 {
     channel->set_notify(notify_on_connect_);
+    channel->set_nonce(nonzero_pseudo_random());
 
     // The channel starts, invokes the handler, then starts the read cycle.
     channel->start(
@@ -234,7 +235,8 @@ void session::handle_starting(const code& ec, channel::ptr channel,
 void session::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {
-    if (settings_.protocol_maximum >= message::version::level::bip61)
+    // The negotiated_version is initialized to the configured maximum.
+    if (channel->negotiated_version() >= message::version::level::bip61)
         attach<protocol_version_70002>(channel)->start(handle_started);
     else
         attach<protocol_version_31402>(channel)->start(handle_started);

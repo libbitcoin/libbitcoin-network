@@ -43,19 +43,22 @@ public:
     /**
      * Construct a version protocol instance using configured minimums.
      * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
+     * @param[in]  channel   The channel for the protocol.
      */
     protocol_version_31402(p2p& network, channel::ptr channel);
 
     /**
      * Construct a version protocol instance.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     * @param[in]  version   The required minimum peer version.
-     * @param[in]  services  The required minimum peer services.
+     * @param[in]  network           The network interface.
+     * @param[in]  channel           The channel for the protocol.
+     * @param[in]  own_version       This node's maximum version.
+     * @param[in]  own_services      This node's advertised services.
+     * @param[in]  minimum_version   This required minimum version.
+     * @param[in]  minimum_services  This required minimum services.
      */
     protocol_version_31402(p2p& network, channel::ptr channel,
-        uint32_t minimum_version, uint64_t minimum_services);
+        uint32_t own_version, uint64_t own_services, uint32_t minimum_version,
+        uint64_t minimum_services);
     
     /**
      * Start the protocol.
@@ -64,11 +67,7 @@ public:
     virtual void start(event_handler handler);
 
 protected:
-    static message::version version_factory(
-        const config::authority& authority, const settings& settings,
-            uint64_t nonce, size_t height);
-
-    virtual void send_version(const message::version& self);
+    virtual message::version version_factory();
 
     virtual void handle_version_sent(const code& ec);
     virtual void handle_verack_sent(const code& ec);
@@ -78,6 +77,8 @@ protected:
     virtual bool handle_receive_verack(const code& ec, message::verack::ptr);
 
     p2p& network_;
+    const uint32_t own_version_;
+    const uint64_t own_services_;
     const uint32_t minimum_version_;
     const uint64_t minimum_services_;
 };

@@ -19,51 +19,44 @@
  */
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 
-#include <algorithm>
-#include <chrono>
 #include <cstdint>
-#include <cstdlib>
-#include <functional>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-using namespace bc::message;
-using namespace std::placeholders;
-
-message::version protocol_version_70002::version_factory(
-    const config::authority& authority, const settings& settings,
-    uint64_t nonce, size_t height)
-{
-    auto version = protocol_version_31402::version_factory(authority, settings,
-        nonce, height);
-
-    // This is the only difference at protocol level 70001.
-    version.relay = settings.relay_transactions;
-
-    return version;
-}
-
 protocol_version_70002::protocol_version_70002(p2p& network,
     channel::ptr channel)
   : protocol_version_70002(network, channel,
+        network.network_settings().protocol_maximum,
+        network.network_settings().services,
         network.network_settings().protocol_minimum,
-        network.network_settings().services)
+        network.network_settings().services,
+        network.network_settings().relay_transactions)
 {
 }
 
 protocol_version_70002::protocol_version_70002(p2p& network,
-    channel::ptr channel, uint32_t minimum_version, uint64_t minimum_services)
-  : protocol_version_31402(network, channel, minimum_version,
-        minimum_services),
+    channel::ptr channel, uint32_t own_version, uint64_t own_services,
+    uint32_t minimum_version, uint64_t minimum_services, bool relay)
+  : protocol_version_31402(network, channel, own_version, own_services,
+        minimum_version, minimum_services),
+    relay_(relay),
     CONSTRUCT_TRACK(protocol_version_70002)
 {
+}
+
+message::version protocol_version_70002::version_factory()
+{
+    auto version = protocol_version_31402::version_factory();
+
+    // This is the only difference at protocol level 70001.
+    version.relay = relay_;
+    return version;
 }
 
 } // namespace network

@@ -48,46 +48,26 @@ static uint64_t time_stamp()
     return wall_clock::to_time_t(now);
 }
 
-message::version protocol_version_31402::version_factory(
-    const config::authority& authority, const settings& settings,
-    uint64_t nonce, size_t height)
-{
-    BITCOIN_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
-
-    message::version version;
-    version.value = settings.protocol_maximum;
-    version.services = settings.services;
-    version.timestamp = time_stamp();
-    version.address_recevier = authority.to_network_address();
-    version.address_sender = settings.self.to_network_address();
-    version.nonce = nonce;
-    version.user_agent = BC_USER_AGENT;
-    version.start_height = static_cast<uint32_t>(height);
-
-    // The peer's services cannot be reflected, so zero it.
-    version.address_recevier.services = version::service::none;
-
-    // We always match the services declared in our version.services.
-    version.address_sender.services = settings.services;
-
-    return version;
-}
-
 // Require the configured minimum and services by default.
 // Configured min version is our own but we may require higer for some stuff.
 // Configured services are our own and may not always make sense to require.
 protocol_version_31402::protocol_version_31402(p2p& network,
     channel::ptr channel)
   : protocol_version_31402(network, channel,
+        network.network_settings().protocol_maximum,
+        network.network_settings().services,
         network.network_settings().protocol_minimum,
         network.network_settings().services)
 {
 }
 
 protocol_version_31402::protocol_version_31402(p2p& network,
-    channel::ptr channel, uint32_t minimum_version, uint64_t minimum_services)
+    channel::ptr channel, uint32_t own_version, uint64_t own_services,
+    uint32_t minimum_version, uint64_t minimum_services)
   : protocol_timer(network, channel, false, NAME),
     network_(network),
+    own_version_(own_version),
+    own_services_(own_services),
     minimum_version_(minimum_version),
     minimum_services_(minimum_services),
     CONSTRUCT_TRACK(protocol_version_31402)
@@ -99,21 +79,38 @@ protocol_version_31402::protocol_version_31402(p2p& network,
 
 void protocol_version_31402::start(event_handler handler)
 {
-    const auto height = network_.height();
-    const auto& settings = network_.network_settings();
+    const auto period = network_.network_settings().channel_handshake();
 
     // The handler is invoked in the context of the last message receipt.
-    protocol_timer::start(settings.channel_handshake(),
-        synchronize(handler, 2, NAME, false));
+    protocol_timer::start(period, synchronize(handler, 2, NAME, false));
 
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
     SUBSCRIBE2(verack, handle_receive_verack, _1, _2);
-    send_version(version_factory(authority(), settings, nonce(), height));
+    SEND1(version_factory(), handle_version_sent, _1);
 }
 
-void protocol_version_31402::send_version(const message::version& self)
+message::version protocol_version_31402::version_factory()
 {
-    SEND1(self, handle_version_sent, _1);
+    const auto& settings = network_.network_settings();
+    const auto height = network_.height();
+    BITCOIN_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
+
+    message::version version;
+    version.value = own_version_;
+    version.services = own_services_;
+    version.timestamp = time_stamp();
+    version.address_recevier = authority().to_network_address();
+    version.address_sender = settings.self.to_network_address();
+    version.nonce = nonce();
+    version.user_agent = BC_USER_AGENT;
+    version.start_height = static_cast<uint32_t>(height);
+
+    // The peer's services cannot be reflected, so zero it.
+    version.address_recevier.services = version::service::none;
+
+    // We always match the services declared in our version.services.
+    version.address_sender.services = own_services_;
+    return version;
 }
 
 // Protocol.
@@ -205,7 +202,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         return false;
     }
 
-    const auto version = std::min(message->value, settings.protocol_maximum);
+    const auto version = std::min(message->value, own_version_);
     set_negotiated_version(version);
 
     log::debug(LOG_NETWORK)

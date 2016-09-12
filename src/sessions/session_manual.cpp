@@ -154,7 +154,7 @@ void session_manual::handle_channel_start(const code& ec,
 
 void session_manual::attach_protocols(channel::ptr channel)
 {
-    if (settings_.protocol_maximum >= message::version::level::bip31)
+    if (channel->negotiated_version() >= message::version::level::bip31)
         attach<protocol_ping_60001>(channel)->start();
     else
         attach<protocol_ping_31402>(channel)->start();
@@ -177,13 +177,6 @@ void session_manual::handle_channel_stop(const code& ec,
 // Channel start sequence.
 // ----------------------------------------------------------------------------
 // Pending not implemented for manual connections (ok to connect to self).
-
-void session_manual::start_channel(channel::ptr channel,
-    result_handler handle_started)
-{
-    channel->set_nonce(nonzero_pseudo_random());
-    session::start_channel(channel, handle_started);
-}
 
 } // namespace network
 } // namespace libbitcoin
