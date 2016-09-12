@@ -148,8 +148,6 @@ void session_outbound::handle_channel_stop(const code& ec,
 void session_outbound::start_channel(channel::ptr channel,
     result_handler handle_started)
 {
-    channel->set_nonce(nonzero_pseudo_random());
-
     result_handler unpend_handler =
         BIND3(do_unpend, _1, channel, handle_started);
 
