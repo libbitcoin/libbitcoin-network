@@ -84,7 +84,7 @@ void session_seed::attach_handshake_protocols(channel::ptr channel,
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= message::version::level::bip61)
         attach<protocol_version_70002>(channel, own_version, own_services,
-        minimum_version, minimum_services, relay)->start(handle_started);
+            minimum_version, minimum_services, relay)->start(handle_started);
     else
         attach<protocol_version_31402>(channel, own_version, own_services,
             minimum_version, minimum_services)->start(handle_started);
