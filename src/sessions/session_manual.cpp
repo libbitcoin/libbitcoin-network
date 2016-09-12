@@ -154,7 +154,7 @@ void session_manual::handle_channel_start(const code& ec,
 
 void session_manual::attach_protocols(channel::ptr channel)
 {
-    if (settings_.protocol_maximum >= message::version::level::bip31)
+    if (channel->negotiated_version() >= message::version::level::bip31)
         attach<protocol_ping_60001>(channel)->start();
     else
         attach<protocol_ping_31402>(channel)->start();

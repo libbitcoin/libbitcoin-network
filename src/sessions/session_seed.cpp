@@ -74,15 +74,20 @@ void session_seed::handle_started(const code& ec, result_handler handler)
 void session_seed::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {
-    const auto version = message::version::level::minimum;
-    const auto service = message::version::service::none;
+    // Don't use configured services or relay for seeding.
+    const auto relay = false;
+    const auto own_version = settings_.protocol_maximum;
+    const auto own_services = message::version::service::none;
+    const auto minimum_version = settings_.protocol_minimum;
+    const auto minimum_services = message::version::service::none;
 
-    if (settings_.protocol_maximum >= message::version::level::bip61)
-        attach<protocol_version_70002>(channel, version, service)->
-            start(handle_started);
+    // The negotiated_version is initialized to the configured maximum.
+    if (channel->negotiated_version() >= message::version::level::bip61)
+        attach<protocol_version_70002>(channel, own_version, own_services,
+        minimum_version, minimum_services, relay)->start(handle_started);
     else
-        attach<protocol_version_31402>(channel, version, service)->
-            start(handle_started);
+        attach<protocol_version_31402>(channel, own_version, own_services,
+            minimum_version, minimum_services)->start(handle_started);
 }
 
 void session_seed::handle_count(size_t start_size, result_handler handler)
@@ -187,7 +192,7 @@ void session_seed::handle_channel_start(const code& ec, channel::ptr channel,
 void session_seed::attach_protocols(channel::ptr channel,
     result_handler handler)
 {
-    if (settings_.protocol_maximum >= message::version::level::bip31)
+    if (channel->negotiated_version() >= message::version::level::bip31)
         attach<protocol_ping_60001>(channel)->start();
     else
         attach<protocol_ping_31402>(channel)->start();

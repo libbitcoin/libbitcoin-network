@@ -26,7 +26,6 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -50,18 +49,22 @@ public:
 
     /**
      * Construct a version protocol instance.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     * @param[in]  version   The required minimum peer version.
-     * @param[in]  services  The required minimum peer services.
+     * @param[in]  network           The network interface.
+     * @param[in]  channel           The channel for the protocol.
+     * @param[in]  own_version       This node's maximum version.
+     * @param[in]  own_services      This node's advertised services.
+     * @param[in]  minimum_version   This required minimum version.
+     * @param[in]  minimum_services  This required minimum services.
+     * @param[in]  relay             The peer should relay transactions.
      */
     protocol_version_70002(p2p& network, channel::ptr channel,
-        uint32_t minimum_version, uint64_t minimum_services);
+        uint32_t own_version, uint64_t own_services, uint32_t minimum_version,
+        uint64_t minimum_services, bool relay);
 
 protected:
-    static message::version version_factory(
-        const config::authority& authority, const settings& settings,
-            uint64_t nonce, size_t height);
+    message::version version_factory() override;
+
+    const bool relay_;
 };
 
 } // namespace network
