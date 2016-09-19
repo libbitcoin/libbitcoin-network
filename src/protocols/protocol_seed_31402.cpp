@@ -22,6 +22,7 @@
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 
@@ -88,7 +89,7 @@ void protocol_seed_31402::handle_seeding_complete(const code& ec,
 }
 
 bool protocol_seed_31402::handle_receive_address(const code& ec,
-    address::ptr message)
+    address_const_ptr message)
 {
     if (stopped())
         return false;

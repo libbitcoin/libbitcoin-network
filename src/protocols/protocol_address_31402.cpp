@@ -22,6 +22,7 @@
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
@@ -35,10 +36,19 @@ namespace network {
 using namespace bc::message;
 using namespace std::placeholders;
 
+static message::address configured_self(const network::settings& settings)
+{
+    if (settings.self.port() == 0)
+        return address{};
+
+    return address{ { settings.self.to_network_address() } };
+}
+
 protocol_address_31402::protocol_address_31402(p2p& network,
     channel::ptr channel)
   : protocol_events(network, channel, NAME),
     network_(network),
+    self_(configured_self(network_.network_settings())),
     CONSTRUCT_TRACK(protocol_address_31402)
 {
 }
@@ -53,9 +63,8 @@ void protocol_address_31402::start()
     // Must have a handler to capture a shared self pointer in stop subscriber.
     protocol_events::start(BIND1(handle_stop, _1));
 
-    if (settings.self.port() != 0)
+    if (!self_.addresses.empty())
     {
-        self_ = address({ { settings.self.to_network_address() } });
         SEND2(self_, handle_send, _1, self_.command);
     }
 
@@ -72,7 +81,7 @@ void protocol_address_31402::start()
 // ----------------------------------------------------------------------------
 
 bool protocol_address_31402::handle_receive_address(const code& ec,
-    address::ptr message)
+    address_const_ptr message)
 {
     if (stopped())
         return false;
@@ -98,7 +107,7 @@ bool protocol_address_31402::handle_receive_address(const code& ec,
 }
 
 bool protocol_address_31402::handle_receive_get_address(const code& ec,
-    get_address::ptr message)
+    get_address_const_ptr message)
 {
     if (stopped())
         return false;

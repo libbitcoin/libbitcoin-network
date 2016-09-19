@@ -187,7 +187,7 @@ void session_inbound::handle_channel_stop(const code& ec)
 void session_inbound::start_channel(channel::ptr channel,
     result_handler handle_started)
 {
-    pending(channel->peer_version().nonce,
+    pending(channel->peer_version()->nonce,
         BIND3(handle_is_pending, _1, channel, handle_started));
 }
 

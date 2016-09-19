@@ -26,6 +26,7 @@
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -117,7 +118,7 @@ message::version protocol_version_31402::version_factory()
 // ----------------------------------------------------------------------------
 
 bool protocol_version_31402::handle_receive_version(const code& ec,
-    version::ptr message)
+    version_const_ptr message)
 {
     if (stopped())
         return false;
@@ -216,7 +217,8 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     return false;
 }
 
-bool protocol_version_31402::handle_receive_verack(const code& ec, verack::ptr)
+bool protocol_version_31402::handle_receive_verack(const code& ec,
+    verack_const_ptr)
 {
     if (stopped())
         return false;

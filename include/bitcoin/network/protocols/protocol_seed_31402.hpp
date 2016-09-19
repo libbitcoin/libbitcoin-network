@@ -64,9 +64,9 @@ protected:
         event_handler handler);
 
     virtual bool handle_receive_address(const code& ec,
-        message::address::ptr address);
+        address_const_ptr address);
     ////virtual bool handle_receive_get_address(const code& ec,
-    ////    message::get_address::ptr message);
+    ////    get_address_const_ptr message);
 
     p2p& network_;
     const config::authority self_;

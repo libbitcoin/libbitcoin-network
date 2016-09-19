@@ -51,4 +51,28 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/thread.hpp>
 
+namespace libbitcoin {
+namespace network {
+    
+typedef message::address::ptr address_ptr;
+typedef message::address::const_ptr address_const_ptr;
+
+typedef message::get_address::ptr get_address_ptr;
+typedef message::get_address::const_ptr get_address_const_ptr;
+
+typedef message::ping::ptr ping_ptr;
+typedef message::ping::const_ptr ping_const_ptr;
+
+typedef message::pong::ptr pong_ptr;
+typedef message::pong::const_ptr pong_const_ptr;
+
+typedef message::verack::ptr verack_ptr;
+typedef message::verack::const_ptr verack_const_ptr;
+
+typedef message::version::ptr version_ptr;
+typedef message::version::const_ptr version_const_ptr;
+
+} // namespace network
+} // namespace libbitcoin
+
 #endif

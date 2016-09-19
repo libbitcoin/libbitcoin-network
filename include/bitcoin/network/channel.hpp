@@ -57,8 +57,8 @@ public:
     virtual uint64_t nonce() const;
     virtual void set_nonce(uint64_t value);
 
-    virtual message::version peer_version() const;
-    virtual void set_peer_version(message::version::ptr value);
+    virtual version_const_ptr peer_version() const;
+    virtual void set_peer_version(version_const_ptr value);
 
 protected:
     virtual void handle_activity();
@@ -75,7 +75,7 @@ private:
 
     std::atomic<bool> notify_;
     std::atomic<uint64_t> nonce_;
-    bc::atomic<message::version::ptr> peer_version_;
+    bc::atomic<version_const_ptr> peer_version_;
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
 };

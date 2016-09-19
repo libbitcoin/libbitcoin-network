@@ -54,10 +54,9 @@ public:
 protected:
     void send_ping(const code& ec) override;
 
-    bool handle_receive_ping(const code& ec,
-        message::ping::ptr message) override;
-    virtual bool handle_receive_pong(const code& ec,
-        message::pong::ptr message, uint64_t nonce);
+    bool handle_receive_ping(const code& ec, ping_const_ptr message) override;
+    virtual bool handle_receive_pong(const code& ec, pong_const_ptr message,
+        uint64_t nonce);
 };
 
 } // namespace network

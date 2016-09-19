@@ -22,6 +22,7 @@
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 
@@ -70,7 +71,7 @@ void protocol_ping_31402::send_ping(const code& ec)
 }
 
 bool protocol_ping_31402::handle_receive_ping(const code& ec,
-    message::ping::ptr message)
+    ping_const_ptr message)
 {
     if (stopped())
         return false;

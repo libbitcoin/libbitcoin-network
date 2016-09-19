@@ -104,10 +104,10 @@ protected:
     virtual uint64_t nonce() const;
 
     /// Get the peer version message.
-    virtual message::version peer_version() const;
+    virtual version_const_ptr peer_version() const;
 
     /// Set the peer version message.
-    virtual void set_peer_version(message::version::ptr value);
+    virtual void set_peer_version(version_const_ptr value);
 
     /// Get the negotiated protocol version.
     virtual uint32_t negotiated_version() const;
