@@ -58,12 +58,12 @@ protected:
     virtual void handle_store_addresses(const code& ec);
 
     virtual bool handle_receive_address(const code& ec,
-        message::address::ptr address);
+        address_const_ptr address);
     virtual bool handle_receive_get_address(const code& ec,
-        message::get_address::ptr message);
+        get_address_const_ptr message);
 
     p2p& network_;
-    message::address self_;
+    const message::address self_;
 };
 
 } // namespace network

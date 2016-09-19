@@ -57,8 +57,7 @@ public:
 protected:
     virtual void send_ping(const code& ec);
 
-    virtual bool handle_receive_ping(const code& ec,
-        message::ping::ptr message);
+    virtual bool handle_receive_ping(const code& ec, ping_const_ptr message);
 
     const settings& settings_;
 };

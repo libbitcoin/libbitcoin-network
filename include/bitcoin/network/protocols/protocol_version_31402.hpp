@@ -73,8 +73,8 @@ protected:
     virtual void handle_verack_sent(const code& ec);
 
     virtual bool handle_receive_version(const code& ec,
-        message::version::ptr version);
-    virtual bool handle_receive_verack(const code& ec, message::verack::ptr);
+        version_const_ptr version);
+    virtual bool handle_receive_verack(const code& ec, verack_const_ptr);
 
     p2p& network_;
     const uint32_t own_version_;

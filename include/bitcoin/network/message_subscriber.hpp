@@ -33,7 +33,7 @@ namespace libbitcoin {
 namespace network {
 
 #define DEFINE_SUBSCRIBER_TYPE(value) \
-    typedef resubscriber<const code&, message::value::ptr> \
+    typedef resubscriber<const code&, message::value::const_ptr> \
         value##_subscriber_type
 
 #define DEFINE_SUBSCRIBER_OVERLOAD(value) \
@@ -49,7 +49,7 @@ namespace network {
 
 template <class Message>
 using message_handler = std::function<bool(const code&,
-    std::shared_ptr<Message>)>;
+    std::shared_ptr<const Message>)>;
 
 /// Aggregation of subscribers by messasge type, thread safe.
 class BCT_API message_subscriber
@@ -108,7 +108,7 @@ public:
     /**
      * Load a stream into a message instance and notify subscribers.
      * @param[in]  stream      The stream from which to load the message.
-     * @param[in]  version  The peer protocol version.
+     * @param[in]  version     The peer protocol version.
      * @param[in]  subscriber  The subscriber for the message type.
      * @return                 Returns error::bad_stream if failed.
      */
@@ -116,17 +116,22 @@ public:
     code relay(std::istream& stream, uint32_t version,
         Subscriber subscriber) const
     {
-        const auto message_ptr = std::make_shared<Message>();
-        const bool parsed = message_ptr->from_data(version, stream);
-        const code ec(parsed ? error::success : error::bad_stream);
-        subscriber->relay(ec, message_ptr);
-        return ec;
+        const auto instance = Message::factory_from_data(version, stream);
+
+        if (!instance.is_valid())
+        {
+            subscriber->relay(error::bad_stream, nullptr);
+        }
+
+        const auto ptr = std::make_shared<const Message>(std::move(instance));
+        subscriber->relay(error::success, ptr);
+        return error::success;
     }
 
     /**
      * Load a stream into a message instance and invoke subscribers.
      * @param[in]  stream      The stream from which to load the message.
-     * @param[in]  version  The peer protocol version.
+     * @param[in]  version     The peer protocol version.
      * @param[in]  subscriber  The subscriber for the message type.
      * @return                 Returns error::bad_stream if failed.
      */
@@ -134,11 +139,16 @@ public:
     code handle(std::istream& stream, uint32_t version,
         Subscriber subscriber) const
     {
-        const auto message_ptr = std::make_shared<Message>();
-        const bool parsed = message_ptr->from_data(version, stream);
-        const code ec(parsed ? error::success : error::bad_stream);
-        subscriber->invoke(ec, message_ptr);
-        return ec;
+        const auto instance = Message::factory_from_data(version, stream);
+
+        if (!instance.is_valid())
+        {
+            subscriber->invoke(error::bad_stream, nullptr);
+        }
+
+        const auto ptr = std::make_shared<const Message>(std::move(instance));
+        subscriber->invoke(error::success, ptr);
+        return error::success;
     }
 
     /**
