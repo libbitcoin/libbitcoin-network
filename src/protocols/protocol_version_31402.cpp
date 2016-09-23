@@ -93,7 +93,7 @@ void protocol_version_31402::start(event_handler handler)
 message::version protocol_version_31402::version_factory() const
 {
     const auto& settings = network_.network_settings();
-    const auto height = network_.height();
+    const auto height = network_.top_height();
     BITCOIN_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
 
     message::version version;
