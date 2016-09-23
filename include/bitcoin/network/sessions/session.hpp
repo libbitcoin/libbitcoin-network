@@ -199,12 +199,11 @@ private:
         result_handler handle_started, result_handler handle_stopped);
     void handle_remove(const code& ec, channel::ptr channel);
 
+    // These are thread safe.
     std::atomic<bool> stopped_;
     const bool notify_on_connect_;
-
-    // These are thread safe.
     p2p& network_;
-    dispatcher dispatch_;
+    mutable dispatcher dispatch_;
 };
 
 // Base session type.
