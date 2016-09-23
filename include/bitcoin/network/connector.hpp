@@ -65,7 +65,7 @@ public:
     void stop();
 
 private:
-    bool stopped();
+    bool stopped() const;
     void close_socket(socket socket);
     std::shared_ptr<channel> new_channel(socket::ptr socket);
 

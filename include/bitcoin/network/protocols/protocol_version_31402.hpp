@@ -67,7 +67,7 @@ public:
     virtual void start(event_handler handler);
 
 protected:
-    virtual message::version version_factory();
+    virtual message::version version_factory() const;
 
     virtual void handle_version_sent(const code& ec);
     virtual void handle_verack_sent(const code& ec);

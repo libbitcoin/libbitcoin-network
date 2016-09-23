@@ -42,7 +42,7 @@ protocol_events::protocol_events(p2p& network, channel::ptr channel,
 // Properties.
 // ----------------------------------------------------------------------------
 
-bool protocol_events::stopped()
+bool protocol_events::stopped() const
 {
     return !handler_.load();
 }

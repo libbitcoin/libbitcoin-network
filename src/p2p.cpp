@@ -382,7 +382,7 @@ void p2p::pending(uint64_t version_nonce, truth_handler handler) const
 // Connections collection.
 // ----------------------------------------------------------------------------
 
-void p2p::connected(const address& address, truth_handler handler)
+void p2p::connected(const address& address, truth_handler handler) const
 {
     connections_->exists(address, handler);
 }
@@ -411,7 +411,7 @@ void p2p::remove(channel::ptr channel, result_handler handler)
     connections_->remove(channel, handler);
 }
 
-void p2p::connected_count(count_handler handler)
+void p2p::connected_count(count_handler handler) const
 {
     connections_->count(handler);
 }
@@ -419,7 +419,7 @@ void p2p::connected_count(count_handler handler)
 // Hosts collection.
 // ----------------------------------------------------------------------------
 
-void p2p::fetch_address(address_handler handler)
+void p2p::fetch_address(address_handler handler) const
 {
     address out;
     handler(hosts_->fetch(out), out);
@@ -441,7 +441,7 @@ void p2p::remove(const address& address, result_handler handler)
     handler(hosts_->remove(address));
 }
 
-void p2p::address_count(count_handler handler)
+void p2p::address_count(count_handler handler) const
 {
     handler(hosts_->count());
 }

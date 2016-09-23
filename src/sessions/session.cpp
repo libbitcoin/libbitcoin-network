@@ -72,19 +72,19 @@ session::~session()
 // ----------------------------------------------------------------------------
 
 // protected:
-void session::address_count(count_handler handler)
+void session::address_count(count_handler handler) const
 {
     network_.address_count(handler);
 }
 
 // protected:
-void session::fetch_address(host_handler handler)
+void session::fetch_address(host_handler handler) const
 {
     network_.fetch_address(handler);
 }
 
 // protected:
-void session::connection_count(count_handler handler)
+void session::connection_count(count_handler handler) const
 {
     network_.connected_count(handler);
 }

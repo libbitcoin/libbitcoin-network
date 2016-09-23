@@ -43,7 +43,7 @@ session_batch::session_batch(p2p& network, bool notify_on_connect)
 
 void session_batch::converge(const code& ec, channel::ptr channel,
      atomic_counter_ptr counter, upgrade_mutex_ptr mutex,
-     channel_handler handler)
+     channel_handler handler) const
 {
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section

@@ -171,7 +171,8 @@ public:
     // ------------------------------------------------------------------------
 
     /// Determine if there exists a connection to the address.
-    virtual void connected(const address& address, truth_handler handler);
+    virtual void connected(const address& address,
+        truth_handler handler) const;
 
     /// Store a connection.
     virtual void store(channel::ptr channel, result_handler handler);
@@ -180,13 +181,13 @@ public:
     virtual void remove(channel::ptr channel, result_handler handler);
 
     /// Get the number of connections.
-    virtual void connected_count(count_handler handler);
+    virtual void connected_count(count_handler handler) const;
 
     // Hosts collection.
     // ------------------------------------------------------------------------
 
     /// Get a randomly-selected address.
-    virtual void fetch_address(address_handler handler);
+    virtual void fetch_address(address_handler handler) const;
 
     /// Store an address.
     virtual void store(const address& address, result_handler handler);
@@ -198,7 +199,7 @@ public:
     virtual void remove(const address& address, result_handler handler);
 
     /// Get the number of addresses.
-    virtual void address_count(count_handler handler);
+    virtual void address_count(count_handler handler) const;
 
 protected:
 
