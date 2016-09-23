@@ -52,7 +52,7 @@ using namespace std::placeholders;
 p2p::p2p(const settings& settings)
   : settings_(settings),
     stopped_(true),
-    height_(0),
+    top_height_(0),
     hosts_(std::make_shared<hosts>(threadpool_, settings_)),
     connections_(std::make_shared<connections>()),
     stop_subscriber_(std::make_shared<stop_subscriber>(threadpool_, NAME "_stop_sub")),
@@ -292,20 +292,20 @@ const settings& p2p::network_settings() const
 }
 
 // The blockchain height is set in our version message for handshake.
-size_t p2p::height() const
+size_t p2p::top_height() const
 {
-    return height_;
+    return top_height_.load();
 }
 
 // The height is set externally and is safe as an atomic.
-void p2p::set_height(size_t value)
+void p2p::set_top_height(size_t value)
 {
-    height_ = value;
+    top_height_.store(value);
 }
 
 bool p2p::stopped() const
 {
-    return stopped_;
+    return stopped_.load();
 }
 
 threadpool& p2p::thread_pool()

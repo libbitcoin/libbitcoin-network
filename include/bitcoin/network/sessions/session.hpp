@@ -75,7 +75,6 @@ class BCT_API session
   : public enable_shared_from_base<session>
 {
 public:
-    typedef std::shared_ptr<session> ptr;
     typedef config::authority authority;
     typedef std::function<void(bool)> truth_handler;
     typedef std::function<void(size_t)> count_handler;

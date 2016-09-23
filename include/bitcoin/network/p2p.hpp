@@ -120,11 +120,11 @@ public:
     /// Network configuration settings.
     virtual const settings& network_settings() const;
 
-    /// Return the current block height.
-    virtual size_t height() const;
+    /// Return the current top block height.
+    virtual size_t top_height() const;
 
-    /// Set the current block height, for use in version messages.
-    virtual void set_height(size_t value);
+    /// Set the current top block height, for use in version messages.
+    virtual void set_top_height(size_t value);
 
     /// Determine if the network is stopped.
     virtual bool stopped() const;
@@ -231,7 +231,7 @@ private:
 
     // These are thread safe.
     std::atomic<bool> stopped_;
-    std::atomic<size_t> height_;
+    std::atomic<size_t> top_height_;
     bc::atomic<session_manual::ptr> manual_;
     threadpool threadpool_;
     hosts::ptr hosts_;

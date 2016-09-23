@@ -52,7 +52,6 @@ class BCT_API protocol
   : public enable_shared_from_base<protocol>
 {
 protected:
-    typedef std::shared_ptr<protocol> ptr;
     typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> event_handler;
     typedef std::function<void(const code&, size_t)> count_handler;
