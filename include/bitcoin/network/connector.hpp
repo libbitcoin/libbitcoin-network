@@ -65,7 +65,7 @@ public:
     void stop();
 
 private:
-    bool stopped();
+    bool stopped() const;
     void close_socket(socket socket);
     std::shared_ptr<channel> new_channel(socket::ptr socket);
 
@@ -81,11 +81,14 @@ private:
     void handle_connect(const boost_code& ec, asio::iterator iterator,
         socket::ptr socket, deadline::ptr timer, connect_handler handler);
 
+    // These are thread safe
     std::atomic<bool> stopped_;
     threadpool& pool_;
     const settings& settings_;
     pending_sockets pending_;
-    dispatcher dispatch_;
+    mutable dispatcher dispatch_;
+
+    // This is protected by mutex.
     std::shared_ptr<asio::resolver> resolver_;
     mutable upgrade_mutex mutex_;
 };

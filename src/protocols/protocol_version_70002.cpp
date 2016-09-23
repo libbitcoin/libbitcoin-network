@@ -50,7 +50,7 @@ protocol_version_70002::protocol_version_70002(p2p& network,
 {
 }
 
-message::version protocol_version_70002::version_factory()
+message::version protocol_version_70002::version_factory() const
 {
     auto version = protocol_version_31402::version_factory();
 

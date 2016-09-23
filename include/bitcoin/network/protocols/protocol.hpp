@@ -67,7 +67,7 @@ protected:
     /// Bind a method in the derived class.
     template <class Protocol, typename Handler, typename... Args>
     auto bind(Handler&& handler, Args&&... args) ->
-        decltype(BOUND_PROTOCOL_TYPE(handler, args))
+        decltype(BOUND_PROTOCOL_TYPE(handler, args)) const
     {
         return BOUND_PROTOCOL(handler, args);
     }

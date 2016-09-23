@@ -64,7 +64,7 @@ protected:
     /**
      * Determine if the event handler has been cleared.
      */
-    virtual bool stopped();
+    virtual bool stopped() const;
 
 protected:
     void handle_send(const code& ec, const std::string& command);

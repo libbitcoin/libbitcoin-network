@@ -54,7 +54,7 @@ private:
 
     void converge(const code& ec, channel::ptr channel,
         atomic_counter_ptr counter, upgrade_mutex_ptr mutex,
-        channel_handler handler);
+        channel_handler handler) const;
 
     // Connect sequence
     void new_connect(connector::ptr connect, atomic_counter_ptr counter,

@@ -62,7 +62,7 @@ public:
         uint64_t minimum_services, bool relay);
 
 protected:
-    message::version version_factory() override;
+    message::version version_factory() const override;
 
     const bool relay_;
 };

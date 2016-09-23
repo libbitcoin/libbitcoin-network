@@ -90,7 +90,7 @@ void protocol_version_31402::start(event_handler handler)
     SEND1(version_factory(), handle_version_sent, _1);
 }
 
-message::version protocol_version_31402::version_factory()
+message::version protocol_version_31402::version_factory() const
 {
     const auto& settings = network_.network_settings();
     const auto height = network_.height();

@@ -68,9 +68,12 @@ private:
     void handle_accept(const boost_code& ec, socket::ptr socket,
         accept_handler handler);
 
+    // These are thread safe.
     threadpool& pool_;
     const settings& settings_;
-    dispatcher dispatch_;
+    mutable dispatcher dispatch_;
+
+    // This is protected by mutex.
     asio::acceptor_ptr acceptor_;
     mutable shared_mutex mutex_;
 };
