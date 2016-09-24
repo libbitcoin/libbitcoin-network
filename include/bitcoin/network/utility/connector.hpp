@@ -26,10 +26,10 @@
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/collections/pending_sockets.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/pending_sockets.hpp>
 #include <bitcoin/network/settings.hpp>
-#include <bitcoin/network/socket.hpp>
+#include <bitcoin/network/utility/socket.hpp>
 
 namespace libbitcoin {
 namespace network {

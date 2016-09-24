@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/acceptor.hpp>
+#include <bitcoin/network/utility/acceptor.hpp>
 
 #include <cstdint>
 #include <functional>
@@ -27,7 +27,7 @@
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
-#include <bitcoin/network/socket.hpp>
+#include <bitcoin/network/utility/socket.hpp>
 
 namespace libbitcoin {
 namespace network {

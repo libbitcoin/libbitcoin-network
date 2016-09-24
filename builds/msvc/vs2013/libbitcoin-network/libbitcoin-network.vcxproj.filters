@@ -28,49 +28,19 @@
     <ClCompile Include="..\..\..\..\src\sessions\session_seed.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\acceptor.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\channel.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\connections.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\connector.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\hosts.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\logging.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\message_subscriber.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\p2p.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\pending_channels.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\pending_sockets.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\proxy.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\settings.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\socket.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\locked_socket.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\const_buffer.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_31402.cpp">
@@ -90,6 +60,36 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70002.cpp">
       <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\collections\hosts.cpp">
+      <Filter>src\collections</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\collections\pending_channels.cpp">
+      <Filter>src\collections</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\collections\pending_sockets.cpp">
+      <Filter>src\collections</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\collections\connections.cpp">
+      <Filter>src\collections</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\utility\locked_socket.cpp">
+      <Filter>src\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\utility\message_subscriber.cpp">
+      <Filter>src\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\utility\socket.cpp">
+      <Filter>src\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\utility\acceptor.cpp">
+      <Filter>src\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\utility\connector.cpp">
+      <Filter>src\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\utility\const_buffer.cpp">
+      <Filter>src\utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -141,43 +141,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70002.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\acceptor.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channel.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\connections.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\connector.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\const_buffer.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\hosts.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\locked_socket.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\logging.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\message_subscriber.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2p.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\pending_channels.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\pending_sockets.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\proxy.hpp">
@@ -186,8 +156,38 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\socket.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\logging.hpp">
       <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\pending_channels.hpp">
+      <Filter>include\bitcoin\network\collections</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\pending_sockets.hpp">
+      <Filter>include\bitcoin\network\collections</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\connections.hpp">
+      <Filter>include\bitcoin\network\collections</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\hosts.hpp">
+      <Filter>include\bitcoin\network\collections</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\connector.hpp">
+      <Filter>include\bitcoin\network\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\const_buffer.hpp">
+      <Filter>include\bitcoin\network\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\locked_socket.hpp">
+      <Filter>include\bitcoin\network\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\message_subscriber.hpp">
+      <Filter>include\bitcoin\network\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\socket.hpp">
+      <Filter>include\bitcoin\network\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\acceptor.hpp">
+      <Filter>include\bitcoin\network\utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -217,6 +217,18 @@
     </Filter>
     <Filter Include="include\bitcoin\network\protocols">
       <UniqueIdentifier>{438861a1-6a4d-4639-8af8-cd55aa20bc04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\collections">
+      <UniqueIdentifier>{157d397c-3992-4ad0-b729-85190e5bad44}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\collections">
+      <UniqueIdentifier>{392d12aa-3114-483b-a561-2d81905abdbe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\utility">
+      <UniqueIdentifier>{34dbfa47-d28f-49a4-9e87-1f2288699988}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\utility">
+      <UniqueIdentifier>{dcc55bff-2424-4a3e-b4d9-1a80da71412b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
