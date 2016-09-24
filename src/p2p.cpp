@@ -47,12 +47,13 @@ namespace network {
 
 #define NAME "p2p"
 
+using namespace bc::config;
 using namespace std::placeholders;
 
 p2p::p2p(const settings& settings)
   : settings_(settings),
     stopped_(true),
-    top_height_(0),
+    top_block_({ null_hash, 0 }),
     hosts_(std::make_shared<hosts>(threadpool_, settings_)),
     connections_(std::make_shared<connections>()),
     stop_subscriber_(std::make_shared<stop_subscriber>(threadpool_, NAME "_stop_sub")),
@@ -291,16 +292,19 @@ const settings& p2p::network_settings() const
     return settings_;
 }
 
-// The blockchain height is set in our version message for handshake.
-size_t p2p::top_height() const
+checkpoint p2p::top_block() const
 {
-    return top_height_.load();
+    return top_block_.load();
 }
 
-// The height is set externally and is safe as an atomic.
-void p2p::set_top_height(size_t value)
+void p2p::set_top_block(checkpoint&& top)
 {
-    top_height_.store(value);
+    top_block_.store(std::forward<checkpoint>(top));
+}
+
+void p2p::set_top_block(const checkpoint& top)
+{
+    top_block_.store(top);
 }
 
 bool p2p::stopped() const
