@@ -28,10 +28,6 @@
 namespace libbitcoin {
 namespace network {
 
-/// Constant for logging file open mode (append output).
-BC_CONSTEXPR std::ofstream::openmode log_open_mode =
-    std::ofstream::out | std::ofstream::app;
-
 /// Set up global logging.
 BCT_API void initialize_logging(std::ofstream& debug, std::ofstream& error,
     std::ostream& output_stream, std::ostream& error_stream);

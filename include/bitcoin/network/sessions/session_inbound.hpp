@@ -24,11 +24,11 @@
 #include <memory>
 #include <vector>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/network/acceptor.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/utility/acceptor.hpp>
 
 namespace libbitcoin {
 namespace network {

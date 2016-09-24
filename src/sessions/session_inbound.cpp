@@ -22,7 +22,6 @@
 #include <cstddef>
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>

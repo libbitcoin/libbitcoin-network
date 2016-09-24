@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/connections.hpp>
+#include <bitcoin/network/collections/connections.hpp>
 
 #include <algorithm>
 #include <bitcoin/bitcoin.hpp>

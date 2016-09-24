@@ -27,9 +27,9 @@
 #include <vector>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/connections.hpp>
+#include <bitcoin/network/collections/connections.hpp>
+#include <bitcoin/network/collections/hosts.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/hosts.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>

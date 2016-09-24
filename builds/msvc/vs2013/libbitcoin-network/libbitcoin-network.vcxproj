@@ -68,18 +68,13 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\channel.cpp" />
-    <ClCompile Include="..\..\..\..\src\connections.cpp" />
-    <ClCompile Include="..\..\..\..\src\connector.cpp" />
-    <ClCompile Include="..\..\..\..\src\const_buffer.cpp" />
-    <ClCompile Include="..\..\..\..\src\hosts.cpp" />
-    <ClCompile Include="..\..\..\..\src\locked_socket.cpp" />
+    <ClCompile Include="..\..\..\..\src\collections\connections.cpp" />
+    <ClCompile Include="..\..\..\..\src\collections\hosts.cpp" />
+    <ClCompile Include="..\..\..\..\src\collections\pending_channels.cpp" />
+    <ClCompile Include="..\..\..\..\src\collections\pending_sockets.cpp" />
     <ClCompile Include="..\..\..\..\src\logging.cpp" />
-    <ClCompile Include="..\..\..\..\src\message_subscriber.cpp" />
     <ClCompile Include="..\..\..\..\src\p2p.cpp" />
-    <ClCompile Include="..\..\..\..\src\pending_channels.cpp" />
-    <ClCompile Include="..\..\..\..\src\pending_sockets.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_60001.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70002.cpp" />
     <ClCompile Include="..\..\..\..\src\proxy.cpp" />
@@ -97,27 +92,27 @@
     <ClCompile Include="..\..\..\..\src\sessions\session_manual.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_outbound.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_seed.cpp" />
-    <ClCompile Include="..\..\..\..\src\socket.cpp" />
+    <ClCompile Include="..\..\..\..\src\utility\acceptor.cpp" />
+    <ClCompile Include="..\..\..\..\src\utility\connector.cpp" />
+    <ClCompile Include="..\..\..\..\src\utility\const_buffer.cpp" />
+    <ClCompile Include="..\..\..\..\src\utility\locked_socket.cpp" />
+    <ClCompile Include="..\..\..\..\src\utility\message_subscriber.cpp" />
+    <ClCompile Include="..\..\..\..\src\utility\socket.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channel.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\connections.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\connector.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\connections.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\hosts.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\pending_channels.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\pending_sockets.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\hosts.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\locked_socket.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\logging.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\message_subscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2p.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\pending_channels.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\pending_sockets.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_60001.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70002.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\proxy.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\const_buffer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_31402.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_events.hpp" />
@@ -131,7 +126,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_manual.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_outbound.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_seed.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\socket.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\acceptor.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\connector.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\const_buffer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\locked_socket.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\message_subscriber.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\utility\socket.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

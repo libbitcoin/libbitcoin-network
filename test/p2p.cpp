@@ -19,6 +19,7 @@
  */
 #include <cstdio>
 #include <future>
+#include <iostream>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/test/unit_test.hpp>
@@ -70,6 +71,9 @@ using namespace bc::network;
     config.outbound_connections = 5; \
     config.seeds = { { SEED1 } }; \
     config.hosts_file = get_log_path(TEST_NAME, "hosts")
+
+static const std::ofstream::openmode log_open_mode = std::ofstream::out |
+    std::ofstream::app;
 
 std::string get_log_path(const std::string& test, const std::string& file)
 {

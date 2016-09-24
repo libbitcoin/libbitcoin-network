@@ -27,12 +27,12 @@
 #include <utility>
 #include <string>
 #include <bitcoin/bitcoin.hpp>
-#include <bitcoin/network/const_buffer.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/proxy.hpp>
-#include <bitcoin/network/message_subscriber.hpp>
 #include <bitcoin/network/settings.hpp>
-#include <bitcoin/network/socket.hpp>
+#include <bitcoin/network/utility/const_buffer.hpp>
+#include <bitcoin/network/utility/message_subscriber.hpp>
+#include <bitcoin/network/utility/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
