@@ -54,13 +54,13 @@ settings::settings()
 
 // Use push_back due to initializer_list bug:
 // stackoverflow.com/a/20168627/1172329
-settings::settings(bc::settings context)
+settings::settings(config::settings context)
   : settings()
 {
     // Handle deviations from common defaults.
     switch (context)
     {
-        case bc::settings::mainnet:
+        case config::settings::mainnet:
         {
             identifier = 3652501241;
             inbound_port = 8333;
@@ -76,7 +76,7 @@ settings::settings(bc::settings context)
             break;
         }
 
-        case bc::settings::testnet:
+        case config::settings::testnet:
         {
             identifier = 118034699;
             inbound_port = 18333;
@@ -89,7 +89,7 @@ settings::settings(bc::settings context)
         }
 
         default:
-        case bc::settings::none:
+        case config::settings::none:
         {
         }
     }
