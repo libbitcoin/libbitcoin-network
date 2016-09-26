@@ -34,7 +34,6 @@ namespace network {
 hosts::hosts(threadpool& pool, const settings& settings)
   : buffer_(std::max(settings.host_pool_capacity, 1u)),
     stopped_(true),
-    dispatch_(pool, NAME),
     file_path_(settings.hosts_file),
     disabled_(settings.host_pool_capacity == 0)
 {
@@ -248,21 +247,24 @@ code hosts::store(const address& host)
     return error::success;
 }
 
-// private
-void hosts::do_store(const address& host, result_handler handler)
-{
-    handler(store(host));
-}
-
 // The handler is invoked once all calls to do_store are completed.
-// We disperse here to allow other addresses messages to interleave hosts.
 void hosts::store(const address::list& hosts, result_handler handler)
 {
     if (stopped_)
         return;
 
-    dispatch_.parallel(hosts, "hosts", handler,
-        &hosts::do_store, shared_from_this());
+    code last_error(error::success);
+
+    const auto storer = [this, &last_error](const address& host)
+    {
+        const auto result = store(host);
+
+        if (result)
+            last_error = result;
+    };
+
+    std::for_each(hosts.begin(), hosts.end(), storer);
+    handler(last_error);
 }
 
 } // namespace network
