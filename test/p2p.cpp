@@ -52,25 +52,25 @@ using namespace bc::network;
       { "[2600:3c01::f03c:91ff:fe98:68bb]:18333" } \
     }
 
-#define SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(config) \
-    auto config = network::settings(bc::settings::testnet); \
-    config.threads = 1; \
-    config.outbound_connections = 0; \
-    config.manual_attempt_limit = 2
+#define SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(name) \
+    auto name = network::settings(bc::config::settings::testnet); \
+    name.threads = 1; \
+    name.outbound_connections = 0; \
+    name.manual_attempt_limit = 2
 
-#define SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(config) \
-    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(config); \
-    config.host_pool_capacity = 42; \
-    config.seeds = { { SEED1 } }; \
-    config.hosts_file = get_log_path(TEST_NAME, "hosts")
+#define SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(name) \
+    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(name); \
+    name.host_pool_capacity = 42; \
+    name.seeds = { { SEED1 } }; \
+    name.hosts_file = get_log_path(TEST_NAME, "hosts")
 
-#define SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(config) \
-    auto config = network::settings(bc::settings::testnet); \
-    config.threads = 3; \
-    config.host_pool_capacity = 42; \
-    config.outbound_connections = 5; \
-    config.seeds = { { SEED1 } }; \
-    config.hosts_file = get_log_path(TEST_NAME, "hosts")
+#define SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(name) \
+    auto name = network::settings(bc::config::settings::testnet); \
+    name.threads = 3; \
+    name.host_pool_capacity = 42; \
+    name.outbound_connections = 5; \
+    name.seeds = { { SEED1 } }; \
+    name.hosts_file = get_log_path(TEST_NAME, "hosts")
 
 static const std::ofstream::openmode log_open_mode = std::ofstream::out |
     std::ofstream::app;
