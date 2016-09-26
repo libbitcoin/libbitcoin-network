@@ -22,8 +22,6 @@
 
 #include <atomic>
 #include <cstddef>
-#include <cstdint>
-#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -45,7 +43,7 @@ class BCT_API hosts
 public:
     typedef std::shared_ptr<hosts> ptr;
     typedef message::network_address address;
-    typedef std::function<void(const code&)> result_handler;
+    typedef handle0 result_handler;
 
     /// Construct an instance.
     hosts(threadpool& pool, const settings& settings);
@@ -71,15 +69,11 @@ private:
     typedef list::iterator iterator;
 
     iterator find(const address& host);
-    void do_store(const address& host, result_handler handler);
 
     // These are protected by a mutex.
     list buffer_;
     std::atomic<bool> stopped_;
     mutable upgrade_mutex mutex_;
-
-    // This is thread safe.
-    mutable dispatcher dispatch_;
 
     // HACK: we use this because the buffer capacity cannot be set to zero.
     const bool disabled_;
