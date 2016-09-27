@@ -38,7 +38,6 @@ namespace network {
 /// The file is a line-oriented set of config::authority serializations.
 /// Duplicate addresses and those with zero-valued ports are disacarded.
 class BCT_API hosts
-  : public enable_shared_from_base<hosts>
 {
 public:
     typedef std::shared_ptr<hosts> ptr;
@@ -59,7 +58,7 @@ public:
     virtual code stop();
 
     virtual size_t count() const;
-    virtual code fetch(address& out);
+    virtual code fetch(address& out) const;
     virtual code remove(const address& host);
     virtual code store(const address& host);
     virtual void store(const address::list& hosts, result_handler handler);
