@@ -48,6 +48,7 @@ protocol_seed_31402::protocol_seed_31402(p2p& network, channel::ptr channel)
 
 void protocol_seed_31402::start(event_handler handler)
 {
+    static const auto mode = synchronizer_terminate::on_error;
     const auto& settings = network_.network_settings();
 
     auto complete = BIND2(handle_seeding_complete, _1, handler);
@@ -59,7 +60,7 @@ void protocol_seed_31402::start(event_handler handler)
     }
 
     protocol_timer::start(settings.channel_germination(),
-        synchronize(complete, 3, NAME, false));
+        synchronize(complete, 3, NAME, mode));
 
     SUBSCRIBE2(address, handle_receive_address, _1, _2);
     send_own_address(settings);

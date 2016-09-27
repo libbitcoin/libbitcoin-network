@@ -68,14 +68,14 @@ public:
     void broadcast(Message&& message, channel_handler handle_channel,
         result_handler handle_complete)
     {
-        connections_->broadcast(message, handle_channel, handle_complete);
+        connections_.broadcast(message, handle_channel, handle_complete);
     }
 
     /// Subscribe to all incoming messages of a type.
     template <class Message>
     void subscribe(message_handler<Message>&& handler)
     {
-        connections_->subscribe(
+        connections_.subscribe(
             std::forward<message_handler<Message>>(handler));
     }
 
@@ -237,9 +237,9 @@ private:
     bc::atomic<config::checkpoint> top_block_;
     bc::atomic<session_manual::ptr> manual_;
     threadpool threadpool_;
-    hosts::ptr hosts_;
     pending_channels pending_;
-    connections::ptr connections_;
+    connections connections_;
+    hosts hosts_;
     stop_subscriber::ptr stop_subscriber_;
     channel_subscriber::ptr channel_subscriber_;
 };

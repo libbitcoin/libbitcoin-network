@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -30,9 +31,11 @@ using namespace bc::config;
 
 #define NAME "connections"
 
-connections::connections()
+connections::connections(const settings& settings)
   : stopped_(false)
 {
+    channels_.reserve(settings.outbound_connections + 
+        settings.inbound_connections + settings.peers.size());
 }
 
 connections::~connections()

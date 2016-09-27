@@ -54,8 +54,9 @@ p2p::p2p(const settings& settings)
   : settings_(settings),
     stopped_(true),
     top_block_({ null_hash, 0 }),
-    hosts_(std::make_shared<hosts>(threadpool_, settings_)),
-    connections_(std::make_shared<connections>()),
+    pending_(settings_),
+    connections_(settings_),
+    hosts_(threadpool_, settings_),
     stop_subscriber_(std::make_shared<stop_subscriber>(threadpool_, NAME "_stop_sub")),
     channel_subscriber_(std::make_shared<channel_subscriber>(threadpool_, NAME "_sub"))
 {
@@ -111,7 +112,7 @@ void p2p::handle_manual_started(const code& ec, result_handler handler)
         return;
     }
 
-    handle_hosts_loaded(hosts_->start(), handler);
+    handle_hosts_loaded(hosts_.start(), handler);
 }
 
 void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
@@ -251,7 +252,7 @@ session_outbound::ptr p2p::attach_outbound_session()
 bool p2p::stop()
 {
     // This is the only stop operation that can fail.
-    const auto result = (hosts_->stop() == error::success);
+    const auto result = (hosts_.stop() == error::success);
 
     // Signal all current work to stop and free manual session.
     stopped_ = true;
@@ -266,7 +267,7 @@ bool p2p::stop()
     channel_subscriber_->invoke(error::service_stopped, nullptr);
 
     // Stop accepting channels and stop those that exist (self-clearing).
-    connections_->stop(error::service_stopped);
+    connections_.stop(error::service_stopped);
 
     // Signal threadpool to stop accepting work now that subscribers are clear.
     threadpool_.shutdown();
@@ -388,7 +389,7 @@ void p2p::pending(uint64_t version_nonce, truth_handler handler) const
 
 void p2p::connected(const address& address, truth_handler handler) const
 {
-    connections_->exists(address, handler);
+    connections_.exists(address, handler);
 }
 
 void p2p::store(channel::ptr channel, result_handler handler)
@@ -397,7 +398,7 @@ void p2p::store(channel::ptr channel, result_handler handler)
         std::bind(&p2p::handle_new_connection,
             this, _1, channel, handler);
 
-    connections_->store(channel, new_connection_handler);
+    connections_.store(channel, new_connection_handler);
 }
 
 void p2p::handle_new_connection(const code& ec, channel::ptr channel,
@@ -412,12 +413,12 @@ void p2p::handle_new_connection(const code& ec, channel::ptr channel,
 
 void p2p::remove(channel::ptr channel, result_handler handler)
 {
-    connections_->remove(channel, handler);
+    connections_.remove(channel, handler);
 }
 
 void p2p::connected_count(count_handler handler) const
 {
-    connections_->count(handler);
+    connections_.count(handler);
 }
 
 // Hosts collection.
@@ -426,28 +427,28 @@ void p2p::connected_count(count_handler handler) const
 void p2p::fetch_address(address_handler handler) const
 {
     address out;
-    handler(hosts_->fetch(out), out);
+    handler(hosts_.fetch(out), out);
 }
 
 void p2p::store(const address& address, result_handler handler)
 {
-    handler(hosts_->store(address));
+    handler(hosts_.store(address));
 }
 
 void p2p::store(const address::list& addresses, result_handler handler)
 {
     // Store is invoked on a new thread.
-    hosts_->store(addresses, handler);
+    hosts_.store(addresses, handler);
 }
 
 void p2p::remove(const address& address, result_handler handler)
 {
-    handler(hosts_->remove(address));
+    handler(hosts_.remove(address));
 }
 
 void p2p::address_count(count_handler handler) const
 {
-    handler(hosts_->count());
+    handler(hosts_.count());
 }
 
 } // namespace network

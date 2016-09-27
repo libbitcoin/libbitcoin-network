@@ -20,9 +20,6 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_BATCH_HPP
 #define LIBBITCOIN_NETWORK_SESSION_BATCH_HPP
 
-#include <atomic>
-#include <cstddef>
-#include <memory>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
@@ -48,23 +45,12 @@ protected:
     virtual void connect(connector::ptr connect, channel_handler handler);
 
 private:
-    typedef std::atomic<size_t> atomic_counter;
-    typedef std::shared_ptr<atomic_counter> atomic_counter_ptr;
-    typedef std::shared_ptr<upgrade_mutex> upgrade_mutex_ptr;
-
-    void converge(const code& ec, channel::ptr channel,
-        atomic_counter_ptr counter, upgrade_mutex_ptr mutex,
-        channel_handler handler) const;
-
     // Connect sequence
-    void new_connect(connector::ptr connect, atomic_counter_ptr counter,
-        channel_handler handler);
+    void new_connect(connector::ptr connect, channel_handler handler);
     void start_connect(const code& ec, const authority& host,
-        connector::ptr connect, atomic_counter_ptr counter,
-        channel_handler handler);
+        connector::ptr connect, channel_handler handler);
     void handle_connect(const code& ec, channel::ptr channel,
-        const authority& host, connector::ptr connect,
-        atomic_counter_ptr counter, channel_handler handler);
+        channel_handler handler);
 
     const size_t batch_size_;
 };

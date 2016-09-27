@@ -120,11 +120,13 @@ void session_seed::handle_count(size_t start_size, result_handler handler)
 void session_seed::start_seeding(size_t start_size, connector::ptr connect,
     result_handler handler)
 {
+    static const auto mode = synchronizer_terminate::on_count;
+
     // When all seeds are synchronized call session_seed::handle_complete.
     auto all = BIND2(handle_complete, start_size, handler);
 
     // Synchronize each individual seed before calling handle_complete.
-    auto each = synchronize(all, settings_.seeds.size(), NAME, true);
+    auto each = synchronize(all, settings_.seeds.size(), NAME, mode);
 
     // We don't use parallel here because connect is itself asynchronous.
     for (const auto& seed: settings_.seeds)
