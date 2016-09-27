@@ -80,10 +80,11 @@ protocol_version_31402::protocol_version_31402(p2p& network,
 
 void protocol_version_31402::start(event_handler handler)
 {
+    static const auto mode = synchronizer_terminate::on_error;
     const auto period = network_.network_settings().channel_handshake();
 
     // The handler is invoked in the context of the last message receipt.
-    protocol_timer::start(period, synchronize(handler, 2, NAME, false));
+    protocol_timer::start(period, synchronize(handler, 2, NAME, mode));
 
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
     SUBSCRIBE2(verack, handle_receive_verack, _1, _2);

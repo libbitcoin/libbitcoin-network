@@ -143,6 +143,8 @@ void connector::connect(const std::string& hostname, uint16_t port,
 void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     connect_handler handler)
 {
+    static const auto mode = synchronizer_terminate::on_error;
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_shared();
@@ -170,8 +172,8 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     // Retain a socket reference until connected, allowing connect cancelation.
     pending_.store(socket);
 
-    // Manage the socket-timer race.
-    const auto handle_connect = synchronize(handler, 1, NAME, false);
+    // Manage the socket-timer race, terminating if either fails.
+    const auto handle_connect = synchronize(handler, 1, NAME, mode);
 
     // This is branch #1 of the connnect sequence.
     timer->start(
