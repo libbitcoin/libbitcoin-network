@@ -26,6 +26,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -37,7 +38,7 @@ public:
     typedef std::function<void(bool)> truth_handler;
     typedef std::function<void(const code&)> result_handler;
     
-    pending_channels();
+    pending_channels(const settings& settings);
     ~pending_channels();
 
     /// This class is not copyable.

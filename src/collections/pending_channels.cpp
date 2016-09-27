@@ -24,12 +24,15 @@
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-pending_channels::pending_channels()
+pending_channels::pending_channels(const settings& settings)
 {
+    channels_.reserve(settings.peers.size() + settings.connect_batch_size *
+        settings.outbound_connections);
 }
 
 pending_channels::~pending_channels()

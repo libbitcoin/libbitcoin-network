@@ -43,6 +43,7 @@ connector::connector(threadpool& pool, const settings& settings)
   : stopped_(false),
     pool_(pool),
     settings_(settings),
+    pending_(settings_),
     dispatch_(pool, NAME),
     resolver_(std::make_shared<asio::resolver>(pool.service())),
     CONSTRUCT_TRACK(connector)

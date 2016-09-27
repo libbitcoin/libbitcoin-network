@@ -24,6 +24,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/utility/socket.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -32,7 +33,7 @@ namespace network {
 class BCT_API pending_sockets
 {
 public:    
-    pending_sockets();
+    pending_sockets(const settings& settings);
     ~pending_sockets();
 
     /// This class is not copyable.

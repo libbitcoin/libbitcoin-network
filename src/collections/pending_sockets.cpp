@@ -23,12 +23,15 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/utility/socket.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-pending_sockets::pending_sockets()
+pending_sockets::pending_sockets(const settings& settings)
 {
+    sockets_.reserve(settings.peers.size() + settings.connect_batch_size *
+        settings.outbound_connections);
 }
 
 pending_sockets::~pending_sockets()
