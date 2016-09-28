@@ -153,21 +153,21 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    if (head.magic != protocol_magic_)
+    if (head.magic() != protocol_magic_)
     {
         log::warning(LOG_NETWORK)
-            << "Invalid heading magic (" << head.magic << ") from ["
+            << "Invalid heading magic (" << head.magic() << ") from ["
             << authority() << "]";
         stop(error::bad_stream);
         return;
     }
 
-    if (head.payload_size > payload_buffer_.capacity())
+    if (head.payload_size() > payload_buffer_.capacity())
     {
         log::warning(LOG_NETWORK)
-            << "Oversized payload indicated by " << head.command
+            << "Oversized payload indicated by " << head.command()
             << " heading from [" << authority() << "] ("
-            << head.payload_size << " bytes)";
+            << head.payload_size() << " bytes)";
         stop(error::bad_stream);
         return;
     }
@@ -182,7 +182,7 @@ void proxy::read_payload(const heading& head)
         return;
 
     // This does not cause a reallocation.
-    payload_buffer_.resize(head.payload_size);
+    payload_buffer_.resize(head.payload_size());
 
     // The payload buffer is protected by ordering, not the critial section.
 
@@ -191,7 +191,7 @@ void proxy::read_payload(const heading& head)
     const auto socket = socket_->get_socket();
 
     using namespace boost::asio;
-    async_read(socket->get(), buffer(payload_buffer_, head.payload_size),
+    async_read(socket->get(), buffer(payload_buffer_, head.payload_size()),
         std::bind(&proxy::handle_read_payload,
             shared_from_this(), _1, _2, head));
     ///////////////////////////////////////////////////////////////////////////
@@ -213,10 +213,10 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
         return;
     }
 
-    if (head.checksum != bitcoin_checksum(payload_buffer_))
+    if (head.checksum() != bitcoin_checksum(payload_buffer_))
     {
         log::warning(LOG_NETWORK) 
-            << "Invalid " << head.command << " payload from [" << authority()
+            << "Invalid " << head.command() << " payload from [" << authority()
             << "] bad checksum.";
         stop(error::bad_stream);
         return;
@@ -241,7 +241,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
     if (code)
     {
         log::warning(LOG_NETWORK)
-            << "Invalid " << head.command << " payload from [" << authority()
+            << "Invalid " << head.command() << " payload from [" << authority()
             << "] " << code.message();
         stop(code);
         return;
@@ -250,14 +250,14 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
     if (!consumed)
     {
         log::warning(LOG_NETWORK)
-            << "Invalid " << head.command << " payload from [" << authority()
+            << "Invalid " << head.command() << " payload from [" << authority()
             << "] trailing bytes.";
         stop(error::bad_stream);
         return;
     }
 
     log::debug(LOG_NETWORK)
-        << "Valid " << head.command << " payload from [" << authority()
+        << "Valid " << head.command() << " payload from [" << authority()
         << "] (" << payload_size << " bytes)";
 
     handle_activity();

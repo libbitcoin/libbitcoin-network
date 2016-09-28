@@ -44,7 +44,7 @@ hosts::iterator hosts::find(const address& host)
 {
     const auto found = [&host](const address& entry)
     {
-        return entry.port == host.port && entry.ip == host.ip;
+        return entry.port() == host.port() && entry.ip() == host.ip();
     };
 
     return std::find_if(buffer_.begin(), buffer_.end(), found);

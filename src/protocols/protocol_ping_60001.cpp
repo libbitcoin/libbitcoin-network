@@ -78,7 +78,7 @@ bool protocol_ping_60001::handle_receive_ping(const code& ec,
         return false;
     }
 
-    SEND2(pong{ message->nonce }, handle_send, _1, pong::command);
+    SEND2(pong{ message->nonce() }, handle_send, _1, pong::command);
     return true;
 }
 
@@ -97,7 +97,7 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
         return false;
     }
 
-    if (message->nonce != nonce)
+    if (message->nonce() != nonce)
     {
         log::warning(LOG_NETWORK)
             << "Invalid or overlapped pong nonce from [" << authority() << "]";

@@ -78,7 +78,9 @@ void protocol_seed_31402::send_own_address(const settings& settings)
         return;
     }
 
-    const address self({ { settings.self.to_network_address() } });
+    const address self(network_address::list{
+        network_address{ settings.self.to_network_address() } });
+
     SEND1(self, handle_send_address, _1);
 }
 
@@ -106,10 +108,10 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
 
     log::debug(LOG_NETWORK)
         << "Storing addresses from seed [" << authority() << "] ("
-        << message->addresses.size() << ")";
+        << message->addresses().size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
+    network_.store(message->addresses(), BIND1(handle_store_addresses, _1));
 
     return false;
 }

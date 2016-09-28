@@ -63,7 +63,7 @@ void protocol_address_31402::start()
     // Must have a handler to capture a shared self pointer in stop subscriber.
     protocol_events::start(BIND1(handle_stop, _1));
 
-    if (!self_.addresses.empty())
+    if (!self_.addresses().empty())
     {
         SEND2(self_, handle_send, _1, self_.command);
     }
@@ -97,10 +97,10 @@ bool protocol_address_31402::handle_receive_address(const code& ec,
 
     log::debug(LOG_NETWORK)
         << "Storing addresses from [" << authority() << "] ("
-        << message->addresses.size() << ")";
+        << message->addresses().size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
+    network_.store(message->addresses(), BIND1(handle_store_addresses, _1));
 
     // RESUBSCRIBE
     return true;
@@ -125,12 +125,12 @@ bool protocol_address_31402::handle_receive_get_address(const code& ec,
     // TODO: pull active hosts from host cache (currently just resending self).
     // TODO: need to distort for privacy, don't send currently-connected peers.
 
-    if (self_.addresses.empty())
+    if (self_.addresses().empty())
         return false;
 
     log::debug(LOG_NETWORK)
         << "Sending addresses to [" << authority() << "] ("
-        << self_.addresses.size() << ")";
+        << self_.addresses().size() << ")";
 
     SEND2(self_, handle_send, _1, self_.command);
 
