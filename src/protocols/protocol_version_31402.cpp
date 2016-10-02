@@ -40,6 +40,9 @@ namespace network {
 using namespace bc::message;
 using namespace std::placeholders;
 
+static const std::string reason_insufficient_services = "insufficient-services";
+static const std::string reason_insufficient_version = "insufficient-version";
+
 // TODO: move to libbitcoin utility with similar blockchain function.
 static uint64_t time_stamp()
 {
@@ -98,20 +101,20 @@ message::version protocol_version_31402::version_factory() const
     BITCOIN_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
 
     message::version version;
-    version.value = own_version_;
-    version.services = own_services_;
-    version.timestamp = time_stamp();
-    version.address_recevier = authority().to_network_address();
-    version.address_sender = settings.self.to_network_address();
-    version.nonce = nonce();
-    version.user_agent = BC_USER_AGENT;
-    version.start_height = static_cast<uint32_t>(height);
+    version.set_value(own_version_);
+    version.set_services(own_services_);
+    version.set_timestamp( time_stamp());
+    version.set_address_receiver(authority().to_network_address());
+    version.set_address_sender(settings.self.to_network_address());
+    version.set_nonce(nonce());
+    version.set_user_agent(BC_USER_AGENT);
+    version.set_start_height(static_cast<uint32_t>(height));
 
     // The peer's services cannot be reflected, so zero it.
-    version.address_recevier.services = version::service::none;
+    version.address_receiver().set_services(version::service::none);
 
     // We always match the services declared in our version.services.
-    version.address_sender.services = own_services_;
+    version.address_sender().set_services( own_services_);
     return version;
 }
 
@@ -134,7 +137,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     }
 
     log::debug(LOG_NETWORK)
-        << "Peer [" << authority() << "] user agent: " << message->user_agent;
+        << "Peer [" << authority() << "] user agent: " << message->user_agent();
 
     const auto& settings = network_.network_settings();
 
@@ -168,17 +171,18 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     }
     //-------------------------------------------------------------------------
 
-    if ((message->services & minimum_services_) != minimum_services_)
+    if ((message->services() & minimum_services_) != minimum_services_)
     {
         log::debug(LOG_NETWORK)
-            << "Insufficient peer network services (" << message->services
+            << "Insufficient peer network services (" << message->services()
             << ") for [" << authority() << "]";
 
         static const message::reject rejection
         {
-            version::command,
             reject::reason_code::obsolete,
-            "insufficient-services"
+            version::command,
+            reason_insufficient_services,
+            null_hash
         };
 
         SEND2(rejection, handle_send, _1, rejection.command);
@@ -186,17 +190,18 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         return false;
     }
 
-    if (message->value < minimum_version_)
+    if (message->value() < minimum_version_)
     {
         log::debug(LOG_NETWORK)
-            << "Insufficient peer protocol version (" << message->value
+            << "Insufficient peer protocol version (" << message->value()
             << ") for [" << authority() << "]";
 
         static const message::reject rejection
         {
-            version::command,
             reject::reason_code::obsolete,
-            "insufficient-version"
+            version::command,
+            reason_insufficient_version,
+            null_hash
         };
 
         SEND2(rejection, handle_send, _1, rejection.command);
@@ -204,7 +209,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         return false;
     }
 
-    const auto version = std::min(message->value, own_version_);
+    const auto version = std::min(message->value(), own_version_);
     set_negotiated_version(version);
 
     log::debug(LOG_NETWORK)
