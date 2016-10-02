@@ -157,11 +157,13 @@ void protocol_seed_31402::handle_store_addresses(const code& ec)
     if (stopped())
         return;
 
-    if (ec)
-    {
+    if (ec && ec != error::service_stopped)
         log::error(LOG_NETWORK)
             << "Failure storing addresses from seed [" << authority() << "] "
             << ec.message();
+
+    if (ec)
+    {
         set_event(ec);
         return;
     }

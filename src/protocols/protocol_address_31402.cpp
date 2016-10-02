@@ -143,13 +143,13 @@ void protocol_address_31402::handle_store_addresses(const code& ec)
     if (stopped())
         return;
 
-    if (ec)
-    {
+    if (ec && ec != error::service_stopped)
         log::error(LOG_NETWORK)
-            << "Failure storing addresses from [" << authority() << "] "
-            << ec.message();
+        << "Failure storing addresses from [" << authority() << "] "
+        << ec.message();
+
+    if (ec)
         stop(ec);
-    }
 }
 
 void protocol_address_31402::handle_stop(const code&)
