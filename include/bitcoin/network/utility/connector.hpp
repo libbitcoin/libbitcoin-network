@@ -21,6 +21,7 @@
 #define LIBBITCOIN_NETWORK_CONNECTOR_HPP
 
 #include <atomic>
+#include <future>
 #include <functional>
 #include <memory>
 #include <string>
@@ -72,14 +73,15 @@ private:
     void safe_stop();
     void safe_resolve(asio::query_ptr query, connect_handler handler);
     void safe_connect(asio::iterator iterator, socket::ptr socket,
-        deadline::ptr timer, connect_handler handler);
+        deadline::ptr timer, connect_handler handler, std::promise<bool>* end_flag);
 
     void handle_resolve(const boost_code& ec, asio::iterator iterator,
         connect_handler handler);
     void handle_timer(const code& ec, socket::ptr socket,
         connect_handler handler);
-    void handle_connect(const boost_code& ec, asio::iterator iterator,
-        socket::ptr socket, deadline::ptr timer, connect_handler handler);
+    void handle_connect(const boost_code& ec, asio::iterator iter, 
+            socket::ptr socket, deadline::ptr timer, connect_handler handler,
+            std::promise<bool>* end_flag);
 
     // These are thread safe
     std::atomic<bool> stopped_;
