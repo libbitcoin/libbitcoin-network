@@ -166,29 +166,41 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
         return;
     }
 
-    const auto timeout = settings_.connect_timeout();
-    const auto timer = std::make_shared<deadline>(pool_, timeout);
-    const auto socket = std::make_shared<network::socket>(pool_);
+    auto do_connecting = [this, &handler](asio::iterator resolver_iterator, std::promise<bool>* end_flag)
+    {
+        const auto timeout = settings_.connect_timeout();
+        const auto timer = std::make_shared<deadline>(pool_, timeout);
+        const auto socket = std::make_shared<network::socket>(pool_);
+    
+        // Retain a socket reference until connected, allowing connect cancelation.
+        pending_.store(socket);
+    
+        // Manage the socket-timer race, terminating if either fails.
+        const auto handle_connect = synchronize(handler, 1, NAME, mode);
+    
+        // This is branch #1 of the connnect sequence.
+        timer->start(
+            std::bind(&connector::handle_timer,
+                shared_from_this(), _1, socket, handle_connect));
+    
+        safe_connect(resolver_iterator, socket, timer, handle_connect, end_flag);
 
-    // Retain a socket reference until connected, allowing connect cancelation.
-    pending_.store(socket);
-
-    // Manage the socket-timer race, terminating if either fails.
-    const auto handle_connect = synchronize(handler, 1, NAME, mode);
-
-    // This is branch #1 of the connnect sequence.
-    timer->start(
-        std::bind(&connector::handle_timer,
-            shared_from_this(), _1, socket, handle_connect));
-
-    safe_connect(iterator, socket, timer, handle_connect);
+    };
+    
+    // Get all hosts under one DNS record.
+    for (asio::iterator end; iterator != end; ++iterator)
+    {  
+        std::promise<bool> promise;
+        do_connecting(iterator, &promise);
+        promise.get_future().get();
+    }
 
     mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 }
 
 void connector::safe_connect(asio::iterator iterator, socket::ptr socket,
-    deadline::ptr timer, connect_handler handler)
+    deadline::ptr timer, connect_handler handler, std::promise<bool>* end_flag)
 {
     // Critical Section (external)
     /////////////////////////////////////////////////////////////////////////// 
@@ -198,7 +210,7 @@ void connector::safe_connect(asio::iterator iterator, socket::ptr socket,
     using namespace boost::asio;
     async_connect(locked->get(), iterator,
         std::bind(&connector::handle_connect,
-            shared_from_this(), _1, _2, socket, timer, handler));
+            shared_from_this(), _1, _2, socket, timer, handler, end_flag));
     /////////////////////////////////////////////////////////////////////////// 
 }
 
@@ -222,8 +234,8 @@ void connector::handle_timer(const code& ec, socket::ptr socket,
 // ----------------------------------------------------------------------------
 
 // private:
-void connector::handle_connect(const boost_code& ec, asio::iterator,
-    socket::ptr socket, deadline::ptr timer, connect_handler handler)
+void connector::handle_connect(const boost_code& ec, asio::iterator iterator,
+    socket::ptr socket, deadline::ptr timer, connect_handler handler, std::promise<bool>* end_flag)
 {
     pending_.remove(socket);
 
@@ -232,6 +244,8 @@ void connector::handle_connect(const boost_code& ec, asio::iterator,
         handler(error::boost_to_error_code(ec), nullptr);
     else
         handler(error::success, new_channel(socket));
+
+    end_flag->set_value(true);
 
     timer->stop();
 }
