@@ -129,14 +129,14 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving version from [" << authority() << "] "
             << ec.message();
         set_event(ec);
         return false;
     }
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Peer [" << authority() << "] user agent: " << message->user_agent();
 
     const auto& settings = network_.network_settings();
@@ -145,7 +145,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     //-------------------------------------------------------------------------
     if (settings.protocol_minimum < version::level::minimum)
     {
-        log::error(LOG_NETWORK)
+        LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, minimum below ("
             << version::level::minimum << ").";
         set_event(error::channel_stopped);
@@ -154,7 +154,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     if (settings.protocol_maximum > version::level::maximum)
     {
-        log::error(LOG_NETWORK)
+        LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, maximum above ("
             << version::level::maximum << ").";
         set_event(error::channel_stopped);
@@ -163,7 +163,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     if (settings.protocol_minimum > settings.protocol_maximum)
     {
-        log::error(LOG_NETWORK)
+        LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, "
             << "minimum exceeds maximum.";
         set_event(error::channel_stopped);
@@ -173,7 +173,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     if ((message->services() & minimum_services_) != minimum_services_)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Insufficient peer network services (" << message->services()
             << ") for [" << authority() << "]";
 
@@ -192,7 +192,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     if (message->value() < minimum_version_)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Insufficient peer protocol version (" << message->value()
             << ") for [" << authority() << "]";
 
@@ -212,7 +212,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     const auto version = std::min(message->value(), own_version_);
     set_negotiated_version(version);
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Negotiated protocol version (" << version
         << ") for [" << authority() << "]";
 
@@ -231,7 +231,7 @@ bool protocol_version_31402::handle_receive_verack(const code& ec,
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving verack from [" << authority() << "] "
             << ec.message();
         set_event(ec);
@@ -250,7 +250,7 @@ void protocol_version_31402::handle_version_sent(const code& ec)
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure sending version to [" << authority() << "] "
             << ec.message();
         set_event(ec);
@@ -265,7 +265,7 @@ void protocol_version_31402::handle_verack_sent(const code& ec)
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure sending verack to [" << authority() << "] "
             << ec.message();
         set_event(ec);

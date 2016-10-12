@@ -99,14 +99,14 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving addresses from seed [" << authority() << "] "
             << ec.message();
         set_event(ec);
         return false;
     }
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Storing addresses from seed [" << authority() << "] ("
         << message->addresses().size() << ")";
 
@@ -123,7 +123,7 @@ void protocol_seed_31402::handle_send_address(const code& ec)
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure sending address to seed [" << authority() << "] "
             << ec.message();
         set_event(ec);
@@ -141,7 +141,7 @@ void protocol_seed_31402::handle_send_get_address(const code& ec)
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure sending get_address to seed [" << authority() << "] "
             << ec.message();
         set_event(ec);
@@ -158,7 +158,7 @@ void protocol_seed_31402::handle_store_addresses(const code& ec)
         return;
 
     if (ec && ec != error::service_stopped)
-        log::error(LOG_NETWORK)
+        LOG_ERROR(LOG_NETWORK)
             << "Failure storing addresses from seed [" << authority() << "] "
             << ec.message();
 
@@ -168,7 +168,7 @@ void protocol_seed_31402::handle_store_addresses(const code& ec)
         return;
     }
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Stopping completed seed [" << authority() << "] ";
 
     // 3 of 3

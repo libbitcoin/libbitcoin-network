@@ -51,7 +51,7 @@ void session_seed::start(result_handler handler)
 {
     if (settings_.host_pool_capacity == 0)
     {
-        log::info(LOG_NETWORK)
+        LOG_INFO(LOG_NETWORK)
             << "Not configured to populate an address pool.";
         handler(error::success);
         return;
@@ -94,7 +94,7 @@ void session_seed::handle_count(size_t start_size, result_handler handler)
 {
     if (start_size != 0)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Seeding is not required because there are " 
             << start_size << " cached addresses.";
         handler(error::success);
@@ -103,7 +103,7 @@ void session_seed::handle_count(size_t start_size, result_handler handler)
 
     if (settings_.seeds.empty())
     {
-        log::error(LOG_NETWORK)
+        LOG_ERROR(LOG_NETWORK)
             << "Seeding is required but no seeds are configured.";
         handler(error::operation_failed);
         return;
@@ -138,13 +138,13 @@ void session_seed::start_seed(const config::endpoint& seed,
 {
     if (stopped())
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Suspended seed connection";
         handler(error::channel_stopped);
         return;
     }
 
-    log::info(LOG_NETWORK)
+    LOG_INFO(LOG_NETWORK)
         << "Contacting seed [" << seed << "]";
 
     // OUTBOUND CONNECT
@@ -156,7 +156,7 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
 {
     if (ec)
     {
-        log::info(LOG_NETWORK)
+        LOG_INFO(LOG_NETWORK)
             << "Failure contacting seed [" << seed << "] " << ec.message();
         handler(ec);
         return;
@@ -164,14 +164,14 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
 
     if (blacklisted(channel->authority()))
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Seed [" << seed << "] on blacklisted address ["
             << channel->authority() << "]";
         handler(error::address_blocked);
         return;
     }
 
-    log::info(LOG_NETWORK)
+    LOG_INFO(LOG_NETWORK)
         << "Connected seed [" << seed << "] as " << channel->authority();
 
     register_channel(channel, 
@@ -204,7 +204,7 @@ void session_seed::attach_protocols(channel::ptr channel,
 
 void session_seed::handle_channel_stop(const code& ec)
 {
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Seed channel stopped: " << ec.message();
 }
 

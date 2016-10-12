@@ -88,14 +88,14 @@ bool protocol_address_31402::handle_receive_address(const code& ec,
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving address message from ["
             << authority() << "] " << ec.message();
         stop(ec);
         return false;
     }
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Storing addresses from [" << authority() << "] ("
         << message->addresses().size() << ")";
 
@@ -114,7 +114,7 @@ bool protocol_address_31402::handle_receive_get_address(const code& ec,
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving get_address message from ["
             << authority() << "] " << ec.message();
         stop(ec);
@@ -128,7 +128,7 @@ bool protocol_address_31402::handle_receive_get_address(const code& ec,
     if (self_.addresses().empty())
         return false;
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Sending addresses to [" << authority() << "] ("
         << self_.addresses().size() << ")";
 
@@ -144,7 +144,7 @@ void protocol_address_31402::handle_store_addresses(const code& ec)
         return;
 
     if (ec && ec != error::service_stopped)
-        log::error(LOG_NETWORK)
+        LOG_ERROR(LOG_NETWORK)
         << "Failure storing addresses from [" << authority() << "] "
         << ec.message();
 
@@ -154,7 +154,7 @@ void protocol_address_31402::handle_store_addresses(const code& ec)
 
 void protocol_address_31402::handle_stop(const code&)
 {
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Stopped address protocol";
 }
 

@@ -120,7 +120,7 @@ code hosts::start()
 
     if (file_error)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failed to save hosts file.";
         return error::file_system;
     }
@@ -164,7 +164,7 @@ code hosts::stop()
 
     if (file_error)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failed to load hosts file.";
         return error::file_system;
     }
@@ -208,7 +208,7 @@ code hosts::store(const address& host)
 {
     if (!host.is_valid())
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Invalid host address from peer";
 
         // We don't treat invalid address as an error, just log it.
@@ -240,7 +240,7 @@ code hosts::store(const address& host)
     mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Redundant host address from peer";
 
     // We don't treat redundant address as an error, just log it.

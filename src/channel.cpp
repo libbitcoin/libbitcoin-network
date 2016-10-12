@@ -140,7 +140,7 @@ void channel::handle_expiration(const code& ec)
     if (stopped())
         return;
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Channel lifetime expired [" << authority() << "]";
 
     stop(error::channel_timeout);
@@ -161,7 +161,7 @@ void channel::handle_inactivity(const code& ec)
     if (stopped())
         return;
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Channel inactivity timeout [" << authority() << "]";
 
     stop(error::channel_timeout);

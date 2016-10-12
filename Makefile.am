@@ -36,7 +36,6 @@ src_libbitcoin_network_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_CPPFLAGS}
 src_libbitcoin_network_la_LIBADD = ${bitcoin_LIBS}
 src_libbitcoin_network_la_SOURCES = \
     src/channel.cpp \
-    src/logging.cpp \
     src/p2p.cpp \
     src/proxy.cpp \
     src/settings.cpp \
@@ -91,7 +90,6 @@ include_bitcoin_networkdir = ${includedir}/bitcoin/network
 include_bitcoin_network_HEADERS = \
     include/bitcoin/network/channel.hpp \
     include/bitcoin/network/define.hpp \
-    include/bitcoin/network/logging.hpp \
     include/bitcoin/network/p2p.hpp \
     include/bitcoin/network/proxy.hpp \
     include/bitcoin/network/settings.hpp \
