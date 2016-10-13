@@ -36,11 +36,9 @@
 using namespace bc;
 using namespace bc::message;
 using namespace bc::network;
-
 namespace logging = boost::log;
-namespace expr = boost::log::expressions;
-namespace src = boost::log::sources;
-namespace sinks = boost::log::sinks;
+namespace sinks = logging::sinks;
+namespace expression = logging::expressions;
 
 typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
 
@@ -97,12 +95,11 @@ std::string get_log_path(const std::string& test, const std::string& file)
     return path;
 }
 
-boost::log::formatting_ostream& operator<<(
-    boost::log::formatting_ostream& strm,
-    boost::log::to_log_manip<libbitcoin::log::severity> const& manip)
+logging::formatting_ostream& operator<<(logging::formatting_ostream& stream,
+    logging::to_log_manip<libbitcoin::log::severity> const& manip)
 {
-    strm.stream() << manip.get();
-    return strm;
+    stream.stream() << manip.get();
+    return stream;
 }
 
 class log_setup_fixture
@@ -112,15 +109,11 @@ public:
       : debug_log_(get_log_path(TEST_SET_NAME, "debug"), log_open_mode),
         error_log_(get_log_path(TEST_SET_NAME, "error"), log_open_mode)
     {
-        boost::shared_ptr<std::ostream> console_out(&bc::cout,
-            boost::null_deleter());
-        boost::shared_ptr<std::ostream> console_err(&bc::cerr,
-            boost::null_deleter());
-        boost::shared_ptr<bc::ofstream> debug_log(&debug_log_,
-            boost::null_deleter());
-        boost::shared_ptr<bc::ofstream> error_log(&error_log_,
-            boost::null_deleter());
-
+        using namespace boost;
+        shared_ptr<std::ostream> console_out(&bc::cout, null_deleter());
+        shared_ptr<std::ostream> console_err(&bc::cerr, null_deleter());
+        shared_ptr<bc::ofstream> debug_log(&debug_log_, null_deleter());
+        shared_ptr<bc::ofstream> error_log(&error_log_, null_deleter());
         initialize_logging(debug_log, error_log, console_out, console_err);
     }
 
@@ -131,7 +124,6 @@ public:
 
 private:
 
-
     template<typename Stream>
     void add_text_sink(boost::shared_ptr<Stream>& stream)
     {
@@ -141,20 +133,19 @@ private:
         // Add a stream to write log to
         sink->locked_backend()->add_stream(stream);
 
-        sink->set_formatter(expr::stream << "["
-            << expr::format_date_time<boost::posix_time::ptime, char>(
+        sink->set_formatter(expression::stream << "["
+            << expression::format_date_time<boost::posix_time::ptime, char>(
                 log::attributes::timestamp.get_name(), "%Y-%m-%d %H:%M:%S")
             << "][" << log::attributes::channel
             << "][" << log::attributes::severity
-            << "]: " << expr::smessage);
+            << "]: " << expression::smessage);
 
         // Register the sink in the logging core
         logging::core::get()->add_sink(sink);
     }
 
     template<typename Stream, typename FunT>
-    void add_text_sink(boost::shared_ptr<Stream>& stream,
-        FunT const& filter)
+    void add_text_sink(boost::shared_ptr<Stream>& stream, FunT const& filter)
     {
         // Construct the sink
         boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
@@ -164,12 +155,12 @@ private:
 
         sink->set_filter(filter);
 
-        sink->set_formatter(expr::stream << "["
-            << expr::format_date_time<boost::posix_time::ptime, char>(
+        sink->set_formatter(expression::stream << "["
+            << expression::format_date_time<boost::posix_time::ptime, char>(
                 log::attributes::timestamp.get_name(), "%Y-%m-%d %H:%M:%S")
             << "][" << log::attributes::channel
             << "][" << log::attributes::severity
-            << "]: " << expr::smessage);
+            << "]: " << expression::smessage);
 
         // Register the sink in the logging core
         logging::core::get()->add_sink(sink);
