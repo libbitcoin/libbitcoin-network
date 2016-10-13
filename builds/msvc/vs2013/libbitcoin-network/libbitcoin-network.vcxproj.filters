@@ -31,9 +31,6 @@
     <ClCompile Include="..\..\..\..\src\channel.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\logging.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\p2p.cpp">
       <Filter>src</Filter>
     </ClCompile>
