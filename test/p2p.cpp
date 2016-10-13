@@ -22,25 +22,12 @@
 #include <iostream>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/log/attributes.hpp>
-#include <boost/log/common.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sinks.hpp>
-#include <boost/log/support/date_time.hpp>
-#include <boost/log/utility/setup/console.hpp>
-#include <boost/log/utility/setup/file.hpp>
 #include <boost/test/unit_test.hpp>
 #include <bitcoin/network.hpp>
 
 using namespace bc;
 using namespace bc::message;
 using namespace bc::network;
-namespace logging = boost::log;
-namespace sinks = logging::sinks;
-namespace expression = logging::expressions;
-
-typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
 
 #define TEST_SET_NAME \
     "p2p_tests"
@@ -85,9 +72,6 @@ typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
     name.seeds = { { SEED1 } }; \
     name.hosts_file = get_log_path(TEST_NAME, "hosts")
 
-static const std::ofstream::openmode log_open_mode = std::ofstream::out |
-    std::ofstream::app;
-
 std::string get_log_path(const std::string& test, const std::string& file)
 {
     const auto path = test + "." + file + ".log";
@@ -95,102 +79,9 @@ std::string get_log_path(const std::string& test, const std::string& file)
     return path;
 }
 
-logging::formatting_ostream& operator<<(logging::formatting_ostream& stream,
-    logging::to_log_manip<libbitcoin::log::severity> const& manip)
-{
-    stream.stream() << manip.get();
-    return stream;
-}
-
-class log_setup_fixture
-{
-public:
-    log_setup_fixture()
-      : debug_log_(get_log_path(TEST_SET_NAME, "debug"), log_open_mode),
-        error_log_(get_log_path(TEST_SET_NAME, "error"), log_open_mode)
-    {
-        using namespace boost;
-        shared_ptr<std::ostream> console_out(&bc::cout, null_deleter());
-        shared_ptr<std::ostream> console_err(&bc::cerr, null_deleter());
-        shared_ptr<bc::ofstream> debug_log(&debug_log_, null_deleter());
-        shared_ptr<bc::ofstream> error_log(&error_log_, null_deleter());
-        initialize_logging(debug_log, error_log, console_out, console_err);
-    }
-
-    ~log_setup_fixture()
-    {
-        // log::clear();
-    }
-
-private:
-
-    template<typename Stream>
-    void add_text_sink(boost::shared_ptr<Stream>& stream)
-    {
-        // Construct the sink
-        boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
-
-        // Add a stream to write log to
-        sink->locked_backend()->add_stream(stream);
-
-        sink->set_formatter(expression::stream << "["
-            << expression::format_date_time<boost::posix_time::ptime, char>(
-                log::attributes::timestamp.get_name(), "%Y-%m-%d %H:%M:%S")
-            << "][" << log::attributes::channel
-            << "][" << log::attributes::severity
-            << "]: " << expression::smessage);
-
-        // Register the sink in the logging core
-        logging::core::get()->add_sink(sink);
-    }
-
-    template<typename Stream, typename FunT>
-    void add_text_sink(boost::shared_ptr<Stream>& stream, FunT const& filter)
-    {
-        // Construct the sink
-        boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
-
-        // Add a stream to write log to
-        sink->locked_backend()->add_stream(stream);
-
-        sink->set_filter(filter);
-
-        sink->set_formatter(expression::stream << "["
-            << expression::format_date_time<boost::posix_time::ptime, char>(
-                log::attributes::timestamp.get_name(), "%Y-%m-%d %H:%M:%S")
-            << "][" << log::attributes::channel
-            << "][" << log::attributes::severity
-            << "]: " << expression::smessage);
-
-        // Register the sink in the logging core
-        logging::core::get()->add_sink(sink);
-    }
-
-    void initialize_logging(boost::shared_ptr<bc::ofstream>& debug,
-        boost::shared_ptr<bc::ofstream>& error,
-        boost::shared_ptr<std::ostream>& output_stream,
-        boost::shared_ptr<std::ostream>& error_stream)
-    {
-        auto error_filter = (log::attributes::severity == log::severity::warning)
-            || (log::attributes::severity == log::severity::error)
-            || (log::attributes::severity == log::severity::fatal);
-
-        auto info_filter = (log::attributes::severity == log::severity::info);
-
-        add_text_sink(debug);
-        add_text_sink(error, error_filter);
-        add_text_sink(output_stream, info_filter);
-        add_text_sink(output_stream, error_filter);
-    }
-
-    bc::ofstream debug_log_;
-    bc::ofstream error_log_;
-};
-
 static void print_headers(const std::string& test)
 {
     const auto header = "=========== " + test + " ==========";
-    LOG_DEBUG(TEST_SET_NAME) << header;
     LOG_INFO(TEST_SET_NAME) << header;
 }
 
@@ -297,7 +188,7 @@ BOOST_AUTO_TEST_CASE(empty_test)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_FIXTURE_TEST_SUITE(p2p_tests, log_setup_fixture)
+BOOST_AUTO_TEST_SUITE(p2p_tests)
 
 BOOST_AUTO_TEST_CASE(p2p__top_block__default__zero_null_hash)
 {
