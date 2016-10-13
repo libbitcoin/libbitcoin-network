@@ -73,7 +73,6 @@
     <ClCompile Include="..\..\..\..\src\collections\hosts.cpp" />
     <ClCompile Include="..\..\..\..\src\collections\pending_channels.cpp" />
     <ClCompile Include="..\..\..\..\src\collections\pending_sockets.cpp" />
-    <ClCompile Include="..\..\..\..\src\logging.cpp" />
     <ClCompile Include="..\..\..\..\src\p2p.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_60001.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70002.cpp" />
