@@ -47,7 +47,7 @@ void session_outbound::start(result_handler handler)
 {
     if (settings_.outbound_connections == 0)
     {
-        log::info(LOG_NETWORK)
+        LOG_INFO(LOG_NETWORK)
             << "Not configured for generating outbound connections.";
         handler(error::success);
         return;
@@ -79,7 +79,7 @@ void session_outbound::new_connection(connector::ptr connect)
 {
     if (stopped())
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Suspended outbound connection.";
         return;
     }
@@ -92,13 +92,13 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
 {
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure connecting outbound: " << ec.message();
         new_connection(connect);
         return;
     }
 
-    log::info(LOG_NETWORK)
+    LOG_INFO(LOG_NETWORK)
         << "Connected to outbound channel [" << channel->authority() << "]";
 
     register_channel(channel, 
@@ -112,7 +112,7 @@ void session_outbound::handle_channel_start(const code& ec,
     // The start failure is also caught by handle_channel_stop. 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Outbound channel failed to start ["
             << channel->authority() << "] " << ec.message();
         return;
@@ -134,7 +134,7 @@ void session_outbound::attach_protocols(channel::ptr channel)
 void session_outbound::handle_channel_stop(const code& ec,
     connector::ptr connect, channel::ptr channel)
 {
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Outbound channel stopped [" << channel->authority() << "] "
         << ec.message();
 
@@ -176,7 +176,7 @@ void session_outbound::do_unpend(const code& ec, channel::ptr channel,
 void session_outbound::handle_unpend(const code& ec)
 {
     if (ec)
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failed to unpend a channel: " << ec.message();
 }
 

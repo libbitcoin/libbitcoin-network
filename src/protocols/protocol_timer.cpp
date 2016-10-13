@@ -78,7 +78,7 @@ void protocol_timer::handle_timer(const code& ec)
     if (stopped())
         return;
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Fired protocol_" << name() << " timer on [" << authority() << "] "
         << ec.message();
 

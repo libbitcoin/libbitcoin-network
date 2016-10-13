@@ -61,7 +61,7 @@ void session_batch::new_connect(connector::ptr connect,
 {
     if (stopped())
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Suspended batch connection.";
         handler(error::channel_stopped, nullptr);
         return;
@@ -76,7 +76,7 @@ void session_batch::start_connect(const code& ec, const authority& host,
     // This termination prevents a tight loop in the empty address pool case.
     if (ec)
     {
-        log::warning(LOG_NETWORK)
+        LOG_WARNING(LOG_NETWORK)
             << "Failure fetching new address: " << ec.message();
         handler(ec, nullptr);
         return;
@@ -85,13 +85,13 @@ void session_batch::start_connect(const code& ec, const authority& host,
     // This creates a tight loop in the case of a small address pool.
     if (blacklisted(host))
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Fetched blacklisted address [" << host << "] ";
         handler(error::address_blocked, nullptr);
         return;
     }
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Connecting to [" << host << "]";
 
     // CONNECT
@@ -106,14 +106,14 @@ void session_batch::handle_connect(const code& ec, channel::ptr channel,
 {
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failed to connect after (" << batch_size_
             << ") concurrent attempts: " << ec.message();
         handler(ec, nullptr);
         return;
     }
 
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Connected to [" << channel->authority() << "]";
 
     // This is the end of the connect sequence.

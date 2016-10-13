@@ -220,7 +220,7 @@ void session::handle_starting(const code& ec, channel::ptr channel,
 {
     if (ec)
     {
-        log::info(LOG_NETWORK)
+        LOG_INFO(LOG_NETWORK)
             << "Channel failed to start [" << channel->authority() << "] "
             << ec.message();
         handle_started(ec);
@@ -247,7 +247,7 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
 {
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure in handshake with [" << channel->authority()
             << "] " << ec.message();
 
@@ -290,7 +290,7 @@ void session::do_remove(const code& ec, channel::ptr channel,
 void session::handle_remove(const code& ec, channel::ptr channel)
 {
     if (ec)
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failed to remove channel [" << channel->authority() << "] "
             << ec.message();
 }

@@ -47,7 +47,7 @@ void session_inbound::start(result_handler handler)
 {
     if (settings_.inbound_port == 0 || settings_.inbound_connections == 0)
     {
-        log::info(LOG_NETWORK)
+        LOG_INFO(LOG_NETWORK)
             << "Not configured for accepting incoming connections.";
         handler(error::success);
         return;
@@ -81,14 +81,14 @@ void session_inbound::start_accept(const code& ec, acceptor::ptr accept)
 {
     if (stopped())
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Suspended inbound connection.";
         return;
     }
 
     if (ec)
     {
-        log::error(LOG_NETWORK)
+        LOG_ERROR(LOG_NETWORK)
             << "Error starting listener: " << ec.message();
         return;
     }
@@ -102,7 +102,7 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel,
 {
     if (stopped())
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Suspended inbound connection.";
         return;
     }
@@ -111,14 +111,14 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel,
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure accepting connection: " << ec.message();
         return;
     }
 
     if (blacklisted(channel->authority()))
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Rejected inbound connection from ["
             << channel->authority() << "] due to blacklisted address.";
         return;
@@ -135,13 +135,13 @@ void session_inbound::handle_connection_count(size_t connections,
 
     if (connections >= connection_limit)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Rejected inbound connection from ["
             << channel->authority() << "] due to connection limit.";
         return;
     }
    
-    log::info(LOG_NETWORK)
+    LOG_INFO(LOG_NETWORK)
         << "Connected inbound channel [" << channel->authority() << "]";
 
     register_channel(channel, 
@@ -154,7 +154,7 @@ void session_inbound::handle_channel_start(const code& ec,
 {
     if (ec)
     {
-        log::info(LOG_NETWORK)
+        LOG_INFO(LOG_NETWORK)
             << "Inbound channel failed to start [" << channel->authority()
             << "] " << ec.message();
         return;
@@ -175,7 +175,7 @@ void session_inbound::attach_protocols(channel::ptr channel)
 
 void session_inbound::handle_channel_stop(const code& ec)
 {
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Inbound channel stopped: " << ec.message();
 }
 
@@ -195,7 +195,7 @@ void session_inbound::handle_is_pending(bool pending, channel::ptr channel,
 {
     if (pending)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Rejected connection from [" << channel->authority()
             << "] as loopback.";
         handle_started(error::accept_failed);

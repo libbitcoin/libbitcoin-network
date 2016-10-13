@@ -61,7 +61,7 @@ void protocol_events::start(event_handler handler)
 
 void protocol_events::handle_stopped(const code& ec)
 {
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Stop protocol_" << name() << " on [" << authority() << "] "
         << ec.message();
     
@@ -94,7 +94,7 @@ void protocol_events::handle_send(const code& ec, const std::string& command)
 
     if (ec)
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Failure sending '" << command << "' to [" << authority()
             << "] " << ec.message();
         stop(ec);

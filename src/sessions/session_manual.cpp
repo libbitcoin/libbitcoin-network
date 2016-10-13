@@ -86,7 +86,7 @@ void session_manual::start_connect(const std::string& hostname, uint16_t port,
 {
     if (stopped())
     {
-        log::debug(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Suspended manual connection.";
 
         connector_.store(nullptr);
@@ -108,7 +108,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
 {
     if (ec)
     {
-        log::warning(LOG_NETWORK)
+        LOG_WARNING(LOG_NETWORK)
             << "Failure connecting [" << config::endpoint(hostname, port)
             << "] manually: " << ec.message();
 
@@ -124,7 +124,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
         return;
     }
 
-    log::info(LOG_NETWORK)
+    LOG_INFO(LOG_NETWORK)
         << "Connected manual channel [" << config::endpoint(hostname, port)
         << "] as [" << channel->authority() << "]";
 
@@ -141,7 +141,7 @@ void session_manual::handle_channel_start(const code& ec,
     // Treat a start failure like a stop, but preserve the start handler.
     if (ec)
     {
-        log::info(LOG_NETWORK)
+        LOG_INFO(LOG_NETWORK)
             << "Manual channel failed to start [" << channel->authority()
             << "] " << ec.message();
         return;
@@ -165,7 +165,7 @@ void session_manual::attach_protocols(channel::ptr channel)
 void session_manual::handle_channel_stop(const code& ec,
     const std::string& hostname, uint16_t port)
 {
-    log::debug(LOG_NETWORK)
+    LOG_DEBUG(LOG_NETWORK)
         << "Manual channel stopped: " << ec.message();
 
     // Special case for already connected, do not keep trying.
