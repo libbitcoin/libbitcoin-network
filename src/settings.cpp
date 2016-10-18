@@ -67,7 +67,7 @@ settings::settings(config::settings context)
 
             // Seeds based on bitcoinstats.com/network/dns-servers
             seeds.reserve(6);
-            seeds.push_back({ "seed.bitchannels.io", 8333 });
+            seeds.push_back({ "seed.bitnodes.io", 8333 });
             seeds.push_back({ "seed.bitcoinstats.com", 8333 });
             seeds.push_back({ "seed.bitcoin.sipa.be", 8333 });
             seeds.push_back({ "dnsseed.bluematt.me", 8333 });
