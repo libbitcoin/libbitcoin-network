@@ -102,9 +102,9 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
         LOG_WARNING(LOG_NETWORK)
             << "Invalid or overlapped pong nonce from [" << authority() << "]";
 
-        // This could result from message overlap due to a short period,
-        // but we assume the response is not as expected and terminate.
-        stop(error::bad_stream);
+        // This could result from message overlap due to a short period.
+        // It seems to happen more frequently than expected, so not stopping.
+        ////stop(error::bad_stream);
     }
 
     return false;
