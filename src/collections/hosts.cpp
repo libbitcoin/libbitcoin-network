@@ -73,7 +73,8 @@ code hosts::fetch(address& out) const
         return error::not_found;
 
     // Randomly select an address from the buffer.
-    const auto index = static_cast<size_t>(pseudo_random() % buffer_.size());
+    const auto random = pseudo_random(0, buffer_.size() - 1);
+    const auto index = static_cast<size_t>(random);
     out = buffer_[index];
     return error::success;
     ///////////////////////////////////////////////////////////////////////////
