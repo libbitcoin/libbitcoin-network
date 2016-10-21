@@ -77,7 +77,7 @@ void session_batch::start_connect(const code& ec, const authority& host,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Batch session stopped while starting.";
-        handler(ec, nullptr);
+        handler(error::service_stopped, nullptr);
         return;
     }
 
