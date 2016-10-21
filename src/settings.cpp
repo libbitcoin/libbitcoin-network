@@ -50,10 +50,10 @@ settings::settings()
     debug_file("debug.log"),
     error_file("error.log"),
     logs_path("logs"),
-    log_rotation_size(std::numeric_limits<uintmax_t>::max()),
-    log_max_files(std::numeric_limits<uintmax_t>::max()),
-    log_max_files_size(std::numeric_limits<uintmax_t>::max()),
-    log_min_free_space(static_cast<uintmax_t>(0)),
+    log_rotation_size(std::numeric_limits<size_t>::max()),
+//    log_max_files(std::numeric_limits<size_t>::max()),
+    log_max_files_size(std::numeric_limits<size_t>::max()),
+    log_min_free_space(static_cast<size_t>(0)),
     self(unspecified_network_address)
 {
 }
