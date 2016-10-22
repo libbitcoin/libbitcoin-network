@@ -19,6 +19,7 @@
  */
 #include <bitcoin/network/settings.hpp>
 
+#include <limits>
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
@@ -48,6 +49,11 @@ settings::settings()
     hosts_file("hosts.cache"),
     debug_file("debug.log"),
     error_file("error.log"),
+    logs_path("logs"),
+    log_rotation_size(std::numeric_limits<size_t>::max()),
+//    log_max_files(std::numeric_limits<size_t>::max()),
+    log_max_files_size(std::numeric_limits<size_t>::max()),
+    log_min_free_space(static_cast<size_t>(0)),
     self(unspecified_network_address)
 {
 }

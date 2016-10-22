@@ -57,6 +57,11 @@ public:
     boost::filesystem::path hosts_file;
     boost::filesystem::path debug_file;
     boost::filesystem::path error_file;
+    boost::filesystem::path logs_path;
+    size_t log_rotation_size;
+//    size_t log_max_files;
+    size_t log_max_files_size;
+    size_t log_min_free_space;
     config::authority self;
     config::authority::list blacklists;
     config::endpoint::list peers;
