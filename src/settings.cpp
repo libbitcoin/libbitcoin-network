@@ -47,14 +47,16 @@ settings::settings()
     host_pool_capacity(0),
     relay_transactions(false),
     hosts_file("hosts.cache"),
+    self(unspecified_network_address),
+
+    // [log]
     debug_file("debug.log"),
     error_file("error.log"),
-    logs_path("logs"),
-    log_rotation_size(std::numeric_limits<size_t>::max()),
-//    log_max_files(std::numeric_limits<size_t>::max()),
-    log_max_files_size(std::numeric_limits<size_t>::max()),
-    log_min_free_space(static_cast<size_t>(0)),
-    self(unspecified_network_address)
+    archive_directory("archive"),
+    rotation_size(0),
+    maximum_archive_size(max_uint32),
+    minimum_free_space(0)
+    ////maximum_archive_files(max_uint32)
 {
 }
 
