@@ -20,6 +20,7 @@
 #ifndef LIBBITCOIN_NETWORK_SETTINGS_HPP
 #define LIBBITCOIN_NETWORK_SETTINGS_HPP
 
+#include <cstddef>
 #include <cstdint>
 #include <boost/filesystem.hpp>
 #include <bitcoin/bitcoin.hpp>
@@ -55,17 +56,19 @@ public:
     uint32_t host_pool_capacity;
     bool relay_transactions;
     boost::filesystem::path hosts_file;
-    boost::filesystem::path debug_file;
-    boost::filesystem::path error_file;
-    boost::filesystem::path logs_path;
-    size_t log_rotation_size;
-//    size_t log_max_files;
-    size_t log_max_files_size;
-    size_t log_min_free_space;
     config::authority self;
     config::authority::list blacklists;
     config::endpoint::list peers;
     config::endpoint::list seeds;
+
+    // [log]
+    boost::filesystem::path debug_file;
+    boost::filesystem::path error_file;
+    boost::filesystem::path archive_directory;
+    size_t rotation_size;
+    size_t maximum_archive_size;
+    size_t minimum_free_space;
+    ////size_t maximum_archive_files;
 
     /// Helpers.
     asio::duration connect_timeout() const;
