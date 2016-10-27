@@ -68,7 +68,7 @@ public:
     size_t rotation_size;
     size_t maximum_archive_size;
     size_t minimum_free_space;
-    ////size_t maximum_archive_files;
+    size_t maximum_archive_files;
 
     /// Helpers.
     asio::duration connect_timeout() const;
