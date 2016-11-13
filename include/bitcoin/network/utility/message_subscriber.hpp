@@ -57,7 +57,7 @@ class BCT_API message_subscriber
 public:
     DEFINE_SUBSCRIBER_TYPE(address);
     DEFINE_SUBSCRIBER_TYPE(alert);
-    DEFINE_SUBSCRIBER_TYPE(block_message);
+    DEFINE_SUBSCRIBER_TYPE(block);
     DEFINE_SUBSCRIBER_TYPE(block_transactions);
     DEFINE_SUBSCRIBER_TYPE(compact_block);
     DEFINE_SUBSCRIBER_TYPE(fee_filter);
@@ -79,7 +79,7 @@ public:
     DEFINE_SUBSCRIBER_TYPE(reject);
     DEFINE_SUBSCRIBER_TYPE(send_headers);
     DEFINE_SUBSCRIBER_TYPE(send_compact_blocks);
-    DEFINE_SUBSCRIBER_TYPE(transaction_message);
+    DEFINE_SUBSCRIBER_TYPE(transaction);
     DEFINE_SUBSCRIBER_TYPE(verack);
     DEFINE_SUBSCRIBER_TYPE(version);
 
@@ -182,7 +182,7 @@ public:
 private:
     DEFINE_SUBSCRIBER_OVERLOAD(address);
     DEFINE_SUBSCRIBER_OVERLOAD(alert);
-    DEFINE_SUBSCRIBER_OVERLOAD(block_message);
+    DEFINE_SUBSCRIBER_OVERLOAD(block);
     DEFINE_SUBSCRIBER_OVERLOAD(block_transactions);
     DEFINE_SUBSCRIBER_OVERLOAD(compact_block);
     DEFINE_SUBSCRIBER_OVERLOAD(fee_filter);
@@ -204,13 +204,13 @@ private:
     DEFINE_SUBSCRIBER_OVERLOAD(reject);
     DEFINE_SUBSCRIBER_OVERLOAD(send_headers);
     DEFINE_SUBSCRIBER_OVERLOAD(send_compact_blocks);
-    DEFINE_SUBSCRIBER_OVERLOAD(transaction_message);
+    DEFINE_SUBSCRIBER_OVERLOAD(transaction);
     DEFINE_SUBSCRIBER_OVERLOAD(verack);
     DEFINE_SUBSCRIBER_OVERLOAD(version);
 
     DECLARE_SUBSCRIBER(address);
     DECLARE_SUBSCRIBER(alert);
-    DECLARE_SUBSCRIBER(block_message);
+    DECLARE_SUBSCRIBER(block);
     DECLARE_SUBSCRIBER(block_transactions);
     DECLARE_SUBSCRIBER(compact_block);
     DECLARE_SUBSCRIBER(fee_filter);
@@ -232,7 +232,7 @@ private:
     DECLARE_SUBSCRIBER(reject);
     DECLARE_SUBSCRIBER(send_headers);
     DECLARE_SUBSCRIBER(send_compact_blocks);
-    DECLARE_SUBSCRIBER(transaction_message);
+    DECLARE_SUBSCRIBER(transaction);
     DECLARE_SUBSCRIBER(verack);
     DECLARE_SUBSCRIBER(version);
 };
