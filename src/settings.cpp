@@ -56,7 +56,8 @@ settings::settings()
     rotation_size(0),
     maximum_archive_size(max_uint32),
     minimum_free_space(0),
-    maximum_archive_files(max_uint32)
+    maximum_archive_files(max_uint32),
+    statsd_server(unspecified_network_address)
 {
 }
 
