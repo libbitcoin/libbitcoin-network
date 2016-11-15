@@ -122,7 +122,7 @@ void acceptor::accept(accept_handler handler)
         return;
     }
 
-    const auto socket = std::make_shared<bc::socket>(pool_);
+    const auto socket = std::make_shared<bc::socket>();
 
     // async_accept will not invoke the handler within this function.
     acceptor_->async_accept(socket->get(),

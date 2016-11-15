@@ -60,7 +60,9 @@ public:
     void send(const Message& message, result_handler handler)
     {
         auto data = message::serialize(version_, message, protocol_magic_);
-        do_send(message.command, std::move(data), handler);
+        const auto payload = std::make_shared<data_chunk>(std::move(data));
+        dispatch_.concurrent(&proxy::do_send,
+            shared_from_this(), message.command, payload, handler);
     }
 
     /// Subscribe to messages of the specified type on the socket.
@@ -106,15 +108,17 @@ private:
     void stop(const boost_code& ec);
 
     void read_heading();
+    void do_read_heading();
     void handle_read_heading(const boost_code& ec, size_t payload_size);
 
     void read_payload(const message::heading& head);
+    void do_read_payload(const message::heading& head);
     void handle_read_payload(const boost_code& ec, size_t,
         const message::heading& head);
 
-    void do_send(const std::string& command, data_chunk&& data,
+    void do_send(const std::string& command, payload_ptr payload,
         result_handler handler);
-    void handle_send(const boost_code& ec, size_t size, payload_ptr buffer,
+    void handle_send(const boost_code& ec, size_t size, payload_ptr payload,
         result_handler handler);
 
     const uint32_t protocol_magic_;
@@ -124,10 +128,9 @@ private:
     data_chunk heading_buffer_;
     data_chunk payload_buffer_;
 
-    // This is protected by mutexes.
+    // This is protected by use of a single thread io_service.
     socket::ptr socket_;
-    mutable upgrade_mutex interleave_mutex_;
-    mutable upgrade_mutex read_write_mutex_;
+    dispatcher dispatch_;
 
     // These are thread safe.
     std::atomic<bool> stopped_;
