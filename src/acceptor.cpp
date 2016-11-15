@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/utility/acceptor.hpp>
+#include <bitcoin/network/acceptor.hpp>
 
 #include <cstdint>
 #include <functional>
@@ -27,7 +27,6 @@
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
-#include <bitcoin/network/utility/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -123,24 +122,15 @@ void acceptor::accept(accept_handler handler)
         return;
     }
 
-    const auto socket = std::make_shared<network::socket>(pool_);
-    safe_accept(socket, handler);
+    const auto socket = std::make_shared<bc::socket>(pool_);
+
+    // async_accept will not invoke the handler within this function.
+    acceptor_->async_accept(socket->get(),
+        std::bind(&acceptor::handle_accept,
+            shared_from_this(), _1, socket, handler));
 
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
-}
-
-void acceptor::safe_accept(socket::ptr socket, accept_handler handler)
-{
-    // Critical Section (external)
-    /////////////////////////////////////////////////////////////////////////// 
-    const auto locked = socket->get_socket();
-
-    // async_accept will not invoke the handler within this function.
-    acceptor_->async_accept(locked->get(),
-        std::bind(&acceptor::handle_accept,
-            shared_from_this(), _1, socket, handler));
-    /////////////////////////////////////////////////////////////////////////// 
 }
 
 void acceptor::handle_accept(const boost_code& ec, socket::ptr socket,

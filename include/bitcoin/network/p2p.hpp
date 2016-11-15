@@ -33,12 +33,12 @@
 #include <bitcoin/network/collections/hosts.hpp>
 #include <bitcoin/network/collections/pending_channels.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/message_subscriber.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
 #include <bitcoin/network/sessions/session_outbound.hpp>
 #include <bitcoin/network/sessions/session_seed.hpp>
 #include <bitcoin/network/settings.hpp>
-#include <bitcoin/network/utility/message_subscriber.hpp>
 
 namespace libbitcoin {
 namespace network {

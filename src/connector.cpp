@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/utility/connector.hpp>
+#include <bitcoin/network/connector.hpp>
 
 #include <cstdint>
 #include <functional>
@@ -27,7 +27,6 @@
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
-#include <bitcoin/network/utility/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -56,12 +55,6 @@ connector::connector(threadpool& pool, const settings& settings)
 // public:
 void connector::stop()
 {
-    safe_stop();
-    pending_.clear();
-}
-
-void connector::safe_stop()
-{
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
@@ -82,6 +75,8 @@ void connector::safe_stop()
 
     mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
+
+    pending_.clear();
 }
 
 bool connector::stopped() const
@@ -128,7 +123,6 @@ void connector::connect(const std::string& hostname, uint16_t port,
     }
 
     auto query = std::make_shared<asio::query>(hostname, std::to_string(port));
-
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     mutex_.unlock_upgrade_and_lock();
 
@@ -144,6 +138,7 @@ void connector::connect(const std::string& hostname, uint16_t port,
 void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     connect_handler handler)
 {
+    using namespace boost::asio;
     static const auto mode = synchronizer_terminate::on_error;
 
     // Critical Section
@@ -168,38 +163,28 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
 
     const auto timeout = settings_.connect_timeout();
     const auto timer = std::make_shared<deadline>(pool_, timeout);
-    const auto socket = std::make_shared<network::socket>(pool_);
+    const auto socket = std::make_shared<bc::socket>(pool_);
 
+    // TODO: need to also enable timer cancelation.
     // Retain a socket reference until connected, allowing connect cancelation.
     pending_.store(socket);
 
-    // Manage the socket-timer race, terminating if either fails.
-    const auto handle_connect = synchronize(handler, 1, NAME, mode);
+    // Manage the timer-connect race, returning upon first completion.
+    const auto completion_handler = synchronize(handler, 1, NAME, mode);
 
-    // This is branch #1 of the connnect sequence.
+    // This is the start of the timer sub-sequence.
     timer->start(
         std::bind(&connector::handle_timer,
-            shared_from_this(), _1, socket, handle_connect));
+            shared_from_this(), _1, socket, completion_handler));
 
-    safe_connect(iterator, socket, timer, handle_connect);
+    // This is the start of the connect sub-sequence.
+    // async_connect will not invoke the handler within this function.
+    async_connect(socket->get(), iterator,
+        std::bind(&connector::handle_connect,
+            shared_from_this(), _1, _2, socket, timer, completion_handler));
 
     mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
-}
-
-void connector::safe_connect(asio::iterator iterator, socket::ptr socket,
-    deadline::ptr timer, connect_handler handler)
-{
-    // Critical Section (external)
-    /////////////////////////////////////////////////////////////////////////// 
-    const auto locked = socket->get_socket();
-
-    // This is branch #2 of the connnect sequence.
-    using namespace boost::asio;
-    async_connect(locked->get(), iterator,
-        std::bind(&connector::handle_connect,
-            shared_from_this(), _1, _2, socket, timer, handler));
-    /////////////////////////////////////////////////////////////////////////// 
 }
 
 // Timer sequence.
@@ -215,7 +200,8 @@ void connector::handle_timer(const code& ec, socket::ptr socket,
     else
         handler(error::channel_timeout, nullptr);
 
-    socket->close();
+    // Cancel any current operations on the socket.
+    socket->stop();
 }
 
 // Connect sequence.
@@ -233,6 +219,7 @@ void connector::handle_connect(const boost_code& ec, asio::iterator,
     else
         handler(error::success, new_channel(socket));
 
+    // Stop the timer so that this instance can be destroyed earlier.
     timer->stop();
 }
 

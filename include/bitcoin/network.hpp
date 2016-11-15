@@ -15,8 +15,11 @@
  */
 
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/network/acceptor.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/message_subscriber.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -40,11 +43,5 @@
 #include <bitcoin/network/sessions/session_manual.hpp>
 #include <bitcoin/network/sessions/session_outbound.hpp>
 #include <bitcoin/network/sessions/session_seed.hpp>
-#include <bitcoin/network/utility/acceptor.hpp>
-#include <bitcoin/network/utility/connector.hpp>
-#include <bitcoin/network/utility/const_buffer.hpp>
-#include <bitcoin/network/utility/locked_socket.hpp>
-#include <bitcoin/network/utility/message_subscriber.hpp>
-#include <bitcoin/network/utility/socket.hpp>
 
 #endif

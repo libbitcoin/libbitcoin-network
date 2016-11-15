@@ -29,9 +29,7 @@
 #include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/utility/const_buffer.hpp>
-#include <bitcoin/network/utility/message_subscriber.hpp>
-#include <bitcoin/network/utility/socket.hpp>
+#include <bitcoin/network/message_subscriber.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -45,8 +43,6 @@ public:
     typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> result_handler;
     typedef subscriber<const code&> stop_subscriber;
-    typedef resubscriber<const code&, const std::string&, const_buffer,
-        result_handler> send_subscriber;
 
     /// Construct an instance.
     proxy(threadpool& pool, socket::ptr socket, uint32_t protocol_magic,
@@ -63,9 +59,8 @@ public:
     template <class Message>
     void send(const Message& message, result_handler handler)
     {
-        const auto buffer = const_buffer(message::serialize(version_,
-            message, protocol_magic_));
-        do_send(message.command, buffer, handler);
+        auto data = message::serialize(version_, message, protocol_magic_);
+        do_send(message.command, std::move(data), handler);
     }
 
     /// Subscribe to messages of the specified type on the socket.
@@ -103,6 +98,7 @@ protected:
 private:
     typedef byte_source<data_chunk> payload_source;
     typedef boost::iostreams::stream<payload_source> payload_stream;
+    typedef std::shared_ptr<data_chunk> payload_ptr;
 
     static config::authority authority_factory(socket::ptr socket);
 
@@ -116,9 +112,9 @@ private:
     void handle_read_payload(const boost_code& ec, size_t,
         const message::heading& head);
 
-    void do_send(const std::string& command, const_buffer buffer,
+    void do_send(const std::string& command, data_chunk&& data,
         result_handler handler);
-    void handle_send(const boost_code& ec, const_buffer buffer,
+    void handle_send(const boost_code& ec, size_t size, payload_ptr buffer,
         result_handler handler);
 
     const uint32_t protocol_magic_;
@@ -128,8 +124,12 @@ private:
     data_chunk heading_buffer_;
     data_chunk payload_buffer_;
 
-    // These are thread safe.
+    // This is protected by mutexes.
     socket::ptr socket_;
+    mutable upgrade_mutex interleave_mutex_;
+    mutable upgrade_mutex read_write_mutex_;
+
+    // These are thread safe.
     std::atomic<bool> stopped_;
     std::atomic<uint32_t> version_;
     message_subscriber message_subscriber_;

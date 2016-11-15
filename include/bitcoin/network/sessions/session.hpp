@@ -25,13 +25,13 @@
 #include <functional>
 #include <memory>
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/network/acceptor.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/collections/connections.hpp>
+#include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
-#include <bitcoin/network/utility/acceptor.hpp>
-#include <bitcoin/network/utility/connector.hpp>
 
 namespace libbitcoin {
 namespace network {
