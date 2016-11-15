@@ -163,7 +163,7 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
 
     const auto timeout = settings_.connect_timeout();
     const auto timer = std::make_shared<deadline>(pool_, timeout);
-    const auto socket = std::make_shared<bc::socket>(pool_);
+    const auto socket = std::make_shared<bc::socket>();
 
     // TODO: need to also enable timer cancelation.
     // Retain a socket reference until connected, allowing connect cancelation.
@@ -194,14 +194,14 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
 void connector::handle_timer(const code& ec, socket::ptr socket,
    connect_handler handler)
 {
+    // Cancel any current operations on the socket.
+    socket->stop();
+
     // This is the end of the timer sequence.
     if (ec)
         handler(ec, nullptr);
     else
         handler(error::channel_timeout, nullptr);
-
-    // Cancel any current operations on the socket.
-    socket->stop();
 }
 
 // Connect sequence.
@@ -211,6 +211,9 @@ void connector::handle_timer(const code& ec, socket::ptr socket,
 void connector::handle_connect(const boost_code& ec, asio::iterator,
     socket::ptr socket, deadline::ptr timer, connect_handler handler)
 {
+    // Stop the timer so that this instance can be destroyed earlier.
+    timer->stop();
+
     pending_.remove(socket);
 
     // This is the end of the connect sequence.
@@ -218,9 +221,6 @@ void connector::handle_connect(const boost_code& ec, asio::iterator,
         handler(error::boost_to_error_code(ec), nullptr);
     else
         handler(error::success, new_channel(socket));
-
-    // Stop the timer so that this instance can be destroyed earlier.
-    timer->stop();
 }
 
 std::shared_ptr<channel> connector::new_channel(socket::ptr socket)
