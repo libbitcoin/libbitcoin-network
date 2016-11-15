@@ -20,8 +20,8 @@
 #include <bitcoin/network/sessions/session_batch.hpp>
 
 #include <bitcoin/bitcoin.hpp>
+#include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/utility/connector.hpp>
 
 namespace libbitcoin {
 namespace network {

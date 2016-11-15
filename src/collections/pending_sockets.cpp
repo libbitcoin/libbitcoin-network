@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/proxy.hpp>
-#include <bitcoin/network/utility/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -47,7 +46,7 @@ void pending_sockets::clear()
 
     // This will asynchronously invoke the handler of each pending connect.
     for (auto socket: sockets_)
-        socket->close();
+        socket->stop();
 
     sockets_.clear();
     ///////////////////////////////////////////////////////////////////////////

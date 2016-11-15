@@ -35,7 +35,10 @@ lib_LTLIBRARIES = src/libbitcoin-network.la
 src_libbitcoin_network_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_CPPFLAGS}
 src_libbitcoin_network_la_LIBADD = ${bitcoin_LIBS}
 src_libbitcoin_network_la_SOURCES = \
+    src/acceptor.cpp \
     src/channel.cpp \
+    src/connector.cpp \
+    src/message_subscriber.cpp \
     src/p2p.cpp \
     src/proxy.cpp \
     src/settings.cpp \
@@ -57,13 +60,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/sessions/session_inbound.cpp \
     src/sessions/session_manual.cpp \
     src/sessions/session_outbound.cpp \
-    src/sessions/session_seed.cpp \
-    src/utility/acceptor.cpp \
-    src/utility/connector.cpp \
-    src/utility/const_buffer.cpp \
-    src/utility/locked_socket.cpp \
-    src/utility/message_subscriber.cpp \
-    src/utility/socket.cpp
+    src/sessions/session_seed.cpp
 
 # local: test/libbitcoin_network_test
 #------------------------------------------------------------------------------
@@ -88,8 +85,11 @@ include_bitcoin_HEADERS = \
 
 include_bitcoin_networkdir = ${includedir}/bitcoin/network
 include_bitcoin_network_HEADERS = \
+    include/bitcoin/network/acceptor.hpp \
     include/bitcoin/network/channel.hpp \
+    include/bitcoin/network/connector.hpp \
     include/bitcoin/network/define.hpp \
+    include/bitcoin/network/message_subscriber.hpp \
     include/bitcoin/network/p2p.hpp \
     include/bitcoin/network/proxy.hpp \
     include/bitcoin/network/settings.hpp \
@@ -122,13 +122,4 @@ include_bitcoin_network_sessions_HEADERS = \
     include/bitcoin/network/sessions/session_manual.hpp \
     include/bitcoin/network/sessions/session_outbound.hpp \
     include/bitcoin/network/sessions/session_seed.hpp
-
-include_bitcoin_network_utilitydir = ${includedir}/bitcoin/network/utility
-include_bitcoin_network_utility_HEADERS = \
-    include/bitcoin/network/utility/acceptor.hpp \
-    include/bitcoin/network/utility/connector.hpp \
-    include/bitcoin/network/utility/const_buffer.hpp \
-    include/bitcoin/network/utility/locked_socket.hpp \
-    include/bitcoin/network/utility/message_subscriber.hpp \
-    include/bitcoin/network/utility/socket.hpp
 

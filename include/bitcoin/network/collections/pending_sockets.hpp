@@ -23,7 +23,6 @@
 #include <vector>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/utility/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
