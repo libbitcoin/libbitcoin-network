@@ -33,9 +33,11 @@
 namespace libbitcoin {
 namespace network {
 
-/// Create outbound socket connections, thread and lock safe.
+/// Create outbound socket connections.
+/// This class is thread safe against stop.
+/// This class is not safe for concurrent connection attempts.
 class BCT_API connector
-  : public enable_shared_from_base<connector>, track<connector>
+  : public enable_shared_from_base<connector>, noncopyable, track<connector>
 {
 public:
     typedef std::shared_ptr<connector> ptr;
@@ -43,10 +45,6 @@ public:
 
     /// Construct an instance.
     connector(threadpool& pool, const settings& settings);
-
-    /// This class is not copyable.
-    connector(const connector&) = delete;
-    void operator=(const connector&) = delete;
 
     /// Try to connect to the endpoint.
     virtual void connect(const config::endpoint& endpoint,
@@ -64,6 +62,8 @@ public:
     void stop();
 
 private:
+    typedef std::shared_ptr<asio::query> query_ptr;
+
     bool stopped() const;
     void close_socket(socket socket);
     std::shared_ptr<channel> new_channel(socket::ptr socket);
@@ -82,7 +82,8 @@ private:
     mutable dispatcher dispatch_;
 
     // This is protected by mutex.
-    std::shared_ptr<asio::resolver> resolver_;
+    query_ptr query_;
+    asio::resolver resolver_;
     mutable upgrade_mutex mutex_;
 };
 

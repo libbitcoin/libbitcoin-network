@@ -32,11 +32,9 @@ namespace libbitcoin {
 namespace network {
 
 #define NAME "connector"
-    
+
 using namespace bc::config;
 using namespace std::placeholders;
-
-// The resolver_, pending_, and stopped_ members are protected.
 
 connector::connector(threadpool& pool, const settings& settings)
   : stopped_(false),
@@ -44,7 +42,7 @@ connector::connector(threadpool& pool, const settings& settings)
     settings_(settings),
     pending_(settings_),
     dispatch_(pool, NAME),
-    resolver_(std::make_shared<asio::resolver>(pool.service())),
+    resolver_(pool.service()),
     CONSTRUCT_TRACK(connector)
 {
 }
@@ -64,8 +62,8 @@ void connector::stop()
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         mutex_.unlock_upgrade_and_lock();
 
-        // This will asynchronously invoke the handler of each pending resolve.
-        resolver_->cancel();
+        // This will asynchronously invoke the handler of the pending resolve.
+        resolver_.cancel();
         stopped_ = true;
 
         mutex_.unlock();
@@ -114,20 +112,18 @@ void connector::connect(const std::string& hostname, uint16_t port,
 
     if (stopped_)
     {
-        // We preserve the asynchronous contract of the async_resolve.
-        // Dispatch ensures job does not execute in the current thread.
-        dispatch_.concurrent(handler, error::service_stopped, nullptr);
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
+        dispatch_.concurrent(handler, error::service_stopped, nullptr);
         return;
     }
 
-    auto query = std::make_shared<asio::query>(hostname, std::to_string(port));
+    query_ = std::make_shared<asio::query>(hostname, std::to_string(port));
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     mutex_.unlock_upgrade_and_lock();
 
     // async_resolve will not invoke the handler within this function.
-    resolver_->async_resolve(*query,
+    resolver_.async_resolve(*query_,
         std::bind(&connector::handle_resolve,
             shared_from_this(), _1, _2, handler));
 
@@ -147,17 +143,17 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
 
     if (stopped_)
     {
-        dispatch_.concurrent(handler, error::service_stopped, nullptr);
         mutex_.unlock_shared();
         //---------------------------------------------------------------------
+        dispatch_.concurrent(handler, error::service_stopped, nullptr);
         return;
     }
 
     if (ec)
     {
-        dispatch_.concurrent(handler, error::resolve_failed, nullptr);
         mutex_.unlock_shared();
         //---------------------------------------------------------------------
+        dispatch_.concurrent(handler, error::resolve_failed, nullptr);
         return;
     }
 
@@ -165,7 +161,6 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     const auto timer = std::make_shared<deadline>(pool_, timeout);
     const auto socket = std::make_shared<bc::socket>();
 
-    // TODO: need to also enable timer cancelation.
     // Retain a socket reference until connected, allowing connect cancelation.
     pending_.store(socket);
 
