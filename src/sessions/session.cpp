@@ -99,7 +99,7 @@ bool session::blacklisted(const authority& authority) const
 
 // Socket creators.
 // ----------------------------------------------------------------------------
-// Must not change context in the stop handlers (must use bind).
+// Must not change thread context in the stop handlers.
 
 // protected:
 acceptor::ptr session::create_acceptor()
