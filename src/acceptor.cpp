@@ -41,14 +41,14 @@ acceptor::acceptor(threadpool& pool, const settings& settings)
   : pool_(pool),
     settings_(settings),
     dispatch_(pool, NAME),
-    acceptor_(std::make_shared<asio::acceptor>(pool_.service())),
+    acceptor_(pool_.service()),
     CONSTRUCT_TRACK(acceptor)
 {
 }
 
 acceptor::~acceptor()
 {
-    BITCOIN_ASSERT_MSG(!acceptor_->is_open(), "The acceptor was not stopped.");
+    BITCOIN_ASSERT_MSG(!acceptor_.is_open(), "The acceptor was not stopped.");
 }
 
 // Stop sequence.
@@ -62,7 +62,7 @@ void acceptor::stop()
     unique_lock lock(mutex_);
 
     // This will asynchronously invoke the handler of each pending accept.
-    acceptor_->close();
+    acceptor_.close();
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -81,27 +81,35 @@ code acceptor::safe_listen(uint16_t port)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
+    mutex_.lock_upgrade();
 
-    if (acceptor_->is_open())
+    if (acceptor_.is_open())
+    {
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
         return error::operation_failed;
+    }
 
     boost_code error;
     asio::endpoint endpoint(asio::tcp::v6(), settings_.inbound_port);
 
-    acceptor_->open(endpoint.protocol(), error);
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    acceptor_.open(endpoint.protocol(), error);
 
     if (!error)
-        acceptor_->set_option(reuse_address, error);
+        acceptor_.set_option(reuse_address, error);
 
     if (!error)
-        acceptor_->bind(endpoint, error);
+        acceptor_.bind(endpoint, error);
 
     if (!error)
-        acceptor_->listen(asio::max_connections, error);
+        acceptor_.listen(asio::max_connections, error);
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
 
     return error::boost_to_error_code(error);
-    ///////////////////////////////////////////////////////////////////////////
 }
 
 // Accept sequence.
@@ -112,20 +120,23 @@ void acceptor::accept(accept_handler handler)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock();
+    mutex_.lock_upgrade();
 
-    if (!acceptor_->is_open())
+    if (!acceptor_.is_open())
     {
-        dispatch_.concurrent(handler, error::service_stopped, nullptr);
-        mutex_.unlock();
+        mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
+        dispatch_.concurrent(handler, error::service_stopped, nullptr);
         return;
     }
 
     const auto socket = std::make_shared<bc::socket>();
 
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
     // async_accept will not invoke the handler within this function.
-    acceptor_->async_accept(socket->get(),
+    acceptor_.async_accept(socket->get(),
         std::bind(&acceptor::handle_accept,
             shared_from_this(), _1, socket, handler));
 

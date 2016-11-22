@@ -32,9 +32,11 @@
 namespace libbitcoin {
 namespace network {
 
-/// Create inbound socket connections, thread and lock safe.
+/// Create inbound socket connections.
+/// This class is thread safe against stop.
+/// This class is not safe for concurrent listening attempts.
 class BCT_API acceptor
-  : public enable_shared_from_base<acceptor>, track<acceptor>
+  : public enable_shared_from_base<acceptor>, noncopyable, track<acceptor>
 {
 public:
     typedef std::shared_ptr<acceptor> ptr;
@@ -46,10 +48,6 @@ public:
 
     /// Validate acceptor stopped.
     ~acceptor();
-
-    /// This class is not copyable.
-    acceptor(const acceptor&) = delete;
-    void operator=(const acceptor&) = delete;
 
     /// Start the listener on the specified port.
     virtual void listen(uint16_t port, result_handler handler);
@@ -72,7 +70,7 @@ private:
     mutable dispatcher dispatch_;
 
     // This is protected by mutex.
-    asio::acceptor_ptr acceptor_;
+    asio::acceptor acceptor_;
     mutable shared_mutex mutex_;
 };
 
