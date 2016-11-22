@@ -69,7 +69,7 @@ private:
     std::shared_ptr<channel> new_channel(socket::ptr socket);
     void handle_resolve(const boost_code& ec, asio::iterator iterator,
         connect_handler handler);
-    void handle_timer(const code& ec, socket::ptr socket,
+    void handle_timer(const code& ec, socket::ptr socket, deadline::ptr,
         connect_handler handler);
     void handle_connect(const boost_code& ec, asio::iterator iterator,
         socket::ptr socket, deadline::ptr timer, connect_handler handler);

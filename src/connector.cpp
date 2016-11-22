@@ -170,7 +170,7 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     // This is the start of the timer sub-sequence.
     timer->start(
         std::bind(&connector::handle_timer,
-            shared_from_this(), _1, socket, completion_handler));
+            shared_from_this(), _1, socket, timer, completion_handler));
 
     // This is the start of the connect sub-sequence.
     // async_connect will not invoke the handler within this function.
@@ -186,7 +186,7 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
 // ----------------------------------------------------------------------------
 
 // private:
-void connector::handle_timer(const code& ec, socket::ptr socket,
+void connector::handle_timer(const code& ec, socket::ptr socket, deadline::ptr,
    connect_handler handler)
 {
     // Cancel any current operations on the socket.
@@ -206,6 +206,7 @@ void connector::handle_timer(const code& ec, socket::ptr socket,
 void connector::handle_connect(const boost_code& ec, asio::iterator,
     socket::ptr socket, deadline::ptr timer, connect_handler handler)
 {
+    // TODO: this causes a unit test exception in debug builds.
     // Stop the timer so that this instance can be destroyed earlier.
     timer->stop();
 
