@@ -73,10 +73,9 @@ protected:
 
     /// Send a message on the channel and handle the result.
     template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(Message&& packet, Handler&& handler, Args&&... args)
+    void send(const Message& packet, Handler&& handler, Args&&... args)
     {
-        channel_->send(std::forward<Message>(packet),
-            BOUND_PROTOCOL(handler, args));
+        channel_->send(packet, BOUND_PROTOCOL(handler, args));
     }
 
     /// Subscribe to all channel messages, blocking until subscribed.
