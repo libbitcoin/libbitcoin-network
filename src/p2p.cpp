@@ -56,7 +56,7 @@ p2p::p2p(const settings& settings)
     top_block_({ null_hash, 0 }),
     pending_(settings_),
     connections_(settings_),
-    hosts_(threadpool_, settings_),
+    hosts_(settings_),
     stop_subscriber_(std::make_shared<stop_subscriber>(threadpool_, NAME "_stop_sub")),
     channel_subscriber_(std::make_shared<channel_subscriber>(threadpool_, NAME "_sub"))
 {

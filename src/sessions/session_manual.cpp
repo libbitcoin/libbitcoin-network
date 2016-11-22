@@ -59,8 +59,6 @@ void session_manual::handle_started(const code& ec, result_handler handler)
         return;
     }
 
-    connector_.store(create_connector());
-
     // This is the end of the start sequence.
     handler(error::success);
 }
@@ -89,12 +87,11 @@ void session_manual::start_connect(const std::string& hostname, uint16_t port,
         LOG_DEBUG(LOG_NETWORK)
             << "Suspended manual connection.";
 
-        connector_.store(nullptr);
         handler(error::service_stopped, nullptr);
         return;
     }
 
-    auto connector = connector_.load();
+    auto connector = create_connector();
     BITCOIN_ASSERT_MSG(connector, "The manual session was not started.");
 
     // MANUAL CONNECT OUTBOUND

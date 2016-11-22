@@ -57,14 +57,14 @@ protected:
     virtual void attach_protocols(channel::ptr channel);
 
 private:
-    void start_accept(const code& ec, acceptor::ptr accept);
+    void start_accept(const code& ec, acceptor::ptr acceptor);
 
     void handle_started(const code& ec, result_handler handler);
     void handle_connection_count(size_t connections, channel::ptr channel);
     void handle_is_pending(bool pending, channel::ptr channel,
         result_handler handle_started);
     void handle_accept(const code& ec, channel::ptr channel,
-        acceptor::ptr accept);
+        acceptor::ptr acceptor);
 
     void handle_channel_start(const code& ec, channel::ptr channel);
     void handle_channel_stop(const code& ec);

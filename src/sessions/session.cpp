@@ -99,13 +99,13 @@ bool session::blacklisted(const authority& authority) const
 
 // Socket creators.
 // ----------------------------------------------------------------------------
-// Must not change context in the stop handlers (must use bind).
+// Must not change thread context in the stop handlers.
 
 // protected:
 acceptor::ptr session::create_acceptor()
 {
     const auto accept = std::make_shared<acceptor>(pool_, settings_);
-    subscribe_stop(BIND_2(do_stop_acceptor, _1, accept));
+    ////subscribe_stop(BIND_2(do_stop_acceptor, _1, accept));
     return accept;
 }
 
@@ -118,7 +118,7 @@ void session::do_stop_acceptor(const code&, acceptor::ptr accept)
 connector::ptr session::create_connector()
 {
     const auto connect = std::make_shared<connector>(pool_, settings_);
-    subscribe_stop(BIND_2(do_stop_connector, _1, connect));
+    ////subscribe_stop(BIND_2(do_stop_connector, _1, connect));
     return connect;
 }
 

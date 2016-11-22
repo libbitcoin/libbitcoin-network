@@ -22,7 +22,6 @@
 
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -42,13 +41,13 @@ protected:
     session_batch(p2p& network, bool notify_on_connect);
 
     /// Create a channel from the configured number of concurrent attempts.
-    virtual void connect(connector::ptr connect, channel_handler handler);
+    virtual void connect(channel_handler handler);
 
 private:
     // Connect sequence
-    void new_connect(connector::ptr connect, channel_handler handler);
+    void new_connect(connector::ptr connector, channel_handler handler);
     void start_connect(const code& ec, const authority& host,
-        connector::ptr connect, channel_handler handler);
+        connector::ptr connector, channel_handler handler);
     void handle_connect(const code& ec, channel::ptr channel,
         channel_handler handler);
 
