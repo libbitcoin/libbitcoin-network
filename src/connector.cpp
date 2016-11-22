@@ -209,7 +209,7 @@ void connector::handle_connect(const boost_code& ec, asio::iterator,
 {
     // TODO: this causes a unit test exception in debug builds.
     // Stop the timer so that this instance can be destroyed earlier.
-    timer->stop();
+    ////timer->stop();
 
     pending_.remove(socket);
 
