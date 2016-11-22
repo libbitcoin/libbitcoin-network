@@ -42,7 +42,7 @@ session_batch::session_batch(p2p& network, bool notify_on_connect)
 // ----------------------------------------------------------------------------
 
 // protected:
-void session_batch::connect(connector::ptr connect, channel_handler handler)
+void session_batch::connect(channel_handler handler)
 {
     static const auto mode = synchronizer_terminate::on_success;
 
@@ -53,10 +53,10 @@ void session_batch::connect(connector::ptr connect, channel_handler handler)
         synchronize(complete_handler, batch_size_, NAME "_join", mode);
 
     for (uint32_t host = 0; host < batch_size_; ++host)
-        new_connect(connect, join_handler);
+        new_connect(create_connector(), join_handler);
 }
 
-void session_batch::new_connect(connector::ptr connect,
+void session_batch::new_connect(connector::ptr connector,
     channel_handler handler)
 {
     if (stopped())
@@ -67,11 +67,11 @@ void session_batch::new_connect(connector::ptr connect,
         return;
     }
 
-    fetch_address(BIND4(start_connect, _1, _2, connect, handler));
+    fetch_address(BIND4(start_connect, _1, _2, connector, handler));
 }
 
 void session_batch::start_connect(const code& ec, const authority& host,
-    connector::ptr connect, channel_handler handler)
+    connector::ptr connector, channel_handler handler)
 {
     if (stopped() || ec == error::service_stopped)
     {
@@ -103,7 +103,7 @@ void session_batch::start_connect(const code& ec, const authority& host,
         << "Connecting to [" << host << "]";
 
     // CONNECT
-    connect->connect(host, handler);
+    connector->connect(host, handler);
 }
 
 // It is common for no connections, one connection or multiple connections to

@@ -64,11 +64,11 @@ void session_inbound::handle_started(const code& ec, result_handler handler)
         return;
     }
 
-    const auto accept = create_acceptor();
+    const auto acceptor = create_acceptor();
     const auto port = settings_.inbound_port;
 
     // START LISTENING ON PORT
-    accept->listen(port, BIND2(start_accept, _1, accept));
+    acceptor->listen(port, BIND2(start_accept, _1, acceptor));
 
     // This is the end of the start sequence.
     handler(error::success);
@@ -77,7 +77,7 @@ void session_inbound::handle_started(const code& ec, result_handler handler)
 // Accept sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept(const code& ec, acceptor::ptr accept)
+void session_inbound::start_accept(const code& ec, acceptor::ptr acceptor)
 {
     if (stopped())
     {
@@ -94,11 +94,11 @@ void session_inbound::start_accept(const code& ec, acceptor::ptr accept)
     }
 
     // ACCEPT THE NEXT INCOMING CONNECTION
-    accept->accept(BIND3(handle_accept, _1, _2, accept));
+    acceptor->accept(BIND3(handle_accept, _1, _2, acceptor));
 }
 
 void session_inbound::handle_accept(const code& ec, channel::ptr channel,
-    acceptor::ptr accept)
+    acceptor::ptr acceptor)
 {
     if (stopped())
     {
@@ -107,7 +107,7 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel,
         return;
     }
 
-    start_accept(error::success, accept);
+    start_accept(error::success, acceptor);
 
     if (ec)
     {

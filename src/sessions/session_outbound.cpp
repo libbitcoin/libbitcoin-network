@@ -64,9 +64,8 @@ void session_outbound::handle_started(const code& ec, result_handler handler)
         return;
     }
 
-    const auto connect = create_connector();
     for (size_t peer = 0; peer < settings_.outbound_connections; ++peer)
-        new_connection(connect);
+        new_connection();
 
     // This is the end of the start sequence.
     handler(error::success);
@@ -75,7 +74,7 @@ void session_outbound::handle_started(const code& ec, result_handler handler)
 // Connnect cycle.
 // ----------------------------------------------------------------------------
 
-void session_outbound::new_connection(connector::ptr connect)
+void session_outbound::new_connection()
 {
     if (stopped())
     {
@@ -84,17 +83,16 @@ void session_outbound::new_connection(connector::ptr connect)
         return;
     }
 
-    this->connect(connect, BIND3(handle_connect, _1, _2, connect));
+    session_batch::connect(BIND2(handle_connect, _1, _2));
 }
 
-void session_outbound::handle_connect(const code& ec, channel::ptr channel,
-    connector::ptr connect)
+void session_outbound::handle_connect(const code& ec, channel::ptr channel)
 {
     if (ec)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure connecting outbound: " << ec.message();
-        new_connection(connect);
+        new_connection();
         return;
     }
 
@@ -102,12 +100,12 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
         << "Connected to outbound channel [" << channel->authority() << "]";
 
     register_channel(channel, 
-        BIND3(handle_channel_start, _1, connect, channel),
-        BIND3(handle_channel_stop, _1, connect, channel));
+        BIND2(handle_channel_start, _1, channel),
+        BIND2(handle_channel_stop, _1, channel));
 }
 
 void session_outbound::handle_channel_start(const code& ec,
-    connector::ptr connect, channel::ptr channel)
+    channel::ptr channel)
 {
     // The start failure is also caught by handle_channel_stop. 
     if (ec)
@@ -132,13 +130,13 @@ void session_outbound::attach_protocols(channel::ptr channel)
 }
 
 void session_outbound::handle_channel_stop(const code& ec,
-    connector::ptr connect, channel::ptr channel)
+    channel::ptr channel)
 {
     LOG_DEBUG(LOG_NETWORK)
         << "Outbound channel stopped [" << channel->authority() << "] "
         << ec.message();
 
-    new_connection(connect);
+    new_connection();
 }
 
 // Channel start sequence.
