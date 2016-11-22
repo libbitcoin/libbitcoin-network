@@ -31,7 +31,7 @@ namespace network {
 
 #define NAME "hosts"
 
-hosts::hosts(threadpool& pool, const settings& settings)
+hosts::hosts(const settings& settings)
   : buffer_(std::max(settings.host_pool_capacity, 1u)),
     stopped_(true),
     file_path_(settings.hosts_file),

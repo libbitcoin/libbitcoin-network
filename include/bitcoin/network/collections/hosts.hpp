@@ -45,7 +45,7 @@ public:
     typedef handle0 result_handler;
 
     /// Construct an instance.
-    hosts(threadpool& pool, const settings& settings);
+    hosts(const settings& settings);
 
     /// This class is not copyable.
     hosts(const hosts&) = delete;
