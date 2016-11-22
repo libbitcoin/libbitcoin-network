@@ -74,6 +74,7 @@ void connector::stop()
     mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
 
+    // TODO: make this a single bc::atomic?
     pending_.clear();
 }
 
