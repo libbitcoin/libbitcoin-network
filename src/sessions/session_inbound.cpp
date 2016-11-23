@@ -181,16 +181,17 @@ void session_inbound::handle_channel_stop(const code& ec)
 
 // Channel start sequence.
 // ----------------------------------------------------------------------------
-// Loopback test required for incoming connections.
+// Loopback test required for inbound connections.
 
-void session_inbound::start_channel(channel::ptr channel,
+void session_inbound::handshake_complete(channel::ptr channel,
     result_handler handle_started)
 {
+    // This will fail if the nonce mathches that of a pending connection.
     pending(channel->peer_version()->nonce(),
-        BIND3(handle_is_pending, _1, channel, handle_started));
+        BIND3(handle_pending, _1, channel, handle_started));
 }
 
-void session_inbound::handle_is_pending(bool pending, channel::ptr channel,
+void session_inbound::handle_pending(bool pending, channel::ptr channel,
     result_handler handle_started)
 {
     if (pending)
@@ -202,7 +203,7 @@ void session_inbound::handle_is_pending(bool pending, channel::ptr channel,
         return;
     }
 
-    session::start_channel(channel, handle_started);
+    session::handshake_complete(channel, handle_started);
 }
 
 } // namespace network

@@ -241,6 +241,12 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
         return;
     }
 
+    handshake_complete(channel, handle_started);
+}
+
+void session::handshake_complete(channel::ptr channel,
+    result_handler handle_started)
+{
     // This will fail if the IP address or nonce is already connected.
     network_.store(channel, handle_started);
 }

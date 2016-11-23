@@ -162,12 +162,16 @@ protected:
     virtual void register_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
 
-    /// Start the channel, override to perform pending or loopback check.
+    /// Start the channel, override to perform pending registration.
     virtual void start_channel(channel::ptr channel,
         result_handler handle_started);
 
     /// Override to attach specialized handshake protocols upon session start.
     virtual void attach_handshake_protocols(channel::ptr channel,
+        result_handler handle_started);
+
+    /// The handshake is complete, override to perform loopback check.
+    virtual void handshake_complete(channel::ptr channel,
         result_handler handle_started);
 
     // TODO: create session_timer base class.
