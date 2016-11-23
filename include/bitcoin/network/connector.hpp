@@ -46,6 +46,9 @@ public:
     /// Construct an instance.
     connector(threadpool& pool, const settings& settings);
 
+    /// Clean up an instance.
+    ~connector();
+
     /// Try to connect to the endpoint.
     virtual void connect(const config::endpoint& endpoint,
         connect_handler handler);

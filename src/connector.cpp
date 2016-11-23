@@ -47,6 +47,11 @@ connector::connector(threadpool& pool, const settings& settings)
 {
 }
 
+connector::~connector()
+{
+    BITCOIN_ASSERT_MSG(!stopped_, "The connector was not stopped.");
+}
+
 // Stop sequence.
 // ----------------------------------------------------------------------------
 
