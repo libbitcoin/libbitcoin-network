@@ -183,9 +183,6 @@ private:
         return BOUND_BASE(handler, args);
     }
 
-    void do_stop_acceptor(const code& ec, acceptor::ptr connect);
-    void do_stop_connector(const code& ec, connector::ptr connect);
-
     void do_stop_session(const code&);
     void do_remove(const code& ec, channel::ptr channel,
         result_handler handle_stopped);

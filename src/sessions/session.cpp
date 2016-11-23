@@ -104,27 +104,13 @@ bool session::blacklisted(const authority& authority) const
 // protected:
 acceptor::ptr session::create_acceptor()
 {
-    const auto accept = std::make_shared<acceptor>(pool_, settings_);
-    ////subscribe_stop(BIND_2(do_stop_acceptor, _1, accept));
-    return accept;
-}
-
-void session::do_stop_acceptor(const code&, acceptor::ptr accept)
-{
-    accept->stop();
+    return std::make_shared<acceptor>(pool_, settings_);
 }
 
 // protected:
 connector::ptr session::create_connector()
 {
-    const auto connect = std::make_shared<connector>(pool_, settings_);
-    ////subscribe_stop(BIND_2(do_stop_connector, _1, connect));
-    return connect;
-}
-
-void session::do_stop_connector(const code&, connector::ptr connect)
-{
-    connect->stop();
+    return std::make_shared<connector>(pool_, settings_);
 }
 
 // Pending connections collection.
