@@ -70,11 +70,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\channel.cpp" />
-    <ClCompile Include="..\..\..\..\src\collections\connections.cpp" />
-    <ClCompile Include="..\..\..\..\src\collections\hosts.cpp" />
-    <ClCompile Include="..\..\..\..\src\collections\pending_channels.cpp" />
-    <ClCompile Include="..\..\..\..\src\collections\pending_sockets.cpp" />
     <ClCompile Include="..\..\..\..\src\connector.cpp" />
+    <ClCompile Include="..\..\..\..\src\hosts.cpp" />
     <ClCompile Include="..\..\..\..\src\message_subscriber.cpp" />
     <ClCompile Include="..\..\..\..\src\p2p.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_60001.cpp" />
@@ -99,12 +96,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channel.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\connections.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\hosts.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\pending_channels.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\pending_sockets.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\connector.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\hosts.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\logging.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\message_subscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2p.hpp" />

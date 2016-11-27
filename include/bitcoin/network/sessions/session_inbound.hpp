@@ -57,17 +57,18 @@ protected:
     virtual void attach_protocols(channel::ptr channel);
 
 private:
-    void start_accept(const code& ec, acceptor::ptr acceptor);
+    void start_accept(const code& ec);
 
+    void handle_stop(const code& ec);
     void handle_started(const code& ec, result_handler handler);
-    void handle_connection_count(size_t connections, channel::ptr channel);
-    void handle_pending(bool pending, channel::ptr channel,
-        result_handler handle_started);
-    void handle_accept(const code& ec, channel::ptr channel,
-        acceptor::ptr acceptor);
+    void handle_accept(const code& ec, channel::ptr channel);
 
     void handle_channel_start(const code& ec, channel::ptr channel);
     void handle_channel_stop(const code& ec);
+
+    // These are thread safe.
+    acceptor::ptr acceptor_;
+    const size_t connection_limit_;
 };
 
 } // namespace network

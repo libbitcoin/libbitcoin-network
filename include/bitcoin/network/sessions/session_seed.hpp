@@ -25,6 +25,7 @@
 #include <vector>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -57,17 +58,13 @@ protected:
         result_handler handler);
 
 private:
-    void handle_count(size_t start_size, result_handler handler);
-    void start_seeding(size_t start_size, connector::ptr connect,
-        result_handler handler);
-    void start_seed(const config::endpoint& seed, connector::ptr connect,
-        result_handler handler);
+    void start_seeding(size_t start_size, result_handler handler);
+    void start_seed(const config::endpoint& seed, result_handler handler);
     void handle_started(const code& ec, result_handler handler);
     void handle_connect(const code& ec, channel::ptr channel,
-        const config::endpoint& seed, result_handler handler);
-    void handle_complete(size_t start_size, result_handler handler);
-    void handle_final_count(size_t current_size, size_t start_size,
+        const config::endpoint& seed, connector::ptr connector,
         result_handler handler);
+    void handle_complete(size_t start_size, result_handler handler);
 
     void handle_channel_start(const code& ec, channel::ptr channel,
         result_handler handler);

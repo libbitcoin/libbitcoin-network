@@ -22,6 +22,7 @@
 
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -45,11 +46,11 @@ protected:
 
 private:
     // Connect sequence
-    void new_connect(connector::ptr connector, channel_handler handler);
+    void new_connect(channel_handler handler);
     void start_connect(const code& ec, const authority& host,
-        connector::ptr connector, channel_handler handler);
-    void handle_connect(const code& ec, channel::ptr channel,
         channel_handler handler);
+    void handle_connect(const code& ec, channel::ptr channel,
+        connector::ptr connector, channel_handler handler);
 
     const size_t batch_size_;
 };

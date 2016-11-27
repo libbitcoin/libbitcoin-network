@@ -48,42 +48,46 @@ acceptor::acceptor(threadpool& pool, const settings& settings)
 
 acceptor::~acceptor()
 {
-    BITCOIN_ASSERT_MSG(!acceptor_.is_open(), "The acceptor was not stopped.");
+    BITCOIN_ASSERT_MSG(stopped(), "The acceptor was not stopped.");
 }
 
-// Stop sequence.
-// ----------------------------------------------------------------------------
-
-// public:
-void acceptor::stop()
-{
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-
-    // This will asynchronously invoke the handler of each pending accept.
-    acceptor_.close();
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-// Listen sequence.
-// ----------------------------------------------------------------------------
-
-// public:
-// This is hardwired to listen on IPv6.
-void acceptor::listen(uint16_t port, result_handler handler)
-{
-    // This is the end of the listen sequence.
-    handler(safe_listen(port));
-}
-
-code acceptor::safe_listen(uint16_t port)
+void acceptor::stop(const code&)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
 
-    if (acceptor_.is_open())
+    if (!stopped())
+    {
+        mutex_.unlock_upgrade_and_lock();
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+        // This will asynchronously invoke the handler of the pending accept.
+        acceptor_.cancel();
+
+        //---------------------------------------------------------------------
+        mutex_.unlock();
+        return;
+    }
+
+    mutex_.unlock_upgrade();
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+// private
+bool acceptor::stopped() const
+{
+    return !acceptor_.is_open();
+}
+
+// This is hardwired to listen on IPv6.
+code acceptor::listen(uint16_t port)
+{
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_upgrade();
+
+    if (!stopped())
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
@@ -112,17 +116,13 @@ code acceptor::safe_listen(uint16_t port)
     return error::boost_to_error_code(error);
 }
 
-// Accept sequence.
-// ----------------------------------------------------------------------------
-
-// public:
 void acceptor::accept(accept_handler handler)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
 
-    if (!acceptor_.is_open())
+    if (stopped())
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
@@ -136,27 +136,26 @@ void acceptor::accept(accept_handler handler)
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     // async_accept will not invoke the handler within this function.
+    // The bound delegate ensures handler completion before loss of scope.
+    // TODO: iIf the accept is invoked on a thread of the acceptor, as opposed
+    // to the thread of the socket, then this is unnecessary.
     acceptor_.async_accept(socket->get(),
-        std::bind(&acceptor::handle_accept,
+        dispatch_.bound_delegate(&acceptor::handle_accept,
             shared_from_this(), _1, socket, handler));
 
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// private:
 void acceptor::handle_accept(const boost_code& ec, socket::ptr socket,
     accept_handler handler)
 {
-    // This is the end of the accept sequence.
     if (ec)
         handler(error::boost_to_error_code(ec), nullptr);
     else
-        handler(error::success, new_channel(socket));
-}
-
-std::shared_ptr<channel> acceptor::new_channel(socket::ptr socket)
-{
-    return std::make_shared<channel>(pool_, socket, settings_);
+        handler(error::success, std::make_shared<channel>(pool_, socket,
+            settings_));
 }
 
 } // namespace network

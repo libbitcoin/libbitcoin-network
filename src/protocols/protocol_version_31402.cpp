@@ -83,11 +83,13 @@ protocol_version_31402::protocol_version_31402(p2p& network,
 
 void protocol_version_31402::start(event_handler handler)
 {
-    static const auto mode = synchronizer_terminate::on_error;
     const auto period = network_.network_settings().channel_handshake();
 
+    const auto join_handler = synchronize(handler, 2, NAME,
+        synchronizer_terminate::on_error);
+
     // The handler is invoked in the context of the last message receipt.
-    protocol_timer::start(period, synchronize(handler, 2, NAME, mode));
+    protocol_timer::start(period, join_handler);
 
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
     SUBSCRIBE2(verack, handle_receive_verack, _1, _2);
@@ -103,7 +105,7 @@ message::version protocol_version_31402::version_factory() const
     message::version version;
     version.set_value(own_version_);
     version.set_services(own_services_);
-    version.set_timestamp( time_stamp());
+    version.set_timestamp(time_stamp());
     version.set_address_receiver(authority().to_network_address());
     version.set_address_sender(settings.self.to_network_address());
     version.set_nonce(nonce());

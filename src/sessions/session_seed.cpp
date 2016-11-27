@@ -30,6 +30,7 @@
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 #include <bitcoin/network/proxy.hpp>
+#include <bitcoin/network/sessions/session.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -68,7 +69,28 @@ void session_seed::handle_started(const code& ec, result_handler handler)
         return;
     }
 
-    address_count(BIND2(handle_count, _1, handler));
+    const auto start_size = address_count();
+
+    if (start_size != 0)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Seeding is not required because there are " 
+            << start_size << " cached addresses.";
+        handler(error::success);
+        return;
+    }
+
+    if (settings_.seeds.empty())
+    {
+        LOG_ERROR(LOG_NETWORK)
+            << "Seeding is required but no seeds are configured.";
+        handler(error::operation_failed);
+        return;
+    }
+    
+    // This is NOT technically the end of the start sequence, since the handler
+    // is not invoked until seeding operations are complete.
+    start_seeding(start_size, handler);
 }
 
 void session_seed::attach_handshake_protocols(channel::ptr channel,
@@ -90,51 +112,23 @@ void session_seed::attach_handshake_protocols(channel::ptr channel,
             minimum_version, minimum_services)->start(handle_started);
 }
 
-void session_seed::handle_count(size_t start_size, result_handler handler)
-{
-    if (start_size != 0)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Seeding is not required because there are " 
-            << start_size << " cached addresses.";
-        handler(error::success);
-        return;
-    }
-
-    if (settings_.seeds.empty())
-    {
-        LOG_ERROR(LOG_NETWORK)
-            << "Seeding is required but no seeds are configured.";
-        handler(error::operation_failed);
-        return;
-    }
-    
-    // This is NOT technically the end of the start sequence, since the handler
-    // is not invoked until seeding operations are complete.
-    start_seeding(start_size, create_connector(), handler);
-}
-
 // Seed sequence.
 // ----------------------------------------------------------------------------
 
-void session_seed::start_seeding(size_t start_size, connector::ptr connect,
-    result_handler handler)
+void session_seed::start_seeding(size_t start_size, result_handler handler)
 {
-    static const auto mode = synchronizer_terminate::on_count;
+    const auto complete = BIND2(handle_complete, start_size, handler);
 
-    // When all seeds are synchronized call session_seed::handle_complete.
-    auto all = BIND2(handle_complete, start_size, handler);
-
-    // Synchronize each individual seed before calling handle_complete.
-    auto each = synchronize(all, settings_.seeds.size(), NAME, mode);
+    const auto join_handler = synchronize(complete, settings_.seeds.size(),
+        NAME, synchronizer_terminate::on_count);
 
     // We don't use parallel here because connect is itself asynchronous.
     for (const auto& seed: settings_.seeds)
-        start_seed(seed, connect, each);
+        start_seed(seed, join_handler);
 }
 
 void session_seed::start_seed(const config::endpoint& seed,
-    connector::ptr connect, result_handler handler)
+    result_handler handler)
 {
     if (stopped())
     {
@@ -147,13 +141,20 @@ void session_seed::start_seed(const config::endpoint& seed,
     LOG_INFO(LOG_NETWORK)
         << "Contacting seed [" << seed << "]";
 
+    const auto connector = create_connector();
+    pend(connector);
+
     // OUTBOUND CONNECT
-    connect->connect(seed, BIND4(handle_connect, _1, _2, seed, handler));
+    connector->connect(seed,
+        BIND5(handle_connect, _1, _2, seed, connector, handler));
 }
 
 void session_seed::handle_connect(const code& ec, channel::ptr channel,
-    const config::endpoint& seed, result_handler handler)
+    const config::endpoint& seed, connector::ptr connector,
+    result_handler handler)
 {
+    unpend(connector);
+
     if (ec)
     {
         LOG_INFO(LOG_NETWORK)
@@ -211,18 +212,11 @@ void session_seed::handle_channel_stop(const code& ec)
 // This accepts no error code because individual seed errors are suppressed.
 void session_seed::handle_complete(size_t start_size, result_handler handler)
 {
-    address_count(BIND3(handle_final_count, _1, start_size, handler));
-}
-
-// We succeed only if there is a host count increase.
-void session_seed::handle_final_count(size_t current_size, size_t start_size,
-    result_handler handler)
-{
-    const auto result = current_size > start_size ? error::success :
-        error::operation_failed;
+    // We succeed only if there is a host count increase.
+    const auto increase = address_count() > start_size;
 
     // This is the end of the seed sequence.
-    handler(result);
+    handler(increase ? error::success : error::operation_failed);
 }
 
 } // namespace network

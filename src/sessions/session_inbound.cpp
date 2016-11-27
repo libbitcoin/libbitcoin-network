@@ -36,6 +36,8 @@ using namespace std::placeholders;
 
 session_inbound::session_inbound(p2p& network, bool notify_on_connect)
   : session(network, notify_on_connect),
+    connection_limit_(settings_.inbound_connections +
+        settings_.outbound_connections),
     CONSTRUCT_TRACK(session_inbound)
 {
 }
@@ -64,20 +66,26 @@ void session_inbound::handle_started(const code& ec, result_handler handler)
         return;
     }
 
-    const auto acceptor = create_acceptor();
-    const auto port = settings_.inbound_port;
+    acceptor_ = create_acceptor();
+
+    // Relay stop to the acceptor.
+    subscribe_stop(BIND1(handle_stop, _1));
 
     // START LISTENING ON PORT
-    acceptor->listen(port, BIND2(start_accept, _1, acceptor));
-
     // This is the end of the start sequence.
-    handler(error::success);
+    handler(acceptor_->listen(settings_.inbound_port));
+}
+
+void session_inbound::handle_stop(const code& ec)
+{
+    // Signal the stop of listener/accept attempt.
+    acceptor_->stop(ec);
 }
 
 // Accept sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept(const code& ec, acceptor::ptr acceptor)
+void session_inbound::start_accept(const code& ec)
 {
     if (stopped())
     {
@@ -94,11 +102,10 @@ void session_inbound::start_accept(const code& ec, acceptor::ptr acceptor)
     }
 
     // ACCEPT THE NEXT INCOMING CONNECTION
-    acceptor->accept(BIND3(handle_accept, _1, _2, acceptor));
+    acceptor_->accept(BIND2(handle_accept, _1, _2));
 }
 
-void session_inbound::handle_accept(const code& ec, channel::ptr channel,
-    acceptor::ptr acceptor)
+void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 {
     if (stopped())
     {
@@ -107,7 +114,8 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel,
         return;
     }
 
-    start_accept(error::success, acceptor);
+    // Start accepting again immediately.
+    start_accept(error::success);
 
     if (ec)
     {
@@ -124,16 +132,7 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel,
         return;
     }
 
-    connection_count(BIND2(handle_connection_count, _1, channel));
-}
-
-void session_inbound::handle_connection_count(size_t connections,
-    channel::ptr channel)
-{
-    const auto connection_limit = settings_.inbound_connections + 
-        settings_.outbound_connections;
-
-    if (connections >= connection_limit)
+    if (connection_count() >= connection_limit_)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Rejected inbound connection from ["
@@ -181,20 +180,12 @@ void session_inbound::handle_channel_stop(const code& ec)
 
 // Channel start sequence.
 // ----------------------------------------------------------------------------
-// Loopback test required for inbound connections.
+// Check pending outbound connections for loopback to this inbound.
 
 void session_inbound::handshake_complete(channel::ptr channel,
     result_handler handle_started)
-{
-    // This will fail if the nonce mathches that of a pending connection.
-    pending(channel->peer_version()->nonce(),
-        BIND3(handle_pending, _1, channel, handle_started));
-}
-
-void session_inbound::handle_pending(bool pending, channel::ptr channel,
-    result_handler handle_started)
-{
-    if (pending)
+{    
+    if (pending(channel->peer_version()->nonce()))
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Rejected connection from [" << channel->authority()

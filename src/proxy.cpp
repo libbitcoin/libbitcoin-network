@@ -319,7 +319,7 @@ void proxy::stop(const code& ec)
     // Give channel opportunity to terminate timers.
     handle_stopping();
 
-    // Cancellation of outstanding calls is thread safe.
+    // Signal socket to stop reading and accepting new work.
     socket_->stop();
 }
 

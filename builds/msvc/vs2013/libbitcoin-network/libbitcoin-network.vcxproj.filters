@@ -58,18 +58,6 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70002.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\collections\hosts.cpp">
-      <Filter>src\collections</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\collections\pending_channels.cpp">
-      <Filter>src\collections</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\collections\pending_sockets.cpp">
-      <Filter>src\collections</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\collections\connections.cpp">
-      <Filter>src\collections</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\message_subscriber.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -77,6 +65,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\connector.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\hosts.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -147,18 +138,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\logging.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\pending_channels.hpp">
-      <Filter>include\bitcoin\network\collections</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\pending_sockets.hpp">
-      <Filter>include\bitcoin\network\collections</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\connections.hpp">
-      <Filter>include\bitcoin\network\collections</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\collections\hosts.hpp">
-      <Filter>include\bitcoin\network\collections</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\acceptor.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
@@ -166,6 +145,9 @@
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\message_subscriber.hpp">
+      <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\hosts.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
   </ItemGroup>
@@ -196,12 +178,6 @@
     </Filter>
     <Filter Include="include\bitcoin\network\protocols">
       <UniqueIdentifier>{438861a1-6a4d-4639-8af8-cd55aa20bc04}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\collections">
-      <UniqueIdentifier>{157d397c-3992-4ad0-b729-85190e5bad44}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\collections">
-      <UniqueIdentifier>{392d12aa-3114-483b-a561-2d81905abdbe}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
