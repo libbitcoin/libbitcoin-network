@@ -40,7 +40,6 @@ class BCT_API acceptor
 {
 public:
     typedef std::shared_ptr<acceptor> ptr;
-    typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, channel::ptr)> accept_handler;
 
     /// Construct an instance.
@@ -50,17 +49,17 @@ public:
     ~acceptor();
 
     /// Start the listener on the specified port.
-    virtual void listen(uint16_t port, result_handler handler);
+    virtual code listen(uint16_t port);
 
     /// Accept the next connection available, until canceled.
     virtual void accept(accept_handler handler);
 
-    /// Cancel the listener and all outstanding accept attempts.
-    virtual void stop();
+    /// Cancel outstanding accept attempt.
+    virtual void stop(const code& ec);
 
 private:
-    code safe_listen(uint16_t port);
-    std::shared_ptr<channel> new_channel(socket::ptr socket);
+    virtual bool stopped() const;
+
     void handle_accept(const boost_code& ec, socket::ptr socket,
         accept_handler handler);
 
@@ -69,7 +68,7 @@ private:
     const settings& settings_;
     mutable dispatcher dispatch_;
 
-    // This is protected by mutex.
+    // These are protected by mutex.
     asio::acceptor acceptor_;
     mutable shared_mutex mutex_;
 };

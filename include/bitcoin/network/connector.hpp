@@ -26,7 +26,6 @@
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/collections/pending_sockets.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -46,7 +45,7 @@ public:
     /// Construct an instance.
     connector(threadpool& pool, const settings& settings);
 
-    /// Clean up an instance.
+    /// Validate connector stopped.
     ~connector();
 
     /// Try to connect to the endpoint.
@@ -61,31 +60,30 @@ public:
     virtual void connect(const std::string& hostname, uint16_t port,
         connect_handler handler);
 
-    /// Cancel all outstanding connection attempts.
-    void stop();
+    /// Cancel outstanding connection attempt.
+    void stop(const code& ec);
 
 private:
     typedef std::shared_ptr<asio::query> query_ptr;
 
     bool stopped() const;
-    void close_socket(socket socket);
-    std::shared_ptr<channel> new_channel(socket::ptr socket);
+
     void handle_resolve(const boost_code& ec, asio::iterator iterator,
         connect_handler handler);
-    void handle_timer(const code& ec, socket::ptr socket, deadline::ptr,
-        connect_handler handler);
     void handle_connect(const boost_code& ec, asio::iterator iterator,
-        socket::ptr socket, deadline::ptr timer, connect_handler handler);
+        socket::ptr socket, connect_handler handler);
+    void handle_timer(const code& ec, socket::ptr socket,
+        connect_handler handler);
 
     // These are thread safe
     std::atomic<bool> stopped_;
     threadpool& pool_;
     const settings& settings_;
-    pending_sockets pending_;
     mutable dispatcher dispatch_;
 
-    // This is protected by mutex.
+    // These are protected by mutex.
     query_ptr query_;
+    deadline::ptr timer_;
     asio::resolver resolver_;
     mutable upgrade_mutex mutex_;
 };

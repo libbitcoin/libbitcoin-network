@@ -19,6 +19,7 @@
  */
 #include <bitcoin/network/connector.hpp>
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -40,7 +41,6 @@ connector::connector(threadpool& pool, const settings& settings)
   : stopped_(false),
     pool_(pool),
     settings_(settings),
-    pending_(settings_),
     dispatch_(pool, NAME),
     resolver_(pool.service()),
     CONSTRUCT_TRACK(connector)
@@ -49,66 +49,52 @@ connector::connector(threadpool& pool, const settings& settings)
 
 connector::~connector()
 {
-    BITCOIN_ASSERT_MSG(!stopped_, "The connector was not stopped.");
+    BITCOIN_ASSERT_MSG(stopped(), "The connector was not stopped.");
 }
 
-// Stop sequence.
-// ----------------------------------------------------------------------------
-
-// public:
-void connector::stop()
+void connector::stop(const code&)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
 
-    if (!stopped_)
+    if (!stopped())
     {
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         mutex_.unlock_upgrade_and_lock();
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
         // This will asynchronously invoke the handler of the pending resolve.
         resolver_.cancel();
-        stopped_ = true;
 
-        mutex_.unlock();
+        if (timer_)
+            timer_->stop();
+
+        stopped_ = true;
         //---------------------------------------------------------------------
+        mutex_.unlock();
         return;
     }
 
     mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
-
-    // TODO: make this a single bc::atomic?
-    pending_.clear();
 }
 
+// private
 bool connector::stopped() const
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
-
     return stopped_;
-    ///////////////////////////////////////////////////////////////////////////
 }
 
-// Connect sequence.
-// ----------------------------------------------------------------------------
-
-// public:
 void connector::connect(const endpoint& endpoint, connect_handler handler)
 {
     connect(endpoint.host(), endpoint.port(), handler);
 }
 
-// public:
 void connector::connect(const authority& authority, connect_handler handler)
 {
     connect(authority.to_hostname(), authority.port(), handler);
 }
 
-// public:
 void connector::connect(const std::string& hostname, uint16_t port,
     connect_handler handler)
 {
@@ -116,7 +102,7 @@ void connector::connect(const std::string& hostname, uint16_t port,
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
 
-    if (stopped_)
+    if (stopped())
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
@@ -125,8 +111,9 @@ void connector::connect(const std::string& hostname, uint16_t port,
     }
 
     query_ = std::make_shared<asio::query>(hostname, std::to_string(port));
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
     mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     // async_resolve will not invoke the handler within this function.
     resolver_.async_resolve(*query_,
@@ -141,13 +128,12 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     connect_handler handler)
 {
     using namespace boost::asio;
-    static const auto mode = synchronizer_terminate::on_error;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_shared();
 
-    if (stopped_)
+    if (stopped())
     {
         mutex_.unlock_shared();
         //---------------------------------------------------------------------
@@ -163,71 +149,47 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
         return;
     }
 
-    const auto timeout = settings_.connect_timeout();
-    const auto timer = std::make_shared<deadline>(pool_, timeout);
     const auto socket = std::make_shared<bc::socket>();
-
-    // Retain a socket reference until connected, allowing connect cancelation.
-    pending_.store(socket);
+    timer_ = std::make_shared<deadline>(pool_, settings_.connect_timeout());
 
     // Manage the timer-connect race, returning upon first completion.
-    const auto completion_handler = synchronize(handler, 1, NAME, mode);
+    const auto join_handler = synchronize(handler, 1, NAME,
+        synchronizer_terminate::on_error);
 
-    // This is the start of the timer sub-sequence.
-    timer->start(
+    // timer.async_wait will not invoke the handler within this function.
+    timer_->start(
         std::bind(&connector::handle_timer,
-            shared_from_this(), _1, socket, timer, completion_handler));
+            shared_from_this(), _1, socket, join_handler));
 
-    // This is the start of the connect sub-sequence.
     // async_connect will not invoke the handler within this function.
+    // The bound delegate ensures handler completion before loss of scope.
     async_connect(socket->get(), iterator,
-        std::bind(&connector::handle_connect,
-            shared_from_this(), _1, _2, socket, timer, completion_handler));
+        dispatch_.bound_delegate(&connector::handle_connect,
+            shared_from_this(), _1, _2, socket, join_handler));
 
     mutex_.unlock_shared();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// Timer sequence.
-// ----------------------------------------------------------------------------
+// private:
+void connector::handle_connect(const boost_code& ec, asio::iterator,
+    socket::ptr socket, connect_handler handler)
+{
+    if (ec)
+        handler(error::boost_to_error_code(ec), nullptr);
+    else
+        handler(error::success, std::make_shared<channel>(pool_, socket,
+            settings_));
+}
 
 // private:
-void connector::handle_timer(const code& ec, socket::ptr socket, deadline::ptr,
-   connect_handler handler)
+void connector::handle_timer(const code& ec, socket::ptr socket,
+    connect_handler handler)
 {
-    // Cancel any current operations on the socket.
-    socket->stop();
-
-    // This is the end of the timer sequence.
     if (ec)
         handler(ec, nullptr);
     else
         handler(error::channel_timeout, nullptr);
-}
-
-// Connect sequence.
-// ----------------------------------------------------------------------------
-
-// private:
-void connector::handle_connect(const boost_code& ec, asio::iterator,
-    socket::ptr socket, deadline::ptr timer, connect_handler handler)
-{
-    // TODO: this causes a unit test exception in debug builds.
-    // Stop the timer so that this instance can be destroyed earlier.
-    ////timer->stop();
-
-    pending_.remove(socket);
-
-    // This is the end of the connect sequence.
-    if (ec)
-        handler(error::boost_to_error_code(ec), nullptr);
-    else
-        handler(error::success, new_channel(socket));
-}
-
-std::shared_ptr<channel> connector::new_channel(socket::ptr socket)
-{
-    return std::make_shared<channel>(pool_, socket, settings_);
 }
 
 } // namespace network

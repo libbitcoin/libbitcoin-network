@@ -28,6 +28,7 @@
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
+#include <bitcoin/network/sessions/session.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -37,7 +38,7 @@ namespace network {
 using namespace std::placeholders;
 
 session_manual::session_manual(p2p& network, bool notify_on_connect)
-  : session_batch(network, notify_on_connect),
+  : session(network, notify_on_connect),
     CONSTRUCT_TRACK(session_manual)
 {
 }
@@ -45,6 +46,7 @@ session_manual::session_manual(p2p& network, bool notify_on_connect)
 // Start sequence.
 // ----------------------------------------------------------------------------
 // Manual connections are always enabled.
+// Handshake pend not implemented for manual connections (connect to self ok).
 
 void session_manual::start(result_handler handler)
 {
@@ -75,12 +77,12 @@ void session_manual::connect(const std::string& hostname, uint16_t port)
 void session_manual::connect(const std::string& hostname, uint16_t port,
     channel_handler handler)
 {
-    start_connect(hostname, port, handler, settings_.manual_attempt_limit);
+    start_connect(hostname, port, settings_.manual_attempt_limit, handler);
 }
 
 // The first connect is a sequence, which then spawns a cycle.
 void session_manual::start_connect(const std::string& hostname, uint16_t port,
-    channel_handler handler, uint32_t retries)
+    uint32_t retries, channel_handler handler)
 {
     if (stopped())
     {
@@ -91,18 +93,21 @@ void session_manual::start_connect(const std::string& hostname, uint16_t port,
         return;
     }
 
-    auto connector = create_connector();
-    BITCOIN_ASSERT_MSG(connector, "The manual session was not started.");
+    const auto connector = create_connector();
+    pend(connector);
 
     // MANUAL CONNECT OUTBOUND
     connector->connect(hostname, port,
-        BIND6(handle_connect, _1, _2, hostname, port, handler, retries));
+        BIND7(handle_connect, _1, _2, hostname, port, retries, connector,
+            handler));
 }
 
 void session_manual::handle_connect(const code& ec, channel::ptr channel,
-    const std::string& hostname, uint16_t port, channel_handler handler,
-    uint32_t retries)
+    const std::string& hostname, uint16_t port, uint32_t retries,
+    connector::ptr connector, channel_handler handler)
 {
+    unpend(connector);
+
     if (ec)
     {
         LOG_WARNING(LOG_NETWORK)
@@ -112,9 +117,9 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
         // Retry logic.
         // The handler invoke is the failure end of the connect sequence.
         if (settings_.manual_attempt_limit == 0)
-            start_connect(hostname, port, handler, 0);
+            start_connect(hostname, port, 0, handler);
         else if (retries > 0)
-            start_connect(hostname, port, handler, retries - 1);
+            start_connect(hostname, port, retries - 1, handler);
         else
             handler(ec, nullptr);
 
@@ -170,10 +175,6 @@ void session_manual::handle_channel_stop(const code& ec,
     if (ec != error::address_in_use)
         connect(hostname, port);
 }
-
-// Channel start sequence.
-// ----------------------------------------------------------------------------
-// Pending not implemented for manual connections (ok to connect to self).
 
 } // namespace network
 } // namespace libbitcoin

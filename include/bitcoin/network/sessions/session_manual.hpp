@@ -28,7 +28,7 @@
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/sessions/session_batch.hpp>
+#include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -38,7 +38,7 @@ class p2p;
 
 /// Manual connections session, thread safe.
 class BCT_API session_manual
-  : public session_batch, track<session_manual>
+  : public session, track<session_manual>
 {
 public:
     typedef std::shared_ptr<session_manual> ptr;
@@ -63,12 +63,12 @@ protected:
 
 private:
     void start_connect(const std::string& hostname, uint16_t port,
-        channel_handler handler, uint32_t retries);
+        uint32_t retries, channel_handler handler);
 
     void handle_started(const code& ec, result_handler handler);
     void handle_connect(const code& ec, channel::ptr channel,
-        const std::string& hostname, uint16_t port,
-        channel_handler handler, uint32_t retries);
+        const std::string& hostname, uint16_t port, uint32_t retries,
+        connector::ptr connector, channel_handler handler);
 
     void handle_channel_start(const code& ec, const std::string& hostname,
         uint16_t port, channel::ptr channel, channel_handler handler);

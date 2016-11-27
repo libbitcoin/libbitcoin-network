@@ -38,14 +38,11 @@ src_libbitcoin_network_la_SOURCES = \
     src/acceptor.cpp \
     src/channel.cpp \
     src/connector.cpp \
+    src/hosts.cpp \
     src/message_subscriber.cpp \
     src/p2p.cpp \
     src/proxy.cpp \
     src/settings.cpp \
-    src/collections/connections.cpp \
-    src/collections/hosts.cpp \
-    src/collections/pending_channels.cpp \
-    src/collections/pending_sockets.cpp \
     src/protocols/protocol.cpp \
     src/protocols/protocol_address_31402.cpp \
     src/protocols/protocol_events.cpp \
@@ -89,18 +86,12 @@ include_bitcoin_network_HEADERS = \
     include/bitcoin/network/channel.hpp \
     include/bitcoin/network/connector.hpp \
     include/bitcoin/network/define.hpp \
+    include/bitcoin/network/hosts.hpp \
     include/bitcoin/network/message_subscriber.hpp \
     include/bitcoin/network/p2p.hpp \
     include/bitcoin/network/proxy.hpp \
     include/bitcoin/network/settings.hpp \
     include/bitcoin/network/version.hpp
-
-include_bitcoin_network_collectionsdir = ${includedir}/bitcoin/network/collections
-include_bitcoin_network_collections_HEADERS = \
-    include/bitcoin/network/collections/connections.hpp \
-    include/bitcoin/network/collections/hosts.hpp \
-    include/bitcoin/network/collections/pending_channels.hpp \
-    include/bitcoin/network/collections/pending_sockets.hpp
 
 include_bitcoin_network_protocolsdir = ${includedir}/bitcoin/network/protocols
 include_bitcoin_network_protocols_HEADERS = \

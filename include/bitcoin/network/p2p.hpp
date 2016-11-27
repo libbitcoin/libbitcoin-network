@@ -29,10 +29,8 @@
 #include <vector>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/collections/connections.hpp>
-#include <bitcoin/network/collections/hosts.hpp>
-#include <bitcoin/network/collections/pending_channels.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/hosts.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
@@ -65,18 +63,20 @@ public:
 
     /// Send message to all connections.
     template <typename Message>
-    void broadcast(Message&& message, channel_handler handle_channel,
+    void broadcast(const Message& message, channel_handler handle_channel,
         result_handler handle_complete)
     {
-        connections_.broadcast(message, handle_channel, handle_complete);
-    }
+        // Safely copy the channel collection.
+        const auto channels = pending_close_.collection();
+        
+        // Invoke the completion handler after send complete on all channels.
+        const auto join_handler = synchronize(handle_complete, channels.size(),
+            "p2p_join", synchronizer_terminate::on_count);
 
-    /// Subscribe to all incoming messages of a type.
-    template <class Message>
-    void subscribe(message_handler<Message>&& handler)
-    {
-        connections_.subscribe(
-            std::forward<message_handler<Message>>(handler));
+        // No pre-serialize, channels may have different protocol versions.
+        for (const auto channel: channels)
+            channel->send(message, std::bind(&p2p::handle_send, this,
+                std::placeholders::_1, channel, handle_channel, join_handler));
     }
 
     // Constructors.
@@ -158,51 +158,59 @@ public:
     virtual void connect(const std::string& hostname, uint16_t port,
         channel_handler handler);
 
-    // Pending connections collection.
-    // ------------------------------------------------------------------------
-
-    /// Store a pending connection reference.
-    virtual void pend(channel::ptr channel, result_handler handler);
-
-    /// Free a pending connection reference.
-    virtual void unpend(channel::ptr channel, result_handler handler);
-
-    /// Test for a pending connection reference.
-    virtual void pending(uint64_t version_nonce, truth_handler handler) const;
-
-    // Connections collection.
-    // ------------------------------------------------------------------------
-
-    /// Determine if there exists a connection to the address.
-    virtual void connected(const address& address,
-        truth_handler handler) const;
-
-    /// Store a connection.
-    virtual void store(channel::ptr channel, result_handler handler);
-
-    /// Remove a connection.
-    virtual void remove(channel::ptr channel, result_handler handler);
-
-    /// Get the number of connections.
-    virtual void connected_count(count_handler handler) const;
-
     // Hosts collection.
     // ------------------------------------------------------------------------
 
-    /// Get a randomly-selected address.
-    virtual void fetch_address(address_handler handler) const;
+    /// Get the number of addresses.
+    virtual size_t address_count() const;
 
     /// Store an address.
-    virtual void store(const address& address, result_handler handler);
+    virtual code store(const address& address);
 
-    /// Store a collection of addresses.
+    /// Store a collection of addresses (asynchronous).
     virtual void store(const address::list& addresses, result_handler handler);
 
-    /// Remove an address.
-    virtual void remove(const address& address, result_handler handler);
+    /// Get a randomly-selected address.
+    virtual code fetch_address(address& out_address) const;
 
-    /// Get the number of addresses.
-    virtual void address_count(count_handler handler) const;
+    /// Remove an address.
+    virtual code remove(const address& address);
+
+    // Pending connect collection.
+    // ------------------------------------------------------------------------
+
+    /// Store a pending connection reference.
+    virtual code pend(connector::ptr connector);
+
+    /// Free a pending connection reference.
+    virtual void unpend(connector::ptr connector);
+
+    // Pending handshake collection.
+    // ------------------------------------------------------------------------
+
+    /// Store a pending connection reference.
+    virtual code pend(channel::ptr channel);
+
+    /// Test for a pending connection reference.
+    virtual bool pending(uint64_t version_nonce) const;
+
+    /// Free a pending connection reference.
+    virtual void unpend(channel::ptr channel);
+
+    // Pending close collection (open connections).
+    // ------------------------------------------------------------------------
+
+    /// Get the number of connections.
+    virtual size_t connection_count() const;
+
+    /// Store a connection.
+    virtual code store(channel::ptr channel);
+
+    /// Determine if there exists a connection to the address.
+    virtual bool connected(const address& address) const;
+
+    /// Remove a connection.
+    virtual void remove(channel::ptr channel);
 
 protected:
 
@@ -220,26 +228,29 @@ protected:
     virtual session_outbound::ptr attach_outbound_session();
 
 private:
+    typedef bc::pending<channel> pending_channels;
+    typedef bc::pending<connector> pending_connectors;
+
     void handle_manual_started(const code& ec, result_handler handler);
     void handle_inbound_started(const code& ec, result_handler handler);
     void handle_hosts_loaded(const code& ec, result_handler handler);
     void handle_hosts_saved(const code& ec, result_handler handler);
-    void handle_new_connection(const code& ec, channel::ptr channel,
-        result_handler handler);
+    void handle_send(const code& ec, channel::ptr channel,
+        channel_handler handle_channel, result_handler handle_complete);
 
     void handle_started(const code& ec, result_handler handler);
     void handle_running(const code& ec, result_handler handler);
 
-    const settings& settings_;
-
     // These are thread safe.
+    const settings& settings_;
     std::atomic<bool> stopped_;
     bc::atomic<config::checkpoint> top_block_;
     bc::atomic<session_manual::ptr> manual_;
     threadpool threadpool_;
-    pending_channels pending_;
-    connections connections_;
     hosts hosts_;
+    pending_connectors pending_connect_;
+    pending_channels pending_handshake_;
+    pending_channels pending_close_;
     stop_subscriber::ptr stop_subscriber_;
     channel_subscriber::ptr channel_subscriber_;
 };

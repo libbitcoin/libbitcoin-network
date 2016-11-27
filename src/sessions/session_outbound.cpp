@@ -146,36 +146,25 @@ void session_outbound::handle_channel_stop(const code& ec,
 void session_outbound::start_channel(channel::ptr channel,
     result_handler handle_started)
 {
-    result_handler unpend_handler =
+    const result_handler unpend_handler =
         BIND3(do_unpend, _1, channel, handle_started);
 
-    pend(channel, BIND3(handle_pend, _1, channel, unpend_handler));
-}
+    const auto ec = pend(channel);
 
-void session_outbound::handle_pend(const code& ec, channel::ptr channel,
-    result_handler handle_started)
-{
     if (ec)
     {
-        handle_started(ec);
+        unpend_handler(ec);
         return;
     }
 
-    session::start_channel(channel, handle_started);
+    session::start_channel(channel, unpend_handler);
 }
 
 void session_outbound::do_unpend(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
-    unpend(channel, BIND1(handle_unpend, _1));
+    unpend(channel);
     handle_started(ec);
-}
-
-void session_outbound::handle_unpend(const code& ec)
-{
-    if (ec)
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failed to unpend a channel: " << ec.message();
 }
 
 } // namespace network

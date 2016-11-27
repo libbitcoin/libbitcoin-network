@@ -59,9 +59,6 @@ private:
 
     void handle_started(const code& ec, result_handler handler);
     void handle_connect(const code& ec, channel::ptr channel);
-    void handle_pend(const code& ec, channel::ptr channel,
-        result_handler handle_started);
-    void handle_unpend(const code& ec);
 
     void do_unpend(const code& ec, channel::ptr channel,
         result_handler handle_started);
