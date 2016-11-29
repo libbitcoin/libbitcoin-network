@@ -176,20 +176,21 @@ void connector::handle_connect(const boost_code& ec, asio::iterator,
     socket::ptr socket, connect_handler handler)
 {
     if (ec)
+    {
         handler(error::boost_to_error_code(ec), nullptr);
-    else
-        handler(error::success, std::make_shared<channel>(pool_, socket,
-            settings_));
+        return;
+    }
+
+    // Ensure that channel is not passed as an r-value.
+    const auto created = std::make_shared<channel>(pool_, socket, settings_);
+    handler(error::success, created);
 }
 
 // private:
 void connector::handle_timer(const code& ec, socket::ptr socket,
     connect_handler handler)
 {
-    if (ec)
-        handler(ec, nullptr);
-    else
-        handler(error::channel_timeout, nullptr);
+    handler(ec ? ec : error::channel_timeout, nullptr);
 }
 
 } // namespace network
