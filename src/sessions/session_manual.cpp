@@ -82,7 +82,7 @@ void session_manual::connect(const std::string& hostname, uint16_t port,
 
 // The first connect is a sequence, which then spawns a cycle.
 void session_manual::start_connect(const std::string& hostname, uint16_t port,
-    uint32_t retries, channel_handler handler)
+    uint32_t attempts, channel_handler handler)
 {
     if (stopped())
     {
@@ -92,6 +92,8 @@ void session_manual::start_connect(const std::string& hostname, uint16_t port,
         handler(error::service_stopped, nullptr);
         return;
     }
+
+    const auto retries = floor_subtract(attempts, 1u);
 
     const auto connector = create_connector();
     pend(connector);
@@ -103,7 +105,7 @@ void session_manual::start_connect(const std::string& hostname, uint16_t port,
 }
 
 void session_manual::handle_connect(const code& ec, channel::ptr channel,
-    const std::string& hostname, uint16_t port, uint32_t retries,
+    const std::string& hostname, uint16_t port, uint32_t remaining,
     connector::ptr connector, channel_handler handler)
 {
     unpend(connector);
@@ -118,8 +120,8 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
         // The handler invoke is the failure end of the connect sequence.
         if (settings_.manual_attempt_limit == 0)
             start_connect(hostname, port, 0, handler);
-        else if (retries > 0)
-            start_connect(hostname, port, retries - 1, handler);
+        else if (remaining > 0)
+            start_connect(hostname, port, remaining - 1, handler);
         else
             handler(ec, nullptr);
 
