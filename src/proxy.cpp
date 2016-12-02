@@ -280,9 +280,12 @@ void proxy::do_send(const std::string& command, payload_ptr payload,
             shared_from_this(), _1, payload->size(), payload, handler));
 }
 
-void proxy::handle_send(const boost_code& ec, size_t size, payload_ptr,
+void proxy::handle_send(const boost_code& ec, size_t size, payload_ptr payload,
     result_handler handler)
 {
+    // This may stop compiler optimization from preventing necessary increment.
+    payload.reset();
+
     const auto error = code(error::boost_to_error_code(ec));
 
     if (error)
