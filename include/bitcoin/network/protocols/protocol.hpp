@@ -49,7 +49,7 @@ class p2p;
 
 /// Virtual base class for protocol implementation, mostly thread safe.
 class BCT_API protocol
-  : public enable_shared_from_base<protocol>
+  : public enable_shared_from_base<protocol>, noncopyable
 {
 protected:
     typedef std::function<void()> completion_handler;
@@ -58,10 +58,6 @@ protected:
 
     /// Construct an instance.
     protocol(p2p& network, channel::ptr channel, const std::string& name);
-
-    /// This class is not copyable.
-    protocol(const protocol&) = delete;
-    void operator=(const protocol&) = delete;
 
     /// Bind a method in the derived class.
     template <class Protocol, typename Handler, typename... Args>

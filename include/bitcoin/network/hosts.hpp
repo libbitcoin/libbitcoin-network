@@ -38,6 +38,7 @@ namespace network {
 /// The file is a line-oriented set of config::authority serializations.
 /// Duplicate addresses and those with zero-valued ports are disacarded.
 class BCT_API hosts
+  : noncopyable
 {
 public:
     typedef std::shared_ptr<hosts> ptr;
@@ -46,10 +47,6 @@ public:
 
     /// Construct an instance.
     hosts(const settings& settings);
-
-    /// This class is not copyable.
-    hosts(const hosts&) = delete;
-    void operator=(const hosts&) = delete;
 
     /// Load hosts file if found.
     virtual code start();

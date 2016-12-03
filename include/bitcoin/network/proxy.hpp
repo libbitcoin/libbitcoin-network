@@ -36,13 +36,12 @@ namespace network {
 
 /// Manages all socket communication, thread safe.
 class BCT_API proxy
-  : public enable_shared_from_base<proxy>
+  : public enable_shared_from_base<proxy>, noncopyable
 {
 public:
     typedef std::shared_ptr<proxy> ptr;
-    typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> result_handler;
-    typedef subscriber<const code&> stop_subscriber;
+    typedef subscriber<code> stop_subscriber;
 
     /// Construct an instance.
     proxy(threadpool& pool, socket::ptr socket, uint32_t protocol_magic,
@@ -51,26 +50,23 @@ public:
     /// Validate proxy stopped.
     ~proxy();
 
-    /// This class is not copyable.
-    proxy(const proxy&) = delete;
-    void operator=(const proxy&) = delete;
-
     /// Send a message on the socket.
     template <class Message>
-    void send(const Message& message, result_handler handler)
+    void send(const Message& message, result_handler&& handler)
     {
         auto data = message::serialize(version_, message, protocol_magic_);
         const auto payload = std::make_shared<data_chunk>(std::move(data));
+
         dispatch_.concurrent(&proxy::do_send,
-            shared_from_this(), message.command, payload, handler);
+            shared_from_this(), message.command, payload, std::move(handler));
     }
 
     /// Subscribe to messages of the specified type on the socket.
     template <class Message>
     void subscribe(message_handler<Message>&& handler)
     {
-        auto stopped = std::forward<message_handler<Message>>(handler);
-        message_subscriber_.subscribe<Message>(stopped);
+        message_subscriber_.subscribe<Message>(
+            std::forward<message_handler<Message>>(handler));
     }
 
     /// Subscribe to the stop event.

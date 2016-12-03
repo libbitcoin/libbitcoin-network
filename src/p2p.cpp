@@ -269,7 +269,7 @@ bool p2p::stop()
 
     // Signal all current work to stop and free manual session.
     stopped_ = true;
-    manual_.store(nullptr);
+    manual_.store({});
 
     // Prevent subscription after stop.
     stop_subscriber_->stop();
@@ -277,7 +277,7 @@ bool p2p::stop()
 
     // Prevent subscription after stop.
     channel_subscriber_->stop();
-    channel_subscriber_->invoke(error::service_stopped, nullptr);
+    channel_subscriber_->invoke(error::service_stopped, {});
 
     // Stop creating new channels and stop those that exist (self-clearing).
     pending_connect_.stop(error::service_stopped);
@@ -349,7 +349,7 @@ void p2p::handle_send(const code& ec, channel::ptr channel,
 
 void p2p::subscribe_connection(connect_handler handler)
 {
-    channel_subscriber_->subscribe(handler, error::service_stopped, nullptr);
+    channel_subscriber_->subscribe(handler, error::service_stopped, {});
 }
 
 void p2p::subscribe_stop(result_handler handler)
@@ -381,7 +381,7 @@ void p2p::connect(const std::string& hostname, uint16_t port,
 {
     if (stopped())
     {
-        handler(error::service_stopped, nullptr);
+        handler(error::service_stopped, {});
         return;
     }
 
