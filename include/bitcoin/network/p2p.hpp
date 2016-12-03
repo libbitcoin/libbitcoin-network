@@ -55,8 +55,8 @@ public:
     typedef std::function<void(const code&, const address&)> address_handler;
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
     typedef std::function<bool(const code&, channel::ptr)> connect_handler;
-    typedef subscriber<const code&> stop_subscriber;
-    typedef resubscriber<const code&, channel::ptr> channel_subscriber;
+    typedef subscriber<code> stop_subscriber;
+    typedef resubscriber<code, channel::ptr> channel_subscriber;
 
     // Templates (send/receive).
     // ------------------------------------------------------------------------

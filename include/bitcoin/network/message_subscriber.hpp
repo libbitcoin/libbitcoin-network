@@ -33,7 +33,7 @@ namespace libbitcoin {
 namespace network {
 
 #define DEFINE_SUBSCRIBER_TYPE(value) \
-    typedef resubscriber<const code&, message::value::const_ptr> \
+    typedef resubscriber<code, message::value::const_ptr> \
         value##_subscriber_type
 
 #define DEFINE_SUBSCRIBER_OVERLOAD(value) \
@@ -41,18 +41,19 @@ namespace network {
     void subscribe(message::value&&, Handler&& handler) \
     { \
         value##_subscriber_->subscribe(std::forward<Handler>(handler), \
-            error::channel_stopped, nullptr); \
+            error::channel_stopped, {}); \
     }
 
 #define DECLARE_SUBSCRIBER(value) \
     value##_subscriber_type::ptr value##_subscriber_
 
 template <class Message>
-using message_handler = std::function<bool(const code&,
-    std::shared_ptr<const Message>)>;
+using message_handler = 
+    std::function<bool(const code&, std::shared_ptr<const Message>)>;
 
 /// Aggregation of subscribers by messasge type, thread safe.
 class BCT_API message_subscriber
+  : noncopyable
 {
 public:
     DEFINE_SUBSCRIBER_TYPE(address);
@@ -88,10 +89,6 @@ public:
      * @param[in]  pool  The threadpool to use for sending notifications.
      */
     message_subscriber(threadpool& pool);
-
-    /// This class is not copyable.
-    message_subscriber(const message_subscriber&) = delete;
-    void operator=(const message_subscriber&) = delete;
     
     /**
      * Subscribe to receive a notification when a message of type is received.
@@ -114,13 +111,13 @@ public:
      */
     template <class Message, class Subscriber>
     code relay(std::istream& stream, uint32_t version,
-        Subscriber subscriber) const
+        Subscriber& subscriber) const
     {
         const auto instance = Message::factory_from_data(version, stream);
 
         if (!instance.is_valid())
         {
-            subscriber->relay(error::bad_stream, nullptr);
+            subscriber->relay(error::bad_stream, {});
         }
 
         const auto ptr = std::make_shared<const Message>(std::move(instance));
@@ -137,13 +134,13 @@ public:
      */
     template <class Message, class Subscriber>
     code handle(std::istream& stream, uint32_t version,
-        Subscriber subscriber) const
+        Subscriber& subscriber) const
     {
         const auto instance = Message::factory_from_data(version, stream);
 
         if (!instance.is_valid())
         {
-            subscriber->invoke(error::bad_stream, nullptr);
+            subscriber->invoke(error::bad_stream, {});
         }
 
         const auto ptr = std::make_shared<const Message>(std::move(instance));
