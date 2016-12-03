@@ -29,7 +29,7 @@
         pool, #value "_sub"))
 
 #define RELAY_CODE(code, value) \
-    value##_subscriber_->relay(code, nullptr)
+    value##_subscriber_->relay(code, {})
 
 #define CASE_HANDLE_MESSAGE(stream, version, value) \
     case message_type::value: \
