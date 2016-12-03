@@ -36,7 +36,7 @@ namespace network {
 
 /// Manages all socket communication, thread safe.
 class BCT_API proxy
-  : public enable_shared_from_base<proxy>
+  : public enable_shared_from_base<proxy>, noncopyable
 {
 public:
     typedef std::shared_ptr<proxy> ptr;
@@ -49,10 +49,6 @@ public:
 
     /// Validate proxy stopped.
     ~proxy();
-
-    /// This class is not copyable.
-    proxy(const proxy&) = delete;
-    void operator=(const proxy&) = delete;
 
     /// Send a message on the socket.
     template <class Message>

@@ -43,7 +43,7 @@ namespace network {
 
 /// Top level public networking interface, partly thread safe.
 class BCT_API p2p
-  : public enable_shared_from_base<p2p>
+  : public enable_shared_from_base<p2p>, noncopyable
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
@@ -84,10 +84,6 @@ public:
 
     /// Construct an instance.
     p2p(const settings& settings);
-
-    /// This class is not copyable.
-    p2p(const p2p&) = delete;
-    void operator=(const p2p&) = delete;
 
     /// Ensure all threads are coalesced.
     virtual ~p2p();
