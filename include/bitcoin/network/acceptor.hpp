@@ -64,6 +64,7 @@ private:
         accept_handler handler);
 
     // These are thread safe.
+    std::atomic<bool> stopped_;
     threadpool& pool_;
     const settings& settings_;
     mutable dispatcher dispatch_;
