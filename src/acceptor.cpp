@@ -38,7 +38,8 @@ using namespace std::placeholders;
 static const auto reuse_address = asio::acceptor::reuse_address(true);
 
 acceptor::acceptor(threadpool& pool, const settings& settings)
-  : pool_(pool),
+  : stopped_(true),
+    pool_(pool),
     settings_(settings),
     dispatch_(pool, NAME),
     acceptor_(pool_.service()),
@@ -65,6 +66,7 @@ void acceptor::stop(const code&)
         // This will asynchronously invoke the handler of the pending accept.
         acceptor_.cancel();
 
+        stopped_ = true;
         //---------------------------------------------------------------------
         mutex_.unlock();
         return;
@@ -77,7 +79,7 @@ void acceptor::stop(const code&)
 // private
 bool acceptor::stopped() const
 {
-    return !acceptor_.is_open();
+    return stopped_;
 }
 
 // This is hardwired to listen on IPv6.
@@ -109,6 +111,8 @@ code acceptor::listen(uint16_t port)
 
     if (!error)
         acceptor_.listen(asio::max_connections, error);
+
+    stopped_ = false;
 
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
