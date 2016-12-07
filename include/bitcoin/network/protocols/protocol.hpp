@@ -126,13 +126,6 @@ private:
 #undef PROTOCOL_ARGS_TYPE
 #undef BOUND_PROTOCOL_TYPE
 
-#define BIND1(method, p1) \
-    bind<CLASS>(&CLASS::method, p1)
-#define BIND2(method, p1, p2) \
-    bind<CLASS>(&CLASS::method, p1, p2)
-#define BIND3(method, p1, p2, p3) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3)
-
 #define SEND1(message, method, p1) \
     send<CLASS>(message, &CLASS::method, p1)
 #define SEND2(message, method, p1, p2) \
