@@ -92,7 +92,10 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure connecting outbound: " << ec.message();
-        new_connection();
+
+        if (ec != error::service_stopped)
+            new_connection();
+
         return;
     }
 

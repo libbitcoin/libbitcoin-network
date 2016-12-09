@@ -113,15 +113,16 @@ public:
     code relay(std::istream& stream, uint32_t version,
         Subscriber& subscriber) const
     {
-        const auto instance = Message::factory_from_data(version, stream);
+        const auto message = std::make_shared<Message>();
 
-        if (!instance.is_valid())
+        if (!message->from_data(version, stream))
         {
             subscriber->relay(error::bad_stream, {});
+            return error::bad_stream;
         }
 
-        const auto ptr = std::make_shared<const Message>(std::move(instance));
-        subscriber->relay(error::success, ptr);
+        const auto const_ptr = std::const_pointer_cast<const Message>(message);
+        subscriber->relay(error::success, const_ptr);
         return error::success;
     }
 
@@ -136,15 +137,16 @@ public:
     code handle(std::istream& stream, uint32_t version,
         Subscriber& subscriber) const
     {
-        const auto instance = Message::factory_from_data(version, stream);
+        const auto message = std::make_shared<Message>();
 
-        if (!instance.is_valid())
+        if (!message->from_data(version, stream))
         {
             subscriber->invoke(error::bad_stream, {});
+            return error::bad_stream;
         }
 
-        const auto ptr = std::make_shared<const Message>(std::move(instance));
-        subscriber->invoke(error::success, ptr);
+        const auto const_ptr = std::const_pointer_cast<const Message>(message);
+        subscriber->invoke(error::success, const_ptr);
         return error::success;
     }
 
