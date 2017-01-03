@@ -144,7 +144,7 @@ void acceptor::accept(accept_handler handler)
     // TODO: iIf the accept is invoked on a thread of the acceptor, as opposed
     // to the thread of the socket, then this is unnecessary.
     acceptor_.async_accept(socket->get(),
-        dispatch_.bound_delegate(&acceptor::handle_accept,
+        std::bind(&acceptor::handle_accept,
             shared_from_this(), _1, socket, handler));
 
     mutex_.unlock();
