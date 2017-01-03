@@ -164,7 +164,7 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
     // async_connect will not invoke the handler within this function.
     // The bound delegate ensures handler completion before loss of scope.
     async_connect(socket->get(), iterator,
-        dispatch_.bound_delegate(&connector::handle_connect,
+        std::bind(&connector::handle_connect,
             shared_from_this(), _1, _2, socket, join_handler));
 
     mutex_.unlock_shared();
