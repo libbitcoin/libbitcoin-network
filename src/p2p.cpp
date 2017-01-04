@@ -372,6 +372,7 @@ void p2p::connect(const std::string& hostname, uint16_t port)
 
     auto manual = manual_.load();
 
+    // Connect is invoked on a new thread.
     if (manual)
         manual->connect(hostname, port);
 }
@@ -388,10 +389,7 @@ void p2p::connect(const std::string& hostname, uint16_t port,
     auto manual = manual_.load();
 
     if (manual)
-    {
-        // Connect is invoked on a new thread.
         manual->connect(hostname, port, handler);
-    }
 }
 
 // Hosts collection.
