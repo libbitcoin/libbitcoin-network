@@ -139,12 +139,14 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     }
 
     LOG_DEBUG(LOG_NETWORK)
-        << "Peer [" << authority() << "] user agent: " << message->user_agent();
+        << "Peer [" << authority() << "] protocol version ("
+        << message->value() << ") user agent: " << message->user_agent();
 
     const auto& settings = network_.network_settings();
 
     // TODO: move these three checks to initialization.
     //-------------------------------------------------------------------------
+
     if (settings.protocol_minimum < version::level::minimum)
     {
         LOG_ERROR(LOG_NETWORK)
@@ -171,6 +173,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         set_event(error::channel_stopped);
         return false;
     }
+
     //-------------------------------------------------------------------------
 
     if ((message->services() & minimum_services_) != minimum_services_)
@@ -213,6 +216,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     const auto version = std::min(message->value(), own_version_);
     set_negotiated_version(version);
+    set_peer_version(message);
 
     LOG_DEBUG(LOG_NETWORK)
         << "Negotiated protocol version (" << version
