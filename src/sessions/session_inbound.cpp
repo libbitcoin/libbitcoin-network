@@ -72,8 +72,20 @@ void session_inbound::handle_started(const code& ec, result_handler handler)
     subscribe_stop(BIND1(handle_stop, _1));
 
     // START LISTENING ON PORT
+    const auto error_code = acceptor_->listen(settings_.inbound_port);
+
+    if (error_code)
+    {
+        LOG_ERROR(LOG_NETWORK)
+            << "Error starting listener: " << ec.message();
+        handler(error_code);
+        return;
+    }
+
+    start_accept();
+
     // This is the end of the start sequence.
-    handler(acceptor_->listen(settings_.inbound_port));
+    handler(error::success);
 }
 
 void session_inbound::handle_stop(const code& ec)
@@ -85,19 +97,12 @@ void session_inbound::handle_stop(const code& ec)
 // Accept sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept(const code& ec)
+void session_inbound::start_accept()
 {
     if (stopped())
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Suspended inbound connection.";
-        return;
-    }
-
-    if (ec)
-    {
-        LOG_ERROR(LOG_NETWORK)
-            << "Error starting listener: " << ec.message();
         return;
     }
 
@@ -114,8 +119,8 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
         return;
     }
 
-    // Start accepting again immediately.
-    start_accept(error::success);
+    // Start accepting again immediately, regardless of previous error.
+    start_accept();
 
     if (ec)
     {
