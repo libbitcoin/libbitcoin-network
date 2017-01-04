@@ -117,13 +117,24 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
             << "] manually: " << ec.message();
 
         // Retry logic.
-        // The handler invoke is the failure end of the connect sequence.
         if (settings_.manual_attempt_limit == 0)
+        {
             start_connect(hostname, port, 0, handler);
+        }
         else if (remaining > 0)
+        {
             start_connect(hostname, port, remaining - 1, handler);
+        }
         else
+        {
+            LOG_WARNING(LOG_NETWORK)
+                << "Suspending manual connection to ["
+                << config::endpoint(hostname, port) << "] after "
+                << settings_.manual_attempt_limit << " failed attempts.";
+
+            // This is the failure end of the connect sequence.
             handler(ec, nullptr);
+        }
 
         return;
     }
