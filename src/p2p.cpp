@@ -94,7 +94,7 @@ void p2p::start(result_handler handler)
     }
 
     threadpool_.join();
-    threadpool_.spawn(settings_.threads, thread_priority::normal);
+    threadpool_.spawn(threads(settings_.threads), thread_priority::normal);
 
     stopped_ = false;
     stop_subscriber_->start();
