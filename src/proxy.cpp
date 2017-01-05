@@ -47,12 +47,12 @@ proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t protocol_magic,
     authority_(socket->authority()),
     heading_buffer_(heading::maximum_size()),
     payload_buffer_(heading::maximum_payload_size(protocol_maximum)),
-    dispatch_(socket->thread(), NAME),
     socket_(socket),
     stopped_(true),
     version_(protocol_maximum),
     message_subscriber_(pool),
-    stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME))
+    stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_sub")),
+    dispatch_(pool, NAME "_dispatch")
 {
 }
 
@@ -114,11 +114,6 @@ void proxy::subscribe_stop(result_handler handler)
 
 void proxy::read_heading()
 {
-    dispatch_.concurrent(&proxy::do_read_heading, shared_from_this());
-}
-
-void proxy::do_read_heading()
-{
     if (stopped())
         return;
 
@@ -175,11 +170,6 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
 }
 
 void proxy::read_payload(const heading& head)
-{
-    dispatch_.concurrent(&proxy::do_read_payload, shared_from_this(), head);
-}
-
-void proxy::do_read_payload(const heading& head)
 {
     if (stopped())
         return;
@@ -265,33 +255,21 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
 void proxy::do_send(const std::string& command, payload_ptr payload,
     result_handler handler)
 {
-    if (stopped())
-    {
-        handler(error::channel_stopped);
-        return;
-    }
-
-    LOG_DEBUG(LOG_NETWORK)
-        << "Sending " << command << " to [" << authority() << "] ("
-        << payload->size() << " bytes)";
-
     async_write(socket_->get(), buffer(*payload),
         std::bind(&proxy::handle_send,
-            shared_from_this(), _1, payload->size(), payload, handler));
+            shared_from_this(), _1, _2, payload, handler));
 }
 
-void proxy::handle_send(const boost_code& ec, size_t size, payload_ptr payload,
+void proxy::handle_send(const boost_code& ec, size_t, payload_ptr payload,
     result_handler handler)
 {
-    // This may stop compiler optimization from preventing necessary increment.
-    payload.reset();
-
+    dispatch_.unlock();
     const auto error = code(error::boost_to_error_code(ec));
 
     if (error)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Failure sending " << size << " byte message to ["
+            << "Failure sending " << payload->size() << " byte message to ["
             << authority() << "] " << error.message();
     }
 

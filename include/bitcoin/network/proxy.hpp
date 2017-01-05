@@ -52,13 +52,15 @@ public:
 
     /// Send a message on the socket.
     template <class Message>
-    void send(const Message& message, result_handler&& handler)
+    void send(const Message& message, result_handler handler)
     {
         auto data = message::serialize(version_, message, protocol_magic_);
         const auto payload = std::make_shared<data_chunk>(std::move(data));
 
-        dispatch_.concurrent(&proxy::do_send,
-            shared_from_this(), message.command, payload, std::move(handler));
+        // Sequential dispatch is required because write may occur in multiple
+        // asynchronous steps invoked on different threads (locking deadlocks).
+        dispatch_.lock(&proxy::do_send,
+            shared_from_this(), message.command, payload, handler);
     }
 
     /// Subscribe to messages of the specified type on the socket.
@@ -104,35 +106,31 @@ private:
     void stop(const boost_code& ec);
 
     void read_heading();
-    void do_read_heading();
     void handle_read_heading(const boost_code& ec, size_t payload_size);
 
     void read_payload(const message::heading& head);
-    void do_read_payload(const message::heading& head);
     void handle_read_payload(const boost_code& ec, size_t,
         const message::heading& head);
 
     void do_send(const std::string& command, payload_ptr payload,
         result_handler handler);
-    void handle_send(const boost_code& ec, size_t size, payload_ptr payload,
+    void handle_send(const boost_code& ec, size_t bytes, payload_ptr payload,
         result_handler handler);
 
     const uint32_t protocol_magic_;
     const config::authority authority_;
 
-    // These are protected by sequential ordering.
+    // These are protected by read header/payload ordering.
     data_chunk heading_buffer_;
     data_chunk payload_buffer_;
-
-    // This is protected by use of a single thread io_service.
     socket::ptr socket_;
-    dispatcher dispatch_;
 
     // These are thread safe.
     std::atomic<bool> stopped_;
     std::atomic<uint32_t> version_;
     message_subscriber message_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
+    dispatcher dispatch_;
 };
 
 } // namespace network

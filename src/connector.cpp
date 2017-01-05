@@ -149,7 +149,7 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
         return;
     }
 
-    const auto socket = std::make_shared<bc::socket>();
+    const auto socket = std::make_shared<bc::socket>(pool_);
     timer_ = std::make_shared<deadline>(pool_, settings_.connect_timeout());
 
     // Manage the timer-connect race, returning upon first completion.
