@@ -19,7 +19,9 @@
  */
 #include <bitcoin/network/settings.hpp>
 
+#include <algorithm>
 #include <limits>
+#include <thread>
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
@@ -30,7 +32,7 @@ using namespace bc::message;
 
 // Common default values (no settings context).
 settings::settings()
-  : threads(50),
+  : threads(std::max(std::thread::hardware_concurrency(), 1u)),
     protocol_maximum(version::level::maximum),
     protocol_minimum(version::level::minimum),
     services(version::service::none),
