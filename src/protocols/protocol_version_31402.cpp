@@ -19,10 +19,7 @@
  */
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
 
-#include <algorithm>
-#include <chrono>
 #include <cstdint>
-#include <cstdlib>
 #include <functional>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
@@ -43,25 +40,18 @@ using namespace std::placeholders;
 static const std::string reason_insufficient_services = "insufficient-services";
 static const std::string reason_insufficient_version = "insufficient-version";
 
-// TODO: move to libbitcoin utility with similar blockchain function.
-static uint64_t time_stamp()
-{
-    // Use system clock because we require accurate time of day.
-    typedef std::chrono::system_clock wall_clock;
-    const auto now = wall_clock::now();
-    return wall_clock::to_time_t(now);
-}
-
 // Require the configured minimum and services by default.
 // Configured min version is our own but we may require higer for some stuff.
-// Configured services are our own and may not always make sense to require.
+// Configured services was our but we found that most incoming connections are
+// set to zero, so that is currently the default (see below).
 protocol_version_31402::protocol_version_31402(p2p& network,
     channel::ptr channel)
   : protocol_version_31402(network, channel,
         network.network_settings().protocol_maximum,
         network.network_settings().services,
         network.network_settings().protocol_minimum,
-        network.network_settings().services)
+        bc::message::version::service::none
+        /*network.network_settings().services*/)
 {
 }
 
@@ -105,7 +95,7 @@ message::version protocol_version_31402::version_factory() const
     message::version version;
     version.set_value(own_version_);
     version.set_services(own_services_);
-    version.set_timestamp(time_stamp());
+    version.set_timestamp(static_cast<uint64_t>(zulu_time()));
     version.set_address_receiver(authority().to_network_address());
     version.set_address_sender(settings.self.to_network_address());
     version.set_nonce(nonce());
