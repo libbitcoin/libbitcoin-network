@@ -29,13 +29,16 @@
 namespace libbitcoin {
 namespace network {
 
+// Configured services was our but we found that most incoming connections are
+// set to zero, so that is currently the default (see below).
 protocol_version_70002::protocol_version_70002(p2p& network,
     channel::ptr channel)
   : protocol_version_70002(network, channel,
         network.network_settings().protocol_maximum,
         network.network_settings().services,
         network.network_settings().protocol_minimum,
-        network.network_settings().services,
+        bc::message::version::service::none,
+        /*network.network_settings().services,*/
         network.network_settings().relay_transactions)
 {
 }
