@@ -29,6 +29,7 @@
 namespace libbitcoin {
 namespace network {
 
+// TODO: set explicitly on inbound (none or new config) and self on outbound.
 // Configured services was our but we found that most incoming connections are
 // set to zero, so that is currently the default (see below).
 protocol_version_70002::protocol_version_70002(p2p& network,

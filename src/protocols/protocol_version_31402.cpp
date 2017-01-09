@@ -40,6 +40,7 @@ using namespace std::placeholders;
 static const std::string reason_insufficient_services = "insufficient-services";
 static const std::string reason_insufficient_version = "insufficient-version";
 
+// TODO: set explicitly on inbound (none or new config) and self on outbound.
 // Require the configured minimum and services by default.
 // Configured min version is our own but we may require higer for some stuff.
 // Configured services was our but we found that most incoming connections are
