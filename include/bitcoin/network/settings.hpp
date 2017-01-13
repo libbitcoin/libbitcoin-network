@@ -65,10 +65,10 @@ public:
     boost::filesystem::path error_file;
     boost::filesystem::path archive_directory;
     size_t rotation_size;
-    size_t maximum_archive_size;
     size_t minimum_free_space;
+    size_t maximum_archive_size;
     size_t maximum_archive_files;
-    config::authority statsd_server;
+    config::authority statistics_server;
 
     /// Helpers.
     asio::duration connect_timeout() const;
