@@ -29,6 +29,8 @@
 namespace libbitcoin {
 namespace network {
 
+using namespace bc::config;
+
 #define NAME "hosts"
 
 hosts::hosts(const settings& settings)
@@ -210,7 +212,7 @@ code hosts::store(const address& host)
     if (!host.is_valid())
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Invalid host address from peer";
+            << "Invalid host address from peer.";
 
         // We don't treat invalid address as an error, just log it.
         return error::success;
@@ -242,7 +244,7 @@ code hosts::store(const address& host)
     ///////////////////////////////////////////////////////////////////////////
 
     LOG_DEBUG(LOG_NETWORK)
-        << "Redundant host address from peer";
+        << "Redundant host address [" << authority(host) << "] from peer.";
 
     // We don't treat redundant address as an error, just log it.
     return error::success;
