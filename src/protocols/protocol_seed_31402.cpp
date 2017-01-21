@@ -94,8 +94,11 @@ void protocol_seed_31402::handle_seeding_complete(const code& ec,
 bool protocol_seed_31402::handle_receive_address(const code& ec,
     address_const_ptr message)
 {
-    if (stopped())
+    if (stopped(ec))
+    {
+        set_event(ec);
         return false;
+    }
 
     if (ec)
     {
@@ -112,14 +115,16 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
     network_.store(message->addresses(), BIND1(handle_store_addresses, _1));
-
     return false;
 }
 
 void protocol_seed_31402::handle_send_address(const code& ec)
 {
-    if (stopped())
+    if (stopped(ec))
+    {
+        set_event(ec);
         return;
+    }
 
     if (ec)
     {
@@ -136,8 +141,11 @@ void protocol_seed_31402::handle_send_address(const code& ec)
 
 void protocol_seed_31402::handle_send_get_address(const code& ec)
 {
-    if (stopped())
+    if (stopped(ec))
+    {
+        set_event(ec);
         return;
+    }
 
     if (ec)
     {
@@ -154,16 +162,17 @@ void protocol_seed_31402::handle_send_get_address(const code& ec)
 
 void protocol_seed_31402::handle_store_addresses(const code& ec)
 {
-    if (stopped())
+    if (stopped(ec))
+    {
+        set_event(ec);
         return;
-
-    if (ec && ec != error::service_stopped)
-        LOG_ERROR(LOG_NETWORK)
-            << "Failure storing addresses from seed [" << authority() << "] "
-            << ec.message();
+    }
 
     if (ec)
     {
+        LOG_ERROR(LOG_NETWORK)
+            << "Failure storing addresses from seed [" << authority() << "] "
+            << ec.message();
         set_event(ec);
         return;
     }

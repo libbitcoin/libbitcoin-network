@@ -66,6 +66,11 @@ protected:
      */
     virtual bool stopped() const;
 
+    /**
+     * Determine if the code is a stop code or the handler has been cleared.
+     */
+    virtual bool stopped(const code& ec) const;
+
 protected:
     void handle_send(const code& ec, const std::string& command);
 

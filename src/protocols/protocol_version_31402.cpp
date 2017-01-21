@@ -117,8 +117,11 @@ message::version protocol_version_31402::version_factory() const
 bool protocol_version_31402::handle_receive_version(const code& ec,
     version_const_ptr message)
 {
-    if (stopped())
+    if (stopped(ec))
+    {
+        set_event(ec);
         return false;
+    }
 
     if (ec)
     {
@@ -223,8 +226,11 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 bool protocol_version_31402::handle_receive_verack(const code& ec,
     verack_const_ptr)
 {
-    if (stopped())
+    if (stopped(ec))
+    {
+        set_event(ec);
         return false;
+    }
 
     if (ec)
     {
@@ -242,8 +248,11 @@ bool protocol_version_31402::handle_receive_verack(const code& ec,
 
 void protocol_version_31402::handle_version_sent(const code& ec)
 {
-    if (stopped())
+    if (stopped(ec))
+    {
+        set_event(ec);
         return;
+    }
 
     if (ec)
     {
@@ -257,8 +266,11 @@ void protocol_version_31402::handle_version_sent(const code& ec)
 
 void protocol_version_31402::handle_verack_sent(const code& ec)
 {
-    if (stopped())
+    if (stopped(ec))
+    {
+        set_event(ec);
         return;
+    }
 
     if (ec)
     {

@@ -121,12 +121,18 @@ void channel::handle_activity()
     start_inactivity();
 }
 
+bool channel::stopped(const code& ec) const
+{
+    return proxy::stopped() || ec == error::channel_stopped || 
+        ec == error::service_stopped;
+}
+
 // Timers (these are inherent races, requiring stranding by stop only).
 // ----------------------------------------------------------------------------
 
 void channel::start_expiration()
 {
-    if (stopped())
+    if (proxy::stopped())
         return;
 
     expiration_->start(
@@ -136,7 +142,7 @@ void channel::start_expiration()
 
 void channel::handle_expiration(const code& ec)
 {
-    if (stopped())
+    if (stopped(ec))
         return;
 
     LOG_DEBUG(LOG_NETWORK)
@@ -147,7 +153,7 @@ void channel::handle_expiration(const code& ec)
 
 void channel::start_inactivity()
 {
-    if (stopped())
+    if (proxy::stopped())
         return;
 
     inactivity_->start(
@@ -157,7 +163,7 @@ void channel::start_inactivity()
 
 void channel::handle_inactivity(const code& ec)
 {
-    if (stopped())
+    if (stopped(ec))
         return;
 
     LOG_DEBUG(LOG_NETWORK)

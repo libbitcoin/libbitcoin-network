@@ -46,7 +46,7 @@ protocol_ping_60001::protocol_ping_60001(p2p& network, channel::ptr channel)
 // This is fired by the callback (i.e. base timer and stop handler).
 void protocol_ping_60001::send_ping(const code& ec)
 {
-    if (stopped())
+    if (stopped(ec))
         return;
 
     if (ec && ec != error::channel_timeout)
@@ -66,7 +66,7 @@ void protocol_ping_60001::send_ping(const code& ec)
 bool protocol_ping_60001::handle_receive_ping(const code& ec,
     ping_const_ptr message)
 {
-    if (stopped())
+    if (stopped(ec))
         return false;
 
     if (ec)
@@ -85,7 +85,7 @@ bool protocol_ping_60001::handle_receive_ping(const code& ec,
 bool protocol_ping_60001::handle_receive_pong(const code& ec,
     pong_const_ptr message, uint64_t nonce)
 {
-    if (stopped())
+    if (stopped(ec))
         return false;
 
     if (ec)
