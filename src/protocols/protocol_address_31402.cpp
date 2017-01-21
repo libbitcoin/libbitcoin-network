@@ -154,8 +154,9 @@ void protocol_address_31402::handle_store_addresses(const code& ec)
 
 void protocol_address_31402::handle_stop(const code&)
 {
-    LOG_DEBUG(LOG_NETWORK)
-        << "Stopped address protocol";
+    // None of the other bc::network protocols log their stop.
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Stopped address protocol for [" << authority() << "].";
 }
 
 } // namespace network
