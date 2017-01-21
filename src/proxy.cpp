@@ -252,26 +252,31 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
 // Message send sequence.
 // ----------------------------------------------------------------------------
 
-void proxy::do_send(const std::string& command, payload_ptr payload,
+void proxy::do_send(command_ptr command, payload_ptr payload,
     result_handler handler)
 {
     async_write(socket_->get(), buffer(*payload),
         std::bind(&proxy::handle_send,
-            shared_from_this(), _1, _2, payload, handler));
+            shared_from_this(), _1, _2, command, payload, handler));
 }
 
-void proxy::handle_send(const boost_code& ec, size_t, payload_ptr payload,
-    result_handler handler)
+void proxy::handle_send(const boost_code& ec, size_t, command_ptr command,
+    payload_ptr payload, result_handler handler)
 {
     dispatch_.unlock();
+    const auto size = payload->size();
     const auto error = code(error::boost_to_error_code(ec));
 
     if (error)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Failure sending " << payload->size() << " byte message to ["
-            << authority() << "] " << error.message();
+            << "Failure sending " << *command << " payload to [" << authority()
+            << "] (" << size << " bytes)";
     }
+
+    LOG_DEBUG(LOG_NETWORK)
+        << "Sent " << *command << " payload to [" << authority() << "] ("
+        << size << " bytes)";
 
     handler(error);
 }
