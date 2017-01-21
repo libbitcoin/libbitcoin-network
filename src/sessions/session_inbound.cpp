@@ -112,7 +112,7 @@ void session_inbound::start_accept()
 
 void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 {
-    if (stopped())
+    if (stopped(ec))
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Suspended inbound connection.";

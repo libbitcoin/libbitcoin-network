@@ -56,11 +56,12 @@ public:
     {
         auto data = message::serialize(version_, message, protocol_magic_);
         const auto payload = std::make_shared<data_chunk>(std::move(data));
+        const auto command = std::make_shared<std::string>(message.command);
 
         // Sequential dispatch is required because write may occur in multiple
-        // asynchronous steps invoked on different threads (locking deadlocks).
+        // asynchronous steps invoked on different threads, causing deadlocks.
         dispatch_.lock(&proxy::do_send,
-            shared_from_this(), message.command, payload, handler);
+            shared_from_this(), command, payload, handler);
     }
 
     /// Subscribe to messages of the specified type on the socket.
@@ -98,6 +99,7 @@ protected:
 private:
     typedef byte_source<data_chunk> payload_source;
     typedef boost::iostreams::stream<payload_source> payload_stream;
+    typedef std::shared_ptr<std::string> command_ptr;
     typedef std::shared_ptr<data_chunk> payload_ptr;
 
     static config::authority authority_factory(socket::ptr socket);
@@ -112,10 +114,10 @@ private:
     void handle_read_payload(const boost_code& ec, size_t,
         const message::heading& head);
 
-    void do_send(const std::string& command, payload_ptr payload,
+    void do_send(command_ptr command, payload_ptr payload,
         result_handler handler);
-    void handle_send(const boost_code& ec, size_t bytes, payload_ptr payload,
-        result_handler handler);
+    void handle_send(const boost_code& ec, size_t bytes, command_ptr command,
+        payload_ptr payload, result_handler handler);
 
     const uint32_t protocol_magic_;
     const config::authority authority_;

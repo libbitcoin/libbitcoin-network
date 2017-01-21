@@ -114,6 +114,7 @@ protected:
     virtual code fetch_address(address& out_address) const;
     virtual bool blacklisted(const authority& authority) const;
     virtual bool stopped() const;
+    virtual bool stopped(const code& ec) const;
 
     /// Socket creators.
     // ------------------------------------------------------------------------

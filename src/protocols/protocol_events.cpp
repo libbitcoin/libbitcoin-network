@@ -44,7 +44,15 @@ protocol_events::protocol_events(p2p& network, channel::ptr channel,
 
 bool protocol_events::stopped() const
 {
+    // Used for context-free stop testing.
     return !handler_.load();
+}
+
+bool protocol_events::stopped(const code& ec) const
+{
+    // The service stop code may also make its way into protocol handlers.
+    return stopped() || ec == error::channel_stopped || 
+        ec == error::service_stopped;
 }
 
 // Start.
@@ -61,9 +69,12 @@ void protocol_events::start(event_handler handler)
 
 void protocol_events::handle_stopped(const code& ec)
 {
-    LOG_DEBUG(LOG_NETWORK)
-        << "Stop protocol_" << name() << " on [" << authority() << "] "
-        << ec.message();
+    if (!stopped(ec))
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Stop protocol_" << name() << " on [" << authority() << "] "
+            << ec.message();
+    }
     
     // Event handlers can depend on this code for channel stop.
     set_event(error::channel_stopped);
@@ -74,13 +85,16 @@ void protocol_events::handle_stopped(const code& ec)
 
 void protocol_events::set_event(const code& ec)
 {
+    // If already stopped.
     auto handler = handler_.load();
     if (!handler)
         return;
 
-    if (ec == error::channel_stopped)
+    // If stopping but not yet cleared, clear event handler now.
+    if (stopped(ec))
         handler_.store(nullptr);
 
+    // Invoke event handler.
     handler(ec);
 }
 
@@ -89,7 +103,7 @@ void protocol_events::set_event(const code& ec)
 
 void protocol_events::handle_send(const code& ec, const std::string& command)
 {
-    if (stopped())
+    if (stopped(ec))
         return;
 
     if (ec)
@@ -98,7 +112,6 @@ void protocol_events::handle_send(const code& ec, const std::string& command)
             << "Failure sending '" << command << "' to [" << authority()
             << "] " << ec.message();
         stop(ec);
-        return;
     }
 }
 

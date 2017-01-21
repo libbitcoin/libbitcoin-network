@@ -61,6 +61,7 @@ public:
 protected:
     virtual void handle_activity() override;
     virtual void handle_stopping() override;
+    virtual bool stopped(const code& ec) const;
 
 private:
     void do_start(const code& ec, result_handler handler);

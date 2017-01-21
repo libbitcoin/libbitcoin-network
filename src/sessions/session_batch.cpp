@@ -72,7 +72,7 @@ void session_batch::new_connect(channel_handler handler)
 void session_batch::start_connect(const code& ec, const authority& host,
     channel_handler handler)
 {
-    if (stopped() || ec == error::service_stopped)
+    if (stopped(ec))
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Batch session stopped while starting.";
