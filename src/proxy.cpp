@@ -215,6 +215,8 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
     // Notify subscribers of the new message.
     payload_source source(payload_buffer_);
     payload_stream istream(source);
+
+    // Failures are not forwarded to subscribers and channel is stopped below.
     const auto code = message_subscriber_.load(head.type(), version_, istream);
     const auto consumed = istream.peek() == std::istream::traits_type::eof();
 
