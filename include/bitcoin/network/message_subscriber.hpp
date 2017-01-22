@@ -78,8 +78,8 @@ public:
     DEFINE_SUBSCRIBER_TYPE(ping);
     DEFINE_SUBSCRIBER_TYPE(pong);
     DEFINE_SUBSCRIBER_TYPE(reject);
+    DEFINE_SUBSCRIBER_TYPE(send_compact);
     DEFINE_SUBSCRIBER_TYPE(send_headers);
-    DEFINE_SUBSCRIBER_TYPE(send_compact_blocks);
     DEFINE_SUBSCRIBER_TYPE(transaction);
     DEFINE_SUBSCRIBER_TYPE(verack);
     DEFINE_SUBSCRIBER_TYPE(version);
@@ -201,8 +201,8 @@ private:
     DEFINE_SUBSCRIBER_OVERLOAD(ping);
     DEFINE_SUBSCRIBER_OVERLOAD(pong);
     DEFINE_SUBSCRIBER_OVERLOAD(reject);
+    DEFINE_SUBSCRIBER_OVERLOAD(send_compact);
     DEFINE_SUBSCRIBER_OVERLOAD(send_headers);
-    DEFINE_SUBSCRIBER_OVERLOAD(send_compact_blocks);
     DEFINE_SUBSCRIBER_OVERLOAD(transaction);
     DEFINE_SUBSCRIBER_OVERLOAD(verack);
     DEFINE_SUBSCRIBER_OVERLOAD(version);
@@ -229,8 +229,8 @@ private:
     DECLARE_SUBSCRIBER(ping);
     DECLARE_SUBSCRIBER(pong);
     DECLARE_SUBSCRIBER(reject);
+    DECLARE_SUBSCRIBER(send_compact);
     DECLARE_SUBSCRIBER(send_headers);
-    DECLARE_SUBSCRIBER(send_compact_blocks);
     DECLARE_SUBSCRIBER(transaction);
     DECLARE_SUBSCRIBER(verack);
     DECLARE_SUBSCRIBER(version);
