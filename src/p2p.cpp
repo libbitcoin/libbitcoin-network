@@ -325,7 +325,7 @@ void p2p::set_top_block(const checkpoint& top)
 
 bool p2p::stopped() const
 {
-    return stopped_.load();
+    return stopped_;
 }
 
 threadpool& p2p::thread_pool()

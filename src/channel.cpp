@@ -76,17 +76,17 @@ void channel::do_start(const code& ec, result_handler handler)
 
 bool channel::notify() const
 {
-    return notify_.load();
+    return notify_;
 }
 
 void channel::set_notify(bool value)
 {
-    notify_.store(value);
+    notify_ = value;
 }
 
 uint64_t channel::nonce() const
 {
-    return nonce_.load();
+    return nonce_;
 }
 
 void channel::set_nonce(uint64_t value)

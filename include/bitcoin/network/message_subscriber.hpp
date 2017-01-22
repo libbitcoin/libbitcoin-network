@@ -115,14 +115,12 @@ public:
     {
         const auto message = std::make_shared<Message>();
 
+        // Subscribers are invoked only with stop and success codes.
         if (!message->from_data(version, stream))
-        {
-            subscriber->relay(error::bad_stream, {});
             return error::bad_stream;
-        }
 
-        const auto const_ptr = std::const_pointer_cast<const Message>(message);
-        subscriber->relay(error::success, const_ptr);
+        ////const auto const_ptr = std::const_pointer_cast<const Message>(message);
+        subscriber->relay(error::success, message);
         return error::success;
     }
 
@@ -139,14 +137,12 @@ public:
     {
         const auto message = std::make_shared<Message>();
 
+        // Subscribers are invoked only with stop and success codes.
         if (!message->from_data(version, stream))
-        {
-            subscriber->invoke(error::bad_stream, {});
             return error::bad_stream;
-        }
 
-        const auto const_ptr = std::const_pointer_cast<const Message>(message);
-        subscriber->invoke(error::success, const_ptr);
+        ////const auto const_ptr = std::const_pointer_cast<const Message>(message);
+        subscriber->invoke(error::success, message);
         return error::success;
     }
 

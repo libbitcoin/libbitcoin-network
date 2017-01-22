@@ -95,19 +95,7 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
     address_const_ptr message)
 {
     if (stopped(ec))
-    {
-        set_event(ec);
         return false;
-    }
-
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure receiving addresses from seed [" << authority() << "] "
-            << ec.message();
-        set_event(ec);
-        return false;
-    }
 
     LOG_DEBUG(LOG_NETWORK)
         << "Storing addresses from seed [" << authority() << "] ("
@@ -121,19 +109,7 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
 void protocol_seed_31402::handle_send_address(const code& ec)
 {
     if (stopped(ec))
-    {
-        set_event(ec);
         return;
-    }
-
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure sending address to seed [" << authority() << "] "
-            << ec.message();
-        set_event(ec);
-        return;
-    }
 
     // 1 of 3
     set_event(error::success);
@@ -142,10 +118,7 @@ void protocol_seed_31402::handle_send_address(const code& ec)
 void protocol_seed_31402::handle_send_get_address(const code& ec)
 {
     if (stopped(ec))
-    {
-        set_event(ec);
         return;
-    }
 
     if (ec)
     {
@@ -163,10 +136,7 @@ void protocol_seed_31402::handle_send_get_address(const code& ec)
 void protocol_seed_31402::handle_store_addresses(const code& ec)
 {
     if (stopped(ec))
-    {
-        set_event(ec);
         return;
-    }
 
     if (ec)
     {

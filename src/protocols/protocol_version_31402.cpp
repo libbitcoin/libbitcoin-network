@@ -84,7 +84,7 @@ void protocol_version_31402::start(event_handler handler)
 
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
     SUBSCRIBE2(verack, handle_receive_verack, _1, _2);
-    SEND1(version_factory(), handle_version_sent, _1);
+    SEND2(version_factory(), handle_send, _1, version::command);
 }
 
 message::version protocol_version_31402::version_factory() const
@@ -118,10 +118,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     version_const_ptr message)
 {
     if (stopped(ec))
-    {
-        set_event(ec);
         return false;
-    }
 
     if (ec)
     {
@@ -216,7 +213,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         << "Negotiated protocol version (" << version
         << ") for [" << authority() << "]";
 
-    SEND1(verack(), handle_verack_sent, _1);
+    SEND2(verack(), handle_send, _1, verack::command);
 
     // 1 of 2
     set_event(error::success);
@@ -227,10 +224,7 @@ bool protocol_version_31402::handle_receive_verack(const code& ec,
     verack_const_ptr)
 {
     if (stopped(ec))
-    {
-        set_event(ec);
         return false;
-    }
 
     if (ec)
     {
@@ -244,42 +238,6 @@ bool protocol_version_31402::handle_receive_verack(const code& ec,
     // 2 of 2
     set_event(error::success);
     return false;
-}
-
-void protocol_version_31402::handle_version_sent(const code& ec)
-{
-    if (stopped(ec))
-    {
-        set_event(ec);
-        return;
-    }
-
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure sending version to [" << authority() << "] "
-            << ec.message();
-        set_event(ec);
-        return;
-    }
-}
-
-void protocol_version_31402::handle_verack_sent(const code& ec)
-{
-    if (stopped(ec))
-    {
-        set_event(ec);
-        return;
-    }
-
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure sending verack to [" << authority() << "] "
-            << ec.message();
-        set_event(ec);
-        return;
-    }
 }
 
 } // namespace network

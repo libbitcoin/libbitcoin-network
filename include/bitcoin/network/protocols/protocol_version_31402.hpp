@@ -69,9 +69,6 @@ public:
 protected:
     virtual message::version version_factory() const;
 
-    virtual void handle_version_sent(const code& ec);
-    virtual void handle_verack_sent(const code& ec);
-
     virtual bool handle_receive_version(const code& ec,
         version_const_ptr version);
     virtual bool handle_receive_verack(const code& ec, verack_const_ptr);
