@@ -73,8 +73,8 @@ message_subscriber::message_subscriber(threadpool& pool)
     INITIALIZE_SUBSCRIBER(pool, ping),
     INITIALIZE_SUBSCRIBER(pool, pong),
     INITIALIZE_SUBSCRIBER(pool, reject),
+    INITIALIZE_SUBSCRIBER(pool, send_compact),
     INITIALIZE_SUBSCRIBER(pool, send_headers),
-    INITIALIZE_SUBSCRIBER(pool, send_compact_blocks),
     INITIALIZE_SUBSCRIBER(pool, transaction),
     INITIALIZE_SUBSCRIBER(pool, verack),
     INITIALIZE_SUBSCRIBER(pool, version)
@@ -105,8 +105,8 @@ void message_subscriber::broadcast(const code& ec)
     RELAY_CODE(ec, ping);
     RELAY_CODE(ec, pong);
     RELAY_CODE(ec, reject);
+    RELAY_CODE(ec, send_compact);
     RELAY_CODE(ec, send_headers);
-    RELAY_CODE(ec, send_compact_blocks);
     RELAY_CODE(ec, transaction);
     RELAY_CODE(ec, verack);
     RELAY_CODE(ec, version);
@@ -139,8 +139,8 @@ code message_subscriber::load(message_type type, uint32_t version,
         CASE_RELAY_MESSAGE(stream, version, ping);
         CASE_RELAY_MESSAGE(stream, version, pong);
         CASE_RELAY_MESSAGE(stream, version, reject);
+        CASE_RELAY_MESSAGE(stream, version, send_compact);
         CASE_RELAY_MESSAGE(stream, version, send_headers);
-        CASE_RELAY_MESSAGE(stream, version, send_compact_blocks);
         CASE_RELAY_MESSAGE(stream, version, transaction);
         CASE_RELAY_MESSAGE(stream, version, verack);
         CASE_RELAY_MESSAGE(stream, version, version);
@@ -174,8 +174,8 @@ void message_subscriber::start()
     START_SUBSCRIBER(ping);
     START_SUBSCRIBER(pong);
     START_SUBSCRIBER(reject);
+    START_SUBSCRIBER(send_compact);
     START_SUBSCRIBER(send_headers);
-    START_SUBSCRIBER(send_compact_blocks);
     START_SUBSCRIBER(transaction);
     START_SUBSCRIBER(verack);
     START_SUBSCRIBER(version);
@@ -205,8 +205,8 @@ void message_subscriber::stop()
     STOP_SUBSCRIBER(ping);
     STOP_SUBSCRIBER(pong);
     STOP_SUBSCRIBER(reject);
+    STOP_SUBSCRIBER(send_compact);
     STOP_SUBSCRIBER(send_headers);
-    STOP_SUBSCRIBER(send_compact_blocks);
     STOP_SUBSCRIBER(transaction);
     STOP_SUBSCRIBER(verack);
     STOP_SUBSCRIBER(version);
