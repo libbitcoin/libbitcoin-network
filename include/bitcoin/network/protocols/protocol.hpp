@@ -115,6 +115,9 @@ protected:
     /// Stop the channel (and the protocol).
     virtual void stop(const code& ec);
 
+protected:
+    void handle_send(const code& ec, const std::string& command);
+
 private:
     threadpool& pool_;
     channel::ptr channel_;
