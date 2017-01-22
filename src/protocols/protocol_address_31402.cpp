@@ -86,15 +86,6 @@ bool protocol_address_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return false;
 
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure receiving address message from ["
-            << authority() << "] " << ec.message();
-        stop(ec);
-        return false;
-    }
-
     LOG_DEBUG(LOG_NETWORK)
         << "Storing addresses from [" << authority() << "] ("
         << message->addresses().size() << ")";
@@ -111,15 +102,6 @@ bool protocol_address_31402::handle_receive_get_address(const code& ec,
 {
     if (stopped(ec))
         return false;
-
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure receiving get_address message from ["
-            << authority() << "] " << ec.message();
-        stop(ec);
-        return false;
-    }
 
     // TODO: allowing repeated queries can allow a channel to map our history.
     // TODO: pull active hosts from host cache (currently just resending self).

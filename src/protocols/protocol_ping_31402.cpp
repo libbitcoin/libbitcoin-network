@@ -76,15 +76,6 @@ bool protocol_ping_31402::handle_receive_ping(const code& ec,
     if (stopped(ec))
         return false;
 
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure getting ping from [" << authority() << "] "
-            << ec.message();
-        stop(ec);
-        return false;
-    }
-
     // RESUBSCRIBE
     return true;
 }
