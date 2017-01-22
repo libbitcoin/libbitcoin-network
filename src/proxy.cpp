@@ -272,6 +272,7 @@ void proxy::handle_send(const boost_code& ec, size_t, command_ptr command,
         LOG_DEBUG(LOG_NETWORK)
             << "Failure sending " << *command << " payload to [" << authority()
             << "] (" << size << " bytes) " << error.message();
+        stop(ec);
     }
 
     LOG_DEBUG(LOG_NETWORK)
