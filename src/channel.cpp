@@ -116,7 +116,7 @@ void channel::handle_stopping()
     inactivity_->stop();
 }
 
-void channel::handle_activity()
+void channel::signal_activity()
 {
     start_inactivity();
 }

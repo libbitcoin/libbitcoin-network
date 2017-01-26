@@ -166,7 +166,6 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
     }
 
     read_payload(head);
-    handle_activity();
 }
 
 void proxy::read_payload(const heading& head)
@@ -247,7 +246,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
         << "Valid " << head.command() << " payload from [" << authority()
         << "] (" << payload_size << " bytes)";
 
-    handle_activity();
+    signal_activity();
     read_heading();
 }
 

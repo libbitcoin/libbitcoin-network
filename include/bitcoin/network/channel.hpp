@@ -59,7 +59,7 @@ public:
     virtual void set_peer_version(version_const_ptr value);
 
 protected:
-    virtual void handle_activity() override;
+    virtual void signal_activity() override;
     virtual void handle_stopping() override;
     virtual bool stopped(const code& ec) const;
 
