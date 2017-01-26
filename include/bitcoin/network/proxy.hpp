@@ -93,7 +93,7 @@ public:
 
 protected:
     virtual bool stopped() const;
-    virtual void handle_activity() = 0;
+    virtual void signal_activity() = 0;
     virtual void handle_stopping() = 0;
 
 private:
