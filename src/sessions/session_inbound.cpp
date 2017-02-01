@@ -37,7 +37,7 @@ using namespace std::placeholders;
 session_inbound::session_inbound(p2p& network, bool notify_on_connect)
   : session(network, notify_on_connect),
     connection_limit_(settings_.inbound_connections +
-        settings_.outbound_connections),
+        settings_.outbound_connections + settings_.peers.size()),
     CONSTRUCT_TRACK(session_inbound)
 {
 }
@@ -137,6 +137,8 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
         return;
     }
 
+    // Inbound connections can easily overflow in the case where manual and/or
+    // outbound connections at the time are not yet connected as configured.
     if (connection_count() >= connection_limit_)
     {
         LOG_DEBUG(LOG_NETWORK)
