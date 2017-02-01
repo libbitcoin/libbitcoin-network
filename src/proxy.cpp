@@ -268,18 +268,25 @@ void proxy::handle_send(const boost_code& ec, size_t, command_ptr command,
     const auto size = payload->size();
     const auto error = code(error::boost_to_error_code(ec));
 
+    if (stopped())
+    {
+        handler(error);
+        return;
+    }
+
     if (error)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure sending " << *command << " payload to [" << authority()
             << "] (" << size << " bytes) " << error.message();
-        stop(ec);
+        stop(error);
+        handler(error);
+        return;
     }
 
     LOG_DEBUG(LOG_NETWORK)
         << "Sent " << *command << " payload to [" << authority() << "] ("
         << size << " bytes)";
-
     handler(error);
 }
 
