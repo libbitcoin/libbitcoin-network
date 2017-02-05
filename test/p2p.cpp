@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(p2p__set_top_block1__values__expected)
     const network::settings configuration;
     p2p network(configuration);
     const size_t expected_height = 42;
-    const auto& expected_hash = null_hash;
+    const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
     network.set_top_block({ expected_hash, expected_height });
     BOOST_REQUIRE(network.top_block().hash() == expected_hash);
     BOOST_REQUIRE_EQUAL(network.top_block().height(), expected_height);
@@ -217,7 +217,8 @@ BOOST_AUTO_TEST_CASE(p2p__set_top_block2__values__expected)
     const network::settings configuration;
     p2p network(configuration);
     const size_t expected_height = 42;
-    const config::checkpoint expected{ null_hash, expected_height };
+    const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+    const config::checkpoint expected{ hash, expected_height };
     network.set_top_block(expected);
     BOOST_REQUIRE(network.top_block().hash() == expected.hash());
     BOOST_REQUIRE_EQUAL(network.top_block().height(), expected.height());
