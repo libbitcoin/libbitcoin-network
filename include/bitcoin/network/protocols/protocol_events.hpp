@@ -49,6 +49,11 @@ protected:
         const std::string& name);
 
     /**
+     * Start the protocol with no event handler.
+     */
+    virtual void start();
+
+    /**
      * Start the protocol.
      * The event handler may be invoked one or more times.
      * @param[in]  handler  The handler to call at each completion event.

@@ -29,6 +29,15 @@
 namespace libbitcoin {
 namespace network {
 
+#define NAME "version"
+#define CLASS protocol_version_70002
+
+using namespace bc::message;
+using namespace std::placeholders;
+
+static const std::string insufficient_version = "insufficient-version";
+static const std::string insufficient_services = "insufficient-services";
+
 // TODO: set explicitly on inbound (none or new config) and self on outbound.
 // Configured services was our but we found that most incoming connections are
 // set to zero, so that is currently the default (see below).
@@ -54,6 +63,16 @@ protocol_version_70002::protocol_version_70002(p2p& network,
 {
 }
 
+// Start sequence.
+// ----------------------------------------------------------------------------
+
+void protocol_version_70002::start(event_handler handler)
+{
+    protocol_version_31402::start(handler);
+
+    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
+}
+
 message::version protocol_version_70002::version_factory() const
 {
     auto version = protocol_version_31402::version_factory();
@@ -62,6 +81,78 @@ message::version protocol_version_70002::version_factory() const
     version.set_relay(relay_);
     return version;
 }
+
+// Protocol.
+// ----------------------------------------------------------------------------
+
+bool protocol_version_70002::sufficient_peer(version_const_ptr message)
+{
+    if (message->value() < minimum_version_)
+    {
+        const reject version_rejection
+        {
+            reject::reason_code::obsolete,
+            version::command,
+            insufficient_version
+        };
+
+        SEND2(version_rejection, handle_send, _1, reject::command);
+    }
+    else if ((message->services() & minimum_services_) != minimum_services_)
+    {
+        const reject obsolete_rejection
+        {
+            reject::reason_code::obsolete,
+            version::command,
+            insufficient_services
+        };
+
+        SEND2(obsolete_rejection, handle_send, _1, reject::command);
+    }
+
+    return protocol_version_31402::sufficient_peer(message);
+}
+
+bool protocol_version_70002::handle_receive_reject(const code& ec,
+    reject_const_ptr reject)
+{
+    if (stopped(ec))
+        return false;
+
+    if (ec)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Failure receiving reject from [" << authority() << "] "
+            << ec.message();
+        set_event(error::channel_stopped);
+        return false;
+    }
+
+    const auto code = reject->code();
+
+    // Client is an obsolete, unsupported version.
+    if (code == reject::reason_code::obsolete)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Obsolete " << reject->message() << " reject from ["
+            << authority() << "] '" << reject->reason() << "'";
+        set_event(error::channel_stopped);
+        return false;
+    }
+
+    // Duplicate version message received.
+    if (code == reject::reason_code::duplicate)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Duplicate " << reject->message() << " reject from ["
+            << authority() << "] '" << reject->reason() << "'";
+        set_event(error::channel_stopped);
+        return false;
+    }
+
+    return true;
+}
+
 
 } // namespace network
 } // namespace libbitcoin

@@ -61,8 +61,18 @@ public:
         uint32_t own_version, uint64_t own_services, uint32_t minimum_version,
         uint64_t minimum_services, bool relay);
 
+    /**
+     * Start the protocol.
+     * @param[in]  handler  Invoked upon stop or receipt of version and verack.
+     */
+    void start(event_handler handler) override;
+
 protected:
     message::version version_factory() const override;
+    bool sufficient_peer(version_const_ptr message) override;
+
+    virtual bool handle_receive_reject(const code& ec,
+        reject_const_ptr reject);
 
     const bool relay_;
 };

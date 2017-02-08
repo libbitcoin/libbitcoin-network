@@ -68,6 +68,7 @@ public:
 
 protected:
     virtual message::version version_factory() const;
+    virtual bool sufficient_peer(version_const_ptr message);
 
     virtual bool handle_receive_version(const code& ec,
         version_const_ptr version);

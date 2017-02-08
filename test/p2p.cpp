@@ -178,7 +178,7 @@ static int send_result(const Message& message, p2p& network, int channels)
     return result;
 }
 
-// Trivial tests just validate static inits.
+// Trivial tests just validate static inits (required because p2p tests disabled in travis).
 BOOST_AUTO_TEST_SUITE(empty_tests)
 
 BOOST_AUTO_TEST_CASE(empty_test)

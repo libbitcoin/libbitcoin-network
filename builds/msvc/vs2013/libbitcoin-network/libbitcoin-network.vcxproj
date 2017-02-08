@@ -75,6 +75,7 @@
     <ClCompile Include="..\..\..\..\src\message_subscriber.cpp" />
     <ClCompile Include="..\..\..\..\src\p2p.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_60001.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_reject_70002.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70002.cpp" />
     <ClCompile Include="..\..\..\..\src\proxy.cpp" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
@@ -103,6 +104,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\message_subscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2p.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_60001.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_reject_70002.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70002.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\proxy.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp" />
