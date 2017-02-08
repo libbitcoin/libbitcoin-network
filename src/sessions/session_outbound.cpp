@@ -26,6 +26,7 @@
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
+#include <bitcoin/network/protocols/protocol_reject_70002.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -124,10 +125,15 @@ void session_outbound::handle_channel_start(const code& ec,
 
 void session_outbound::attach_protocols(channel::ptr channel)
 {
-    if (channel->negotiated_version() >= message::version::level::bip31)
+    const auto version = channel->negotiated_version();
+
+    if (version >= message::version::level::bip31)
         attach<protocol_ping_60001>(channel)->start();
     else
         attach<protocol_ping_31402>(channel)->start();
+
+    if (version >= message::version::level::bip61)
+        attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_address_31402>(channel)->start();
 }

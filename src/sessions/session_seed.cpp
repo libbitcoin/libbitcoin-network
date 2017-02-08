@@ -26,11 +26,10 @@
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
+#include <bitcoin/network/protocols/protocol_reject_70002.hpp>
 #include <bitcoin/network/protocols/protocol_seed_31402.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
-#include <bitcoin/network/proxy.hpp>
-#include <bitcoin/network/sessions/session.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -103,6 +102,7 @@ void session_seed::attach_handshake_protocols(channel::ptr channel,
     const auto minimum_version = settings_.protocol_minimum;
     const auto minimum_services = message::version::service::none;
 
+    // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= message::version::level::bip61)
         attach<protocol_version_70002>(channel, own_version, own_services,
@@ -195,10 +195,15 @@ void session_seed::handle_channel_start(const code& ec, channel::ptr channel,
 void session_seed::attach_protocols(channel::ptr channel,
     result_handler handler)
 {
-    if (channel->negotiated_version() >= message::version::level::bip31)
+    const auto version = channel->negotiated_version();
+
+    if (version >= message::version::level::bip31)
         attach<protocol_ping_60001>(channel)->start();
     else
         attach<protocol_ping_31402>(channel)->start();
+
+    if (version >= message::version::level::bip61)
+        attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_seed_31402>(channel)->start(handler);
 }

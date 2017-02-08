@@ -37,9 +37,6 @@ namespace network {
 using namespace bc::message;
 using namespace std::placeholders;
 
-static const std::string reason_insufficient_services = "insufficient-services";
-static const std::string reason_insufficient_version = "insufficient-version";
-
 // TODO: set explicitly on inbound (none or new config) and self on outbound.
 // Require the configured minimum and services by default.
 // Configured min version is our own but we may require higer for some stuff.
@@ -133,10 +130,10 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         << "Peer [" << authority() << "] protocol version ("
         << message->value() << ") user agent: " << message->user_agent();
 
-    const auto& settings = network_.network_settings();
-
     // TODO: move these three checks to initialization.
     //-------------------------------------------------------------------------
+
+    const auto& settings = network_.network_settings();
 
     if (settings.protocol_minimum < version::level::minimum)
     {
@@ -167,40 +164,8 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     //-------------------------------------------------------------------------
 
-    if ((message->services() & minimum_services_) != minimum_services_)
+    if (!sufficient_peer(message))
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Insufficient peer network services (" << message->services()
-            << ") for [" << authority() << "]";
-
-        static const message::reject rejection
-        {
-            reject::reason_code::obsolete,
-            version::command,
-            reason_insufficient_services,
-            null_hash
-        };
-
-        SEND2(rejection, handle_send, _1, rejection.command);
-        set_event(error::channel_stopped);
-        return false;
-    }
-
-    if (message->value() < minimum_version_)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Insufficient peer protocol version (" << message->value()
-            << ") for [" << authority() << "]";
-
-        static const message::reject rejection
-        {
-            reject::reason_code::obsolete,
-            version::command,
-            reason_insufficient_version,
-            null_hash
-        };
-
-        SEND2(rejection, handle_send, _1, rejection.command);
         set_event(error::channel_stopped);
         return false;
     }
@@ -218,6 +183,27 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     // 1 of 2
     set_event(error::success);
     return false;
+}
+
+bool protocol_version_31402::sufficient_peer(version_const_ptr message)
+{
+    if ((message->services() & minimum_services_) != minimum_services_)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Insufficient peer network services (" << message->services()
+            << ") for [" << authority() << "]";
+        return false;
+    }
+
+    if (message->value() < minimum_version_)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Insufficient peer protocol version (" << message->value()
+            << ") for [" << authority() << "]";
+        return false;
+    }
+
+    return true;
 }
 
 bool protocol_version_31402::handle_receive_verack(const code& ec,
