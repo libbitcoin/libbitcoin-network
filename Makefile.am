@@ -48,6 +48,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/protocols/protocol_events.cpp \
     src/protocols/protocol_ping_31402.cpp \
     src/protocols/protocol_ping_60001.cpp \
+    src/protocols/protocol_reject_70002.cpp \
     src/protocols/protocol_seed_31402.cpp \
     src/protocols/protocol_timer.cpp \
     src/protocols/protocol_version_31402.cpp \
@@ -100,6 +101,7 @@ include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol_events.hpp \
     include/bitcoin/network/protocols/protocol_ping_31402.hpp \
     include/bitcoin/network/protocols/protocol_ping_60001.hpp \
+    include/bitcoin/network/protocols/protocol_reject_70002.hpp \
     include/bitcoin/network/protocols/protocol_seed_31402.hpp \
     include/bitcoin/network/protocols/protocol_timer.hpp \
     include/bitcoin/network/protocols/protocol_version_31402.hpp \

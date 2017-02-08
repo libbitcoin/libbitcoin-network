@@ -58,6 +58,12 @@ bool protocol_events::stopped(const code& ec) const
 // Start.
 // ----------------------------------------------------------------------------
 
+void protocol_events::start()
+{
+    const auto nop = [](const code&){};
+    start(nop);
+}
+
 void protocol_events::start(event_handler handler)
 {
     handler_.store(handler);

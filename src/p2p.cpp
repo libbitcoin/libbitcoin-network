@@ -71,8 +71,10 @@ p2p::p2p(const settings& settings)
     pending_connect_(nominal_connecting(settings_)),
     pending_handshake_(nominal_connected(settings_)),
     pending_close_(nominal_connected(settings_)),
-    stop_subscriber_(std::make_shared<stop_subscriber>(threadpool_, NAME "_stop_sub")),
-    channel_subscriber_(std::make_shared<channel_subscriber>(threadpool_, NAME "_sub"))
+    stop_subscriber_(std::make_shared<stop_subscriber>(threadpool_,
+        NAME "_stop_sub")),
+    channel_subscriber_(std::make_shared<channel_subscriber>(threadpool_,
+        NAME "_sub"))
 {
 }
 

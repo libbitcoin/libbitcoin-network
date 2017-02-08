@@ -70,6 +70,9 @@
     <ClCompile Include="..\..\..\..\src\hosts.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_reject_70002.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp">
@@ -149,6 +152,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\hosts.hpp">
       <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_reject_70002.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

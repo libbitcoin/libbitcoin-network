@@ -218,6 +218,7 @@ void session::handle_starting(const code& ec, channel::ptr channel,
 void session::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {
+    // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= message::version::level::bip61)
         attach<protocol_version_70002>(channel)->start(handle_started);
