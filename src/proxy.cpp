@@ -20,6 +20,7 @@
 
 #define BOOST_BIND_NO_PLACEHOLDERS
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -228,6 +229,12 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
         LOG_WARNING(LOG_NETWORK)
             << "Invalid " << head.command() << " payload from [" << authority()
             << "] " << code.message();
+
+        // Dump up to 1k of payload as hex in order to diagnore failure.
+        const auto size = std::min(payload_size, size_t(1024));
+        const auto begin = payload_buffer_.begin();
+        LOG_DEBUG(LOG_NETWORK)
+            << "Stream: " << encode_base16(data_chunk{ begin, begin + size });
         stop(code);
         return;
     }
