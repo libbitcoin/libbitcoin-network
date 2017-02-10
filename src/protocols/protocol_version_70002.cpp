@@ -127,14 +127,20 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
         return false;
     }
 
+    const auto& message = reject->message();
+
+    // Handle these in the reject protocol.
+    if (message != version::command)
+        return true;
+
     const auto code = reject->code();
 
     // Client is an obsolete, unsupported version.
     if (code == reject::reason_code::obsolete)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Obsolete " << reject->message() << " reject from ["
-            << authority() << "] '" << reject->reason() << "'";
+            << "Obsolete version reject from [" << authority() << "] '"
+            << reject->reason() << "'";
         set_event(error::channel_stopped);
         return false;
     }
@@ -143,8 +149,8 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
     if (code == reject::reason_code::duplicate)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Duplicate " << reject->message() << " reject from ["
-            << authority() << "] '" << reject->reason() << "'";
+            << "Duplicate version reject from [" << authority() << "] '"
+            << reject->reason() << "'";
         set_event(error::channel_stopped);
         return false;
     }

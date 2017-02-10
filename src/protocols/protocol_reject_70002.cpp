@@ -72,22 +72,20 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
         return false;
     }
 
-    const auto code = reject->code();
+    const auto& message = reject->message();
 
-    // These are version messages, handle in version protocol.
-    if (code == reject::reason_code::obsolete ||
-        code == reject::reason_code::duplicate)
+    // Handle these in the version protocol.
+    if (message == version::command)
         return true;
 
     std::string hash;
-    const auto& message = reject->message();
-
     if (message == block::command || message == transaction::command)
         hash = " [" + encode_hash(reject->data()) + "].";
 
+    const auto code = reject->code();
     LOG_DEBUG(LOG_NETWORK)
-        << "Received " << message << " (" << static_cast<uint16_t>(code)
-        << ") reject from [" << authority() << "] '" << reject->reason()
+        << "Received " << message << " reject (" << static_cast<uint16_t>(code)
+        << ") from [" << authority() << "] '" << reject->reason()
         << "'" << hash;
     return true;
 }
