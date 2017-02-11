@@ -38,6 +38,7 @@ using namespace std::placeholders;
 
 protocol_ping_60001::protocol_ping_60001(p2p& network, channel::ptr channel)
   : protocol_ping_31402(network, channel),
+    pending_(false),
     CONSTRUCT_TRACK(protocol_ping_60001)
 {
 }
@@ -57,9 +58,34 @@ void protocol_ping_60001::send_ping(const code& ec)
         return;
     }
 
+    if (pending_)
+    {
+        LOG_WARNING(LOG_NETWORK)
+            << "Ping latency limit exceeded [" << authority() << "]";
+        stop(error::channel_timeout);
+        return;
+    }
+
     const auto nonce = pseudo_random();
     SUBSCRIBE3(pong, handle_receive_pong, _1, _2, nonce);
-    SEND2(ping{ nonce }, handle_send, _1, pong::command);
+    SEND2(ping{ nonce }, handle_send_ping, _1, pong::command);
+}
+
+void protocol_ping_60001::handle_send_ping(const code& ec, const std::string&)
+{
+    if (stopped(ec))
+        return;
+
+    if (ec)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Failure sending ping to [" << authority() << "] "
+            << ec.message();
+        stop(ec);
+        return;
+    }
+
+    pending_ = true;
 }
 
 bool protocol_ping_60001::handle_receive_ping(const code& ec,
@@ -96,14 +122,14 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
         return false;
     }
 
+    pending_ = false;
+
     if (message->nonce() != nonce)
     {
         LOG_WARNING(LOG_NETWORK)
-            << "Invalid or overlapped pong nonce from [" << authority() << "]";
-
-        // This could result from message overlap due to a short period.
-        // It seems to happen more frequently than expected, so not stopping.
-        ////stop(error::bad_stream);
+            << "Invalid pong nonce from [" << authority() << "]";
+        stop(error::bad_stream);
+        return false;
     }
 
     return false;
