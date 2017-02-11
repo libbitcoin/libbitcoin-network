@@ -60,7 +60,7 @@ void protocol_ping_60001::send_ping(const code& ec)
 
     if (pending_)
     {
-        LOG_WARNING(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Ping latency limit exceeded [" << authority() << "]";
         stop(error::channel_timeout);
         return;
