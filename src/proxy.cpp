@@ -205,12 +205,6 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
         return;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: we aren't getting a stream benefit if we read the full payload
-    // before parsing the message. Should just make this a message parse or
-    // look into converting this to use an asio stream socket.
-    ///////////////////////////////////////////////////////////////////////////
-
     // Notify subscribers of the new message.
     payload_source source(payload_buffer_);
     payload_stream istream(source);
@@ -248,9 +242,9 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
         return;
     }
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Valid " << head.command() << " payload from [" << authority()
-        << "] (" << payload_size << " bytes)";
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Valid " << head.command() << " payload from [" << authority()
+    ////    << "] (" << payload_size << " bytes)";
 
     signal_activity();
     read_heading();
@@ -290,9 +284,9 @@ void proxy::handle_send(const boost_code& ec, size_t, command_ptr command,
         return;
     }
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Sent " << *command << " payload to [" << authority() << "] ("
-        << size << " bytes)";
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Sent " << *command << " payload to [" << authority() << "] ("
+    ////    << size << " bytes)";
     handler(error);
 }
 
