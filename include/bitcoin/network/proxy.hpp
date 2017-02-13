@@ -44,7 +44,7 @@ public:
 
     /// Construct an instance.
     proxy(threadpool& pool, socket::ptr socket, uint32_t protocol_magic,
-        uint32_t protocol_version);
+        uint32_t protocol_version, bool validate_checksum);
 
     /// Validate proxy stopped.
     ~proxy();
@@ -128,6 +128,7 @@ private:
 
     // These are thread safe.
     std::atomic<bool> stopped_;
+    const bool validate_checksum_;
     std::atomic<uint32_t> version_;
     message_subscriber message_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
