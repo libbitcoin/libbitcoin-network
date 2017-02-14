@@ -100,7 +100,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\connector.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\hosts.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\logging.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\message_subscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\p2p.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_60001.hpp" />

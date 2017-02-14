@@ -138,9 +138,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\logging.hpp">
-      <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\acceptor.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
