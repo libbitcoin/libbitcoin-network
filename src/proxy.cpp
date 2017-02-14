@@ -42,13 +42,14 @@ using namespace bc::message;
 // payload_buffer_ sizing assumes monotonically increasing size by version.
 // The socket owns the single thread on which this channel reads and writes.
 proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t protocol_magic,
-    uint32_t protocol_maximum)
+    uint32_t protocol_maximum, bool validate_checksum)
   : protocol_magic_(protocol_magic),
     authority_(socket->authority()),
     heading_buffer_(heading::maximum_size()),
     payload_buffer_(heading::maximum_payload_size(protocol_maximum)),
     socket_(socket),
     stopped_(true),
+    validate_checksum_(validate_checksum),
     version_(protocol_maximum),
     message_subscriber_(pool),
     stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_sub")),
@@ -196,7 +197,9 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
         return;
     }
 
-    if (head.checksum() != bitcoin_checksum(payload_buffer_))
+    // This is a pointless test but we allow it as an option for completeness.
+    if (validate_checksum_ &&
+        head.checksum() != bitcoin_checksum(payload_buffer_))
     {
         LOG_WARNING(LOG_NETWORK)
             << "Invalid " << head.command() << " payload from [" << authority()
@@ -204,12 +207,6 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
         stop(error::bad_stream);
         return;
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: we aren't getting a stream benefit if we read the full payload
-    // before parsing the message. Should just make this a message parse or
-    // look into converting this to use an asio stream socket.
-    ///////////////////////////////////////////////////////////////////////////
 
     // Notify subscribers of the new message.
     payload_source source(payload_buffer_);
@@ -248,9 +245,9 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
         return;
     }
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Valid " << head.command() << " payload from [" << authority()
-        << "] (" << payload_size << " bytes)";
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Valid " << head.command() << " payload from [" << authority()
+    ////    << "] (" << payload_size << " bytes)";
 
     signal_activity();
     read_heading();
@@ -290,9 +287,9 @@ void proxy::handle_send(const boost_code& ec, size_t, command_ptr command,
         return;
     }
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Sent " << *command << " payload to [" << authority() << "] ("
-        << size << " bytes)";
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Sent " << *command << " payload to [" << authority() << "] ("
+    ////    << size << " bytes)";
     handler(error);
 }
 

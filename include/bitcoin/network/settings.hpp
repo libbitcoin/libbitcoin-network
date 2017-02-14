@@ -39,6 +39,8 @@ public:
     uint32_t protocol_maximum;
     uint32_t protocol_minimum;
     uint64_t services;
+    bool relay_transactions;
+    bool validate_checksum;
     uint32_t identifier;
     uint16_t inbound_port;
     uint32_t inbound_connections;
@@ -52,7 +54,6 @@ public:
     uint32_t channel_expiration_minutes;
     uint32_t channel_germination_seconds;
     uint32_t host_pool_capacity;
-    bool relay_transactions;
     boost::filesystem::path hosts_file;
     config::authority self;
     config::authority::list blacklists;

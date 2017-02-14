@@ -100,7 +100,8 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel)
     }
 
     LOG_INFO(LOG_NETWORK)
-        << "Connected to outbound channel [" << channel->authority() << "]";
+        << "Connected outbound channel [" << channel->authority() << "] ("
+        << connection_count() << ")";
 
     register_channel(channel,
         BIND2(handle_channel_start, _1, channel),

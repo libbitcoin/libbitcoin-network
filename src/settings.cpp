@@ -32,6 +32,8 @@ settings::settings()
     protocol_maximum(version::level::maximum),
     protocol_minimum(version::level::minimum),
     services(version::service::none),
+    relay_transactions(false),
+    validate_checksum(false),
     inbound_connections(0),
     outbound_connections(8),
     manual_attempt_limit(0),
@@ -43,7 +45,6 @@ settings::settings()
     channel_expiration_minutes(1440),
     channel_germination_seconds(30),
     host_pool_capacity(0),
-    relay_transactions(false),
     hosts_file("hosts.cache"),
     self(unspecified_network_address),
 
