@@ -147,10 +147,6 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
         return;
     }
 
-    LOG_INFO(LOG_NETWORK)
-        << "Connected inbound channel [" << channel->authority() << "] ("
-        << connection_count() << ")";
-
     register_channel(channel,
         BIND2(handle_channel_start, _1, channel),
         BIND1(handle_channel_stop, _1));
@@ -166,6 +162,10 @@ void session_inbound::handle_channel_start(const code& ec,
             << "] " << ec.message();
         return;
     }
+
+    LOG_INFO(LOG_NETWORK)
+        << "Connected inbound channel [" << channel->authority() << "] ("
+        << connection_count() << ")";
 
     attach_protocols(channel);
 };

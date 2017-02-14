@@ -99,10 +99,6 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel)
         return;
     }
 
-    LOG_INFO(LOG_NETWORK)
-        << "Connected outbound channel [" << channel->authority() << "] ("
-        << connection_count() << ")";
-
     register_channel(channel,
         BIND2(handle_channel_start, _1, channel),
         BIND2(handle_channel_stop, _1, channel));
@@ -119,6 +115,10 @@ void session_outbound::handle_channel_start(const code& ec,
             << channel->authority() << "] " << ec.message();
         return;
     }
+
+    LOG_INFO(LOG_NETWORK)
+        << "Connected outbound channel [" << channel->authority() << "] ("
+        << connection_count() << ")";
 
     attach_protocols(channel);
 };

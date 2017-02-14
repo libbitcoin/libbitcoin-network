@@ -138,11 +138,6 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
         return;
     }
 
-    LOG_INFO(LOG_NETWORK)
-        << "Connected manual channel [" << config::endpoint(hostname, port)
-        << "] as [" << channel->authority() << "] ("
-        << connection_count() << ")";
-
     register_channel(channel,
         BIND5(handle_channel_start, _1, hostname, port, channel, handler),
         BIND3(handle_channel_stop, _1, hostname, port));
@@ -161,6 +156,11 @@ void session_manual::handle_channel_start(const code& ec,
             << "] " << ec.message();
         return;
     }
+
+    LOG_INFO(LOG_NETWORK)
+        << "Connected manual channel [" << config::endpoint(hostname, port)
+        << "] as [" << channel->authority() << "] ("
+        << connection_count() << ")";
 
     // This is the success end of the connect sequence.
     handler(error::success, channel);
