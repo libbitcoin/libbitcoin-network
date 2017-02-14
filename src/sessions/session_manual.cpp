@@ -140,7 +140,8 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
 
     LOG_INFO(LOG_NETWORK)
         << "Connected manual channel [" << config::endpoint(hostname, port)
-        << "] as [" << channel->authority() << "]";
+        << "] as [" << channel->authority() << "] ("
+        << connection_count() << ")";
 
     register_channel(channel,
         BIND5(handle_channel_start, _1, hostname, port, channel, handler),
