@@ -210,10 +210,10 @@ code hosts::store(const address& host)
 {
     if (!host.is_valid())
     {
+        // We don't treat invalid address as an error, just log it.
         LOG_DEBUG(LOG_NETWORK)
             << "Invalid host address from peer.";
 
-        // We don't treat invalid address as an error, just log it.
         return error::success;
     }
 
@@ -242,10 +242,10 @@ code hosts::store(const address& host)
     mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Redundant host address [" << authority(host) << "] from peer.";
+    ////// We don't treat redundant address as an error, just log it.
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Redundant host address [" << authority(host) << "] from peer.";
 
-    // We don't treat redundant address as an error, just log it.
     return error::success;
 }
 
