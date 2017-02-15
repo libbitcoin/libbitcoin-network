@@ -66,6 +66,7 @@ void protocol_ping_60001::send_ping(const code& ec)
         return;
     }
 
+    pending_ = true;
     const auto nonce = pseudo_random();
     SUBSCRIBE3(pong, handle_receive_pong, _1, _2, nonce);
     SEND2(ping{ nonce }, handle_send_ping, _1, pong::command);
@@ -84,8 +85,6 @@ void protocol_ping_60001::handle_send_ping(const code& ec, const std::string&)
         stop(ec);
         return;
     }
-
-    pending_ = true;
 }
 
 bool protocol_ping_60001::handle_receive_ping(const code& ec,
