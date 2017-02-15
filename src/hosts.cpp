@@ -281,7 +281,7 @@ void hosts::store(const address::list& hosts, result_handler handler)
     // Accept between 1 and all of this peer's addresses up to capacity.
     const auto capacity = buffer_.capacity();
     const auto usable = std::min(hosts.size(), capacity);
-    const auto random = pseudo_random(1, usable);
+    const auto random = static_cast<size_t>(pseudo_random(1, usable));
 
     // But always accept at least the amount we are short if available.
     const auto gap = capacity - buffer_.size();
