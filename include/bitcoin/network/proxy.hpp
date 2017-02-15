@@ -29,6 +29,7 @@
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -43,8 +44,7 @@ public:
     typedef subscriber<code> stop_subscriber;
 
     /// Construct an instance.
-    proxy(threadpool& pool, socket::ptr socket, uint32_t protocol_magic,
-        uint32_t protocol_version, bool validate_checksum);
+    proxy(threadpool& pool, socket::ptr socket, const settings& settings);
 
     /// Validate proxy stopped.
     ~proxy();
@@ -118,7 +118,6 @@ private:
     void handle_send(const boost_code& ec, size_t bytes, command_ptr command,
         payload_ptr payload, result_handler handler);
 
-    const uint32_t protocol_magic_;
     const config::authority authority_;
 
     // These are protected by read header/payload ordering.
@@ -128,7 +127,9 @@ private:
 
     // These are thread safe.
     std::atomic<bool> stopped_;
+    const uint32_t protocol_magic_;
     const bool validate_checksum_;
+    const bool verbose_;
     std::atomic<uint32_t> version_;
     message_subscriber message_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
