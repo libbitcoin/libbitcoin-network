@@ -29,6 +29,7 @@
 #include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -39,18 +40,21 @@ using namespace std::placeholders;
 using namespace boost::asio;
 using namespace bc::message;
 
+// Dump up to 1k of payload as hex in order to diagnore failure.
+static const size_t invalid_payload_dump_size = 1024;
+
 // payload_buffer_ sizing assumes monotonically increasing size by version.
 // The socket owns the single thread on which this channel reads and writes.
-proxy::proxy(threadpool& pool, socket::ptr socket, uint32_t protocol_magic,
-    uint32_t protocol_maximum, bool validate_checksum)
-  : protocol_magic_(protocol_magic),
-    authority_(socket->authority()),
+proxy::proxy(threadpool& pool, socket::ptr socket, const settings& settings)
+  : authority_(socket->authority()),
     heading_buffer_(heading::maximum_size()),
-    payload_buffer_(heading::maximum_payload_size(protocol_maximum)),
+    payload_buffer_(heading::maximum_payload_size(settings.protocol_maximum)),
     socket_(socket),
     stopped_(true),
-    validate_checksum_(validate_checksum),
-    version_(protocol_maximum),
+    protocol_magic_(settings.identifier),
+    validate_checksum_(settings.validate_checksum),
+    verbose_(settings.verbose),
+    version_(settings.protocol_maximum),
     message_subscriber_(pool),
     stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_sub")),
     dispatch_(pool, NAME "_dispatch")
@@ -216,22 +220,23 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
     const auto code = message_subscriber_.load(head.type(), version_, istream);
     const auto consumed = istream.peek() == std::istream::traits_type::eof();
 
-    // For finding agents of bad versions.
-    ////const auto agent =
-    ////    ((!code && consumed) || head.command != version::command) ? "" : " " +
-    ////        std::string(payload_buffer_.begin(), payload_buffer_.end());
+    if (verbose_ && code)
+    {
+        const auto size = std::min(payload_size, invalid_payload_dump_size);
+        const auto begin = payload_buffer_.begin();
+
+        LOG_DEBUG(LOG_NETWORK)
+            << "Invalid payload from [" << authority() << "] "
+            << encode_base16(data_chunk{ begin, begin + size });
+        stop(code);
+        return;
+    }
 
     if (code)
     {
         LOG_WARNING(LOG_NETWORK)
             << "Invalid " << head.command() << " payload from [" << authority()
             << "] " << code.message();
-
-        // Dump up to 1k of payload as hex in order to diagnore failure.
-        const auto size = std::min(payload_size, size_t(1024));
-        const auto begin = payload_buffer_.begin();
-        LOG_DEBUG(LOG_NETWORK)
-            << "Stream: " << encode_base16(data_chunk{ begin, begin + size });
         stop(code);
         return;
     }
@@ -245,9 +250,12 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
         return;
     }
 
-    ////LOG_DEBUG(LOG_NETWORK)
-    ////    << "Valid " << head.command() << " payload from [" << authority()
-    ////    << "] (" << payload_size << " bytes)";
+    if (verbose_)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Valid " << head.command() << " payload from [" << authority()
+            << "] (" << payload_size << " bytes)";
+    }
 
     signal_activity();
     read_heading();
@@ -287,9 +295,13 @@ void proxy::handle_send(const boost_code& ec, size_t, command_ptr command,
         return;
     }
 
-    ////LOG_DEBUG(LOG_NETWORK)
-    ////    << "Sent " << *command << " payload to [" << authority() << "] ("
-    ////    << size << " bytes)";
+    if (verbose_)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Sent " << *command << " payload to [" << authority() << "] ("
+            << size << " bytes)";
+    }
+
     handler(error);
 }
 

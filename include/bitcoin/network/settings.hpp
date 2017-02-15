@@ -69,6 +69,7 @@ public:
     size_t maximum_archive_size;
     size_t maximum_archive_files;
     config::authority statistics_server;
+    bool verbose;
 
     /// Helpers.
     asio::duration connect_timeout() const;

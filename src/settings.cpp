@@ -56,7 +56,8 @@ settings::settings()
     minimum_free_space(0),
     maximum_archive_size(0),
     maximum_archive_files(0),
-    statistics_server(unspecified_network_address)
+    statistics_server(unspecified_network_address),
+    verbose(false)
 {
 }
 

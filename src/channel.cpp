@@ -42,8 +42,7 @@ static deadline::ptr alarm(threadpool& pool, const asio::duration& duration)
 
 channel::channel(threadpool& pool, socket::ptr socket,
     const settings& settings)
-  : proxy(pool, socket, settings.identifier, settings.protocol_maximum,
-        settings.validate_checksum),
+  : proxy(pool, socket, settings),
     notify_(false),
     nonce_(0),
     expiration_(alarm(pool, settings.channel_expiration())),
