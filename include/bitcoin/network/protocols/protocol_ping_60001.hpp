@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_PING_60001_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_PING_60001_HPP
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <bitcoin/bitcoin.hpp>
@@ -59,7 +60,7 @@ protected:
         uint64_t nonce);
 
 private:
-    bool pending_;
+    std::atomic<bool> pending_;
 };
 
 } // namespace network
