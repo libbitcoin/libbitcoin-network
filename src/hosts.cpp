@@ -63,6 +63,9 @@ size_t hosts::count() const
 
 code hosts::fetch(address& out) const
 {
+    if (disabled_)
+        return error::not_found;
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     shared_lock lock(mutex_);
@@ -176,6 +179,9 @@ code hosts::stop()
 
 code hosts::remove(const address& host)
 {
+    if (disabled_)
+        return error::not_found;
+
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     mutex_.lock_upgrade();
@@ -208,9 +214,12 @@ code hosts::remove(const address& host)
 
 code hosts::store(const address& host)
 {
+    if (disabled_)
+        return error::success;
+
     if (!host.is_valid())
     {
-        // We don't treat invalid address as an error, just log it.
+        // Do not treat invalid address as an error, just log it.
         LOG_DEBUG(LOG_NETWORK)
             << "Invalid host address from peer.";
 
@@ -249,24 +258,70 @@ code hosts::store(const address& host)
     return error::success;
 }
 
-// The handler is invoked once all calls to do_store are completed.
 void hosts::store(const address::list& hosts, result_handler handler)
 {
-    if (stopped_)
-        return;
-
-    code last_error(error::success);
-
-    const auto storer = [this, &last_error](const address& host)
+    if (disabled_ || hosts.empty())
     {
-        const auto result = store(host);
+        handler(error::success);
+        return;
+    }
 
-        if (result)
-            last_error = result;
-    };
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    mutex_.lock_upgrade();
 
-    std::for_each(hosts.begin(), hosts.end(), storer);
-    handler(last_error);
+    if (stopped_)
+    {
+        mutex_.unlock_upgrade();
+        //---------------------------------------------------------------------
+        handler(error::service_stopped);
+        return;
+    }
+
+    // Accept between 1 and all of this peer's addresses up to capacity.
+    const auto capacity = buffer_.capacity();
+    const auto usable = std::min(hosts.size(), capacity);
+    const auto random = pseudo_random(1, usable);
+
+    // But always accept at least the amount we are short if available.
+    const auto gap = capacity - buffer_.size();
+    const auto accept = std::max(gap, random);
+
+    // Convert minimum desired to step for iteration, no less than 1.
+    const auto step = std::max(usable / accept, size_t(1));
+    size_t accepted = 0;
+
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+    for (size_t index = 0; index < usable; index = ceiling_add(index, step))
+    {
+        const auto& host = hosts[index];
+
+        // Do not treat invalid address as an error, just log it.
+        if (!host.is_valid())
+        {
+            LOG_DEBUG(LOG_NETWORK)
+                << "Invalid host address from peer.";
+            continue;
+        }
+
+        // Do not allow duplicates in the host cache.
+        if (find(host) == buffer_.end())
+        {
+            ++accepted;
+            buffer_.push_back(host);
+        }
+    }
+
+    mutex_.unlock();
+    ///////////////////////////////////////////////////////////////////////////
+
+    LOG_DEBUG(LOG_NETWORK)
+        << "Accepted (" << accepted << " of " << hosts.size()
+        << ") host addresses from peer.";
+
+    handler(error::success);
 }
 
 } // namespace network
