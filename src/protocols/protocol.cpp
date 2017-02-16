@@ -27,9 +27,11 @@
 namespace libbitcoin {
 namespace network {
 
-protocol::protocol(p2p& network, channel::ptr channel,
-    const std::string& name)
+#define NAME "protocol"
+
+protocol::protocol(p2p& network, channel::ptr channel, const std::string& name)
   : pool_(network.thread_pool()),
+    dispatch_(network.thread_pool(), NAME),
     channel_(channel),
     name_(name)
 {

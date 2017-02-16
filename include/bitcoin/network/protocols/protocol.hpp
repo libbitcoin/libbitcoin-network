@@ -66,6 +66,12 @@ protected:
         return BOUND_PROTOCOL(handler, args);
     }
 
+    template <class Protocol, typename Handler, typename... Args>
+    void dispatch_concurrent(Handler&& handler, Args&&... args)
+    {
+        dispatch_.concurrent(BOUND_PROTOCOL(handler, args));
+    }
+
     /// Send a message on the channel and handle the result.
     template <class Protocol, class Message, typename Handler, typename... Args>
     void send(const Message& packet, Handler&& handler, Args&&... args)
@@ -119,6 +125,7 @@ protected:
 
 private:
     threadpool& pool_;
+    dispatcher dispatch_;
     channel::ptr channel_;
     const std::string name_;
 };
@@ -142,6 +149,9 @@ private:
 
 #define SUBSCRIBE_STOP1(method, p1) \
     subscribe_stop<CLASS>(&CLASS::method, p1)
+
+#define DISPATCH_CONCURRENT1(method, p1) \
+    dispatch_concurrent<CLASS>(&CLASS::method, p1)
 
 } // namespace network
 } // namespace libbitcoin
