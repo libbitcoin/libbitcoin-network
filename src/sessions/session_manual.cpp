@@ -49,7 +49,7 @@ session_manual::session_manual(p2p& network, bool notify_on_connect)
 
 void session_manual::start(result_handler handler)
 {
-    session::start(CONCURRENT2(handle_started, _1, handler));
+    session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
 void session_manual::handle_started(const code& ec, result_handler handler)

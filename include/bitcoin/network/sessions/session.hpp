@@ -205,7 +205,7 @@ private:
 #define BIND7(method, p1, p2, p3, p4, p5, p6, p7) \
     bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6, p7)
 
-#define CONCURRENT2(method, p1, p2) \
+#define CONCURRENT_DELEGATE2(method, p1, p2) \
     concurrent_delegate<CLASS>(&CLASS::method, p1, p2)
 
 
