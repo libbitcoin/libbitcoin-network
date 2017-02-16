@@ -56,7 +56,7 @@ void session_seed::start(result_handler handler)
         return;
     }
 
-    session::start(CONCURRENT2(handle_started, _1, handler));
+    session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
 void session_seed::handle_started(const code& ec, result_handler handler)
