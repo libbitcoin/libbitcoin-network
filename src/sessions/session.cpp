@@ -203,7 +203,7 @@ void session::handle_starting(const code& ec, channel::ptr channel,
 {
     if (ec)
     {
-        LOG_INFO(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Channel failed to start [" << channel->authority() << "] "
             << ec.message();
         handle_started(ec);
