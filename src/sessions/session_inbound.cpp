@@ -157,7 +157,7 @@ void session_inbound::handle_channel_start(const code& ec,
 {
     if (ec)
     {
-        LOG_INFO(LOG_NETWORK)
+        LOG_DEBUG(LOG_NETWORK)
             << "Inbound channel failed to start [" << channel->authority()
             << "] " << ec.message();
         return;
