@@ -49,6 +49,9 @@ session_manual::session_manual(p2p& network, bool notify_on_connect)
 
 void session_manual::start(result_handler handler)
 {
+    LOG_INFO(LOG_NETWORK)
+        << "Starting manual session.";
+
     session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
@@ -76,12 +79,13 @@ void session_manual::connect(const std::string& hostname, uint16_t port)
 void session_manual::connect(const std::string& hostname, uint16_t port,
     channel_handler handler)
 {
-    start_connect(hostname, port, settings_.manual_attempt_limit, handler);
+    start_connect(error::success, hostname, port,
+        settings_.manual_attempt_limit, handler);
 }
 
 // The first connect is a sequence, which then spawns a cycle.
-void session_manual::start_connect(const std::string& hostname, uint16_t port,
-    uint32_t attempts, channel_handler handler)
+void session_manual::start_connect(const code&, const std::string& hostname,
+    uint16_t port, uint32_t attempts, channel_handler handler)
 {
     if (stopped())
     {
@@ -93,7 +97,6 @@ void session_manual::start_connect(const std::string& hostname, uint16_t port,
     }
 
     const auto retries = floor_subtract(attempts, 1u);
-
     const auto connector = create_connector();
     pend(connector);
 
@@ -115,26 +118,24 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
             << "Failure connecting [" << config::endpoint(hostname, port)
             << "] manually: " << ec.message();
 
-        // Retry logic.
-        if (settings_.manual_attempt_limit == 0)
-        {
-            start_connect(hostname, port, 0, handler);
-        }
-        else if (remaining > 0)
-        {
-            start_connect(hostname, port, remaining - 1, handler);
-        }
-        else
-        {
-            LOG_WARNING(LOG_NETWORK)
-                << "Suspending manual connection to ["
-                << config::endpoint(hostname, port) << "] after "
-                << settings_.manual_attempt_limit << " failed attempts.";
+        // Retry forever if limit is zero.
+        remaining = settings_.manual_attempt_limit == 0 ? 1 : --remaining;
 
-            // This is the failure end of the connect sequence.
-            handler(ec, nullptr);
+        if (remaining > 0)
+        {
+            // Retry with conditional delay, regardless of error.
+            dispatch_delayed(cycle_delay(ec),
+                BIND5(start_connect, _1, hostname, port, remaining, handler));
+            return;
         }
 
+        LOG_WARNING(LOG_NETWORK)
+            << "Suspending manual connection to ["
+            << config::endpoint(hostname, port) << "] after "
+            << settings_.manual_attempt_limit << " failed attempts.";
+
+        // This is the failure end of the connect sequence.
+        handler(ec, nullptr);
         return;
     }
 

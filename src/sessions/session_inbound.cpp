@@ -55,6 +55,10 @@ void session_inbound::start(result_handler handler)
         return;
     }
 
+    LOG_INFO(LOG_NETWORK)
+        << "Starting inbound session on port (" << settings_.inbound_port 
+        << ").";
+
     session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
@@ -82,7 +86,7 @@ void session_inbound::handle_started(const code& ec, result_handler handler)
         return;
     }
 
-    start_accept();
+    start_accept(error::success);
 
     // This is the end of the start sequence.
     handler(error::success);
@@ -97,7 +101,7 @@ void session_inbound::handle_stop(const code& ec)
 // Accept sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept()
+void session_inbound::start_accept(const code&)
 {
     if (stopped())
     {
@@ -119,8 +123,8 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
         return;
     }
 
-    // Start accepting again immediately, regardless of previous error.
-    start_accept();
+    // Start accepting again with conditional delay, regardless of error.
+    dispatch_delayed(cycle_delay(ec), BIND1(start_accept, _1));
 
     if (ec)
     {

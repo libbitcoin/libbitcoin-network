@@ -53,6 +53,9 @@ void session_outbound::start(result_handler handler)
         return;
     }
 
+    LOG_INFO(LOG_NETWORK)
+        << "Starting outbound session.";
+
     session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
@@ -65,7 +68,7 @@ void session_outbound::handle_started(const code& ec, result_handler handler)
     }
 
     for (size_t peer = 0; peer < settings_.outbound_connections; ++peer)
-        new_connection();
+        new_connection(error::success);
 
     // This is the end of the start sequence.
     handler(error::success);
@@ -74,7 +77,7 @@ void session_outbound::handle_started(const code& ec, result_handler handler)
 // Connnect cycle.
 // ----------------------------------------------------------------------------
 
-void session_outbound::new_connection()
+void session_outbound::new_connection(const code&)
 {
     if (stopped())
     {
@@ -93,9 +96,8 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel)
         LOG_DEBUG(LOG_NETWORK)
             << "Failure connecting outbound: " << ec.message();
 
-        if (ec != error::service_stopped)
-            new_connection();
-
+        // Retry with conditional delay, regardless of error.
+        dispatch_delayed(cycle_delay(ec), BIND1(new_connection, _1));
         return;
     }
 
@@ -145,7 +147,7 @@ void session_outbound::handle_channel_stop(const code& ec,
         << "Outbound channel stopped [" << channel->authority() << "] "
         << ec.message();
 
-    new_connection();
+    new_connection(error::success);
 }
 
 // Channel start sequence.
