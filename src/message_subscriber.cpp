@@ -30,6 +30,7 @@
 #define RELAY_CODE(code, value) \
     value##_subscriber_->relay(code, {})
 
+// This allows us to block the peer while handling the message.
 #define CASE_HANDLE_MESSAGE(stream, version, value) \
     case message_type::value: \
         return handle<message::value>(stream, version, value##_subscriber_)
@@ -140,7 +141,7 @@ code message_subscriber::load(message_type type, uint32_t version,
         CASE_RELAY_MESSAGE(stream, version, reject);
         CASE_RELAY_MESSAGE(stream, version, send_compact);
         CASE_RELAY_MESSAGE(stream, version, send_headers);
-        CASE_RELAY_MESSAGE(stream, version, transaction);
+        CASE_HANDLE_MESSAGE(stream, version, transaction);
         CASE_RELAY_MESSAGE(stream, version, verack);
         CASE_RELAY_MESSAGE(stream, version, version);
         case message_type::unknown:
