@@ -56,7 +56,7 @@ protected:
     virtual void attach_protocols(channel::ptr channel);
 
 private:
-    void start_accept();
+    void start_accept(const code& ec);
 
     void handle_stop(const code& ec);
     void handle_started(const code& ec, result_handler handler);

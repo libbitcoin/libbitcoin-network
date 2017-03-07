@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
+#include <utility>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/acceptor.hpp>
 #include <bitcoin/network/channel.hpp>
@@ -103,6 +104,20 @@ protected:
         delegates::concurrent<decltype(BOUND_SESSION_TYPE(handler, args))> const
     {
         return dispatch_.concurrent_delegate(SESSION_ARGS(handler, args));
+    }
+
+    /// Invoke a method in the derived class after the specified delay.
+    inline void dispatch_delayed(const asio::duration& delay,
+        dispatcher::delay_handler handler) const
+    {
+        dispatch_.delayed(delay, handler);
+    }
+
+    /// Delay timing for a tight connection loop, based on configured timeout.
+    inline asio::duration cycle_delay(const code& ec)
+    {
+        return (ec == error::channel_timeout || ec == error::service_stopped) ?
+            asio::seconds(0) : settings_.connect_timeout();
     }
 
     /// Properties.

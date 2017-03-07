@@ -54,7 +54,7 @@ protected:
     virtual void attach_protocols(channel::ptr channel);
 
 private:
-    void new_connection();
+    void new_connection(const code&);
 
     void handle_started(const code& ec, result_handler handler);
     void handle_connect(const code& ec, channel::ptr channel);
