@@ -167,7 +167,8 @@ void session_inbound::handle_channel_start(const code& ec,
         return;
     }
 
-    LOG_INFO(LOG_NETWORK)
+    // Relegate to debug due to typical frequency.
+    LOG_DEBUG(LOG_NETWORK)
         << "Connected inbound channel [" << channel->authority() << "] ("
         << connection_count() << ")";
 
