@@ -40,7 +40,7 @@ using namespace std::placeholders;
 using namespace boost::asio;
 using namespace bc::message;
 
-// Dump up to 1k of payload as hex in order to diagnore failure.
+// Dump up to 1k of payload as hex in order to diagnose failure.
 static const size_t invalid_payload_dump_size = 1024;
 
 // payload_buffer_ sizing assumes monotonically increasing size by version.
