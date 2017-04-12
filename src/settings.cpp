@@ -42,7 +42,7 @@ settings::settings()
     channel_handshake_seconds(30),
     channel_heartbeat_minutes(5),
     channel_inactivity_minutes(10),
-    channel_expiration_minutes(1440),
+    channel_expiration_minutes(60),
     channel_germination_seconds(30),
     host_pool_capacity(0),
     hosts_file("hosts.cache"),
