@@ -140,7 +140,7 @@ void acceptor::accept(accept_handler handler)
 
     // async_accept will not invoke the handler within this function.
     // The bound delegate ensures handler completion before loss of scope.
-    // TODO: iIf the accept is invoked on a thread of the acceptor, as opposed
+    // TODO: if the accept is invoked on a thread of the acceptor, as opposed
     // to the thread of the socket, then this is unnecessary.
     acceptor_.async_accept(socket->get(),
         std::bind(&acceptor::handle_accept,

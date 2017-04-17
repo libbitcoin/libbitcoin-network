@@ -119,7 +119,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
             << "] manually: " << ec.message();
 
         // Retry forever if limit is zero.
-        remaining = settings_.manual_attempt_limit == 0 ? 1 : --remaining;
+        remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
 
         if (remaining > 0)
         {
