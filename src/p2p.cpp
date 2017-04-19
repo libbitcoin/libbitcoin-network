@@ -24,6 +24,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
@@ -318,7 +319,7 @@ checkpoint p2p::top_block() const
 
 void p2p::set_top_block(checkpoint&& top)
 {
-    top_block_.store(std::forward<checkpoint>(top));
+    top_block_.store(std::move(top));
 }
 
 void p2p::set_top_block(const checkpoint& top)
