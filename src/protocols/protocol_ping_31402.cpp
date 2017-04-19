@@ -66,7 +66,7 @@ void protocol_ping_31402::send_ping(const code& ec)
         return;
     }
 
-    SEND2(ping{}, handle_send, _1, pong::command);
+    SEND2(ping{}, handle_send, _1, ping::command);
 }
 
 bool protocol_ping_31402::handle_receive_ping(const code& ec,
