@@ -253,7 +253,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
     if (verbose_)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Valid " << head.command() << " payload from [" << authority()
+            << "Received " << head.command() << " from [" << authority()
             << "] (" << payload_size << " bytes)";
     }
 
@@ -288,7 +288,7 @@ void proxy::handle_send(const boost_code& ec, size_t, command_ptr command,
     if (error)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Failure sending " << *command << " payload to [" << authority()
+            << "Failure sending " << *command << " to [" << authority()
             << "] (" << size << " bytes) " << error.message();
         stop(error);
         handler(error);
@@ -298,8 +298,8 @@ void proxy::handle_send(const boost_code& ec, size_t, command_ptr command,
     if (verbose_)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Sent " << *command << " payload to [" << authority() << "] ("
-            << size << " bytes)";
+            << "Sent " << *command << " to [" << authority() << "] (" << size
+            << " bytes)";
     }
 
     handler(error);
