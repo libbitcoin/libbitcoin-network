@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session__start_stop_start_success)
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(p2p__start__seed_session_handshake_timeout__start_operation_fail_stop_success)
+BOOST_AUTO_TEST_CASE(p2p__start__seed_session_handshake_timeout__start_peer_throttling_stop_success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
@@ -268,50 +268,50 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_handshake_timeout__start_operation
 
     // The (timeout) error on the individual connection is ignored.
     // The connection failure results in a failure to generate any addresses.
-    // The failure to germinate produces error::operation_failed.
-    BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
+    // The failure to generate an increase of 100 addresses produces error::peer_throttling.
+    BOOST_REQUIRE_EQUAL(start_result(network), error::peer_throttling);
 
     // The service never started but stop will still succeed (and is optional).
     BOOST_REQUIRE(network.stop());
 }
 
-BOOST_AUTO_TEST_CASE(p2p__start__seed_session_connect_timeout__start_operation_fail_stop_success)
+BOOST_AUTO_TEST_CASE(p2p__start__seed_session_connect_timeout__start_peer_throttling_stop_success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
     configuration.connect_timeout_seconds = 0;
     p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
+    BOOST_REQUIRE_EQUAL(start_result(network), error::peer_throttling);
     BOOST_REQUIRE(network.stop());
 }
 
-BOOST_AUTO_TEST_CASE(p2p__start__seed_session_germination_timeout__start_operation_fail_stop_success)
+BOOST_AUTO_TEST_CASE(p2p__start__seed_session_germination_timeout__start_peer_throttling_stop_success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
     configuration.channel_germination_seconds = 0;
     p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
+    BOOST_REQUIRE_EQUAL(start_result(network), error::peer_throttling);
     BOOST_REQUIRE(network.stop());
 }
 
-BOOST_AUTO_TEST_CASE(p2p__start__seed_session_inactivity_timeout__start_operation_fail_stop_success)
+BOOST_AUTO_TEST_CASE(p2p__start__seed_session_inactivity_timeout__start_peer_throttling_stop_success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
     configuration.channel_inactivity_minutes = 0;
     p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
+    BOOST_REQUIRE_EQUAL(start_result(network), error::peer_throttling);
     BOOST_REQUIRE(network.stop());
 }
 
-BOOST_AUTO_TEST_CASE(p2p__start__seed_session_expiration_timeout__start_operation_fail_stop_success)
+BOOST_AUTO_TEST_CASE(p2p__start__seed_session_expiration_timeout__start_peer_throttling_stop_success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
     configuration.channel_expiration_minutes = 0;
     p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
+    BOOST_REQUIRE_EQUAL(start_result(network), error::peer_throttling);
     BOOST_REQUIRE(network.stop());
 }
 
