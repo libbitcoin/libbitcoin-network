@@ -153,7 +153,8 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
 
     if (head.magic() != protocol_magic_)
     {
-        LOG_WARNING(LOG_NETWORK)
+        // These are common, with magic 542393671 coming from http requests.
+        LOG_DEBUG(LOG_NETWORK)
             << "Invalid heading magic (" << head.magic() << ") from ["
             << authority() << "]";
         stop(error::bad_stream);
