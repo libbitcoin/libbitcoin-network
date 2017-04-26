@@ -226,7 +226,7 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
         const auto size = std::min(payload_size, invalid_payload_dump_size);
         const auto begin = payload_buffer_.begin();
 
-        LOG_DEBUG(LOG_NETWORK)
+        LOG_VERBOSE(LOG_NETWORK)
             << "Invalid payload from [" << authority() << "] "
             << encode_base16(data_chunk{ begin, begin + size });
         stop(code);
@@ -251,12 +251,9 @@ void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
         return;
     }
 
-    if (verbose_)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Received " << head.command() << " from [" << authority()
-            << "] (" << payload_size << " bytes)";
-    }
+    LOG_VERBOSE(LOG_NETWORK)
+        << "Received " << head.command() << " from [" << authority()
+        << "] (" << payload_size << " bytes)";
 
     signal_activity();
     read_heading();
@@ -296,12 +293,9 @@ void proxy::handle_send(const boost_code& ec, size_t, command_ptr command,
         return;
     }
 
-    if (verbose_)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Sent " << *command << " to [" << authority() << "] (" << size
-            << " bytes)";
-    }
+    LOG_VERBOSE(LOG_NETWORK)
+        << "Sent " << *command << " to [" << authority() << "] (" << size
+        << " bytes)";
 
     handler(error);
 }
