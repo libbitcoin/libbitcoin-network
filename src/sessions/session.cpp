@@ -77,8 +77,13 @@ code session::fetch_address(address& out_address) const
 
 bool session::blacklisted(const authority& authority) const
 {
+    const auto ip_compare = [&](const config::authority& blocked)
+    {
+        return authority.ip() == blocked.ip();
+    };
+
     const auto& list = settings_.blacklists;
-    return std::find(list.begin(), list.end(), authority) != list.end();
+    return std::any_of(list.begin(), list.end(), ip_compare);
 }
 
 bool session::stopped() const

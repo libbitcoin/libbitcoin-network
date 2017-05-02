@@ -32,6 +32,7 @@ using namespace bc::config;
 
 #define NAME "hosts"
 
+// TODO: change to network_address bimap hash table with services and age.
 hosts::hosts(const settings& settings)
   : buffer_(std::max(settings.host_pool_capacity, 1u)),
     stopped_(true),
@@ -113,6 +114,8 @@ code hosts::start()
 
         while (std::getline(file, line))
         {
+            // TODO: create full space-delimited network_address serialization.
+            // Use to/from string format as opposed to wire serialization.
             config::authority host(line);
 
             if (host.port() != 0)
@@ -159,7 +162,11 @@ code hosts::stop()
     if (!file_error)
     {
         for (const auto& entry: buffer_)
+        {
+            // TODO: create full space-delimited network_address serialization.
+            // Use to/from string format as opposed to wire serialization.
             file << config::authority(entry) << std::endl;
+        }
 
         buffer_.clear();
     }
