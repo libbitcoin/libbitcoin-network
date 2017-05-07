@@ -37,6 +37,7 @@ using namespace std::placeholders;
 // Factory for deadline timer pointer construction.
 static deadline::ptr alarm(threadpool& pool, const asio::duration& duration)
 {
+    // TODO: don't apply this to inactivity.
     return std::make_shared<deadline>(pool, pseudo_randomize(duration));
 }
 
