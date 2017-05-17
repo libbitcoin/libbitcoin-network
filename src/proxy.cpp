@@ -141,7 +141,7 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    const auto head = heading::factory_from_data(heading_buffer_);
+    const auto head = heading::factory(heading_buffer_);
 
     if (!head.is_valid())
     {
