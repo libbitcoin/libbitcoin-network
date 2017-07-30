@@ -116,13 +116,13 @@ public:
     virtual const settings& network_settings() const;
 
     /// Return the current top block identity.
-    config::checkpoint top_block() const;
+    virtual config::checkpoint top_block() const;
 
     /// Set the current top block identity.
-    void set_top_block(config::checkpoint&& top);
+    virtual void set_top_block(config::checkpoint&& top);
 
     /// Set the current top block identity.
-    void set_top_block(const config::checkpoint& top);
+    virtual void set_top_block(const config::checkpoint& top);
 
     /// Determine if the network is stopped.
     virtual bool stopped() const;
