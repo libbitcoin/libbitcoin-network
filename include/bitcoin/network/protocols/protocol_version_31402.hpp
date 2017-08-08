@@ -52,12 +52,13 @@ public:
      * @param[in]  channel           The channel for the protocol.
      * @param[in]  own_version       This node's maximum version.
      * @param[in]  own_services      This node's advertised services.
+     * @param[in]  invalid_services  The disallowed peers services.
      * @param[in]  minimum_version   This required minimum version.
      * @param[in]  minimum_services  This required minimum services.
      */
     protocol_version_31402(p2p& network, channel::ptr channel,
-        uint32_t own_version, uint64_t own_services, uint32_t minimum_version,
-        uint64_t minimum_services);
+        uint32_t own_version, uint64_t own_services, uint64_t invalid_services,
+        uint32_t minimum_version, uint64_t minimum_services);
 
     /**
      * Start the protocol.
@@ -76,6 +77,7 @@ protected:
     p2p& network_;
     const uint32_t own_version_;
     const uint64_t own_services_;
+    const uint64_t invalid_services_;
     const uint32_t minimum_version_;
     const uint64_t minimum_services_;
 };
