@@ -45,6 +45,7 @@ protocol_version_70002::protocol_version_70002(p2p& network,
   : protocol_version_70002(network, channel,
         network.network_settings().protocol_maximum,
         network.network_settings().services,
+        network.network_settings().invalid_services,
         network.network_settings().protocol_minimum,
         bc::message::version::service::none,
         /*network.network_settings().services,*/
@@ -54,9 +55,10 @@ protocol_version_70002::protocol_version_70002(p2p& network,
 
 protocol_version_70002::protocol_version_70002(p2p& network,
     channel::ptr channel, uint32_t own_version, uint64_t own_services,
-    uint32_t minimum_version, uint64_t minimum_services, bool relay)
+    uint64_t invalid_services, uint32_t minimum_version,
+    uint64_t minimum_services, bool relay)
   : protocol_version_31402(network, channel, own_version, own_services,
-        minimum_version, minimum_services),
+        invalid_services, minimum_version, minimum_services),
     relay_(relay),
     CONSTRUCT_TRACK(protocol_version_70002)
 {
