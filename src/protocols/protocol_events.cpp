@@ -76,7 +76,7 @@ void protocol_events::handle_stopped(const code& ec)
 {
     if (!stopped(ec))
     {
-        LOG_DEBUG(LOG_NETWORK)
+        LOG_VERBOSE(LOG_NETWORK)
             << "Stop protocol_" << name() << " on [" << authority() << "] "
             << ec.message();
     }
