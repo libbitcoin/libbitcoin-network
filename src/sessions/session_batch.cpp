@@ -97,7 +97,7 @@ void session_batch::start_connect(const code& ec, const authority& host,
         return;
     }
 
-    LOG_DEBUG(LOG_NETWORK)
+    LOG_VERBOSE(LOG_NETWORK)
         << "Connecting to [" << host << "]";
 
     const auto connector = create_connector();
