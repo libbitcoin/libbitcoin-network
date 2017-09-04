@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/settings.hpp>
 
+#include <cstddef>
 #include <bitcoin/bitcoin.hpp>
 
 namespace libbitcoin {
@@ -115,6 +116,11 @@ settings::settings(config::settings context)
         {
         }
     }
+}
+
+size_t settings::minimum_connections() const
+{
+    return ceiling_add<size_t>(outbound_connections, peers.size());
 }
 
 duration settings::connect_timeout() const

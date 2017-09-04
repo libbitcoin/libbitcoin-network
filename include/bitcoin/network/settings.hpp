@@ -73,6 +73,7 @@ public:
     bool verbose;
 
     /// Helpers.
+    size_t minimum_connections() const;
     asio::duration connect_timeout() const;
     asio::duration channel_handshake() const;
     asio::duration channel_heartbeat() const;
