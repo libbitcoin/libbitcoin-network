@@ -136,8 +136,8 @@ code message_subscriber::load(message_type type, uint32_t version,
         CASE_RELAY_MESSAGE(stream, version, memory_pool);
         CASE_RELAY_MESSAGE(stream, version, merkle_block);
         CASE_RELAY_MESSAGE(stream, version, not_found);
-        CASE_RELAY_MESSAGE(stream, version, ping);
-        CASE_RELAY_MESSAGE(stream, version, pong);
+        CASE_HANDLE_MESSAGE(stream, version, ping);
+        CASE_HANDLE_MESSAGE(stream, version, pong);
         CASE_RELAY_MESSAGE(stream, version, reject);
         CASE_RELAY_MESSAGE(stream, version, send_compact);
         CASE_RELAY_MESSAGE(stream, version, send_headers);
