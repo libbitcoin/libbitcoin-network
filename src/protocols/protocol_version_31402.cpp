@@ -48,8 +48,7 @@ protocol_version_31402::protocol_version_31402(p2p& network,
         network.network_settings().services,
         network.network_settings().invalid_services,
         network.network_settings().protocol_minimum,
-        bc::message::version::service::none
-        /*network.network_settings().services*/)
+        version::service::none)
 {
 }
 
