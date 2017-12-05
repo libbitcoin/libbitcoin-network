@@ -86,7 +86,6 @@ settings::settings(config::settings context)
             break;
         }
 
-        // Seeds based on satoshi client v0.14.0 plus voskuil.org.
         case config::settings::testnet:
         {
             identifier = 118034699;
@@ -99,6 +98,15 @@ settings::settings(config::settings context)
             seeds.push_back({ "testnet-seed.bluematt.me", 18333 });
             seeds.push_back({ "testnet-seed.bitcoin.schildbach.de", 18333 });
             seeds.push_back({ "testnet-seed.voskuil.org", 18333 });
+            break;
+        }
+
+        case config::settings::regtest:
+        {
+            identifier = 3669344250;
+            inbound_port = 18444;
+
+            // Regtest is private network only, so there is no seeding.
             break;
         }
 
