@@ -50,6 +50,10 @@ protected:
     void start_channel(channel::ptr channel,
         result_handler handle_started) override;
 
+    /// Overridden to attach minimum service level for witness support.
+    void attach_handshake_protocols(channel::ptr channel,
+        result_handler handle_started) override;
+
     /// Override to attach specialized protocols upon channel start.
     virtual void attach_protocols(channel::ptr channel);
 

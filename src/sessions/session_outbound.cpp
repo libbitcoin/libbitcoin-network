@@ -26,6 +26,8 @@
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 #include <bitcoin/network/protocols/protocol_reject_70002.hpp>
+#include <bitcoin/network/protocols/protocol_version_31402.hpp>
+#include <bitcoin/network/protocols/protocol_version_70002.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -138,6 +140,32 @@ void session_outbound::attach_protocols(channel::ptr channel)
         attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_address_31402>(channel)->start();
+}
+
+void session_outbound::attach_handshake_protocols(channel::ptr channel,
+    result_handler handle_started)
+{
+    using serve = message::version::service;
+    const auto relay = settings_.relay_transactions;
+    const auto own_version = settings_.protocol_maximum;
+    const auto own_services = settings_.services;
+    const auto invalid_services = settings_.invalid_services;
+    const auto minimum_version = settings_.protocol_minimum;
+
+    // Require peer to serve network (and witness if configured on self).
+    const auto minimum_services = (own_services & serve::node_witness) |
+        serve::node_network;
+
+    // Reject messages are not handled until bip61 (70002).
+    // The negotiated_version is initialized to the configured maximum.
+    if (channel->negotiated_version() >= message::version::level::bip61)
+        attach<protocol_version_70002>(channel, own_version, own_services,
+            invalid_services, minimum_version, minimum_services, relay)
+            ->start(handle_started);
+    else
+        attach<protocol_version_31402>(channel, own_version, own_services,
+            invalid_services, minimum_version, minimum_services)
+            ->start(handle_started);
 }
 
 void session_outbound::handle_channel_stop(const code& ec,
