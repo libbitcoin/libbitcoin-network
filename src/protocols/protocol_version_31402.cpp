@@ -46,6 +46,7 @@ protocol_version_31402::protocol_version_31402(p2p& network,
   : protocol_version_31402(network, channel,
         network.network_settings().protocol_maximum,
         network.network_settings().services,
+        network.network_settings().invalid_services,
         network.network_settings().protocol_minimum,
         bc::message::version::service::none
         /*network.network_settings().services*/)
@@ -54,11 +55,13 @@ protocol_version_31402::protocol_version_31402(p2p& network,
 
 protocol_version_31402::protocol_version_31402(p2p& network,
     channel::ptr channel, uint32_t own_version, uint64_t own_services,
-    uint32_t minimum_version, uint64_t minimum_services)
+    uint64_t invalid_services, uint32_t minimum_version,
+    uint64_t minimum_services)
   : protocol_timer(network, channel, false, NAME),
     network_(network),
     own_version_(own_version),
     own_services_(own_services),
+    invalid_services_(invalid_services),
     minimum_version_(minimum_version),
     minimum_services_(minimum_services),
     CONSTRUCT_TRACK(protocol_version_31402)
@@ -103,7 +106,7 @@ message::version protocol_version_31402::version_factory() const
     version.address_receiver().set_services(version::service::none);
 
     // We always match the services declared in our version.services.
-    version.address_sender().set_services( own_services_);
+    version.address_sender().set_services(own_services_);
     return version;
 }
 
@@ -186,6 +189,14 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
 bool protocol_version_31402::sufficient_peer(version_const_ptr message)
 {
+    if ((message->services() & invalid_services_) != 0)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Invalid peer network services (" << message->services()
+            << ") for [" << authority() << "]";
+        return false;
+    }
+
     if ((message->services() & minimum_services_) != minimum_services_)
     {
         LOG_DEBUG(LOG_NETWORK)
