@@ -128,6 +128,7 @@ private:
     // These are thread safe.
     std::atomic<bool> stopped_;
     const uint32_t protocol_magic_;
+    const size_t maximum_payload_;
     const bool validate_checksum_;
     const bool verbose_;
     std::atomic<uint32_t> version_;
