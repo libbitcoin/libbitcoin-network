@@ -44,11 +44,14 @@ using namespace bc::message;
 static const size_t invalid_payload_dump_size = 1024;
 
 // payload_buffer_ sizing assumes monotonically increasing size by version.
+// Initialize to pre-witness max payload and let grow to witness as required.
 // The socket owns the single thread on which this channel reads and writes.
 proxy::proxy(threadpool& pool, socket::ptr socket, const settings& settings)
   : authority_(socket->authority()),
     heading_buffer_(heading::maximum_size()),
-    payload_buffer_(heading::maximum_payload_size(settings.protocol_maximum)),
+    payload_buffer_(heading::maximum_payload_size(settings.protocol_maximum, false)),
+    maximum_payload_(heading::maximum_payload_size(settings.protocol_maximum,
+        (settings.services & version::service::node_witness) != 0)),
     socket_(socket),
     stopped_(true),
     protocol_magic_(settings.identifier),
@@ -161,7 +164,7 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    if (head.payload_size() > payload_buffer_.capacity())
+    if (head.payload_size() > maximum_payload_)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Oversized payload indicated by " << head.command()
