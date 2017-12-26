@@ -249,15 +249,15 @@ BOOST_AUTO_TEST_CASE(p2p__start__no_sessions__start_success_start_operation_fail
     BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
 }
 
-BOOST_AUTO_TEST_CASE(p2p__start__seed_session__start_stop_start_success)
-{
-    print_headers(TEST_NAME);
-    SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
-    p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-    BOOST_REQUIRE(network.stop());
-    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-}
+////BOOST_AUTO_TEST_CASE(p2p__start__seed_session__start_stop_start_success)
+////{
+////    print_headers(TEST_NAME);
+////    SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
+////    p2p network(configuration);
+////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+////    BOOST_REQUIRE(network.stop());
+////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+////}
 
 BOOST_AUTO_TEST_CASE(p2p__start__seed_session_handshake_timeout__start_peer_throttling_stop_success)
 {
@@ -436,35 +436,35 @@ BOOST_AUTO_TEST_CASE(p2p__broadcast__ping_two_distinct_hosts__two_sends_and_succ
     BOOST_REQUIRE_EQUAL(send_result(ping(0), network, 2), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
-{
-    print_headers(TEST_NAME);
-    SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(configuration);
-    p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-
-    std::promise<code> subscribe;
-    const auto subscribe_handler = [&subscribe, &network](code ec, channel::ptr)
-    {
-        // Fires on first connection.
-        subscribe.set_value(ec);
-        return false;
-    };
-    network.subscribe_connection(subscribe_handler);
-
-    std::promise<code> run;
-    const auto run_handler = [&run, &network](code ec)
-    {
-        // Fires once the session is started.
-        run.set_value(ec);
-    };
-    network.run(run_handler);
-
-    BOOST_REQUIRE_EQUAL(run.get_future().get().value(), error::success);
-    BOOST_REQUIRE_EQUAL(subscribe.get_future().get().value(), error::success);
-
-    // ~network blocks on stopping all channels.
-    // during channel.stop each channel removes itself from the collection.
-}
+////BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
+////{
+////    print_headers(TEST_NAME);
+////    SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(configuration);
+////    p2p network(configuration);
+////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+////
+////    std::promise<code> subscribe;
+////    const auto subscribe_handler = [&subscribe, &network](code ec, channel::ptr)
+////    {
+////        // Fires on first connection.
+////        subscribe.set_value(ec);
+////        return false;
+////    };
+////    network.subscribe_connection(subscribe_handler);
+////
+////    std::promise<code> run;
+////    const auto run_handler = [&run, &network](code ec)
+////    {
+////        // Fires once the session is started.
+////        run.set_value(ec);
+////    };
+////    network.run(run_handler);
+////
+////    BOOST_REQUIRE_EQUAL(run.get_future().get().value(), error::success);
+////    BOOST_REQUIRE_EQUAL(subscribe.get_future().get().value(), error::success);
+////
+////    // ~network blocks on stopping all channels.
+////    // during channel.stop each channel removes itself from the collection.
+////}
 
 BOOST_AUTO_TEST_SUITE_END()
