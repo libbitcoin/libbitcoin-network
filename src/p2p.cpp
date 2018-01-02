@@ -68,6 +68,7 @@ p2p::p2p(const settings& settings)
   : settings_(settings),
     stopped_(true),
     top_block_({ null_hash, 0 }),
+    top_header_({ null_hash, 0 }),
     hosts_(settings_),
     pending_connect_(nominal_connecting(settings_)),
     pending_handshake_(nominal_connected(settings_)),
@@ -325,6 +326,21 @@ void p2p::set_top_block(checkpoint&& top)
 void p2p::set_top_block(const checkpoint& top)
 {
     top_block_.store(top);
+}
+
+checkpoint p2p::top_header() const
+{
+    return top_header_.load();
+}
+
+void p2p::set_top_header(checkpoint&& top)
+{
+    top_header_.store(std::move(top));
+}
+
+void p2p::set_top_header(const checkpoint& top)
+{
+    top_header_.store(top);
 }
 
 bool p2p::stopped() const

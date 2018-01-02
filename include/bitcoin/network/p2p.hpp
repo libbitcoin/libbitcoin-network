@@ -124,6 +124,15 @@ public:
     /// Set the current top block identity.
     virtual void set_top_block(const config::checkpoint& top);
 
+    /// Return the current top header identity.
+    virtual config::checkpoint top_header() const;
+
+    /// Set the current top header identity.
+    virtual void set_top_header(config::checkpoint&& top);
+
+    /// Set the current top header identity.
+    virtual void set_top_header(const config::checkpoint& top);
+
     /// Determine if the network is stopped.
     virtual bool stopped() const;
 
@@ -240,6 +249,7 @@ private:
     const settings& settings_;
     std::atomic<bool> stopped_;
     bc::atomic<config::checkpoint> top_block_;
+    bc::atomic<config::checkpoint> top_header_;
     bc::atomic<session_manual::ptr> manual_;
     threadpool threadpool_;
     hosts hosts_;
