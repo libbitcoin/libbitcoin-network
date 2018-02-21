@@ -42,12 +42,12 @@ namespace network {
 using namespace std::placeholders;
 
 session::session(p2p& network, bool notify_on_connect)
-  : pool_(network.thread_pool()),
-    settings_(network.network_settings()),
-    stopped_(true),
+  : stopped_(true),
     notify_on_connect_(notify_on_connect),
     network_(network),
-    dispatch_(pool_, NAME)
+    dispatch_(network.thread_pool(), NAME),
+    pool_(network.thread_pool()),
+    settings_(network.network_settings())
 {
 }
 
