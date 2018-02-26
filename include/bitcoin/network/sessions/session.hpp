@@ -177,6 +177,7 @@ protected:
         result_handler handle_started);
 
     // TODO: create session_timer base class.
+    // Initialization order places these after privates.
     threadpool& pool_;
     const settings& settings_;
 

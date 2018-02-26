@@ -50,10 +50,10 @@ public:
     uint32_t connect_batch_size;
     uint32_t connect_timeout_seconds;
     uint32_t channel_handshake_seconds;
+    uint32_t channel_germination_seconds;
     uint32_t channel_heartbeat_minutes;
     uint32_t channel_inactivity_minutes;
     uint32_t channel_expiration_minutes;
-    uint32_t channel_germination_seconds;
     uint32_t host_pool_capacity;
     boost::filesystem::path hosts_file;
     config::authority self;

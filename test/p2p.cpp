@@ -223,6 +223,40 @@ BOOST_AUTO_TEST_CASE(p2p__set_top_block2__values__expected)
     BOOST_REQUIRE_EQUAL(network.top_block().height(), expected.height());
 }
 
+BOOST_AUTO_TEST_CASE(p2p__top_header__default__zero_null_hash)
+{
+    print_headers(TEST_NAME);
+    const network::settings configuration;
+    p2p network(configuration);
+    BOOST_REQUIRE_EQUAL(network.top_header().height(), 0);
+    BOOST_REQUIRE(network.top_header().hash() == null_hash);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__set_top_header1__values__expected)
+{
+    print_headers(TEST_NAME);
+    const network::settings configuration;
+    p2p network(configuration);
+    const size_t expected_height = 42;
+    const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+    network.set_top_header({ expected_hash, expected_height });
+    BOOST_REQUIRE(network.top_header().hash() == expected_hash);
+    BOOST_REQUIRE_EQUAL(network.top_header().height(), expected_height);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__set_top_header2__values__expected)
+{
+    print_headers(TEST_NAME);
+    const network::settings configuration;
+    p2p network(configuration);
+    const size_t expected_height = 42;
+    const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+    const config::checkpoint expected{ hash, expected_height };
+    network.set_top_header(expected);
+    BOOST_REQUIRE(network.top_header().hash() == expected.hash());
+    BOOST_REQUIRE_EQUAL(network.top_header().height(), expected.height());
+}
+
 BOOST_AUTO_TEST_CASE(p2p__start__no_sessions__start_success)
 {
     print_headers(TEST_NAME);
