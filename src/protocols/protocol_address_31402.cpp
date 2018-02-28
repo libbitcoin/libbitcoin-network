@@ -102,22 +102,21 @@ bool protocol_address_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return false;
 
-    // TODO: allowing repeated queries can allow a channel to map our history.
-    // TODO: pull active hosts from host cache (currently just resending self).
-    // TODO: need to distort for privacy, don't send currently-connected peers.
-    // TODO: response size limit is max_address (1000).
+    bc::message::network_address::list addresses;
+    network_.fetch_addresses(addresses);
 
-    if (self_.addresses().empty())
-        return false;
+    if (!addresses.empty())
+    {
+        const address address_subset(addresses);
+        SEND2(address_subset, handle_send, _1, self_.command);
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Sending addresses to [" << authority() << "] ("
-        << self_.addresses().size() << ")";
+        LOG_DEBUG(LOG_NETWORK)
+            << "Sending addresses to [" << authority() << "] ("
+            << self_.addresses().size() << ")";
+    }
 
-    SEND2(self_, handle_send, _1, self_.command);
-
-    // RESUBSCRIBE
-    return true;
+    // do not resubscribe; one response per connection permitted
+    return false;
 }
 
 void protocol_address_31402::handle_store_addresses(const code& ec)

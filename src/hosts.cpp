@@ -34,10 +34,12 @@ using namespace bc::config;
 
 // TODO: change to network_address bimap hash table with services and age.
 hosts::hosts(const settings& settings)
-  : buffer_(std::max(settings.host_pool_capacity, 1u)),
+  : capacity_(std::min(max_address, static_cast<size_t>(
+        settings.host_pool_capacity))),
+    buffer_(std::max(capacity_, static_cast<size_t>(1u))),
     stopped_(true),
     file_path_(settings.hosts_file),
-    disabled_(settings.host_pool_capacity == 0)
+    disabled_(capacity_ == 0)
 {
 }
 
@@ -78,11 +80,43 @@ code hosts::fetch(address& out) const
         return error::not_found;
 
     // Randomly select an address from the buffer.
-    const auto random = pseudo_random(0, buffer_.size() - 1);
+    const auto random = pseudo_random::next(0, buffer_.size() - 1);
     const auto index = static_cast<size_t>(random);
     out = buffer_[index];
     return error::success;
     ///////////////////////////////////////////////////////////////////////////
+}
+
+code hosts::fetch(address::list& out) const
+{
+    if (disabled_)
+        return error::not_found;
+
+    // Critical Section
+    ///////////////////////////////////////////////////////////////////////////
+    {
+        shared_lock lock(mutex_);
+
+        if (stopped_)
+            return error::service_stopped;
+
+        if (buffer_.empty())
+            return error::not_found;
+
+        const auto out_count = std::min(buffer_.size(), capacity_) /
+            static_cast<size_t>(pseudo_random::next(1, 20));
+
+        if (out_count == 0)
+            return error::success;
+
+        out.reserve(out_count);
+        for (size_t index = 0; index < out_count; ++index)
+            out.push_back(buffer_[index]);
+    }
+    ///////////////////////////////////////////////////////////////////////////
+
+    pseudo_random::shuffle(out);
+    return error::success;
 }
 
 // load
@@ -288,7 +322,7 @@ void hosts::store(const address::list& hosts, result_handler handler)
     // Accept between 1 and all of this peer's addresses up to capacity.
     const auto capacity = buffer_.capacity();
     const auto usable = std::min(hosts.size(), capacity);
-    const auto random = static_cast<size_t>(pseudo_random(1, usable));
+    const auto random = static_cast<size_t>(pseudo_random::next(1, usable));
 
     // But always accept at least the amount we are short if available.
     const auto gap = capacity - buffer_.size();
