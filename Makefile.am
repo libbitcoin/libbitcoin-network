@@ -60,13 +60,13 @@ src_libbitcoin_network_la_SOURCES = \
     src/sessions/session_outbound.cpp \
     src/sessions/session_seed.cpp
 
-# local: test/libbitcoin_network_test
+# local: test/libbitcoin-network-test
 #------------------------------------------------------------------------------
 if WITH_TESTS
 
-TESTS = libbitcoin_network_test_runner.sh
+TESTS = libbitcoin-network-test_runner.sh
 
-check_PROGRAMS = test/libbitcoin_network_test
+check_PROGRAMS = test/libbitcoin-network-test
 test_libbitcoin_network_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_CPPFLAGS}
 test_libbitcoin_network_test_LDADD = src/libbitcoin-network.la ${boost_unit_test_framework_LIBS} ${bitcoin_LIBS}
 test_libbitcoin_network_test_SOURCES = \
