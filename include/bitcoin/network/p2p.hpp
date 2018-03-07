@@ -168,6 +168,9 @@ public:
     /// Get a randomly-selected address.
     virtual code fetch_address(address& out_address) const;
 
+    /// Get a list of stored hosts
+    virtual code fetch_addresses(address::list& out_addresses) const;
+
     /// Remove an address.
     virtual code remove(const address& address);
 

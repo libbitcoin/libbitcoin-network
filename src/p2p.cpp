@@ -420,6 +420,11 @@ code p2p::fetch_address(address& out_address) const
     return hosts_.fetch(out_address);
 }
 
+code p2p::fetch_addresses(address::list& out_addresses) const
+{
+    return hosts_.fetch(out_addresses);
+}
+
 code p2p::remove(const address& address)
 {
     return hosts_.remove(address);
