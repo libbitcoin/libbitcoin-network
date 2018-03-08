@@ -324,7 +324,7 @@ void hosts::store(const address::list& hosts, result_handler handler)
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 
-    LOG_DEBUG(LOG_NETWORK)
+    LOG_VERBOSE(LOG_NETWORK)
         << "Accepted (" << accepted << " of " << hosts.size()
         << ") host addresses from peer.";
 
