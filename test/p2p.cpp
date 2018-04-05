@@ -35,21 +35,15 @@ using namespace bc::network;
     boost::unit_test::framework::current_test_case().p_name
 
 // TODO: build mock and/or use dedicated test service.
-#define SEED1 "testnet-seed.bitcoin.petertodd.org:18333"
-#define SEED2 "testnet-seed.bitcoin.schildbach.de:18333"
+#define SEED1 "testnet1.libbitcoin.net:18333"
+#define SEED2 "testnet2.libbitcoin.net:18333"
 
 // NOTE: this is insufficient as the address varies.
-#define SEED1_AUTHORITIES \
-    { \
-      { "52.8.185.53:18333" }, \
-      { "178.21.118.174:18333" }, \
-      { "[2604:880:d:2f::c7b2]:18333" }, \
-      { "[2604:a880:1:20::269:b001]:18333" }, \
-      { "[2602:ffea:1001:6ff::f922]:18333" }, \
-      { "[2401:2500:203:9:153:120:11:18]:18333" }, \
-      { "[2600:3c00::f03c:91ff:fe89:305f]:18333" }, \
-      { "[2600:3c01::f03c:91ff:fe98:68bb]:18333" } \
-    }
+#define SEED_AUTHORITIES \
+{ \
+    { "72.65.246.83" }, \
+    { "72.65.246.84" }, \
+}
 
 #define SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(name) \
     auto name = network::settings(bc::config::settings::testnet); \
@@ -349,20 +343,19 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_expiration_timeout__start_peer_thr
     BOOST_REQUIRE(network.stop());
 }
 
-// Disabled for live test reliability.
-// This may fail due to missing blacklist entries for the specified host.
-////BOOST_AUTO_TEST_CASE(p2p__start__seed_session_blacklisted__start_operation_fail_stop_success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    configuration.host_pool_capacity = 42;
-////    configuration.hosts_file = get_log_path(TEST_NAME, "hosts");
-////    configuration.seeds = { { SEED1 } };
-////    configuration.blacklists = SEED1_AUTHORITIES;
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
-////    BOOST_REQUIRE(network.stop());
-////}
+// This may fail due to missing blacklist entries for the specified seed hosts.
+BOOST_AUTO_TEST_CASE(p2p__start__seed_session_blacklisted__start_peer_throttling_stop_success)
+{
+    print_headers(TEST_NAME);
+    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+    configuration.host_pool_capacity = 42;
+    configuration.hosts_file = get_log_path(TEST_NAME, "hosts");
+    configuration.seeds = { { SEED1 }, { SEED2 } };
+    configuration.blacklists = SEED_AUTHORITIES;
+    p2p network(configuration);
+    BOOST_REQUIRE_EQUAL(start_result(network), error::peer_throttling);
+    BOOST_REQUIRE(network.stop());
+}
 
 BOOST_AUTO_TEST_CASE(p2p__start__outbound_no_seeds__success)
 {
