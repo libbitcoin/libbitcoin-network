@@ -32,7 +32,7 @@ settings::settings()
     protocol_maximum(version::level::maximum),
     protocol_minimum(version::level::minimum),
     services(version::service::none),
-    invalid_services(160),
+    invalid_services(176),
     relay_transactions(false),
     validate_checksum(false),
     inbound_connections(0),
