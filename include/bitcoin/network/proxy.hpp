@@ -44,7 +44,8 @@ public:
     typedef subscriber<code> stop_subscriber;
 
     /// Construct an instance.
-    proxy(threadpool& pool, socket::ptr socket, const settings& settings);
+    proxy(threadpool& pool, socket::ptr socket, const settings& settings,
+        const bc::settings& bitcoin_settings);
 
     /// Validate proxy stopped.
     ~proxy();
@@ -69,6 +70,15 @@ public:
     {
         message_subscriber_.subscribe<Message>(
             std::forward<message_handler<Message>>(handler));
+    }
+
+    /// Subscribe to messages of the specified type on the socket.
+    template <class Message>
+    void subscribe(message_handler<Message>&& handler,
+        const bc::settings& bitcoin_settings)
+    {
+        message_subscriber_.subscribe<Message>(
+            std::forward<message_handler<Message>>(handler), bitcoin_settings);
     }
 
     /// Subscribe to the stop event.

@@ -64,8 +64,9 @@ inline size_t nominal_connected(const settings& settings)
         settings.inbound_connections;
 }
 
-p2p::p2p(const settings& settings)
+p2p::p2p(const settings& settings, const bc::settings& bitcoin_settings)
   : settings_(settings),
+    bitcoin_settings_(bitcoin_settings),
     stopped_(true),
     top_block_({ null_hash, 0 }),
     top_header_({ null_hash, 0 }),

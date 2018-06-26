@@ -99,14 +99,14 @@ bool session::stopped(const code& ec) const
 // Socket creators.
 // ----------------------------------------------------------------------------
 
-acceptor::ptr session::create_acceptor()
+acceptor::ptr session::create_acceptor(const bc::settings& bitcoin_settings)
 {
-    return std::make_shared<acceptor>(pool_, settings_);
+    return std::make_shared<acceptor>(pool_, settings_, bitcoin_settings);
 }
 
-connector::ptr session::create_connector()
+connector::ptr session::create_connector(const bc::settings& bitcoin_settings)
 {
-    return std::make_shared<connector>(pool_, settings_);
+    return std::make_shared<connector>(pool_, settings_, bitcoin_settings);
 }
 
 // Pending connect.

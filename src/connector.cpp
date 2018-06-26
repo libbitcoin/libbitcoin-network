@@ -36,10 +36,12 @@ namespace network {
 using namespace bc::config;
 using namespace std::placeholders;
 
-connector::connector(threadpool& pool, const settings& settings)
+connector::connector(threadpool& pool, const settings& settings,
+    const bc::settings& bitcoin_settings)
   : stopped_(false),
     pool_(pool),
     settings_(settings),
+    bitcoin_settings_(bitcoin_settings),
     dispatch_(pool, NAME),
     resolver_(pool.service()),
     CONSTRUCT_TRACK(connector)
@@ -181,7 +183,8 @@ void connector::handle_connect(const boost_code& ec, asio::iterator,
     }
 
     // Ensure that channel is not passed as an r-value.
-    const auto created = std::make_shared<channel>(pool_, socket, settings_);
+    const auto created = std::make_shared<channel>(pool_, socket, settings_,
+        bitcoin_settings_);
     handler(error::success, created);
 }
 
