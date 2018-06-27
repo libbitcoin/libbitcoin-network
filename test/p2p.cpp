@@ -152,7 +152,7 @@ static int subscribe_connect2_result(p2p& network, const config::endpoint& host)
 template<class Message>
 static int send_result(const Message& message, p2p& network, int channels)
 {
-    const auto channel_counter = [&channels](code ec, channel::ptr channel)
+    const auto channel_counter = [&channels](code ec, channel::ptr )
     {
         BOOST_REQUIRE_EQUAL(ec, error::success);
         --channels;
