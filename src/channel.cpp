@@ -64,7 +64,7 @@ void channel::start(result_handler handler)
 }
 
 // Don't start the timers until the socket is enabled.
-void channel::do_start(const code& ec, result_handler handler)
+void channel::do_start(const code& , result_handler handler)
 {
     start_expiration();
     start_inactivity();

@@ -56,7 +56,7 @@ void session_inbound::start(result_handler handler)
     }
 
     LOG_INFO(LOG_NETWORK)
-        << "Starting inbound session on port (" << settings_.inbound_port 
+        << "Starting inbound session on port (" << settings_.inbound_port
         << ").";
 
     session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
@@ -173,7 +173,7 @@ void session_inbound::handle_channel_start(const code& ec,
         << connection_count() << ")";
 
     attach_protocols(channel);
-};
+}
 
 void session_inbound::attach_protocols(channel::ptr channel)
 {
