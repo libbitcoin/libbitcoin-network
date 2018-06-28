@@ -113,11 +113,12 @@ protected:
         dispatch_.delayed(delay, handler);
     }
 
-    /// Delay timing for a tight connection loop, based on configured timeout.
+    /// Delay timing for a tight failure loop, based on configured timeout.
     inline asio::duration cycle_delay(const code& ec)
     {
-        return (ec == error::channel_timeout || ec == error::service_stopped) ?
-            asio::seconds(0) : settings_.connect_timeout();
+        return (ec == error::channel_timeout || ec == error::service_stopped ||
+            ec == error::success) ? asio::seconds(0) :
+            settings_.connect_timeout();
     }
 
     /// Properties.
