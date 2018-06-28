@@ -166,7 +166,7 @@ void session_manual::handle_channel_start(const code& ec,
     // This is the success end of the connect sequence.
     handler(error::success, channel);
     attach_protocols(channel);
-};
+}
 
 void session_manual::attach_protocols(channel::ptr channel)
 {

@@ -82,7 +82,7 @@ bool acceptor::stopped() const
 }
 
 // This is hardwired to listen on IPv6.
-code acceptor::listen(uint16_t port)
+code acceptor::listen(uint16_t )
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
