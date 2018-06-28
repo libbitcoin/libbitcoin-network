@@ -98,7 +98,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel)
         LOG_DEBUG(LOG_NETWORK)
             << "Failure connecting outbound: " << ec.message();
 
-        // Retry with conditional delay, regardless of error.
+        // Retry with conditional delay in case of network error.
         dispatch_delayed(cycle_delay(ec), BIND1(new_connection, _1));
         return;
     }

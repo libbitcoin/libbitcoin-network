@@ -123,7 +123,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
 
         if (remaining > 0)
         {
-            // Retry with conditional delay, regardless of error.
+            // Retry with conditional delay in case of network error.
             dispatch_delayed(cycle_delay(ec),
                 BIND5(start_connect, _1, hostname, port, remaining, handler));
             return;
