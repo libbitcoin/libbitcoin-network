@@ -123,7 +123,7 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
         return;
     }
 
-    // Start accepting again with conditional delay, regardless of error.
+    // Start accepting with conditional delay in case of network error.
     dispatch_delayed(cycle_delay(ec), BIND1(start_accept, _1));
 
     if (ec)
