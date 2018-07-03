@@ -125,7 +125,7 @@ void session_outbound::handle_channel_start(const code& ec,
         << connection_count() << ")";
 
     attach_protocols(channel);
-};
+}
 
 void session_outbound::attach_protocols(channel::ptr channel)
 {
