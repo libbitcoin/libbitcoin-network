@@ -42,7 +42,8 @@ public:
     typedef std::shared_ptr<channel> ptr;
 
     /// Construct an instance.
-    channel(threadpool& pool, socket::ptr socket, const settings& settings);
+    channel(threadpool& pool, socket::ptr socket, const settings& settings,
+        const bc::settings& bitcoin_settings);
 
     void start(result_handler handler) override;
 

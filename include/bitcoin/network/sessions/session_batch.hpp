@@ -38,7 +38,8 @@ class BCT_API session_batch
 protected:
 
     /// Construct an instance.
-    session_batch(p2p& network, bool notify_on_connect);
+    session_batch(p2p& network, bool notify_on_connect,
+        const bc::settings& bitcoin_settings);
 
     /// Create a channel from the configured number of concurrent attempts.
     virtual void connect(channel_handler handler);
@@ -52,6 +53,7 @@ private:
         connector::ptr connector, channel_handler handler);
 
     const size_t batch_size_;
+    const bc::settings& bitcoin_settings_;
 };
 
 } // namespace network

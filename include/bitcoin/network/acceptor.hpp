@@ -42,7 +42,8 @@ public:
     typedef std::function<void(const code&, channel::ptr)> accept_handler;
 
     /// Construct an instance.
-    acceptor(threadpool& pool, const settings& settings);
+    acceptor(threadpool& pool, const settings& settings,
+        const bc::settings& bitcoin_settings);
 
     /// Validate acceptor stopped.
     ~acceptor();
@@ -66,6 +67,7 @@ private:
     std::atomic<bool> stopped_;
     threadpool& pool_;
     const settings& settings_;
+    const bc::settings& bitcoin_settings_;
     mutable dispatcher dispatch_;
 
     // These are protected by mutex.

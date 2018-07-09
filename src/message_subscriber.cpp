@@ -50,7 +50,8 @@ namespace network {
 
 using namespace message;
 
-message_subscriber::message_subscriber(threadpool& pool)
+message_subscriber::message_subscriber(threadpool& pool,
+    const bc::settings& bitcoin_settings)
   : INITIALIZE_SUBSCRIBER(pool, address),
     INITIALIZE_SUBSCRIBER(pool, alert),
     INITIALIZE_SUBSCRIBER(pool, block),
@@ -77,7 +78,8 @@ message_subscriber::message_subscriber(threadpool& pool)
     INITIALIZE_SUBSCRIBER(pool, send_headers),
     INITIALIZE_SUBSCRIBER(pool, transaction),
     INITIALIZE_SUBSCRIBER(pool, verack),
-    INITIALIZE_SUBSCRIBER(pool, version)
+    INITIALIZE_SUBSCRIBER(pool, version),
+    bitcoin_settings_(bitcoin_settings)
 {
 }
 
