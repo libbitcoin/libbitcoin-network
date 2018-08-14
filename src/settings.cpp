@@ -74,15 +74,11 @@ settings::settings(config::settings context)
         {
             identifier = 3652501241;
             inbound_port = 8333;
-
-            // Seeds based on satoshi client v0.14.0 plus voskuil.org.
-            seeds.reserve(6);
-            seeds.push_back({ "seed.bitcoin.sipa.be", 8333 });
-            seeds.push_back({ "dnsseed.bluematt.me", 8333 });
-            seeds.push_back({ "dnsseed.bitcoin.dashjr.org", 8333 });
-            seeds.push_back({ "seed.bitcoinstats.com", 8333 });
-            seeds.push_back({ "seed.bitcoin.jonasschnelli.ch", 8333 });
-            seeds.push_back({ "seed.voskuil.org", 8333 });
+            seeds.reserve(4);
+            seeds.push_back({ "mainnet1.libbitcoin.net", 8333 });
+            seeds.push_back({ "mainnet2.libbitcoin.net", 8333 });
+            seeds.push_back({ "mainnet3.libbitcoin.net", 8333 });
+            seeds.push_back({ "mainnet4.libbitcoin.net", 8333 });
             break;
         }
 
@@ -90,14 +86,11 @@ settings::settings(config::settings context)
         {
             identifier = 118034699;
             inbound_port = 18333;
-
-            // Seeds based on satoshi client v0.14.0 plus voskuil.org.
-            seeds.reserve(3);
-            seeds.push_back({ "testnet-seed.bitcoin.jonasschnelli.ch", 18333 });
-            seeds.push_back({ "seed.tbtc.petertodd.org", 18333 });
-            seeds.push_back({ "testnet-seed.bluematt.me", 18333 });
-            seeds.push_back({ "testnet-seed.bitcoin.schildbach.de", 18333 });
-            seeds.push_back({ "testnet-seed.voskuil.org", 18333 });
+            seeds.reserve(4);
+            seeds.push_back({ "testnet1.libbitcoin.net", 18333 });
+            seeds.push_back({ "testnet2.libbitcoin.net", 18333 });
+            seeds.push_back({ "testnet3.libbitcoin.net", 18333 });
+            seeds.push_back({ "testnet4.libbitcoin.net", 18333 });
             break;
         }
 
