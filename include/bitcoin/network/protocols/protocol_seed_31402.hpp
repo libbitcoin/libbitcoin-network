@@ -54,6 +54,9 @@ public:
     virtual void start(event_handler handler);
 
 protected:
+    // Expose polymorphic start method from base.
+    using protocol_timer::start;
+
     virtual void send_own_address(const settings& settings);
 
     virtual void handle_send_address(const code& ec);

@@ -57,6 +57,9 @@ protected:
      */
     virtual void start(const asio::duration& timeout, event_handler handler);
 
+    // Expose polymorphic start method from base.
+    using protocol_events::start;
+
 protected:
     void reset_timer();
 

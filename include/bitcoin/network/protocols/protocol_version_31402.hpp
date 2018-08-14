@@ -67,6 +67,9 @@ public:
     virtual void start(event_handler handler);
 
 protected:
+    // Expose polymorphic start method from base.
+    using protocol_timer::start;
+
     virtual message::version version_factory() const;
     virtual bool sufficient_peer(version_const_ptr message);
 
