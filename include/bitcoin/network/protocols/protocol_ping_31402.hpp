@@ -53,10 +53,10 @@ public:
      */
     virtual void start();
 
+protected:
     // Expose polymorphic start method from base.
     using protocol_timer::start;
 
-protected:
     virtual void send_ping(const code& ec);
 
     virtual bool handle_receive_ping(const code& ec, ping_const_ptr message);
