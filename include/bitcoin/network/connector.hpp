@@ -42,8 +42,7 @@ public:
     typedef std::function<void(const code& ec, channel::ptr)> connect_handler;
 
     /// Construct an instance.
-    connector(threadpool& pool, const settings& settings,
-        const bc::settings& bitcoin_settings);
+    connector(threadpool& pool, const settings& settings);
 
     /// Validate connector stopped.
     ~connector();
@@ -79,7 +78,6 @@ private:
     std::atomic<bool> stopped_;
     threadpool& pool_;
     const settings& settings_;
-    const bc::settings& bitcoin_settings_;
     mutable dispatcher dispatch_;
 
     // These are protected by mutex.

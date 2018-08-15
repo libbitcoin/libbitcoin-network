@@ -34,13 +34,11 @@ namespace network {
 
 using namespace std::placeholders;
 
-session_inbound::session_inbound(p2p& network, bool notify_on_connect,
-    const bc::settings& bitcoin_settings)
+session_inbound::session_inbound(p2p& network, bool notify_on_connect)
   : session(network, notify_on_connect),
     connection_limit_(settings_.inbound_connections +
         settings_.outbound_connections + settings_.peers.size()),
-    CONSTRUCT_TRACK(session_inbound),
-    bitcoin_settings_(bitcoin_settings)
+    CONSTRUCT_TRACK(session_inbound)
 {
 }
 
@@ -72,7 +70,7 @@ void session_inbound::handle_started(const code& ec, result_handler handler)
         return;
     }
 
-    acceptor_ = create_acceptor(bitcoin_settings_);
+    acceptor_ = create_acceptor();
 
     // Relay stop to the acceptor.
     subscribe_stop(BIND1(handle_stop, _1));

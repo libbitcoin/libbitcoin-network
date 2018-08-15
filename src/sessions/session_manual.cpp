@@ -36,11 +36,9 @@ namespace network {
 
 using namespace std::placeholders;
 
-session_manual::session_manual(p2p& network, bool notify_on_connect,
-    const bc::settings& bitcoin_settings)
+session_manual::session_manual(p2p& network, bool notify_on_connect)
   : session(network, notify_on_connect),
-    CONSTRUCT_TRACK(session_manual),
-    bitcoin_settings_(bitcoin_settings)
+    CONSTRUCT_TRACK(session_manual)
 {
 }
 
@@ -99,7 +97,7 @@ void session_manual::start_connect(const code&, const std::string& hostname,
     }
 
     const auto retries = floor_subtract(attempts, 1u);
-    const auto connector = create_connector(bitcoin_settings_);
+    const auto connector = create_connector();
     pend(connector);
 
     // MANUAL CONNECT OUTBOUND

@@ -36,9 +36,8 @@ namespace network {
 
 using namespace std::placeholders;
 
-session_outbound::session_outbound(p2p& network, bool notify_on_connect,
-    const bc::settings& bitcoin_settings)
-  : session_batch(network, notify_on_connect, bitcoin_settings),
+session_outbound::session_outbound(p2p& network, bool notify_on_connect)
+  : session_batch(network, notify_on_connect),
     CONSTRUCT_TRACK(session_outbound)
 {
 }

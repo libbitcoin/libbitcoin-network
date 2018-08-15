@@ -134,9 +134,8 @@ protected:
     /// Socket creators.
     // ------------------------------------------------------------------------
 
-    virtual acceptor::ptr create_acceptor(const bc::settings& bitcoin_settings);
-    virtual connector::ptr create_connector(
-        const bc::settings& bitcoin_settings);
+    virtual acceptor::ptr create_acceptor();
+    virtual connector::ptr create_connector();
 
     // Pending connect.
     // ------------------------------------------------------------------------

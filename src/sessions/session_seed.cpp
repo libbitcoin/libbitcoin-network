@@ -40,10 +40,9 @@ namespace network {
 static const size_t minimum_host_increase = 100;
 
 using namespace std::placeholders;
-session_seed::session_seed(p2p& network, const bc::settings& bitcoin_settings)
+session_seed::session_seed(p2p& network)
   : session(network, false),
-    CONSTRUCT_TRACK(session_seed),
-    bitcoin_settings_(bitcoin_settings)
+    CONSTRUCT_TRACK(session_seed)
 {
 }
 
@@ -147,7 +146,7 @@ void session_seed::start_seed(const config::endpoint& seed,
     LOG_INFO(LOG_NETWORK)
         << "Contacting seed [" << seed << "]";
 
-    const auto connector = create_connector(bitcoin_settings_);
+    const auto connector = create_connector();
     pend(connector);
 
     // OUTBOUND CONNECT
