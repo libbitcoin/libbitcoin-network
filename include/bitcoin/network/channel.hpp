@@ -63,7 +63,7 @@ protected:
     virtual void handle_stopping() override;
     virtual bool stopped(const code& ec) const;
 
-    // Expose polymorphic start method from base.
+    // Expose polymorphic stopped method from base.
     using proxy::stopped;
 
 private:
