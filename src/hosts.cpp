@@ -34,8 +34,7 @@ using namespace bc::config;
 
 // TODO: change to network_address bimap hash table with services and age.
 hosts::hosts(const settings& settings)
-  : capacity_(std::min(max_address, static_cast<size_t>(
-        settings.host_pool_capacity))),
+  : capacity_(static_cast<size_t>(settings.host_pool_capacity)),
     buffer_(std::max(capacity_, static_cast<size_t>(1u))),
     stopped_(true),
     file_path_(settings.hosts_file),
@@ -103,8 +102,8 @@ code hosts::fetch(address::list& out) const
         if (buffer_.empty())
             return error::not_found;
 
-        const auto out_count = std::min(buffer_.size(), capacity_) /
-            static_cast<size_t>(pseudo_random::next(5, 10));
+        const auto out_count = std::min(max_address, std::min(buffer_.size(),
+            capacity_) / static_cast<size_t>(pseudo_random::next(5, 10)));
 
         if (out_count == 0)
             return error::success;
