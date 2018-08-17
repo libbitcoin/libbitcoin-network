@@ -187,8 +187,7 @@ BOOST_AUTO_TEST_CASE(p2p__top_block__default__zero_null_hash)
 {
     print_headers(TEST_NAME);
     const network::settings configuration;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(network.top_block().height(), 0);
     BOOST_REQUIRE(network.top_block().hash() == null_hash);
 }
@@ -197,8 +196,7 @@ BOOST_AUTO_TEST_CASE(p2p__set_top_block1__values__expected)
 {
     print_headers(TEST_NAME);
     const network::settings configuration;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     const size_t expected_height = 42;
     const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
     network.set_top_block({ expected_hash, expected_height });
@@ -210,8 +208,7 @@ BOOST_AUTO_TEST_CASE(p2p__set_top_block2__values__expected)
 {
     print_headers(TEST_NAME);
     const network::settings configuration;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     const size_t expected_height = 42;
     const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
     const config::checkpoint expected{ hash, expected_height };
@@ -224,8 +221,7 @@ BOOST_AUTO_TEST_CASE(p2p__top_header__default__zero_null_hash)
 {
     print_headers(TEST_NAME);
     const network::settings configuration;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(network.top_header().height(), 0);
     BOOST_REQUIRE(network.top_header().hash() == null_hash);
 }
@@ -234,8 +230,7 @@ BOOST_AUTO_TEST_CASE(p2p__set_top_header1__values__expected)
 {
     print_headers(TEST_NAME);
     const network::settings configuration;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     const size_t expected_height = 42;
     const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
     network.set_top_header({ expected_hash, expected_height });
@@ -247,8 +242,7 @@ BOOST_AUTO_TEST_CASE(p2p__set_top_header2__values__expected)
 {
     print_headers(TEST_NAME);
     const network::settings configuration;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     const size_t expected_height = 42;
     const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
     const config::checkpoint expected{ hash, expected_height };
@@ -261,8 +255,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__no_sessions__start_success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 }
 
@@ -270,8 +263,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__no_connections__start_stop_success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
     BOOST_REQUIRE(network.stop());
 }
@@ -280,8 +272,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__no_sessions__start_success_start_operation_fail
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
     BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
 }
@@ -301,8 +292,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_handshake_timeout__start_peer_thro
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
     configuration.channel_handshake_seconds = 0;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
 
     // The (timeout) error on the individual connection is ignored.
     // The connection failure results in a failure to generate any addresses.
@@ -318,8 +308,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_connect_timeout__start_peer_thrott
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
     configuration.connect_timeout_seconds = 0;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::peer_throttling);
     BOOST_REQUIRE(network.stop());
 }
@@ -329,8 +318,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_germination_timeout__start_peer_th
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
     configuration.channel_germination_seconds = 0;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::peer_throttling);
     BOOST_REQUIRE(network.stop());
 }
@@ -340,8 +328,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_inactivity_timeout__start_peer_thr
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
     configuration.channel_inactivity_minutes = 0;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::peer_throttling);
     BOOST_REQUIRE(network.stop());
 }
@@ -351,8 +338,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_expiration_timeout__start_peer_thr
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
     configuration.channel_expiration_minutes = 0;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::peer_throttling);
     BOOST_REQUIRE(network.stop());
 }
@@ -366,8 +352,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__seed_session_blacklisted__start_peer_throttling
     configuration.hosts_file = get_log_path(TEST_NAME, "hosts");
     configuration.seeds = { { SEED1 }, { SEED2 } };
     configuration.blacklists = SEED_AUTHORITIES;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::peer_throttling);
     BOOST_REQUIRE(network.stop());
 }
@@ -377,8 +362,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__outbound_no_seeds__success)
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
     configuration.outbound_connections = 1;
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 }
 
@@ -386,8 +370,7 @@ BOOST_AUTO_TEST_CASE(p2p__connect__not_started__service_stopped)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     const config::endpoint host(SEED1);
     BOOST_REQUIRE_EQUAL(connect_result(network, host), error::service_stopped);
 }
@@ -396,8 +379,7 @@ BOOST_AUTO_TEST_CASE(p2p__connect__started__success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     const config::endpoint host(SEED1);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
     BOOST_REQUIRE_EQUAL(run_result(network), error::success);
@@ -422,8 +404,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__stopped__service_stopped)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
 
     // Expect immediate return because service is not started.
     BOOST_REQUIRE_EQUAL(subscribe_result(network), error::service_stopped);
@@ -433,8 +414,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__started_stop__service_stopped)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 
     std::promise<code> promise;
@@ -453,8 +433,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__started_connect1__success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     const config::endpoint host(SEED1);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
     BOOST_REQUIRE_EQUAL(subscribe_connect1_result(network, host), error::success);
@@ -464,8 +443,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__started_connect2__success)
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     const config::endpoint host(SEED1);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
     BOOST_REQUIRE_EQUAL(subscribe_connect2_result(network, host), error::success);
@@ -475,8 +453,7 @@ BOOST_AUTO_TEST_CASE(p2p__broadcast__ping_two_distinct_hosts__two_sends_and_succ
 {
     print_headers(TEST_NAME);
     SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    const bc::settings bitcoin_configuration;
-    p2p network(configuration, bitcoin_configuration);
+    p2p network(configuration);
     const config::endpoint host1(SEED1);
     const config::endpoint host2(SEED2);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);

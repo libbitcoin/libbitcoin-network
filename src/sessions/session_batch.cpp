@@ -34,11 +34,9 @@ using namespace bc::config;
 using namespace bc::message;
 using namespace std::placeholders;
 
-session_batch::session_batch(p2p& network, bool notify_on_connect,
-    const bc::settings& bitcoin_settings)
+session_batch::session_batch(p2p& network, bool notify_on_connect)
   : session(network, notify_on_connect),
-    batch_size_(std::max(settings_.connect_batch_size, 1u)),
-    bitcoin_settings_(bitcoin_settings)
+    batch_size_(std::max(settings_.connect_batch_size, 1u))
 {
 }
 
@@ -102,7 +100,7 @@ void session_batch::start_connect(const code& ec, const authority& host,
     LOG_VERBOSE(LOG_NETWORK)
         << "Connecting to [" << host << "]";
 
-    const auto connector = create_connector(bitcoin_settings_);
+    const auto connector = create_connector();
     pend(connector);
 
     // CONNECT

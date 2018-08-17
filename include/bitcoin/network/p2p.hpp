@@ -82,7 +82,7 @@ public:
     // ------------------------------------------------------------------------
 
     /// Construct an instance.
-    p2p(const settings& settings, const bc::settings& bitcoin_settings);
+    p2p(const settings& settings);
 
     /// Ensure all threads are coalesced.
     virtual ~p2p();
@@ -225,8 +225,7 @@ protected:
     template <class Session, typename... Args>
     typename Session::ptr attach(Args&&... args)
     {
-        return std::make_shared<Session>(*this, std::forward<Args>(args)...,
-            bitcoin_settings_);
+        return std::make_shared<Session>(*this, std::forward<Args>(args)...);
     }
 
     /// Override to attach specialized sessions.
@@ -251,7 +250,6 @@ private:
 
     // These are thread safe.
     const settings& settings_;
-    const bc::settings& bitcoin_settings_;
     std::atomic<bool> stopped_;
     bc::atomic<config::checkpoint> top_block_;
     bc::atomic<config::checkpoint> top_header_;

@@ -44,8 +44,7 @@ public:
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
 
     /// Construct an instance.
-    session_manual(p2p& network, bool notify_on_connect,
-        const bc::settings& bitcoin_settings);
+    session_manual(p2p& network, bool notify_on_connect);
 
     /// Start the manual session.
     void start(result_handler handler) override;
@@ -74,8 +73,6 @@ private:
         uint16_t port, channel::ptr channel, channel_handler handler);
     void handle_channel_stop(const code& ec, const std::string& hostname,
         uint16_t port);
-
-    const bc::settings& bitcoin_settings_;
 };
 
 } // namespace network

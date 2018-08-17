@@ -85,11 +85,9 @@ public:
 
     /**
      * Create an instance of this class.
-     * @param[in]  pool              The threadpool to use for sending
-     *                               notifications.
-     * @param[in]  bitcoin_settings  The bitcoin settings.
+     * @param[in]  pool  The threadpool to use for sending notifications.
      */
-    message_subscriber(threadpool& pool, const bc::settings& bitcoin_settings);
+    message_subscriber(threadpool& pool);
 
     /**
      * Subscribe to receive a notification when a message of type is received.
@@ -231,85 +229,7 @@ private:
     DECLARE_SUBSCRIBER(transaction);
     DECLARE_SUBSCRIBER(verack);
     DECLARE_SUBSCRIBER(version);
-
-    const bc::settings& bitcoin_settings_;
 };
-
-template <>
-inline void message_subscriber::subscribe<message::block,
-     message_handler<message::block>>(message_handler<message::block>&& handler)
-{
-    subscribe(message::block(bitcoin_settings_),
-        std::forward<message_handler<message::block>>(handler));
-}
-
-template <>
-inline code message_subscriber::relay<message::compact_block,
-    const message_subscriber::compact_block_subscriber_type::ptr>(
-    std::istream& stream, uint32_t version,
-    const message_subscriber::compact_block_subscriber_type::ptr& subscriber
-    ) const
-{
-    const auto message = std::make_shared<message::compact_block>(
-        bitcoin_settings_);
-
-    // Subscribers are invoked only with stop and success codes.
-    if (!message->from_data(version, stream, bitcoin_settings_))
-        return error::bad_stream;
-
-    subscriber->relay(error::success, message);
-    return error::success;
-}
-
-template <>
-inline code message_subscriber::relay<message::headers,
-    const message_subscriber::headers_subscriber_type::ptr>(
-    std::istream& stream, uint32_t version,
-    const message_subscriber::headers_subscriber_type::ptr& subscriber) const
-{
-    const auto message = std::make_shared<message::headers>();
-
-    // Subscribers are invoked only with stop and success codes.
-    if (!message->from_data(version, stream, bitcoin_settings_))
-        return error::bad_stream;
-
-    subscriber->relay(error::success, message);
-    return error::success;
-}
-
-template <>
-inline code message_subscriber::relay<message::merkle_block,
-    const message_subscriber::merkle_block_subscriber_type::ptr>(
-    std::istream& stream, uint32_t version,
-    const message_subscriber::merkle_block_subscriber_type::ptr& subscriber
-    ) const
-{
-    const auto message = std::make_shared<message::merkle_block>(
-        bitcoin_settings_);
-
-    // Subscribers are invoked only with stop and success codes.
-    if (!message->from_data(version, stream, bitcoin_settings_))
-        return error::bad_stream;
-
-    subscriber->relay(error::success, message);
-    return error::success;
-}
-
-template <>
-inline code message_subscriber::handle<message::block,
-     const message_subscriber::block_subscriber_type::ptr>(
-     std::istream& stream, uint32_t version,
-     const message_subscriber::block_subscriber_type::ptr& subscriber) const
-{
-    const auto message = std::make_shared<message::block>(bitcoin_settings_);
-
-    // Subscribers are invoked only with stop and success codes.
-    if (!message->from_data(version, stream))
-        return error::bad_stream;
-
-    subscriber->invoke(error::success, message);
-    return error::success;
-}
 
 #undef DEFINE_SUBSCRIBER_TYPE
 #undef DEFINE_SUBSCRIBER_OVERLOAD

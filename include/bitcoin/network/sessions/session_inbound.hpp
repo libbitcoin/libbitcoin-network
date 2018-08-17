@@ -42,8 +42,7 @@ public:
     typedef std::shared_ptr<session_inbound> ptr;
 
     /// Construct an instance.
-    session_inbound(p2p& network, bool notify_on_connect,
-        const bc::settings& bitcoin_settings);
+    session_inbound(p2p& network, bool notify_on_connect);
 
     /// Start the session.
     void start(result_handler handler) override;
@@ -69,7 +68,6 @@ private:
     // These are thread safe.
     acceptor::ptr acceptor_;
     const size_t connection_limit_;
-    const bc::settings& bitcoin_settings_;
 };
 
 } // namespace network

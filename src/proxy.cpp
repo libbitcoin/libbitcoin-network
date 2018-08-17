@@ -46,8 +46,7 @@ static const size_t invalid_payload_dump_size = 1024;
 // payload_buffer_ sizing assumes monotonically increasing size by version.
 // Initialize to pre-witness max payload and let grow to witness as required.
 // The socket owns the single thread on which this channel reads and writes.
-proxy::proxy(threadpool& pool, socket::ptr socket, const settings& settings,
-    const bc::settings& bitcoin_settings)
+proxy::proxy(threadpool& pool, socket::ptr socket, const settings& settings)
   : authority_(socket->authority()),
     heading_buffer_(heading::maximum_size()),
     payload_buffer_(heading::maximum_payload_size(settings.protocol_maximum, false)),
@@ -59,7 +58,7 @@ proxy::proxy(threadpool& pool, socket::ptr socket, const settings& settings,
     validate_checksum_(settings.validate_checksum),
     verbose_(settings.verbose),
     version_(settings.protocol_maximum),
-    message_subscriber_(pool, bitcoin_settings),
+    message_subscriber_(pool),
     stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_sub")),
     dispatch_(pool, NAME "_dispatch")
 {

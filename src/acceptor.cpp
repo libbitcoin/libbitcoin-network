@@ -36,12 +36,10 @@ using namespace std::placeholders;
 
 static const auto reuse_address = asio::acceptor::reuse_address(true);
 
-acceptor::acceptor(threadpool& pool, const settings& settings,
-    const bc::settings& bitcoin_settings)
+acceptor::acceptor(threadpool& pool, const settings& settings)
   : stopped_(true),
     pool_(pool),
     settings_(settings),
-    bitcoin_settings_(bitcoin_settings),
     dispatch_(pool, NAME),
     acceptor_(pool_.service()),
     CONSTRUCT_TRACK(acceptor)
@@ -163,8 +161,7 @@ void acceptor::handle_accept(const boost_code& ec, socket::ptr socket,
     }
 
     // Ensure that channel is not passed as an r-value.
-    const auto created = std::make_shared<channel>(pool_, socket, settings_,
-        bitcoin_settings_);
+    const auto created = std::make_shared<channel>(pool_, socket, settings_);
     handler(error::success, created);
 }
 

@@ -42,7 +42,7 @@ public:
     typedef std::shared_ptr<session_seed> ptr;
 
     /// Construct an instance.
-    session_seed(p2p& network, const bc::settings& bitcoin_settings);
+    session_seed(p2p& network);
 
     /// Start the session.
     void start(result_handler handler) override;
@@ -68,8 +68,6 @@ private:
     void handle_channel_start(const code& ec, channel::ptr channel,
         result_handler handler);
     void handle_channel_stop(const code& ec);
-
-    const bc::settings bitcoin_settings_;
 };
 
 } // namespace network
