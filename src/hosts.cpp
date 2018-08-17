@@ -104,14 +104,17 @@ code hosts::fetch(address::list& out) const
             return error::not_found;
 
         const auto out_count = std::min(buffer_.size(), capacity_) /
-            static_cast<size_t>(pseudo_random::next(1, 20));
+            static_cast<size_t>(pseudo_random::next(5, 10));
 
         if (out_count == 0)
             return error::success;
 
+        const auto limit = buffer_.size() - 1;
+        auto index = static_cast<size_t>(pseudo_random::next(0, limit));
+
         out.reserve(out_count);
-        for (size_t index = 0; index < out_count; ++index)
-            out.push_back(buffer_[index]);
+        for (size_t count = 0; count < out_count; ++count)
+            out.push_back(buffer_[index++ % limit]);
     }
     ///////////////////////////////////////////////////////////////////////////
 
