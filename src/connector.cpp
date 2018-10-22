@@ -25,7 +25,6 @@
 #include <string>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {

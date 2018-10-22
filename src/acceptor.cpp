@@ -24,7 +24,6 @@
 #include <memory>
 #include <bitcoin/bitcoin.hpp>
 #include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -82,7 +81,7 @@ bool acceptor::stopped() const
 }
 
 // This is hardwired to listen on IPv6.
-code acceptor::listen(uint16_t )
+code acceptor::listen(uint16_t port)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -96,7 +95,7 @@ code acceptor::listen(uint16_t )
     }
 
     boost_code error;
-    asio::endpoint endpoint(asio::tcp::v6(), settings_.inbound_port);
+    asio::endpoint endpoint(asio::tcp::v6(), port);
 
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
