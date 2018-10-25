@@ -390,7 +390,6 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe__started_stop__service_stopped)
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 
-    std::promise<code> promise;
     const auto handler = [](code ec, channel::ptr channel)
     {
         BOOST_REQUIRE(!channel);
