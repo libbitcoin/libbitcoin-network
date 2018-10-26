@@ -241,7 +241,6 @@ private:
     void handle_manual_started(const code& ec, result_handler handler);
     void handle_inbound_started(const code& ec, result_handler handler);
     void handle_hosts_loaded(const code& ec, result_handler handler);
-    void handle_hosts_saved(const code& ec, result_handler handler);
     void handle_send(const code& ec, channel::ptr channel,
         channel_handler handle_channel, result_handler handle_complete);
 
