@@ -76,9 +76,7 @@ protected:
     virtual bool stopped(const code& ec) const;
 
 private:
-    void handle_started(completion_handler handler);
     void handle_stopped(const code& ec);
-    void do_set_event(const code& ec);
 
     bc::atomic<event_handler> handler_;
 };

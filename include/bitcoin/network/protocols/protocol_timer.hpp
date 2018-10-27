@@ -40,7 +40,7 @@ protected:
 
     /**
      * Construct a timed protocol instance.
-     * @param[in]  network   The network interface.
+     * @param[in]  network    The network interface.
      * @param[in]  channel    The channel on which to start the protocol.
      * @param[in]  perpetual  Set for automatic timer reset unless stopped.
      * @param[in]  name       The instance name for logging purposes.
