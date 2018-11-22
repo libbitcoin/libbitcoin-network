@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -32,7 +32,7 @@ class BCT_API settings
 {
 public:
     settings();
-    settings(config::settings context);
+    settings(system::config::settings context);
 
     /// Properties.
     uint32_t threads;
@@ -56,10 +56,10 @@ public:
     uint32_t channel_expiration_minutes;
     uint32_t host_pool_capacity;
     boost::filesystem::path hosts_file;
-    config::authority self;
-    config::authority::list blacklists;
-    config::endpoint::list peers;
-    config::endpoint::list seeds;
+    system::config::authority self;
+    system::config::authority::list blacklists;
+    system::config::endpoint::list peers;
+    system::config::endpoint::list seeds;
 
     // [log]
     boost::filesystem::path debug_file;
@@ -69,17 +69,17 @@ public:
     size_t minimum_free_space;
     size_t maximum_archive_size;
     size_t maximum_archive_files;
-    config::authority statistics_server;
+    system::config::authority statistics_server;
     bool verbose;
 
     /// Helpers.
     size_t minimum_connections() const;
-    asio::duration connect_timeout() const;
-    asio::duration channel_handshake() const;
-    asio::duration channel_heartbeat() const;
-    asio::duration channel_inactivity() const;
-    asio::duration channel_expiration() const;
-    asio::duration channel_germination() const;
+    system::asio::duration connect_timeout() const;
+    system::asio::duration channel_handshake() const;
+    system::asio::duration channel_heartbeat() const;
+    system::asio::duration channel_inactivity() const;
+    system::asio::duration channel_expiration() const;
+    system::asio::duration channel_germination() const;
 };
 
 } // namespace network

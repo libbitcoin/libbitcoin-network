@@ -22,7 +22,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
@@ -55,7 +55,8 @@ void session_manual::start(result_handler handler)
     session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
-void session_manual::handle_started(const code& ec, result_handler handler)
+void session_manual::handle_started(const system::code& ec,
+    result_handler handler)
 {
     if (ec)
     {
@@ -64,7 +65,7 @@ void session_manual::handle_started(const code& ec, result_handler handler)
     }
 
     // This is the end of the start sequence.
-    handler(error::success);
+    handler(system::error::success);
 }
 
 // Connect sequence/cycle.
@@ -72,31 +73,32 @@ void session_manual::handle_started(const code& ec, result_handler handler)
 
 void session_manual::connect(const std::string& hostname, uint16_t port)
 {
-    const auto unhandled = [](code, channel::ptr) {};
+    const auto unhandled = [](system::code, channel::ptr) {};
     connect(hostname, port, unhandled);
 }
 
 void session_manual::connect(const std::string& hostname, uint16_t port,
     channel_handler handler)
 {
-    start_connect(error::success, hostname, port,
+    start_connect(system::error::success, hostname, port,
         settings_.manual_attempt_limit, handler);
 }
 
 // The first connect is a sequence, which then spawns a cycle.
-void session_manual::start_connect(const code&, const std::string& hostname,
-    uint16_t port, uint32_t attempts, channel_handler handler)
+void session_manual::start_connect(const system::code&,
+    const std::string& hostname, uint16_t port, uint32_t attempts,
+    channel_handler handler)
 {
     if (stopped())
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Suspended manual connection.";
 
-        handler(error::service_stopped, nullptr);
+        handler(system::error::service_stopped, nullptr);
         return;
     }
 
-    const auto retries = floor_subtract(attempts, 1u);
+    const auto retries = system::floor_subtract(attempts, 1u);
     const auto connector = create_connector();
     pend(connector);
 
@@ -106,16 +108,17 @@ void session_manual::start_connect(const code&, const std::string& hostname,
             handler));
 }
 
-void session_manual::handle_connect(const code& ec, channel::ptr channel,
-    const std::string& hostname, uint16_t port, uint32_t remaining,
-    connector::ptr connector, channel_handler handler)
+void session_manual::handle_connect(const system::code& ec,
+    channel::ptr channel, const std::string& hostname, uint16_t port,
+    uint32_t remaining, connector::ptr connector, channel_handler handler)
 {
     unpend(connector);
 
     if (ec)
     {
         LOG_WARNING(LOG_NETWORK)
-            << "Failure connecting [" << config::endpoint(hostname, port)
+            << "Failure connecting ["
+            << system::config::endpoint(hostname, port)
             << "] manually: " << ec.message();
 
         // Retry forever if limit is zero.
@@ -131,7 +134,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
 
         LOG_WARNING(LOG_NETWORK)
             << "Suspending manual connection to ["
-            << config::endpoint(hostname, port) << "] after "
+            << system::config::endpoint(hostname, port) << "] after "
             << settings_.manual_attempt_limit << " failed attempts.";
 
         // This is the failure end of the connect sequence.
@@ -144,7 +147,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
         BIND3(handle_channel_stop, _1, hostname, port));
 }
 
-void session_manual::handle_channel_start(const code& ec,
+void session_manual::handle_channel_start(const system::code& ec,
     const std::string& hostname, uint16_t port, channel::ptr channel,
     channel_handler handler)
 {
@@ -159,12 +162,13 @@ void session_manual::handle_channel_start(const code& ec,
     }
 
     LOG_INFO(LOG_NETWORK)
-        << "Connected manual channel [" << config::endpoint(hostname, port)
+        << "Connected manual channel ["
+        << system::config::endpoint(hostname, port)
         << "] as [" << channel->authority() << "] ("
         << connection_count() << ")";
 
     // This is the success end of the connect sequence.
-    handler(error::success, channel);
+    handler(system::error::success, channel);
     attach_protocols(channel);
 }
 
@@ -172,18 +176,18 @@ void session_manual::attach_protocols(channel::ptr channel)
 {
     const auto version = channel->negotiated_version();
 
-    if (version >= message::version::level::bip31)
+    if (version >= system::message::version::level::bip31)
         attach<protocol_ping_60001>(channel)->start();
     else
         attach<protocol_ping_31402>(channel)->start();
 
-    if (version >= message::version::level::bip61)
+    if (version >= system::message::version::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_address_31402>(channel)->start();
 }
 
-void session_manual::handle_channel_stop(const code& ec,
+void session_manual::handle_channel_stop(const system::code& ec,
     const std::string& hostname, uint16_t port)
 {
     LOG_DEBUG(LOG_NETWORK)
@@ -191,7 +195,7 @@ void session_manual::handle_channel_stop(const code& ec,
 
     // Special case for already connected, do not keep trying.
     // After a stop we don't use the caller's start handler, but keep connecting.
-    if (ec != error::address_in_use)
+    if (ec != system::error::address_in_use)
         connect(hostname, port);
 }
 

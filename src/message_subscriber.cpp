@@ -21,7 +21,7 @@
 #include <istream>
 #include <memory>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 
 #define INITIALIZE_SUBSCRIBER(pool, value) \
     value##_subscriber_(std::make_shared<value##_subscriber_type>( \
@@ -33,11 +33,11 @@
 // This allows us to block the peer while handling the message.
 #define CASE_HANDLE_MESSAGE(stream, version, value) \
     case message_type::value: \
-        return handle<message::value>(stream, version, value##_subscriber_)
+        return handle<system::message::value>(stream, version, value##_subscriber_)
 
 #define CASE_RELAY_MESSAGE(stream, version, value) \
     case message_type::value: \
-        return relay<message::value>(stream, version, value##_subscriber_)
+        return relay<system::message::value>(stream, version, value##_subscriber_)
 
 #define START_SUBSCRIBER(value) \
     value##_subscriber_->start()
@@ -48,9 +48,9 @@
 namespace libbitcoin {
 namespace network {
 
-using namespace message;
+using namespace bc::system::message;
 
-message_subscriber::message_subscriber(threadpool& pool)
+message_subscriber::message_subscriber(system::threadpool& pool)
   : INITIALIZE_SUBSCRIBER(pool, address),
     INITIALIZE_SUBSCRIBER(pool, alert),
     INITIALIZE_SUBSCRIBER(pool, block),
@@ -81,7 +81,7 @@ message_subscriber::message_subscriber(threadpool& pool)
 {
 }
 
-void message_subscriber::broadcast(const code& ec)
+void message_subscriber::broadcast(const system::code& ec)
 {
     RELAY_CODE(ec, address);
     RELAY_CODE(ec, alert);
@@ -112,7 +112,7 @@ void message_subscriber::broadcast(const code& ec)
     RELAY_CODE(ec, version);
 }
 
-code message_subscriber::load(message_type type, uint32_t version,
+system::code message_subscriber::load(message_type type, uint32_t version,
     std::istream& stream) const
 {
     switch (type)
@@ -146,7 +146,7 @@ code message_subscriber::load(message_type type, uint32_t version,
         CASE_HANDLE_MESSAGE(stream, version, version);
         case message_type::unknown:
         default:
-            return error::not_found;
+            return system::error::not_found;
     }
 }
 

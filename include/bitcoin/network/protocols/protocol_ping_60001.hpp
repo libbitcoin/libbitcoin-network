@@ -22,7 +22,7 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
@@ -52,12 +52,13 @@ public:
     protocol_ping_60001(p2p& network, channel::ptr channel);
 
 protected:
-    void send_ping(const code& ec) override;
+    void send_ping(const system::code& ec) override;
 
-    void handle_send_ping(const code& ec, const std::string& command);
-    bool handle_receive_ping(const code& ec, ping_const_ptr message) override;
-    virtual bool handle_receive_pong(const code& ec, pong_const_ptr message,
-        uint64_t nonce);
+    void handle_send_ping(const system::code& ec, const std::string& command);
+    bool handle_receive_ping(const system::code& ec,
+        system::ping_const_ptr message) override;
+    virtual bool handle_receive_pong(const system::code& ec,
+        system::pong_const_ptr message, uint64_t nonce);
 
 private:
     std::atomic<bool> pending_;

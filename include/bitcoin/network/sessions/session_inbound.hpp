@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <memory>
 #include <vector>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/acceptor.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
@@ -56,14 +56,14 @@ protected:
     virtual void attach_protocols(channel::ptr channel);
 
 private:
-    void start_accept(const code& ec);
+    void start_accept(const system::code& ec);
 
-    void handle_stop(const code& ec);
-    void handle_started(const code& ec, result_handler handler);
-    void handle_accept(const code& ec, channel::ptr channel);
+    void handle_stop(const system::code& ec);
+    void handle_started(const system::code& ec, result_handler handler);
+    void handle_accept(const system::code& ec, channel::ptr channel);
 
-    void handle_channel_start(const code& ec, channel::ptr channel);
-    void handle_channel_stop(const code& ec);
+    void handle_channel_start(const system::code& ec, channel::ptr channel);
+    void handle_channel_stop(const system::code& ec);
 
     // These are thread safe.
     acceptor::ptr acceptor_;

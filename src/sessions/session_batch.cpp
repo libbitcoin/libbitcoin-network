@@ -19,7 +19,7 @@
 #include <bitcoin/network/sessions/session_batch.hpp>
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/sessions/session.hpp>
@@ -30,8 +30,8 @@ namespace network {
 #define CLASS session_batch
 #define NAME "session_batch"
 
-using namespace bc::config;
-using namespace bc::message;
+using namespace bc::system::config;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 session_batch::session_batch(p2p& network, bool notify_on_connect)
@@ -47,7 +47,7 @@ session_batch::session_batch(p2p& network, bool notify_on_connect)
 void session_batch::connect(channel_handler handler)
 {
     const auto join_handler = synchronize(handler, batch_size_, NAME "_join",
-        synchronizer_terminate::on_success);
+        system::synchronizer_terminate::on_success);
 
     for (size_t host = 0; host < batch_size_; ++host)
         new_connect(join_handler);
@@ -59,7 +59,7 @@ void session_batch::new_connect(channel_handler handler)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Suspended batch connection.";
-        handler(error::channel_stopped, nullptr);
+        handler(system::error::channel_stopped, nullptr);
         return;
     }
 
@@ -68,14 +68,14 @@ void session_batch::new_connect(channel_handler handler)
     start_connect(ec, address, handler);
 }
 
-void session_batch::start_connect(const code& ec, const authority& host,
-    channel_handler handler)
+void session_batch::start_connect(const system::code& ec,
+    const authority& host, channel_handler handler)
 {
     if (stopped(ec))
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Batch session stopped while starting.";
-        handler(error::service_stopped, nullptr);
+        handler(system::error::service_stopped, nullptr);
         return;
     }
 
@@ -93,7 +93,7 @@ void session_batch::start_connect(const code& ec, const authority& host,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Fetched blacklisted address [" << host << "] ";
-        handler(error::address_blocked, nullptr);
+        handler(system::error::address_blocked, nullptr);
         return;
     }
 
@@ -108,8 +108,8 @@ void session_batch::start_connect(const code& ec, const authority& host,
         BIND4(handle_connect, _1, _2, connector, handler));
 }
 
-void session_batch::handle_connect(const code& ec, channel::ptr channel,
-    connector::ptr connector, channel_handler handler)
+void session_batch::handle_connect(const system::code& ec,
+    channel::ptr channel, connector::ptr connector, channel_handler handler)
 {
     unpend(connector);
 
@@ -123,7 +123,7 @@ void session_batch::handle_connect(const code& ec, channel::ptr channel,
         << "Connected to [" << channel->authority() << "]";
 
     // This is the end of the connect sequence.
-    handler(error::success, channel);
+    handler(system::error::success, channel);
 }
 
 } // namespace network

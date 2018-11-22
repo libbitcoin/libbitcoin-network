@@ -19,13 +19,13 @@
 #include <bitcoin/network/settings.hpp>
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-using namespace bc::asio;
-using namespace bc::message;
+using namespace bc::system::asio;
+using namespace bc::system::message;
 
 // Common default values (no settings context).
 settings::settings()
@@ -65,13 +65,13 @@ settings::settings()
 
 // Use push_back due to initializer_list bug:
 // stackoverflow.com/a/20168627/1172329
-settings::settings(config::settings context)
+settings::settings(system::config::settings context)
   : settings()
 {
     // Handle deviations from common defaults.
     switch (context)
     {
-        case config::settings::mainnet:
+        case system::config::settings::mainnet:
         {
             identifier = 3652501241;
             inbound_port = 8333;
@@ -83,7 +83,7 @@ settings::settings(config::settings context)
             break;
         }
 
-        case config::settings::testnet:
+        case system::config::settings::testnet:
         {
             identifier = 118034699;
             inbound_port = 18333;
@@ -95,7 +95,7 @@ settings::settings(config::settings context)
             break;
         }
 
-        case config::settings::regtest:
+        case system::config::settings::regtest:
         {
             identifier = 3669344250;
             inbound_port = 18444;
@@ -105,7 +105,7 @@ settings::settings(config::settings context)
         }
 
         default:
-        case config::settings::none:
+        case system::config::settings::none:
         {
         }
     }
@@ -113,7 +113,7 @@ settings::settings(config::settings context)
 
 size_t settings::minimum_connections() const
 {
-    return ceiling_add<size_t>(outbound_connections, peers.size());
+    return system::ceiling_add<size_t>(outbound_connections, peers.size());
 }
 
 duration settings::connect_timeout() const

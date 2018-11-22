@@ -25,22 +25,22 @@
 #include <memory>
 #include <utility>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 #define DEFINE_SUBSCRIBER_TYPE(value) \
-    typedef resubscriber<code, message::value::const_ptr> \
+    typedef system::resubscriber<system::code, system::message::value::const_ptr> \
         value##_subscriber_type
 
 #define DEFINE_SUBSCRIBER_OVERLOAD(value) \
     template <typename Handler> \
-    void subscribe(message::value&&, Handler&& handler) \
+    void subscribe(system::message::value&&, Handler&& handler) \
     { \
         value##_subscriber_->subscribe(std::forward<Handler>(handler), \
-            error::channel_stopped, {}); \
+            system::error::channel_stopped, {}); \
     }
 
 #define DECLARE_SUBSCRIBER(value) \
@@ -48,11 +48,11 @@ namespace network {
 
 template <class Message>
 using message_handler =
-    std::function<bool(const code&, std::shared_ptr<const Message>)>;
+    std::function<bool(const system::code&, std::shared_ptr<const Message>)>;
 
 /// Aggregation of subscribers by messasge type, thread safe.
 class BCT_API message_subscriber
-  : noncopyable
+  : system::noncopyable
 {
 public:
     DEFINE_SUBSCRIBER_TYPE(address);
@@ -87,7 +87,7 @@ public:
      * Create an instance of this class.
      * @param[in]  pool  The threadpool to use for sending notifications.
      */
-    message_subscriber(threadpool& pool);
+    message_subscriber(system::threadpool& pool);
 
     /**
      * Subscribe to receive a notification when a message of type is received.
@@ -109,17 +109,17 @@ public:
      * @return                 Returns error::bad_stream if failed.
      */
     template <class Message, class Subscriber>
-    code relay(std::istream& stream, uint32_t version,
+    system::code relay(std::istream& stream, uint32_t version,
         Subscriber& subscriber) const
     {
         const auto message = std::make_shared<Message>();
 
         // Subscribers are invoked only with stop and success codes.
         if (!message->from_data(version, stream))
-            return error::bad_stream;
+            return system::error::bad_stream;
 
-        subscriber->relay(error::success, message);
-        return error::success;
+        subscriber->relay(system::error::success, message);
+        return system::error::success;
     }
 
     /**
@@ -130,24 +130,24 @@ public:
      * @return                 Returns error::bad_stream if failed.
      */
     template <class Message, class Subscriber>
-    code handle(std::istream& stream, uint32_t version,
+    system::code handle(std::istream& stream, uint32_t version,
         Subscriber& subscriber) const
     {
         const auto message = std::make_shared<Message>();
 
         // Subscribers are invoked only with stop and success codes.
         if (!message->from_data(version, stream))
-            return error::bad_stream;
+            return system::error::bad_stream;
 
-        subscriber->invoke(error::success, message);
-        return error::success;
+        subscriber->invoke(system::error::success, message);
+        return system::error::success;
     }
 
     /**
      * Broadcast a default message instance with the specified error code.
      * @param[in]  ec  The error code to broadcast.
      */
-    virtual void broadcast(const code& ec);
+    virtual void broadcast(const system::code& ec);
 
     /*
      * Load a stream of the specified command type.
@@ -158,8 +158,8 @@ public:
      * @param[in]  stream   The stream from which to load the message.
      * @return              Returns error::bad_stream if failed.
      */
-    virtual code load(message::message_type type, uint32_t version,
-        std::istream& stream) const;
+    virtual system::code load(system::message::message_type type,
+        uint32_t version, std::istream& stream) const;
 
     /**
      * Start all subscribers so that they accept subscription.

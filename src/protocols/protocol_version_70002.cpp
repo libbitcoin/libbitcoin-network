@@ -19,7 +19,7 @@
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 
 #include <cstdint>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
@@ -31,7 +31,7 @@ namespace network {
 #define NAME "version"
 #define CLASS protocol_version_70002
 
-using namespace bc::message;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 static const std::string insufficient_version = "insufficient-version";
@@ -47,7 +47,7 @@ protocol_version_70002::protocol_version_70002(p2p& network,
         network.network_settings().services,
         network.network_settings().invalid_services,
         network.network_settings().protocol_minimum,
-        bc::message::version::service::none,
+        version::service::none,
         /*network.network_settings().services,*/
         network.network_settings().relay_transactions)
 {
@@ -74,7 +74,7 @@ void protocol_version_70002::start(event_handler handler)
     SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
 }
 
-message::version protocol_version_70002::version_factory() const
+version protocol_version_70002::version_factory() const
 {
     auto version = protocol_version_31402::version_factory();
 
@@ -86,7 +86,7 @@ message::version protocol_version_70002::version_factory() const
 // Protocol.
 // ----------------------------------------------------------------------------
 
-bool protocol_version_70002::sufficient_peer(version_const_ptr message)
+bool protocol_version_70002::sufficient_peer(system::version_const_ptr message)
 {
     if (message->value() < minimum_version_)
     {
@@ -114,8 +114,8 @@ bool protocol_version_70002::sufficient_peer(version_const_ptr message)
     return protocol_version_31402::sufficient_peer(message);
 }
 
-bool protocol_version_70002::handle_receive_reject(const code& ec,
-    reject_const_ptr reject)
+bool protocol_version_70002::handle_receive_reject(const system::code& ec,
+    system::reject_const_ptr reject)
 {
     if (stopped(ec))
         return false;
@@ -125,7 +125,7 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
         LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving reject from [" << authority() << "] "
             << ec.message();
-        set_event(error::channel_stopped);
+        set_event(system::error::channel_stopped);
         return false;
     }
 
@@ -143,7 +143,7 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
         LOG_DEBUG(LOG_NETWORK)
             << "Obsolete version reject from [" << authority() << "] '"
             << reject->reason() << "'";
-        set_event(error::channel_stopped);
+        set_event(system::error::channel_stopped);
         return false;
     }
 
@@ -153,7 +153,7 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
         LOG_DEBUG(LOG_NETWORK)
             << "Duplicate version reject from [" << authority() << "] '"
             << reject->reason() << "'";
-        set_event(error::channel_stopped);
+        set_event(system::error::channel_stopped);
         return false;
     }
 

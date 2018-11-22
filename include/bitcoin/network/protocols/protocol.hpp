@@ -23,7 +23,7 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -48,12 +48,12 @@ class p2p;
 
 /// Virtual base class for protocol implementation, mostly thread safe.
 class BCT_API protocol
-  : public enable_shared_from_base<protocol>, noncopyable
+  : public system::enable_shared_from_base<protocol>, system::noncopyable
 {
 protected:
     typedef std::function<void()> completion_handler;
-    typedef std::function<void(const code&)> event_handler;
-    typedef std::function<void(const code&, size_t)> count_handler;
+    typedef std::function<void(const system::code&)> event_handler;
+    typedef std::function<void(const system::code&, size_t)> count_handler;
 
     /// Construct an instance.
     protocol(p2p& network, channel::ptr channel, const std::string& name);
@@ -94,7 +94,7 @@ protected:
     }
 
     /// Get the address of the channel.
-    virtual config::authority authority() const;
+    virtual system::config::authority authority() const;
 
     /// Get the protocol name, for logging purposes.
     virtual const std::string& name() const;
@@ -103,10 +103,10 @@ protected:
     virtual uint64_t nonce() const;
 
     /// Get the peer version message.
-    virtual version_const_ptr peer_version() const;
+    virtual system::version_const_ptr peer_version() const;
 
     /// Set the peer version message.
-    virtual void set_peer_version(version_const_ptr value);
+    virtual void set_peer_version(system::version_const_ptr value);
 
     /// Get the negotiated protocol version.
     virtual uint32_t negotiated_version() const;
@@ -115,17 +115,17 @@ protected:
     virtual void set_negotiated_version(uint32_t value);
 
     /// Get the threadpool.
-    virtual threadpool& pool();
+    virtual system::threadpool& pool();
 
     /// Stop the channel (and the protocol).
-    virtual void stop(const code& ec);
+    virtual void stop(const system::code& ec);
 
 protected:
-    void handle_send(const code& ec, const std::string& command);
+    void handle_send(const system::code& ec, const std::string& command);
 
 private:
-    threadpool& pool_;
-    dispatcher dispatch_;
+    system::threadpool& pool_;
+    system::dispatcher dispatch_;
     channel::ptr channel_;
     const std::string name_;
 };

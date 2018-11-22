@@ -20,7 +20,7 @@
 
 #include <cstdint>
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
@@ -33,7 +33,7 @@ namespace network {
 #define NAME "version"
 #define CLASS protocol_version_31402
 
-using namespace bc::message;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 // TODO: set explicitly on inbound (none or new config) and self on outbound.
@@ -48,7 +48,7 @@ protocol_version_31402::protocol_version_31402(p2p& network,
         network.network_settings().services,
         network.network_settings().invalid_services,
         network.network_settings().protocol_minimum,
-        bc::message::version::service::none
+        system::message::version::service::none
         /*network.network_settings().services*/)
 {
 }
@@ -76,7 +76,7 @@ void protocol_version_31402::start(event_handler handler)
     const auto period = network_.network_settings().channel_handshake();
 
     const auto join_handler = synchronize(handler, 2, NAME,
-        synchronizer_terminate::on_error);
+        system::synchronizer_terminate::on_error);
 
     // The handler is invoked in the context of the last message receipt.
     protocol_timer::start(period, join_handler);
@@ -86,16 +86,16 @@ void protocol_version_31402::start(event_handler handler)
     SEND2(version_factory(), handle_send, _1, version::command);
 }
 
-message::version protocol_version_31402::version_factory() const
+system::message::version protocol_version_31402::version_factory() const
 {
     const auto& settings = network_.network_settings();
     const auto height = network_.top_block().height();
     BITCOIN_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
 
-    message::version version;
+    system::message::version version;
     version.set_value(own_version_);
     version.set_services(own_services_);
-    version.set_timestamp(static_cast<uint64_t>(zulu_time()));
+    version.set_timestamp(static_cast<uint64_t>(system::zulu_time()));
     version.set_address_receiver(authority().to_network_address());
     version.set_address_sender(settings.self.to_network_address());
     version.set_nonce(nonce());
@@ -113,8 +113,8 @@ message::version protocol_version_31402::version_factory() const
 // Protocol.
 // ----------------------------------------------------------------------------
 
-bool protocol_version_31402::handle_receive_version(const code& ec,
-    version_const_ptr message)
+bool protocol_version_31402::handle_receive_version(const system::code& ec,
+    system::version_const_ptr message)
 {
     if (stopped(ec))
         return false;
@@ -142,7 +142,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, minimum below ("
             << version::level::minimum << ").";
-        set_event(error::channel_stopped);
+        set_event(system::error::channel_stopped);
         return false;
     }
 
@@ -151,7 +151,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, maximum above ("
             << version::level::maximum << ").";
-        set_event(error::channel_stopped);
+        set_event(system::error::channel_stopped);
         return false;
     }
 
@@ -160,7 +160,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, "
             << "minimum exceeds maximum.";
-        set_event(error::channel_stopped);
+        set_event(system::error::channel_stopped);
         return false;
     }
 
@@ -168,7 +168,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     if (!sufficient_peer(message))
     {
-        set_event(error::channel_stopped);
+        set_event(system::error::channel_stopped);
         return false;
     }
 
@@ -183,11 +183,11 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     SEND2(verack(), handle_send, _1, verack::command);
 
     // 1 of 2
-    set_event(error::success);
+    set_event(system::error::success);
     return false;
 }
 
-bool protocol_version_31402::sufficient_peer(version_const_ptr message)
+bool protocol_version_31402::sufficient_peer(system::version_const_ptr message)
 {
     if ((message->services() & invalid_services_) != 0)
     {
@@ -216,8 +216,8 @@ bool protocol_version_31402::sufficient_peer(version_const_ptr message)
     return true;
 }
 
-bool protocol_version_31402::handle_receive_verack(const code& ec,
-    verack_const_ptr)
+bool protocol_version_31402::handle_receive_verack(const system::code& ec,
+    system::verack_const_ptr)
 {
     if (stopped(ec))
         return false;
@@ -232,7 +232,7 @@ bool protocol_version_31402::handle_receive_verack(const code& ec,
     }
 
     // 2 of 2
-    set_event(error::success);
+    set_event(system::error::success);
     return false;
 }
 

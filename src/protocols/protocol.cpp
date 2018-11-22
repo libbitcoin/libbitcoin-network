@@ -20,7 +20,7 @@
 
 #include <cstdint>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/p2p.hpp>
 
@@ -37,7 +37,7 @@ protocol::protocol(p2p& network, channel::ptr channel, const std::string& name)
 {
 }
 
-config::authority protocol::authority() const
+system::config::authority protocol::authority() const
 {
     return channel_->authority();
 }
@@ -52,12 +52,12 @@ uint64_t protocol::nonce() const
     return channel_->nonce();
 }
 
-version_const_ptr protocol::peer_version() const
+system::version_const_ptr protocol::peer_version() const
 {
     return channel_->peer_version();
 }
 
-void protocol::set_peer_version(version_const_ptr value)
+void protocol::set_peer_version(system::version_const_ptr value)
 {
     channel_->set_peer_version(value);
 }
@@ -72,19 +72,19 @@ void protocol::set_negotiated_version(uint32_t value)
     channel_->set_negotiated_version(value);
 }
 
-threadpool& protocol::pool()
+system::threadpool& protocol::pool()
 {
     return pool_;
 }
 
 // Stop the channel.
-void protocol::stop(const code& ec)
+void protocol::stop(const system::code& ec)
 {
     channel_->stop(ec);
 }
 
 // protected
-void protocol::handle_send(const code& , const std::string& )
+void protocol::handle_send(const system::code& , const std::string& )
 {
     // Send and receive failures are logged by the proxy.
     // This provides a convenient location for override if desired.

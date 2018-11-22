@@ -24,23 +24,25 @@
 #include <functional>
 #include <memory>
 #include <utility>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-using namespace bc::message;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 // Factory for deadline timer pointer construction.
-static deadline::ptr alarm(threadpool& pool, const asio::duration& duration)
+static system::deadline::ptr alarm(system::threadpool& pool,
+    const system::asio::duration& duration)
 {
-    return std::make_shared<deadline>(pool, pseudo_random::duration(duration));
+    return std::make_shared<system::deadline>(pool,
+        system::pseudo_random::duration(duration));
 }
 
-channel::channel(threadpool& pool, socket::ptr socket,
+channel::channel(system::threadpool& pool, system::socket::ptr socket,
     const settings& settings)
   : proxy(pool, socket, settings),
     notify_(false),
@@ -63,11 +65,11 @@ void channel::start(result_handler handler)
 }
 
 // Don't start the timers until the socket is enabled.
-void channel::do_start(const code& , result_handler handler)
+void channel::do_start(const system::code& , result_handler handler)
 {
     start_expiration();
     start_inactivity();
-    handler(error::success);
+    handler(system::error::success);
 }
 
 // Properties.
@@ -93,14 +95,14 @@ void channel::set_nonce(uint64_t value)
     nonce_.store(value);
 }
 
-version_const_ptr channel::peer_version() const
+system::version_const_ptr channel::peer_version() const
 {
     const auto version = peer_version_.load();
     BITCOIN_ASSERT_MSG(version, "Read peer version before set.");
     return version;
 }
 
-void channel::set_peer_version(version_const_ptr value)
+void channel::set_peer_version(system::version_const_ptr value)
 {
     peer_version_.store(value);
 }
@@ -120,10 +122,10 @@ void channel::signal_activity()
     start_inactivity();
 }
 
-bool channel::stopped(const code& ec) const
+bool channel::stopped(const system::code& ec) const
 {
-    return proxy::stopped() || ec == error::channel_stopped ||
-        ec == error::service_stopped;
+    return proxy::stopped() || ec == system::error::channel_stopped ||
+        ec == system::error::service_stopped;
 }
 
 // Timers (these are inherent races, requiring stranding by stop only).
@@ -139,7 +141,7 @@ void channel::start_expiration()
             shared_from_base<channel>(), _1));
 }
 
-void channel::handle_expiration(const code& ec)
+void channel::handle_expiration(const system::code& ec)
 {
     if (stopped(ec))
         return;
@@ -147,7 +149,7 @@ void channel::handle_expiration(const code& ec)
     LOG_DEBUG(LOG_NETWORK)
         << "Channel lifetime expired [" << authority() << "]";
 
-    stop(error::channel_timeout);
+    stop(system::error::channel_timeout);
 }
 
 void channel::start_inactivity()
@@ -160,7 +162,7 @@ void channel::start_inactivity()
             shared_from_base<channel>(), _1));
 }
 
-void channel::handle_inactivity(const code& ec)
+void channel::handle_inactivity(const system::code& ec)
 {
     if (stopped(ec))
         return;
@@ -168,7 +170,7 @@ void channel::handle_inactivity(const code& ec)
     LOG_DEBUG(LOG_NETWORK)
         << "Channel inactivity timeout [" << authority() << "]";
 
-    stop(error::channel_timeout);
+    stop(system::error::channel_timeout);
 }
 
 } // namespace network

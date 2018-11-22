@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/acceptor.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connector.hpp>
@@ -70,14 +70,14 @@ size_t session::connection_count() const
     return network_.connection_count();
 }
 
-code session::fetch_address(address& out_address) const
+system::code session::fetch_address(address& out_address) const
 {
     return network_.fetch_address(out_address);
 }
 
 bool session::blacklisted(const authority& authority) const
 {
-    const auto ip_compare = [&](const config::authority& blocked)
+    const auto ip_compare = [&](const system::config::authority& blocked)
     {
         return authority.ip() == blocked.ip();
     };
@@ -91,9 +91,9 @@ bool session::stopped() const
     return stopped_;
 }
 
-bool session::stopped(const code& ec) const
+bool session::stopped(const system::code& ec) const
 {
-    return stopped() || ec == error::service_stopped;
+    return stopped() || ec == system::error::service_stopped;
 }
 
 // Socket creators.
@@ -112,7 +112,7 @@ connector::ptr session::create_connector()
 // Pending connect.
 // ----------------------------------------------------------------------------
 
-code session::pend(connector::ptr connector)
+system::code session::pend(connector::ptr connector)
 {
     return network_.pend(connector);
 }
@@ -125,7 +125,7 @@ void session::unpend(connector::ptr connector)
 // Pending handshake.
 // ----------------------------------------------------------------------------
 
-code session::pend(channel::ptr channel)
+system::code session::pend(channel::ptr channel)
 {
     return network_.pend(channel);
 }
@@ -148,7 +148,7 @@ void session::start(result_handler handler)
 {
     if (!stopped())
     {
-        handler(error::operation_failed);
+        handler(system::error::operation_failed);
         return;
     }
 
@@ -156,10 +156,10 @@ void session::start(result_handler handler)
     subscribe_stop(BIND1(handle_stop, _1));
 
     // This is the end of the start sequence.
-    handler(error::success);
+    handler(system::error::success);
 }
 
-void session::handle_stop(const code&)
+void session::handle_stop(const system::code&)
 {
     // This signals the session to stop creating connections, but does not
     // close the session. Channels stop, resulting in session loss of scope.
@@ -183,8 +183,8 @@ void session::register_channel(channel::ptr channel,
 {
     if (stopped())
     {
-        handle_started(error::service_stopped);
-        handle_stopped(error::service_stopped);
+        handle_started(system::error::service_stopped);
+        handle_stopped(system::error::service_stopped);
         return;
     }
 
@@ -196,14 +196,14 @@ void session::start_channel(channel::ptr channel,
     result_handler handle_started)
 {
     channel->set_notify(notify_on_connect_);
-    channel->set_nonce(pseudo_random::next(1, max_uint64));
+    channel->set_nonce(system::pseudo_random::next(1, max_uint64));
 
     // The channel starts, invokes the handler, then starts the read cycle.
     channel->start(
         BIND3(handle_starting, _1, channel, handle_started));
 }
 
-void session::handle_starting(const code& ec, channel::ptr channel,
+void session::handle_starting(const system::code& ec, channel::ptr channel,
     result_handler handle_started)
 {
     if (ec)
@@ -224,13 +224,13 @@ void session::attach_handshake_protocols(channel::ptr channel,
 {
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= message::version::level::bip61)
+    if (channel->negotiated_version() >= system::message::version::level::bip61)
         attach<protocol_version_70002>(channel)->start(handle_started);
     else
         attach<protocol_version_31402>(channel)->start(handle_started);
 }
 
-void session::handle_handshake(const code& ec, channel::ptr channel,
+void session::handle_handshake(const system::code& ec, channel::ptr channel,
     result_handler handle_started)
 {
     if (ec)
@@ -253,7 +253,7 @@ void session::handshake_complete(channel::ptr channel,
     handle_started(network_.store(channel));
 }
 
-void session::handle_start(const code& ec, channel::ptr channel,
+void session::handle_start(const system::code& ec, channel::ptr channel,
     result_handler handle_started, result_handler handle_stopped)
 {
     // Must either stop or subscribe the channel for stop before returning.
@@ -274,11 +274,11 @@ void session::handle_start(const code& ec, channel::ptr channel,
     handle_started(ec);
 }
 
-void session::handle_remove(const code&, channel::ptr channel,
+void session::handle_remove(const system::code&, channel::ptr channel,
     result_handler handle_stopped)
 {
     network_.remove(channel);
-    handle_stopped(error::success);
+    handle_stopped(system::error::success);
 }
 
 } // namespace network

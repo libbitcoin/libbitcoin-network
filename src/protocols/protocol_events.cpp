@@ -20,7 +20,7 @@
 
 #include <functional>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
@@ -47,11 +47,11 @@ bool protocol_events::stopped() const
     return !handler_.load();
 }
 
-bool protocol_events::stopped(const code& ec) const
+bool protocol_events::stopped(const system::code& ec) const
 {
     // The service stop code may also make its way into protocol handlers.
-    return stopped() || ec == error::channel_stopped ||
-        ec == error::service_stopped;
+    return stopped() || ec == system::error::channel_stopped ||
+        ec == system::error::service_stopped;
 }
 
 // Start.
@@ -59,7 +59,7 @@ bool protocol_events::stopped(const code& ec) const
 
 void protocol_events::start()
 {
-    const auto nop = [](const code&){};
+    const auto nop = [](const system::code&){};
     start(nop);
 }
 
@@ -72,7 +72,7 @@ void protocol_events::start(event_handler handler)
 // Stop.
 // ----------------------------------------------------------------------------
 
-void protocol_events::handle_stopped(const code& ec)
+void protocol_events::handle_stopped(const system::code& ec)
 {
     if (!stopped(ec))
     {
@@ -82,13 +82,13 @@ void protocol_events::handle_stopped(const code& ec)
     }
 
     // Event handlers can depend on this code for channel stop.
-    set_event(error::channel_stopped);
+    set_event(system::error::channel_stopped);
 }
 
 // Set Event.
 // ----------------------------------------------------------------------------
 
-void protocol_events::set_event(const code& ec)
+void protocol_events::set_event(const system::code& ec)
 {
     // If already stopped.
     auto handler = handler_.load();

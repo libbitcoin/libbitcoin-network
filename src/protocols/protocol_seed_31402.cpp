@@ -19,7 +19,7 @@
 #include <bitcoin/network/protocols/protocol_seed_31402.hpp>
 
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
@@ -31,7 +31,7 @@ namespace network {
 #define NAME "seed"
 #define CLASS protocol_seed_31402
 
-using namespace bc::message;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 // Require three callbacks (or any error) before calling complete.
@@ -52,12 +52,12 @@ void protocol_seed_31402::start(event_handler handler)
 
     if (settings.host_pool_capacity == 0)
     {
-        complete(error::not_found);
+        complete(system::error::not_found);
         return;
     }
 
     const auto join_handler = synchronize(complete, 3, NAME,
-        synchronizer_terminate::on_error);
+        system::synchronizer_terminate::on_error);
 
     protocol_timer::start(settings.channel_germination(), join_handler);
 
@@ -73,7 +73,7 @@ void protocol_seed_31402::send_own_address(const settings& settings)
 {
     if (settings.self.port() == 0)
     {
-        set_event(error::success);
+        set_event(system::error::success);
         return;
     }
 
@@ -83,15 +83,15 @@ void protocol_seed_31402::send_own_address(const settings& settings)
     SEND1(self, handle_send_address, _1);
 }
 
-void protocol_seed_31402::handle_seeding_complete(const code& ec,
+void protocol_seed_31402::handle_seeding_complete(const system::code& ec,
     event_handler handler)
 {
     handler(ec);
     stop(ec);
 }
 
-bool protocol_seed_31402::handle_receive_address(const code& ec,
-    address_const_ptr message)
+bool protocol_seed_31402::handle_receive_address(const system::code& ec,
+    system::address_const_ptr message)
 {
     if (stopped(ec))
         return false;
@@ -105,16 +105,16 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
     return false;
 }
 
-void protocol_seed_31402::handle_send_address(const code& ec)
+void protocol_seed_31402::handle_send_address(const system::code& ec)
 {
     if (stopped(ec))
         return;
 
     // 1 of 3
-    set_event(error::success);
+    set_event(system::error::success);
 }
 
-void protocol_seed_31402::handle_send_get_address(const code& ec)
+void protocol_seed_31402::handle_send_get_address(const system::code& ec)
 {
     if (stopped(ec))
         return;
@@ -129,10 +129,10 @@ void protocol_seed_31402::handle_send_get_address(const code& ec)
     }
 
     // 2 of 3
-    set_event(error::success);
+    set_event(system::error::success);
 }
 
-void protocol_seed_31402::handle_store_addresses(const code& ec)
+void protocol_seed_31402::handle_store_addresses(const system::code& ec)
 {
     if (stopped(ec))
         return;
@@ -150,7 +150,7 @@ void protocol_seed_31402::handle_store_addresses(const code& ec)
         << "Stopping completed seed [" << authority() << "] ";
 
     // 3 of 3
-    set_event(error::channel_stopped);
+    set_event(system::error::channel_stopped);
 }
 
 } // namespace network

@@ -24,7 +24,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -37,28 +37,29 @@ namespace network {
 /// The file is a line-oriented set of config::authority serializations.
 /// Duplicate addresses and those with zero-valued ports are disacarded.
 class BCT_API hosts
-  : noncopyable
+  : system::noncopyable
 {
 public:
     typedef std::shared_ptr<hosts> ptr;
-    typedef message::network_address address;
-    typedef handle0 result_handler;
+    typedef system::message::network_address address;
+    typedef system::handle0 result_handler;
 
     /// Construct an instance.
     hosts(const settings& settings);
 
     /// Load hosts file if found.
-    virtual code start();
+    virtual system::code start();
 
     // Save hosts to file.
-    virtual code stop();
+    virtual system::code stop();
 
     virtual size_t count() const;
-    virtual code fetch(address& out) const;
-    virtual code fetch(address::list& out) const;
-    virtual code remove(const address& host);
-    virtual code store(const address& host);
-    virtual void store(const address::list& hosts, result_handler handler);
+    virtual system::code fetch(address& out) const;
+    virtual system::code fetch(address::list& out) const;
+    virtual system::code remove(const address& host);
+    virtual system::code store(const address& host);
+    virtual void store(const address::list& hosts,
+        result_handler handler);
 
 private:
     typedef boost::circular_buffer<address> list;
@@ -71,7 +72,7 @@ private:
     // These are protected by a mutex.
     list buffer_;
     std::atomic<bool> stopped_;
-    mutable upgrade_mutex mutex_;
+    mutable system::upgrade_mutex mutex_;
 
     // HACK: we use this because the buffer capacity cannot be set to zero.
     const bool disabled_;

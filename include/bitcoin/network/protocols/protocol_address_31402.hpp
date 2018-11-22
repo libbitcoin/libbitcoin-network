@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_31402_HPP
 
 #include <memory>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
@@ -53,16 +53,16 @@ public:
     virtual void start();
 
 protected:
-    virtual void handle_stop(const code& ec);
-    virtual void handle_store_addresses(const code& ec);
+    virtual void handle_stop(const system::code& ec);
+    virtual void handle_store_addresses(const system::code& ec);
 
-    virtual bool handle_receive_address(const code& ec,
-        address_const_ptr address);
-    virtual bool handle_receive_get_address(const code& ec,
-        get_address_const_ptr message);
+    virtual bool handle_receive_address(const system::code& ec,
+        system::address_const_ptr address);
+    virtual bool handle_receive_get_address(const system::code& ec,
+        system::get_address_const_ptr message);
 
     p2p& network_;
-    const message::address self_;
+    const system::message::address self_;
 };
 
 } // namespace network

@@ -22,7 +22,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -33,9 +33,9 @@ namespace network {
 
 using namespace std::placeholders;
 
-static const auto reuse_address = asio::acceptor::reuse_address(true);
+static const auto reuse_address = system::asio::acceptor::reuse_address(true);
 
-acceptor::acceptor(threadpool& pool, const settings& settings)
+acceptor::acceptor(system::threadpool& pool, const settings& settings)
   : stopped_(true),
     pool_(pool),
     settings_(settings),
@@ -50,7 +50,7 @@ acceptor::~acceptor()
     BITCOIN_ASSERT_MSG(stopped(), "The acceptor was not stopped.");
 }
 
-void acceptor::stop(const code&)
+void acceptor::stop(const system::code&)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -81,7 +81,7 @@ bool acceptor::stopped() const
 }
 
 // This is hardwired to listen on IPv6.
-code acceptor::listen(uint16_t port)
+system::code acceptor::listen(uint16_t port)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -91,11 +91,11 @@ code acceptor::listen(uint16_t port)
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
-        return error::operation_failed;
+        return system::error::operation_failed;
     }
 
-    boost_code error;
-    asio::endpoint endpoint(asio::tcp::v6(), port);
+    system::boost_code error;
+    system::asio::endpoint endpoint(system::asio::tcp::v6(), port);
 
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -108,14 +108,14 @@ code acceptor::listen(uint16_t port)
         acceptor_.bind(endpoint, error);
 
     if (!error)
-        acceptor_.listen(asio::max_connections, error);
+        acceptor_.listen(system::asio::max_connections, error);
 
     stopped_ = false;
 
     mutex_.unlock();
     ///////////////////////////////////////////////////////////////////////////
 
-    return error::boost_to_error_code(error);
+    return system::error::boost_to_error_code(error);
 }
 
 void acceptor::accept(accept_handler handler)
@@ -128,11 +128,11 @@ void acceptor::accept(accept_handler handler)
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
-        dispatch_.concurrent(handler, error::service_stopped, nullptr);
+        dispatch_.concurrent(handler, system::error::service_stopped, nullptr);
         return;
     }
 
-    const auto socket = std::make_shared<bc::socket>(pool_);
+    const auto socket = std::make_shared<system::socket>(pool_);
 
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -150,18 +150,18 @@ void acceptor::accept(accept_handler handler)
 }
 
 // private:
-void acceptor::handle_accept(const boost_code& ec, socket::ptr socket,
-    accept_handler handler)
+void acceptor::handle_accept(const system::boost_code& ec,
+    system::socket::ptr socket, accept_handler handler)
 {
     if (ec)
     {
-        handler(error::boost_to_error_code(ec), nullptr);
+        handler(system::error::boost_to_error_code(ec), nullptr);
         return;
     }
 
     // Ensure that channel is not passed as an r-value.
     const auto created = std::make_shared<channel>(pool_, socket, settings_);
-    handler(error::success, created);
+    handler(system::error::success, created);
 }
 
 } // namespace network

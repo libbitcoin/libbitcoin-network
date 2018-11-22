@@ -19,7 +19,7 @@
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
@@ -31,7 +31,7 @@ namespace network {
 #define NAME "ping"
 #define CLASS protocol_ping_31402
 
-using namespace bc::message;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 protocol_ping_31402::protocol_ping_31402(p2p& network, channel::ptr channel)
@@ -48,16 +48,16 @@ void protocol_ping_31402::start()
     SUBSCRIBE2(ping, handle_receive_ping, _1, _2);
 
     // Send initial ping message by simulating first heartbeat.
-    set_event(error::success);
+    set_event(system::error::success);
 }
 
 // This is fired by the callback (i.e. base timer and stop handler).
-void protocol_ping_31402::send_ping(const code& ec)
+void protocol_ping_31402::send_ping(const system::code& ec)
 {
     if (stopped(ec))
         return;
 
-    if (ec && ec != error::channel_timeout)
+    if (ec && ec != system::error::channel_timeout)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure in ping timer for [" << authority() << "] "
@@ -69,8 +69,8 @@ void protocol_ping_31402::send_ping(const code& ec)
     SEND2(ping{}, handle_send, _1, ping::command);
 }
 
-bool protocol_ping_31402::handle_receive_ping(const code& ec,
-    ping_const_ptr )
+bool protocol_ping_31402::handle_receive_ping(const system::code& ec,
+    system::ping_const_ptr )
 {
     if (stopped(ec))
         return false;

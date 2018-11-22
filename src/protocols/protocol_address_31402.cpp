@@ -19,7 +19,7 @@
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
@@ -32,10 +32,11 @@ namespace network {
 #define NAME "address"
 #define CLASS protocol_address_31402
 
-using namespace bc::message;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
-static message::address configured_self(const network::settings& settings)
+static system::message::address configured_self(
+    const network::settings& settings)
 {
     if (settings.self.port() == 0)
         return address{};
@@ -79,8 +80,8 @@ void protocol_address_31402::start()
 // Protocol.
 // ----------------------------------------------------------------------------
 
-bool protocol_address_31402::handle_receive_address(const code& ec,
-    address_const_ptr message)
+bool protocol_address_31402::handle_receive_address(const system::code& ec,
+    system::address_const_ptr message)
 {
     if (stopped(ec))
         return false;
@@ -96,13 +97,13 @@ bool protocol_address_31402::handle_receive_address(const code& ec,
     return true;
 }
 
-bool protocol_address_31402::handle_receive_get_address(const code& ec,
-    get_address_const_ptr )
+bool protocol_address_31402::handle_receive_get_address(const system::code& ec,
+    system::get_address_const_ptr )
 {
     if (stopped(ec))
         return false;
 
-    bc::message::network_address::list addresses;
+    bc::system::message::network_address::list addresses;
     network_.fetch_addresses(addresses);
 
     if (!addresses.empty())
@@ -119,7 +120,7 @@ bool protocol_address_31402::handle_receive_get_address(const code& ec,
     return false;
 }
 
-void protocol_address_31402::handle_store_addresses(const code& ec)
+void protocol_address_31402::handle_store_addresses(const system::code& ec)
 {
     if (stopped(ec))
         return;
@@ -133,7 +134,7 @@ void protocol_address_31402::handle_store_addresses(const code& ec)
     }
 }
 
-void protocol_address_31402::handle_stop(const code&)
+void protocol_address_31402::handle_stop(const system::code&)
 {
     // None of the other bc::network protocols log their stop.
     ////LOG_DEBUG(LOG_NETWORK)

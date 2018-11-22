@@ -21,7 +21,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
@@ -33,7 +33,7 @@ namespace network {
 #define NAME "reject"
 #define CLASS protocol_reject_70002
 
-using namespace bc::message;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 protocol_reject_70002::protocol_reject_70002(p2p& network,
@@ -57,8 +57,8 @@ void protocol_reject_70002::start()
 // ----------------------------------------------------------------------------
 
 // TODO: mitigate log fill DOS.
-bool protocol_reject_70002::handle_receive_reject(const code& ec,
-    reject_const_ptr reject)
+bool protocol_reject_70002::handle_receive_reject(const system::code& ec,
+    system::reject_const_ptr reject)
 {
     if (stopped(ec))
         return false;
@@ -68,7 +68,7 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
         LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving reject from [" << authority() << "] "
             << ec.message();
-        stop(error::channel_stopped);
+        stop(system::error::channel_stopped);
         return false;
     }
 
@@ -80,7 +80,7 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
 
     std::string hash;
     if (message == block::command || message == transaction::command)
-        hash = " [" + encode_hash(reject->data()) + "].";
+        hash = " [" + system::encode_hash(reject->data()) + "].";
 
     const auto code = reject->code();
     LOG_DEBUG(LOG_NETWORK)

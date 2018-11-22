@@ -24,7 +24,7 @@
 #include <functional>
 #include <memory>
 #include <utility>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/acceptor.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connector.hpp>
@@ -53,17 +53,17 @@ class p2p;
 
 /// Base class for maintaining the lifetime of a channel set, thread safe.
 class BCT_API session
-  : public enable_shared_from_base<session>, noncopyable
+  : public system::enable_shared_from_base<session>, system::noncopyable
 {
 public:
-    typedef config::authority authority;
-    typedef message::network_address address;
+    typedef system::config::authority authority;
+    typedef system::message::network_address address;
     typedef std::function<void(bool)> truth_handler;
     typedef std::function<void(size_t)> count_handler;
-    typedef std::function<void(const code&)> result_handler;
-    typedef std::function<void(const code&, channel::ptr)> channel_handler;
-    typedef std::function<void(const code&, acceptor::ptr)> accept_handler;
-    typedef std::function<void(const code&, const authority&)> host_handler;
+    typedef std::function<void(const system::code&)> result_handler;
+    typedef std::function<void(const system::code&, channel::ptr)> channel_handler;
+    typedef std::function<void(const system::code&, acceptor::ptr)> accept_handler;
+    typedef std::function<void(const system::code&, const authority&)> host_handler;
 
     /// Start the session, invokes handler once stop is registered.
     virtual void start(result_handler handler);
@@ -101,24 +101,25 @@ protected:
     /// Bind a concurrent delegate to a method in the derived class.
     template <class Session, typename Handler, typename... Args>
     auto concurrent_delegate(Handler&& handler, Args&&... args) ->
-        delegates::concurrent<decltype(BOUND_SESSION_TYPE(handler, args))> const
+        system::delegates::concurrent<decltype(BOUND_SESSION_TYPE(handler, args))> const
     {
         return dispatch_.concurrent_delegate(SESSION_ARGS(handler, args));
     }
 
     /// Invoke a method in the derived class after the specified delay.
-    inline void dispatch_delayed(const asio::duration& delay,
-        dispatcher::delay_handler handler) const
+    inline void dispatch_delayed(const system::asio::duration& delay,
+        system::dispatcher::delay_handler handler) const
     {
         dispatch_.delayed(delay, handler);
     }
 
     /// Delay timing for a tight failure loop, based on configured timeout.
-    inline asio::duration cycle_delay(const code& ec)
+    inline system::asio::duration cycle_delay(const system::code& ec)
     {
-        return (ec == error::channel_timeout || ec == error::service_stopped ||
-            ec == error::success) ? asio::seconds(0) :
-            settings_.connect_timeout();
+        return (ec == system::error::channel_timeout ||
+            ec == system::error::service_stopped ||
+            ec == system::error::success) ?
+                system::asio::seconds(0) : settings_.connect_timeout();
     }
 
     /// Properties.
@@ -126,10 +127,10 @@ protected:
 
     virtual size_t address_count() const;
     virtual size_t connection_count() const;
-    virtual code fetch_address(address& out_address) const;
+    virtual system::code fetch_address(address& out_address) const;
     virtual bool blacklisted(const authority& authority) const;
     virtual bool stopped() const;
-    virtual bool stopped(const code& ec) const;
+    virtual bool stopped(const system::code& ec) const;
 
     /// Socket creators.
     // ------------------------------------------------------------------------
@@ -141,7 +142,7 @@ protected:
     // ------------------------------------------------------------------------
 
     /// Store a pending connection reference.
-    virtual code pend(connector::ptr connector);
+    virtual system::code pend(connector::ptr connector);
 
     /// Free a pending connection reference.
     virtual void unpend(connector::ptr connector);
@@ -150,7 +151,7 @@ protected:
     // ------------------------------------------------------------------------
 
     /// Store a pending connection reference.
-    virtual code pend(channel::ptr channel);
+    virtual system::code pend(channel::ptr channel);
 
     /// Free a pending connection reference.
     virtual void unpend(channel::ptr channel);
@@ -179,27 +180,27 @@ protected:
 
     // TODO: create session_timer base class.
     // Initialization order places these after privates.
-    threadpool& pool_;
+    system::threadpool& pool_;
     const settings& settings_;
 
 private:
-    typedef bc::pending<connector> connectors;
+    typedef system::pending<connector> connectors;
 
-    void handle_stop(const code& ec);
-    void handle_starting(const code& ec, channel::ptr channel,
+    void handle_stop(const system::code& ec);
+    void handle_starting(const system::code& ec, channel::ptr channel,
         result_handler handle_started);
-    void handle_handshake(const code& ec, channel::ptr channel,
+    void handle_handshake(const system::code& ec, channel::ptr channel,
         result_handler handle_started);
-    void handle_start(const code& ec, channel::ptr channel,
+    void handle_start(const system::code& ec, channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
-    void handle_remove(const code& ec, channel::ptr channel,
+    void handle_remove(const system::code& ec, channel::ptr channel,
         result_handler handle_stopped);
 
     // These are thread safe.
     std::atomic<bool> stopped_;
     const bool notify_on_connect_;
     p2p& network_;
-    mutable dispatcher dispatch_;
+    mutable system::dispatcher dispatch_;
 };
 
 #undef SESSION_ARGS

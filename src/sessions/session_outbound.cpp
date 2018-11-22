@@ -20,7 +20,7 @@
 
 #include <cstddef>
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
@@ -51,7 +51,7 @@ void session_outbound::start(result_handler handler)
     {
         LOG_INFO(LOG_NETWORK)
             << "Not configured for generating outbound connections.";
-        handler(error::success);
+        handler(system::error::success);
         return;
     }
 
@@ -61,7 +61,8 @@ void session_outbound::start(result_handler handler)
     session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
-void session_outbound::handle_started(const code& ec, result_handler handler)
+void session_outbound::handle_started(const system::code& ec,
+    result_handler handler)
 {
     if (ec)
     {
@@ -70,16 +71,16 @@ void session_outbound::handle_started(const code& ec, result_handler handler)
     }
 
     for (size_t peer = 0; peer < settings_.outbound_connections; ++peer)
-        new_connection(error::success);
+        new_connection(system::error::success);
 
     // This is the end of the start sequence.
-    handler(error::success);
+    handler(system::error::success);
 }
 
 // Connnect cycle.
 // ----------------------------------------------------------------------------
 
-void session_outbound::new_connection(const code&)
+void session_outbound::new_connection(const system::code&)
 {
     if (stopped())
     {
@@ -91,7 +92,8 @@ void session_outbound::new_connection(const code&)
     session_batch::connect(BIND2(handle_connect, _1, _2));
 }
 
-void session_outbound::handle_connect(const code& ec, channel::ptr channel)
+void session_outbound::handle_connect(const system::code& ec,
+    channel::ptr channel)
 {
     if (ec)
     {
@@ -108,7 +110,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel)
         BIND2(handle_channel_stop, _1, channel));
 }
 
-void session_outbound::handle_channel_start(const code& ec,
+void session_outbound::handle_channel_start(const system::code& ec,
     channel::ptr channel)
 {
     // The start failure is also caught by handle_channel_stop.
@@ -131,12 +133,12 @@ void session_outbound::attach_protocols(channel::ptr channel)
 {
     const auto version = channel->negotiated_version();
 
-    if (version >= message::version::level::bip31)
+    if (version >= system::message::version::level::bip31)
         attach<protocol_ping_60001>(channel)->start();
     else
         attach<protocol_ping_31402>(channel)->start();
 
-    if (version >= message::version::level::bip61)
+    if (version >= system::message::version::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_address_31402>(channel)->start();
@@ -145,7 +147,7 @@ void session_outbound::attach_protocols(channel::ptr channel)
 void session_outbound::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {
-    using serve = message::version::service;
+    using serve = system::message::version::service;
     const auto relay = settings_.relay_transactions;
     const auto own_version = settings_.protocol_maximum;
     const auto own_services = settings_.services;
@@ -158,7 +160,7 @@ void session_outbound::attach_handshake_protocols(channel::ptr channel,
 
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= message::version::level::bip61)
+    if (channel->negotiated_version() >= system::message::version::level::bip61)
         attach<protocol_version_70002>(channel, own_version, own_services,
             invalid_services, minimum_version, minimum_services, relay)
             ->start(handle_started);
@@ -168,14 +170,14 @@ void session_outbound::attach_handshake_protocols(channel::ptr channel,
             ->start(handle_started);
 }
 
-void session_outbound::handle_channel_stop(const code& ec,
+void session_outbound::handle_channel_stop(const system::code& ec,
     channel::ptr channel)
 {
     LOG_DEBUG(LOG_NETWORK)
         << "Outbound channel stopped [" << channel->authority() << "] "
         << ec.message();
 
-    new_connection(error::success);
+    new_connection(system::error::success);
 }
 
 // Channel start sequence.
@@ -199,7 +201,7 @@ void session_outbound::start_channel(channel::ptr channel,
     session::start_channel(channel, unpend_handler);
 }
 
-void session_outbound::do_unpend(const code& ec, channel::ptr channel,
+void session_outbound::do_unpend(const system::code& ec, channel::ptr channel,
     result_handler handle_started)
 {
     unpend(channel);

@@ -21,7 +21,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
@@ -55,14 +55,15 @@ void session_seed::start(result_handler handler)
     {
         LOG_INFO(LOG_NETWORK)
             << "Not configured to populate an address pool.";
-        handler(error::success);
+        handler(system::error::success);
         return;
     }
 
     session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
-void session_seed::handle_started(const code& ec, result_handler handler)
+void session_seed::handle_started(const system::code& ec,
+    result_handler handler)
 {
     if (ec)
     {
@@ -77,7 +78,7 @@ void session_seed::handle_started(const code& ec, result_handler handler)
         LOG_DEBUG(LOG_NETWORK)
             << "Seeding is not required because there are "
             << start_size << " cached addresses.";
-        handler(error::success);
+        handler(system::error::success);
         return;
     }
 
@@ -85,7 +86,7 @@ void session_seed::handle_started(const code& ec, result_handler handler)
     {
         LOG_ERROR(LOG_NETWORK)
             << "Seeding is required but no seeds are configured.";
-        handler(error::operation_failed);
+        handler(system::error::operation_failed);
         return;
     }
 
@@ -100,14 +101,14 @@ void session_seed::attach_handshake_protocols(channel::ptr channel,
     // Don't use configured services or relay for seeding.
     const auto relay = false;
     const auto own_version = settings_.protocol_maximum;
-    const auto own_services = message::version::service::none;
+    const auto own_services = system::message::version::service::none;
     const auto invalid_services = settings_.invalid_services;
     const auto minimum_version = settings_.protocol_minimum;
-    const auto minimum_services = message::version::service::none;
+    const auto minimum_services = system::message::version::service::none;
 
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= message::version::level::bip61)
+    if (channel->negotiated_version() >= system::message::version::level::bip61)
         attach<protocol_version_70002>(channel, own_version, own_services,
             invalid_services, minimum_version, minimum_services, relay)
             ->start(handle_started);
@@ -125,21 +126,21 @@ void session_seed::start_seeding(size_t start_size, result_handler handler)
     const auto complete = BIND2(handle_complete, start_size, handler);
 
     const auto join_handler = synchronize(complete, settings_.seeds.size(),
-        NAME, synchronizer_terminate::on_count);
+        NAME, system::synchronizer_terminate::on_count);
 
     // We don't use parallel here because connect is itself asynchronous.
     for (const auto& seed: settings_.seeds)
         start_seed(seed, join_handler);
 }
 
-void session_seed::start_seed(const config::endpoint& seed,
+void session_seed::start_seed(const system::config::endpoint& seed,
     result_handler handler)
 {
     if (stopped())
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Suspended seed connection";
-        handler(error::channel_stopped);
+        handler(system::error::channel_stopped);
         return;
     }
 
@@ -154,8 +155,8 @@ void session_seed::start_seed(const config::endpoint& seed,
         BIND5(handle_connect, _1, _2, seed, connector, handler));
 }
 
-void session_seed::handle_connect(const code& ec, channel::ptr channel,
-    const config::endpoint& seed, connector::ptr connector,
+void session_seed::handle_connect(const system::code& ec, channel::ptr channel,
+    const system::config::endpoint& seed, connector::ptr connector,
     result_handler handler)
 {
     unpend(connector);
@@ -173,7 +174,7 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
         LOG_DEBUG(LOG_NETWORK)
             << "Seed [" << seed << "] on blacklisted address ["
             << channel->authority() << "]";
-        handler(error::address_blocked);
+        handler(system::error::address_blocked);
         return;
     }
 
@@ -185,8 +186,8 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
         BIND1(handle_channel_stop, _1));
 }
 
-void session_seed::handle_channel_start(const code& ec, channel::ptr channel,
-    result_handler handler)
+void session_seed::handle_channel_start(const system::code& ec,
+    channel::ptr channel, result_handler handler)
 {
     if (ec)
     {
@@ -202,18 +203,18 @@ void session_seed::attach_protocols(channel::ptr channel,
 {
     const auto version = channel->negotiated_version();
 
-    if (version >= message::version::level::bip31)
+    if (version >= system::message::version::level::bip31)
         attach<protocol_ping_60001>(channel)->start();
     else
         attach<protocol_ping_31402>(channel)->start();
 
-    if (version >= message::version::level::bip61)
+    if (version >= system::message::version::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_seed_31402>(channel)->start(handler);
 }
 
-void session_seed::handle_channel_stop(const code& ec)
+void session_seed::handle_channel_stop(const system::code& ec)
 {
     LOG_DEBUG(LOG_NETWORK)
         << "Seed channel stopped: " << ec.message();
@@ -224,10 +225,11 @@ void session_seed::handle_complete(size_t start_size, result_handler handler)
 {
     // We succeed only if there is a host count increase of at least 100.
     const auto increase = address_count() >=
-        ceiling_add(start_size, minimum_host_increase);
+        system::ceiling_add(start_size, minimum_host_increase);
 
     // This is the end of the seed sequence.
-    handler(increase ? error::success : error::peer_throttling);
+    handler(increase ?
+        system::error::success : system::error::peer_throttling);
 }
 
 } // namespace network
