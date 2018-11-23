@@ -24,6 +24,7 @@
 namespace libbitcoin {
 namespace network {
 
+using namespace bc::system;
 using namespace bc::system::asio;
 using namespace bc::system::message;
 
@@ -65,13 +66,13 @@ settings::settings()
 
 // Use push_back due to initializer_list bug:
 // stackoverflow.com/a/20168627/1172329
-settings::settings(system::config::settings context)
+settings::settings(config::settings context)
   : settings()
 {
     // Handle deviations from common defaults.
     switch (context)
     {
-        case system::config::settings::mainnet:
+        case config::settings::mainnet:
         {
             identifier = 3652501241;
             inbound_port = 8333;
@@ -83,7 +84,7 @@ settings::settings(system::config::settings context)
             break;
         }
 
-        case system::config::settings::testnet:
+        case config::settings::testnet:
         {
             identifier = 118034699;
             inbound_port = 18333;
@@ -95,7 +96,7 @@ settings::settings(system::config::settings context)
             break;
         }
 
-        case system::config::settings::regtest:
+        case config::settings::regtest:
         {
             identifier = 3669344250;
             inbound_port = 18444;
@@ -105,7 +106,7 @@ settings::settings(system::config::settings context)
         }
 
         default:
-        case system::config::settings::none:
+        case config::settings::none:
         {
         }
     }
@@ -113,7 +114,7 @@ settings::settings(system::config::settings context)
 
 size_t settings::minimum_connections() const
 {
-    return system::ceiling_add<size_t>(outbound_connections, peers.size());
+    return ceiling_add<size_t>(outbound_connections, peers.size());
 }
 
 duration settings::connect_timeout() const

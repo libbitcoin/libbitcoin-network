@@ -33,6 +33,7 @@ namespace network {
 
 #define CLASS protocol_ping_60001
 
+using namespace bc::system;
 using namespace bc::system::message;
 using namespace std::placeholders;
 
@@ -44,12 +45,12 @@ protocol_ping_60001::protocol_ping_60001(p2p& network, channel::ptr channel)
 }
 
 // This is fired by the callback (i.e. base timer and stop handler).
-void protocol_ping_60001::send_ping(const system::code& ec)
+void protocol_ping_60001::send_ping(const code& ec)
 {
     if (stopped(ec))
         return;
 
-    if (ec && ec != system::error::channel_timeout)
+    if (ec && ec != error::channel_timeout)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure in ping timer for [" << authority() << "] "
@@ -62,17 +63,17 @@ void protocol_ping_60001::send_ping(const system::code& ec)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Ping latency limit exceeded [" << authority() << "]";
-        stop(system::error::channel_timeout);
+        stop(error::channel_timeout);
         return;
     }
 
     pending_ = true;
-    const auto nonce = system::pseudo_random::next();
+    const auto nonce = pseudo_random::next();
     SUBSCRIBE3(pong, handle_receive_pong, _1, _2, nonce);
     SEND2(ping{ nonce }, handle_send_ping, _1, ping::command);
 }
 
-void protocol_ping_60001::handle_send_ping(const system::code& ec,
+void protocol_ping_60001::handle_send_ping(const code& ec,
     const std::string&)
 {
     if (stopped(ec))
@@ -88,8 +89,8 @@ void protocol_ping_60001::handle_send_ping(const system::code& ec,
     }
 }
 
-bool protocol_ping_60001::handle_receive_ping(const system::code& ec,
-    system::ping_const_ptr message)
+bool protocol_ping_60001::handle_receive_ping(const code& ec,
+    ping_const_ptr message)
 {
     if (stopped(ec))
         return false;
@@ -107,8 +108,8 @@ bool protocol_ping_60001::handle_receive_ping(const system::code& ec,
     return true;
 }
 
-bool protocol_ping_60001::handle_receive_pong(const system::code& ec,
-    system::pong_const_ptr message, uint64_t nonce)
+bool protocol_ping_60001::handle_receive_pong(const code& ec,
+    pong_const_ptr message, uint64_t nonce)
 {
     if (stopped(ec))
         return false;
@@ -128,7 +129,7 @@ bool protocol_ping_60001::handle_receive_pong(const system::code& ec,
     {
         LOG_WARNING(LOG_NETWORK)
             << "Invalid pong nonce from [" << authority() << "]";
-        stop(system::error::bad_stream);
+        stop(error::bad_stream);
         return false;
     }
 

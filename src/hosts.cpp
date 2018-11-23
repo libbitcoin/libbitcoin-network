@@ -28,6 +28,7 @@
 namespace libbitcoin {
 namespace network {
 
+using namespace bc::system;
 using namespace bc::system::config;
 
 #define NAME "hosts"
@@ -57,60 +58,60 @@ size_t hosts::count() const
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::shared_lock lock(mutex_);
+    shared_lock lock(mutex_);
 
     return buffer_.size();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-system::code hosts::fetch(address& out) const
+code hosts::fetch(address& out) const
 {
     if (disabled_)
-        return system::error::not_found;
+        return error::not_found;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    system::shared_lock lock(mutex_);
+    shared_lock lock(mutex_);
 
     if (stopped_)
-        return system::error::service_stopped;
+        return error::service_stopped;
 
     if (buffer_.empty())
-        return system::error::not_found;
+        return error::not_found;
 
     // Randomly select an address from the buffer.
-    const auto random = system::pseudo_random::next(0, buffer_.size() - 1);
+    const auto random = pseudo_random::next(0, buffer_.size() - 1);
     const auto index = static_cast<size_t>(random);
     out = buffer_[index];
-    return system::error::success;
+    return error::success;
     ///////////////////////////////////////////////////////////////////////////
 }
 
-system::code hosts::fetch(address::list& out) const
+code hosts::fetch(address::list& out) const
 {
     if (disabled_)
-        return system::error::not_found;
+        return error::not_found;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
     {
-        system::shared_lock lock(mutex_);
+        shared_lock lock(mutex_);
 
         if (stopped_)
-            return system::error::service_stopped;
+            return error::service_stopped;
 
         if (buffer_.empty())
-            return system::error::not_found;
+            return error::not_found;
 
         const auto out_count = std::min(max_address,
             std::min(buffer_.size(), capacity_) / static_cast<size_t>(
-            system::pseudo_random::next(5, 10)));
+            pseudo_random::next(5, 10)));
 
         if (out_count == 0)
-            return system::error::success;
+            return error::success;
 
         const auto limit = buffer_.size() - 1;
-        auto index = static_cast<size_t>(system::pseudo_random::next(0, limit));
+        auto index = static_cast<size_t>(pseudo_random::next(0, limit));
 
         out.reserve(out_count);
         for (size_t count = 0; count < out_count; ++count)
@@ -118,15 +119,15 @@ system::code hosts::fetch(address::list& out) const
     }
     ///////////////////////////////////////////////////////////////////////////
 
-    system::pseudo_random::shuffle(out);
-    return system::error::success;
+    pseudo_random::shuffle(out);
+    return error::success;
 }
 
 // load
-system::code hosts::start()
+code hosts::start()
 {
     if (disabled_)
-        return system::error::success;
+        return error::success;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -136,13 +137,13 @@ system::code hosts::start()
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
-        return system::error::operation_failed;
+        return error::operation_failed;
     }
 
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     stopped_ = false;
-    system::ifstream file(file_path_.string());
+    ifstream file(file_path_.string());
     const auto file_error = file.bad();
 
     if (!file_error)
@@ -153,7 +154,7 @@ system::code hosts::start()
         {
             // TODO: create full space-delimited network_address serialization.
             // Use to/from string format as opposed to wire serialization.
-            system::config::authority host(line);
+            config::authority host(line);
 
             if (host.port() != 0)
                 buffer_.push_back(host.to_network_address());
@@ -167,17 +168,17 @@ system::code hosts::start()
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failed to save hosts file.";
-        return system::error::file_system;
+        return error::file_system;
     }
 
-    return system::error::success;
+    return error::success;
 }
 
 // load
-system::code hosts::stop()
+code hosts::stop()
 {
     if (disabled_)
-        return system::error::success;
+        return error::success;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -187,13 +188,13 @@ system::code hosts::stop()
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
-        return system::error::success;
+        return error::success;
     }
 
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     stopped_ = true;
-    system::ofstream file(file_path_.string());
+    ofstream file(file_path_.string());
     const auto file_error = file.bad();
 
     if (!file_error)
@@ -202,7 +203,7 @@ system::code hosts::stop()
         {
             // TODO: create full space-delimited network_address serialization.
             // Use to/from string format as opposed to wire serialization.
-            file << system::config::authority(entry) << std::endl;
+            file << config::authority(entry) << std::endl;
         }
 
         buffer_.clear();
@@ -215,16 +216,16 @@ system::code hosts::stop()
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failed to load hosts file.";
-        return system::error::file_system;
+        return error::file_system;
     }
 
-    return system::error::success;
+    return error::success;
 }
 
-system::code hosts::remove(const address& host)
+code hosts::remove(const address& host)
 {
     if (disabled_)
-        return system::error::not_found;
+        return error::not_found;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -234,7 +235,7 @@ system::code hosts::remove(const address& host)
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
-        return system::error::service_stopped;
+        return error::service_stopped;
     }
 
     auto it = find(host);
@@ -247,19 +248,19 @@ system::code hosts::remove(const address& host)
 
         mutex_.unlock();
         //---------------------------------------------------------------------
-        return system::error::success;
+        return error::success;
     }
 
     mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
 
-    return system::error::not_found;
+    return error::not_found;
 }
 
-system::code hosts::store(const address& host)
+code hosts::store(const address& host)
 {
     if (disabled_)
-        return system::error::success;
+        return error::success;
 
     if (!host.is_valid())
     {
@@ -267,7 +268,7 @@ system::code hosts::store(const address& host)
         LOG_DEBUG(LOG_NETWORK)
             << "Invalid host address from peer.";
 
-        return system::error::success;
+        return error::success;
     }
 
     // Critical Section
@@ -278,7 +279,7 @@ system::code hosts::store(const address& host)
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
-        return system::error::service_stopped;
+        return error::service_stopped;
     }
 
     if (find(host) == buffer_.end())
@@ -289,7 +290,7 @@ system::code hosts::store(const address& host)
 
         mutex_.unlock();
         //---------------------------------------------------------------------
-        return system::error::success;
+        return error::success;
     }
 
     mutex_.unlock_upgrade();
@@ -299,14 +300,14 @@ system::code hosts::store(const address& host)
     ////LOG_DEBUG(LOG_NETWORK)
     ////    << "Redundant host address [" << authority(host) << "] from peer.";
 
-    return system::error::success;
+    return error::success;
 }
 
 void hosts::store(const address::list& hosts, result_handler handler)
 {
     if (disabled_ || hosts.empty())
     {
-        handler(system::error::success);
+        handler(error::success);
         return;
     }
 
@@ -318,7 +319,7 @@ void hosts::store(const address::list& hosts, result_handler handler)
     {
         mutex_.unlock_upgrade();
         //---------------------------------------------------------------------
-        handler(system::error::service_stopped);
+        handler(error::service_stopped);
         return;
     }
 
@@ -326,7 +327,7 @@ void hosts::store(const address::list& hosts, result_handler handler)
     const auto capacity = buffer_.capacity();
     const auto usable = std::min(hosts.size(), capacity);
     const auto random = static_cast<size_t>(
-        system::pseudo_random::next(1, usable));
+        pseudo_random::next(1, usable));
 
     // But always accept at least the amount we are short if available.
     const auto gap = capacity - buffer_.size();
@@ -339,7 +340,7 @@ void hosts::store(const address::list& hosts, result_handler handler)
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    for (size_t index = 0; index < usable; index = system::ceiling_add(index, step))
+    for (size_t index = 0; index < usable; index = ceiling_add(index, step))
     {
         const auto& host = hosts[index];
 
@@ -366,7 +367,7 @@ void hosts::store(const address::list& hosts, result_handler handler)
         << "Accepted (" << accepted << " of " << hosts.size()
         << ") host addresses from peer.";
 
-    handler(system::error::success);
+    handler(error::success);
 }
 
 } // namespace network

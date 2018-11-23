@@ -32,6 +32,7 @@ namespace network {
 
 #define CLASS session_inbound
 
+using namespace bc::system;
 using namespace std::placeholders;
 
 session_inbound::session_inbound(p2p& network, bool notify_on_connect)
@@ -51,7 +52,7 @@ void session_inbound::start(result_handler handler)
     {
         LOG_INFO(LOG_NETWORK)
             << "Not configured for accepting incoming connections.";
-        handler(system::error::success);
+        handler(error::success);
         return;
     }
 
@@ -62,7 +63,7 @@ void session_inbound::start(result_handler handler)
     session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
-void session_inbound::handle_started(const system::code& ec,
+void session_inbound::handle_started(const code& ec,
     result_handler handler)
 {
     if (ec)
@@ -87,13 +88,13 @@ void session_inbound::handle_started(const system::code& ec,
         return;
     }
 
-    start_accept(system::error::success);
+    start_accept(error::success);
 
     // This is the end of the start sequence.
-    handler(system::error::success);
+    handler(error::success);
 }
 
-void session_inbound::handle_stop(const system::code& ec)
+void session_inbound::handle_stop(const code& ec)
 {
     // Signal the stop of listener/accept attempt.
     acceptor_->stop(ec);
@@ -102,7 +103,7 @@ void session_inbound::handle_stop(const system::code& ec)
 // Accept sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept(const system::code&)
+void session_inbound::start_accept(const code&)
 {
     if (stopped())
     {
@@ -115,7 +116,7 @@ void session_inbound::start_accept(const system::code&)
     acceptor_->accept(BIND2(handle_accept, _1, _2));
 }
 
-void session_inbound::handle_accept(const system::code& ec,
+void session_inbound::handle_accept(const code& ec,
     channel::ptr channel)
 {
     if (stopped(ec))
@@ -158,7 +159,7 @@ void session_inbound::handle_accept(const system::code& ec,
         BIND1(handle_channel_stop, _1));
 }
 
-void session_inbound::handle_channel_start(const system::code& ec,
+void session_inbound::handle_channel_start(const code& ec,
     channel::ptr channel)
 {
     if (ec)
@@ -180,18 +181,18 @@ void session_inbound::attach_protocols(channel::ptr channel)
 {
     const auto version = channel->negotiated_version();
 
-    if (version >= system::message::version::level::bip31)
+    if (version >= message::version::level::bip31)
         attach<protocol_ping_60001>(channel)->start();
     else
         attach<protocol_ping_31402>(channel)->start();
 
-    if (version >= system::message::version::level::bip61)
+    if (version >= message::version::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_address_31402>(channel)->start();
 }
 
-void session_inbound::handle_channel_stop(const system::code& ec)
+void session_inbound::handle_channel_stop(const code& ec)
 {
     LOG_DEBUG(LOG_NETWORK)
         << "Inbound channel stopped: " << ec.message();
@@ -209,7 +210,7 @@ void session_inbound::handshake_complete(channel::ptr channel,
         LOG_DEBUG(LOG_NETWORK)
             << "Rejected connection from [" << channel->authority()
             << "] as loopback.";
-        handle_started(system::error::accept_failed);
+        handle_started(error::accept_failed);
         return;
     }
 

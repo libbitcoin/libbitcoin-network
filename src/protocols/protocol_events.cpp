@@ -30,6 +30,7 @@ namespace network {
 
 #define CLASS protocol_events
 
+using namespace bc::system;
 using namespace std::placeholders;
 
 protocol_events::protocol_events(p2p& network, channel::ptr channel,
@@ -47,11 +48,11 @@ bool protocol_events::stopped() const
     return !handler_.load();
 }
 
-bool protocol_events::stopped(const system::code& ec) const
+bool protocol_events::stopped(const code& ec) const
 {
     // The service stop code may also make its way into protocol handlers.
-    return stopped() || ec == system::error::channel_stopped ||
-        ec == system::error::service_stopped;
+    return stopped() || ec == error::channel_stopped ||
+        ec == error::service_stopped;
 }
 
 // Start.
@@ -59,7 +60,7 @@ bool protocol_events::stopped(const system::code& ec) const
 
 void protocol_events::start()
 {
-    const auto nop = [](const system::code&){};
+    const auto nop = [](const code&){};
     start(nop);
 }
 
@@ -72,7 +73,7 @@ void protocol_events::start(event_handler handler)
 // Stop.
 // ----------------------------------------------------------------------------
 
-void protocol_events::handle_stopped(const system::code& ec)
+void protocol_events::handle_stopped(const code& ec)
 {
     if (!stopped(ec))
     {
@@ -82,13 +83,13 @@ void protocol_events::handle_stopped(const system::code& ec)
     }
 
     // Event handlers can depend on this code for channel stop.
-    set_event(system::error::channel_stopped);
+    set_event(error::channel_stopped);
 }
 
 // Set Event.
 // ----------------------------------------------------------------------------
 
-void protocol_events::set_event(const system::code& ec)
+void protocol_events::set_event(const code& ec)
 {
     // If already stopped.
     auto handler = handler_.load();

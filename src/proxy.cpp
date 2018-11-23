@@ -36,9 +36,10 @@ namespace network {
 
 #define NAME "proxy"
 
-using namespace std::placeholders;
-using namespace boost::asio;
+using namespace bc::system;
 using namespace bc::system::message;
+using namespace boost::asio;
+using namespace std::placeholders;
 
 // Dump up to 1k of payload as hex in order to diagnose failure.
 static const size_t invalid_payload_dump_size = 1024;
@@ -46,7 +47,7 @@ static const size_t invalid_payload_dump_size = 1024;
 // payload_buffer_ sizing assumes monotonically increasing size by version.
 // Initialize to pre-witness max payload and let grow to witness as required.
 // The socket owns the single thread on which this channel reads and writes.
-proxy::proxy(system::threadpool& pool, system::socket::ptr socket,
+proxy::proxy(threadpool& pool, socket::ptr socket,
     const settings& settings)
   : authority_(socket->authority()),
     heading_buffer_(heading::maximum_size()),
@@ -73,7 +74,7 @@ proxy::~proxy()
 // Properties.
 // ----------------------------------------------------------------------------
 
-const system::config::authority& proxy::authority() const
+const config::authority& proxy::authority() const
 {
     return authority_;
 }
@@ -95,7 +96,7 @@ void proxy::start(result_handler handler)
 {
     if (!stopped())
     {
-        handler(system::error::operation_failed);
+        handler(error::operation_failed);
         return;
     }
 
@@ -104,7 +105,7 @@ void proxy::start(result_handler handler)
     message_subscriber_.start();
 
     // Allow for subscription before first read, so no messages are missed.
-    handler(system::error::success);
+    handler(error::success);
 
     // Start the read cycle.
     read_heading();
@@ -115,7 +116,7 @@ void proxy::start(result_handler handler)
 
 void proxy::subscribe_stop(result_handler handler)
 {
-    stop_subscriber_->subscribe(handler, system::error::channel_stopped);
+    stop_subscriber_->subscribe(handler, error::channel_stopped);
 }
 
 // Read cycle (read continues until stop).
@@ -131,7 +132,7 @@ void proxy::read_heading()
             shared_from_this(), _1, _2));
 }
 
-void proxy::handle_read_heading(const system::boost_code& ec, size_t)
+void proxy::handle_read_heading(const boost_code& ec, size_t)
 {
     if (stopped())
         return;
@@ -140,7 +141,7 @@ void proxy::handle_read_heading(const system::boost_code& ec, size_t)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Heading read failure [" << authority() << "] "
-            << system::code(system::error::boost_to_error_code(ec)).message();
+            << code(error::boost_to_error_code(ec)).message();
         stop(ec);
         return;
     }
@@ -151,7 +152,7 @@ void proxy::handle_read_heading(const system::boost_code& ec, size_t)
     {
         LOG_WARNING(LOG_NETWORK)
             << "Invalid heading from [" << authority() << "]";
-        stop(system::error::bad_stream);
+        stop(error::bad_stream);
         return;
     }
 
@@ -161,7 +162,7 @@ void proxy::handle_read_heading(const system::boost_code& ec, size_t)
         LOG_DEBUG(LOG_NETWORK)
             << "Invalid heading magic (" << head.magic() << ") from ["
             << authority() << "]";
-        stop(system::error::bad_stream);
+        stop(error::bad_stream);
         return;
     }
 
@@ -171,7 +172,7 @@ void proxy::handle_read_heading(const system::boost_code& ec, size_t)
             << "Oversized payload indicated by " << head.command()
             << " heading from [" << authority() << "] ("
             << head.payload_size() << " bytes)";
-        stop(system::error::bad_stream);
+        stop(error::bad_stream);
         return;
     }
 
@@ -191,7 +192,7 @@ void proxy::read_payload(const heading& head)
             shared_from_this(), _1, _2, head));
 }
 
-void proxy::handle_read_payload(const system::boost_code& ec,
+void proxy::handle_read_payload(const boost_code& ec,
     size_t payload_size, const heading& head)
 {
     if (stopped())
@@ -201,19 +202,19 @@ void proxy::handle_read_payload(const system::boost_code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Payload read failure [" << authority() << "] "
-            << system::code(system::error::boost_to_error_code(ec)).message();
+            << code(error::boost_to_error_code(ec)).message();
         stop(ec);
         return;
     }
 
     // This is a pointless test but we allow it as an option for completeness.
     if (validate_checksum_ &&
-        head.checksum() != system::bitcoin_checksum(payload_buffer_))
+        head.checksum() != bitcoin_checksum(payload_buffer_))
     {
         LOG_WARNING(LOG_NETWORK)
             << "Invalid " << head.command() << " payload from [" << authority()
             << "] bad checksum.";
-        stop(system::error::bad_stream);
+        stop(error::bad_stream);
         return;
     }
 
@@ -232,7 +233,7 @@ void proxy::handle_read_payload(const system::boost_code& ec,
 
         LOG_VERBOSE(LOG_NETWORK)
             << "Invalid payload from [" << authority() << "] "
-            << system::encode_base16(system::data_chunk{ begin, begin + size });
+            << encode_base16(data_chunk{ begin, begin + size });
         stop(code);
         return;
     }
@@ -251,7 +252,7 @@ void proxy::handle_read_payload(const system::boost_code& ec,
         LOG_WARNING(LOG_NETWORK)
             << "Invalid " << head.command() << " payload from [" << authority()
             << "] trailing bytes.";
-        stop(system::error::bad_stream);
+        stop(error::bad_stream);
         return;
     }
 
@@ -274,12 +275,12 @@ void proxy::do_send(command_ptr command, payload_ptr payload,
             shared_from_this(), _1, _2, command, payload, handler));
 }
 
-void proxy::handle_send(const system::boost_code& ec, size_t,
+void proxy::handle_send(const boost_code& ec, size_t,
     command_ptr command, payload_ptr payload, result_handler handler)
 {
     dispatch_.unlock();
     const auto size = payload->size();
-    const auto error = system::code(system::error::boost_to_error_code(ec));
+    const auto error = code(error::boost_to_error_code(ec));
 
     if (stopped())
     {
@@ -311,7 +312,7 @@ void proxy::handle_send(const system::boost_code& ec, size_t,
 // completes at least once before invoking the handler. That would require a
 // lock be taken around the entire section, which poses a deadlock risk.
 // Instead this is thread safe and idempotent, allowing it to be unguarded.
-void proxy::stop(const system::code& ec)
+void proxy::stop(const code& ec)
 {
     BITCOIN_ASSERT_MSG(ec, "The stop code must be an error code.");
 
@@ -319,7 +320,7 @@ void proxy::stop(const system::code& ec)
 
     // Prevent subscription after stop.
     message_subscriber_.stop();
-    message_subscriber_.broadcast(system::error::channel_stopped);
+    message_subscriber_.broadcast(error::channel_stopped);
 
     // Prevent subscription after stop.
     stop_subscriber_->stop();
@@ -332,9 +333,9 @@ void proxy::stop(const system::code& ec)
     socket_->stop();
 }
 
-void proxy::stop(const system::boost_code& ec)
+void proxy::stop(const boost_code& ec)
 {
-    stop(system::error::boost_to_error_code(ec));
+    stop(error::boost_to_error_code(ec));
 }
 
 bool proxy::stopped() const

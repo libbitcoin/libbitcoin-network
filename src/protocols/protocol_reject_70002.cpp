@@ -33,6 +33,7 @@ namespace network {
 #define NAME "reject"
 #define CLASS protocol_reject_70002
 
+using namespace bc::system;
 using namespace bc::system::message;
 using namespace std::placeholders;
 
@@ -57,8 +58,8 @@ void protocol_reject_70002::start()
 // ----------------------------------------------------------------------------
 
 // TODO: mitigate log fill DOS.
-bool protocol_reject_70002::handle_receive_reject(const system::code& ec,
-    system::reject_const_ptr reject)
+bool protocol_reject_70002::handle_receive_reject(const code& ec,
+    reject_const_ptr reject)
 {
     if (stopped(ec))
         return false;
@@ -68,7 +69,7 @@ bool protocol_reject_70002::handle_receive_reject(const system::code& ec,
         LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving reject from [" << authority() << "] "
             << ec.message();
-        stop(system::error::channel_stopped);
+        stop(error::channel_stopped);
         return false;
     }
 
@@ -80,7 +81,7 @@ bool protocol_reject_70002::handle_receive_reject(const system::code& ec,
 
     std::string hash;
     if (message == block::command || message == transaction::command)
-        hash = " [" + system::encode_hash(reject->data()) + "].";
+        hash = " [" + encode_hash(reject->data()) + "].";
 
     const auto code = reject->code();
     LOG_DEBUG(LOG_NETWORK)

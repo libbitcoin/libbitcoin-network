@@ -30,6 +30,7 @@ namespace libbitcoin {
 namespace network {
 
 #define CLASS protocol_timer
+using namespace bc::system;
 using namespace std::placeholders;
 
 protocol_timer::protocol_timer(p2p& network, channel::ptr channel,
@@ -43,19 +44,19 @@ protocol_timer::protocol_timer(p2p& network, channel::ptr channel,
 // ----------------------------------------------------------------------------
 
 // protected:
-void protocol_timer::start(const system::asio::duration& timeout,
+void protocol_timer::start(const asio::duration& timeout,
     event_handler handle_event)
 {
     // The deadline timer is thread safe.
-    timer_ = std::make_shared<system::deadline>(pool(), timeout);
+    timer_ = std::make_shared<deadline>(pool(), timeout);
     protocol_events::start(BIND2(handle_notify, _1, handle_event));
     reset_timer();
 }
 
-void protocol_timer::handle_notify(const system::code& ec,
+void protocol_timer::handle_notify(const code& ec,
     event_handler handler)
 {
-    if (ec == system::error::channel_stopped)
+    if (ec == error::channel_stopped)
         timer_->stop();
 
     handler(ec);
@@ -73,7 +74,7 @@ void protocol_timer::reset_timer()
     timer_->start(BIND1(handle_timer, _1));
 }
 
-void protocol_timer::handle_timer(const system::code& ec)
+void protocol_timer::handle_timer(const code& ec)
 {
     if (stopped())
         return;
@@ -83,7 +84,7 @@ void protocol_timer::handle_timer(const system::code& ec)
         << ec.message();
 
     // The handler completes before the timer is reset.
-    set_event(system::error::channel_timeout);
+    set_event(error::channel_timeout);
 
     // A perpetual timer resets itself until the channel is stopped.
     if (perpetual_)
