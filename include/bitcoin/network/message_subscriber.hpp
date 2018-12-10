@@ -118,7 +118,6 @@ public:
         if (!message->from_data(version, stream))
             return error::bad_stream;
 
-        ////const auto const_ptr = std::const_pointer_cast<const Message>(message);
         subscriber->relay(error::success, message);
         return error::success;
     }
@@ -140,7 +139,6 @@ public:
         if (!message->from_data(version, stream))
             return error::bad_stream;
 
-        ////const auto const_ptr = std::const_pointer_cast<const Message>(message);
         subscriber->invoke(error::success, message);
         return error::success;
     }
