@@ -24,20 +24,23 @@
 #include <functional>
 #include <memory>
 #include <utility>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-using namespace bc::message;
+using namespace bc::system;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 // Factory for deadline timer pointer construction.
-static deadline::ptr alarm(threadpool& pool, const asio::duration& duration)
+static deadline::ptr alarm(threadpool& pool,
+    const asio::duration& duration)
 {
-    return std::make_shared<deadline>(pool, pseudo_random::duration(duration));
+    return std::make_shared<deadline>(pool,
+        pseudo_random::duration(duration));
 }
 
 channel::channel(threadpool& pool, socket::ptr socket,

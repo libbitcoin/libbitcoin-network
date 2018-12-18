@@ -20,7 +20,7 @@
 
 #include <cstdint>
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
@@ -33,7 +33,8 @@ namespace network {
 #define NAME "version"
 #define CLASS protocol_version_31402
 
-using namespace bc::message;
+using namespace bc::system;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 // TODO: set explicitly on inbound (none or new config) and self on outbound.
@@ -48,7 +49,7 @@ protocol_version_31402::protocol_version_31402(p2p& network,
         network.network_settings().services,
         network.network_settings().invalid_services,
         network.network_settings().protocol_minimum,
-        bc::message::version::service::none
+        message::version::service::none
         /*network.network_settings().services*/)
 {
 }

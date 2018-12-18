@@ -22,7 +22,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
@@ -34,6 +34,7 @@ namespace network {
 
 #define CLASS session_manual
 
+using namespace bc::system;
 using namespace std::placeholders;
 
 session_manual::session_manual(p2p& network, bool notify_on_connect)
@@ -55,7 +56,8 @@ void session_manual::start(result_handler handler)
     session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
-void session_manual::handle_started(const code& ec, result_handler handler)
+void session_manual::handle_started(const code& ec,
+    result_handler handler)
 {
     if (ec)
     {
@@ -84,8 +86,9 @@ void session_manual::connect(const std::string& hostname, uint16_t port,
 }
 
 // The first connect is a sequence, which then spawns a cycle.
-void session_manual::start_connect(const code&, const std::string& hostname,
-    uint16_t port, uint32_t attempts, channel_handler handler)
+void session_manual::start_connect(const code&,
+    const std::string& hostname, uint16_t port, uint32_t attempts,
+    channel_handler handler)
 {
     if (stopped())
     {
@@ -106,16 +109,17 @@ void session_manual::start_connect(const code&, const std::string& hostname,
             handler));
 }
 
-void session_manual::handle_connect(const code& ec, channel::ptr channel,
-    const std::string& hostname, uint16_t port, uint32_t remaining,
-    connector::ptr connector, channel_handler handler)
+void session_manual::handle_connect(const code& ec,
+    channel::ptr channel, const std::string& hostname, uint16_t port,
+    uint32_t remaining, connector::ptr connector, channel_handler handler)
 {
     unpend(connector);
 
     if (ec)
     {
         LOG_WARNING(LOG_NETWORK)
-            << "Failure connecting [" << config::endpoint(hostname, port)
+            << "Failure connecting ["
+            << config::endpoint(hostname, port)
             << "] manually: " << ec.message();
 
         // Retry forever if limit is zero.
@@ -159,7 +163,8 @@ void session_manual::handle_channel_start(const code& ec,
     }
 
     LOG_INFO(LOG_NETWORK)
-        << "Connected manual channel [" << config::endpoint(hostname, port)
+        << "Connected manual channel ["
+        << config::endpoint(hostname, port)
         << "] as [" << channel->authority() << "] ("
         << connection_count() << ")";
 

@@ -20,12 +20,14 @@
 
 #include <cstdint>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/p2p.hpp>
 
 namespace libbitcoin {
 namespace network {
+
+using namespace bc::system;
 
 #define NAME "protocol"
 

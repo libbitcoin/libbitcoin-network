@@ -23,7 +23,7 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -32,7 +32,8 @@ namespace network {
 
 #define NAME "connector"
 
-using namespace bc::config;
+using namespace bc::system;
+using namespace bc::system::config;
 using namespace std::placeholders;
 
 connector::connector(threadpool& pool, const settings& settings)
@@ -108,7 +109,8 @@ void connector::connect(const std::string& hostname, uint16_t port,
         return;
     }
 
-    query_ = std::make_shared<asio::query>(hostname, std::to_string(port));
+    query_ = std::make_shared<asio::query>(hostname,
+        std::to_string(port));
 
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -122,8 +124,8 @@ void connector::connect(const std::string& hostname, uint16_t port,
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
-    connect_handler handler)
+void connector::handle_resolve(const boost_code& ec,
+    asio::iterator iterator, connect_handler handler)
 {
     using namespace boost::asio;
 
@@ -147,8 +149,9 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
         return;
     }
 
-    const auto socket = std::make_shared<bc::socket>(pool_);
-    timer_ = std::make_shared<deadline>(pool_, settings_.connect_timeout());
+    const auto socket = std::make_shared<system::socket>(pool_);
+    timer_ = std::make_shared<deadline>(pool_,
+        settings_.connect_timeout());
 
     // Manage the timer-connect race, returning upon first completion.
     const auto join_handler = synchronize(handler, 1, NAME,
@@ -170,8 +173,9 @@ void connector::handle_resolve(const boost_code& ec, asio::iterator iterator,
 }
 
 // private:
-void connector::handle_connect(const boost_code& ec, asio::iterator,
-    socket::ptr socket, connect_handler handler)
+void connector::handle_connect(const boost_code& ec,
+    asio::iterator, socket::ptr socket,
+    connect_handler handler)
 {
     if (ec)
     {

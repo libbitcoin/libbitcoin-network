@@ -21,7 +21,7 @@
 #include <istream>
 #include <memory>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 
 #define INITIALIZE_SUBSCRIBER(pool, value) \
     value##_subscriber_(std::make_shared<value##_subscriber_type>( \
@@ -48,7 +48,8 @@
 namespace libbitcoin {
 namespace network {
 
-using namespace message;
+using namespace bc::system;
+using namespace bc::system::message;
 
 message_subscriber::message_subscriber(threadpool& pool)
   : INITIALIZE_SUBSCRIBER(pool, address),

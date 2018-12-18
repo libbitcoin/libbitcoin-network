@@ -22,13 +22,14 @@
 #include <cstddef>
 #include <string>
 #include <vector>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-using namespace bc::config;
+using namespace bc::system;
+using namespace bc::system::config;
 
 #define NAME "hosts"
 
@@ -102,8 +103,9 @@ code hosts::fetch(address::list& out) const
         if (buffer_.empty())
             return error::not_found;
 
-        const auto out_count = std::min(max_address, std::min(buffer_.size(),
-            capacity_) / static_cast<size_t>(pseudo_random::next(5, 10)));
+        const auto out_count = std::min(max_address,
+            std::min(buffer_.size(), capacity_) / static_cast<size_t>(
+            pseudo_random::next(5, 10)));
 
         if (out_count == 0)
             return error::success;
@@ -141,7 +143,7 @@ code hosts::start()
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     stopped_ = false;
-    bc::ifstream file(file_path_.string());
+    ifstream file(file_path_.string());
     const auto file_error = file.bad();
 
     if (!file_error)
@@ -192,7 +194,7 @@ code hosts::stop()
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     stopped_ = true;
-    bc::ofstream file(file_path_.string());
+    ofstream file(file_path_.string());
     const auto file_error = file.bad();
 
     if (!file_error)
@@ -324,7 +326,8 @@ void hosts::store(const address::list& hosts, result_handler handler)
     // Accept between 1 and all of this peer's addresses up to capacity.
     const auto capacity = buffer_.capacity();
     const auto usable = std::min(hosts.size(), capacity);
-    const auto random = static_cast<size_t>(pseudo_random::next(1, usable));
+    const auto random = static_cast<size_t>(
+        pseudo_random::next(1, usable));
 
     // But always accept at least the amount we are short if available.
     const auto gap = capacity - buffer_.size();

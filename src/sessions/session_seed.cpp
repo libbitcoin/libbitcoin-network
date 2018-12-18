@@ -21,7 +21,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
@@ -39,7 +39,9 @@ namespace network {
 /// If seeding occurs it must generate an increase of 100 hosts or will fail.
 static const size_t minimum_host_increase = 100;
 
+using namespace bc::system;
 using namespace std::placeholders;
+
 session_seed::session_seed(p2p& network)
   : session(network, false),
     CONSTRUCT_TRACK(session_seed)
@@ -62,7 +64,8 @@ void session_seed::start(result_handler handler)
     session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
-void session_seed::handle_started(const code& ec, result_handler handler)
+void session_seed::handle_started(const code& ec,
+    result_handler handler)
 {
     if (ec)
     {
@@ -185,8 +188,8 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
         BIND1(handle_channel_stop, _1));
 }
 
-void session_seed::handle_channel_start(const code& ec, channel::ptr channel,
-    result_handler handler)
+void session_seed::handle_channel_start(const code& ec,
+    channel::ptr channel, result_handler handler)
 {
     if (ec)
     {
@@ -227,7 +230,8 @@ void session_seed::handle_complete(size_t start_size, result_handler handler)
         ceiling_add(start_size, minimum_host_increase);
 
     // This is the end of the seed sequence.
-    handler(increase ? error::success : error::peer_throttling);
+    handler(increase ?
+        error::success : error::peer_throttling);
 }
 
 } // namespace network

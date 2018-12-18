@@ -14,7 +14,7 @@
  * Maintainers: Do not include this header internal to this library.
  */
 
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/acceptor.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connector.hpp>

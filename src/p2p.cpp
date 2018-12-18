@@ -26,7 +26,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/hosts.hpp>
@@ -47,7 +47,8 @@ namespace network {
 
 #define NAME "p2p"
 
-using namespace bc::config;
+using namespace bc::system;
+using namespace bc::system::config;
 using namespace std::placeholders;
 
 // This can be exceeded due to manual connection calls and race conditions.
@@ -201,7 +202,8 @@ void p2p::run(result_handler handler)
             this, _1, handler));
 }
 
-void p2p::handle_inbound_started(const code& ec, result_handler handler)
+void p2p::handle_inbound_started(const code& ec,
+    result_handler handler)
 {
     if (ec)
     {
@@ -369,7 +371,8 @@ void p2p::handle_send(const code& ec, channel::ptr channel,
 
 void p2p::subscribe_connection(connect_handler handler)
 {
-    channel_subscriber_->subscribe(handler, error::service_stopped, {});
+    channel_subscriber_->subscribe(handler, error::service_stopped,
+        {});
 }
 
 void p2p::subscribe_stop(result_handler handler)

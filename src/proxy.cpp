@@ -27,7 +27,7 @@
 #include <functional>
 #include <memory>
 #include <utility>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -36,9 +36,10 @@ namespace network {
 
 #define NAME "proxy"
 
-using namespace std::placeholders;
+using namespace bc::system;
+using namespace bc::system::message;
 using namespace boost::asio;
-using namespace bc::message;
+using namespace std::placeholders;
 
 // Dump up to 1k of payload as hex in order to diagnose failure.
 static const size_t invalid_payload_dump_size = 1024;
@@ -46,7 +47,8 @@ static const size_t invalid_payload_dump_size = 1024;
 // payload_buffer_ sizing assumes monotonically increasing size by version.
 // Initialize to pre-witness max payload and let grow to witness as required.
 // The socket owns the single thread on which this channel reads and writes.
-proxy::proxy(threadpool& pool, socket::ptr socket, const settings& settings)
+proxy::proxy(threadpool& pool, socket::ptr socket,
+    const settings& settings)
   : authority_(socket->authority()),
     heading_buffer_(heading::maximum_size()),
     payload_buffer_(heading::maximum_payload_size(settings.protocol_maximum, false)),
@@ -190,8 +192,8 @@ void proxy::read_payload(const heading& head)
             shared_from_this(), _1, _2, head));
 }
 
-void proxy::handle_read_payload(const boost_code& ec, size_t payload_size,
-    const heading& head)
+void proxy::handle_read_payload(const boost_code& ec,
+    size_t payload_size, const heading& head)
 {
     if (stopped())
         return;
@@ -273,8 +275,8 @@ void proxy::do_send(command_ptr command, payload_ptr payload,
             shared_from_this(), _1, _2, command, payload, handler));
 }
 
-void proxy::handle_send(const boost_code& ec, size_t, command_ptr command,
-    payload_ptr payload, result_handler handler)
+void proxy::handle_send(const boost_code& ec, size_t,
+    command_ptr command, payload_ptr payload, result_handler handler)
 {
     dispatch_.unlock();
     const auto size = payload->size();

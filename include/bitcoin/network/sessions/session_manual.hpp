@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
@@ -41,7 +41,8 @@ class BCT_API session_manual
 {
 public:
     typedef std::shared_ptr<session_manual> ptr;
-    typedef std::function<void(const code&, channel::ptr)> channel_handler;
+    typedef std::function<void(const system::code&, channel::ptr)>
+        channel_handler;
 
     /// Construct an instance.
     session_manual(p2p& network, bool notify_on_connect);
@@ -61,18 +62,19 @@ protected:
     virtual void attach_protocols(channel::ptr channel);
 
 private:
-    void start_connect(const code& ec, const std::string& hostname,
+    void start_connect(const system::code& ec, const std::string& hostname,
         uint16_t port, uint32_t attempts, channel_handler handler);
 
-    void handle_started(const code& ec, result_handler handler);
-    void handle_connect(const code& ec, channel::ptr channel,
+    void handle_started(const system::code& ec, result_handler handler);
+    void handle_connect(const system::code& ec, channel::ptr channel,
         const std::string& hostname, uint16_t port, uint32_t remaining,
         connector::ptr connector, channel_handler handler);
 
-    void handle_channel_start(const code& ec, const std::string& hostname,
-        uint16_t port, channel::ptr channel, channel_handler handler);
-    void handle_channel_stop(const code& ec, const std::string& hostname,
-        uint16_t port);
+    void handle_channel_start(const system::code& ec,
+        const std::string& hostname, uint16_t port, channel::ptr channel,
+        channel_handler handler);
+    void handle_channel_stop(const system::code& ec,
+        const std::string& hostname, uint16_t port);
 };
 
 } // namespace network

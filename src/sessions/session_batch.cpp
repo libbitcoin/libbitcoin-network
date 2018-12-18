@@ -19,7 +19,7 @@
 #include <bitcoin/network/sessions/session_batch.hpp>
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/sessions/session.hpp>
@@ -30,8 +30,9 @@ namespace network {
 #define CLASS session_batch
 #define NAME "session_batch"
 
-using namespace bc::config;
-using namespace bc::message;
+using namespace bc::system;
+using namespace bc::system::config;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 session_batch::session_batch(p2p& network, bool notify_on_connect)
@@ -68,8 +69,8 @@ void session_batch::new_connect(channel_handler handler)
     start_connect(ec, address, handler);
 }
 
-void session_batch::start_connect(const code& ec, const authority& host,
-    channel_handler handler)
+void session_batch::start_connect(const code& ec,
+    const authority& host, channel_handler handler)
 {
     if (stopped(ec))
     {
@@ -108,8 +109,8 @@ void session_batch::start_connect(const code& ec, const authority& host,
         BIND4(handle_connect, _1, _2, connector, handler));
 }
 
-void session_batch::handle_connect(const code& ec, channel::ptr channel,
-    connector::ptr connector, channel_handler handler)
+void session_batch::handle_connect(const code& ec,
+    channel::ptr channel, connector::ptr connector, channel_handler handler)
 {
     unpend(connector);
 

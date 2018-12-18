@@ -21,7 +21,7 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
@@ -30,6 +30,7 @@ namespace libbitcoin {
 namespace network {
 
 #define CLASS protocol_timer
+using namespace bc::system;
 using namespace std::placeholders;
 
 protocol_timer::protocol_timer(p2p& network, channel::ptr channel,
@@ -52,7 +53,8 @@ void protocol_timer::start(const asio::duration& timeout,
     reset_timer();
 }
 
-void protocol_timer::handle_notify(const code& ec, event_handler handler)
+void protocol_timer::handle_notify(const code& ec,
+    event_handler handler)
 {
     if (ec == error::channel_stopped)
         timer_->stop();

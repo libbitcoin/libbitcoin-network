@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_REJECT_70002_HPP
 
 #include <memory>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
@@ -49,8 +49,8 @@ public:
     virtual void start();
 
 protected:
-    virtual bool handle_receive_reject(const code& ec,
-        reject_const_ptr reject);
+    virtual bool handle_receive_reject(const system::code& ec,
+        system::reject_const_ptr reject);
 };
 
 } // namespace network

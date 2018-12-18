@@ -19,7 +19,7 @@
 #include <bitcoin/network/protocols/protocol_seed_31402.hpp>
 
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
@@ -31,7 +31,8 @@ namespace network {
 #define NAME "seed"
 #define CLASS protocol_seed_31402
 
-using namespace bc::message;
+using namespace bc::system;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 // Require three callbacks (or any error) before calling complete.

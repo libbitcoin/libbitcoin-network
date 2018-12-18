@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_PING_31402_HPP
 
 #include <memory>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
@@ -57,9 +57,10 @@ protected:
     // Expose polymorphic start method from base.
     using protocol_timer::start;
 
-    virtual void send_ping(const code& ec);
+    virtual void send_ping(const system::code& ec);
 
-    virtual bool handle_receive_ping(const code& ec, ping_const_ptr message);
+    virtual bool handle_receive_ping(const system::code& ec,
+        system::ping_const_ptr message);
 
     const settings& settings_;
 };

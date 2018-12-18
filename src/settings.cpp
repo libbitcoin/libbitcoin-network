@@ -19,13 +19,14 @@
 #include <bitcoin/network/settings.hpp>
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-using namespace bc::asio;
-using namespace bc::message;
+using namespace bc::system;
+using namespace bc::system::asio;
+using namespace bc::system::message;
 
 // Common default values (no settings context).
 settings::settings()

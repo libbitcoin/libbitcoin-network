@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -35,42 +35,43 @@ namespace network {
 /// This class is thread safe against stop.
 /// This class is not safe for concurrent listening attempts.
 class BCT_API acceptor
-  : public enable_shared_from_base<acceptor>, noncopyable, track<acceptor>
+  : public system::enable_shared_from_base<acceptor>, system::noncopyable,
+    track<acceptor>
 {
 public:
     typedef std::shared_ptr<acceptor> ptr;
-    typedef std::function<void(const code&, channel::ptr)> accept_handler;
+    typedef std::function<void(const system::code&, channel::ptr)> accept_handler;
 
     /// Construct an instance.
-    acceptor(threadpool& pool, const settings& settings);
+    acceptor(system::threadpool& pool, const settings& settings);
 
     /// Validate acceptor stopped.
     ~acceptor();
 
     /// Start the listener on the specified port.
-    virtual code listen(uint16_t port);
+    virtual system::code listen(uint16_t port);
 
     /// Accept the next connection available, until canceled.
     virtual void accept(accept_handler handler);
 
     /// Cancel outstanding accept attempt.
-    virtual void stop(const code& ec);
+    virtual void stop(const system::code& ec);
 
 private:
     virtual bool stopped() const;
 
-    void handle_accept(const boost_code& ec, socket::ptr socket,
-        accept_handler handler);
+    void handle_accept(const system::boost_code& ec,
+        system::socket::ptr socket, accept_handler handler);
 
     // These are thread safe.
     std::atomic<bool> stopped_;
-    threadpool& pool_;
+    system::threadpool& pool_;
     const settings& settings_;
-    mutable dispatcher dispatch_;
+    mutable system::dispatcher dispatch_;
 
     // These are protected by mutex.
-    asio::acceptor acceptor_;
-    mutable shared_mutex mutex_;
+    system::asio::acceptor acceptor_;
+    mutable system::shared_mutex mutex_;
 };
 
 } // namespace network

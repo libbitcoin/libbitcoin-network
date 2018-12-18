@@ -19,7 +19,7 @@
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 
 #include <cstdint>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
@@ -31,7 +31,8 @@ namespace network {
 #define NAME "version"
 #define CLASS protocol_version_70002
 
-using namespace bc::message;
+using namespace bc::system;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 static const std::string insufficient_version = "insufficient-version";
@@ -47,7 +48,7 @@ protocol_version_70002::protocol_version_70002(p2p& network,
         network.network_settings().services,
         network.network_settings().invalid_services,
         network.network_settings().protocol_minimum,
-        bc::message::version::service::none,
+        version::service::none,
         /*network.network_settings().services,*/
         network.network_settings().relay_transactions)
 {
@@ -74,7 +75,7 @@ void protocol_version_70002::start(event_handler handler)
     SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
 }
 
-message::version protocol_version_70002::version_factory() const
+version protocol_version_70002::version_factory() const
 {
     auto version = protocol_version_31402::version_factory();
 

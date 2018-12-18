@@ -26,7 +26,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/hosts.hpp>
@@ -42,20 +42,23 @@ namespace network {
 
 /// Top level public networking interface, partly thread safe.
 class BCT_API p2p
-  : public enable_shared_from_base<p2p>, noncopyable
+  : public system::enable_shared_from_base<p2p>, system::noncopyable
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
-    typedef message::network_address address;
+    typedef system::message::network_address address;
     typedef std::function<void()> stop_handler;
     typedef std::function<void(bool)> truth_handler;
     typedef std::function<void(size_t)> count_handler;
-    typedef std::function<void(const code&)> result_handler;
-    typedef std::function<void(const code&, const address&)> address_handler;
-    typedef std::function<void(const code&, channel::ptr)> channel_handler;
-    typedef std::function<bool(const code&, channel::ptr)> connect_handler;
-    typedef subscriber<code> stop_subscriber;
-    typedef resubscriber<code, channel::ptr> channel_subscriber;
+    typedef std::function<void(const system::code&)> result_handler;
+    typedef std::function<void(const system::code&, const address&)>
+        address_handler;
+    typedef std::function<void(const system::code&, channel::ptr)>
+        channel_handler;
+    typedef std::function<bool(const system::code&, channel::ptr)>
+        connect_handler;
+    typedef system::subscriber<system::code> stop_subscriber;
+    typedef system::resubscriber<system::code, channel::ptr> channel_subscriber;
 
     // Templates (send/receive).
     // ------------------------------------------------------------------------
@@ -70,7 +73,7 @@ public:
 
         // Invoke the completion handler after send complete on all channels.
         const auto join_handler = synchronize(handle_complete, channels.size(),
-            "p2p_join", synchronizer_terminate::on_count);
+            "p2p_join", system::synchronizer_terminate::on_count);
 
         // No pre-serialize, channels may have different protocol versions.
         for (const auto channel: channels)
@@ -116,28 +119,28 @@ public:
     virtual const settings& network_settings() const;
 
     /// Return the current top block identity.
-    virtual config::checkpoint top_block() const;
+    virtual system::config::checkpoint top_block() const;
 
     /// Set the current top block identity.
-    virtual void set_top_block(config::checkpoint&& top);
+    virtual void set_top_block(system::config::checkpoint&& top);
 
     /// Set the current top block identity.
-    virtual void set_top_block(const config::checkpoint& top);
+    virtual void set_top_block(const system::config::checkpoint& top);
 
     /// Return the current top header identity.
-    virtual config::checkpoint top_header() const;
+    virtual system::config::checkpoint top_header() const;
 
     /// Set the current top header identity.
-    virtual void set_top_header(config::checkpoint&& top);
+    virtual void set_top_header(system::config::checkpoint&& top);
 
     /// Set the current top header identity.
-    virtual void set_top_header(const config::checkpoint& top);
+    virtual void set_top_header(const system::config::checkpoint& top);
 
     /// Determine if the network is stopped.
     virtual bool stopped() const;
 
     /// Return a reference to the network threadpool.
-    virtual threadpool& thread_pool();
+    virtual system::threadpool& thread_pool();
 
     // Subscriptions.
     // ------------------------------------------------------------------------
@@ -152,7 +155,7 @@ public:
     // ----------------------------------------------------------------------------
 
     /// Maintain a connection to hostname:port.
-    virtual void connect(const config::endpoint& peer);
+    virtual void connect(const system::config::endpoint& peer);
 
     /// Maintain a connection to hostname:port.
     virtual void connect(const std::string& hostname, uint16_t port);
@@ -169,25 +172,25 @@ public:
     virtual size_t address_count() const;
 
     /// Store an address.
-    virtual code store(const address& address);
+    virtual system::code store(const address& address);
 
     /// Store a collection of addresses (asynchronous).
     virtual void store(const address::list& addresses, result_handler handler);
 
     /// Get a randomly-selected address.
-    virtual code fetch_address(address& out_address) const;
+    virtual system::code fetch_address(address& out_address) const;
 
     /// Get a list of stored hosts
-    virtual code fetch_addresses(address::list& out_addresses) const;
+    virtual system::code fetch_addresses(address::list& out_addresses) const;
 
     /// Remove an address.
-    virtual code remove(const address& address);
+    virtual system::code remove(const address& address);
 
     // Pending connect collection.
     // ------------------------------------------------------------------------
 
     /// Store a pending connection reference.
-    virtual code pend(connector::ptr connector);
+    virtual system::code pend(connector::ptr connector);
 
     /// Free a pending connection reference.
     virtual void unpend(connector::ptr connector);
@@ -196,7 +199,7 @@ public:
     // ------------------------------------------------------------------------
 
     /// Store a pending connection reference.
-    virtual code pend(channel::ptr channel);
+    virtual system::code pend(channel::ptr channel);
 
     /// Test for a pending connection reference.
     virtual bool pending(uint64_t version_nonce) const;
@@ -211,7 +214,7 @@ public:
     virtual size_t connection_count() const;
 
     /// Store a connection.
-    virtual code store(channel::ptr channel);
+    virtual system::code store(channel::ptr channel);
 
     /// Determine if there exists a connection to the address.
     virtual bool connected(const address& address) const;
@@ -235,25 +238,25 @@ protected:
     virtual session_outbound::ptr attach_outbound_session();
 
 private:
-    typedef bc::pending<channel> pending_channels;
-    typedef bc::pending<connector> pending_connectors;
+    typedef system::pending<channel> pending_channels;
+    typedef system::pending<connector> pending_connectors;
 
-    void handle_manual_started(const code& ec, result_handler handler);
-    void handle_inbound_started(const code& ec, result_handler handler);
-    void handle_hosts_loaded(const code& ec, result_handler handler);
-    void handle_send(const code& ec, channel::ptr channel,
+    void handle_manual_started(const system::code& ec, result_handler handler);
+    void handle_inbound_started(const system::code& ec, result_handler handler);
+    void handle_hosts_loaded(const system::code& ec, result_handler handler);
+    void handle_send(const system::code& ec, channel::ptr channel,
         channel_handler handle_channel, result_handler handle_complete);
 
-    void handle_started(const code& ec, result_handler handler);
-    void handle_running(const code& ec, result_handler handler);
+    void handle_started(const system::code& ec, result_handler handler);
+    void handle_running(const system::code& ec, result_handler handler);
 
     // These are thread safe.
     const settings& settings_;
     std::atomic<bool> stopped_;
-    bc::atomic<config::checkpoint> top_block_;
-    bc::atomic<config::checkpoint> top_header_;
-    bc::atomic<session_manual::ptr> manual_;
-    threadpool threadpool_;
+    system::atomic<system::config::checkpoint> top_block_;
+    system::atomic<system::config::checkpoint> top_header_;
+    system::atomic<session_manual::ptr> manual_;
+    system::threadpool threadpool_;
     hosts hosts_;
     pending_connectors pending_connect_;
     pending_channels pending_handshake_;

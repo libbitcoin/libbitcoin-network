@@ -20,7 +20,7 @@
 
 #include <cstddef>
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
@@ -32,6 +32,7 @@ namespace network {
 
 #define CLASS session_inbound
 
+using namespace bc::system;
 using namespace std::placeholders;
 
 session_inbound::session_inbound(p2p& network, bool notify_on_connect)
@@ -62,7 +63,8 @@ void session_inbound::start(result_handler handler)
     session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
 }
 
-void session_inbound::handle_started(const code& ec, result_handler handler)
+void session_inbound::handle_started(const code& ec,
+    result_handler handler)
 {
     if (ec)
     {
@@ -114,7 +116,8 @@ void session_inbound::start_accept(const code&)
     acceptor_->accept(BIND2(handle_accept, _1, _2));
 }
 
-void session_inbound::handle_accept(const code& ec, channel::ptr channel)
+void session_inbound::handle_accept(const code& ec,
+    channel::ptr channel)
 {
     if (stopped(ec))
     {

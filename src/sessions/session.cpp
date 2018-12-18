@@ -23,7 +23,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/acceptor.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connector.hpp>
@@ -39,6 +39,7 @@ namespace network {
 #define CLASS session
 #define NAME "session"
 
+using namespace bc::system;
 using namespace std::placeholders;
 
 session::session(p2p& network, bool notify_on_connect)
@@ -159,7 +160,7 @@ void session::start(result_handler handler)
     handler(error::success);
 }
 
-void session::handle_stop(const code&)
+void session::handle_stop(const code& )
 {
     // This signals the session to stop creating connections, but does not
     // close the session. Channels stop, resulting in session loss of scope.
@@ -274,7 +275,7 @@ void session::handle_start(const code& ec, channel::ptr channel,
     handle_started(ec);
 }
 
-void session::handle_remove(const code&, channel::ptr channel,
+void session::handle_remove(const code& , channel::ptr channel,
     result_handler handle_stopped)
 {
     network_.remove(channel);

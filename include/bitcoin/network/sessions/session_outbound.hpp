@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <memory>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/sessions/session_batch.hpp>
@@ -58,16 +58,16 @@ protected:
     virtual void attach_protocols(channel::ptr channel);
 
 private:
-    void new_connection(const code&);
+    void new_connection(const system::code&);
 
-    void handle_started(const code& ec, result_handler handler);
-    void handle_connect(const code& ec, channel::ptr channel);
+    void handle_started(const system::code& ec, result_handler handler);
+    void handle_connect(const system::code& ec, channel::ptr channel);
 
-    void do_unpend(const code& ec, channel::ptr channel,
+    void do_unpend(const system::code& ec, channel::ptr channel,
         result_handler handle_started);
 
-    void handle_channel_stop(const code& ec, channel::ptr channel);
-    void handle_channel_start(const code& ec, channel::ptr channel);
+    void handle_channel_stop(const system::code& ec, channel::ptr channel);
+    void handle_channel_start(const system::code& ec, channel::ptr channel);
 };
 
 } // namespace network

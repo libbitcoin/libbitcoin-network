@@ -21,7 +21,7 @@
 #include <cstdint>
 #include <functional>
 #include <string>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/p2p.hpp>
@@ -33,7 +33,8 @@ namespace network {
 
 #define CLASS protocol_ping_60001
 
-using namespace bc::message;
+using namespace bc::system;
+using namespace bc::system::message;
 using namespace std::placeholders;
 
 protocol_ping_60001::protocol_ping_60001(p2p& network, channel::ptr channel)
@@ -72,7 +73,8 @@ void protocol_ping_60001::send_ping(const code& ec)
     SEND2(ping{ nonce }, handle_send_ping, _1, ping::command);
 }
 
-void protocol_ping_60001::handle_send_ping(const code& ec, const std::string&)
+void protocol_ping_60001::handle_send_ping(const code& ec,
+    const std::string&)
 {
     if (stopped(ec))
         return;

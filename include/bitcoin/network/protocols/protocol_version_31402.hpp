@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
@@ -70,12 +70,13 @@ protected:
     // Expose polymorphic start method from base.
     using protocol_timer::start;
 
-    virtual message::version version_factory() const;
-    virtual bool sufficient_peer(version_const_ptr message);
+    virtual system::message::version version_factory() const;
+    virtual bool sufficient_peer(system::version_const_ptr message);
 
-    virtual bool handle_receive_version(const code& ec,
-        version_const_ptr version);
-    virtual bool handle_receive_verack(const code& ec, verack_const_ptr);
+    virtual bool handle_receive_version(const system::code& ec,
+        system::version_const_ptr version);
+    virtual bool handle_receive_verack(const system::code& ec,
+        system::verack_const_ptr);
 
     p2p& network_;
     const uint32_t own_version_;
