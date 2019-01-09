@@ -87,7 +87,7 @@ bool protocol_address_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return false;
 
-    LOG_DEBUG(LOG_NETWORK)
+    LOG_VERBOSE(LOG_NETWORK)
         << "Storing addresses from [" << authority() << "] ("
         << message->addresses().size() << ")";
 
