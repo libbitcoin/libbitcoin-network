@@ -198,7 +198,6 @@ endif()
 #------------------------------------------------------------------------------
 if (with-tests)
     add_executable( libbitcoin-network-test
-        "../../test/.gitignore"
         "../../test/main.cpp"
         "../../test/p2p.cpp" )
 
