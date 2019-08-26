@@ -133,7 +133,7 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
         return false;
     }
 
-    return false;
+    return true;
 }
 
 } // namespace network
