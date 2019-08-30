@@ -35,7 +35,7 @@ namespace network {
 class p2p;
 
 /**
- * Ping-pong protocol.
+ * Ping-pong protocol implementing BIP31
  * Attach this to a channel immediately following handshake completion.
  */
 class BCT_API protocol_ping_60001
@@ -57,11 +57,13 @@ protected:
     void handle_send_ping(const system::code& ec, const std::string& command);
     bool handle_receive_ping(const system::code& ec,
         system::ping_const_ptr message) override;
-    virtual bool handle_receive_pong(const system::code& ec,
-        system::pong_const_ptr message, uint64_t nonce);
+    void handle_send_pong(const system::code& ec, const std::string&);
+    bool handle_receive_pong(const system::code& ec,
+        system::pong_const_ptr message, uint64_t nonce_in);
 
 private:
-    std::atomic<bool> pending_;
+    uint64_t nonce;
+    std::atomic<short int> pending_;
 };
 
 } // namespace network

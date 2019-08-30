@@ -61,12 +61,14 @@ void protocol_ping_31402::send_ping(const code& ec)
     if (ec && ec != error::channel_timeout)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Failure in ping timer for [" << authority() << "] "
+            << "Failure in protocol_ping_31402 timer for [" << authority() << "] "
             << ec.message();
         stop(ec);
         return;
     }
 
+    // prior to BIP31 there is no pong reply expected, so a local TCP/IP network error condition on the attempt to send indicates failure.
+    // (i.e. local network stack error is the only possible error condition, this ping only checks locally for an active TCP connection.)
     SEND2(ping{}, handle_send, _1, ping::command);
 }
 

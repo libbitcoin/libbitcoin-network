@@ -323,9 +323,15 @@ void hosts::store(const address::list& hosts, result_handler handler)
         return;
     }
 
+    mutex_.unlock_upgrade_and_lock();
+    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
     // Accept between 1 and all of this peer's addresses up to capacity.
     const auto capacity = buffer_.capacity();
     const auto usable = std::min(hosts.size(), capacity);
+    LOG_DEBUG(LOG_NETWORK)
+    << "hosts::store() storing up to " << usable << " host addresses from peer.";
+
     const auto random = static_cast<size_t>(
         pseudo_random::next(1, usable));
 
@@ -336,9 +342,6 @@ void hosts::store(const address::list& hosts, result_handler handler)
     // Convert minimum desired to step for iteration, no less than 1.
     const auto step = std::max(usable / accept, size_t(1));
     size_t accepted = 0;
-
-    mutex_.unlock_upgrade_and_lock();
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     for (size_t index = 0; index < usable; index = ceiling_add(index, step))
     {

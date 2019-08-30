@@ -122,11 +122,11 @@ protected:
 
 protected:
     void handle_send(const system::code& ec, const std::string& command);
+    channel::ptr channel_;
 
 private:
     system::threadpool& pool_;
     system::dispatcher dispatch_;
-    channel::ptr channel_;
     const std::string name_;
 };
 

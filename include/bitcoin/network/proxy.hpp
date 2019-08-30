@@ -93,6 +93,19 @@ public:
     /// Stop reading or sending messages on this socket.
     virtual void stop(const system::code& ec);
 
+    // if we have been pinged, don't send the peer long-running commands such as getdata
+    // until after we send our pong, or else the peer may disconnect due to ping timeout.
+    bool pinged();
+    void set_pinged(bool pinged);
+
+    // or if we sent a ping and peer has not yet replied with a pong, delay new commands.
+    bool ponged();
+    void set_ponged(bool ponged);
+
+    /// Get or set the channel state.
+    bool active() const;
+    void set_active(bool state);
+
 protected:
     virtual bool stopped() const;
     virtual void signal_activity() = 0;
@@ -120,6 +133,10 @@ private:
         command_ptr command, payload_ptr payload, result_handler handler);
 
     const system::config::authority authority_;
+
+    std::atomic<bool> pinged_;
+    std::atomic<bool> ponged_;
+    std::atomic<bool> active_;
 
     // These are protected by read header/payload ordering.
     system::data_chunk heading_buffer_;

@@ -30,6 +30,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/settings.hpp>
+#include <boost/stacktrace.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -56,6 +57,9 @@ proxy::proxy(threadpool& pool, socket::ptr socket,
         (settings.services & version::service::node_witness) != 0)),
     socket_(socket),
     stopped_(true),
+    active_(false),
+    pinged_(false),
+    ponged_(true),
     protocol_magic_(settings.identifier),
     validate_checksum_(settings.validate_checksum),
     verbose_(settings.verbose),
@@ -181,11 +185,24 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
 
 void proxy::read_payload(const heading& head)
 {
+    LOG_DEBUG(LOG_NETWORK)
+    << "read_payload() called";
+
     if (stopped())
         return;
 
     // This does not cause a reallocation.
     payload_buffer_.resize(head.payload_size());
+
+    boost::system::error_code ec;
+    
+    LOG_DEBUG(LOG_NETWORK)
+    << "calling async_read() for socket = " << socket_->get().available(ec);
+    
+    LOG_DEBUG(LOG_NETWORK)
+    << "available() ec = " << ec
+    << " boost_to_error_code() = " << error::boost_to_error_code(ec)
+    << " " << code(error::boost_to_error_code(ec)).message();
 
     async_read(socket_->get(), buffer(payload_buffer_),
         std::bind(&proxy::handle_read_payload,
@@ -195,6 +212,11 @@ void proxy::read_payload(const heading& head)
 void proxy::handle_read_payload(const boost_code& ec,
     size_t payload_size, const heading& head)
 {
+    const auto command = head.command();
+
+    LOG_DEBUG(LOG_NETWORK)
+    << "handle_read_payload() called with heading command = " << command;
+
     if (stopped())
         return;
 
@@ -202,7 +224,10 @@ void proxy::handle_read_payload(const boost_code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Payload read failure [" << authority() << "] "
-            << code(error::boost_to_error_code(ec)).message();
+            << "ec = " << ec
+            << " boost_to_error_code() = " << error::boost_to_error_code(ec)
+            << " " << code(error::boost_to_error_code(ec)).message();
+
         stop(ec);
         return;
     }
@@ -212,7 +237,7 @@ void proxy::handle_read_payload(const boost_code& ec,
         head.checksum() != bitcoin_checksum(payload_buffer_))
     {
         LOG_WARNING(LOG_NETWORK)
-            << "Invalid " << head.command() << " payload from [" << authority()
+            << "Invalid " << command << " payload from [" << authority()
             << "] bad checksum.";
         stop(error::bad_stream);
         return;
@@ -241,7 +266,7 @@ void proxy::handle_read_payload(const boost_code& ec,
     if (code)
     {
         LOG_WARNING(LOG_NETWORK)
-            << "Invalid " << head.command() << " payload from [" << authority()
+            << "Invalid " << command << " payload from [" << authority()
             << "] " << code.message();
         stop(code);
         return;
@@ -250,18 +275,60 @@ void proxy::handle_read_payload(const boost_code& ec,
     if (!consumed)
     {
         LOG_WARNING(LOG_NETWORK)
-            << "Invalid " << head.command() << " payload from [" << authority()
+            << "Invalid " << command << " payload from [" << authority()
             << "] trailing bytes.";
         stop(error::bad_stream);
         return;
     }
 
     LOG_VERBOSE(LOG_NETWORK)
-        << "Received " << head.command() << " from [" << authority()
+        << "Received " << command << " from [" << authority()
         << "] (" << payload_size << " bytes)";
+
+    if (command.compare(pong::command) != 0 && command.compare(version::command) != 0 && command.compare(verack::command) != 0 && command.compare(ping::command) != 0)
+    {
+        // active channels don't need to be pinged, nor disconnected due to ping timeout
+        set_active(true);
+    }
 
     signal_activity();
     read_heading();
+}
+
+bool proxy::ponged()
+{
+    return ponged_;
+}
+
+void proxy::set_ponged(bool ponged)
+{
+    LOG_DEBUG(LOG_NETWORK)
+        << "proxy::set_ponged = " << ponged;
+
+    ponged_ = ponged;
+}
+
+bool proxy::pinged()
+{
+    return pinged_;
+}
+    
+void proxy::set_pinged(bool pinged)
+{
+    LOG_DEBUG(LOG_NETWORK)
+    << "proxy::set_pinged = " << pinged;
+
+    pinged_ = pinged;
+}
+
+void proxy::set_active(bool state)
+{
+    active_ = state;
+}
+    
+bool proxy::active() const
+{
+    return active_;
 }
 
 // Message send sequence.
@@ -270,9 +337,32 @@ void proxy::handle_read_payload(const boost_code& ec,
 void proxy::do_send(command_ptr command, payload_ptr payload,
     result_handler handler)
 {
-    async_write(socket_->get(), buffer(*payload),
-        std::bind(&proxy::handle_send,
+    if (stopped())
+    {
+        return;
+    }
+
+    // if we have been pinged but have not yet replied with a pong, or if we sent a ping
+    // and peer has not yet replied with a pong, delay sending lengthy getdata commands
+    // but we always respond to inbound commands from the peer while waiting to pong.
+    if (command->compare(get_data::command) == 0 && (pinged() || !ponged()))
+    {
+        LOG_DEBUG(LOG_NETWORK)
+        << "proxy::do_send() delayed for command: " << command->c_str() << " waiting to send or receive a pong";
+
+        // queue for retry after our pong message has been sent to peer -- it would be better to chain the commands together, can we?
+        dispatch_.delayed(std::chrono::seconds(5),std::bind(&proxy::do_send, shared_from_this(), command, payload, handler));
+        dispatch_.unlock();
+    }
+    else
+    {
+        LOG_DEBUG(LOG_NETWORK)
+        << "proxy::do_send() calling async_write for command: " << command->c_str();
+
+        async_write(socket_->get(), buffer(*payload),
+            std::bind(&proxy::handle_send,
             shared_from_this(), _1, _2, command, payload, handler));
+    }
 }
 
 void proxy::handle_send(const boost_code& ec, size_t,
