@@ -60,6 +60,9 @@ public:
     DEFINE_SUBSCRIBER_TYPE(block);
     DEFINE_SUBSCRIBER_TYPE(block_transactions);
     DEFINE_SUBSCRIBER_TYPE(compact_block);
+    DEFINE_SUBSCRIBER_TYPE(compact_filter);
+    DEFINE_SUBSCRIBER_TYPE(compact_filter_checkpoint);
+    DEFINE_SUBSCRIBER_TYPE(compact_filter_headers);
     DEFINE_SUBSCRIBER_TYPE(fee_filter);
     DEFINE_SUBSCRIBER_TYPE(filter_add);
     DEFINE_SUBSCRIBER_TYPE(filter_clear);
@@ -67,6 +70,9 @@ public:
     DEFINE_SUBSCRIBER_TYPE(get_address);
     DEFINE_SUBSCRIBER_TYPE(get_blocks);
     DEFINE_SUBSCRIBER_TYPE(get_block_transactions);
+    DEFINE_SUBSCRIBER_TYPE(get_compact_filter_checkpoint);
+    DEFINE_SUBSCRIBER_TYPE(get_compact_filter_headers);
+    DEFINE_SUBSCRIBER_TYPE(get_compact_filters);
     DEFINE_SUBSCRIBER_TYPE(get_data);
     DEFINE_SUBSCRIBER_TYPE(get_headers);
     DEFINE_SUBSCRIBER_TYPE(headers);
@@ -177,6 +183,9 @@ private:
     DEFINE_SUBSCRIBER_OVERLOAD(block)
     DEFINE_SUBSCRIBER_OVERLOAD(block_transactions)
     DEFINE_SUBSCRIBER_OVERLOAD(compact_block)
+    DEFINE_SUBSCRIBER_OVERLOAD(compact_filter)
+    DEFINE_SUBSCRIBER_OVERLOAD(compact_filter_checkpoint)
+    DEFINE_SUBSCRIBER_OVERLOAD(compact_filter_headers)
     DEFINE_SUBSCRIBER_OVERLOAD(fee_filter)
     DEFINE_SUBSCRIBER_OVERLOAD(filter_add)
     DEFINE_SUBSCRIBER_OVERLOAD(filter_clear)
@@ -184,6 +193,9 @@ private:
     DEFINE_SUBSCRIBER_OVERLOAD(get_address)
     DEFINE_SUBSCRIBER_OVERLOAD(get_blocks)
     DEFINE_SUBSCRIBER_OVERLOAD(get_block_transactions)
+    DEFINE_SUBSCRIBER_OVERLOAD(get_compact_filter_checkpoint)
+    DEFINE_SUBSCRIBER_OVERLOAD(get_compact_filter_headers)
+    DEFINE_SUBSCRIBER_OVERLOAD(get_compact_filters)
     DEFINE_SUBSCRIBER_OVERLOAD(get_data)
     DEFINE_SUBSCRIBER_OVERLOAD(get_headers)
     DEFINE_SUBSCRIBER_OVERLOAD(headers)
@@ -205,6 +217,9 @@ private:
     DECLARE_SUBSCRIBER(block);
     DECLARE_SUBSCRIBER(block_transactions);
     DECLARE_SUBSCRIBER(compact_block);
+    DECLARE_SUBSCRIBER(compact_filter);
+    DECLARE_SUBSCRIBER(compact_filter_checkpoint);
+    DECLARE_SUBSCRIBER(compact_filter_headers);
     DECLARE_SUBSCRIBER(fee_filter);
     DECLARE_SUBSCRIBER(filter_add);
     DECLARE_SUBSCRIBER(filter_clear);
@@ -212,6 +227,9 @@ private:
     DECLARE_SUBSCRIBER(get_address);
     DECLARE_SUBSCRIBER(get_blocks);
     DECLARE_SUBSCRIBER(get_block_transactions);
+    DECLARE_SUBSCRIBER(get_compact_filter_checkpoint);
+    DECLARE_SUBSCRIBER(get_compact_filter_headers);
+    DECLARE_SUBSCRIBER(get_compact_filters);
     DECLARE_SUBSCRIBER(get_data);
     DECLARE_SUBSCRIBER(get_headers);
     DECLARE_SUBSCRIBER(headers);
