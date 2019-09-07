@@ -145,7 +145,7 @@ void session_manual::handle_connect(const code& ec,
 
     register_channel(channel,
         BIND5(handle_channel_start, _1, hostname, port, channel, handler),
-        BIND3(handle_channel_stop, _1, hostname, port));
+        BIND5(handle_channel_stop, _1, hostname, port, remaining, handler));
 }
 
 void session_manual::handle_channel_start(const code& ec,
@@ -189,7 +189,8 @@ void session_manual::attach_protocols(channel::ptr channel)
 }
 
 void session_manual::handle_channel_stop(const code& ec,
-    const std::string& hostname, uint16_t port)
+    const std::string& hostname, uint16_t port, uint32_t remaining,
+    channel_handler handler)
 {
     LOG_DEBUG(LOG_NETWORK)
         << "Manual channel stopped: " << ec.message();
@@ -197,7 +198,21 @@ void session_manual::handle_channel_stop(const code& ec,
     // Special case for already connected, do not keep trying.
     // After a stop we don't use the caller's start handler, but keep connecting.
     if (ec != error::address_in_use)
-        connect(hostname, port);
+    {
+        // Retry forever if limit is zero.
+        remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
+
+        if (remaining > 0)
+        {
+            start_connect(error::success, hostname, port, remaining, handler);
+            return;
+        }
+
+        LOG_WARNING(LOG_NETWORK)
+            << "Not restarting manual connection to ["
+            << config::endpoint(hostname, port) << "] after "
+            << settings_.manual_attempt_limit << " failed attempts.";
+    }
 }
 
 } // namespace network
