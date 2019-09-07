@@ -197,22 +197,24 @@ void session_manual::handle_channel_stop(const code& ec,
 
     // Special case for already connected, do not keep trying.
     // After a stop we don't use the caller's start handler, but keep connecting.
-    if (ec != error::address_in_use)
+    if (ec == error::address_in_use)
+        return;
+
+    // Retry forever if limit is zero.
+    remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
+
+    if (remaining > 0)
     {
-        // Retry forever if limit is zero.
-        remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
-
-        if (remaining > 0)
-        {
-            start_connect(error::success, hostname, port, remaining, handler);
-            return;
-        }
-
-        LOG_WARNING(LOG_NETWORK)
-            << "Not restarting manual connection to ["
-            << config::endpoint(hostname, port) << "] after "
-            << settings_.manual_attempt_limit << " failed attempts.";
+        start_connect(error::success, hostname, port, remaining, handler);
+        return;
     }
+
+    LOG_WARNING(LOG_NETWORK)
+        << "Not restarting manual connection to ["
+        << config::endpoint(hostname, port) << "] after "
+        << settings_.manual_attempt_limit << " failed attempts.";
+
+    handler(ec, nullptr);
 }
 
 } // namespace network
