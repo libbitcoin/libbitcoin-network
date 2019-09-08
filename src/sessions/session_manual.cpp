@@ -144,13 +144,13 @@ void session_manual::handle_connect(const code& ec,
     }
 
     register_channel(channel,
-        BIND5(handle_channel_start, _1, hostname, port, channel, handler),
+        BIND6(handle_channel_start, _1, hostname, port, remaining, channel, handler),
         BIND5(handle_channel_stop, _1, hostname, port, remaining, handler));
 }
 
 void session_manual::handle_channel_start(const code& ec,
-    const std::string& hostname, uint16_t port, channel::ptr channel,
-    channel_handler handler)
+    const std::string& hostname, uint16_t port, uint32_t remaining,
+    channel::ptr channel, channel_handler handler)
 {
     // The start failure is also caught by handle_channel_stop.
     // Treat a start failure like a stop, but preserve the start handler.
@@ -159,6 +159,14 @@ void session_manual::handle_channel_start(const code& ec,
         LOG_INFO(LOG_NETWORK)
             << "Manual channel failed to start [" << channel->authority()
             << "] " << ec.message();
+
+        // Retry forever if limit is zero.
+        remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
+
+        // if stop handler won't retry, invoke handler with error
+        if ((ec == error::address_in_use) || (remaining == 0))
+            handler(ec, channel);
+
         return;
     }
 
@@ -213,8 +221,6 @@ void session_manual::handle_channel_stop(const code& ec,
         << "Not restarting manual connection to ["
         << config::endpoint(hostname, port) << "] after "
         << settings_.manual_attempt_limit << " failed attempts.";
-
-    handler(ec, nullptr);
 }
 
 } // namespace network
