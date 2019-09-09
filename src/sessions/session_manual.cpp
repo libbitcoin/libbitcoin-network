@@ -138,7 +138,7 @@ void session_manual::handle_connect(const code& ec,
             << config::endpoint(hostname, port) << "] after "
             << settings_.manual_attempt_limit << " failed attempts.";
 
-        // This is the failure end of the connect sequence.
+        // This is a failure end of the connect sequence.
         handler(ec, nullptr);
         return;
     }
@@ -152,8 +152,6 @@ void session_manual::handle_channel_start(const code& ec,
     const std::string& hostname, uint16_t port, uint32_t remaining,
     channel::ptr channel, channel_handler handler)
 {
-    // The start failure is also caught by handle_channel_stop.
-    // Treat a start failure like a stop, but preserve the start handler.
     if (ec)
     {
         LOG_INFO(LOG_NETWORK)
@@ -163,7 +161,8 @@ void session_manual::handle_channel_start(const code& ec,
         // Retry forever if limit is zero.
         remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
 
-        // if stop handler won't retry, invoke handler with error
+        // This is a failure end of the connect sequence.
+        // If stop handler won't retry, invoke handler with error.
         if ((ec == error::address_in_use) || (remaining == 0))
             handler(ec, channel);
 
@@ -204,7 +203,6 @@ void session_manual::handle_channel_stop(const code& ec,
         << "Manual channel stopped: " << ec.message();
 
     // Special case for already connected, do not keep trying.
-    // After a stop we don't use the caller's start handler, but keep connecting.
     if (ec == error::address_in_use)
         return;
 
