@@ -71,10 +71,11 @@ private:
         connector::ptr connector, channel_handler handler);
 
     void handle_channel_start(const system::code& ec,
-        const std::string& hostname, uint16_t port, channel::ptr channel,
-        channel_handler handler);
+        const std::string& hostname, uint16_t port, uint32_t remaining,
+        channel::ptr channel, channel_handler handler);
     void handle_channel_stop(const system::code& ec,
-        const std::string& hostname, uint16_t port);
+        const std::string& hostname, uint16_t port, uint32_t remaining,
+        channel_handler handler);
 };
 
 } // namespace network
