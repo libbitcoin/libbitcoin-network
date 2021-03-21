@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_BATCH_HPP
 #define LIBBITCOIN_NETWORK_SESSION_BATCH_HPP
 
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>

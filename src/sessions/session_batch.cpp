@@ -19,7 +19,7 @@
 #include <bitcoin/network/sessions/session_batch.hpp>
 
 #include <cstddef>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/sessions/session.hpp>

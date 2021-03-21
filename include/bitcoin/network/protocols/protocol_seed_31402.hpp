@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_SEED_31402_HPP
 
 #include <memory>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
