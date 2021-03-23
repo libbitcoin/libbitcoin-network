@@ -73,7 +73,7 @@ public:
             "p2p_join", synchronizer_terminate::on_count);
 
         // No pre-serialize, channels may have different protocol versions.
-        for (const auto channel: channels)
+        for (const auto& channel: channels)
             channel->send(message, std::bind(&p2p::handle_send, this,
                 std::placeholders::_1, channel, handle_channel, join_handler));
     }
