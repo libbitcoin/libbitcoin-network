@@ -26,7 +26,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/hosts.hpp>

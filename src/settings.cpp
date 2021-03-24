@@ -18,7 +18,7 @@
  */
 #include <bitcoin/network/settings.hpp>
 
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {

@@ -27,7 +27,7 @@
 #include <functional>
 #include <memory>
 #include <utility>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/settings.hpp>
 

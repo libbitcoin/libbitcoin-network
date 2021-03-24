@@ -21,7 +21,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>

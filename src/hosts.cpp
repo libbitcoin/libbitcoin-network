@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <string>
 #include <vector>
-#include <bitcoin/bitcoin.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
