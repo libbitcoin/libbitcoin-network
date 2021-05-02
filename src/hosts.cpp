@@ -80,8 +80,7 @@ code hosts::fetch(address& out) const
         return error::not_found;
 
     // Randomly select an address from the buffer.
-    const auto random = pseudo_random::next(0, buffer_.size() - 1);
-    const auto index = static_cast<size_t>(random);
+    const auto index = pseudo_random::next<size_t>(0u, buffer_.size() - 1u);
     out = buffer_[index];
     return error::success;
     ///////////////////////////////////////////////////////////////////////////
@@ -104,14 +103,14 @@ code hosts::fetch(address::list& out) const
             return error::not_found;
 
         const auto out_count = std::min(max_address,
-            std::min(buffer_.size(), capacity_) / static_cast<size_t>(
-            pseudo_random::next(5, 10)));
+            std::min(buffer_.size(), capacity_) /
+                pseudo_random::next<size_t>(5u, 10u));
 
         if (out_count == 0)
             return error::success;
 
-        const auto limit = buffer_.size() - 1;
-        auto index = static_cast<size_t>(pseudo_random::next(0, limit));
+        const auto limit = buffer_.size() - 1u;
+        auto index = pseudo_random::next<size_t>(0, limit);
 
         out.reserve(out_count);
         for (size_t count = 0; count < out_count; ++count)
@@ -326,15 +325,14 @@ void hosts::store(const address::list& hosts, result_handler handler)
     // Accept between 1 and all of this peer's addresses up to capacity.
     const auto capacity = buffer_.capacity();
     const auto usable = std::min(hosts.size(), capacity);
-    const auto random = static_cast<size_t>(
-        pseudo_random::next(1, usable));
+    const auto random = pseudo_random::next<size_t>(1u, usable);
 
     // But always accept at least the amount we are short if available.
     const auto gap = capacity - buffer_.size();
     const auto accept = std::max(gap, random);
 
     // Convert minimum desired to step for iteration, no less than 1.
-    const auto step = std::max(usable / accept, size_t(1));
+    const auto step = std::max(usable / accept, size_t{ 1 });
     size_t accepted = 0;
 
     mutex_.unlock_upgrade_and_lock();
