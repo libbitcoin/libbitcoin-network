@@ -208,8 +208,7 @@ void proxy::handle_read_payload(const boost_code& ec,
     }
 
     // This is a pointless test but we allow it as an option for completeness.
-    if (validate_checksum_ &&
-        head.checksum() != bitcoin_checksum(payload_buffer_))
+    if (validate_checksum_ && !head.verify_checksum(payload_buffer_))
     {
         LOG_WARNING(LOG_NETWORK)
             << "Invalid " << head.command() << " payload from [" << authority()
