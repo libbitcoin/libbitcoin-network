@@ -120,4 +120,7 @@
       <Project>{564EB540-D6B6-425C-B8DB-B0BEE8970C18}</Project>
     </ProjectReference>
   </ItemGroup>
+    <ItemGroup>
+      <Natvis Include="..\..\debug.natvis" />
+    </ItemGroup>
 </Project>
