@@ -152,6 +152,27 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/p2p.cpp"
     "../../src/proxy.cpp"
     "../../src/settings.cpp"
+    "../../src/concurrent/conditional_lock.cpp"
+    "../../src/concurrent/deadline.cpp"
+    "../../src/concurrent/dispatcher.cpp"
+    "../../src/concurrent/file_lock.cpp"
+    "../../src/concurrent/flush_lock.cpp"
+    "../../src/concurrent/interprocess_lock.cpp"
+    "../../src/concurrent/monitor.cpp"
+    "../../src/concurrent/prioritized_mutex.cpp"
+    "../../src/concurrent/scope_lock.cpp"
+    "../../src/concurrent/sequencer.cpp"
+    "../../src/concurrent/sequential_lock.cpp"
+    "../../src/concurrent/socket.cpp"
+    "../../src/concurrent/thread.cpp"
+    "../../src/concurrent/threadpool.cpp"
+    "../../src/concurrent/work.cpp"
+    "../../src/log/file_collector.cpp"
+    "../../src/log/file_collector_repository.cpp"
+    "../../src/log/file_counter_formatter.cpp"
+    "../../src/log/sink.cpp"
+    "../../src/log/statsd_sink.cpp"
+    "../../src/log/udp_client_sink.cpp"
     "../../src/protocols/protocol.cpp"
     "../../src/protocols/protocol_address_31402.cpp"
     "../../src/protocols/protocol_events.cpp"
@@ -199,7 +220,13 @@ endif()
 if (with-tests)
     add_executable( libbitcoin-network-test
         "../../test/main.cpp"
-        "../../test/p2p.cpp" )
+        "../../test/p2p.cpp"
+        "../../test/test.cpp"
+        "../../test/test.hpp"
+        "../../test/concurrent/file_lock.cpp"
+        "../../test/concurrent/flush_lock.cpp"
+        "../../test/concurrent/interprocess_lock.cpp"
+        "../../test/concurrent/thread.cpp" )
 
     add_test( NAME libbitcoin-network-test COMMAND libbitcoin-network-test
             --run_test=empty_tests

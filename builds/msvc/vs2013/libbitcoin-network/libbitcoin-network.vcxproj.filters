@@ -8,31 +8,58 @@
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="include">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\protocols">
+    <Filter Include="include\bitcoin">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\sessions">
+    <Filter Include="include\bitcoin\network">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="resource">
+    <Filter Include="include\bitcoin\network\concurrent">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\impl">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\impl\concurrent">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\impl\log">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\impl\log\features">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\log">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\log\features">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\protocols">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\sessions">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resource">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000000}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\protocols">
+    <Filter Include="src\concurrent">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000001}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sessions">
+    <Filter Include="src\log">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\protocols">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sessions">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -42,11 +69,74 @@
     <ClCompile Include="..\..\..\..\src\channel.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\conditional_lock.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\deadline.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\dispatcher.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\file_lock.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\flush_lock.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\interprocess_lock.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\monitor.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\prioritized_mutex.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\scope_lock.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\sequencer.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\sequential_lock.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\socket.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\thread.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\threadpool.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\concurrent\work.cpp">
+      <Filter>src\concurrent</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\connector.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\hosts.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\log\file_collector.cpp">
+      <Filter>src\log</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\log\file_collector_repository.cpp">
+      <Filter>src\log</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\log\file_counter_formatter.cpp">
+      <Filter>src\log</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\log\sink.cpp">
+      <Filter>src\log</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\log\statsd_sink.cpp">
+      <Filter>src\log</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\log\udp_client_sink.cpp">
+      <Filter>src\log</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\message_subscriber.cpp">
       <Filter>src</Filter>
@@ -119,6 +209,90 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channel.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\asio.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\atomic.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\concurrent.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\conditional_lock.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\deadline.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\decorator.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\delegates.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\dispatcher.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\enable_shared_from_base.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\file_lock.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\flush_lock.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\handlers.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\interprocess_lock.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\monitor.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\pending.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\prioritized_mutex.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\resubscriber.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\scope_lock.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\sequencer.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\sequential_lock.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\socket.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\subscriber.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\synchronizer.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\thread.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\threadpool.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\timer.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\track.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\work.hpp">
+      <Filter>include\bitcoin\network\concurrent</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\connector.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
@@ -127,6 +301,60 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\hosts.hpp">
       <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\attributes.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\counter.hpp">
+      <Filter>include\bitcoin\network\log\features</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\gauge.hpp">
+      <Filter>include\bitcoin\network\log\features</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\metric.hpp">
+      <Filter>include\bitcoin\network\log\features</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\rate.hpp">
+      <Filter>include\bitcoin\network\log\features</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\timer.hpp">
+      <Filter>include\bitcoin\network\log\features</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\file_char_traits.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\file_collector.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\file_collector_repository.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\file_counter_formatter.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\log.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\rotable_file.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\severity.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\sink.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\source.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\statsd_sink.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\statsd_source.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\udp_client_sink.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\message_subscriber.hpp">
       <Filter>include\bitcoin\network</Filter>
@@ -193,6 +421,33 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\concurrent\pending.ipp">
+      <Filter>include\bitcoin\network\impl\concurrent</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\concurrent\resubscriber.ipp">
+      <Filter>include\bitcoin\network\impl\concurrent</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\concurrent\subscriber.ipp">
+      <Filter>include\bitcoin\network\impl\concurrent</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\concurrent\track.ipp">
+      <Filter>include\bitcoin\network\impl\concurrent</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\log\features\counter.ipp">
+      <Filter>include\bitcoin\network\impl\log\features</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\log\features\gauge.ipp">
+      <Filter>include\bitcoin\network\impl\log\features</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\log\features\metric.ipp">
+      <Filter>include\bitcoin\network\impl\log\features</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\log\features\rate.ipp">
+      <Filter>include\bitcoin\network\impl\log\features</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\log\features\timer.ipp">
+      <Filter>include\bitcoin\network\impl\log\features</Filter>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
