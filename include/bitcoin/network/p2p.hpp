@@ -28,6 +28,8 @@
 #include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
+#include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/hosts.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
@@ -42,11 +44,11 @@ namespace network {
 
 /// Top level public networking interface, partly thread safe.
 class BCT_API p2p
-  : public system::enable_shared_from_base<p2p>, system::noncopyable
+  : public enable_shared_from_base<p2p>, system::noncopyable
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
-    typedef system::message::network_address address;
+    typedef system::messages::network_address address;
     typedef std::function<void()> stop_handler;
     typedef std::function<void(bool)> truth_handler;
     typedef std::function<void(size_t)> count_handler;
@@ -57,8 +59,8 @@ public:
         channel_handler;
     typedef std::function<bool(const system::code&, channel::ptr)>
         connect_handler;
-    typedef system::subscriber<system::code> stop_subscriber;
-    typedef system::resubscriber<system::code, channel::ptr> channel_subscriber;
+    typedef subscriber<system::code> stop_subscriber;
+    typedef resubscriber<system::code, channel::ptr> channel_subscriber;
 
     // Templates (send/receive).
     // ------------------------------------------------------------------------
@@ -73,7 +75,7 @@ public:
 
         // Invoke the completion handler after send complete on all channels.
         const auto join_handler = synchronize(handle_complete, channels.size(),
-            "p2p_join", system::synchronizer_terminate::on_count);
+            "p2p_join", synchronizer_terminate::on_count);
 
         // No pre-serialize, channels may have different protocol versions.
         for (const auto& channel: channels)
@@ -119,28 +121,28 @@ public:
     virtual const settings& network_settings() const;
 
     /// Return the current top block identity.
-    virtual system::config::checkpoint top_block() const;
+    virtual system::chain::check_point top_block() const;
 
     /// Set the current top block identity.
-    virtual void set_top_block(system::config::checkpoint&& top);
+    virtual void set_top_block(system::chain::check_point&& top);
 
     /// Set the current top block identity.
-    virtual void set_top_block(const system::config::checkpoint& top);
+    virtual void set_top_block(const system::chain::check_point& top);
 
     /// Return the current top header identity.
-    virtual system::config::checkpoint top_header() const;
+    virtual system::chain::check_point top_header() const;
 
     /// Set the current top header identity.
-    virtual void set_top_header(system::config::checkpoint&& top);
+    virtual void set_top_header(system::chain::check_point&& top);
 
     /// Set the current top header identity.
-    virtual void set_top_header(const system::config::checkpoint& top);
+    virtual void set_top_header(const system::chain::check_point& top);
 
     /// Determine if the network is stopped.
     virtual bool stopped() const;
 
     /// Return a reference to the network threadpool.
-    virtual system::threadpool& thread_pool();
+    virtual threadpool& thread_pool();
 
     // Subscriptions.
     // ------------------------------------------------------------------------
@@ -238,8 +240,8 @@ protected:
     virtual session_outbound::ptr attach_outbound_session();
 
 private:
-    typedef system::pending<channel> pending_channels;
-    typedef system::pending<connector> pending_connectors;
+    typedef network::pending<channel> pending_channels;
+    typedef network::pending<connector> pending_connectors;
 
     void handle_manual_started(const system::code& ec, result_handler handler);
     void handle_inbound_started(const system::code& ec, result_handler handler);
@@ -253,10 +255,10 @@ private:
     // These are thread safe.
     const settings& settings_;
     std::atomic<bool> stopped_;
-    system::atomic<system::config::checkpoint> top_block_;
-    system::atomic<system::config::checkpoint> top_header_;
-    system::atomic<session_manual::ptr> manual_;
-    system::threadpool threadpool_;
+    atomic<system::chain::check_point> top_block_;
+    atomic<system::chain::check_point> top_header_;
+    atomic<session_manual::ptr> manual_;
+    threadpool threadpool_;
     hosts hosts_;
     pending_connectors pending_connect_;
     pending_channels pending_handshake_;

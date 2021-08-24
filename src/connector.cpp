@@ -25,6 +25,7 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -149,7 +150,7 @@ void connector::handle_resolve(const boost_code& ec,
         return;
     }
 
-    const auto socket = std::make_shared<system::socket>(pool_);
+    const auto socket = std::make_shared<network::socket>(pool_);
     timer_ = std::make_shared<deadline>(pool_,
         settings_.connect_timeout());
 

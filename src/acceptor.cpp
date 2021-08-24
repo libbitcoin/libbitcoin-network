@@ -24,6 +24,7 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -96,7 +97,7 @@ code acceptor::listen(uint16_t port)
     }
 
     boost_code error;
-    asio::endpoint endpoint(system::asio::tcp::v6(), port);
+    asio::endpoint endpoint(asio::tcp::v6(), port);
 
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -133,7 +134,7 @@ void acceptor::accept(accept_handler handler)
         return;
     }
 
-    const auto socket = std::make_shared<system::socket>(pool_);
+    const auto socket = std::make_shared<network::socket>(pool_);
 
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

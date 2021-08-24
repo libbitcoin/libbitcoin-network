@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/connector.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 
@@ -32,7 +33,7 @@ namespace network {
 
 using namespace bc::system;
 using namespace bc::system::config;
-using namespace bc::system::message;
+using namespace bc::system::messages;
 using namespace std::placeholders;
 
 session_batch::session_batch(p2p& network, bool notify_on_connect)

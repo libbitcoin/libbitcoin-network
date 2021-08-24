@@ -25,6 +25,7 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -35,7 +36,7 @@ namespace network {
 /// This class is thread safe against stop.
 /// This class is not safe for concurrent connection attempts.
 class BCT_API connector
-  : public system::enable_shared_from_base<connector>, system::noncopyable,
+  : public enable_shared_from_base<connector>, system::noncopyable,
     track<connector>
 {
 public:
@@ -44,7 +45,7 @@ public:
         connect_handler;
 
     /// Construct an instance.
-    connector(system::threadpool& pool, const settings& settings);
+    connector(threadpool& pool, const settings& settings);
 
     /// Validate connector stopped.
     ~connector();
@@ -65,28 +66,28 @@ public:
     void stop(const system::code& ec);
 
 private:
-    typedef std::shared_ptr<system::asio::query> query_ptr;
+    typedef std::shared_ptr<asio::query> query_ptr;
 
     bool stopped() const;
 
     void handle_resolve(const system::boost_code& ec,
-        system::asio::iterator iterator, connect_handler handler);
+        asio::iterator iterator, connect_handler handler);
     void handle_connect(const system::boost_code& ec,
-        system::asio::iterator iterator, system::socket::ptr socket,
+        asio::iterator iterator, socket::ptr socket,
         connect_handler handler);
-    void handle_timer(const system::code& ec, system::socket::ptr socket,
+    void handle_timer(const system::code& ec, socket::ptr socket,
         connect_handler handler);
 
     // These are thread safe
     std::atomic<bool> stopped_;
-    system::threadpool& pool_;
+    threadpool& pool_;
     const settings& settings_;
-    mutable system::dispatcher dispatch_;
+    mutable dispatcher dispatch_;
 
     // These are protected by mutex.
     query_ptr query_;
-    system::deadline::ptr timer_;
-    system::asio::resolver resolver_;
+    deadline::ptr timer_;
+    asio::resolver resolver_;
     mutable system::upgrade_mutex mutex_;
 };
 

@@ -25,6 +25,8 @@
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -32,7 +34,7 @@ namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
-using namespace bc::system::message;
+using namespace bc::system::messages;
 using namespace std::placeholders;
 
 // Factory for deadline timer pointer construction.
@@ -66,7 +68,7 @@ void channel::start(result_handler handler)
 }
 
 // Don't start the timers until the socket is enabled.
-void channel::do_start(const code& , result_handler handler)
+void channel::do_start(const code&, result_handler handler)
 {
     start_expiration();
     start_inactivity();

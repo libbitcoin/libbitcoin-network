@@ -23,6 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -34,7 +35,7 @@ namespace network {
 #define CLASS protocol_version_31402
 
 using namespace bc::system;
-using namespace bc::system::message;
+using namespace bc::system::messages;
 using namespace std::placeholders;
 
 // TODO: set explicitly on inbound (none or new config) and self on outbound.
@@ -49,7 +50,7 @@ protocol_version_31402::protocol_version_31402(p2p& network,
         network.network_settings().services,
         network.network_settings().invalid_services,
         network.network_settings().protocol_minimum,
-        message::version::service::none
+        messages::version::service::none
         /*network.network_settings().services*/)
 {
 }
@@ -87,13 +88,13 @@ void protocol_version_31402::start(event_handler handler)
     SEND2(version_factory(), handle_send, _1, version::command);
 }
 
-message::version protocol_version_31402::version_factory() const
+messages::version protocol_version_31402::version_factory() const
 {
     const auto& settings = network_.network_settings();
     const auto height = network_.top_block().height();
     BITCOIN_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
 
-    message::version version;
+    messages::version version;
     version.set_value(own_version_);
     version.set_services(own_services_);
     version.set_timestamp(static_cast<uint64_t>(zulu_time()));

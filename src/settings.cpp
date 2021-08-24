@@ -20,13 +20,13 @@
 
 #include <cstddef>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/concurrent/asio.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
-using namespace bc::system::asio;
-using namespace bc::system::message;
+using namespace bc::system::messages;
 
 // Common default values (no settings context).
 settings::settings()
@@ -66,13 +66,13 @@ settings::settings()
 
 // Use push_back due to initializer_list bug:
 // stackoverflow.com/a/20168627/1172329
-settings::settings(config::settings context)
+settings::settings(chain::selection context)
   : settings()
 {
     // Handle deviations from common defaults.
     switch (context)
     {
-        case config::settings::mainnet:
+        case chain::selection::mainnet:
         {
             identifier = 3652501241;
             inbound_port = 8333;
@@ -84,7 +84,7 @@ settings::settings(config::settings context)
             break;
         }
 
-        case config::settings::testnet:
+        case chain::selection::testnet:
         {
             identifier = 118034699;
             inbound_port = 18333;
@@ -96,7 +96,7 @@ settings::settings(config::settings context)
             break;
         }
 
-        case config::settings::regtest:
+        case chain::selection::regtest:
         {
             identifier = 3669344250;
             inbound_port = 18444;
@@ -106,7 +106,7 @@ settings::settings(config::settings context)
         }
 
         default:
-        case config::settings::none:
+        case chain::selection::none:
         {
         }
     }
@@ -114,37 +114,37 @@ settings::settings(config::settings context)
 
 size_t settings::minimum_connections() const
 {
-    return ceiling_add<size_t>(outbound_connections, peers.size());
+    return system::ceilinged_add<size_t>(outbound_connections, peers.size());
 }
 
-duration settings::connect_timeout() const
+asio::duration settings::connect_timeout() const
 {
-    return seconds(connect_timeout_seconds);
+    return asio::seconds(connect_timeout_seconds);
 }
 
-duration settings::channel_handshake() const
+asio::duration settings::channel_handshake() const
 {
-    return seconds(channel_handshake_seconds);
+    return asio::seconds(channel_handshake_seconds);
 }
 
-duration settings::channel_heartbeat() const
+asio::duration settings::channel_heartbeat() const
 {
-    return minutes(channel_heartbeat_minutes);
+    return asio::minutes(channel_heartbeat_minutes);
 }
 
-duration settings::channel_inactivity() const
+asio::duration settings::channel_inactivity() const
 {
-    return minutes(channel_inactivity_minutes);
+    return asio::minutes(channel_inactivity_minutes);
 }
 
-duration settings::channel_expiration() const
+asio::duration settings::channel_expiration() const
 {
-    return minutes(channel_expiration_minutes);
+    return asio::minutes(channel_expiration_minutes);
 }
 
-duration settings::channel_germination() const
+asio::duration settings::channel_germination() const
 {
-    return seconds(channel_germination_seconds);
+    return asio::seconds(channel_germination_seconds);
 }
 
 } // namespace network

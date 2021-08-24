@@ -25,6 +25,7 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -35,7 +36,7 @@ namespace network {
 /// This class is thread safe against stop.
 /// This class is not safe for concurrent listening attempts.
 class BCT_API acceptor
-  : public system::enable_shared_from_base<acceptor>, system::noncopyable,
+  : public enable_shared_from_base<acceptor>, system::noncopyable,
     track<acceptor>
 {
 public:
@@ -43,7 +44,7 @@ public:
     typedef std::function<void(const system::code&, channel::ptr)> accept_handler;
 
     /// Construct an instance.
-    acceptor(system::threadpool& pool, const settings& settings);
+    acceptor(threadpool& pool, const settings& settings);
 
     /// Validate acceptor stopped.
     ~acceptor();
@@ -61,16 +62,16 @@ private:
     virtual bool stopped() const;
 
     void handle_accept(const system::boost_code& ec,
-        system::socket::ptr socket, accept_handler handler);
+        socket::ptr socket, accept_handler handler);
 
     // These are thread safe.
     std::atomic<bool> stopped_;
-    system::threadpool& pool_;
+    threadpool& pool_;
     const settings& settings_;
-    mutable system::dispatcher dispatch_;
+    mutable dispatcher dispatch_;
 
     // These are protected by mutex.
-    system::asio::acceptor acceptor_;
+    asio::acceptor acceptor_;
     mutable system::shared_mutex mutex_;
 };
 

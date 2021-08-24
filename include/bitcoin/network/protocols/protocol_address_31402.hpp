@@ -62,7 +62,7 @@ protected:
         system::get_address_const_ptr message);
 
     p2p& network_;
-    const system::message::address self_;
+    const system::messages::address self_;
 };
 
 } // namespace network

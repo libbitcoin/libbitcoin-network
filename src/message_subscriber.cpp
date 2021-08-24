@@ -18,38 +18,37 @@
  */
 #include <bitcoin/network/message_subscriber.hpp>
 
-#include <istream>
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
 
-#define INITIALIZE_SUBSCRIBER(pool, value) \
-    value##_subscriber_(std::make_shared<value##_subscriber_type>( \
-        pool, #value "_sub"))
+#define INITIALIZE_SUBSCRIBER(pool, name) \
+    name##_subscriber_(std::make_shared<name##_subscriber_type>( \
+        pool, #name "_sub"))
 
-#define RELAY_CODE(code, value) \
-    value##_subscriber_->relay(code, {})
+#define RELAY_CODE(code, name) \
+    name##_subscriber_->relay(code, {})
 
 // This allows us to block the peer while handling the message.
-#define CASE_HANDLE_MESSAGE(stream, version, value) \
-    case message_type::value: \
-        return handle<message::value>(stream, version, value##_subscriber_)
+#define CASE_HANDLE_MESSAGE(reader, version, name) \
+    case message_type::name: \
+        return handle<messages::name>(reader, version, name##_subscriber_)
 
-#define CASE_RELAY_MESSAGE(stream, version, value) \
-    case message_type::value: \
-        return relay<message::value>(stream, version, value##_subscriber_)
+#define CASE_RELAY_MESSAGE(reader, version, name) \
+    case message_type::name: \
+        return relay<messages::name>(reader, version, name##_subscriber_)
 
-#define START_SUBSCRIBER(value) \
-    value##_subscriber_->start()
+#define START_SUBSCRIBER(name) \
+    name##_subscriber_->start()
 
-#define STOP_SUBSCRIBER(value) \
-    value##_subscriber_->stop()
+#define STOP_SUBSCRIBER(name) \
+    name##_subscriber_->stop()
 
 namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
-using namespace bc::system::message;
+using namespace bc::system::messages;
 
 message_subscriber::message_subscriber(threadpool& pool)
   : INITIALIZE_SUBSCRIBER(pool, address),
@@ -126,43 +125,43 @@ void message_subscriber::broadcast(const code& ec)
 }
 
 code message_subscriber::load(message_type type, uint32_t version,
-    std::istream& stream) const
+    system::reader& reader) const
 {
     switch (type)
     {
-        CASE_RELAY_MESSAGE(stream, version, address);
-        CASE_RELAY_MESSAGE(stream, version, alert);
-        CASE_HANDLE_MESSAGE(stream, version, block);
-        CASE_RELAY_MESSAGE(stream, version, block_transactions);
-        CASE_RELAY_MESSAGE(stream, version, compact_block);
-        CASE_RELAY_MESSAGE(stream, version, compact_filter);
-        CASE_RELAY_MESSAGE(stream, version, compact_filter_checkpoint);
-        CASE_RELAY_MESSAGE(stream, version, compact_filter_headers);
-        CASE_RELAY_MESSAGE(stream, version, fee_filter);
-        CASE_RELAY_MESSAGE(stream, version, filter_add);
-        CASE_RELAY_MESSAGE(stream, version, filter_clear);
-        CASE_RELAY_MESSAGE(stream, version, filter_load);
-        CASE_RELAY_MESSAGE(stream, version, get_address);
-        CASE_RELAY_MESSAGE(stream, version, get_blocks);
-        CASE_RELAY_MESSAGE(stream, version, get_block_transactions);
-        CASE_RELAY_MESSAGE(stream, version, get_compact_filter_checkpoint);
-        CASE_RELAY_MESSAGE(stream, version, get_compact_filter_headers);
-        CASE_RELAY_MESSAGE(stream, version, get_compact_filters);
-        CASE_RELAY_MESSAGE(stream, version, get_data);
-        CASE_RELAY_MESSAGE(stream, version, get_headers);
-        CASE_RELAY_MESSAGE(stream, version, headers);
-        CASE_RELAY_MESSAGE(stream, version, inventory);
-        CASE_RELAY_MESSAGE(stream, version, memory_pool);
-        CASE_RELAY_MESSAGE(stream, version, merkle_block);
-        CASE_RELAY_MESSAGE(stream, version, not_found);
-        CASE_HANDLE_MESSAGE(stream, version, ping);
-        CASE_HANDLE_MESSAGE(stream, version, pong);
-        CASE_RELAY_MESSAGE(stream, version, reject);
-        CASE_RELAY_MESSAGE(stream, version, send_compact);
-        CASE_RELAY_MESSAGE(stream, version, send_headers);
-        CASE_HANDLE_MESSAGE(stream, version, transaction);
-        CASE_HANDLE_MESSAGE(stream, version, verack);
-        CASE_HANDLE_MESSAGE(stream, version, version);
+        CASE_RELAY_MESSAGE(reader, version, address);
+        CASE_RELAY_MESSAGE(reader, version, alert);
+        CASE_HANDLE_MESSAGE(reader, version, block);
+        CASE_RELAY_MESSAGE(reader, version, block_transactions);
+        CASE_RELAY_MESSAGE(reader, version, compact_block);
+        CASE_RELAY_MESSAGE(reader, version, compact_filter);
+        CASE_RELAY_MESSAGE(reader, version, compact_filter_checkpoint);
+        CASE_RELAY_MESSAGE(reader, version, compact_filter_headers);
+        CASE_RELAY_MESSAGE(reader, version, fee_filter);
+        CASE_RELAY_MESSAGE(reader, version, filter_add);
+        CASE_RELAY_MESSAGE(reader, version, filter_clear);
+        CASE_RELAY_MESSAGE(reader, version, filter_load);
+        CASE_RELAY_MESSAGE(reader, version, get_address);
+        CASE_RELAY_MESSAGE(reader, version, get_blocks);
+        CASE_RELAY_MESSAGE(reader, version, get_block_transactions);
+        CASE_RELAY_MESSAGE(reader, version, get_compact_filter_checkpoint);
+        CASE_RELAY_MESSAGE(reader, version, get_compact_filter_headers);
+        CASE_RELAY_MESSAGE(reader, version, get_compact_filters);
+        CASE_RELAY_MESSAGE(reader, version, get_data);
+        CASE_RELAY_MESSAGE(reader, version, get_headers);
+        CASE_RELAY_MESSAGE(reader, version, headers);
+        CASE_RELAY_MESSAGE(reader, version, inventory);
+        CASE_RELAY_MESSAGE(reader, version, memory_pool);
+        CASE_RELAY_MESSAGE(reader, version, merkle_block);
+        CASE_RELAY_MESSAGE(reader, version, not_found);
+        CASE_HANDLE_MESSAGE(reader, version, ping);
+        CASE_HANDLE_MESSAGE(reader, version, pong);
+        CASE_RELAY_MESSAGE(reader, version, reject);
+        CASE_RELAY_MESSAGE(reader, version, send_compact);
+        CASE_RELAY_MESSAGE(reader, version, send_headers);
+        CASE_HANDLE_MESSAGE(reader, version, transaction);
+        CASE_HANDLE_MESSAGE(reader, version, verack);
+        CASE_HANDLE_MESSAGE(reader, version, version);
         case message_type::unknown:
         default:
             return error::not_found;

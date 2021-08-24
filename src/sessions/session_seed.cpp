@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <functional>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
@@ -103,14 +104,14 @@ void session_seed::attach_handshake_protocols(channel::ptr channel,
     // Don't use configured services or relay for seeding.
     const auto relay = false;
     const auto own_version = settings_.protocol_maximum;
-    const auto own_services = message::version::service::none;
+    const auto own_services = messages::version::service::none;
     const auto invalid_services = settings_.invalid_services;
     const auto minimum_version = settings_.protocol_minimum;
-    const auto minimum_services = message::version::service::none;
+    const auto minimum_services = messages::version::service::none;
 
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= message::version::level::bip61)
+    if (channel->negotiated_version() >= messages::version::level::bip61)
         attach<protocol_version_70002>(channel, own_version, own_services,
             invalid_services, minimum_version, minimum_services, relay)
             ->start(handle_started);
@@ -205,12 +206,12 @@ void session_seed::attach_protocols(channel::ptr channel,
 {
     const auto version = channel->negotiated_version();
 
-    if (version >= message::version::level::bip31)
+    if (version >= messages::version::level::bip31)
         attach<protocol_ping_60001>(channel)->start();
     else
         attach<protocol_ping_31402>(channel)->start();
 
-    if (version >= message::version::level::bip61)
+    if (version >= messages::version::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_seed_31402>(channel)->start(handler);
@@ -227,11 +228,10 @@ void session_seed::handle_complete(size_t start_size, result_handler handler)
 {
     // We succeed only if there is a host count increase of at least 100.
     const auto increase = address_count() >=
-        ceiling_add(start_size, minimum_host_increase);
+        ceilinged_add(start_size, minimum_host_increase);
 
     // This is the end of the seed sequence.
-    handler(increase ?
-        error::success : error::peer_throttling);
+    handler(increase ? error::success : error::peer_throttling);
 }
 
 } // namespace network

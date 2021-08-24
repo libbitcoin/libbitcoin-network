@@ -50,4 +50,12 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/thread.hpp>
 
+namespace libbitcoin {
+namespace network {
+
+using code = system::code;
+
+} // namespace network
+} // namespace libbitcoin
+
 #endif

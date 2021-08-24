@@ -27,6 +27,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/acceptor.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/proxy.hpp>
@@ -53,11 +54,11 @@ class p2p;
 
 /// Base class for maintaining the lifetime of a channel set, thread safe.
 class BCT_API session
-  : public system::enable_shared_from_base<session>, system::noncopyable
+  : public enable_shared_from_base<session>, system::noncopyable
 {
 public:
     typedef system::config::authority authority;
-    typedef system::message::network_address address;
+    typedef system::messages::network_address address;
     typedef std::function<void(bool)> truth_handler;
     typedef std::function<void(size_t)> count_handler;
     typedef std::function<void(const system::code&)> result_handler;
@@ -101,25 +102,25 @@ protected:
     /// Bind a concurrent delegate to a method in the derived class.
     template <class Session, typename Handler, typename... Args>
     auto concurrent_delegate(Handler&& handler, Args&&... args) ->
-        system::delegates::concurrent<decltype(BOUND_SESSION_TYPE(handler, args))> const
+        delegates::concurrent<decltype(BOUND_SESSION_TYPE(handler, args))> const
     {
         return dispatch_.concurrent_delegate(SESSION_ARGS(handler, args));
     }
 
     /// Invoke a method in the derived class after the specified delay.
-    inline void dispatch_delayed(const system::asio::duration& delay,
-        system::dispatcher::delay_handler handler) const
+    inline void dispatch_delayed(const asio::duration& delay,
+        dispatcher::delay_handler handler) const
     {
         dispatch_.delayed(delay, handler);
     }
 
     /// Delay timing for a tight failure loop, based on configured timeout.
-    inline system::asio::duration cycle_delay(const system::code& ec)
+    inline asio::duration cycle_delay(const system::code& ec)
     {
         return (ec == system::error::channel_timeout ||
             ec == system::error::service_stopped ||
             ec == system::error::success) ?
-                system::asio::seconds(0) : settings_.connect_timeout();
+                asio::seconds(0) : settings_.connect_timeout();
     }
 
     /// Properties.
@@ -180,11 +181,11 @@ protected:
 
     // TODO: create session_timer base class.
     // Initialization order places these after privates.
-    system::threadpool& pool_;
+    threadpool& pool_;
     const settings& settings_;
 
 private:
-    typedef system::pending<connector> connectors;
+    typedef network::pending<connector> connectors;
 
     void handle_stop(const system::code& ec);
     void handle_starting(const system::code& ec, channel::ptr channel,
@@ -200,7 +201,7 @@ private:
     std::atomic<bool> stopped_;
     const bool notify_on_connect_;
     p2p& network_;
-    mutable system::dispatcher dispatch_;
+    mutable dispatcher dispatch_;
 };
 
 #undef SESSION_ARGS

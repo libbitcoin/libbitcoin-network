@@ -22,6 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
@@ -33,10 +34,10 @@ namespace network {
 #define CLASS protocol_address_31402
 
 using namespace bc::system;
-using namespace bc::system::message;
+using namespace bc::system::messages;
 using namespace std::placeholders;
 
-static message::address configured_self(
+static messages::address configured_self(
     const network::settings& settings)
 {
     if (settings.self.port() == 0)
@@ -104,7 +105,7 @@ bool protocol_address_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return false;
 
-    message::network_address::list addresses;
+    messages::network_address::list addresses;
     network_.fetch_addresses(addresses);
 
     if (!addresses.empty())

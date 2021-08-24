@@ -24,6 +24,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
@@ -34,7 +35,7 @@ namespace network {
 #define CLASS protocol_ping_60001
 
 using namespace bc::system;
-using namespace bc::system::message;
+using namespace bc::system::messages;
 using namespace std::placeholders;
 
 protocol_ping_60001::protocol_ping_60001(p2p& network, channel::ptr channel)

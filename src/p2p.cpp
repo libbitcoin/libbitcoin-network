@@ -28,8 +28,10 @@
 #include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/hosts.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
@@ -48,7 +50,7 @@ namespace network {
 #define NAME "p2p"
 
 using namespace bc::system;
-using namespace bc::system::config;
+using namespace bc::system::chain;
 using namespace std::placeholders;
 
 // This can be exceeded due to manual connection calls and race conditions.
@@ -315,32 +317,32 @@ const settings& p2p::network_settings() const
     return settings_;
 }
 
-checkpoint p2p::top_block() const
+check_point p2p::top_block() const
 {
     return top_block_.load();
 }
 
-void p2p::set_top_block(checkpoint&& top)
+void p2p::set_top_block(check_point&& top)
 {
     top_block_.store(std::move(top));
 }
 
-void p2p::set_top_block(const checkpoint& top)
+void p2p::set_top_block(const check_point& top)
 {
     top_block_.store(top);
 }
 
-checkpoint p2p::top_header() const
+check_point p2p::top_header() const
 {
     return top_header_.load();
 }
 
-void p2p::set_top_header(checkpoint&& top)
+void p2p::set_top_header(check_point&& top)
 {
     top_header_.store(std::move(top));
 }
 
-void p2p::set_top_header(const checkpoint& top)
+void p2p::set_top_header(const check_point& top)
 {
     top_header_.store(top);
 }

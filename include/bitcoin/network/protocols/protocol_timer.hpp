@@ -22,6 +22,7 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
 
@@ -55,8 +56,7 @@ protected:
      * @param[in]  timeout  The timer period (not automatically reset).
      * @param[in]  handler  Invoke automatically on stop and timer events.
      */
-    virtual void start(const system::asio::duration& timeout,
-        event_handler handler);
+    virtual void start(const asio::duration& timeout, event_handler handler);
 
     // Expose polymorphic start method from base.
     using protocol_events::start;
@@ -69,7 +69,7 @@ private:
     void handle_notify(const system::code& ec, event_handler handler);
 
     const bool perpetual_;
-    system::deadline::ptr timer_;
+    deadline::ptr timer_;
 };
 
 } // namespace network

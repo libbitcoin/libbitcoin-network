@@ -16,24 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "test.hpp"
 #include <cstdio>
 #include <future>
 #include <iostream>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
-#include <boost/test/unit_test.hpp>
 #include <bitcoin/network.hpp>
 
 using namespace bc;
 using namespace bc::network;
 using namespace bc::system;
-using namespace bc::system::message;
-
-#define TEST_SET_NAME \
-    "p2p_tests"
-
-#define TEST_NAME \
-    boost::unit_test::framework::current_test_case().p_name
+using namespace bc::system::messages;
 
 // TODO: build mock and/or use dedicated test service.
 #define SEED1 "testnet1.libbitcoin.net:18333"
@@ -47,7 +41,7 @@ using namespace bc::system::message;
 }
 
 #define SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(name) \
-    auto name = network::settings(config::settings::testnet); \
+    auto name = network::settings(chain::selection::testnet); \
     name.threads = 1; \
     name.outbound_connections = 0; \
     name.manual_attempt_limit = 2
@@ -59,7 +53,7 @@ using namespace bc::system::message;
     name.hosts_file = get_log_path(TEST_NAME, "hosts")
 
 #define SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(name) \
-    auto name = network::settings(config::settings::testnet); \
+    auto name = network::settings(chain::selection::testnet); \
     name.threads = 3; \
     name.host_pool_capacity = 42; \
     name.outbound_connections = 5; \
@@ -76,7 +70,7 @@ std::string get_log_path(const std::string& test, const std::string& file)
 static void print_headers(const std::string& test)
 {
     const auto header = "=========== " + test + " ==========";
-    LOG_INFO(TEST_SET_NAME) << header;
+    LOG_INFO(SUITE_NAME) << header;
 }
 
 static int start_result(p2p& network)
@@ -190,7 +184,7 @@ BOOST_AUTO_TEST_CASE(p2p__top_block__default__zero_null_hash)
     const network::settings configuration;
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(network.top_block().height(), 0);
-    BOOST_REQUIRE(network.top_block().hash() == null_hash);
+    BOOST_REQUIRE_EQUAL(network.top_block().hash(), null_hash);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__set_top_block1__values__expected)
@@ -201,7 +195,7 @@ BOOST_AUTO_TEST_CASE(p2p__set_top_block1__values__expected)
     const size_t expected_height = 42;
     const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
     network.set_top_block({ expected_hash, expected_height });
-    BOOST_REQUIRE(network.top_block().hash() == expected_hash);
+    BOOST_REQUIRE_EQUAL(network.top_block().hash(), expected_hash);
     BOOST_REQUIRE_EQUAL(network.top_block().height(), expected_height);
 }
 
@@ -212,9 +206,9 @@ BOOST_AUTO_TEST_CASE(p2p__set_top_block2__values__expected)
     p2p network(configuration);
     const size_t expected_height = 42;
     const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-    const config::checkpoint expected{ hash, expected_height };
+    const chain::check_point expected{ hash, expected_height };
     network.set_top_block(expected);
-    BOOST_REQUIRE(network.top_block().hash() == expected.hash());
+    BOOST_REQUIRE_EQUAL(network.top_block().hash(), expected.hash());
     BOOST_REQUIRE_EQUAL(network.top_block().height(), expected.height());
 }
 
@@ -224,7 +218,7 @@ BOOST_AUTO_TEST_CASE(p2p__top_header__default__zero_null_hash)
     const network::settings configuration;
     p2p network(configuration);
     BOOST_REQUIRE_EQUAL(network.top_header().height(), 0);
-    BOOST_REQUIRE(network.top_header().hash() == null_hash);
+    BOOST_REQUIRE_EQUAL(network.top_header().hash(), null_hash);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__set_top_header1__values__expected)
@@ -235,7 +229,7 @@ BOOST_AUTO_TEST_CASE(p2p__set_top_header1__values__expected)
     const size_t expected_height = 42;
     const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
     network.set_top_header({ expected_hash, expected_height });
-    BOOST_REQUIRE(network.top_header().hash() == expected_hash);
+    BOOST_REQUIRE_EQUAL(network.top_header().hash(), expected_hash);
     BOOST_REQUIRE_EQUAL(network.top_header().height(), expected_height);
 }
 
@@ -246,9 +240,9 @@ BOOST_AUTO_TEST_CASE(p2p__set_top_header2__values__expected)
     p2p network(configuration);
     const size_t expected_height = 42;
     const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-    const config::checkpoint expected{ hash, expected_height };
+    const chain::check_point expected{ hash, expected_height };
     network.set_top_header(expected);
-    BOOST_REQUIRE(network.top_header().hash() == expected.hash());
+    BOOST_REQUIRE_EQUAL(network.top_header().hash(), expected.hash());
     BOOST_REQUIRE_EQUAL(network.top_header().height(), expected.height());
 }
 

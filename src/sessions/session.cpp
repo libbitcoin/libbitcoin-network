@@ -27,6 +27,7 @@
 #include <bitcoin/network/acceptor.hpp>
 #include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/connector.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/proxy.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
@@ -225,7 +226,7 @@ void session::attach_handshake_protocols(channel::ptr channel,
 {
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= message::version::level::bip61)
+    if (channel->negotiated_version() >= messages::version::level::bip61)
         attach<protocol_version_70002>(channel)->start(handle_started);
     else
         attach<protocol_version_31402>(channel)->start(handle_started);

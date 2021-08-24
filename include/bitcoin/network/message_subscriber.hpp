@@ -26,18 +26,19 @@
 #include <utility>
 #include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 #define DEFINE_SUBSCRIBER_TYPE(value) \
-    typedef system::resubscriber<system::code, system::message::value::const_ptr> \
+    typedef resubscriber<system::code, system::messages::value::const_ptr> \
         value##_subscriber_type
 
 #define DEFINE_SUBSCRIBER_OVERLOAD(value) \
     template <typename Handler> \
-    void subscribe(system::message::value&&, Handler&& handler) \
+    void subscribe(system::messages::value&&, Handler&& handler) \
     { \
         value##_subscriber_->subscribe(std::forward<Handler>(handler), \
             system::error::channel_stopped, {}); \
@@ -93,7 +94,7 @@ public:
      * Create an instance of this class.
      * @param[in]  pool  The threadpool to use for sending notifications.
      */
-    message_subscriber(system::threadpool& pool);
+    message_subscriber(threadpool& pool);
 
     /**
      * Subscribe to receive a notification when a message of type is received.
@@ -109,19 +110,19 @@ public:
 
     /**
      * Load a stream into a message instance and notify subscribers.
-     * @param[in]  stream      The stream from which to load the message.
+     * @param[in]  reader      The stream reader from which to load the message.
      * @param[in]  version     The peer protocol version.
      * @param[in]  subscriber  The subscriber for the message type.
      * @return                 Returns error::bad_stream if failed.
      */
     template <class Message, class Subscriber>
-    system::code relay(std::istream& stream, uint32_t version,
+    system::code relay(system::reader& reader, uint32_t version,
         Subscriber& subscriber) const
     {
         const auto message = std::make_shared<Message>();
 
         // Subscribers are invoked only with stop and success codes.
-        if (!message->from_data(version, stream))
+        if (!message->from_data(version, reader))
             return system::error::bad_stream;
 
         subscriber->relay(system::error::success, message);
@@ -130,19 +131,19 @@ public:
 
     /**
      * Load a stream into a message instance and invoke subscribers.
-     * @param[in]  stream      The stream from which to load the message.
+     * @param[in]  reader      The stream reader from which to load the message.
      * @param[in]  version     The peer protocol version.
      * @param[in]  subscriber  The subscriber for the message type.
      * @return                 Returns error::bad_stream if failed.
      */
     template <class Message, class Subscriber>
-    system::code handle(std::istream& stream, uint32_t version,
+    system::code handle(system::reader& reader, uint32_t version,
         Subscriber& subscriber) const
     {
         const auto message = std::make_shared<Message>();
 
         // Subscribers are invoked only with stop and success codes.
-        if (!message->from_data(version, stream))
+        if (!message->from_data(version, reader))
             return system::error::bad_stream;
 
         subscriber->invoke(system::error::success, message);
@@ -161,11 +162,11 @@ public:
      * Sends the message instance to each subscriber of the type.
      * @param[in]  type     The stream message type identifier.
      * @param[in]  version  The peer protocol version.
-     * @param[in]  stream   The stream from which to load the message.
+     * @param[in]  reader   The stream reader from which to load the message.
      * @return              Returns error::bad_stream if failed.
      */
-    virtual system::code load(system::message::message_type type,
-        uint32_t version, std::istream& stream) const;
+    virtual system::code load(system::messages::message_type type,
+        uint32_t version, system::reader& reader) const;
 
     /**
      * Start all subscribers so that they accept subscription.

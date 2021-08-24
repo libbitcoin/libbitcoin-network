@@ -23,23 +23,23 @@
 #include <string>
 #include <vector>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
-using namespace bc::system::config;
 
 #define NAME "hosts"
 
 // TODO: change to network_address bimap hash table with services and age.
 hosts::hosts(const settings& settings)
   : capacity_(static_cast<size_t>(settings.host_pool_capacity)),
-    buffer_(std::max(capacity_, static_cast<size_t>(1u))),
+    buffer_(std::max(capacity_, one)),
     stopped_(true),
     file_path_(settings.hosts_file),
-    disabled_(capacity_ == 0)
+    disabled_(is_zero(capacity_))
 {
 }
 
@@ -80,7 +80,7 @@ code hosts::fetch(address& out) const
         return error::not_found;
 
     // Randomly select an address from the buffer.
-    const auto index = pseudo_random::next<size_t>(0u, buffer_.size() - 1u);
+    const auto index = pseudo_random::next(zero, sub1(buffer_.size()));
     out = buffer_[index];
     return error::success;
     ///////////////////////////////////////////////////////////////////////////
@@ -102,15 +102,15 @@ code hosts::fetch(address::list& out) const
         if (buffer_.empty())
             return error::not_found;
 
-        const auto out_count = std::min(max_address,
+        const auto out_count = std::min(messages::max_address,
             std::min(buffer_.size(), capacity_) /
                 pseudo_random::next<size_t>(5u, 10u));
 
-        if (out_count == 0)
+        if (is_zero(out_count))
             return error::success;
 
-        const auto limit = buffer_.size() - 1u;
-        auto index = pseudo_random::next<size_t>(0, limit);
+        const auto limit = sub1(buffer_.size());
+        auto index = pseudo_random::next(zero, limit);
 
         out.reserve(out_count);
         for (size_t count = 0; count < out_count; ++count)
@@ -155,7 +155,7 @@ code hosts::start()
             // Use to/from string format as opposed to wire serialization.
             config::authority host(line);
 
-            if (host.port() != 0)
+            if (!is_zero(host.port()))
                 buffer_.push_back(host.to_network_address());
         }
     }
@@ -325,20 +325,20 @@ void hosts::store(const address::list& hosts, result_handler handler)
     // Accept between 1 and all of this peer's addresses up to capacity.
     const auto capacity = buffer_.capacity();
     const auto usable = std::min(hosts.size(), capacity);
-    const auto random = pseudo_random::next<size_t>(1u, usable);
+    const auto random = pseudo_random::next(one, usable);
 
     // But always accept at least the amount we are short if available.
     const auto gap = capacity - buffer_.size();
     const auto accept = std::max(gap, random);
 
     // Convert minimum desired to step for iteration, no less than 1.
-    const auto step = std::max(usable / accept, size_t{ 1 });
+    const auto step = std::max(usable / accept, one);
     size_t accepted = 0;
 
     mutex_.unlock_upgrade_and_lock();
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-    for (size_t index = 0; index < usable; index = ceiling_add(index, step))
+    for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
         const auto& host = hosts[index];
 

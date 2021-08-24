@@ -27,6 +27,7 @@
 #include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -36,16 +37,15 @@ namespace network {
 
 /// Manages all socket communication, thread safe.
 class BCT_API proxy
-  : public system::enable_shared_from_base<proxy>, system::noncopyable
+  : public enable_shared_from_base<proxy>, system::noncopyable
 {
 public:
     typedef std::shared_ptr<proxy> ptr;
     typedef std::function<void(const system::code&)> result_handler;
-    typedef system::subscriber<system::code> stop_subscriber;
+    typedef subscriber<system::code> stop_subscriber;
 
     /// Construct an instance.
-    proxy(system::threadpool& pool, system::socket::ptr socket,
-        const settings& settings);
+    proxy(threadpool& pool, socket::ptr socket, const settings& settings);
 
     /// Validate proxy stopped.
     ~proxy();
@@ -54,7 +54,7 @@ public:
     template <class Message>
     void send(const Message& message, result_handler handler)
     {
-        auto data = system::message::serialize(version_, message,
+        auto data = system::messages::serialize(version_, message,
             protocol_magic_);
         const auto payload = std::make_shared<system::data_chunk>(
             std::move(data));
@@ -62,6 +62,7 @@ public:
 
         // Sequential dispatch is required because write may occur in multiple
         // asynchronous steps invoked on different threads, causing deadlocks.
+        // boost.org/doc/libs/1_77_0/doc/html/boost_asio/reference/async_write/overload1.html
         dispatch_.lock(&proxy::do_send,
             shared_from_this(), command, payload, handler);
     }
@@ -99,43 +100,41 @@ protected:
     virtual void handle_stopping() = 0;
 
 private:
-    typedef system::byte_source<system::data_chunk> payload_source;
-    typedef boost::iostreams::stream<payload_source> payload_stream;
     typedef std::shared_ptr<std::string> command_ptr;
     typedef std::shared_ptr<system::data_chunk> payload_ptr;
 
     void stop(const system::boost_code& ec);
 
     void read_heading();
-    void handle_read_heading(const system::boost_code& ec,
-        size_t payload_size);
+    void handle_read_heading(const system::boost_code& ec, size_t heading_size);
 
-    void read_payload(const system::message::heading& head);
-    void handle_read_payload(const system::boost_code& ec, size_t,
-        const system::message::heading& head);
+    void read_payload(const system::messages::heading& head);
+    void handle_read_payload(const system::boost_code& ec, size_t payload_size,
+        const system::messages::heading& head);
 
     void do_send(command_ptr command, payload_ptr payload,
         result_handler handler);
     void handle_send(const system::boost_code& ec, size_t bytes,
         command_ptr command, payload_ptr payload, result_handler handler);
 
-    const system::config::authority authority_;
+    // This is thread safe.
+    const size_t maximum_payload_;
 
     // These are protected by read header/payload ordering.
     system::data_chunk heading_buffer_;
     system::data_chunk payload_buffer_;
-    system::socket::ptr socket_;
+    socket::ptr socket_;
 
     // These are thread safe.
     std::atomic<bool> stopped_;
     const uint32_t protocol_magic_;
-    const size_t maximum_payload_;
     const bool validate_checksum_;
     const bool verbose_;
     std::atomic<uint32_t> version_;
+    const system::config::authority authority_;
     message_subscriber message_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
-    system::dispatcher dispatch_;
+    dispatcher dispatch_;
 };
 
 } // namespace network

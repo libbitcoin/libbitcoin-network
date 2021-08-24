@@ -68,7 +68,7 @@ public:
     void start(event_handler handler) override;
 
 protected:
-    system::message::version version_factory() const override;
+    system::messages::version version_factory() const override;
     bool sufficient_peer(system::version_const_ptr message) override;
 
     virtual bool handle_receive_reject(const system::code& ec,

@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <functional>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
@@ -134,12 +135,12 @@ void session_outbound::attach_protocols(channel::ptr channel)
 {
     const auto version = channel->negotiated_version();
 
-    if (version >= message::version::level::bip31)
+    if (version >= messages::version::level::bip31)
         attach<protocol_ping_60001>(channel)->start();
     else
         attach<protocol_ping_31402>(channel)->start();
 
-    if (version >= message::version::level::bip61)
+    if (version >= messages::version::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_address_31402>(channel)->start();
@@ -148,7 +149,7 @@ void session_outbound::attach_protocols(channel::ptr channel)
 void session_outbound::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {
-    using serve = message::version::service;
+    using serve = messages::version::service;
     const auto relay = settings_.relay_transactions;
     const auto own_version = settings_.protocol_maximum;
     const auto own_services = settings_.services;
@@ -161,7 +162,7 @@ void session_outbound::attach_handshake_protocols(channel::ptr channel,
 
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= message::version::level::bip61)
+    if (channel->negotiated_version() >= messages::version::level::bip61)
         attach<protocol_version_70002>(channel, own_version, own_services,
             invalid_services, minimum_version, minimum_services, relay)
             ->start(handle_started);

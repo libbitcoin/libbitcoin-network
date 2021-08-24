@@ -25,6 +25,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -48,7 +49,7 @@ class p2p;
 
 /// Virtual base class for protocol implementation, mostly thread safe.
 class BCT_API protocol
-  : public system::enable_shared_from_base<protocol>, system::noncopyable
+  : public enable_shared_from_base<protocol>, system::noncopyable
 {
 protected:
     typedef std::function<void()> completion_handler;
@@ -115,7 +116,7 @@ protected:
     virtual void set_negotiated_version(uint32_t value);
 
     /// Get the threadpool.
-    virtual system::threadpool& pool();
+    virtual threadpool& pool();
 
     /// Stop the channel (and the protocol).
     virtual void stop(const system::code& ec);
@@ -124,8 +125,8 @@ protected:
     void handle_send(const system::code& ec, const std::string& command);
 
 private:
-    system::threadpool& pool_;
-    system::dispatcher dispatch_;
+    threadpool& pool_;
+    dispatcher dispatch_;
     channel::ptr channel_;
     const std::string name_;
 };

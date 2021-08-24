@@ -70,7 +70,7 @@ protected:
     // Expose polymorphic start method from base.
     using protocol_timer::start;
 
-    virtual system::message::version version_factory() const;
+    virtual system::messages::version version_factory() const;
     virtual bool sufficient_peer(system::version_const_ptr message);
 
     virtual bool handle_receive_version(const system::code& ec,

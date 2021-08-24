@@ -28,7 +28,9 @@
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -37,29 +39,26 @@ namespace network {
 #define NAME "proxy"
 
 using namespace bc::system;
-using namespace bc::system::message;
+using namespace bc::system::messages;
 using namespace boost::asio;
 using namespace std::placeholders;
 
 // Dump up to 1k of payload as hex in order to diagnose failure.
 static const size_t invalid_payload_dump_size = 1024;
 
-// payload_buffer_ sizing assumes monotonically increasing size by version.
-// Initialize to pre-witness max payload and let grow to witness as required.
 // The socket owns the single thread on which this channel reads and writes.
-proxy::proxy(threadpool& pool, socket::ptr socket,
-    const settings& settings)
-  : authority_(socket->authority()),
-    heading_buffer_(heading::maximum_size()),
-    payload_buffer_(heading::maximum_payload_size(settings.protocol_maximum, false)),
-    maximum_payload_(heading::maximum_payload_size(settings.protocol_maximum,
-        (settings.services & version::service::node_witness) != 0)),
+proxy::proxy(threadpool& pool, socket::ptr socket, const settings& settings)
+  : maximum_payload_(heading::maximum_payload_size(settings.protocol_maximum,
+        !is_zero(settings.services & version::service::node_witness))),
+    heading_buffer_(heading::maximum_size(), no_fill_byte_allocator),
+    payload_buffer_(maximum_payload_, no_fill_byte_allocator),
     socket_(socket),
     stopped_(true),
     protocol_magic_(settings.identifier),
     validate_checksum_(settings.validate_checksum),
     verbose_(settings.verbose),
     version_(settings.protocol_maximum),
+    authority_(socket->authority()),
     message_subscriber_(pool),
     stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_sub")),
     dispatch_(pool, NAME "_dispatch")
@@ -127,11 +126,13 @@ void proxy::read_heading()
     if (stopped())
         return;
 
+    // This will call handler upon stop, error, or buffer full.
     async_read(socket_->get(), buffer(heading_buffer_),
         std::bind(&proxy::handle_read_heading,
             shared_from_this(), _1, _2));
 }
 
+// Size does not matter because the full buffer is read if no error.
 void proxy::handle_read_heading(const boost_code& ec, size_t)
 {
     if (stopped())
@@ -146,7 +147,7 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    const auto head = heading::factory(heading_buffer_);
+    auto head = heading::factory(heading_buffer_);
 
     if (!head.is_valid())
     {
@@ -176,7 +177,7 @@ void proxy::handle_read_heading(const boost_code& ec, size_t)
         return;
     }
 
-    read_payload(head);
+    read_payload(std::move(head));
 }
 
 void proxy::read_payload(const heading& head)
@@ -184,14 +185,15 @@ void proxy::read_payload(const heading& head)
     if (stopped())
         return;
 
-    // This does not cause a reallocation.
     payload_buffer_.resize(head.payload_size());
 
+    // This will call handler upon stop, error, or buffer full.
     async_read(socket_->get(), buffer(payload_buffer_),
         std::bind(&proxy::handle_read_payload,
             shared_from_this(), _1, _2, head));
 }
 
+// Size does not matter because the full buffer is read if no error.
 void proxy::handle_read_payload(const boost_code& ec,
     size_t payload_size, const heading& head)
 {
@@ -218,12 +220,8 @@ void proxy::handle_read_payload(const boost_code& ec,
     }
 
     // Notify subscribers of the new message.
-    payload_source source(payload_buffer_);
-    payload_stream istream(source);
-
-    // Failures are not forwarded to subscribers and channel is stopped below.
-    const auto code = message_subscriber_.load(head.type(), version_, istream);
-    const auto consumed = istream.peek() == std::istream::traits_type::eof();
+    read::bytes::copy reader(payload_buffer_);
+    const auto code = message_subscriber_.load(head.type(), version_, reader);
 
     if (verbose_ && code)
     {
@@ -246,7 +244,7 @@ void proxy::handle_read_payload(const boost_code& ec,
         return;
     }
 
-    if (!consumed)
+    if (!reader.is_exhausted())
     {
         LOG_WARNING(LOG_NETWORK)
             << "Invalid " << head.command() << " payload from [" << authority()
@@ -255,6 +253,7 @@ void proxy::handle_read_payload(const boost_code& ec,
         return;
     }
 
+    // Channel stopped above on failure, not forwarded to subscribers.
     LOG_VERBOSE(LOG_NETWORK)
         << "Received " << head.command() << " from [" << authority()
         << "] (" << payload_size << " bytes)";
@@ -269,6 +268,7 @@ void proxy::handle_read_payload(const boost_code& ec,
 void proxy::do_send(command_ptr command, payload_ptr payload,
     result_handler handler)
 {
+    // This will call handler upon stop, error, or buffer fully sent.
     async_write(socket_->get(), buffer(*payload),
         std::bind(&proxy::handle_send,
             shared_from_this(), _1, _2, command, payload, handler));

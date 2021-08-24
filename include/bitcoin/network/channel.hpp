@@ -26,6 +26,7 @@
 #include <utility>
 #include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/message_subscriber.hpp>
 #include <bitcoin/network/proxy.hpp>
@@ -42,7 +43,7 @@ public:
     typedef std::shared_ptr<channel> ptr;
 
     /// Construct an instance.
-    channel(system::threadpool& pool, system::socket::ptr socket,
+    channel(threadpool& pool, socket::ptr socket,
         const settings& settings);
 
     void start(result_handler handler) override;
@@ -77,9 +78,9 @@ private:
 
     std::atomic<bool> notify_;
     std::atomic<uint64_t> nonce_;
-    system::atomic<system::version_const_ptr> peer_version_;
-    system::deadline::ptr expiration_;
-    system::deadline::ptr inactivity_;
+    atomic<system::version_const_ptr> peer_version_;
+    deadline::ptr expiration_;
+    deadline::ptr inactivity_;
 };
 
 } // namespace network

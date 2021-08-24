@@ -22,6 +22,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/concurrent/asio.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -32,7 +33,7 @@ class BCT_API settings
 {
 public:
     settings();
-    settings(system::config::settings context);
+    settings(system::chain::selection context);
 
     /// Properties.
     uint32_t threads;
@@ -74,12 +75,12 @@ public:
 
     /// Helpers.
     size_t minimum_connections() const;
-    system::asio::duration connect_timeout() const;
-    system::asio::duration channel_handshake() const;
-    system::asio::duration channel_heartbeat() const;
-    system::asio::duration channel_inactivity() const;
-    system::asio::duration channel_expiration() const;
-    system::asio::duration channel_germination() const;
+    asio::duration connect_timeout() const;
+    asio::duration channel_handshake() const;
+    asio::duration channel_heartbeat() const;
+    asio::duration channel_inactivity() const;
+    asio::duration channel_expiration() const;
+    asio::duration channel_germination() const;
 };
 
 } // namespace network

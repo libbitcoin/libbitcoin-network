@@ -22,6 +22,7 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/concurrent/concurrent.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 
@@ -78,7 +79,7 @@ protected:
 private:
     void handle_stopped(const system::code& ec);
 
-    system::atomic<event_handler> handler_;
+    atomic<event_handler> handler_;
 };
 
 } // namespace network
