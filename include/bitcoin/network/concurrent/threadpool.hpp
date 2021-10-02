@@ -19,11 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_CONCURRENT_THREADPOOL_HPP
 #define LIBBITCOIN_NETWORK_CONCURRENT_THREADPOOL_HPP
 
-#include <atomic>
 #include <cstddef>
 #include <memory>
-#include <functional>
-#include <thread>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/concurrent/asio.hpp>
 #include <bitcoin/network/concurrent/thread.hpp>
@@ -32,80 +29,46 @@
 namespace libbitcoin {
 namespace network {
 
-/**
- * This class and the asio service it exposes are thread safe.
- * A collection of threads which can be passed operations through io_service.
- */
+///This class and the asio service it exposes are thread safe.
+/// A collection of threads which can be passed operations through io_service.
 class BCT_API threadpool
   : system::noncopyable
 {
 public:
 
-    /**
-     * Threadpool constructor, spawns the specified number of threads.
-     * @param[in]   number_threads  Number of threads to spawn.
-     * @param[in]   priority        Priority of threads to spawn.
-     */
+    /// Threadpool constructor, spawns the specified number of threads.
      threadpool(size_t number_threads=0,
         thread_priority priority=thread_priority::normal);
 
     virtual ~threadpool();
 
-    /**
-     * There are no threads configured in the threadpool.
-     */
+    /// There are no threads configured in the threadpool.
     bool empty() const;
 
-    /**
-     * The number of threads configured in the threadpool.
-     */
+    /// The number of threads configured in the threadpool.
     size_t size() const;
 
-    /**
-     * Add the specified number of threads to this threadpool.
-     * @param[in]   number_threads  Number of threads to add.
-     * @param[in]   priority        Priority of threads to add.
-     */
-    void spawn(size_t number_threads=1,
-        thread_priority priority=thread_priority::normal);
-
-    /**
-     * Abandon outstanding operations without dispatching handlers.
-     * WARNING: This call is unsave and should be avoided.
-     */
-    void abort();
-
-    /**
-     * Destroy the work keep alive, allowing threads be joined.
-     * Caller should next call join.
-     */
+    /// Destroy the work keep-alive, allowing threads be joined, non-blocking.
+    /// Safe to call from any thread. Caller should next invoke join.
+    /// Threadpool cannot be restarted following a call to shutdown.
     void shutdown();
 
-    /**
-     * Wait for all threads in the pool to terminate.
-     * This is safe to call from any thread in the threadpool or otherwise.
-     */
+    /// Wait for all threads in the pool to terminate.
+    /// Safe to call from any thread not in the threadpool.
     void join();
 
-    /**
-     * Underlying boost::io_service object.
-     */
+    /// Underlying boost::io_service object.
     asio::service& service();
 
-    /**
-     * Underlying boost::io_service object.
-     */
+    /// Underlying boost::io_service object.
     const asio::service& service() const;
 
 private:
-    void spawn_once(thread_priority priority=thread_priority::normal);
-
     // This is thread safe.
     asio::service service_;
 
     // These are protected by mutex.
 
-    std::atomic<size_t> size_;
     std::vector<asio::thread> threads_;
     mutable upgrade_mutex threads_mutex_;
 

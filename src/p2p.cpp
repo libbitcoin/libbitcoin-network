@@ -72,6 +72,8 @@ p2p::p2p(const settings& settings)
     stopped_(true),
     top_block_({ null_hash, 0 }),
     top_header_({ null_hash, 0 }),
+    threadpool_(thread_default(settings_.threads),
+        thread_priority::normal),
     hosts_(settings_),
     pending_connect_(nominal_connecting(settings_)),
     pending_handshake_(nominal_connected(settings_)),
@@ -99,10 +101,6 @@ void p2p::start(result_handler handler)
         handler(error::operation_failed);
         return;
     }
-
-    threadpool_.join();
-    threadpool_.spawn(thread_default(settings_.threads),
-        thread_priority::normal);
 
     stopped_ = false;
     stop_subscriber_->start();

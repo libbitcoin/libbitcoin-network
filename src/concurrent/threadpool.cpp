@@ -18,7 +18,8 @@
  */
 #include <bitcoin/network/concurrent/threadpool.hpp>
 
-#include <thread>
+#include <cstddef>
+#include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/concurrent/asio.hpp>
 #include <bitcoin/network/concurrent/thread.hpp>
@@ -27,9 +28,18 @@ namespace libbitcoin {
 namespace network {
 
 threadpool::threadpool(size_t number_threads, thread_priority priority)
-  : size_(0)
 {
-    spawn(number_threads, priority);
+    /// Keep the threadpool alive with no threads running.
+    work_ = std::make_shared<asio::service::work>(service_);
+
+    for (size_t thread = 0; thread < number_threads; ++thread)
+    {
+        threads_.push_back(asio::thread([this, priority]()
+        {
+            set_priority(priority);
+            service_.run();
+        }));
+    }
 }
 
 threadpool::~threadpool()
@@ -38,67 +48,22 @@ threadpool::~threadpool()
     join();
 }
 
-// Should not be called during spawn.
 bool threadpool::empty() const
 {
-    return size() != 0;
+    return !is_zero(size());
 }
 
-// Should not be called during spawn.
 size_t threadpool::size() const
 {
-    return size_.load();
-}
-
-// This is not thread safe.
-void threadpool::spawn(size_t number_threads, thread_priority priority)
-{
-    // This allows the pool to be restarted.
-    service_.reset();
-
-    for (size_t i = 0; i < number_threads; ++i)
-        spawn_once(priority);
-}
-
-void threadpool::spawn_once(thread_priority priority)
-{
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    work_mutex_.lock_upgrade();
-
-    // Work prevents the service from running out of work and terminating.
-    if (!work_)
-    {
-        work_mutex_.unlock_upgrade_and_lock();
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        work_ = std::make_shared<asio::service::work>(service_);
-
-        work_mutex_.unlock_and_lock_upgrade();
-        //-----------------------------------------------------------------
-    }
-
-    work_mutex_.unlock_upgrade();
-    ///////////////////////////////////////////////////////////////////////////
-
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
     unique_lock lock(threads_mutex_);
 
-    threads_.push_back(asio::thread([this, priority]()
-    {
-        set_priority(priority);
-        service_.run();
-    }));
-
-    ++size_;
+    return threads_.size();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-void threadpool::abort()
-{
-    service_.stop();
-}
-
+// Work mutex allows threadsafe shutdown calls.
 void threadpool::shutdown()
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -109,12 +74,14 @@ void threadpool::shutdown()
     ///////////////////////////////////////////////////////////////////////////
 }
 
+// Threads mutex allows threadsafe join calls and protects size/empty.
 void threadpool::join()
 {
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
     unique_lock lock(threads_mutex_);
 
+    // Join cannot be called from a thread in the threadpool (deadlock).
     DEBUG_ONLY(const auto this_id = boost::this_thread::get_id();)
 
     for (auto& thread: threads_)
@@ -125,7 +92,6 @@ void threadpool::join()
     }
 
     threads_.clear();
-    size_.store(0);
     ///////////////////////////////////////////////////////////////////////////
 }
 
