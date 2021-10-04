@@ -21,6 +21,7 @@
 
 #include <type_traits>
 #include <utility>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/thread.hpp>
 
 namespace libbitcoin {
@@ -28,6 +29,7 @@ namespace network {
 
 template <typename Type>
 class atomic
+  : system::noncopyable
 {
 public:
 
