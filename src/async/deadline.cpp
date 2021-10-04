@@ -40,7 +40,7 @@ deadline::deadline(threadpool& pool)
 {
 }
 
-deadline::deadline(threadpool& pool, const duration span)
+deadline::deadline(threadpool& pool, const duration& span)
   : duration_(span),
     timer_(pool.service())
     /*, CONSTRUCT_TRACK(deadline)*/
@@ -52,7 +52,7 @@ void deadline::start(handler handle)
     start(handle, duration_);
 }
 
-void deadline::start(handler handle, const duration span)
+void deadline::start(handler handle, const duration& span)
 {
     const auto timer_handler =
         std::bind(&deadline::handle_timer,

@@ -57,7 +57,7 @@ public:
      * @param[in]  pool  The thread pool used by the timer.
      * @param[in]  span  The default time period from start to expiration.
      */
-    deadline(threadpool& pool, const duration span);
+    deadline(threadpool& pool, const duration& span);
 
     /**
      * Start or restart the timer.
@@ -74,7 +74,7 @@ public:
      * @param[in]  handle  Callback invoked upon expire or cancel.
      * @param[in]  span    The time period from start to expiration.
      */
-    void start(handler handle, const duration span);
+    void start(handler handle, const duration& span);
 
     /**
      * Cancel the timer. The handler will be invoked.
