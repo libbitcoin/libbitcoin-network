@@ -137,7 +137,6 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/async.hpp \
     include/bitcoin/network/async/atomic.hpp \
     include/bitcoin/network/async/deadline.hpp \
-    include/bitcoin/network/async/decorator.hpp \
     include/bitcoin/network/async/delegates.hpp \
     include/bitcoin/network/async/dispatcher.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
