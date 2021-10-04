@@ -15,15 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\concurrent\file_lock.cpp">
-      <Filter>src\concurrent</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\concurrent\flush_lock.cpp">
-      <Filter>src\concurrent</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\concurrent\interprocess_lock.cpp">
-      <Filter>src\concurrent</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\concurrent\thread.cpp">
       <Filter>src\concurrent</Filter>
     </ClCompile>

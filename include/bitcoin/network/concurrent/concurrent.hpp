@@ -19,32 +19,28 @@
 #ifndef LIBBITCOIN_NETWORK_CONCURRENT_CONCURRENT_HPP
 #define LIBBITCOIN_NETWORK_CONCURRENT_CONCURRENT_HPP
 
+// async
 #include <bitcoin/network/concurrent/asio.hpp>
 #include <bitcoin/network/concurrent/atomic.hpp>
-#include <bitcoin/network/concurrent/conditional_lock.hpp>
 #include <bitcoin/network/concurrent/deadline.hpp>
 #include <bitcoin/network/concurrent/decorator.hpp>
 #include <bitcoin/network/concurrent/delegates.hpp>
 #include <bitcoin/network/concurrent/dispatcher.hpp>
 #include <bitcoin/network/concurrent/enable_shared_from_base.hpp>
-#include <bitcoin/network/concurrent/file_lock.hpp>
-#include <bitcoin/network/concurrent/flush_lock.hpp>
 #include <bitcoin/network/concurrent/handlers.hpp>
-#include <bitcoin/network/concurrent/interprocess_lock.hpp>
 #include <bitcoin/network/concurrent/monitor.hpp>
-#include <bitcoin/network/concurrent/pending.hpp>
-#include <bitcoin/network/concurrent/prioritized_mutex.hpp>
-#include <bitcoin/network/concurrent/resubscriber.hpp>
-#include <bitcoin/network/concurrent/scope_lock.hpp>
 #include <bitcoin/network/concurrent/sequencer.hpp>
-#include <bitcoin/network/concurrent/sequential_lock.hpp>
-#include <bitcoin/network/concurrent/socket.hpp>
-#include <bitcoin/network/concurrent/subscriber.hpp>
 #include <bitcoin/network/concurrent/synchronizer.hpp>
 #include <bitcoin/network/concurrent/thread.hpp>
 #include <bitcoin/network/concurrent/threadpool.hpp>
 #include <bitcoin/network/concurrent/timer.hpp>
 #include <bitcoin/network/concurrent/track.hpp>
 #include <bitcoin/network/concurrent/work.hpp>
+
+// net
+#include <bitcoin/network/concurrent/pending.hpp>
+#include <bitcoin/network/concurrent/resubscriber.hpp>
+#include <bitcoin/network/concurrent/socket.hpp>
+#include <bitcoin/network/concurrent/subscriber.hpp>
 
 #endif

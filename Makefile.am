@@ -43,17 +43,10 @@ src_libbitcoin_network_la_SOURCES = \
     src/p2p.cpp \
     src/proxy.cpp \
     src/settings.cpp \
-    src/concurrent/conditional_lock.cpp \
     src/concurrent/deadline.cpp \
     src/concurrent/dispatcher.cpp \
-    src/concurrent/file_lock.cpp \
-    src/concurrent/flush_lock.cpp \
-    src/concurrent/interprocess_lock.cpp \
     src/concurrent/monitor.cpp \
-    src/concurrent/prioritized_mutex.cpp \
-    src/concurrent/scope_lock.cpp \
     src/concurrent/sequencer.cpp \
-    src/concurrent/sequential_lock.cpp \
     src/concurrent/socket.cpp \
     src/concurrent/thread.cpp \
     src/concurrent/threadpool.cpp \
@@ -95,9 +88,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/p2p.cpp \
     test/test.cpp \
     test/test.hpp \
-    test/concurrent/file_lock.cpp \
-    test/concurrent/flush_lock.cpp \
-    test/concurrent/interprocess_lock.cpp \
     test/concurrent/thread.cpp
 
 endif WITH_TESTS
@@ -126,23 +116,16 @@ include_bitcoin_network_concurrent_HEADERS = \
     include/bitcoin/network/concurrent/asio.hpp \
     include/bitcoin/network/concurrent/atomic.hpp \
     include/bitcoin/network/concurrent/concurrent.hpp \
-    include/bitcoin/network/concurrent/conditional_lock.hpp \
     include/bitcoin/network/concurrent/deadline.hpp \
     include/bitcoin/network/concurrent/decorator.hpp \
     include/bitcoin/network/concurrent/delegates.hpp \
     include/bitcoin/network/concurrent/dispatcher.hpp \
     include/bitcoin/network/concurrent/enable_shared_from_base.hpp \
-    include/bitcoin/network/concurrent/file_lock.hpp \
-    include/bitcoin/network/concurrent/flush_lock.hpp \
     include/bitcoin/network/concurrent/handlers.hpp \
-    include/bitcoin/network/concurrent/interprocess_lock.hpp \
     include/bitcoin/network/concurrent/monitor.hpp \
     include/bitcoin/network/concurrent/pending.hpp \
-    include/bitcoin/network/concurrent/prioritized_mutex.hpp \
     include/bitcoin/network/concurrent/resubscriber.hpp \
-    include/bitcoin/network/concurrent/scope_lock.hpp \
     include/bitcoin/network/concurrent/sequencer.hpp \
-    include/bitcoin/network/concurrent/sequential_lock.hpp \
     include/bitcoin/network/concurrent/socket.hpp \
     include/bitcoin/network/concurrent/subscriber.hpp \
     include/bitcoin/network/concurrent/synchronizer.hpp \

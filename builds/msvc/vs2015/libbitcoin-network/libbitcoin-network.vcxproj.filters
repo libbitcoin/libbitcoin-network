@@ -69,37 +69,16 @@
     <ClCompile Include="..\..\..\..\src\channel.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\concurrent\conditional_lock.cpp">
-      <Filter>src\concurrent</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\concurrent\deadline.cpp">
       <Filter>src\concurrent</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\concurrent\dispatcher.cpp">
       <Filter>src\concurrent</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\concurrent\file_lock.cpp">
-      <Filter>src\concurrent</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\concurrent\flush_lock.cpp">
-      <Filter>src\concurrent</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\concurrent\interprocess_lock.cpp">
-      <Filter>src\concurrent</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\concurrent\monitor.cpp">
       <Filter>src\concurrent</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\concurrent\prioritized_mutex.cpp">
-      <Filter>src\concurrent</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\concurrent\scope_lock.cpp">
-      <Filter>src\concurrent</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\concurrent\sequencer.cpp">
-      <Filter>src\concurrent</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\concurrent\sequential_lock.cpp">
       <Filter>src\concurrent</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\concurrent\socket.cpp">
@@ -218,9 +197,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\concurrent.hpp">
       <Filter>include\bitcoin\network\concurrent</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\conditional_lock.hpp">
-      <Filter>include\bitcoin\network\concurrent</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\deadline.hpp">
       <Filter>include\bitcoin\network\concurrent</Filter>
     </ClInclude>
@@ -236,16 +212,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\enable_shared_from_base.hpp">
       <Filter>include\bitcoin\network\concurrent</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\file_lock.hpp">
-      <Filter>include\bitcoin\network\concurrent</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\flush_lock.hpp">
-      <Filter>include\bitcoin\network\concurrent</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\handlers.hpp">
-      <Filter>include\bitcoin\network\concurrent</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\interprocess_lock.hpp">
       <Filter>include\bitcoin\network\concurrent</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\monitor.hpp">
@@ -254,19 +221,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\pending.hpp">
       <Filter>include\bitcoin\network\concurrent</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\prioritized_mutex.hpp">
-      <Filter>include\bitcoin\network\concurrent</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\resubscriber.hpp">
       <Filter>include\bitcoin\network\concurrent</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\scope_lock.hpp">
-      <Filter>include\bitcoin\network\concurrent</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\sequencer.hpp">
-      <Filter>include\bitcoin\network\concurrent</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\sequential_lock.hpp">
       <Filter>include\bitcoin\network\concurrent</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\concurrent\socket.hpp">
