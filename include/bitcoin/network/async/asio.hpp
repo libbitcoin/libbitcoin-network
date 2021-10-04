@@ -24,8 +24,7 @@
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
-// TODO: rename namespace to 'async'.
-// Convenience namespace for commonly used boost async aliases.
+// Convenience namespace for commonly used boost async i/o aliases.
 
 namespace libbitcoin {
 namespace network {
