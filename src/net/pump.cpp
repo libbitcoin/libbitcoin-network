@@ -50,7 +50,7 @@ namespace network {
 using namespace bc::system;
 using namespace bc::system::messages;
 
-message_subscriber::message_subscriber(threadpool& pool)
+pump::pump(threadpool& pool)
   : INITIALIZE_SUBSCRIBER(pool, address),
     INITIALIZE_SUBSCRIBER(pool, alert),
     INITIALIZE_SUBSCRIBER(pool, block),
@@ -87,7 +87,7 @@ message_subscriber::message_subscriber(threadpool& pool)
 {
 }
 
-void message_subscriber::broadcast(const code& ec)
+void pump::broadcast(const code& ec)
 {
     RELAY_CODE(ec, address);
     RELAY_CODE(ec, alert);
@@ -124,7 +124,7 @@ void message_subscriber::broadcast(const code& ec)
     RELAY_CODE(ec, version);
 }
 
-code message_subscriber::load(message_type type, uint32_t version,
+code pump::load(message_type type, uint32_t version,
     system::reader& reader) const
 {
     switch (type)
@@ -168,7 +168,7 @@ code message_subscriber::load(message_type type, uint32_t version,
     }
 }
 
-void message_subscriber::start()
+void pump::start()
 {
     START_SUBSCRIBER(address);
     START_SUBSCRIBER(alert);
@@ -205,7 +205,7 @@ void message_subscriber::start()
     START_SUBSCRIBER(version);
 }
 
-void message_subscriber::stop()
+void pump::stop()
 {
     STOP_SUBSCRIBER(address);
     STOP_SUBSCRIBER(alert);

@@ -72,8 +72,8 @@ public:
     template <class Message>
     void subscribe(message_handler<Message>&& handler)
     {
-        message_subscriber_.subscribe<Message>(
-            std::forward<message_handler<Message>>(handler));
+        pump_.subscribe<Message>(std::forward<message_handler<Message>>(
+            handler));
     }
 
     /// Subscribe to the stop event.
@@ -133,7 +133,7 @@ private:
     const bool verbose_;
     std::atomic<uint32_t> version_;
     const system::config::authority authority_;
-    message_subscriber message_subscriber_;
+    pump pump_;
     stop_subscriber::ptr stop_subscriber_;
     dispatcher dispatch_;
 };

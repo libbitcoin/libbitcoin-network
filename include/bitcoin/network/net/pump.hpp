@@ -52,7 +52,7 @@ using message_handler =
     std::function<bool(const system::code&, std::shared_ptr<const Message>)>;
 
 /// Aggregation of subscribers by messasge type, thread safe.
-class BCT_API message_subscriber
+class BCT_API pump
   : system::noncopyable
 {
 public:
@@ -94,7 +94,7 @@ public:
      * Create an instance of this class.
      * @param[in]  pool  The threadpool to use for sending notifications.
      */
-    message_subscriber(threadpool& pool);
+    pump(threadpool& pool);
 
     /**
      * Subscribe to receive a notification when a message of type is received.

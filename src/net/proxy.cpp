@@ -59,7 +59,7 @@ proxy::proxy(threadpool& pool, socket::ptr socket, const settings& settings)
     verbose_(settings.verbose),
     version_(settings.protocol_maximum),
     authority_(socket->authority()),
-    message_subscriber_(pool),
+    pump_(pool),
     stop_subscriber_(std::make_shared<stop_subscriber>(pool, NAME "_sub")),
     dispatch_(pool, NAME "_dispatch")
 {
@@ -101,7 +101,7 @@ void proxy::start(result_handler handler)
 
     stopped_ = false;
     stop_subscriber_->start();
-    message_subscriber_.start();
+    pump_.start();
 
     // Allow for subscription before first read, so no messages are missed.
     handler(error::success);
@@ -221,7 +221,7 @@ void proxy::handle_read_payload(const boost_code& ec,
 
     // Notify subscribers of the new message.
     read::bytes::copy reader(payload_buffer_);
-    const auto code = message_subscriber_.load(head.type(), version_, reader);
+    const auto code = pump_.load(head.type(), version_, reader);
 
     if (verbose_ && code)
     {
@@ -318,8 +318,8 @@ void proxy::stop(const code& ec)
     stopped_ = true;
 
     // Prevent subscription after stop.
-    message_subscriber_.stop();
-    message_subscriber_.broadcast(error::channel_stopped);
+    pump_.stop();
+    pump_.broadcast(error::channel_stopped);
 
     // Prevent subscription after stop.
     stop_subscriber_->stop();
