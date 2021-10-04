@@ -22,7 +22,7 @@
 #include <functional>
 #include <string>
 #include <boost/make_shared.hpp>
-#include <bitcoin/system/error.hpp>
+#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {

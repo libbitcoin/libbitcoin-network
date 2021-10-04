@@ -21,8 +21,8 @@
 
 #include <boost/log/sources/basic_logger.hpp>
 #include <boost/log/sources/features.hpp>
-#include <boost/log/utility/strictest_lock.hpp>
 #include <boost/log/sources/threading_models.hpp>
+#include <boost/log/utility/strictest_lock.hpp>
 
 namespace libbitcoin {
 namespace network {
