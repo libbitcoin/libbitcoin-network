@@ -30,6 +30,7 @@
 #include <bitcoin/network/async/delegates.hpp>
 #include <bitcoin/network/async/synchronizer.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
+#include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/work.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -111,7 +112,7 @@ public:
 
     /// Posts job to service after specified delay. Concurrent and not ordered.
     /// The timer cannot be canceled so delay should be within stop criteria.
-    inline void delayed(const asio::duration& delay, delay_handler handler)
+    inline void delayed(const duration& delay, delay_handler handler)
     {
         auto timer = std::make_shared<deadline>(pool_, delay);
         timer->start([handler, timer](const code& ec)

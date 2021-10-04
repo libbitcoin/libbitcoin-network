@@ -50,6 +50,10 @@ enum class thread_priority
     lowest
 };
 
+// Boost thread is used because of thread_specific_ptr limitation:
+// stackoverflow.com/q/22448022/1172329
+typedef boost::thread thread;
+
 typedef boost::shared_mutex shared_mutex;
 typedef boost::upgrade_mutex upgrade_mutex;
 

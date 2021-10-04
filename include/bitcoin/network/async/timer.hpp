@@ -20,68 +20,19 @@
 #define LIBBITCOIN_NETWORK_ASYNC_TIMER_HPP
 
 #include <chrono>
-#include <cstddef>
-#include <time.h>
-#include <string>
-#include <bitcoin/network/async/asio.hpp>
+#include <utility>
+#include <bitcoin/network/async/time.hpp>
 
 namespace libbitcoin {
 namespace network {
-
-/// Current zulu (utc) time using the wall clock.
-/// BUGBUG: en.wikipedia.org/wiki/Year_2038_problem
-inline std::time_t zulu_time()
-{
-    using wall_clock = std::chrono::system_clock;
-    const auto now = wall_clock::now();
-    return wall_clock::to_time_t(now);
-}
-
-/// Current local time using the wall clock, false and empty string on failure.
-inline bool local_time(tm& out_local, std::time_t zulu)
-{
-    // localtime not threadsafe due to static buffer return, use localtime_s.
-#ifdef _MSC_VER
-    // proprietary msvc implemention, parameters swapped, returns errno_t.
-    return localtime_s(&out_local, &zulu) == 0;
-#else
-    // C++11 implemention returns parameter pointer, nullptr implies failure.
-    return localtime_r(&zulu, &out_local) != nullptr;
-#endif
-}
-
-/// Standard date-time string, e.g. Sun Oct 17 04:41:13 2010, locale dependent.
-inline std::string local_time()
-{
-    tm out_local{};
-    if (!local_time(out_local, zulu_time()))
-        return "";
-
-    // %c writes standard date and time string, e.g.
-    // Sun Oct 17 04:41:13 2010 (locale dependent)
-    static const auto format = "%c";
-    static constexpr size_t size = 25;
-    char buffer[size];
-
-    // std::strftime is required because gcc doesn't implement std::put_time.
-    // Returns number of characters, zero implies failure and undefined buffer.
-    return std::strftime(buffer, size, format, &out_local) == 0 ? "" : buffer;
-}
 
 // From: github.com/picanumber/bureaucrat/blob/master/time_lapse.h
 // boost::timer::auto_cpu_timer requires the boost timer lib dependency.
 
 /// Class to measure the execution time of a callable.
-template <typename Time=asio::milliseconds, class Clock=asio::steady_clock>
+template <typename Time=milliseconds, class Clock=steady_clock>
 struct timer
 {
-    /// Returns the quantity (count) of the elapsed time as TimeT units.
-    template <typename Function, typename ...Args>
-    static typename Time::rep execution(Function func, Args&&... args)
-    {
-        return duration(func, std::forward<Args>(args)...).count();
-    }
-
     /// Returns the duration (in chrono's type system) of the elapsed time.
     template <typename Function, typename... Args>
     static Time duration(Function func, Args&&... args)
@@ -89,6 +40,13 @@ struct timer
         auto start = Clock::now();
         func(std::forward<Args>(args)...);
         return std::chrono::duration_cast<Time>(Clock::now() - start);
+    }
+
+    /// Returns the quantity (count) of the elapsed time as TimeT units.
+    template <typename Function, typename ...Args>
+    static typename Time::rep execution(Function func, Args&&... args)
+    {
+        return duration(func, std::forward<Args>(args)...).count();
     }
 };
 

@@ -22,7 +22,6 @@
 #include <chrono>
 #include <memory>
 #include <boost/asio.hpp>
-#include <boost/thread.hpp>
 
 // Convenience namespace for commonly used boost async i/o aliases.
 
@@ -31,19 +30,6 @@ namespace network {
 namespace asio {
 
 namespace error = boost::asio::error;
-
-typedef std::chrono::hours hours;
-typedef std::chrono::minutes minutes;
-typedef std::chrono::seconds seconds;
-typedef std::chrono::milliseconds milliseconds;
-typedef std::chrono::microseconds microseconds;
-typedef std::chrono::nanoseconds nanoseconds;
-
-// Steady clock: use for continuity, not time of day determinations.
-typedef std::chrono::steady_clock steady_clock;
-typedef steady_clock::duration duration;
-typedef steady_clock::time_point time_point;
-typedef boost::asio::basic_waitable_timer<steady_clock> timer;
 
 typedef boost::asio::io_service service;
 typedef boost::asio::ip::address address;
@@ -57,14 +43,9 @@ typedef tcp::acceptor acceptor;
 typedef tcp::resolver resolver;
 typedef tcp::resolver::query query;
 typedef tcp::resolver::iterator iterator;
-
-// Boost thread is used because of thread_specific_ptr limitation:
-// stackoverflow.com/q/22448022/1172329
-typedef boost::thread thread;
-
 typedef std::shared_ptr<socket> socket_ptr;
 
-constexpr int max_connections = boost::asio::socket_base::max_connections;
+constexpr auto max_connections = boost::asio::socket_base::max_connections;
 
 } // namespace asio
 } // namespace network

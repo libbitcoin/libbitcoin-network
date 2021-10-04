@@ -56,7 +56,7 @@ protected:
      * @param[in]  timeout  The timer period (not automatically reset).
      * @param[in]  handler  Invoke automatically on stop and timer events.
      */
-    virtual void start(const asio::duration& timeout, event_handler handler);
+    virtual void start(const duration& timeout, event_handler handler);
 
     // Expose polymorphic start method from base.
     using protocol_events::start;

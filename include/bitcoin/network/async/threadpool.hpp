@@ -69,7 +69,7 @@ private:
 
     // These are protected by mutex.
 
-    std::vector<asio::thread> threads_;
+    std::vector<thread> threads_;
     mutable upgrade_mutex threads_mutex_;
 
     std::shared_ptr<asio::service::work> work_;

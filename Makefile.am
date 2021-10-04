@@ -43,6 +43,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/async/sequencer.cpp \
     src/async/thread.cpp \
     src/async/threadpool.cpp \
+    src/async/time.cpp \
     src/async/work.cpp \
     src/log/file_collector.cpp \
     src/log/file_collector_repository.cpp \
@@ -123,6 +124,7 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/synchronizer.hpp \
     include/bitcoin/network/async/thread.hpp \
     include/bitcoin/network/async/threadpool.hpp \
+    include/bitcoin/network/async/time.hpp \
     include/bitcoin/network/async/timer.hpp \
     include/bitcoin/network/async/track.hpp \
     include/bitcoin/network/async/work.hpp

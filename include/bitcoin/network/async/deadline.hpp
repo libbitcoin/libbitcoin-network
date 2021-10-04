@@ -23,6 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
+#include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
 ////#include <bitcoin/network/async/track.hpp>
@@ -53,10 +54,10 @@ public:
 
     /**
      * Construct a deadline timer.
-     * @param[in]  pool      The thread pool used by the timer.
-     * @param[in]  duration  The default time period from start to expiration.
+     * @param[in]  pool  The thread pool used by the timer.
+     * @param[in]  span  The default time period from start to expiration.
      */
-    deadline(threadpool& pool, const asio::duration duration);
+    deadline(threadpool& pool, const duration span);
 
     /**
      * Start or restart the timer.
@@ -70,10 +71,10 @@ public:
      * Start or restart the timer.
      * The handler will not be invoked within the scope of this call.
      * Use expired(ec) in handler to test for expiration.
-     * @param[in]  handle    Callback invoked upon expire or cancel.
-     * @param[in]  duration  The time period from start to expiration.
+     * @param[in]  handle  Callback invoked upon expire or cancel.
+     * @param[in]  span    The time period from start to expiration.
      */
-    void start(handler handle, const asio::duration duration);
+    void start(handler handle, const duration span);
 
     /**
      * Cancel the timer. The handler will be invoked.
@@ -83,8 +84,8 @@ public:
 private:
     void handle_timer(const system::boost_code& ec, handler handle) const;
 
-    asio::timer timer_;
-    asio::duration duration_;
+    wait_timer timer_;
+    duration duration_;
     mutable shared_mutex mutex_;
 };
 

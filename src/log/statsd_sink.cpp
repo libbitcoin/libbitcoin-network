@@ -67,7 +67,7 @@ void statsd_formatter(const record_view& record, formatting_ostream& stream)
     if (has_attribute<uint64_t>(attributes::gauge.get_name())(record))
         stream << record[attributes::gauge] << "|g";
 
-    if (has_attribute<asio::milliseconds>(attributes::timer.get_name())(record))
+    if (has_attribute<milliseconds>(attributes::timer.get_name())(record))
         stream << record[attributes::timer].get().count() << "|ms";
 
     if (has_attribute<float>(attributes::rate.get_name())(record))

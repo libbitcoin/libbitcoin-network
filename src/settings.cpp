@@ -117,34 +117,34 @@ size_t settings::minimum_connections() const
     return system::ceilinged_add<size_t>(outbound_connections, peers.size());
 }
 
-asio::duration settings::connect_timeout() const
+duration settings::connect_timeout() const
 {
-    return asio::seconds(connect_timeout_seconds);
+    return seconds(connect_timeout_seconds);
 }
 
-asio::duration settings::channel_handshake() const
+duration settings::channel_handshake() const
 {
-    return asio::seconds(channel_handshake_seconds);
+    return seconds(channel_handshake_seconds);
 }
 
-asio::duration settings::channel_heartbeat() const
+duration settings::channel_heartbeat() const
 {
-    return asio::minutes(channel_heartbeat_minutes);
+    return minutes(channel_heartbeat_minutes);
 }
 
-asio::duration settings::channel_inactivity() const
+duration settings::channel_inactivity() const
 {
-    return asio::minutes(channel_inactivity_minutes);
+    return minutes(channel_inactivity_minutes);
 }
 
-asio::duration settings::channel_expiration() const
+duration settings::channel_expiration() const
 {
-    return asio::minutes(channel_expiration_minutes);
+    return minutes(channel_expiration_minutes);
 }
 
-asio::duration settings::channel_germination() const
+duration settings::channel_germination() const
 {
-    return asio::seconds(channel_germination_seconds);
+    return seconds(channel_germination_seconds);
 }
 
 } // namespace network

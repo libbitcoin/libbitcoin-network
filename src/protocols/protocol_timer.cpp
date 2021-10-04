@@ -46,7 +46,7 @@ protocol_timer::protocol_timer(p2p& network, channel::ptr channel,
 // ----------------------------------------------------------------------------
 
 // protected:
-void protocol_timer::start(const asio::duration& timeout,
+void protocol_timer::start(const duration& timeout,
     event_handler handle_event)
 {
     // The deadline timer is thread safe.

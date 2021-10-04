@@ -20,9 +20,9 @@
 
 #include <functional>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
+#include <bitcoin/network/async/time.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -34,14 +34,14 @@ using namespace std::placeholders;
 // Deadline is guaranteed to call handler exactly once unless canceled/reset.
 
 deadline::deadline(threadpool& pool)
-  : duration_(asio::seconds(0)),
+  : duration_(seconds(0)),
     timer_(pool.service())
     /*, CONSTRUCT_TRACK(deadline)*/
 {
 }
 
-deadline::deadline(threadpool& pool, const asio::duration duration)
-  : duration_(duration),
+deadline::deadline(threadpool& pool, const duration span)
+  : duration_(span),
     timer_(pool.service())
     /*, CONSTRUCT_TRACK(deadline)*/
 {
@@ -52,7 +52,7 @@ void deadline::start(handler handle)
     start(handle, duration_);
 }
 
-void deadline::start(handler handle, const asio::duration duration)
+void deadline::start(handler handle, const duration span)
 {
     const auto timer_handler =
         std::bind(&deadline::handle_timer,
@@ -65,7 +65,7 @@ void deadline::start(handler handle, const asio::duration duration)
     // Handling socket error codes creates exception safety.
     boost_code ignore;
     timer_.cancel(ignore);
-    timer_.expires_from_now(duration);
+    timer_.expires_from_now(span);
 
     // async_wait will not invoke the handler within this function.
     timer_.async_wait(timer_handler);

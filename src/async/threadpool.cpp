@@ -34,7 +34,7 @@ threadpool::threadpool(size_t number_threads, thread_priority priority)
 
     for (size_t thread = 0; thread < number_threads; ++thread)
     {
-        threads_.push_back(asio::thread([this, priority]()
+        threads_.push_back(network::thread([this, priority]()
         {
             set_priority(priority);
             service_.run();

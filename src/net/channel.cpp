@@ -38,11 +38,10 @@ using namespace bc::system::messages;
 using namespace std::placeholders;
 
 // Factory for deadline timer pointer construction.
-static deadline::ptr alarm(threadpool& pool,
-    const asio::duration& duration)
+static deadline::ptr alarm(threadpool& pool, const duration& span)
 {
     return std::make_shared<deadline>(pool,
-        pseudo_random::duration(duration));
+        pseudo_random::duration(span));
 }
 
 channel::channel(threadpool& pool, socket::ptr socket,

@@ -79,6 +79,7 @@
     <ClCompile Include="..\..\..\..\src\async\sequencer.cpp" />
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
+    <ClCompile Include="..\..\..\..\src\async\time.cpp" />
     <ClCompile Include="..\..\..\..\src\async\work.cpp" />
     <ClCompile Include="..\..\..\..\src\log\file_collector.cpp" />
     <ClCompile Include="..\..\..\..\src\log\file_collector_repository.cpp" />
@@ -130,6 +131,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\synchronizer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\thread.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\threadpool.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\track.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\work.hpp" />

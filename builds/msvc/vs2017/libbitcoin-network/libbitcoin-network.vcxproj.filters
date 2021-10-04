@@ -90,6 +90,9 @@
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\async\time.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\async\work.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
@@ -237,6 +240,9 @@
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\threadpool.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\timer.hpp">

@@ -35,6 +35,7 @@
 #include <bitcoin/network/async/synchronizer.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
+#include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/timer.hpp>
 #include <bitcoin/network/async/track.hpp>
 #include <bitcoin/network/async/work.hpp>

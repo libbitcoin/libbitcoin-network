@@ -152,6 +152,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/async/sequencer.cpp"
     "../../src/async/thread.cpp"
     "../../src/async/threadpool.cpp"
+    "../../src/async/time.cpp"
     "../../src/async/work.cpp"
     "../../src/log/file_collector.cpp"
     "../../src/log/file_collector_repository.cpp"

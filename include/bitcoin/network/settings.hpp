@@ -75,12 +75,12 @@ public:
 
     /// Helpers.
     size_t minimum_connections() const;
-    asio::duration connect_timeout() const;
-    asio::duration channel_handshake() const;
-    asio::duration channel_heartbeat() const;
-    asio::duration channel_inactivity() const;
-    asio::duration channel_expiration() const;
-    asio::duration channel_germination() const;
+    duration connect_timeout() const;
+    duration channel_handshake() const;
+    duration channel_heartbeat() const;
+    duration channel_inactivity() const;
+    duration channel_expiration() const;
+    duration channel_germination() const;
 };
 
 } // namespace network
