@@ -29,9 +29,7 @@ namespace std {
 std::ostream& operator<<(std::ostream& stream,
     const data_slice& slice) noexcept
 {
-    // Avoid serialize() here for its own test benefit.
-    // stream << serialize(slice);
-    stream << encode_base16(slice);
+    stream << serialize(slice);
     return stream;
 }
 
