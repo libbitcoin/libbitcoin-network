@@ -325,16 +325,16 @@ BOOST_AUTO_TEST_CASE(p2p__start__outbound_no_seeds__success)
 }
 
 // channel_timeout (node offline)
-BOOST_AUTO_TEST_CASE(p2p__connect__started__success)
-{
-    print_headers(TEST_NAME);
-    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    p2p network(configuration);
-    const config::endpoint host(SEED1);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-    BOOST_REQUIRE_EQUAL(run_result(network), error::success);
-    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::channel_timeout);
-}
+////BOOST_AUTO_TEST_CASE(p2p__connect__started__success)
+////{
+////    print_headers(TEST_NAME);
+////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+////    p2p network(configuration);
+////    const config::endpoint host(SEED1);
+////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+////    BOOST_REQUIRE_EQUAL(run_result(network), error::success);
+////    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::channel_timeout);
+////}
 
 // single seed start
 
