@@ -63,8 +63,6 @@ void set_thread_priority_test(int priority)
 
 #ifdef _MSC_VER
 
-// WARNING: This creates a side effect that may impact other tests.
-// We must run these sequentially to prevent concurrency-driven test failures.
 BOOST_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
 {
     // Save so we can restore at the end of this test case.
@@ -86,8 +84,6 @@ BOOST_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
 
 #else
 
-// WARNING: This creates a side effect that may impact other tests.
-// We must run these sequentially to prevent concurrency-driven test failures.
 BOOST_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
 {
     // Save so we can restore at the end of this test case.
