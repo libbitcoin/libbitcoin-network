@@ -33,6 +33,7 @@ public:
 
     /// Create an atomically-accessible default instance of the type.
     atomic()
+      : instance_{}
     {
     }
 
@@ -79,6 +80,7 @@ public:
     }
 
 private:
+    // std::decay performs lvalue-to-rvalue conversion, so reference is copied.
     typedef typename std::decay<Type>::type decay_type;
 
     decay_type instance_;
