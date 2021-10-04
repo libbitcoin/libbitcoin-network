@@ -20,8 +20,8 @@
 
 #include <cstdint>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
 #include <bitcoin/network/settings.hpp>

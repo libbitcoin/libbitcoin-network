@@ -27,12 +27,9 @@
 #include <string>
 #include <vector>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/concurrent/concurrent.hpp>
-#include <bitcoin/network/connector.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/hosts.hpp>
-#include <bitcoin/network/message_subscriber.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
 #include <bitcoin/network/sessions/session_outbound.hpp>

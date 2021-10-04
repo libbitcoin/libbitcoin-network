@@ -22,7 +22,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/concurrent/asio.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

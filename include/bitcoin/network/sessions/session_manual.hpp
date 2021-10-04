@@ -24,9 +24,8 @@
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/connector.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
 

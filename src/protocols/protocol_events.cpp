@@ -21,8 +21,8 @@
 #include <functional>
 #include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 

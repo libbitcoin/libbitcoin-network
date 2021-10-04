@@ -20,9 +20,8 @@
 #define LIBBITCOIN_NETWORK_LOG_STATSD_SINK_HPP
 
 #include <cstdint>
-#include <bitcoin/network/concurrent/asio.hpp>
-#include <bitcoin/network/concurrent/threadpool.hpp>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/log/rotable_file.hpp>
 
 namespace libbitcoin {

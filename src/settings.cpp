@@ -20,7 +20,7 @@
 
 #include <cstddef>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/concurrent/asio.hpp>
+#include <bitcoin/network/async/async.hpp>
 
 namespace libbitcoin {
 namespace network {

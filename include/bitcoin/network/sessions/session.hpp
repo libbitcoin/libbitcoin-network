@@ -25,12 +25,9 @@
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/acceptor.hpp>
-#include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/concurrent/concurrent.hpp>
-#include <bitcoin/network/connector.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/proxy.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {

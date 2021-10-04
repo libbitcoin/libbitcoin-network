@@ -27,11 +27,10 @@
 #include <utility>
 #include <vector>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/concurrent/concurrent.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/hosts.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>

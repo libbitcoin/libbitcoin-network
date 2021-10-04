@@ -144,28 +144,28 @@ endif()
 # Define ${CANONICAL_LIB_NAME} project.
 #------------------------------------------------------------------------------
 add_library( ${CANONICAL_LIB_NAME}
-    "../../src/acceptor.cpp"
-    "../../src/channel.cpp"
-    "../../src/connector.cpp"
-    "../../src/hosts.cpp"
-    "../../src/message_subscriber.cpp"
     "../../src/p2p.cpp"
-    "../../src/proxy.cpp"
     "../../src/settings.cpp"
-    "../../src/concurrent/deadline.cpp"
-    "../../src/concurrent/dispatcher.cpp"
-    "../../src/concurrent/monitor.cpp"
-    "../../src/concurrent/sequencer.cpp"
-    "../../src/concurrent/socket.cpp"
-    "../../src/concurrent/thread.cpp"
-    "../../src/concurrent/threadpool.cpp"
-    "../../src/concurrent/work.cpp"
+    "../../src/async/deadline.cpp"
+    "../../src/async/dispatcher.cpp"
+    "../../src/async/monitor.cpp"
+    "../../src/async/sequencer.cpp"
+    "../../src/async/thread.cpp"
+    "../../src/async/threadpool.cpp"
+    "../../src/async/work.cpp"
     "../../src/log/file_collector.cpp"
     "../../src/log/file_collector_repository.cpp"
     "../../src/log/file_counter_formatter.cpp"
     "../../src/log/sink.cpp"
     "../../src/log/statsd_sink.cpp"
     "../../src/log/udp_client_sink.cpp"
+    "../../src/net/acceptor.cpp"
+    "../../src/net/channel.cpp"
+    "../../src/net/connector.cpp"
+    "../../src/net/hosts.cpp"
+    "../../src/net/proxy.cpp"
+    "../../src/net/pump.cpp"
+    "../../src/net/socket.cpp"
     "../../src/protocols/protocol.cpp"
     "../../src/protocols/protocol_address_31402.cpp"
     "../../src/protocols/protocol_events.cpp"
@@ -216,7 +216,7 @@ if (with-tests)
         "../../test/p2p.cpp"
         "../../test/test.cpp"
         "../../test/test.hpp"
-        "../../test/concurrent/thread.cpp" )
+        "../../test/async/thread.cpp" )
 
     add_test( NAME libbitcoin-network-test COMMAND libbitcoin-network-test
             --run_test=empty_tests

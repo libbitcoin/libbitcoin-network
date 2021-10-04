@@ -24,9 +24,9 @@
 #include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/concurrent/concurrent.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/net/net.hpp>
 
 namespace libbitcoin {
 namespace network {

@@ -23,9 +23,8 @@
 #include <memory>
 #include <vector>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/acceptor.hpp>
-#include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
 

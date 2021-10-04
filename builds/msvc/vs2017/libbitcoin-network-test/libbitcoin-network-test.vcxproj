@@ -70,7 +70,7 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\concurrent\thread.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\p2p.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />

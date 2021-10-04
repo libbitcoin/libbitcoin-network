@@ -29,8 +29,7 @@
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/utility/setup/formatter_parser.hpp>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/concurrent/asio.hpp>
-#include <bitcoin/network/concurrent/threadpool.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/log/features/counter.hpp>
 #include <bitcoin/network/log/features/gauge.hpp>
 #include <bitcoin/network/log/features/metric.hpp>

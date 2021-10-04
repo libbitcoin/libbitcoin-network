@@ -10,13 +10,13 @@
     <Filter Include="src">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000000}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\concurrent">
+    <Filter Include="src\async">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\concurrent\thread.cpp">
-      <Filter>src\concurrent</Filter>
+    <ClCompile Include="..\..\..\..\test\async\thread.cpp">
+      <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\main.cpp">
       <Filter>src</Filter>

@@ -35,28 +35,28 @@ lib_LTLIBRARIES = src/libbitcoin-network.la
 src_libbitcoin_network_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 src_libbitcoin_network_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_network_la_SOURCES = \
-    src/acceptor.cpp \
-    src/channel.cpp \
-    src/connector.cpp \
-    src/hosts.cpp \
-    src/message_subscriber.cpp \
     src/p2p.cpp \
-    src/proxy.cpp \
     src/settings.cpp \
-    src/concurrent/deadline.cpp \
-    src/concurrent/dispatcher.cpp \
-    src/concurrent/monitor.cpp \
-    src/concurrent/sequencer.cpp \
-    src/concurrent/socket.cpp \
-    src/concurrent/thread.cpp \
-    src/concurrent/threadpool.cpp \
-    src/concurrent/work.cpp \
+    src/async/deadline.cpp \
+    src/async/dispatcher.cpp \
+    src/async/monitor.cpp \
+    src/async/sequencer.cpp \
+    src/async/thread.cpp \
+    src/async/threadpool.cpp \
+    src/async/work.cpp \
     src/log/file_collector.cpp \
     src/log/file_collector_repository.cpp \
     src/log/file_counter_formatter.cpp \
     src/log/sink.cpp \
     src/log/statsd_sink.cpp \
     src/log/udp_client_sink.cpp \
+    src/net/acceptor.cpp \
+    src/net/channel.cpp \
+    src/net/connector.cpp \
+    src/net/hosts.cpp \
+    src/net/proxy.cpp \
+    src/net/pump.cpp \
+    src/net/socket.cpp \
     src/protocols/protocol.cpp \
     src/protocols/protocol_address_31402.cpp \
     src/protocols/protocol_events.cpp \
@@ -88,7 +88,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/p2p.cpp \
     test/test.cpp \
     test/test.hpp \
-    test/concurrent/thread.cpp
+    test/async/thread.cpp
 
 endif WITH_TESTS
 
@@ -100,47 +100,38 @@ include_bitcoin_HEADERS = \
 
 include_bitcoin_networkdir = ${includedir}/bitcoin/network
 include_bitcoin_network_HEADERS = \
-    include/bitcoin/network/acceptor.hpp \
-    include/bitcoin/network/channel.hpp \
-    include/bitcoin/network/connector.hpp \
     include/bitcoin/network/define.hpp \
-    include/bitcoin/network/hosts.hpp \
-    include/bitcoin/network/message_subscriber.hpp \
     include/bitcoin/network/p2p.hpp \
-    include/bitcoin/network/proxy.hpp \
     include/bitcoin/network/settings.hpp \
     include/bitcoin/network/version.hpp
 
-include_bitcoin_network_concurrentdir = ${includedir}/bitcoin/network/concurrent
-include_bitcoin_network_concurrent_HEADERS = \
-    include/bitcoin/network/concurrent/asio.hpp \
-    include/bitcoin/network/concurrent/atomic.hpp \
-    include/bitcoin/network/concurrent/concurrent.hpp \
-    include/bitcoin/network/concurrent/deadline.hpp \
-    include/bitcoin/network/concurrent/decorator.hpp \
-    include/bitcoin/network/concurrent/delegates.hpp \
-    include/bitcoin/network/concurrent/dispatcher.hpp \
-    include/bitcoin/network/concurrent/enable_shared_from_base.hpp \
-    include/bitcoin/network/concurrent/handlers.hpp \
-    include/bitcoin/network/concurrent/monitor.hpp \
-    include/bitcoin/network/concurrent/pending.hpp \
-    include/bitcoin/network/concurrent/resubscriber.hpp \
-    include/bitcoin/network/concurrent/sequencer.hpp \
-    include/bitcoin/network/concurrent/socket.hpp \
-    include/bitcoin/network/concurrent/subscriber.hpp \
-    include/bitcoin/network/concurrent/synchronizer.hpp \
-    include/bitcoin/network/concurrent/thread.hpp \
-    include/bitcoin/network/concurrent/threadpool.hpp \
-    include/bitcoin/network/concurrent/timer.hpp \
-    include/bitcoin/network/concurrent/track.hpp \
-    include/bitcoin/network/concurrent/work.hpp
+include_bitcoin_network_asyncdir = ${includedir}/bitcoin/network/async
+include_bitcoin_network_async_HEADERS = \
+    include/bitcoin/network/async/asio.hpp \
+    include/bitcoin/network/async/async.hpp \
+    include/bitcoin/network/async/atomic.hpp \
+    include/bitcoin/network/async/deadline.hpp \
+    include/bitcoin/network/async/decorator.hpp \
+    include/bitcoin/network/async/delegates.hpp \
+    include/bitcoin/network/async/dispatcher.hpp \
+    include/bitcoin/network/async/enable_shared_from_base.hpp \
+    include/bitcoin/network/async/handlers.hpp \
+    include/bitcoin/network/async/monitor.hpp \
+    include/bitcoin/network/async/resubscriber.hpp \
+    include/bitcoin/network/async/sequencer.hpp \
+    include/bitcoin/network/async/subscriber.hpp \
+    include/bitcoin/network/async/synchronizer.hpp \
+    include/bitcoin/network/async/thread.hpp \
+    include/bitcoin/network/async/threadpool.hpp \
+    include/bitcoin/network/async/timer.hpp \
+    include/bitcoin/network/async/track.hpp \
+    include/bitcoin/network/async/work.hpp
 
-include_bitcoin_network_impl_concurrentdir = ${includedir}/bitcoin/network/impl/concurrent
-include_bitcoin_network_impl_concurrent_HEADERS = \
-    include/bitcoin/network/impl/concurrent/pending.ipp \
-    include/bitcoin/network/impl/concurrent/resubscriber.ipp \
-    include/bitcoin/network/impl/concurrent/subscriber.ipp \
-    include/bitcoin/network/impl/concurrent/track.ipp
+include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
+include_bitcoin_network_impl_async_HEADERS = \
+    include/bitcoin/network/impl/async/resubscriber.ipp \
+    include/bitcoin/network/impl/async/subscriber.ipp \
+    include/bitcoin/network/impl/async/track.ipp
 
 include_bitcoin_network_impl_log_featuresdir = ${includedir}/bitcoin/network/impl/log/features
 include_bitcoin_network_impl_log_features_HEADERS = \
@@ -149,6 +140,10 @@ include_bitcoin_network_impl_log_features_HEADERS = \
     include/bitcoin/network/impl/log/features/metric.ipp \
     include/bitcoin/network/impl/log/features/rate.ipp \
     include/bitcoin/network/impl/log/features/timer.ipp
+
+include_bitcoin_network_impl_netdir = ${includedir}/bitcoin/network/impl/net
+include_bitcoin_network_impl_net_HEADERS = \
+    include/bitcoin/network/impl/net/pending.ipp
 
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \
@@ -173,6 +168,18 @@ include_bitcoin_network_log_features_HEADERS = \
     include/bitcoin/network/log/features/metric.hpp \
     include/bitcoin/network/log/features/rate.hpp \
     include/bitcoin/network/log/features/timer.hpp
+
+include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
+include_bitcoin_network_net_HEADERS = \
+    include/bitcoin/network/net/acceptor.hpp \
+    include/bitcoin/network/net/channel.hpp \
+    include/bitcoin/network/net/connector.hpp \
+    include/bitcoin/network/net/hosts.hpp \
+    include/bitcoin/network/net/net.hpp \
+    include/bitcoin/network/net/pending.hpp \
+    include/bitcoin/network/net/proxy.hpp \
+    include/bitcoin/network/net/pump.hpp \
+    include/bitcoin/network/net/socket.hpp
 
 include_bitcoin_network_protocolsdir = ${includedir}/bitcoin/network/protocols
 include_bitcoin_network_protocols_HEADERS = \
