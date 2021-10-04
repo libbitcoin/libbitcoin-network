@@ -72,7 +72,7 @@ void protocol_ping_31402::send_ping(const code& ec)
 }
 
 bool protocol_ping_31402::handle_receive_ping(const code& ec,
-    ping_const_ptr )
+    ping_const_ptr)
 {
     if (stopped(ec))
         return false;

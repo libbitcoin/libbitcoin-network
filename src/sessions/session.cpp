@@ -161,7 +161,7 @@ void session::start(result_handler handler)
     handler(error::success);
 }
 
-void session::handle_stop(const code& )
+void session::handle_stop(const code&)
 {
     // This signals the session to stop creating connections, but does not
     // close the session. Channels stop, resulting in session loss of scope.
