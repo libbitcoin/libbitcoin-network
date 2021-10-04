@@ -13,16 +13,100 @@
     <Filter Include="src\async">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\net">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\protocols">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sessions">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\async\atomic.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\deadline.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\delegates.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\dispatcher.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\monitor.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\sequencer.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\subscriber.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\synchronizer.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\thread.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\threadpool.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\time.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\timer.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\track.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\work.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\acceptor.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\channel.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\connector.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\hosts.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\pending.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\proxy.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\pump.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\socket.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\p2p.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session.cpp">
+      <Filter>src\sessions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>

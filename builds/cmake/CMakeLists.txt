@@ -217,7 +217,32 @@ if (with-tests)
         "../../test/p2p.cpp"
         "../../test/test.cpp"
         "../../test/test.hpp"
-        "../../test/async/thread.cpp" )
+        "../../test/async/atomic.cpp"
+        "../../test/async/deadline.cpp"
+        "../../test/async/delegates.cpp"
+        "../../test/async/dispatcher.cpp"
+        "../../test/async/enable_shared_from_base.cpp"
+        "../../test/async/monitor.cpp"
+        "../../test/async/resubscriber.cpp"
+        "../../test/async/sequencer.cpp"
+        "../../test/async/subscriber.cpp"
+        "../../test/async/synchronizer.cpp"
+        "../../test/async/thread.cpp"
+        "../../test/async/threadpool.cpp"
+        "../../test/async/time.cpp"
+        "../../test/async/timer.cpp"
+        "../../test/async/track.cpp"
+        "../../test/async/work.cpp"
+        "../../test/net/acceptor.cpp"
+        "../../test/net/channel.cpp"
+        "../../test/net/connector.cpp"
+        "../../test/net/hosts.cpp"
+        "../../test/net/pending.cpp"
+        "../../test/net/proxy.cpp"
+        "../../test/net/pump.cpp"
+        "../../test/net/socket.cpp"
+        "../../test/protocols/protocol.cpp"
+        "../../test/sessions/session.cpp" )
 
     add_test( NAME libbitcoin-network-test COMMAND libbitcoin-network-test
             --run_test=empty_tests

@@ -70,9 +70,34 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\async\atomic.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\deadline.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\delegates.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\dispatcher.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\monitor.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\sequencer.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\subscriber.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\synchronizer.cpp" />
     <ClCompile Include="..\..\..\..\test\async\thread.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\time.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\timer.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\track.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\work.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\channel.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\pending.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\pump.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\socket.cpp" />
     <ClCompile Include="..\..\..\..\test\p2p.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp" />
+    <ClCompile Include="..\..\..\..\test\sessions\session.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>
   <ItemGroup>
