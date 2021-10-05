@@ -23,9 +23,99 @@ using namespace bc::network;
 
 BOOST_AUTO_TEST_SUITE(deadline_tests)
 
-BOOST_AUTO_TEST_CASE(deadline)
+BOOST_AUTO_TEST_CASE(deadline__construct1__one_thread_start_zero_delay__success)
 {
-    BOOST_REQUIRE(true);
+    const auto handler = [](code ec)
+    {
+        BOOST_REQUIRE(ec == error::success);
+    };
+
+    threadpool pool(1);
+    std::make_shared<deadline>(pool)->start(handler);
+}
+
+BOOST_AUTO_TEST_CASE(deadline__construct1__two_threads_start_delay__success)
+{
+    const auto handler = [](code ec)
+    {
+        BOOST_REQUIRE(ec == error::success);
+    };
+
+    threadpool pool(2);
+    std::make_shared<deadline>(pool)->start(handler, seconds(1));
+}
+
+BOOST_AUTO_TEST_CASE(deadline__construct2__three_threads_start_zero_delay__success)
+{
+    const auto handler = [](code ec)
+    {
+        BOOST_REQUIRE(ec == error::success);
+    };
+
+    threadpool pool(3);
+    std::make_shared<deadline>(pool, seconds(42))->start(handler, seconds(0));
+}
+
+BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
+{
+    // Thread starved timer.
+    // ------------------------------------------------------------------------
+
+    const auto handler = [](code ec)
+    {
+        // This should never be invoked (no threads).
+        BOOST_REQUIRE(false);
+    };
+
+    threadpool pool(0);
+    auto timer = std::make_shared<deadline>(pool);
+    timer->start(handler);
+
+    // Stop timer.
+    // ------------------------------------------------------------------------
+
+    std::promise<code> stop_promise;
+    const auto stop_handler = [&timer](code ec)
+    {
+        BOOST_REQUIRE(ec == error::success);
+        timer->stop();
+    };
+
+    threadpool stop_pool(1);
+    auto stopper = std::make_shared<deadline>(stop_pool, seconds(1));
+    stopper->start(stop_handler);
+}
+
+BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
+{
+    // Slow timer.
+    // ------------------------------------------------------------------------
+
+    const auto handler = [](code ec)
+    {
+        // In the case of a race won by the slow timer, this catches success.
+        // In the case of a race won by the stop timer, this will not fire.
+        // A 10s delay indicates the slow timer has won the race (unexpected).
+        BOOST_REQUIRE(ec == error::success);
+    };
+
+    threadpool pool(1);
+    auto timer = std::make_shared<deadline>(pool, seconds(10));
+    timer->start(handler);
+
+    // Stop timer.
+    // ------------------------------------------------------------------------
+
+    std::promise<code> stop_promise;
+    const auto stop_handler = [&timer](code ec)
+    {
+        BOOST_REQUIRE(ec == error::success);
+        timer->stop();
+    };
+
+    threadpool stop_pool(1);
+    auto stopper = std::make_shared<deadline>(stop_pool);
+    stopper->start(stop_handler, seconds(1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

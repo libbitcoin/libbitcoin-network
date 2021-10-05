@@ -32,11 +32,9 @@
 namespace libbitcoin {
 namespace network {
 
-/**
- * Class wrapper for boost::asio::deadline_timer, thread safe.
- * This simplifies invocation, eliminates boost-specific error handling and
- * makes timer firing and cancellation conditions safer.
- */
+/// Class wrapper for boost::asio::deadline_timer, thread safe.
+/// This simplifies invocation, eliminates boost-specific error handling and
+/// makes timer firing and cancellation conditions safer.
 class BCT_API deadline
   : public enable_shared_from_base<deadline>,
     system::noncopyable
@@ -46,39 +44,25 @@ public:
     typedef std::shared_ptr<deadline> ptr;
     typedef std::function<void(const system::code&)> handler;
 
-    /**
-     * Construct a deadline timer with a zero duration.
-     * @param[in]  pool      The thread pool used by the timer.
-     */
+    /// Construct a deadline timer with a zero duration.
     deadline(threadpool& pool);
 
-    /**
-     * Construct a deadline timer.
-     * @param[in]  pool  The thread pool used by the timer.
-     * @param[in]  span  The default time period from start to expiration.
-     */
+    /// Construct a deadline timer with duration relative to start call.
     deadline(threadpool& pool, const duration& span);
 
-    /**
-     * Start or restart the timer.
-     * The handler will not be invoked within the scope of this call.
-     * Use expired(ec) in handler to test for expiration.
-     * @param[in]  handle  Callback invoked upon expire or cancel.
-     */
+    /// Start or restart the timer.
+    /// The handler will not be invoked within the scope of this call.
+    /// Use expired(ec) in handler to test for expiration.
+    /// A std::shared_ptr to the deadline instance must make this call.
     void start(handler handle);
 
-    /**
-     * Start or restart the timer.
-     * The handler will not be invoked within the scope of this call.
-     * Use expired(ec) in handler to test for expiration.
-     * @param[in]  handle  Callback invoked upon expire or cancel.
-     * @param[in]  span    The time period from start to expiration.
-     */
+    /// Start or restart the timer.
+    /// The handler will not be invoked within the scope of this call.
+    /// Use expired(ec) in handler to test for expiration.
+    /// A std::shared_ptr to the deadline instance must make this call.
     void start(handler handle, const duration& span);
 
-    /**
-     * Cancel the timer. The handler will be invoked.
-     */
+    /// Cancel the timer. The handler will be invoked.
     void stop();
 
 private:

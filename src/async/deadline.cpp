@@ -31,7 +31,7 @@ using namespace bc::system;
 using namespace std::placeholders;
 
 // The timer closure captures an instance of this class and the callback.
-// Deadline is guaranteed to call handler exactly once unless canceled/reset.
+// Deadline calls handler exactly once unless canceled/restarted.
 
 deadline::deadline(threadpool& pool)
   : duration_(seconds(0)),
@@ -54,6 +54,7 @@ void deadline::start(handler handle)
 
 void deadline::start(handler handle, const duration& span)
 {
+    // shared_from_this requires that the caller is owned by a std::shared_ptr.
     const auto timer_handler =
         std::bind(&deadline::handle_timer,
             shared_from_this(), _1, handle);
@@ -74,7 +75,7 @@ void deadline::start(handler handle, const duration& span)
 
 // Cancellation calls handle_timer with asio::error::operation_aborted.
 // We do not handle the cancelation result code, which will return success
-// in the case of a race in which the timer is already canceled.
+// in the case of a race in which the timer is already expired.
 void deadline::stop()
 {
     // Critical Section
@@ -89,12 +90,10 @@ void deadline::stop()
 
 // If the timer expires the callback is fired with a success code.
 // If the timer fails the callback is fired with the normalized error code.
-// If the timer is canceled no call is made.
+// If the timer is canceled before it has fired, no call is made.
 void deadline::handle_timer(const boost_code& ec, handler handle) const
 {
-    if (!ec)
-        handle(error::success);
-    else if (ec != asio::error::operation_aborted)
+    if (ec != asio::error::operation_aborted)
         handle(error::boost_to_error_code(ec));
 }
 
