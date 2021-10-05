@@ -184,7 +184,6 @@ void connector::handle_connect(const boost_code& ec,
         return;
     }
 
-    // Ensure that channel is not passed as an r-value.
     const auto created = std::make_shared<channel>(pool_, socket, settings_);
     handler(error::success, created);
 }
