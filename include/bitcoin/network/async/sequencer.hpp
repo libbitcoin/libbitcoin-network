@@ -23,7 +23,6 @@
 #include <memory>
 #include <queue>
 #include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/thread.hpp>
 ////#include <bitcoin/network/async/track.hpp>
 
@@ -31,8 +30,7 @@ namespace libbitcoin {
 namespace network {
 
 class sequencer
-  : public enable_shared_from_base<sequencer>
-    /*, track<sequencer>*/
+  /*: track<sequencer>*/
 {
 public:
     typedef std::shared_ptr<sequencer> ptr;
