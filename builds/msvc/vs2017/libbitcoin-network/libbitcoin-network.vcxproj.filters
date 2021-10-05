@@ -78,9 +78,6 @@
     <ClCompile Include="..\..\..\..\src\async\dispatcher.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\async\monitor.cpp">
-      <Filter>src\async</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\async\sequencer.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
@@ -216,9 +213,6 @@
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp">
-      <Filter>include\bitcoin\network\async</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\monitor.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\resubscriber.hpp">

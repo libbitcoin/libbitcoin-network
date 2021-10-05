@@ -39,7 +39,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/settings.cpp \
     src/async/deadline.cpp \
     src/async/dispatcher.cpp \
-    src/async/monitor.cpp \
     src/async/sequencer.cpp \
     src/async/thread.cpp \
     src/async/threadpool.cpp \
@@ -94,7 +93,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/async/delegates.cpp \
     test/async/dispatcher.cpp \
     test/async/enable_shared_from_base.cpp \
-    test/async/monitor.cpp \
     test/async/resubscriber.cpp \
     test/async/sequencer.cpp \
     test/async/subscriber.cpp \
@@ -141,7 +139,6 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/dispatcher.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
     include/bitcoin/network/async/handlers.hpp \
-    include/bitcoin/network/async/monitor.hpp \
     include/bitcoin/network/async/resubscriber.hpp \
     include/bitcoin/network/async/sequencer.hpp \
     include/bitcoin/network/async/subscriber.hpp \

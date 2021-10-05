@@ -20,23 +20,17 @@
 #define LIBBITCOIN_NETWORK_ASYNC_WORK_HPP
 
 #include <functional>
-#include <string>
 #include <memory>
+#include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/monitor.hpp>
 #include <bitcoin/network/async/sequencer.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
-
-#define ORDERED "ordered"
-#define UNORDERED "unordered"
-#define CONCURRENT "concurrent"
-#define SEQUENCE "sequence"
 
 #define FORWARD_ARGS(args) \
     std::forward<Args>(args)...
@@ -69,8 +63,6 @@ public:
     {
         // Service post ensures the job does not execute in the current thread.
         service_.post(BIND_HANDLER(handler, args));
-        ////service_.post(inject(BIND_HANDLER(handler, args), CONCURRENT,
-        ////    concurrent_));
     }
 
     /// Sequential execution for synchronous operations.
@@ -80,7 +72,6 @@ public:
         // Use a strand to prevent concurrency and post vs. dispatch to ensure
         // that the job is not executed in the current thread.
         strand_.post(BIND_HANDLER(handler, args));
-        ////strand_.post(inject(BIND_HANDLER(handler, args), ORDERED, ordered_));
     }
 
     /// Non-concurrent execution for synchronous operations.
@@ -90,8 +81,6 @@ public:
         // Use a strand wrapper to prevent concurrency and a service post
         // to deny ordering while ensuring execution on another thread.
         service_.post(strand_.wrap(BIND_HANDLER(handler, args)));
-        ////service_.post(strand_.wrap(inject(BIND_HANDLER(handler, args),
-        ////    UNORDERED, unordered_)));
     }
 
     /// Begin sequential execution for a set of asynchronous operations.
@@ -102,8 +91,6 @@ public:
         // Use a sequence to track the asynchronous operation to completion,
         // ensuring each asynchronous op executes independently and in order.
         sequence_.lock(BIND_HANDLER(handler, args));
-        ////sequence_.lock(inject(BIND_HANDLER(handler, args), SEQUENCE,
-        ////    sequence_));
     }
 
     /// Complete sequential execution.
@@ -112,32 +99,9 @@ public:
         sequence_.unlock();
     }
 
-    ////size_t ordered_backlog();
-    ////size_t unordered_backlog();
-    ////size_t concurrent_backlog();
-    ////size_t sequential_backlog();
-    ////size_t combined_backlog();
-
 private:
-    ////template <typename Handler>
-    ////auto inject(Handler&& handler, const std::string& context,
-    ////    monitor::count_ptr counter) -> std::function<void()>
-    ////{
-    ////    auto label = name_ + "_" + context;
-    ////    auto capture = std::make_shared<monitor>(counter, std::move(label));
-    ////    return [=]() { capture->invoke(handler); };
-
-    ////    //// TODO: use this to prevent handler copy into closure.
-    ////    ////return std::bind(&monitor::invoke<Handler>, capture,
-    ////    ////    std::forward<Handler>(handler));
-    ////}
-
     // These are thread safe.
     const std::string name_;
-    ////monitor::count_ptr ordered_;
-    ////monitor::count_ptr unordered_;
-    ////monitor::count_ptr concurrent_;
-    ////monitor::count_ptr sequential_;
     asio::service& service_;
     asio::service::strand strand_;
     sequencer sequence_;

@@ -75,7 +75,6 @@
     <ClCompile Include="..\..\..\..\test\async\delegates.cpp" />
     <ClCompile Include="..\..\..\..\test\async\dispatcher.cpp" />
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\monitor.cpp" />
     <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\sequencer.cpp" />
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp" />

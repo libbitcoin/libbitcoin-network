@@ -27,7 +27,6 @@
 #include <bitcoin/network/async/dispatcher.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/handlers.hpp>
-#include <bitcoin/network/async/monitor.hpp>
 #include <bitcoin/network/async/resubscriber.hpp>
 #include <bitcoin/network/async/sequencer.hpp>
 #include <bitcoin/network/async/subscriber.hpp>

@@ -75,7 +75,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\async\deadline.cpp" />
     <ClCompile Include="..\..\..\..\src\async\dispatcher.cpp" />
-    <ClCompile Include="..\..\..\..\src\async\monitor.cpp" />
     <ClCompile Include="..\..\..\..\src\async\sequencer.cpp" />
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
@@ -123,7 +122,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\dispatcher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\monitor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\resubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\sequencer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp" />
