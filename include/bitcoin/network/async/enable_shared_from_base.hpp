@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_ASYNC_ENABLE_SHARED_FROM_BASE_HPP
 
 #include <memory>
+#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -30,7 +31,10 @@ class enable_shared_from_base
   : public std::enable_shared_from_this<Base>
 {
 protected:
-    template <class Derived>
+    // static_cast avoids dynamic_cast runtime safety checks.
+    // Caller must ensure that Derived is derived from Base.
+    // The type constraint performs this check at compile time.
+    template <class Derived, system::if_base_of<Base, Derived> = true>
     std::shared_ptr<Derived> shared_from_base()
     {
         return std::static_pointer_cast<Derived>(this->shared_from_this());
