@@ -42,8 +42,8 @@ class BCT_API proxy
 {
 public:
     typedef std::shared_ptr<proxy> ptr;
-    typedef std::function<void(const system::code&)> result_handler;
-    typedef subscriber<system::code> stop_subscriber;
+    typedef std::function<void(const code&)> result_handler;
+    typedef subscriber<code> stop_subscriber;
 
     /// Construct an instance.
     proxy(threadpool& pool, socket::ptr socket, const settings& settings);
@@ -55,25 +55,18 @@ public:
     template <class Message>
     void send(const Message& message, result_handler handler)
     {
-        auto data = system::messages::serialize(version_, message,
-            protocol_magic_);
-        const auto payload = std::make_shared<system::data_chunk>(
-            std::move(data));
-        const auto command = std::make_shared<std::string>(message.command);
-
-        // Sequential dispatch is required because write may occur in multiple
-        // asynchronous steps invoked on different threads, causing deadlocks.
-        // boost.org/doc/libs/1_77_0/doc/html/boost_asio/reference/async_write/overload1.html
-        dispatch_.lock(&proxy::do_send,
-            shared_from_this(), command, payload, handler);
+        auto data = messages::serialize(message, version_, protocol_magic_);
+        auto payload = std::make_shared<system::data_chunk>(std::move(data));
+        auto command = std::make_shared<std::string>(message.command);
+        send(command, payload, handler);
     }
 
     /// Subscribe to messages of the specified type on the socket.
     template <class Message>
     void subscribe(message_handler<Message>&& handler)
     {
-        pump_.subscribe<Message>(std::forward<message_handler<Message>>(
-            handler));
+        pump_.subscribe<Message>(
+            std::forward<message_handler<Message>>(handler));
     }
 
     /// Subscribe to the stop event.
@@ -113,6 +106,8 @@ private:
     void handle_read_payload(const system::boost_code& ec, size_t payload_size,
         const system::messages::heading& head);
 
+    void send(command_ptr command, payload_ptr payload,
+        result_handler handler);
     void do_send(command_ptr command, payload_ptr payload,
         result_handler handler);
     void handle_send(const system::boost_code& ec, size_t bytes,

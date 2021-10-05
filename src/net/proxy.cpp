@@ -265,6 +265,17 @@ void proxy::handle_read_payload(const boost_code& ec,
 // Message send sequence.
 // ----------------------------------------------------------------------------
 
+// Called from send<Message> following serialization.
+void proxy::send(command_ptr command, payload_ptr payload,
+    result_handler handler)
+{
+    // Sequential dispatch is required because write may occur in multiple
+    // asynchronous steps invoked on different threads, causing deadlocks.
+    // boost.org/doc/libs/1_77_0/doc/html/boost_asio/reference/async_write/overload1.html
+    dispatch_.lock(&proxy::do_send,
+        shared_from_this(), command, payload, handler);
+}
+
 void proxy::do_send(command_ptr command, payload_ptr payload,
     result_handler handler)
 {
