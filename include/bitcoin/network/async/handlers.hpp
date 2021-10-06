@@ -25,6 +25,8 @@
 namespace libbitcoin {
 namespace network {
 
+/// Aliases for common handlers.
+
 typedef std::function<void(const code&)> handle0;
 
 template <typename Type>
