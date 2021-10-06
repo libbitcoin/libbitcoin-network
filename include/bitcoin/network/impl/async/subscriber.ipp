@@ -123,6 +123,7 @@ template <typename... Args>
 void subscriber<Args...>::relay(Args... args)
 {
     // This enqueues work while maintaining order.
+    // Ordering constraint is lost if work is performed asynchronously.
     dispatch_.ordered(&subscriber<Args...>::do_invoke,
         this->shared_from_this(), args...);
 }

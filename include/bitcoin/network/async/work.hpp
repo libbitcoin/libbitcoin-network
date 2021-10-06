@@ -32,6 +32,9 @@
 namespace libbitcoin {
 namespace network {
 
+/// work->()
+/// work->[strand|service|sequence->service]
+
 /// This  class is thread safe.
 /// boost asio class wrapper to enable work heap management.
 class BCT_API work
@@ -54,6 +57,7 @@ public:
     template <typename Handler, typename... Args>
     void concurrent(Handler&& handler, Args&&... args)
     {
+        // TODO: io_context::post is deprecated, use post.
         // Service post ensures the job does not execute in the current thread.
         service_.post(BIND_HANDLER(handler, args));
     }
@@ -71,6 +75,8 @@ public:
     template <typename Handler, typename... Args>
     void unordered(Handler&& handler, Args&&... args)
     {
+        // TODO: io_context::post is deprecated, use post.
+        // TODO: io_context::strand::wrap is deprecated, use bind_executor.
         // Use a strand wrapper to prevent concurrency and a service post
         // to deny ordering while ensuring execution on another thread.
         service_.post(strand_.wrap(BIND_HANDLER(handler, args)));

@@ -23,22 +23,24 @@
 #include <functional>
 #include <string>
 #include <utility>
-#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/deadline.hpp>
 #include <bitcoin/network/async/delegates.hpp>
-#include <bitcoin/network/async/synchronizer.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
-#include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/work.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// This  class is thread safe.
+/// dispatcher->()
+/// dispatcher->work->[service|strand|sequence->service]
+/// dispatcher->delegate->work->[service|strand|sequence->service]
+
+/// This class is thread safe.
 /// If the ios service is stopped jobs will not be dispatched.
+/// This is the originator of work executed by the network.
 class BCT_API dispatcher
   : system::noncopyable
 {
@@ -47,11 +49,24 @@ public:
 
     dispatcher(threadpool& pool, const std::string& name);
 
-    /// Invokes a job on the current thread. Equivalent to invoking std::bind.
+    /// Executes a job immediately on the current thread.
     template <typename... Args>
     static void bound(Args&&... args)
     {
         std::bind(FORWARD_ARGS(args))();
+    }
+
+    /// Executes a job after specified delay, on the timer thread.
+    /// The timer cannot be canceled as no reference is retained.
+    /// This is used for delayed retry network operations.
+    inline void delayed(const duration& delay, delay_handler handler)
+    {
+        auto timer = std::make_shared<deadline>(pool_, delay);
+        timer->start([handler, timer](const code& ec)
+        {
+            handler(ec);
+            timer->stop();
+        });
     }
 
     /// Posts a job to the service. Concurrent and not ordered.
@@ -89,19 +104,6 @@ public:
     inline void unlock()
     {
         heap_->unlock();
-    }
-
-    /// Posts job to service after specified delay. Concurrent and not ordered.
-    /// The timer cannot be canceled as no reference is retained.
-    /// This is used for delayed network retry operations.
-    inline void delayed(const duration& delay, delay_handler handler)
-    {
-        auto timer = std::make_shared<deadline>(pool_, delay);
-        timer->start([handler, timer](const code& ec)
-        {
-            handler(ec);
-            timer->stop();
-        });
     }
 
     /// Returns a delegate that will execute the job on the current thread.
@@ -181,6 +183,9 @@ private:
 
 #endif
 
+////#include <bitcoin/network/async/synchronizer.hpp>
+////#include <vector>
+////
 ////// Collection dispatch doesn't forward args as move args can only forward once.
 ////#define BIND_RACE(args, call) \
 ////    std::bind(args..., call)

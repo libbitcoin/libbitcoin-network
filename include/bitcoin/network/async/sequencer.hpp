@@ -29,6 +29,8 @@
 namespace libbitcoin {
 namespace network {
 
+/// sequence->service.post
+
 class sequencer
   /*: track<sequencer>*/
 {

@@ -26,6 +26,9 @@ namespace libbitcoin {
 namespace network {
 namespace delegates {
 
+/// delegate->()
+/// delegate->work->[service|strand|sequence->service]
+
 /// Binding delegate (current thread).
 template <typename Handler>
 struct bound

@@ -270,8 +270,16 @@ void proxy::send(command_ptr command, payload_ptr payload,
     result_handler handler)
 {
     // Sequential dispatch is required because write may occur in multiple
-    // asynchronous steps invoked on different threads, causing deadlocks.
+    // asynchronous steps invoked on different threads.
     // boost.org/doc/libs/1_77_0/doc/html/boost_asio/reference/async_write/overload1.html
+    // "This operation is implemented in terms of zero or more calls to the
+    // stream's async_write_some function, and is known as a composed operation.
+    // The program must ensure that the stream performs no other write operations
+    // (such as async_write, the stream's async_write_some function, or any other
+    // composed operations that perform writes) until this operation completes."
+    // Given that async_write_some returns immediately, ordered async_write
+    // execution is insufficient to preclude disorder of writes. So we queue
+    // writes on this channel until the previous write has completed.
     dispatch_.lock(&proxy::do_send,
         shared_from_this(), command, payload, handler);
 }
@@ -288,6 +296,7 @@ void proxy::do_send(command_ptr command, payload_ptr payload,
 void proxy::handle_send(const boost_code& ec, size_t,
     command_ptr command, payload_ptr payload, result_handler handler)
 {
+    // lock and unlock may execute on independent threads.
     dispatch_.unlock();
     const auto size = payload->size();
     const auto error = code(error::boost_to_error_code(ec));

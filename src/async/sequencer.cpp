@@ -33,6 +33,8 @@ sequencer::sequencer(asio::service& service)
 
 sequencer::~sequencer()
 {
+    // Failure to unlock will create a shutdown hang as delegates contain a
+    // reference to the sending proxy object.
     BITCOIN_ASSERT_MSG(actions_.empty(), "sequencer not cleared");
 }
 
