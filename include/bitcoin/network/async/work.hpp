@@ -32,13 +32,6 @@
 namespace libbitcoin {
 namespace network {
 
-#define FORWARD_ARGS(args) \
-    std::forward<Args>(args)...
-#define FORWARD_HANDLER(handler) \
-    std::forward<Handler>(handler)
-#define BIND_HANDLER(handler, args) \
-    std::bind(FORWARD_HANDLER(handler), FORWARD_ARGS(args))
-
 /// This  class is thread safe.
 /// boost asio class wrapper to enable work heap management.
 class BCT_API work
@@ -106,10 +99,6 @@ private:
     asio::service::strand strand_;
     sequencer sequence_;
 };
-
-#undef FORWARD_ARGS
-#undef FORWARD_HANDLER
-#undef BIND_HANDLER
 
 } // namespace network
 } // namespace libbitcoin

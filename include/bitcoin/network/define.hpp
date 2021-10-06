@@ -55,6 +55,14 @@ namespace network {
 
 using code = system::code;
 
+// The 'Handler' typename is conventional.
+#define FORWARD_ARGS(args) \
+    std::forward<Args>(args)...
+#define FORWARD_HANDLER(handler) \
+    std::forward<Handler>(handler)
+#define BIND_HANDLER(handler, args) \
+    std::bind(FORWARD_HANDLER(handler), FORWARD_ARGS(args))
+
 } // namespace network
 } // namespace libbitcoin
 

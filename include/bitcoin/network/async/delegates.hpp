@@ -26,13 +26,6 @@ namespace libbitcoin {
 namespace network {
 namespace delegates {
 
-#define FORWARD_ARGS(args) \
-    std::forward<Args>(args)...
-#define FORWARD_HANDLER(handler) \
-    std::forward<Handler>(handler)
-#define BIND_HANDLER(handler, args) \
-    std::bind(FORWARD_HANDLER(handler), FORWARD_ARGS(args))
-
 /// Binding delegate (current thread).
 template <typename Handler>
 struct bound
@@ -101,10 +94,6 @@ struct sequence
     Handler handler;
     work::ptr heap;
 };
-
-#undef FORWARD_ARGS
-#undef FORWARD_HANDLER
-#undef BIND_HANDLER
 
 } // namespace delegates
 } // namespace network
