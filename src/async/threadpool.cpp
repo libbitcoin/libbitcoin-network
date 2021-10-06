@@ -28,9 +28,10 @@ namespace libbitcoin {
 namespace network {
 
 threadpool::threadpool(size_t number_threads, thread_priority priority)
+  : work_(std::make_shared<asio::service::work>(service_))
 {
-    /// Keep the threadpool alive with no threads running.
-    work_ = std::make_shared<asio::service::work>(service_);
+    // TODO: io_context::work is deprecated, use executor_work_guard.
+    // Work keeps the threadpool alive when there are no threads running.
 
     for (size_t thread = 0; thread < number_threads; ++thread)
     {
