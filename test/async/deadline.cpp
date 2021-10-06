@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(deadline__construct1__two_threads_start_delay__success)
     };
 
     threadpool pool(2);
-    std::make_shared<deadline>(pool)->start(handler, seconds(1));
+    std::make_shared<deadline>(pool)->start(handler, milliseconds(1));
 }
 
 BOOST_AUTO_TEST_CASE(deadline__construct2__three_threads_start_zero_delay__success)
@@ -74,7 +74,6 @@ BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
     // Stop timer.
     // ------------------------------------------------------------------------
 
-    std::promise<code> stop_promise;
     const auto stop_handler = [&timer](code ec)
     {
         BOOST_REQUIRE(ec == error::success);
@@ -82,7 +81,7 @@ BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
     };
 
     threadpool stop_pool(1);
-    auto stopper = std::make_shared<deadline>(stop_pool, seconds(1));
+    auto stopper = std::make_shared<deadline>(stop_pool, milliseconds(1));
     stopper->start(stop_handler);
 }
 
@@ -106,7 +105,6 @@ BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
     // Stop timer.
     // ------------------------------------------------------------------------
 
-    std::promise<code> stop_promise;
     const auto stop_handler = [&timer](code ec)
     {
         BOOST_REQUIRE(ec == error::success);
@@ -115,7 +113,7 @@ BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
 
     threadpool stop_pool(1);
     auto stopper = std::make_shared<deadline>(stop_pool);
-    stopper->start(stop_handler, seconds(1));
+    stopper->start(stop_handler, milliseconds(1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
