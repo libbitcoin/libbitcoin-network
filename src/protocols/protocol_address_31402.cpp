@@ -19,6 +19,7 @@
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 
 #include <functional>
+#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -30,25 +31,24 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "address"
 #define CLASS protocol_address_31402
+static const std::string protocol_name = "address";
 
 using namespace bc::system;
 using namespace bc::system::messages;
 using namespace std::placeholders;
 
-static messages::address configured_self(
-    const network::settings& settings)
+static messages::address configured_self(const network::settings& settings)
 {
     if (settings.self.port() == 0)
-        return address{};
+        return {};
 
-    return address{ { settings.self.to_network_address() } };
+    return { { settings.self.to_network_address() } };
 }
 
-protocol_address_31402::protocol_address_31402(p2p& network,
-    channel::ptr channel)
-  : protocol_events(network, channel, NAME),
+protocol_address_31402::protocol_address_31402(channel::ptr channel,
+    p2p& network)
+  : protocol_events(channel),
     network_(network),
     self_(configured_self(network_.network_settings())),
     CONSTRUCT_TRACK(protocol_address_31402)
@@ -62,6 +62,7 @@ void protocol_address_31402::start()
 {
     const auto& settings = network_.network_settings();
 
+    // Events start completes without invoking the handler.
     // Must have a handler to capture a shared self pointer in stop subscriber.
     protocol_events::start(BIND1(handle_stop, _1));
 
@@ -141,6 +142,11 @@ void protocol_address_31402::handle_stop(const code&)
     // None of the other bc::network protocols log their stop.
     ////LOG_DEBUG(LOG_NETWORK)
     ////    << "Stopped address protocol for [" << authority() << "].";
+}
+
+const std::string& protocol_address_31402::name() const
+{
+    return protocol_name;
 }
 
 } // namespace network

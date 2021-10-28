@@ -20,12 +20,11 @@
 
 #include <functional>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
 
 namespace libbitcoin {
@@ -35,10 +34,12 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-protocol_timer::protocol_timer(p2p& network, channel::ptr channel,
-    bool perpetual, const std::string& name)
-  : protocol_events(network, channel, name),
-    perpetual_(perpetual)
+protocol_timer::protocol_timer(channel::ptr channel, const duration& timeout,
+    bool perpetual)
+  : protocol_events(channel),
+    timeout_(timeout),
+    perpetual_(perpetual),
+    timer_(std::make_shared<deadline>(channel->strand()))
 {
 }
 
@@ -46,11 +47,11 @@ protocol_timer::protocol_timer(p2p& network, channel::ptr channel,
 // ----------------------------------------------------------------------------
 
 // protected:
-void protocol_timer::start(const duration& timeout,
-    event_handler handle_event)
+void protocol_timer::start(event_handler handle_event)
 {
-    // The deadline timer is thread safe.
-    timer_ = std::make_shared<deadline>(pool(), timeout);
+    // EVENTS START COMPLETES WITHOUT INVOKING THE HANDLER.
+    // protocol_events retains this handler to be invoked multiple times.
+    // handle_event is invoked on the channel thread.
     protocol_events::start(BIND2(handle_notify, _1, handle_event));
     reset_timer();
 }
@@ -73,7 +74,7 @@ void protocol_timer::reset_timer()
     if (stopped())
         return;
 
-    timer_->start(BIND1(handle_timer, _1));
+    timer_->start(BIND1(handle_timer, _1), timeout_);
 }
 
 void protocol_timer::handle_timer(const code& ec)
@@ -85,10 +86,9 @@ void protocol_timer::handle_timer(const code& ec)
         << "Fired protocol_" << name() << " timer on [" << authority() << "] "
         << ec.message();
 
-    // The handler completes before the timer is reset.
     set_event(error::channel_timeout);
 
-    // A perpetual timer resets itself until the channel is stopped.
+    // Reset timer until the channel is stopped.
     if (perpetual_)
         reset_timer();
 }

@@ -27,10 +27,20 @@
 namespace libbitcoin {
 namespace network {
 
+// Stopping the I/O service will abandon unfinished operations without
+// permitting ready handlers to be dispatched. More information here:
+// www.boost.org/doc/libs/1_69_0/doc/html/boost_asio/reference/io_context.html#
+// boost_asio.reference.io_context.stopping_the_io_context_from_running_out_of_work
+
+// The run() function blocks until all work has finished and there are no
+// more handlers to be dispatched, or until the io_context has been stopped.
+
+// Construct.
+// ----------------------------------------------------------------------------
+
 threadpool::threadpool(size_t number_threads, thread_priority priority)
-  : work_(std::make_shared<asio::service::work>(service_))
+  : work_(boost::asio::make_work_guard(service_))
 {
-    // TODO: io_context::work is deprecated, use executor_work_guard.
     // Work keeps the threadpool alive when there are no threads running.
 
     for (size_t thread = 0; thread < number_threads; ++thread)
@@ -45,37 +55,27 @@ threadpool::threadpool(size_t number_threads, thread_priority priority)
 
 threadpool::~threadpool()
 {
-    shutdown();
+    stop();
     join();
 }
 
-bool threadpool::empty() const
-{
-    return !is_zero(size());
-}
+// Stop.
+// ----------------------------------------------------------------------------
 
-size_t threadpool::size() const
-{
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    unique_lock lock(threads_mutex_);
-
-    return threads_.size();
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-// Work mutex allows threadsafe shutdown calls.
-void threadpool::shutdown()
+// Work mutex allows threadsafe concurrent stop calls.
+void threadpool::stop()
 {
     ///////////////////////////////////////////////////////////////////////////
     // Critical Section
     unique_lock lock(work_mutex_);
 
+    // Clear the work keep-alive.
+    // Allows all operations and handlers to finish normally.
     work_.reset();
     ///////////////////////////////////////////////////////////////////////////
 }
 
-// Threads mutex allows threadsafe join calls and protects size/empty.
+// Threads mutex allows threadsafe join calls while protecting size/empty.
 void threadpool::join()
 {
     ///////////////////////////////////////////////////////////////////////////
@@ -87,8 +87,8 @@ void threadpool::join()
 
     for (auto& thread: threads_)
     {
-        BITCOIN_ASSERT(this_id != thread.get_id());
-        BITCOIN_ASSERT(thread.joinable());
+        BITCOIN_ASSERT_MSG(thread.joinable(), "unjoinable deadlock");
+        BITCOIN_ASSERT_MSG(this_id != thread.get_id(), "join deadlock");
         thread.join();
     }
 
@@ -96,12 +96,30 @@ void threadpool::join()
     ///////////////////////////////////////////////////////////////////////////
 }
 
-asio::service& threadpool::service()
+// Properties.
+// ----------------------------------------------------------------------------
+
+bool threadpool::empty() const
+{
+    return !is_zero(size());
+}
+
+size_t threadpool::size() const
+{
+    ///////////////////////////////////////////////////////////////////////////
+    // Critical Section
+    shared_lock lock(threads_mutex_);
+
+    return threads_.size();
+    ///////////////////////////////////////////////////////////////////////////
+}
+
+const asio::io_context& threadpool::service() const
 {
     return service_;
 }
 
-const asio::service& threadpool::service() const
+asio::io_context& threadpool::service()
 {
     return service_;
 }

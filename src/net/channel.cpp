@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/channel.hpp>
 
-#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -37,41 +36,56 @@ using namespace bc::system;
 using namespace bc::system::messages;
 using namespace std::placeholders;
 
-// Factory for deadline timer pointer construction.
-static deadline::ptr alarm(threadpool& pool, const duration& span)
+// Helper to derive maximum message payload size from settings.
+inline size_t payload_maximum(const settings& settings)
 {
-    return std::make_shared<deadline>(pool,
-        pseudo_random::duration(span));
+    return heading::maximum_payload_size(settings.protocol_maximum,
+        !is_zero(settings.services & version::service::node_witness));
 }
 
-channel::channel(threadpool& pool, socket::ptr socket,
-    const settings& settings)
-  : proxy(pool, socket, settings),
-    notify_(false),
-    nonce_(0),
-    expiration_(alarm(pool, settings.channel_expiration())),
-    inactivity_(alarm(pool, settings.channel_inactivity())),
+// Factory for fixed deadline timer pointer construction.
+inline deadline::ptr timeout(asio::strand& strand, const duration& span)
+{
+    return std::make_shared<deadline>(strand, span);
+}
+
+// Factory for varied deadline timer pointer construction.
+inline deadline::ptr expiration(asio::strand& strand, const duration& span)
+{
+    return timeout(strand, pseudo_random::duration(span));
+}
+
+channel::channel(socket::ptr socket, const settings& settings)
+  : proxy(socket),
+    maximum_payload_(payload_maximum(settings)),
+    protocol_magic_(settings.identifier),
+    validate_checksum_(settings.validate_checksum),
+    verbose_logging_(settings.verbose),
+    notify_on_connect_(false),
+    channel_nonce_(0),
+    negotiated_version_(settings.protocol_maximum),
+    peer_version_(std::make_shared<system::messages::version>()),
+    expiration_(expiration(socket->strand(), settings.channel_expiration())),
+    inactivity_(timeout(socket->strand(), settings.channel_inactivity())),
     CONSTRUCT_TRACK(channel)
 {
 }
 
-// Talk sequence.
+// Start/stop.
 // ----------------------------------------------------------------------------
 
-// public:
-void channel::start(result_handler handler)
-{
-    proxy::start(
-        std::bind(&channel::do_start,
-            shared_from_base<channel>(), _1, handler));
-}
-
-// Don't start the timers until the socket is enabled.
-void channel::do_start(const code&, result_handler handler)
+void channel::start()
 {
     start_expiration();
     start_inactivity();
-    handler(error::success);
+    proxy::start();
+}
+
+void channel::stop(const code& ec)
+{
+    inactivity_->stop();
+    expiration_->stop();
+    proxy::stop(ec);
 }
 
 // Properties.
@@ -79,29 +93,38 @@ void channel::do_start(const code&, result_handler handler)
 
 bool channel::notify() const
 {
-    return notify_;
+    return notify_on_connect_;
 }
 
 void channel::set_notify(bool value)
 {
-    notify_ = value;
+    notify_on_connect_ = value;
 }
 
 uint64_t channel::nonce() const
 {
-    return nonce_;
+    return channel_nonce_;
 }
 
+// TODO: can the nonce be generated internally on construct?
 void channel::set_nonce(uint64_t value)
 {
-    nonce_.store(value);
+    channel_nonce_ = value;
+}
+
+uint32_t channel::negotiated_version() const
+{
+    return negotiated_version_;
+}
+
+void channel::set_negotiated_version(uint32_t value)
+{
+    negotiated_version_ = value;
 }
 
 version_const_ptr channel::peer_version() const
 {
-    const auto version = peer_version_.load();
-    BITCOIN_ASSERT_MSG(version, "Read peer version before set.");
-    return version;
+    return peer_version_.load();
 }
 
 void channel::set_peer_version(version_const_ptr value)
@@ -109,35 +132,52 @@ void channel::set_peer_version(version_const_ptr value)
     peer_version_.store(value);
 }
 
-// Proxy pure virtual protected and ordered handlers.
+// Proxy overrides (channel maintains state for the proxy).
 // ----------------------------------------------------------------------------
+// private
 
-// It is possible that this may be called multiple times.
-void channel::handle_stopping()
+size_t channel::maximum_payload() const
 {
-    expiration_->stop();
-    inactivity_->stop();
+    return maximum_payload_;
 }
 
+uint32_t channel::protocol_magic() const
+{
+    return protocol_magic_;
+}
+
+bool channel::validate_checksum() const
+{
+    return validate_checksum_;
+}
+
+bool channel::verbose() const
+{
+    return verbose_logging_;
+}
+
+uint32_t channel::version() const
+{
+    return negotiated_version();
+}
+
+// Cancels previous timer and retains configured duration.
+// A canceled timer does not invoke its completion handler.
 void channel::signal_activity()
 {
-    start_inactivity();
+    return start_inactivity();
 }
 
-bool channel::stopped(const code& ec) const
-{
-    return proxy::stopped() || ec == error::channel_stopped ||
-        ec == error::service_stopped;
-}
-
-// Timers (these are inherent races, requiring stranding by stop only).
+// Timers.
 // ----------------------------------------------------------------------------
+// private
 
 void channel::start_expiration()
 {
-    if (proxy::stopped())
+    if (stopped())
         return;
 
+    // Handler is posted to the socket strand.
     expiration_->start(
         std::bind(&channel::handle_expiration,
             shared_from_base<channel>(), _1));
@@ -145,20 +185,31 @@ void channel::start_expiration()
 
 void channel::handle_expiration(const code& ec)
 {
-    if (stopped(ec))
+    BITCOIN_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+
+    if (stopped())
         return;
+
+    if (ec)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Channel lifetime timer failure [" << authority() << "] "
+            << ec.message();
+        stop(ec);
+        return;
+    }
 
     LOG_DEBUG(LOG_NETWORK)
         << "Channel lifetime expired [" << authority() << "]";
-
-    stop(error::channel_timeout);
+    stop(ec);
 }
 
 void channel::start_inactivity()
 {
-    if (proxy::stopped())
+    if (stopped())
         return;
 
+    // Handler is posted to the socket strand.
     inactivity_->start(
         std::bind(&channel::handle_inactivity,
             shared_from_base<channel>(), _1));
@@ -166,13 +217,23 @@ void channel::start_inactivity()
 
 void channel::handle_inactivity(const code& ec)
 {
-    if (stopped(ec))
+    BITCOIN_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+
+    if (stopped())
         return;
+
+    if (ec)
+    {
+        LOG_DEBUG(LOG_NETWORK)
+            << "Channel inactivity timer failure [" << authority() << "] "
+            << ec.message();
+        stop(ec);
+        return;
+    }
 
     LOG_DEBUG(LOG_NETWORK)
         << "Channel inactivity timeout [" << authority() << "]";
-
-    stop(error::channel_timeout);
+    stop(ec);
 }
 
 } // namespace network

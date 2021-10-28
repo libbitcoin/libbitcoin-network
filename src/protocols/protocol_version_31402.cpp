@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -31,8 +32,8 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "version"
 #define CLASS protocol_version_31402
+static const std::string protocol_name = "version";
 
 using namespace bc::system;
 using namespace bc::system::messages;
@@ -43,9 +44,8 @@ using namespace std::placeholders;
 // Configured min version is our own but we may require higer for some stuff.
 // Configured services was our but we found that most incoming connections are
 // set to zero, so that is currently the default (see below).
-protocol_version_31402::protocol_version_31402(p2p& network,
-    channel::ptr channel)
-  : protocol_version_31402(network, channel,
+protocol_version_31402::protocol_version_31402(channel::ptr channel, p2p& network)
+  : protocol_version_31402(channel, network,
         network.network_settings().protocol_maximum,
         network.network_settings().services,
         network.network_settings().invalid_services,
@@ -55,11 +55,12 @@ protocol_version_31402::protocol_version_31402(p2p& network,
 {
 }
 
-protocol_version_31402::protocol_version_31402(p2p& network,
-    channel::ptr channel, uint32_t own_version, uint64_t own_services,
+protocol_version_31402::protocol_version_31402(channel::ptr channel,
+    p2p& network, uint32_t own_version, uint64_t own_services,
     uint64_t invalid_services, uint32_t minimum_version,
     uint64_t minimum_services)
-  : protocol_timer(network, channel, false, NAME),
+  : protocol_timer(channel, network_.network_settings().channel_handshake(),
+      false),
     network_(network),
     own_version_(own_version),
     own_services_(own_services),
@@ -73,15 +74,18 @@ protocol_version_31402::protocol_version_31402(p2p& network,
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_version_31402::start(event_handler handler)
+void protocol_version_31402::start(event_handler handle_event)
 {
-    const auto period = network_.network_settings().channel_handshake();
+    // TODO: just use a state member variable, this is stranded.
 
-    const auto join_handler = synchronize(handler, 2, NAME,
-        synchronizer_terminate::on_error);
+    ////// TODO: add custom handle_send here and make this 3 events (see seed).
+    ////const auto join_handler = synchronize(handle_event, 2, "TODO",
+    ////    synchronizer_terminate::on_error);
 
-    // The handler is invoked in the context of the last message receipt.
-    protocol_timer::start(period, join_handler);
+    ////// TIMER/EVENTS START COMPLETES WITHOUT INVOKING THE HANDLER.
+    ////// protocol_events retains join_handler to be invoked multiple times.
+    ////// handle_event is invoked on the channel thread.
+    ////protocol_timer::start(join_handler);
 
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
     SUBSCRIBE2(verack, handle_receive_verack, _1, _2);
@@ -236,6 +240,11 @@ bool protocol_version_31402::handle_receive_verack(const code& ec,
     // 2 of 2
     set_event(error::success);
     return false;
+}
+
+const std::string& protocol_version_31402::name() const
+{
+    return protocol_name;
 }
 
 } // namespace network

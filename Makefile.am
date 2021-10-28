@@ -38,12 +38,9 @@ src_libbitcoin_network_la_SOURCES = \
     src/p2p.cpp \
     src/settings.cpp \
     src/async/deadline.cpp \
-    src/async/dispatcher.cpp \
-    src/async/sequencer.cpp \
     src/async/thread.cpp \
     src/async/threadpool.cpp \
     src/async/time.cpp \
-    src/async/work.cpp \
     src/log/file_collector.cpp \
     src/log/file_collector_repository.cpp \
     src/log/file_counter_formatter.cpp \
@@ -90,19 +87,13 @@ test_libbitcoin_network_test_SOURCES = \
     test/test.hpp \
     test/async/atomic.cpp \
     test/async/deadline.cpp \
-    test/async/delegates.cpp \
-    test/async/dispatcher.cpp \
     test/async/enable_shared_from_base.cpp \
-    test/async/resubscriber.cpp \
-    test/async/sequencer.cpp \
     test/async/subscriber.cpp \
-    test/async/synchronizer.cpp \
     test/async/thread.cpp \
     test/async/threadpool.cpp \
     test/async/time.cpp \
     test/async/timer.cpp \
     test/async/track.cpp \
-    test/async/work.cpp \
     test/net/acceptor.cpp \
     test/net/channel.cpp \
     test/net/connector.cpp \
@@ -135,24 +126,17 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/async.hpp \
     include/bitcoin/network/async/atomic.hpp \
     include/bitcoin/network/async/deadline.hpp \
-    include/bitcoin/network/async/delegates.hpp \
-    include/bitcoin/network/async/dispatcher.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
     include/bitcoin/network/async/handlers.hpp \
-    include/bitcoin/network/async/resubscriber.hpp \
-    include/bitcoin/network/async/sequencer.hpp \
     include/bitcoin/network/async/subscriber.hpp \
-    include/bitcoin/network/async/synchronizer.hpp \
     include/bitcoin/network/async/thread.hpp \
     include/bitcoin/network/async/threadpool.hpp \
     include/bitcoin/network/async/time.hpp \
     include/bitcoin/network/async/timer.hpp \
-    include/bitcoin/network/async/track.hpp \
-    include/bitcoin/network/async/work.hpp
+    include/bitcoin/network/async/track.hpp
 
 include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \
-    include/bitcoin/network/impl/async/resubscriber.ipp \
     include/bitcoin/network/impl/async/subscriber.ipp \
     include/bitcoin/network/impl/async/track.ipp
 

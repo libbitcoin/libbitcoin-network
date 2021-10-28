@@ -21,54 +21,60 @@
 
 #include <functional>
 #include <memory>
-#include <string>
 #include <vector>
-#include <bitcoin/network/async/dispatcher.hpp>
+#include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/thread.hpp>
-#include <bitcoin/network/async/threadpool.hpp>
-////#include <bitcoin/network/async/track.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-template <typename... Args>
+/// Thread safe event queue.
+/// Stop is thread safe and idempotent, may be called multiple times.
+/// All handlers are posted to the service.
+template <typename Service, typename... Args>
 class subscriber
-  : public enable_shared_from_base<subscriber<Args...>>
-    /*, track<subscriber<Args...>>*/
+  : public enable_shared_from_base<subscriber<Service, Args...>>,
+    system::noncopyable
 {
 public:
-    typedef std::function<void (Args...)> handler;
-    typedef std::shared_ptr<subscriber<Args...>> ptr;
+    typedef std::function<void(Args...)> handler;
+    typedef std::shared_ptr<subscriber<Service, Args...>> ptr;
 
-    subscriber(threadpool& pool, const std::string& class_name);
+    // Construct.
+    // ------------------------------------------------------------------------
+
+    /// Event notification handlers are posted to the service.
+    subscriber(Service& service);
     virtual ~subscriber();
 
-    /// Enable new subscriptions.
-    void start();
+    // Stop.
+    // ------------------------------------------------------------------------
 
-    /// Prevent new subscriptions.
-    void stop();
+    /// Notification order follows subscription order. Arguments are copied.
+    /// Clears all handlers and prevents subsequent subscription (idempotent).
+    void stop(const Args&... args);
 
-    /// Subscribe to notifications (for one invocation only).
-    void subscribe(handler&& notify, Args... stopped_args);
+    // Methods.
+    // ------------------------------------------------------------------------
 
-    /// Invoke and clear all handlers sequentially (blocking).
-    void invoke(Args... args);
+    /// Notification order follows subscription order. Arguments are copied.
+    void notify(const Args&... args);
 
-    /// Invoke and clear all handlers sequentially (non-blocking).
-    void relay(Args... args);
+    /// Subscribe to notifications, false if subscriber is stopped.
+    /// Subscription handlers are retained in the queue until stop.
+    bool subscribe(handler&& notify);
 
 private:
-    typedef std::vector<handler> list;
+    // Clears all handlers and prevents subsequent subscription if stop true.
+    void notify(bool stop, const Args&... args);
 
-    void do_invoke(Args... args);
+    // This is thread safe (asio:io_context or asio::strand).
+    Service& service_;
 
-    bool stopped_;
-    list subscriptions_;
-    dispatcher dispatch_;
-    mutable upgrade_mutex invoke_mutex_;
-    mutable upgrade_mutex subscribe_mutex_;
+    // This is protected by mutex.
+    std::shared_ptr<std::vector<handler>> queue_;
+    mutable upgrade_mutex mutex_;
 };
 
 } // namespace network

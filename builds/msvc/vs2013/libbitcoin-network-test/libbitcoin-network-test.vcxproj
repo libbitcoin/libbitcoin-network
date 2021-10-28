@@ -72,19 +72,13 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\test\async\atomic.cpp" />
     <ClCompile Include="..\..\..\..\test\async\deadline.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\delegates.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\dispatcher.cpp" />
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\sequencer.cpp" />
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\synchronizer.cpp" />
     <ClCompile Include="..\..\..\..\test\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\test\async\time.cpp" />
     <ClCompile Include="..\..\..\..\test\async\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\async\track.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\work.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\channel.cpp" />

@@ -48,11 +48,13 @@ session_batch::session_batch(p2p& network, bool notify_on_connect)
 // protected:
 void session_batch::connect(channel_handler handler)
 {
-    const auto join_handler = synchronize(handler, batch_size_, NAME "_join",
-        synchronizer_terminate::on_success);
+    // TODO: just use a state member variable, this will be stranded.
 
-    for (size_t host = 0; host < batch_size_; ++host)
-        new_connect(join_handler);
+    ////const auto join_handler = synchronize(handler, batch_size_, NAME "_join",
+    ////    synchronizer_terminate::on_success);
+
+    ////for (size_t host = 0; host < batch_size_; ++host)
+    ////    new_connect(join_handler);
 }
 
 void session_batch::new_connect(channel_handler handler)
@@ -110,6 +112,7 @@ void session_batch::start_connect(const code& ec,
         BIND4(handle_connect, _1, _2, connector, handler));
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_batch::handle_connect(const code& ec,
     channel::ptr channel, connector::ptr connector, channel_handler handler)
 {

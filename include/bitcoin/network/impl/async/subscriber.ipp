@@ -21,142 +21,98 @@
 
 #include <functional>
 #include <memory>
-#include <string>
 #include <utility>
+#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/dispatcher.hpp>
-#include <bitcoin/network/async/thread.hpp>
-#include <bitcoin/network/async/threadpool.hpp>
-////#include <bitcoin/network/async/track.hpp>
-
-// TODO: use r-value arguments.
+#include <bitcoin/network/async/asio.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-template <typename... Args>
-subscriber<Args...>::subscriber(threadpool& pool,
-    const std::string& class_name)
-  : stopped_(true), dispatch_(pool, class_name)
-    /*, track<subscriber<Args...>>(class_name)*/
+// Construct.
+// ----------------------------------------------------------------------------
+
+template <typename Service, typename... Args>
+subscriber<Service, Args...>::subscriber(Service& service)
+  : service_(service),
+    queue_(std::make_shared<std::vector<handler>>())
 {
 }
 
-template <typename... Args>
-subscriber<Args...>::~subscriber()
+template <typename Service, typename... Args>
+subscriber<Service, Args...>::~subscriber()
 {
-    BITCOIN_ASSERT_MSG(subscriptions_.empty(), "subscriber not cleared");
+    BITCOIN_ASSERT_MSG(!queue_, "subscriber is not stopped");
 }
 
-template <typename... Args>
-void subscriber<Args...>::start()
+// Stop.
+// ----------------------------------------------------------------------------
+
+template <typename Service, typename... Args>
+void subscriber<Service, Args...>::stop(const Args&... args)
+{
+    notify(true, args...);
+}
+
+// Methods.
+// ----------------------------------------------------------------------------
+
+template <typename Service, typename... Args>
+bool subscriber<Service, Args...>::subscribe(handler&& notify)
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    subscribe_mutex_.lock_upgrade();
+    mutex_.lock_upgrade();
 
-    if (stopped_)
+    if (queue_)
     {
         //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        subscribe_mutex_.unlock_upgrade_and_lock();
-        stopped_ = false;
-        subscribe_mutex_.unlock();
+        mutex_.unlock_upgrade_and_lock();
+        queue_->push_back(std::move(notify));
+        mutex_.unlock();
         //---------------------------------------------------------------------
-        return;
+        return true;
     }
 
-    subscribe_mutex_.unlock_upgrade();
+    mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
+
+    return false;
 }
 
-template <typename... Args>
-void subscriber<Args...>::stop()
+template <typename Service, typename... Args>
+void subscriber<Service, Args...>::notify(const Args&... args)
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    subscribe_mutex_.lock_upgrade();
-
-    if (!stopped_)
-    {
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        subscribe_mutex_.unlock_upgrade_and_lock();
-        stopped_ = true;
-        subscribe_mutex_.unlock();
-        //---------------------------------------------------------------------
-        return;
-    }
-
-    subscribe_mutex_.unlock_upgrade();
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-template <typename... Args>
-void subscriber<Args...>::subscribe(handler&& notify, Args... stopped_args)
-{
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    subscribe_mutex_.lock_upgrade();
-
-    if (!stopped_)
-    {
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        subscribe_mutex_.unlock_upgrade_and_lock();
-        subscriptions_.push_back(std::forward<handler>(notify));
-        subscribe_mutex_.unlock();
-        //---------------------------------------------------------------------
-        return;
-    }
-
-    subscribe_mutex_.unlock_upgrade();
-    ///////////////////////////////////////////////////////////////////////////
-
-    notify(stopped_args...);
-}
-
-template <typename... Args>
-void subscriber<Args...>::invoke(Args... args)
-{
-    do_invoke(args...);
-}
-
-template <typename... Args>
-void subscriber<Args...>::relay(Args... args)
-{
-    // This enqueues work while maintaining order.
-    // Ordering constraint is lost if work is performed asynchronously.
-    dispatch_.ordered(&subscriber<Args...>::do_invoke,
-        this->shared_from_this(), args...);
+    notify(false, args...);
 }
 
 // private
-template <typename... Args>
-void subscriber<Args...>::do_invoke(Args... args)
+template <typename Service, typename... Args>
+void subscriber<Service, Args...>::notify(bool stop, const Args&... args)
 {
-    // Critical Section (prevent concurrent handler execution)
+    // Critical Section
     ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(invoke_mutex_);
+    mutex_.lock_upgrade();
 
-    // Critical Section (protect stop)
-    ///////////////////////////////////////////////////////////////////////////
-    subscribe_mutex_.lock();
-
-    // Move subscribers from the member list to a temporary list.
-    list subscriptions;
-    std::swap(subscriptions, subscriptions_);
-
-    subscribe_mutex_.unlock();
-    ///////////////////////////////////////////////////////////////////////////
-
-    // Subscriptions may be created while this loop is executing.
-    // Invoke subscribers from temporary list, without subscription renewal.
-    for (const auto& handler: subscriptions)
+    if (queue_)
     {
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // DEADLOCK RISK, handler must not return to invoke.
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        handler(args...);
+        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        mutex_.unlock_upgrade_and_lock();
+
+        // std::bind copies handler and args for each post (including refs).
+        // Post all to service, non-blocking, cannot internally execute handler.
+        for (const auto& handler: *queue_)
+            boost::asio::post(service_, std::bind(handler, args...));
+
+        if (stop)
+            queue_.reset();
+
+        mutex_.unlock();
+        //---------------------------------------------------------------------
+        return;
     }
 
+    mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
 }
 

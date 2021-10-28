@@ -102,6 +102,7 @@ code hosts::fetch(address::list& out) const
         if (buffer_.empty())
             return error::not_found;
 
+        // TODO: extract configuration.
         const auto out_count = std::min(messages::max_address,
             std::min(buffer_.size(), capacity_) /
                 pseudo_random::next<size_t>(5u, 10u));

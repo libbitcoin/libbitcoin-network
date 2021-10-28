@@ -22,31 +22,22 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/p2p.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
 
-#define NAME "protocol"
-
-protocol::protocol(p2p& network, channel::ptr channel, const std::string& name)
-  : pool_(network.thread_pool()),
-    dispatch_(network.thread_pool(), NAME),
-    channel_(channel),
-    name_(name)
+protocol::protocol(channel::ptr channel)
+  : channel_(channel)
 {
 }
+
+// Protocol start methods conventionally do not invoke the passed handler.
 
 config::authority protocol::authority() const
 {
     return channel_->authority();
-}
-
-const std::string& protocol::name() const
-{
-    return name_;
 }
 
 uint64_t protocol::nonce() const
@@ -74,11 +65,6 @@ void protocol::set_negotiated_version(uint32_t value)
     channel_->set_negotiated_version(value);
 }
 
-threadpool& protocol::pool()
-{
-    return pool_;
-}
-
 // Stop the channel.
 void protocol::stop(const code& ec)
 {
@@ -86,10 +72,10 @@ void protocol::stop(const code& ec)
 }
 
 // protected
-void protocol::handle_send(const code& , const std::string&)
+void protocol::handle_send(const code&, const std::string&)
 {
     // Send and receive failures are logged by the proxy.
-    // This provides a convenient location for override if desired.
+    // This provides a convenient default overridable handler.
 }
 
 } // namespace network

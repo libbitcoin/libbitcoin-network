@@ -62,7 +62,7 @@ void session_seed::start(result_handler handler)
         return;
     }
 
-    session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
+    session::start(BIND2(handle_started, _1, handler));
 }
 
 void session_seed::handle_started(const code& ec,
@@ -93,7 +93,7 @@ void session_seed::handle_started(const code& ec,
         return;
     }
 
-    // This is NOT technically the end of the start sequence, since the handler
+    // This is not technically the end of the start sequence, since the handler
     // is not invoked until seeding operations are complete.
     start_seeding(start_size, handler);
 }
@@ -112,12 +112,12 @@ void session_seed::attach_handshake_protocols(channel::ptr channel,
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= messages::version::level::bip61)
-        attach<protocol_version_70002>(channel, own_version, own_services,
-            invalid_services, minimum_version, minimum_services, relay)
-            ->start(handle_started);
+        attach<protocol_version_70002>(channel, network_, own_version,
+            own_services, invalid_services, minimum_version, minimum_services,
+            relay)->start(handle_started);
     else
-        attach<protocol_version_31402>(channel, own_version, own_services,
-            invalid_services, minimum_version, minimum_services)
+        attach<protocol_version_31402>(channel, network_, own_version,
+            own_services, invalid_services, minimum_version, minimum_services)
             ->start(handle_started);
 }
 
@@ -128,12 +128,14 @@ void session_seed::start_seeding(size_t start_size, result_handler handler)
 {
     const auto complete = BIND2(handle_complete, start_size, handler);
 
-    const auto join_handler = synchronize(complete, settings_.seeds.size(),
-        NAME, synchronizer_terminate::on_count);
+    // TODO: just use a state member variable, this will be stranded.
 
-    // We don't use parallel here because connect is itself asynchronous.
-    for (const auto& seed: settings_.seeds)
-        start_seed(seed, join_handler);
+    ////const auto join_handler = synchronize(complete, settings_.seeds.size(),
+    ////    NAME, synchronizer_terminate::on_count);
+
+    ////// We don't use parallel here because connect is itself asynchronous.
+    ////for (const auto& seed: settings_.seeds)
+    ////    start_seed(seed, join_handler);
 }
 
 void session_seed::start_seed(const config::endpoint& seed,
@@ -205,16 +207,17 @@ void session_seed::attach_protocols(channel::ptr channel,
     result_handler handler)
 {
     const auto version = channel->negotiated_version();
+    const auto heartbeat = network_.network_settings().channel_heartbeat();
 
     if (version >= messages::version::level::bip31)
-        attach<protocol_ping_60001>(channel)->start();
+        attach<protocol_ping_60001>(channel, heartbeat)->start();
     else
-        attach<protocol_ping_31402>(channel)->start();
+        attach<protocol_ping_31402>(channel, heartbeat)->start();
 
     if (version >= messages::version::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
-    attach<protocol_seed_31402>(channel)->start(handler);
+    attach<protocol_seed_31402>(channel, network_)->start(handler);
 }
 
 void session_seed::handle_channel_stop(const code& ec)

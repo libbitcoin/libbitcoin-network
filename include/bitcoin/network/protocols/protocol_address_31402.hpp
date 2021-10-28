@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_31402_HPP
 
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -30,36 +31,28 @@ namespace network {
 
 class p2p;
 
-/**
- * Address protocol.
- * Attach this to a channel immediately following handshake completion.
- */
+/// Address protocol.
+/// Attach this to a channel immediately following handshake completion.
 class BCT_API protocol_address_31402
   : public protocol_events, track<protocol_address_31402>
 {
 public:
     typedef std::shared_ptr<protocol_address_31402> ptr;
 
-    /**
-     * Construct an address protocol instance.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     */
-    protocol_address_31402(p2p& network, channel::ptr channel);
+    protocol_address_31402(channel::ptr channel, p2p& network);
 
-    /**
-     * Start the protocol.
-     */
     virtual void start();
 
 protected:
-    virtual void handle_stop(const system::code& ec);
-    virtual void handle_store_addresses(const system::code& ec);
+    virtual void handle_stop(const code& ec);
+    virtual void handle_store_addresses(const code& ec);
 
-    virtual bool handle_receive_address(const system::code& ec,
+    virtual bool handle_receive_address(const code& ec,
         system::address_const_ptr address);
-    virtual bool handle_receive_get_address(const system::code& ec,
+    virtual bool handle_receive_get_address(const code& ec,
         system::get_address_const_ptr message);
+
+    virtual const std::string& name() const override;
 
     p2p& network_;
     const system::messages::address self_;

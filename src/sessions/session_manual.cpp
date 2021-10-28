@@ -54,7 +54,7 @@ void session_manual::start(result_handler handler)
     LOG_INFO(LOG_NETWORK)
         << "Starting manual session.";
 
-    session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
+    session::start(BIND2(handle_started, _1, handler));
 }
 
 void session_manual::handle_started(const code& ec,
@@ -110,6 +110,7 @@ void session_manual::start_connect(const code&,
             handler));
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_manual::handle_connect(const code& ec,
     channel::ptr channel, const std::string& hostname, uint16_t port,
     uint32_t remaining, connector::ptr connector, channel_handler handler)
@@ -128,9 +129,9 @@ void session_manual::handle_connect(const code& ec,
 
         if (remaining > 0)
         {
-            // Retry with conditional delay in case of network error.
-            dispatch_delayed(cycle_delay(ec),
-                BIND5(start_connect, _1, hostname, port, remaining, handler));
+            ////// Retry with conditional delay in case of network error.
+            ////dispatch_delayed(cycle_delay(ec),
+            ////    BIND5(start_connect, _1, hostname, port, remaining, handler));
             return;
         }
 
@@ -149,6 +150,7 @@ void session_manual::handle_connect(const code& ec,
         BIND5(handle_channel_stop, _1, hostname, port, remaining, handler));
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_manual::handle_channel_start(const code& ec,
     const std::string& hostname, uint16_t port, uint32_t remaining,
     channel::ptr channel, channel_handler handler)
@@ -181,21 +183,25 @@ void session_manual::handle_channel_start(const code& ec,
     attach_protocols(channel);
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
+// Communication will begin after this function returns, freeing the thread.
 void session_manual::attach_protocols(channel::ptr channel)
 {
     const auto version = channel->negotiated_version();
+    const auto heartbeat = network_.network_settings().channel_heartbeat();
 
     if (version >= messages::version::level::bip31)
-        attach<protocol_ping_60001>(channel)->start();
+        attach<protocol_ping_60001>(channel, heartbeat)->start();
     else
-        attach<protocol_ping_31402>(channel)->start();
+        attach<protocol_ping_31402>(channel, heartbeat)->start();
 
     if (version >= messages::version::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
-    attach<protocol_address_31402>(channel)->start();
+    attach<protocol_address_31402>(channel, network_)->start();
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD (if the channel stops itself).
 void session_manual::handle_channel_stop(const code& ec,
     const std::string& hostname, uint16_t port, uint32_t remaining,
     channel_handler handler)

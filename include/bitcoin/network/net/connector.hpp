@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_NET_CONNECTOR_HPP
 #define LIBBITCOIN_NETWORK_NET_CONNECTOR_HPP
 
-#include <atomic>
 #include <functional>
 #include <memory>
 #include <string>
@@ -32,63 +31,70 @@
 namespace libbitcoin {
 namespace network {
 
+/// This class is thread safe.
 /// Create outbound socket connections.
-/// This class is thread safe against stop.
-/// This class is not safe for concurrent connection attempts.
+/// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API connector
   : public enable_shared_from_base<connector>, system::noncopyable,
     track<connector>
 {
 public:
     typedef std::shared_ptr<connector> ptr;
-    typedef std::function<void(const system::code& ec, channel::ptr)>
+    typedef std::function<void(const code& ec, channel::ptr)>
         connect_handler;
 
+    // Construct.
+    // ------------------------------------------------------------------------
+
     /// Construct an instance.
-    connector(threadpool& pool, const settings& settings);
+    connector(asio::io_context& service, const settings& settings);
 
-    /// Validate connector stopped.
-    ~connector();
+    // Stop.
+    // ------------------------------------------------------------------------
 
-    /// Try to connect to the endpoint.
+    /// TODO: remove ec (see pend).
+    /// Cancel work and close the connector (idempotent).
+    /// This action is deferred to the strand, not immediately affected.
+    /// Block on threadpool.join() to ensure termination of the connector.
+    void stop(const code& ec);
+
+    // Methods.
+    // ------------------------------------------------------------------------
+    /// A connection may only be reattempted following handler invocation.
+    /// May return channel_stopped, channel_timeout, success or an error code.
+    /// The channel paramter is nullptr unless success is returned.
+
+    /// Try to connect to the endpoint, starts timer.
     virtual void connect(const system::config::endpoint& endpoint,
-        connect_handler handler);
+        connect_handler&& handler);
 
-    /// Try to connect to the authority.
+    /// Try to connect to the authority, starts timer.
     virtual void connect(const system::config::authority& authority,
-        connect_handler handler);
+        connect_handler&& handler);
 
-    /// Try to connect to host:port.
+    /// Try to connect to host:port, starts timer.
     virtual void connect(const std::string& hostname, uint16_t port,
-        connect_handler handler);
-
-    /// Cancel outstanding connection attempt.
-    void stop(const system::code& ec);
+        connect_handler&& handler);
 
 private:
-    typedef std::shared_ptr<asio::query> query_ptr;
-
-    bool stopped() const;
-
-    void handle_resolve(const system::boost_code& ec,
-        asio::iterator iterator, connect_handler handler);
-    void handle_connect(const system::boost_code& ec,
-        asio::iterator iterator, socket::ptr socket,
+    void do_stop();
+    void do_resolve(const std::string& hostname, uint16_t port,
         connect_handler handler);
-    void handle_timer(const system::code& ec, socket::ptr socket,
-        connect_handler handler);
+    void handle_resolve(const system::boost_code& ec, const asio::iterator& it,
+        socket::ptr socket, connect_handler handler);
+    void handle_connect(const code& ec, socket::ptr socket,
+        const connect_handler& handler);
+    void handle_timer(const code& ec, socket::ptr socket,
+        const connect_handler& handler);
 
     // These are thread safe
-    std::atomic<bool> stopped_;
-    threadpool& pool_;
     const settings& settings_;
-    mutable dispatcher dispatch_;
+    asio::strand strand_;
+    deadline timer_;
 
-    // These are protected by mutex.
-    query_ptr query_;
-    deadline::ptr timer_;
+    // These are protected by strand.
     asio::resolver resolver_;
-    mutable system::upgrade_mutex mutex_;
+    bool stopped_;
 };
 
 } // namespace network

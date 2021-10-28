@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_EVENTS_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_EVENTS_HPP
 
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -29,55 +28,30 @@
 namespace libbitcoin {
 namespace network {
 
-class p2p;
-
-/**
- * Base class for stateful protocol implementation, thread and lock safe.
- */
+/// Base class for stateful protocol implementation, thread and lock safe.
 class BCT_API protocol_events
   : public protocol
 {
 protected:
 
-    /**
-     * Construct a protocol instance.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     * @param[in]  name      The instance name for logging purposes.
-     */
-    protocol_events(p2p& network, channel::ptr channel,
-        const std::string& name);
+    protocol_events(channel::ptr channel);
 
-    /**
-     * Start the protocol with no event handler.
-     */
     virtual void start();
 
-    /**
-     * Start the protocol.
-     * The event handler may be invoked one or more times.
-     * @param[in]  handler  The handler to call at each completion event.
-     */
-    virtual void start(event_handler handler);
+    /// The handler is invoked at each completion event.
+    virtual void start(event_handler handle_event);
 
-    /**
-     * Invoke the event handler.
-     * @param[in]  ec  The error code of the preceding operation.
-     */
-    virtual void set_event(const system::code& ec);
+    /// Invoke the event handler.
+    virtual void set_event(const code& ec);
 
-    /**
-     * Determine if the event handler has been cleared.
-     */
+    /// Determine if the event handler has been cleared.
     virtual bool stopped() const;
 
-    /**
-     * Determine if the code is a stop code or the handler has been cleared.
-     */
-    virtual bool stopped(const system::code& ec) const;
+    /// Determine if the code is a stop code or the handler has been cleared.
+    virtual bool stopped(const code& ec) const;
 
 private:
-    void handle_stopped(const system::code& ec);
+    void handle_stopped(const code& ec);
 
     atomic<event_handler> handler_;
 };

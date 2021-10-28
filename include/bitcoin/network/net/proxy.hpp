@@ -31,106 +31,117 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/pump.hpp>
 #include <bitcoin/network/net/socket.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// Manages all socket communication, thread safe.
+/// Virtual base for all channel communication error handling and logging.
+/// This class is thread safe, though start my be called only once.
+/// Stop is thread safe and idempotent, may be called multiple times.
+/// All handlers are posted to the socket strand.
 class BCT_API proxy
   : public enable_shared_from_base<proxy>, system::noncopyable
 {
 public:
     typedef std::shared_ptr<proxy> ptr;
+    typedef subscriber<asio::strand, code> stop_subscriber;
     typedef std::function<void(const code&)> result_handler;
-    typedef subscriber<code> stop_subscriber;
 
-    /// Construct an instance.
-    proxy(threadpool& pool, socket::ptr socket, const settings& settings);
+    // Construction.
+    // ------------------------------------------------------------------------
 
-    /// Validate proxy stopped.
-    ~proxy();
+    /// Construct an instance from a socket.
+    proxy(socket::ptr socket);
 
-    /// Send a message on the socket.
+    // Start/Stop.
+    // ------------------------------------------------------------------------
+
+    /// Start reading messages from the socket (call only once).
+    /// Messages are posted to each subscribed pump::handler.
+    virtual void start();
+
+    /// Subscribe to proxy stop notifications.
+    virtual bool subscribe_stop(result_handler&& handler);
+
+    /// Stop has been signaled, work is stopping.
+    virtual bool stopped() const;
+
+    /// Cancel work and close the socket (idempotent).
+    /// This action is deferred to the strand, not immediately affected.
+    /// Block on threadpool.join() to ensure termination of the connection.
+    /// Code is passed to stop subscribers, channel_stopped to message pump. 
+    virtual void stop(const code& ec);
+
+    // I/O.
+    // ------------------------------------------------------------------------
+
+    /// Send a message on the socket, does not require proxy to be started.
+    /// Message is serialized and does not have to be retained by the caller.
     template <class Message>
-    void send(const Message& message, result_handler handler)
+    void send(const Message& message, result_handler&& handler)
     {
-        auto data = messages::serialize(message, version_, protocol_magic_);
-        auto payload = std::make_shared<system::data_chunk>(std::move(data));
+        // TODO: Avoid reserializing the same object for every peer, such as by
+        // TODO: broadcast. Have the object maintain a shared copy of its
+        // TODO: serialization (mapped to version to the extent that it varies
+        // TODO: by version). Obtain the shared pointer here by version and
+        // TODO: send it. See also comments in pump::do_notify.
+
         auto command = std::make_shared<std::string>(message.command);
-        send(command, payload, handler);
+        auto payload = std::make_shared<system::data_chunk>(
+            messages::serialize(message, version(), protocol_magic()));
+
+        send(command, payload, std::move(handler));
     }
 
-    /// Subscribe to messages of the specified type on the socket.
-    template <class Message>
-    void subscribe(message_handler<Message>&& handler)
+    /// Subscribe to messages of type Message received by the started socket.
+    /// Subscription handler is copied and retained in the queue until stop.
+    template <class Message, typename Handler = pump::handler<Message>>
+    bool subscribe(Handler&& handler)
     {
-        pump_.subscribe<Message>(
-            std::forward<message_handler<Message>>(handler));
+        return pump_subscriber_.subscribe(std::forward<Handler>(handler));
     }
 
-    /// Subscribe to the stop event.
-    virtual void subscribe_stop(result_handler handler);
+    // Properties.
+    // ------------------------------------------------------------------------
 
-    /// Get the authority of the far end of this socket.
+    /// Get the strand of the socket.
+    virtual asio::strand& proxy::strand();
+
+    /// Get the authority of the peer.
     virtual const system::config::authority& authority() const;
 
-    /// Get the negotiated protocol version of this socket.
-    /// The value should be the lesser of own max and peer min.
-    uint32_t negotiated_version() const;
-
-    /// Save the negotiated protocol version.
-    virtual void set_negotiated_version(uint32_t value);
-
-    /// Read messages from this socket.
-    virtual void start(result_handler handler);
-
-    /// Stop reading or sending messages on this socket.
-    virtual void stop(const system::code& ec);
-
-protected:
-    virtual bool stopped() const;
-    virtual void signal_activity() = 0;
-    virtual void handle_stopping() = 0;
-
 private:
+    typedef system::messages::heading::ptr heading_ptr;
     typedef std::shared_ptr<std::string> command_ptr;
     typedef std::shared_ptr<system::data_chunk> payload_ptr;
 
-    void stop(const system::boost_code& ec);
+    virtual size_t maximum_payload() const = 0;
+    virtual uint32_t protocol_magic() const = 0;
+    virtual bool validate_checksum() const = 0;
+    virtual bool verbose() const = 0;
+    virtual uint32_t version() const = 0;
+    virtual void signal_activity() = 0;
 
     void read_heading();
-    void handle_read_heading(const system::boost_code& ec, size_t heading_size);
+    void handle_read_heading(const code& ec, size_t heading_size);
 
-    void read_payload(const system::messages::heading& head);
-    void handle_read_payload(const system::boost_code& ec, size_t payload_size,
-        const system::messages::heading& head);
+    void read_payload(heading_ptr head);
+    void handle_read_payload(const code& ec, size_t payload_size,
+        heading_ptr head);
 
     void send(command_ptr command, payload_ptr payload,
-        result_handler handler);
-    void do_send(command_ptr command, payload_ptr payload,
-        result_handler handler);
-    void handle_send(const system::boost_code& ec, size_t bytes,
-        command_ptr command, payload_ptr payload, result_handler handler);
-
-    // This is thread safe.
-    const size_t maximum_payload_;
-
-    // These are protected by read header/payload ordering.
-    system::data_chunk heading_buffer_;
-    system::data_chunk payload_buffer_;
-    socket::ptr socket_;
+        result_handler&& handler);
+    void handle_send(const code& ec, size_t bytes, command_ptr command,
+        payload_ptr payload, const result_handler& handler);
 
     // These are thread safe.
-    std::atomic<bool> stopped_;
-    const uint32_t protocol_magic_;
-    const bool validate_checksum_;
-    const bool verbose_;
-    std::atomic<uint32_t> version_;
-    const system::config::authority authority_;
-    pump pump_;
-    stop_subscriber::ptr stop_subscriber_;
-    dispatcher dispatch_;
+    socket::ptr socket_;
+    pump pump_subscriber_;
+    stop_subscriber stop_subscriber_;
+
+    // These are protected by read header/payload ordering.
+    system::data_chunk payload_buffer_;
+    system::data_chunk heading_buffer_;
 };
 
 } // namespace network

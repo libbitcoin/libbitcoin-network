@@ -29,18 +29,35 @@
 namespace libbitcoin {
 namespace network {
 
-///This class and the asio service it exposes are thread safe.
-/// A collection of threads which can be passed operations through io_service.
+/// This class and the asio service it exposes are thread safe.
+/// A collection of threads that share an asio I/O context (service).
 class BCT_API threadpool
   : system::noncopyable
 {
 public:
 
-    /// Threadpool constructor, spawns the specified number of threads.
-     threadpool(size_t number_threads=0,
+    // Construct.
+    // ------------------------------------------------------------------------
+
+    /// Threadpool constructor, initializes the specified number of threads.
+     threadpool(size_t number_threads=1,
         thread_priority priority=thread_priority::normal);
 
     virtual ~threadpool();
+
+    // Stop.
+    // ------------------------------------------------------------------------
+
+    /// Destroy the work keep-alive. Safe to call from any thread.
+    /// Allows threads to join when all outstanding work is complete.
+    void stop();
+
+    /// Block until all threads in the pool terminate.
+    /// Safe to call from any thread not in the threadpool.
+    void join();
+
+    // Properties.
+    // ------------------------------------------------------------------------
 
     /// There are no threads configured in the threadpool.
     bool empty() const;
@@ -48,31 +65,22 @@ public:
     /// The number of threads configured in the threadpool.
     size_t size() const;
 
-    /// Destroy the work keep-alive, allowing threads be joined, non-blocking.
-    /// Safe to call from any thread. Caller should next invoke join.
-    /// Threadpool cannot be restarted following a call to shutdown.
-    void shutdown();
-
-    /// Wait for all threads in the pool to terminate.
-    /// Safe to call from any thread not in the threadpool.
-    void join();
-
     /// Underlying boost::io_service object.
-    asio::service& service();
+    const asio::io_context& service() const;
 
-    /// Underlying boost::io_service object.
-    const asio::service& service() const;
+    /// Non-const underlying boost::io_service object.
+    asio::io_context& service();
 
 private:
     // This is thread safe.
-    asio::service service_;
+    asio::io_context service_;
 
     // These are protected by mutex.
 
     std::vector<thread> threads_;
     mutable upgrade_mutex threads_mutex_;
 
-    std::shared_ptr<asio::service::work> work_;
+    boost::asio::executor_work_guard<asio::work_guard> work_;
     mutable upgrade_mutex work_mutex_;
 };
 

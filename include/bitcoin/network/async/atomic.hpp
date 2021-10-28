@@ -85,6 +85,7 @@ private:
     // std::decay performs lvalue-to-rvalue conversion, so reference is copied.
     typedef typename std::decay<Type>::type decay_type;
 
+    // This is protected by mutex.
     decay_type instance_;
     mutable shared_mutex mutex_;
 };

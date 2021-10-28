@@ -47,69 +47,50 @@ public:
     typedef std::shared_ptr<p2p> ptr;
     typedef system::messages::network_address address;
     typedef std::function<void()> stop_handler;
-    typedef std::function<void(bool)> truth_handler;
-    typedef std::function<void(size_t)> count_handler;
-    typedef std::function<void(const system::code&)> result_handler;
-    typedef std::function<void(const system::code&, const address&)>
-        address_handler;
-    typedef std::function<void(const system::code&, channel::ptr)>
-        channel_handler;
-    typedef std::function<bool(const system::code&, channel::ptr)>
-        connect_handler;
-    typedef subscriber<system::code> stop_subscriber;
-    typedef resubscriber<system::code, channel::ptr> channel_subscriber;
+    typedef std::function<void(const code&)> result_handler;
+    typedef std::function<void(const code&, channel::ptr)> channel_handler;
+    typedef std::function<bool(const code&, channel::ptr)> connect_handler;
+    typedef subscriber<asio::io_context, code> stop_subscriber;
+    typedef subscriber<asio::io_context, code, channel::ptr> channel_subscriber;
 
-    // Templates (send/receive).
+    // Templates.
     // ------------------------------------------------------------------------
 
-    /// Send message to all connections.
+    /// Send message to all connections, handler notified for each channel.
     template <typename Message>
-    void broadcast(const Message& message, channel_handler handle_channel,
-        result_handler handle_complete)
+    void broadcast(const Message& message, channel_handler&& handle_channel)
     {
-        // Safely copy the channel collection.
         const auto channels = pending_close_.collection();
-
-        // Invoke the completion handler after send complete on all channels.
-        const auto join_handler = synchronize(handle_complete, channels.size(),
-            "p2p_join", synchronizer_terminate::on_count);
-
-        // No pre-serialize, channels may have different protocol versions.
         for (const auto& channel: channels)
-            channel->send(message, std::bind(&p2p::handle_send, this,
-                std::placeholders::_1, channel, handle_channel, join_handler));
+            channel->send(message, std::move(handle_channel));
     }
 
     // Constructors.
     // ------------------------------------------------------------------------
-
     /// Construct an instance.
     p2p(const settings& settings);
 
-    /// Ensure all threads are coalesced.
+    /// Calls stop().
     virtual ~p2p();
 
-    // Start/Run sequences.
+    // Sequences.
     // ------------------------------------------------------------------------
 
-    /// Invoke startup and seeding sequence, call from constructing thread.
+    /// Invoke startup and seeding sequence.
     virtual void start(result_handler handler);
 
-    /// Synchronize the blockchain and then begin long running sessions,
-    /// call from start result handler. Call base method to skip sync.
+    /// Run inbound and outbound sessions, call from start result handler.
     virtual void run(result_handler handler);
 
     // Shutdown.
     // ------------------------------------------------------------------------
 
     /// Idempotent call to signal work stop, start may be reinvoked after.
-    /// Returns the result of file save operation.
+    /// Returns the result of the hosts file save operation.
     virtual bool stop();
 
-    /// Blocking call to coalesce all work and then terminate all threads.
-    /// Call from thread that constructed this class, or don't call at all.
-    /// This calls stop, and start may be reinvoked after calling this.
-    virtual bool close();
+    /// Determine if the network is stopped.
+    virtual bool stopped() const;
 
     // Properties.
     // ------------------------------------------------------------------------
@@ -117,29 +98,28 @@ public:
     /// Network configuration settings.
     virtual const settings& network_settings() const;
 
-    /// Return the current top block identity.
+    /// Return a reference to the network io_context.
+    virtual asio::io_context& service();
+
+    /// Return the current top block identity (for p2p handshake).
     virtual system::chain::check_point top_block() const;
 
-    /// Set the current top block identity.
+    /// Set the current top block identity (for p2p handshake).
     virtual void set_top_block(system::chain::check_point&& top);
 
-    /// Set the current top block identity.
-    virtual void set_top_block(const system::chain::check_point& top);
+    //// TODO: move to blockchain/node.
 
-    /// Return the current top header identity.
-    virtual system::chain::check_point top_header() const;
+    /////// Set the current top block identity.
+    ////virtual void set_top_block(const system::chain::check_point& top);
 
-    /// Set the current top header identity.
-    virtual void set_top_header(system::chain::check_point&& top);
+    /////// Return the current top header identity.
+    ////virtual system::chain::check_point top_header() const;
 
-    /// Set the current top header identity.
-    virtual void set_top_header(const system::chain::check_point& top);
+    /////// Set the current top header identity.
+    ////virtual void set_top_header(system::chain::check_point&& top);
 
-    /// Determine if the network is stopped.
-    virtual bool stopped() const;
-
-    /// Return a reference to the network threadpool.
-    virtual threadpool& thread_pool();
+    /////// Set the current top header identity.
+    ////virtual void set_top_header(const system::chain::check_point& top);
 
     // Subscriptions.
     // ------------------------------------------------------------------------
@@ -170,35 +150,39 @@ public:
     /// Get the number of addresses.
     virtual size_t address_count() const;
 
+    // TODO: make protected.
+
     /// Store an address.
-    virtual system::code store(const address& address);
+    virtual code store(const address& address);
 
     /// Store a collection of addresses (asynchronous).
     virtual void store(const address::list& addresses, result_handler handler);
 
     /// Get a randomly-selected address.
-    virtual system::code fetch_address(address& out_address) const;
+    virtual code fetch_address(address& out_address) const;
 
     /// Get a list of stored hosts
-    virtual system::code fetch_addresses(address::list& out_addresses) const;
+    virtual code fetch_addresses(address::list& out_addresses) const;
 
     /// Remove an address.
-    virtual system::code remove(const address& address);
+    virtual code remove(const address& address);
 
     // Pending connect collection.
     // ------------------------------------------------------------------------
+    // TODO: remove.
 
     /// Store a pending connection reference.
-    virtual system::code pend(connector::ptr connector);
+    virtual code pend(connector::ptr connector);
 
     /// Free a pending connection reference.
     virtual void unpend(connector::ptr connector);
 
     // Pending handshake collection.
     // ------------------------------------------------------------------------
+    // TODO: make private.
 
     /// Store a pending connection reference.
-    virtual system::code pend(channel::ptr channel);
+    virtual code pend(channel::ptr channel);
 
     /// Test for a pending connection reference.
     virtual bool pending(uint64_t version_nonce) const;
@@ -212,8 +196,10 @@ public:
     /// Get the number of connections.
     virtual size_t connection_count() const;
 
+    // TODO: make private.
+
     /// Store a connection.
-    virtual system::code store(channel::ptr channel);
+    virtual code store(channel::ptr channel);
 
     /// Determine if there exists a connection to the address.
     virtual bool connected(const address& address) const;
@@ -227,7 +213,21 @@ protected:
     template <class Session, typename... Args>
     typename Session::ptr attach(Args&&... args)
     {
-        return std::make_shared<Session>(*this, std::forward<Args>(args)...);
+        // Sessions are attached by start (manual) and run (in/out).
+        const auto session = std::make_shared<Session>(*this,
+            std::forward<Args>(args)...);
+
+        // TODO: provide a way to detach (seed session).
+        // TODO: Add desubscription method to subscriber (enumerable hashmap).
+        // TODO: Use channel as key and bury inclusion for protocols in base.
+        // Capture the session in the p2p stop handler.
+        const result_handler session_stop = [session](const code& ec)
+        {
+            session->stop(ec);
+        };
+
+        this->subscribe_stop(session_stop);
+        return session;
     }
 
     /// Override to attach specialized sessions.
@@ -240,14 +240,12 @@ private:
     typedef network::pending<channel> pending_channels;
     typedef network::pending<connector> pending_connectors;
 
-    void handle_manual_started(const system::code& ec, result_handler handler);
-    void handle_inbound_started(const system::code& ec, result_handler handler);
-    void handle_hosts_loaded(const system::code& ec, result_handler handler);
-    void handle_send(const system::code& ec, channel::ptr channel,
-        channel_handler handle_channel, result_handler handle_complete);
+    void handle_manual_started(const code& ec, result_handler handler);
+    void handle_inbound_started(const code& ec, result_handler handler);
+    void handle_hosts_loaded(const code& ec, result_handler handler);
 
-    void handle_started(const system::code& ec, result_handler handler);
-    void handle_running(const system::code& ec, result_handler handler);
+    void handle_started(const code& ec, result_handler handler);
+    void handle_running(const code& ec, result_handler handler);
 
     // These are thread safe.
     const settings& settings_;
@@ -255,13 +253,13 @@ private:
     atomic<system::chain::check_point> top_block_;
     atomic<system::chain::check_point> top_header_;
     atomic<session_manual::ptr> manual_;
-    threadpool threadpool_;
     hosts hosts_;
+    threadpool threadpool_;
     pending_connectors pending_connect_;
     pending_channels pending_handshake_;
     pending_channels pending_close_;
-    stop_subscriber::ptr stop_subscriber_;
-    channel_subscriber::ptr channel_subscriber_;
+    stop_subscriber stop_subscriber_;
+    channel_subscriber channel_subscriber_;
 };
 
 } // namespace network

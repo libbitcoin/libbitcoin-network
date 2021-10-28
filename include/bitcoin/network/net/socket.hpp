@@ -19,6 +19,9 @@
 #ifndef LIBBITCOIN_NETWORK_NET_SOCKET_HPP
 #define LIBBITCOIN_NETWORK_NET_SOCKET_HPP
 
+#include <atomic>
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -27,33 +30,79 @@
 namespace libbitcoin {
 namespace network {
 
-/// This class is thread safe but the socket may not be used concurrently.
+/// This class is thread safe (see comments on accept).
+/// Stop is thread safe and idempotent, may be called multiple times.
+/// All handlers (except accept) are posted to the internal strand.
 class BCT_API socket
-  : system::noncopyable
-    /*, public track<socket>*/
+  : public enable_shared_from_base<socket>, system::noncopyable, track<socket>
 {
 public:
     typedef std::shared_ptr<socket> ptr;
+    typedef std::function<void(const code&)> result_handler;
+    typedef std::function<void(const code&, size_t)> io_handler;
+
+    // Construction.
+    // ------------------------------------------------------------------------
 
     /// Construct an instance.
-    socket(threadpool& thread);
+    socket(asio::io_context& service);
 
-    /// Obtain the authority of the remote endpoint.
-    system::config::authority authority() const;
+    // Stop.
+    // ------------------------------------------------------------------------
 
-    /// The underlying socket.
-    asio::socket& get();
+    /// Stop has been signaled, work is stopping.
+    virtual bool stopped() const;
 
-    /// Signal cancel of all outstanding work on the socket.
+    /// Cancel work and close the socket (idempotent).
+    /// This action is deferred to the strand, not immediately affected.
+    /// Block on threadpool.join() to ensure termination of the connection.
     virtual void stop();
 
-private:
-    // This is thread safe.
-    threadpool& thread_;
+    // I/O.
+    // ------------------------------------------------------------------------
 
-    // This is protected by mutex.
+    /// Accept an incoming connection, handler posted to *acceptor* strand.
+    /// Concurrent calls are NOT thread safe until this handler is invoked.
+    virtual void accept(asio::acceptor& acceptor, result_handler&& handler);
+
+    /// Create an outbound connection, handler posted to socket strand.
+    virtual void connect(const asio::iterator& it, result_handler&& handler);
+
+    /// Read from the socket, handler posted to socket strand.
+    virtual void read(system::data_chunk& out, io_handler&& handler);
+
+    /// Write to the socket, handler posted to socket strand.
+    virtual void write(const system::data_chunk& in, io_handler&& handler);
+
+    // Properties.
+    // ------------------------------------------------------------------------
+
+    /// Get the strand of the socket.
+    virtual asio::strand& strand();
+
+    /// Get the authority of the remote endpoint.
+    virtual system::config::authority endpoint() const;
+
+private:
+    void do_stop();
+    void do_connect(const asio::iterator& it, result_handler handler);
+    void do_read(system::data_chunk& out, io_handler handler);
+    void do_write(const system::data_chunk& in, io_handler handler);
+
+    void handle_accept(const system::boost_code& ec,
+        const result_handler& handler);
+    void handle_connect(const system::boost_code& ec,
+        const asio::endpoint& peer, const result_handler& handler);
+    void socket::handle_io(const system::boost_code& ec, size_t size,
+        const io_handler& handler);
+
+    // These are thread safe.
+    std::atomic<bool> stopped_;
+    atomic<system::config::authority> endpoint_;
+    asio::strand strand_;
+
+    // This is protected by strand.
     asio::socket socket_;
-    mutable shared_mutex mutex_;
 };
 
 } // namespace network

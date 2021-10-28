@@ -61,7 +61,7 @@ void session_inbound::start(result_handler handler)
         << "Starting inbound session on port (" << settings_.inbound_port
         << ").";
 
-    session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
+    session::start(BIND2(handle_started, _1, handler));
 }
 
 void session_inbound::handle_started(const code& ec,
@@ -75,11 +75,8 @@ void session_inbound::handle_started(const code& ec,
 
     acceptor_ = create_acceptor();
 
-    // Relay stop to the acceptor.
-    subscribe_stop(BIND1(handle_stop, _1));
-
     // START LISTENING ON PORT
-    const auto error_code = acceptor_->listen(settings_.inbound_port);
+    const auto error_code = acceptor_->start(settings_.inbound_port);
 
     if (error_code)
     {
@@ -95,11 +92,10 @@ void session_inbound::handle_started(const code& ec,
     handler(error::success);
 }
 
-void session_inbound::handle_stop(const code& ec)
-{
-    // Signal the stop of listener/accept attempt.
-    acceptor_->stop(ec);
-}
+////void session_inbound::stop(const code& ec)
+////{
+////    acceptor_->stop(ec);
+////}
 
 // Accept sequence.
 // ----------------------------------------------------------------------------
@@ -117,6 +113,7 @@ void session_inbound::start_accept(const code&)
     acceptor_->accept(BIND2(handle_accept, _1, _2));
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_inbound::handle_accept(const code& ec,
     channel::ptr channel)
 {
@@ -127,8 +124,8 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
-    // Start accepting with conditional delay in case of network error.
-    dispatch_delayed(cycle_delay(ec), BIND1(start_accept, _1));
+    ////// Start accepting with conditional delay in case of network error.
+    ////dispatch_delayed(cycle_delay(ec), BIND1(start_accept, _1));
 
     if (ec)
     {
@@ -160,6 +157,7 @@ void session_inbound::handle_accept(const code& ec,
         BIND1(handle_channel_stop, _1));
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_inbound::handle_channel_start(const code& ec,
     channel::ptr channel)
 {
@@ -178,21 +176,25 @@ void session_inbound::handle_channel_start(const code& ec,
     attach_protocols(channel);
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
+// Communication will begin after this function returns, freeing the thread.
 void session_inbound::attach_protocols(channel::ptr channel)
 {
     const auto version = channel->negotiated_version();
+    const auto heartbeat = network_.network_settings().channel_heartbeat();
 
     if (version >= messages::version::level::bip31)
-        attach<protocol_ping_60001>(channel)->start();
+        attach<protocol_ping_60001>(channel, heartbeat)->start();
     else
-        attach<protocol_ping_31402>(channel)->start();
+        attach<protocol_ping_31402>(channel, heartbeat)->start();
 
     if (version >= messages::version::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
-    attach<protocol_address_31402>(channel)->start();
+    attach<protocol_address_31402>(channel, network_)->start();
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD (if the channel stops itself).
 void session_inbound::handle_channel_stop(const code& ec)
 {
     LOG_DEBUG(LOG_NETWORK)
@@ -203,6 +205,7 @@ void session_inbound::handle_channel_stop(const code& ec)
 // ----------------------------------------------------------------------------
 // Check pending outbound connections for loopback to this inbound.
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_inbound::handshake_complete(channel::ptr channel,
     result_handler handle_started)
 {

@@ -22,19 +22,13 @@
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/atomic.hpp>
 #include <bitcoin/network/async/deadline.hpp>
-#include <bitcoin/network/async/delegates.hpp>
-#include <bitcoin/network/async/dispatcher.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/handlers.hpp>
-#include <bitcoin/network/async/resubscriber.hpp>
-#include <bitcoin/network/async/sequencer.hpp>
 #include <bitcoin/network/async/subscriber.hpp>
-#include <bitcoin/network/async/synchronizer.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/timer.hpp>
 #include <bitcoin/network/async/track.hpp>
-#include <bitcoin/network/async/work.hpp>
 
 #endif

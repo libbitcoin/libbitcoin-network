@@ -74,12 +74,9 @@
   </ImportGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\async\deadline.cpp" />
-    <ClCompile Include="..\..\..\..\src\async\dispatcher.cpp" />
-    <ClCompile Include="..\..\..\..\src\async\sequencer.cpp" />
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
-    <ClCompile Include="..\..\..\..\src\async\work.cpp" />
     <ClCompile Include="..\..\..\..\src\log\file_collector.cpp" />
     <ClCompile Include="..\..\..\..\src\log\file_collector_repository.cpp" />
     <ClCompile Include="..\..\..\..\src\log\file_counter_formatter.cpp" />
@@ -118,20 +115,14 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\atomic.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\deadline.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\delegates.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\dispatcher.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\resubscriber.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\sequencer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\synchronizer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\thread.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\threadpool.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\track.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\work.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\attributes.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\counter.hpp" />
@@ -181,7 +172,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\resubscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\track.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\log\features\counter.ipp" />

@@ -25,31 +25,32 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-#define NAME "reject"
 #define CLASS protocol_reject_70002
+static const std::string protocol_name = "reject";
 
 using namespace bc::system;
 using namespace bc::system::messages;
 using namespace std::placeholders;
 
-protocol_reject_70002::protocol_reject_70002(p2p& network,
-    channel::ptr channel)
-  : protocol_events(network, channel, NAME),
+protocol_reject_70002::protocol_reject_70002(channel::ptr channel)
+  : protocol_events(channel),
     CONSTRUCT_TRACK(protocol_reject_70002)
 {
 }
+
+// TODO: move stop handling into protocol and override in protocol_events.
 
 // Start sequence.
 // ----------------------------------------------------------------------------
 
 void protocol_reject_70002::start()
 {
+    // protocol_events has a nop start only for this overload.
     protocol_events::start();
 
     SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
@@ -58,10 +59,13 @@ void protocol_reject_70002::start()
 // Protocol.
 // ----------------------------------------------------------------------------
 
-// TODO: mitigate log fill DOS.
+// This creates a log fill DOS vector.
+// This protocol is no longer in widespread use.
+// TODO: update in protocol attachment configuration.
 bool protocol_reject_70002::handle_receive_reject(const code& ec,
     reject_const_ptr reject)
 {
+    // protocol_events is the base class only for this check.
     if (stopped(ec))
         return false;
 
@@ -90,6 +94,11 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
         << ") from [" << authority() << "] '" << reject->reason()
         << "'" << hash;
     return true;
+}
+
+const std::string& protocol_reject_70002::name() const
+{
+    return protocol_name;
 }
 
 } // namespace network

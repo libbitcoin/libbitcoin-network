@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(deadline__construct1__one_thread_start_zero_delay__success)
     };
 
     threadpool pool(1);
-    std::make_shared<deadline>(pool)->start(handler);
+    std::make_shared<deadline>(pool.service())->start(handler);
 }
 
 BOOST_AUTO_TEST_CASE(deadline__construct1__two_threads_start_delay__success)
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(deadline__construct1__two_threads_start_delay__success)
     };
 
     threadpool pool(2);
-    std::make_shared<deadline>(pool)->start(handler, milliseconds(1));
+    std::make_shared<deadline>(pool.service())->start(handler, milliseconds(1));
 }
 
 BOOST_AUTO_TEST_CASE(deadline__construct2__three_threads_start_zero_delay__success)
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(deadline__construct2__three_threads_start_zero_delay__succe
     };
 
     threadpool pool(3);
-    std::make_shared<deadline>(pool, seconds(42))->start(handler, seconds(0));
+    std::make_shared<deadline>(pool.service(), seconds(42))->start(handler, seconds(0));
 }
 
 BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
     };
 
     threadpool pool(0);
-    auto timer = std::make_shared<deadline>(pool);
+    auto timer = std::make_shared<deadline>(pool.service());
     timer->start(handler);
 
     // Stop timer.
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
     };
 
     threadpool stop_pool(1);
-    auto stopper = std::make_shared<deadline>(stop_pool, milliseconds(1));
+    auto stopper = std::make_shared<deadline>(stop_pool.service(), milliseconds(1));
     stopper->start(stop_handler);
 }
 
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
     };
 
     threadpool pool(1);
-    auto timer = std::make_shared<deadline>(pool, seconds(10));
+    auto timer = std::make_shared<deadline>(pool.service(), seconds(10));
     timer->start(handler);
 
     // Stop timer.
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
     };
 
     threadpool stop_pool(1);
-    auto stopper = std::make_shared<deadline>(stop_pool);
+    auto stopper = std::make_shared<deadline>(stop_pool.service());
     stopper->start(stop_handler, milliseconds(1));
 }
 

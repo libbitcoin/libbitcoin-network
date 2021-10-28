@@ -43,16 +43,16 @@ class BCT_API hosts
 public:
     typedef std::shared_ptr<hosts> ptr;
     typedef system::messages::network_address address;
-    typedef std::function<void(const system::code&)> result_handler;
+    typedef std::function<void(const code&)> result_handler;
 
     /// Construct an instance.
     hosts(const settings& settings);
 
     /// Load hosts file if found.
-    virtual system::code start();
+    virtual code start();
 
     // Save hosts to file.
-    virtual system::code stop();
+    virtual code stop();
 
     virtual size_t count() const;
     virtual code fetch(address& out) const;

@@ -22,7 +22,9 @@
 #include <atomic>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
@@ -34,31 +36,26 @@ namespace network {
 
 class p2p;
 
-/**
- * Ping-pong protocol.
- * Attach this to a channel immediately following handshake completion.
- */
+/// Ping-pong protocol.
+///Attach this to a channel immediately following handshake completion.
 class BCT_API protocol_ping_60001
   : public protocol_ping_31402, track<protocol_ping_60001>
 {
 public:
     typedef std::shared_ptr<protocol_ping_60001> ptr;
 
-    /**
-     * Construct a ping protocol instance.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     */
-    protocol_ping_60001(p2p& network, channel::ptr channel);
+    protocol_ping_60001(channel::ptr channel, const duration& heartbeat);
 
 protected:
-    void send_ping(const system::code& ec) override;
+    void send_ping(const code& ec) override;
 
-    void handle_send_ping(const system::code& ec, const std::string& command);
-    bool handle_receive_ping(const system::code& ec,
+    void handle_send_ping(const code& ec, const std::string& command);
+    bool handle_receive_ping(const code& ec,
         system::ping_const_ptr message) override;
-    virtual bool handle_receive_pong(const system::code& ec,
+    virtual bool handle_receive_pong(const code& ec,
         system::pong_const_ptr message, uint64_t nonce);
+
+    virtual const std::string& name() const override;
 
 private:
     std::atomic<bool> pending_;

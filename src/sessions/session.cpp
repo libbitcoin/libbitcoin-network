@@ -44,8 +44,6 @@ session::session(p2p& network, bool notify_on_connect)
   : stopped_(true),
     notify_on_connect_(notify_on_connect),
     network_(network),
-    dispatch_(network.thread_pool(), NAME),
-    pool_(network.thread_pool()),
     settings_(network.network_settings())
 {
 }
@@ -90,6 +88,7 @@ bool session::stopped() const
     return stopped_;
 }
 
+// TODO: clean this up.
 bool session::stopped(const code& ec) const
 {
     return stopped() || ec == error::service_stopped;
@@ -100,12 +99,12 @@ bool session::stopped(const code& ec) const
 
 acceptor::ptr session::create_acceptor()
 {
-    return std::make_shared<acceptor>(pool_, settings_);
+    return std::make_shared<acceptor>(network_.service(), settings_);
 }
 
 connector::ptr session::create_connector()
 {
-    return std::make_shared<connector>(pool_, settings_);
+    return std::make_shared<connector>(network_.service(), settings_);
 }
 
 // Pending connect.
@@ -141,7 +140,6 @@ bool session::pending(uint64_t version_nonce) const
 
 // Start sequence.
 // ----------------------------------------------------------------------------
-// Must not change context before subscribing.
 
 void session::start(result_handler handler)
 {
@@ -152,25 +150,15 @@ void session::start(result_handler handler)
     }
 
     stopped_ = false;
-    subscribe_stop(BIND1(handle_stop, _1));
 
     // This is the end of the start sequence.
     handler(error::success);
 }
 
-void session::handle_stop(const code&)
+// TODO: override to log session stop.
+void session::stop(const code&)
 {
-    // This signals the session to stop creating connections, but does not
-    // close the session. Channels stop, resulting in session loss of scope.
     stopped_ = true;
-}
-
-// Subscribe Stop.
-// ----------------------------------------------------------------------------
-
-void session::subscribe_stop(result_handler handler)
-{
-    network_.subscribe_stop(handler);
 }
 
 // Registration sequence.
@@ -196,39 +184,29 @@ void session::start_channel(channel::ptr channel,
 {
     channel->set_notify(notify_on_connect_);
     channel->set_nonce(pseudo_random::next<uint64_t>(1u, max_uint64));
-
-    // The channel starts, invokes the handler, then starts the read cycle.
-    channel->start(
-        BIND3(handle_starting, _1, channel, handle_started));
-}
-
-void session::handle_starting(const code& ec, channel::ptr channel,
-    result_handler handle_started)
-{
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Channel failed to start [" << channel->authority() << "] "
-            << ec.message();
-        handle_started(ec);
-        return;
-    }
+    channel->start();
 
     attach_handshake_protocols(channel,
         BIND3(handle_handshake, _1, channel, handle_started));
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
+// Channel communication begins after version protocol start returns.
+// handle_handshake is invoked after version negotiation completes.
 void session::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= messages::version::level::bip61)
-        attach<protocol_version_70002>(channel)->start(handle_started);
+        attach<protocol_version_70002>(channel, network_)->
+            start(handle_started);
     else
-        attach<protocol_version_31402>(channel)->start(handle_started);
+        attach<protocol_version_31402>(channel, network_)->
+            start(handle_started);
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session::handle_handshake(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
@@ -245,13 +223,16 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
     handshake_complete(channel, handle_started);
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session::handshake_complete(channel::ptr channel,
     result_handler handle_started)
 {
+    // TODO: subscribe to message broadcaster?
     // This will fail if the IP address or nonce is already connected.
     handle_started(network_.store(channel));
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session::handle_start(const code& ec, channel::ptr channel,
     result_handler handle_started, result_handler handle_stopped)
 {
@@ -265,6 +246,8 @@ void session::handle_start(const code& ec, channel::ptr channel,
     }
     else
     {
+        // NOTE: protocols are also subscribed to channel stop.
+        // This is where all channels subscribe to their own stop notification.
         channel->subscribe_stop(
             BIND3(handle_remove, _1, channel, handle_stopped));
     }
@@ -273,6 +256,7 @@ void session::handle_start(const code& ec, channel::ptr channel,
     handle_started(ec);
 }
 
+// THIS IS INVOKED ON THE CHANNEL THREAD (if the channel stops itself).
 void session::handle_remove(const code& , channel::ptr channel,
     result_handler handle_stopped)
 {

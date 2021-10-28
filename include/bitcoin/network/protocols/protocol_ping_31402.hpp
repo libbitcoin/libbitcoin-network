@@ -20,7 +20,9 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_PING_31402_HPP
 
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
@@ -29,40 +31,28 @@
 namespace libbitcoin {
 namespace network {
 
-class p2p;
-
-/**
- * Ping-pong protocol.
- * Attach this to a channel immediately following handshake completion.
- */
+/// Ping-pong protocol.
+/// Attach this to a channel immediately following handshake completion.
 class BCT_API protocol_ping_31402
   : public protocol_timer, track<protocol_ping_31402>
 {
 public:
     typedef std::shared_ptr<protocol_ping_31402> ptr;
 
-    /**
-     * Construct a ping protocol instance.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     */
-    protocol_ping_31402(p2p& network, channel::ptr channel);
+    protocol_ping_31402(channel::ptr channel, const duration& heartbeat);
 
-    /**
-     * Start the protocol.
-     */
     virtual void start();
 
 protected:
     // Expose polymorphic start method from base.
     using protocol_timer::start;
 
-    virtual void send_ping(const system::code& ec);
+    virtual void send_ping(const code& ec);
 
-    virtual bool handle_receive_ping(const system::code& ec,
+    virtual bool handle_receive_ping(const code& ec,
         system::ping_const_ptr message);
 
-    const settings& settings_;
+    virtual const std::string& name() const override;
 };
 
 } // namespace network

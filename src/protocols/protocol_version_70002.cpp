@@ -19,6 +19,7 @@
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 
 #include <cstdint>
+#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -29,8 +30,8 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "version"
 #define CLASS protocol_version_70002
+static const std::string protocol_name = "version";
 
 using namespace bc::system;
 using namespace bc::system::messages;
@@ -40,11 +41,11 @@ static const std::string insufficient_version = "insufficient-version";
 static const std::string insufficient_services = "insufficient-services";
 
 // TODO: set explicitly on inbound (none or new config) and self on outbound.
-// Configured services was our but we found that most incoming connections are
+// Configured services was one but we found that most incoming connections are
 // set to zero, so that is currently the default (see below).
-protocol_version_70002::protocol_version_70002(p2p& network,
-    channel::ptr channel)
-  : protocol_version_70002(network, channel,
+protocol_version_70002::protocol_version_70002(channel::ptr channel,
+    p2p& network)
+  : protocol_version_70002(channel, network,
         network.network_settings().protocol_maximum,
         network.network_settings().services,
         network.network_settings().invalid_services,
@@ -55,11 +56,11 @@ protocol_version_70002::protocol_version_70002(p2p& network,
 {
 }
 
-protocol_version_70002::protocol_version_70002(p2p& network,
-    channel::ptr channel, uint32_t own_version, uint64_t own_services,
+protocol_version_70002::protocol_version_70002(channel::ptr channel,
+    p2p& network, uint32_t own_version, uint64_t own_services,
     uint64_t invalid_services, uint32_t minimum_version,
     uint64_t minimum_services, bool relay)
-  : protocol_version_31402(network, channel, own_version, own_services,
+  : protocol_version_31402(channel, network, own_version, own_services,
         invalid_services, minimum_version, minimum_services),
     relay_(relay),
     CONSTRUCT_TRACK(protocol_version_70002)
@@ -69,9 +70,11 @@ protocol_version_70002::protocol_version_70002(p2p& network,
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_version_70002::start(event_handler handler)
+void protocol_version_70002::start(event_handler handle_event)
 {
-    protocol_version_31402::start(handler);
+    // VERSION/TIMER/EVENTS START COMPLETES WITHOUT INVOKING THE HANDLER.
+    // handle_event is invoked on the channel thread.
+    protocol_version_31402::start(handle_event);
 
     SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
 }
@@ -162,6 +165,10 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
     return true;
 }
 
+const std::string& protocol_version_70002::name() const
+{
+    return protocol_name;
+}
 
 } // namespace network
 } // namespace libbitcoin

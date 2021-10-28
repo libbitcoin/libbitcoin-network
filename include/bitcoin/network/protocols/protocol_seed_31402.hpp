@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_SEED_31402_HPP
 
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -30,28 +31,17 @@ namespace network {
 
 class p2p;
 
-/**
- * Seeding protocol.
- * Attach this to a channel immediately following seed handshake completion.
- */
+/// Seeding protocol.
+/// Attach this to a channel immediately following seed handshake completion.
 class BCT_API protocol_seed_31402
   : public protocol_timer, track<protocol_seed_31402>
 {
 public:
     typedef std::shared_ptr<protocol_seed_31402> ptr;
 
-    /**
-     * Construct a seed protocol instance.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     */
-    protocol_seed_31402(p2p& network, channel::ptr channel);
+    protocol_seed_31402(channel::ptr channel, p2p& network);
 
-    /**
-     * Start the protocol.
-     * @param[in]  handler   Invoked upon stop or complete.
-     */
-    virtual void start(event_handler handler);
+    virtual void start(event_handler handle_event);
 
 protected:
     // Expose polymorphic start method from base.
@@ -59,16 +49,18 @@ protected:
 
     virtual void send_own_address(const settings& settings);
 
-    virtual void handle_send_address(const system::code& ec);
-    virtual void handle_send_get_address(const system::code& ec);
-    virtual void handle_store_addresses(const system::code& ec);
-    virtual void handle_seeding_complete(const system::code& ec,
+    virtual void handle_send_address(const code& ec);
+    virtual void handle_send_get_address(const code& ec);
+    virtual void handle_store_addresses(const code& ec);
+    virtual void handle_seeding_complete(const code& ec,
         event_handler handler);
 
-    virtual bool handle_receive_address(const system::code& ec,
+    virtual bool handle_receive_address(const code& ec,
         system::address_const_ptr address);
     ////virtual bool handle_receive_get_address(const code& ec,
     ////    get_address_const_ptr message);
+
+    virtual const std::string& name() const override;
 
     p2p& network_;
     const system::config::authority self_;

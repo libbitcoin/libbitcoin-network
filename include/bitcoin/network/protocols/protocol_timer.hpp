@@ -29,34 +29,16 @@
 namespace libbitcoin {
 namespace network {
 
-class p2p;
-
-/**
- * Base class for timed protocol implementation.
- */
+/// Base class for timed protocol implementation.
 class BCT_API protocol_timer
   : public protocol_events
 {
 protected:
 
-    /**
-     * Construct a timed protocol instance.
-     * @param[in]  network    The network interface.
-     * @param[in]  channel    The channel on which to start the protocol.
-     * @param[in]  perpetual  Set for automatic timer reset unless stopped.
-     * @param[in]  name       The instance name for logging purposes.
-     */
-    protocol_timer(p2p& network, channel::ptr channel, bool perpetual,
-        const std::string& name);
+    protocol_timer(channel::ptr channel, const duration& timeout,
+        bool perpetual=true);
 
-    /**
-     * Define the event handler and start the protocol and timer.
-     * The timer is automatically canceled on stop (only).
-     * The timer is suspended while the handler is executing.
-     * @param[in]  timeout  The timer period (not automatically reset).
-     * @param[in]  handler  Invoke automatically on stop and timer events.
-     */
-    virtual void start(const duration& timeout, event_handler handler);
+    virtual void start(event_handler handle_event);
 
     // Expose polymorphic start method from base.
     using protocol_events::start;
@@ -65,9 +47,10 @@ protected:
     void reset_timer();
 
 private:
-    void handle_timer(const system::code& ec);
-    void handle_notify(const system::code& ec, event_handler handler);
+    void handle_timer(const code& ec);
+    void handle_notify(const code& ec, event_handler handler);
 
+    const duration timeout_;
     const bool perpetual_;
     deadline::ptr timer_;
 };

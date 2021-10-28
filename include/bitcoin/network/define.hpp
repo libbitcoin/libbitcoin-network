@@ -55,13 +55,21 @@ namespace network {
 
 using code = system::code;
 
-// The 'Handler' typename is conventional.
-#define FORWARD_ARGS(args) \
-    std::forward<Args>(args)...
-#define FORWARD_HANDLER(handler) \
-    std::forward<Handler>(handler)
-#define BIND_HANDLER(handler, args) \
-    std::bind(FORWARD_HANDLER(handler), FORWARD_ARGS(args))
+// The 'bind' method and 'CLASS' names are conventional.
+#define BIND1(method, p1) \
+    bind<CLASS>(&CLASS::method, p1)
+#define BIND2(method, p1, p2) \
+    bind<CLASS>(&CLASS::method, p1, p2)
+#define BIND3(method, p1, p2, p3) \
+    bind<CLASS>(&CLASS::method, p1, p2, p3)
+#define BIND4(method, p1, p2, p3, p4) \
+    bind<CLASS>(&CLASS::method, p1, p2, p3, p4)
+#define BIND5(method, p1, p2, p3, p4, p5) \
+    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5)
+#define BIND6(method, p1, p2, p3, p4, p5, p6) \
+    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6)
+#define BIND7(method, p1, p2, p3, p4, p5, p6, p7) \
+    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6, p7)
 
 } // namespace network
 } // namespace libbitcoin

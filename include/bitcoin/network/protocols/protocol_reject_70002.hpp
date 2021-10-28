@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_REJECT_70002_HPP
 
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -30,27 +31,22 @@ namespace network {
 
 class p2p;
 
+/// A protocol for logging reject payloads.
 class BCT_API protocol_reject_70002
   : public protocol_events, track<protocol_reject_70002>
 {
 public:
     typedef std::shared_ptr<protocol_reject_70002> ptr;
 
-    /**
-     * Construct a reject protocol for logging reject payloads.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel for the protocol.
-     */
-    protocol_reject_70002(p2p& network, channel::ptr channel);
+    protocol_reject_70002(channel::ptr channel);
 
-    /**
-     * Start the protocol.
-     */
     virtual void start();
 
 protected:
-    virtual bool handle_receive_reject(const system::code& ec,
+    virtual bool handle_receive_reject(const code& ec,
         system::reject_const_ptr reject);
+
+    virtual const std::string& name() const override;
 };
 
 } // namespace network

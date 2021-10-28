@@ -180,149 +180,149 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 
 // configuration
 
-BOOST_AUTO_TEST_CASE(p2p__top_block__default__zero_null_hash)
-{
-    print_headers(TEST_NAME);
-    const network::settings configuration;
-    p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(network.top_block().height(), 0);
-    BOOST_REQUIRE_EQUAL(network.top_block().hash(), null_hash);
-}
+////BOOST_AUTO_TEST_CASE(p2p__top_block__default__zero_null_hash)
+////{
+////    print_headers(TEST_NAME);
+////    const network::settings configuration;
+////    p2p network(configuration);
+////    BOOST_REQUIRE_EQUAL(network.top_block().height(), 0);
+////    BOOST_REQUIRE_EQUAL(network.top_block().hash(), null_hash);
+////}
 
-BOOST_AUTO_TEST_CASE(p2p__set_top_block1__values__expected)
-{
-    print_headers(TEST_NAME);
-    const network::settings configuration;
-    p2p network(configuration);
-    const size_t expected_height = 42;
-    const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-    network.set_top_block({ expected_hash, expected_height });
-    BOOST_REQUIRE_EQUAL(network.top_block().hash(), expected_hash);
-    BOOST_REQUIRE_EQUAL(network.top_block().height(), expected_height);
-}
+////BOOST_AUTO_TEST_CASE(p2p__set_top_block1__values__expected)
+////{
+////    print_headers(TEST_NAME);
+////    const network::settings configuration;
+////    p2p network(configuration);
+////    const size_t expected_height = 42;
+////    const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+////    network.set_top_block({ expected_hash, expected_height });
+////    BOOST_REQUIRE_EQUAL(network.top_block().hash(), expected_hash);
+////    BOOST_REQUIRE_EQUAL(network.top_block().height(), expected_height);
+////}
 
-BOOST_AUTO_TEST_CASE(p2p__set_top_block2__values__expected)
-{
-    print_headers(TEST_NAME);
-    const network::settings configuration;
-    p2p network(configuration);
-    const size_t expected_height = 42;
-    const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-    const chain::check_point expected{ hash, expected_height };
-    network.set_top_block(expected);
-    BOOST_REQUIRE_EQUAL(network.top_block().hash(), expected.hash());
-    BOOST_REQUIRE_EQUAL(network.top_block().height(), expected.height());
-}
+////BOOST_AUTO_TEST_CASE(p2p__set_top_block2__values__expected)
+////{
+////    print_headers(TEST_NAME);
+////    const network::settings configuration;
+////    p2p network(configuration);
+////    const size_t expected_height = 42;
+////    const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+////    const chain::check_point expected{ hash, expected_height };
+////    network.set_top_block(expected);
+////    BOOST_REQUIRE_EQUAL(network.top_block().hash(), expected.hash());
+////    BOOST_REQUIRE_EQUAL(network.top_block().height(), expected.height());
+////}
 
-BOOST_AUTO_TEST_CASE(p2p__top_header__default__zero_null_hash)
-{
-    print_headers(TEST_NAME);
-    const network::settings configuration;
-    p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(network.top_header().height(), 0);
-    BOOST_REQUIRE_EQUAL(network.top_header().hash(), null_hash);
-}
+////BOOST_AUTO_TEST_CASE(p2p__top_header__default__zero_null_hash)
+////{
+////    print_headers(TEST_NAME);
+////    const network::settings configuration;
+////    p2p network(configuration);
+////    BOOST_REQUIRE_EQUAL(network.top_header().height(), 0);
+////    BOOST_REQUIRE_EQUAL(network.top_header().hash(), null_hash);
+////}
 
-BOOST_AUTO_TEST_CASE(p2p__set_top_header1__values__expected)
-{
-    print_headers(TEST_NAME);
-    const network::settings configuration;
-    p2p network(configuration);
-    const size_t expected_height = 42;
-    const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-    network.set_top_header({ expected_hash, expected_height });
-    BOOST_REQUIRE_EQUAL(network.top_header().hash(), expected_hash);
-    BOOST_REQUIRE_EQUAL(network.top_header().height(), expected_height);
-}
+////BOOST_AUTO_TEST_CASE(p2p__set_top_header1__values__expected)
+////{
+////    print_headers(TEST_NAME);
+////    const network::settings configuration;
+////    p2p network(configuration);
+////    const size_t expected_height = 42;
+////    const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+////    network.set_top_header({ expected_hash, expected_height });
+////    BOOST_REQUIRE_EQUAL(network.top_header().hash(), expected_hash);
+////    BOOST_REQUIRE_EQUAL(network.top_header().height(), expected_height);
+////}
 
-BOOST_AUTO_TEST_CASE(p2p__set_top_header2__values__expected)
-{
-    print_headers(TEST_NAME);
-    const network::settings configuration;
-    p2p network(configuration);
-    const size_t expected_height = 42;
-    const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-    const chain::check_point expected{ hash, expected_height };
-    network.set_top_header(expected);
-    BOOST_REQUIRE_EQUAL(network.top_header().hash(), expected.hash());
-    BOOST_REQUIRE_EQUAL(network.top_header().height(), expected.height());
-}
+////BOOST_AUTO_TEST_CASE(p2p__set_top_header2__values__expected)
+////{
+////    print_headers(TEST_NAME);
+////    const network::settings configuration;
+////    p2p network(configuration);
+////    const size_t expected_height = 42;
+////    const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+////    const chain::check_point expected{ hash, expected_height };
+////    network.set_top_header(expected);
+////    BOOST_REQUIRE_EQUAL(network.top_header().hash(), expected.hash());
+////    BOOST_REQUIRE_EQUAL(network.top_header().height(), expected.height());
+////}
 
 // service stopped
 
-BOOST_AUTO_TEST_CASE(p2p__connect__stopped__service_stopped)
-{
-    print_headers(TEST_NAME);
-    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    p2p network(configuration);
-    const config::endpoint host(SEED1);
-    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::service_stopped);
-}
+////BOOST_AUTO_TEST_CASE(p2p__connect__stopped__service_stopped)
+////{
+////    print_headers(TEST_NAME);
+////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+////    p2p network(configuration);
+////    const config::endpoint host(SEED1);
+////    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::service_stopped);
+////}
 
-BOOST_AUTO_TEST_CASE(p2p__subscribe__stopped__service_stopped)
-{
-    print_headers(TEST_NAME);
-    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(subscribe_result(network), error::service_stopped);
-}
+////BOOST_AUTO_TEST_CASE(p2p__subscribe__stopped__service_stopped)
+////{
+////    print_headers(TEST_NAME);
+////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+////    p2p network(configuration);
+////    BOOST_REQUIRE_EQUAL(subscribe_result(network), error::service_stopped);
+////}
 
-BOOST_AUTO_TEST_CASE(p2p__subscribe__started__service_stopped_on_destruct)
-{
-    print_headers(TEST_NAME);
-    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-
-    const auto handler = [](code ec, channel::ptr channel)
-    {
-        BOOST_REQUIRE(!channel);
-        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
-        return false;
-    };
-
-    // Expect queued handler until destruct because service is started.
-    network.subscribe_connection(handler);
-}
+////BOOST_AUTO_TEST_CASE(p2p__subscribe__started__service_stopped_on_destruct)
+////{
+////    print_headers(TEST_NAME);
+////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+////    p2p network(configuration);
+////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+////
+////    const auto handler = [](code ec, channel::ptr channel)
+////    {
+////        BOOST_REQUIRE(!channel);
+////        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
+////        return false;
+////    };
+////
+////    // Expect queued handler until destruct because service is started.
+////    network.subscribe_connection(handler);
+////}
 
 // start with no connections
 
-BOOST_AUTO_TEST_CASE(p2p__start__no_connections__start_success)
-{
-    print_headers(TEST_NAME);
-    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-}
+////BOOST_AUTO_TEST_CASE(p2p__start__no_connections__start_success)
+////{
+////    print_headers(TEST_NAME);
+////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+////    p2p network(configuration);
+////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+////}
 
-BOOST_AUTO_TEST_CASE(p2p__start__no_connections__stop_success)
-{
-    print_headers(TEST_NAME);
-    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-    BOOST_REQUIRE(network.stop());
-}
+////BOOST_AUTO_TEST_CASE(p2p__start__no_connections__stop_success)
+////{
+////    print_headers(TEST_NAME);
+////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+////    p2p network(configuration);
+////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+////    BOOST_REQUIRE(network.stop());
+////}
 
-BOOST_AUTO_TEST_CASE(p2p__start__no_connections_restart__start_operation_failed)
-{
-    print_headers(TEST_NAME);
-    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
-}
+////BOOST_AUTO_TEST_CASE(p2p__start__no_connections_restart__start_operation_failed)
+////{
+////    print_headers(TEST_NAME);
+////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+////    p2p network(configuration);
+////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+////    BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
+////}
 
 // one connection with no seeds
 
-BOOST_AUTO_TEST_CASE(p2p__start__outbound_no_seeds__success)
-{
-    print_headers(TEST_NAME);
-    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-    configuration.outbound_connections = 1;
-    p2p network(configuration);
-    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-}
+////BOOST_AUTO_TEST_CASE(p2p__start__outbound_no_seeds__success)
+////{
+////    print_headers(TEST_NAME);
+////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
+////    configuration.outbound_connections = 1;
+////    p2p network(configuration);
+////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
+////}
 
 // channel_timeout (node offline)
 ////BOOST_AUTO_TEST_CASE(p2p__connect__started__success)

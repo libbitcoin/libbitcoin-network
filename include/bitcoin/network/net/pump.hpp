@@ -19,12 +19,9 @@
 #ifndef LIBBITCOIN_NETWORK_NET_PUMP_HPP
 #define LIBBITCOIN_NETWORK_NET_PUMP_HPP
 
-#include <istream>
 #include <functional>
-#include <map>
 #include <memory>
 #include <utility>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -32,187 +29,159 @@
 namespace libbitcoin {
 namespace network {
 
-#define DEFINE_SUBSCRIBER_TYPE(value) \
-    typedef resubscriber<system::code, system::messages::value::const_ptr> \
-        value##_subscriber_type
+#define SUBSCRIBER(name) name##_subscriber_
+#define SUBSCRIBER_TYPE(name) name##_subscriber
 
-#define DEFINE_SUBSCRIBER_OVERLOAD(value) \
-    template <typename Handler> \
-    void subscribe(system::messages::value&&, Handler&& handler) \
-    { \
-        value##_subscriber_->subscribe(std::forward<Handler>(handler), \
-            system::error::channel_stopped, {}); \
-    }
+#define DEFINE_SUBSCRIBER(name) \
+    typedef subscriber<asio::strand, code, system::messages::name::const_ptr> \
+        SUBSCRIBER_TYPE(name)
 
-#define DECLARE_SUBSCRIBER(value) \
-    value##_subscriber_type::ptr value##_subscriber_
+#define SUBSCRIBER_OVERLOAD(name) \
+    bool do_subscribe(pump::handler<system::messages::name>&& handler) const \
+{ \
+    return SUBSCRIBER(name)->subscribe(std::move(handler)); \
+}
 
-template <class Message>
-using message_handler =
-    std::function<bool(const system::code&, std::shared_ptr<const Message>)>;
+#define DECLARE_SUBSCRIBER(name) \
+    SUBSCRIBER_TYPE(name)::ptr SUBSCRIBER(name)
 
-/// Aggregation of subscribers by messasge type, thread safe.
+// TODO: type-constrain templates to a Message to base class, when there is one.
+
+/// Thread safe aggregation of subscribers by message type.
+/// Stop is thread safe and idempotent, may be called multiple times.
+/// All handlers are posted to the strand provided upon construct.
 class BCT_API pump
   : system::noncopyable
 {
 public:
-    DEFINE_SUBSCRIBER_TYPE(address);
-    DEFINE_SUBSCRIBER_TYPE(alert);
-    DEFINE_SUBSCRIBER_TYPE(block);
-    DEFINE_SUBSCRIBER_TYPE(block_transactions);
-    DEFINE_SUBSCRIBER_TYPE(compact_block);
-    DEFINE_SUBSCRIBER_TYPE(compact_filter);
-    DEFINE_SUBSCRIBER_TYPE(compact_filter_checkpoint);
-    DEFINE_SUBSCRIBER_TYPE(compact_filter_headers);
-    DEFINE_SUBSCRIBER_TYPE(fee_filter);
-    DEFINE_SUBSCRIBER_TYPE(filter_add);
-    DEFINE_SUBSCRIBER_TYPE(filter_clear);
-    DEFINE_SUBSCRIBER_TYPE(filter_load);
-    DEFINE_SUBSCRIBER_TYPE(get_address);
-    DEFINE_SUBSCRIBER_TYPE(get_blocks);
-    DEFINE_SUBSCRIBER_TYPE(get_block_transactions);
-    DEFINE_SUBSCRIBER_TYPE(get_compact_filter_checkpoint);
-    DEFINE_SUBSCRIBER_TYPE(get_compact_filter_headers);
-    DEFINE_SUBSCRIBER_TYPE(get_compact_filters);
-    DEFINE_SUBSCRIBER_TYPE(get_data);
-    DEFINE_SUBSCRIBER_TYPE(get_headers);
-    DEFINE_SUBSCRIBER_TYPE(headers);
-    DEFINE_SUBSCRIBER_TYPE(inventory);
-    DEFINE_SUBSCRIBER_TYPE(memory_pool);
-    DEFINE_SUBSCRIBER_TYPE(merkle_block);
-    DEFINE_SUBSCRIBER_TYPE(not_found);
-    DEFINE_SUBSCRIBER_TYPE(ping);
-    DEFINE_SUBSCRIBER_TYPE(pong);
-    DEFINE_SUBSCRIBER_TYPE(reject);
-    DEFINE_SUBSCRIBER_TYPE(send_compact);
-    DEFINE_SUBSCRIBER_TYPE(send_headers);
-    DEFINE_SUBSCRIBER_TYPE(transaction);
-    DEFINE_SUBSCRIBER_TYPE(verack);
-    DEFINE_SUBSCRIBER_TYPE(version);
+    /// Helper for external declarations.
+    template <class Message>
+    using handler = std::function<bool(const code&,
+        std::shared_ptr<const Message>)>;
 
-    /**
-     * Create an instance of this class.
-     * @param[in]  pool  The threadpool to use for sending notifications.
-     */
-    pump(threadpool& pool);
+    ////typedef subscriber<asio::strand, code, system::messages::address::const_ptr>
+    ////    address_subscriber;
+    DEFINE_SUBSCRIBER(address);
+    DEFINE_SUBSCRIBER(alert);
+    DEFINE_SUBSCRIBER(block);
+    DEFINE_SUBSCRIBER(block_transactions);
+    DEFINE_SUBSCRIBER(compact_block);
+    DEFINE_SUBSCRIBER(compact_filter);
+    DEFINE_SUBSCRIBER(compact_filter_checkpoint);
+    DEFINE_SUBSCRIBER(compact_filter_headers);
+    DEFINE_SUBSCRIBER(fee_filter);
+    DEFINE_SUBSCRIBER(filter_add);
+    DEFINE_SUBSCRIBER(filter_clear);
+    DEFINE_SUBSCRIBER(filter_load);
+    DEFINE_SUBSCRIBER(get_address);
+    DEFINE_SUBSCRIBER(get_blocks);
+    DEFINE_SUBSCRIBER(get_block_transactions);
+    DEFINE_SUBSCRIBER(get_compact_filter_checkpoint);
+    DEFINE_SUBSCRIBER(get_compact_filter_headers);
+    DEFINE_SUBSCRIBER(get_compact_filters);
+    DEFINE_SUBSCRIBER(get_data);
+    DEFINE_SUBSCRIBER(get_headers);
+    DEFINE_SUBSCRIBER(headers);
+    DEFINE_SUBSCRIBER(inventory);
+    DEFINE_SUBSCRIBER(memory_pool);
+    DEFINE_SUBSCRIBER(merkle_block);
+    DEFINE_SUBSCRIBER(not_found);
+    DEFINE_SUBSCRIBER(ping);
+    DEFINE_SUBSCRIBER(pong);
+    DEFINE_SUBSCRIBER(reject);
+    DEFINE_SUBSCRIBER(send_compact);
+    DEFINE_SUBSCRIBER(send_headers);
+    DEFINE_SUBSCRIBER(transaction);
+    DEFINE_SUBSCRIBER(verack);
+    DEFINE_SUBSCRIBER(version);
 
-    /**
-     * Subscribe to receive a notification when a message of type is received.
-     * The handler is unregistered when the call is made.
-     * Subscribing must be immediate, we cannot switch thread contexts.
-     * @param[in]  handler  The handler to register.
-     */
-    template <class Message, typename Handler>
-    void subscribe(Handler&& handler)
+    /// Create an instance of this class.
+    pump(asio::strand& strand);
+
+    /// Subscribe to receive a notification when a message of type is received.
+    /// Subscription handler is retained in the queue until stop.
+    template <typename Handler>
+    bool subscribe(Handler&& handler)
     {
-        subscribe(Message(), std::forward<Handler>(handler));
+        return do_subscribe(std::forward<Handler>(handler));
     }
 
-    /**
-     * Load a stream into a message instance and notify subscribers.
-     * @param[in]  reader      The stream reader from which to load the message.
-     * @param[in]  version     The peer protocol version.
-     * @param[in]  subscriber  The subscriber for the message type.
-     * @return                 Returns error::bad_stream if failed.
-     */
-    template <class Message, class Subscriber>
-    system::code relay(system::reader& reader, uint32_t version,
-        Subscriber& subscriber) const
-    {
-        const auto message = std::make_shared<Message>();
+    /// Relay a message instance to each subscriber of the type.
+    /// Returns bad_stream if message fails to deserialize, otherwise success.
+    virtual code notify(system::messages::identifier id, uint32_t version,
+        system::reader& reader) const;
 
-        // Subscribers are invoked only with stop and success codes.
-        if (!message->from_data(version, reader))
-            return system::error::bad_stream;
-
-        subscriber->relay(system::error::success, message);
-        return system::error::success;
-    }
-
-    /**
-     * Load a stream into a message instance and invoke subscribers.
-     * @param[in]  reader      The stream reader from which to load the message.
-     * @param[in]  version     The peer protocol version.
-     * @param[in]  subscriber  The subscriber for the message type.
-     * @return                 Returns error::bad_stream if failed.
-     */
-    template <class Message, class Subscriber>
-    system::code handle(system::reader& reader, uint32_t version,
-        Subscriber& subscriber) const
-    {
-        const auto message = std::make_shared<Message>();
-
-        // Subscribers are invoked only with stop and success codes.
-        if (!message->from_data(version, reader))
-            return system::error::bad_stream;
-
-        subscriber->invoke(system::error::success, message);
-        return system::error::success;
-    }
-
-    /**
-     * Broadcast a default message instance with the specified error code.
-     * @param[in]  ec  The error code to broadcast.
-     */
-    virtual void broadcast(const system::code& ec);
-
-    /*
-     * Load a stream of the specified command type.
-     * Creates an instance of the indicated message type.
-     * Sends the message instance to each subscriber of the type.
-     * @param[in]  type     The stream message type identifier.
-     * @param[in]  version  The peer protocol version.
-     * @param[in]  reader   The stream reader from which to load the message.
-     * @return              Returns error::bad_stream if failed.
-     */
-    virtual system::code load(system::messages::message_type type,
-        uint32_t version, system::reader& reader) const;
-
-    /**
-     * Start all subscribers so that they accept subscription.
-     */
-    virtual void start();
-
-    /**
-     * Stop all subscribers so that they no longer accept subscription.
-     */
-    virtual void stop();
+    /// Stop all subscribers, prevents subsequent subscription (idempotent).
+    /// The subscriber is stopped regardless of the error code, however by
+    /// convention handlers rely on the error code to avoid message processing.
+    virtual void stop(const code& ec);
 
 private:
-    DEFINE_SUBSCRIBER_OVERLOAD(address)
-    DEFINE_SUBSCRIBER_OVERLOAD(alert)
-    DEFINE_SUBSCRIBER_OVERLOAD(block)
-    DEFINE_SUBSCRIBER_OVERLOAD(block_transactions)
-    DEFINE_SUBSCRIBER_OVERLOAD(compact_block)
-    DEFINE_SUBSCRIBER_OVERLOAD(compact_filter)
-    DEFINE_SUBSCRIBER_OVERLOAD(compact_filter_checkpoint)
-    DEFINE_SUBSCRIBER_OVERLOAD(compact_filter_headers)
-    DEFINE_SUBSCRIBER_OVERLOAD(fee_filter)
-    DEFINE_SUBSCRIBER_OVERLOAD(filter_add)
-    DEFINE_SUBSCRIBER_OVERLOAD(filter_clear)
-    DEFINE_SUBSCRIBER_OVERLOAD(filter_load)
-    DEFINE_SUBSCRIBER_OVERLOAD(get_address)
-    DEFINE_SUBSCRIBER_OVERLOAD(get_blocks)
-    DEFINE_SUBSCRIBER_OVERLOAD(get_block_transactions)
-    DEFINE_SUBSCRIBER_OVERLOAD(get_compact_filter_checkpoint)
-    DEFINE_SUBSCRIBER_OVERLOAD(get_compact_filter_headers)
-    DEFINE_SUBSCRIBER_OVERLOAD(get_compact_filters)
-    DEFINE_SUBSCRIBER_OVERLOAD(get_data)
-    DEFINE_SUBSCRIBER_OVERLOAD(get_headers)
-    DEFINE_SUBSCRIBER_OVERLOAD(headers)
-    DEFINE_SUBSCRIBER_OVERLOAD(inventory)
-    DEFINE_SUBSCRIBER_OVERLOAD(memory_pool)
-    DEFINE_SUBSCRIBER_OVERLOAD(merkle_block)
-    DEFINE_SUBSCRIBER_OVERLOAD(not_found)
-    DEFINE_SUBSCRIBER_OVERLOAD(ping)
-    DEFINE_SUBSCRIBER_OVERLOAD(pong)
-    DEFINE_SUBSCRIBER_OVERLOAD(reject)
-    DEFINE_SUBSCRIBER_OVERLOAD(send_compact)
-    DEFINE_SUBSCRIBER_OVERLOAD(send_headers)
-    DEFINE_SUBSCRIBER_OVERLOAD(transaction)
-    DEFINE_SUBSCRIBER_OVERLOAD(verack)
-    DEFINE_SUBSCRIBER_OVERLOAD(version)
+    // Deserialize a stream into a message instance and notify subscribers.
+    template <typename Message, typename Subscriber>
+    code do_notify(Subscriber& subscriber, uint32_t version,
+        system::reader& reader) const
+    {
+        // TODO: Implement deferred deserialization in messages.
+        // TODO: Store buffer and use for hash compute and reserialization.
+        // TODO: Give option to purge buffer on deserialization or explicitly.
+        // TODO: This accelerates hash compute and allows for fast reject of
+        // TODO: messages that we already have (by hash), and to retain the
+        // TODO: buffer for relaying to other peers, etc. The hash is a store
+        // TODO: key, so we just read it onto the object. The only time we need
+        // TODO: to serialize is to send a message over the wire, and only need
+        // TODO: to hash for identity when we receive over the wire. See also
+        // TODO: comments in proxy::send.
 
+        const auto message = std::make_shared<Message>();
+        if (!message->from_data(version, reader))
+            return system::error::bad_stream;
+
+        // Subscribers are notified only with stop and success codes.
+        subscriber->notify(system::error::success, message);
+        return system::error::success;
+    }
+
+    ////bool do_subscribe(pump::handler<system::messages::address>&& handler) const
+    ////{
+    ////    return address_subscriber_->subscribe(std::move(handler));
+    ////}
+    SUBSCRIBER_OVERLOAD(address);
+    SUBSCRIBER_OVERLOAD(alert);
+    SUBSCRIBER_OVERLOAD(block);
+    SUBSCRIBER_OVERLOAD(block_transactions);
+    SUBSCRIBER_OVERLOAD(compact_block);
+    SUBSCRIBER_OVERLOAD(compact_filter);
+    SUBSCRIBER_OVERLOAD(compact_filter_checkpoint);
+    SUBSCRIBER_OVERLOAD(compact_filter_headers);
+    SUBSCRIBER_OVERLOAD(fee_filter);
+    SUBSCRIBER_OVERLOAD(filter_add);
+    SUBSCRIBER_OVERLOAD(filter_clear);
+    SUBSCRIBER_OVERLOAD(filter_load);
+    SUBSCRIBER_OVERLOAD(get_address);
+    SUBSCRIBER_OVERLOAD(get_blocks);
+    SUBSCRIBER_OVERLOAD(get_block_transactions);
+    SUBSCRIBER_OVERLOAD(get_compact_filter_checkpoint);
+    SUBSCRIBER_OVERLOAD(get_compact_filter_headers);
+    SUBSCRIBER_OVERLOAD(get_compact_filters);
+    SUBSCRIBER_OVERLOAD(get_data);
+    SUBSCRIBER_OVERLOAD(get_headers);
+    SUBSCRIBER_OVERLOAD(headers);
+    SUBSCRIBER_OVERLOAD(inventory);
+    SUBSCRIBER_OVERLOAD(memory_pool);
+    SUBSCRIBER_OVERLOAD(merkle_block);
+    SUBSCRIBER_OVERLOAD(not_found);
+    SUBSCRIBER_OVERLOAD(ping);
+    SUBSCRIBER_OVERLOAD(pong);
+    SUBSCRIBER_OVERLOAD(reject);
+    SUBSCRIBER_OVERLOAD(send_compact);
+    SUBSCRIBER_OVERLOAD(send_headers);
+    SUBSCRIBER_OVERLOAD(transaction);
+    SUBSCRIBER_OVERLOAD(verack);
+    SUBSCRIBER_OVERLOAD(version);
+
+    // These are thread safe.
+    /////address_subscriber::ptr address_subscriber_;
     DECLARE_SUBSCRIBER(address);
     DECLARE_SUBSCRIBER(alert);
     DECLARE_SUBSCRIBER(block);
@@ -246,10 +215,15 @@ private:
     DECLARE_SUBSCRIBER(transaction);
     DECLARE_SUBSCRIBER(verack);
     DECLARE_SUBSCRIBER(version);
+
+    // This is thread safe.
+    asio::strand& strand_;
 };
 
-#undef DEFINE_SUBSCRIBER_TYPE
-#undef DEFINE_SUBSCRIBER_OVERLOAD
+#undef SUBSCRIBER
+#undef SUBSCRIBER_TYPE
+#undef DEFINE_SUBSCRIBER
+#undef SUBSCRIBER_OVERLOAD
 #undef DECLARE_SUBSCRIBER
 
 } // namespace network

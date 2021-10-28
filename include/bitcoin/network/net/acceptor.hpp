@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_NET_ACCEPTOR_HPP
 #define LIBBITCOIN_NETWORK_NET_ACCEPTOR_HPP
 
-#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -32,47 +31,59 @@
 namespace libbitcoin {
 namespace network {
 
+/// This class is thread safe.
 /// Create inbound socket connections.
-/// This class is thread safe against stop.
-/// This class is not safe for concurrent listening attempts.
+/// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API acceptor
   : public enable_shared_from_base<acceptor>, system::noncopyable,
     track<acceptor>
 {
 public:
     typedef std::shared_ptr<acceptor> ptr;
-    typedef std::function<void(const system::code&, channel::ptr)> accept_handler;
+    typedef std::function<void(const code&, channel::ptr)> accept_handler;
+
+    // Construct.
+    // ------------------------------------------------------------------------
 
     /// Construct an instance.
-    acceptor(threadpool& pool, const settings& settings);
+    acceptor(asio::io_context& service, const settings& settings);
 
-    /// Validate acceptor stopped.
-    ~acceptor();
+    // Stop.
+    // ------------------------------------------------------------------------
 
-    /// Start the listener on the specified port.
-    virtual system::code listen(uint16_t port);
+    /// Start the listener on the specified port (call only once).
+    virtual code start(uint16_t port);
 
-    /// Accept the next connection available, until canceled.
-    virtual void accept(accept_handler handler);
+    /// Cancel work and close the acceptor (idempotent).
+    /// This action is deferred to the strand, not immediately affected.
+    /// Block on threadpool.join() to ensure termination of the acceptor.
+    virtual void stop();
 
-    /// Cancel outstanding accept attempt.
-    virtual void stop(const system::code& ec);
+    // Methods.
+    // ------------------------------------------------------------------------
+    /// Subsequent accepts may only be attempted following handler invocation.
+    /// May return channel_stopped, channel_timeout, success or an error code.
+    /// The channel paramter is nullptr unless success is returned.
+
+    /// Accept next connection available until stop or timeout, starts timer.
+    virtual void accept(accept_handler&& handler);
 
 private:
-    virtual bool stopped() const;
-
-    void handle_accept(const system::boost_code& ec,
-        socket::ptr socket, accept_handler handler);
+    void do_stop();
+    void do_accept(accept_handler handler);
+    void handle_accept(const code& ec, socket::ptr socket,
+        const accept_handler& handler);
+    void handle_timer(const code& ec, socket::ptr socket,
+        const accept_handler& handler);
 
     // These are thread safe.
-    std::atomic<bool> stopped_;
-    threadpool& pool_;
     const settings& settings_;
-    mutable dispatcher dispatch_;
+    asio::strand strand_;
+    deadline timer_;
 
-    // These are protected by mutex.
+    // These are protected by strand.
     asio::acceptor acceptor_;
-    mutable system::shared_mutex mutex_;
+    bool stopped_;
 };
 
 } // namespace network

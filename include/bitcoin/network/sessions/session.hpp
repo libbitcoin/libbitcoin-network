@@ -56,18 +56,16 @@ class BCT_API session
 public:
     typedef system::config::authority authority;
     typedef system::messages::network_address address;
-    typedef std::function<void(bool)> truth_handler;
-    typedef std::function<void(size_t)> count_handler;
-    typedef std::function<void(const system::code&)> result_handler;
-    typedef std::function<void(const system::code&, channel::ptr)> channel_handler;
-    typedef std::function<void(const system::code&, acceptor::ptr)> accept_handler;
-    typedef std::function<void(const system::code&, const authority&)> host_handler;
+    typedef std::function<void(const code&)> result_handler;
+    typedef std::function<void(const code&, channel::ptr)> channel_handler;
+    typedef std::function<void(const code&, acceptor::ptr)> accept_handler;
+    typedef std::function<void(const code&, const authority&)> host_handler;
 
-    /// Start the session, invokes handler once stop is registered.
+    /// Start the session.
     virtual void start(result_handler handler);
 
-    /// Subscribe to receive session stop notification.
-    virtual void subscribe_stop(result_handler handler);
+    /// Signal stop.
+    virtual void stop(const code& ec);
 
 protected:
 
@@ -84,8 +82,20 @@ protected:
     template <class Protocol, typename... Args>
     typename Protocol::ptr attach(channel::ptr channel, Args&&... args)
     {
-        return std::make_shared<Protocol>(network_, channel,
+        // Protocols are attached after channel start.
+        const auto protocol = std::make_shared<Protocol>(channel,
             std::forward<Args>(args)...);
+
+        // TODO: provide a way to detach (version protocols).
+        // TODO: Add desubscription method to subscriber (enumerable hashmap).
+        // TODO: Use channel as key and bury inclusion for protocols in base.
+        // Capture the protocol in the channel stop handler.
+        channel->subscribe_stop([protocol](const code& ec)
+        {
+            protocol->stop(ec);
+        });
+
+        return protocol;
     }
 
     /// Bind a method in the derived class.
@@ -96,23 +106,8 @@ protected:
         return BOUND_SESSION(handler, args);
     }
 
-    /// Bind a concurrent delegate to a method in the derived class.
-    template <class Session, typename Handler, typename... Args>
-    auto concurrent_delegate(Handler&& handler, Args&&... args) ->
-        delegates::concurrent<decltype(BOUND_SESSION_TYPE(handler, args))> const
-    {
-        return dispatch_.concurrent_delegate(SESSION_ARGS(handler, args));
-    }
-
-    /// Invoke a method in the derived class after the specified delay.
-    inline void dispatch_delayed(const duration& delay,
-        dispatcher::delay_handler handler) const
-    {
-        dispatch_.delayed(delay, handler);
-    }
-
     /// Delay timing for a tight failure loop, based on configured timeout.
-    inline duration cycle_delay(const system::code& ec)
+    inline duration cycle_delay(const code& ec)
     {
         return (ec == system::error::channel_timeout ||
             ec == system::error::service_stopped ||
@@ -125,10 +120,10 @@ protected:
 
     virtual size_t address_count() const;
     virtual size_t connection_count() const;
-    virtual system::code fetch_address(address& out_address) const;
+    virtual code fetch_address(address& out_address) const;
     virtual bool blacklisted(const authority& authority) const;
     virtual bool stopped() const;
-    virtual bool stopped(const system::code& ec) const;
+    virtual bool stopped(const code& ec) const;
 
     /// Socket creators.
     // ------------------------------------------------------------------------
@@ -140,7 +135,7 @@ protected:
     // ------------------------------------------------------------------------
 
     /// Store a pending connection reference.
-    virtual system::code pend(connector::ptr connector);
+    virtual code pend(connector::ptr connector);
 
     /// Free a pending connection reference.
     virtual void unpend(connector::ptr connector);
@@ -149,7 +144,7 @@ protected:
     // ------------------------------------------------------------------------
 
     /// Store a pending connection reference.
-    virtual system::code pend(channel::ptr channel);
+    virtual code pend(channel::ptr channel);
 
     /// Free a pending connection reference.
     virtual void unpend(channel::ptr channel);
@@ -177,28 +172,27 @@ protected:
         result_handler handle_started);
 
     // TODO: create session_timer base class.
-    // Initialization order places these after privates.
-    threadpool& pool_;
+    // Initialization order places this after privates.
     const settings& settings_;
 
 private:
     typedef network::pending<connector> connectors;
 
-    void handle_stop(const system::code& ec);
-    void handle_starting(const system::code& ec, channel::ptr channel,
+    void handle_starting(const code& ec, channel::ptr channel,
         result_handler handle_started);
-    void handle_handshake(const system::code& ec, channel::ptr channel,
+    void handle_handshake(const code& ec, channel::ptr channel,
         result_handler handle_started);
-    void handle_start(const system::code& ec, channel::ptr channel,
+    void handle_start(const code& ec, channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
-    void handle_remove(const system::code& ec, channel::ptr channel,
+    void handle_remove(const code& ec, channel::ptr channel,
         result_handler handle_stopped);
 
     // These are thread safe.
     std::atomic<bool> stopped_;
     const bool notify_on_connect_;
+
+protected:
     p2p& network_;
-    mutable dispatcher dispatch_;
 };
 
 #undef SESSION_ARGS
@@ -206,23 +200,8 @@ private:
 #undef SESSION_ARGS_TYPE
 #undef BOUND_SESSION_TYPE
 
-#define BIND1(method, p1) \
-    bind<CLASS>(&CLASS::method, p1)
-#define BIND2(method, p1, p2) \
-    bind<CLASS>(&CLASS::method, p1, p2)
-#define BIND3(method, p1, p2, p3) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3)
-#define BIND4(method, p1, p2, p3, p4) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4)
-#define BIND5(method, p1, p2, p3, p4, p5) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5)
-#define BIND6(method, p1, p2, p3, p4, p5, p6) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6)
-#define BIND7(method, p1, p2, p3, p4, p5, p6, p7) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6, p7)
-
-#define CONCURRENT_DELEGATE2(method, p1, p2) \
-    concurrent_delegate<CLASS>(&CLASS::method, p1, p2)
+////#define CONCURRENT_DELEGATE2(method, p1, p2) \
+////    concurrent_delegate<CLASS>(&CLASS::method, p1, p2)
 
 
 } // namespace network

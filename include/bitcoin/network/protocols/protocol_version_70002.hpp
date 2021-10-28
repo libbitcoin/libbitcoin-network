@@ -22,6 +22,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -39,40 +40,24 @@ class BCT_API protocol_version_70002
 public:
     typedef std::shared_ptr<protocol_version_70002> ptr;
 
-    /**
-     * Construct a version protocol instance using configured minimums.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     */
-    protocol_version_70002(p2p& network, channel::ptr channel);
+    /// Construct a version protocol instance using configured minimums.
+    protocol_version_70002(channel::ptr channel, p2p& network);
 
-    /**
-     * Construct a version protocol instance.
-     * @param[in]  network           The network interface.
-     * @param[in]  channel           The channel for the protocol.
-     * @param[in]  own_version       This node's maximum version.
-     * @param[in]  own_services      This node's advertised services.
-     * @param[in]  invalid_services  The disallowed peers services.
-     * @param[in]  minimum_version   This required minimum version.
-     * @param[in]  minimum_services  This required minimum services.
-     * @param[in]  relay             The peer should relay transactions.
-     */
-    protocol_version_70002(p2p& network, channel::ptr channel,
+    /// Construct a version protocol instance.
+    protocol_version_70002(channel::ptr channel, p2p& network,
         uint32_t own_version, uint64_t own_services, uint64_t invalid_services,
         uint32_t minimum_version, uint64_t minimum_services, bool relay);
 
-    /**
-     * Start the protocol.
-     * @param[in]  handler  Invoked upon stop or receipt of version and verack.
-     */
-    void start(event_handler handler) override;
+    void start(event_handler handle_event) override;
 
 protected:
     system::messages::version version_factory() const override;
     bool sufficient_peer(system::version_const_ptr message) override;
 
-    virtual bool handle_receive_reject(const system::code& ec,
+    virtual bool handle_receive_reject(const code& ec,
         system::reject_const_ptr reject);
+
+    virtual const std::string& name() const override;
 
     const bool relay_;
 };

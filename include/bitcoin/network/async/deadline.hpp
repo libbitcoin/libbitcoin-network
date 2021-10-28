@@ -32,9 +32,10 @@
 namespace libbitcoin {
 namespace network {
 
-/// Class wrapper for boost::asio::deadline_timer, thread safe.
+/// TODO: templatize on service and remove double constructor.
+/// Class wrapper for boost::asio::basic_waitable_timer, thread safe.
 /// This simplifies invocation, eliminates boost-specific error handling and
-/// makes timer firing and cancellation conditions safer.
+/// makes timer firing and cancelation conditions safe for shared objects.
 class BCT_API deadline
   : public enable_shared_from_base<deadline>,
     system::noncopyable
@@ -42,25 +43,21 @@ class BCT_API deadline
 {
 public:
     typedef std::shared_ptr<deadline> ptr;
-    typedef std::function<void(const system::code&)> handler;
+    typedef std::function<void(const code&)> handler;
+    
+    /// Timer notification handler is posted to the service.
+    deadline(asio::io_context& service, const duration& timeout=seconds(0));
 
-    /// Construct a deadline timer with a zero duration.
-    deadline(threadpool& pool);
-
-    /// Construct a deadline timer with duration relative to start call.
-    deadline(threadpool& pool, const duration& span);
+    /// Timer notification handler is posted to the strand.
+    deadline(asio::strand& strand, const duration& timeout=seconds(0));
 
     /// Start or restart the timer.
-    /// The handler will not be invoked within the scope of this call.
     /// Use expired(ec) in handler to test for expiration.
-    /// A std::shared_ptr to the deadline instance must make this call.
     void start(handler handle);
 
     /// Start or restart the timer.
-    /// The handler will not be invoked within the scope of this call.
     /// Use expired(ec) in handler to test for expiration.
-    /// A std::shared_ptr to the deadline instance must make this call.
-    void start(handler handle, const duration& span);
+    void start(handler handle, const duration& timeout);
 
     /// Cancel the timer. The handler will be invoked.
     void stop();
@@ -68,8 +65,11 @@ public:
 private:
     void handle_timer(const system::boost_code& ec, handler handle) const;
 
+    // This is thread safe.
+    const duration duration_;
+
+    // This is protected by mutex.
     wait_timer timer_;
-    duration duration_;
     mutable shared_mutex mutex_;
 };
 

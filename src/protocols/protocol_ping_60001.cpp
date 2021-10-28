@@ -22,24 +22,25 @@
 #include <functional>
 #include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 #define CLASS protocol_ping_60001
+static const std::string protocol_name = "ping";
 
 using namespace bc::system;
 using namespace bc::system::messages;
 using namespace std::placeholders;
 
-protocol_ping_60001::protocol_ping_60001(p2p& network, channel::ptr channel)
-  : protocol_ping_31402(network, channel),
+protocol_ping_60001::protocol_ping_60001(channel::ptr channel,
+    const duration& heartbeat)
+  : protocol_ping_31402(channel, heartbeat),
     pending_(false),
     CONSTRUCT_TRACK(protocol_ping_60001)
 {
@@ -135,6 +136,11 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
     }
 
     return false;
+}
+
+const std::string& protocol_ping_60001::name() const
+{
+    return protocol_name;
 }
 
 } // namespace network

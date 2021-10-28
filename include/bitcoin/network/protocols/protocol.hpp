@@ -24,7 +24,6 @@
 #include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
 
@@ -45,19 +44,16 @@ namespace network {
 #define BOUND_PROTOCOL_TYPE(handler, args) \
     std::bind(PROTOCOL_ARGS_TYPE(handler, args))
 
-class p2p;
-
 /// Virtual base class for protocol implementation, mostly thread safe.
 class BCT_API protocol
   : public enable_shared_from_base<protocol>, system::noncopyable
 {
 protected:
     typedef std::function<void()> completion_handler;
-    typedef std::function<void(const system::code&)> event_handler;
-    typedef std::function<void(const system::code&, size_t)> count_handler;
+    typedef std::function<void(const code&)> event_handler;
 
     /// Construct an instance.
-    protocol(p2p& network, channel::ptr channel, const std::string& name);
+    protocol(channel::ptr channel);
 
     /// Bind a method in the derived class.
     template <class Protocol, typename Handler, typename... Args>
@@ -67,17 +63,11 @@ protected:
         return BOUND_PROTOCOL(handler, args);
     }
 
-    template <class Protocol, typename Handler, typename... Args>
-    void dispatch_concurrent(Handler&& handler, Args&&... args)
-    {
-        dispatch_.concurrent(BOUND_PROTOCOL(handler, args));
-    }
-
     /// Send a message on the channel and handle the result.
     template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(const Message& packet, Handler&& handler, Args&&... args)
+    void send(const Message& message, Handler&& handler, Args&&... args)
     {
-        channel_->send(packet, BOUND_PROTOCOL(handler, args));
+        channel_->send(message, BOUND_PROTOCOL(handler, args));
     }
 
     /// Subscribe to all channel messages, blocking until subscribed.
@@ -87,18 +77,8 @@ protected:
         channel_->template subscribe<Message>(BOUND_PROTOCOL(handler, args));
     }
 
-    /// Subscribe to the channel stop, blocking until subscribed.
-    template <class Protocol, typename Handler, typename... Args>
-    void subscribe_stop(Handler&& handler, Args&&... args)
-    {
-        channel_->subscribe_stop(BOUND_PROTOCOL(handler, args));
-    }
-
     /// Get the address of the channel.
     virtual system::config::authority authority() const;
-
-    /// Get the protocol name, for logging purposes.
-    virtual const std::string& name() const;
 
     /// Get the channel nonce.
     virtual uint64_t nonce() const;
@@ -115,18 +95,20 @@ protected:
     /// Set the negotiated protocol version.
     virtual void set_negotiated_version(uint32_t value);
 
-    /// Get the threadpool.
-    virtual threadpool& pool();
+    // HACK: sessions may stop protocols.
+    friend class session;
 
-    /// Stop the channel (and the protocol).
-    virtual void stop(const system::code& ec);
+    /// Stop the protocol (and the channel).
+    virtual void stop(const code& ec);
 
-protected:
-    void handle_send(const system::code& ec, const std::string& command);
+    /// Default send handler (no-op).
+    virtual void handle_send(const code& ec,
+        const std::string& command);
+
+    /// Define the protocol name, for logging.
+    virtual const std::string& name() const = 0;
 
 private:
-    threadpool& pool_;
-    dispatcher dispatch_;
     channel::ptr channel_;
     const std::string name_;
 };
@@ -147,15 +129,6 @@ private:
     subscribe<CLASS, message>(&CLASS::method, p1, p2)
 #define SUBSCRIBE3(message, method, p1, p2, p3) \
     subscribe<CLASS, message>(&CLASS::method, p1, p2, p3)
-
-#define SUBSCRIBE_STOP1(method, p1) \
-    subscribe_stop<CLASS>(&CLASS::method, p1)
-
-#define DISPATCH_CONCURRENT1(method, p1) \
-    dispatch_concurrent<CLASS>(&CLASS::method, p1)
-
-#define DISPATCH_CONCURRENT2(method, p1, p2) \
-    dispatch_concurrent<CLASS>(&CLASS::method, p1, p2)
 
 } // namespace network
 } // namespace libbitcoin

@@ -30,25 +30,10 @@
     <ClCompile Include="..\..\..\..\test\async\deadline.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\delegates.cpp">
-      <Filter>src\async</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\dispatcher.cpp">
-      <Filter>src\async</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp">
-      <Filter>src\async</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\sequencer.cpp">
-      <Filter>src\async</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp">
-      <Filter>src\async</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\synchronizer.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\thread.cpp">
@@ -64,9 +49,6 @@
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\track.cpp">
-      <Filter>src\async</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\work.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\main.cpp">

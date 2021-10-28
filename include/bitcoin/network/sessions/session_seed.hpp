@@ -59,15 +59,15 @@ private:
     void start_seeding(size_t start_size, result_handler handler);
     void start_seed(const system::config::endpoint& seed,
         result_handler handler);
-    void handle_started(const system::code& ec, result_handler handler);
-    void handle_connect(const system::code& ec, channel::ptr channel,
+    void handle_started(const code& ec, result_handler handler);
+    void handle_connect(const code& ec, channel::ptr channel,
         const system::config::endpoint& seed, connector::ptr connector,
         result_handler handler);
     void handle_complete(size_t start_size, result_handler handler);
 
-    void handle_channel_start(const system::code& ec, channel::ptr channel,
+    void handle_channel_start(const code& ec, channel::ptr channel,
         result_handler handler);
-    void handle_channel_stop(const system::code& ec);
+    void handle_channel_stop(const code& ec);
 };
 
 } // namespace network

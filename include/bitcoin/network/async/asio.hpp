@@ -31,21 +31,24 @@ namespace asio {
 
 namespace error = boost::asio::error;
 
-typedef boost::asio::io_service service;
+typedef boost::asio::io_context io_context;
+typedef boost::asio::io_context::strand strand;
+typedef boost::asio::io_context::executor_type work_guard;
+
 typedef boost::asio::ip::address address;
 typedef boost::asio::ip::address_v4 ipv4;
 typedef boost::asio::ip::address_v6 ipv6;
 typedef boost::asio::ip::tcp tcp;
-typedef boost::asio::ip::tcp::endpoint endpoint;
 
+typedef tcp::endpoint endpoint;
 typedef tcp::socket socket;
 typedef tcp::acceptor acceptor;
 typedef tcp::resolver resolver;
-typedef tcp::resolver::query query;
-typedef tcp::resolver::iterator iterator;
+typedef resolver::results_type iterator;
 typedef std::shared_ptr<socket> socket_ptr;
 
-constexpr auto max_connections = boost::asio::socket_base::max_connections;
+constexpr auto max_connections = boost::asio::socket_base::max_listen_connections;
+
 
 } // namespace asio
 } // namespace network

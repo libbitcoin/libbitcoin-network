@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <time.h>
 #include <string>
+#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -58,7 +59,7 @@ std::string local_time()
 
     // std::strftime is required because gcc doesn't implement std::put_time.
     // Returns number of characters, zero implies failure and undefined buffer.
-    return std::strftime(buffer, size, format, &out_local) == 0 ? "" : buffer;
+    return is_zero(std::strftime(buffer, size, format, &out_local)) ? "" : buffer;
 }
 
 } // namespace network

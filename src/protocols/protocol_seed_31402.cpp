@@ -19,6 +19,7 @@
 #include <bitcoin/network/protocols/protocol_seed_31402.hpp>
 
 #include <functional>
+#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -29,16 +30,17 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "seed"
 #define CLASS protocol_seed_31402
+static const std::string protocol_name = "seed";
 
 using namespace bc::system;
 using namespace bc::system::messages;
 using namespace std::placeholders;
 
 // Require three callbacks (or any error) before calling complete.
-protocol_seed_31402::protocol_seed_31402(p2p& network, channel::ptr channel)
-  : protocol_timer(network, channel, false, NAME),
+protocol_seed_31402::protocol_seed_31402(channel::ptr channel, p2p& network)
+  : protocol_timer(channel, network.network_settings().channel_germination(),
+      false),
     network_(network),
     CONSTRUCT_TRACK(protocol_seed_31402)
 {
@@ -58,14 +60,16 @@ void protocol_seed_31402::start(event_handler handler)
         return;
     }
 
-    const auto join_handler = synchronize(complete, 3, NAME,
-        synchronizer_terminate::on_error);
+    // TODO: just use a state member variable, this is stranded.
 
-    protocol_timer::start(settings.channel_germination(), join_handler);
+    ////const auto join_handler = synchronize(complete, 3, NAME,
+    ////    synchronizer_terminate::on_error);
 
-    SUBSCRIBE2(address, handle_receive_address, _1, _2);
-    send_own_address(settings);
-    SEND1(get_address(), handle_send_get_address, _1);
+    ////protocol_timer::start(settings.channel_germination(), join_handler);
+
+    ////SUBSCRIBE2(address, handle_receive_address, _1, _2);
+    ////send_own_address(settings);
+    ////SEND1(get_address(), handle_send_get_address, _1);
 }
 
 // Protocol.
@@ -153,6 +157,11 @@ void protocol_seed_31402::handle_store_addresses(const code& ec)
 
     // 3 of 3
     set_event(error::channel_stopped);
+}
+
+const std::string& protocol_seed_31402::name() const
+{
+    return protocol_name;
 }
 
 } // namespace network

@@ -19,11 +19,9 @@
 #include <bitcoin/network/protocols/protocol_events.hpp>
 
 #include <functional>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 
 namespace libbitcoin {
@@ -34,9 +32,8 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-protocol_events::protocol_events(p2p& network, channel::ptr channel,
-    const std::string& name)
-  : protocol(network, channel, name)
+protocol_events::protocol_events(channel::ptr channel)
+  : protocol(channel)
 {
 }
 
@@ -65,10 +62,10 @@ void protocol_events::start()
     start(nop);
 }
 
-void protocol_events::start(event_handler handler)
+// START COMPLETES WITHOUT INVOKING THE HANDLER.
+void protocol_events::start(event_handler handle_event)
 {
-    handler_.store(handler);
-    SUBSCRIBE_STOP1(handle_stopped, _1);
+    handler_.store(handle_event);
 }
 
 // Stop.

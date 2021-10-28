@@ -46,8 +46,6 @@
 namespace libbitcoin {
 namespace network {
 
-#define NAME "p2p"
-
 using namespace bc::system;
 using namespace bc::system::chain;
 using namespace std::placeholders;
@@ -69,25 +67,21 @@ inline size_t nominal_connected(const settings& settings)
 p2p::p2p(const settings& settings)
   : settings_(settings),
     stopped_(true),
-    top_block_({ null_hash, 0 }),
-    top_header_({ null_hash, 0 }),
-    threadpool_(thread_default(settings_.threads),
-        thread_priority::normal),
+    top_block_({ null_hash, zero }),
+    top_header_({ null_hash, zero }),
     hosts_(settings_),
+    threadpool_(settings_.threads),
     pending_connect_(nominal_connecting(settings_)),
     pending_handshake_(nominal_connected(settings_)),
     pending_close_(nominal_connected(settings_)),
-    stop_subscriber_(std::make_shared<stop_subscriber>(threadpool_,
-        NAME "_stop_sub")),
-    channel_subscriber_(std::make_shared<channel_subscriber>(threadpool_,
-        NAME "_sub"))
+    stop_subscriber_(threadpool_.service()),
+    channel_subscriber_(threadpool_.service())
 {
 }
 
-// This allows for shutdown based on destruct without need to call stop.
 p2p::~p2p()
 {
-    p2p::close();
+    p2p::stop();
 }
 
 // Start sequence.
@@ -102,13 +96,11 @@ void p2p::start(result_handler handler)
     }
 
     stopped_ = false;
-    stop_subscriber_->start();
-    channel_subscriber_->start();
 
     // This instance is retained by stop handler and member reference.
+    // The member reference is retained for posting manual connect calls.
     manual_.store(attach_manual_session());
 
-    // This is invoked on a new thread.
     manual_.load()->start(
         std::bind(&p2p::handle_manual_started,
             this, _1, handler));
@@ -149,15 +141,16 @@ void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
         return;
     }
 
-    // The instance is retained by the stop handler (until shutdown).
+    // Subscription for seed node connections is not supported.
+    // The instance is retained by p2p stop handler (until shutdown).
     const auto seed = attach_seed_session();
 
-    // This is invoked on a new thread.
     seed->start(
         std::bind(&p2p::handle_started,
             this, _1, handler));
 }
 
+// The seed session is complete upon the invocation of its start handler.
 void p2p::handle_started(const code& ec, result_handler handler)
 {
     if (stopped())
@@ -174,11 +167,6 @@ void p2p::handle_started(const code& ec, result_handler handler)
         return;
     }
 
-    // There is no way to guarantee subscription before handler execution.
-    // So currently subscription for seed node connections is not supported.
-    // Subscription after this return will capture connections established via
-    // subsequent "run" and "connect" calls, and will clear on close/destruct.
-
     // This is the end of the start sequence.
     handler(error::success);
 }
@@ -188,14 +176,13 @@ void p2p::handle_started(const code& ec, result_handler handler)
 
 void p2p::run(result_handler handler)
 {
-    // Start node.peer persistent connections.
+    // Start configured persistent connections.
     for (const auto& peer: settings_.peers)
         connect(peer);
 
     // The instance is retained by the stop handler (until shutdown).
     const auto inbound = attach_inbound_session();
 
-    // This is invoked on a new thread.
     inbound->start(
         std::bind(&p2p::handle_inbound_started,
             this, _1, handler));
@@ -215,7 +202,6 @@ void p2p::handle_inbound_started(const code& ec,
     // The instance is retained by the stop handler (until shutdown).
     const auto outbound = attach_outbound_session();
 
-    // This is invoked on a new thread.
     outbound->start(
         std::bind(&p2p::handle_running,
             this, _1, handler));
@@ -264,46 +250,35 @@ session_outbound::ptr p2p::attach_outbound_session()
 // All shutdown actions must be queued by the end of the stop call.
 // IOW queued shutdown operations must not enqueue additional work.
 
-// This is not short-circuited by a stopped test because we need to ensure it
-// completes at least once before returning. This requires a unique lock be
-// taken around the entire section, which poses a deadlock risk. Instead this
-// is thread safe and idempotent, allowing it to be unguarded.
+// TODO: Stop will terminate all network operations, but channel threads
+// may continue to execute in their shutdown phase after this call returns.
+// Each channel joins its own threads, waiting on release of self-references
+// retained within handlers. To provide a positive stop requires that we inject
+// a shared pointer object into each channel and block on its destruction here.
+
+// This is thread safe and idempotent, allowing it to be unguarded.
 bool p2p::stop()
 {
-    // This is the only stop operation that can fail.
-    const auto result = (hosts_.stop() == error::success);
-
-    // Signal all current work to stop and free manual session.
     stopped_ = true;
-    manual_.store({});
 
     // Prevent subscription after stop.
-    stop_subscriber_->stop();
-    stop_subscriber_->invoke(error::service_stopped);
+    stop_subscriber_.stop(error::service_stopped);
 
     // Prevent subscription after stop.
-    channel_subscriber_->stop();
-    channel_subscriber_->invoke(error::service_stopped, {});
+    channel_subscriber_.stop(error::service_stopped, {});
 
-    // Stop creating new channels and stop those that exist (self-clearing).
+    // Stop creating new channels and stop those that exist.
     pending_connect_.stop(error::service_stopped);
     pending_handshake_.stop(error::service_stopped);
     pending_close_.stop(error::service_stopped);
 
-    // Signal threadpool to stop accepting work now that subscribers are clear.
-    threadpool_.shutdown();
-    return result;
+    // This is the only stop operation that can fail (due to disk I/O).
+    return (hosts_.stop() == error::success);
 }
 
-// This must be called from the thread that constructed this class (see join).
-bool p2p::close()
+bool p2p::stopped() const
 {
-    // Signal current work to stop and threadpool to stop accepting new work.
-    const auto result = p2p::stop();
-
-    // Block on join of all threads in the threadpool.
-    threadpool_.join();
-    return result;
+    return stopped_;
 }
 
 // Properties.
@@ -312,6 +287,11 @@ bool p2p::close()
 const settings& p2p::network_settings() const
 {
     return settings_;
+}
+
+asio::io_context& p2p::service()
+{
+    return threadpool_.service();
 }
 
 check_point p2p::top_block() const
@@ -324,59 +304,37 @@ void p2p::set_top_block(check_point&& top)
     top_block_.store(std::move(top));
 }
 
-void p2p::set_top_block(const check_point& top)
-{
-    top_block_.store(top);
-}
-
-check_point p2p::top_header() const
-{
-    return top_header_.load();
-}
-
-void p2p::set_top_header(check_point&& top)
-{
-    top_header_.store(std::move(top));
-}
-
-void p2p::set_top_header(const check_point& top)
-{
-    top_header_.store(top);
-}
-
-bool p2p::stopped() const
-{
-    return stopped_;
-}
-
-threadpool& p2p::thread_pool()
-{
-    return threadpool_;
-}
-
-// Send.
-// ----------------------------------------------------------------------------
-
-// private
-void p2p::handle_send(const code& ec, channel::ptr channel,
-    channel_handler handle_channel, result_handler handle_complete)
-{
-    handle_channel(ec, channel);
-    handle_complete(ec);
-}
+////void p2p::set_top_block(const check_point& top)
+////{
+////    top_block_.store(top);
+////}
+////
+////check_point p2p::top_header() const
+////{
+////    return top_header_.load();
+////}
+////
+////void p2p::set_top_header(check_point&& top)
+////{
+////    top_header_.store(std::move(top));
+////}
+////
+////void p2p::set_top_header(const check_point& top)
+////{
+////    top_header_.store(top);
+////}
 
 // Subscriptions.
 // ----------------------------------------------------------------------------
 
 void p2p::subscribe_connection(connect_handler handler)
 {
-    channel_subscriber_->subscribe(handler, error::service_stopped,
-        {});
+    channel_subscriber_.subscribe(handler);
 }
 
 void p2p::subscribe_stop(result_handler handler)
 {
-    stop_subscriber_->subscribe(handler, error::service_stopped);
+    stop_subscriber_.subscribe(handler);
 }
 
 // Manual connections.
@@ -394,11 +352,11 @@ void p2p::connect(const std::string& hostname, uint16_t port)
 
     auto manual = manual_.load();
 
-    // Connect is invoked on a new thread.
     if (manual)
         manual->connect(hostname, port);
 }
 
+// Handler is invoked after handshake and before protocol attachment.
 void p2p::connect(const std::string& hostname, uint16_t port,
     channel_handler handler)
 {
@@ -429,7 +387,6 @@ code p2p::store(const address& address)
 
 void p2p::store(const address::list& addresses, result_handler handler)
 {
-    // Store is invoked on a new thread.
     hosts_.store(addresses, handler);
 }
 
@@ -450,6 +407,7 @@ code p2p::remove(const address& address)
 
 // Pending connect collection.
 // ----------------------------------------------------------------------------
+// TODO: Move to session base.
 
 code p2p::pend(connector::ptr connector)
 {
@@ -458,12 +416,15 @@ code p2p::pend(connector::ptr connector)
 
 void p2p::unpend(connector::ptr connector)
 {
+    // TODO: remove code.
     connector->stop(error::success);
     pending_connect_.remove(connector);
 }
 
 // Pending handshake collection.
 // ----------------------------------------------------------------------------
+// TODO: use common collection, nonces are sufficiently unique?
+// TODO: would need to subscribe to broadcast after handshake.
 
 code p2p::pend(channel::ptr channel)
 {
@@ -487,6 +448,8 @@ bool p2p::pending(uint64_t version_nonce) const
 
 // Pending close collection (open connections).
 // ----------------------------------------------------------------------------
+// TODO: use common collection, addresses are sufficiently unique?
+// TODO: would need to subscribe to broadcast after handshake.
 
 size_t p2p::connection_count() const
 {
@@ -515,7 +478,7 @@ code p2p::store(channel::ptr channel)
     const auto ec = pending_close_.store(channel, match);
 
     if (!ec && channel->notify())
-        channel_subscriber_->relay(error::success, channel);
+        channel_subscriber_.notify(error::success, channel);
 
     return ec;
 }
