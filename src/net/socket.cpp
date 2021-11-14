@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/net/socket.hpp>
 
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <memory>
@@ -74,14 +75,14 @@ socket::socket(asio::io_context& service)
 
 bool socket::stopped() const 
 {
-    return stopped_;
+    return stopped_.load(std::memory_order_relaxed);
 }
 
 void socket::stop()
 {
     // Stop flag can accelerate work stoppage, as it does not wait on strand,
     // but does not preempt I/O calls as they are guaranteed strand invocation.
-    stopped_ = true;
+    stopped_.store(true, std::memory_order_relaxed);
 
     // strand::dispatch invokes its handler directly if the strand is not busy,
     // which hopefully blocks the strand until the dispatch call completes.
