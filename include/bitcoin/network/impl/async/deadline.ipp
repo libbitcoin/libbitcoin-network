@@ -16,6 +16,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef LIBBITCOIN_NETWORK_ASYNC_DEADLINE_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_DEADLINE_IPP
+
 #include <bitcoin/network/async/deadline.hpp>
 
 #include <functional>
@@ -34,26 +37,22 @@ using namespace std::placeholders;
 // The timer closure captures an instance of this class and the callback.
 // Deadline calls handler exactly once unless canceled/restarted.
 
-deadline::deadline(asio::io_context& service, const duration& timeout)
+template <typename Service>
+deadline<Service>::deadline(Service& service, const duration& timeout)
   : duration_(timeout),
     timer_(service),
     CONSTRUCT_TRACK(deadline)
 {
 }
 
-deadline::deadline(asio::strand& strand, const duration& timeout)
-  : duration_(timeout),
-    timer_(strand),
-    CONSTRUCT_TRACK(deadline)
-{
-}
-
-void deadline::start(handler handle)
+template <typename Service>
+void deadline<Service>::start(handler handle)
 {
     start(handle, duration_);
 }
 
-void deadline::start(handler handle, const duration& timeout)
+template <typename Service>
+void deadline<Service>::start(handler handle, const duration& timeout)
 {
     const auto timer_handler =
         std::bind(&deadline::handle_timer,
@@ -76,7 +75,8 @@ void deadline::start(handler handle, const duration& timeout)
 // Cancellation calls handle_timer with asio::error::operation_aborted.
 // We do not handle the cancelation result code, which will return success
 // in the case of a race in which the timer is already expired.
-void deadline::stop()
+template <typename Service>
+void deadline<Service>::stop()
 {
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,9 @@ void deadline::stop()
 // If the timer expires the callback is fired with a success code.
 // If the timer fails the callback is fired with the normalized error code.
 // If the timer is canceled before it has fired, no call is made (but cleared).
-void deadline::handle_timer(const boost_code& ec, handler handle) const
+// TODO: it might be normalizing to allow the handler to be fired upon cancel.
+template <typename Service>
+void deadline<Service>::handle_timer(const boost_code& ec, handler handle) const
 {
     // operation_aborted is the result of cancelation.
     if (ec != boost::asio::error::operation_aborted)
@@ -100,3 +102,5 @@ void deadline::handle_timer(const boost_code& ec, handler handle) const
 
 } // namespace network
 } // namespace libbitcoin
+
+#endif

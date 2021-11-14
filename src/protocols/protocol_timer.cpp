@@ -39,7 +39,7 @@ protocol_timer::protocol_timer(channel::ptr channel, const duration& timeout,
   : protocol_events(channel),
     timeout_(timeout),
     perpetual_(perpetual),
-    timer_(std::make_shared<deadline>(channel->strand()))
+    timer_(std::make_shared<deadline<asio::strand>>(channel->strand()))
 {
 }
 

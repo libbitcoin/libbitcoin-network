@@ -98,8 +98,8 @@ private:
     std::atomic<uint64_t> channel_nonce_;
     std::atomic<uint32_t> negotiated_version_;
     atomic<system::version_const_ptr> peer_version_;
-    deadline::ptr expiration_;
-    deadline::ptr inactivity_;
+    deadline<asio::strand>::ptr expiration_;
+    deadline<asio::strand>::ptr inactivity_;
 };
 
 } // namespace network

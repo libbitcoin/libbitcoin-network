@@ -79,7 +79,7 @@ private:
     // These are thread safe.
     const settings& settings_;
     asio::strand strand_;
-    deadline timer_;
+    deadline<asio::strand> timer_;
 
     // These are protected by strand.
     asio::acceptor acceptor_;

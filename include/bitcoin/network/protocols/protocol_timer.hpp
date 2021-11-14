@@ -52,7 +52,7 @@ private:
 
     const duration timeout_;
     const bool perpetual_;
-    deadline::ptr timer_;
+    deadline<asio::strand>::ptr timer_;
 };
 
 } // namespace network

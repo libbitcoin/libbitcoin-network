@@ -32,24 +32,21 @@
 namespace libbitcoin {
 namespace network {
 
-/// TODO: templatize on service and remove double constructor.
 /// Class wrapper for boost::asio::basic_waitable_timer, thread safe.
 /// This simplifies invocation, eliminates boost-specific error handling and
 /// makes timer firing and cancelation conditions safe for shared objects.
-class BCT_API deadline
-  : public enable_shared_from_base<deadline>,
+template <typename Service>
+class deadline
+  : public enable_shared_from_base<deadline<Service>>,
     system::noncopyable,
-    track<deadline>
+    track<deadline<Service>>
 {
 public:
-    typedef std::shared_ptr<deadline> ptr;
+    typedef std::shared_ptr<deadline<Service>> ptr;
     typedef std::function<void(const code&)> handler;
     
     /// Timer notification handler is posted to the service.
-    deadline(asio::io_context& service, const duration& timeout=seconds(0));
-
-    /// Timer notification handler is posted to the strand.
-    deadline(asio::strand& strand, const duration& timeout=seconds(0));
+    deadline(Service& service, const duration& timeout=seconds(0));
 
     /// Start or restart the timer.
     /// Use expired(ec) in handler to test for expiration.
@@ -75,5 +72,7 @@ private:
 
 } // namespace network
 } // namespace libbitcoin
+
+#include <bitcoin/network/impl/async/deadline.ipp>
 
 #endif

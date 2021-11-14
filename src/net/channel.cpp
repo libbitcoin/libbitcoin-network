@@ -44,13 +44,15 @@ inline size_t payload_maximum(const settings& settings)
 }
 
 // Factory for fixed deadline timer pointer construction.
-inline deadline::ptr timeout(asio::strand& strand, const duration& span)
+inline deadline<asio::strand>::ptr timeout(asio::strand& strand,
+    const duration& span)
 {
-    return std::make_shared<deadline>(strand, span);
+    return std::make_shared<deadline<asio::strand>>(strand, span);
 }
 
 // Factory for varied deadline timer pointer construction.
-inline deadline::ptr expiration(asio::strand& strand, const duration& span)
+inline deadline<asio::strand>::ptr expiration(asio::strand& strand,
+    const duration& span)
 {
     return timeout(strand, pseudo_random::duration(span));
 }
