@@ -36,14 +36,15 @@ using namespace std::placeholders;
 
 deadline::deadline(asio::io_context& service, const duration& timeout)
   : duration_(timeout),
-    timer_(service)
+    timer_(service),
+    CONSTRUCT_TRACK(deadline)
 {
 }
 
 deadline::deadline(asio::strand& strand, const duration& timeout)
   : duration_(timeout),
-    timer_(strand)
-    /*, CONSTRUCT_TRACK(deadline)*/
+    timer_(strand),
+    CONSTRUCT_TRACK(deadline)
 {
 }
 

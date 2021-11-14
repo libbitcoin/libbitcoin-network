@@ -26,7 +26,7 @@
 #include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
-////#include <bitcoin/network/async/track.hpp>
+#include <bitcoin/network/async/track.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -38,8 +38,8 @@ namespace network {
 /// makes timer firing and cancelation conditions safe for shared objects.
 class BCT_API deadline
   : public enable_shared_from_base<deadline>,
-    system::noncopyable
-    /*, track<deadline>*/
+    system::noncopyable,
+    track<deadline>
 {
 public:
     typedef std::shared_ptr<deadline> ptr;
