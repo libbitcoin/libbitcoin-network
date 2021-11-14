@@ -72,9 +72,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\async\deadline.cpp">
-      <Filter>src\async</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\async\thread.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
@@ -361,6 +358,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\deadline.ipp">
+      <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>

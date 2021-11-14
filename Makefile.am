@@ -37,7 +37,6 @@ src_libbitcoin_network_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_network_la_SOURCES = \
     src/p2p.cpp \
     src/settings.cpp \
-    src/async/deadline.cpp \
     src/async/thread.cpp \
     src/async/threadpool.cpp \
     src/async/time.cpp \
@@ -137,6 +136,7 @@ include_bitcoin_network_async_HEADERS = \
 
 include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \
+    include/bitcoin/network/impl/async/deadline.ipp \
     include/bitcoin/network/impl/async/subscriber.ipp \
     include/bitcoin/network/impl/async/track.ipp
 
