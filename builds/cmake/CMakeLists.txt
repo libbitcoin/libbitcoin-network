@@ -144,6 +144,7 @@ endif()
 # Define ${CANONICAL_LIB_NAME} project.
 #------------------------------------------------------------------------------
 add_library( ${CANONICAL_LIB_NAME}
+    "../../src/error.cpp"
     "../../src/p2p.cpp"
     "../../src/settings.cpp"
     "../../src/async/thread.cpp"

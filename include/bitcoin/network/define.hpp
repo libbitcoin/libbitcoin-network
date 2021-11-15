@@ -53,8 +53,6 @@
 namespace libbitcoin {
 namespace network {
 
-using code = system::code;
-
 // The 'bind' method and 'CLASS' names are conventional.
 #define BIND1(method, p1) \
     bind<CLASS>(&CLASS::method, p1)

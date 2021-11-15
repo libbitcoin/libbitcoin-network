@@ -26,6 +26,7 @@
 #include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -119,21 +120,20 @@ void connector::do_resolve(const std::string& hostname, uint16_t port,
 }
 
 // private
-void connector::handle_resolve(const boost_code& ec, const asio::iterator& it,
-    socket::ptr socket, connect_handler handler)
+void connector::handle_resolve(const error::boost_code& ec,
+    const asio::iterator& it, socket::ptr socket, connect_handler handler)
 {
     BITCOIN_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    // operation_aborted is the result of cancelation.
-    if (ec == boost::asio::error::operation_aborted)
+    if (error::asio_is_cancelled(ec))
     {
-        handler(system::error::channel_stopped, nullptr);
+        handler(error::channel_stopped, nullptr);
         return;
     }
 
     if (ec)
     {
-        handler(error::boost_to_error_code(ec), nullptr);
+        handler(error::asio_to_error_code(ec), nullptr);
         return;
     }
 

@@ -76,6 +76,7 @@
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
+    <ClCompile Include="..\..\..\..\src\error.cpp" />
     <ClCompile Include="..\..\..\..\src\log\file_collector.cpp" />
     <ClCompile Include="..\..\..\..\src\log\file_collector_repository.cpp" />
     <ClCompile Include="..\..\..\..\src\log\file_counter_formatter.cpp" />
@@ -123,6 +124,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\track.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\attributes.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\counter.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\gauge.hpp" />

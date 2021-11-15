@@ -35,6 +35,7 @@ lib_LTLIBRARIES = src/libbitcoin-network.la
 src_libbitcoin_network_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 src_libbitcoin_network_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_network_la_SOURCES = \
+    src/error.cpp \
     src/p2p.cpp \
     src/settings.cpp \
     src/async/thread.cpp \
@@ -115,6 +116,7 @@ include_bitcoin_HEADERS = \
 include_bitcoin_networkdir = ${includedir}/bitcoin/network
 include_bitcoin_network_HEADERS = \
     include/bitcoin/network/define.hpp \
+    include/bitcoin/network/error.hpp \
     include/bitcoin/network/p2p.hpp \
     include/bitcoin/network/settings.hpp \
     include/bitcoin/network/version.hpp

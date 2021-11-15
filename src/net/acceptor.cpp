@@ -23,6 +23,7 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -54,22 +55,22 @@ acceptor::acceptor(asio::io_context& service, const settings& settings)
 code acceptor::start(uint16_t port)
 {
     static const auto reuse_address = asio::acceptor::reuse_address(true);
-    boost_code error;
+    error::boost_code ec;
 
     // This is hardwired to listen on IPv6.
     asio::endpoint endpoint(asio::tcp::v6(), port);
-    acceptor_.open(endpoint.protocol(), error);
+    acceptor_.open(endpoint.protocol(), ec);
 
-    if (!error)
-        acceptor_.set_option(reuse_address, error);
+    if (!ec)
+        acceptor_.set_option(reuse_address, ec);
 
-    if (!error)
-        acceptor_.bind(endpoint, error);
+    if (!ec)
+        acceptor_.bind(endpoint, ec);
 
-    if (!error)
-        acceptor_.listen(asio::max_connections, error);
+    if (!ec)
+        acceptor_.listen(asio::max_connections, ec);
 
-    return error::boost_to_error_code(error);
+    return error::asio_to_error_code(ec);
 }
 
 void acceptor::stop()
@@ -84,7 +85,7 @@ void acceptor::stop()
 void acceptor::do_stop()
 {
     // Posts handle_accept to strand.
-    boost_code ignore;
+    error::boost_code ignore;
     acceptor_.cancel(ignore);
 
     // Posts timer handler to strand (if not expired).
@@ -166,7 +167,7 @@ void acceptor::handle_timer(const code& ec, socket::ptr socket,
         return;
 
     // Posts handle_accept to strand (if not already posted).
-    boost_code ignore;
+    error::boost_code ignore;
     acceptor_.cancel(ignore);
     stopped_ = true;
 

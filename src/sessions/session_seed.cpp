@@ -234,7 +234,7 @@ void session_seed::handle_complete(size_t start_size, result_handler handler)
         ceilinged_add(start_size, minimum_host_increase);
 
     // This is the end of the seed sequence.
-    handler(increase ? error::success : error::peer_throttling);
+    handler(increase ? error::success : error::seeding_unsuccessful);
 }
 
 } // namespace network

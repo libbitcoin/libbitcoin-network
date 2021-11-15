@@ -56,7 +56,7 @@ void protocol_seed_31402::start(event_handler handler)
 
     if (settings.host_pool_capacity == 0)
     {
-        complete(error::not_found);
+        complete(error::address_not_found);
         return;
     }
 

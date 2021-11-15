@@ -81,6 +81,9 @@
     <ClCompile Include="..\..\..\..\src\async\time.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\error.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\log\file_collector.cpp">
       <Filter>src\log</Filter>
     </ClCompile>
@@ -216,6 +219,9 @@
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp">
+      <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\attributes.hpp">

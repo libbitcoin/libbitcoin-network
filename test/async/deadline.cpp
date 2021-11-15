@@ -27,33 +27,36 @@ BOOST_AUTO_TEST_CASE(deadline__construct1__one_thread_start_zero_delay__success)
 {
     const auto handler = [](code ec)
     {
-        BOOST_REQUIRE(ec == error::success);
+        BOOST_REQUIRE(!ec);
     };
 
     threadpool pool(1);
-    std::make_shared<deadline<asio::io_context>>(pool.service())->start(handler);
+    auto timer = std::make_shared<deadline<asio::io_context>>(pool.service());
+    timer->start(handler);
 }
 
 BOOST_AUTO_TEST_CASE(deadline__construct1__two_threads_start_delay__success)
 {
     const auto handler = [](code ec)
     {
-        BOOST_REQUIRE(ec == error::success);
+        BOOST_REQUIRE(!ec);
     };
 
     threadpool pool(2);
-    std::make_shared<deadline<asio::io_context>>(pool.service())->start(handler, milliseconds(1));
+    auto timer = std::make_shared<deadline<asio::io_context>>(pool.service());
+    timer->start(handler, milliseconds(1));
 }
 
 BOOST_AUTO_TEST_CASE(deadline__construct2__three_threads_start_zero_delay__success)
 {
     const auto handler = [](code ec)
     {
-        BOOST_REQUIRE(ec == error::success);
+        BOOST_REQUIRE(!ec);
     };
 
     threadpool pool(3);
-    std::make_shared<deadline<asio::io_context>>(pool.service(), seconds(42))->start(handler, seconds(0));
+    auto timer = std::make_shared<deadline<asio::io_context>>(pool.service(), seconds(42));
+    timer->start(handler, seconds(0));
 }
 
 BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
@@ -76,7 +79,7 @@ BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
 
     const auto stop_handler = [&timer](code ec)
     {
-        BOOST_REQUIRE(ec == error::success);
+        BOOST_REQUIRE(!ec);
         timer->stop();
     };
 
@@ -95,7 +98,7 @@ BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
         // In the case of a race won by the slow timer, this catches success.
         // In the case of a race won by the stop timer, this will not fire.
         // A 10s delay indicates the slow timer has won the race (unexpected).
-        BOOST_REQUIRE(ec == error::success);
+        BOOST_REQUIRE(!ec);
     };
 
     threadpool pool(1);
@@ -107,7 +110,7 @@ BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
 
     const auto stop_handler = [&timer](code ec)
     {
-        BOOST_REQUIRE(ec == error::success);
+        BOOST_REQUIRE(!ec);
         timer->stop();
     };
 

@@ -26,6 +26,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/log/log.hpp>
 
 namespace libbitcoin {
@@ -112,7 +113,7 @@ void proxy::handle_read_heading(const code& ec, size_t)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Heading read failure [" << authority() << "] " << ec.message();
-        stop(error::bad_stream);
+        stop(ec);
         return;
     }
 
@@ -122,7 +123,7 @@ void proxy::handle_read_heading(const code& ec, size_t)
     {
         LOG_WARNING(LOG_NETWORK)
             << "Invalid heading from [" << authority() << "]";
-        stop(error::bad_stream);
+        stop(error::invalid_heading);
         return;
     }
 
@@ -132,7 +133,7 @@ void proxy::handle_read_heading(const code& ec, size_t)
         LOG_DEBUG(LOG_NETWORK)
             << "Invalid heading magic (" << head->magic() << ") from ["
             << authority() << "]";
-        stop(error::bad_stream);
+        stop(error::invalid_magic);
         return;
     }
 
@@ -142,7 +143,7 @@ void proxy::handle_read_heading(const code& ec, size_t)
             << "Oversized payload indicated by " << head->command()
             << " heading from [" << authority() << "] ("
             << head->payload_size() << " bytes)";
-        stop(error::bad_stream);
+        stop(error::oversized_payload);
         return;
     }
 
@@ -188,7 +189,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
         LOG_WARNING(LOG_NETWORK)
             << "Invalid " << head->command() << " payload from ["
             << authority() << "] bad checksum.";
-        stop(error::bad_stream);
+        stop(error::invalid_checksum);
         return;
     }
 
@@ -196,7 +197,6 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
     read::bytes::copy reader(payload_buffer_);
     const auto code = pump_subscriber_.notify(head->id(), version(), reader);
 
-    // code is limited to success or bad_stream
     if (verbose() && code)
     {
         const auto size = std::min(payload_size, invalid_payload_dump_size);
@@ -214,7 +214,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
         LOG_WARNING(LOG_NETWORK)
             << "Invalid " << head->command() << " payload from ["
             << authority() << "] " << code.message();
-        stop(error::bad_stream);
+        stop(code);
         return;
     }
 
@@ -223,7 +223,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
         LOG_WARNING(LOG_NETWORK)
             << "Invalid " << head->command() << " payload from ["
             << authority() << "] trailing bytes.";
-        stop(error::bad_stream);
+        stop(error::undersized_payload);
         return;
     }
 

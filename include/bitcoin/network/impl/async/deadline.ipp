@@ -27,6 +27,7 @@
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/async/time.hpp>
+#include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -63,7 +64,7 @@ void deadline<Service>::start(handler handle, const duration& timeout)
     unique_lock lock(mutex_);
 
     // Handling socket error codes creates exception safety.
-    boost_code ignore;
+    error::boost_code ignore;
     timer_.cancel(ignore);
     timer_.expires_from_now(timeout);
 
@@ -83,7 +84,7 @@ void deadline<Service>::stop()
     unique_lock lock(mutex_);
 
     // Handling socket error codes creates exception safety.
-    boost_code ignore;
+    error::boost_code ignore;
     timer_.cancel(ignore);
     ///////////////////////////////////////////////////////////////////////////
 }
@@ -93,11 +94,11 @@ void deadline<Service>::stop()
 // If the timer is canceled before it has fired, no call is made (but cleared).
 // TODO: it might be normalizing to allow the handler to be fired upon cancel.
 template <typename Service>
-void deadline<Service>::handle_timer(const boost_code& ec, handler handle) const
+void deadline<Service>::handle_timer(const error::boost_code& ec,
+    handler handle) const
 {
-    // operation_aborted is the result of cancelation.
-    if (ec != boost::asio::error::operation_aborted)
-        handle(error::boost_to_error_code(ec));
+    if (!error::asio_is_cancelled(ec))
+        handle(error::asio_to_error_code(ec));
 }
 
 } // namespace network

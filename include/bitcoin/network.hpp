@@ -16,6 +16,7 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/version.hpp>

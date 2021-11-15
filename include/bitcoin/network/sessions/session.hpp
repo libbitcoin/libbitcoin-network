@@ -109,9 +109,8 @@ protected:
     /// Delay timing for a tight failure loop, based on configured timeout.
     inline duration cycle_delay(const code& ec)
     {
-        return (ec == system::error::channel_timeout ||
-            ec == system::error::service_stopped ||
-            ec == system::error::success) ?
+        return (ec == error::channel_timeout ||
+            ec == error::service_stopped || ec == error::success) ?
                 seconds(0) : settings_.connect_timeout();
     }
 

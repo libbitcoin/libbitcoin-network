@@ -80,8 +80,7 @@ pump::pump(asio::strand& strand)
 {
 }
 
-code pump::notify(identifier id, uint32_t version,
-    system::reader& reader) const
+code pump::notify(identifier id, uint32_t version, reader& reader) const
 {
     switch (id)
     {
@@ -123,7 +122,7 @@ code pump::notify(identifier id, uint32_t version,
         CASE_NOTIFY(version);
         case identifier::unknown:
         default:
-            return error::not_found;
+            return error::unknown_message;
     }
 }
 

@@ -28,6 +28,7 @@
 #include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/async/track.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -43,7 +44,7 @@ class deadline
 {
 public:
     typedef std::shared_ptr<deadline<Service>> ptr;
-    typedef std::function<void(const code&)> handler;
+    typedef std::function<void(const error::code&)> handler;
     
     /// Timer notification handler is posted to the service.
     deadline(Service& service, const duration& timeout=seconds(0));
@@ -60,7 +61,7 @@ public:
     void stop();
 
 private:
-    void handle_timer(const system::boost_code& ec, handler handle) const;
+    void handle_timer(const error::boost_code& ec, handler handle) const;
 
     // This is thread safe.
     const duration duration_;

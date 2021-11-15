@@ -25,6 +25,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -80,7 +81,7 @@ private:
     void do_stop();
     void do_resolve(const std::string& hostname, uint16_t port,
         connect_handler handler);
-    void handle_resolve(const system::boost_code& ec, const asio::iterator& it,
+    void handle_resolve(const error::boost_code& ec, const asio::iterator& it,
         socket::ptr socket, connect_handler handler);
     void handle_connect(const code& ec, socket::ptr socket,
         const connect_handler& handler);

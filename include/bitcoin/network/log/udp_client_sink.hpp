@@ -48,7 +48,8 @@ protected:
     typedef boost::shared_ptr<std::string> message_ptr;
 
     void send(const std::string& message);
-    void handle_send(const system::boost_code&, size_t, message_ptr payload);
+    void handle_send(const boost::system::error_code&, size_t,
+        message_ptr payload);
 
 private:
     socket_ptr socket_;

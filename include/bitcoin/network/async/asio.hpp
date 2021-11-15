@@ -19,17 +19,14 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_ASIO_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_ASIO_HPP
 
-#include <chrono>
 #include <memory>
 #include <boost/asio.hpp>
 
-// Convenience namespace for commonly used boost async i/o aliases.
+/// Convenience namespace for commonly used boost async i/o aliases.
 
 namespace libbitcoin {
 namespace network {
 namespace asio {
-
-namespace error = boost::asio::error;
 
 typedef boost::asio::io_context io_context;
 typedef boost::asio::io_context::strand strand;
@@ -48,7 +45,6 @@ typedef resolver::results_type iterator;
 typedef std::shared_ptr<socket> socket_ptr;
 
 constexpr auto max_connections = boost::asio::socket_base::max_listen_connections;
-
 
 } // namespace asio
 } // namespace network

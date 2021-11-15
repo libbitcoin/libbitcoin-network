@@ -26,6 +26,7 @@
 #include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -93,7 +94,7 @@ void socket::stop()
 // private
 void socket::do_stop()
 {
-    boost_code ignore;
+    error::boost_code ignore;
 
     // Disable future sends or receives on the socket, for graceful close.
     socket_.shutdown(asio::socket::shutdown_both, ignore);
@@ -177,55 +178,53 @@ void socket::do_write(const data_chunk& in, io_handler handler)
 // handlers (private).
 // ----------------------------------------------------------------------------
 
-void socket::handle_accept(const boost_code& ec, const result_handler& handler)
+void socket::handle_accept(const error::boost_code& ec,
+    const result_handler& handler)
 {
     // This is running in the acceptor or socket execution context.
     // The socket is not guarded here, see comments on the accept method.
     endpoint_.store(socket_.remote_endpoint());
 
-    // operation_aborted is the result of cancelation.
-    if (ec == boost::asio::error::operation_aborted)
+    if (error::asio_is_cancelled(ec))
     {
-        handler(system::error::channel_stopped);
+        handler(error::channel_stopped);
         return;
     }
 
     // Translate other boost error code and invoke caller handler.
-    handler(error::boost_to_error_code(ec));
+    handler(error::asio_to_error_code(ec));
 }
 
-void socket::handle_connect(const boost_code& ec, const asio::endpoint& peer,
-    const result_handler& handler)
+void socket::handle_connect(const error::boost_code& ec,
+    const asio::endpoint& peer, const result_handler& handler)
 {
     BITCOIN_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     endpoint_.store(peer);
 
-    // operation_aborted is the result of cancelation.
-    if (ec == boost::asio::error::operation_aborted)
+    if (error::asio_is_cancelled(ec))
     {
-        handler(system::error::channel_stopped);
+        handler(error::channel_stopped);
         return;
     }
 
     // Translate other boost error code and invoke caller handler.
-    handler(error::boost_to_error_code(ec));
+    handler(error::asio_to_error_code(ec));
 }
 
-void socket::handle_io(const boost_code& ec, size_t size,
+void socket::handle_io(const error::boost_code& ec, size_t size,
     const io_handler& handler)
 {
     BITCOIN_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    // operation_aborted is the result of cancelation.
-    if (ec == boost::asio::error::operation_aborted)
+    if (error::asio_is_cancelled(ec))
     {
-        handler(system::error::channel_stopped, size);
+        handler(error::channel_stopped, size);
         return;
     }
 
     // Translate other boost error code and invoke caller handler.
-    handler(error::boost_to_error_code(ec), size);
+    handler(error::asio_to_error_code(ec), size);
 }
 
 // Properties.

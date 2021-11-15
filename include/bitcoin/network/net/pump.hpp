@@ -107,7 +107,7 @@ public:
     }
 
     /// Relay a message instance to each subscriber of the type.
-    /// Returns bad_stream if message fails to deserialize, otherwise success.
+    /// Returns invalid_message if fails to deserialize, otherwise success.
     virtual code notify(system::messages::identifier id, uint32_t version,
         system::reader& reader) const;
 
@@ -135,11 +135,11 @@ private:
 
         const auto message = std::make_shared<Message>();
         if (!message->from_data(version, reader))
-            return system::error::bad_stream;
+            return error::invalid_message;
 
-        // Subscribers are notified only with stop and success codes.
-        subscriber->notify(system::error::success, message);
-        return system::error::success;
+        // Subscribers are notified only with stop code or error::success.
+        subscriber->notify(error::success, message);
+        return error::success;
     }
 
     ////bool do_subscribe(pump::handler<system::messages::address>&& handler) const

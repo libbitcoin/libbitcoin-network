@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -67,7 +68,7 @@ size_t hosts::count() const
 code hosts::fetch(address& out) const
 {
     if (disabled_)
-        return error::not_found;
+        return error::address_not_found;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -77,7 +78,7 @@ code hosts::fetch(address& out) const
         return error::service_stopped;
 
     if (buffer_.empty())
-        return error::not_found;
+        return error::address_not_found;
 
     // Randomly select an address from the buffer.
     const auto index = pseudo_random::next(zero, sub1(buffer_.size()));
@@ -89,7 +90,7 @@ code hosts::fetch(address& out) const
 code hosts::fetch(address::list& out) const
 {
     if (disabled_)
-        return error::not_found;
+        return error::address_not_found;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -100,7 +101,7 @@ code hosts::fetch(address::list& out) const
             return error::service_stopped;
 
         if (buffer_.empty())
-            return error::not_found;
+            return error::address_not_found;
 
         // TODO: extract configuration.
         const auto out_count = std::min(messages::max_address,
@@ -168,7 +169,7 @@ code hosts::start()
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failed to save hosts file.";
-        return error::file_system;
+        return error::file_save;
     }
 
     return error::success;
@@ -216,7 +217,7 @@ code hosts::stop()
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failed to load hosts file.";
-        return error::file_system;
+        return error::file_load;
     }
 
     return error::success;
@@ -225,7 +226,7 @@ code hosts::stop()
 code hosts::remove(const address& host)
 {
     if (disabled_)
-        return error::not_found;
+        return error::address_not_found;
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -254,7 +255,7 @@ code hosts::remove(const address& host)
     mutex_.unlock_upgrade();
     ///////////////////////////////////////////////////////////////////////////
 
-    return error::not_found;
+    return error::address_not_found;
 }
 
 code hosts::store(const address& host)

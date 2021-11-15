@@ -89,11 +89,11 @@ private:
     void do_read(system::data_chunk& out, io_handler handler);
     void do_write(const system::data_chunk& in, io_handler handler);
 
-    void handle_accept(const system::boost_code& ec,
+    void handle_accept(const error::boost_code& ec,
         const result_handler& handler);
-    void handle_connect(const system::boost_code& ec,
+    void handle_connect(const error::boost_code& ec,
         const asio::endpoint& peer, const result_handler& handler);
-    void socket::handle_io(const system::boost_code& ec, size_t size,
+    void socket::handle_io(const error::boost_code& ec, size_t size,
         const io_handler& handler);
 
     // These are thread safe.
