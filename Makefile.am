@@ -81,6 +81,7 @@ check_PROGRAMS = test/libbitcoin-network-test
 test_libbitcoin_network_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 test_libbitcoin_network_test_LDADD = src/libbitcoin-network.la ${boost_unit_test_framework_LIBS} ${bitcoin_system_LIBS}
 test_libbitcoin_network_test_SOURCES = \
+    test/error.cpp \
     test/main.cpp \
     test/p2p.cpp \
     test/test.cpp \
