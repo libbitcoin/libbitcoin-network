@@ -19,8 +19,6 @@
 #include "../test.hpp"
 #include <bitcoin/network.hpp>
 
-using namespace bc::network;
-
 BOOST_AUTO_TEST_SUITE(enable_shared_from_base_tests)
 
 BOOST_AUTO_TEST_CASE(enable_shared_from_base)

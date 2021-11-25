@@ -27,7 +27,7 @@
 namespace std {
 
 std::ostream& operator<<(std::ostream& stream,
-    const data_slice& slice) noexcept
+    const system::data_slice& slice) noexcept
 {
     stream << serialize(slice);
     return stream;
@@ -46,7 +46,7 @@ bool clear(const boost::filesystem::path& directory) noexcept
     // remove_all returns count removed, and error code if fails.
     // create_directories returns true if path exists or created.
     // used for setup, with no expectations of file/directory existence.
-    const auto path = to_extended_path(directory);
+    const auto path = system::to_extended_path(directory);
     boost::system::error_code ec;
     boost::filesystem::remove_all(path, ec);
     return !ec && boost::filesystem::create_directories(path, ec);
@@ -56,7 +56,7 @@ bool clear(const boost::filesystem::path& directory) noexcept
 bool create(const boost::filesystem::path& file_path) noexcept
 {
     // Creates and returns true if file already existed (and no error).
-    std::ofstream file(to_extended_path(file_path));
+    std::ofstream file(system::to_extended_path(file_path));
     return file.good();
 }
 
@@ -64,7 +64,7 @@ bool create(const boost::filesystem::path& file_path) noexcept
 bool exists(const boost::filesystem::path& file_path) noexcept
 {
     // Returns true only if file existed.
-    std::ifstream file(to_extended_path(file_path));
+    std::ifstream file(system::to_extended_path(file_path));
     return file.good();
 }
 
@@ -74,7 +74,7 @@ bool remove(const boost::filesystem::path& file_path) noexcept
     // C++17: use std::filesystem.
     // Deletes and returns false if file did not exist (or error).
     boost::system::error_code ec;
-    return boost::filesystem::remove(to_extended_path(file_path), ec);
+    return boost::filesystem::remove(system::to_extended_path(file_path), ec);
 }
 
 } // namespace test

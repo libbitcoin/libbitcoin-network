@@ -32,7 +32,6 @@
 namespace libbitcoin {
 namespace network {
 
-using namespace bc::system;
 using namespace std::placeholders;
 
 // The timer closure captures an instance of this class and the callback.

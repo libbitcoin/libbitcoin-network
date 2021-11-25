@@ -19,8 +19,6 @@
 #include "../test.hpp"
 #include <bitcoin/network.hpp>
 
-using namespace bc::network;
-
 #ifdef _MSC_VER
     #include <windows.h>
 #else

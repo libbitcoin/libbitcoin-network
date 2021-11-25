@@ -25,17 +25,18 @@
 #include <iostream>
 #include <vector>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network.hpp>
 
  // copied from libbitcoin-system-test
 
 using namespace bc;
-using namespace bc::system;
+using namespace bc::network;
 
 namespace std {
 
 // data_slice -> base16(data)
 std::ostream& operator<<(std::ostream& stream,
-    const data_slice& slice) noexcept;
+    const system::data_slice& slice) noexcept;
 
 // vector<Type> -> join(<<Type)
 template <typename Type>

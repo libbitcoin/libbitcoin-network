@@ -19,8 +19,6 @@
 #include "../test.hpp"
 #include <bitcoin/network.hpp>
 
-using namespace bc::network;
-
 BOOST_AUTO_TEST_SUITE(proxy_tests)
 
 BOOST_AUTO_TEST_CASE(proxy)

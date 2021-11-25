@@ -19,8 +19,6 @@
 #include "../test.hpp"
 #include <bitcoin/network.hpp>
 
-using namespace bc::network;
-
 BOOST_AUTO_TEST_SUITE(deadline_tests)
 
 BOOST_AUTO_TEST_CASE(deadline__construct1__one_thread_start_zero_delay__success)

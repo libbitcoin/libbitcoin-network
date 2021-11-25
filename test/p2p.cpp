@@ -25,8 +25,6 @@
 #include <bitcoin/network.hpp>
 
 using namespace bc;
-using namespace bc::network;
-using namespace bc::system;
 using namespace bc::system::messages;
 
 // TODO: build mock and/or use dedicated test service.
@@ -41,7 +39,7 @@ using namespace bc::system::messages;
 }
 
 #define SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(name) \
-    auto name = network::settings(chain::selection::testnet); \
+    auto name = settings(system::chain::selection::testnet); \
     name.threads = 1; \
     name.outbound_connections = 0; \
     name.manual_attempt_limit = 2
@@ -53,7 +51,7 @@ using namespace bc::system::messages;
     name.hosts_file = get_log_path(TEST_NAME, "hosts")
 
 #define SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(name) \
-    auto name = network::settings(chain::selection::testnet); \
+    auto name = settings(system::chain::selection::testnet); \
     name.threads = 3; \
     name.host_pool_capacity = 42; \
     name.outbound_connections = 5; \
@@ -84,7 +82,7 @@ static int start_result(p2p& network)
     return promise.get_future().get().value();
 }
 
-static int connect_result(p2p& network, const config::endpoint& host)
+static int connect_result(p2p& network, const system::config::endpoint& host)
 {
     std::promise<code> promise;
     const auto handler = [&promise](code ec, channel::ptr)
@@ -118,7 +116,7 @@ static int subscribe_result(p2p& network)
     return promise.get_future().get().value();
 }
 
-static int subscribe_connect_result(p2p& network, const config::endpoint& host)
+static int subscribe_connect_result(p2p& network, const system::config::endpoint& host)
 {
     std::promise<code> promise;
     const auto handler = [&promise](code ec, channel::ptr)
@@ -131,7 +129,7 @@ static int subscribe_connect_result(p2p& network, const config::endpoint& host)
     return promise.get_future().get().value();
 }
 
-static int subscribe_connect_port_result(p2p& network, const config::endpoint& host)
+static int subscribe_connect_port_result(p2p& network, const system::config::endpoint& host)
 {
     std::promise<code> promise;
     const auto handler = [&promise](code ec, channel::ptr)
@@ -183,7 +181,7 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////BOOST_AUTO_TEST_CASE(p2p__top_block__default__zero_null_hash)
 ////{
 ////    print_headers(TEST_NAME);
-////    const network::settings configuration;
+////    const settings configuration;
 ////    p2p network(configuration);
 ////    BOOST_REQUIRE_EQUAL(network.top_block().height(), 0);
 ////    BOOST_REQUIRE_EQUAL(network.top_block().hash(), null_hash);
@@ -192,7 +190,7 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////BOOST_AUTO_TEST_CASE(p2p__set_top_block1__values__expected)
 ////{
 ////    print_headers(TEST_NAME);
-////    const network::settings configuration;
+////    const settings configuration;
 ////    p2p network(configuration);
 ////    const size_t expected_height = 42;
 ////    const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
@@ -204,11 +202,11 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////BOOST_AUTO_TEST_CASE(p2p__set_top_block2__values__expected)
 ////{
 ////    print_headers(TEST_NAME);
-////    const network::settings configuration;
+////    const settings configuration;
 ////    p2p network(configuration);
 ////    const size_t expected_height = 42;
 ////    const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-////    const chain::check_point expected{ hash, expected_height };
+////    const system::chain::check_point expected{ hash, expected_height };
 ////    network.set_top_block(expected);
 ////    BOOST_REQUIRE_EQUAL(network.top_block().hash(), expected.hash());
 ////    BOOST_REQUIRE_EQUAL(network.top_block().height(), expected.height());
@@ -217,7 +215,7 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////BOOST_AUTO_TEST_CASE(p2p__top_header__default__zero_null_hash)
 ////{
 ////    print_headers(TEST_NAME);
-////    const network::settings configuration;
+////    const settings configuration;
 ////    p2p network(configuration);
 ////    BOOST_REQUIRE_EQUAL(network.top_header().height(), 0);
 ////    BOOST_REQUIRE_EQUAL(network.top_header().hash(), null_hash);
@@ -226,7 +224,7 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////BOOST_AUTO_TEST_CASE(p2p__set_top_header1__values__expected)
 ////{
 ////    print_headers(TEST_NAME);
-////    const network::settings configuration;
+////    const settings configuration;
 ////    p2p network(configuration);
 ////    const size_t expected_height = 42;
 ////    const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
@@ -238,11 +236,11 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////BOOST_AUTO_TEST_CASE(p2p__set_top_header2__values__expected)
 ////{
 ////    print_headers(TEST_NAME);
-////    const network::settings configuration;
+////    const settings configuration;
 ////    p2p network(configuration);
 ////    const size_t expected_height = 42;
 ////    const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-////    const chain::check_point expected{ hash, expected_height };
+////    const system::chain::check_point expected{ hash, expected_height };
 ////    network.set_top_header(expected);
 ////    BOOST_REQUIRE_EQUAL(network.top_header().hash(), expected.hash());
 ////    BOOST_REQUIRE_EQUAL(network.top_header().height(), expected.height());
@@ -255,7 +253,7 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////    print_headers(TEST_NAME);
 ////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
 ////    p2p network(configuration);
-////    const config::endpoint host(SEED1);
+////    const system::config::endpoint host(SEED1);
 ////    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::service_stopped);
 ////}
 
@@ -330,7 +328,7 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////    print_headers(TEST_NAME);
 ////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
 ////    p2p network(configuration);
-////    const config::endpoint host(SEED1);
+////    const system::config::endpoint host(SEED1);
 ////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 ////    BOOST_REQUIRE_EQUAL(run_result(network), error::success);
 ////    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::channel_timeout);
@@ -429,7 +427,7 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////    print_headers(TEST_NAME);
 ////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
 ////    p2p network(configuration);
-////    const config::endpoint host(SEED1);
+////    const system::config::endpoint host(SEED1);
 ////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 ////    BOOST_REQUIRE_EQUAL(run_result(network), error::success);
 ////    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::success);
@@ -443,7 +441,7 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////    print_headers(TEST_NAME);
 ////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
 ////    p2p network(configuration);
-////    const config::endpoint host(SEED1);
+////    const system::config::endpoint host(SEED1);
 ////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 ////    BOOST_REQUIRE_EQUAL(subscribe_connect_result(network, host), error::success);
 ////}
@@ -453,7 +451,7 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////    print_headers(TEST_NAME);
 ////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
 ////    p2p network(configuration);
-////    const config::endpoint host(SEED1);
+////    const system::config::endpoint host(SEED1);
 ////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 ////    BOOST_REQUIRE_EQUAL(subscribe_connect_port_result(network, host), error::success);
 ////}
@@ -465,8 +463,8 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////    print_headers(TEST_NAME);
 ////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
 ////    p2p network(configuration);
-////    const config::endpoint host1(SEED1);
-////    const config::endpoint host2(SEED2);
+////    const system::config::endpoint host1(SEED1);
+////    const system::config::endpoint host2(SEED2);
 ////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
 ////    BOOST_REQUIRE_EQUAL(run_result(network), error::success);
 ////    BOOST_REQUIRE_EQUAL(connect_result(network, host1), error::success);

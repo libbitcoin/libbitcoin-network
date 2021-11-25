@@ -209,6 +209,7 @@ endif()
 #------------------------------------------------------------------------------
 if (with-tests)
     add_executable( libbitcoin-network-test
+        "../../test/error.cpp"
         "../../test/main.cpp"
         "../../test/p2p.cpp"
         "../../test/test.cpp"

@@ -19,8 +19,6 @@
 #include "../test.hpp"
 #include <bitcoin/network.hpp>
 
-using namespace bc::network;
-
 BOOST_AUTO_TEST_SUITE(atomic_tests)
 
 typedef struct foo
@@ -32,13 +30,13 @@ typedef struct foo
 
 BOOST_AUTO_TEST_CASE(atomic__integral__default__false)
 {
-    network::atomic<bool> instance{};
+    atomic<bool> instance{};
     BOOST_REQUIRE(!instance.load());
 }
 
 BOOST_AUTO_TEST_CASE(atomic__struct__default__false)
 {
-    network::atomic<foo> instance{};
+    atomic<foo> instance{};
     BOOST_REQUIRE(!instance.load().bar);
 }
 
@@ -46,26 +44,26 @@ BOOST_AUTO_TEST_CASE(atomic__struct__default__false)
 
 BOOST_AUTO_TEST_CASE(atomic__integral_load__false__false)
 {
-    network::atomic<bool> instance(false);
+    atomic<bool> instance(false);
     BOOST_REQUIRE(!instance.load());
 }
 
 BOOST_AUTO_TEST_CASE(atomic__integral_load__true__true)
 {
-    network::atomic<bool> instance(true);
+    atomic<bool> instance(true);
     BOOST_REQUIRE(instance.load());
 }
 
 BOOST_AUTO_TEST_CASE(atomic__integral_store__true__true)
 {
-    network::atomic<bool> instance{};
+    atomic<bool> instance{};
     instance.store(true);
     BOOST_REQUIRE(instance.load());
 }
 
 BOOST_AUTO_TEST_CASE(atomic__integral_store__true_false__false)
 {
-    network::atomic<bool> instance{};
+    atomic<bool> instance{};
     instance.store(true);
     instance.store(false);
     BOOST_REQUIRE(!instance.load());
@@ -76,21 +74,21 @@ BOOST_AUTO_TEST_CASE(atomic__integral_store__true_false__false)
 BOOST_AUTO_TEST_CASE(atomic__reference_load__false__false)
 {
     const foo value{ false };
-    network::atomic<foo> instance(value);
+    atomic<foo> instance(value);
     BOOST_REQUIRE(!instance.load().bar);
 }
 
 BOOST_AUTO_TEST_CASE(atomic__reference_load__true__true)
 {
     const foo value{ true };
-    network::atomic<foo> instance(value);
+    atomic<foo> instance(value);
     BOOST_REQUIRE(instance.load().bar);
 }
 
 BOOST_AUTO_TEST_CASE(atomic__reference_store__true__true)
 {
     const foo value{ true };
-    network::atomic<foo> instance{};
+    atomic<foo> instance{};
     instance.store(value);
     BOOST_REQUIRE(instance.load().bar);
 }
@@ -98,7 +96,7 @@ BOOST_AUTO_TEST_CASE(atomic__reference_store__true__true)
 BOOST_AUTO_TEST_CASE(atomic__reference_store__true_false__true)
 {
     foo value{ true };
-    network::atomic<foo> instance{};
+    atomic<foo> instance{};
     instance.store(value);
 
     // Since decay converts to a copy, this should not affect the atomic.
@@ -110,20 +108,20 @@ BOOST_AUTO_TEST_CASE(atomic__reference_store__true_false__true)
 
 BOOST_AUTO_TEST_CASE(atomic__move_load__false__false)
 {
-    network::atomic<foo> instance(foo{ false });
+    atomic<foo> instance(foo{ false });
     BOOST_REQUIRE(!instance.load().bar);
 }
 
 BOOST_AUTO_TEST_CASE(atomic__move_load__true__true)
 {
     const foo value{ true };
-    network::atomic<foo> instance(foo{ true });
+    atomic<foo> instance(foo{ true });
     BOOST_REQUIRE(instance.load().bar);
 }
 
 BOOST_AUTO_TEST_CASE(atomic__move_store__true__true)
 {
-    network::atomic<foo> instance{};
+    atomic<foo> instance{};
     instance.store(foo{ true });
     BOOST_REQUIRE(instance.load().bar);
 }
@@ -141,7 +139,7 @@ BOOST_AUTO_TEST_CASE(atomic__move_store__true_false__false)
 BOOST_AUTO_TEST_CASE(atomic__move_store__move_false_reference_true__true)
 {
     const foo value{ true };
-    network::atomic<foo> instance(foo{ false });
+    atomic<foo> instance(foo{ false });
     instance.store(value);
     BOOST_REQUIRE(instance.load().bar);
 }
@@ -149,7 +147,7 @@ BOOST_AUTO_TEST_CASE(atomic__move_store__move_false_reference_true__true)
 BOOST_AUTO_TEST_CASE(atomic__move_store__reference_false_move_true__true)
 {
     const foo value{ false };
-    network::atomic<foo> instance(value);
+    atomic<foo> instance(value);
     instance.store(foo{ true });
     BOOST_REQUIRE(instance.load().bar);
 }
