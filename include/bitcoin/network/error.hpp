@@ -25,11 +25,12 @@
 
 namespace libbitcoin {
 namespace network {
-namespace error {
 
 /// Alias system code.
 /// std::error_code "network" category holds network::error::error_t.
 typedef std::error_code code;
+
+namespace error {
 
 /// Alias asio code.
 /// Asio implements an equivalent to std::error_code.
@@ -118,6 +119,6 @@ BCT_API bool asio_is_cancelled(const error::boost_code& ec);
 } // namespace network
 } // namespace libbitcoin
 
-DECLARE_STD_ERROR_T_REGISTRATION(bc::network::error, error)
+DECLARE_STD_ERROR_REGISTRATION(bc::network::error::error)
 
 #endif

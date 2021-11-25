@@ -44,7 +44,7 @@ class deadline
 {
 public:
     typedef std::shared_ptr<deadline<Service>> ptr;
-    typedef std::function<void(const error::code&)> handler;
+    typedef std::function<void(const code&)> handler;
     
     /// Timer notification handler is posted to the service.
     deadline(Service& service, const duration& timeout=seconds(0));

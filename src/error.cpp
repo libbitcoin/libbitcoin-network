@@ -212,8 +212,6 @@ code asio_to_error_code(const error::boost_code& ec)
 } // namespace system
 } // namespace libbitcoin
 
-DEFINE_STD_ERROR_T_REGISTRATION(bc::network::error, error)
-
 // Just for reference.
 #ifdef BOOST_CODES_AND_CONDITIONS
 
