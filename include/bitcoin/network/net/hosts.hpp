@@ -25,7 +25,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -72,7 +72,7 @@ private:
     // These are protected by a mutex.
     list buffer_;
     std::atomic<bool> stopped_;
-    mutable system::upgrade_mutex mutex_;
+    mutable upgrade_mutex mutex_;
 
     // HACK: we use this because the buffer capacity cannot be set to zero.
     const bool disabled_;

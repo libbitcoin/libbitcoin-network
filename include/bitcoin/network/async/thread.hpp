@@ -54,10 +54,16 @@ enum class thread_priority
 // stackoverflow.com/q/22448022/1172329
 typedef boost::thread thread;
 
+/// C++17: std::shared_mutex.
 typedef boost::shared_mutex shared_mutex;
+
+/// C++??: there is no upgradeable lock concept.
 typedef boost::upgrade_mutex upgrade_mutex;
 
+/// C++11: std::unique_lock
 typedef boost::unique_lock<shared_mutex> unique_lock;
+
+/// C++14: std::shared_lock
 typedef boost::shared_lock<shared_mutex> shared_lock;
 
 typedef std::shared_ptr<boost::shared_mutex> shared_mutex_ptr;
