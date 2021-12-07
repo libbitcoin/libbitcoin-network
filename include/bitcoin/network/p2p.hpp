@@ -102,24 +102,24 @@ public:
     virtual asio::io_context& service();
 
     /// Return the current top block identity (for p2p handshake).
-    virtual system::chain::check_point top_block() const;
+    virtual system::chain::checkpoint top_block() const;
 
     /// Set the current top block identity (for p2p handshake).
-    virtual void set_top_block(system::chain::check_point&& top);
+    virtual void set_top_block(system::chain::checkpoint&& top);
 
     //// TODO: move to blockchain/node.
 
     /////// Set the current top block identity.
-    ////virtual void set_top_block(const system::chain::check_point& top);
+    ////virtual void set_top_block(const system::chain::checkpoint& top);
 
     /////// Return the current top header identity.
-    ////virtual system::chain::check_point top_header() const;
+    ////virtual system::chain::checkpoint top_header() const;
 
     /////// Set the current top header identity.
-    ////virtual void set_top_header(system::chain::check_point&& top);
+    ////virtual void set_top_header(system::chain::checkpoint&& top);
 
     /////// Set the current top header identity.
-    ////virtual void set_top_header(const system::chain::check_point& top);
+    ////virtual void set_top_header(const system::chain::checkpoint& top);
 
     // Subscriptions.
     // ------------------------------------------------------------------------
@@ -250,8 +250,8 @@ private:
     // These are thread safe.
     const settings& settings_;
     std::atomic<bool> stopped_;
-    atomic<system::chain::check_point> top_block_;
-    atomic<system::chain::check_point> top_header_;
+    atomic<system::chain::checkpoint> top_block_;
+    atomic<system::chain::checkpoint> top_header_;
     atomic<session_manual::ptr> manual_;
     hosts hosts_;
     threadpool threadpool_;

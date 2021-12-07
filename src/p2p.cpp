@@ -294,32 +294,32 @@ asio::io_context& p2p::service()
     return threadpool_.service();
 }
 
-check_point p2p::top_block() const
+checkpoint p2p::top_block() const
 {
     return top_block_.load();
 }
 
-void p2p::set_top_block(check_point&& top)
+void p2p::set_top_block(checkpoint&& top)
 {
     top_block_.store(std::move(top));
 }
 
-////void p2p::set_top_block(const check_point& top)
+////void p2p::set_top_block(const checkpoint& top)
 ////{
 ////    top_block_.store(top);
 ////}
 ////
-////check_point p2p::top_header() const
+////checkpoint p2p::top_header() const
 ////{
 ////    return top_header_.load();
 ////}
 ////
-////void p2p::set_top_header(check_point&& top)
+////void p2p::set_top_header(checkpoint&& top)
 ////{
 ////    top_header_.store(std::move(top));
 ////}
 ////
-////void p2p::set_top_header(const check_point& top)
+////void p2p::set_top_header(const checkpoint& top)
 ////{
 ////    top_header_.store(top);
 ////}
