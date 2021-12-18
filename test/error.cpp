@@ -218,15 +218,6 @@ BOOST_AUTO_TEST_CASE(error_t__code__invalid_message__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "message failed to deserialize");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__undersized_payload__true_exected_message)
-{
-    constexpr auto value = error::undersized_payload;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "undersized message payload");
-}
-
 BOOST_AUTO_TEST_CASE(error_t__code__unknown_message__true_exected_message)
 {
     constexpr auto value = error::unknown_message;

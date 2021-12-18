@@ -28,8 +28,10 @@
 #include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
@@ -380,27 +382,28 @@ size_t p2p::address_count() const
     return hosts_.count();
 }
 
-code p2p::store(const address& address)
+code p2p::store(const messages::address_item& address)
 {
     return hosts_.store(address);
 }
 
-void p2p::store(const address::list& addresses, result_handler handler)
+void p2p::store(const messages::address_item::list& addresses,
+    result_handler handler)
 {
     hosts_.store(addresses, handler);
 }
 
-code p2p::fetch_address(address& out_address) const
+code p2p::fetch_address(messages::address_item& out_address) const
 {
     return hosts_.fetch(out_address);
 }
 
-code p2p::fetch_addresses(address::list& out_addresses) const
+code p2p::fetch_addresses(messages::address_item::list& out_addresses) const
 {
     return hosts_.fetch(out_addresses);
 }
 
-code p2p::remove(const address& address)
+code p2p::remove(const messages::address_item& address)
 {
     return hosts_.remove(address);
 }
@@ -456,7 +459,7 @@ size_t p2p::connection_count() const
     return pending_close_.size();
 }
 
-bool p2p::connected(const address& address) const
+bool p2p::connected(const messages::address_item& address) const
 {
     const auto match = [&address](const channel::ptr& element)
     {

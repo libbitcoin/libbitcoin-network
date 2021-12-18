@@ -25,6 +25,7 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -51,11 +52,11 @@ public:
     void start(event_handler handle_event) override;
 
 protected:
-    system::messages::version version_factory() const override;
-    bool sufficient_peer(system::version_const_ptr message) override;
+    messages::version version_factory() const override;
+    bool sufficient_peer(messages::version::ptr message) override;
 
     virtual bool handle_receive_reject(const code& ec,
-        system::reject_const_ptr reject);
+        messages::reject::ptr reject);
 
     virtual const std::string& name() const override;
 

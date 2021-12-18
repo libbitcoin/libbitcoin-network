@@ -23,6 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
@@ -34,7 +35,7 @@ namespace network {
 static const std::string protocol_name = "seed";
 
 using namespace bc::system;
-using namespace bc::system::messages;
+using namespace messages;
 using namespace std::placeholders;
 
 // Require three callbacks (or any error) before calling complete.
@@ -69,7 +70,7 @@ void protocol_seed_31402::start(event_handler handler)
 
     ////SUBSCRIBE2(address, handle_receive_address, _1, _2);
     ////send_own_address(settings);
-    ////SEND1(get_address(), handle_send_get_address, _1);
+    ////SEND1(get_address{}, handle_send_get_address, _1);
 }
 
 // Protocol.
@@ -83,8 +84,7 @@ void protocol_seed_31402::send_own_address(const settings& settings)
         return;
     }
 
-    const address self(network_address::list{
-        network_address{ settings.self.to_network_address() } });
+    const address self{ { settings.self.to_address_item() } };
 
     SEND1(self, handle_send_address, _1);
 }
@@ -97,17 +97,17 @@ void protocol_seed_31402::handle_seeding_complete(const code& ec,
 }
 
 bool protocol_seed_31402::handle_receive_address(const code& ec,
-    address_const_ptr message)
+    address::ptr message)
 {
     if (stopped(ec))
         return false;
 
     LOG_DEBUG(LOG_NETWORK)
         << "Storing addresses from seed [" << authority() << "] ("
-        << message->addresses().size() << ")";
+        << message->addresses.size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.store(message->addresses(), BIND1(handle_store_addresses, _1));
+    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
     return false;
 }
 

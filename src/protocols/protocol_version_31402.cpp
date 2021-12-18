@@ -24,6 +24,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
@@ -36,7 +37,7 @@ namespace network {
 static const std::string protocol_name = "version";
 
 using namespace bc::system;
-using namespace bc::system::messages;
+using namespace messages;
 using namespace std::placeholders;
 
 // TODO: set explicitly on inbound (none or new config) and self on outbound.
@@ -50,7 +51,7 @@ protocol_version_31402::protocol_version_31402(channel::ptr channel, p2p& networ
         network.network_settings().services,
         network.network_settings().invalid_services,
         network.network_settings().protocol_minimum,
-        messages::version::service::none
+        messages::service::node_none
         /*network.network_settings().services*/)
 {
 }
@@ -88,39 +89,49 @@ void protocol_version_31402::start(event_handler handle_event)
     ////protocol_timer::start(join_handler);
 
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
-    SUBSCRIBE2(verack, handle_receive_verack, _1, _2);
+    SUBSCRIBE2(version_acknowledge, handle_receive_version_acknowledge, _1, _2);
     SEND2(version_factory(), handle_send, _1, version::command);
 }
 
 messages::version protocol_version_31402::version_factory() const
 {
+    const auto timestamp = static_cast<uint32_t>(zulu_time());
     const auto& settings = network_.network_settings();
     const auto height = network_.top_block().height();
+
     BITCOIN_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
 
-    messages::version version;
-    version.set_value(own_version_);
-    version.set_services(own_services_);
-    version.set_timestamp(static_cast<uint64_t>(zulu_time()));
-    version.set_address_receiver(authority().to_network_address());
-    version.set_address_sender(settings.self.to_network_address());
-    version.set_nonce(nonce());
-    version.set_user_agent(BC_USER_AGENT);
-    version.set_start_height(static_cast<uint32_t>(height));
-
-    // The peer's services cannot be reflected, so zero it.
-    version.address_receiver().set_services(version::service::none);
-
-    // We always match the services declared in our version.services.
-    version.address_sender().set_services(own_services_);
-    return version;
+    return
+    {
+        own_version_,
+        own_services_,
+        timestamp,
+        {
+            // The peer's services cannot be reflected, so zero it.
+            timestamp,
+            service::node_none,
+            authority().ip(),
+            authority().port(),
+        },
+        {
+            // We always match the services declared in our version.services.
+            timestamp,
+            own_services_,
+            settings.self.ip(),
+            settings.self.port(),
+        },
+        nonce(),
+        BC_USER_AGENT,
+        static_cast<uint32_t>(height),
+        false
+    };
 }
 
 // Protocol.
 // ----------------------------------------------------------------------------
 
 bool protocol_version_31402::handle_receive_version(const code& ec,
-    version_const_ptr message)
+    version::ptr message)
 {
     if (stopped(ec))
         return false;
@@ -136,27 +147,27 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     LOG_DEBUG(LOG_NETWORK)
         << "Peer [" << authority() << "] protocol version ("
-        << message->value() << ") user agent: " << message->user_agent();
+        << message->value << ") user agent: " << message->user_agent;
 
     // TODO: move these three checks to initialization.
     //-------------------------------------------------------------------------
 
     const auto& settings = network_.network_settings();
 
-    if (settings.protocol_minimum < version::level::minimum)
+    if (settings.protocol_minimum < level::minimum_protocol)
     {
         LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, minimum below ("
-            << version::level::minimum << ").";
+            << level::minimum_protocol << ").";
         set_event(error::channel_stopped);
         return false;
     }
 
-    if (settings.protocol_maximum > version::level::maximum)
+    if (settings.protocol_maximum > level::maximum_protocol)
     {
         LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, maximum above ("
-            << version::level::maximum << ").";
+            << level::maximum_protocol << ").";
         set_event(error::channel_stopped);
         return false;
     }
@@ -178,7 +189,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         return false;
     }
 
-    const auto version = std::min(message->value(), own_version_);
+    const auto version = std::min(message->value, own_version_);
     set_negotiated_version(version);
     set_peer_version(message);
 
@@ -186,35 +197,35 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
         << "Negotiated protocol version (" << version
         << ") for [" << authority() << "]";
 
-    SEND2(verack(), handle_send, _1, verack::command);
+    SEND2(version_acknowledge{}, handle_send, _1, version_acknowledge::command);
 
     // 1 of 2
     set_event(error::success);
     return false;
 }
 
-bool protocol_version_31402::sufficient_peer(version_const_ptr message)
+bool protocol_version_31402::sufficient_peer(version::ptr message)
 {
-    if ((message->services() & invalid_services_) != 0)
+    if ((message->services & invalid_services_) != 0)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Invalid peer network services (" << message->services()
+            << "Invalid peer network services (" << message->services
             << ") for [" << authority() << "]";
         return false;
     }
 
-    if ((message->services() & minimum_services_) != minimum_services_)
+    if ((message->services & minimum_services_) != minimum_services_)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Insufficient peer network services (" << message->services()
+            << "Insufficient peer network services (" << message->services
             << ") for [" << authority() << "]";
         return false;
     }
 
-    if (message->value() < minimum_version_)
+    if (message->value < minimum_version_)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Insufficient peer protocol version (" << message->value()
+            << "Insufficient peer protocol version (" << message->value
             << ") for [" << authority() << "]";
         return false;
     }
@@ -222,8 +233,8 @@ bool protocol_version_31402::sufficient_peer(version_const_ptr message)
     return true;
 }
 
-bool protocol_version_31402::handle_receive_verack(const code& ec,
-    verack_const_ptr)
+bool protocol_version_31402::handle_receive_version_acknowledge(const code& ec,
+    version_acknowledge::ptr)
 {
     if (stopped(ec))
         return false;

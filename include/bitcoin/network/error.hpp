@@ -83,7 +83,6 @@ enum error_t
     oversized_payload,
     invalid_checksum,
     invalid_message,
-    undersized_payload,
     unknown_message,
 
     // general failures

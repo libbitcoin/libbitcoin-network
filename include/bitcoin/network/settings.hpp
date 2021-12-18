@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -57,10 +58,10 @@ public:
     uint32_t channel_expiration_minutes;
     uint32_t host_pool_capacity;
     boost::filesystem::path hosts_file;
-    system::config::authority self;
-    system::config::authority::list blacklists;
-    system::config::endpoint::list peers;
-    system::config::endpoint::list seeds;
+    config::authority self;
+    config::authority::list blacklists;
+    config::endpoint::list peers;
+    config::endpoint::list seeds;
 
     // [log]
     boost::filesystem::path debug_file;
@@ -70,7 +71,7 @@ public:
     size_t minimum_free_space;
     size_t maximum_archive_size;
     size_t maximum_archive_files;
-    system::config::authority statistics_server;
+    config::authority statistics_server;
     bool verbose;
 
     /// Helpers.

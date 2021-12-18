@@ -25,6 +25,7 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -54,13 +55,13 @@ protected:
     // Expose polymorphic start method from base.
     using protocol_timer::start;
 
-    virtual system::messages::version version_factory() const;
-    virtual bool sufficient_peer(system::version_const_ptr message);
+    virtual messages::version version_factory() const;
+    virtual bool sufficient_peer(messages::version::ptr message);
 
     virtual bool handle_receive_version(const code& ec,
-        system::version_const_ptr version);
-    virtual bool handle_receive_verack(const code& ec,
-        system::verack_const_ptr);
+        messages::version::ptr version);
+    virtual bool handle_receive_version_acknowledge(const code& ec,
+        messages::version_acknowledge::ptr);
 
     virtual const std::string& name() const override;
 

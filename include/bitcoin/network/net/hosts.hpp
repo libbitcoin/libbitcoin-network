@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -42,7 +43,6 @@ class BCT_API hosts
 {
 public:
     typedef std::shared_ptr<hosts> ptr;
-    typedef system::messages::network_address address;
     typedef std::function<void(const code&)> result_handler;
 
     /// Construct an instance.
@@ -55,17 +55,18 @@ public:
     virtual code stop();
 
     virtual size_t count() const;
-    virtual code fetch(address& out) const;
-    virtual code fetch(address::list& out) const;
-    virtual code remove(const address& host);
-    virtual code store(const address& host);
-    virtual void store(const address::list& hosts, result_handler handler);
+    virtual code fetch(messages::address_item& out) const;
+    virtual code fetch(messages::address_item::list& out) const;
+    virtual code remove(const messages::address_item& host);
+    virtual code store(const messages::address_item& host);
+    virtual void store(const messages::address_item::list& hosts,
+        result_handler handler);
 
 private:
-    typedef boost::circular_buffer<address> list;
+    typedef boost::circular_buffer<messages::address_item> list;
     typedef list::iterator iterator;
 
-    iterator find(const address& host);
+    iterator find(const messages::address_item& host);
 
     const size_t capacity_;
 

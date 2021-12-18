@@ -24,7 +24,9 @@
 #include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 
 namespace libbitcoin {
@@ -78,16 +80,16 @@ protected:
     }
 
     /// Get the address of the channel.
-    virtual system::config::authority authority() const;
+    virtual config::authority authority() const;
 
     /// Get the channel nonce.
     virtual uint64_t nonce() const;
 
     /// Get the peer version message.
-    virtual system::version_const_ptr peer_version() const;
+    virtual messages::version::ptr peer_version() const;
 
     /// Set the peer version message.
-    virtual void set_peer_version(system::version_const_ptr value);
+    virtual void set_peer_version(messages::version::ptr value);
 
     /// Get the negotiated protocol version.
     virtual uint32_t negotiated_version() const;

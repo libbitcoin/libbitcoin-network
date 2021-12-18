@@ -26,7 +26,9 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -54,8 +56,7 @@ class BCT_API session
   : public enable_shared_from_base<session>, system::noncopyable
 {
 public:
-    typedef system::config::authority authority;
-    typedef system::messages::network_address address;
+    typedef config::authority authority;
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
     typedef std::function<void(const code&, acceptor::ptr)> accept_handler;
@@ -119,7 +120,7 @@ protected:
 
     virtual size_t address_count() const;
     virtual size_t connection_count() const;
-    virtual code fetch_address(address& out_address) const;
+    virtual code fetch_address(messages::address_item& out_address) const;
     virtual bool blacklisted(const authority& authority) const;
     virtual bool stopped() const;
     virtual bool stopped(const code& ec) const;

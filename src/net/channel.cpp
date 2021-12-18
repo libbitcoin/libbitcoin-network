@@ -26,6 +26,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -33,14 +34,14 @@ namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
-using namespace bc::system::messages;
+using namespace messages;
 using namespace std::placeholders;
 
 // Helper to derive maximum message payload size from settings.
 inline size_t payload_maximum(const settings& settings)
 {
     return heading::maximum_payload_size(settings.protocol_maximum,
-        !is_zero(settings.services & version::service::node_witness));
+        !is_zero(settings.services & service::node_witness));
 }
 
 // Factory for fixed deadline timer pointer construction.
@@ -109,7 +110,7 @@ channel::channel(socket::ptr socket, const settings& settings)
     notify_on_connect_(false),
     channel_nonce_(0),
     negotiated_version_(settings.protocol_maximum),
-    peer_version_(std::make_shared<system::messages::version>()),
+    peer_version_(std::make_shared<messages::version>()),
     expiration_(expiration(socket->strand(), settings.channel_expiration())),
     inactivity_(timeout(socket->strand(), settings.channel_inactivity())),
     CONSTRUCT_TRACK(channel)
@@ -167,12 +168,12 @@ void channel::set_negotiated_version(uint32_t value)
     negotiated_version_ = value;
 }
 
-version_const_ptr channel::peer_version() const
+version::ptr channel::peer_version() const
 {
     return peer_version_.load();
 }
 
-void channel::set_peer_version(version_const_ptr value)
+void channel::set_peer_version(version::ptr value)
 {
     peer_version_.store(value);
 }

@@ -140,12 +140,12 @@ void session_outbound::attach_protocols(channel::ptr channel)
     const auto version = channel->negotiated_version();
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
-    if (version >= messages::version::level::bip31)
+    if (version >= messages::level::bip31)
         attach<protocol_ping_60001>(channel, heartbeat)->start();
     else
         attach<protocol_ping_31402>(channel, heartbeat)->start();
 
-    if (version >= messages::version::level::bip61)
+    if (version >= messages::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_address_31402>(channel, network_)->start();
@@ -155,7 +155,6 @@ void session_outbound::attach_protocols(channel::ptr channel)
 void session_outbound::attach_handshake_protocols(channel::ptr channel,
     result_handler handle_started)
 {
-    using serve = messages::version::service;
     const auto relay = settings_.relay_transactions;
     const auto own_version = settings_.protocol_maximum;
     const auto own_services = settings_.services;
@@ -163,19 +162,19 @@ void session_outbound::attach_handshake_protocols(channel::ptr channel,
     const auto minimum_version = settings_.protocol_minimum;
 
     // Require peer to serve network (and witness if configured on self).
-    const auto minimum_services = (own_services & serve::node_witness) |
-        serve::node_network;
+    const auto min_service = (own_services & messages::service::node_witness) |
+        messages::service::node_network;
 
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= messages::version::level::bip61)
+    if (channel->negotiated_version() >= messages::level::bip61)
         attach<protocol_version_70002>(channel, network_, own_version,
-            own_services, invalid_services, minimum_version, minimum_services,
+            own_services, invalid_services, minimum_version, min_service,
             relay)->start(handle_started);
     else
         attach<protocol_version_31402>(channel, network_, own_version,
-            own_services, invalid_services, minimum_version, minimum_services)
-            ->start(handle_started);
+            own_services, invalid_services, minimum_version, min_service)
+                ->start(handle_started);
 }
 
 // THIS IS INVOKED ON THE CHANNEL THREAD (if the channel stops itself).

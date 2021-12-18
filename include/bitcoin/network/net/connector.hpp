@@ -24,6 +24,7 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/net/channel.hpp>
@@ -66,11 +67,11 @@ public:
     /// The channel paramter is nullptr unless success is returned.
 
     /// Try to connect to the endpoint, starts timer.
-    virtual void connect(const system::config::endpoint& endpoint,
+    virtual void connect(const config::endpoint& endpoint,
         connect_handler&& handler);
 
     /// Try to connect to the authority, starts timer.
-    virtual void connect(const system::config::authority& authority,
+    virtual void connect(const config::authority& authority,
         connect_handler&& handler);
 
     /// Try to connect to host:port, starts timer.

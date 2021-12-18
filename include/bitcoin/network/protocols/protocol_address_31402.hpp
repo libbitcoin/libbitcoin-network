@@ -23,6 +23,7 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
 
@@ -48,14 +49,14 @@ protected:
     virtual void handle_store_addresses(const code& ec);
 
     virtual bool handle_receive_address(const code& ec,
-        system::address_const_ptr address);
+        messages::address::ptr address);
     virtual bool handle_receive_get_address(const code& ec,
-        system::get_address_const_ptr message);
+        messages::get_address::ptr message);
 
     virtual const std::string& name() const override;
 
     p2p& network_;
-    const system::messages::address self_;
+    const messages::address self_;
 };
 
 } // namespace network

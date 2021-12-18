@@ -26,14 +26,14 @@ namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
-using namespace bc::system::messages;
+using namespace messages;
 
 // Common default values (no settings context).
 settings::settings()
   : threads(0),
-    protocol_maximum(version::level::maximum),
-    protocol_minimum(version::level::minimum),
-    services(version::service::none),
+    protocol_maximum(level::maximum_protocol),
+    protocol_minimum(level::minimum_protocol),
+    services(service::node_none),
     invalid_services(176),
     relay_transactions(false),
     validate_checksum(false),
@@ -49,7 +49,7 @@ settings::settings()
     channel_expiration_minutes(1440),
     host_pool_capacity(0),
     hosts_file("hosts.cache"),
-    self(unspecified_network_address),
+    self(unspecified_address_item),
 
     // [log]
     debug_file("debug.log"),
@@ -59,7 +59,7 @@ settings::settings()
     minimum_free_space(0),
     maximum_archive_size(0),
     maximum_archive_files(0),
-    statistics_server(unspecified_network_address),
+    statistics_server(unspecified_address_item),
     verbose(false)
 {
 }

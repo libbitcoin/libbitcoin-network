@@ -26,6 +26,7 @@
 #include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {

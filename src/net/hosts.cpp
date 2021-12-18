@@ -23,14 +23,18 @@
 #include <string>
 #include <vector>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
+using namespace config;
+using namespace messages;
 
 #define NAME "hosts"
 
@@ -45,11 +49,11 @@ hosts::hosts(const settings& settings)
 }
 
 // private
-hosts::iterator hosts::find(const address& host)
+hosts::iterator hosts::find(const address_item& host)
 {
-    const auto found = [&host](const address& entry)
+    const auto found = [&host](const address_item& entry)
     {
-        return entry.port() == host.port() && entry.ip() == host.ip();
+        return entry.port == host.port && entry.ip == host.ip;
     };
 
     return std::find_if(buffer_.begin(), buffer_.end(), found);
@@ -65,7 +69,7 @@ size_t hosts::count() const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-code hosts::fetch(address& out) const
+code hosts::fetch(address_item& out) const
 {
     if (disabled_)
         return error::address_not_found;
@@ -87,7 +91,7 @@ code hosts::fetch(address& out) const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-code hosts::fetch(address::list& out) const
+code hosts::fetch(address_item::list& out) const
 {
     if (disabled_)
         return error::address_not_found;
@@ -158,7 +162,7 @@ code hosts::start()
             config::authority host(line);
 
             if (!is_zero(host.port()))
-                buffer_.push_back(host.to_network_address());
+                buffer_.push_back(host.to_address_item());
         }
     }
 
@@ -223,7 +227,7 @@ code hosts::stop()
     return error::success;
 }
 
-code hosts::remove(const address& host)
+code hosts::remove(const address_item& host)
 {
     if (disabled_)
         return error::address_not_found;
@@ -258,12 +262,12 @@ code hosts::remove(const address& host)
     return error::address_not_found;
 }
 
-code hosts::store(const address& host)
+code hosts::store(const address_item& host)
 {
     if (disabled_)
         return error::success;
 
-    if (!host.is_valid())
+    if (host.ip == null_ip_address)
     {
         // Do not treat invalid address as an error, just log it.
         LOG_DEBUG(LOG_NETWORK)
@@ -304,7 +308,7 @@ code hosts::store(const address& host)
     return error::success;
 }
 
-void hosts::store(const address::list& hosts, result_handler handler)
+void hosts::store(const address_item::list& hosts, result_handler handler)
 {
     if (disabled_ || hosts.empty())
     {
@@ -345,13 +349,14 @@ void hosts::store(const address::list& hosts, result_handler handler)
         const auto& host = hosts[index];
 
         // Do not treat invalid address as an error, just log it.
-        if (!host.is_valid())
+        if (host.ip == null_ip_address)
         {
             LOG_DEBUG(LOG_NETWORK)
                 << "Invalid host address from peer.";
             continue;
         }
 
+        // TODO: use std::map.
         // Do not allow duplicates in the host cache.
         if (find(host) == buffer_.end())
         {

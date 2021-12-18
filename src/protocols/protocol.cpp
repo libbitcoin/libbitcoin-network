@@ -21,12 +21,15 @@
 #include <cstdint>
 #include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
+using namespace messages;
 
 protocol::protocol(channel::ptr channel)
   : channel_(channel)
@@ -45,12 +48,12 @@ uint64_t protocol::nonce() const
     return channel_->nonce();
 }
 
-version_const_ptr protocol::peer_version() const
+version::ptr protocol::peer_version() const
 {
     return channel_->peer_version();
 }
 
-void protocol::set_peer_version(version_const_ptr value)
+void protocol::set_peer_version(version::ptr value)
 {
     channel_->set_peer_version(value);
 }

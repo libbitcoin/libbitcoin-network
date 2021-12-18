@@ -21,12 +21,12 @@
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
-using namespace bc::system::messages;
 
 #define SUBSCRIBER(name) name##_subscriber_
 #define SUBSCRIBER_TYPE(name) name##_subscriber
@@ -35,8 +35,8 @@ using namespace bc::system::messages;
     SUBSCRIBER(name)(std::make_shared<SUBSCRIBER_TYPE(name)>(strand_))
 
 #define CASE_NOTIFY(name) \
-    case identifier::name: \
-        return do_notify<messages::name>(SUBSCRIBER(name), version, reader)
+    case messages::identifier::name: \
+        return do_notify<messages::name>(SUBSCRIBER(name), version, data)
 
 #define STOP_SUBSCRIBER(name) \
     SUBSCRIBER(name)->stop(ec, nullptr)
@@ -47,21 +47,21 @@ pump::pump(asio::strand& strand)
     MAKE_SUBSCRIBER(address),
     MAKE_SUBSCRIBER(alert),
     MAKE_SUBSCRIBER(block),
-    MAKE_SUBSCRIBER(block_transactions),
+    MAKE_SUBSCRIBER(bloom_filter_add),
+    MAKE_SUBSCRIBER(bloom_filter_clear),
+    MAKE_SUBSCRIBER(bloom_filter_load),
+    MAKE_SUBSCRIBER(client_filter),
+    MAKE_SUBSCRIBER(client_filter_checkpoint),
+    MAKE_SUBSCRIBER(client_filter_headers),
     MAKE_SUBSCRIBER(compact_block),
-    MAKE_SUBSCRIBER(compact_filter),
-    MAKE_SUBSCRIBER(compact_filter_checkpoint),
-    MAKE_SUBSCRIBER(compact_filter_headers),
+    MAKE_SUBSCRIBER(compact_transactions),
     MAKE_SUBSCRIBER(fee_filter),
-    MAKE_SUBSCRIBER(filter_add),
-    MAKE_SUBSCRIBER(filter_clear),
-    MAKE_SUBSCRIBER(filter_load),
     MAKE_SUBSCRIBER(get_address),
     MAKE_SUBSCRIBER(get_blocks),
-    MAKE_SUBSCRIBER(get_block_transactions),
-    MAKE_SUBSCRIBER(get_compact_filter_checkpoint),
-    MAKE_SUBSCRIBER(get_compact_filter_headers),
-    MAKE_SUBSCRIBER(get_compact_filters),
+    MAKE_SUBSCRIBER(get_client_filter_checkpoint),
+    MAKE_SUBSCRIBER(get_client_filter_headers),
+    MAKE_SUBSCRIBER(get_client_filters),
+    MAKE_SUBSCRIBER(get_compact_transactions),
     MAKE_SUBSCRIBER(get_data),
     MAKE_SUBSCRIBER(get_headers),
     MAKE_SUBSCRIBER(headers),
@@ -75,36 +75,37 @@ pump::pump(asio::strand& strand)
     MAKE_SUBSCRIBER(send_compact),
     MAKE_SUBSCRIBER(send_headers),
     MAKE_SUBSCRIBER(transaction),
-    MAKE_SUBSCRIBER(verack),
-    MAKE_SUBSCRIBER(version)
+    MAKE_SUBSCRIBER(version),
+    MAKE_SUBSCRIBER(version_acknowledge)
 {
 }
 
-code pump::notify(identifier id, uint32_t version, reader& reader) const
+code pump::notify(messages::identifier id, uint32_t version,
+    const data_chunk& data) const
 {
     switch (id)
     {
-        ////case identifier::address:
+        ////case messages:identifier::address:
         ////    return do_notify<messages::address>(
-        ////        address_subscriber_, version, reader);
+        ////        address_subscriber_, version, data);
         CASE_NOTIFY(address);
         CASE_NOTIFY(alert);
         CASE_NOTIFY(block);
-        CASE_NOTIFY(block_transactions);
+        CASE_NOTIFY(bloom_filter_add);
+        CASE_NOTIFY(bloom_filter_clear);
+        CASE_NOTIFY(bloom_filter_load);
+        CASE_NOTIFY(client_filter);
+        CASE_NOTIFY(client_filter_checkpoint);
+        CASE_NOTIFY(client_filter_headers);
         CASE_NOTIFY(compact_block);
-        CASE_NOTIFY(compact_filter);
-        CASE_NOTIFY(compact_filter_checkpoint);
-        CASE_NOTIFY(compact_filter_headers);
+        CASE_NOTIFY(compact_transactions);
         CASE_NOTIFY(fee_filter);
-        CASE_NOTIFY(filter_add);
-        CASE_NOTIFY(filter_clear);
-        CASE_NOTIFY(filter_load);
         CASE_NOTIFY(get_address);
         CASE_NOTIFY(get_blocks);
-        CASE_NOTIFY(get_block_transactions);
-        CASE_NOTIFY(get_compact_filter_checkpoint);
-        CASE_NOTIFY(get_compact_filter_headers);
-        CASE_NOTIFY(get_compact_filters);
+        CASE_NOTIFY(get_client_filter_checkpoint);
+        CASE_NOTIFY(get_client_filter_headers);
+        CASE_NOTIFY(get_client_filters);
+        CASE_NOTIFY(get_compact_transactions);
         CASE_NOTIFY(get_data);
         CASE_NOTIFY(get_headers);
         CASE_NOTIFY(headers);
@@ -118,9 +119,9 @@ code pump::notify(identifier id, uint32_t version, reader& reader) const
         CASE_NOTIFY(send_compact);
         CASE_NOTIFY(send_headers);
         CASE_NOTIFY(transaction);
-        CASE_NOTIFY(verack);
         CASE_NOTIFY(version);
-        case identifier::unknown:
+        CASE_NOTIFY(version_acknowledge);
+        case messages::identifier::unknown:
         default:
             return error::unknown_message;
     }
@@ -130,23 +131,24 @@ void pump::stop(const code& ec)
 {
     ////address_subscriber_->stop(ec, nullptr);
     STOP_SUBSCRIBER(address);
+    STOP_SUBSCRIBER(address);
     STOP_SUBSCRIBER(alert);
     STOP_SUBSCRIBER(block);
-    STOP_SUBSCRIBER(block_transactions);
+    STOP_SUBSCRIBER(bloom_filter_add);
+    STOP_SUBSCRIBER(bloom_filter_clear);
+    STOP_SUBSCRIBER(bloom_filter_load);
+    STOP_SUBSCRIBER(client_filter);
+    STOP_SUBSCRIBER(client_filter_checkpoint);
+    STOP_SUBSCRIBER(client_filter_headers);
     STOP_SUBSCRIBER(compact_block);
-    STOP_SUBSCRIBER(compact_filter);
-    STOP_SUBSCRIBER(compact_filter_checkpoint);
-    STOP_SUBSCRIBER(compact_filter_headers);
+    STOP_SUBSCRIBER(compact_transactions);
     STOP_SUBSCRIBER(fee_filter);
-    STOP_SUBSCRIBER(filter_add);
-    STOP_SUBSCRIBER(filter_clear);
-    STOP_SUBSCRIBER(filter_load);
     STOP_SUBSCRIBER(get_address);
     STOP_SUBSCRIBER(get_blocks);
-    STOP_SUBSCRIBER(get_block_transactions);
-    STOP_SUBSCRIBER(get_compact_filter_checkpoint);
-    STOP_SUBSCRIBER(get_compact_filter_headers);
-    STOP_SUBSCRIBER(get_compact_filters);
+    STOP_SUBSCRIBER(get_client_filter_checkpoint);
+    STOP_SUBSCRIBER(get_client_filter_headers);
+    STOP_SUBSCRIBER(get_client_filters);
+    STOP_SUBSCRIBER(get_compact_transactions);
     STOP_SUBSCRIBER(get_data);
     STOP_SUBSCRIBER(get_headers);
     STOP_SUBSCRIBER(headers);
@@ -160,8 +162,8 @@ void pump::stop(const code& ec)
     STOP_SUBSCRIBER(send_compact);
     STOP_SUBSCRIBER(send_headers);
     STOP_SUBSCRIBER(transaction);
-    STOP_SUBSCRIBER(verack);
     STOP_SUBSCRIBER(version);
+    STOP_SUBSCRIBER(version_acknowledge);
 }
 
 #undef SUBSCRIBER

@@ -25,6 +25,7 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -81,7 +82,7 @@ public:
     virtual asio::strand& strand();
 
     /// Get the authority of the remote endpoint.
-    virtual system::config::authority endpoint() const;
+    virtual config::authority endpoint() const;
 
 private:
     void do_stop();
@@ -98,7 +99,7 @@ private:
 
     // These are thread safe.
     std::atomic<bool> stopped_;
-    atomic<system::config::authority> endpoint_;
+    atomic<config::authority> endpoint_;
     asio::strand strand_;
 
     // This is protected by strand.

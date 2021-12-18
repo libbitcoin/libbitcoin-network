@@ -63,7 +63,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { oversized_payload, "oversize message payload" },
     { invalid_checksum, "invalid message checksum" },
     { invalid_message, "message failed to deserialize" },
-    { undersized_payload, "undersized message payload" },
     { unknown_message, "unknown message type" },
 
     // general failures
@@ -209,7 +208,7 @@ code asio_to_error_code(const error::boost_code& ec)
 }
 
 } // namespace error
-} // namespace system
+} // namespace network
 } // namespace libbitcoin
 
 // Just for reference.

@@ -25,6 +25,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 
@@ -35,7 +36,7 @@ namespace network {
 static const std::string protocol_name = "ping";
 
 using namespace bc::system;
-using namespace bc::system::messages;
+using namespace messages;
 using namespace std::placeholders;
 
 protocol_ping_60001::protocol_ping_60001(channel::ptr channel,
@@ -92,7 +93,7 @@ void protocol_ping_60001::handle_send_ping(const code& ec,
 }
 
 bool protocol_ping_60001::handle_receive_ping(const code& ec,
-    ping_const_ptr message)
+    ping::ptr message)
 {
     if (stopped(ec))
         return false;
@@ -106,12 +107,12 @@ bool protocol_ping_60001::handle_receive_ping(const code& ec,
         return false;
     }
 
-    SEND2(pong{ message->nonce() }, handle_send, _1, pong::command);
+    SEND2(pong{ message->nonce }, handle_send, _1, pong::command);
     return true;
 }
 
 bool protocol_ping_60001::handle_receive_pong(const code& ec,
-    pong_const_ptr message, uint64_t nonce)
+    pong::ptr message, uint64_t nonce)
 {
     if (stopped(ec))
         return false;
@@ -127,7 +128,7 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
 
     pending_ = false;
 
-    if (message->nonce() != nonce)
+    if (message->nonce != nonce)
     {
         LOG_WARNING(LOG_NETWORK)
             << "Invalid pong nonce from [" << authority() << "]";

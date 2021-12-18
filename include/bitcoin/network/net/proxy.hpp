@@ -75,22 +75,19 @@ public:
     // I/O.
     // ------------------------------------------------------------------------
 
+    // TODO: Avoid reserializing the same object for every peer, such as by
+    // TODO: broadcast. Have the object maintain a shared copy of its
+    // TODO: serialization (mapped to version to the extent that it varies
+    // TODO: by version). Obtain the shared pointer here by version and
+    // TODO: send it. See also comments in pump::do_notify.
+
     /// Send a message on the socket, does not require proxy to be started.
     /// Message is serialized and does not have to be retained by the caller.
     template <class Message>
     void send(const Message& message, result_handler&& handler)
     {
-        // TODO: Avoid reserializing the same object for every peer, such as by
-        // TODO: broadcast. Have the object maintain a shared copy of its
-        // TODO: serialization (mapped to version to the extent that it varies
-        // TODO: by version). Obtain the shared pointer here by version and
-        // TODO: send it. See also comments in pump::do_notify.
-
-        auto command = std::make_shared<std::string>(message.command);
-        auto payload = std::make_shared<system::data_chunk>(
-            messages::serialize(message, version(), protocol_magic()));
-
-        send(command, payload, std::move(handler));
+        send(messages::serialize(message, protocol_magic(), version(), true),
+            std::move(handler));
     }
 
     /// Subscribe to messages of type Message received by the started socket.
@@ -108,12 +105,13 @@ public:
     virtual asio::strand& proxy::strand();
 
     /// Get the authority of the peer.
-    virtual const system::config::authority& authority() const;
+    virtual const config::authority& authority() const;
 
 private:
-    typedef system::messages::heading::ptr heading_ptr;
-    typedef std::shared_ptr<std::string> command_ptr;
-    typedef std::shared_ptr<system::data_chunk> payload_ptr;
+    typedef system::chunk_ptr payload_ptr;
+    typedef messages::heading::ptr heading_ptr;
+
+    static std::string extract_command(payload_ptr payload);
 
     virtual size_t maximum_payload() const = 0;
     virtual uint32_t protocol_magic() const = 0;
@@ -129,10 +127,9 @@ private:
     void handle_read_payload(const code& ec, size_t payload_size,
         heading_ptr head);
 
-    void send(command_ptr command, payload_ptr payload,
-        result_handler&& handler);
-    void handle_send(const code& ec, size_t bytes, command_ptr command,
-        payload_ptr payload, const result_handler& handler);
+    void send(payload_ptr payload, result_handler&& handler);
+    void handle_send(const code& ec, size_t bytes, payload_ptr payload,
+        const result_handler& handler);
 
     // These are thread safe.
     socket::ptr socket_;

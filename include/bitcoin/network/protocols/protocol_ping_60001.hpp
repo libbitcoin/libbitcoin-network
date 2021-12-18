@@ -26,6 +26,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
@@ -51,9 +52,9 @@ protected:
 
     void handle_send_ping(const code& ec, const std::string& command);
     bool handle_receive_ping(const code& ec,
-        system::ping_const_ptr message) override;
+        messages::ping::ptr message) override;
     virtual bool handle_receive_pong(const code& ec,
-        system::pong_const_ptr message, uint64_t nonce);
+        messages::pong::ptr message, uint64_t nonce);
 
     virtual const std::string& name() const override;
 

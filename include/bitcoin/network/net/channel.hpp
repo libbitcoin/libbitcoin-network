@@ -72,8 +72,8 @@ public:
     virtual uint32_t negotiated_version() const;
     virtual void set_negotiated_version(uint32_t value);
 
-    virtual system::version_const_ptr peer_version() const;
-    virtual void set_peer_version(system::version_const_ptr value);
+    virtual messages::version::ptr peer_version() const;
+    virtual void set_peer_version(messages::version::ptr value);
 
 private:
     virtual size_t maximum_payload() const override;
@@ -97,7 +97,7 @@ private:
     std::atomic<bool> notify_on_connect_;
     std::atomic<uint64_t> channel_nonce_;
     std::atomic<uint32_t> negotiated_version_;
-    atomic<system::version_const_ptr> peer_version_;
+    atomic<messages::version::ptr> peer_version_;
     deadline<asio::strand>::ptr expiration_;
     deadline<asio::strand>::ptr inactivity_;
 };

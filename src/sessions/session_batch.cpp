@@ -20,8 +20,10 @@
 
 #include <cstddef>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 
@@ -32,8 +34,8 @@ namespace network {
 #define NAME "session_batch"
 
 using namespace bc::system;
-using namespace bc::system::config;
-using namespace bc::system::messages;
+using namespace config;
+using namespace messages;
 using namespace std::placeholders;
 
 session_batch::session_batch(p2p& network, bool notify_on_connect)
@@ -67,9 +69,9 @@ void session_batch::new_connect(channel_handler handler)
         return;
     }
 
-    network_address address;
+    messages::address_item address;
     const auto ec = fetch_address(address);
-    start_connect(ec, address, handler);
+    start_connect(ec, { address }, handler);
 }
 
 void session_batch::start_connect(const code& ec,

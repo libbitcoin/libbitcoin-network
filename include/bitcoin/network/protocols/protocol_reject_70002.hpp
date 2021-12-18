@@ -23,6 +23,7 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
 
@@ -44,7 +45,7 @@ public:
 
 protected:
     virtual bool handle_receive_reject(const code& ec,
-        system::reject_const_ptr reject);
+        messages::reject::ptr reject);
 
     virtual const std::string& name() const override;
 };

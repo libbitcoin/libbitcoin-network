@@ -183,12 +183,12 @@ void session_inbound::attach_protocols(channel::ptr channel)
     const auto version = channel->negotiated_version();
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
-    if (version >= messages::version::level::bip31)
+    if (version >= messages::level::bip31)
         attach<protocol_ping_60001>(channel, heartbeat)->start();
     else
         attach<protocol_ping_31402>(channel, heartbeat)->start();
 
-    if (version >= messages::version::level::bip61)
+    if (version >= messages::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_address_31402>(channel, network_)->start();
@@ -209,7 +209,7 @@ void session_inbound::handle_channel_stop(const code& ec)
 void session_inbound::handshake_complete(channel::ptr channel,
     result_handler handle_started)
 {
-    if (pending(channel->peer_version()->nonce()))
+    if (pending(channel->peer_version()->nonce))
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Rejected connection from [" << channel->authority()

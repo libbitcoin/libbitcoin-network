@@ -34,7 +34,7 @@ namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
-using namespace bc::system::config;
+using namespace network::config;
 using namespace std::placeholders;
 
 // Construct.

@@ -22,6 +22,7 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
@@ -34,7 +35,7 @@ namespace network {
 static const std::string protocol_name = "version";
 
 using namespace bc::system;
-using namespace bc::system::messages;
+using namespace bc::network::messages;
 using namespace std::placeholders;
 
 static const std::string insufficient_version = "insufficient-version";
@@ -50,7 +51,7 @@ protocol_version_70002::protocol_version_70002(channel::ptr channel,
         network.network_settings().services,
         network.network_settings().invalid_services,
         network.network_settings().protocol_minimum,
-        version::service::none,
+        service::node_none,
         /*network.network_settings().services,*/
         network.network_settings().relay_transactions)
 {
@@ -81,36 +82,33 @@ void protocol_version_70002::start(event_handler handle_event)
 
 version protocol_version_70002::version_factory() const
 {
+    // Relay is the only difference at protocol level 70001.
     auto version = protocol_version_31402::version_factory();
-
-    // This is the only difference at protocol level 70001.
-    version.set_relay(relay_);
+    version.relay = relay_;
     return version;
 }
 
 // Protocol.
 // ----------------------------------------------------------------------------
 
-bool protocol_version_70002::sufficient_peer(version_const_ptr message)
+bool protocol_version_70002::sufficient_peer(version::ptr message)
 {
-    if (message->value() < minimum_version_)
+    if (message->value < minimum_version_)
     {
         const reject version_rejection
         {
-            reject::reason_code::obsolete,
             version::command,
-            insufficient_version
+            reject::reason_code::obsolete
         };
 
         SEND2(version_rejection, handle_send, _1, reject::command);
     }
-    else if ((message->services() & minimum_services_) != minimum_services_)
+    else if ((message->services & minimum_services_) != minimum_services_)
     {
         const reject obsolete_rejection
         {
-            reject::reason_code::obsolete,
             version::command,
-            insufficient_services
+            reject::reason_code::obsolete
         };
 
         SEND2(obsolete_rejection, handle_send, _1, reject::command);
@@ -120,7 +118,7 @@ bool protocol_version_70002::sufficient_peer(version_const_ptr message)
 }
 
 bool protocol_version_70002::handle_receive_reject(const code& ec,
-    reject_const_ptr reject)
+    reject::ptr reject)
 {
     if (stopped(ec))
         return false;
@@ -134,20 +132,20 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
         return false;
     }
 
-    const auto& message = reject->message();
+    const auto& message = reject->message;
 
     // Handle these in the reject protocol.
     if (message != version::command)
         return true;
 
-    const auto code = reject->code();
+    const auto code = reject->code;
 
     // Client is an obsolete, unsupported version.
     if (code == reject::reason_code::obsolete)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Obsolete version reject from [" << authority() << "] '"
-            << reject->reason() << "'";
+            << reject->reason << "'";
         set_event(error::channel_stopped);
         return false;
     }
@@ -157,7 +155,7 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Duplicate version reject from [" << authority() << "] '"
-            << reject->reason() << "'";
+            << reject->reason << "'";
         set_event(error::channel_stopped);
         return false;
     }

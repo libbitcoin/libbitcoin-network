@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <functional>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
@@ -104,14 +105,14 @@ void session_seed::attach_handshake_protocols(channel::ptr channel,
     // Don't use configured services or relay for seeding.
     const auto relay = false;
     const auto own_version = settings_.protocol_maximum;
-    const auto own_services = messages::version::service::none;
+    const auto own_services = messages::service::node_none;
     const auto invalid_services = settings_.invalid_services;
     const auto minimum_version = settings_.protocol_minimum;
-    const auto minimum_services = messages::version::service::none;
+    const auto minimum_services = messages::service::node_none;
 
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= messages::version::level::bip61)
+    if (channel->negotiated_version() >= messages::level::bip61)
         attach<protocol_version_70002>(channel, network_, own_version,
             own_services, invalid_services, minimum_version, minimum_services,
             relay)->start(handle_started);
@@ -209,12 +210,12 @@ void session_seed::attach_protocols(channel::ptr channel,
     const auto version = channel->negotiated_version();
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
-    if (version >= messages::version::level::bip31)
+    if (version >= messages::level::bip31)
         attach<protocol_ping_60001>(channel, heartbeat)->start();
     else
         attach<protocol_ping_31402>(channel, heartbeat)->start();
 
-    if (version >= messages::version::level::bip61)
+    if (version >= messages::level::bip61)
         attach<protocol_reject_70002>(channel)->start();
 
     attach<protocol_seed_31402>(channel, network_)->start(handler);

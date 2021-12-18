@@ -26,6 +26,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
@@ -36,7 +37,7 @@ namespace network {
 
 #define CLASS session
 #define NAME "session"
-
+    
 using namespace bc::system;
 using namespace std::placeholders;
 
@@ -67,7 +68,7 @@ size_t session::connection_count() const
     return network_.connection_count();
 }
 
-code session::fetch_address(address& out_address) const
+code session::fetch_address(messages::address_item& out_address) const
 {
     return network_.fetch_address(out_address);
 }
@@ -198,7 +199,7 @@ void session::attach_handshake_protocols(channel::ptr channel,
 {
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= messages::version::level::bip61)
+    if (channel->negotiated_version() >= messages::level::bip61)
         attach<protocol_version_70002>(channel, network_)->
             start(handle_started);
     else

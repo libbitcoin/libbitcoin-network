@@ -23,6 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
@@ -35,7 +36,7 @@ namespace network {
 static const std::string protocol_name = "address";
 
 using namespace bc::system;
-using namespace bc::system::messages;
+using namespace messages;
 using namespace std::placeholders;
 
 static messages::address configured_self(const network::settings& settings)
@@ -43,7 +44,7 @@ static messages::address configured_self(const network::settings& settings)
     if (settings.self.port() == 0)
         return {};
 
-    return { { settings.self.to_network_address() } };
+    return { { settings.self.to_address_item() } };
 }
 
 protocol_address_31402::protocol_address_31402(channel::ptr channel,
@@ -66,7 +67,7 @@ void protocol_address_31402::start()
     // Must have a handler to capture a shared self pointer in stop subscriber.
     protocol_events::start(BIND1(handle_stop, _1));
 
-    if (!self_.addresses().empty())
+    if (!self_.addresses.empty())
     {
         SEND2(self_, handle_send, _1, self_.command);
     }
@@ -84,39 +85,38 @@ void protocol_address_31402::start()
 // ----------------------------------------------------------------------------
 
 bool protocol_address_31402::handle_receive_address(const code& ec,
-    address_const_ptr message)
+    address::ptr message)
 {
     if (stopped(ec))
         return false;
 
     LOG_VERBOSE(LOG_NETWORK)
         << "Storing addresses from [" << authority() << "] ("
-        << message->addresses().size() << ")";
+        << message->addresses.size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.store(message->addresses(), BIND1(handle_store_addresses, _1));
+    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
 
     // RESUBSCRIBE
     return true;
 }
 
 bool protocol_address_31402::handle_receive_get_address(const code& ec,
-    get_address_const_ptr)
+    get_address::ptr)
 {
     if (stopped(ec))
         return false;
 
-    messages::network_address::list addresses;
-    network_.fetch_addresses(addresses);
+    messages::address_item::list subset;
+    const auto code = network_.fetch_addresses(subset);
 
-    if (!addresses.empty())
+    if (!code)
     {
-        const address address_subset(addresses);
-        SEND2(address_subset, handle_send, _1, self_.command);
+        SEND2(address{ subset }, handle_send, _1, self_.command);
 
         LOG_DEBUG(LOG_NETWORK)
             << "Sending addresses to [" << authority() << "] ("
-            << self_.addresses().size() << ")";
+            << self_.addresses.size() << ")";
     }
 
     // do not resubscribe; one response per connection permitted

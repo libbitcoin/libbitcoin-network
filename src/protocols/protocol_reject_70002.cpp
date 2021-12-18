@@ -24,6 +24,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_events.hpp>
 
@@ -34,7 +35,7 @@ namespace network {
 static const std::string protocol_name = "reject";
 
 using namespace bc::system;
-using namespace bc::system::messages;
+using namespace messages;
 using namespace std::placeholders;
 
 protocol_reject_70002::protocol_reject_70002(channel::ptr channel)
@@ -63,7 +64,7 @@ void protocol_reject_70002::start()
 // This protocol is no longer in widespread use.
 // TODO: update in protocol attachment configuration.
 bool protocol_reject_70002::handle_receive_reject(const code& ec,
-    reject_const_ptr reject)
+    reject::ptr reject)
 {
     // protocol_events is the base class only for this check.
     if (stopped(ec))
@@ -78,7 +79,7 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
         return false;
     }
 
-    const auto& message = reject->message();
+    const auto& message = reject->message;
 
     // Handle these in the version protocol.
     if (message == version::command)
@@ -86,12 +87,12 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
 
     std::string hash;
     if (message == block::command || message == transaction::command)
-        hash = " [" + encode_hash(reject->data()) + "].";
+        hash = " [" + encode_hash(reject->hash) + "].";
 
-    const auto code = reject->code();
+    const auto code = reject->code;
     LOG_DEBUG(LOG_NETWORK)
         << "Received " << message << " reject (" << static_cast<uint16_t>(code)
-        << ") from [" << authority() << "] '" << reject->reason()
+        << ") from [" << authority() << "] '" << reject->reason
         << "'" << hash;
     return true;
 }

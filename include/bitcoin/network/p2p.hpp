@@ -28,7 +28,9 @@
 #include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
@@ -45,7 +47,6 @@ class BCT_API p2p
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
-    typedef system::messages::network_address address;
     typedef std::function<void()> stop_handler;
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
@@ -134,7 +135,7 @@ public:
     // ----------------------------------------------------------------------------
 
     /// Maintain a connection to hostname:port.
-    virtual void connect(const system::config::endpoint& peer);
+    virtual void connect(const config::endpoint& peer);
 
     /// Maintain a connection to hostname:port.
     virtual void connect(const std::string& hostname, uint16_t port);
@@ -153,19 +154,21 @@ public:
     // TODO: make protected.
 
     /// Store an address.
-    virtual code store(const address& address);
+    virtual code store(const messages::address_item& address);
 
     /// Store a collection of addresses (asynchronous).
-    virtual void store(const address::list& addresses, result_handler handler);
+    virtual void store(const messages::address_item::list& addresses,
+        result_handler handler);
 
     /// Get a randomly-selected address.
-    virtual code fetch_address(address& out_address) const;
+    virtual code fetch_address(messages::address_item& out_address) const;
 
     /// Get a list of stored hosts
-    virtual code fetch_addresses(address::list& out_addresses) const;
+    virtual code fetch_addresses(
+        messages::address_item::list& out_addresses) const;
 
     /// Remove an address.
-    virtual code remove(const address& address);
+    virtual code remove(const messages::address_item& address);
 
     // Pending connect collection.
     // ------------------------------------------------------------------------
@@ -202,7 +205,7 @@ public:
     virtual code store(channel::ptr channel);
 
     /// Determine if there exists a connection to the address.
-    virtual bool connected(const address& address) const;
+    virtual bool connected(const messages::address_item& address) const;
 
     /// Remove a connection.
     virtual void remove(channel::ptr channel);
