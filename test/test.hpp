@@ -43,7 +43,7 @@ template <typename Type>
 std::ostream& operator<<(std::ostream& stream,
     const std::vector<Type>& values) noexcept
 {
-    stream << serialize(values);
+    stream << system::serialize(values);
     return stream;
 }
 
@@ -52,7 +52,7 @@ template <typename Type, size_t Size>
 std::ostream& operator<<(std::ostream& stream,
     const std::array<Type, Size>& values) noexcept
 {
-    stream << serialize(values);
+    stream << system::serialize(values);
     return stream;
 }
 
