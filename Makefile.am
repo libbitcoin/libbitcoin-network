@@ -41,12 +41,54 @@ src_libbitcoin_network_la_SOURCES = \
     src/async/thread.cpp \
     src/async/threadpool.cpp \
     src/async/time.cpp \
+    src/config/authority.cpp \
+    src/config/client_filter.cpp \
+    src/config/endpoint.cpp \
     src/log/file_collector.cpp \
     src/log/file_collector_repository.cpp \
     src/log/file_counter_formatter.cpp \
     src/log/sink.cpp \
     src/log/statsd_sink.cpp \
     src/log/udp_client_sink.cpp \
+    src/messages/address.cpp \
+    src/messages/address_item.cpp \
+    src/messages/alert.cpp \
+    src/messages/alert_item.cpp \
+    src/messages/block.cpp \
+    src/messages/bloom_filter_add.cpp \
+    src/messages/bloom_filter_clear.cpp \
+    src/messages/bloom_filter_load.cpp \
+    src/messages/client_filter.cpp \
+    src/messages/client_filter_checkpoint.cpp \
+    src/messages/client_filter_headers.cpp \
+    src/messages/compact_block.cpp \
+    src/messages/compact_block_item.cpp \
+    src/messages/compact_transactions.cpp \
+    src/messages/fee_filter.cpp \
+    src/messages/get_address.cpp \
+    src/messages/get_blocks.cpp \
+    src/messages/get_client_filter_checkpoint.cpp \
+    src/messages/get_client_filter_headers.cpp \
+    src/messages/get_client_filters.cpp \
+    src/messages/get_compact_transactions.cpp \
+    src/messages/get_data.cpp \
+    src/messages/get_headers.cpp \
+    src/messages/headers.cpp \
+    src/messages/heading.cpp \
+    src/messages/inventory.cpp \
+    src/messages/inventory_item.cpp \
+    src/messages/memory_pool.cpp \
+    src/messages/merkle_block.cpp \
+    src/messages/message.cpp \
+    src/messages/not_found.cpp \
+    src/messages/ping.cpp \
+    src/messages/pong.cpp \
+    src/messages/reject.cpp \
+    src/messages/send_compact.cpp \
+    src/messages/send_headers.cpp \
+    src/messages/transaction.cpp \
+    src/messages/version.cpp \
+    src/messages/version_acknowledge.cpp \
     src/net/acceptor.cpp \
     src/net/channel.cpp \
     src/net/connector.cpp \
@@ -95,6 +137,47 @@ test_libbitcoin_network_test_SOURCES = \
     test/async/time.cpp \
     test/async/timer.cpp \
     test/async/track.cpp \
+    test/config/authority.cpp \
+    test/config/client_filter.cpp \
+    test/config/endpoint.cpp \
+    test/messages/address.cpp \
+    test/messages/address_item.cpp \
+    test/messages/alert.cpp \
+    test/messages/alert_item.cpp \
+    test/messages/block.cpp \
+    test/messages/bloom_filter_add.cpp \
+    test/messages/bloom_filter_clear.cpp \
+    test/messages/bloom_filter_load.cpp \
+    test/messages/client_filter.cpp \
+    test/messages/client_filter_checkpoint.cpp \
+    test/messages/client_filter_headers.cpp \
+    test/messages/compact_block.cpp \
+    test/messages/compact_block_item.cpp \
+    test/messages/compact_transactions.cpp \
+    test/messages/fee_filter.cpp \
+    test/messages/get_address.cpp \
+    test/messages/get_blocks.cpp \
+    test/messages/get_client_filter_checkpoint.cpp \
+    test/messages/get_client_filter_headers.cpp \
+    test/messages/get_client_filters.cpp \
+    test/messages/get_compact_transactions.cpp \
+    test/messages/get_data.cpp \
+    test/messages/get_headers.cpp \
+    test/messages/headers.cpp \
+    test/messages/heading.cpp \
+    test/messages/inventory.cpp \
+    test/messages/inventory_item.cpp \
+    test/messages/memory_pool.cpp \
+    test/messages/merkle_block.cpp \
+    test/messages/not_found.cpp \
+    test/messages/ping.cpp \
+    test/messages/pong.cpp \
+    test/messages/reject.cpp \
+    test/messages/send_compact.cpp \
+    test/messages/send_headers.cpp \
+    test/messages/transaction.cpp \
+    test/messages/version.cpp \
+    test/messages/version_acknowledge.cpp \
     test/net/acceptor.cpp \
     test/net/channel.cpp \
     test/net/connector.cpp \
@@ -137,6 +220,13 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/timer.hpp \
     include/bitcoin/network/async/track.hpp
 
+include_bitcoin_network_configdir = ${includedir}/bitcoin/network/config
+include_bitcoin_network_config_HEADERS = \
+    include/bitcoin/network/config/authority.hpp \
+    include/bitcoin/network/config/client_filter.hpp \
+    include/bitcoin/network/config/config.hpp \
+    include/bitcoin/network/config/endpoint.hpp
+
 include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \
     include/bitcoin/network/impl/async/deadline.ipp \
@@ -178,6 +268,55 @@ include_bitcoin_network_log_features_HEADERS = \
     include/bitcoin/network/log/features/metric.hpp \
     include/bitcoin/network/log/features/rate.hpp \
     include/bitcoin/network/log/features/timer.hpp
+
+include_bitcoin_network_messagesdir = ${includedir}/bitcoin/network/messages
+include_bitcoin_network_messages_HEADERS = \
+    include/bitcoin/network/messages/address.hpp \
+    include/bitcoin/network/messages/address_item.hpp \
+    include/bitcoin/network/messages/alert.hpp \
+    include/bitcoin/network/messages/alert_item.hpp \
+    include/bitcoin/network/messages/block.hpp \
+    include/bitcoin/network/messages/bloom_filter_add.hpp \
+    include/bitcoin/network/messages/bloom_filter_clear.hpp \
+    include/bitcoin/network/messages/bloom_filter_load.hpp \
+    include/bitcoin/network/messages/client_filter.hpp \
+    include/bitcoin/network/messages/client_filter_checkpoint.hpp \
+    include/bitcoin/network/messages/client_filter_headers.hpp \
+    include/bitcoin/network/messages/compact_block.hpp \
+    include/bitcoin/network/messages/compact_block_item.hpp \
+    include/bitcoin/network/messages/compact_transactions.hpp \
+    include/bitcoin/network/messages/fee_filter.hpp \
+    include/bitcoin/network/messages/get_address.hpp \
+    include/bitcoin/network/messages/get_blocks.hpp \
+    include/bitcoin/network/messages/get_client_filter_checkpoint.hpp \
+    include/bitcoin/network/messages/get_client_filter_headers.hpp \
+    include/bitcoin/network/messages/get_client_filters.hpp \
+    include/bitcoin/network/messages/get_compact_transactions.hpp \
+    include/bitcoin/network/messages/get_data.hpp \
+    include/bitcoin/network/messages/get_headers.hpp \
+    include/bitcoin/network/messages/headers.hpp \
+    include/bitcoin/network/messages/heading.hpp \
+    include/bitcoin/network/messages/inventory.hpp \
+    include/bitcoin/network/messages/inventory_item.hpp \
+    include/bitcoin/network/messages/memory_pool.hpp \
+    include/bitcoin/network/messages/merkle_block.hpp \
+    include/bitcoin/network/messages/message.hpp \
+    include/bitcoin/network/messages/messages.hpp \
+    include/bitcoin/network/messages/not_found.hpp \
+    include/bitcoin/network/messages/ping.hpp \
+    include/bitcoin/network/messages/pong.hpp \
+    include/bitcoin/network/messages/reject.hpp \
+    include/bitcoin/network/messages/send_compact.hpp \
+    include/bitcoin/network/messages/send_headers.hpp \
+    include/bitcoin/network/messages/transaction.hpp \
+    include/bitcoin/network/messages/version.hpp \
+    include/bitcoin/network/messages/version_acknowledge.hpp
+
+include_bitcoin_network_messages_enumsdir = ${includedir}/bitcoin/network/messages/enums
+include_bitcoin_network_messages_enums_HEADERS = \
+    include/bitcoin/network/messages/enums/identifier.hpp \
+    include/bitcoin/network/messages/enums/level.hpp \
+    include/bitcoin/network/messages/enums/service.hpp
 
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \
