@@ -136,8 +136,7 @@ typename Message::ptr deserialize(system::reader& source, uint32_t version,
 }
 
 template <typename Message>
-typename Message::ptr deserialize(const system::data_chunk& data,
-    uint32_t version, bool witness)
+typename Message::ptr deserialize(const system::data_chunk&, uint32_t, bool)
 {
     ////system::read::bytes::copy source(data);
     ////auto message = deserialize<Message>(source, version, witness);

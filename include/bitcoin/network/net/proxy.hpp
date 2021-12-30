@@ -102,7 +102,7 @@ public:
     // ------------------------------------------------------------------------
 
     /// Get the strand of the socket.
-    virtual asio::strand& proxy::strand();
+    virtual asio::strand& strand();
 
     /// Get the authority of the peer.
     virtual const config::authority& authority() const;

@@ -42,7 +42,7 @@ public:
 
     protocol_address_31402(channel::ptr channel, p2p& network);
 
-    virtual void start();
+    virtual void start() override;
 
 protected:
     virtual void handle_stop(const code& ec);

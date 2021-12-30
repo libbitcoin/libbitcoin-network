@@ -94,7 +94,7 @@ private:
         const result_handler& handler);
     void handle_connect(const error::boost_code& ec,
         const asio::endpoint& peer, const result_handler& handler);
-    void socket::handle_io(const error::boost_code& ec, size_t size,
+    void handle_io(const error::boost_code& ec, size_t size,
         const io_handler& handler);
 
     // These are thread safe.

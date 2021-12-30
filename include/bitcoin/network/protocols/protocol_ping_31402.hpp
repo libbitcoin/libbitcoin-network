@@ -42,7 +42,7 @@ public:
 
     protocol_ping_31402(channel::ptr channel, const duration& heartbeat);
 
-    virtual void start();
+    virtual void start() override;
 
 protected:
     // Expose polymorphic start method from base.

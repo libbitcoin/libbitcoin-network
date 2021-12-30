@@ -49,7 +49,7 @@ public:
         uint32_t own_version, uint64_t own_services, uint64_t invalid_services,
         uint32_t minimum_version, uint64_t minimum_services);
 
-    virtual void start(event_handler handle_event);
+    virtual void start(event_handler handle_event) override;
 
 protected:
     // Expose polymorphic start method from base.

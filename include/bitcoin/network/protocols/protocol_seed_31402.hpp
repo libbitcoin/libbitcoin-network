@@ -43,7 +43,7 @@ public:
 
     protocol_seed_31402(channel::ptr channel, p2p& network);
 
-    virtual void start(event_handler handle_event);
+    virtual void start(event_handler handle_event) override;
 
 protected:
     // Expose polymorphic start method from base.
