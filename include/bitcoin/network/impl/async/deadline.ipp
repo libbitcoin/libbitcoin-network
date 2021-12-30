@@ -56,7 +56,7 @@ void deadline<Service>::start(handler handle, const duration& timeout)
 {
     const auto timer_handler =
         std::bind(&deadline::handle_timer,
-            shared_from_this(), _1, handle);
+            this->shared_from_this(), _1, handle);
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
