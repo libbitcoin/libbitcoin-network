@@ -25,6 +25,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/block.hpp>
 #include <bitcoin/network/messages/compact_block.hpp>
+#include <bitcoin/network/messages/heading.hpp>
 #include <bitcoin/network/messages/transaction.hpp>
 
 namespace libbitcoin {
