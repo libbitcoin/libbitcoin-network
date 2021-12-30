@@ -35,7 +35,7 @@ namespace network {
 /// Create inbound socket connections.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API acceptor
-  : public enable_shared_from_base<acceptor>, system::noncopyable,
+  : public std::enable_shared_from_this<acceptor>, system::noncopyable,
     track<acceptor>
 {
 public:

@@ -35,7 +35,7 @@ namespace network {
 /// Stop is thread safe and idempotent, may be called multiple times.
 /// All handlers (except accept) are posted to the internal strand.
 class BCT_API socket
-  : public enable_shared_from_base<socket>, system::noncopyable, track<socket>
+  : public std::enable_shared_from_this<socket>, system::noncopyable, track<socket>
 {
 public:
     typedef std::shared_ptr<socket> ptr;

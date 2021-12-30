@@ -34,7 +34,7 @@ namespace network {
 /// All handlers are posted to the service.
 template <typename Service, typename... Args>
 class subscriber
-  : public enable_shared_from_base<subscriber<Service, Args...>>,
+  : public std::enable_shared_from_this<subscriber<Service, Args...>>,
     system::noncopyable
 {
 public:

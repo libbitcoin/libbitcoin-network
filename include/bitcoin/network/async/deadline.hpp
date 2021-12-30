@@ -38,7 +38,7 @@ namespace network {
 /// makes timer firing and cancelation conditions safe for shared objects.
 template <typename Service>
 class deadline
-  : public enable_shared_from_base<deadline<Service>>,
+  : public std::enable_shared_from_this<deadline<Service>>,
     system::noncopyable,
     track<deadline<Service>>
 {
