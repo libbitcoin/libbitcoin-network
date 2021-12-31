@@ -119,7 +119,7 @@ void acceptor::do_accept(accept_handler handler)
     // But timer handler does not invoke handle_timer on stop.
     timer_.start(
         std::bind(&acceptor::handle_timer,
-            shared_from_this(), _1, socket, handler));
+            shared_from_this(), _1, handler));
 
     // Posts handle_accept to strand.
     // This does not post to the socket strand, unlike other socket calls.
@@ -157,8 +157,7 @@ void acceptor::handle_accept(const code& ec, socket::ptr socket,
 }
 
 // private
-void acceptor::handle_timer(const code& ec, socket::ptr socket,
-    const accept_handler& handler)
+void acceptor::handle_timer(const code& ec, const accept_handler& handler)
 {
     BITCOIN_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

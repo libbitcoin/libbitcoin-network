@@ -110,7 +110,7 @@ void connector::do_resolve(const std::string& hostname, uint16_t port,
     // But timer handler does not invoke handle_timer on stop.
     timer_.start(
         std::bind(&connector::handle_timer,
-            shared_from_this(), _1, socket, handler));
+            shared_from_this(), _1, handler));
 
     // async_resolve copies string parameters.
     // Posts handle_resolve to strand.
@@ -174,8 +174,7 @@ void connector::handle_connect(const code& ec, socket::ptr socket,
 }
 
 // private
-void connector::handle_timer(const code& ec, socket::ptr socket,
-    const connect_handler& handler)
+void connector::handle_timer(const code& ec, const connect_handler& handler)
 {
     BITCOIN_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

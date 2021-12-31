@@ -75,7 +75,7 @@ protocol_version_31402::protocol_version_31402(channel::ptr channel,
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_version_31402::start(event_handler handle_event)
+void protocol_version_31402::start(event_handler /*handle_event*/)
 {
     // TODO: just use a state member variable, this is stranded.
 

@@ -25,6 +25,7 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {
@@ -102,12 +103,7 @@ static std::string to_ipv6_hostname(const ip::address& ip_address)
 }
 
 authority::authority()
-  : port_(0)
-{
-}
-
-authority::authority(const authority& other)
-  : authority(other.ip_, other.port_)
+  : authority(messages::null_ip_address, 0)
 {
 }
 

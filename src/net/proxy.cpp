@@ -293,7 +293,7 @@ asio::strand& proxy::strand()
     return socket_->strand();
 }
 
-const config::authority& proxy::authority() const
+config::authority proxy::authority() const
 {
     return socket_->endpoint();
 }

@@ -144,6 +144,9 @@ private:
         return error::success;
     }
 
+    // This is thread safe.
+    asio::strand& strand_;
+
     ////bool do_subscribe(pump::handler<messages::address>&& handler) const
     ////{
     ////    return address_subscriber_->subscribe(std::move(handler));
@@ -217,9 +220,6 @@ private:
     DECLARE_SUBSCRIBER(transaction);
     DECLARE_SUBSCRIBER(version);
     DECLARE_SUBSCRIBER(version_acknowledge);
-
-    // This is thread safe.
-    asio::strand& strand_;
 };
 
 #undef SUBSCRIBER

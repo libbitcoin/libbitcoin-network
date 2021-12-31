@@ -86,8 +86,7 @@ private:
         socket::ptr socket, connect_handler handler);
     void handle_connect(const code& ec, socket::ptr socket,
         const connect_handler& handler);
-    void handle_timer(const code& ec, socket::ptr socket,
-        const connect_handler& handler);
+    void handle_timer(const code& ec, const connect_handler& handler);
 
     // These are thread safe
     const settings& settings_;

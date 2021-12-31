@@ -78,8 +78,6 @@ void get_compact_transactions::serialize(uint32_t DEBUG_ONLY(version),
 
 size_t get_compact_transactions::size(uint32_t) const
 {
-    auto size = hash_size + variable_size(indexes.size());
-
     const auto values = [](size_t total, uint64_t output)
     {
         return total + variable_size(output);

@@ -39,7 +39,6 @@ public:
     typedef std::vector<authority> list;
 
     authority();
-    authority(const authority& other);
 
     /// Deserialize a IPv4 or IPv6 address-based hostname[:port].
     /// The port is optional and will be set to zero if not provided.

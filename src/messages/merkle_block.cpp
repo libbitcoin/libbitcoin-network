@@ -37,7 +37,7 @@ const identifier merkle_block::id = identifier::merkle_block;
 const uint32_t merkle_block::version_minimum = level::bip37;
 const uint32_t merkle_block::version_maximum = level::maximum_protocol;
 
-merkle_block merkle_block::deserialize(uint32_t version, reader& source)
+merkle_block merkle_block::deserialize(uint32_t, reader& source)
 {
     const auto read_hashes = [](reader& source)
     {

@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
     // Thread starved timer.
     // ------------------------------------------------------------------------
 
-    const auto handler = [](code ec)
+    const auto handler = [](code)
     {
         // This should never be invoked (no threads).
         BOOST_REQUIRE(false);

@@ -48,7 +48,7 @@ session_batch::session_batch(p2p& network, bool notify_on_connect)
 // ----------------------------------------------------------------------------
 
 // protected:
-void session_batch::connect(channel_handler handler)
+void session_batch::connect(channel_handler /*handler*/)
 {
     // TODO: just use a state member variable, this will be stranded.
 

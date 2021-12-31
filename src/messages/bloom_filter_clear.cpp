@@ -37,7 +37,7 @@ const uint32_t bloom_filter_clear::version_minimum = level::bip37;
 const uint32_t bloom_filter_clear::version_maximum = level::maximum_protocol;
 
 // static
-size_t bloom_filter_clear::size(uint32_t version)
+size_t bloom_filter_clear::size(uint32_t)
 {
     return zero;
 }

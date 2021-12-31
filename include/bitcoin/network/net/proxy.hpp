@@ -105,7 +105,7 @@ public:
     virtual asio::strand& strand();
 
     /// Get the authority of the peer.
-    virtual const config::authority& authority() const;
+    virtual config::authority authority() const;
 
 private:
     typedef system::chunk_ptr payload_ptr;

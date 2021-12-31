@@ -73,8 +73,7 @@ private:
     void do_accept(accept_handler handler);
     void handle_accept(const code& ec, socket::ptr socket,
         const accept_handler& handler);
-    void handle_timer(const code& ec, socket::ptr socket,
-        const accept_handler& handler);
+    void handle_timer(const code& ec, const accept_handler& handler);
 
     // These are thread safe.
     const settings& settings_;

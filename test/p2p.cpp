@@ -65,82 +65,82 @@ std::string get_log_path(const std::string& test, const std::string& file)
     return path;
 }
 
-static void print_headers(const std::string& test)
-{
-    const auto header = "=========== " + test + " ==========";
-    LOG_INFO(SUITE_NAME) << header;
-}
-
-static int start_result(p2p& network)
-{
-    std::promise<code> promise;
-    const auto handler = [&promise](code ec)
-    {
-        promise.set_value(ec);
-    };
-    network.start(handler);
-    return promise.get_future().get().value();
-}
-
-static int connect_result(p2p& network, const config::endpoint& host)
-{
-    std::promise<code> promise;
-    const auto handler = [&promise](code ec, channel::ptr)
-    {
-        promise.set_value(ec);
-    };
-    network.connect(host.host(), host.port(), handler);
-    return promise.get_future().get().value();
-}
-
-static int run_result(p2p& network)
-{
-    std::promise<code> promise;
-    const auto handler = [&promise](code ec)
-    {
-        promise.set_value(ec);
-    };
-    network.run(handler);
-    return promise.get_future().get().value();
-}
-
-static int subscribe_result(p2p& network)
-{
-    std::promise<code> promise;
-    const auto handler = [&promise](code ec, channel::ptr)
-    {
-        promise.set_value(ec);
-        return false;
-    };
-    network.subscribe_connection(handler);
-    return promise.get_future().get().value();
-}
-
-static int subscribe_connect_result(p2p& network, const config::endpoint& host)
-{
-    std::promise<code> promise;
-    const auto handler = [&promise](code ec, channel::ptr)
-    {
-        promise.set_value(ec);
-        return false;
-    };
-    network.subscribe_connection(handler);
-    network.connect(host);
-    return promise.get_future().get().value();
-}
-
-static int subscribe_connect_port_result(p2p& network, const config::endpoint& host)
-{
-    std::promise<code> promise;
-    const auto handler = [&promise](code ec, channel::ptr)
-    {
-        promise.set_value(ec);
-        return false;
-    };
-    network.subscribe_connection(handler);
-    network.connect(host.host(), host.port());
-    return promise.get_future().get().value();
-}
+////static void print_headers(const std::string& test)
+////{
+////    const auto header = "=========== " + test + " ==========";
+////    LOG_INFO(SUITE_NAME) << header;
+////}
+////
+////static int start_result(p2p& network)
+////{
+////    std::promise<code> promise;
+////    const auto handler = [&promise](code ec)
+////    {
+////        promise.set_value(ec);
+////    };
+////    network.start(handler);
+////    return promise.get_future().get().value();
+////}
+////
+////static int connect_result(p2p& network, const config::endpoint& host)
+////{
+////    std::promise<code> promise;
+////    const auto handler = [&promise](code ec, channel::ptr)
+////    {
+////        promise.set_value(ec);
+////    };
+////    network.connect(host.host(), host.port(), handler);
+////    return promise.get_future().get().value();
+////}
+////
+////static int run_result(p2p& network)
+////{
+////    std::promise<code> promise;
+////    const auto handler = [&promise](code ec)
+////    {
+////        promise.set_value(ec);
+////    };
+////    network.run(handler);
+////    return promise.get_future().get().value();
+////}
+////
+////static int subscribe_result(p2p& network)
+////{
+////    std::promise<code> promise;
+////    const auto handler = [&promise](code ec, channel::ptr)
+////    {
+////        promise.set_value(ec);
+////        return false;
+////    };
+////    network.subscribe_connection(handler);
+////    return promise.get_future().get().value();
+////}
+////
+////static int subscribe_connect_result(p2p& network, const config::endpoint& host)
+////{
+////    std::promise<code> promise;
+////    const auto handler = [&promise](code ec, channel::ptr)
+////    {
+////        promise.set_value(ec);
+////        return false;
+////    };
+////    network.subscribe_connection(handler);
+////    network.connect(host);
+////    return promise.get_future().get().value();
+////}
+////
+////static int subscribe_connect_port_result(p2p& network, const config::endpoint& host)
+////{
+////    std::promise<code> promise;
+////    const auto handler = [&promise](code ec, channel::ptr)
+////    {
+////        promise.set_value(ec);
+////        return false;
+////    };
+////    network.subscribe_connection(handler);
+////    network.connect(host.host(), host.port());
+////    return promise.get_future().get().value();
+////}
 
 template<class Message>
 static int send_result(const Message& message, p2p& network, int channels)

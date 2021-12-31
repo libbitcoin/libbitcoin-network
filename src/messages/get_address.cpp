@@ -37,7 +37,7 @@ const uint32_t get_address::version_minimum = level::minimum_protocol;
 const uint32_t get_address::version_maximum = level::maximum_protocol;
 
 // static
-size_t get_address::size(uint32_t version)
+size_t get_address::size(uint32_t)
 {
     return zero;
 }

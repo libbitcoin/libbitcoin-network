@@ -41,7 +41,7 @@ public:
 
     protocol_reject_70002(channel::ptr channel);
 
-    virtual void start();
+    virtual void start() override;
 
 protected:
     virtual bool handle_receive_reject(const code& ec,

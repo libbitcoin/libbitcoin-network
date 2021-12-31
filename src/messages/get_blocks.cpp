@@ -117,7 +117,7 @@ void get_blocks::serialize(uint32_t version, writer& sink) const
     BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t get_blocks::size(uint32_t version) const
+size_t get_blocks::size(uint32_t) const
 {
     return sizeof(uint32_t) +
         hash_size +

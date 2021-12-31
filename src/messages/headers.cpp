@@ -76,7 +76,7 @@ void headers::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
     BITCOIN_ASSERT(sink&& sink.get_position() - start == bytes);
 }
 
-size_t headers::size(uint32_t version) const
+size_t headers::size(uint32_t) const
 {
     return variable_size(headers.size()) +
         (headers.size() * chain::header::serialized_size() + sizeof(trail));

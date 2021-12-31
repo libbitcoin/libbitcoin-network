@@ -78,7 +78,7 @@ reject::reason_code reject::byte_to_reason(uint8_t byte)
 }
 
 // static
-reject reject::deserialize(uint32_t version, reader& source)
+reject reject::deserialize(uint32_t, reader& source)
 {
     auto message = source.read_string(max_message);
     const auto chain = is_chain(message);

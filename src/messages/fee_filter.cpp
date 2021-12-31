@@ -51,7 +51,7 @@ fee_filter fee_filter::deserialize(uint32_t version, reader& source)
     return { source.read_8_bytes_little_endian() };
 }
 
-void fee_filter::serialize(uint32_t version, writer& sink) const
+void fee_filter::serialize(uint32_t, writer& sink) const
 {
     sink.write_8_bytes_little_endian(minimum_fee);
 }

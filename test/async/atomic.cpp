@@ -21,10 +21,10 @@
 
 BOOST_AUTO_TEST_SUITE(atomic_tests)
 
-typedef struct foo
+struct foo
 {
     bool bar = false;
-} foo;
+};
 
 // default values
 
