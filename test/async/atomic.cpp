@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(atomic_tests)
 
 struct foo
 {
-    bool bar = false;
+    bool bar;
 };
 
 // default values
@@ -151,6 +151,5 @@ BOOST_AUTO_TEST_CASE(atomic__move_store__reference_false_move_true__true)
     instance.store(foo{ true });
     BOOST_REQUIRE(instance.load().bar);
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
