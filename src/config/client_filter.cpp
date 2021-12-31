@@ -71,7 +71,7 @@ bool client_filter::operator==(const client_filter& other) const
 {
     // No equality operator on message types.
     return value_.filter_type == other.value_.filter_type
-        && value_.id == other.value_.id
+        && value_.block_hash == other.value_.block_hash
         && value_.filter == other.value_.filter;
 }
 
