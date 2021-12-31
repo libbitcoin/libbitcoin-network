@@ -60,7 +60,7 @@ protocol_version_31402::protocol_version_31402(channel::ptr channel,
     p2p& network, uint32_t own_version, uint64_t own_services,
     uint64_t invalid_services, uint32_t minimum_version,
     uint64_t minimum_services)
-  : protocol_timer(channel, network_.network_settings().channel_handshake(),
+  : protocol_timer(channel, network.network_settings().channel_handshake(),
       false),
     network_(network),
     own_version_(own_version),
