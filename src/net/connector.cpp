@@ -101,16 +101,15 @@ void connector::do_resolve(const std::string& hostname, uint16_t port,
     // Enables reusability.
     stopped_ = true;
 
-    // Socket is required by timer, so create here.
-    // io_context is noncopyable, so this references the constructor parameter.
-    const auto socket = std::make_shared<network::socket>(strand_.context());
-
     // The handler is copied by std::bind.
     // Posts timer handler to strand (if not expired).
     // But timer handler does not invoke handle_timer on stop.
     timer_.start(
         std::bind(&connector::handle_timer,
             shared_from_this(), _1, handler));
+
+    // io_context is noncopyable, so this references the constructor parameter.
+    const auto socket = std::make_shared<network::socket>(strand_.context());
 
     // async_resolve copies string parameters.
     // Posts handle_resolve to strand.

@@ -110,16 +110,16 @@ void acceptor::do_accept(accept_handler handler)
     // Enables reusability.
     stopped_ = true;
 
-    // Calls on socket are unsafe during socket->accept (ok).
-    // io_context is noncopyable, so this references the constructor parameter.
-    const auto socket = std::make_shared<network::socket>(strand_.context());
-
     // The handler is copied by std::bind.
     // Posts timer handler to strand (if not expired).
     // But timer handler does not invoke handle_timer on stop.
     timer_.start(
         std::bind(&acceptor::handle_timer,
             shared_from_this(), _1, handler));
+
+    // Calls on socket are unsafe during socket->accept (ok).
+    // io_context is noncopyable, so this references the constructor parameter.
+    const auto socket = std::make_shared<network::socket>(strand_.context());
 
     // Posts handle_accept to strand.
     // This does not post to the socket strand, unlike other socket calls.
