@@ -38,9 +38,7 @@ static const std::string encoded_genesis_filter
 
 static const auto genesis_filter = client_filter{ encoded_genesis_filter };
 
-// ------------------------------------------------------------------------- //
-
-BOOST_AUTO_TEST_SUITE(client_filter__construct)
+// construct
 
 BOOST_AUTO_TEST_CASE(client_filter__construct__default)
 {
@@ -54,6 +52,14 @@ BOOST_AUTO_TEST_CASE(client_filter__construct__copy__expected)
     BOOST_REQUIRE_EQUAL(filter, genesis_filter);
 }
 
+BOOST_AUTO_TEST_CASE(client_filter__construct__string__expected)
+{
+    const client_filter filter(encoded_genesis_filter);
+    BOOST_REQUIRE_EQUAL(filter, genesis_filter);
+}
+
+// copy assign
+
 BOOST_AUTO_TEST_CASE(client_filter__copy_assign__always__expected)
 {
     client_filter filter;
@@ -61,17 +67,31 @@ BOOST_AUTO_TEST_CASE(client_filter__copy_assign__always__expected)
     BOOST_REQUIRE_EQUAL(filter, genesis_filter);
 }
 
-BOOST_AUTO_TEST_CASE(client_filter__construct__string__expected)
+// equality
+
+BOOST_AUTO_TEST_CASE(client_filter__equality__same__true)
 {
-    const client_filter filter(encoded_genesis_filter);
-    BOOST_REQUIRE_EQUAL(filter, genesis_filter);
+    const client_filter alpha;
+    const client_filter bravo;
+    BOOST_REQUIRE(alpha == bravo);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_CASE(client_filter__equality__different_by_type_only__false)
+{
+    const client_filter alpha;
+    const client_filter bravo
+    {
+        {
+            1,
+            system::null_hash,
+            {}
+        }
+    };
 
-// ------------------------------------------------------------------------- //
+    BOOST_REQUIRE(!(alpha == bravo));
+}
 
-BOOST_AUTO_TEST_SUITE(client_filter__istream)
+// istream
 
 BOOST_AUTO_TEST_CASE(client_filter__istream__populated__expected)
 {
@@ -81,11 +101,7 @@ BOOST_AUTO_TEST_CASE(client_filter__istream__populated__expected)
     BOOST_REQUIRE_EQUAL(deserialized.to_string(), encoded_genesis_filter);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-// ------------------------------------------------------------------------- //
-
-BOOST_AUTO_TEST_SUITE(client_filter__ostream)
+// ostream
 
 BOOST_AUTO_TEST_CASE(client_filter__ostream__empty__expected)
 {
@@ -106,7 +122,5 @@ BOOST_AUTO_TEST_CASE(client_filter__ostream__boost_lexical_cast__expected)
     const auto serialized = boost::lexical_cast<std::string>(genesis_filter);
     BOOST_REQUIRE_EQUAL(serialized, encoded_genesis_filter);
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

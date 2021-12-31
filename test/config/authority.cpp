@@ -73,9 +73,29 @@ static bool net_equal(const messages::address_item& left,
     return ip_equal(left.ip, right.ip) && (left.port == right.port);
 }
 
-// ------------------------------------------------------------------------- //
+// construct
 
-BOOST_AUTO_TEST_SUITE(authority__port)
+BOOST_AUTO_TEST_CASE(authority__construct__bogus_ip__throws_invalid_option)
+{
+    BOOST_REQUIRE_THROW(authority host("bogus"), invalid_option_value);
+}
+
+BOOST_AUTO_TEST_CASE(authority__construct__invalid_ipv4__throws_invalid_option)
+{
+    BOOST_REQUIRE_THROW(authority host("999.999.999.999"), invalid_option_value);
+}
+
+BOOST_AUTO_TEST_CASE(authority__construct__invalid_ipv6__throws_invalid_option)
+{
+    BOOST_REQUIRE_THROW(authority host("[:::]"), invalid_option_value);
+}
+
+BOOST_AUTO_TEST_CASE(authority__construct__invalid_port__throws_invalid_option)
+{
+    BOOST_REQUIRE_THROW(authority host("[::]:12345678901"), invalid_option_value);
+}
+
+// port
 
 BOOST_AUTO_TEST_CASE(authority__port__default__zero)
 {
@@ -152,11 +172,7 @@ BOOST_AUTO_TEST_CASE(authority__port__boost_endpoint__expected)
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-// ------------------------------------------------------------------------- //
-
-BOOST_AUTO_TEST_SUITE(authority__ip)
+// bool
 
 BOOST_AUTO_TEST_CASE(authority__bool__default__false)
 {
@@ -176,11 +192,7 @@ BOOST_AUTO_TEST_CASE(authority__bool__nonzero_port__true)
     BOOST_REQUIRE(host);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-// ------------------------------------------------------------------------- //
-
-BOOST_AUTO_TEST_SUITE(authority__ip)
+// ip
 
 BOOST_AUTO_TEST_CASE(authority__ip__default__unspecified)
 {
@@ -274,11 +286,7 @@ BOOST_AUTO_TEST_CASE(authority__ip__boost_endpoint__expected)
     BOOST_REQUIRE(ip_equal(host.ip(), test_mapped_ip_address));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-// ------------------------------------------------------------------------- //
-
-BOOST_AUTO_TEST_SUITE(authority__to_hostname)
+// to_hostname
 
 BOOST_AUTO_TEST_CASE(authority__to_hostname__default__ipv6_unspecified)
 {
@@ -307,11 +315,7 @@ BOOST_AUTO_TEST_CASE(authority__to_hostname__ipv6_address__ipv6_compressed)
     BOOST_REQUIRE_EQUAL(host.to_hostname(), "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-// ------------------------------------------------------------------------- //
-
-BOOST_AUTO_TEST_SUITE(authority__to_address_item)
+// to_address_item
 
 BOOST_AUTO_TEST_CASE(authority__to_address_item__default__ipv6_unspecified)
 {
@@ -357,11 +361,7 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item__ipv6_address__ipv6_compressed)
     BOOST_REQUIRE(net_equal(host.to_address_item(), expected_address));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-// ------------------------------------------------------------------------- //
-
-BOOST_AUTO_TEST_SUITE(authority__to_string)
+// to_string
 
 BOOST_AUTO_TEST_CASE(authority__to_string__default__unspecified)
 {
@@ -444,11 +444,7 @@ BOOST_AUTO_TEST_CASE(authority__to_string__ipv6_compatible_port__expected)
     BOOST_REQUIRE_EQUAL(host.to_string(), line);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-// ------------------------------------------------------------------------- //
-
-BOOST_AUTO_TEST_SUITE(authority__equality)
+// equality
 
 BOOST_AUTO_TEST_CASE(authority__equality__default_default__true)
 {
@@ -507,11 +503,7 @@ BOOST_AUTO_TEST_CASE(authority__equality__compatible_alternative__true)
     BOOST_REQUIRE(host1 == host2);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-// ------------------------------------------------------------------------- //
-
-BOOST_AUTO_TEST_SUITE(authority__inequality)
+// inequality
 
 BOOST_AUTO_TEST_CASE(authority__inequality__default_default__false)
 {
@@ -533,33 +525,5 @@ BOOST_AUTO_TEST_CASE(authority__inequality__ipv6_ipv6__false)
     const authority host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
     BOOST_REQUIRE(!(host1 != host2));
 }
-
-BOOST_AUTO_TEST_SUITE_END()
-
-// ------------------------------------------------------------------------- //
-
-BOOST_AUTO_TEST_SUITE(authority__construct)
-
-BOOST_AUTO_TEST_CASE(authority__construct__bogus_ip__throws_invalid_option)
-{
-    BOOST_REQUIRE_THROW(authority host("bogus"), invalid_option_value);
-}
-
-BOOST_AUTO_TEST_CASE(authority__construct__invalid_ipv4__throws_invalid_option)
-{
-    BOOST_REQUIRE_THROW(authority host("999.999.999.999"), invalid_option_value);
-}
-
-BOOST_AUTO_TEST_CASE(authority__construct__invalid_ipv6__throws_invalid_option)
-{
-    BOOST_REQUIRE_THROW(authority host("[:::]"), invalid_option_value);
-}
-
-BOOST_AUTO_TEST_CASE(authority__construct__invalid_port__throws_invalid_option)
-{
-    BOOST_REQUIRE_THROW(authority host("[::]:12345678901"), invalid_option_value);
-}
-
-BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

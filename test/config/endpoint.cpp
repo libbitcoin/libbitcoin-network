@@ -25,9 +25,7 @@ BOOST_AUTO_TEST_SUITE(endpoint_tests)
 using namespace network::config;
 using namespace boost::program_options;
 
-// ------------------------------------------------------------------------- //
-
-BOOST_AUTO_TEST_SUITE(endpoint__construct)
+// construct
 
 BOOST_AUTO_TEST_CASE(endpoint__construct__empty__throws_invalid_option)
 {
@@ -84,6 +82,8 @@ BOOST_AUTO_TEST_CASE(endpoint__construct__scheme_host__expected_values)
     BOOST_REQUIRE_EQUAL(host.port(), 0u);
 }
 
+// to_local
+
 BOOST_AUTO_TEST_CASE(endpoint__to_local__scheme_host_port__expected_values)
 {
     endpoint original("tcp://*:12345");
@@ -101,7 +101,5 @@ BOOST_AUTO_TEST_CASE(endpoint__to_local__host_port__expected_values)
     BOOST_REQUIRE_EQUAL(host.host(), "localhost");
     BOOST_REQUIRE_EQUAL(host.port(), 12345u);
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
