@@ -114,7 +114,6 @@ BOOST_AUTO_TEST_CASE(atomic__move_load__false__false)
 
 BOOST_AUTO_TEST_CASE(atomic__move_load__true__true)
 {
-    const foo value{ true };
     atomic<foo> instance(foo{ true });
     BOOST_REQUIRE(instance.load().bar);
 }
