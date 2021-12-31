@@ -70,8 +70,8 @@ client_filter& client_filter::operator=(messages::client_filter&& other)
 bool client_filter::operator==(const client_filter& other) const
 {
     // No equality operator on message types.
-    return this->value_.id == other.value_.id
-        && value_.filter_type == other.value_.filter_type
+    return value_.filter_type == other.value_.filter_type
+        && value_.id == other.value_.id
         && value_.filter == other.value_.filter;
 }
 
