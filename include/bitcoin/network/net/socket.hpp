@@ -70,10 +70,10 @@ public:
     virtual void connect(const asio::iterator& it, result_handler&& handler);
 
     /// Read from the socket, handler posted to socket strand.
-    virtual void read(system::data_chunk& out, io_handler&& handler);
+    virtual void read(const system::data_slab& out, io_handler&& handler);
 
     /// Write to the socket, handler posted to socket strand.
-    virtual void write(const system::data_chunk& in, io_handler&& handler);
+    virtual void write(const system::data_slice& in, io_handler&& handler);
 
     // Properties.
     // ------------------------------------------------------------------------
@@ -87,8 +87,8 @@ public:
 private:
     void do_stop();
     void do_connect(const asio::iterator& it, result_handler handler);
-    void do_read(system::data_chunk& out, io_handler handler);
-    void do_write(const system::data_chunk& in, io_handler handler);
+    void do_read(const boost::asio::mutable_buffer& out, io_handler handler);
+    void do_write(const boost::asio::const_buffer& in, io_handler handler);
 
     void handle_accept(const error::boost_code& ec,
         const result_handler& handler);

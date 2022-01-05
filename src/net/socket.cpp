@@ -126,26 +126,23 @@ void socket::accept(asio::acceptor& acceptor, result_handler&& handler)
 
 void socket::connect(const asio::iterator& it, result_handler&& handler)
 {
-    // iterator is copied by std::bind, may be discarded by caller.
     strand_.dispatch(
         std::bind(&socket::do_connect,
             shared_from_this(), it, std::move(handler)));
 }
 
-void socket::read(data_chunk& out, io_handler&& handler)
+void socket::read(const data_slab& out, io_handler&& handler)
 {
-    // data_chunk is passed by reference, must be kept in scope by caller.
     strand_.dispatch(
-        std::bind(&socket::do_read,
-            shared_from_this(), std::ref(out), std::move(handler)));
+        std::bind(&socket::do_read, shared_from_this(),
+            mutable_buffer{ out.data(), out.size() }, std::move(handler)));
 }
 
-void socket::write(const data_chunk& in, io_handler&& handler)
+void socket::write(const data_slice& in, io_handler&& handler)
 {
-    // data_chunk is passed by reference, must be kept in scope by caller.
     strand_.dispatch(
-        std::bind(&socket::do_write,
-            shared_from_this(), std::ref(in), std::move(handler)));
+        std::bind(&socket::do_write, shared_from_this(),
+            const_buffer{ in.data(), in.size() }, std::move(handler)));
 }
 
 // executors (private).
@@ -160,18 +157,18 @@ void socket::do_connect(const asio::iterator& it, result_handler handler)
             shared_from_this(), _1, _2, std::move(handler)));
 }
 
-void socket::do_read(data_chunk& out, io_handler handler)
+void socket::do_read(const mutable_buffer& out, io_handler handler)
 {
     // This composed operation posts all intermediate handlers to the strand.
-    async_read(socket_, buffer(out),
+    async_read(socket_, out,
         std::bind(&socket::handle_io,
             shared_from_this(), _1, _2, std::move(handler)));
 }
 
-void socket::do_write(const data_chunk& in, io_handler handler)
+void socket::do_write(const const_buffer& in, io_handler handler)
 {
     // This composed operation posts all intermediate handlers to the strand.
-    async_write(socket_, buffer(in),
+    async_write(socket_, in,
         std::bind(&socket::handle_io,
             shared_from_this(), _1, _2, std::move(handler)));
 }
