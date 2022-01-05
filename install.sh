@@ -8,6 +8,16 @@
 # Script to build and install libbitcoin-network.
 #
 # Script options:
+# --with-icu               Compile with International Components for Unicode.
+#                            Since the addition of BIP-39 and later BIP-38
+#                            support, libbitcoin conditionally incorporates ICU
+#                            to provide BIP-38 and BIP-39 passphrase
+#                            normalization features. Currently
+#                            libbitcoin-explorer is the only other library that
+#                            accesses this feature, so if you do not intend to
+#                            use passphrase normalization this dependency can
+#                            be avoided.
+# --build-icu              Builds ICU libraries.
 # --build-boost            Builds Boost libraries.
 # --build-dir=<path>       Location of downloaded and intermediate files.
 # --prefix=<absolute-path> Library install location (defaults to /usr/local).
@@ -30,6 +40,11 @@
 # The default build directory.
 #------------------------------------------------------------------------------
 BUILD_DIR="build-libbitcoin-network"
+
+# ICU archive.
+#------------------------------------------------------------------------------
+ICU_URL="https://github.com/unicode-org/icu/releases/download/release-55-2/icu4c-55_2-src.tgz"
+ICU_ARCHIVE="icu4c-55_2-src.tgz"
 
 # Boost archive.
 #------------------------------------------------------------------------------
@@ -170,6 +185,16 @@ display_help()
     display_message "Usage: ./install.sh [OPTION]..."
     display_message "Manage the installation of libbitcoin-network."
     display_message "Script options:"
+    display_message "  --with-icu               Compile with International Components for Unicode."
+    display_message "                             Since the addition of BIP-39 and later BIP-38 "
+    display_message "                             support, libbitcoin conditionally incorporates ICU "
+    display_message "                             to provide BIP-38 and BIP-39 passphrase "
+    display_message "                             normalization features. Currently "
+    display_message "                             libbitcoin-explorer is the only other library that "
+    display_message "                             accesses this feature, so if you do not intend to "
+    display_message "                             use passphrase normalization this dependency can "
+    display_message "                             be avoided."
+    display_message "  --build-icu              Builds ICU libraries."
     display_message "  --build-boost            Builds Boost libraries."
     display_message "  --build-dir=<path>       Location of downloaded and intermediate files."
     display_message "  --prefix=<absolute-path> Library install location (defaults to /usr/local)."
@@ -196,8 +221,10 @@ parse_command_line_options()
             (--disable-static)      DISABLE_STATIC="yes";;
 
             # Common project options.
+            (--with-icu)            WITH_ICU="yes";;
 
             # Custom build options (in the form of --build-<option>).
+            (--build-icu)           BUILD_ICU="yes";;
             (--build-boost)         BUILD_BOOST="yes";;
 
             # Unique script options.
@@ -351,6 +378,8 @@ display_configuration()
     display_message "CXXFLAGS              : $CXXFLAGS"
     display_message "LDFLAGS               : $LDFLAGS"
     display_message "LDLIBS                : $LDLIBS"
+    display_message "WITH_ICU              : $WITH_ICU"
+    display_message "BUILD_ICU             : $BUILD_ICU"
     display_message "BUILD_BOOST           : $BUILD_BOOST"
     display_message "BUILD_DIR             : $BUILD_DIR"
     display_message "PREFIX                : $PREFIX"
@@ -364,6 +393,18 @@ display_configuration()
 
 # Define build options.
 #==============================================================================
+# Define icu options.
+#------------------------------------------------------------------------------
+ICU_OPTIONS=(
+"--enable-draft" \
+"--enable-tools" \
+"--disable-extras" \
+"--disable-icuio" \
+"--disable-layout" \
+"--disable-layoutex" \
+"--disable-tests" \
+"--disable-samples")
+
 # Define boost options.
 #------------------------------------------------------------------------------
 BOOST_OPTIONS=(
@@ -713,6 +754,7 @@ build_from_ci()
 #==============================================================================
 build_all()
 {
+    build_from_tarball "$ICU_URL" "$ICU_ARCHIVE" gzip source "$PARALLEL" "$BUILD_ICU" "${ICU_OPTIONS[@]}" "$@"
     build_from_tarball_boost "$BOOST_URL" "$BOOST_ARCHIVE" bzip2 . "$PARALLEL" "$BUILD_BOOST" "${BOOST_OPTIONS[@]}"
     build_from_github evoskuil secp256k1 version8 "$PARALLEL" "${SECP256K1_OPTIONS[@]}" "$@"
     build_from_github evoskuil libbitcoin-system master "$PARALLEL" "${BITCOIN_SYSTEM_OPTIONS[@]}" "$@"
