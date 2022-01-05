@@ -63,7 +63,7 @@ using namespace std::placeholders;
 
 socket::socket(asio::io_context& service)
   : stopped_(false),
-    strand_(service),
+    strand_(service.get_executor()),
     socket_(strand_),
     CONSTRUCT_TRACK(socket)
 {
@@ -89,7 +89,7 @@ void socket::stop()
     // strand::dispatch invokes its handler directly if the strand is not busy,
     // which hopefully blocks the strand until the dispatch call completes.
     // Otherwise the handler is posted to the strand for deferred completion.
-    strand_.dispatch(std::bind(&socket::do_stop, shared_from_this()));
+    dispatch(strand_, std::bind(&socket::do_stop, shared_from_this()));
 }
 
 // private
@@ -126,21 +126,21 @@ void socket::accept(asio::acceptor& acceptor, result_handler&& handler)
 
 void socket::connect(const asio::iterator& it, result_handler&& handler)
 {
-    strand_.dispatch(
+    dispatch(strand_,
         std::bind(&socket::do_connect,
             shared_from_this(), it, std::move(handler)));
 }
 
 void socket::read(const data_slab& out, io_handler&& handler)
 {
-    strand_.dispatch(
+    dispatch(strand_,
         std::bind(&socket::do_read, shared_from_this(),
             mutable_buffer{ out.data(), out.size() }, std::move(handler)));
 }
 
 void socket::write(const data_slice& in, io_handler&& handler)
 {
-    strand_.dispatch(
+    dispatch(strand_,
         std::bind(&socket::do_write, shared_from_this(),
             const_buffer{ in.data(), in.size() }, std::move(handler)));
 }

@@ -80,7 +80,7 @@ private:
     std::vector<thread> threads_;
     mutable upgrade_mutex threads_mutex_;
 
-    boost::asio::executor_work_guard<asio::work_guard> work_;
+    boost::asio::executor_work_guard<asio::executor_type> work_;
     mutable upgrade_mutex work_mutex_;
 };
 

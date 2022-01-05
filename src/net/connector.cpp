@@ -35,6 +35,7 @@ namespace network {
 
 using namespace bc::system;
 using namespace network::config;
+using namespace boost::asio;
 using namespace std::placeholders;
 
 // Construct.
@@ -42,7 +43,8 @@ using namespace std::placeholders;
 
 connector::connector(asio::io_context& service, const settings& settings)
   : settings_(settings),
-    strand_(service),
+    service_(service),
+    strand_(service_.get_executor()),
     timer_(strand_, settings_.connect_timeout()),
     resolver_(strand_),
     stopped_(true),
@@ -58,7 +60,7 @@ void connector::stop(const code&)
     // strand::dispatch invokes its handler directly if the strand is not busy,
     // which hopefully blocks the strand until the dispatch call completes.
     // Otherwise the handler is posted to the strand for deferred completion.
-    strand_.dispatch(std::bind(&connector::do_stop, shared_from_this()));
+    dispatch(strand_, std::bind(&connector::do_stop, shared_from_this()));
 }
 
 // private
@@ -90,7 +92,7 @@ void connector::connect(const std::string& hostname, uint16_t port,
 {
     // hostname is copied by std::bind, may be discarded by caller.
     // Dispatch executes within this call if strand is not busy.
-    strand_.dispatch(
+    dispatch(strand_,
         std::bind(&connector::do_resolve,
             shared_from_this(), hostname, port, std::move(handler)));
 }
@@ -109,7 +111,7 @@ void connector::do_resolve(const std::string& hostname, uint16_t port,
             shared_from_this(), _1, handler));
 
     // io_context is noncopyable, so this references the constructor parameter.
-    const auto socket = std::make_shared<network::socket>(strand_.context());
+    const auto socket = std::make_shared<network::socket>(service_);
 
     // async_resolve copies string parameters.
     // Posts handle_resolve to strand.

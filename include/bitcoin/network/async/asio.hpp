@@ -28,9 +28,11 @@ namespace libbitcoin {
 namespace network {
 namespace asio {
 
+// stackoverflow.com/questions/66765121/
+// asiostrandasioio-contextexecutor-type-vs-io-contextstrand
 typedef boost::asio::io_context io_context;
-typedef boost::asio::io_context::strand strand;
-typedef boost::asio::io_context::executor_type work_guard;
+typedef boost::asio::io_context::executor_type executor_type;
+typedef boost::asio::strand<executor_type> strand;
 
 typedef boost::asio::ip::address address;
 typedef boost::asio::ip::address_v4 ipv4;

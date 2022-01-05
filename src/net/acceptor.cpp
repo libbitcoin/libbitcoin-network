@@ -31,6 +31,7 @@ namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
+using namespace boost::asio;
 using namespace std::placeholders;
 
 // Construct.
@@ -41,7 +42,8 @@ using namespace std::placeholders;
 
 acceptor::acceptor(asio::io_context& service, const settings& settings)
   : settings_(settings),
-    strand_(service),
+    service_(service),
+    strand_(service_.get_executor()),
     timer_(strand_, settings_.connect_timeout()),
     acceptor_(strand_),
     stopped_(false),
@@ -78,7 +80,7 @@ void acceptor::stop()
     // strand::dispatch invokes its handler directly if the strand is not busy,
     // which hopefully blocks the strand until the dispatch call completes.
     // Otherwise the handler is posted to the strand for deferred completion.
-    strand_.dispatch(std::bind(&acceptor::do_stop, shared_from_this()));
+    dispatch(strand_, std::bind(&acceptor::do_stop, shared_from_this()));
 }
 
 // private
@@ -99,7 +101,7 @@ void acceptor::do_stop()
 void acceptor::accept(accept_handler&& handler)
 {
     // Dispatch executes within this call if strand is not busy.
-    strand_.dispatch(
+    dispatch(strand_,
         std::bind(&acceptor::do_accept,
             shared_from_this(), std::move(handler)));
 }
@@ -119,7 +121,7 @@ void acceptor::do_accept(accept_handler handler)
 
     // Calls on socket are unsafe during socket->accept (ok).
     // io_context is noncopyable, so this references the constructor parameter.
-    const auto socket = std::make_shared<network::socket>(strand_.context());
+    const auto socket = std::make_shared<network::socket>(service_);
 
     // Posts handle_accept to strand.
     // This does not post to the socket strand, unlike other socket calls.

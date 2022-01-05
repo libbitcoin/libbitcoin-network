@@ -77,6 +77,7 @@ private:
 
     // These are thread safe.
     const settings& settings_;
+    asio::io_context& service_;
     asio::strand strand_;
     deadline<asio::strand> timer_;
 
