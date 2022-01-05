@@ -35,12 +35,21 @@ struct BCT_API heading
 {
     typedef std::shared_ptr<const heading> ptr;
 
+    static constexpr size_t command_size = 12;
+
     static size_t maximum_payload_size(uint32_t version, bool witness);
     static heading factory(uint32_t magic, const std::string& command,
         const system::data_slice& payload);
 
     // Heading does not use version.
-    static size_t size();
+    static constexpr size_t size()
+    {
+        return sizeof(uint32_t)
+            + command_size
+            + sizeof(uint32_t)
+            + sizeof(uint32_t);
+    }
+
     static heading deserialize(system::reader& source);
     void serialize(system::writer& sink) const;
 

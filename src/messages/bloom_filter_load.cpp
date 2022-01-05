@@ -46,7 +46,7 @@ bloom_filter_load bloom_filter_load::deserialize(uint32_t version, reader& sourc
     {
         const auto hash_functions = source.read_4_bytes_little_endian();
 
-        if (hash_functions > max_filter_functions)
+        if (hash_functions > max_bloom_filter_functions)
             source.invalidate();
 
         return hash_functions;

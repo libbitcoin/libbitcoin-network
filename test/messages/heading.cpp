@@ -31,7 +31,7 @@ using namespace bc::network::messages;
 BOOST_AUTO_TEST_CASE(heading__size__always__expected)
 {
     constexpr auto expected = sizeof(uint32_t)
-        + command_size
+        + heading::command_size
         + sizeof(uint32_t)
         + sizeof(uint32_t);
 

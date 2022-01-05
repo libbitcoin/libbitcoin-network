@@ -100,15 +100,6 @@ heading heading::factory(uint32_t magic, const std::string& command,
 }
 
 // static
-size_t heading::size()
-{
-    return sizeof(uint32_t)
-        + command_size
-        + sizeof(uint32_t)
-        + sizeof(uint32_t);
-}
-
-// static
 heading heading::deserialize(reader& source)
 {
     return

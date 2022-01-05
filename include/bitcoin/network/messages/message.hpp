@@ -35,27 +35,24 @@ namespace messages {
 /// Network protocol constants.
 ///----------------------------------------------------------------------------
 
-/// Explicit size.
-constexpr size_t command_size = 12;
-
 /// Explicit limits.
 constexpr size_t max_address = 1000;
 constexpr size_t max_bloom_filter_add = 520;
-constexpr size_t max_filter_functions = 50;
-constexpr size_t max_filter_hashes = 2000;
+constexpr size_t max_bloom_filter_functions = 50;
+////constexpr size_t max_bloom_filter_hashes = 2000;
 constexpr size_t max_bloom_filter_load = 36000;
 constexpr size_t max_get_blocks = 500;
 constexpr size_t max_get_headers = 2000;
-constexpr size_t max_get_data = 50000;
+////constexpr size_t max_get_data = 50000;
 constexpr size_t max_inventory = 50000;
-constexpr size_t max_get_client_filter_headers = 1999;
-constexpr size_t max_get_client_filters = 99;
+////constexpr size_t max_get_client_filter_headers = 1999;
+////constexpr size_t max_get_client_filters = 99;
 
-/// compact filter checkpoint interval
-constexpr size_t client_filter_checkpoint_interval = 1000;
+/////// compact filter checkpoint interval
+////constexpr size_t client_filter_checkpoint_interval = 1000;
 
-/// Effective limit given a 32 bit chain height boundary: 10 + log2(2^32) + 1.
-constexpr size_t max_locator = 43;
+/////// Effective limit given a 32 bit chain height boundary: 10 + log2(2^32) + 1.
+////constexpr size_t max_locator = 43;
 
 // Serialization templates.
 ///----------------------------------------------------------------------------
