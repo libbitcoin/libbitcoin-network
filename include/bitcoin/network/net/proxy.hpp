@@ -29,6 +29,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/pump.hpp>
 #include <bitcoin/network/net/socket.hpp>
 
@@ -138,11 +139,10 @@ private:
 
     // These are protected by read header/payload ordering.
     system::data_chunk payload_buffer_;
-    system::data_chunk heading_buffer_;
+    system::data_array<messages::heading::size()> heading_buffer_;
 };
 
 } // namespace network
 } // namespace libbitcoin
 
 #endif
-

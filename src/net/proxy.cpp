@@ -42,20 +42,19 @@ static const size_t invalid_payload_dump_size = 1024;
 // static
 std::string proxy::extract_command(payload_ptr payload)
 {
-    if (payload->size() < sizeof(uint32_t) + command_size)
+    if (payload->size() < sizeof(uint32_t) + heading::command_size)
         return "<unknown>";
 
     return data_slice(
         std::next(payload->begin(), sizeof(uint32_t)),
-        std::next(payload->end(), command_size)).to_string();
+        std::next(payload->end(), heading::command_size)).to_string();
 }
 
 proxy::proxy(socket::ptr socket)
   : socket_(socket),
     pump_subscriber_(socket->strand()),
     stop_subscriber_(socket->strand()),
-    payload_buffer_(no_fill_byte_allocator),
-    heading_buffer_(heading::size(), no_fill_byte_allocator)
+    payload_buffer_(no_fill_byte_allocator)
 {
 }
 
