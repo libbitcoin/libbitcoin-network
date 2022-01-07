@@ -87,8 +87,8 @@ void serialize(Message& instance, system::writer& sink, uint32_t version, bool)
 
 /// Serialize a message object to the Bitcoin wire protocol encoding.
 template <typename Message>
-system::chunk_ptr serialize(const Message& instance, uint32_t magic,
-    uint32_t version, bool witness)
+chunk_ptr serialize(const Message& instance, uint32_t magic, uint32_t version,
+    bool witness)
 {
     const auto buffer = std::make_shared<system::data_chunk>(
         system::no_fill_byte_allocator);

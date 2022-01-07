@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_DEFINE_HPP
 #define LIBBITCOIN_NETWORK_DEFINE_HPP
 
+#include <memory>
 #include <bitcoin/system.hpp>
 
 // We use the generic helper definitions in libbitcoin to define BCT_API
@@ -68,6 +69,8 @@ namespace network {
     bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6)
 #define BIND7(method, p1, p2, p3, p4, p5, p6, p7) \
     bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6, p7)
+
+typedef std::shared_ptr<const system::data_chunk> chunk_ptr;
 
 } // namespace network
 } // namespace libbitcoin

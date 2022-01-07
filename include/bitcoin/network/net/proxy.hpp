@@ -109,7 +109,7 @@ public:
     virtual config::authority authority() const;
 
 private:
-    typedef system::chunk_ptr payload_ptr;
+    typedef chunk_ptr payload_ptr;
     typedef messages::heading::ptr heading_ptr;
 
     static std::string extract_command(payload_ptr payload);
