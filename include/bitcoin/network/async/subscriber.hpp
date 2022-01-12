@@ -23,7 +23,6 @@
 #include <memory>
 #include <vector>
 #include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/thread.hpp>
 
 namespace libbitcoin {

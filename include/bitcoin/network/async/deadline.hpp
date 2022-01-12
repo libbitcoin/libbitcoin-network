@@ -22,7 +22,6 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
