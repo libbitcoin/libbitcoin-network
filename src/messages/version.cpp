@@ -86,8 +86,8 @@ version version::deserialize(uint32_t version, reader& source)
 
 void version::serialize(uint32_t version, writer& sink) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_4_bytes_little_endian(value);
     sink.write_8_bytes_little_endian(services);
@@ -101,7 +101,7 @@ void version::serialize(uint32_t version, writer& sink) const
     if (std::min(version, value) >= level::bip37)
         sink.write_byte(to_int<uint8_t>(relay));
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t version::size(uint32_t version) const

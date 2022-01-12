@@ -53,17 +53,17 @@ client_filter client_filter::deserialize(uint32_t version, reader& source)
     };
 }
 
-void client_filter::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
+void client_filter::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_byte(filter_type);
     sink.write_bytes(block_hash);
     sink.write_variable(filter.size());
     sink.write_bytes(filter);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t client_filter::size(uint32_t) const

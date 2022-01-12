@@ -83,12 +83,12 @@ void threadpool::join()
     unique_lock lock(threads_mutex_);
 
     // Join cannot be called from a thread in the threadpool (deadlock).
-    DEBUG_ONLY(const auto this_id = boost::this_thread::get_id();)
+    BC_DEBUG_ONLY(const auto this_id = boost::this_thread::get_id();)
 
     for (auto& thread: threads_)
     {
-        BITCOIN_ASSERT_MSG(thread.joinable(), "unjoinable deadlock");
-        BITCOIN_ASSERT_MSG(this_id != thread.get_id(), "join deadlock");
+        BC_ASSERT_MSG(thread.joinable(), "unjoinable deadlock");
+        BC_ASSERT_MSG(this_id != thread.get_id(), "join deadlock");
         thread.join();
     }
 

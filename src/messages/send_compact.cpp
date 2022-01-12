@@ -63,15 +63,15 @@ send_compact send_compact::deserialize(uint32_t version, reader& source)
     return { to_bool(mode), protocol };
 }
 
-void send_compact::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
+void send_compact::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_byte(static_cast<uint8_t>(high_bandwidth));
     sink.write_8_bytes_little_endian(compact_version);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 } // namespace messages

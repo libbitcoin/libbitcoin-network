@@ -58,13 +58,13 @@ ping ping::deserialize(uint32_t version, reader& source)
 
 void ping::serialize(uint32_t version, writer& sink) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     if (version >= level::bip31)
         sink.write_8_bytes_little_endian(nonce);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 } // namespace messages

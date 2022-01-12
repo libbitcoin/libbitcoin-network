@@ -231,7 +231,7 @@ void channel::start_expiration()
 
 void channel::handle_expiration(const code& ec)
 {
-    BITCOIN_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
 
     if (stopped())
         return;
@@ -263,7 +263,7 @@ void channel::start_inactivity()
 
 void channel::handle_inactivity(const code& ec)
 {
-    BITCOIN_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
 
     if (stopped())
         return;

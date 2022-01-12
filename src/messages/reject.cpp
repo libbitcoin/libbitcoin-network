@@ -96,10 +96,10 @@ reject reject::deserialize(uint32_t, reader& source)
     };
 }
 
-void reject::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
+void reject::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_string(message);
     sink.write_byte(reason_to_byte(code));
@@ -108,7 +108,7 @@ void reject::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
     if (is_chain(message))
         sink.write_bytes(hash);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t reject::size(uint32_t) const

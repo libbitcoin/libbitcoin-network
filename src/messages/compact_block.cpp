@@ -80,8 +80,8 @@ compact_block compact_block::deserialize(uint32_t version, reader& source,
 void compact_block::serialize(uint32_t version, writer& sink,
     bool witness) const
 {
-    DEBUG_ONLY(const auto bytes = size(version, witness);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     header.to_data(sink);
     sink.write_8_bytes_little_endian(nonce);
@@ -95,7 +95,7 @@ void compact_block::serialize(uint32_t version, writer& sink,
     for (const auto& tx: transactions)
         tx.serialize(version, sink, witness);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t compact_block::size(uint32_t version, bool witness) const

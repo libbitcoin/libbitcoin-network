@@ -44,15 +44,15 @@ bloom_filter_add bloom_filter_add::deserialize(uint32_t version, reader& source)
     return { source.read_bytes(source.read_size(max_bloom_filter_add)) };
 }
 
-void bloom_filter_add::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
+void bloom_filter_add::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_variable(data.size());
     sink.write_bytes(data);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t bloom_filter_add::size(uint32_t) const

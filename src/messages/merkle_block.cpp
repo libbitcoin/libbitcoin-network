@@ -59,10 +59,10 @@ merkle_block merkle_block::deserialize(uint32_t, reader& source)
     };
 }
 
-void merkle_block::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
+void merkle_block::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     if (header)
         header->to_data(sink);
@@ -76,7 +76,7 @@ void merkle_block::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
     sink.write_variable(flags.size());
     sink.write_bytes(flags);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t merkle_block::size(uint32_t) const

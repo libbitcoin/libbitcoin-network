@@ -75,7 +75,7 @@ static ip::address_v6 to_ipv6(const ip::address& ip_address)
     if (ip_address.is_v6())
         return ip_address.to_v6();
 
-    BITCOIN_ASSERT_MSG(ip_address.is_v4(),
+    BC_ASSERT_MSG(ip_address.is_v4(),
         "The address must be either IPv4 or IPv6.");
 
     return to_ipv6(ip_address.to_v4());
@@ -122,7 +122,7 @@ authority::authority(const messages::address_item& address)
 static ip::address_v6 to_boost_address(const messages::ip_address& in)
 {
     ip::address_v6::bytes_type bytes;
-    BITCOIN_ASSERT(bytes.size() == in.size());
+    BC_ASSERT(bytes.size() == in.size());
     std::copy_n(in.begin(), in.size(), bytes.begin());
     const ip::address_v6 out(bytes);
     return out;
@@ -132,7 +132,7 @@ static messages::ip_address to_bc_address(const ip::address_v6& in)
 {
     messages::ip_address out;
     const auto bytes = in.to_bytes();
-    BITCOIN_ASSERT(bytes.size() == out.size());
+    BC_ASSERT(bytes.size() == out.size());
     std::copy_n(bytes.begin(), bytes.size(), out.begin());
     return out;
 }

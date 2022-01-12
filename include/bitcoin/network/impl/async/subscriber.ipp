@@ -42,7 +42,7 @@ subscriber<Service, Args...>::subscriber(Service& service)
 template <typename Service, typename... Args>
 subscriber<Service, Args...>::~subscriber()
 {
-    BITCOIN_ASSERT_MSG(!queue_, "subscriber is not stopped");
+    BC_ASSERT_MSG(!queue_, "subscriber is not stopped");
 }
 
 // Stop.

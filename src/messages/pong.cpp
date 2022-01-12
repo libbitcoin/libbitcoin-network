@@ -51,14 +51,14 @@ pong pong::deserialize(uint32_t version, reader& source)
     return { source.read_8_bytes_little_endian() };
 }
 
-void pong::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
+void pong::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_8_bytes_little_endian(nonce);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 } // namespace messages

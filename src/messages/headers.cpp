@@ -60,10 +60,10 @@ headers headers::deserialize(uint32_t version, reader& source)
     return { headers };
 }
 
-void headers::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
+void headers::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_variable(headers.size());
 
@@ -73,7 +73,7 @@ void headers::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
         sink.write_byte(trail);
     }
 
-    BITCOIN_ASSERT(sink&& sink.get_position() - start == bytes);
+    BC_ASSERT(sink&& sink.get_position() - start == bytes);
 }
 
 size_t headers::size(uint32_t) const

@@ -41,17 +41,17 @@ compact_block_item compact_block_item::deserialize(uint32_t, reader& source,
     };
 }
 
-void compact_block_item::serialize(uint32_t DEBUG_ONLY(version), writer& sink,
+void compact_block_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     bool witness) const
 {
-    DEBUG_ONLY(const auto bytes = size(version, witness);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_variable(index);
     if (transaction)
         transaction->to_data(sink, witness);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t compact_block_item::size(uint32_t, bool witness) const

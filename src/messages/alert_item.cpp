@@ -90,10 +90,10 @@ alert_item alert_item::deserialize(uint32_t, reader& source)
     };
 }
 
-void alert_item::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
+void alert_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_4_bytes_little_endian(version);
     sink.write_8_bytes_little_endian(relay_until);
@@ -117,7 +117,7 @@ void alert_item::serialize(uint32_t DEBUG_ONLY(version), writer& sink) const
     sink.write_string(status_bar);
     sink.write_string(reserved);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t alert_item::size(uint32_t) const

@@ -62,17 +62,17 @@ get_client_filters get_client_filters::deserialize(uint32_t version,
     };
 }
 
-void get_client_filters::serialize(uint32_t DEBUG_ONLY(version),
+void get_client_filters::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_byte(filter_type);
     sink.write_4_bytes_little_endian(start_height);
     sink.write_bytes(stop_hash);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 } // namespace messages

@@ -51,12 +51,12 @@ bloom_filter_clear bloom_filter_clear::deserialize(uint32_t version, reader& sou
     return {};
 }
 
-void bloom_filter_clear::serialize(uint32_t DEBUG_ONLY(version),
-    writer& DEBUG_ONLY(sink)) const
+void bloom_filter_clear::serialize(uint32_t BC_DEBUG_ONLY(version),
+    writer& BC_DEBUG_ONLY(sink)) const
 {
-    DEBUG_ONLY(const auto bytes = size(version);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 } // namespace messages

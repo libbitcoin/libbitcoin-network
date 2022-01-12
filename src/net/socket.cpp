@@ -196,7 +196,7 @@ void socket::handle_accept(const error::boost_code& ec,
 void socket::handle_connect(const error::boost_code& ec,
     const asio::endpoint& peer, const result_handler& handler)
 {
-    BITCOIN_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     endpoint_.store(peer);
 
@@ -213,7 +213,7 @@ void socket::handle_connect(const error::boost_code& ec,
 void socket::handle_io(const error::boost_code& ec, size_t size,
     const io_handler& handler)
 {
-    BITCOIN_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (error::asio_is_cancelled(ec))
     {

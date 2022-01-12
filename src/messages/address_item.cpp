@@ -66,11 +66,11 @@ address_item address_item::deserialize(uint32_t, reader& source,
     };
 }
 
-void address_item::serialize(uint32_t DEBUG_ONLY(version), writer& sink,
+void address_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     bool with_timestamp) const
 {
-    DEBUG_ONLY(const auto bytes = size(version, with_timestamp);)
-    DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto bytes = size(version, with_timestamp);)
+    BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     if (with_timestamp)
         sink.write_4_bytes_little_endian(timestamp);
@@ -79,7 +79,7 @@ void address_item::serialize(uint32_t DEBUG_ONLY(version), writer& sink,
     sink.write_bytes(ip.data(), ip.size());
     sink.write_2_bytes_big_endian(port);
 
-    BITCOIN_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 } // namespace messages

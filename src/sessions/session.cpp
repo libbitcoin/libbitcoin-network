@@ -51,7 +51,7 @@ session::session(p2p& network, bool notify_on_connect)
 
 session::~session()
 {
-    BITCOIN_ASSERT_MSG(stopped(), "The session was not stopped.");
+    BC_ASSERT_MSG(stopped(), "The session was not stopped.");
 }
 
 // Properties.

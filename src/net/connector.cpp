@@ -124,7 +124,7 @@ void connector::do_resolve(const std::string& hostname, uint16_t port,
 void connector::handle_resolve(const error::boost_code& ec,
     const asio::iterator& it, socket::ptr socket, connect_handler handler)
 {
-    BITCOIN_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (error::asio_is_cancelled(ec))
     {
@@ -150,7 +150,7 @@ void connector::handle_resolve(const error::boost_code& ec,
 void connector::handle_connect(const code& ec, socket::ptr socket,
     const connect_handler& handler)
 {
-    BITCOIN_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     // Ensure only the handler executes only once, as both may be posted.
     if (stopped_)
@@ -177,7 +177,7 @@ void connector::handle_connect(const code& ec, socket::ptr socket,
 // private
 void connector::handle_timer(const code& ec, const connect_handler& handler)
 {
-    BITCOIN_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     // Ensure only the handler executes only once, as both may be posted.
     if (stopped_)
