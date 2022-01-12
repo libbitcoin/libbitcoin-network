@@ -37,7 +37,7 @@ protected:
     template <class Derived, system::if_base_of<Base, Derived> = true>
     std::shared_ptr<Derived> shared_from_base()
     {
-        return std::static_pointer_cast<Derived>(this->shared_from_this());
+        return std::static_pointer_cast<Derived>(shared_from_this());
     }
 };
 
