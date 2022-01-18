@@ -24,7 +24,6 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
-#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>

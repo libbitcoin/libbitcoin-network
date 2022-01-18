@@ -23,7 +23,6 @@
 #include <cstddef>
 #include <string>
 #include <bitcoin/system.hpp>
-////#include <bitcoin/network/log/log.hpp>
 
 // Log name.
 #define LOG_SYSTEM "system"

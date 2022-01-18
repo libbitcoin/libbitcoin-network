@@ -25,7 +25,6 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>

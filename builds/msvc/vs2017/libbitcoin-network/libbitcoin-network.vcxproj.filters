@@ -8,58 +8,46 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="include">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000A}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\async">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000B}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\config">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\impl">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000D}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\impl\async">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\impl\log">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\impl\log\features">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\impl\net">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\log">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000E}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\log\features">
+    <Filter Include="include\bitcoin">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\messages">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\bitcoin\network\messages\enums">
+    <Filter Include="include\bitcoin\network">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\net">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000001}</UniqueIdentifier>
+    <Filter Include="include\bitcoin\network\async">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\protocols">
+    <Filter Include="include\bitcoin\network\config">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\impl">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\impl\async">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\sessions">
+    <Filter Include="include\bitcoin\network\impl\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\bitcoin\network\messages">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\messages\enums">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\net">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\protocols">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\sessions">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000001}</UniqueIdentifier>
+    </Filter>
     <Filter Include="resource">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000000}</UniqueIdentifier>
@@ -70,20 +58,17 @@
     <Filter Include="src\config">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\log">
+    <Filter Include="src\messages">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages">
+    <Filter Include="src\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\net">
+    <Filter Include="src\protocols">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\protocols">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\sessions">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000007}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -107,24 +92,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\error.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\log\file_collector.cpp">
-      <Filter>src\log</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\log\file_collector_repository.cpp">
-      <Filter>src\log</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\log\file_counter_formatter.cpp">
-      <Filter>src\log</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\log\sink.cpp">
-      <Filter>src\log</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\log\statsd_sink.cpp">
-      <Filter>src\log</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\log\udp_client_sink.cpp">
-      <Filter>src\log</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\address.cpp">
       <Filter>src\messages</Filter>
@@ -377,60 +344,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\attributes.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\counter.hpp">
-      <Filter>include\bitcoin\network\log\features</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\gauge.hpp">
-      <Filter>include\bitcoin\network\log\features</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\metric.hpp">
-      <Filter>include\bitcoin\network\log\features</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\rate.hpp">
-      <Filter>include\bitcoin\network\log\features</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\features\timer.hpp">
-      <Filter>include\bitcoin\network\log\features</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\file_char_traits.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\file_collector.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\file_collector_repository.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\file_counter_formatter.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\log.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\rotable_file.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\severity.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\sink.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\source.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\statsd_sink.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\statsd_source.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\udp_client_sink.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\address.hpp">
       <Filter>include\bitcoin\network\messages</Filter>
     </ClInclude>
@@ -654,21 +567,6 @@
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\track.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\log\features\counter.ipp">
-      <Filter>include\bitcoin\network\impl\log\features</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\log\features\gauge.ipp">
-      <Filter>include\bitcoin\network\impl\log\features</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\log\features\metric.ipp">
-      <Filter>include\bitcoin\network\impl\log\features</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\log\features\rate.ipp">
-      <Filter>include\bitcoin\network\impl\log\features</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\log\features\timer.ipp">
-      <Filter>include\bitcoin\network\impl\log\features</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\net\pending.ipp">
       <Filter>include\bitcoin\network\impl\net</Filter>

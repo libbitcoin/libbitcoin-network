@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_DEFINE_HPP
 #define LIBBITCOIN_NETWORK_DEFINE_HPP
 
+#include <iostream>
 #include <memory>
 #include <bitcoin/system.hpp>
 
@@ -43,6 +44,12 @@
 
 // Avoid namespace conflict between boost::placeholders and std::placeholders.
 #define BOOST_BIND_NO_PLACEHOLDERS
+
+#define LOG_INFO(name) std::cout << name << " : "
+#define LOG_DEBUG(name) std::cout << name << " : "
+#define LOG_VERBOSE(name) std::cout << name << " : "
+#define LOG_ERROR(name) std::cerr << name << " : "
+#define LOG_WARNING(name) std::cerr << name << " : "
 
 // Include boost only here, so placeholders exclusion works.
 #include <boost/asio.hpp>

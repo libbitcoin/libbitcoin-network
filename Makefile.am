@@ -44,12 +44,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/config/authority.cpp \
     src/config/client_filter.cpp \
     src/config/endpoint.cpp \
-    src/log/file_collector.cpp \
-    src/log/file_collector_repository.cpp \
-    src/log/file_counter_formatter.cpp \
-    src/log/sink.cpp \
-    src/log/statsd_sink.cpp \
-    src/log/udp_client_sink.cpp \
     src/messages/address.cpp \
     src/messages/address_item.cpp \
     src/messages/alert.cpp \
@@ -233,41 +227,9 @@ include_bitcoin_network_impl_async_HEADERS = \
     include/bitcoin/network/impl/async/subscriber.ipp \
     include/bitcoin/network/impl/async/track.ipp
 
-include_bitcoin_network_impl_log_featuresdir = ${includedir}/bitcoin/network/impl/log/features
-include_bitcoin_network_impl_log_features_HEADERS = \
-    include/bitcoin/network/impl/log/features/counter.ipp \
-    include/bitcoin/network/impl/log/features/gauge.ipp \
-    include/bitcoin/network/impl/log/features/metric.ipp \
-    include/bitcoin/network/impl/log/features/rate.ipp \
-    include/bitcoin/network/impl/log/features/timer.ipp
-
 include_bitcoin_network_impl_netdir = ${includedir}/bitcoin/network/impl/net
 include_bitcoin_network_impl_net_HEADERS = \
     include/bitcoin/network/impl/net/pending.ipp
-
-include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
-include_bitcoin_network_log_HEADERS = \
-    include/bitcoin/network/log/attributes.hpp \
-    include/bitcoin/network/log/file_char_traits.hpp \
-    include/bitcoin/network/log/file_collector.hpp \
-    include/bitcoin/network/log/file_collector_repository.hpp \
-    include/bitcoin/network/log/file_counter_formatter.hpp \
-    include/bitcoin/network/log/log.hpp \
-    include/bitcoin/network/log/rotable_file.hpp \
-    include/bitcoin/network/log/severity.hpp \
-    include/bitcoin/network/log/sink.hpp \
-    include/bitcoin/network/log/source.hpp \
-    include/bitcoin/network/log/statsd_sink.hpp \
-    include/bitcoin/network/log/statsd_source.hpp \
-    include/bitcoin/network/log/udp_client_sink.hpp
-
-include_bitcoin_network_log_featuresdir = ${includedir}/bitcoin/network/log/features
-include_bitcoin_network_log_features_HEADERS = \
-    include/bitcoin/network/log/features/counter.hpp \
-    include/bitcoin/network/log/features/gauge.hpp \
-    include/bitcoin/network/log/features/metric.hpp \
-    include/bitcoin/network/log/features/rate.hpp \
-    include/bitcoin/network/log/features/timer.hpp
 
 include_bitcoin_network_messagesdir = ${includedir}/bitcoin/network/messages
 include_bitcoin_network_messages_HEADERS = \
