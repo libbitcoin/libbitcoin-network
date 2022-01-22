@@ -38,8 +38,7 @@ using namespace std::placeholders;
 session_inbound::session_inbound(p2p& network, bool notify_on_connect)
   : session(network, notify_on_connect),
     connection_limit_(settings_.inbound_connections +
-        settings_.outbound_connections + settings_.peers.size()),
-    CONSTRUCT_TRACK(session_inbound)
+        settings_.outbound_connections + settings_.peers.size())
 {
 }
 

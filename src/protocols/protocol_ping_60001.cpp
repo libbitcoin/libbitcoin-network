@@ -41,8 +41,7 @@ using namespace std::placeholders;
 protocol_ping_60001::protocol_ping_60001(channel::ptr channel,
     const duration& heartbeat)
   : protocol_ping_31402(channel, heartbeat),
-    pending_(false),
-    CONSTRUCT_TRACK(protocol_ping_60001)
+    pending_(false)
 {
 }
 

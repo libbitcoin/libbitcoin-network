@@ -44,8 +44,7 @@ using namespace bc::system;
 using namespace std::placeholders;
 
 session_seed::session_seed(p2p& network)
-  : session(network, false),
-    CONSTRUCT_TRACK(session_seed)
+  : session(network, false)
 {
 }
 

@@ -64,8 +64,7 @@ using namespace std::placeholders;
 socket::socket(asio::io_context& service)
   : stopped_(false),
     strand_(service.get_executor()),
-    socket_(strand_),
-    CONSTRUCT_TRACK(socket)
+    socket_(strand_)
 {
 }
 

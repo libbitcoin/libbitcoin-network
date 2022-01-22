@@ -41,8 +41,7 @@ using namespace std::placeholders;
 protocol_seed_31402::protocol_seed_31402(channel::ptr channel, p2p& network)
   : protocol_timer(channel, network.network_settings().channel_germination(),
       false),
-    network_(network),
-    CONSTRUCT_TRACK(protocol_seed_31402)
+    network_(network)
 {
 }
 

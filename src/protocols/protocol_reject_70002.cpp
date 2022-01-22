@@ -38,8 +38,7 @@ using namespace messages;
 using namespace std::placeholders;
 
 protocol_reject_70002::protocol_reject_70002(channel::ptr channel)
-  : protocol_events(channel),
-    CONSTRUCT_TRACK(protocol_reject_70002)
+  : protocol_events(channel)
 {
 }
 

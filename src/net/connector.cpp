@@ -47,8 +47,7 @@ connector::connector(asio::io_context& service, const settings& settings)
     strand_(service_.get_executor()),
     timer_(strand_, settings_.connect_timeout()),
     resolver_(strand_),
-    stopped_(true),
-    CONSTRUCT_TRACK(connector)
+    stopped_(true)
 {
 }
 

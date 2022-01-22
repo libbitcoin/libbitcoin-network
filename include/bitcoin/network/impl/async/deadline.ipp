@@ -41,7 +41,7 @@ template <typename Service>
 deadline<Service>::deadline(Service& service, const duration& timeout)
   : duration_(timeout),
     timer_(service),
-    CONSTRUCT_TRACK(deadline)
+    track<deadline>()
 {
 }
 

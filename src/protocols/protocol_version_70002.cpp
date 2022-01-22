@@ -62,8 +62,7 @@ protocol_version_70002::protocol_version_70002(channel::ptr channel,
     uint64_t minimum_services, bool relay)
   : protocol_version_31402(channel, network, own_version, own_services,
         invalid_services, minimum_version, minimum_services),
-    relay_(relay),
-    CONSTRUCT_TRACK(protocol_version_70002)
+    relay_(relay)
 {
 }
 

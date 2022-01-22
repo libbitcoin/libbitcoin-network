@@ -111,8 +111,7 @@ channel::channel(socket::ptr socket, const settings& settings)
     negotiated_version_(settings.protocol_maximum),
     peer_version_(std::make_shared<messages::version>()),
     expiration_(expiration(socket->strand(), settings.channel_expiration())),
-    inactivity_(timeout(socket->strand(), settings.channel_inactivity())),
-    CONSTRUCT_TRACK(channel)
+    inactivity_(timeout(socket->strand(), settings.channel_inactivity()))
 {
 }
 

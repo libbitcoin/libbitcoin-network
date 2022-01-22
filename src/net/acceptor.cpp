@@ -46,8 +46,7 @@ acceptor::acceptor(asio::io_context& service, const settings& settings)
     strand_(service_.get_executor()),
     timer_(strand_, settings_.connect_timeout()),
     acceptor_(strand_),
-    stopped_(false),
-    CONSTRUCT_TRACK(acceptor)
+    stopped_(false)
 {
 }
 

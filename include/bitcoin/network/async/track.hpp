@@ -21,10 +21,6 @@
 
 #include <atomic>
 #include <cstddef>
-#include <string>
-
-#define CONSTRUCT_TRACK(class_name) \
-    track<class_name>(#class_name)
 
 namespace libbitcoin {
 namespace network {
@@ -32,15 +28,12 @@ namespace network {
 template <class Shared>
 class track
 {
-public:
-    static std::atomic<size_t> instances;
-
 protected:
-    track(const std::string& class_name);
+    track();
     virtual ~track();
 
 private:
-    const std::string class_;
+    static std::atomic<size_t> instances_;
 };
 
 } // namespace network

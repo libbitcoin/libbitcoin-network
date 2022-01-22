@@ -50,8 +50,7 @@ protocol_address_31402::protocol_address_31402(channel::ptr channel,
     p2p& network)
   : protocol_events(channel),
     network_(network),
-    self_(configured_self(network_.network_settings())),
-    CONSTRUCT_TRACK(protocol_address_31402)
+    self_(configured_self(network_.network_settings()))
 {
 }
 

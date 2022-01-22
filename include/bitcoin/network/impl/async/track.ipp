@@ -21,8 +21,9 @@
 
 #include <atomic>
 #include <cstddef>
-#include <string>
+#include <typeinfo>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/define.hpp>
 
 // Log name.
 #define LOG_SYSTEM "system"
@@ -31,16 +32,14 @@ namespace libbitcoin {
 namespace network {
 
 template <class Shared>
-std::atomic<size_t> track<Shared>::instances(0);
+std::atomic<size_t> track<Shared>::instances_(0);
 
 template <class Shared>
-track<Shared>::track(const std::string& BC_DEBUG_ONLY(class_name))
-#ifndef NDEBUG
-  : class_(class_name)
-#endif
+track<Shared>::track()
 {
 #ifndef NDEBUG
-    ////LOG_DEBUG(LOG_SYSTEM) << class_ << "(" << ++instances << ")";
+    LOG_DEBUG(LOG_SYSTEM) << typeid(Shared).name()
+        << "(" << ++instances_ << ")";
 #endif
 }
 
@@ -48,7 +47,8 @@ template <class Shared>
 track<Shared>::~track()
 {
 #ifndef NDEBUG
-    ////LOG_DEBUG(LOG_SYSTEM) << "~" << class_ << "(" << --instances << ")";
+    LOG_DEBUG(LOG_SYSTEM) << "~" << typeid(Shared).name()
+        << "(" << --instances_ << ")";
 #endif
 }
 
