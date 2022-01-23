@@ -56,93 +56,36 @@ constexpr size_t max_inventory = 50000;
 
 // Serialization templates.
 ///----------------------------------------------------------------------------
-/// TODO: define template concept for witnessable.
-
-template <typename Message, system::if_base_of<Message, block> = true>
-void serialize(Message& instance, system::writer& sink, uint32_t version,
-    bool witness)
-{
-    instance.serialize(version, sink, witness);
-}
-
-template <typename Message, system::if_base_of<Message, transaction> = true>
-void serialize(Message& instance, system::writer& sink, uint32_t version,
-    bool witness)
-{
-    instance.serialize(version, sink, witness);
-}
-
-template <typename Message, system::if_base_of<Message, compact_block> = true>
-void serialize(Message& instance, system::writer& sink, uint32_t version,
-    bool witness)
-{
-    instance.serialize(version, sink, witness);
-}
 
 template <typename Message>
-void serialize(Message& instance, system::writer& sink, uint32_t version, bool)
+void serialize(Message& instance, system::writer& sink, uint32_t version)
 {
     instance.serialize(version, sink);
 }
 
 /// Serialize a message object to the Bitcoin wire protocol encoding.
 template <typename Message>
-chunk_ptr serialize(const Message& instance, uint32_t magic, uint32_t version,
-    bool witness)
+chunk_ptr serialize(const Message& instance, uint32_t magic, uint32_t version)
 {
-    const auto buffer = std::make_shared<system::data_chunk>(
-        system::no_fill_byte_allocator);
+    using namespace system;
+
+    const auto buffer = std::make_shared<data_chunk>(no_fill_byte_allocator);
     buffer->resize(heading::size() + instance.size(version));
 
-    system::data_slab body(std::next(buffer->begin(), heading::size()),
-        buffer->end());
-    system::write::bytes::copy body_writer(body);
-    serialize(instance, body_writer, version, witness);
+    data_slab body(std::next(buffer->begin(), heading::size()), buffer->end());
+    write::bytes::copy body_writer(body);
+    serialize(instance, body_writer, version);
 
-    system::write::bytes::copy head_writer(*buffer);
+    write::bytes::copy head_writer(*buffer);
     heading::factory(magic, Message::command, body).serialize(head_writer);
 
     return buffer;
 }
 
-template <typename Message, system::if_base_of<Message, block> = true>
-typename Message::ptr deserialize(system::reader& source, uint32_t version,
-    bool witness)
-{
-    return system::to_shared(Message::deserialize(version, source, witness));
-}
-
-template <typename Message, system::if_base_of<Message, transaction> = true>
-typename Message::ptr deserialize(system::reader& source, uint32_t version,
-    bool witness)
-{
-    return system::to_shared(Message::deserialize(version, source, witness));
-}
-
-template <typename Message, system::if_base_of<Message, compact_block> = true>
-typename Message::ptr deserialize(system::reader& source, uint32_t version,
-    bool witness)
-{
-    return system::to_shared(Message::deserialize(version, source, witness));
-}
-
 template <typename Message>
-typename Message::ptr deserialize(system::reader& source, uint32_t version,
-    bool)
+typename Message::ptr deserialize(system::reader& source, uint32_t version)
 {
     return system::to_shared(Message::deserialize(version, source));
-}
-
-template <typename Message>
-typename Message::ptr deserialize(const system::data_chunk&, uint32_t, bool)
-{
-    ////system::read::bytes::copy source(data);
-    ////auto message = deserialize<Message>(source, version, witness);
-
-    ////if (source && source.is_exhausted())
-    ////    return message;
-
-    return nullptr;
 }
 
 /// Compute an internal representation of the message checksum.

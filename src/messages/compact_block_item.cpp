@@ -48,8 +48,8 @@ void compact_block_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_variable(index);
-    if (transaction)
-        transaction->to_data(sink, witness);
+    if (transaction_ptr)
+        transaction_ptr->to_data(sink, witness);
 
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
@@ -57,7 +57,7 @@ void compact_block_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink
 size_t compact_block_item::size(uint32_t, bool witness) const
 {
     return sizeof(uint64_t)
-        + (transaction ? transaction->serialized_size(witness) : zero);
+        + (transaction_ptr ? transaction_ptr->serialized_size(witness) : zero);
 }
 
 } // namespace messages

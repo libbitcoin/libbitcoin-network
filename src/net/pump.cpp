@@ -36,7 +36,7 @@ using namespace bc::system;
 
 #define CASE_NOTIFY(name) \
     case messages::identifier::name: \
-        return do_notify<messages::name>(SUBSCRIBER(name), version, data)
+        return do_notify<messages::name>(SUBSCRIBER(name), version, source)
 
 #define STOP_SUBSCRIBER(name) \
     SUBSCRIBER(name)->stop(ec, nullptr)
@@ -81,13 +81,13 @@ pump::pump(asio::strand& strand)
 }
 
 code pump::notify(messages::identifier id, uint32_t version,
-    const data_chunk& data) const
+    reader& source) const
 {
     switch (id)
     {
         ////case messages:identifier::address:
         ////    return do_notify<messages::address>(
-        ////        address_subscriber_, version, data);
+        ////        address_subscriber_, version, source);
         CASE_NOTIFY(address);
         CASE_NOTIFY(alert);
         CASE_NOTIFY(block);

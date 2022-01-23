@@ -70,7 +70,7 @@ compact_block compact_block::deserialize(uint32_t version, reader& source,
 
     return 
     {
-        chain::header(source),
+        to_shared(chain::header(source)),
         source.read_8_bytes_little_endian(),
         read_short_ids(source),
         read_transactions(source)
@@ -83,7 +83,7 @@ void compact_block::serialize(uint32_t version, writer& sink,
     BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
-    header.to_data(sink);
+    header_ptr->to_data(sink);
     sink.write_8_bytes_little_endian(nonce);
     sink.write_variable(short_ids.size());
 

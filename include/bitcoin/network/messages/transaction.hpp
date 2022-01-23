@@ -47,11 +47,12 @@ struct BCT_API transaction
     static const uint32_t version_maximum;
 
     static transaction deserialize(uint32_t version, system::reader& source,
-        bool witness);
-    void serialize(uint32_t version, system::writer& sink, bool witness) const;
+        bool witness=true);
+    void serialize(uint32_t version, system::writer& sink,
+        bool witness=true) const;
     size_t size(uint32_t version, bool witness) const;
 
-    system::chain::transaction::ptr transaction;
+    system::chain::transaction::ptr transaction_ptr;
 };
 
 } // namespace messages

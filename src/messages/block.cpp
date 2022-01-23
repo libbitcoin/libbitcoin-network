@@ -51,16 +51,28 @@ void block::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
-    if (block)
-        block->to_data(sink, witness);
+    if (block_ptr)
+        block_ptr->to_data(sink, witness);
 
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t block::size(uint32_t, bool witness) const
 {
-    return block ? block->serialized_size(witness) : zero;
+    return block_ptr ? block_ptr->serialized_size(witness) : zero;
 }
+////
+////static void foo()
+////{
+////    system::chain::block::ptr alpha;
+////    auto beta = std::move(alpha);
+////}
+////
+////static void bar()
+////{
+////    block alpha;
+////    auto beta = std::move(alpha);
+////}
 
 } // namespace messages
 } // namespace network

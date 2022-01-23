@@ -46,8 +46,6 @@ namespace network {
 #define DECLARE_SUBSCRIBER(name) \
     SUBSCRIBER_TYPE(name)::ptr SUBSCRIBER(name)
 
-// TODO: type-constrain templates to a Message to base class, when there is one.
-
 /// Thread safe aggregation of subscribers by message type.
 /// Stop is thread safe and idempotent, may be called multiple times.
 /// All handlers are posted to the strand provided upon construct.
@@ -110,7 +108,7 @@ public:
     /// Relay a message instance to each subscriber of the type.
     /// Returns invalid_message if fails to deserialize, otherwise success.
     virtual code notify(messages::identifier id, uint32_t version,
-        const system::data_chunk& data) const;
+        system::reader& source) const;
 
     /// Stop all subscribers, prevents subsequent subscription (idempotent).
     /// The subscriber is stopped regardless of the error code, however by
@@ -121,11 +119,9 @@ private:
     // Deserialize a stream into a message instance and notify subscribers.
     template <typename Message, typename Subscriber>
     code do_notify(Subscriber& subscriber, uint32_t version,
-        const system::data_chunk& data) const
+        system::reader& source) const
     {
         // TODO: Implement deferred deserialization in messages.
-        // TODO: Store buffer and use for hash compute and reserialization.
-        // TODO: Give option to purge buffer on deserialization or explicitly.
         // TODO: This accelerates hash compute and allows for fast reject of
         // TODO: messages that we already have (by hash), and to retain the
         // TODO: buffer for relaying to other peers, etc. The hash is a store
@@ -134,7 +130,7 @@ private:
         // TODO: to hash for identity when we receive over the wire. See also
         // TODO: comments in proxy::send.
 
-        const auto message = messages::deserialize<Message>(data, version, true);
+        const auto message = messages::deserialize<Message>(source, version);
 
         if (!message)
             return error::invalid_message;

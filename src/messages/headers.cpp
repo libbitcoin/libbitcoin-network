@@ -46,18 +46,18 @@ headers headers::deserialize(uint32_t version, reader& source)
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    chain::header_ptrs headers;
-    headers.reserve(source.read_size(max_get_headers));
+    chain::header_ptrs header_ptrs;
+    header_ptrs.reserve(source.read_size(max_get_headers));
 
-    for (size_t header = 0; header < headers.capacity(); ++header)
+    for (size_t header = 0; header < header_ptrs.capacity(); ++header)
     {
-        headers.emplace_back(new chain::header{ source });
+        header_ptrs.emplace_back(new chain::header{ source });
 
         if (source.read_byte() != trail)
             source.invalidate();
     }
 
-    return { headers };
+    return { header_ptrs };
 }
 
 void headers::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
@@ -65,9 +65,9 @@ void headers::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
-    sink.write_variable(headers.size());
+    sink.write_variable(header_ptrs.size());
 
-    for (const auto& header: headers)
+    for (const auto& header: header_ptrs)
     {
         header->to_data(sink);
         sink.write_byte(trail);
@@ -78,19 +78,20 @@ void headers::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
 
 size_t headers::size(uint32_t) const
 {
-    return variable_size(headers.size()) +
-        (headers.size() * chain::header::serialized_size() + sizeof(trail));
+    return variable_size(header_ptrs.size()) +
+        (header_ptrs.size() * chain::header::serialized_size() + sizeof(trail));
 }
 
 // TODO: This would benefit from block hash store/return as pointer.
 bool headers::is_sequential() const
 {
-    if (headers.empty())
+    if (header_ptrs.empty())
         return true;
 
-    auto previous = headers.front()->hash();
+    auto previous = header_ptrs.front()->hash();
 
-    for (auto it = std::next(headers.begin()); it != headers.end(); ++it)
+    for (auto it = std::next(header_ptrs.begin()); it != header_ptrs.end();
+        ++it)
     {
         if ((*it)->previous_block_hash() != previous)
             return false;
@@ -105,9 +106,9 @@ bool headers::is_sequential() const
 hash_list headers::to_hashes() const
 {
     hash_list out;
-    out.reserve(headers.size());
+    out.reserve(header_ptrs.size());
 
-    for (const auto& header: headers)
+    for (const auto& header: header_ptrs)
         out.push_back(header->hash());
 
     return out;
@@ -117,10 +118,10 @@ hash_list headers::to_hashes() const
 inventory_item::list headers::to_inventory(inventory::type_id type) const
 {
     inventory_item::list out;
-    out.reserve(headers.size());
+    out.reserve(header_ptrs.size());
 
     // msvc: emplace_back(type, header->hash()) does not compile.
-    for (const auto& header: headers)
+    for (const auto& header: header_ptrs)
         out.push_back({ type, header->hash() });
 
     return out;

@@ -44,8 +44,7 @@ std::string proxy::extract_command(payload_ptr payload)
     if (payload->size() < sizeof(uint32_t) + heading::command_size)
         return "<unknown>";
 
-    return data_slice(
-        std::next(payload->begin(), sizeof(uint32_t)),
+    return data_slice(std::next(payload->begin(), sizeof(uint32_t)),
         std::next(payload->end(), heading::command_size)).to_string();
 }
 
@@ -53,7 +52,8 @@ proxy::proxy(socket::ptr socket)
   : socket_(socket),
     pump_subscriber_(socket->strand()),
     stop_subscriber_(socket->strand()),
-    payload_buffer_(no_fill_byte_allocator)
+    payload_buffer_(no_fill_byte_allocator),
+    heading_reader_(heading_buffer_)
 {
 }
 
@@ -126,10 +126,10 @@ void proxy::handle_read_heading(const code& ec, size_t)
         return;
     }
 
-    system::read::bytes::copy reader(heading_buffer_);
-    const auto head = to_shared(heading::deserialize(reader));
+    heading_reader_.set_position(zero);
+    const auto head = to_shared(heading::deserialize(heading_reader_));
 
-    if (!reader)
+    if (!heading_reader_)
     {
         LOG_WARNING(LOG_NETWORK)
             << "Invalid heading from [" << authority() << "]";
@@ -203,8 +203,11 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
         return;
     }
 
+    // Resizable payload buffer precludes reuse of the payload reader.
+    system::read::bytes::copy payload_reader(payload_buffer_);
+
     // Notify subscribers of the new message.
-    auto code = pump_subscriber_.notify(head->id(), version(), payload_buffer_);
+    auto code = pump_subscriber_.notify(head->id(), version(), payload_reader);
 
     if (code)
     {

@@ -87,7 +87,7 @@ public:
     template <class Message>
     void send(const Message& message, result_handler&& handler)
     {
-        send(messages::serialize(message, protocol_magic(), version(), true),
+        send(messages::serialize(message, protocol_magic(), version()),
             std::move(handler));
     }
 
@@ -140,6 +140,7 @@ private:
     // These are protected by read header/payload ordering.
     system::data_chunk payload_buffer_;
     system::data_array<messages::heading::size()> heading_buffer_;
+    system::read::bytes::copy heading_reader_;
 };
 
 } // namespace network

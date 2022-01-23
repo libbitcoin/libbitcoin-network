@@ -50,7 +50,7 @@ struct BCT_API headers
     system::hash_list to_hashes() const;
     inventory_item::list to_inventory(inventory::type_id type) const;
 
-    system::chain::header_ptrs headers;
+    system::chain::header_ptrs header_ptrs;
 };
 
 } // namespace messages

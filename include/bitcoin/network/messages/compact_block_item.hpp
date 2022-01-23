@@ -43,7 +43,7 @@ public:
     size_t size(uint32_t version, bool witness) const;
 
     uint64_t index;
-    system::chain::transaction::ptr transaction;
+    system::chain::transaction::ptr transaction_ptr;
 };
 
 } // namespace messages

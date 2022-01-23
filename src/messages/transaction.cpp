@@ -52,15 +52,15 @@ void transaction::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
-    if (transaction)
-        transaction->to_data(sink, witness);
+    if (transaction_ptr)
+        transaction_ptr->to_data(sink, witness);
 
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t transaction::size(uint32_t, bool witness) const
 {
-    return transaction ? transaction->serialized_size(witness) : zero;
+    return transaction_ptr ? transaction_ptr->serialized_size(witness) : zero;
 }
 
 } // namespace messages

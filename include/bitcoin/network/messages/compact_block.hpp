@@ -44,11 +44,12 @@ struct BCT_API compact_block
     static const uint32_t version_maximum;
 
     static compact_block deserialize(uint32_t version, system::reader& source,
-        bool witness);
-    void serialize(uint32_t version, system::writer& sink, bool witness) const;
+        bool witness=true);
+    void serialize(uint32_t version, system::writer& sink,
+        bool witness=true) const;
     size_t size(uint32_t version, bool witness) const;
 
-    system::chain::header header;
+    system::chain::header::ptr header_ptr;
     uint64_t nonce;
     short_id_list short_ids;
     compact_block_item::list transactions;
