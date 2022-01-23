@@ -32,7 +32,9 @@ using namespace bc::system;
 using namespace std::placeholders;
 
 protocol_events::protocol_events(channel::ptr channel)
-  : protocol(channel)
+  : protocol(channel),
+    handler_([](const code&) {}),
+    stopped_(false)
 {
 }
 
@@ -42,7 +44,7 @@ protocol_events::protocol_events(channel::ptr channel)
 bool protocol_events::stopped() const
 {
     // Used for context-free stop testing.
-    return !handler_.load();
+    return stopped_;
 }
 
 bool protocol_events::stopped(const code& ec) const
@@ -57,14 +59,12 @@ bool protocol_events::stopped(const code& ec) const
 
 void protocol_events::start()
 {
-    const auto nop = [](const code&){};
-    start(nop);
 }
 
 // START COMPLETES WITHOUT INVOKING THE HANDLER.
 void protocol_events::start(event_handler handle_event)
 {
-    handler_.store(handle_event);
+    handler_ = handle_event;
 }
 
 // Stop.
@@ -88,17 +88,13 @@ void protocol_events::handle_stopped(const code& ec)
 
 void protocol_events::set_event(const code& ec)
 {
-    // If already stopped.
-    auto handler = handler_.load();
-    if (!handler)
-        return;
-
-    // If stopping but not yet cleared, clear event handler now.
     if (stopped(ec))
-        handler_.store(nullptr);
-
-    // Invoke event handler.
-    handler(ec);
+    {
+        stopped_ = true;
+        return;
+    }
+    
+    handler_(ec);
 }
 
 } // namespace network

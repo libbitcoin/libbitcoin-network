@@ -102,11 +102,11 @@ public:
     /// Return a reference to the network io_context.
     virtual asio::io_context& service();
 
-    /// Return the current top block identity (for p2p handshake).
-    virtual system::chain::checkpoint top_block() const;
+    /////// Return the current top block identity (for p2p handshake).
+    ////virtual system::chain::checkpoint top_block() const;
 
-    /// Set the current top block identity (for p2p handshake).
-    virtual void set_top_block(system::chain::checkpoint&& top);
+    /////// Set the current top block identity (for p2p handshake).
+    ////virtual void set_top_block(system::chain::checkpoint&& top);
 
     //// TODO: move to blockchain/node.
 
@@ -253,9 +253,9 @@ private:
     // These are thread safe.
     const settings& settings_;
     std::atomic<bool> stopped_;
-    atomic<system::chain::checkpoint> top_block_;
-    atomic<system::chain::checkpoint> top_header_;
-    atomic<session_manual::ptr> manual_;
+    ////atomic<system::chain::checkpoint> top_block_;
+    ////atomic<system::chain::checkpoint> top_header_;
+    session_manual::ptr manual_;
     hosts hosts_;
     threadpool threadpool_;
     pending_connectors pending_connect_;

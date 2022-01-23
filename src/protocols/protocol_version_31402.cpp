@@ -95,7 +95,7 @@ messages::version protocol_version_31402::version_factory() const
 {
     const auto timestamp = static_cast<uint32_t>(zulu_time());
     const auto& settings = network_.network_settings();
-    const auto height = network_.top_block().height();
+    const auto height = 42u;//// network_.top_block().height();
 
     BC_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
 

@@ -19,8 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_EVENTS_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_EVENTS_HPP
 
+#include <atomic>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
@@ -53,7 +53,8 @@ protected:
 private:
     void handle_stopped(const code& ec);
 
-    atomic<event_handler> handler_;
+    event_handler handler_;
+    std::atomic<bool> stopped_;
 };
 
 } // namespace network

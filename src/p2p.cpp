@@ -68,8 +68,8 @@ inline size_t nominal_connected(const settings& settings)
 p2p::p2p(const settings& settings)
   : settings_(settings),
     stopped_(true),
-    top_block_({ null_hash, zero }),
-    top_header_({ null_hash, zero }),
+    ////top_block_({ null_hash, zero }),
+    ////top_header_({ null_hash, zero }),
     hosts_(settings_),
     threadpool_(settings_.threads),
     pending_connect_(nominal_connecting(settings_)),
@@ -100,9 +100,9 @@ void p2p::start(result_handler handler)
 
     // This instance is retained by stop handler and member reference.
     // The member reference is retained for posting manual connect calls.
-    manual_.store(attach_manual_session());
+    manual_ = attach_manual_session();
 
-    manual_.load()->start(
+    manual_->start(
         std::bind(&p2p::handle_manual_started,
             this, _1, handler));
 }
@@ -295,15 +295,15 @@ asio::io_context& p2p::service()
     return threadpool_.service();
 }
 
-checkpoint p2p::top_block() const
-{
-    return top_block_.load();
-}
-
-void p2p::set_top_block(checkpoint&& top)
-{
-    top_block_.store(std::move(top));
-}
+////checkpoint p2p::top_block() const
+////{
+////    return top_block_.load();
+////}
+////
+////void p2p::set_top_block(checkpoint&& top)
+////{
+////    top_block_.store(std::move(top));
+////}
 
 ////void p2p::set_top_block(const checkpoint& top)
 ////{
@@ -351,10 +351,7 @@ void p2p::connect(const std::string& hostname, uint16_t port)
     if (stopped())
         return;
 
-    auto manual = manual_.load();
-
-    if (manual)
-        manual->connect(hostname, port);
+    manual_->connect(hostname, port);
 }
 
 // Handler is invoked after handshake and before protocol attachment.
@@ -367,10 +364,7 @@ void p2p::connect(const std::string& hostname, uint16_t port,
         return;
     }
 
-    auto manual = manual_.load();
-
-    if (manual)
-        manual->connect(hostname, port, handler);
+    manual_->connect(hostname, port, handler);
 }
 
 // Hosts collection.

@@ -99,11 +99,11 @@ private:
 
     // These are thread safe.
     std::atomic<bool> stopped_;
-    atomic<config::authority> endpoint_;
     asio::strand strand_;
 
-    // This is protected by strand.
+    // These are protected by strand (see also handle_accept).
     asio::socket socket_;
+    config::authority endpoint_;
 };
 
 } // namespace network

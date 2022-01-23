@@ -179,8 +179,8 @@ void socket::handle_accept(const error::boost_code& ec,
     const result_handler& handler)
 {
     // This is running in the acceptor or socket execution context.
-    // The socket is not guarded here, see comments on the accept method.
-    endpoint_.store(socket_.remote_endpoint());
+    // socket and endpoint are not guarded here, see comments on accept method.
+    endpoint_ = socket_.remote_endpoint();
 
     if (error::asio_is_cancelled(ec))
     {
@@ -197,7 +197,7 @@ void socket::handle_connect(const error::boost_code& ec,
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    endpoint_.store(peer);
+    endpoint_ = peer;
 
     if (error::asio_is_cancelled(ec))
     {
@@ -235,7 +235,7 @@ asio::strand& socket::strand()
 
 config::authority socket::endpoint() const
 {
-    return endpoint_.load();
+    return endpoint_;
 }
 
 } // namespace network

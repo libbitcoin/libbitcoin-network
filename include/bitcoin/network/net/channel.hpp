@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_NET_CHANNEL_HPP
 #define LIBBITCOIN_NETWORK_NET_CHANNEL_HPP
 
-#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -62,6 +61,7 @@ public:
 
     // Properties.
     // ------------------------------------------------------------------------
+    // These are not thread safe, caller must be stranded.
 
     virtual bool notify() const;
     virtual void set_notify(bool value);
@@ -94,12 +94,14 @@ private:
     const uint32_t protocol_magic_;
     const bool validate_checksum_;
     const bool verbose_logging_;
-    std::atomic<bool> notify_on_connect_;
-    std::atomic<uint64_t> channel_nonce_;
-    std::atomic<uint32_t> negotiated_version_;
-    atomic<messages::version::ptr> peer_version_;
     deadline<asio::strand>::ptr expiration_;
     deadline<asio::strand>::ptr inactivity_;
+
+    // These are not thread safe, caller must be stranded.
+    bool notify_on_connect_;
+    uint64_t channel_nonce_;
+    uint32_t negotiated_version_;
+    messages::version::ptr peer_version_;
 };
 
 } // namespace network

@@ -150,7 +150,6 @@ uint64_t channel::nonce() const
     return channel_nonce_;
 }
 
-// TODO: can the nonce be generated internally on construct?
 void channel::set_nonce(uint64_t value)
 {
     channel_nonce_ = value;
@@ -168,12 +167,12 @@ void channel::set_negotiated_version(uint32_t value)
 
 version::ptr channel::peer_version() const
 {
-    return peer_version_.load();
+    return peer_version_;
 }
 
 void channel::set_peer_version(version::ptr value)
 {
-    peer_version_.store(value);
+    peer_version_ = value;
 }
 
 // Proxy overrides (channel maintains state for the proxy).
