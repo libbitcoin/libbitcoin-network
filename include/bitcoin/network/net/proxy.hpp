@@ -87,6 +87,7 @@ public:
     template <class Message>
     void send(const Message& message, result_handler&& handler)
     {
+        // TODO: account for witness parameter here.
         send(messages::serialize(message, protocol_magic(), version()),
             std::move(handler));
     }

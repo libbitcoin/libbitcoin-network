@@ -130,6 +130,7 @@ private:
         // TODO: to hash for identity when we receive over the wire. See also
         // TODO: comments in proxy::send.
 
+        // TODO: account for witness parameter here.
         const auto message = messages::deserialize<Message>(source, version);
 
         if (!message)
