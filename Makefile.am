@@ -122,7 +122,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/p2p.cpp \
     test/test.cpp \
     test/test.hpp \
-    test/async/atomic.cpp \
     test/async/deadline.cpp \
     test/async/enable_shared_from_base.cpp \
     test/async/subscriber.cpp \
@@ -203,7 +202,6 @@ include_bitcoin_network_asyncdir = ${includedir}/bitcoin/network/async
 include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/asio.hpp \
     include/bitcoin/network/async/async.hpp \
-    include/bitcoin/network/async/atomic.hpp \
     include/bitcoin/network/async/deadline.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
     include/bitcoin/network/async/handlers.hpp \

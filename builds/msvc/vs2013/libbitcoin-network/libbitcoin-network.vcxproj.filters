@@ -296,9 +296,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\atomic.hpp">
-      <Filter>include\bitcoin\network\async</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\deadline.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
