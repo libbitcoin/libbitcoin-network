@@ -345,7 +345,7 @@ session_outbound::ptr p2p::attach_outbound_session()
 ////    return hosts_.store(address);
 ////}
 ////
-////void p2p::store(const messages::address_item::list& addresses,
+////void p2p::store(const messages::address_items& addresses,
 ////    result_handler handler)
 ////{
 ////    hosts_.store(addresses, handler);
@@ -356,7 +356,7 @@ session_outbound::ptr p2p::attach_outbound_session()
 ////    return hosts_.fetch(out_address);
 ////}
 ////
-////code p2p::fetch_addresses(messages::address_item::list& out_addresses) const
+////code p2p::fetch_addresses(messages::address_items& out_addresses) const
 ////{
 ////    return hosts_.fetch(out_addresses);
 ////}

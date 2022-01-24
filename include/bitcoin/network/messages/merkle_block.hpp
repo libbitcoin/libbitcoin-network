@@ -35,7 +35,6 @@ namespace messages {
 struct BCT_API merkle_block
 {
 public:
-    typedef std::vector<merkle_block> list;
     typedef std::shared_ptr<const merkle_block> ptr;
 
     static const identifier id;
@@ -53,6 +52,8 @@ public:
     system::hash_list hashes;
     system::data_chunk flags;
 };
+
+typedef std::vector<merkle_block> merkle_blocks;
 
 } // namespace messages
 } // namespace network

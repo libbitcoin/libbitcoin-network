@@ -45,7 +45,7 @@ inventory inventory::factory(hash_list&& hashes, type_id type)
 {
     static default_allocator<inventory_item> no_fill_allocator{};
 
-    inventory_item::list items(no_fill_allocator);
+    inventory_items items(no_fill_allocator);
     items.resize(hashes.size());
 
     std::transform(hashes.begin(), hashes.end(), items.begin(),
@@ -61,7 +61,7 @@ inventory inventory::factory(const hash_list& hashes, type_id type)
 {
     static default_allocator<inventory_item> no_fill_allocator{};
 
-    inventory_item::list items(no_fill_allocator);
+    inventory_items items(no_fill_allocator);
     items.resize(hashes.size());
 
     std::transform(hashes.begin(), hashes.end(), items.begin(),
@@ -78,7 +78,7 @@ inventory inventory::deserialize(uint32_t version, reader& source)
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    inventory_item::list items;
+    inventory_items items;
     items.resize(source.read_size(max_inventory));
 
     for (size_t item = 0; item < items.capacity(); ++item)
@@ -106,9 +106,9 @@ size_t inventory::size(uint32_t version) const
         (items.size() * inventory_item::size(version));
 }
 
-inventory_item::list inventory::filter(type_id type) const
+inventory_items inventory::filter(type_id type) const
 {
-    inventory_item::list out;
+    inventory_items out;
     out.reserve(count(type));
 
     for (const auto& item: items)
@@ -137,7 +137,7 @@ size_t inventory::count(type_id type) const
         return item.type == type;
     };
 
-    return count_if(items.begin(), items.end(), is_type);
+    return std::count_if(items.begin(), items.end(), is_type);
 }
 
 } // namespace messages

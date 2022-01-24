@@ -59,9 +59,9 @@ public:
     uint32_t host_pool_capacity;
     boost::filesystem::path hosts_file;
     config::authority self;
-    config::authority::list blacklists;
-    config::endpoint::list peers;
-    config::endpoint::list seeds;
+    config::authorities blacklists;
+    config::endpoints peers;
+    config::endpoints seeds;
 
     // [log]
     boost::filesystem::path debug_file;

@@ -90,7 +90,7 @@ code hosts::fetch(address_item& out) const
     ///////////////////////////////////////////////////////////////////////////
 }
 
-code hosts::fetch(address_item::list& out) const
+code hosts::fetch(address_items& out) const
 {
     if (disabled_)
         return error::address_not_found;
@@ -307,7 +307,7 @@ code hosts::store(const address_item& host)
     return error::success;
 }
 
-void hosts::store(const address_item::list& hosts, result_handler handler)
+void hosts::store(const address_items& hosts, result_handler handler)
 {
     if (disabled_ || hosts.empty())
     {

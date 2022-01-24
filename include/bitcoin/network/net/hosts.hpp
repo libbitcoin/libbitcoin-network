@@ -56,22 +56,22 @@ public:
 
     virtual size_t count() const;
     virtual code fetch(messages::address_item& out) const;
-    virtual code fetch(messages::address_item::list& out) const;
+    virtual code fetch(messages::address_items& out) const;
     virtual code remove(const messages::address_item& host);
     virtual code store(const messages::address_item& host);
-    virtual void store(const messages::address_item::list& hosts,
+    virtual void store(const messages::address_items& hosts,
         result_handler handler);
 
 private:
-    typedef boost::circular_buffer<messages::address_item> list;
-    typedef list::iterator iterator;
+    typedef boost::circular_buffer<messages::address_item> buffer;
+    typedef buffer::iterator iterator;
 
     iterator find(const messages::address_item& host);
 
     const size_t capacity_;
 
     // These are protected by a mutex.
-    list buffer_;
+    buffer buffer_;
     std::atomic<bool> stopped_;
     mutable upgrade_mutex mutex_;
 

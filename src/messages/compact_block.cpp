@@ -58,7 +58,7 @@ compact_block compact_block::deserialize(uint32_t version, reader& source,
 
     const auto read_transactions = [=](reader& source)
     {
-        compact_block_item::list txs;
+        compact_block_items txs;
         txs.reserve(source.read_size(chain::max_block_size));
 
         for (size_t id = 0; id < txs.capacity(); ++id)

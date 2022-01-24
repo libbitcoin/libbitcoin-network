@@ -34,7 +34,6 @@ namespace messages {
 /// This is also known as a "inventory vector".
 struct BCT_API inventory_item
 {
-    typedef std::vector<inventory_item> list;
     typedef std::shared_ptr<const inventory_item> ptr;
 
     enum class type_id : uint32_t
@@ -68,6 +67,8 @@ struct BCT_API inventory_item
     type_id type;
     system::hash_digest hash;
 };
+
+typedef std::vector<inventory_item> inventory_items;
 
 } // namespace messages
 } // namespace network

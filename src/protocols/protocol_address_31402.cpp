@@ -105,7 +105,7 @@ bool protocol_address_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return false;
 
-    messages::address_item::list subset;
+    messages::address_items subset;
 ////    const auto code = network_.fetch_addresses(subset);
 code code;
 

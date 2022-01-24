@@ -52,7 +52,7 @@ struct BCT_API compact_block
     system::chain::header::ptr header_ptr;
     uint64_t nonce;
     short_id_list short_ids;
-    compact_block_item::list transactions;
+    compact_block_items transactions;
 };
 
 } // namespace messages

@@ -115,9 +115,9 @@ hash_list headers::to_hashes() const
 }
 
 // TODO: This would benefit from inventory_item hash pointers.
-inventory_item::list headers::to_inventory(inventory::type_id type) const
+inventory_items headers::to_inventory(inventory::type_id type) const
 {
-    inventory_item::list out;
+    inventory_items out;
     out.reserve(header_ptrs.size());
 
     // msvc: emplace_back(type, header->hash()) does not compile.

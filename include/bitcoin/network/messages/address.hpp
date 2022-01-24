@@ -45,7 +45,7 @@ struct BCT_API address
     void serialize(uint32_t version, system::writer& sink) const;
     size_t size(uint32_t version) const;
 
-    address_item::list addresses;
+    address_items addresses;
 };
 
 } // namespace messages

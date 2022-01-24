@@ -34,7 +34,6 @@ namespace messages {
 struct BCT_API compact_block_item
 {
 public:
-    typedef std::vector<compact_block_item> list;
     typedef std::shared_ptr<const compact_block_item> ptr;
 
     static compact_block_item deserialize(uint32_t version,
@@ -45,6 +44,8 @@ public:
     uint64_t index;
     system::chain::transaction::ptr transaction_ptr;
 };
+
+typedef std::vector<compact_block_item> compact_block_items;
 
 } // namespace messages
 } // namespace network

@@ -37,8 +37,6 @@ namespace config {
 class BC_API endpoint
 {
 public:
-    typedef std::vector<endpoint> list;
-
     endpoint();
     endpoint(const endpoint& other);
 
@@ -89,6 +87,8 @@ private:
     std::string host_;
     uint16_t port_;
 };
+
+typedef std::vector<endpoint> endpoints;
 
 } // namespace config
 } // namespace system

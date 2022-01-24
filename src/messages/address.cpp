@@ -46,7 +46,7 @@ address address::deserialize(uint32_t version, system::reader& source)
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    address_item::list addresses;
+    address_items addresses;
     addresses.reserve(source.read_size(max_address));
 
     for (size_t address = 0; address < addresses.capacity(); ++address)

@@ -36,8 +36,6 @@ namespace config {
 class BC_API authority
 {
 public:
-    typedef std::vector<authority> list;
-
     authority();
 
     /// Deserialize a IPv4 or IPv6 address-based hostname[:port].
@@ -93,6 +91,8 @@ private:
     boost::asio::ip::address_v6 ip_;
     uint16_t port_;
 };
+
+typedef std::vector<authority> authorities;
 
 } // namespace config
 } // namespace system

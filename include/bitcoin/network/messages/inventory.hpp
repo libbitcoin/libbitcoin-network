@@ -50,11 +50,11 @@ struct BCT_API inventory
     void serialize(uint32_t version, system::writer& sink) const;
     size_t size(uint32_t version) const;
 
-    inventory_item::list filter(type_id type) const;
+    inventory_items filter(type_id type) const;
     system::hash_list to_hashes(type_id type) const;
     size_t count(type_id type) const;
 
-    inventory_item::list items;
+    inventory_items items;
 };
 
 } // namespace messages

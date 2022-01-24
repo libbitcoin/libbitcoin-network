@@ -35,7 +35,6 @@ typedef system::data_array<16> ip_address;
 
 struct BCT_API address_item
 {
-    typedef std::vector<address_item> list;
     typedef std::shared_ptr<const address_item> ptr;
 
     static size_t size(uint32_t version, bool with_timestamp);
@@ -49,6 +48,8 @@ struct BCT_API address_item
     ip_address ip;
     uint16_t port;
 };
+
+typedef std::vector<address_item> address_items;
 
 static const ip_address null_ip_address
 {

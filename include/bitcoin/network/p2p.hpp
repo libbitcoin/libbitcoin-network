@@ -129,7 +129,7 @@ public:
     ////virtual code store(const messages::address_item& address);
 
     /////// Store a collection of addresses (asynchronous).
-    ////virtual void store(const messages::address_item::list& addresses,
+    ////virtual void store(const messages::address_items& addresses,
     ////    result_handler handler);
 
     /////// Get a randomly-selected address.
@@ -137,7 +137,7 @@ public:
 
     /////// Get a list of stored hosts
     ////virtual code fetch_addresses(
-    ////    messages::address_item::list& out_addresses) const;
+    ////    messages::address_items& out_addresses) const;
 
     /////// Remove an address.
     ////virtual code remove(const messages::address_item& address);
