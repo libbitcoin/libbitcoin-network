@@ -92,9 +92,9 @@ private:
     const settings& settings_;
     asio::io_context& service_;
     asio::strand strand_;
-    deadline<asio::strand> timer_;
 
     // These are protected by strand.
+    deadline::ptr timer_;
     asio::resolver resolver_;
     bool stopped_;
 };

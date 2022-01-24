@@ -44,7 +44,7 @@ acceptor::acceptor(asio::io_context& service, const settings& settings)
   : settings_(settings),
     service_(service),
     strand_(service_.get_executor()),
-    timer_(strand_, settings_.connect_timeout()),
+    timer_(std::make_shared<deadline>(strand_, settings_.connect_timeout())),
     acceptor_(strand_),
     stopped_(false)
 {
@@ -91,7 +91,7 @@ void acceptor::do_stop()
 
     // Posts timer handler to strand (if not expired).
     // But timer handler does not invoke handle_timer on stop.
-    timer_.stop();
+    timer_->stop();
 }
 
 // Methods.
@@ -114,7 +114,7 @@ void acceptor::do_accept(accept_handler handler)
     // The handler is copied by std::bind.
     // Posts timer handler to strand (if not expired).
     // But timer handler does not invoke handle_timer on stop.
-    timer_.start(
+    timer_->start(
         std::bind(&acceptor::handle_timer,
             shared_from_this(), _1, handler));
 
@@ -141,7 +141,7 @@ void acceptor::handle_accept(const code& ec, socket::ptr socket,
 
     // Posts timer handler to strand (if not expired).
     // But timer handler does not invoke handle_timer on stop.
-    timer_.stop();
+    timer_->stop();
     stopped_ = true;
 
     // socket->accept sets channel_stopped when canceled, otherwise error.

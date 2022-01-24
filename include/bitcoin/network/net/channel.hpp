@@ -94,8 +94,8 @@ private:
     const uint32_t protocol_magic_;
     const bool validate_checksum_;
     const bool verbose_logging_;
-    deadline<asio::strand>::ptr expiration_;
-    deadline<asio::strand>::ptr inactivity_;
+    deadline::ptr expiration_;
+    deadline::ptr inactivity_;
 
     // These are not thread safe, caller must be stranded.
     bool notify_on_connect_;

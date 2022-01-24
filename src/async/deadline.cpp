@@ -16,9 +16,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_DEADLINE_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_DEADLINE_IPP
-
 #include <bitcoin/network/async/deadline.hpp>
 
 #include <functional>
@@ -35,66 +32,41 @@ namespace network {
 
 using namespace std::placeholders;
 
-// The timer closure captures an instance of this class and the callback.
-// Deadline calls handler exactly once unless canceled/restarted.
-
-template <typename Service>
-deadline<Service>::deadline(Service& service, const duration& timeout)
-  : duration_(timeout),
-    timer_(service),
-    track<deadline>()
+deadline::deadline(asio::strand& strand, const duration& timeout)
+  : duration_(timeout), timer_(strand), track<deadline>()
 {
 }
 
-template <typename Service>
-void deadline<Service>::start(handler&& handle)
+void deadline::start(handler&& handle)
 {
     start(std::move(handle), duration_);
 }
 
-template <typename Service>
-void deadline<Service>::start(handler&& handle, const duration& timeout)
+void deadline::start(handler&& handle, const duration& timeout)
 {
-    auto timer_handler =
-        std::bind(&deadline::handle_timer,
-            this->shared_from_this(), _1, std::move(handle));
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-
-    // Handling socket error codes creates exception safety.
+    // Handling cancel error code creates exception safety.
     error::boost_code ignore;
     timer_.cancel(ignore);
     timer_.expires_from_now(timeout);
 
-    // async_wait will not invoke the handler within this function.
-    timer_.async_wait(std::move(timer_handler));
-    ///////////////////////////////////////////////////////////////////////////
+    // Handler posted, invoked once, sets operation_aborted if canceled.
+    timer_.async_wait(
+        std::bind(&deadline::handle_timer,
+            shared_from_this(), _1, std::move(handle)));
 }
 
 // Cancellation calls handle_timer with asio::error::operation_aborted.
-// We do not handle the cancelation result code, which will return success
-// in the case of a race in which the timer is already expired.
-template <typename Service>
-void deadline<Service>::stop()
+void deadline::stop()
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    unique_lock lock(mutex_);
-
-    // Handling socket error codes creates exception safety.
+    // Handling cancel error code creates exception safety.
     error::boost_code ignore;
     timer_.cancel(ignore);
-    ///////////////////////////////////////////////////////////////////////////
 }
 
 // If the timer expires the callback is fired with a success code.
 // If the timer fails the callback is fired with the normalized error code.
 // If the timer is canceled before it has fired, no call is made (but cleared).
-// TODO: it might be normalizing to allow the handler to be fired upon cancel.
-template <typename Service>
-void deadline<Service>::handle_timer(const error::boost_code& ec,
+void deadline::handle_timer(const error::boost_code& ec,
     const handler& handle) const
 {
     if (!error::asio_is_cancelled(ec))
@@ -103,5 +75,3 @@ void deadline<Service>::handle_timer(const error::boost_code& ec,
 
 } // namespace network
 } // namespace libbitcoin
-
-#endif

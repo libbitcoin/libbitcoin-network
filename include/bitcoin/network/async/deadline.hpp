@@ -24,7 +24,6 @@
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/thread.hpp>
-#include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/async/track.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
@@ -32,21 +31,20 @@
 namespace libbitcoin {
 namespace network {
 
-/// Class wrapper for boost::asio::basic_waitable_timer, thread safe.
+/// Not thread safe.
+/// Class wrapper for boost::asio::basic_waitable_timer.
 /// This simplifies invocation, eliminates boost-specific error handling and
 /// makes timer firing and cancelation conditions safe for shared objects.
-template <typename Service>
 class deadline
-  : public std::enable_shared_from_this<deadline<Service>>,
-    system::noncopyable,
-    track<deadline<Service>>
+  : public std::enable_shared_from_this<deadline>, system::noncopyable,
+    track<deadline>
 {
 public:
-    typedef std::shared_ptr<deadline<Service>> ptr;
+    typedef std::shared_ptr<deadline> ptr;
     typedef std::function<void(const code&)> handler;
     
     /// Timer notification handler is posted to the service.
-    deadline(Service& service, const duration& timeout=seconds(0));
+    deadline(asio::strand& strand, const duration& timeout=seconds(0));
 
     /// Start or restart the timer.
     /// Use expired(ec) in handler to test for expiration.
@@ -66,14 +64,11 @@ private:
     // This is thread safe.
     const duration duration_;
 
-    // This is protected by mutex.
+    // This is not thread safe.
     wait_timer timer_;
-    mutable shared_mutex mutex_;
 };
 
 } // namespace network
 } // namespace libbitcoin
-
-#include <bitcoin/network/impl/async/deadline.ipp>
 
 #endif

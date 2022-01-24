@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -23,38 +23,35 @@ BOOST_AUTO_TEST_SUITE(deadline_tests)
 
 BOOST_AUTO_TEST_CASE(deadline__construct1__one_thread_start_zero_delay__success)
 {
-    const auto handler = [](code ec)
-    {
-        BOOST_REQUIRE(!ec);
-    };
-
     threadpool pool(1);
-    auto timer = std::make_shared<deadline<asio::io_context>>(pool.service());
-    timer->start(handler);
+    asio::strand strand(pool.service().get_executor());
+    const auto timer = std::make_shared<deadline>(strand);
+    timer->start([timer](code ec)
+    {
+        BOOST_REQUIRE(timer && !ec);
+    });
 }
 
 BOOST_AUTO_TEST_CASE(deadline__construct1__two_threads_start_delay__success)
 {
-    const auto handler = [](code ec)
-    {
-        BOOST_REQUIRE(!ec);
-    };
-
     threadpool pool(2);
-    auto timer = std::make_shared<deadline<asio::io_context>>(pool.service());
-    timer->start(handler, milliseconds(1));
+    asio::strand strand(pool.service().get_executor());
+    const auto timer = std::make_shared<deadline>(strand);
+    timer->start([timer](code ec)
+    {
+        BOOST_REQUIRE(timer && !ec);
+    }, milliseconds(1));
 }
 
 BOOST_AUTO_TEST_CASE(deadline__construct2__three_threads_start_zero_delay__success)
 {
-    const auto handler = [](code ec)
-    {
-        BOOST_REQUIRE(!ec);
-    };
-
     threadpool pool(3);
-    auto timer = std::make_shared<deadline<asio::io_context>>(pool.service(), seconds(42));
-    timer->start(handler, seconds(0));
+    asio::strand strand(pool.service().get_executor());
+    const auto timer = std::make_shared<deadline>(strand, seconds(42));
+    timer->start([timer](code ec)
+    {
+        BOOST_REQUIRE(timer && !ec);
+    }, seconds(0));
 }
 
 BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
@@ -62,28 +59,26 @@ BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
     // Thread starved timer.
     // ------------------------------------------------------------------------
 
-    const auto handler = [](code)
+    threadpool pool(0);
+    asio::strand strand(pool.service().get_executor());
+    const auto timer = std::make_shared<deadline>(strand);
+    timer->start([timer](code)
     {
         // This should never be invoked (no threads).
-        BOOST_REQUIRE(false);
-    };
-
-    threadpool pool(0);
-    auto timer = std::make_shared<deadline<asio::io_context>>(pool.service());
-    timer->start(handler);
+        BOOST_REQUIRE(!timer);
+    });
 
     // Stop timer.
     // ------------------------------------------------------------------------
 
-    const auto stop_handler = [&timer](code ec)
-    {
-        BOOST_REQUIRE(!ec);
-        timer->stop();
-    };
-
     threadpool stop_pool(1);
-    auto stopper = std::make_shared<deadline<asio::io_context>>(stop_pool.service(), milliseconds(1));
-    stopper->start(stop_handler);
+    asio::strand stop_strand(stop_pool.service().get_executor());
+    const auto stopper = std::make_shared<deadline>(stop_strand, milliseconds(1));
+    stopper->start([timer, stopper](code ec)
+    {
+        BOOST_REQUIRE(stopper && !ec);
+        timer->stop();
+    });
 }
 
 BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
@@ -91,30 +86,28 @@ BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
     // Slow timer.
     // ------------------------------------------------------------------------
 
-    const auto handler = [](code ec)
+    threadpool pool(1);
+    asio::strand strand(pool.service().get_executor());
+    const auto timer = std::make_shared<deadline>(strand, seconds(10));
+    timer->start([timer](code ec)
     {
         // In the case of a race won by the slow timer, this catches success.
         // In the case of a race won by the stop timer, this will not fire.
         // A 10s delay indicates the slow timer has won the race (unexpected).
-        BOOST_REQUIRE(!ec);
-    };
-
-    threadpool pool(1);
-    auto timer = std::make_shared<deadline<asio::io_context>>(pool.service(), seconds(10));
-    timer->start(handler);
+        BOOST_REQUIRE(timer && !ec);
+    });
 
     // Stop timer.
     // ------------------------------------------------------------------------
 
-    const auto stop_handler = [&timer](code ec)
-    {
-        BOOST_REQUIRE(!ec);
-        timer->stop();
-    };
-
     threadpool stop_pool(1);
-    auto stopper = std::make_shared<deadline<asio::io_context>>(stop_pool.service());
-    stopper->start(stop_handler, milliseconds(1));
+    asio::strand stop_strand(stop_pool.service().get_executor());
+    const auto stopper = std::make_shared<deadline>(stop_strand);
+    stopper->start([timer, stopper](code ec)
+    {
+        BOOST_REQUIRE(stopper && !ec);
+        timer->stop();
+    }, milliseconds(1));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
