@@ -47,6 +47,7 @@ public:
 
     /// Construct an instance.
     socket(asio::io_context& service);
+    virtual ~socket();
 
     // Stop.
     // ------------------------------------------------------------------------

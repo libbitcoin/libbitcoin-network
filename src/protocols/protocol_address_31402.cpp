@@ -93,7 +93,7 @@ bool protocol_address_31402::handle_receive_address(const code& ec,
         << message->addresses.size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
+////    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
 
     // RESUBSCRIBE
     return true;
@@ -106,7 +106,8 @@ bool protocol_address_31402::handle_receive_get_address(const code& ec,
         return false;
 
     messages::address_item::list subset;
-    const auto code = network_.fetch_addresses(subset);
+////    const auto code = network_.fetch_addresses(subset);
+code code;
 
     if (!code)
     {

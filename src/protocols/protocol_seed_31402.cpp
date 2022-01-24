@@ -105,7 +105,7 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
         << message->addresses.size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
+////    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
     return false;
 }
 

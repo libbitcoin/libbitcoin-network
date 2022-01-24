@@ -45,7 +45,7 @@ class BCT_API proxy
 {
 public:
     typedef std::shared_ptr<proxy> ptr;
-    typedef subscriber<asio::strand, code> stop_subscriber;
+    typedef subscriber<code> stop_subscriber;
     typedef std::function<void(const code&)> result_handler;
 
     // Construction.
@@ -53,6 +53,7 @@ public:
 
     /// Construct an instance from a socket.
     proxy(socket::ptr socket);
+    virtual ~proxy();
 
     // Start/Stop.
     // ------------------------------------------------------------------------
@@ -61,11 +62,12 @@ public:
     /// Messages are posted to each subscribed pump::handler.
     virtual void start();
 
-    /// Subscribe to proxy stop notifications.
-    virtual bool subscribe_stop(result_handler&& handler);
-
     /// Stop has been signaled, work is stopping.
     virtual bool stopped() const;
+
+    /// Subscribe to proxy stop notifications.
+    /// No invocation occurs if the subscriber is stopped at time of subscribe.
+    virtual void subscribe_stop(result_handler&& handler);
 
     /// Cancel work and close the socket (idempotent).
     /// This action is deferred to the strand, not immediately affected.
@@ -75,12 +77,6 @@ public:
 
     // I/O.
     // ------------------------------------------------------------------------
-
-    // TODO: Avoid reserializing the same object for every peer, such as by
-    // TODO: broadcast. Have the object maintain a shared copy of its
-    // TODO: serialization (mapped to version to the extent that it varies
-    // TODO: by version). Obtain the shared pointer here by version and
-    // TODO: send it. See also comments in pump::do_notify.
 
     /// Send a message on the socket, does not require proxy to be started.
     /// Message is serialized and does not have to be retained by the caller.
@@ -92,12 +88,21 @@ public:
             std::move(handler));
     }
 
+    template <class Message>
+    void send(const Message& message, const result_handler& handler)
+    {
+        // TODO: account for witness parameter here.
+        send(messages::serialize(message, protocol_magic(), version()),
+            handler);
+    }
+
     /// Subscribe to messages of type Message received by the started socket.
     /// Subscription handler is copied and retained in the queue until stop.
+    /// No invocation occurs if the subscriber is stopped at time of subscribe.
     template <class Message, typename Handler = pump::handler<Message>>
-    bool subscribe(Handler&& handler)
+    void subscribe(Handler&& handler)
     {
-        return pump_subscriber_.subscribe(std::forward<Handler>(handler));
+        pump_subscriber_.subscribe(std::forward<Handler>(handler));
     }
 
     // Properties.
@@ -130,13 +135,19 @@ private:
         heading_ptr head);
 
     void send(payload_ptr payload, result_handler&& handler);
+    void send(payload_ptr payload, const result_handler& handler);
     void handle_send(const code& ec, size_t bytes, payload_ptr payload,
         const result_handler& handler);
 
-    // These are thread safe.
+    void do_stop(const code& ec);
+    void do_subscribe(result_handler handler);
+
+    // This is thread safe.
     socket::ptr socket_;
+
+    // These are protected by the strand.
     pump pump_subscriber_;
-    stop_subscriber stop_subscriber_;
+    stop_subscriber::ptr stop_subscriber_;
 
     // These are protected by read header/payload ordering.
     system::data_chunk payload_buffer_;

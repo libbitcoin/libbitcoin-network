@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_NET_PUMP_HPP
 #define LIBBITCOIN_NETWORK_NET_PUMP_HPP
 
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -34,21 +35,20 @@ namespace network {
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 
 #define DEFINE_SUBSCRIBER(name) \
-    typedef subscriber<asio::strand, code, messages::name::ptr> \
+    typedef subscriber<code, messages::name::ptr> \
         SUBSCRIBER_TYPE(name)
 
 #define SUBSCRIBER_OVERLOAD(name) \
-    bool do_subscribe(pump::handler<messages::name>&& handler) const \
+void do_subscribe(pump::handler<messages::name>&& handler) const \
 { \
-    return SUBSCRIBER(name)->subscribe(std::move(handler)); \
+    SUBSCRIBER(name)->subscribe(std::move(handler)); \
 }
 
 #define DECLARE_SUBSCRIBER(name) \
     SUBSCRIBER_TYPE(name)::ptr SUBSCRIBER(name)
 
-/// Thread safe aggregation of subscribers by message type.
-/// Stop is thread safe and idempotent, may be called multiple times.
-/// All handlers are posted to the strand provided upon construct.
+/// Not thread safe.
+/// All handlers are posted to the strand.
 class BCT_API pump
   : system::noncopyable
 {
@@ -58,8 +58,6 @@ public:
     using handler = std::function<bool(const code&,
         std::shared_ptr<const Message>)>;
 
-    ////typedef subscriber<asio::strand, code, system::messages::address::const_ptr>
-    ////    address_subscriber;
     DEFINE_SUBSCRIBER(address);
     DEFINE_SUBSCRIBER(alert);
     DEFINE_SUBSCRIBER(block);
@@ -97,16 +95,16 @@ public:
     /// Create an instance of this class.
     pump(asio::strand& strand);
 
-    /// Subscribe to receive a notification when a message of type is received.
-    /// Subscription handler is retained in the queue until stop.
+    /// Subscription handlers are retained in the queue until stop.
+    /// No invocation occurs if the subscriber is stopped at time of subscribe.
     template <typename Handler>
-    bool subscribe(Handler&& handler)
+    void subscribe(Handler&& handler)
     {
-        return do_subscribe(std::forward<Handler>(handler));
+        do_subscribe(std::forward<Handler>(handler));
     }
 
     /// Relay a message instance to each subscriber of the type.
-    /// Returns invalid_message if fails to deserialize, otherwise success.
+    /// Returns error code if fails to deserialize, otherwise success.
     virtual code notify(messages::identifier id, uint32_t version,
         system::reader& source) const;
 
@@ -121,15 +119,6 @@ private:
     code do_notify(Subscriber& subscriber, uint32_t version,
         system::reader& source) const
     {
-        // TODO: Implement deferred deserialization in messages.
-        // TODO: This accelerates hash compute and allows for fast reject of
-        // TODO: messages that we already have (by hash), and to retain the
-        // TODO: buffer for relaying to other peers, etc. The hash is a store
-        // TODO: key, so we just read it onto the object. The only time we need
-        // TODO: to serialize is to send a message over the wire, and only need
-        // TODO: to hash for identity when we receive over the wire. See also
-        // TODO: comments in proxy::send.
-
         // TODO: account for witness parameter here.
         const auto message = messages::deserialize<Message>(source, version);
 
@@ -141,13 +130,6 @@ private:
         return error::success;
     }
 
-    // This is thread safe.
-    asio::strand& strand_;
-
-    ////bool do_subscribe(pump::handler<messages::address>&& handler) const
-    ////{
-    ////    return address_subscriber_->subscribe(std::move(handler));
-    ////}
     SUBSCRIBER_OVERLOAD(address);
     SUBSCRIBER_OVERLOAD(alert);
     SUBSCRIBER_OVERLOAD(block);
@@ -183,7 +165,6 @@ private:
     SUBSCRIBER_OVERLOAD(version_acknowledge);
 
     // These are thread safe.
-    /////address_subscriber::ptr address_subscriber_;
     DECLARE_SUBSCRIBER(address);
     DECLARE_SUBSCRIBER(alert);
     DECLARE_SUBSCRIBER(block);

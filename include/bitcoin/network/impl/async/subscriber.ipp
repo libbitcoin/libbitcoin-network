@@ -19,102 +19,55 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_IPP
 #define LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_IPP
 
-#include <functional>
-#include <memory>
-#include <utility>
 #include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/asio.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-// Construct.
-// ----------------------------------------------------------------------------
-
-template <typename Service, typename... Args>
-subscriber<Service, Args...>::subscriber(Service& service)
-  : service_(service),
-    queue_(std::make_shared<std::vector<handler>>())
+template <typename... Args>
+subscriber<Args...>::subscriber(asio::strand& strand) noexcept
+  : strand_(strand),
+    stopped_(false)
 {
 }
 
-template <typename Service, typename... Args>
-subscriber<Service, Args...>::~subscriber()
+template <typename... Args>
+subscriber<Args...>::~subscriber() noexcept
 {
-    BC_ASSERT_MSG(!queue_, "subscriber is not stopped");
+    BC_ASSERT_MSG(stopped_, "subscriber is not stopped");
 }
 
-// Stop.
-// ----------------------------------------------------------------------------
-
-template <typename Service, typename... Args>
-void subscriber<Service, Args...>::stop(const Args&... args)
+template <typename... Args>
+void subscriber<Args...>::subscribe(handler&& notify) noexcept
 {
-    notify(true, args...);
+    if (!stopped_)
+        queue_.push_back(std::move(notify));
 }
 
-// Methods.
-// ----------------------------------------------------------------------------
-
-template <typename Service, typename... Args>
-bool subscriber<Service, Args...>::subscribe(handler&& notify)
+template <typename... Args>
+void subscriber<Args...>::notify(const Args&... args) const noexcept
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
-
-    if (queue_)
-    {
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        mutex_.unlock_upgrade_and_lock();
-        queue_->push_back(std::move(notify));
-        mutex_.unlock();
-        //---------------------------------------------------------------------
-        return true;
-    }
-
-    mutex_.unlock_upgrade();
-    ///////////////////////////////////////////////////////////////////////////
-
-    return false;
-}
-
-template <typename Service, typename... Args>
-void subscriber<Service, Args...>::notify(const Args&... args)
-{
-    notify(false, args...);
-}
-
-// private
-template <typename Service, typename... Args>
-void subscriber<Service, Args...>::notify(bool stop, const Args&... args)
-{
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
-
-    if (queue_)
-    {
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        mutex_.unlock_upgrade_and_lock();
-
-        // std::bind copies handler and args for each post (including refs).
-        // Post all to service, non-blocking, cannot internally execute handler.
-        for (const auto& handler: *queue_)
-            boost::asio::post(service_, std::bind(handler, args...));
-
-        if (stop)
-            queue_.reset();
-
-        mutex_.unlock();
-        //---------------------------------------------------------------------
+    if (stopped_)
         return;
-    }
 
-    mutex_.unlock_upgrade();
-    ///////////////////////////////////////////////////////////////////////////
+    // std::bind copies handler and args for each post (including refs).
+    // Post all to strand, non-blocking, cannot internally execute handler.
+    for (const auto& handler: queue_)
+        boost::asio::post(strand_, std::bind(handler, args...));
 }
+
+template <typename... Args>
+void subscriber<Args...>::stop(const Args&... args) noexcept
+{
+    if (stopped_)
+        return;
+
+    stopped_ = true;
+    notify(args...);
+    queue_.clear();
+}
+
 
 } // namespace network
 } // namespace libbitcoin

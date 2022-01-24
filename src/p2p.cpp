@@ -32,12 +32,6 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_address_31402.hpp>
-#include <bitcoin/network/protocols/protocol_ping_31402.hpp>
-#include <bitcoin/network/protocols/protocol_ping_60001.hpp>
-#include <bitcoin/network/protocols/protocol_seed_31402.hpp>
-#include <bitcoin/network/protocols/protocol_version_31402.hpp>
-#include <bitcoin/network/protocols/protocol_version_70002.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
 #include <bitcoin/network/sessions/session_outbound.hpp>
@@ -68,15 +62,14 @@ inline size_t nominal_connected(const settings& settings)
 p2p::p2p(const settings& settings)
   : settings_(settings),
     stopped_(true),
-    ////top_block_({ null_hash, zero }),
-    ////top_header_({ null_hash, zero }),
-    hosts_(settings_),
     threadpool_(settings_.threads),
-    pending_connect_(nominal_connecting(settings_)),
-    pending_handshake_(nominal_connected(settings_)),
-    pending_close_(nominal_connected(settings_)),
-    stop_subscriber_(threadpool_.service()),
-    channel_subscriber_(threadpool_.service())
+    strand_(threadpool_.service().get_executor()),
+    stop_subscriber_(std::make_shared<stop_subscriber>(strand_)),
+    channel_subscriber_(std::make_shared<channel_subscriber>(strand_))
+    ////hosts_(settings_),
+    ////pending_connect_(nominal_connecting(settings_)),
+    ////pending_handshake_(nominal_connected(settings_)),
+    ////pending_close_(nominal_connected(settings_))
 {
 }
 
@@ -96,7 +89,7 @@ void p2p::start(result_handler handler)
         return;
     }
 
-    stopped_ = false;
+    stopped_.store(false, std::memory_order_relaxed);
 
     // This instance is retained by stop handler and member reference.
     // The member reference is retained for posting manual connect calls.
@@ -123,7 +116,8 @@ void p2p::handle_manual_started(const code& ec, result_handler handler)
         return;
     }
 
-    handle_hosts_loaded(hosts_.start(), handler);
+    handle_hosts_loaded(error::success, handler);
+    ////handle_hosts_loaded(hosts_.start(), handler);
 }
 
 void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
@@ -260,26 +254,30 @@ session_outbound::ptr p2p::attach_outbound_session()
 // This is thread safe and idempotent, allowing it to be unguarded.
 bool p2p::stop()
 {
-    stopped_ = true;
+    stopped_.store(true, std::memory_order_relaxed);
 
     // Prevent subscription after stop.
-    stop_subscriber_.stop(error::service_stopped);
+    stop_subscriber_->stop(error::service_stopped);
 
     // Prevent subscription after stop.
-    channel_subscriber_.stop(error::service_stopped, {});
+    channel_subscriber_->stop(error::service_stopped, {});
 
-    // Stop creating new channels and stop those that exist.
-    pending_connect_.stop(error::service_stopped);
-    pending_handshake_.stop(error::service_stopped);
-    pending_close_.stop(error::service_stopped);
+    ////// Stop creating new channels and stop those that exist.
+    ////pending_connect_.stop(error::service_stopped);
+    ////pending_handshake_.stop(error::service_stopped);
+    ////pending_close_.stop(error::service_stopped);
 
-    // This is the only stop operation that can fail (due to disk I/O).
-    return (hosts_.stop() == error::success);
+    ////// This is the only stop operation that can fail (due to disk I/O).
+    ////return (hosts_.stop() == error::success);
+
+    threadpool_.stop();
+    threadpool_.join();
+    return true;
 }
 
 bool p2p::stopped() const
 {
-    return stopped_;
+    return stopped_.load(std::memory_order_relaxed);
 }
 
 // Properties.
@@ -295,47 +293,17 @@ asio::io_context& p2p::service()
     return threadpool_.service();
 }
 
-////checkpoint p2p::top_block() const
-////{
-////    return top_block_.load();
-////}
-////
-////void p2p::set_top_block(checkpoint&& top)
-////{
-////    top_block_.store(std::move(top));
-////}
-
-////void p2p::set_top_block(const checkpoint& top)
-////{
-////    top_block_.store(top);
-////}
-////
-////checkpoint p2p::top_header() const
-////{
-////    return top_header_.load();
-////}
-////
-////void p2p::set_top_header(checkpoint&& top)
-////{
-////    top_header_.store(std::move(top));
-////}
-////
-////void p2p::set_top_header(const checkpoint& top)
-////{
-////    top_header_.store(top);
-////}
-
 // Subscriptions.
 // ----------------------------------------------------------------------------
 
 void p2p::subscribe_connection(connect_handler handler)
 {
-    channel_subscriber_.subscribe(handler);
+    channel_subscriber_->subscribe(handler);
 }
 
 void p2p::subscribe_stop(result_handler handler)
 {
-    stop_subscriber_.subscribe(handler);
+    stop_subscriber_->subscribe(handler);
 }
 
 // Manual connections.
@@ -367,122 +335,122 @@ void p2p::connect(const std::string& hostname, uint16_t port,
     manual_->connect(hostname, port, handler);
 }
 
-// Hosts collection.
-// ----------------------------------------------------------------------------
-
-size_t p2p::address_count() const
-{
-    return hosts_.count();
-}
-
-code p2p::store(const messages::address_item& address)
-{
-    return hosts_.store(address);
-}
-
-void p2p::store(const messages::address_item::list& addresses,
-    result_handler handler)
-{
-    hosts_.store(addresses, handler);
-}
-
-code p2p::fetch_address(messages::address_item& out_address) const
-{
-    return hosts_.fetch(out_address);
-}
-
-code p2p::fetch_addresses(messages::address_item::list& out_addresses) const
-{
-    return hosts_.fetch(out_addresses);
-}
-
-code p2p::remove(const messages::address_item& address)
-{
-    return hosts_.remove(address);
-}
-
-// Pending connect collection.
-// ----------------------------------------------------------------------------
-// TODO: Move to session base.
-
-code p2p::pend(connector::ptr connector)
-{
-    return pending_connect_.store(connector);
-}
-
-void p2p::unpend(connector::ptr connector)
-{
-    // TODO: remove code.
-    connector->stop(error::success);
-    pending_connect_.remove(connector);
-}
-
-// Pending handshake collection.
-// ----------------------------------------------------------------------------
-// TODO: use common collection, nonces are sufficiently unique?
-// TODO: would need to subscribe to broadcast after handshake.
-
-code p2p::pend(channel::ptr channel)
-{
-    return pending_handshake_.store(channel);
-}
-
-void p2p::unpend(channel::ptr channel)
-{
-    pending_handshake_.remove(channel);
-}
-
-bool p2p::pending(uint64_t version_nonce) const
-{
-    const auto match = [version_nonce](const channel::ptr& element)
-    {
-        return element->nonce() == version_nonce;
-    };
-
-    return pending_handshake_.exists(match);
-}
-
-// Pending close collection (open connections).
-// ----------------------------------------------------------------------------
-// TODO: use common collection, addresses are sufficiently unique?
-// TODO: would need to subscribe to broadcast after handshake.
-
-size_t p2p::connection_count() const
-{
-    return pending_close_.size();
-}
-
-bool p2p::connected(const messages::address_item& address) const
-{
-    const auto match = [&address](const channel::ptr& element)
-    {
-        return element->authority() == address;
-    };
-
-    return pending_close_.exists(match);
-}
-
-code p2p::store(channel::ptr channel)
-{
-    const auto address = channel->authority();
-    const auto match = [&address](const channel::ptr& element)
-    {
-        return element->authority() == address;
-    };
-
-    // May return error::address_in_use.
-    const auto ec = pending_close_.store(channel, match);
-
-    if (!ec && channel->notify())
-        channel_subscriber_.notify(error::success, channel);
-
-    return ec;
-}
-
-void p2p::remove(channel::ptr channel)
-{
-    pending_close_.remove(channel);
-}
+////// Hosts collection.
+////// ----------------------------------------------------------------------------
+////
+////size_t p2p::address_count() const
+////{
+////    return hosts_.count();
+////}
+////
+////code p2p::store(const messages::address_item& address)
+////{
+////    return hosts_.store(address);
+////}
+////
+////void p2p::store(const messages::address_item::list& addresses,
+////    result_handler handler)
+////{
+////    hosts_.store(addresses, handler);
+////}
+////
+////code p2p::fetch_address(messages::address_item& out_address) const
+////{
+////    return hosts_.fetch(out_address);
+////}
+////
+////code p2p::fetch_addresses(messages::address_item::list& out_addresses) const
+////{
+////    return hosts_.fetch(out_addresses);
+////}
+////
+////code p2p::remove(const messages::address_item& address)
+////{
+////    return hosts_.remove(address);
+////}
+////
+////// Pending connect collection.
+////// ----------------------------------------------------------------------------
+////// TODO: Move to session base.
+////
+////code p2p::pend(connector::ptr connector)
+////{
+////    return pending_connect_.store(connector);
+////}
+////
+////void p2p::unpend(connector::ptr connector)
+////{
+////    // TODO: remove code.
+////    connector->stop(error::success);
+////    pending_connect_.remove(connector);
+////}
+////
+////// Pending handshake collection.
+////// ----------------------------------------------------------------------------
+////// TODO: use common collection, nonces are sufficiently unique?
+////// TODO: would need to subscribe to broadcast after handshake.
+////
+////code p2p::pend(channel::ptr channel)
+////{
+////    return pending_handshake_.store(channel);
+////}
+////
+////void p2p::unpend(channel::ptr channel)
+////{
+////    pending_handshake_.remove(channel);
+////}
+////
+////bool p2p::pending(uint64_t version_nonce) const
+////{
+////    const auto match = [version_nonce](const channel::ptr& element)
+////    {
+////        return element->nonce() == version_nonce;
+////    };
+////
+////    return pending_handshake_.exists(match);
+////}
+////
+////// Pending close collection (open connections).
+////// ----------------------------------------------------------------------------
+////// TODO: use common collection, addresses are sufficiently unique?
+////// TODO: would need to subscribe to broadcast after handshake.
+////
+////size_t p2p::connection_count() const
+////{
+////    return pending_close_.size();
+////}
+////
+////bool p2p::connected(const messages::address_item& address) const
+////{
+////    const auto match = [&address](const channel::ptr& element)
+////    {
+////        return element->authority() == address;
+////    };
+////
+////    return pending_close_.exists(match);
+////}
+////
+////code p2p::store(channel::ptr channel)
+////{
+////    const auto address = channel->authority();
+////    const auto match = [&address](const channel::ptr& element)
+////    {
+////        return element->authority() == address;
+////    };
+////
+////    // May return error::address_in_use.
+////    const auto ec = pending_close_.store(channel, match);
+////
+////    if (!ec && channel->notify())
+////        channel_subscriber_.notify(error::success, channel);
+////
+////    return ec;
+////}
+////
+////void p2p::remove(channel::ptr channel)
+////{
+////    pending_close_.remove(channel);
+////}
 
 } // namespace network
 } // namespace libbitcoin

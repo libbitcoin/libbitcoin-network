@@ -18,9 +18,9 @@
  */
 #include <bitcoin/network/net/pump.hpp>
 
-#include <memory>
-#include <string>
+#include <cstdint>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {
@@ -32,7 +32,7 @@ using namespace bc::system;
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 
 #define MAKE_SUBSCRIBER(name) \
-    SUBSCRIBER(name)(std::make_shared<SUBSCRIBER_TYPE(name)>(strand_))
+    SUBSCRIBER(name)(std::make_shared<SUBSCRIBER_TYPE(name)>(strand))
 
 #define CASE_NOTIFY(name) \
     case messages::identifier::name: \
@@ -42,9 +42,7 @@ using namespace bc::system;
     SUBSCRIBER(name)->stop(ec, nullptr)
 
 pump::pump(asio::strand& strand)
-  : strand_(strand),
-    ////address_subscriber_(std::make_shared<address_subscriber>(strand_)),
-    MAKE_SUBSCRIBER(address),
+  : MAKE_SUBSCRIBER(address),
     MAKE_SUBSCRIBER(alert),
     MAKE_SUBSCRIBER(block),
     MAKE_SUBSCRIBER(bloom_filter_add),
@@ -85,9 +83,6 @@ code pump::notify(messages::identifier id, uint32_t version,
 {
     switch (id)
     {
-        ////case messages:identifier::address:
-        ////    return do_notify<messages::address>(
-        ////        address_subscriber_, version, source);
         CASE_NOTIFY(address);
         CASE_NOTIFY(alert);
         CASE_NOTIFY(block);
@@ -129,7 +124,6 @@ code pump::notify(messages::identifier id, uint32_t version,
 
 void pump::stop(const code& ec)
 {
-    ////address_subscriber_->stop(ec, nullptr);
     STOP_SUBSCRIBER(address);
     STOP_SUBSCRIBER(address);
     STOP_SUBSCRIBER(alert);

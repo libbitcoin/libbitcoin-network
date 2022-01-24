@@ -50,17 +50,18 @@ public:
 
     /// Start or restart the timer.
     /// Use expired(ec) in handler to test for expiration.
-    void start(handler handle);
+    void start(handler&& handle);
 
     /// Start or restart the timer.
     /// Use expired(ec) in handler to test for expiration.
-    void start(handler handle, const duration& timeout);
+    void start(handler&& handle, const duration& timeout);
 
     /// Cancel the timer. The handler will be invoked.
     void stop();
 
 private:
-    void handle_timer(const error::boost_code& ec, handler handle) const;
+    void handle_timer(const error::boost_code& ec,
+        const handler& handle) const;
 
     // This is thread safe.
     const duration duration_;

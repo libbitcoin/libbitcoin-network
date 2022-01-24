@@ -22,6 +22,7 @@
 #include <bitcoin/network/async/deadline.hpp>
 
 #include <functional>
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/thread.hpp>
@@ -46,17 +47,17 @@ deadline<Service>::deadline(Service& service, const duration& timeout)
 }
 
 template <typename Service>
-void deadline<Service>::start(handler handle)
+void deadline<Service>::start(handler&& handle)
 {
-    start(handle, duration_);
+    start(std::move(handle), duration_);
 }
 
 template <typename Service>
-void deadline<Service>::start(handler handle, const duration& timeout)
+void deadline<Service>::start(handler&& handle, const duration& timeout)
 {
-    const auto timer_handler =
+    auto timer_handler =
         std::bind(&deadline::handle_timer,
-            this->shared_from_this(), _1, handle);
+            this->shared_from_this(), _1, std::move(handle));
 
     // Critical Section
     ///////////////////////////////////////////////////////////////////////////
@@ -68,7 +69,7 @@ void deadline<Service>::start(handler handle, const duration& timeout)
     timer_.expires_from_now(timeout);
 
     // async_wait will not invoke the handler within this function.
-    timer_.async_wait(timer_handler);
+    timer_.async_wait(std::move(timer_handler));
     ///////////////////////////////////////////////////////////////////////////
 }
 
@@ -94,7 +95,7 @@ void deadline<Service>::stop()
 // TODO: it might be normalizing to allow the handler to be fired upon cancel.
 template <typename Service>
 void deadline<Service>::handle_timer(const error::boost_code& ec,
-    handler handle) const
+    const handler& handle) const
 {
     if (!error::asio_is_cancelled(ec))
         handle(error::asio_to_error_code(ec));

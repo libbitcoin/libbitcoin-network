@@ -51,19 +51,19 @@ public:
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
     typedef std::function<bool(const code&, channel::ptr)> connect_handler;
-    typedef subscriber<asio::io_context, code> stop_subscriber;
-    typedef subscriber<asio::io_context, code, channel::ptr> channel_subscriber;
+    typedef subscriber<code> stop_subscriber;
+    typedef subscriber<code, channel::ptr> channel_subscriber;
 
     // Templates.
     // ------------------------------------------------------------------------
 
     /// Send message to all connections, handler notified for each channel.
     template <typename Message>
-    void broadcast(const Message& message, channel_handler&& handle_channel)
+    void broadcast(const Message& message, const channel_handler& handler)
     {
         const auto channels = pending_close_.collection();
         for (const auto& channel: channels)
-            channel->send(message, std::move(handle_channel));
+            channel->send(message, handler);
     }
 
     // Constructors.
@@ -102,26 +102,6 @@ public:
     /// Return a reference to the network io_context.
     virtual asio::io_context& service();
 
-    /////// Return the current top block identity (for p2p handshake).
-    ////virtual system::chain::checkpoint top_block() const;
-
-    /////// Set the current top block identity (for p2p handshake).
-    ////virtual void set_top_block(system::chain::checkpoint&& top);
-
-    //// TODO: move to blockchain/node.
-
-    /////// Set the current top block identity.
-    ////virtual void set_top_block(const system::chain::checkpoint& top);
-
-    /////// Return the current top header identity.
-    ////virtual system::chain::checkpoint top_header() const;
-
-    /////// Set the current top header identity.
-    ////virtual void set_top_header(system::chain::checkpoint&& top);
-
-    /////// Set the current top header identity.
-    ////virtual void set_top_header(const system::chain::checkpoint& top);
-
     // Subscriptions.
     // ------------------------------------------------------------------------
 
@@ -145,70 +125,70 @@ public:
     virtual void connect(const std::string& hostname, uint16_t port,
         channel_handler handler);
 
-    // Hosts collection.
-    // ------------------------------------------------------------------------
+    ////// Hosts collection.
+    ////// ------------------------------------------------------------------------
 
-    /// Get the number of addresses.
-    virtual size_t address_count() const;
+    /////// Get the number of addresses.
+    ////virtual size_t address_count() const;
 
-    // TODO: make protected.
+    ////// TODO: make protected.
 
-    /// Store an address.
-    virtual code store(const messages::address_item& address);
+    /////// Store an address.
+    ////virtual code store(const messages::address_item& address);
 
-    /// Store a collection of addresses (asynchronous).
-    virtual void store(const messages::address_item::list& addresses,
-        result_handler handler);
+    /////// Store a collection of addresses (asynchronous).
+    ////virtual void store(const messages::address_item::list& addresses,
+    ////    result_handler handler);
 
-    /// Get a randomly-selected address.
-    virtual code fetch_address(messages::address_item& out_address) const;
+    /////// Get a randomly-selected address.
+    ////virtual code fetch_address(messages::address_item& out_address) const;
 
-    /// Get a list of stored hosts
-    virtual code fetch_addresses(
-        messages::address_item::list& out_addresses) const;
+    /////// Get a list of stored hosts
+    ////virtual code fetch_addresses(
+    ////    messages::address_item::list& out_addresses) const;
 
-    /// Remove an address.
-    virtual code remove(const messages::address_item& address);
+    /////// Remove an address.
+    ////virtual code remove(const messages::address_item& address);
 
-    // Pending connect collection.
-    // ------------------------------------------------------------------------
-    // TODO: remove.
+    ////// Pending connect collection.
+    ////// ------------------------------------------------------------------------
+    ////// TODO: remove.
 
-    /// Store a pending connection reference.
-    virtual code pend(connector::ptr connector);
+    /////// Store a pending connection reference.
+    ////virtual code pend(connector::ptr connector);
 
-    /// Free a pending connection reference.
-    virtual void unpend(connector::ptr connector);
+    /////// Free a pending connection reference.
+    ////virtual void unpend(connector::ptr connector);
 
-    // Pending handshake collection.
-    // ------------------------------------------------------------------------
-    // TODO: make private.
+    ////// Pending handshake collection.
+    ////// ------------------------------------------------------------------------
+    ////// TODO: make private.
 
-    /// Store a pending connection reference.
-    virtual code pend(channel::ptr channel);
+    /////// Store a pending connection reference.
+    ////virtual code pend(channel::ptr channel);
 
-    /// Test for a pending connection reference.
-    virtual bool pending(uint64_t version_nonce) const;
+    /////// Test for a pending connection reference.
+    ////virtual bool pending(uint64_t version_nonce) const;
 
-    /// Free a pending connection reference.
-    virtual void unpend(channel::ptr channel);
+    /////// Free a pending connection reference.
+    ////virtual void unpend(channel::ptr channel);
 
-    // Pending close collection (open connections).
-    // ------------------------------------------------------------------------
+    ////// Pending close collection (open connections).
+    ////// ------------------------------------------------------------------------
 
-    /// Get the number of connections.
-    virtual size_t connection_count() const;
+    /////// Get the number of connections.
+    ////virtual size_t connection_count() const;
 
-    // TODO: make private.
+    ////// TODO: make private.
 
-    /// Store a connection.
-    virtual code store(channel::ptr channel);
+    /////// Store a connection.
+    ////virtual code store(channel::ptr channel);
 
-    /// Determine if there exists a connection to the address.
-    virtual bool connected(const messages::address_item& address) const;
+    /////// Determine if there exists a connection to the address.
+    ////virtual bool connected(const messages::address_item& address) const;
 
-    /// Remove a connection.
-    virtual void remove(channel::ptr channel);
+    /////// Remove a connection.
+    ////virtual void remove(channel::ptr channel);
 
 protected:
 
@@ -240,8 +220,8 @@ protected:
     virtual session_outbound::ptr attach_outbound_session();
 
 private:
-    typedef network::pending<channel> pending_channels;
-    typedef network::pending<connector> pending_connectors;
+    ////typedef network::pending<channel> pending_channels;
+    ////typedef network::pending<connector> pending_connectors;
 
     void handle_manual_started(const code& ec, result_handler handler);
     void handle_inbound_started(const code& ec, result_handler handler);
@@ -253,16 +233,17 @@ private:
     // These are thread safe.
     const settings& settings_;
     std::atomic<bool> stopped_;
-    ////atomic<system::chain::checkpoint> top_block_;
-    ////atomic<system::chain::checkpoint> top_header_;
-    session_manual::ptr manual_;
-    hosts hosts_;
     threadpool threadpool_;
-    pending_connectors pending_connect_;
-    pending_channels pending_handshake_;
-    pending_channels pending_close_;
-    stop_subscriber stop_subscriber_;
-    channel_subscriber channel_subscriber_;
+    asio::strand strand_;
+    stop_subscriber::ptr stop_subscriber_;
+    channel_subscriber::ptr channel_subscriber_;
+    ////hosts hosts_;
+    ////pending_connectors pending_connect_;
+    ////pending_channels pending_handshake_;
+    ////pending_channels pending_close_;
+
+    // This is not thread safe.
+    session_manual::ptr manual_;
 };
 
 } // namespace network

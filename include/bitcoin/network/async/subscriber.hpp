@@ -28,52 +28,39 @@
 namespace libbitcoin {
 namespace network {
 
-/// Thread safe event queue.
-/// Stop is thread safe and idempotent, may be called multiple times.
-/// All handlers are posted to the service.
-template <typename Service, typename... Args>
+/// Not thread safe.
+/// All handlers are posted to the strand.
+template <typename... Args>
 class subscriber
-  : public std::enable_shared_from_this<subscriber<Service, Args...>>,
+  : public std::enable_shared_from_this<subscriber<Args...>>,
     system::noncopyable
 {
 public:
     typedef std::function<void(Args...)> handler;
-    typedef std::shared_ptr<subscriber<Service, Args...>> ptr;
+    typedef std::shared_ptr<subscriber<Args...>> ptr;
 
-    // Construct.
-    // ------------------------------------------------------------------------
+    /// Event notification handlers are posted to the strand.
+    subscriber(asio::strand& strand) noexcept;
+    virtual ~subscriber() noexcept;
+    
+    /// Subscription handlers are retained in the queue until stop.
+    /// No invocation occurs if the subscriber is stopped at time of subscribe.
+    void subscribe(handler&& notify) noexcept;
 
-    /// Event notification handlers are posted to the service.
-    subscriber(Service& service);
-    virtual ~subscriber();
-
-    // Stop.
-    // ------------------------------------------------------------------------
+    /// Notification order follows subscription order. Arguments are copied.
+    void notify(const Args&... args) const noexcept;
 
     /// Notification order follows subscription order. Arguments are copied.
     /// Clears all handlers and prevents subsequent subscription (idempotent).
-    void stop(const Args&... args);
-
-    // Methods.
-    // ------------------------------------------------------------------------
-
-    /// Notification order follows subscription order. Arguments are copied.
-    void notify(const Args&... args);
-
-    /// Subscribe to notifications, false if subscriber is stopped.
-    /// Subscription handlers are retained in the queue until stop.
-    bool subscribe(handler&& notify);
+    void stop(const Args&... args) noexcept;
 
 private:
-    // Clears all handlers and prevents subsequent subscription if stop true.
-    void notify(bool stop, const Args&... args);
+    // This is safe.
+    asio::strand& strand_;
 
-    // This is thread safe (asio:io_context or asio::strand).
-    Service& service_;
-
-    // This is protected by mutex.
-    std::shared_ptr<std::vector<handler>> queue_;
-    mutable upgrade_mutex mutex_;
+    // These are not thread safe.
+    bool stopped_;
+    std::vector<handler> queue_;
 };
 
 } // namespace network

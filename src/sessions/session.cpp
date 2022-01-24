@@ -59,17 +59,17 @@ session::~session()
 
 size_t session::address_count() const
 {
-    return network_.address_count();
+    return {}; ////network_.address_count();
 }
 
 size_t session::connection_count() const
 {
-    return network_.connection_count();
+    return {}; ////network_.connection_count();
 }
 
 code session::fetch_address(messages::address_item& out_address) const
 {
-    return network_.fetch_address(out_address);
+    return {}; ////network_.fetch_address(out_address);
 }
 
 bool session::blacklisted(const authority& authority) const
@@ -112,12 +112,12 @@ connector::ptr session::create_connector()
 
 code session::pend(connector::ptr connector)
 {
-    return network_.pend(connector);
+    return {}; ////network_.pend(connector);
 }
 
 void session::unpend(connector::ptr connector)
 {
-    network_.unpend(connector);
+    return; ////network_.unpend(connector);
 }
 
 // Pending handshake.
@@ -125,17 +125,17 @@ void session::unpend(connector::ptr connector)
 
 code session::pend(channel::ptr channel)
 {
-    return network_.pend(channel);
+    return {}; ////return network_.pend(channel);
 }
 
 void session::unpend(channel::ptr channel)
 {
-    network_.unpend(channel);
+    return; ////network_.unpend(channel);
 }
 
 bool session::pending(uint64_t version_nonce) const
 {
-    return network_.pending(version_nonce);
+    return {}; ////return network_.pending(version_nonce);
 }
 
 // Start sequence.
@@ -229,7 +229,7 @@ void session::handshake_complete(channel::ptr channel,
 {
     // TODO: subscribe to message broadcaster?
     // This will fail if the IP address or nonce is already connected.
-    handle_started(network_.store(channel));
+////handle_started(network_.store(channel));
 }
 
 // THIS IS INVOKED ON THE CHANNEL THREAD.
@@ -260,7 +260,7 @@ void session::handle_start(const code& ec, channel::ptr channel,
 void session::handle_remove(const code& , channel::ptr channel,
     result_handler handle_stopped)
 {
-    network_.remove(channel);
+////network_.remove(channel);
     handle_stopped(error::success);
 }
 

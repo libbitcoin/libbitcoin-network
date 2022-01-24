@@ -51,14 +51,19 @@ std::string proxy::extract_command(payload_ptr payload)
 proxy::proxy(socket::ptr socket)
   : socket_(socket),
     pump_subscriber_(socket->strand()),
-    stop_subscriber_(socket->strand()),
+    stop_subscriber_(std::make_shared<stop_subscriber>(socket->strand())),
     payload_buffer_(no_fill_byte_allocator),
     heading_reader_(heading_buffer_)
 {
 }
 
+proxy::~proxy()
+{
+}
+
 // Start/Stop.
 // ----------------------------------------------------------------------------
+// These calls may originate from outside the strand on any thread.
 
 // Start the read cycle.
 void proxy::start()
@@ -71,24 +76,42 @@ bool proxy::stopped() const
     return socket_->stopped();
 }
 
+void proxy::subscribe_stop(result_handler&& handler)
+{
+    // Stop is posted to strand to protect socket and subscribers.
+    post(strand(),
+        std::bind(&proxy::do_subscribe,
+            shared_from_this(), std::move(handler)));
+}
+
+// private
+void proxy::do_subscribe(result_handler handler)
+{
+    stop_subscriber_->subscribe(std::move(handler));
+}
+
 void proxy::stop(const code& ec)
+{
+    // Stop is posted to strand to protect socket and subscribers.
+    post(strand(),
+        std::bind(&proxy::do_stop,
+            shared_from_this(), ec));
+}
+
+// private
+void proxy::do_stop(const code& ec)
 {
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
-    pump_subscriber_.stop(error::channel_stopped);
+    pump_subscriber_.stop(ec);
 
     // Post stop handlers to strand and clear/stop accepting subscriptions.
     // The code provides information on the reason that the channel stopped.
-    stop_subscriber_.stop(ec);
+    stop_subscriber_->stop(ec);
 
     // Stops the read loop.
-    // Signals socket to stop accepting new work, cancel pending work.
+    // Signals socket to stop accepting new work, cancels pending work.
     socket_->stop();
-}
-
-bool proxy::subscribe_stop(result_handler&& handler)
-{
-    return stop_subscriber_.subscribe(std::move(handler));
 }
 
 // Read cycle (read continues until stop).
@@ -110,6 +133,8 @@ void proxy::read_heading()
 // Handle errors and invoke payload read.
 void proxy::handle_read_heading(const code& ec, size_t)
 {
+    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+
     if (ec == error::channel_stopped)
     {
         LOG_VERBOSE(LOG_NETWORK)
@@ -176,6 +201,8 @@ void proxy::read_payload(heading_ptr head)
 void proxy::handle_read_payload(const code& ec, size_t payload_size,
     heading_ptr head)
 {
+    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+
     if (ec == error::channel_stopped)
     {
         LOG_VERBOSE(LOG_NETWORK)
@@ -255,10 +282,23 @@ void proxy::send(payload_ptr payload, result_handler&& handler)
 }
 
 // private
+void proxy::send(payload_ptr payload, const result_handler& handler)
+{
+    // Sends are allowed to proceed after stop, but will be aborted.
+
+    // Post handle_send to strand upon stop, error, or buffer fully sent.
+    socket_->write(*payload,
+        std::bind(&proxy::handle_send,
+            shared_from_this(), _1, _2, payload, handler));
+}
+
+// private
 // Handle errors and invoke completion handler.
 void proxy::handle_send(const code& ec, size_t, payload_ptr payload,
     const result_handler& handler)
 {
+    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+
     if (ec == error::channel_stopped)
     {
         LOG_VERBOSE(LOG_NETWORK)

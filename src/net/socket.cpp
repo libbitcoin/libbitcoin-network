@@ -68,11 +68,13 @@ socket::socket(asio::io_context& service)
 {
 }
 
+socket::~socket()
+{
+}
+
 // Stop.
 // ----------------------------------------------------------------------------
-// These calls may originate from any thread.
-// There is no point in calling do_stop from the destructor.
-
+// These calls may originate from outside the strand on any thread.
 
 bool socket::stopped() const 
 {
@@ -81,14 +83,11 @@ bool socket::stopped() const
 
 void socket::stop()
 {
-    // Stop flag can accelerate work stoppage, as it does not wait on strand,
-    // but does not preempt I/O calls as they are guaranteed strand invocation.
+    // Stop flag can accelerate work stoppage, as it does not wait on strand.
     stopped_.store(true, std::memory_order_relaxed);
 
-    // strand::dispatch invokes its handler directly if the strand is not busy,
-    // which hopefully blocks the strand until the dispatch call completes.
-    // Otherwise the handler is posted to the strand for deferred completion.
-    dispatch(strand_, std::bind(&socket::do_stop, shared_from_this()));
+    // Stop is posted to strand to protect the socket.
+    post(strand_, std::bind(&socket::do_stop, shared_from_this()));
 }
 
 // private
@@ -112,12 +111,12 @@ void socket::do_stop()
 // Boost async functions are NOT THREAD SAFE for the same socket object.
 // This clarifies boost documentation: svn.boost.org/trac10/ticket/10009
 
-// The socket is not guarded during async_accept. This is required so the
-// acceptor may be guarded from its own strand while preserving the hiding of
-// socket internals. This makes concurrent calls unsafe, however only the
-// acceptor (a socket factory) requires access to the socket at this time.
 void socket::accept(asio::acceptor& acceptor, result_handler&& handler)
 {
+    // The socket is not guarded during async_accept. This is required so the
+    // acceptor may be guarded from its own strand while preserving hiding of
+    // socket internals. This makes concurrent calls unsafe, however only the
+    // acceptor (a socket factory) requires access to the socket at this time.
     acceptor.async_accept(socket_,
         std::bind(&socket::handle_accept,
             shared_from_this(), _1, std::move(handler)));
@@ -125,29 +124,28 @@ void socket::accept(asio::acceptor& acceptor, result_handler&& handler)
 
 void socket::connect(const asio::iterator& it, result_handler&& handler)
 {
-    dispatch(strand_,
+    post(strand_,
         std::bind(&socket::do_connect,
             shared_from_this(), it, std::move(handler)));
 }
 
 void socket::read(const data_slab& out, io_handler&& handler)
 {
-    dispatch(strand_,
+    post(strand_,
         std::bind(&socket::do_read, shared_from_this(),
             mutable_buffer{ out.data(), out.size() }, std::move(handler)));
 }
 
 void socket::write(const data_slice& in, io_handler&& handler)
 {
-    dispatch(strand_,
+    post(strand_,
         std::bind(&socket::do_write, shared_from_this(),
             const_buffer{ in.data(), in.size() }, std::move(handler)));
 }
 
 // executors (private).
 // ----------------------------------------------------------------------------
-// These may execute outside of the strand, but are isolated from it.
-// handlers are invoked on strand upon failure, socket cancel, or completion.
+// These execute on the strand to protect the member socket.
 
 void socket::do_connect(const asio::iterator& it, result_handler handler)
 {
@@ -174,6 +172,7 @@ void socket::do_write(const const_buffer& in, io_handler handler)
 
 // handlers (private).
 // ----------------------------------------------------------------------------
+// These are invoked on strand upon failure, socket cancel, or completion.
 
 void socket::handle_accept(const error::boost_code& ec,
     const result_handler& handler)
