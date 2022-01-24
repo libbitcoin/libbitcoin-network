@@ -32,10 +32,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/sessions/session_inbound.hpp>
-#include <bitcoin/network/sessions/session_manual.hpp>
-#include <bitcoin/network/sessions/session_outbound.hpp>
-#include <bitcoin/network/sessions/session_seed.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {

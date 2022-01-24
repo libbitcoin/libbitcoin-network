@@ -530,6 +530,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70002.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocols.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
@@ -546,6 +549,9 @@
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_seed.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\sessions.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp">

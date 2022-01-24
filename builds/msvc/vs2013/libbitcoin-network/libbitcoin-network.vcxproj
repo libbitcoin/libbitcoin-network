@@ -231,12 +231,14 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_31402.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70002.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocols.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_batch.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_manual.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_outbound.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_seed.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\sessions.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp" />
   </ItemGroup>

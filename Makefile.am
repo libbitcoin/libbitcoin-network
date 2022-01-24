@@ -301,7 +301,8 @@ include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol_seed_31402.hpp \
     include/bitcoin/network/protocols/protocol_timer.hpp \
     include/bitcoin/network/protocols/protocol_version_31402.hpp \
-    include/bitcoin/network/protocols/protocol_version_70002.hpp
+    include/bitcoin/network/protocols/protocol_version_70002.hpp \
+    include/bitcoin/network/protocols/protocols.hpp
 
 include_bitcoin_network_sessionsdir = ${includedir}/bitcoin/network/sessions
 include_bitcoin_network_sessions_HEADERS = \
@@ -310,5 +311,6 @@ include_bitcoin_network_sessions_HEADERS = \
     include/bitcoin/network/sessions/session_inbound.hpp \
     include/bitcoin/network/sessions/session_manual.hpp \
     include/bitcoin/network/sessions/session_outbound.hpp \
-    include/bitcoin/network/sessions/session_seed.hpp
+    include/bitcoin/network/sessions/session_seed.hpp \
+    include/bitcoin/network/sessions/sessions.hpp
 

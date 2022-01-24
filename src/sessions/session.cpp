@@ -27,8 +27,7 @@
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/protocols/protocol_version_31402.hpp>
-#include <bitcoin/network/protocols/protocol_version_70002.hpp>
+#include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
