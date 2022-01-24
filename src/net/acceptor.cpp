@@ -76,15 +76,14 @@ code acceptor::start(uint16_t port)
 
 void acceptor::stop()
 {
-    // strand::dispatch invokes its handler directly if the strand is not busy,
-    // which hopefully blocks the strand until the dispatch call completes.
-    // Otherwise the handler is posted to the strand for deferred completion.
-    dispatch(strand_, std::bind(&acceptor::do_stop, shared_from_this()));
+    post(strand_, std::bind(&acceptor::do_stop, shared_from_this()));
 }
 
-// private
+// protected
 void acceptor::do_stop()
 {
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
     // Posts handle_accept to strand.
     error::boost_code ignore;
     acceptor_.cancel(ignore);
@@ -99,15 +98,16 @@ void acceptor::do_stop()
 
 void acceptor::accept(accept_handler&& handler)
 {
-    // Dispatch executes within this call if strand is not busy.
-    dispatch(strand_,
+    post(strand_,
         std::bind(&acceptor::do_accept,
             shared_from_this(), std::move(handler)));
 }
 
-// private
+// protected
 void acceptor::do_accept(accept_handler handler)
 {
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
     // Enables reusability.
     stopped_ = true;
 

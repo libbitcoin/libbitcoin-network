@@ -56,15 +56,14 @@ connector::connector(asio::io_context& service, const settings& settings)
 
 void connector::stop(const code&)
 {
-    // strand::dispatch invokes its handler directly if the strand is not busy,
-    // which hopefully blocks the strand until the dispatch call completes.
-    // Otherwise the handler is posted to the strand for deferred completion.
-    dispatch(strand_, std::bind(&connector::do_stop, shared_from_this()));
+    post(strand_, std::bind(&connector::do_stop, shared_from_this()));
 }
 
-// private
+// protected
 void connector::do_stop()
 {
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
     // Posts handle_resolve to strand.
     resolver_.cancel();
 
@@ -90,15 +89,17 @@ void connector::connect(const std::string& hostname, uint16_t port,
     connect_handler&& handler)
 {
     // hostname is copied by std::bind, may be discarded by caller.
-    // Dispatch executes within this call if strand is not busy.
-    dispatch(strand_,
+    post(strand_,
         std::bind(&connector::do_resolve,
             shared_from_this(), hostname, port, std::move(handler)));
 }
 
+// protected
 void connector::do_resolve(const std::string& hostname, uint16_t port,
     connect_handler handler)
 {
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
     // Enables reusability.
     stopped_ = true;
 

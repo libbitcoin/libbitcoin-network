@@ -31,7 +31,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Not thread safe.
+/// Not thread safe, start and stop on the strand.
 /// Class wrapper for boost::asio::basic_waitable_timer.
 /// This simplifies invocation, eliminates boost-specific error handling and
 /// makes timer firing and cancelation conditions safe for shared objects.
@@ -61,8 +61,9 @@ private:
     void handle_timer(const error::boost_code& ec,
         const handler& handle) const;
 
-    // This is thread safe.
+    // These are thread safe.
     const duration duration_;
+    asio::strand& strand_;
 
     // This is not thread safe.
     wait_timer timer_;

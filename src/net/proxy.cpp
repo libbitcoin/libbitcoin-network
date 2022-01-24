@@ -84,7 +84,7 @@ void proxy::subscribe_stop(result_handler&& handler)
             shared_from_this(), std::move(handler)));
 }
 
-// private
+// protected
 void proxy::do_subscribe(result_handler handler)
 {
     stop_subscriber_->subscribe(std::move(handler));
@@ -98,7 +98,7 @@ void proxy::stop(const code& ec)
             shared_from_this(), ec));
 }
 
-// private
+// protected
 void proxy::do_stop(const code& ec)
 {
     // Post message handlers to strand and clear/stop accepting subscriptions.

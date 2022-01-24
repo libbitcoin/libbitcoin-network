@@ -32,8 +32,8 @@
 namespace libbitcoin {
 namespace network {
 
+/// Not thread safe.
 /// A channel is a proxy with logged timers and state.
-/// This class is thread safe, though start my be called only once.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API channel
   : public proxy, track<channel>
@@ -75,6 +75,9 @@ public:
     virtual messages::version::ptr peer_version() const;
     virtual void set_peer_version(messages::version::ptr value);
 
+protected:
+    void do_stop(const code& ec);
+
 private:
     virtual size_t maximum_payload() const override;
     virtual uint32_t protocol_magic() const override;
@@ -94,14 +97,14 @@ private:
     const uint32_t protocol_magic_;
     const bool validate_checksum_;
     const bool verbose_logging_;
-    deadline::ptr expiration_;
-    deadline::ptr inactivity_;
 
-    // These are not thread safe, caller must be stranded.
+    // These are not thread safe.
     bool notify_on_connect_;
     uint64_t channel_nonce_;
     uint32_t negotiated_version_;
     messages::version::ptr peer_version_;
+    deadline::ptr expiration_;
+    deadline::ptr inactivity_;
 };
 
 } // namespace network

@@ -114,6 +114,10 @@ public:
     /// Get the authority of the peer.
     virtual config::authority authority() const;
 
+protected:
+    void do_stop(const code& ec);
+    void do_subscribe(result_handler handler);
+
 private:
     typedef chunk_ptr payload_ptr;
     typedef messages::heading::ptr heading_ptr;
@@ -138,9 +142,6 @@ private:
     void send(payload_ptr payload, const result_handler& handler);
     void handle_send(const code& ec, size_t bytes, payload_ptr payload,
         const result_handler& handler);
-
-    void do_stop(const code& ec);
-    void do_subscribe(result_handler handler);
 
     // This is thread safe.
     socket::ptr socket_;

@@ -68,9 +68,11 @@ public:
     /// Accept next connection available until stop or timeout, starts timer.
     virtual void accept(accept_handler&& handler);
 
-private:
+protected:
     void do_stop();
     void do_accept(accept_handler handler);
+
+private:
     void handle_accept(const code& ec, socket::ptr socket,
         const accept_handler& handler);
     void handle_timer(const code& ec, const accept_handler& handler);
