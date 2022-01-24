@@ -29,24 +29,18 @@
 namespace libbitcoin {
 namespace network {
 
-/// This class and the asio service it exposes are thread safe.
+/// Not thread safe.
 /// A collection of threads that share an asio I/O context (service).
 class BCT_API threadpool
   : system::noncopyable
 {
 public:
-
-    // Construct.
-    // ------------------------------------------------------------------------
-
     /// Threadpool constructor, initializes the specified number of threads.
-     threadpool(size_t number_threads=1,
+    threadpool(size_t number_threads=one,
         thread_priority priority=thread_priority::normal);
 
+    /// Stop and join threads.
     virtual ~threadpool();
-
-    // Stop.
-    // ------------------------------------------------------------------------
 
     /// Destroy the work keep-alive. Safe to call from any thread.
     /// Allows threads to join when all outstanding work is complete.
@@ -56,32 +50,16 @@ public:
     /// Safe to call from any thread not in the threadpool.
     void join();
 
-    // Properties.
-    // ------------------------------------------------------------------------
-
-    /// There are no threads configured in the threadpool.
-    bool empty() const;
-
-    /// The number of threads configured in the threadpool.
-    size_t size() const;
-
-    /// Underlying boost::io_service object.
-    const asio::io_context& service() const;
-
-    /// Non-const underlying boost::io_service object.
+    /// Non-const underlying boost::io_service object (thread safe).
     asio::io_context& service();
 
 private:
     // This is thread safe.
     asio::io_context service_;
 
-    // These are protected by mutex.
-
+    // These are not thread safe.
     std::vector<thread> threads_;
-    mutable upgrade_mutex threads_mutex_;
-
     boost::asio::executor_work_guard<asio::executor_type> work_;
-    mutable upgrade_mutex work_mutex_;
 };
 
 } // namespace network

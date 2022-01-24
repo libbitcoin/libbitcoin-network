@@ -54,17 +54,15 @@ public:
     typedef subscriber<code> stop_subscriber;
     typedef subscriber<code, channel::ptr> channel_subscriber;
 
-    // Templates.
-    // ------------------------------------------------------------------------
-
-    /// Send message to all connections, handler notified for each channel.
-    template <typename Message>
-    void broadcast(const Message& message, const channel_handler& handler)
-    {
-        const auto channels = pending_close_.collection();
-        for (const auto& channel: channels)
-            channel->send(message, handler);
-    }
+    // TODO: subscribe channels to broadcast and eliminate penders.
+    /////// Send message to all connections, handler notified for each channel.
+    ////template <typename Message>
+    ////void broadcast(const Message& message, const channel_handler& handler)
+    ////{
+    ////    const auto channels = pending_close_.collection();
+    ////    for (const auto& channel: channels)
+    ////        channel->send(message, handler);
+    ////}
 
     // Constructors.
     // ------------------------------------------------------------------------
@@ -83,24 +81,12 @@ public:
     /// Run inbound and outbound sessions, call from start result handler.
     virtual void run(result_handler handler);
 
-    // Shutdown.
-    // ------------------------------------------------------------------------
-
     /// Idempotent call to signal work stop, start may be reinvoked after.
     /// Returns the result of the hosts file save operation.
-    virtual bool stop();
+    virtual void stop(result_handler handler);
 
     /// Determine if the network is stopped.
     virtual bool stopped() const;
-
-    // Properties.
-    // ------------------------------------------------------------------------
-
-    /// Network configuration settings.
-    virtual const settings& network_settings() const;
-
-    /// Return a reference to the network io_context.
-    virtual asio::io_context& service();
 
     // Subscriptions.
     // ------------------------------------------------------------------------
@@ -124,6 +110,15 @@ public:
     /// The callback is invoked by the first connection creation only.
     virtual void connect(const std::string& hostname, uint16_t port,
         channel_handler handler);
+
+    // Properties.
+    // ------------------------------------------------------------------------
+
+    /// Network configuration settings.
+    virtual const settings& network_settings() const;
+
+    /// Return a reference to the network io_context.
+    virtual asio::io_context& service();
 
     ////// Hosts collection.
     ////// ------------------------------------------------------------------------
@@ -222,6 +217,10 @@ protected:
 private:
     ////typedef network::pending<channel> pending_channels;
     ////typedef network::pending<connector> pending_connectors;
+    ////hosts hosts_;
+    ////pending_connectors pending_connect_;
+    ////pending_channels pending_handshake_;
+    ////pending_channels pending_close_;
 
     void handle_manual_started(const code& ec, result_handler handler);
     void handle_inbound_started(const code& ec, result_handler handler);
@@ -229,21 +228,23 @@ private:
 
     void handle_started(const code& ec, result_handler handler);
     void handle_running(const code& ec, result_handler handler);
+    
+    void do_stop(result_handler handler);
+    void do_subscribe_connection(connect_handler handler);
+    void do_subscribe_stop(result_handler handler);
 
     // These are thread safe.
     const settings& settings_;
     std::atomic<bool> stopped_;
+
+    // These are not thread safe.
+    session_manual::ptr manual_;
     threadpool threadpool_;
+
+    // These are thread safe.
     asio::strand strand_;
     stop_subscriber::ptr stop_subscriber_;
     channel_subscriber::ptr channel_subscriber_;
-    ////hosts hosts_;
-    ////pending_connectors pending_connect_;
-    ////pending_channels pending_handshake_;
-    ////pending_channels pending_close_;
-
-    // This is not thread safe.
-    session_manual::ptr manual_;
 };
 
 } // namespace network

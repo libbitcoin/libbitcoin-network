@@ -35,9 +35,6 @@ namespace network {
 // The run() function blocks until all work has finished and there are no
 // more handlers to be dispatched, or until the io_context has been stopped.
 
-// Construct.
-// ----------------------------------------------------------------------------
-
 threadpool::threadpool(size_t number_threads, thread_priority priority)
   : work_(boost::asio::make_work_guard(service_))
 {
@@ -59,29 +56,15 @@ threadpool::~threadpool()
     join();
 }
 
-// Stop.
-// ----------------------------------------------------------------------------
-
-// Work mutex allows threadsafe concurrent stop calls.
 void threadpool::stop()
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    unique_lock lock(work_mutex_);
-
     // Clear the work keep-alive.
     // Allows all operations and handlers to finish normally.
     work_.reset();
-    ///////////////////////////////////////////////////////////////////////////
 }
 
-// Threads mutex allows threadsafe join calls while protecting size/empty.
 void threadpool::join()
 {
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    unique_lock lock(threads_mutex_);
-
     // Join cannot be called from a thread in the threadpool (deadlock).
     BC_DEBUG_ONLY(const auto this_id = boost::this_thread::get_id();)
 
@@ -93,30 +76,6 @@ void threadpool::join()
     }
 
     threads_.clear();
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-// Properties.
-// ----------------------------------------------------------------------------
-
-bool threadpool::empty() const
-{
-    return !is_zero(size());
-}
-
-size_t threadpool::size() const
-{
-    ///////////////////////////////////////////////////////////////////////////
-    // Critical Section
-    shared_lock lock(threads_mutex_);
-
-    return threads_.size();
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-const asio::io_context& threadpool::service() const
-{
-    return service_;
 }
 
 asio::io_context& threadpool::service()

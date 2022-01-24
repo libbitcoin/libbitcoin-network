@@ -31,9 +31,6 @@ class enable_shared_from_base
   : public std::enable_shared_from_this<Base>
 {
 protected:
-    // static_cast avoids dynamic_cast runtime safety checks.
-    // Caller must ensure that Derived is derived from Base.
-    // The type constraint performs this check at compile time.
     template <class Derived, system::if_base_of<Base, Derived> = true>
     std::shared_ptr<Derived> shared_from_base()
     {

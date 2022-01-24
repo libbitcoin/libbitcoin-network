@@ -79,7 +79,7 @@ bool proxy::stopped() const
 void proxy::subscribe_stop(result_handler&& handler)
 {
     // Stop is posted to strand to protect socket and subscribers.
-    post(strand(),
+    boost::asio::post(strand(),
         std::bind(&proxy::do_subscribe,
             shared_from_this(), std::move(handler)));
 }
@@ -93,7 +93,7 @@ void proxy::do_subscribe(result_handler handler)
 void proxy::stop(const code& ec)
 {
     // Stop is posted to strand to protect socket and subscribers.
-    post(strand(),
+    boost::asio::post(strand(),
         std::bind(&proxy::do_stop,
             shared_from_this(), ec));
 }

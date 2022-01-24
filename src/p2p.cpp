@@ -44,6 +44,7 @@ namespace network {
 using namespace bc::system;
 using namespace bc::system::chain;
 using namespace std::placeholders;
+using namespace boost::asio;
 
 // This can be exceeded due to manual connection calls and race conditions.
 inline size_t nominal_connecting(const settings& settings)
@@ -62,10 +63,12 @@ inline size_t nominal_connected(const settings& settings)
 p2p::p2p(const settings& settings)
   : settings_(settings),
     stopped_(true),
+    manual_(nullptr),
     threadpool_(settings_.threads),
     strand_(threadpool_.service().get_executor()),
     stop_subscriber_(std::make_shared<stop_subscriber>(strand_)),
     channel_subscriber_(std::make_shared<channel_subscriber>(strand_))
+
     ////hosts_(settings_),
     ////pending_connect_(nominal_connecting(settings_)),
     ////pending_handshake_(nominal_connected(settings_)),
@@ -75,7 +78,7 @@ p2p::p2p(const settings& settings)
 
 p2p::~p2p()
 {
-    p2p::stop();
+    p2p::do_stop(result_handler{});
 }
 
 // Start sequence.
@@ -91,13 +94,10 @@ void p2p::start(result_handler handler)
 
     stopped_.store(false, std::memory_order_relaxed);
 
-    // This instance is retained by stop handler and member reference.
+    // The instance is retained by p2p stop handler (until shutdown).
     // The member reference is retained for posting manual connect calls.
     manual_ = attach_manual_session();
-
-    manual_->start(
-        std::bind(&p2p::handle_manual_started,
-            this, _1, handler));
+    manual_->start(std::bind(&p2p::handle_manual_started, this, _1, handler));
 }
 
 void p2p::handle_manual_started(const code& ec, result_handler handler)
@@ -139,10 +139,7 @@ void p2p::handle_hosts_loaded(const code& ec, result_handler handler)
     // Subscription for seed node connections is not supported.
     // The instance is retained by p2p stop handler (until shutdown).
     const auto seed = attach_seed_session();
-
-    seed->start(
-        std::bind(&p2p::handle_started,
-            this, _1, handler));
+    seed->start(std::bind(&p2p::handle_started, this, _1, handler));
 }
 
 // The seed session is complete upon the invocation of its start handler.
@@ -177,10 +174,7 @@ void p2p::run(result_handler handler)
 
     // The instance is retained by the stop handler (until shutdown).
     const auto inbound = attach_inbound_session();
-
-    inbound->start(
-        std::bind(&p2p::handle_inbound_started,
-            this, _1, handler));
+    inbound->start(std::bind(&p2p::handle_inbound_started, this, _1, handler));
 }
 
 void p2p::handle_inbound_started(const code& ec,
@@ -196,10 +190,7 @@ void p2p::handle_inbound_started(const code& ec,
 
     // The instance is retained by the stop handler (until shutdown).
     const auto outbound = attach_outbound_session();
-
-    outbound->start(
-        std::bind(&p2p::handle_running,
-            this, _1, handler));
+    outbound->start(std::bind(&p2p::handle_running, this, _1, handler));
 }
 
 void p2p::handle_running(const code& ec, result_handler handler)
@@ -216,7 +207,111 @@ void p2p::handle_running(const code& ec, result_handler handler)
     handler(error::success);
 }
 
-// Specializations.
+// Shutdown sequence.
+// ----------------------------------------------------------------------------
+
+// Call returns immediately, threads are joined when handler returns.
+// p2p object must be kept in scope until hander returns or undefined behavior.
+void p2p::stop(result_handler handler)
+{
+    stopped_.store(true, std::memory_order_relaxed);
+    post(strand_, std::bind(&p2p::do_stop, this, std::move(handler)));
+}
+
+void p2p::do_stop(result_handler handler)
+{
+    stop_subscriber_->stop(error::service_stopped);
+    channel_subscriber_->stop(error::service_stopped, nullptr);
+
+    // The manual session is released on destruct if it is not closed over,
+    // and with all resources freed and threads joined this is the case.
+    // The same holds for all sessions, held within the stop handlers.
+    // The manual session reference is only for connect calls.
+
+    ////// Stop creating new channels and stop those that exist.
+    ////pending_connect_.stop(error::service_stopped);
+    ////pending_handshake_.stop(error::service_stopped);
+    ////pending_close_.stop(error::service_stopped);
+
+    /// This is the only stop operation that can fail (due to disk I/O).
+    const auto ec = error::success;//// = hosts_.stop();
+
+    threadpool_.stop();
+    threadpool_.join();
+    handler(ec);
+}
+
+bool p2p::stopped() const
+{
+    return stopped_.load(std::memory_order_relaxed);
+}
+
+// Subscriptions.
+// ----------------------------------------------------------------------------
+
+void p2p::subscribe_connection(connect_handler handler)
+{
+    post(strand_, std::bind(&p2p::do_subscribe_connection, this, std::move(handler)));
+}
+
+void p2p::do_subscribe_connection(connect_handler handler)
+{
+    channel_subscriber_->subscribe(handler);
+}
+
+void p2p::subscribe_stop(result_handler handler)
+{
+    post(strand_, std::bind(&p2p::do_subscribe_stop, this, std::move(handler)));
+}
+
+void p2p::do_subscribe_stop(result_handler handler)
+{
+    stop_subscriber_->subscribe(handler);
+}
+
+// Manual connections.
+// ----------------------------------------------------------------------------
+
+void p2p::connect(const config::endpoint& peer)
+{
+    manual_->connect(peer.host(), peer.port());
+}
+
+void p2p::connect(const std::string& hostname, uint16_t port)
+{
+    if (stopped())
+        return;
+
+    manual_->connect(hostname, port);
+}
+
+// Handler is invoked after handshake and before protocol attachment.
+void p2p::connect(const std::string& hostname, uint16_t port,
+    channel_handler handler)
+{
+    if (stopped())
+    {
+        handler(error::service_stopped, nullptr);
+        return;
+    }
+
+    manual_->connect(hostname, port, handler);
+}
+
+// Properties.
+// ----------------------------------------------------------------------------
+
+const settings& p2p::network_settings() const
+{
+    return settings_;
+}
+
+asio::io_context& p2p::service()
+{
+    return threadpool_.service();
+}
+
+// Specializations (protected).
 // ----------------------------------------------------------------------------
 // Create derived sessions and override these to inject from derived p2p class.
 
@@ -238,101 +333,6 @@ session_inbound::ptr p2p::attach_inbound_session()
 session_outbound::ptr p2p::attach_outbound_session()
 {
     return attach<session_outbound>(true);
-}
-
-// Shutdown.
-// ----------------------------------------------------------------------------
-// All shutdown actions must be queued by the end of the stop call.
-// IOW queued shutdown operations must not enqueue additional work.
-
-// TODO: Stop will terminate all network operations, but channel threads
-// may continue to execute in their shutdown phase after this call returns.
-// Each channel joins its own threads, waiting on release of self-references
-// retained within handlers. To provide a positive stop requires that we inject
-// a shared pointer object into each channel and block on its destruction here.
-
-// This is thread safe and idempotent, allowing it to be unguarded.
-bool p2p::stop()
-{
-    stopped_.store(true, std::memory_order_relaxed);
-
-    // Prevent subscription after stop.
-    stop_subscriber_->stop(error::service_stopped);
-
-    // Prevent subscription after stop.
-    channel_subscriber_->stop(error::service_stopped, {});
-
-    ////// Stop creating new channels and stop those that exist.
-    ////pending_connect_.stop(error::service_stopped);
-    ////pending_handshake_.stop(error::service_stopped);
-    ////pending_close_.stop(error::service_stopped);
-
-    ////// This is the only stop operation that can fail (due to disk I/O).
-    ////return (hosts_.stop() == error::success);
-
-    threadpool_.stop();
-    threadpool_.join();
-    return true;
-}
-
-bool p2p::stopped() const
-{
-    return stopped_.load(std::memory_order_relaxed);
-}
-
-// Properties.
-// ----------------------------------------------------------------------------
-
-const settings& p2p::network_settings() const
-{
-    return settings_;
-}
-
-asio::io_context& p2p::service()
-{
-    return threadpool_.service();
-}
-
-// Subscriptions.
-// ----------------------------------------------------------------------------
-
-void p2p::subscribe_connection(connect_handler handler)
-{
-    channel_subscriber_->subscribe(handler);
-}
-
-void p2p::subscribe_stop(result_handler handler)
-{
-    stop_subscriber_->subscribe(handler);
-}
-
-// Manual connections.
-// ----------------------------------------------------------------------------
-
-void p2p::connect(const config::endpoint& peer)
-{
-    connect(peer.host(), peer.port());
-}
-
-void p2p::connect(const std::string& hostname, uint16_t port)
-{
-    if (stopped())
-        return;
-
-    manual_->connect(hostname, port);
-}
-
-// Handler is invoked after handshake and before protocol attachment.
-void p2p::connect(const std::string& hostname, uint16_t port,
-    channel_handler handler)
-{
-    if (stopped())
-    {
-        handler(error::service_stopped, {});
-        return;
-    }
-
-    manual_->connect(hostname, port, handler);
 }
 
 ////// Hosts collection.
