@@ -137,17 +137,12 @@ void session_seed::start_seed(const config::endpoint& seed,
 {
     if (stopped())
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Suspended seed connection";
         handler(error::channel_stopped);
         return;
     }
 
-    LOG_INFO(LOG_NETWORK)
-        << "Contacting seed [" << seed << "]";
-
     const auto connector = create_connector();
-    pend(connector);
+////    pend(connector);
 
     // OUTBOUND CONNECT
     connector->connect(seed,
@@ -158,27 +153,19 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
     const config::endpoint& seed, connector::ptr connector,
     result_handler handler)
 {
-    unpend(connector);
+////    unpend(connector);
 
     if (ec)
     {
-        LOG_INFO(LOG_NETWORK)
-            << "Failure contacting seed [" << seed << "] " << ec.message();
         handler(ec);
         return;
     }
 
     if (blacklisted(channel->authority()))
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Seed [" << seed << "] on blacklisted address ["
-            << channel->authority() << "]";
         handler(error::address_blocked);
         return;
     }
-
-    LOG_INFO(LOG_NETWORK)
-        << "Connected seed [" << seed << "] as " << channel->authority();
 
     register_channel(channel,
         BIND3(handle_channel_start, _1, channel, handler),
@@ -216,8 +203,6 @@ void session_seed::attach_protocols(channel::ptr channel,
 
 void session_seed::handle_channel_stop(const code& ec)
 {
-    LOG_DEBUG(LOG_NETWORK)
-        << "Seed channel stopped: " << ec.message();
 }
 
 // This accepts no error code because individual seed errors are suppressed.

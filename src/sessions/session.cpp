@@ -56,19 +56,20 @@ session::~session()
 // ----------------------------------------------------------------------------
 // protected
 
+// for seeding
 size_t session::address_count() const
 {
-    return {}; ////network_.address_count();
+    return network_.address_count();
 }
 
 size_t session::connection_count() const
 {
-    return {}; ////network_.connection_count();
+    return network_.connection_count();
 }
 
-code session::fetch_address(messages::address_item& out_address) const
+void session::fetch_address(hosts::peer_handler handler) const
 {
-    return {}; ////network_.fetch_address(out_address);
+    network_.fetch_address(handler);
 }
 
 bool session::blacklisted(const authority& authority) const
@@ -106,36 +107,36 @@ connector::ptr session::create_connector()
     return std::make_shared<connector>(network_.service(), settings_);
 }
 
-// Pending connect.
-// ----------------------------------------------------------------------------
-
-code session::pend(connector::ptr connector)
-{
-    return {}; ////network_.pend(connector);
-}
-
-void session::unpend(connector::ptr connector)
-{
-    return; ////network_.unpend(connector);
-}
-
-// Pending handshake.
-// ----------------------------------------------------------------------------
-
-code session::pend(channel::ptr channel)
-{
-    return {}; ////return network_.pend(channel);
-}
-
-void session::unpend(channel::ptr channel)
-{
-    return; ////network_.unpend(channel);
-}
-
-bool session::pending(uint64_t version_nonce) const
-{
-    return {}; ////return network_.pending(version_nonce);
-}
+////// Pending connect.
+////// ----------------------------------------------------------------------------
+////
+////code session::pend(connector::ptr connector)
+////{
+////    return {}; ////network_.pend(connector);
+////}
+////
+////void session::unpend(connector::ptr connector)
+////{
+////    return; ////network_.unpend(connector);
+////}
+////
+////// Pending handshake.
+////// ----------------------------------------------------------------------------
+////
+////code session::pend(channel::ptr channel)
+////{
+////    return {}; ////return network_.pend(channel);
+////}
+////
+////void session::unpend(channel::ptr channel)
+////{
+////    return; ////network_.unpend(channel);
+////}
+////
+////bool session::pending(uint64_t version_nonce) const
+////{
+////    return {}; ////return network_.pending(version_nonce);
+////}
 
 // Start sequence.
 // ----------------------------------------------------------------------------
@@ -154,9 +155,10 @@ void session::start(result_handler handler)
     handler(error::success);
 }
 
-// TODO: override to log session stop.
+// override to log session stop.
 void session::stop(const code&)
 {
+    // This is entirely passive.
     stopped_ = true;
 }
 
@@ -164,6 +166,7 @@ void session::stop(const code&)
 // ----------------------------------------------------------------------------
 // Must not change context in start or stop sequences (use bind).
 
+//////// Want this on the strand, to protect the loopback map.
 void session::register_channel(channel::ptr channel,
     result_handler handle_started, result_handler handle_stopped)
 {
@@ -174,22 +177,24 @@ void session::register_channel(channel::ptr channel,
         return;
     }
 
+    // must set nonce before start_channel
+    channel->set_notify(notify_on_connect_);
+    channel->set_nonce(pseudo_random::next<uint64_t>(1u, max_uint64));
+
     start_channel(channel,
         BIND4(handle_start, _1, channel, handle_started, handle_stopped));
 }
 
+//////// Want this on the strand, to protect the loopback map.
 void session::start_channel(channel::ptr channel,
     result_handler handle_started)
 {
-    channel->set_notify(notify_on_connect_);
-    channel->set_nonce(pseudo_random::next<uint64_t>(1u, max_uint64));
     channel->start();
 
     attach_handshake_protocols(channel,
         BIND3(handle_handshake, _1, channel, handle_started));
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
 // Channel communication begins after version protocol start returns.
 // handle_handshake is invoked after version negotiation completes.
 void session::attach_handshake_protocols(channel::ptr channel,
@@ -205,16 +210,12 @@ void session::attach_handshake_protocols(channel::ptr channel,
             start(handle_started);
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
+//////// Want this on the strand, to protect the loopback map.
 void session::handle_handshake(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
     if (ec)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure in handshake with [" << channel->authority()
-            << "] " << ec.message();
-
         handle_started(ec);
         return;
     }
@@ -222,7 +223,7 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
     handshake_complete(channel, handle_started);
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
+//////// Want this on the strand, to protect the loopback map.
 void session::handshake_complete(channel::ptr channel,
     result_handler handle_started)
 {
@@ -231,7 +232,6 @@ void session::handshake_complete(channel::ptr channel,
 ////handle_started(network_.store(channel));
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session::handle_start(const code& ec, channel::ptr channel,
     result_handler handle_started, result_handler handle_stopped)
 {
@@ -255,7 +255,6 @@ void session::handle_start(const code& ec, channel::ptr channel,
     handle_started(ec);
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD (if the channel stops itself).
 void session::handle_remove(const code& , channel::ptr channel,
     result_handler handle_stopped)
 {

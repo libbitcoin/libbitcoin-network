@@ -78,6 +78,8 @@ void protocol_timer::reset_timer()
 
 void protocol_timer::handle_timer(const code& ec)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped())
         return;
 

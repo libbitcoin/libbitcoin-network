@@ -39,7 +39,7 @@ public:
     typedef std::function<void(Args...)> handler;
     typedef std::shared_ptr<subscriber<Args...>> ptr;
 
-    /// Event notification handlers are posted to the strand.
+    /// Event notification handlers are posted to the given strand.
     subscriber(asio::strand& strand) noexcept;
     virtual ~subscriber() noexcept;
     
@@ -55,7 +55,7 @@ public:
     void stop(const Args&... args) noexcept;
 
 private:
-    // This is safe.
+    // This is thread safe.
     asio::strand& strand_;
 
     // These are not thread safe.

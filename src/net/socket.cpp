@@ -93,6 +93,7 @@ void socket::stop()
 // private
 void socket::do_stop()
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     error::boost_code ignore;
 
     // Disable future sends or receives on the socket, for graceful close.
@@ -156,6 +157,8 @@ void socket::do_connect(const asio::iterator& it, result_handler handler)
 
 void socket::do_read(const mutable_buffer& out, io_handler handler)
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
     // This composed operation posts all intermediate handlers to the strand.
     async_read(socket_, out,
         std::bind(&socket::handle_io,
@@ -164,6 +167,8 @@ void socket::do_read(const mutable_buffer& out, io_handler handler)
 
 void socket::do_write(const const_buffer& in, io_handler handler)
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
     // This composed operation posts all intermediate handlers to the strand.
     async_write(socket_, in,
         std::bind(&socket::handle_io,
@@ -194,7 +199,7 @@ void socket::handle_accept(const error::boost_code& ec,
 void socket::handle_connect(const error::boost_code& ec,
     const asio::endpoint& peer, const result_handler& handler)
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     endpoint_ = peer;
 
@@ -211,7 +216,7 @@ void socket::handle_connect(const error::boost_code& ec,
 void socket::handle_io(const error::boost_code& ec, size_t size,
     const io_handler& handler)
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (error::asio_is_cancelled(ec))
     {
@@ -226,6 +231,11 @@ void socket::handle_io(const error::boost_code& ec, size_t size,
 // Properties.
 // ----------------------------------------------------------------------------
 // These calls may originate from any thread.
+
+bool socket::stranded() const
+{
+    return strand_.running_in_this_thread();
+}
 
 asio::strand& socket::strand()
 {

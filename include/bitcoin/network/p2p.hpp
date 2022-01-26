@@ -23,8 +23,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -114,73 +116,73 @@ public:
     /// Network configuration settings.
     virtual const settings& network_settings() const;
 
-    /// Return a reference to the network io_context.
+    /// Return a reference to the network io_context (thread safe).
     virtual asio::io_context& service();
 
-    ////// Hosts collection.
-    ////// ------------------------------------------------------------------------
+    /// Return a reference to the network strand (thread safe).
+    /// Network strand is for sessions, but also hosts, subscribe and stop.
+    virtual asio::strand& strand();
 
-    /////// Get the number of addresses.
-    ////virtual size_t address_count() const;
+    // Hosts collection.
+    // ------------------------------------------------------------------------
 
-    ////// TODO: make protected.
+    /// Get the number of addresses (thread safe).
+    virtual size_t address_count() const;
 
-    /////// Store an address.
-    ////virtual code store(const messages::address_item& address);
+    /// Store an address.
+    virtual void store(const messages::address_item& address);
 
-    /////// Store a collection of addresses (asynchronous).
-    ////virtual void store(const messages::address_items& addresses,
-    ////    result_handler handler);
+    /// Store a collection of addresses.
+    virtual void store(const messages::address_items& addresses);
 
-    /////// Get a randomly-selected address.
-    ////virtual code fetch_address(messages::address_item& out_address) const;
+    /// Remove an address.
+    virtual void remove(const messages::address_item& address);
 
-    /////// Get a list of stored hosts
-    ////virtual code fetch_addresses(
-    ////    messages::address_items& out_addresses) const;
+    /// Get a randomly-selected address.
+    virtual void fetch_address(hosts::peer_handler handler) const;
 
-    /////// Remove an address.
-    ////virtual code remove(const messages::address_item& address);
+    /// Get a list of stored hosts
+    virtual void fetch_addresses(hosts::peers_handler handler) const;
 
     ////// Pending connect collection.
     ////// ------------------------------------------------------------------------
     ////// TODO: remove.
-
+    ////
     /////// Store a pending connection reference.
     ////virtual code pend(connector::ptr connector);
-
+    ////
     /////// Free a pending connection reference.
     ////virtual void unpend(connector::ptr connector);
-
+    ////
     ////// Pending handshake collection.
     ////// ------------------------------------------------------------------------
     ////// TODO: make private.
-
+    ////
     /////// Store a pending connection reference.
     ////virtual code pend(channel::ptr channel);
-
+    ////
     /////// Test for a pending connection reference.
     ////virtual bool pending(uint64_t version_nonce) const;
-
+    ////
     /////// Free a pending connection reference.
     ////virtual void unpend(channel::ptr channel);
-
-    ////// Pending close collection (open connections).
-    ////// ------------------------------------------------------------------------
-
-    /////// Get the number of connections.
-    ////virtual size_t connection_count() const;
-
-    ////// TODO: make private.
-
-    /////// Store a connection.
-    ////virtual code store(channel::ptr channel);
-
-    /////// Determine if there exists a connection to the address.
-    ////virtual bool connected(const messages::address_item& address) const;
-
-    /////// Remove a connection.
-    ////virtual void remove(channel::ptr channel);
+    
+    // Pending close collection (open connections).
+    // ------------------------------------------------------------------------
+    
+    /// Get the number of connections.
+    virtual size_t connection_count() const;
+    
+    // TODO: make private.
+    
+    /// Store a connection.
+    virtual code store(channel::ptr channel);
+    
+    /// Determine if there exists a connection to the address.
+    virtual bool connected(const messages::address_item& address) const;
+    
+    /// Remove a connection.
+    virtual void remove(channel::ptr channel);
 
 protected:
 
@@ -212,13 +214,6 @@ protected:
     virtual session_outbound::ptr attach_outbound_session();
 
 private:
-    ////typedef network::pending<channel> pending_channels;
-    ////typedef network::pending<connector> pending_connectors;
-    ////hosts hosts_;
-    ////pending_connectors pending_connect_;
-    ////pending_channels pending_handshake_;
-    ////pending_channels pending_close_;
-
     void handle_manual_started(const code& ec, result_handler handler);
     void handle_inbound_started(const code& ec, result_handler handler);
     void handle_hosts_loaded(const code& ec, result_handler handler);
@@ -230,18 +225,30 @@ private:
     void do_subscribe_connection(connect_handler handler);
     void do_subscribe_stop(result_handler handler);
 
+    void do_store_host(const messages::address_item& host);
+    void do_store_hosts(const messages::address_items& hosts);
+    void do_remove(const messages::address_item& host);
+    void do_fetch_address(hosts::peer_handler handler) const;
+    void do_fetch_addresses(hosts::peers_handler handler) const;
+
     // These are thread safe.
     const settings& settings_;
     std::atomic<bool> stopped_;
 
     // These are not thread safe.
+    hosts hosts_;
     session_manual::ptr manual_;
     threadpool threadpool_;
 
     // These are thread safe.
     asio::strand strand_;
+
+    // These are not thread safe.
     stop_subscriber::ptr stop_subscriber_;
     channel_subscriber::ptr channel_subscriber_;
+    std::vector<channel::ptr> channels_;
+    std::unordered_set<uint64_t> nonces_;
+    std::unordered_set<config::authority::ptr> addresses_;
 };
 
 } // namespace network

@@ -192,49 +192,49 @@ BOOST_AUTO_TEST_CASE(authority__bool__nonzero_port__true)
     BOOST_REQUIRE(host);
 }
 
-// ip
+// to_ip_address
 
-BOOST_AUTO_TEST_CASE(authority__ip__default__unspecified)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__default__unspecified)
 {
     const authority host;
-    BOOST_REQUIRE(ip_equal(host.ip(), test_unspecified_ip_address));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_unspecified_ip_address));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__copy__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__copy__expected)
 {
     const auto& expected_ip = test_ipv6_address;
     const authority other(expected_ip, 42);
     const authority host(other);
-    BOOST_REQUIRE(ip_equal(host.ip(), expected_ip));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), expected_ip));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__ipv4_authority__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__ipv4_authority__expected)
 {
     const authority host(BC_AUTHORITY_IPV4_ADDRESS ":42");
-    BOOST_REQUIRE(ip_equal(host.ip(), test_mapped_ip_address));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_mapped_ip_address));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__ipv6_authority__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__ipv6_authority__expected)
 {
     const authority host("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:42");
-    BOOST_REQUIRE(ip_equal(host.ip(), test_ipv6_address));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_ipv6_address));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__ipv6_compatible_authority__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__ipv6_compatible_authority__expected)
 {
     // BC_AUTHORITY_IPV6_COMPATIBLE_ADDRESS A|B variants are equivalent.
     const authority host("[" BC_AUTHORITY_IPV6_COMPATIBLE_ADDRESS "]:42");
-    BOOST_REQUIRE(ip_equal(host.ip(), test_compatible_ip_address));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_compatible_ip_address));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__ipv6_compatible_alternative_authority__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__ipv6_compatible_alternative_authority__expected)
 {
     // BC_AUTHORITY_IPV6_COMPATIBLE_ADDRESS A|B variants are equivalent.
     const authority host("[" BC_AUTHORITY_IPV6_ALTERNATIVE_COMPATIBLE_ADDRESS "]:42");
-    BOOST_REQUIRE(ip_equal(host.ip(), test_compatible_ip_address));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_compatible_ip_address));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__address_item__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__address_item__expected)
 {
     const auto& expected_ip = test_ipv6_address;
     const messages::address_item address
@@ -243,47 +243,47 @@ BOOST_AUTO_TEST_CASE(authority__ip__address_item__expected)
     };
 
     const authority host(address);
-    BOOST_REQUIRE(ip_equal(host.ip(), expected_ip));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), expected_ip));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__ip_address__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__ip_address__expected)
 {
     const auto& expected_ip = test_ipv6_address;
     const authority host(expected_ip, 42);
-    BOOST_REQUIRE(ip_equal(host.ip(), expected_ip));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), expected_ip));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__ipv4_hostname__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__ipv4_hostname__expected)
 {
     const authority host(BC_AUTHORITY_IPV4_ADDRESS, 42);
-    BOOST_REQUIRE(ip_equal(host.ip(), test_mapped_ip_address));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_mapped_ip_address));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__ipv6_host__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__ipv6_host__expected)
 {
     const authority host(BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS, 42);
-    BOOST_REQUIRE(ip_equal(host.ip(), test_ipv6_address));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_ipv6_address));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__ipv6_hostname__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__ipv6_hostname__expected)
 {
     const authority host("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]", 42);
-    BOOST_REQUIRE(ip_equal(host.ip(), test_ipv6_address));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_ipv6_address));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__boost_address__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__boost_address__expected)
 {
     const auto address = boost::asio::ip::address::from_string(BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
     const authority host(address, 42);
-    BOOST_REQUIRE(ip_equal(host.ip(), test_ipv6_address));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_ipv6_address));
 }
 
-BOOST_AUTO_TEST_CASE(authority__ip__boost_endpoint__expected)
+BOOST_AUTO_TEST_CASE(authority__to_ip_address__boost_endpoint__expected)
 {
     const auto address = boost::asio::ip::address::from_string(BC_AUTHORITY_IPV4_ADDRESS);
     boost::asio::ip::tcp::endpoint tcp_endpoint(address, 42);
     const authority host(tcp_endpoint);
-    BOOST_REQUIRE(ip_equal(host.ip(), test_mapped_ip_address));
+    BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_mapped_ip_address));
 }
 
 // to_hostname

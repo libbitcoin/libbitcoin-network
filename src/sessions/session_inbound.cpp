@@ -46,15 +46,9 @@ void session_inbound::start(result_handler handler)
 {
     if (settings_.inbound_port == 0 || settings_.inbound_connections == 0)
     {
-        LOG_INFO(LOG_NETWORK)
-            << "Not configured for accepting incoming connections.";
         handler(error::success);
         return;
     }
-
-    LOG_INFO(LOG_NETWORK)
-        << "Starting inbound session on port (" << settings_.inbound_port
-        << ").";
 
     session::start(BIND2(handle_started, _1, handler));
 }
@@ -70,14 +64,12 @@ void session_inbound::handle_started(const code& ec,
 
     acceptor_ = create_acceptor();
 
-    // START LISTENING ON PORT
-    const auto error_code = acceptor_->start(settings_.inbound_port);
+    // LISTEN
+    const auto start_ec = acceptor_->start(settings_.inbound_port);
 
-    if (error_code)
+    if (start_ec)
     {
-        LOG_ERROR(LOG_NETWORK)
-            << "Error starting listener: " << ec.message();
-        handler(error_code);
+        handler(start_ec);
         return;
     }
 
@@ -98,80 +90,46 @@ void session_inbound::handle_started(const code& ec,
 void session_inbound::start_accept(const code&)
 {
     if (stopped())
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Suspended inbound connection.";
         return;
-    }
 
-    // ACCEPT THE NEXT INCOMING CONNECTION
+    // ACCEPT
     acceptor_->accept(BIND2(handle_accept, _1, _2));
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_inbound::handle_accept(const code& ec,
     channel::ptr channel)
 {
     if (stopped(ec))
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Suspended inbound connection.";
         return;
-    }
 
     ////// Start accepting with conditional delay in case of network error.
     ////dispatch_delayed(cycle_delay(ec), BIND1(start_accept, _1));
 
     if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure accepting connection: " << ec.message();
         return;
-    }
 
     if (blacklisted(channel->authority()))
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Rejected inbound connection from ["
-            << channel->authority() << "] due to blacklisted address.";
         return;
-    }
 
     // Inbound connections can easily overflow in the case where manual and/or
     // outbound connections at the time are not yet connected as configured.
     if (connection_count() >= connection_limit_)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Rejected inbound connection from ["
-            << channel->authority() << "] due to connection limit.";
         return;
-    }
 
     register_channel(channel,
         BIND2(handle_channel_start, _1, channel),
         BIND1(handle_channel_stop, _1));
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_inbound::handle_channel_start(const code& ec,
     channel::ptr channel)
 {
     if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Inbound channel failed to start [" << channel->authority()
-            << "] " << ec.message();
         return;
-    }
-
-    LOG_INFO(LOG_NETWORK)
-        << "Connected inbound channel [" << channel->authority() << "] ("
-        << connection_count() << ")";
 
     attach_protocols(channel);
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
 // Communication will begin after this function returns, freeing the thread.
 void session_inbound::attach_protocols(channel::ptr channel)
 {
@@ -192,26 +150,20 @@ void session_inbound::attach_protocols(channel::ptr channel)
 // THIS IS INVOKED ON THE CHANNEL THREAD (if the channel stops itself).
 void session_inbound::handle_channel_stop(const code& ec)
 {
-    LOG_DEBUG(LOG_NETWORK)
-        << "Inbound channel stopped: " << ec.message();
 }
 
 // Channel start sequence.
 // ----------------------------------------------------------------------------
 // Check pending outbound connections for loopback to this inbound.
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_inbound::handshake_complete(channel::ptr channel,
     result_handler handle_started)
 {
-    if (pending(channel->peer_version()->nonce))
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Rejected connection from [" << channel->authority()
-            << "] as loopback.";
-        handle_started(error::accept_failed);
-        return;
-    }
+    ////if (pending(channel->peer_version()->nonce))
+    ////{
+    ////    handle_started(error::accept_failed);
+    ////    return;
+    ////}
 
     session::handshake_complete(channel, handle_started);
 }

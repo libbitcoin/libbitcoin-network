@@ -108,7 +108,11 @@ public:
     // Properties.
     // ------------------------------------------------------------------------
 
+    /// Is the strand running in this thread.
+    virtual bool stranded() const;
+
     /// Get the strand of the socket.
+    /// socket/proxy/channel strand is used by attached protocols.
     virtual asio::strand& strand();
 
     /// Get the authority of the peer.

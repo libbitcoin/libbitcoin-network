@@ -134,7 +134,7 @@ void channel::stop(const code& ec)
 // protected
 void channel::do_stop(const code& ec)
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     inactivity_->stop();
     expiration_->stop();
     proxy::do_stop(ec);
@@ -145,49 +145,49 @@ void channel::do_stop(const code& ec)
 
 bool channel::notify() const
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     return notify_on_connect_;
 }
 
 void channel::set_notify(bool value)
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     notify_on_connect_ = value;
 }
 
 uint64_t channel::nonce() const
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     return channel_nonce_;
 }
 
 void channel::set_nonce(uint64_t value)
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     channel_nonce_ = value;
 }
 
 uint32_t channel::negotiated_version() const
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     return negotiated_version_;
 }
 
 void channel::set_negotiated_version(uint32_t value)
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     negotiated_version_ = value;
 }
 
 version::ptr channel::peer_version() const
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     return peer_version_;
 }
 
 void channel::set_peer_version(version::ptr value)
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     peer_version_ = value;
 }
 
@@ -197,31 +197,31 @@ void channel::set_peer_version(version::ptr value)
 
 size_t channel::maximum_payload() const
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     return maximum_payload_;
 }
 
 uint32_t channel::protocol_magic() const
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     return protocol_magic_;
 }
 
 bool channel::validate_checksum() const
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     return validate_checksum_;
 }
 
 bool channel::verbose() const
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     return verbose_logging_;
 }
 
 uint32_t channel::version() const
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     return negotiated_version();
 }
 
@@ -229,7 +229,7 @@ uint32_t channel::version() const
 // A canceled timer does not invoke its completion handler.
 void channel::signal_activity()
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     return start_inactivity();
 }
 
@@ -251,7 +251,7 @@ void channel::start_expiration()
 
 void channel::handle_expiration(const code& ec)
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped())
         return;
@@ -284,7 +284,7 @@ void channel::start_inactivity()
 
 void channel::handle_inactivity(const code& ec)
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped())
         return;

@@ -50,6 +50,7 @@ struct BCT_API address_item
 };
 
 typedef std::vector<address_item> address_items;
+typedef std::shared_ptr<address_items> address_items_ptr;
 
 static const ip_address null_ip_address
 {

@@ -108,14 +108,14 @@ messages::version protocol_version_31402::version_factory() const
             // The peer's services cannot be reflected, so zero it.
             timestamp,
             service::node_none,
-            authority().ip(),
+            authority().to_ip_address(),
             authority().port(),
         },
         {
             // We always match the services declared in our version.services.
             timestamp,
             own_services_,
-            settings.self.ip(),
+            settings.self.to_ip_address(),
             settings.self.port(),
         },
         nonce(),

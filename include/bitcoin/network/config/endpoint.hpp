@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 #include <boost/asio.hpp>
@@ -37,6 +38,8 @@ namespace config {
 class BC_API endpoint
 {
 public:
+    typedef std::shared_ptr<endpoint> ptr;
+
     endpoint();
     endpoint(const endpoint& other);
 
@@ -75,6 +78,7 @@ public:
     /// to a service that has been configured to bind to all interfaces.
     /// The endpoint is of the form: [scheme://]host[:port]
     endpoint to_local() const;
+
     bool operator==(const endpoint& other) const;
 
     friend std::istream& operator>>(std::istream& input,
@@ -91,7 +95,19 @@ private:
 typedef std::vector<endpoint> endpoints;
 
 } // namespace config
-} // namespace system
+} // namespace network
 } // namespace libbitcoin
+
+namespace std
+{
+template<>
+struct hash<bc::network::config::endpoint>
+{
+    size_t operator()(const bc::network::config::endpoint& value) const noexcept
+    {
+        return std::hash<std::string>{}(value.to_string());
+    }
+};
+} // namespace std
 
 #endif

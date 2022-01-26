@@ -23,6 +23,7 @@
 #define LIBBITCOIN_NETWORK_CONFIG_CLIENT_FILTER_HPP
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -35,6 +36,8 @@ namespace config {
 class BC_API client_filter
 {
 public:
+    typedef std::shared_ptr<client_filter> ptr;
+
     client_filter();
     client_filter(const client_filter& other);
     client_filter(const std::string& hexcode);
@@ -59,7 +62,7 @@ private:
 };
 
 } // namespace config
-} // namespace system
+} // namespace network
 } // namespace libbitcoin
 
 #endif

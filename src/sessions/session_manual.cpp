@@ -47,9 +47,6 @@ session_manual::session_manual(p2p& network, bool notify_on_connect)
 
 void session_manual::start(result_handler handler)
 {
-    LOG_INFO(LOG_NETWORK)
-        << "Starting manual session.";
-
     session::start(BIND2(handle_started, _1, handler));
 }
 
@@ -89,37 +86,28 @@ void session_manual::start_connect(const code&,
 {
     if (stopped())
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Suspended manual connection.";
-
         handler(error::service_stopped, nullptr);
         return;
     }
 
     const auto retries = floored_subtract(attempts, 1u);
     const auto connector = create_connector();
-    pend(connector);
 
-    // MANUAL CONNECT OUTBOUND
+    ////pend(connector);
+
+    // CONNECT
     connector->connect(hostname, port,
-        BIND7(handle_connect, _1, _2, hostname, port, retries, connector,
-            handler));
+        BIND7(handle_connect, _1, _2, hostname, port, retries, connector, handler));
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_manual::handle_connect(const code& ec,
     channel::ptr channel, const std::string& hostname, uint16_t port,
     uint32_t remaining, connector::ptr connector, channel_handler handler)
 {
-    unpend(connector);
+    ////unpend(connector);
 
     if (ec)
     {
-        LOG_WARNING(LOG_NETWORK)
-            << "Failure connecting ["
-            << config::endpoint(hostname, port)
-            << "] manually: " << ec.message();
-
         // Retry forever if limit is zero.
         remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
 
@@ -131,11 +119,6 @@ void session_manual::handle_connect(const code& ec,
             return;
         }
 
-        LOG_WARNING(LOG_NETWORK)
-            << "Suspending manual connection to ["
-            << config::endpoint(hostname, port) << "] after "
-            << settings_.manual_attempt_limit << " failed attempts.";
-
         // This is a failure end of the connect sequence.
         handler(ec, nullptr);
         return;
@@ -146,17 +129,12 @@ void session_manual::handle_connect(const code& ec,
         BIND5(handle_channel_stop, _1, hostname, port, remaining, handler));
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_manual::handle_channel_start(const code& ec,
     const std::string& hostname, uint16_t port, uint32_t remaining,
     channel::ptr channel, channel_handler handler)
 {
     if (ec)
     {
-        LOG_INFO(LOG_NETWORK)
-            << "Manual channel failed to start [" << channel->authority()
-            << "] " << ec.message();
-
         // Retry forever if limit is zero.
         remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
 
@@ -168,18 +146,11 @@ void session_manual::handle_channel_start(const code& ec,
         return;
     }
 
-    LOG_INFO(LOG_NETWORK)
-        << "Connected manual channel ["
-        << config::endpoint(hostname, port)
-        << "] as [" << channel->authority() << "] ("
-        << connection_count() << ")";
-
     // This is the success end of the connect sequence.
     handler(error::success, channel);
     attach_protocols(channel);
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
 // Communication will begin after this function returns, freeing the thread.
 void session_manual::attach_protocols(channel::ptr channel)
 {
@@ -197,14 +168,10 @@ void session_manual::attach_protocols(channel::ptr channel)
     attach<protocol_address_31402>(channel, network_)->start();
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD (if the channel stops itself).
 void session_manual::handle_channel_stop(const code& ec,
     const std::string& hostname, uint16_t port, uint32_t remaining,
     channel_handler handler)
 {
-    LOG_DEBUG(LOG_NETWORK)
-        << "Manual channel stopped: " << ec.message();
-
     // Special case for already connected, do not keep trying.
     if (ec == error::address_in_use)
         return;
@@ -218,10 +185,7 @@ void session_manual::handle_channel_stop(const code& ec,
         return;
     }
 
-    LOG_WARNING(LOG_NETWORK)
-        << "Not restarting manual connection to ["
-        << config::endpoint(hostname, port) << "] after "
-        << settings_.manual_attempt_limit << " failed attempts.";
+    // hit manual_attempt_limit, no restart.
 }
 
 } // namespace network

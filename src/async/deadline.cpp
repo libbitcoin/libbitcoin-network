@@ -34,7 +34,6 @@ using namespace std::placeholders;
 
 deadline::deadline(asio::strand& strand, const duration& timeout)
   : duration_(timeout),
-    strand_(strand),
     timer_(strand),
     track<deadline>()
 {
@@ -63,8 +62,6 @@ void deadline::start(handler&& handle, const duration& timeout)
 // Cancellation calls handle_timer with asio::error::operation_aborted.
 void deadline::stop()
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     // Handling cancel error code creates exception safety.
     error::boost_code ignore;
     timer_.cancel(ignore);
@@ -76,8 +73,6 @@ void deadline::stop()
 void deadline::handle_timer(const error::boost_code& ec,
     const handler& handle) const
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     if (!error::asio_is_cancelled(ec))
         handle(error::asio_to_error_code(ec));
 }

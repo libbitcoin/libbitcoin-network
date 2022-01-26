@@ -49,6 +49,7 @@ public:
     // ------------------------------------------------------------------------
 
     /// Construct an instance.
+    /// Connector strand is self-contained.
     connector(asio::io_context& service, const settings& settings);
 
     // Stop.

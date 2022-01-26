@@ -63,7 +63,6 @@ private:
 
     // These are thread safe.
     const duration duration_;
-    asio::strand& strand_;
 
     // This is not thread safe.
     wait_timer timer_;

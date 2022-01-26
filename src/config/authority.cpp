@@ -128,7 +128,7 @@ static ip::address_v6 to_boost_address(const messages::ip_address& in)
     return out;
 }
 
-static messages::ip_address to_bc_address(const ip::address_v6& in)
+static messages::ip_address to_message_address(const ip::address_v6& in)
 {
     messages::ip_address out;
     const auto bytes = in.to_bytes();
@@ -163,14 +163,9 @@ authority::operator bool() const
     return port_ != 0;
 }
 
-ip::address_v6 authority::asio_ip() const
+const ip::address_v6& authority::ip() const
 {
     return ip_;
-}
-
-messages::ip_address authority::ip() const
-{
-    return to_bc_address(ip_);
 }
 
 uint16_t authority::port() const
@@ -184,23 +179,28 @@ std::string authority::to_hostname() const
     return ipv4_hostname.empty() ? to_ipv6_hostname(ip_) : ipv4_hostname;
 }
 
+std::string authority::to_string() const
+{
+    std::stringstream value;
+    value << *this;
+    return value.str();
+}
+
 messages::address_item authority::to_address_item() const
 {
     static constexpr uint32_t services = 0;
     static constexpr uint32_t timestamp = 0;
     const messages::address_item address_item
     {
-        timestamp, services, ip(), port(),
+        timestamp, services, to_ip_address(), port(),
     };
 
     return address_item;
 }
 
-std::string authority::to_string() const
+messages::ip_address authority::to_ip_address() const
 {
-    std::stringstream value;
-    value << *this;
-    return value.str();
+    return to_message_address(ip_);
 }
 
 bool authority::operator==(const authority& other) const

@@ -120,8 +120,8 @@ protected:
 
     virtual size_t address_count() const;
     virtual size_t connection_count() const;
-    virtual code fetch_address(messages::address_item& out_address) const;
-    virtual bool blacklisted(const authority& authority) const;
+    virtual void fetch_address(hosts::peer_handler handler) const;
+    virtual bool blacklisted(const config::authority& authority) const;
     virtual bool stopped() const;
     virtual bool stopped(const code& ec) const;
 
@@ -131,26 +131,26 @@ protected:
     virtual acceptor::ptr create_acceptor();
     virtual connector::ptr create_connector();
 
-    // Pending connect.
-    // ------------------------------------------------------------------------
+    ////// Pending connect.
+    ////// ------------------------------------------------------------------------
 
-    /// Store a pending connection reference.
-    virtual code pend(connector::ptr connector);
+    /////// Store a pending connection reference.
+    ////virtual code pend(connector::ptr connector);
 
-    /// Free a pending connection reference.
-    virtual void unpend(connector::ptr connector);
+    /////// Free a pending connection reference.
+    ////virtual void unpend(connector::ptr connector);
 
-    // Pending handshake.
-    // ------------------------------------------------------------------------
+    ////// Pending handshake.
+    ////// ------------------------------------------------------------------------
 
-    /// Store a pending connection reference.
-    virtual code pend(channel::ptr channel);
+    /////// Store a pending connection reference.
+    ////virtual code pend(channel::ptr channel);
 
-    /// Free a pending connection reference.
-    virtual void unpend(channel::ptr channel);
+    /////// Free a pending connection reference.
+    ////virtual void unpend(channel::ptr channel);
 
-    /// Test for a pending connection reference.
-    virtual bool pending(uint64_t version_nonce) const;
+    /////// Test for a pending connection reference.
+    ////virtual bool pending(uint64_t version_nonce) const;
 
     // Registration sequence.
     //-------------------------------------------------------------------------
@@ -178,8 +178,6 @@ protected:
 private:
     typedef network::pending<connector> connectors;
 
-    void handle_starting(const code& ec, channel::ptr channel,
-        result_handler handle_started);
     void handle_handshake(const code& ec, channel::ptr channel,
         result_handler handle_started);
     void handle_start(const code& ec, channel::ptr channel,

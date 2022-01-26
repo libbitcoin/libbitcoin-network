@@ -101,6 +101,8 @@ void proxy::stop(const code& ec)
 // protected
 void proxy::do_stop(const code& ec)
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
     pump_subscriber_.stop(ec);
@@ -133,7 +135,7 @@ void proxy::read_heading()
 // Handle errors and invoke payload read.
 void proxy::handle_read_heading(const code& ec, size_t)
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec == error::channel_stopped)
     {
@@ -201,7 +203,7 @@ void proxy::read_payload(heading_ptr head)
 void proxy::handle_read_payload(const code& ec, size_t payload_size,
     heading_ptr head)
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec == error::channel_stopped)
     {
@@ -297,7 +299,7 @@ void proxy::send(payload_ptr payload, const result_handler& handler)
 void proxy::handle_send(const code& ec, size_t, payload_ptr payload,
     const result_handler& handler)
 {
-    BC_ASSERT_MSG(strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec == error::channel_stopped)
     {
@@ -328,6 +330,11 @@ void proxy::handle_send(const code& ec, size_t, payload_ptr payload,
 
 // Properties.
 // ----------------------------------------------------------------------------
+
+bool proxy::stranded() const
+{
+    return socket_->stranded();
+}
 
 asio::strand& proxy::strand()
 {

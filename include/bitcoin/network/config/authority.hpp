@@ -22,6 +22,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 #include <boost/asio.hpp>
@@ -36,6 +37,8 @@ namespace config {
 class BC_API authority
 {
 public:
+    typedef std::shared_ptr<authority> ptr;
+
     authority();
 
     /// Deserialize a IPv4 or IPv6 address-based hostname[:port].
@@ -57,10 +60,7 @@ public:
     operator bool() const;
 
     /// The ip address of the authority.
-    boost::asio::ip::address_v6 asio_ip() const;
-
-    /// The ip address of the authority.
-    messages::ip_address ip() const;
+    const boost::asio::ip::address_v6& ip() const;
 
     /// The tcp port of the authority.
     uint16_t port() const;
@@ -76,8 +76,11 @@ public:
     /// The authority in one of two forms: [2001:db8::2]:port or 1.2.240.1:port
     std::string to_string() const;
 
-    /// The authority converted to a network address.
+    /// The authority converted to a network messages address.
     messages::address_item to_address_item() const;
+
+    /// The authority converted to a network messages ip_address.
+    messages::ip_address to_ip_address() const;
 
     bool operator==(const authority& other) const;
     bool operator!=(const authority& other) const;
@@ -95,7 +98,19 @@ private:
 typedef std::vector<authority> authorities;
 
 } // namespace config
-} // namespace system
+} // namespace network
 } // namespace libbitcoin
+
+namespace std
+{
+template<>
+struct hash<bc::network::config::authority>
+{
+    size_t operator()(const bc::network::config::authority& value) const noexcept
+    {
+        return std::hash<std::string>{}(value.to_string());
+    }
+};
+} // namespace std
 
 #endif

@@ -78,6 +78,8 @@ protected:
     {
         channel_->template subscribe<Message>(BOUND_PROTOCOL(handler, args));
     }
+    /// True if the strand is running in the thread.
+    virtual bool stranded() const;
 
     /// Get the address of the channel.
     virtual config::authority authority() const;

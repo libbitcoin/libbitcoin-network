@@ -37,295 +37,114 @@ using namespace messages;
 
 #define NAME "hosts"
 
-// TODO: change to network_address bimap hash table with services and age.
-hosts::hosts(const settings& settings)
-  : capacity_(static_cast<size_t>(settings.host_pool_capacity)),
-    buffer_(std::max(capacity_, one)),
-    stopped_(true),
-    file_path_(settings.hosts_file),
-    disabled_(is_zero(capacity_))
+inline bool is_invalid(const address_item& host)
 {
+    return is_zero(host.port) || host.ip == null_ip_address;
 }
 
-// private
-hosts::iterator hosts::find(const address_item& host)
+// TODO: change to network_address bimap hash table with services and age.
+hosts::hosts(const settings& settings)
+  : disabled_(is_zero(settings.host_pool_capacity)),
+    capacity_(static_cast<size_t>(settings.host_pool_capacity)),
+    file_path_(settings.hosts_file),
+    count_(zero),
+    buffer_(std::max(capacity_, one)),
+    stopped_(true)
 {
-    const auto found = [&host](const address_item& entry)
-    {
-        return entry.port == host.port && entry.ip == host.ip;
-    };
-
-    return std::find_if(buffer_.begin(), buffer_.end(), found);
 }
 
 size_t hosts::count() const
 {
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
-
-    return buffer_.size();
-    ///////////////////////////////////////////////////////////////////////////
+    return count_.load(std::memory_order_relaxed);
 }
 
-code hosts::fetch(address_item& out) const
-{
-    if (disabled_)
-        return error::address_not_found;
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    shared_lock lock(mutex_);
-
-    if (stopped_)
-        return error::service_stopped;
-
-    if (buffer_.empty())
-        return error::address_not_found;
-
-    // Randomly select an address from the buffer.
-    const auto index = pseudo_random::next(zero, sub1(buffer_.size()));
-    out = buffer_[index];
-    return error::success;
-    ///////////////////////////////////////////////////////////////////////////
-}
-
-code hosts::fetch(address_items& out) const
-{
-    if (disabled_)
-        return error::address_not_found;
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    {
-        shared_lock lock(mutex_);
-
-        if (stopped_)
-            return error::service_stopped;
-
-        if (buffer_.empty())
-            return error::address_not_found;
-
-        // TODO: extract configuration.
-        const auto out_count = std::min(messages::max_address,
-            std::min(buffer_.size(), capacity_) /
-                pseudo_random::next<size_t>(5u, 10u));
-
-        if (is_zero(out_count))
-            return error::success;
-
-        const auto limit = sub1(buffer_.size());
-        auto index = pseudo_random::next(zero, limit);
-
-        out.reserve(out_count);
-        for (size_t count = 0; count < out_count; ++count)
-            out.push_back(buffer_[index++ % limit]);
-    }
-    ///////////////////////////////////////////////////////////////////////////
-
-    pseudo_random::shuffle(out);
-    return error::success;
-}
-
-// load
 code hosts::start()
 {
     if (disabled_)
         return error::success;
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
-
     if (!stopped_)
-    {
-        mutex_.unlock_upgrade();
-        //---------------------------------------------------------------------
         return error::operation_failed;
-    }
 
-    mutex_.unlock_upgrade_and_lock();
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     stopped_ = false;
     ifstream file(file_path_.string());
     const auto file_error = file.bad();
 
-    if (!file_error)
-    {
-        std::string line;
-
-        while (std::getline(file, line))
-        {
-            // TODO: create full space-delimited network_address serialization.
-            // Use to/from string format as opposed to wire serialization.
-            config::authority host(line);
-
-            if (!is_zero(host.port()))
-                buffer_.push_back(host.to_address_item());
-        }
-    }
-
-    mutex_.unlock();
-    ///////////////////////////////////////////////////////////////////////////
-
     if (file_error)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failed to save hosts file.";
+        LOG_DEBUG(LOG_NETWORK) << "Failed to save hosts file.";
         return error::file_save;
     }
 
+    std::string line;
+    while (std::getline(file, line))
+    {
+        // TODO: create full space-delimited network_address serialization.
+        // Use to/from string format as opposed to wire serialization.
+        config::authority entry(line);
+        auto host = entry.to_address_item();
+
+        if (!is_invalid(host))
+            buffer_.push_back(host);
+    }
+
+    count_.store(buffer_.size(), std::memory_order_relaxed);
     return error::success;
 }
 
-// load
 code hosts::stop()
 {
     if (disabled_)
         return error::success;
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
-
     if (stopped_)
-    {
-        mutex_.unlock_upgrade();
-        //---------------------------------------------------------------------
         return error::success;
-    }
 
-    mutex_.unlock_upgrade_and_lock();
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     stopped_ = true;
     ofstream file(file_path_.string());
     const auto file_error = file.bad();
 
-    if (!file_error)
-    {
-        for (const auto& entry: buffer_)
-        {
-            // TODO: create full space-delimited network_address serialization.
-            // Use to/from string format as opposed to wire serialization.
-            file << config::authority(entry) << std::endl;
-        }
-
-        buffer_.clear();
-    }
-
-    mutex_.unlock();
-    ///////////////////////////////////////////////////////////////////////////
-
     if (file_error)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failed to load hosts file.";
+        LOG_DEBUG(LOG_NETWORK) << "Failed to load hosts file.";
         return error::file_load;
     }
 
+    for (const auto& entry: buffer_)
+    {
+        // TODO: create full space-delimited network_address serialization.
+        // Use to/from string format as opposed to wire serialization.
+        file << config::authority(entry) << std::endl;
+    }
+
+    buffer_.clear();
+    count_.store(zero, std::memory_order_relaxed);
     return error::success;
 }
 
-code hosts::remove(const address_item& host)
+void hosts::store(const peer& host)
 {
-    if (disabled_)
-        return error::address_not_found;
+    if (disabled_ || stopped_)
+        return;
 
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
-
-    if (stopped_)
+    // Do not treat invalid address as an error, just log it.
+    if (is_invalid(host))
     {
-        mutex_.unlock_upgrade();
-        //---------------------------------------------------------------------
-        return error::service_stopped;
-    }
-
-    auto it = find(host);
-
-    if (it != buffer_.end())
-    {
-        mutex_.unlock_upgrade_and_lock();
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        buffer_.erase(it);
-
-        mutex_.unlock();
-        //---------------------------------------------------------------------
-        return error::success;
-    }
-
-    mutex_.unlock_upgrade();
-    ///////////////////////////////////////////////////////////////////////////
-
-    return error::address_not_found;
-}
-
-code hosts::store(const address_item& host)
-{
-    if (disabled_)
-        return error::success;
-
-    if (host.ip == null_ip_address)
-    {
-        // Do not treat invalid address as an error, just log it.
-        LOG_DEBUG(LOG_NETWORK)
-            << "Invalid host address from peer.";
-
-        return error::success;
-    }
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
-
-    if (stopped_)
-    {
-        mutex_.unlock_upgrade();
-        //---------------------------------------------------------------------
-        return error::service_stopped;
+        LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer.";
+        return;
     }
 
     if (find(host) == buffer_.end())
     {
-        mutex_.unlock_upgrade_and_lock();
-        //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
         buffer_.push_back(host);
-
-        mutex_.unlock();
-        //---------------------------------------------------------------------
-        return error::success;
+        count_.store(buffer_.size(), std::memory_order_relaxed);
     }
-
-    mutex_.unlock_upgrade();
-    ///////////////////////////////////////////////////////////////////////////
-
-    ////// We don't treat redundant address as an error, just log it.
-    ////LOG_DEBUG(LOG_NETWORK)
-    ////    << "Redundant host address [" << authority(host) << "] from peer.";
-
-    return error::success;
 }
 
-void hosts::store(const address_items& hosts, result_handler handler)
+void hosts::store(const peers& hosts)
 {
-    if (disabled_ || hosts.empty())
-    {
-        handler(error::success);
+    if (disabled_ || stopped_ || hosts.empty())
         return;
-    }
-
-    // Critical Section
-    ///////////////////////////////////////////////////////////////////////////
-    mutex_.lock_upgrade();
-
-    if (stopped_)
-    {
-        mutex_.unlock_upgrade();
-        //---------------------------------------------------------------------
-        handler(error::service_stopped);
-        return;
-    }
 
     // Accept between 1 and all of this peer's addresses up to capacity.
     const auto capacity = buffer_.capacity();
@@ -340,18 +159,14 @@ void hosts::store(const address_items& hosts, result_handler handler)
     const auto step = std::max(usable / accept, one);
     size_t accepted = 0;
 
-    mutex_.unlock_upgrade_and_lock();
-    //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
         const auto& host = hosts[index];
 
         // Do not treat invalid address as an error, just log it.
-        if (host.ip == null_ip_address)
+        if (is_invalid(host))
         {
-            LOG_DEBUG(LOG_NETWORK)
-                << "Invalid host address from peer.";
+            LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer.";
             continue;
         }
 
@@ -361,17 +176,97 @@ void hosts::store(const address_items& hosts, result_handler handler)
         {
             ++accepted;
             buffer_.push_back(host);
+            count_.store(buffer_.size(), std::memory_order_relaxed);
         }
     }
-
-    mutex_.unlock();
-    ///////////////////////////////////////////////////////////////////////////
 
     LOG_VERBOSE(LOG_NETWORK)
         << "Accepted (" << accepted << " of " << hosts.size()
         << ") host addresses from peer.";
+}
 
-    handler(error::success);
+void hosts::remove(const peer& host)
+{
+    if (stopped_ || buffer_.empty())
+        return;
+
+    auto it = find(host);
+    if (it == buffer_.end())
+    {
+        LOG_DEBUG(LOG_NETWORK) << "Address to remove not found.";
+        return;
+    }
+
+    buffer_.erase(it);
+    count_.store(buffer_.size(), std::memory_order_relaxed);
+}
+
+void hosts::fetch(peer_handler handler) const
+{
+    if (stopped_)
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
+    if (buffer_.empty())
+    {
+        handler(error::address_not_found, {});
+        return;
+    }
+
+    // Randomly select an address from the buffer.
+    const auto index = pseudo_random::next(zero, sub1(buffer_.size()));
+    handler(error::success, buffer_[index]);
+}
+
+void hosts::fetch(peers_handler handler) const
+{
+    if (stopped_)
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
+    if (buffer_.empty())
+    {
+        handler(error::address_not_found, {});
+        return;
+    }
+
+    // TODO: extract configuration.
+    const auto out_count = std::min(messages::max_address,
+        std::min(buffer_.size(), capacity_) /
+            pseudo_random::next<size_t>(5u, 10u));
+
+    if (is_zero(out_count))
+    {
+        handler(error::success, {});
+        return;
+    }
+
+    const auto limit = sub1(buffer_.size());
+    auto index = pseudo_random::next(zero, limit);
+
+    peers out;
+    out.reserve(out_count);
+    for (size_t count = 0; count < out_count; ++count)
+        out.push_back(buffer_[index++ % limit]);
+
+    pseudo_random::shuffle(out);
+    handler(error::success, out);
+}
+
+// private
+hosts::buffer::iterator hosts::find(const peer& host)
+{
+    const auto found = [&host](const peer& entry)
+    {
+        // Message types do not implement comparison operators.
+        return entry.port == host.port && entry.ip == host.ip;
+    };
+
+    return std::find_if(buffer_.begin(), buffer_.end(), found);
 }
 
 } // namespace network

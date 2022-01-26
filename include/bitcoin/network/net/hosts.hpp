@@ -28,13 +28,13 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// This class is thread safe.
-/// The hosts class manages a thread-safe dynamic store of network addresses.
+/// Not thread safe.
 /// The store can be loaded and saved from/to the specified file path.
 /// The file is a line-oriented set of config::authority serializations.
 /// Duplicate addresses and those with zero-valued ports are disacarded.
@@ -42,42 +42,41 @@ class BCT_API hosts
   : system::noncopyable
 {
 public:
-    typedef std::shared_ptr<hosts> ptr;
-    typedef std::function<void(const code&)> result_handler;
+    ////typedef std::shared_ptr<hosts> ptr;
+    typedef messages::address_item peer;
+    typedef messages::address_items peers;
+    typedef std::function<void(const code&, const peer& host)> peer_handler;
+    typedef std::function<void(const code&, const peers& hosts)> peers_handler;
 
     /// Construct an instance.
     hosts(const settings& settings);
 
-    /// Load hosts file if found.
+    /// Load hosts file.
     virtual code start();
 
     // Save hosts to file.
     virtual code stop();
 
+    // Thread safe, inexact (race).
     virtual size_t count() const;
-    virtual code fetch(messages::address_item& out) const;
-    virtual code fetch(messages::address_items& out) const;
-    virtual code remove(const messages::address_item& host);
-    virtual code store(const messages::address_item& host);
-    virtual void store(const messages::address_items& hosts,
-        result_handler handler);
+
+    virtual void store(const peer& host);
+    virtual void store(const peers& hosts);
+    virtual void remove(const peer& host);
+    virtual void fetch(peer_handler handler) const;
+    virtual void fetch(peers_handler handler) const;
 
 private:
-    typedef boost::circular_buffer<messages::address_item> buffer;
-    typedef buffer::iterator iterator;
+    typedef boost::circular_buffer<peer> buffer;
 
-    iterator find(const messages::address_item& host);
+    buffer::iterator find(const peer& host);
 
-    const size_t capacity_;
-
-    // These are protected by a mutex.
-    buffer buffer_;
-    std::atomic<bool> stopped_;
-    mutable upgrade_mutex mutex_;
-
-    // HACK: we use this because the buffer capacity cannot be set to zero.
     const bool disabled_;
+    const size_t capacity_;
     const boost::filesystem::path file_path_;
+    std::atomic<size_t> count_;
+    buffer buffer_;
+    bool stopped_;
 };
 
 } // namespace network

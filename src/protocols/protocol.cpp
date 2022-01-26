@@ -36,35 +36,46 @@ protocol::protocol(channel::ptr channel)
 {
 }
 
+bool protocol::stranded() const
+{
+    return channel_->stranded();
+}
+
 // Protocol start methods conventionally do not invoke the passed handler.
 
 config::authority protocol::authority() const
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     return channel_->authority();
 }
 
 uint64_t protocol::nonce() const
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     return channel_->nonce();
 }
 
 version::ptr protocol::peer_version() const
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     return channel_->peer_version();
 }
 
 void protocol::set_peer_version(version::ptr value)
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     channel_->set_peer_version(value);
 }
 
 uint32_t protocol::negotiated_version() const
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     return channel_->negotiated_version();
 }
 
 void protocol::set_negotiated_version(uint32_t value)
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     channel_->set_negotiated_version(value);
 }
 
@@ -79,6 +90,7 @@ void protocol::handle_send(const code&, const std::string&)
 {
     // Send and receive failures are logged by the proxy.
     // This provides a convenient default overridable handler.
+    BC_ASSERT_MSG(stranded(), "strand");
 }
 
 } // namespace network

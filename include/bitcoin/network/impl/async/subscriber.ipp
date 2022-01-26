@@ -41,6 +41,8 @@ subscriber<Args...>::~subscriber() noexcept
 template <typename... Args>
 void subscriber<Args...>::subscribe(handler&& notify) noexcept
 {
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
     if (!stopped_)
         queue_.push_back(std::move(notify));
 }
@@ -48,6 +50,8 @@ void subscriber<Args...>::subscribe(handler&& notify) noexcept
 template <typename... Args>
 void subscriber<Args...>::notify(const Args&... args) const noexcept
 {
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
     if (stopped_)
         return;
 
@@ -60,6 +64,8 @@ void subscriber<Args...>::notify(const Args&... args) const noexcept
 template <typename... Args>
 void subscriber<Args...>::stop(const Args&... args) noexcept
 {
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
     if (stopped_)
         return;
 

@@ -47,39 +47,33 @@ session_batch::session_batch(p2p& network, bool notify_on_connect)
 // ----------------------------------------------------------------------------
 
 // protected:
-void session_batch::connect(channel_handler /*handler*/)
+void session_batch::connect(channel_handler handler)
 {
     // TODO: just use a state member variable, this will be stranded.
 
     ////const auto join_handler = synchronize(handler, batch_size_, NAME "_join",
     ////    synchronizer_terminate::on_success);
 
-    ////for (size_t host = 0; host < batch_size_; ++host)
-    ////    new_connect(join_handler);
+    for (size_t host = 0; host < batch_size_; ++host)
+        new_connect(handler);
 }
 
 void session_batch::new_connect(channel_handler handler)
 {
     if (stopped())
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Suspended batch connection.";
         handler(error::channel_stopped, nullptr);
         return;
     }
 
-    messages::address_item address;
-    const auto ec = fetch_address(address);
-    start_connect(ec, { address }, handler);
+    fetch_address(BIND3(start_connect, _1, _2, handler));
 }
 
-void session_batch::start_connect(const code& ec,
-    const authority& host, channel_handler handler)
+void session_batch::start_connect(const code& ec, const authority& host,
+    channel_handler handler)
 {
     if (stopped(ec))
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Batch session stopped while starting.";
         handler(error::service_stopped, nullptr);
         return;
     }
@@ -87,8 +81,6 @@ void session_batch::start_connect(const code& ec,
     // This termination prevents a tight loop in the empty address pool case.
     if (ec)
     {
-        LOG_WARNING(LOG_NETWORK)
-            << "Failure fetching new address: " << ec.message();
         handler(ec, nullptr);
         return;
     }
@@ -96,37 +88,28 @@ void session_batch::start_connect(const code& ec,
     // This creates a tight loop in the case of a small address pool.
     if (blacklisted(host))
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Fetched blacklisted address [" << host << "] ";
         handler(error::address_blocked, nullptr);
         return;
     }
 
-    LOG_VERBOSE(LOG_NETWORK)
-        << "Connecting to [" << host << "]";
-
     const auto connector = create_connector();
-    pend(connector);
+
+    ////pend(connector);
 
     // CONNECT
-    connector->connect(host,
-        BIND4(handle_connect, _1, _2, connector, handler));
+    connector->connect(host, BIND4(handle_connect, _1, _2, connector, handler));
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_batch::handle_connect(const code& ec,
     channel::ptr channel, connector::ptr connector, channel_handler handler)
 {
-    unpend(connector);
+    ////unpend(connector);
 
     if (ec)
     {
         handler(ec, nullptr);
         return;
     }
-
-    LOG_DEBUG(LOG_NETWORK)
-        << "Connected to [" << channel->authority() << "]";
 
     // This is the end of the connect sequence.
     handler(error::success, channel);
