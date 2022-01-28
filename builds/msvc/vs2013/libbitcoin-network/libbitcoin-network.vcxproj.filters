@@ -28,14 +28,11 @@
     <Filter Include="include\bitcoin\network\impl\async">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\impl\net">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\bitcoin\network\messages">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000D}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\messages\enums">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000E}</UniqueIdentifier>
@@ -47,7 +44,7 @@
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000001}</UniqueIdentifier>
     </Filter>
     <Filter Include="resource">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000000}</UniqueIdentifier>
@@ -488,9 +485,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\pending.hpp">
-      <Filter>include\bitcoin\network\net</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\proxy.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
@@ -570,9 +564,6 @@
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\track.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\net\pending.ipp">
-      <Filter>include\bitcoin\network\impl\net</Filter>
     </None>
     <None Include="packages.config" />
   </ItemGroup>

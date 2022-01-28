@@ -195,9 +195,6 @@
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\pending.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp">
       <Filter>src\net</Filter>
     </ClCompile>

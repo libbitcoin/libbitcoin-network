@@ -730,6 +730,7 @@ BOOST_OPTIONS=(
 "--with-date_time" \
 "--with-filesystem" \
 "--with-iostreams" \
+"--with-json" \
 "--with-locale" \
 "--with-program_options" \
 "--with-regex" \

@@ -129,7 +129,6 @@
     <ClCompile Include="..\..\..\..\test\net\channel.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\pending.cpp" />
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\test\net\pump.cpp" />
     <ClCompile Include="..\..\..\..\test\net\socket.cpp" />

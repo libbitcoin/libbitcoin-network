@@ -83,7 +83,6 @@
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/hosts.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/net/pending.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/net/pump.hpp>
 #include <bitcoin/network/net/socket.hpp>

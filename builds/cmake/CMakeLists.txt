@@ -304,7 +304,6 @@ if (with-tests)
         "../../test/net/channel.cpp"
         "../../test/net/connector.cpp"
         "../../test/net/hosts.cpp"
-        "../../test/net/pending.cpp"
         "../../test/net/proxy.cpp"
         "../../test/net/pump.cpp"
         "../../test/net/socket.cpp"

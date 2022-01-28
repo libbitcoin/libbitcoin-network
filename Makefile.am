@@ -176,7 +176,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/net/channel.cpp \
     test/net/connector.cpp \
     test/net/hosts.cpp \
-    test/net/pending.cpp \
     test/net/proxy.cpp \
     test/net/pump.cpp \
     test/net/socket.cpp \
@@ -224,10 +223,6 @@ include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \
     include/bitcoin/network/impl/async/subscriber.ipp \
     include/bitcoin/network/impl/async/track.ipp
-
-include_bitcoin_network_impl_netdir = ${includedir}/bitcoin/network/impl/net
-include_bitcoin_network_impl_net_HEADERS = \
-    include/bitcoin/network/impl/net/pending.ipp
 
 include_bitcoin_network_messagesdir = ${includedir}/bitcoin/network/messages
 include_bitcoin_network_messages_HEADERS = \
@@ -285,7 +280,6 @@ include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/connector.hpp \
     include/bitcoin/network/net/hosts.hpp \
     include/bitcoin/network/net/net.hpp \
-    include/bitcoin/network/net/pending.hpp \
     include/bitcoin/network/net/proxy.hpp \
     include/bitcoin/network/net/pump.hpp \
     include/bitcoin/network/net/socket.hpp

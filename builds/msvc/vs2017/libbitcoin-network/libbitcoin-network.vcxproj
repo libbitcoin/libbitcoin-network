@@ -217,7 +217,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\hosts.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\pending.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\proxy.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\pump.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp" />
@@ -246,7 +245,6 @@
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\track.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\net\pending.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
