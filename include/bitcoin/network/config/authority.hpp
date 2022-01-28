@@ -34,7 +34,7 @@ namespace network {
 namespace config {
 
 /// This is a container for a {ip address, port} tuple.
-class BC_API authority
+class BCT_API authority
 {
 public:
     typedef std::shared_ptr<authority> ptr;

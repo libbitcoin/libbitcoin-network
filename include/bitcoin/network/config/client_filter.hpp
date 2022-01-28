@@ -33,7 +33,7 @@
 ////namespace config {
 ////
 /////// Serialization helper for a client filter.
-////class BC_API client_filter
+////class BCT_API client_filter
 ////{
 ////public:
 ////    typedef std::shared_ptr<client_filter> ptr;

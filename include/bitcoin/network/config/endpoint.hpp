@@ -36,7 +36,7 @@ namespace config {
 
 /// Serialization helper for a network endpoint in URI format.
 /// This is a container for a {scheme, host, port} tuple.
-class BC_API endpoint
+class BCT_API endpoint
 {
 public:
     typedef std::shared_ptr<endpoint> ptr;
