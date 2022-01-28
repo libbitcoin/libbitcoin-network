@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_CONFIG_CONFIG_HPP
 
 #include <bitcoin/network/config/authority.hpp>
-#include <bitcoin/network/config/client_filter.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
 
 #endif

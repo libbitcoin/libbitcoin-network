@@ -32,7 +32,6 @@
 #include <bitcoin/network/async/timer.hpp>
 #include <bitcoin/network/async/track.hpp>
 #include <bitcoin/network/config/authority.hpp>
-#include <bitcoin/network/config/client_filter.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/messages/address.hpp>

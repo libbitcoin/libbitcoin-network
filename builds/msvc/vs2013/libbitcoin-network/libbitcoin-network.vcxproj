@@ -78,9 +78,6 @@
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
     <ClCompile Include="..\..\..\..\src\config\authority.cpp" />
-    <ClCompile Include="..\..\..\..\src\config\client_filter.cpp">
-      <ObjectFileName>$(IntDir)src_config_client_filter.obj</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\config\endpoint.cpp" />
     <ClCompile Include="..\..\..\..\src\error.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\address.cpp" />
@@ -91,9 +88,7 @@
     <ClCompile Include="..\..\..\..\src\messages\bloom_filter_add.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\bloom_filter_clear.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\bloom_filter_load.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\client_filter.cpp">
-      <ObjectFileName>$(IntDir)src_messages_client_filter.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\client_filter.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\client_filter_checkpoint.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\client_filter_headers.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\compact_block.cpp" />
@@ -164,7 +159,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\track.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\config\client_filter.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\config.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\endpoint.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />

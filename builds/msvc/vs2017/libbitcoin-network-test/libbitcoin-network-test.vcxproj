@@ -79,9 +79,6 @@
     <ClCompile Include="..\..\..\..\test\async\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\async\track.cpp" />
     <ClCompile Include="..\..\..\..\test\config\authority.cpp" />
-    <ClCompile Include="..\..\..\..\test\config\client_filter.cpp">
-      <ObjectFileName>$(IntDir)test_config_client_filter.obj</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\endpoint.cpp" />
     <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
@@ -93,9 +90,7 @@
     <ClCompile Include="..\..\..\..\test\messages\bloom_filter_add.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\bloom_filter_clear.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\bloom_filter_load.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\client_filter.cpp">
-      <ObjectFileName>$(IntDir)test_messages_client_filter.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\client_filter.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\client_filter_checkpoint.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\client_filter_headers.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\compact_block.cpp" />
