@@ -20,21 +20,17 @@
 
 #include <algorithm>
 #include <sstream>
-#include <boost/asio.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace config {
-
-using namespace boost;
-using namespace boost::asio;
-using namespace bc::system;
 
 // host:    [2001:db8::2] or  2001:db8::2  or 1.2.240.1
 // returns: [2001:db8::2] or [2001:db8::2] or 1.2.240.1
@@ -43,7 +39,7 @@ static std::string to_host_name(const std::string& host)
     if (host.find(":") == std::string::npos || host.find("[") == 0)
         return host;
 
-    const auto hostname = format("[%1%]") % host;
+    const auto hostname = boost::format("[%1%]") % host;
     return hostname.str();
 }
 
@@ -63,14 +59,14 @@ static std::string to_ipv6(const std::string& ipv4_address)
     return std::string("::ffff:") + ipv4_address;
 }
 
-static ip::address_v6 to_ipv6(const ip::address_v4& ipv4_address)
+static asio::ipv6 to_ipv6(const asio::ipv4& ipv4_address)
 {
     // Create an IPv6 mapped IPv4 address via serialization.
     const auto ipv6 = to_ipv6(ipv4_address.to_string());
-    return ip::address_v6::from_string(ipv6);
+    return asio::ipv6::from_string(ipv6);
 }
 
-static ip::address_v6 to_ipv6(const ip::address& ip_address)
+static asio::ipv6 to_ipv6(const asio::address& ip_address)
 {
     if (ip_address.is_v6())
         return ip_address.to_v6();
@@ -81,13 +77,13 @@ static ip::address_v6 to_ipv6(const ip::address& ip_address)
     return to_ipv6(ip_address.to_v4());
 }
 
-static std::string to_ipv4_hostname(const ip::address& ip_address)
+static std::string to_ipv4_hostname(const asio::address& ip_address)
 {
     // std::regex requires gcc 4.9, so we are using boost::regex for now.
-    static const regex regular("^::ffff:([0-9\\.]+)$");
+    static const boost::regex regular("^::ffff:([0-9\\.]+)$");
 
     const auto address = ip_address.to_string();
-    sregex_iterator it(address.begin(), address.end(), regular), end;
+    boost::sregex_iterator it(address.begin(), address.end(), regular), end;
     if (it == end)
         return "";
 
@@ -95,10 +91,10 @@ static std::string to_ipv4_hostname(const ip::address& ip_address)
     return match[1];
 }
 
-static std::string to_ipv6_hostname(const ip::address& ip_address)
+static std::string to_ipv6_hostname(const asio::address& ip_address)
 {
     // IPv6 URLs use a bracketed IPv6 address, see rfc2732.
-    const auto hostname = format("[%1%]") % to_ipv6(ip_address);
+    const auto hostname = boost::format("[%1%]") % to_ipv6(ip_address);
     return hostname.str();
 }
 
@@ -119,16 +115,16 @@ authority::authority(const messages::address_item& address)
 {
 }
 
-static ip::address_v6 to_boost_address(const messages::ip_address& in)
+static asio::ipv6 to_boost_address(const messages::ip_address& in)
 {
-    ip::address_v6::bytes_type bytes;
+    asio::ipv6::bytes_type bytes;
     BC_ASSERT(bytes.size() == in.size());
     std::copy_n(in.begin(), in.size(), bytes.begin());
-    const ip::address_v6 out(bytes);
+    const asio::ipv6 out(bytes);
     return out;
 }
 
-static messages::ip_address to_message_address(const ip::address_v6& in)
+static messages::ip_address to_message_address(const asio::ipv6& in)
 {
     messages::ip_address out;
     const auto bytes = in.to_bytes();
@@ -148,12 +144,12 @@ authority::authority(const std::string& host, uint16_t port)
 {
 }
 
-authority::authority(const ip::address& ip, uint16_t port)
+authority::authority(const asio::address& ip, uint16_t port)
   : ip_(to_ipv6(ip)), port_(port)
 {
 }
 
-authority::authority(const ip::tcp::endpoint& endpoint)
+authority::authority(const asio::endpoint& endpoint)
   : authority(endpoint.address(), endpoint.port())
 {
 }
@@ -163,7 +159,7 @@ authority::operator bool() const
     return port_ != 0;
 }
 
-const ip::address_v6& authority::ip() const
+const asio::ipv6& authority::ip() const
 {
     return ip_;
 }
@@ -219,12 +215,12 @@ std::istream& operator>>(std::istream& input, authority& argument)
     input >> value;
 
     // std::regex requires gcc 4.9, so we are using boost::regex for now.
-    static const regex regular(
+    static const boost::regex regular(
         "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])(:([0-9]{1,5}))?$");
 
-    sregex_iterator it(value.begin(), value.end(), regular), end;
+    boost::sregex_iterator it(value.begin(), value.end(), regular), end;
     if (it == end)
-        throw istream_exception(value);
+        throw bc::system::istream_exception(value);
 
     const auto& match = *it;
     std::string port(match[5]);
@@ -234,12 +230,12 @@ std::istream& operator>>(std::istream& input, authority& argument)
 
     try
     {
-        argument.ip_ = ip::address_v6::from_string(ip_address);
-        argument.port_ = port.empty() ? 0 : lexical_cast<uint16_t>(port);
+        argument.ip_ = asio::ipv6::from_string(ip_address);
+        argument.port_ = port.empty() ? 0 : boost::lexical_cast<uint16_t>(port);
     }
     catch (const boost::exception&)
     {
-        throw istream_exception(value);
+        throw bc::system::istream_exception(value);
     }
 
     return input;

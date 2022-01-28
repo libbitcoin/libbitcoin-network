@@ -71,7 +71,7 @@ p2p::p2p(const settings& settings)
 
 p2p::~p2p()
 {
-    p2p::do_stop(result_handler{});
+    p2p::do_stop();
 }
 
 // Start sequence.
@@ -79,6 +79,11 @@ p2p::~p2p()
 
 void p2p::start(result_handler handler)
 {
+    const auto ptr = to_shared<messages::address>(new messages::address);
+
+    broadcast<messages::address>(ptr, handler);
+    do_broadcast<messages::address>(ptr, handler);
+
     if (!stopped())
     {
         handler(error::operation_failed);
@@ -193,23 +198,41 @@ void p2p::handle_running(const code& ec, result_handler handler)
 // ----------------------------------------------------------------------------
 // p2p must be kept in scope until stop hander returns or undefined behavior.
 
-// Threads are joined when handler is invoked.
-void p2p::stop(result_handler handler)
+// Blocks on join of all threadpool threads.
+// Must not be called from a thread within threadpool_.
+void p2p::stop()
 {
     stopped_.store(true, std::memory_order_relaxed);
-    post(strand_, std::bind(&p2p::do_stop, this, std::move(handler)));
+    post(strand_, std::bind(&p2p::do_stop, this));
+    threadpool_.join();
 }
 
-void p2p::do_stop(result_handler handler)
+void p2p::do_stop()
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
+    // Stop and clear manual session.
+    manual_->stop(error::service_stopped);
+    manual_.reset();
+
+    // Stop and clear all other sessions.
     stop_subscriber_->stop(error::service_stopped);
+
+    // Clear subscribers to new channel notifications.
     channel_subscriber_->stop(error::service_stopped, nullptr);
 
+    // Stop and clear all channels.
+    // These are each posted to each channel strand by the channel proxy.
+    // Each proxy stop subscriber will invoke stop handlers on that strand.
+    // That causes session channel removal to be posted to network strand.
+    for (const auto& channel: channels_)
+        channel->stop(error::service_stopped);
+
+    // Serialize hosts file (log results).
+    /*code*/ hosts_.stop();
+
+    // Stop threadpool keep-alive, all work must self-terminate to affect join.
     threadpool_.stop();
-    threadpool_.join();
-    handler(hosts_.stop());
 }
 
 bool p2p::stopped() const
@@ -220,34 +243,36 @@ bool p2p::stopped() const
 // Subscriptions.
 // ----------------------------------------------------------------------------
 
-void p2p::subscribe_connection(connect_handler handler)
+// External or derived callers.
+void p2p::subscribe_connect(connect_handler handler)
 {
-    post(strand_, std::bind(&p2p::do_subscribe_connection, this, std::move(handler)));
+    post(strand_, std::bind(&p2p::do_subscribe_connect, this, std::move(handler)));
 }
 
-void p2p::do_subscribe_connection(connect_handler handler)
+void p2p::do_subscribe_connect(connect_handler handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     channel_subscriber_->subscribe(handler);
 }
 
-void p2p::subscribe_stop(result_handler handler)
+// Sessions subscribe to network close.
+void p2p::subscribe_close(result_handler handler)
 {
-    post(strand_, std::bind(&p2p::do_subscribe_stop, this, std::move(handler)));
+    post(strand_, std::bind(&p2p::do_subscribe_close, this, std::move(handler)));
 }
 
-void p2p::do_subscribe_stop(result_handler handler)
+void p2p::do_subscribe_close(result_handler handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     stop_subscriber_->subscribe(handler);
 }
 
-// Manual connections.
+// Manual connections (do not invoke mutiple connect concurrently).
 // ----------------------------------------------------------------------------
 
-void p2p::connect(const config::endpoint& peer)
+void p2p::connect(const config::endpoint& endpoint)
 {
-    manual_->connect(peer.host(), peer.port());
+    manual_->connect(endpoint.host(), endpoint.port());
 }
 
 void p2p::connect(const std::string& hostname, uint16_t port)
@@ -300,56 +325,57 @@ session_seed::ptr p2p::attach_seed_session()
 
 session_manual::ptr p2p::attach_manual_session()
 {
-    return attach<session_manual>(true);
+    return attach<session_manual>();
 }
 
 session_inbound::ptr p2p::attach_inbound_session()
 {
-    return attach<session_inbound>(true);
+    return attach<session_inbound>();
 }
 
 session_outbound::ptr p2p::attach_outbound_session()
 {
-    return attach<session_outbound>(true);
+    return attach<session_outbound>();
 }
 
 // Hosts collection.
 // ----------------------------------------------------------------------------
 
+// Thread safe.
 size_t p2p::address_count() const
 {
     return hosts_.count();
 }
 
-void p2p::store(const messages::address_item& host)
+void p2p::load(const messages::address_item& host)
 {
-    post(strand_, std::bind(&p2p::do_store_host, this, host));
+    post(strand_, std::bind(&p2p::do_load, this, host));
 }
 
-void p2p::do_store_host(const messages::address_item& host)
+void p2p::do_load(const messages::address_item& host)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     hosts_.store(host);
 }
 
 // TODO: use pointer.
-void p2p::store(const messages::address_items& hosts)
+void p2p::load(const messages::address_items& hosts)
 {
-    post(strand_, std::bind(&p2p::do_store_hosts, this, hosts));
+    post(strand_, std::bind(&p2p::do_loads, this, hosts));
 }
 
-void p2p::do_store_hosts(const messages::address_items& hosts)
+void p2p::do_loads(const messages::address_items& hosts)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     hosts_.store(hosts);
 }
 
-void p2p::remove(const messages::address_item& host)
+void p2p::unload(const messages::address_item& host)
 {
-    post(strand_, std::bind(&p2p::do_remove, this, host));
+    post(strand_, std::bind(&p2p::do_unload, this, host));
 }
 
-void p2p::do_remove(const messages::address_item& host)
+void p2p::do_unload(const messages::address_item& host)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     hosts_.remove(host);
@@ -377,9 +403,7 @@ void p2p::do_fetch_addresses(hosts::peers_handler handler) const
     hosts_.fetch(handler);
 }
 
-// Shouldn't need to pend connector.
-
-////// Pending connect collection.
+////// Connection management.
 ////// ----------------------------------------------------------------------------
 ////// TODO: Move to session base.
 ////
@@ -395,75 +419,90 @@ void p2p::do_fetch_addresses(hosts::peers_handler handler) const
 ////    pending_connect_.remove(connector);
 ////}
 
-// These are for detecting reflection.
-
-////// Pending handshake collection.
-////// ----------------------------------------------------------------------------
-////// TODO: use common collection, nonces are sufficiently unique?
-////// TODO: would need to subscribe to broadcast after handshake.
-////
-////code p2p::pend(channel::ptr channel)
-////{
-////    return pending_handshake_.store(channel);
-////}
-////
-////void p2p::unpend(channel::ptr channel)
-////{
-////    pending_handshake_.remove(channel);
-////}
-////
-////bool p2p::pending(uint64_t version_nonce) const
-////{
-////    const auto match = [version_nonce](const channel::ptr& element)
-////    {
-////        return element->nonce() == version_nonce;
-////    };
-////
-////    return pending_handshake_.exists(match);
-////}
-
-// This can be replaced with broadcast subscription.
-
-// Pending close collection (open connections).
-// ----------------------------------------------------------------------------
-
-size_t p2p::connection_count() const
+// Thread safe, inexact (ok).
+size_t p2p::channel_count() const
 {
-    return channels_.size();
+    return channel_count_.load(std::memory_order_relaxed);
 }
 
-bool p2p::connected(const messages::address_item& address) const
+void p2p::pend(uint64_t nonce)
 {
-    ////const auto match = [&address](const channel::ptr& element)
-    ////{
-    ////    return element->authority() == address;
-    ////};
-
-    ////return pending_close_.exists(match);
-    return false;
+    post(strand_, std::bind(&p2p::do_pend, this, nonce));
 }
 
-code p2p::store(channel::ptr channel)
+void p2p::do_pend(uint64_t nonce)
 {
-    ////const auto address = channel->authority();
-    ////const auto match = [&address](const channel::ptr& element)
-    ////{
-    ////    return element->authority() == address;
-    ////};
-
-    ////// May return error::address_in_use.
-    ////const auto ec = pending_close_.store(channel, match);
-
-    ////if (!ec && channel->notify())
-    ////    channel_subscriber_.notify(error::success, channel);
-
-    ////return ec;
-    return {};
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    nonces_.insert(nonce);
 }
 
-void p2p::remove(channel::ptr channel)
+void p2p::unpend(uint64_t nonce)
 {
-    ////pending_close_.remove(channel);
+    post(strand_, std::bind(&p2p::do_unpend, this, nonce));
+}
+
+void p2p::do_unpend(uint64_t nonce)
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    nonces_.erase(nonce);
+}
+
+void p2p::store(channel::ptr channel, bool notify, bool inbound,
+    result_handler handler)
+{
+    post(strand_,
+        std::bind(&p2p::do_store, this, channel, notify, inbound, handler));
+}
+
+// Channel is presumed to be started.
+void p2p::do_store(channel::ptr channel, bool notify, bool inbound,
+    result_handler handler)
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
+    // Cannot allow any store once stopped, or do_stop will not free it.
+    if (stopped())
+    {
+        handler(error::service_stopped);
+        return;
+    }
+
+    // Check for connection to self (but only on incoming).
+    if (inbound &&
+        nonces_.find(channel->peer_version()->nonce) != nonces_.end())
+    {
+        handler(error::accept_failed);
+        return;
+    }
+
+    // Store the peer address, exit if already exists.
+    if (!addresses_.insert(channel->authority()).second)
+    {
+        handler(error::address_in_use);
+        return;
+    }
+
+    // Notify channel subscribers of started channel.
+    if (notify)
+        channel_subscriber_->notify(error::success, channel);
+
+    ++channel_count_;
+    channels_.insert(channel);
+    handler(error::success);
+}
+
+void p2p::unstore(channel::ptr channel)
+{
+    post(strand_, std::bind(&p2p::do_unstore, this, channel));
+}
+
+// Channel is presumed to be stopped.
+void p2p::do_unstore(channel::ptr channel)
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    --channel_count_;
+    channels_.erase(channel);
+    addresses_.erase(channel->authority());
 }
 
 } // namespace network

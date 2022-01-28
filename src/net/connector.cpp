@@ -23,7 +23,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/error.hpp>
@@ -35,7 +34,6 @@ namespace network {
 
 using namespace bc::system;
 using namespace network::config;
-using namespace boost::asio;
 using namespace std::placeholders;
 
 // Construct.

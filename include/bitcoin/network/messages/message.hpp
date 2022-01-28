@@ -65,7 +65,8 @@ void serialize(Message& instance, system::writer& sink, uint32_t version)
 
 /// Serialize a message object to the Bitcoin wire protocol encoding.
 template <typename Message>
-chunk_ptr serialize(const Message& instance, uint32_t magic, uint32_t version)
+system::chunk_ptr serialize(const Message& instance, uint32_t magic,
+    uint32_t version)
 {
     using namespace system;
 

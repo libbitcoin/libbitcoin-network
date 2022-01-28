@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(authority__port__hostname__expected)
 BOOST_AUTO_TEST_CASE(authority__port__boost_address__expected)
 {
     const uint16_t expected_port = 42;
-    const auto address = boost::asio::ip::address::from_string(BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
+    const auto address = asio::address::from_string(BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
     const authority host(address, expected_port);
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
@@ -166,8 +166,8 @@ BOOST_AUTO_TEST_CASE(authority__port__boost_address__expected)
 BOOST_AUTO_TEST_CASE(authority__port__boost_endpoint__expected)
 {
     const uint16_t expected_port = 42;
-    const auto address = boost::asio::ip::address::from_string(BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
-    boost::asio::ip::tcp::endpoint tcp_endpoint(address, expected_port);
+    const auto address = asio::address::from_string(BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
+    asio::endpoint tcp_endpoint(address, expected_port);
     const authority host(tcp_endpoint);
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
@@ -273,15 +273,15 @@ BOOST_AUTO_TEST_CASE(authority__to_ip_address__ipv6_hostname__expected)
 
 BOOST_AUTO_TEST_CASE(authority__to_ip_address__boost_address__expected)
 {
-    const auto address = boost::asio::ip::address::from_string(BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
+    const auto address = asio::address::from_string(BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
     const authority host(address, 42);
     BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_ipv6_address));
 }
 
 BOOST_AUTO_TEST_CASE(authority__to_ip_address__boost_endpoint__expected)
 {
-    const auto address = boost::asio::ip::address::from_string(BC_AUTHORITY_IPV4_ADDRESS);
-    boost::asio::ip::tcp::endpoint tcp_endpoint(address, 42);
+    const auto address = asio::address::from_string(BC_AUTHORITY_IPV4_ADDRESS);
+    asio::endpoint tcp_endpoint(address, 42);
     const authority host(tcp_endpoint);
     BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_mapped_ip_address));
 }

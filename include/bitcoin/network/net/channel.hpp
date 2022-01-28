@@ -63,9 +63,6 @@ public:
     // ------------------------------------------------------------------------
     // These are not thread safe, caller must be stranded.
 
-    virtual bool notify() const;
-    virtual void set_notify(bool value);
-
     virtual uint64_t nonce() const;
     virtual void set_nonce(uint64_t value);
 
@@ -99,7 +96,6 @@ private:
     const bool verbose_logging_;
 
     // These are not thread safe.
-    bool notify_on_connect_;
     uint64_t channel_nonce_;
     uint32_t negotiated_version_;
     messages::version::ptr peer_version_;

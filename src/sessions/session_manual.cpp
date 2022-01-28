@@ -35,8 +35,8 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-session_manual::session_manual(p2p& network, bool notify_on_connect)
-  : session(network, notify_on_connect)
+session_manual::session_manual(p2p& network)
+  : session(network, true)
 {
 }
 

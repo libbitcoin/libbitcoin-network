@@ -32,8 +32,8 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-session_inbound::session_inbound(p2p& network, bool notify_on_connect)
-  : session(network, notify_on_connect),
+session_inbound::session_inbound(p2p& network)
+  : session(network, true),
     connection_limit_(settings_.inbound_connections +
         settings_.outbound_connections + settings_.peers.size())
 {
@@ -113,7 +113,7 @@ void session_inbound::handle_accept(const code& ec,
 
     // Inbound connections can easily overflow in the case where manual and/or
     // outbound connections at the time are not yet connected as configured.
-    if (connection_count() >= connection_limit_)
+    if (network_.channel_count() >= connection_limit_)
         return;
 
     register_channel(channel,
@@ -147,25 +147,18 @@ void session_inbound::attach_protocols(channel::ptr channel)
     attach<protocol_address_31402>(channel, network_)->start();
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD (if the channel stops itself).
 void session_inbound::handle_channel_stop(const code& ec)
 {
 }
 
 // Channel start sequence.
 // ----------------------------------------------------------------------------
-// Check pending outbound connections for loopback to this inbound.
 
 void session_inbound::handshake_complete(channel::ptr channel,
     result_handler handle_started)
 {
-    ////if (pending(channel->peer_version()->nonce))
-    ////{
-    ////    handle_started(error::accept_failed);
-    ////    return;
-    ////}
-
-    session::handshake_complete(channel, handle_started);
+    // This will fail if the IP address or nonce is already connected.
+    network_.store(channel, notify_on_connect_, true, handle_started);
 }
 
 } // namespace network

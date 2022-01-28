@@ -37,8 +37,8 @@ using namespace config;
 using namespace messages;
 using namespace std::placeholders;
 
-session_batch::session_batch(p2p& network, bool notify_on_connect)
-  : session(network, notify_on_connect),
+session_batch::session_batch(p2p& network)
+  : session(network, true),
     batch_size_(std::max(settings_.connect_batch_size, 1u))
 {
 }
@@ -66,7 +66,7 @@ void session_batch::new_connect(channel_handler handler)
         return;
     }
 
-    fetch_address(BIND3(start_connect, _1, _2, handler));
+    network_.fetch_address(BIND3(start_connect, _1, _2, handler));
 }
 
 void session_batch::start_connect(const code& ec, const authority& host,

@@ -53,15 +53,28 @@ public:
     typedef subscriber<code> stop_subscriber;
     typedef subscriber<code, channel::ptr> channel_subscriber;
 
-    // TODO: subscribe channels to broadcast and eliminate penders.
-    /////// Send message to all connections, handler notified for each channel.
-    ////template <typename Message>
-    ////void broadcast(const Message& message, const channel_handler& handler)
-    ////{
-    ////    const auto channels = pending_close_.collection();
-    ////    for (const auto& channel: channels)
-    ////        channel->send(message, handler);
-    ////}
+    template <typename Message>
+    void broadcast(Message&& message, result_handler handler)
+    {
+        post(strand_, std::bind(&p2p::do_broadcast<Message>, this,
+            system::to_shared(std::move(message)), handler));
+    }
+
+    template <typename Message>
+    void broadcast(typename Message::ptr message, result_handler handler)
+    {
+        post(strand_, std::bind(&p2p::do_broadcast<Message>, this, message, std::ref(handler)));
+    }
+
+    /// Broadcast a message to all peers.
+    template <typename Message>
+    void do_broadcast(typename Message::ptr message, result_handler handler)
+    {
+        BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
+        for (const auto& channel: channels_)
+            channel->send<Message>(message, handler);
+    }
 
     // Constructors.
     // ------------------------------------------------------------------------
@@ -82,7 +95,7 @@ public:
 
     /// Idempotent call to signal work stop, start may be reinvoked after.
     /// Returns the result of the hosts file save operation.
-    virtual void stop(result_handler handler);
+    virtual void stop();
 
     /// Determine if the network is stopped.
     virtual bool stopped() const;
@@ -91,16 +104,16 @@ public:
     // ------------------------------------------------------------------------
 
     /// Subscribe to connection creation events.
-    virtual void subscribe_connection(connect_handler handler);
+    virtual void subscribe_connect(connect_handler handler);
 
     /// Subscribe to service stop event.
-    virtual void subscribe_stop(result_handler handler);
+    virtual void subscribe_close(result_handler handler);
 
     // Manual connections.
     // ----------------------------------------------------------------------------
 
     /// Maintain a connection to hostname:port.
-    virtual void connect(const config::endpoint& peer);
+    virtual void connect(const config::endpoint& endpoint);
 
     /// Maintain a connection to hostname:port.
     virtual void connect(const std::string& hostname, uint16_t port);
@@ -130,13 +143,13 @@ public:
     virtual size_t address_count() const;
 
     /// Store an address.
-    virtual void store(const messages::address_item& address);
+    virtual void load(const messages::address_item& address);
 
     /// Store a collection of addresses.
-    virtual void store(const messages::address_items& addresses);
+    virtual void load(const messages::address_items& addresses);
 
     /// Remove an address.
-    virtual void remove(const messages::address_item& address);
+    virtual void unload(const messages::address_item& address);
 
     /// Get a randomly-selected address.
     virtual void fetch_address(hosts::peer_handler handler) const;
@@ -144,66 +157,30 @@ public:
     /// Get a list of stored hosts
     virtual void fetch_addresses(hosts::peers_handler handler) const;
 
-    ////// Pending connect collection.
-    ////// ------------------------------------------------------------------------
-    ////// TODO: remove.
-    ////
-    /////// Store a pending connection reference.
-    ////virtual code pend(connector::ptr connector);
-    ////
-    /////// Free a pending connection reference.
-    ////virtual void unpend(connector::ptr connector);
-    ////
-    ////// Pending handshake collection.
-    ////// ------------------------------------------------------------------------
-    ////// TODO: make private.
-    ////
-    /////// Store a pending connection reference.
-    ////virtual code pend(channel::ptr channel);
-    ////
-    /////// Test for a pending connection reference.
-    ////virtual bool pending(uint64_t version_nonce) const;
-    ////
-    /////// Free a pending connection reference.
-    ////virtual void unpend(channel::ptr channel);
-    
-    // Pending close collection (open connections).
+    // Connection management.
     // ------------------------------------------------------------------------
-    
-    /// Get the number of connections.
-    virtual size_t connection_count() const;
-    
-    // TODO: make private.
-    
-    /// Store a connection.
-    virtual code store(channel::ptr channel);
-    
-    /// Determine if there exists a connection to the address.
-    virtual bool connected(const messages::address_item& address) const;
-    
-    /// Remove a connection.
-    virtual void remove(channel::ptr channel);
+
+    ////virtual code pend(connector::ptr connector);
+    ////virtual void unpend(connector::ptr connector);
+
+    virtual size_t channel_count() const;
+    virtual void pend(uint64_t nonce);
+    virtual void unpend(uint64_t nonce);    
+    virtual void store(channel::ptr channel, bool notify, bool inbound,
+        result_handler handler);
+    virtual void unstore(channel::ptr channel);
 
 protected:
-
-    /// Attach a session to the network, caller must start the session.
+    /// Attach a session to the network, caller must start returned session.
     template <class Session, typename... Args>
     typename Session::ptr attach(Args&&... args)
     {
-        // Sessions are attached by start (manual) and run (in/out).
+        // Sessions are attached after network start.
         const auto session = std::make_shared<Session>(*this,
             std::forward<Args>(args)...);
 
-        // TODO: provide a way to detach (seed session).
-        // TODO: Add desubscription method to subscriber (enumerable hashmap).
-        // TODO: Use channel as key and bury inclusion for protocols in base.
-        // Capture the session in the p2p stop handler.
-        const result_handler session_stop = [session](const code& ec)
-        {
-            session->stop(ec);
-        };
-
-        this->subscribe_stop(session_stop);
+        // Session lifetime is ensured by the network stop subscriber.
+        subscribe_close([=](const code& ec){ session->stop(ec); });
         return session;
     }
 
@@ -221,34 +198,43 @@ private:
     void handle_started(const code& ec, result_handler handler);
     void handle_running(const code& ec, result_handler handler);
     
-    void do_stop(result_handler handler);
-    void do_subscribe_connection(connect_handler handler);
-    void do_subscribe_stop(result_handler handler);
+    void do_stop();
+    void do_subscribe_connect(connect_handler handler);
+    void do_subscribe_close(result_handler handler);
 
-    void do_store_host(const messages::address_item& host);
-    void do_store_hosts(const messages::address_items& hosts);
-    void do_remove(const messages::address_item& host);
+    void do_load(const messages::address_item& host);
+    void do_loads(const messages::address_items& hosts);
+    void do_unload(const messages::address_item& host);
+
     void do_fetch_address(hosts::peer_handler handler) const;
     void do_fetch_addresses(hosts::peers_handler handler) const;
+
+    void do_pend(uint64_t nonce);
+    void do_unpend(uint64_t nonce);
+
+    void do_store(channel::ptr channel, bool notify, bool inbound,
+        result_handler handler);
+    void do_unstore(channel::ptr channel);
 
     // These are thread safe.
     const settings& settings_;
     std::atomic<bool> stopped_;
+    std::atomic<size_t> channel_count_;
 
     // These are not thread safe.
     hosts hosts_;
     session_manual::ptr manual_;
     threadpool threadpool_;
 
-    // These are thread safe.
+    // This is thread safe.
     asio::strand strand_;
 
     // These are not thread safe.
     stop_subscriber::ptr stop_subscriber_;
     channel_subscriber::ptr channel_subscriber_;
-    std::vector<channel::ptr> channels_;
     std::unordered_set<uint64_t> nonces_;
-    std::unordered_set<config::authority::ptr> addresses_;
+    std::unordered_set<channel::ptr> channels_;
+    std::unordered_set<config::authority> addresses_;
 };
 
 } // namespace network

@@ -56,42 +56,19 @@ session::~session()
 // ----------------------------------------------------------------------------
 // protected
 
-// for seeding
-size_t session::address_count() const
-{
-    return network_.address_count();
-}
-
-size_t session::connection_count() const
-{
-    return network_.connection_count();
-}
-
-void session::fetch_address(hosts::peer_handler handler) const
-{
-    network_.fetch_address(handler);
-}
-
-bool session::blacklisted(const authority& authority) const
-{
-    const auto ip_compare = [&](const config::authority& blocked)
-    {
-        return authority.ip() == blocked.ip();
-    };
-
-    const auto& list = settings_.blacklists;
-    return std::any_of(list.begin(), list.end(), ip_compare);
-}
-
 bool session::stopped() const
 {
     return stopped_;
 }
 
-// TODO: clean this up.
 bool session::stopped(const code& ec) const
 {
     return stopped() || ec == error::service_stopped;
+}
+
+bool session::blacklisted(const authority& authority) const
+{
+    return contains(settings_.blacklists, authority);
 }
 
 // Socket creators.
@@ -106,37 +83,6 @@ connector::ptr session::create_connector()
 {
     return std::make_shared<connector>(network_.service(), settings_);
 }
-
-////// Pending connect.
-////// ----------------------------------------------------------------------------
-////
-////code session::pend(connector::ptr connector)
-////{
-////    return {}; ////network_.pend(connector);
-////}
-////
-////void session::unpend(connector::ptr connector)
-////{
-////    return; ////network_.unpend(connector);
-////}
-////
-////// Pending handshake.
-////// ----------------------------------------------------------------------------
-////
-////code session::pend(channel::ptr channel)
-////{
-////    return {}; ////return network_.pend(channel);
-////}
-////
-////void session::unpend(channel::ptr channel)
-////{
-////    return; ////network_.unpend(channel);
-////}
-////
-////bool session::pending(uint64_t version_nonce) const
-////{
-////    return {}; ////return network_.pending(version_nonce);
-////}
 
 // Start sequence.
 // ----------------------------------------------------------------------------
@@ -162,104 +108,96 @@ void session::stop(const code&)
     stopped_ = true;
 }
 
-// Registration sequence.
+// Registration start/stop sequence.
 // ----------------------------------------------------------------------------
 // Must not change context in start or stop sequences (use bind).
 
-//////// Want this on the strand, to protect the loopback map.
 void session::register_channel(channel::ptr channel,
-    result_handler handle_started, result_handler handle_stopped)
+    result_handler handle_started1, result_handler handle_stopped1)
 {
     if (stopped())
     {
-        handle_started(error::service_stopped);
-        handle_stopped(error::service_stopped);
+        handle_started1(error::service_stopped);
+        handle_stopped1(error::service_stopped);
         return;
     }
 
     // must set nonce before start_channel
-    channel->set_notify(notify_on_connect_);
-    channel->set_nonce(pseudo_random::next<uint64_t>(1u, max_uint64));
+    channel->set_nonce(pseudo_random::next<uint64_t>(1, max_uint64));
 
     start_channel(channel,
-        BIND4(handle_start, _1, channel, handle_started, handle_stopped));
+        BIND4(handle_start, _1, channel, handle_started1, handle_stopped1));
 }
 
-//////// Want this on the strand, to protect the loopback map.
 void session::start_channel(channel::ptr channel,
-    result_handler handle_started)
+    result_handler handle_started2)
 {
     channel->start();
 
     attach_handshake_protocols(channel,
-        BIND3(handle_handshake, _1, channel, handle_started));
+        BIND3(handle_handshake, _1, channel, handle_started2));
 }
 
 // Channel communication begins after version protocol start returns.
 // handle_handshake is invoked after version negotiation completes.
 void session::attach_handshake_protocols(channel::ptr channel,
-    result_handler handle_started)
+    result_handler handle_started3)
 {
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= messages::level::bip61)
         attach<protocol_version_70002>(channel, network_)->
-            start(handle_started);
+            start(handle_started3);
     else
         attach<protocol_version_31402>(channel, network_)->
-            start(handle_started);
+            start(handle_started3);
 }
 
-//////// Want this on the strand, to protect the loopback map.
 void session::handle_handshake(const code& ec, channel::ptr channel,
-    result_handler handle_started)
+    result_handler handle_started2)
 {
     if (ec)
     {
-        handle_started(ec);
+        handle_started2(ec);
         return;
     }
 
-    handshake_complete(channel, handle_started);
+    handshake_complete(channel, handle_started2);
 }
 
-//////// Want this on the strand, to protect the loopback map.
 void session::handshake_complete(channel::ptr channel,
-    result_handler handle_started)
+    result_handler handle_started2)
 {
-    // TODO: subscribe to message broadcaster?
-    // This will fail if the IP address or nonce is already connected.
-////handle_started(network_.store(channel));
+    // This will fail if the IP address is already connected.
+    network_.store(channel, notify_on_connect_, false, handle_started2);
 }
 
 void session::handle_start(const code& ec, channel::ptr channel,
-    result_handler handle_started, result_handler handle_stopped)
+    result_handler handle_started1, result_handler handle_stopped1)
 {
-    // Must either stop or subscribe the channel for stop before returning.
-    // All closures must eventually be invoked as otherwise it is a leak.
-    // Therefore upon start failure expect start failure and stop callbacks.
     if (ec)
     {
         channel->stop(ec);
-        handle_stopped(ec);
+        handle_stopped1(ec);
     }
     else
     {
-        // NOTE: protocols are also subscribed to channel stop.
-        // This is where all channels subscribe to their own stop notification.
+        // Started, and eventual stop will cause removal.
         channel->subscribe_stop(
-            BIND3(handle_remove, _1, channel, handle_stopped));
+            BIND3(handle_remove, _1, channel, handle_stopped1));
     }
 
-    // This is the end of the registration sequence.
-    handle_started(ec);
+    // This is the end of the registration start sequence.
+    handle_started1(ec);
 }
 
-void session::handle_remove(const code& , channel::ptr channel,
-    result_handler handle_stopped)
+void session::handle_remove(const code&, channel::ptr channel,
+    result_handler handle_stopped1)
 {
-////network_.remove(channel);
-    handle_stopped(error::success);
+    network_.unstore(channel);
+
+    // This is the end of the registration stop sequence.
+    handle_stopped1(error::success);
 }
 
 } // namespace network

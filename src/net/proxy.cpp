@@ -39,7 +39,7 @@ using namespace std::placeholders;
 static const size_t invalid_payload_dump_size = 1024;
 
 // static
-std::string proxy::extract_command(payload_ptr payload)
+std::string proxy::extract_command(system::chunk_ptr payload)
 {
     if (payload->size() < sizeof(uint32_t) + heading::command_size)
         return "<unknown>";
@@ -76,6 +76,7 @@ bool proxy::stopped() const
     return socket_->stopped();
 }
 
+// Protocols subscribe to channel stop.
 void proxy::subscribe_stop(result_handler&& handler)
 {
     // Stop is posted to strand to protect socket and subscribers.
@@ -273,7 +274,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
 // ----------------------------------------------------------------------------
 
 // private
-void proxy::send(payload_ptr payload, result_handler&& handler)
+void proxy::send(system::chunk_ptr payload, result_handler&& handler)
 {
     // Sends are allowed to proceed after stop, but will be aborted.
 
@@ -284,7 +285,7 @@ void proxy::send(payload_ptr payload, result_handler&& handler)
 }
 
 // private
-void proxy::send(payload_ptr payload, const result_handler& handler)
+void proxy::send(system::chunk_ptr payload, const result_handler& handler)
 {
     // Sends are allowed to proceed after stop, but will be aborted.
 
@@ -296,7 +297,7 @@ void proxy::send(payload_ptr payload, const result_handler& handler)
 
 // private
 // Handle errors and invoke completion handler.
-void proxy::handle_send(const code& ec, size_t, payload_ptr payload,
+void proxy::handle_send(const code& ec, size_t, system::chunk_ptr payload,
     const result_handler& handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -341,9 +342,9 @@ asio::strand& proxy::strand()
     return socket_->strand();
 }
 
-config::authority proxy::authority() const
+const config::authority& proxy::authority() const
 {
-    return socket_->endpoint();
+    return socket_->authority();
 }
 
 } // namespace network

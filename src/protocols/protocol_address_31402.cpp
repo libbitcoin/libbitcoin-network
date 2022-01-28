@@ -40,7 +40,7 @@ using namespace std::placeholders;
 
 static messages::address configured_self(const network::settings& settings)
 {
-    if (settings.self.port() == 0)
+    if (is_zero(settings.self.port()))
         return {};
 
     return { { settings.self.to_address_item() } };
@@ -93,9 +93,7 @@ bool protocol_address_31402::handle_receive_address(const code& ec,
         << message->addresses.size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-////    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
-
-    // RESUBSCRIBE
+    network_.load(message->addresses);
     return true;
 }
 
@@ -105,42 +103,26 @@ bool protocol_address_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return false;
 
-    messages::address_items subset;
-////    const auto code = network_.fetch_addresses(subset);
-code code;
+    network_.fetch_addresses(BIND2(handle_fetch_addresses, _1, _2));
+    return true;
+}
 
-    if (!code)
+// TODO: one response per connection permitted.
+void protocol_address_31402::handle_fetch_addresses(const code& ec,
+    const hosts::peers& hosts)
+{
+    if (!ec)
     {
-        SEND2(address{ subset }, handle_send, _1, self_.command);
+        SEND2(address{ hosts }, handle_send, _1, self_.command);
 
         LOG_DEBUG(LOG_NETWORK)
             << "Sending addresses to [" << authority() << "] ("
             << self_.addresses.size() << ")";
     }
-
-    // do not resubscribe; one response per connection permitted
-    return false;
-}
-
-void protocol_address_31402::handle_store_addresses(const code& ec)
-{
-    if (stopped(ec))
-        return;
-
-    if (ec)
-    {
-        LOG_ERROR(LOG_NETWORK)
-            << "Failure storing addresses from [" << authority() << "] "
-            << ec.message();
-        stop(ec);
-    }
 }
 
 void protocol_address_31402::handle_stop(const code&)
 {
-    // None of the other bc::network protocols log their stop.
-    ////LOG_DEBUG(LOG_NETWORK)
-    ////    << "Stopped address protocol for [" << authority() << "].";
 }
 
 const std::string& protocol_address_31402::name() const

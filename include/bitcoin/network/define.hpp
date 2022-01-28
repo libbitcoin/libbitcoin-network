@@ -77,8 +77,6 @@ namespace network {
 #define BIND7(method, p1, p2, p3, p4, p5, p6, p7) \
     bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6, p7)
 
-typedef std::shared_ptr<const system::data_chunk> chunk_ptr;
-
 } // namespace network
 } // namespace libbitcoin
 

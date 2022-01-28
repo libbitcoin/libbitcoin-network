@@ -112,7 +112,7 @@ std::string get_log_path(const std::string& test, const std::string& file)
 ////        promise.set_value(ec);
 ////        return false;
 ////    };
-////    network.subscribe_connection(handler);
+////    network.subscribe_connect(handler);
 ////    return promise.get_future().get().value();
 ////}
 ////
@@ -124,7 +124,7 @@ std::string get_log_path(const std::string& test, const std::string& file)
 ////        promise.set_value(ec);
 ////        return false;
 ////    };
-////    network.subscribe_connection(handler);
+////    network.subscribe_connect(handler);
 ////    network.connect(host);
 ////    return promise.get_future().get().value();
 ////}
@@ -137,7 +137,7 @@ std::string get_log_path(const std::string& test, const std::string& file)
 ////        promise.set_value(ec);
 ////        return false;
 ////    };
-////    network.subscribe_connection(handler);
+////    network.subscribe_connect(handler);
 ////    network.connect(host.host(), host.port());
 ////    return promise.get_future().get().value();
 ////}
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////    };
 ////
 ////    // Expect queued handler until destruct because service is started.
-////    network.subscribe_connection(handler);
+////    network.subscribe_connect(handler);
 ////}
 
 // start with no connections
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_SUITE(p2p_tests)
 ////        subscribe.set_value(ec);
 ////        return false;
 ////    };
-////    network.subscribe_connection(subscribe_handler);
+////    network.subscribe_connect(subscribe_handler);
 ////
 ////    std::promise<code> run;
 ////    const auto run_handler = [&run, &network](code ec)

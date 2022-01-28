@@ -104,7 +104,6 @@ channel::channel(socket::ptr socket, const settings& settings)
     protocol_magic_(settings.identifier),
     validate_checksum_(settings.validate_checksum),
     verbose_logging_(settings.verbose),
-    notify_on_connect_(false),
     channel_nonce_(0),
     negotiated_version_(settings.protocol_maximum),
     peer_version_(std::make_shared<messages::version>()),
@@ -142,18 +141,6 @@ void channel::do_stop(const code& ec)
 
 // Properties.
 // ----------------------------------------------------------------------------
-
-bool channel::notify() const
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    return notify_on_connect_;
-}
-
-void channel::set_notify(bool value)
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    notify_on_connect_ = value;
-}
 
 uint64_t channel::nonce() const
 {

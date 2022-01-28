@@ -86,7 +86,7 @@ public:
     virtual asio::strand& strand();
 
     /// Get the authority of the remote endpoint.
-    virtual config::authority endpoint() const;
+    virtual const config::authority& authority() const;
 
 private:
     void do_stop();
@@ -107,7 +107,7 @@ private:
 
     // These are protected by strand (see also handle_accept).
     asio::socket socket_;
-    config::authority endpoint_;
+    config::authority authority_;
 };
 
 } // namespace network

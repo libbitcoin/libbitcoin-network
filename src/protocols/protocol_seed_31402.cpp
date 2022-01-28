@@ -82,9 +82,8 @@ void protocol_seed_31402::send_own_address(const settings& settings)
         return;
     }
 
-    const address self{ { settings.self.to_address_item() } };
-
-    SEND1(self, handle_send_address, _1);
+    SEND1(address{ { settings.self.to_address_item() } },
+        handle_send_address, _1);
 }
 
 void protocol_seed_31402::handle_seeding_complete(const code& ec,
@@ -105,7 +104,7 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
         << message->addresses.size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-////    network_.store(message->addresses, BIND1(handle_store_addresses, _1));
+    network_.load(message->addresses);
     return false;
 }
 
@@ -136,26 +135,26 @@ void protocol_seed_31402::handle_send_get_address(const code& ec)
     set_event(error::success);
 }
 
-void protocol_seed_31402::handle_store_addresses(const code& ec)
-{
-    if (stopped(ec))
-        return;
-
-    if (ec)
-    {
-        LOG_ERROR(LOG_NETWORK)
-            << "Failure storing addresses from seed [" << authority() << "] "
-            << ec.message();
-        set_event(ec);
-        return;
-    }
-
-    LOG_DEBUG(LOG_NETWORK)
-        << "Stopping completed seed [" << authority() << "] ";
-
-    // 3 of 3
-    set_event(error::channel_stopped);
-}
+////void protocol_seed_31402::handle_store_addresses(const code& ec)
+////{
+////    if (stopped(ec))
+////        return;
+////
+////    if (ec)
+////    {
+////        LOG_ERROR(LOG_NETWORK)
+////            << "Failure storing addresses from seed [" << authority() << "] "
+////            << ec.message();
+////        set_event(ec);
+////        return;
+////    }
+////
+////    LOG_DEBUG(LOG_NETWORK)
+////        << "Stopping completed seed [" << authority() << "] ";
+////
+////    // 3 of 3
+////    set_event(error::channel_stopped);
+////}
 
 const std::string& protocol_seed_31402::name() const
 {

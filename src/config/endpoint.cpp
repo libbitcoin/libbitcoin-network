@@ -24,6 +24,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/authority.hpp>
 
 namespace libbitcoin {
@@ -42,9 +43,9 @@ endpoint::endpoint(const endpoint& other)
 {
 }
 
-endpoint::endpoint(const std::string& value)
+endpoint::endpoint(const std::string& uri)
 {
-    std::stringstream(value) >> *this;
+    std::stringstream(uri) >> *this;
 }
 
 endpoint::endpoint(const authority& authority)
@@ -63,12 +64,12 @@ endpoint::endpoint(const std::string& scheme, const std::string& host,
 {
 }
 
-endpoint::endpoint(const boost::asio::ip::tcp::endpoint& host)
-  : endpoint(host.address(), host.port())
+endpoint::endpoint(const asio::endpoint& uri)
+  : endpoint(uri.address(), uri.port())
 {
 }
 
-endpoint::endpoint(const boost::asio::ip::address& ip, uint16_t port)
+endpoint::endpoint(const asio::address& ip, uint16_t port)
   : host_(ip.to_string()), port_(port)
 {
 }

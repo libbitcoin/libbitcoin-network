@@ -53,6 +53,7 @@ class BCT_API pump
   : system::noncopyable
 {
 public:
+    // TOOD: this must change to <void(...)> when handlers are changed.
     /// Helper for external declarations.
     template <class Message>
     using handler = std::function<bool(const code&,

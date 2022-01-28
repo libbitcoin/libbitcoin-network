@@ -41,7 +41,7 @@ public:
     typedef std::shared_ptr<session_inbound> ptr;
 
     /// Construct an instance.
-    session_inbound(p2p& network, bool notify_on_connect);
+    session_inbound(p2p& network);
 
     /// Start the session.
     void start(result_handler handler) override;

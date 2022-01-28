@@ -93,23 +93,23 @@ bool protocol_version_70002::sufficient_peer(version::ptr message)
 {
     if (message->value < minimum_version_)
     {
-        const reject version_rejection
+        reject version_rejection
         {
             version::command,
             reject::reason_code::obsolete
         };
 
-        SEND2(version_rejection, handle_send, _1, reject::command);
+        SEND2(std::move(version_rejection), handle_send, _1, reject::command);
     }
     else if ((message->services & minimum_services_) != minimum_services_)
     {
-        const reject obsolete_rejection
+        reject obsolete_rejection
         {
             version::command,
             reject::reason_code::obsolete
         };
 
-        SEND2(obsolete_rejection, handle_send, _1, reject::command);
+        SEND2(std::move(obsolete_rejection), handle_send, _1, reject::command);
     }
 
     return protocol_version_31402::sufficient_peer(message);

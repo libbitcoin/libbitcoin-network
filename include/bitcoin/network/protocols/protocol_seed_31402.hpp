@@ -53,7 +53,7 @@ protected:
 
     virtual void handle_send_address(const code& ec);
     virtual void handle_send_get_address(const code& ec);
-    virtual void handle_store_addresses(const code& ec);
+    ////virtual void handle_store_addresses(const code& ec);
     virtual void handle_seeding_complete(const code& ec,
         event_handler handler);
 

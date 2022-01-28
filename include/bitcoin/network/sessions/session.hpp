@@ -69,17 +69,13 @@ public:
     virtual void stop(const code& ec);
 
 protected:
-
-    /// Construct an instance.
     session(p2p& network, bool notify_on_connect);
-
-    /// Validate session stopped.
     ~session();
 
     /// Template helpers.
     // ------------------------------------------------------------------------
 
-    /// Attach a protocol to a channel, caller must start the channel.
+    /// Attach a protocol to a channel, caller must start returned protocol.
     template <class Protocol, typename... Args>
     typename Protocol::ptr attach(channel::ptr channel, Args&&... args)
     {
@@ -87,15 +83,8 @@ protected:
         const auto protocol = std::make_shared<Protocol>(channel,
             std::forward<Args>(args)...);
 
-        // TODO: provide a way to detach (version protocols).
-        // TODO: Add desubscription method to subscriber (enumerable hashmap).
-        // TODO: Use channel as key and bury inclusion for protocols in base.
-        // Capture the protocol in the channel stop handler.
-        channel->subscribe_stop([protocol](const code& ec)
-        {
-            protocol->stop(ec);
-        });
-
+        // Protocol lifetime is ensured by the channel stop subscriber.
+        channel->subscribe_stop([=](const code& ec){ protocol->stop(ec); });
         return protocol;
     }
 
@@ -110,47 +99,24 @@ protected:
     /// Delay timing for a tight failure loop, based on configured timeout.
     inline duration cycle_delay(const code& ec)
     {
-        return (ec == error::channel_timeout ||
-            ec == error::service_stopped || ec == error::success) ?
-                seconds(0) : settings_.connect_timeout();
+        return (
+            ec == error::channel_timeout ||
+            ec == error::service_stopped ||
+            ec == error::success) ? seconds(0) : settings_.connect_timeout();
     }
 
     /// Properties.
     // ------------------------------------------------------------------------
 
-    virtual size_t address_count() const;
-    virtual size_t connection_count() const;
-    virtual void fetch_address(hosts::peer_handler handler) const;
-    virtual bool blacklisted(const config::authority& authority) const;
     virtual bool stopped() const;
     virtual bool stopped(const code& ec) const;
+    virtual bool blacklisted(const config::authority& authority) const;
 
     /// Socket creators.
     // ------------------------------------------------------------------------
 
     virtual acceptor::ptr create_acceptor();
     virtual connector::ptr create_connector();
-
-    ////// Pending connect.
-    ////// ------------------------------------------------------------------------
-
-    /////// Store a pending connection reference.
-    ////virtual code pend(connector::ptr connector);
-
-    /////// Free a pending connection reference.
-    ////virtual void unpend(connector::ptr connector);
-
-    ////// Pending handshake.
-    ////// ------------------------------------------------------------------------
-
-    /////// Store a pending connection reference.
-    ////virtual code pend(channel::ptr channel);
-
-    /////// Free a pending connection reference.
-    ////virtual void unpend(channel::ptr channel);
-
-    /////// Test for a pending connection reference.
-    ////virtual bool pending(uint64_t version_nonce) const;
 
     // Registration sequence.
     //-------------------------------------------------------------------------
@@ -176,8 +142,6 @@ protected:
     const settings& settings_;
 
 private:
-    typedef network::pending<connector> connectors;
-
     void handle_handshake(const code& ec, channel::ptr channel,
         result_handler handle_started);
     void handle_start(const code& ec, channel::ptr channel,
@@ -185,12 +149,13 @@ private:
     void handle_remove(const code& ec, channel::ptr channel,
         result_handler handle_stopped);
 
+protected:
+    // This is not thread safe.
+    p2p& network_;
+
     // These are thread safe.
     std::atomic<bool> stopped_;
     const bool notify_on_connect_;
-
-protected:
-    p2p& network_;
 };
 
 #undef SESSION_ARGS

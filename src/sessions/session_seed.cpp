@@ -68,7 +68,7 @@ void session_seed::handle_started(const code& ec,
         return;
     }
 
-    const auto start_size = address_count();
+    const auto start_size = network_.address_count();
 
     if (start_size != 0)
     {
@@ -209,7 +209,7 @@ void session_seed::handle_channel_stop(const code& ec)
 void session_seed::handle_complete(size_t start_size, result_handler handler)
 {
     // We succeed only if there is a host count increase of at least 100.
-    const auto increase = address_count() >=
+    const auto increase = network_.address_count() >=
         ceilinged_add(start_size, minimum_host_increase);
 
     // This is the end of the seed sequence.

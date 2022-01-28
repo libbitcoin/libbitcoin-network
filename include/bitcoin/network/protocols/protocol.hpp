@@ -65,11 +65,27 @@ protected:
         return BOUND_PROTOCOL(handler, args);
     }
 
-    /// Send a message on the channel and handle the result.
+    /// Send a copied message on the channel and handle the result.
     template <class Protocol, class Message, typename Handler, typename... Args>
     void send(const Message& message, Handler&& handler, Args&&... args)
     {
-        channel_->send(message, BOUND_PROTOCOL(handler, args));
+        channel_->send<Message>(system::to_shared(message),
+            BOUND_PROTOCOL(handler, args));
+    }
+
+    /// Send a moved message on the channel and handle the result.
+    template <class Protocol, class Message, typename Handler, typename... Args>
+    void send(Message&& message, Handler&& handler, Args&&... args)
+    {
+        channel_->send<Message>(system::to_shared(std::move(message)),
+            BOUND_PROTOCOL(handler, args));
+    }
+
+    /// Send a referenced message on the channel and handle the result.
+    template <class Protocol, class Message, typename Handler, typename... Args>
+    void send(typename Message::ptr message, Handler&& handler, Args&&... args)
+    {
+        channel_->send<Message>(message, BOUND_PROTOCOL(handler, args));
     }
 
     /// Subscribe to all channel messages, blocking until subscribed.

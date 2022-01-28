@@ -25,7 +25,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/asio.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
@@ -53,14 +53,14 @@ public:
     /// The host can be in one of three forms:
     /// [2001:db8::2] or 2001:db8::2 or 1.2.240.1
     authority(const std::string& host, uint16_t port);
-    authority(const boost::asio::ip::address& ip, uint16_t port);
-    authority(const boost::asio::ip::tcp::endpoint& endpoint);
+    authority(const asio::address& ip, uint16_t port);
+    authority(const asio::endpoint& endpoint);
 
     /// True if the port is non-zero.
     operator bool() const;
 
     /// The ip address of the authority.
-    const boost::asio::ip::address_v6& ip() const;
+    const asio::ipv6& ip() const;
 
     /// The tcp port of the authority.
     uint16_t port() const;
@@ -76,10 +76,8 @@ public:
     /// The authority in one of two forms: [2001:db8::2]:port or 1.2.240.1:port
     std::string to_string() const;
 
-    /// The authority converted to a network messages address.
+    /// The authority converted to a network messages address/ip_address.
     messages::address_item to_address_item() const;
-
-    /// The authority converted to a network messages ip_address.
     messages::ip_address to_ip_address() const;
 
     bool operator==(const authority& other) const;
@@ -91,7 +89,7 @@ public:
         const authority& argument);
 
 private:
-    boost::asio::ip::address_v6 ip_;
+    asio::ipv6 ip_;
     uint16_t port_;
 };
 

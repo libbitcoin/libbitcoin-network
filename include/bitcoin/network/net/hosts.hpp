@@ -45,8 +45,8 @@ public:
     ////typedef std::shared_ptr<hosts> ptr;
     typedef messages::address_item peer;
     typedef messages::address_items peers;
-    typedef std::function<void(const code&, const peer& host)> peer_handler;
-    typedef std::function<void(const code&, const peers& hosts)> peers_handler;
+    typedef std::function<void(const code&, const peer&)> peer_handler;
+    typedef std::function<void(const code&, const peers&)> peers_handler;
 
     /// Construct an instance.
     hosts(const settings& settings);
@@ -57,7 +57,7 @@ public:
     // Save hosts to file.
     virtual code stop();
 
-    // Thread safe, inexact (race).
+    // Thread safe, inexact (ok).
     virtual size_t count() const;
 
     virtual void store(const peer& host);

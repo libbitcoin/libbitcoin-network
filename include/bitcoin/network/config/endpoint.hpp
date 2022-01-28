@@ -26,6 +26,7 @@
 #include <vector>
 #include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -44,18 +45,17 @@ public:
     endpoint(const endpoint& other);
 
     /// The scheme and port may be undefined, in which case the port is
-    // reported as zero and the scheme is reported as an empty string.
+    /// reported as zero and the scheme is reported as an empty string.
     /// The value is of the form: [scheme://]host[:port]
-    endpoint(const std::string& value);
+    endpoint(const std::string& uri);
     endpoint(const authority& authority);
 
     /// host may be host name or ip address.
     endpoint(const std::string& host, uint16_t port);
-    endpoint(const std::string& scheme, const std::string& host,
-        uint16_t port);
+    endpoint(const std::string& scheme, const std::string& host, uint16_t port);
 
-    endpoint(const boost::asio::ip::tcp::endpoint& host);
-    endpoint(const boost::asio::ip::address& ip, uint16_t port);
+    endpoint(const asio::endpoint& uri);
+    endpoint(const asio::address& ip, uint16_t port);
 
     /// True if the endpoint is initialized.
     operator bool() const;

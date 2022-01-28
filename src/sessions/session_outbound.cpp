@@ -32,8 +32,8 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-session_outbound::session_outbound(p2p& network, bool notify_on_connect)
-  : session_batch(network, notify_on_connect)
+session_outbound::session_outbound(p2p& network)
+  : session_batch(network)
 {
 }
 
@@ -161,16 +161,14 @@ void session_outbound::handle_channel_stop(const code& ec,
 void session_outbound::start_channel(channel::ptr channel,
     result_handler handle_started)
 {
-    //// pend(channel);
-
+    network_.pend(channel->nonce());
     session::start_channel(channel, BIND3(do_unpend, _1, channel, handle_started));
 }
 
 void session_outbound::do_unpend(const code& ec, channel::ptr channel,
     result_handler handle_started)
 {
-    //// unpend(channel);
-
+    network_.unpend(channel->nonce());
     handle_started(ec);
 }
 

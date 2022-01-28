@@ -65,7 +65,7 @@ public:
     /// Stop has been signaled, work is stopping.
     virtual bool stopped() const;
 
-    /// Subscribe to proxy stop notifications.
+    /// Subscribe to proxy stop notifications (channels and protocols).
     /// No invocation occurs if the subscriber is stopped at time of subscribe.
     virtual void subscribe_stop(result_handler&& handler);
 
@@ -78,22 +78,12 @@ public:
     // I/O.
     // ------------------------------------------------------------------------
 
-    /// Send a message on the socket, does not require proxy to be started.
-    /// Message is serialized and does not have to be retained by the caller.
     template <class Message>
-    void send(const Message& message, result_handler&& handler)
+    void send(typename Message::ptr message, const result_handler handler)
     {
         // TODO: account for witness parameter here.
-        send(messages::serialize(message, protocol_magic(), version()),
-            std::move(handler));
-    }
-
-    template <class Message>
-    void send(const Message& message, const result_handler& handler)
-    {
-        // TODO: account for witness parameter here.
-        send(messages::serialize(message, protocol_magic(), version()),
-            handler);
+        using namespace messages;
+        send(serialize(*message, protocol_magic(), version()), handler);
     }
 
     /// Subscribe to messages of type Message received by the started socket.
@@ -116,17 +106,16 @@ public:
     virtual asio::strand& strand();
 
     /// Get the authority of the peer.
-    virtual config::authority authority() const;
+    virtual const config::authority& authority() const;
 
 protected:
     void do_stop(const code& ec);
     void do_subscribe(result_handler handler);
 
 private:
-    typedef chunk_ptr payload_ptr;
     typedef messages::heading::ptr heading_ptr;
 
-    static std::string extract_command(payload_ptr payload);
+    static std::string extract_command(system::chunk_ptr payload);
 
     virtual size_t maximum_payload() const = 0;
     virtual uint32_t protocol_magic() const = 0;
@@ -142,9 +131,9 @@ private:
     void handle_read_payload(const code& ec, size_t payload_size,
         heading_ptr head);
 
-    void send(payload_ptr payload, result_handler&& handler);
-    void send(payload_ptr payload, const result_handler& handler);
-    void handle_send(const code& ec, size_t bytes, payload_ptr payload,
+    void send(system::chunk_ptr payload, result_handler&& handler);
+    void send(system::chunk_ptr payload, const result_handler& handler);
+    void handle_send(const code& ec, size_t bytes, system::chunk_ptr payload,
         const result_handler& handler);
 
     // This is thread safe.
