@@ -120,7 +120,7 @@ void connector::do_resolve(const std::string& hostname, uint16_t port,
 
 // private
 void connector::handle_resolve(const error::boost_code& ec,
-    const asio::iterator& it, socket::ptr socket, connect_handler handler)
+    const asio::resolved& it, socket::ptr socket, connect_handler handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

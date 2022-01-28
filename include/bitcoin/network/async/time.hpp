@@ -23,7 +23,6 @@
 #include <cstddef>
 #include <time.h>
 #include <string>
-#include <boost/asio.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -41,9 +40,6 @@ typedef std::chrono::steady_clock steady_clock;
 typedef steady_clock::duration duration;
 typedef steady_clock::time_point time_point;
 typedef std::chrono::system_clock wall_clock;
-
-/// Thread safe for distinct (unshared) instances.
-typedef boost::asio::basic_waitable_timer<steady_clock> wait_timer;
 
 /// Current zulu (utc) time using the wall clock.
 time_t zulu_time();

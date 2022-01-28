@@ -33,7 +33,6 @@ namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
-using namespace boost::asio;
 using namespace std::placeholders;
 
 // Socket creates a strand from the threadpool, posting all handlers to it.
@@ -123,54 +122,56 @@ void socket::accept(asio::acceptor& acceptor, result_handler&& handler)
             shared_from_this(), _1, std::move(handler)));
 }
 
-void socket::connect(const asio::iterator& it, result_handler&& handler)
+void socket::connect(const asio::resolved& it, result_handler&& handler)
 {
-    post(strand_,
+    boost::asio::post(strand_,
         std::bind(&socket::do_connect,
             shared_from_this(), it, std::move(handler)));
 }
 
 void socket::read(const data_slab& out, io_handler&& handler)
 {
-    post(strand_,
+    boost::asio::post(strand_,
         std::bind(&socket::do_read, shared_from_this(),
-            mutable_buffer{ out.data(), out.size() }, std::move(handler)));
+            boost::asio::mutable_buffer{ out.data(), out.size() },
+            std::move(handler)));
 }
 
 void socket::write(const data_slice& in, io_handler&& handler)
 {
-    post(strand_,
+    boost::asio::post(strand_,
         std::bind(&socket::do_write, shared_from_this(),
-            const_buffer{ in.data(), in.size() }, std::move(handler)));
+            boost::asio::const_buffer{ in.data(), in.size() },
+            std::move(handler)));
 }
 
 // executors (private).
 // ----------------------------------------------------------------------------
 // These execute on the strand to protect the member socket.
 
-void socket::do_connect(const asio::iterator& it, result_handler handler)
+void socket::do_connect(const asio::resolved& it, result_handler handler)
 {
     async_connect(socket_, it,
         std::bind(&socket::handle_connect,
             shared_from_this(), _1, _2, std::move(handler)));
 }
 
-void socket::do_read(const mutable_buffer& out, io_handler handler)
+void socket::do_read(const boost::asio::mutable_buffer& out, io_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // This composed operation posts all intermediate handlers to the strand.
-    async_read(socket_, out,
+    boost::asio::async_read(socket_, out,
         std::bind(&socket::handle_io,
             shared_from_this(), _1, _2, std::move(handler)));
 }
 
-void socket::do_write(const const_buffer& in, io_handler handler)
+void socket::do_write(const boost::asio::const_buffer& in, io_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // This composed operation posts all intermediate handlers to the strand.
-    async_write(socket_, in,
+    boost::asio::async_write(socket_, in,
         std::bind(&socket::handle_io,
             shared_from_this(), _1, _2, std::move(handler)));
 }

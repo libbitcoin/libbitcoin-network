@@ -61,11 +61,11 @@ private:
     void handle_timer(const error::boost_code& ec,
         const handler& handle) const;
 
-    // These are thread safe.
+    // This is thread safe.
     const duration duration_;
 
     // This is not thread safe.
-    wait_timer timer_;
+    asio::wait_timer timer_;
 };
 
 } // namespace network

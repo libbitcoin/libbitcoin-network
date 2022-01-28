@@ -26,6 +26,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -41,7 +42,6 @@ namespace network {
 using namespace bc::system;
 using namespace bc::system::chain;
 using namespace std::placeholders;
-using namespace boost::asio;
 
 // This can be exceeded due to manual connection calls and race conditions.
 inline size_t nominal_connecting(const settings& settings)
@@ -80,9 +80,6 @@ p2p::~p2p()
 void p2p::start(result_handler handler)
 {
     const auto ptr = to_shared<messages::address>(new messages::address);
-
-    broadcast<messages::address>(ptr, handler);
-    do_broadcast<messages::address>(ptr, handler);
 
     if (!stopped())
     {
@@ -203,7 +200,7 @@ void p2p::handle_running(const code& ec, result_handler handler)
 void p2p::stop()
 {
     stopped_.store(true, std::memory_order_relaxed);
-    post(strand_, std::bind(&p2p::do_stop, this));
+    boost::asio::post(strand_, std::bind(&p2p::do_stop, this));
     threadpool_.join();
 }
 
@@ -246,7 +243,8 @@ bool p2p::stopped() const
 // External or derived callers.
 void p2p::subscribe_connect(connect_handler handler)
 {
-    post(strand_, std::bind(&p2p::do_subscribe_connect, this, std::move(handler)));
+    boost::asio::post(strand_,
+        std::bind(&p2p::do_subscribe_connect, this, std::move(handler)));
 }
 
 void p2p::do_subscribe_connect(connect_handler handler)
@@ -258,7 +256,8 @@ void p2p::do_subscribe_connect(connect_handler handler)
 // Sessions subscribe to network close.
 void p2p::subscribe_close(result_handler handler)
 {
-    post(strand_, std::bind(&p2p::do_subscribe_close, this, std::move(handler)));
+    boost::asio::post(strand_,
+        std::bind(&p2p::do_subscribe_close, this, std::move(handler)));
 }
 
 void p2p::do_subscribe_close(result_handler handler)
@@ -349,7 +348,7 @@ size_t p2p::address_count() const
 
 void p2p::load(const messages::address_item& host)
 {
-    post(strand_, std::bind(&p2p::do_load, this, host));
+    boost::asio::post(strand_, std::bind(&p2p::do_load, this, host));
 }
 
 void p2p::do_load(const messages::address_item& host)
@@ -361,7 +360,7 @@ void p2p::do_load(const messages::address_item& host)
 // TODO: use pointer.
 void p2p::load(const messages::address_items& hosts)
 {
-    post(strand_, std::bind(&p2p::do_loads, this, hosts));
+    boost::asio::post(strand_, std::bind(&p2p::do_loads, this, hosts));
 }
 
 void p2p::do_loads(const messages::address_items& hosts)
@@ -372,7 +371,7 @@ void p2p::do_loads(const messages::address_items& hosts)
 
 void p2p::unload(const messages::address_item& host)
 {
-    post(strand_, std::bind(&p2p::do_unload, this, host));
+    boost::asio::post(strand_, std::bind(&p2p::do_unload, this, host));
 }
 
 void p2p::do_unload(const messages::address_item& host)
@@ -383,7 +382,8 @@ void p2p::do_unload(const messages::address_item& host)
 
 void p2p::fetch_address(hosts::peer_handler handler) const
 {
-    post(strand_, std::bind(&p2p::do_fetch_address, this, std::move(handler)));
+    boost::asio::post(
+        strand_, std::bind(&p2p::do_fetch_address, this, std::move(handler)));
 }
 
 void p2p::do_fetch_address(hosts::peer_handler handler) const
@@ -394,7 +394,8 @@ void p2p::do_fetch_address(hosts::peer_handler handler) const
 
 void p2p::fetch_addresses(hosts::peers_handler handler) const
 {
-    post(strand_, std::bind(&p2p::do_fetch_addresses, this, std::move(handler)));
+    boost::asio::post(strand_,
+        std::bind(&p2p::do_fetch_addresses, this, std::move(handler)));
 }
 
 void p2p::do_fetch_addresses(hosts::peers_handler handler) const
@@ -427,7 +428,7 @@ size_t p2p::channel_count() const
 
 void p2p::pend(uint64_t nonce)
 {
-    post(strand_, std::bind(&p2p::do_pend, this, nonce));
+    boost::asio::post(strand_, std::bind(&p2p::do_pend, this, nonce));
 }
 
 void p2p::do_pend(uint64_t nonce)
@@ -438,7 +439,7 @@ void p2p::do_pend(uint64_t nonce)
 
 void p2p::unpend(uint64_t nonce)
 {
-    post(strand_, std::bind(&p2p::do_unpend, this, nonce));
+    boost::asio::post(strand_, std::bind(&p2p::do_unpend, this, nonce));
 }
 
 void p2p::do_unpend(uint64_t nonce)
@@ -450,7 +451,7 @@ void p2p::do_unpend(uint64_t nonce)
 void p2p::store(channel::ptr channel, bool notify, bool inbound,
     result_handler handler)
 {
-    post(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_store, this, channel, notify, inbound, handler));
 }
 
@@ -493,7 +494,7 @@ void p2p::do_store(channel::ptr channel, bool notify, bool inbound,
 
 void p2p::unstore(channel::ptr channel)
 {
-    post(strand_, std::bind(&p2p::do_unstore, this, channel));
+    boost::asio::post(strand_, std::bind(&p2p::do_unstore, this, channel));
 }
 
 // Channel is presumed to be stopped.

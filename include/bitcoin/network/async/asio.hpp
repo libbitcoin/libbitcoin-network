@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <boost/asio.hpp>
+#include <bitcoin/network/async/time.hpp>
 
 /// Convenience namespace for commonly used boost async i/o aliases.
 
@@ -33,6 +34,7 @@ namespace asio {
 typedef boost::asio::io_context io_context;
 typedef boost::asio::io_context::executor_type executor_type;
 typedef boost::asio::strand<executor_type> strand;
+typedef boost::asio::basic_waitable_timer<steady_clock> wait_timer;
 
 typedef boost::asio::ip::address address;
 typedef boost::asio::ip::address_v4 ipv4;
@@ -40,10 +42,11 @@ typedef boost::asio::ip::address_v6 ipv6;
 typedef boost::asio::ip::tcp tcp;
 
 typedef tcp::endpoint endpoint;
-typedef tcp::socket socket;
 typedef tcp::acceptor acceptor;
 typedef tcp::resolver resolver;
-typedef resolver::results_type iterator;
+typedef resolver::results_type resolved;
+
+typedef tcp::socket socket;
 typedef std::shared_ptr<socket> socket_ptr;
 
 constexpr auto max_connections = boost::asio::socket_base::max_listen_connections;

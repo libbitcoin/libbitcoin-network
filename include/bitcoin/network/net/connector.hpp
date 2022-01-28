@@ -85,7 +85,7 @@ protected:
         connect_handler handler);
 
 private:
-    void handle_resolve(const error::boost_code& ec, const asio::iterator& it,
+    void handle_resolve(const error::boost_code& ec, const asio::resolved& it,
         socket::ptr socket, connect_handler handler);
     void handle_connect(const code& ec, socket::ptr socket,
         const connect_handler& handler);
