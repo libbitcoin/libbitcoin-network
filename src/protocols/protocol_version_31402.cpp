@@ -129,11 +129,11 @@ messages::version protocol_version_31402::version_factory() const
 // Protocol.
 // ----------------------------------------------------------------------------
 
-bool protocol_version_31402::handle_receive_version(const code& ec,
+void protocol_version_31402::handle_receive_version(const code& ec,
     version::ptr message)
 {
     if (stopped(ec))
-        return false;
+        return;
 
     if (ec)
     {
@@ -141,7 +141,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
             << "Failure receiving version from [" << authority() << "] "
             << ec.message();
         set_event(ec);
-        return false;
+        return;
     }
 
     LOG_DEBUG(LOG_NETWORK)
@@ -159,7 +159,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
             << "Invalid protocol version configuration, minimum below ("
             << level::minimum_protocol << ").";
         set_event(error::channel_stopped);
-        return false;
+        return;
     }
 
     if (settings.protocol_maximum > level::maximum_protocol)
@@ -168,7 +168,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
             << "Invalid protocol version configuration, maximum above ("
             << level::maximum_protocol << ").";
         set_event(error::channel_stopped);
-        return false;
+        return;
     }
 
     if (settings.protocol_minimum > settings.protocol_maximum)
@@ -177,7 +177,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
             << "Invalid protocol version configuration, "
             << "minimum exceeds maximum.";
         set_event(error::channel_stopped);
-        return false;
+        return;
     }
 
     //-------------------------------------------------------------------------
@@ -185,7 +185,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     if (!sufficient_peer(message))
     {
         set_event(error::channel_stopped);
-        return false;
+        return;
     }
 
     const auto version = std::min(message->value, own_version_);
@@ -200,7 +200,6 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     // 1 of 2
     set_event(error::success);
-    return false;
 }
 
 bool protocol_version_31402::sufficient_peer(version::ptr message)
@@ -232,11 +231,11 @@ bool protocol_version_31402::sufficient_peer(version::ptr message)
     return true;
 }
 
-bool protocol_version_31402::handle_receive_acknowledge(const code& ec,
+void protocol_version_31402::handle_receive_acknowledge(const code& ec,
     version_acknowledge::ptr)
 {
     if (stopped(ec))
-        return false;
+        return;
 
     if (ec)
     {
@@ -244,12 +243,11 @@ bool protocol_version_31402::handle_receive_acknowledge(const code& ec,
             << "Failure receiving verack from [" << authority() << "] "
             << ec.message();
         set_event(ec);
-        return false;
+        return;
     }
 
     // 2 of 2
     set_event(error::success);
-    return false;
 }
 
 const std::string& protocol_version_31402::name() const

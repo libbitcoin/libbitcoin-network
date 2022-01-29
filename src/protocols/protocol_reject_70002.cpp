@@ -61,12 +61,12 @@ void protocol_reject_70002::start()
 // This creates a log fill DOS vector.
 // This protocol is no longer in widespread use.
 // TODO: update in protocol attachment configuration.
-bool protocol_reject_70002::handle_receive_reject(const code& ec,
+void protocol_reject_70002::handle_receive_reject(const code& ec,
     reject::ptr reject)
 {
     // protocol_events is the base class only for this check.
     if (stopped(ec))
-        return false;
+        return;
 
     if (ec)
     {
@@ -74,14 +74,14 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
             << "Failure receiving reject from [" << authority() << "] "
             << ec.message();
         stop(error::channel_stopped);
-        return false;
+        return;
     }
 
     const auto& message = reject->message;
 
     // Handle these in the version protocol.
     if (message == version::command)
-        return true;
+        return;
 
     std::string hash;
     if (message == block::command || message == transaction::command)
@@ -92,7 +92,6 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
         << "Received " << message << " reject (" << static_cast<uint16_t>(code)
         << ") from [" << authority() << "] '" << reject->reason
         << "'" << hash;
-    return true;
 }
 
 const std::string& protocol_reject_70002::name() const

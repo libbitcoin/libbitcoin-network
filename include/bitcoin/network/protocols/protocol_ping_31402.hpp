@@ -50,7 +50,7 @@ protected:
 
     virtual void send_ping(const code& ec);
 
-    virtual bool handle_receive_ping(const code& ec,
+    virtual void handle_receive_ping(const code& ec,
         messages::ping::ptr message);
 
     virtual const std::string& name() const override;

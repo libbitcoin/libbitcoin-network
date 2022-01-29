@@ -58,9 +58,9 @@ protected:
     virtual messages::version version_factory() const;
     virtual bool sufficient_peer(messages::version::ptr message);
 
-    virtual bool handle_receive_version(const code& ec,
+    virtual void handle_receive_version(const code& ec,
         messages::version::ptr version);
-    virtual bool handle_receive_acknowledge(const code& ec,
+    virtual void handle_receive_acknowledge(const code& ec,
         messages::version_acknowledge::ptr);
 
     virtual const std::string& name() const override;

@@ -57,9 +57,9 @@ protected:
     virtual void handle_seeding_complete(const code& ec,
         result_handler handler);
 
-    virtual bool handle_receive_address(const code& ec,
+    virtual void handle_receive_address(const code& ec,
         messages::address::ptr address);
-    ////virtual bool handle_receive_get_address(const code& ec,
+    ////virtual void handle_receive_get_address(const code& ec,
     ////    messages::get_address::ptr message);
 
     virtual const std::string& name() const override;

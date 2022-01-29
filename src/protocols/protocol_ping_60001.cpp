@@ -90,11 +90,11 @@ void protocol_ping_60001::handle_send_ping(const code& ec,
     }
 }
 
-bool protocol_ping_60001::handle_receive_ping(const code& ec,
+void protocol_ping_60001::handle_receive_ping(const code& ec,
     ping::ptr message)
 {
     if (stopped(ec))
-        return false;
+        return;
 
     if (ec)
     {
@@ -102,18 +102,17 @@ bool protocol_ping_60001::handle_receive_ping(const code& ec,
             << "Failure getting ping from [" << authority() << "] "
             << ec.message();
         stop(ec);
-        return false;
+        return;
     }
 
     SEND2(pong{ message->nonce }, handle_send, _1, pong::command);
-    return true;
 }
 
-bool protocol_ping_60001::handle_receive_pong(const code& ec,
+void protocol_ping_60001::handle_receive_pong(const code& ec,
     pong::ptr message, uint64_t nonce)
 {
     if (stopped(ec))
-        return false;
+        return;
 
     if (ec)
     {
@@ -121,7 +120,6 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
             << "Failure getting pong from [" << authority() << "] "
             << ec.message();
         stop(ec);
-        return false;
     }
 
     pending_ = false;
@@ -131,10 +129,7 @@ bool protocol_ping_60001::handle_receive_pong(const code& ec,
         LOG_WARNING(LOG_NETWORK)
             << "Invalid pong nonce from [" << authority() << "]";
         stop(error::bad_stream);
-        return false;
     }
-
-    return false;
 }
 
 const std::string& protocol_ping_60001::name() const

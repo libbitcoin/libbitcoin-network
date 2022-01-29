@@ -82,11 +82,11 @@ void protocol_address_31402::start()
 // Protocol.
 // ----------------------------------------------------------------------------
 
-bool protocol_address_31402::handle_receive_address(const code& ec,
+void protocol_address_31402::handle_receive_address(const code& ec,
     address::ptr message)
 {
     if (stopped(ec))
-        return false;
+        return;
 
     LOG_VERBOSE(LOG_NETWORK)
         << "Storing addresses from [" << authority() << "] ("
@@ -94,17 +94,15 @@ bool protocol_address_31402::handle_receive_address(const code& ec,
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
     network_.load(message->addresses, {});
-    return true;
 }
 
-bool protocol_address_31402::handle_receive_get_address(const code& ec,
+void protocol_address_31402::handle_receive_get_address(const code& ec,
     get_address::ptr)
 {
     if (stopped(ec))
-        return false;
+        return;
 
     network_.fetch_addresses(BIND2(handle_fetch_addresses, _1, _2));
-    return true;
 }
 
 // TODO: one response per connection permitted.

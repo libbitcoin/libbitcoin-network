@@ -93,11 +93,11 @@ void protocol_seed_31402::handle_seeding_complete(const code& ec,
     stop(ec);
 }
 
-bool protocol_seed_31402::handle_receive_address(const code& ec,
+void protocol_seed_31402::handle_receive_address(const code& ec,
     address::ptr message)
 {
     if (stopped(ec))
-        return false;
+        return;
 
     LOG_DEBUG(LOG_NETWORK)
         << "Storing addresses from seed [" << authority() << "] ("
@@ -106,7 +106,6 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
     // TODO: use handler to avoid count race.
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
     network_.load(message->addresses, {});
-    return false;
 }
 
 void protocol_seed_31402::handle_send_address(const code& ec)

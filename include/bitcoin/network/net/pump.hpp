@@ -53,10 +53,9 @@ class BCT_API pump
   : system::noncopyable
 {
 public:
-    // TOOD: this must change to <void(...)> when handlers are changed.
     /// Helper for external declarations.
     template <class Message>
-    using handler = std::function<bool(const code&,
+    using handler = std::function<void(const code&,
         std::shared_ptr<const Message>)>;
 
     DEFINE_SUBSCRIBER(address);

@@ -55,7 +55,7 @@ protected:
     messages::version version_factory() const override;
     bool sufficient_peer(messages::version::ptr message) override;
 
-    virtual bool handle_receive_reject(const code& ec,
+    virtual void handle_receive_reject(const code& ec,
         messages::reject::ptr reject);
 
     virtual const std::string& name() const override;

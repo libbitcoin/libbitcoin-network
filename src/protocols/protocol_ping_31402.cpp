@@ -72,14 +72,13 @@ void protocol_ping_31402::send_ping(const code& ec)
     SEND2(ping{}, handle_send, _1, ping::command);
 }
 
-bool protocol_ping_31402::handle_receive_ping(const code& ec,
+void protocol_ping_31402::handle_receive_ping(const code& ec,
     ping::ptr)
 {
     if (stopped(ec))
-        return false;
+        return;
 
     // RESUBSCRIBE
-    return true;
 }
 
 const std::string& protocol_ping_31402::name() const

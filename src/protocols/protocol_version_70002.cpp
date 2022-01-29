@@ -104,11 +104,11 @@ bool protocol_version_70002::sufficient_peer(version::ptr message)
     return protocol_version_31402::sufficient_peer(message);
 }
 
-bool protocol_version_70002::handle_receive_reject(const code& ec,
+void protocol_version_70002::handle_receive_reject(const code& ec,
     reject::ptr reject)
 {
     if (stopped(ec))
-        return false;
+        return;
 
     if (ec)
     {
@@ -116,14 +116,14 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
             << "Failure receiving reject from [" << authority() << "] "
             << ec.message();
         set_event(error::channel_stopped);
-        return false;
+        return;
     }
 
     const auto& message = reject->message;
 
     // Handle these in the reject protocol.
     if (message != version::command)
-        return true;
+        return;
 
     const auto code = reject->code;
 
@@ -134,7 +134,7 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
             << "Obsolete version reject from [" << authority() << "] '"
             << reject->reason << "'";
         set_event(error::channel_stopped);
-        return false;
+        return;
     }
 
     // Duplicate version message received.
@@ -144,10 +144,7 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
             << "Duplicate version reject from [" << authority() << "] '"
             << reject->reason << "'";
         set_event(error::channel_stopped);
-        return false;
     }
-
-    return true;
 }
 
 const std::string& protocol_version_70002::name() const
