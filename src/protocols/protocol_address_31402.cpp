@@ -109,7 +109,7 @@ bool protocol_address_31402::handle_receive_get_address(const code& ec,
 
 // TODO: one response per connection permitted.
 void protocol_address_31402::handle_fetch_addresses(const code& ec,
-    const hosts::peers& hosts)
+    const messages::address_items& hosts)
 {
     if (!ec)
     {

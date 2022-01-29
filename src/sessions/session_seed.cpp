@@ -170,7 +170,7 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
         return;
     }
 
-    register_channel(channel,
+    start_channel(channel,
         BIND3(handle_channel_start, _1, channel, handler),
         BIND1(handle_channel_stop, _1));
 }

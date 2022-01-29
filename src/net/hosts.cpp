@@ -122,7 +122,7 @@ code hosts::stop()
     return error::success;
 }
 
-void hosts::store(const peer& host)
+void hosts::store(const address_item& host)
 {
     if (disabled_ || stopped_)
         return;
@@ -141,7 +141,7 @@ void hosts::store(const peer& host)
     }
 }
 
-void hosts::store(const peers& hosts)
+void hosts::store(const address_items& hosts)
 {
     if (disabled_ || stopped_ || hosts.empty())
         return;
@@ -185,7 +185,7 @@ void hosts::store(const peers& hosts)
         << ") host addresses from peer.";
 }
 
-void hosts::remove(const peer& host)
+void hosts::remove(const address_item& host)
 {
     if (stopped_ || buffer_.empty())
         return;
@@ -201,7 +201,7 @@ void hosts::remove(const peer& host)
     count_.store(buffer_.size(), std::memory_order_relaxed);
 }
 
-void hosts::fetch(peer_handler handler) const
+void hosts::fetch(address_item_handler handler) const
 {
     if (stopped_)
     {
@@ -220,7 +220,7 @@ void hosts::fetch(peer_handler handler) const
     handler(error::success, buffer_[index]);
 }
 
-void hosts::fetch(peers_handler handler) const
+void hosts::fetch(address_items_handler handler) const
 {
     if (stopped_)
     {
@@ -248,7 +248,7 @@ void hosts::fetch(peers_handler handler) const
     const auto limit = sub1(buffer_.size());
     auto index = pseudo_random::next(zero, limit);
 
-    peers out;
+    address_items out;
     out.reserve(out_count);
     for (size_t count = 0; count < out_count; ++count)
         out.push_back(buffer_[index++ % limit]);
@@ -258,9 +258,9 @@ void hosts::fetch(peers_handler handler) const
 }
 
 // private
-hosts::buffer::iterator hosts::find(const peer& host)
+hosts::buffer::iterator hosts::find(const address_item& host)
 {
-    const auto found = [&host](const peer& entry)
+    const auto found = [&host](const address_item& entry)
     {
         // Message types do not implement comparison operators.
         return entry.port == host.port && entry.ip == host.ip;

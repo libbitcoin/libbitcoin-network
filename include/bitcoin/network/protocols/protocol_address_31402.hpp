@@ -47,7 +47,7 @@ public:
 protected:
     virtual void handle_stop(const code& ec);
     virtual void handle_fetch_addresses(const code& ec,
-        const hosts::peers& hosts);
+        const messages::address_items& hosts);
 
     virtual bool handle_receive_address(const code& ec,
         messages::address::ptr address);

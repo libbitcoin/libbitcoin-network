@@ -91,7 +91,7 @@ void session_outbound::handle_connect(const code& ec,
         return;
     }
 
-    register_channel(channel,
+    start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
         BIND2(handle_channel_stop, _1, channel));
 }

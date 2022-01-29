@@ -119,7 +119,7 @@ void session_manual::handle_connect(const code& ec,
         return;
     }
 
-    register_channel(channel,
+    start_channel(channel,
         BIND6(handle_channel_start, _1, hostname, port, remaining, channel, handler),
         BIND5(handle_channel_stop, _1, hostname, port, remaining, handler));
 }

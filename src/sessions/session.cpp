@@ -138,7 +138,7 @@ void session::stop(const code&)
 // ----------------------------------------------------------------------------
 
 // protected
-void session::register_channel(channel::ptr channel, result_handler started,
+void session::start_channel(channel::ptr channel, result_handler started,
     result_handler stopped)
 {
     if (this->stopped())

@@ -62,10 +62,7 @@ public:
     typedef std::function<void(const code&, const config::authority&)>
         host_handler;
 
-    /// Start the session.
     virtual void start(result_handler handler);
-
-    /// Signal stop.
     virtual void stop(const code& ec);
 
 protected:
@@ -117,8 +114,8 @@ protected:
     // Registration sequence.
     //-------------------------------------------------------------------------
 
-    /// Register a new channel with the session and bind its handlers.
-    virtual void register_channel(channel::ptr channel,
+    /// Start a new channel with the session and bind its handlers.
+    virtual void start_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
 
     /// Override to attach specialized handshake protocols.

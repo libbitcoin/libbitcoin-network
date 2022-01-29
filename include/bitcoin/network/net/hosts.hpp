@@ -43,10 +43,10 @@ class BCT_API hosts
 {
 public:
     ////typedef std::shared_ptr<hosts> ptr;
-    typedef messages::address_item peer;
-    typedef messages::address_items peers;
-    typedef std::function<void(const code&, const peer&)> peer_handler;
-    typedef std::function<void(const code&, const peers&)> peers_handler;
+    typedef std::function<void(const code&, const messages::address_item&)>
+        address_item_handler;
+    typedef std::function<void(const code&, const messages::address_items&)>
+        address_items_handler;
 
     /// Construct an instance.
     hosts(const settings& settings);
@@ -60,16 +60,16 @@ public:
     // Thread safe, inexact (ok).
     virtual size_t count() const;
 
-    virtual void store(const peer& host);
-    virtual void store(const peers& hosts);
-    virtual void remove(const peer& host);
-    virtual void fetch(peer_handler handler) const;
-    virtual void fetch(peers_handler handler) const;
+    virtual void store(const messages::address_item& host);
+    virtual void store(const messages::address_items& hosts);
+    virtual void remove(const messages::address_item& host);
+    virtual void fetch(address_item_handler handler) const;
+    virtual void fetch(address_items_handler handler) const;
 
 private:
-    typedef boost::circular_buffer<peer> buffer;
+    typedef boost::circular_buffer<messages::address_item> buffer;
 
-    buffer::iterator find(const peer& host);
+    buffer::iterator find(const messages::address_item& host);
 
     const bool disabled_;
     const size_t capacity_;

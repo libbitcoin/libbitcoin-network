@@ -123,7 +123,7 @@ void session_inbound::handle_accept(const code& ec,
     if (network_.channel_count() >= connection_limit_)
         return;
 
-    register_channel(channel,
+    start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
         BIND1(handle_channel_stop, _1));
 }

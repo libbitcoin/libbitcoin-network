@@ -41,7 +41,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Top level public networking interface, partly thread safe.
+/// Top level public networking interface, thread safe.
 class BCT_API p2p
   : public enable_shared_from_base<p2p>, system::noncopyable
 {
@@ -95,6 +95,7 @@ public:
     /// Run inbound and outbound sessions, call from start result handler.
     virtual void run(result_handler handler);
 
+    /// Not thread safe (threadpool.clear).
     /// Idempotent call to signal work stop, start may be reinvoked after.
     virtual void stop();
 
@@ -155,10 +156,10 @@ public:
     virtual void unload(const messages::address_item& address);
 
     /// Get a randomly-selected address.
-    virtual void fetch_address(hosts::peer_handler handler) const;
+    virtual void fetch_address(hosts::address_item_handler handler) const;
 
     /// Get a list of stored hosts
-    virtual void fetch_addresses(hosts::peers_handler handler) const;
+    virtual void fetch_addresses(hosts::address_items_handler handler) const;
 
     // Connection management.
     // ------------------------------------------------------------------------
@@ -218,12 +219,13 @@ private:
     void do_connect3(const std::string& hostname, uint16_t port,
         channel_handler handler);
 
+    // hosts
     void do_load(const messages::address_item& host);
     void do_loads(const messages::address_items& hosts);
     void do_unload(const messages::address_item& host);
 
-    void do_fetch_address(hosts::peer_handler handler) const;
-    void do_fetch_addresses(hosts::peers_handler handler) const;
+    void do_fetch_address(hosts::address_item_handler handler) const;
+    void do_fetch_addresses(hosts::address_items_handler handler) const;
 
     void do_pend(uint64_t nonce);
     void do_unpend(uint64_t nonce);
@@ -249,7 +251,7 @@ private:
     channel_subscriber::ptr channel_subscriber_;
     std::unordered_set<uint64_t> nonces_;
     std::unordered_set<channel::ptr> channels_;
-    std::unordered_set<config::authority> addresses_;
+    std::unordered_set<config::authority> authorities_;
 };
 
 } // namespace network

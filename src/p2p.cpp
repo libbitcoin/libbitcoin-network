@@ -59,6 +59,7 @@ inline size_t nominal_connected(const settings& settings)
 
 p2p::p2p(const settings& settings)
   : settings_(settings),
+    channel_count_(zero),
     hosts_(settings_),
     threadpool_(settings_.threads),
     strand_(threadpool_.service().get_executor()),
@@ -152,6 +153,7 @@ void p2p::handle_run(code ec, result_handler handler)
 // ----------------------------------------------------------------------------
 // p2p must be kept in scope until stop hander returns or undefined behavior.
 
+// Not thread safe.
 // Blocks on join of all threadpool threads.
 // Must not be called from a thread within threadpool_.
 void p2p::stop()
@@ -346,27 +348,27 @@ void p2p::do_unload(const messages::address_item& host)
     hosts_.remove(host);
 }
 
-void p2p::fetch_address(hosts::peer_handler handler) const
+void p2p::fetch_address(hosts::address_item_handler handler) const
 {
     boost::asio::post(
         strand_, std::bind(&p2p::do_fetch_address, this, std::move(handler)));
 }
 
 // private
-void p2p::do_fetch_address(hosts::peer_handler handler) const
+void p2p::do_fetch_address(hosts::address_item_handler handler) const
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.fetch(handler);
 }
 
-void p2p::fetch_addresses(hosts::peers_handler handler) const
+void p2p::fetch_addresses(hosts::address_items_handler handler) const
 {
     boost::asio::post(strand_,
         std::bind(&p2p::do_fetch_addresses, this, std::move(handler)));
 }
 
 // private
-void p2p::do_fetch_addresses(hosts::peers_handler handler) const
+void p2p::do_fetch_addresses(hosts::address_items_handler handler) const
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.fetch(handler);
@@ -448,7 +450,7 @@ void p2p::do_store(channel::ptr channel, bool notify, bool inbound,
     }
 
     // Store the peer address, fail if already exists.
-    if (!addresses_.insert(channel->authority()).second)
+    if (!authorities_.insert(channel->authority()).second)
     {
         handler(error::address_in_use);
         return;
@@ -472,10 +474,10 @@ void p2p::unstore(channel::ptr channel)
 // Channel is presumed to be stopped.
 void p2p::do_unstore(channel::ptr channel)
 {
-    BC_ASSERT_MSG(stranded(), "channels_, addresses_");
+    BC_ASSERT_MSG(stranded(), "channels_, authorities_");
     --channel_count_;
     channels_.erase(channel);
-    addresses_.erase(channel->authority());
+    authorities_.erase(channel->authority());
 }
 
 // Specializations (protected).
@@ -492,21 +494,21 @@ session_seed::ptr p2p::attach_seed_session()
 // protected
 session_manual::ptr p2p::attach_manual_session()
 {
-    BC_ASSERT_MSG(stranded(), "ttach (do_subscribe_close)");
+    BC_ASSERT_MSG(stranded(), "attach (do_subscribe_close)");
     return attach<session_manual>();
 }
 
 // protected
 session_inbound::ptr p2p::attach_inbound_session()
 {
-    BC_ASSERT_MSG(stranded(), "ttach (do_subscribe_close)");
+    BC_ASSERT_MSG(stranded(), "attach (do_subscribe_close)");
     return attach<session_inbound>();
 }
 
 // protected
 session_outbound::ptr p2p::attach_outbound_session()
 {
-    BC_ASSERT_MSG(stranded(), "ttach (do_subscribe_close)");
+    BC_ASSERT_MSG(stranded(), "attach (do_subscribe_close)");
     return attach<session_outbound>();
 }
 
