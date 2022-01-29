@@ -130,7 +130,6 @@ void channel::stop(const code& ec)
             shared_from_base<channel>(), ec));
 }
 
-// protected
 void channel::do_stop(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -141,7 +140,10 @@ void channel::do_stop(const code& ec)
 
 // Properties.
 // ----------------------------------------------------------------------------
+// Versions are not thread safe, but logically should only be set in handshake
+// protocol, and only read thereafter. Otherwise values may be corrupted (ok).
 
+// channel_nonce_ is const.
 uint64_t channel::nonce() const
 {
     return channel_nonce_;
@@ -149,59 +151,50 @@ uint64_t channel::nonce() const
 
 uint32_t channel::negotiated_version() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return negotiated_version_;
 }
 
 void channel::set_negotiated_version(uint32_t value)
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     negotiated_version_ = value;
 }
 
 version::ptr channel::peer_version() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return peer_version_;
 }
 
 void channel::set_peer_version(version::ptr value)
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     peer_version_ = value;
 }
 
 // Proxy overrides (channel maintains state for the proxy).
 // ----------------------------------------------------------------------------
-// private
+// These are const except for version (safe) and signal_activity (stranded).
 
 size_t channel::maximum_payload() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return maximum_payload_;
 }
 
 uint32_t channel::protocol_magic() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return protocol_magic_;
 }
 
 bool channel::validate_checksum() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return validate_checksum_;
 }
 
 bool channel::verbose() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return verbose_logging_;
 }
 
 uint32_t channel::version() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return negotiated_version();
 }
 
@@ -215,7 +208,6 @@ void channel::signal_activity()
 
 // Timers.
 // ----------------------------------------------------------------------------
-// private
 
 // Called from start or strand.
 void channel::start_expiration()

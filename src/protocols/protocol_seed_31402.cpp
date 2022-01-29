@@ -103,8 +103,9 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
         << "Storing addresses from seed [" << authority() << "] ("
         << message->addresses.size() << ")";
 
+    // TODO: use handler to avoid count race.
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.load(message->addresses);
+    network_.load(message->addresses, {});
     return false;
 }
 

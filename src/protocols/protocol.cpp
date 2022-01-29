@@ -36,6 +36,15 @@ protocol::protocol(channel::ptr channel)
 {
 }
 
+protocol::~protocol()
+{
+}
+
+// This nop holds protocol shared pointer in attach closure.
+void protocol::nop() volatile
+{
+}
+
 bool protocol::stranded() const
 {
     return channel_->stranded();
@@ -45,37 +54,31 @@ bool protocol::stranded() const
 
 config::authority protocol::authority() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return channel_->authority();
 }
 
 uint64_t protocol::nonce() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return channel_->nonce();
 }
 
 version::ptr protocol::peer_version() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return channel_->peer_version();
 }
 
 void protocol::set_peer_version(version::ptr value)
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     channel_->set_peer_version(value);
 }
 
 uint32_t protocol::negotiated_version() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return channel_->negotiated_version();
 }
 
 void protocol::set_negotiated_version(uint32_t value)
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     channel_->set_negotiated_version(value);
 }
 

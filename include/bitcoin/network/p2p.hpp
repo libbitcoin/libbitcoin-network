@@ -83,7 +83,7 @@ public:
     /// Construct an instance.
     p2p(const settings& settings);
 
-    /// Calls stop().
+    /// Calls close().
     virtual ~p2p();
 
     // Sequences.
@@ -96,8 +96,8 @@ public:
     virtual void run(result_handler handler);
 
     /// Not thread safe (threadpool.clear).
-    /// Idempotent call to signal work stop, start may be reinvoked after.
-    virtual void stop();
+    /// Idempotent call to block on work stop, start may be reinvoked after.
+    virtual void close();
 
     // Subscriptions.
     // ------------------------------------------------------------------------
@@ -147,13 +147,16 @@ public:
     virtual size_t address_count() const;
 
     /// Store an address.
-    virtual void load(const messages::address_item& address);
+    virtual void load(const messages::address_item& address,
+        result_handler complete);
 
     /// Store a collection of addresses.
-    virtual void load(const messages::address_items& addresses);
+    virtual void load(const messages::address_items& addresses,
+        result_handler complete);
 
     /// Remove an address.
-    virtual void unload(const messages::address_item& address);
+    virtual void unload(const messages::address_item& address,
+        result_handler complete);
 
     /// Get a randomly-selected address.
     virtual void fetch_address(hosts::address_item_handler handler) const;
@@ -165,9 +168,9 @@ public:
     // ------------------------------------------------------------------------
 
     virtual size_t channel_count() const;
-    virtual void pend(uint64_t nonce);
-    virtual void unpend(uint64_t nonce);
-    virtual void unstore(channel::ptr channel);
+    virtual void pend(uint64_t nonce, result_handler handler);
+    virtual void unpend(uint64_t nonce, result_handler handler);
+    virtual void unstore(channel::ptr channel, result_handler handler);
     virtual void store(channel::ptr channel, bool notify, bool inbound,
         result_handler handler);
 
@@ -183,7 +186,7 @@ protected:
             std::forward<Args>(args)...);
 
         // Session lifetime is ensured by the network stop subscriber.
-        do_subscribe_close([=](const code& ec){ session->stop(ec); }, {});
+        do_subscribe_close([=](const code&){ session->stop(); }, {});
         return session;
     }
 
@@ -208,7 +211,7 @@ private:
 
     void do_start(result_handler handler);
     void do_run(result_handler handler);
-    void do_stop();
+    void do_close();
   
     void do_subscribe_connect(connect_handler handler, result_handler complete);
     void do_subscribe_close(result_handler handler, result_handler complete);
@@ -220,17 +223,17 @@ private:
         channel_handler handler);
 
     // hosts
-    void do_load(const messages::address_item& host);
-    void do_loads(const messages::address_items& hosts);
-    void do_unload(const messages::address_item& host);
+    void do_load(const messages::address_item& host, result_handler complete);
+    void do_loads(const messages::address_items& hosts, result_handler complete);
+    void do_unload(const messages::address_item& host, result_handler complete);
 
     void do_fetch_address(hosts::address_item_handler handler) const;
     void do_fetch_addresses(hosts::address_items_handler handler) const;
 
-    void do_pend(uint64_t nonce);
-    void do_unpend(uint64_t nonce);
+    void do_pend(uint64_t nonce, result_handler complete);
+    void do_unpend(uint64_t nonce, result_handler complete);
 
-    void do_unstore(channel::ptr channel);
+    void do_unstore(channel::ptr channel, result_handler complete);
     void do_store(channel::ptr channel, bool notify, bool inbound,
         result_handler handler);
 

@@ -153,14 +153,14 @@ void session_manual::attach_protocols(channel::ptr channel)
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
     if (version >= messages::level::bip31)
-        attach<protocol_ping_60001>(channel, heartbeat)->start();
+        channel->attach<protocol_ping_60001>(heartbeat)->start();
     else
-        attach<protocol_ping_31402>(channel, heartbeat)->start();
+        channel->attach<protocol_ping_31402>(heartbeat)->start();
 
     if (version >= messages::level::bip61)
-        attach<protocol_reject_70002>(channel)->start();
+        channel->attach<protocol_reject_70002>()->start();
 
-    attach<protocol_address_31402>(channel, network_)->start();
+    channel->attach<protocol_address_31402>(network_)->start();
 }
 
 void session_manual::handle_channel_stop(const code& ec,

@@ -114,18 +114,18 @@ void session_outbound::attach_protocols(channel::ptr channel)
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
     if (version >= messages::level::bip31)
-        attach<protocol_ping_60001>(channel, heartbeat)->start();
+        channel->attach<protocol_ping_60001>(heartbeat)->start();
     else
-        attach<protocol_ping_31402>(channel, heartbeat)->start();
+        channel->attach<protocol_ping_31402>(heartbeat)->start();
 
     if (version >= messages::level::bip61)
-        attach<protocol_reject_70002>(channel)->start();
+        channel->attach<protocol_reject_70002>()->start();
 
-    attach<protocol_address_31402>(channel, network_)->start();
+    channel->attach<protocol_address_31402>(network_)->start();
 }
 
 void session_outbound::attach_handshake(channel::ptr channel,
-    result_handler handle_started)
+    result_handler handshake)
 {
     const auto& settings = network_.network_settings();
     const auto relay = settings.relay_transactions;
@@ -141,13 +141,13 @@ void session_outbound::attach_handshake(channel::ptr channel,
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= messages::level::bip61)
-        attach<protocol_version_70002>(channel, network_, own_version,
+        channel->attach<protocol_version_70002>(network_, own_version,
             own_services, invalid_services, minimum_version, min_service, relay)
-            ->start(handle_started);
+            ->start(handshake);
     else
-        attach<protocol_version_31402>(channel, network_, own_version,
+        channel->attach<protocol_version_31402>(network_, own_version,
             own_services, invalid_services, minimum_version, min_service)
-            ->start(handle_started);
+            ->start(handshake);
 }
 
 void session_outbound::handle_channel_stop(const code& ec,

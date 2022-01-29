@@ -93,7 +93,7 @@ bool protocol_address_31402::handle_receive_address(const code& ec,
         << message->addresses.size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.load(message->addresses);
+    network_.load(message->addresses, {});
     return true;
 }
 

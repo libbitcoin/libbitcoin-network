@@ -41,41 +41,40 @@ class BCT_API channel
 public:
     typedef std::shared_ptr<channel> ptr;
 
-    // Construct.
-    // ------------------------------------------------------------------------
+    /// Attach a protocol to the channel, caller must start returned protocol.
+    template <class Protocol, typename... Args>
+    typename Protocol::ptr attach(Args&&... args)
+    {
+        BC_ASSERT_MSG(stranded(), "do_subscribe_stop");
 
-    /// Construct an instance from a socket and network settings.
+        // HACK: public but must be called from channel strand.
+        // HACK: this avoids need for post/callback during attach.
+        if (!stranded())
+            return nullptr;
+
+        // Protocols are attached after channel start.
+        const auto protocol = std::make_shared<Protocol>(
+            shared_from_base<channel>(), std::forward<Args>(args)...);
+
+        // Protocol lifetime is ensured by the channel stop subscriber.
+        do_subscribe_stop([=](const code&) { protocol->nop(); }, {});
+        return protocol;
+    }
+
     channel(socket::ptr socket, const settings& settings);
 
-    // Start/stop.
-    // ------------------------------------------------------------------------
+    virtual void start() override;
+    virtual void stop(const code& ec) override;
 
-    /// Start communicating (call only once).
-    void start() override;
-
-    /// Cancel work and close the socket (idempotent).
-    /// This action is deferred to the strand, not immediately affected.
-    /// Block on threadpool.join() to ensure termination of the connection.
-    /// Code is passed to stop subscribers, channel_stopped to message pump. 
-    void stop(const code& ec) override;
-
-    // Properties.
-    // ------------------------------------------------------------------------
-    // These are not thread safe, caller must be stranded.
-
-    virtual uint64_t nonce() const;
-    ////virtual void set_nonce(uint64_t value);
-
-    virtual uint32_t negotiated_version() const;
-    virtual void set_negotiated_version(uint32_t value);
-
-    virtual messages::version::ptr peer_version() const;
-    virtual void set_peer_version(messages::version::ptr value);
+    uint64_t nonce() const;
+    uint32_t negotiated_version() const;
+    void set_negotiated_version(uint32_t value);
+    messages::version::ptr peer_version() const;
+    void set_peer_version(messages::version::ptr value);
 
 protected:
     void do_stop(const code& ec);
 
-private:
     virtual size_t maximum_payload() const override;
     virtual uint32_t protocol_magic() const override;
     virtual bool validate_checksum() const override;
@@ -83,10 +82,11 @@ private:
     virtual uint32_t version() const override;
     virtual void signal_activity() override;
 
-    virtual void start_expiration();
+private:
+    void start_expiration();
     void handle_expiration(const code& ec);
 
-    virtual void start_inactivity();
+    void start_inactivity();
     void handle_inactivity(const code& ec);
 
     // These are thread safe.

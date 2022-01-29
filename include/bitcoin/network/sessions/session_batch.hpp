@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_BATCH_HPP
 #define LIBBITCOIN_NETWORK_SESSION_BATCH_HPP
 
+#include <cstddef>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -35,15 +36,12 @@ class BCT_API session_batch
   : public session
 {
 protected:
+    typedef std::function<void(const code&, channel::ptr)> channel_handler;
 
-    /// Construct an instance.
     session_batch(p2p& network);
-
-    /// Create a channel from the configured number of concurrent attempts.
     virtual void connect(channel_handler handler);
 
 private:
-    // Connect sequence
     void new_connect(channel_handler handler);
     void start_connect(const code& ec, const config::authority& host,
         channel_handler handler);

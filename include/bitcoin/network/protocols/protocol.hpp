@@ -50,12 +50,15 @@ namespace network {
 class BCT_API protocol
   : public enable_shared_from_base<protocol>, system::noncopyable
 {
+public:
+    void nop() volatile;
+
 protected:
     typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> result_handler;
 
-    /// Construct an instance.
     protocol(channel::ptr channel);
+    virtual ~protocol();
 
     /// Bind a method in the derived class.
     template <class Protocol, typename Handler, typename... Args>
@@ -93,38 +96,16 @@ protected:
             std::forward<result_handler>(complete));
     }
 
-    /// True if the strand is running in the thread.
-    virtual bool stranded() const;
+    bool stranded() const;
+    config::authority authority() const;
+    uint64_t nonce() const;
+    messages::version::ptr peer_version() const;
+    void set_peer_version(messages::version::ptr value);
+    uint32_t negotiated_version() const;
+    void set_negotiated_version(uint32_t value);
+    void stop(const code& ec);
 
-    /// Get the address of the channel.
-    virtual config::authority authority() const;
-
-    /// Get the channel nonce.
-    virtual uint64_t nonce() const;
-
-    /// Get the peer version message.
-    virtual messages::version::ptr peer_version() const;
-
-    /// Set the peer version message.
-    virtual void set_peer_version(messages::version::ptr value);
-
-    /// Get the negotiated protocol version.
-    virtual uint32_t negotiated_version() const;
-
-    /// Set the negotiated protocol version.
-    virtual void set_negotiated_version(uint32_t value);
-
-    // HACK: sessions may stop protocols.
-    friend class session;
-
-    /// Stop the protocol (and the channel).
-    virtual void stop(const code& ec);
-
-    /// Default send handler (no-op).
-    virtual void handle_send(const code& ec,
-        const std::string& command);
-
-    /// Define the protocol name, for logging.
+    virtual void handle_send(const code& ec, const std::string& command);
     virtual const std::string& name() const = 0;
 
 private:

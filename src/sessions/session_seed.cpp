@@ -98,7 +98,7 @@ void session_seed::handle_started(const code& ec,
 }
 
 void session_seed::attach_handshake(channel::ptr channel,
-    result_handler handle_started)
+    result_handler handshake)
 {
     // Don't use configured services or relay for seeding.
     const auto relay = false;
@@ -112,13 +112,13 @@ void session_seed::attach_handshake(channel::ptr channel,
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= messages::level::bip61)
-        attach<protocol_version_70002>(channel, network_, own_version,
+        channel->attach<protocol_version_70002>(network_, own_version,
             own_services, invalid_services, minimum_version, minimum_services,
-            relay)->start(handle_started);
+            relay)->start(handshake);
     else
-        attach<protocol_version_31402>(channel, network_, own_version,
+        channel->attach<protocol_version_31402>(network_, own_version,
             own_services, invalid_services, minimum_version, minimum_services)
-            ->start(handle_started);
+            ->start(handshake);
 }
 
 // Seed sequence.
@@ -194,14 +194,14 @@ void session_seed::attach_protocols(channel::ptr channel,
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
     if (version >= messages::level::bip31)
-        attach<protocol_ping_60001>(channel, heartbeat)->start();
+        channel->attach<protocol_ping_60001>(heartbeat)->start();
     else
-        attach<protocol_ping_31402>(channel, heartbeat)->start();
+        channel->attach<protocol_ping_31402>(heartbeat)->start();
 
     if (version >= messages::level::bip61)
-        attach<protocol_reject_70002>(channel)->start();
+        channel->attach<protocol_reject_70002>()->start();
 
-    attach<protocol_seed_31402>(channel, network_)->start(handler);
+    channel->attach<protocol_seed_31402>(network_)->start(handler);
 }
 
 void session_seed::handle_channel_stop(const code& ec)

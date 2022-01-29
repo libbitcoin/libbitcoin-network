@@ -61,11 +61,6 @@ proxy::~proxy()
 {
 }
 
-// Start/Stop.
-// ----------------------------------------------------------------------------
-// These calls may originate from outside the strand on any thread.
-
-// Start the read cycle.
 void proxy::start()
 {
     read_heading();
@@ -76,30 +71,12 @@ bool proxy::stopped() const
     return socket_->stopped();
 }
 
-// Protocols subscribe to channel stop.
-void proxy::subscribe_stop(result_handler&& handler)
-{
-    // Stop is posted to strand to protect socket and subscribers.
-    boost::asio::post(strand(),
-        std::bind(&proxy::do_subscribe_stop,
-            shared_from_this(), std::move(handler)));
-}
-
-// protected
-void proxy::do_subscribe_stop(result_handler handler)
-{
-    stop_subscriber_->subscribe(std::move(handler));
-}
-
 void proxy::stop(const code& ec)
 {
-    // Stop is posted to strand to protect socket and subscribers.
     boost::asio::post(strand(),
-        std::bind(&proxy::do_stop,
-            shared_from_this(), ec));
+        std::bind(&proxy::do_stop, shared_from_this(), ec));
 }
 
-// protected
 void proxy::do_stop(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -117,7 +94,20 @@ void proxy::do_stop(const code& ec)
     socket_->stop();
 }
 
-// Read cycle (read continues until stop).
+void proxy::subscribe_stop(result_handler&& handler, result_handler&& complete)
+{
+    // Stop is posted to strand to protect socket and subscribers.
+    boost::asio::post(strand(),
+        std::bind(&proxy::do_subscribe_stop,
+            shared_from_this(), std::move(handler), std::move(complete)));
+}
+
+void proxy::do_subscribe_stop(result_handler handler, result_handler complete)
+{
+    stop_subscriber_->subscribe(std::move(handler));
+}
+
+// Read cycle (read continues until stop called).
 // ----------------------------------------------------------------------------
 
 void proxy::read_heading()
@@ -132,8 +122,6 @@ void proxy::read_heading()
             shared_from_this(), _1, _2));
 }
 
-// private
-// Handle errors and invoke payload read.
 void proxy::handle_read_heading(const code& ec, size_t)
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -199,7 +187,6 @@ void proxy::read_payload(heading_ptr head)
             shared_from_this(), _1, _2, head));
 }
 
-// private
 // Handle errors and post message to subscribers.
 void proxy::handle_read_payload(const code& ec, size_t payload_size,
     heading_ptr head)
@@ -273,30 +260,22 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
 // Message send sequence.
 // ----------------------------------------------------------------------------
 
-// private
 void proxy::send(system::chunk_ptr payload, result_handler&& handler)
 {
-    // Sends are allowed to proceed after stop, but will be aborted.
-
     // Post handle_send to strand upon stop, error, or buffer fully sent.
     socket_->write(*payload,
         std::bind(&proxy::handle_send,
             shared_from_this(), _1, _2, payload, std::move(handler)));
 }
 
-// private
 void proxy::send(system::chunk_ptr payload, const result_handler& handler)
 {
-    // Sends are allowed to proceed after stop, but will be aborted.
-
     // Post handle_send to strand upon stop, error, or buffer fully sent.
     socket_->write(*payload,
         std::bind(&proxy::handle_send,
             shared_from_this(), _1, _2, payload, handler));
 }
 
-// private
-// Handle errors and invoke completion handler.
 void proxy::handle_send(const code& ec, size_t, system::chunk_ptr payload,
     const result_handler& handler)
 {
@@ -327,7 +306,6 @@ void proxy::handle_send(const code& ec, size_t, system::chunk_ptr payload,
 
     handler(ec);
 }
-
 
 // Properties.
 // ----------------------------------------------------------------------------

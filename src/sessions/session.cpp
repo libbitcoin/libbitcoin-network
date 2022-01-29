@@ -18,10 +18,11 @@
  */
 #include <bitcoin/network/sessions/session.hpp>
 
-#include <cstdint>
 #include <functional>
 #include <memory>
+#include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -38,84 +39,17 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-// protected
 session::session(p2p& network)
   : stopped_(true),
     network_(network)
 {
 }
 
-// protected
 session::~session()
 {
     BC_ASSERT_MSG(stopped(), "The session was not stopped.");
 }
 
-// Properties.
-// ----------------------------------------------------------------------------
-
-// protected
-bool session::stopped() const
-{
-    return stopped_.load(std::memory_order_relaxed);
-}
-
-// protected
-bool session::stopped(const code& ec) const
-{
-    return stopped() || ec == error::service_stopped;
-}
-
-// protected
-bool session::blacklisted(const config::authority& authority) const
-{
-    return contains(network_.network_settings().blacklists, authority);
-}
-
-// protected
-bool session::inbound() const
-{
-    // inbound session overrides.
-    return false;
-}
-
-// protected
-bool session::notify() const
-{
-    // seed session overrides.
-    return true;
-}
-
-duration session::cycle_delay(const code& ec)
-{
-    return (ec == error::success ||
-        ec == error::channel_timeout ||
-        ec == error::service_stopped) ? seconds(0) :
-            network_.network_settings().connect_timeout();
-}
-
-// Socket creators.
-// ----------------------------------------------------------------------------
-
-// protected
-acceptor::ptr session::create_acceptor()
-{
-    return std::make_shared<acceptor>(network_.service(),
-        network_.network_settings());
-}
-
-// protected
-connector::ptr session::create_connector()
-{
-    return std::make_shared<connector>(network_.service(),
-        network_.network_settings());
-}
-
-// Start sequence.
-// ----------------------------------------------------------------------------
-// These provide completion and early termination for seed session.
-
-// public
 void session::start(result_handler handler)
 {
     if (!stopped())
@@ -128,20 +62,18 @@ void session::start(result_handler handler)
     handler(error::success);
 }
 
-// public
-void session::stop(const code&)
+void session::stop()
 {
     stopped_.store(true, std::memory_order_relaxed);
 }
 
-// Registration start/stop sequence.
+// Channel sequence.
 // ----------------------------------------------------------------------------
 
-// protected
 void session::start_channel(channel::ptr channel, result_handler started,
     result_handler stopped)
 {
-    if (this->stopped())
+    if (session::stopped())
     {
         started(error::service_stopped);
         stopped(error::service_stopped);
@@ -150,32 +82,52 @@ void session::start_channel(channel::ptr channel, result_handler started,
 
     channel->start();
 
-    if (!inbound())
-        network_.pend(channel->nonce());
+    if (inbound())
+    {
+        start_channel_complete(channel, started, stopped);
+        return;
+    }
 
-    result_handler start = BIND4(handle_start, _1, channel, started, stopped);
-    attach_handshake(channel, BIND3(handle_handshake, _1, channel, start));
+    network_.pend(channel->nonce(),
+        BIND3(start_channel_complete, channel, started, std::move(stopped)));
 }
 
-// protected
+void session::start_channel_complete(channel::ptr channel, result_handler started,
+    result_handler stopped)
+{
+    result_handler start = BIND4(handle_start, _1, channel, started, stopped);
+    result_handler shake = BIND3(handle_handshake, _1, channel, std::move(start));
+
+    // channel::attach calls must be made from channel strand.
+    boost::asio::post(channel->strand(),
+        std::bind(&session::attach_handshake,
+            shared_from_this(), channel, std::move(shake)));
+}
+
 void session::attach_handshake(channel::ptr channel, result_handler handshake)
 {
-    if (channel->negotiated_version() >= messages::level::bip61)
-        attach<protocol_version_70002>(channel, network_)->start(handshake);
+    if (network_.network_settings().protocol_maximum >= messages::level::bip61)
+        channel->attach<protocol_version_70002>(network_)->start(handshake);
     else
-        attach<protocol_version_31402>(channel, network_)->start(handshake);
+        channel->attach<protocol_version_31402>(network_)->start(handshake);
 }
 
-// Privates.
-// ----------------------------------------------------------------------------
-
-// private
 void session::handle_handshake(const code& ec, channel::ptr channel,
     result_handler start)
 {
-    if (!inbound())
-        network_.unpend(channel->nonce());
+    if (inbound())
+    {
+        handle_handshake_complete(ec, channel, start);
+        return;
+    }
 
+    network_.unpend(channel->nonce(),
+        BIND3(handle_handshake_complete, ec, channel, std::move(start)));
+}
+
+void session::handle_handshake_complete(const code& ec, channel::ptr channel,
+    result_handler start)
+{
     if (ec)
     {
         start(ec);
@@ -185,7 +137,6 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
     network_.store(channel, notify(), inbound(), start);
 }
 
-// private
 void session::handle_start(const code& ec, channel::ptr channel,
     result_handler started, result_handler stopped)
 {
@@ -193,21 +144,66 @@ void session::handle_start(const code& ec, channel::ptr channel,
     {
         channel->stop(ec);
         stopped(ec);
-    }
-    else
-    {
-        channel->subscribe_stop(BIND3(handle_remove, _1, channel, stopped));
+        started(ec);
+        return;
     }
 
-    started(ec);
+    channel->subscribe_stop(BIND3(handle_stop, _1, channel, stopped),
+        std::move(started));
 }
 
-// private
-void session::handle_remove(const code&, channel::ptr channel,
+void session::handle_stop(const code&, channel::ptr channel,
     result_handler stopped)
 {
-    network_.unstore(channel);
-    stopped(error::success);
+    network_.unstore(channel, stopped);
+}
+
+// Properties.
+// ----------------------------------------------------------------------------
+
+bool session::stopped() const
+{
+    return stopped_.load(std::memory_order_relaxed);
+}
+
+bool session::stopped(const code& ec) const
+{
+    return stopped() || ec == error::service_stopped;
+}
+
+bool session::blacklisted(const config::authority& authority) const
+{
+    return contains(network_.network_settings().blacklists, authority);
+}
+
+duration session::cycle_delay(const code& ec)
+{
+    return (ec == error::success ||
+        ec == error::channel_timeout ||
+        ec == error::service_stopped) ? seconds(0) :
+            network_.network_settings().connect_timeout();
+}
+
+acceptor::ptr session::create_acceptor()
+{
+    return std::make_shared<acceptor>(network_.service(),
+        network_.network_settings());
+}
+
+connector::ptr session::create_connector()
+{
+    return std::make_shared<connector>(network_.service(),
+        network_.network_settings());
+}
+
+bool session::inbound() const
+{
+    return false;
+}
+
+bool session::notify() const
+{
+    return true;
 }
 
 } // namespace network
