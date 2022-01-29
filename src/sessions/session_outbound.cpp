@@ -42,7 +42,7 @@ session_outbound::session_outbound(p2p& network)
 
 void session_outbound::start(result_handler handler)
 {
-    if (settings_.outbound_connections == 0)
+    if (network_.network_settings().outbound_connections == 0)
     {
         handler(error::success);
         return;
@@ -60,7 +60,8 @@ void session_outbound::handle_started(const code& ec,
         return;
     }
 
-    for (size_t peer = 0; peer < settings_.outbound_connections; ++peer)
+    for (size_t peer = 0; peer < 
+        network_.network_settings().outbound_connections; ++peer)
         new_connection(error::success);
 
     // This is the end of the start sequence.
@@ -123,14 +124,15 @@ void session_outbound::attach_protocols(channel::ptr channel)
     attach<protocol_address_31402>(channel, network_)->start();
 }
 
-void session_outbound::attach_handshake_protocols(channel::ptr channel,
+void session_outbound::attach_handshake(channel::ptr channel,
     result_handler handle_started)
 {
-    const auto relay = settings_.relay_transactions;
-    const auto own_version = settings_.protocol_maximum;
-    const auto own_services = settings_.services;
-    const auto invalid_services = settings_.invalid_services;
-    const auto minimum_version = settings_.protocol_minimum;
+    const auto& settings = network_.network_settings();
+    const auto relay = settings.relay_transactions;
+    const auto own_version = settings.protocol_maximum;
+    const auto own_services = settings.services;
+    const auto invalid_services = settings.invalid_services;
+    const auto minimum_version = settings.protocol_minimum;
 
     // Require peer to serve network (and witness if configured on self).
     const auto min_service = (own_services & messages::service::node_witness) |
@@ -152,24 +154,6 @@ void session_outbound::handle_channel_stop(const code& ec,
     channel::ptr channel)
 {
     new_connection(error::success);
-}
-
-// Channel start sequence.
-// ----------------------------------------------------------------------------
-// Pend outgoing connections so we can detect connection to self.
-
-void session_outbound::start_channel(channel::ptr channel,
-    result_handler handle_started)
-{
-    network_.pend(channel->nonce());
-    session::start_channel(channel, BIND3(do_unpend, _1, channel, handle_started));
-}
-
-void session_outbound::do_unpend(const code& ec, channel::ptr channel,
-    result_handler handle_started)
-{
-    network_.unpend(channel->nonce());
-    handle_started(ec);
 }
 
 } // namespace network

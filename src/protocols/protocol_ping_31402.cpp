@@ -48,7 +48,7 @@ void protocol_ping_31402::start()
     // Timer/event start completes without invoking the handler.
     protocol_timer::start(BIND1(send_ping, _1));
 
-    SUBSCRIBE2(ping, handle_receive_ping, _1, _2);
+    SUBSCRIBE2(ping, {}, handle_receive_ping, _1, _2);
 
     // Send initial ping message by simulating first heartbeat.
     set_event(error::success);

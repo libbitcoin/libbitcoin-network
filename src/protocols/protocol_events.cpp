@@ -62,7 +62,7 @@ void protocol_events::start()
 }
 
 // START COMPLETES WITHOUT INVOKING THE HANDLER.
-void protocol_events::start(event_handler handle_event)
+void protocol_events::start(result_handler handle_event)
 {
     handler_ = handle_event;
 }

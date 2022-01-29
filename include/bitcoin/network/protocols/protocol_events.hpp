@@ -39,7 +39,7 @@ protected:
     virtual void start();
 
     /// The handler is invoked at each completion event.
-    virtual void start(event_handler handle_event);
+    virtual void start(result_handler handle_event);
 
     /// Invoke the event handler.
     virtual void set_event(const code& ec);
@@ -53,7 +53,7 @@ protected:
 private:
     void handle_stopped(const code& ec);
 
-    event_handler handler_;
+    result_handler handler_;
     std::atomic<bool> stopped_;
 };
 

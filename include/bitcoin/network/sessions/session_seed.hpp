@@ -49,12 +49,15 @@ public:
 
 protected:
     /// Overridden to set service and version mins upon session start.
-    void attach_handshake_protocols(channel::ptr channel,
+    void attach_handshake(channel::ptr channel,
         result_handler handle_started) override;
 
     /// Override to attach specialized protocols upon channel start.
     virtual void attach_protocols(channel::ptr channel,
         result_handler handler);
+
+    /// Override to preclude notify on connect.
+    virtual bool notify() const override;
 
 private:
     void start_seeding(size_t start_size, result_handler handler);

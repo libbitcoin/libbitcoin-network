@@ -28,6 +28,7 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -50,30 +51,31 @@ public:
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
     typedef std::function<bool(const code&, channel::ptr)> connect_handler;
-    typedef subscriber<code> stop_subscriber;
     typedef subscriber<code, channel::ptr> channel_subscriber;
+    typedef subscriber<code> stop_subscriber;
+
+    template <typename Message>
+    void broadcast(const Message& message, result_handler handler)
+    {
+        boost::asio::post(strand_,
+            std::bind(&p2p::do_broadcast<Message>,
+                this, system::to_shared(message), handler));
+    }
 
     template <typename Message>
     void broadcast(Message&& message, result_handler handler)
     {
-        post(strand_, std::bind(&p2p::do_broadcast<Message>, this,
-            system::to_shared(std::move(message)), handler));
+        boost::asio::post(strand_,
+            std::bind(&p2p::do_broadcast<Message>,
+                this, system::to_shared(std::move(message)), handler));
     }
 
     template <typename Message>
     void broadcast(typename Message::ptr message, result_handler handler)
     {
-        post(strand_, std::bind(&p2p::do_broadcast<Message>, this, message, std::ref(handler)));
-    }
-
-    /// Broadcast a message to all peers.
-    template <typename Message>
-    void do_broadcast(typename Message::ptr message, result_handler handler)
-    {
-        BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
-        for (const auto& channel: channels_)
-            channel->send<Message>(message, handler);
+        boost::asio::post(strand_,
+            std::bind(&p2p::do_broadcast<Message>,
+                this, message, handler));
     }
 
     // Constructors.
@@ -94,20 +96,18 @@ public:
     virtual void run(result_handler handler);
 
     /// Idempotent call to signal work stop, start may be reinvoked after.
-    /// Returns the result of the hosts file save operation.
     virtual void stop();
-
-    /// Determine if the network is stopped.
-    virtual bool stopped() const;
 
     // Subscriptions.
     // ------------------------------------------------------------------------
 
     /// Subscribe to connection creation events.
-    virtual void subscribe_connect(connect_handler handler);
+    virtual void subscribe_connect(connect_handler handler,
+        result_handler complete);
 
     /// Subscribe to service stop event.
-    virtual void subscribe_close(result_handler handler);
+    virtual void subscribe_close(result_handler handler,
+        result_handler complete);
 
     // Manual connections.
     // ----------------------------------------------------------------------------
@@ -136,6 +136,9 @@ public:
     /// Network strand is for sessions, but also hosts, subscribe and stop.
     virtual asio::strand& strand();
 
+    /// Is the strand running in this thread.
+    virtual bool stranded() const;
+
     // Hosts collection.
     // ------------------------------------------------------------------------
 
@@ -160,27 +163,26 @@ public:
     // Connection management.
     // ------------------------------------------------------------------------
 
-    ////virtual code pend(connector::ptr connector);
-    ////virtual void unpend(connector::ptr connector);
-
     virtual size_t channel_count() const;
     virtual void pend(uint64_t nonce);
-    virtual void unpend(uint64_t nonce);    
+    virtual void unpend(uint64_t nonce);
+    virtual void unstore(channel::ptr channel);
     virtual void store(channel::ptr channel, bool notify, bool inbound,
         result_handler handler);
-    virtual void unstore(channel::ptr channel);
 
 protected:
     /// Attach a session to the network, caller must start returned session.
     template <class Session, typename... Args>
     typename Session::ptr attach(Args&&... args)
     {
+        BC_ASSERT_MSG(stranded(), "do_subscribe_close");
+
         // Sessions are attached after network start.
         const auto session = std::make_shared<Session>(*this,
             std::forward<Args>(args)...);
 
         // Session lifetime is ensured by the network stop subscriber.
-        subscribe_close([=](const code& ec){ session->stop(ec); });
+        do_subscribe_close([=](const code& ec){ session->stop(ec); }, {});
         return session;
     }
 
@@ -191,16 +193,30 @@ protected:
     virtual session_outbound::ptr attach_outbound_session();
 
 private:
-    void handle_manual_started(const code& ec, result_handler handler);
-    void handle_inbound_started(const code& ec, result_handler handler);
-    void handle_hosts_loaded(const code& ec, result_handler handler);
+    template <typename Message>
+    void do_broadcast(typename Message::ptr message, result_handler handler)
+    {
+        BC_ASSERT_MSG(strand_.running_in_this_thread(), "channels_");
 
-    void handle_started(const code& ec, result_handler handler);
-    void handle_running(const code& ec, result_handler handler);
-    
+        for (const auto& channel: channels_)
+            channel->send<Message>(message, handler);
+    }
+
+    void handle_start(code ec, result_handler handler);
+    void handle_run(code ec, result_handler handler);
+
+    void do_start(result_handler handler);
+    void do_run(result_handler handler);
     void do_stop();
-    void do_subscribe_connect(connect_handler handler);
-    void do_subscribe_close(result_handler handler);
+  
+    void do_subscribe_connect(connect_handler handler, result_handler complete);
+    void do_subscribe_close(result_handler handler, result_handler complete);
+
+    // Distinct names required to bind.
+    void do_connect1(const config::endpoint& endpoint);
+    void do_connect2(const std::string& hostname, uint16_t port);
+    void do_connect3(const std::string& hostname, uint16_t port,
+        channel_handler handler);
 
     void do_load(const messages::address_item& host);
     void do_loads(const messages::address_items& hosts);
@@ -212,13 +228,12 @@ private:
     void do_pend(uint64_t nonce);
     void do_unpend(uint64_t nonce);
 
+    void do_unstore(channel::ptr channel);
     void do_store(channel::ptr channel, bool notify, bool inbound,
         result_handler handler);
-    void do_unstore(channel::ptr channel);
 
     // These are thread safe.
     const settings& settings_;
-    std::atomic<bool> stopped_;
     std::atomic<size_t> channel_count_;
 
     // These are not thread safe.

@@ -46,7 +46,7 @@ protocol_timer::protocol_timer(channel::ptr channel, const duration& timeout,
 // ----------------------------------------------------------------------------
 
 // protected:
-void protocol_timer::start(event_handler handle_event)
+void protocol_timer::start(result_handler handle_event)
 {
     // EVENTS START COMPLETES WITHOUT INVOKING THE HANDLER.
     // protocol_events retains this handler to be invoked multiple times.
@@ -56,7 +56,7 @@ void protocol_timer::start(event_handler handle_event)
 }
 
 void protocol_timer::handle_notify(const code& ec,
-    event_handler handler)
+    result_handler handler)
 {
     if (ec == error::channel_stopped)
         timer_->stop();

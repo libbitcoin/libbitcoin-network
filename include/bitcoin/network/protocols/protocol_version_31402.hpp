@@ -49,7 +49,7 @@ public:
         uint32_t own_version, uint64_t own_services, uint64_t invalid_services,
         uint32_t minimum_version, uint64_t minimum_services);
 
-    virtual void start(event_handler handle_event) override;
+    virtual void start(result_handler handle_event) override;
 
 protected:
     // Expose polymorphic start method from base.
@@ -60,7 +60,7 @@ protected:
 
     virtual bool handle_receive_version(const code& ec,
         messages::version::ptr version);
-    virtual bool handle_receive_version_acknowledge(const code& ec,
+    virtual bool handle_receive_acknowledge(const code& ec,
         messages::version_acknowledge::ptr);
 
     virtual const std::string& name() const override;

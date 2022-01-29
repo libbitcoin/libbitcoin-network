@@ -69,13 +69,12 @@ protocol_version_70002::protocol_version_70002(channel::ptr channel,
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_version_70002::start(event_handler handle_event)
+void protocol_version_70002::start(result_handler handle_event)
 {
     // VERSION/TIMER/EVENTS START COMPLETES WITHOUT INVOKING THE HANDLER.
-    // handle_event is invoked on the channel thread.
-    protocol_version_31402::start(handle_event);
 
-    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
+    protocol_version_31402::start(handle_event);
+    SUBSCRIBE2(reject, {}, handle_receive_reject, _1, _2);
 }
 
 version protocol_version_70002::version_factory() const
@@ -93,23 +92,13 @@ bool protocol_version_70002::sufficient_peer(version::ptr message)
 {
     if (message->value < minimum_version_)
     {
-        reject version_rejection
-        {
-            version::command,
-            reject::reason_code::obsolete
-        };
-
-        SEND2(std::move(version_rejection), handle_send, _1, reject::command);
+        SEND2((reject{ version::command, reject::reason_code::obsolete }),
+            handle_send, _1, reject::command);
     }
     else if ((message->services & minimum_services_) != minimum_services_)
     {
-        reject obsolete_rejection
-        {
-            version::command,
-            reject::reason_code::obsolete
-        };
-
-        SEND2(std::move(obsolete_rejection), handle_send, _1, reject::command);
+        SEND2((reject { version::command, reject::reason_code::obsolete }),
+            handle_send, _1, reject::command);
     }
 
     return protocol_version_31402::sufficient_peer(message);

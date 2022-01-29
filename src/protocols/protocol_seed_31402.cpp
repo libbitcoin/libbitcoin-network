@@ -48,10 +48,10 @@ protocol_seed_31402::protocol_seed_31402(channel::ptr channel, p2p& network)
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_seed_31402::start(event_handler handler)
+void protocol_seed_31402::start(result_handler handler)
 {
     const auto& settings = network_.network_settings();
-    const event_handler complete = BIND2(handle_seeding_complete, _1, handler);
+    const result_handler complete = BIND2(handle_seeding_complete, _1, handler);
 
     if (settings.host_pool_capacity == 0)
     {
@@ -66,7 +66,7 @@ void protocol_seed_31402::start(event_handler handler)
 
     ////protocol_timer::start(settings.channel_germination(), join_handler);
 
-    ////SUBSCRIBE2(address, handle_receive_address, _1, _2);
+    ////SUBSCRIBE2(address, {}, handle_receive_address, _1, _2);
     ////send_own_address(settings);
     ////SEND1(get_address{}, handle_send_get_address, _1);
 }
@@ -87,7 +87,7 @@ void protocol_seed_31402::send_own_address(const settings& settings)
 }
 
 void protocol_seed_31402::handle_seeding_complete(const code& ec,
-    event_handler handler)
+    result_handler handler)
 {
     handler(ec);
     stop(ec);

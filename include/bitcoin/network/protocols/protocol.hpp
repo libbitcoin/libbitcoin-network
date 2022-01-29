@@ -52,7 +52,7 @@ class BCT_API protocol
 {
 protected:
     typedef std::function<void()> completion_handler;
-    typedef std::function<void(const code&)> event_handler;
+    typedef std::function<void(const code&)> result_handler;
 
     /// Construct an instance.
     protocol(channel::ptr channel);
@@ -65,7 +65,6 @@ protected:
         return BOUND_PROTOCOL(handler, args);
     }
 
-    /// Send a copied message on the channel and handle the result.
     template <class Protocol, class Message, typename Handler, typename... Args>
     void send(const Message& message, Handler&& handler, Args&&... args)
     {
@@ -73,7 +72,6 @@ protected:
             BOUND_PROTOCOL(handler, args));
     }
 
-    /// Send a moved message on the channel and handle the result.
     template <class Protocol, class Message, typename Handler, typename... Args>
     void send(Message&& message, Handler&& handler, Args&&... args)
     {
@@ -81,19 +79,20 @@ protected:
             BOUND_PROTOCOL(handler, args));
     }
 
-    /// Send a referenced message on the channel and handle the result.
     template <class Protocol, class Message, typename Handler, typename... Args>
     void send(typename Message::ptr message, Handler&& handler, Args&&... args)
     {
         channel_->send<Message>(message, BOUND_PROTOCOL(handler, args));
     }
 
-    /// Subscribe to all channel messages, blocking until subscribed.
+    /// Subscribe to channel messages by type.
     template <class Protocol, class Message, typename Handler, typename... Args>
-    void subscribe(Handler&& handler, Args&&... args)
+    void subscribe(result_handler&& complete, Handler&& handler, Args&&... args)
     {
-        channel_->template subscribe<Message>(BOUND_PROTOCOL(handler, args));
+        channel_->template subscribe<Message>(BOUND_PROTOCOL(handler, args),
+            std::forward<result_handler>(complete));
     }
+
     /// True if the strand is running in the thread.
     virtual bool stranded() const;
 
@@ -145,10 +144,11 @@ private:
 #define SEND3(message, method, p1, p2, p3) \
     send<CLASS>(message, &CLASS::method, p1, p2, p3)
 
-#define SUBSCRIBE2(message, method, p1, p2) \
-    subscribe<CLASS, message>(&CLASS::method, p1, p2)
-#define SUBSCRIBE3(message, method, p1, p2, p3) \
-    subscribe<CLASS, message>(&CLASS::method, p1, p2, p3)
+// BUGBUG: Protocol subscribers are not waiting on completion handlers.
+#define SUBSCRIBE2(message, complete, method, p1, p2) \
+    subscribe<CLASS, message>(complete, &CLASS::method, p1, p2)
+#define SUBSCRIBE3(message, complete, method, p1, p2, p3) \
+    subscribe<CLASS, message>(complete, &CLASS::method, p1, p2, p3)
 
 } // namespace network
 } // namespace libbitcoin

@@ -28,7 +28,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -56,11 +56,11 @@ class BCT_API session
   : public enable_shared_from_base<session>, system::noncopyable
 {
 public:
-    typedef config::authority authority;
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
     typedef std::function<void(const code&, acceptor::ptr)> accept_handler;
-    typedef std::function<void(const code&, const authority&)> host_handler;
+    typedef std::function<void(const code&, const config::authority&)>
+        host_handler;
 
     /// Start the session.
     virtual void start(result_handler handler);
@@ -69,7 +69,7 @@ public:
     virtual void stop(const code& ec);
 
 protected:
-    session(p2p& network, bool notify_on_connect);
+    session(p2p& network);
     ~session();
 
     /// Template helpers.
@@ -96,21 +96,17 @@ protected:
         return BOUND_SESSION(handler, args);
     }
 
-    /// Delay timing for a tight failure loop, based on configured timeout.
-    inline duration cycle_delay(const code& ec)
-    {
-        return (
-            ec == error::channel_timeout ||
-            ec == error::service_stopped ||
-            ec == error::success) ? seconds(0) : settings_.connect_timeout();
-    }
-
     /// Properties.
     // ------------------------------------------------------------------------
 
     virtual bool stopped() const;
     virtual bool stopped(const code& ec) const;
     virtual bool blacklisted(const config::authority& authority) const;
+    virtual bool inbound() const;
+    virtual bool notify() const;
+
+    /// Delay timing for a tight failure loop, based on configured timeout.
+    duration cycle_delay(const code& ec);
 
     /// Socket creators.
     // ------------------------------------------------------------------------
@@ -125,21 +121,17 @@ protected:
     virtual void register_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
 
-    /// Start the channel, override to perform pending registration.
-    virtual void start_channel(channel::ptr channel,
+    /// Override to attach specialized handshake protocols.
+    virtual void attach_handshake(channel::ptr channel,
         result_handler handle_started);
 
-    /// Override to attach specialized handshake protocols upon session start.
-    virtual void attach_handshake_protocols(channel::ptr channel,
-        result_handler handle_started);
+    //-------------------------------------------------------------------------
 
-    /// The handshake is complete, override to perform loopback check.
-    virtual void handshake_complete(channel::ptr channel,
-        result_handler handle_started);
+    // This is thread safe.
+    std::atomic<bool> stopped_;
 
-    // TODO: create session_timer base class.
-    // Initialization order places this after privates.
-    const settings& settings_;
+    // This is not thread safe.
+    p2p& network_;
 
 private:
     void handle_handshake(const code& ec, channel::ptr channel,
@@ -148,14 +140,6 @@ private:
         result_handler handle_started, result_handler handle_stopped);
     void handle_remove(const code& ec, channel::ptr channel,
         result_handler handle_stopped);
-
-protected:
-    // This is not thread safe.
-    p2p& network_;
-
-    // These are thread safe.
-    std::atomic<bool> stopped_;
-    const bool notify_on_connect_;
 };
 
 #undef SESSION_ARGS

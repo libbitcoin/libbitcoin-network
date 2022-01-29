@@ -36,14 +36,14 @@ using namespace bc::system;
 using namespace std::placeholders;
 
 session_manual::session_manual(p2p& network)
-  : session(network, true)
+  : session(network),
+    attempt_limit_(network.network_settings().manual_attempt_limit)
 {
 }
 
 // Start sequence.
 // ----------------------------------------------------------------------------
 // Manual connections are always enabled.
-// Handshake pend not implemented for manual connections (connect to self ok).
 
 void session_manual::start(result_handler handler)
 {
@@ -75,8 +75,7 @@ void session_manual::connect(const std::string& hostname, uint16_t port)
 void session_manual::connect(const std::string& hostname, uint16_t port,
     channel_handler handler)
 {
-    start_connect(error::success, hostname, port,
-        settings_.manual_attempt_limit, handler);
+    start_connect(error::success, hostname, port, attempt_limit_, handler);
 }
 
 // The first connect is a sequence, which then spawns a cycle.
@@ -93,8 +92,6 @@ void session_manual::start_connect(const code&,
     const auto retries = floored_subtract(attempts, 1u);
     const auto connector = create_connector();
 
-    ////pend(connector);
-
     // CONNECT
     connector->connect(hostname, port,
         BIND7(handle_connect, _1, _2, hostname, port, retries, connector, handler));
@@ -104,12 +101,10 @@ void session_manual::handle_connect(const code& ec,
     channel::ptr channel, const std::string& hostname, uint16_t port,
     uint32_t remaining, connector::ptr connector, channel_handler handler)
 {
-    ////unpend(connector);
-
     if (ec)
     {
         // Retry forever if limit is zero.
-        remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
+        remaining = attempt_limit_ == 0 ? 1 : remaining;
 
         if (remaining > 0)
         {
@@ -136,7 +131,7 @@ void session_manual::handle_channel_start(const code& ec,
     if (ec)
     {
         // Retry forever if limit is zero.
-        remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
+        remaining = attempt_limit_ == 0 ? 1 : remaining;
 
         // This is a failure end of the connect sequence.
         // If stop handler won't retry, invoke handler with error.
@@ -177,7 +172,7 @@ void session_manual::handle_channel_stop(const code& ec,
         return;
 
     // Retry forever if limit is zero.
-    remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
+    remaining = attempt_limit_ == 0 ? 1 : remaining;
 
     if (remaining > 0)
     {
@@ -185,7 +180,7 @@ void session_manual::handle_channel_stop(const code& ec,
         return;
     }
 
-    // hit manual_attempt_limit, no restart.
+    // hit attempt limit, no restart.
 }
 
 } // namespace network

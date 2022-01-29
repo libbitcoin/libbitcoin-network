@@ -38,7 +38,7 @@ protected:
     protocol_timer(channel::ptr channel, const duration& timeout,
         bool perpetual=true);
 
-    virtual void start(event_handler handle_event);
+    virtual void start(result_handler handle_event);
 
     // Expose polymorphic start method from base.
     using protocol_events::start;
@@ -48,7 +48,7 @@ protected:
 
 private:
     void handle_timer(const code& ec);
-    void handle_notify(const code& ec, event_handler handler);
+    void handle_notify(const code& ec, result_handler handler);
 
     const duration timeout_;
     const bool perpetual_;

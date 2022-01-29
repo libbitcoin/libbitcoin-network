@@ -38,8 +38,8 @@ using namespace messages;
 using namespace std::placeholders;
 
 session_batch::session_batch(p2p& network)
-  : session(network, true),
-    batch_size_(std::max(settings_.connect_batch_size, 1u))
+  : session(network),
+    batch_size_(std::max(network.network_settings().connect_batch_size, 1u))
 {
 }
 
@@ -94,8 +94,6 @@ void session_batch::start_connect(const code& ec, const authority& host,
 
     const auto connector = create_connector();
 
-    ////pend(connector);
-
     // CONNECT
     connector->connect(host, BIND4(handle_connect, _1, _2, connector, handler));
 }
@@ -103,8 +101,6 @@ void session_batch::start_connect(const code& ec, const authority& host,
 void session_batch::handle_connect(const code& ec,
     channel::ptr channel, connector::ptr connector, channel_handler handler)
 {
-    ////unpend(connector);
-
     if (ec)
     {
         handler(ec, nullptr);

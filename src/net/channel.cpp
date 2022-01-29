@@ -40,7 +40,7 @@ using namespace std::placeholders;
 inline size_t payload_maximum(const settings& settings)
 {
     return heading::maximum_payload_size(settings.protocol_maximum,
-        !is_zero(settings.services & service::node_witness));
+        to_bool(settings.services & service::node_witness));
 }
 
 // Factory for fixed deadline timer pointer construction.
@@ -102,9 +102,9 @@ channel::channel(socket::ptr socket, const settings& settings)
   : proxy(socket),
     maximum_payload_(payload_maximum(settings)),
     protocol_magic_(settings.identifier),
+    channel_nonce_(pseudo_random::next<uint64_t>(1, max_uint64)),
     validate_checksum_(settings.validate_checksum),
     verbose_logging_(settings.verbose),
-    channel_nonce_(0),
     negotiated_version_(settings.protocol_maximum),
     peer_version_(std::make_shared<messages::version>()),
     expiration_(expiration(socket->strand(), settings.channel_expiration())),
@@ -144,14 +144,7 @@ void channel::do_stop(const code& ec)
 
 uint64_t channel::nonce() const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     return channel_nonce_;
-}
-
-void channel::set_nonce(uint64_t value)
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    channel_nonce_ = value;
 }
 
 uint32_t channel::negotiated_version() const

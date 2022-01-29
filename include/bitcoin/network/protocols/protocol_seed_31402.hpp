@@ -43,7 +43,7 @@ public:
 
     protocol_seed_31402(channel::ptr channel, p2p& network);
 
-    virtual void start(event_handler handle_event) override;
+    virtual void start(result_handler handle_event) override;
 
 protected:
     // Expose polymorphic start method from base.
@@ -55,7 +55,7 @@ protected:
     virtual void handle_send_get_address(const code& ec);
     ////virtual void handle_store_addresses(const code& ec);
     virtual void handle_seeding_complete(const code& ec,
-        event_handler handler);
+        result_handler handler);
 
     virtual bool handle_receive_address(const code& ec,
         messages::address::ptr address);

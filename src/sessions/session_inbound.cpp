@@ -33,10 +33,17 @@ using namespace bc::system;
 using namespace std::placeholders;
 
 session_inbound::session_inbound(p2p& network)
-  : session(network, true),
-    connection_limit_(settings_.inbound_connections +
-        settings_.outbound_connections + settings_.peers.size())
+  : session(network),
+    connection_limit_(
+        network.network_settings().inbound_connections +
+        network.network_settings().outbound_connections +
+        network.network_settings().peers.size())
 {
+}
+
+bool session_inbound::inbound() const
+{
+    return true;
 }
 
 // Start sequence.
@@ -44,7 +51,8 @@ session_inbound::session_inbound(p2p& network)
 
 void session_inbound::start(result_handler handler)
 {
-    if (settings_.inbound_port == 0 || settings_.inbound_connections == 0)
+    if (network_.network_settings().inbound_port == 0 ||
+        network_.network_settings().inbound_connections == 0)
     {
         handler(error::success);
         return;
@@ -65,7 +73,8 @@ void session_inbound::handle_started(const code& ec,
     acceptor_ = create_acceptor();
 
     // LISTEN
-    const auto start_ec = acceptor_->start(settings_.inbound_port);
+    const auto start_ec = acceptor_->start(
+        network_.network_settings().inbound_port);
 
     if (start_ec)
     {
@@ -111,8 +120,6 @@ void session_inbound::handle_accept(const code& ec,
     if (blacklisted(channel->authority()))
         return;
 
-    // Inbound connections can easily overflow in the case where manual and/or
-    // outbound connections at the time are not yet connected as configured.
     if (network_.channel_count() >= connection_limit_)
         return;
 
@@ -130,7 +137,6 @@ void session_inbound::handle_channel_start(const code& ec,
     attach_protocols(channel);
 }
 
-// Communication will begin after this function returns, freeing the thread.
 void session_inbound::attach_protocols(channel::ptr channel)
 {
     const auto version = channel->negotiated_version();
@@ -147,18 +153,8 @@ void session_inbound::attach_protocols(channel::ptr channel)
     attach<protocol_address_31402>(channel, network_)->start();
 }
 
-void session_inbound::handle_channel_stop(const code& ec)
+void session_inbound::handle_channel_stop(const code&)
 {
-}
-
-// Channel start sequence.
-// ----------------------------------------------------------------------------
-
-void session_inbound::handshake_complete(channel::ptr channel,
-    result_handler handle_started)
-{
-    // This will fail if the IP address or nonce is already connected.
-    network_.store(channel, notify_on_connect_, true, handle_started);
 }
 
 } // namespace network

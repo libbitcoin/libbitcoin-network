@@ -65,6 +65,7 @@ public:
     /// Stop has been signaled, work is stopping.
     virtual bool stopped() const;
 
+    // BUGBUG: async completion.
     /// Subscribe to proxy stop notifications (channels and protocols).
     /// No invocation occurs if the subscriber is stopped at time of subscribe.
     virtual void subscribe_stop(result_handler&& handler);
@@ -79,20 +80,24 @@ public:
     // ------------------------------------------------------------------------
 
     template <class Message>
-    void send(typename Message::ptr message, const result_handler handler)
+    void send(typename Message::ptr message, const result_handler& handler)
     {
-        // TODO: account for witness parameter here.
         using namespace messages;
         send(serialize(*message, protocol_magic(), version()), handler);
     }
 
-    /// Subscribe to messages of type Message received by the started socket.
-    /// Subscription handler is copied and retained in the queue until stop.
-    /// No invocation occurs if the subscriber is stopped at time of subscribe.
+    /// Subscribe to messages of type Message received by socket.
     template <class Message, typename Handler = pump::handler<Message>>
-    void subscribe(Handler&& handler)
+    void subscribe(Handler&& handler, result_handler&& complete)
     {
-        pump_subscriber_.subscribe(std::forward<Handler>(handler));
+        // C++14: move handlers into closure.
+        const auto self = shared_from_this();
+        boost::asio::post(strand(), [=]()
+        {
+            BC_ASSERT_MSG(self->stranded(), "pump_subscriber_");
+            self->pump_subscriber_.subscribe(std::move(handler));
+            complete(error::success);
+        });
     }
 
     // Properties.
@@ -110,7 +115,7 @@ public:
 
 protected:
     void do_stop(const code& ec);
-    void do_subscribe(result_handler handler);
+    void do_subscribe_stop(result_handler handler);
 
 private:
     typedef messages::heading::ptr heading_ptr;

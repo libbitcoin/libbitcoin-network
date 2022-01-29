@@ -46,12 +46,8 @@ public:
     void start(result_handler handler) override;
 
 protected:
-    /// Overridden to implement pending outbound channels.
-    void start_channel(channel::ptr channel,
-        result_handler handle_started) override;
-
     /// Overridden to attach minimum service level for witness support.
-    void attach_handshake_protocols(channel::ptr channel,
+    void attach_handshake(channel::ptr channel,
         result_handler handle_started) override;
 
     /// Override to attach specialized protocols upon channel start.
@@ -62,9 +58,6 @@ private:
 
     void handle_started(const code& ec, result_handler handler);
     void handle_connect(const code& ec, channel::ptr channel);
-
-    void do_unpend(const code& ec, channel::ptr channel,
-        result_handler handle_started);
 
     void handle_channel_stop(const code& ec, channel::ptr channel);
     void handle_channel_start(const code& ec, channel::ptr channel);

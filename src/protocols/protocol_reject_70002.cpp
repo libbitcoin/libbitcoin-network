@@ -52,7 +52,7 @@ void protocol_reject_70002::start()
     // protocol_events has a nop start only for this overload.
     protocol_events::start();
 
-    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
+    SUBSCRIBE2(reject, {}, handle_receive_reject, _1, _2);
 }
 
 // Protocol.

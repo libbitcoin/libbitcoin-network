@@ -64,7 +64,7 @@ public:
     // These are not thread safe, caller must be stranded.
 
     virtual uint64_t nonce() const;
-    virtual void set_nonce(uint64_t value);
+    ////virtual void set_nonce(uint64_t value);
 
     virtual uint32_t negotiated_version() const;
     virtual void set_negotiated_version(uint32_t value);
@@ -92,11 +92,11 @@ private:
     // These are thread safe.
     const size_t maximum_payload_;
     const uint32_t protocol_magic_;
+    const uint64_t channel_nonce_;
     const bool validate_checksum_;
     const bool verbose_logging_;
 
     // These are not thread safe.
-    uint64_t channel_nonce_;
     uint32_t negotiated_version_;
     messages::version::ptr peer_version_;
     deadline::ptr expiration_;

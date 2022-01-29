@@ -45,7 +45,7 @@ protected:
 private:
     // Connect sequence
     void new_connect(channel_handler handler);
-    void start_connect(const code& ec, const authority& host,
+    void start_connect(const code& ec, const config::authority& host,
         channel_handler handler);
     void handle_connect(const code& ec, channel::ptr channel,
         connector::ptr connector, channel_handler handler);

@@ -71,11 +71,11 @@ void protocol_address_31402::start()
     }
 
     // If we can't store addresses we don't ask for or handle them.
-    if (settings.host_pool_capacity == 0)
+    if (is_zero(settings.host_pool_capacity))
         return;
 
-    SUBSCRIBE2(address, handle_receive_address, _1, _2);
-    SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
+    SUBSCRIBE2(address, {}, handle_receive_address, _1, _2);
+    SUBSCRIBE2(get_address, {}, handle_receive_get_address, _1, _2);
     SEND2(get_address{}, handle_send, _1, get_address::command);
 }
 

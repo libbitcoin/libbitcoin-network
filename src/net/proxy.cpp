@@ -81,12 +81,12 @@ void proxy::subscribe_stop(result_handler&& handler)
 {
     // Stop is posted to strand to protect socket and subscribers.
     boost::asio::post(strand(),
-        std::bind(&proxy::do_subscribe,
+        std::bind(&proxy::do_subscribe_stop,
             shared_from_this(), std::move(handler)));
 }
 
 // protected
-void proxy::do_subscribe(result_handler handler)
+void proxy::do_subscribe_stop(result_handler handler)
 {
     stop_subscriber_->subscribe(std::move(handler));
 }

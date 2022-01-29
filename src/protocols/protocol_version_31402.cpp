@@ -73,7 +73,7 @@ protocol_version_31402::protocol_version_31402(channel::ptr channel,
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_version_31402::start(event_handler /*handle_event*/)
+void protocol_version_31402::start(result_handler /*handle_event*/)
 {
     // TODO: just use a state member variable, this is stranded.
 
@@ -86,16 +86,17 @@ void protocol_version_31402::start(event_handler /*handle_event*/)
     ////// handle_event is invoked on the channel thread.
     ////protocol_timer::start(join_handler);
 
-    SUBSCRIBE2(version, handle_receive_version, _1, _2);
-    SUBSCRIBE2(version_acknowledge, handle_receive_version_acknowledge, _1, _2);
+    SUBSCRIBE2(version, {}, handle_receive_version, _1, _2);
+    SUBSCRIBE2(version_acknowledge, {}, handle_receive_acknowledge, _1, _2);
     SEND2(version_factory(), handle_send, _1, version::command);
 }
 
+// TODO: allow for node to inject top height.
 messages::version protocol_version_31402::version_factory() const
 {
     const auto timestamp = static_cast<uint32_t>(zulu_time());
     const auto& settings = network_.network_settings();
-    const auto height = 42u;//// network_.top_block().height();
+    const auto height = zero;//// network_.top_block().height();
 
     BC_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
 
@@ -204,7 +205,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
 bool protocol_version_31402::sufficient_peer(version::ptr message)
 {
-    if ((message->services & invalid_services_) != 0)
+    if (to_bool(message->services & invalid_services_))
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Invalid peer network services (" << message->services
@@ -231,7 +232,7 @@ bool protocol_version_31402::sufficient_peer(version::ptr message)
     return true;
 }
 
-bool protocol_version_31402::handle_receive_version_acknowledge(const code& ec,
+bool protocol_version_31402::handle_receive_acknowledge(const code& ec,
     version_acknowledge::ptr)
 {
     if (stopped(ec))

@@ -18,35 +18,34 @@
  */
 #include <bitcoin/network/sessions/session.hpp>
 
-#include <algorithm>
-#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 #define CLASS session
 #define NAME "session"
-    
+
 using namespace bc::system;
 using namespace std::placeholders;
 
-session::session(p2p& network, bool notify_on_connect)
+// protected
+session::session(p2p& network)
   : stopped_(true),
-    notify_on_connect_(notify_on_connect),
-    network_(network),
-    settings_(network.network_settings())
+    network_(network)
 {
 }
 
+// protected
 session::~session()
 {
     BC_ASSERT_MSG(stopped(), "The session was not stopped.");
@@ -54,39 +53,69 @@ session::~session()
 
 // Properties.
 // ----------------------------------------------------------------------------
-// protected
 
+// protected
 bool session::stopped() const
 {
-    return stopped_;
+    return stopped_.load(std::memory_order_relaxed);
 }
 
+// protected
 bool session::stopped(const code& ec) const
 {
     return stopped() || ec == error::service_stopped;
 }
 
-bool session::blacklisted(const authority& authority) const
+// protected
+bool session::blacklisted(const config::authority& authority) const
 {
-    return contains(settings_.blacklists, authority);
+    return contains(network_.network_settings().blacklists, authority);
+}
+
+// protected
+bool session::inbound() const
+{
+    // inbound session overrides.
+    return false;
+}
+
+// protected
+bool session::notify() const
+{
+    // seed session overrides.
+    return true;
+}
+
+duration session::cycle_delay(const code& ec)
+{
+    return (ec == error::success ||
+        ec == error::channel_timeout ||
+        ec == error::service_stopped) ? seconds(0) :
+            network_.network_settings().connect_timeout();
 }
 
 // Socket creators.
 // ----------------------------------------------------------------------------
 
+// protected
 acceptor::ptr session::create_acceptor()
 {
-    return std::make_shared<acceptor>(network_.service(), settings_);
+    return std::make_shared<acceptor>(network_.service(),
+        network_.network_settings());
 }
 
+// protected
 connector::ptr session::create_connector()
 {
-    return std::make_shared<connector>(network_.service(), settings_);
+    return std::make_shared<connector>(network_.service(),
+        network_.network_settings());
 }
 
 // Start sequence.
 // ----------------------------------------------------------------------------
+// These provide completion and early termination for seed session.
 
+// public
 void session::start(result_handler handler)
 {
     if (!stopped())
@@ -95,109 +124,90 @@ void session::start(result_handler handler)
         return;
     }
 
-    stopped_ = false;
-
-    // This is the end of the start sequence.
+    stopped_.store(false, std::memory_order_relaxed);
     handler(error::success);
 }
 
-// override to log session stop.
+// public
 void session::stop(const code&)
 {
-    // This is entirely passive.
-    stopped_ = true;
+    stopped_.store(true, std::memory_order_relaxed);
 }
 
 // Registration start/stop sequence.
 // ----------------------------------------------------------------------------
-// Must not change context in start or stop sequences (use bind).
 
-void session::register_channel(channel::ptr channel,
-    result_handler handle_started1, result_handler handle_stopped1)
+// protected
+void session::register_channel(channel::ptr channel, result_handler started,
+    result_handler stopped)
 {
-    if (stopped())
+    if (this->stopped())
     {
-        handle_started1(error::service_stopped);
-        handle_stopped1(error::service_stopped);
+        started(error::service_stopped);
+        stopped(error::service_stopped);
         return;
     }
 
-    // must set nonce before start_channel
-    channel->set_nonce(pseudo_random::next<uint64_t>(1, max_uint64));
-
-    start_channel(channel,
-        BIND4(handle_start, _1, channel, handle_started1, handle_stopped1));
-}
-
-void session::start_channel(channel::ptr channel,
-    result_handler handle_started2)
-{
     channel->start();
 
-    attach_handshake_protocols(channel,
-        BIND3(handle_handshake, _1, channel, handle_started2));
+    if (!inbound())
+        network_.pend(channel->nonce());
+
+    result_handler start = BIND4(handle_start, _1, channel, started, stopped);
+    attach_handshake(channel, BIND3(handle_handshake, _1, channel, start));
 }
 
-// Channel communication begins after version protocol start returns.
-// handle_handshake is invoked after version negotiation completes.
-void session::attach_handshake_protocols(channel::ptr channel,
-    result_handler handle_started3)
+// protected
+void session::attach_handshake(channel::ptr channel, result_handler handshake)
 {
-    // Reject messages are not handled until bip61 (70002).
-    // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= messages::level::bip61)
-        attach<protocol_version_70002>(channel, network_)->
-            start(handle_started3);
+        attach<protocol_version_70002>(channel, network_)->start(handshake);
     else
-        attach<protocol_version_31402>(channel, network_)->
-            start(handle_started3);
+        attach<protocol_version_31402>(channel, network_)->start(handshake);
 }
 
+// Privates.
+// ----------------------------------------------------------------------------
+
+// private
 void session::handle_handshake(const code& ec, channel::ptr channel,
-    result_handler handle_started2)
+    result_handler start)
 {
+    if (!inbound())
+        network_.unpend(channel->nonce());
+
     if (ec)
     {
-        handle_started2(ec);
+        start(ec);
         return;
     }
 
-    handshake_complete(channel, handle_started2);
+    network_.store(channel, notify(), inbound(), start);
 }
 
-void session::handshake_complete(channel::ptr channel,
-    result_handler handle_started2)
-{
-    // This will fail if the IP address is already connected.
-    network_.store(channel, notify_on_connect_, false, handle_started2);
-}
-
+// private
 void session::handle_start(const code& ec, channel::ptr channel,
-    result_handler handle_started1, result_handler handle_stopped1)
+    result_handler started, result_handler stopped)
 {
     if (ec)
     {
         channel->stop(ec);
-        handle_stopped1(ec);
+        stopped(ec);
     }
     else
     {
-        // Started, and eventual stop will cause removal.
-        channel->subscribe_stop(
-            BIND3(handle_remove, _1, channel, handle_stopped1));
+        channel->subscribe_stop(BIND3(handle_remove, _1, channel, stopped));
     }
 
-    // This is the end of the registration start sequence.
-    handle_started1(ec);
+    started(ec);
 }
 
+// private
 void session::handle_remove(const code&, channel::ptr channel,
-    result_handler handle_stopped1)
+    result_handler stopped)
 {
     network_.unstore(channel);
-
-    // This is the end of the registration stop sequence.
-    handle_stopped1(error::success);
+    stopped(error::success);
 }
 
 } // namespace network

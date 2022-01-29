@@ -75,6 +75,8 @@ private:
     void handle_channel_stop(const code& ec,
         const std::string& hostname, uint16_t port, uint32_t remaining,
         channel_handler handler);
+
+    uint32_t attempt_limit_;
 };
 
 } // namespace network

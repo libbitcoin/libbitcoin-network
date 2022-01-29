@@ -39,8 +39,13 @@ using namespace bc::system;
 using namespace std::placeholders;
 
 session_seed::session_seed(p2p& network)
-  : session(network, false)
+  : session(network)
 {
+}
+
+bool session_seed::notify() const
+{
+    return false;
 }
 
 // Start sequence.
@@ -48,7 +53,7 @@ session_seed::session_seed(p2p& network)
 
 void session_seed::start(result_handler handler)
 {
-    if (settings_.host_pool_capacity == 0)
+    if (network_.network_settings().host_pool_capacity == 0)
     {
         LOG_INFO(LOG_NETWORK)
             << "Not configured to populate an address pool.";
@@ -79,7 +84,7 @@ void session_seed::handle_started(const code& ec,
         return;
     }
 
-    if (settings_.seeds.empty())
+    if (network_.network_settings().seeds.empty())
     {
         LOG_ERROR(LOG_NETWORK)
             << "Seeding is required but no seeds are configured.";
@@ -92,15 +97,16 @@ void session_seed::handle_started(const code& ec,
     start_seeding(start_size, handler);
 }
 
-void session_seed::attach_handshake_protocols(channel::ptr channel,
+void session_seed::attach_handshake(channel::ptr channel,
     result_handler handle_started)
 {
     // Don't use configured services or relay for seeding.
     const auto relay = false;
-    const auto own_version = settings_.protocol_maximum;
+    const auto& settings = network_.network_settings();
+    const auto own_version = settings.protocol_maximum;
     const auto own_services = messages::service::node_none;
-    const auto invalid_services = settings_.invalid_services;
-    const auto minimum_version = settings_.protocol_minimum;
+    const auto invalid_services = settings.invalid_services;
+    const auto minimum_version = settings.protocol_minimum;
     const auto minimum_services = messages::service::node_none;
 
     // Reject messages are not handled until bip61 (70002).
@@ -142,7 +148,6 @@ void session_seed::start_seed(const config::endpoint& seed,
     }
 
     const auto connector = create_connector();
-////    pend(connector);
 
     // OUTBOUND CONNECT
     connector->connect(seed,
@@ -153,8 +158,6 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
     const config::endpoint& seed, connector::ptr connector,
     result_handler handler)
 {
-////    unpend(connector);
-
     if (ec)
     {
         handler(ec);

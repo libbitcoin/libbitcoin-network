@@ -49,7 +49,7 @@ public:
         uint32_t own_version, uint64_t own_services, uint64_t invalid_services,
         uint32_t minimum_version, uint64_t minimum_services, bool relay);
 
-    void start(event_handler handle_event) override;
+    void start(result_handler handle_event) override;
 
 protected:
     messages::version version_factory() const override;
