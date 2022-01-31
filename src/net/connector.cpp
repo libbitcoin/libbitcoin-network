@@ -39,26 +39,18 @@ using namespace std::placeholders;
 // Construct.
 // ---------------------------------------------------------------------------
 
-connector::connector(asio::io_context& service, const settings& settings)
+connector::connector(asio::strand& strand, asio::io_context& service,
+    const settings& settings)
   : settings_(settings),
     service_(service),
-    strand_(service_.get_executor()),
+    strand_(strand),
     timer_(std::make_shared<deadline>(strand_, settings_.connect_timeout())),
     resolver_(strand_),
     stopped_(true)
 {
 }
 
-// Stop.
-// ---------------------------------------------------------------------------
-
-void connector::stop(const code&)
-{
-    post(strand_, std::bind(&connector::do_stop, shared_from_this()));
-}
-
-// protected
-void connector::do_stop()
+void connector::stop()
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -86,20 +78,10 @@ void connector::connect(const authority& authority, connect_handler&& handler)
 void connector::connect(const std::string& hostname, uint16_t port,
     connect_handler&& handler)
 {
-    // hostname is copied by std::bind, may be discarded by caller.
-    post(strand_,
-        std::bind(&connector::do_resolve,
-            shared_from_this(), hostname, port, std::move(handler)));
-}
-
-// protected
-void connector::do_resolve(const std::string& hostname, uint16_t port,
-    connect_handler handler)
-{
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     // Enables reusability.
-    stopped_ = true;
+    stopped_ = false;
 
     // The handler is copied by std::bind.
     // Posts timer handler to strand (if not expired).
@@ -108,7 +90,6 @@ void connector::do_resolve(const std::string& hostname, uint16_t port,
         std::bind(&connector::handle_timer,
             shared_from_this(), _1, handler));
 
-    // io_context is noncopyable, so this references the constructor parameter.
     const auto socket = std::make_shared<network::socket>(service_);
 
     // async_resolve copies string parameters.

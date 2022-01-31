@@ -50,8 +50,6 @@ bool protocol::stranded() const
     return channel_->stranded();
 }
 
-// Protocol start methods conventionally do not invoke the passed handler.
-
 config::authority protocol::authority() const
 {
     return channel_->authority();
@@ -82,13 +80,11 @@ void protocol::set_negotiated_version(uint32_t value)
     channel_->set_negotiated_version(value);
 }
 
-// Stop the channel.
 void protocol::stop(const code& ec)
 {
     channel_->stop(ec);
 }
 
-// protected
 void protocol::handle_send(const code&, const std::string&)
 {
     // Send and receive failures are logged by the proxy.

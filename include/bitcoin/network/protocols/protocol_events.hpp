@@ -33,7 +33,6 @@ class BCT_API protocol_events
   : public protocol
 {
 protected:
-
     protocol_events(channel::ptr channel);
 
     virtual void start();

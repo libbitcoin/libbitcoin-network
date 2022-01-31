@@ -75,25 +75,28 @@ protocol_version_31402::protocol_version_31402(channel::ptr channel,
 
 void protocol_version_31402::start(result_handler /*handle_event*/)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     // TODO: just use a state member variable, this is stranded.
 
     ////// TODO: add custom handle_send here and make this 3 events (see seed).
     ////const auto join_handler = synchronize(handle_event, 2, "TODO",
     ////    synchronizer_terminate::on_error);
 
-    ////// TIMER/EVENTS START COMPLETES WITHOUT INVOKING THE HANDLER.
     ////// protocol_events retains join_handler to be invoked multiple times.
     ////// handle_event is invoked on the channel thread.
     ////protocol_timer::start(join_handler);
 
-    SUBSCRIBE2(version, {}, handle_receive_version, _1, _2);
-    SUBSCRIBE2(version_acknowledge, {}, handle_receive_acknowledge, _1, _2);
+    SUBSCRIBE2(version, handle_receive_version, _1, _2);
+    SUBSCRIBE2(version_acknowledge, handle_receive_acknowledge, _1, _2);
     SEND2(version_factory(), handle_send, _1, version::command);
 }
 
 // TODO: allow for node to inject top height.
 messages::version protocol_version_31402::version_factory() const
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     const auto timestamp = static_cast<uint32_t>(zulu_time());
     const auto& settings = network_.network_settings();
     const auto height = zero;//// network_.top_block().height();
@@ -132,6 +135,8 @@ messages::version protocol_version_31402::version_factory() const
 void protocol_version_31402::handle_receive_version(const code& ec,
     version::ptr message)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped(ec))
         return;
 
@@ -204,6 +209,8 @@ void protocol_version_31402::handle_receive_version(const code& ec,
 
 bool protocol_version_31402::sufficient_peer(version::ptr message)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (to_bool(message->services & invalid_services_))
     {
         LOG_DEBUG(LOG_NETWORK)
@@ -234,6 +241,8 @@ bool protocol_version_31402::sufficient_peer(version::ptr message)
 void protocol_version_31402::handle_receive_acknowledge(const code& ec,
     version_acknowledge::ptr)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped(ec))
         return;
 

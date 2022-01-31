@@ -39,13 +39,14 @@ using namespace std::placeholders;
 // handlers for any asynchronous operations performed on the acceptor."
 // Calls are stranded to protect the acceptor member.
 
-acceptor::acceptor(asio::io_context& service, const settings& settings)
+acceptor::acceptor(asio::strand& strand, asio::io_context& service,
+    const settings& settings)
   : settings_(settings),
     service_(service),
-    strand_(service_.get_executor()),
+    strand_(strand),
     timer_(std::make_shared<deadline>(strand_, settings_.connect_timeout())),
     acceptor_(strand_),
-    stopped_(false)
+    stopped_(true)
 {
 }
 
@@ -75,12 +76,6 @@ code acceptor::start(uint16_t port)
 
 void acceptor::stop()
 {
-    post(strand_, std::bind(&acceptor::do_stop, shared_from_this()));
-}
-
-// protected
-void acceptor::do_stop()
-{
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     // Posts handle_accept to strand.
@@ -97,18 +92,10 @@ void acceptor::do_stop()
 
 void acceptor::accept(accept_handler&& handler)
 {
-    post(strand_,
-        std::bind(&acceptor::do_accept,
-            shared_from_this(), std::move(handler)));
-}
-
-// protected
-void acceptor::do_accept(accept_handler handler)
-{
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     // Enables reusability.
-    stopped_ = true;
+    stopped_ = false;
 
     // The handler is copied by std::bind.
     // Posts timer handler to strand (if not expired).
@@ -117,8 +104,6 @@ void acceptor::do_accept(accept_handler handler)
         std::bind(&acceptor::handle_timer,
             shared_from_this(), _1, handler));
 
-    // Calls on socket are unsafe during socket->accept (ok).
-    // io_context is noncopyable, so this references the constructor parameter.
     const auto socket = std::make_shared<network::socket>(service_);
 
     // Posts handle_accept to strand.

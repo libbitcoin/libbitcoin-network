@@ -31,7 +31,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// This class is thread safe.
+/// Not thread safe.
 /// Create inbound socket connections.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API acceptor
@@ -46,18 +46,16 @@ public:
     // ------------------------------------------------------------------------
 
     /// Construct an instance.
-    /// Connector strand is self-contained.
-    acceptor(asio::io_context& service, const settings& settings);
+    acceptor(asio::strand& strand, asio::io_context& service,
+        const settings& settings);
 
-    // Stop.
+    // Start/stop.
     // ------------------------------------------------------------------------
 
     /// Start the listener on the specified port (call only once).
     virtual code start(uint16_t port);
 
     /// Cancel work and close the acceptor (idempotent).
-    /// This action is deferred to the strand, not immediately affected.
-    /// Block on threadpool.join() to ensure termination of the acceptor.
     virtual void stop();
 
     // Methods.
@@ -69,10 +67,6 @@ public:
     /// Accept next connection available until stop or timeout, starts timer.
     virtual void accept(accept_handler&& handler);
 
-protected:
-    void do_stop();
-    void do_accept(accept_handler handler);
-
 private:
     void handle_accept(const code& ec, socket::ptr socket,
         const accept_handler& handler);
@@ -81,7 +75,7 @@ private:
     // These are thread safe.
     const settings& settings_;
     asio::io_context& service_;
-    asio::strand strand_;
+    asio::strand& strand_;
 
     // These are protected by strand.
     deadline::ptr timer_;

@@ -35,25 +35,6 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-// Socket creates a strand from the threadpool, posting all handlers to it.
-// Socket will only self destruct when there are no more references to it.
-// Once the I/O context is canceled and handlers completed, the threadpool
-// will join, yet the object will not destruct if handler references remain.
-// This means that all self-referential handlers must be deleted, as well as
-// any cached references (such as a connection pool). Canceling the I/O service
-// will release (invoke) and pent handlers, but does not clear our subscriber
-// queue - this must be explicitly stopped. The asio socket will stop upon 
-// destruct of this class, but the class cannot destruct until all pending
-// asynchrous operation handlers have been deleted. It should be the case that
-// stopping the I/O service releases all such handlers, allowing the socket to
-// stop on destruct. So network stop and join of the threadpool ensures
-// termination of all work with the exception of our subscribers. But
-// individual channel termination requires explicit stop of the subscriber,
-// socket and any other pending asynchronous calls (such as timers), since the
-// strand does not support cancelation. So the socket and derived classes
-// (channel) must provide explit stop methods, clearing subscribers and
-// canceling all asynchronous operations.
-
 // Construction.
 // ----------------------------------------------------------------------------
 // Boost: "The execution context provides the I/O executor that the socket will
@@ -124,14 +105,14 @@ void socket::accept(asio::acceptor& acceptor, result_handler&& handler)
 
 void socket::connect(const asio::resolved& it, result_handler&& handler)
 {
-    boost::asio::post(strand_,
+    boost::asio::dispatch(strand_,
         std::bind(&socket::do_connect,
             shared_from_this(), it, std::move(handler)));
 }
 
 void socket::read(const data_slab& out, io_handler&& handler)
 {
-    boost::asio::post(strand_,
+    boost::asio::dispatch(strand_,
         std::bind(&socket::do_read, shared_from_this(),
             boost::asio::mutable_buffer{ out.data(), out.size() },
             std::move(handler)));
@@ -139,7 +120,7 @@ void socket::read(const data_slab& out, io_handler&& handler)
 
 void socket::write(const data_slice& in, io_handler&& handler)
 {
-    boost::asio::post(strand_,
+    boost::asio::dispatch(strand_,
         std::bind(&socket::do_write, shared_from_this(),
             boost::asio::const_buffer{ in.data(), in.size() },
             std::move(handler)));

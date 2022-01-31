@@ -48,7 +48,8 @@ protocol_timer::protocol_timer(channel::ptr channel, const duration& timeout,
 // protected:
 void protocol_timer::start(result_handler handle_event)
 {
-    // EVENTS START COMPLETES WITHOUT INVOKING THE HANDLER.
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     // protocol_events retains this handler to be invoked multiple times.
     // handle_event is invoked on the channel thread.
     protocol_events::start(BIND2(handle_notify, _1, handle_event));
@@ -58,6 +59,8 @@ void protocol_timer::start(result_handler handle_event)
 void protocol_timer::handle_notify(const code& ec,
     result_handler handler)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (ec == error::channel_stopped)
         timer_->stop();
 
@@ -70,6 +73,8 @@ void protocol_timer::handle_notify(const code& ec,
 // protected:
 void protocol_timer::reset_timer()
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped())
         return;
 

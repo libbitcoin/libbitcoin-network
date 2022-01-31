@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_IPP
 #define LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_IPP
 
-#include <boost/asio.hpp>
+////#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {
@@ -27,8 +27,7 @@ namespace network {
 
 template <typename... Args>
 subscriber<Args...>::subscriber(asio::strand& strand) noexcept
-  : strand_(strand),
-    stopped_(false)
+  : strand_(strand), stopped_(false)
 {
 }
 
@@ -55,10 +54,14 @@ void subscriber<Args...>::notify(const Args&... args) const noexcept
     if (stopped_)
         return;
 
-    // std::bind copies handler and args for each post (including refs).
-    // Post all to strand, non-blocking, cannot internally execute handler.
+    ////// std::bind copies handler and args for each post (including refs).
+    ////// Post all to strand, non-blocking, cannot internally execute handler.
+    ////for (const auto& handler: queue_)
+    ////    boost::asio::post(strand_, std::bind(handler, args...));
+
+    // We are already on the strand to protect queue_, so execute each handler.
     for (const auto& handler: queue_)
-        boost::asio::post(strand_, std::bind(handler, args...));
+        handler(args...);
 }
 
 template <typename... Args>

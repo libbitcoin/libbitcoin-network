@@ -50,6 +50,8 @@ protocol_seed_31402::protocol_seed_31402(channel::ptr channel, p2p& network)
 
 void protocol_seed_31402::start(result_handler handler)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     const auto& settings = network_.network_settings();
     const result_handler complete = BIND2(handle_seeding_complete, _1, handler);
 
@@ -66,7 +68,7 @@ void protocol_seed_31402::start(result_handler handler)
 
     ////protocol_timer::start(settings.channel_germination(), join_handler);
 
-    ////SUBSCRIBE2(address, {}, handle_receive_address, _1, _2);
+    ////SUBSCRIBE2(address, handle_receive_address, _1, _2);
     ////send_own_address(settings);
     ////SEND1(get_address{}, handle_send_get_address, _1);
 }
@@ -76,7 +78,9 @@ void protocol_seed_31402::start(result_handler handler)
 
 void protocol_seed_31402::send_own_address(const settings& settings)
 {
-    if (settings.self.port() == 0)
+    BC_ASSERT_MSG(stranded(), "stranded");
+
+    if (is_zero(settings.self.port()))
     {
         set_event(error::success);
         return;
@@ -89,6 +93,8 @@ void protocol_seed_31402::send_own_address(const settings& settings)
 void protocol_seed_31402::handle_seeding_complete(const code& ec,
     result_handler handler)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     handler(ec);
     stop(ec);
 }
@@ -96,6 +102,8 @@ void protocol_seed_31402::handle_seeding_complete(const code& ec,
 void protocol_seed_31402::handle_receive_address(const code& ec,
     address::ptr message)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped(ec))
         return;
 
@@ -110,6 +118,8 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
 
 void protocol_seed_31402::handle_send_address(const code& ec)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped(ec))
         return;
 
@@ -119,6 +129,8 @@ void protocol_seed_31402::handle_send_address(const code& ec)
 
 void protocol_seed_31402::handle_send_get_address(const code& ec)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped(ec))
         return;
 
@@ -137,6 +149,8 @@ void protocol_seed_31402::handle_send_get_address(const code& ec)
 
 ////void protocol_seed_31402::handle_store_addresses(const code& ec)
 ////{
+////    BC_ASSERT_MSG(stranded(), "stranded");
+////
 ////    if (stopped(ec))
 ////        return;
 ////

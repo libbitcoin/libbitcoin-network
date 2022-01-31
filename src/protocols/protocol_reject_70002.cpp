@@ -49,10 +49,12 @@ protocol_reject_70002::protocol_reject_70002(channel::ptr channel)
 
 void protocol_reject_70002::start()
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     // protocol_events has a nop start only for this overload.
     protocol_events::start();
 
-    SUBSCRIBE2(reject, {}, handle_receive_reject, _1, _2);
+    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
 }
 
 // Protocol.
@@ -64,6 +66,8 @@ void protocol_reject_70002::start()
 void protocol_reject_70002::handle_receive_reject(const code& ec,
     reject::ptr reject)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     // protocol_events is the base class only for this check.
     if (stopped(ec))
         return;

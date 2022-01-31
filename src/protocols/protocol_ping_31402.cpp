@@ -45,10 +45,12 @@ protocol_ping_31402::protocol_ping_31402(channel::ptr channel,
 
 void protocol_ping_31402::start()
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     // Timer/event start completes without invoking the handler.
     protocol_timer::start(BIND1(send_ping, _1));
 
-    SUBSCRIBE2(ping, {}, handle_receive_ping, _1, _2);
+    SUBSCRIBE2(ping, handle_receive_ping, _1, _2);
 
     // Send initial ping message by simulating first heartbeat.
     set_event(error::success);
@@ -57,6 +59,8 @@ void protocol_ping_31402::start()
 // This is fired by the callback (i.e. base timer and stop handler).
 void protocol_ping_31402::send_ping(const code& ec)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped(ec))
         return;
 
@@ -75,6 +79,8 @@ void protocol_ping_31402::send_ping(const code& ec)
 void protocol_ping_31402::handle_receive_ping(const code& ec,
     ping::ptr)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped(ec))
         return;
 

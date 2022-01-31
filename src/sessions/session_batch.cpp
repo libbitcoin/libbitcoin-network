@@ -49,6 +49,8 @@ session_batch::session_batch(p2p& network)
 // protected:
 void session_batch::connect(channel_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     // TODO: just use a state member variable, this will be stranded.
 
     ////const auto join_handler = synchronize(handler, batch_size_, NAME "_join",
@@ -60,6 +62,8 @@ void session_batch::connect(channel_handler handler)
 
 void session_batch::new_connect(channel_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (stopped())
     {
         handler(error::channel_stopped, nullptr);
@@ -72,6 +76,8 @@ void session_batch::new_connect(channel_handler handler)
 void session_batch::start_connect(const code& ec, const authority& host,
     channel_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (stopped(ec))
     {
         handler(error::service_stopped, nullptr);
@@ -94,13 +100,15 @@ void session_batch::start_connect(const code& ec, const authority& host,
 
     const auto connector = create_connector();
 
-    // CONNECT
+    // CONNECT (wait)
     connector->connect(host, BIND4(handle_connect, _1, _2, connector, handler));
 }
 
 void session_batch::handle_connect(const code& ec,
     channel::ptr channel, connector::ptr connector, channel_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (ec)
     {
         handler(ec, nullptr);

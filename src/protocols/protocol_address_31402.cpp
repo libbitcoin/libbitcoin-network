@@ -59,6 +59,8 @@ protocol_address_31402::protocol_address_31402(channel::ptr channel,
 
 void protocol_address_31402::start()
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     const auto& settings = network_.network_settings();
 
     // Events start completes without invoking the handler.
@@ -74,8 +76,8 @@ void protocol_address_31402::start()
     if (is_zero(settings.host_pool_capacity))
         return;
 
-    SUBSCRIBE2(address, {}, handle_receive_address, _1, _2);
-    SUBSCRIBE2(get_address, {}, handle_receive_get_address, _1, _2);
+    SUBSCRIBE2(address, handle_receive_address, _1, _2);
+    SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
     SEND2(get_address{}, handle_send, _1, get_address::command);
 }
 
@@ -85,6 +87,8 @@ void protocol_address_31402::start()
 void protocol_address_31402::handle_receive_address(const code& ec,
     address::ptr message)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped(ec))
         return;
 
@@ -99,6 +103,8 @@ void protocol_address_31402::handle_receive_address(const code& ec,
 void protocol_address_31402::handle_receive_get_address(const code& ec,
     get_address::ptr)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped(ec))
         return;
 
@@ -109,6 +115,8 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
 void protocol_address_31402::handle_fetch_addresses(const code& ec,
     const messages::address_items& hosts)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (!ec)
     {
         SEND2(address{ hosts }, handle_send, _1, self_.command);
@@ -121,6 +129,7 @@ void protocol_address_31402::handle_fetch_addresses(const code& ec,
 
 void protocol_address_31402::handle_stop(const code&)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
 }
 
 const std::string& protocol_address_31402::name() const

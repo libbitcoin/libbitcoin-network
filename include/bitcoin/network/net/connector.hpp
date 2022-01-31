@@ -33,7 +33,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// This class is thread safe.
+/// Not thread safe.
 /// Create outbound socket connections.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API connector
@@ -49,17 +49,17 @@ public:
     // ------------------------------------------------------------------------
 
     /// Construct an instance.
-    /// Connector strand is self-contained.
-    connector(asio::io_context& service, const settings& settings);
+    connector(asio::strand& strand, asio::io_context& service,
+        const settings& settings);
 
-    // Stop.
+    // Start/stop.
     // ------------------------------------------------------------------------
 
-    /// TODO: remove ec (see pend).
+    /// Start the connector (call only once). 
+    void start();
+
     /// Cancel work and close the connector (idempotent).
-    /// This action is deferred to the strand, not immediately affected.
-    /// Block on threadpool.join() to ensure termination of the connector.
-    void stop(const code& ec);
+    void stop();
 
     // Methods.
     // ------------------------------------------------------------------------
@@ -94,7 +94,7 @@ private:
     // These are thread safe
     const settings& settings_;
     asio::io_context& service_;
-    asio::strand strand_;
+    asio::strand& strand_;
 
     // These are protected by strand.
     deadline::ptr timer_;

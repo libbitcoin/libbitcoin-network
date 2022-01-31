@@ -141,7 +141,7 @@ void channel::do_stop(const code& ec)
 // Properties.
 // ----------------------------------------------------------------------------
 // Versions are not thread safe, but logically should only be set in handshake
-// protocol, and only read thereafter. Otherwise values may be corrupted (ok).
+// protocol, and only read thereafter. Otherwise values may be corrupted.
 
 // channel_nonce_ is const.
 uint64_t channel::nonce() const

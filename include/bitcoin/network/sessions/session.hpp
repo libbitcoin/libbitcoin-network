@@ -76,7 +76,7 @@ protected:
     bool stopped(const code& ec) const;
     bool blacklisted(const config::authority& authority) const;
 
-    duration cycle_delay(const code& ec);
+    ////duration cycle_delay(const code& ec);
     acceptor::ptr create_acceptor();
     connector::ptr create_connector();
 
@@ -98,11 +98,6 @@ private:
     void handle_start(const code& ec, channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
     void handle_stop(const code& ec, channel::ptr channel,
-        result_handler handler);
-
-    void start_channel_complete(channel::ptr channel, result_handler started,
-        result_handler stopped);
-    void handle_handshake_complete(const code& ec, channel::ptr channel,
         result_handler handler);
 };
 

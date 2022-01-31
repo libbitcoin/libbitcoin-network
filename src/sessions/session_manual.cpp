@@ -47,12 +47,16 @@ session_manual::session_manual(p2p& network)
 
 void session_manual::start(result_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     session::start(BIND2(handle_started, _1, handler));
 }
 
 void session_manual::handle_started(const code& ec,
     result_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (ec)
     {
         handler(ec);
@@ -83,6 +87,8 @@ void session_manual::start_connect(const code&,
     const std::string& hostname, uint16_t port, uint32_t attempts,
     channel_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (stopped())
     {
         handler(error::service_stopped, nullptr);
@@ -101,6 +107,8 @@ void session_manual::handle_connect(const code& ec,
     channel::ptr channel, const std::string& hostname, uint16_t port,
     uint32_t remaining, connector::ptr connector, channel_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (ec)
     {
         // Retry forever if limit is zero.
@@ -128,6 +136,8 @@ void session_manual::handle_channel_start(const code& ec,
     const std::string& hostname, uint16_t port, uint32_t remaining,
     channel::ptr channel, channel_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (ec)
     {
         // Retry forever if limit is zero.
@@ -143,24 +153,30 @@ void session_manual::handle_channel_start(const code& ec,
 
     // This is the success end of the connect sequence.
     handler(error::success, channel);
-    attach_protocols(channel);
+
+    boost::asio::post(channel->strand(),
+        std::bind(&session_manual::attach_protocols,
+            shared_from_base<session_manual>(), channel));
 }
 
 // Communication will begin after this function returns, freeing the thread.
 void session_manual::attach_protocols(channel::ptr channel)
 {
+    // Channel attach and start both require channel strand.
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+
     const auto version = channel->negotiated_version();
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
     if (version >= messages::level::bip31)
-        channel->attach<protocol_ping_60001>(heartbeat)->start();
+        channel->do_attach<protocol_ping_60001>(heartbeat)->start();
     else
-        channel->attach<protocol_ping_31402>(heartbeat)->start();
+        channel->do_attach<protocol_ping_31402>(heartbeat)->start();
 
     if (version >= messages::level::bip61)
-        channel->attach<protocol_reject_70002>()->start();
+        channel->do_attach<protocol_reject_70002>()->start();
 
-    channel->attach<protocol_address_31402>(network_)->start();
+    channel->do_attach<protocol_address_31402>(network_)->start();
 }
 
 void session_manual::handle_channel_stop(const code& ec,

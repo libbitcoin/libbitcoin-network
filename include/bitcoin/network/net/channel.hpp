@@ -32,7 +32,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Not thread safe.
+/// This class is thread safe (see comments on versions in cpp).
 /// A channel is a proxy with logged timers and state.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API channel
@@ -43,7 +43,7 @@ public:
 
     /// Attach a protocol to the channel, caller must start returned protocol.
     template <class Protocol, typename... Args>
-    typename Protocol::ptr attach(Args&&... args)
+    typename Protocol::ptr do_attach(Args&&... args)
     {
         BC_ASSERT_MSG(stranded(), "do_subscribe_stop");
 

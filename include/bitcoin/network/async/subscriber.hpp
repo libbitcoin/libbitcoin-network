@@ -23,13 +23,11 @@
 #include <memory>
 #include <vector>
 #include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/thread.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 /// Not thread safe.
-/// All handlers are posted to the strand.
 template <typename... Args>
 class subscriber
   : public std::enable_shared_from_this<subscriber<Args...>>,
@@ -39,19 +37,11 @@ public:
     typedef std::function<void(Args...)> handler;
     typedef std::shared_ptr<subscriber<Args...>> ptr;
 
-    /// Event notification handlers are posted to the given strand.
     subscriber(asio::strand& strand) noexcept;
     virtual ~subscriber() noexcept;
-    
-    /// Subscription handlers are retained in the queue until stop.
-    /// No invocation occurs if the subscriber is stopped at time of subscribe.
+
     void subscribe(handler&& notify) noexcept;
-
-    /// Notification order follows subscription order. Arguments are copied.
     void notify(const Args&... args) const noexcept;
-
-    /// Notification order follows subscription order. Arguments are copied.
-    /// Clears all handlers and prevents subsequent subscription (idempotent).
     void stop(const Args&... args) noexcept;
 
 private:

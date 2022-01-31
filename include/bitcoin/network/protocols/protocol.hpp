@@ -125,11 +125,10 @@ private:
 #define SEND3(message, method, p1, p2, p3) \
     send<CLASS>(message, &CLASS::method, p1, p2, p3)
 
-// BUGBUG: Protocol subscribers are not waiting on completion handlers.
-#define SUBSCRIBE2(message, complete, method, p1, p2) \
-    subscribe<CLASS, message>(complete, &CLASS::method, p1, p2)
-#define SUBSCRIBE3(message, complete, method, p1, p2, p3) \
-    subscribe<CLASS, message>(complete, &CLASS::method, p1, p2, p3)
+#define SUBSCRIBE2(message, method, p1, p2) \
+    subscribe<CLASS, message>({}, &CLASS::method, p1, p2)
+#define SUBSCRIBE3(message, method, p1, p2, p3) \
+    subscribe<CLASS, message>({}, &CLASS::method, p1, p2, p3)
 
 } // namespace network
 } // namespace libbitcoin

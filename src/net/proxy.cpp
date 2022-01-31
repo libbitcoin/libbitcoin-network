@@ -173,11 +173,6 @@ void proxy::handle_read_heading(const code& ec, size_t)
         return;
     }
 
-    read_payload(head);
-}
-
-void proxy::read_payload(heading_ptr head)
-{
     // Buffer reserve increases with each larger message (up to maximum).
     payload_buffer_.resize(head->payload_size);
 

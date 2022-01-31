@@ -56,11 +56,11 @@ public:
     template <class Message, typename Handler = pump::handler<Message>>
     void subscribe(Handler&& handler, result_handler&& complete)
     {
-        // C++14: std::move handlers into closure.
         const auto self = shared_from_this();
+
+        // C++14: std::move handlers into closure.
         boost::asio::post(strand(), [=]()
         {
-            BC_ASSERT_MSG(self->stranded(), "pump_subscriber_");
             self->pump_subscriber_.subscribe(std::move(handler));
             complete(error::success);
         });
@@ -97,8 +97,6 @@ private:
 
     void read_heading();
     void handle_read_heading(const code& ec, size_t heading_size);
-
-    void read_payload(heading_ptr head);
     void handle_read_payload(const code& ec, size_t payload_size,
         heading_ptr head);
 

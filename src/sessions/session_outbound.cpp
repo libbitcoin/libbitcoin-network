@@ -42,7 +42,9 @@ session_outbound::session_outbound(p2p& network)
 
 void session_outbound::start(result_handler handler)
 {
-    if (network_.network_settings().outbound_connections == 0)
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
+    if (is_zero(network_.network_settings().outbound_connections))
     {
         handler(error::success);
         return;
@@ -73,17 +75,19 @@ void session_outbound::handle_started(const code& ec,
 
 void session_outbound::new_connection(const code&)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (stopped())
         return;
 
-    // CONNECT
+    // CONNECT (wait)
     session_batch::connect(BIND2(handle_connect, _1, _2));
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
-void session_outbound::handle_connect(const code& ec,
-    channel::ptr channel)
+void session_outbound::handle_connect(const code& ec, channel::ptr channel)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (ec)
     {
         ////// Retry with conditional delay in case of network error.
@@ -96,37 +100,52 @@ void session_outbound::handle_connect(const code& ec,
         BIND2(handle_channel_stop, _1, channel));
 }
 
-// THIS IS INVOKED ON THE CHANNEL THREAD.
 void session_outbound::handle_channel_start(const code& ec,
     channel::ptr channel)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     // The start failure is also caught by handle_channel_stop.
     if (ec)
         return;
 
-    attach_protocols(channel);
+    boost::asio::post(channel->strand(),
+        std::bind(&session_outbound::attach_protocols,
+            shared_from_base<session_outbound>(), channel));
 }
 
-// Communication will begin after this function returns, freeing the thread.
 void session_outbound::attach_protocols(channel::ptr channel)
 {
+    // Channel attach and start both require channel strand.
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+
     const auto version = channel->negotiated_version();
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
     if (version >= messages::level::bip31)
-        channel->attach<protocol_ping_60001>(heartbeat)->start();
+        channel->do_attach<protocol_ping_60001>(heartbeat)->start();
     else
-        channel->attach<protocol_ping_31402>(heartbeat)->start();
+        channel->do_attach<protocol_ping_31402>(heartbeat)->start();
 
     if (version >= messages::level::bip61)
-        channel->attach<protocol_reject_70002>()->start();
+        channel->do_attach<protocol_reject_70002>()->start();
 
-    channel->attach<protocol_address_31402>(network_)->start();
+    channel->do_attach<protocol_address_31402>(network_)->start();
+}
+
+void session_outbound::handle_channel_stop(const code& ec,
+    channel::ptr channel)
+{
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    new_connection(error::success);
 }
 
 void session_outbound::attach_handshake(channel::ptr channel,
     result_handler handshake)
 {
+    // Channel attach and start both require channel strand.
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+
     const auto& settings = network_.network_settings();
     const auto relay = settings.relay_transactions;
     const auto own_version = settings.protocol_maximum;
@@ -141,19 +160,13 @@ void session_outbound::attach_handshake(channel::ptr channel,
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= messages::level::bip61)
-        channel->attach<protocol_version_70002>(network_, own_version,
+        channel->do_attach<protocol_version_70002>(network_, own_version,
             own_services, invalid_services, minimum_version, min_service, relay)
             ->start(handshake);
     else
-        channel->attach<protocol_version_31402>(network_, own_version,
+        channel->do_attach<protocol_version_31402>(network_, own_version,
             own_services, invalid_services, minimum_version, min_service)
             ->start(handshake);
-}
-
-void session_outbound::handle_channel_stop(const code& ec,
-    channel::ptr channel)
-{
-    new_connection(error::success);
 }
 
 } // namespace network

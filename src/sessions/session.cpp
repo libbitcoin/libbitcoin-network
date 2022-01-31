@@ -52,6 +52,8 @@ session::~session()
 
 void session::start(result_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (!stopped())
     {
         handler(error::operation_failed);
@@ -73,6 +75,8 @@ void session::stop()
 void session::start_channel(channel::ptr channel, result_handler started,
     result_handler stopped)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (session::stopped())
     {
         started(error::service_stopped);
@@ -82,23 +86,13 @@ void session::start_channel(channel::ptr channel, result_handler started,
 
     channel->start();
 
-    if (inbound())
-    {
-        start_channel_complete(channel, started, stopped);
-        return;
-    }
+    if (!inbound())
+        network_.pend(channel->nonce());
 
-    network_.pend(channel->nonce(),
-        BIND3(start_channel_complete, channel, started, std::move(stopped)));
-}
-
-void session::start_channel_complete(channel::ptr channel, result_handler started,
-    result_handler stopped)
-{
     result_handler start = BIND4(handle_start, _1, channel, started, stopped);
     result_handler shake = BIND3(handle_handshake, _1, channel, std::move(start));
 
-    // channel::attach calls must be made from channel strand.
+    // TODO: handshake bind to strand.
     boost::asio::post(channel->strand(),
         std::bind(&session::attach_handshake,
             shared_from_this(), channel, std::move(shake)));
@@ -106,35 +100,30 @@ void session::start_channel_complete(channel::ptr channel, result_handler starte
 
 void session::attach_handshake(channel::ptr channel, result_handler handshake)
 {
+    // Channel attach and start both require channel strand.
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+
     if (network_.network_settings().protocol_maximum >= messages::level::bip61)
-        channel->attach<protocol_version_70002>(network_)->start(handshake);
+        channel->do_attach<protocol_version_70002>(network_)->start(handshake);
     else
-        channel->attach<protocol_version_31402>(network_)->start(handshake);
+        channel->do_attach<protocol_version_31402>(network_)->start(handshake);
 }
 
 void session::handle_handshake(const code& ec, channel::ptr channel,
     result_handler start)
 {
-    if (inbound())
-    {
-        handle_handshake_complete(ec, channel, start);
-        return;
-    }
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
 
-    network_.unpend(channel->nonce(),
-        BIND3(handle_handshake_complete, ec, channel, std::move(start)));
-}
+    if (!inbound())
+        network_.unpend(channel->nonce());
 
-void session::handle_handshake_complete(const code& ec, channel::ptr channel,
-    result_handler start)
-{
     if (ec)
     {
         start(ec);
         return;
     }
 
-    network_.store(channel, notify(), inbound(), start);
+    start(network_.store(channel, notify(), inbound()));
 }
 
 void session::handle_start(const code& ec, channel::ptr channel,
@@ -148,14 +137,18 @@ void session::handle_start(const code& ec, channel::ptr channel,
         return;
     }
 
+    // TODO: BIND3 bind to strand.
     channel->subscribe_stop(BIND3(handle_stop, _1, channel, stopped),
         std::move(started));
 }
 
-void session::handle_stop(const code&, channel::ptr channel,
+void session::handle_stop(const code& ec, channel::ptr channel,
     result_handler stopped)
 {
-    network_.unstore(channel, stopped);
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
+    network_.unstore(channel);
+    stopped(ec);
 }
 
 // Properties.
@@ -176,23 +169,23 @@ bool session::blacklisted(const config::authority& authority) const
     return contains(network_.network_settings().blacklists, authority);
 }
 
-duration session::cycle_delay(const code& ec)
-{
-    return (ec == error::success ||
-        ec == error::channel_timeout ||
-        ec == error::service_stopped) ? seconds(0) :
-            network_.network_settings().connect_timeout();
-}
+////duration session::cycle_delay(const code& ec)
+////{
+////    return (ec == error::success ||
+////        ec == error::channel_timeout ||
+////        ec == error::service_stopped) ? seconds(0) :
+////            network_.network_settings().connect_timeout();
+////}
 
 acceptor::ptr session::create_acceptor()
 {
-    return std::make_shared<acceptor>(network_.service(),
+    return std::make_shared<acceptor>(network_.strand(), network_.service(),
         network_.network_settings());
 }
 
 connector::ptr session::create_connector()
 {
-    return std::make_shared<connector>(network_.service(),
+    return std::make_shared<connector>(network_.strand(), network_.service(),
         network_.network_settings());
 }
 

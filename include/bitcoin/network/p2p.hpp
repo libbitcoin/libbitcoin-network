@@ -128,56 +128,49 @@ public:
     // ------------------------------------------------------------------------
 
     /// Network configuration settings.
-    virtual const settings& network_settings() const;
+    size_t channel_count() const;
+
+    /// Network configuration settings.
+    const settings& network_settings() const;
 
     /// Return a reference to the network io_context (thread safe).
-    virtual asio::io_context& service();
+    asio::io_context& service();
 
     /// Return a reference to the network strand (thread safe).
     /// Network strand is for sessions, but also hosts, subscribe and stop.
-    virtual asio::strand& strand();
+    asio::strand& strand();
 
     /// Is the strand running in this thread.
-    virtual bool stranded() const;
+    bool stranded() const;
 
     // Hosts collection.
     // ------------------------------------------------------------------------
 
     /// Get the number of addresses (thread safe).
-    virtual size_t address_count() const;
+    size_t address_count() const;
 
     /// Store an address.
-    virtual void load(const messages::address_item& address,
+    void load(const messages::address_item& address,
         result_handler complete);
 
     /// Store a collection of addresses.
-    virtual void load(const messages::address_items& addresses,
+    void load(const messages::address_items& addresses,
         result_handler complete);
 
     /// Remove an address.
-    virtual void unload(const messages::address_item& address,
+    void unload(const messages::address_item& address,
         result_handler complete);
 
     /// Get a randomly-selected address.
-    virtual void fetch_address(hosts::address_item_handler handler) const;
+    void fetch_address(hosts::address_item_handler handler) const;
 
     /// Get a list of stored hosts
-    virtual void fetch_addresses(hosts::address_items_handler handler) const;
-
-    // Connection management.
-    // ------------------------------------------------------------------------
-
-    virtual size_t channel_count() const;
-    virtual void pend(uint64_t nonce, result_handler handler);
-    virtual void unpend(uint64_t nonce, result_handler handler);
-    virtual void unstore(channel::ptr channel, result_handler handler);
-    virtual void store(channel::ptr channel, bool notify, bool inbound,
-        result_handler handler);
+    void fetch_addresses(hosts::address_items_handler handler) const;
 
 protected:
     /// Attach a session to the network, caller must start returned session.
     template <class Session, typename... Args>
-    typename Session::ptr attach(Args&&... args)
+    typename Session::ptr do_attach(Args&&... args)
     {
         BC_ASSERT_MSG(stranded(), "do_subscribe_close");
 
@@ -230,12 +223,11 @@ private:
     void do_fetch_address(hosts::address_item_handler handler) const;
     void do_fetch_addresses(hosts::address_items_handler handler) const;
 
-    void do_pend(uint64_t nonce, result_handler complete);
-    void do_unpend(uint64_t nonce, result_handler complete);
-
-    void do_unstore(channel::ptr channel, result_handler complete);
-    void do_store(channel::ptr channel, bool notify, bool inbound,
-        result_handler handler);
+    friend class session;
+    void pend(uint64_t nonce);
+    void unpend(uint64_t nonce);
+    void unstore(channel::ptr channel);
+    code store(channel::ptr channel, bool notify, bool inbound);
 
     // These are thread safe.
     const settings& settings_;

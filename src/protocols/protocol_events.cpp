@@ -59,11 +59,13 @@ bool protocol_events::stopped(const code& ec) const
 
 void protocol_events::start()
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
 }
 
 // START COMPLETES WITHOUT INVOKING THE HANDLER.
 void protocol_events::start(result_handler handle_event)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
     handler_ = handle_event;
 }
 
@@ -72,6 +74,8 @@ void protocol_events::start(result_handler handle_event)
 
 void protocol_events::handle_stopped(const code& ec)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (!stopped(ec))
     {
         LOG_VERBOSE(LOG_NETWORK)
@@ -88,6 +92,8 @@ void protocol_events::handle_stopped(const code& ec)
 
 void protocol_events::set_event(const code& ec)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped(ec))
     {
         stopped_ = true;

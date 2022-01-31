@@ -71,10 +71,10 @@ protocol_version_70002::protocol_version_70002(channel::ptr channel,
 
 void protocol_version_70002::start(result_handler handle_event)
 {
-    // VERSION/TIMER/EVENTS START COMPLETES WITHOUT INVOKING THE HANDLER.
+    BC_ASSERT_MSG(stranded(), "stranded");
 
     protocol_version_31402::start(handle_event);
-    SUBSCRIBE2(reject, {}, handle_receive_reject, _1, _2);
+    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
 }
 
 version protocol_version_70002::version_factory() const
@@ -90,6 +90,8 @@ version protocol_version_70002::version_factory() const
 
 bool protocol_version_70002::sufficient_peer(version::ptr message)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (message->value < minimum_version_)
     {
         SEND2((reject{ version::command, reject::reason_code::obsolete }),
@@ -107,6 +109,8 @@ bool protocol_version_70002::sufficient_peer(version::ptr message)
 void protocol_version_70002::handle_receive_reject(const code& ec,
     reject::ptr reject)
 {
+    BC_ASSERT_MSG(stranded(), "stranded");
+
     if (stopped(ec))
         return;
 

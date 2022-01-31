@@ -53,7 +53,9 @@ bool session_seed::notify() const
 
 void session_seed::start(result_handler handler)
 {
-    if (network_.network_settings().host_pool_capacity == 0)
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
+    if (is_zero(network_.network_settings().host_pool_capacity))
     {
         LOG_INFO(LOG_NETWORK)
             << "Not configured to populate an address pool.";
@@ -67,6 +69,8 @@ void session_seed::start(result_handler handler)
 void session_seed::handle_started(const code& ec,
     result_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+
     if (ec)
     {
         handler(ec);
@@ -75,7 +79,7 @@ void session_seed::handle_started(const code& ec,
 
     const auto start_size = network_.address_count();
 
-    if (start_size != 0)
+    if (!is_zero(start_size))
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Seeding is not required because there are "
@@ -95,30 +99,6 @@ void session_seed::handle_started(const code& ec,
     // This is not technically the end of the start sequence, since the handler
     // is not invoked until seeding operations are complete.
     start_seeding(start_size, handler);
-}
-
-void session_seed::attach_handshake(channel::ptr channel,
-    result_handler handshake)
-{
-    // Don't use configured services or relay for seeding.
-    const auto relay = false;
-    const auto& settings = network_.network_settings();
-    const auto own_version = settings.protocol_maximum;
-    const auto own_services = messages::service::node_none;
-    const auto invalid_services = settings.invalid_services;
-    const auto minimum_version = settings.protocol_minimum;
-    const auto minimum_services = messages::service::node_none;
-
-    // Reject messages are not handled until bip61 (70002).
-    // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= messages::level::bip61)
-        channel->attach<protocol_version_70002>(network_, own_version,
-            own_services, invalid_services, minimum_version, minimum_services,
-            relay)->start(handshake);
-    else
-        channel->attach<protocol_version_31402>(network_, own_version,
-            own_services, invalid_services, minimum_version, minimum_services)
-            ->start(handshake);
 }
 
 // Seed sequence.
@@ -184,24 +164,29 @@ void session_seed::handle_channel_start(const code& ec,
         return;
     }
 
-    attach_protocols(channel, handler);
+    boost::asio::post(channel->strand(),
+        std::bind(&session_seed::attach_protocols,
+            shared_from_base<session_seed>(), channel, std::move(handler)));
 }
 
 void session_seed::attach_protocols(channel::ptr channel,
     result_handler handler)
 {
+    // Channel attach and start both require channel strand.
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+
     const auto version = channel->negotiated_version();
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
     if (version >= messages::level::bip31)
-        channel->attach<protocol_ping_60001>(heartbeat)->start();
+        channel->do_attach<protocol_ping_60001>(heartbeat)->start();
     else
-        channel->attach<protocol_ping_31402>(heartbeat)->start();
+        channel->do_attach<protocol_ping_31402>(heartbeat)->start();
 
     if (version >= messages::level::bip61)
-        channel->attach<protocol_reject_70002>()->start();
+        channel->do_attach<protocol_reject_70002>()->start();
 
-    channel->attach<protocol_seed_31402>(network_)->start(handler);
+    channel->do_attach<protocol_seed_31402>(network_)->start(handler);
 }
 
 void session_seed::handle_channel_stop(const code& ec)
@@ -217,6 +202,33 @@ void session_seed::handle_complete(size_t start_size, result_handler handler)
 
     // This is the end of the seed sequence.
     handler(increase ? error::success : error::seeding_unsuccessful);
+}
+
+void session_seed::attach_handshake(channel::ptr channel,
+    result_handler handshake)
+{
+    // Channel attach and start both require channel strand.
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+
+    // Don't use configured services or relay for seeding.
+    const auto relay = false;
+    const auto& settings = network_.network_settings();
+    const auto own_version = settings.protocol_maximum;
+    const auto own_services = messages::service::node_none;
+    const auto invalid_services = settings.invalid_services;
+    const auto minimum_version = settings.protocol_minimum;
+    const auto minimum_services = messages::service::node_none;
+
+    // Reject messages are not handled until bip61 (70002).
+    // The negotiated_version is initialized to the configured maximum.
+    if (channel->negotiated_version() >= messages::level::bip61)
+        channel->do_attach<protocol_version_70002>(network_, own_version,
+            own_services, invalid_services, minimum_version, minimum_services,
+            relay)->start(handshake);
+    else
+        channel->do_attach<protocol_version_31402>(network_, own_version,
+            own_services, invalid_services, minimum_version, minimum_services)
+            ->start(handshake);
 }
 
 } // namespace network
