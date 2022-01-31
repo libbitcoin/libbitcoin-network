@@ -52,11 +52,8 @@ public:
     connector(asio::strand& strand, asio::io_context& service,
         const settings& settings);
 
-    // Start/stop.
+    // Stop (no start).
     // ------------------------------------------------------------------------
-
-    /// Start the connector (call only once). 
-    void start();
 
     /// Cancel work and close the connector (idempotent).
     void stop();
@@ -78,11 +75,6 @@ public:
     /// Try to connect to host:port, starts timer.
     virtual void connect(const std::string& hostname, uint16_t port,
         connect_handler&& handler);
-
-protected:
-    void do_stop();
-    void do_resolve(const std::string& hostname, uint16_t port,
-        connect_handler handler);
 
 private:
     void handle_resolve(const error::boost_code& ec, const asio::resolved& it,

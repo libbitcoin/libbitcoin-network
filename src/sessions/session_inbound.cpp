@@ -77,54 +77,46 @@ void session_inbound::handle_started(const code& ec,
     const auto port = network_.network_settings().inbound_port;
 
     acceptor_ = create_acceptor();
+    const auto code = acceptor_->start(port);
+    handler(code);
 
     // LISTEN
-    const auto start_ec = acceptor_->start(port);
-
-    if (start_ec)
-    {
-        handler(start_ec);
-        return;
-    }
-
-    start_accept(error::success);
-
-    // This is the end of the start sequence.
-    handler(error::success);
+    start_accept(code);
 }
 
 // Accept sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept(const code&)
+void session_inbound::start_accept(const code& ec)
 {
     BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
 
-    if (stopped())
+    if (ec)
         return;
 
     // ACCEPT (wait)
     acceptor_->accept(BIND2(handle_accept, _1, _2));
 }
 
-void session_inbound::handle_accept(const code& ec,
-    channel::ptr channel)
+void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 {
     BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
 
     if (stopped(ec))
         return;
 
-    ////// Start accepting with conditional delay in case of network error.
-    ////dispatch_delayed(cycle_delay(ec), BIND1(start_accept, _1));
+    // TODO: use timer to delay start in case of error other than
+    // channel_timeout. use network_.network_settings().connect_timeout().
+    start_accept(error::success);
 
+    // There was an error accepting the channel, so drop it.
     if (ec)
         return;
 
-    if (blacklisted(channel->authority()))
+    if (network_.channel_count() >= connection_limit_)
         return;
 
-    if (network_.channel_count() >= connection_limit_)
+    if (blacklisted(channel->authority()))
         return;
 
     start_channel(channel,
@@ -140,12 +132,11 @@ void session_inbound::handle_channel_start(const code& ec,
     if (ec)
         return;
 
-    boost::asio::post(channel->strand(),
-        std::bind(&session_inbound::attach_protocols,
-            shared_from_base<session_inbound>(), channel));
+    // Calls attach_protocols on channel strand.
+    post_attach_protocols(channel);
 }
 
-void session_inbound::attach_protocols(channel::ptr channel)
+void session_inbound::attach_protocols1(channel::ptr channel) const
 {
     // Channel attach and start both require channel strand.
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");

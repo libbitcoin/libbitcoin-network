@@ -164,13 +164,12 @@ void session_seed::handle_channel_start(const code& ec,
         return;
     }
 
-    boost::asio::post(channel->strand(),
-        std::bind(&session_seed::attach_protocols,
-            shared_from_base<session_seed>(), channel, std::move(handler)));
+    // Calls attach_protocols on channel strand.
+    post_attach_protocols(channel, std::move(handler));
 }
 
-void session_seed::attach_protocols(channel::ptr channel,
-    result_handler handler)
+void session_seed::attach_protocols2(channel::ptr channel,
+    result_handler handler) const
 {
     // Channel attach and start both require channel strand.
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
@@ -205,7 +204,7 @@ void session_seed::handle_complete(size_t start_size, result_handler handler)
 }
 
 void session_seed::attach_handshake(channel::ptr channel,
-    result_handler handshake)
+    result_handler handshake) const
 {
     // Channel attach and start both require channel strand.
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");

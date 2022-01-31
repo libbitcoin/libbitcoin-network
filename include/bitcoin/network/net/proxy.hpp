@@ -47,10 +47,10 @@ public:
     typedef std::function<void(const code&)> result_handler;
 
     template <class Message>
-    void send(typename Message::ptr message, const result_handler& handler)
+    void send(typename Message::ptr message, const result_handler& complete)
     {
         using namespace messages;
-        send(serialize(*message, protocol_magic(), version()), handler);
+        send(serialize(*message, protocol_magic(), version()), complete);
     }
 
     template <class Message, typename Handler = pump::handler<Message>>

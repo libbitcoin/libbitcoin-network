@@ -21,6 +21,7 @@
 #include <functional>
 #include <memory>
 #include <utility>
+#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -89,16 +90,20 @@ void session::start_channel(channel::ptr channel, result_handler started,
     if (!inbound())
         network_.pend(channel->nonce());
 
-    result_handler start = BIND4(handle_start, _1, channel, started, stopped);
-    result_handler shake = BIND3(handle_handshake, _1, channel, std::move(start));
+    result_handler start = std::bind(&session::handle_start,
+        shared_from_this(), _1, channel, std::move(started), std::move(stopped));
 
-    // TODO: handshake bind to strand.
+    result_handler shake = boost::asio::bind_executor(network_.strand(),
+        std::bind(&session::handle_handshake,
+            shared_from_this(), _1, channel, std::move(start)));
+
     boost::asio::post(channel->strand(),
         std::bind(&session::attach_handshake,
             shared_from_this(), channel, std::move(shake)));
 }
 
-void session::attach_handshake(channel::ptr channel, result_handler handshake)
+void session::attach_handshake(channel::ptr channel,
+    result_handler handshake) const
 {
     // Channel attach and start both require channel strand.
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
@@ -107,6 +112,33 @@ void session::attach_handshake(channel::ptr channel, result_handler handshake)
         channel->do_attach<protocol_version_70002>(network_)->start(handshake);
     else
         channel->do_attach<protocol_version_31402>(network_)->start(handshake);
+}
+
+void session::attach_protocols1(channel::ptr channel) const
+{
+}
+
+void session::attach_protocols2(channel::ptr channel,
+    result_handler handler) const
+{
+    handler(error::success);
+}
+
+void session::post_attach_protocols(channel::ptr channel) const
+{
+    // Protocol attach and start require channel context.
+    boost::asio::post(channel->strand(),
+        std::bind(&session::attach_protocols1,
+            shared_from_this(), channel));
+}
+
+void session::post_attach_protocols(channel::ptr channel,
+    result_handler handler) const
+{
+    // Protocol attach and start require channel context.
+    boost::asio::post(channel->strand(),
+        std::bind(&session::attach_protocols2,
+            shared_from_this(), channel, std::move(handler)));
 }
 
 void session::handle_handshake(const code& ec, channel::ptr channel,
@@ -137,9 +169,11 @@ void session::handle_start(const code& ec, channel::ptr channel,
         return;
     }
 
-    // TODO: BIND3 bind to strand.
-    channel->subscribe_stop(BIND3(handle_stop, _1, channel, stopped),
-        std::move(started));
+    result_handler subscribe = boost::asio::bind_executor(network_.strand(),
+        std::bind(&session::handle_stop,
+            shared_from_this(), _1, channel, std::move(stopped)));
+
+    channel->subscribe_stop(std::move(subscribe), std::move(started));
 }
 
 void session::handle_stop(const code& ec, channel::ptr channel,
@@ -169,24 +203,14 @@ bool session::blacklisted(const config::authority& authority) const
     return contains(network_.network_settings().blacklists, authority);
 }
 
-////duration session::cycle_delay(const code& ec)
-////{
-////    return (ec == error::success ||
-////        ec == error::channel_timeout ||
-////        ec == error::service_stopped) ? seconds(0) :
-////            network_.network_settings().connect_timeout();
-////}
-
 acceptor::ptr session::create_acceptor()
 {
-    return std::make_shared<acceptor>(network_.strand(), network_.service(),
-        network_.network_settings());
+    return network_.create_acceptor();
 }
 
 connector::ptr session::create_connector()
 {
-    return std::make_shared<connector>(network_.strand(), network_.service(),
-        network_.network_settings());
+    return network_.create_connector();
 }
 
 bool session::inbound() const

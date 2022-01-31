@@ -109,12 +109,11 @@ void session_outbound::handle_channel_start(const code& ec,
     if (ec)
         return;
 
-    boost::asio::post(channel->strand(),
-        std::bind(&session_outbound::attach_protocols,
-            shared_from_base<session_outbound>(), channel));
+    // Calls attach_protocols on channel strand.
+    post_attach_protocols(channel);
 }
 
-void session_outbound::attach_protocols(channel::ptr channel)
+void session_outbound::attach_protocols1(channel::ptr channel) const
 {
     // Channel attach and start both require channel strand.
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
@@ -141,7 +140,7 @@ void session_outbound::handle_channel_stop(const code& ec,
 }
 
 void session_outbound::attach_handshake(channel::ptr channel,
-    result_handler handshake)
+    result_handler handshake) const
 {
     // Channel attach and start both require channel strand.
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");

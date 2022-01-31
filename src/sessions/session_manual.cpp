@@ -48,7 +48,6 @@ session_manual::session_manual(p2p& network)
 void session_manual::start(result_handler handler)
 {
     BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
-
     session::start(BIND2(handle_started, _1, handler));
 }
 
@@ -56,15 +55,7 @@ void session_manual::handle_started(const code& ec,
     result_handler handler)
 {
     BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
-
-    if (ec)
-    {
-        handler(ec);
-        return;
-    }
-
-    // This is the end of the start sequence.
-    handler(error::success);
+    handler(ec);
 }
 
 // Connect sequence/cycle.
@@ -72,13 +63,14 @@ void session_manual::handle_started(const code& ec,
 
 void session_manual::connect(const std::string& hostname, uint16_t port)
 {
-    const auto unhandled = [](code, channel::ptr) {};
-    connect(hostname, port, unhandled);
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    connect(hostname, port, {});
 }
 
 void session_manual::connect(const std::string& hostname, uint16_t port,
     channel_handler handler)
 {
+    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
     start_connect(error::success, hostname, port, attempt_limit_, handler);
 }
 
@@ -116,9 +108,10 @@ void session_manual::handle_connect(const code& ec,
 
         if (remaining > 0)
         {
-            ////// Retry with conditional delay in case of network error.
-            ////dispatch_delayed(cycle_delay(ec),
-            ////    BIND5(start_connect, _1, hostname, port, remaining, handler));
+            // TODO: use timer to delay start in case of error other than
+            // channel_timeout. use network_.network_settings().connect_timeout().
+
+            start_connect(error::success, hostname, port, remaining, handler);
             return;
         }
 
@@ -151,16 +144,15 @@ void session_manual::handle_channel_start(const code& ec,
         return;
     }
 
+    // Calls attach_protocols on channel strand.
+    post_attach_protocols(channel);
+
     // This is the success end of the connect sequence.
     handler(error::success, channel);
-
-    boost::asio::post(channel->strand(),
-        std::bind(&session_manual::attach_protocols,
-            shared_from_base<session_manual>(), channel));
 }
 
 // Communication will begin after this function returns, freeing the thread.
-void session_manual::attach_protocols(channel::ptr channel)
+void session_manual::attach_protocols1(channel::ptr channel) const
 {
     // Channel attach and start both require channel strand.
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");

@@ -49,12 +49,12 @@ public:
 
 protected:
     /// Overridden to set service and version mins upon session start.
-    void attach_handshake(channel::ptr channel,
-        result_handler handle_started) override;
+    virtual void attach_handshake(channel::ptr channel,
+        result_handler handle_started) const override;
 
     /// Override to attach specialized protocols upon channel start.
-    virtual void attach_protocols(channel::ptr channel,
-        result_handler handler);
+    virtual void attach_protocols2(channel::ptr channel,
+        result_handler handler) const override;
 
     /// Override to preclude notify on connect.
     virtual bool notify() const override;

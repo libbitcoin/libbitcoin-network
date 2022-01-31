@@ -73,6 +73,19 @@ p2p::~p2p()
     p2p::close();
 }
 
+// I/O factories.
+// ----------------------------------------------------------------------------
+
+acceptor::ptr p2p::create_acceptor()
+{
+    return std::make_shared<acceptor>(strand(), service(), network_settings());
+}
+
+connector::ptr p2p::create_connector()
+{
+    return std::make_shared<connector>(strand(), service(), network_settings());
+}
+
 // Start sequence.
 // ----------------------------------------------------------------------------
 

@@ -76,14 +76,21 @@ protected:
     bool stopped(const code& ec) const;
     bool blacklisted(const config::authority& authority) const;
 
-    ////duration cycle_delay(const code& ec);
     acceptor::ptr create_acceptor();
     connector::ptr create_connector();
 
     virtual void start_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
     virtual void attach_handshake(channel::ptr channel,
-        result_handler handler);
+        result_handler handler) const;
+
+    virtual void attach_protocols1(channel::ptr channel) const;
+    virtual void attach_protocols2(channel::ptr channel,
+        result_handler handler) const;
+
+    virtual void post_attach_protocols(channel::ptr channel) const;
+    virtual void post_attach_protocols(channel::ptr channel,
+        result_handler handler) const;
 
     virtual bool inbound() const;
     virtual bool notify() const;

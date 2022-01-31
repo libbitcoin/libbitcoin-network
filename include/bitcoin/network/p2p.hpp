@@ -86,6 +86,12 @@ public:
     /// Calls close().
     virtual ~p2p();
 
+    // I/O factories.
+    // ------------------------------------------------------------------------
+
+    virtual acceptor::ptr create_acceptor();
+    virtual connector::ptr create_connector();
+
     // Sequences.
     // ------------------------------------------------------------------------
 
