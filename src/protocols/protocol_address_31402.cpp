@@ -108,10 +108,13 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return;
 
-    network_.fetch_addresses(BIND2(handle_fetch_addresses, _1, _2));
+    // Restore strand context ater network load.
+    network_.fetch_addresses(
+        boost::asio::bind_executor(network_.strand(),
+            std::bind(&protocol_address_31402::handle_fetch_addresses,
+                shared_from_base<protocol_address_31402>(), _1, _2)));
 }
 
-// TODO: one response per connection permitted.
 void protocol_address_31402::handle_fetch_addresses(const code& ec,
     const messages::address_items& hosts)
 {

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_SEED_31402_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_SEED_31402_HPP
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
@@ -49,23 +50,21 @@ protected:
     // Expose polymorphic start method from base.
     using protocol_timer::start;
 
-    virtual void send_own_address(const settings& settings);
-
+    virtual void handle_complete(const code& ec);
     virtual void handle_send_address(const code& ec);
     virtual void handle_send_get_address(const code& ec);
-    ////virtual void handle_store_addresses(const code& ec);
-    virtual void handle_seeding_complete(const code& ec,
-        result_handler handler);
+    virtual void handle_load_addresses(const code& ec);
 
     virtual void handle_receive_address(const code& ec,
         messages::address::ptr address);
-    ////virtual void handle_receive_get_address(const code& ec,
-    ////    messages::get_address::ptr message);
+    virtual void handle_receive_get_address(const code& ec,
+        messages::get_address::ptr message);
 
     virtual const std::string& name() const override;
 
     p2p& network_;
-    const config::authority self_;
+    size_t events_;
+    ////const config::authority self_;
 };
 
 } // namespace network

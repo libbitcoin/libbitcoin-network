@@ -299,6 +299,7 @@ bool p2p::stranded() const
 
 // Hosts collection.
 // ----------------------------------------------------------------------------
+// TODO: protected, expose to session, wrapper to maintain protocol context.
 
 size_t p2p::address_count() const
 {
@@ -371,6 +372,7 @@ void p2p::do_fetch_addresses(hosts::address_items_handler handler) const
 
 // Connection management.
 // ----------------------------------------------------------------------------
+// TODO: protected, expose to session, wrapper to maintain protocol context.
 
 // Thread safe, inexact (ok).
 size_t p2p::channel_count() const
