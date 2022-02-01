@@ -53,7 +53,7 @@ session::~session()
 
 void session::start(result_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (!stopped())
     {
@@ -76,7 +76,7 @@ void session::stop()
 void session::start_channel(channel::ptr channel, result_handler started,
     result_handler stopped)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (session::stopped())
     {
@@ -144,7 +144,7 @@ void session::post_attach_protocols(channel::ptr channel,
 void session::handle_handshake(const code& ec, channel::ptr channel,
     result_handler start)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (!inbound())
         network_.unpend(channel->nonce());
@@ -179,7 +179,7 @@ void session::handle_start(const code& ec, channel::ptr channel,
 void session::handle_stop(const code& ec, channel::ptr channel,
     result_handler stopped)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     network_.unstore(channel);
     stopped(ec);
@@ -211,6 +211,11 @@ acceptor::ptr session::create_acceptor()
 connector::ptr session::create_connector()
 {
     return network_.create_connector();
+}
+
+connectors_ptr session::create_connectors(size_t count)
+{
+    return network_.create_connectors(count);
 }
 
 bool session::inbound() const

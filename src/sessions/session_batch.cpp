@@ -39,44 +39,29 @@ using namespace std::placeholders;
 
 session_batch::session_batch(p2p& network)
   : session(network),
-    batch_size_(std::max(network.network_settings().connect_batch_size, 1u))
+    batch_size_(std::max(network.network_settings().connect_batch_size, 1u)),
+    count_(zero)
 {
 }
 
-// Connect sequence.
-// ----------------------------------------------------------------------------
-
-// protected:
 void session_batch::connect(channel_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    // TODO: just use a state member variable, this will be stranded.
+    const auto connects = create_connectors(batch_size_);
 
-    ////const auto join_handler = synchronize(handler, batch_size_, NAME "_join",
-    ////    synchronizer_terminate::on_success);
+    channel_handler start = 
+        BIND4(handle_connect, _1, _2, connects, std::move(handler));
 
-    for (size_t host = 0; host < batch_size_; ++host)
-        new_connect(handler);
-}
-
-void session_batch::new_connect(channel_handler handler)
-{
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
-
-    if (stopped())
-    {
-        handler(error::channel_stopped, nullptr);
-        return;
-    }
-
-    network_.fetch_address(BIND3(start_connect, _1, _2, handler));
+    // Initialize batch of connectors.
+    for (auto it = connects->begin(); it != connects->end() && !stopped(); ++it)
+        network_.fetch_address(BIND4(start_connect, _1, _2, *it, start));
 }
 
 void session_batch::start_connect(const code& ec, const authority& host,
-    channel_handler handler)
+    connector::ptr connector, channel_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (stopped(ec))
     {
@@ -98,25 +83,33 @@ void session_batch::start_connect(const code& ec, const authority& host,
         return;
     }
 
-    const auto connector = create_connector();
-
     // CONNECT (wait)
-    connector->connect(host, BIND4(handle_connect, _1, _2, connector, handler));
+    connector->connect(host, std::move(handler));
 }
 
-void session_batch::handle_connect(const code& ec,
-    channel::ptr channel, connector::ptr connector, channel_handler handler)
+// Called once for each call to start_connect.
+void session_batch::handle_connect(const code& ec, channel::ptr channel,
+    connectors_ptr connectors, channel_handler complete)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    if (ec)
+    auto finished = (++count_ == batch_size_);
+
+    if (!ec)
     {
-        handler(ec, nullptr);
+        // Clear unfinished connectors.
+        if (!finished)
+            for (auto it = connectors->begin(); it != connectors->end(); ++it)
+                (*it)->stop();
+
+        // Got a connection.
+        complete(error::success, channel);
         return;
     }
 
-    // This is the end of the connect sequence.
-    handler(error::success, channel);
+    // Got no successful connection.
+    if (finished)
+        complete(error::connect_failed, nullptr);
 }
 
 } // namespace network

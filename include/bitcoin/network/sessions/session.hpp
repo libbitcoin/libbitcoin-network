@@ -78,6 +78,7 @@ protected:
 
     acceptor::ptr create_acceptor();
     connector::ptr create_connector();
+    connectors_ptr create_connectors(size_t count);
 
     virtual void start_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);

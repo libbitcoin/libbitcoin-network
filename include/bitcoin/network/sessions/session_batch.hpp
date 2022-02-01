@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_SESSION_BATCH_HPP
 
 #include <cstddef>
+#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -42,13 +43,13 @@ protected:
     virtual void connect(channel_handler handler);
 
 private:
-    void new_connect(channel_handler handler);
     void start_connect(const code& ec, const config::authority& host,
-        channel_handler handler);
-    void handle_connect(const code& ec, channel::ptr channel,
         connector::ptr connector, channel_handler handler);
+    void handle_connect(const code& ec, channel::ptr channel,
+        connectors_ptr connectors, channel_handler complete);
 
     const size_t batch_size_;
+    size_t count_;
 };
 
 } // namespace network

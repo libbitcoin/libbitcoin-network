@@ -22,6 +22,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -93,6 +94,9 @@ private:
     asio::resolver resolver_;
     bool stopped_;
 };
+
+typedef std::vector<connector::ptr> connectors;
+typedef std::shared_ptr<connectors> connectors_ptr;
 
 } // namespace network
 } // namespace libbitcoin

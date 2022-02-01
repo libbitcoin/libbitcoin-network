@@ -86,6 +86,17 @@ connector::ptr p2p::create_connector()
     return std::make_shared<connector>(strand(), service(), network_settings());
 }
 
+connectors_ptr p2p::create_connectors(size_t count)
+{
+    const auto connects = std::make_shared<connectors>(connectors{});
+    connects->reserve(count);
+
+    for (auto connect = 0; connect < count; ++connect)
+        connects->push_back(create_connector());
+
+    return connects;
+}
+
 // Start sequence.
 // ----------------------------------------------------------------------------
 

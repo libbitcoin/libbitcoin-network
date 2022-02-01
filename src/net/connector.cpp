@@ -54,6 +54,9 @@ void connector::stop()
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
+    if (stopped_)
+        return;
+
     // Posts handle_resolve to strand.
     resolver_.cancel();
 

@@ -91,6 +91,7 @@ public:
 
     virtual acceptor::ptr create_acceptor();
     virtual connector::ptr create_connector();
+    virtual connectors_ptr create_connectors(size_t count);
 
     // Sequences.
     // ------------------------------------------------------------------------
