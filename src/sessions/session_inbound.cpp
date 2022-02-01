@@ -136,7 +136,8 @@ void session_inbound::handle_channel_start(const code& ec,
     post_attach_protocols(channel);
 }
 
-void session_inbound::attach_protocols1(channel::ptr channel) const
+void session_inbound::attach_protocols(channel::ptr channel,
+    result_handler) const
 {
     // Channel attach and start both require channel strand.
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");

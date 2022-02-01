@@ -58,7 +58,8 @@ public:
 
 protected:
     /// Override to attach specialized protocols upon channel start.
-    virtual void attach_protocols1(channel::ptr channel) const override;
+    virtual void attach_protocols(channel::ptr channel,
+        result_handler handler={}) const override;
 
 private:
     void start_connect(const code& ec, const std::string& hostname,

@@ -152,7 +152,8 @@ void session_manual::handle_channel_start(const code& ec,
 }
 
 // Communication will begin after this function returns, freeing the thread.
-void session_manual::attach_protocols1(channel::ptr channel) const
+void session_manual::attach_protocols(channel::ptr channel,
+    result_handler) const
 {
     // Channel attach and start both require channel strand.
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");

@@ -48,7 +48,8 @@ public:
 
 protected:
     /// Override to attach specialized protocols upon channel start.
-    virtual void attach_protocols1(channel::ptr channel) const override;
+    virtual void attach_protocols(channel::ptr channel,
+        result_handler handler={}) const override;
 
     /// Override to preclude pending the nonce.
     virtual bool inbound() const override;

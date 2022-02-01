@@ -160,7 +160,7 @@ void session_seed::handle_channel_start(const code& ec,
     post_attach_protocols(channel, std::move(handler));
 }
 
-void session_seed::attach_protocols2(channel::ptr channel,
+void session_seed::attach_protocols(channel::ptr channel,
     result_handler handler) const
 {
     // Channel attach and start both require channel strand.
