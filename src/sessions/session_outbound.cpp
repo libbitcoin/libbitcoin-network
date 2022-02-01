@@ -42,7 +42,7 @@ session_outbound::session_outbound(p2p& network)
 
 void session_outbound::start(result_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (is_zero(network_.network_settings().outbound_connections))
     {
@@ -75,7 +75,7 @@ void session_outbound::handle_started(const code& ec,
 
 void session_outbound::new_connection(const code&)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (stopped())
         return;
@@ -86,7 +86,7 @@ void session_outbound::new_connection(const code&)
 
 void session_outbound::handle_connect(const code& ec, channel::ptr channel)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (ec)
     {
@@ -103,7 +103,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel)
 void session_outbound::handle_channel_start(const code& ec,
     channel::ptr channel)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     // The start failure is also caught by handle_channel_stop.
     if (ec)
@@ -135,7 +135,7 @@ void session_outbound::attach_protocols1(channel::ptr channel) const
 void session_outbound::handle_channel_stop(const code& ec,
     channel::ptr channel)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
     new_connection(error::success);
 }
 

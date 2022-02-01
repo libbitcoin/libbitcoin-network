@@ -47,14 +47,14 @@ session_manual::session_manual(p2p& network)
 
 void session_manual::start(result_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
     session::start(BIND2(handle_started, _1, handler));
 }
 
 void session_manual::handle_started(const code& ec,
     result_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
     handler(ec);
 }
 
@@ -63,14 +63,14 @@ void session_manual::handle_started(const code& ec,
 
 void session_manual::connect(const std::string& hostname, uint16_t port)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
     connect(hostname, port, {});
 }
 
 void session_manual::connect(const std::string& hostname, uint16_t port,
     channel_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
     start_connect(error::success, hostname, port, attempt_limit_, handler);
 }
 
@@ -79,7 +79,7 @@ void session_manual::start_connect(const code&,
     const std::string& hostname, uint16_t port, uint32_t attempts,
     channel_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (stopped())
     {
@@ -99,7 +99,7 @@ void session_manual::handle_connect(const code& ec,
     channel::ptr channel, const std::string& hostname, uint16_t port,
     uint32_t remaining, connector::ptr connector, channel_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (ec)
     {
@@ -129,7 +129,7 @@ void session_manual::handle_channel_start(const code& ec,
     const std::string& hostname, uint16_t port, uint32_t remaining,
     channel::ptr channel, channel_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (ec)
     {

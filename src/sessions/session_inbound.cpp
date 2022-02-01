@@ -51,7 +51,7 @@ bool session_inbound::inbound() const
 
 void session_inbound::start(result_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (is_zero(network_.network_settings().inbound_port) ||
         is_zero(network_.network_settings().inbound_connections))
@@ -66,7 +66,7 @@ void session_inbound::start(result_handler handler)
 void session_inbound::handle_started(const code& ec,
     result_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (ec)
     {
@@ -89,7 +89,7 @@ void session_inbound::handle_started(const code& ec,
 
 void session_inbound::start_accept(const code& ec)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (ec)
         return;
@@ -100,7 +100,7 @@ void session_inbound::start_accept(const code& ec)
 
 void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (stopped(ec))
         return;
@@ -127,7 +127,7 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 void session_inbound::handle_channel_start(const code& ec,
     channel::ptr channel)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (ec)
         return;
@@ -157,7 +157,7 @@ void session_inbound::attach_protocols1(channel::ptr channel) const
 
 void session_inbound::handle_channel_stop(const code&)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 }
 
 } // namespace network

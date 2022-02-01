@@ -53,7 +53,7 @@ bool session_seed::notify() const
 
 void session_seed::start(result_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (is_zero(network_.network_settings().host_pool_capacity))
     {
@@ -69,7 +69,7 @@ void session_seed::start(result_handler handler)
 void session_seed::handle_started(const code& ec,
     result_handler handler)
 {
-    BC_ASSERT_MSG(network_.strand().running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (ec)
     {
