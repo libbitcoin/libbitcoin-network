@@ -106,16 +106,8 @@ void session_seed::handle_started(const code& ec,
 
 void session_seed::start_seeding(size_t start_size, result_handler handler)
 {
-    const auto complete = BIND2(handle_complete, start_size, handler);
-
-    // TODO: just use a state member variable, this will be stranded.
-
-    ////const auto join_handler = synchronize(complete, settings_.seeds.size(),
-    ////    NAME, synchronizer_terminate::on_count);
-
-    ////// We don't use parallel here because connect is itself asynchronous.
-    ////for (const auto& seed: settings_.seeds)
-    ////    start_seed(seed, join_handler);
+    ////for (const auto& seed: network_.network_settings().seeds)
+    ////    start_seed(seed, {});
 }
 
 void session_seed::start_seed(const config::endpoint& seed,

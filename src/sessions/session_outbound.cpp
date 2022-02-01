@@ -90,8 +90,9 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel)
 
     if (ec)
     {
-        ////// Retry with conditional delay in case of network error.
-        ////dispatch_delayed(cycle_delay(ec), BIND1(new_connection, _1));
+        // TODO: use timer to delay start in case of error other than
+        // channel_timeout. use network_.network_settings().connect_timeout().
+        new_connection(error::success);
         return;
     }
 
