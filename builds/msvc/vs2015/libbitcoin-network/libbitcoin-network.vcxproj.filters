@@ -264,9 +264,6 @@
     <ClCompile Include="..\..\..\..\src\sessions\session.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\sessions\session_batch.cpp">
-      <Filter>src\sessions</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\sessions\session_inbound.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
@@ -525,9 +522,6 @@
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp">
-      <Filter>include\bitcoin\network\sessions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_batch.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound.hpp">

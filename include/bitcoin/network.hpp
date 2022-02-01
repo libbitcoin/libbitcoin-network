@@ -97,7 +97,6 @@
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/sessions/session.hpp>
-#include <bitcoin/network/sessions/session_batch.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
 #include <bitcoin/network/sessions/session_outbound.hpp>

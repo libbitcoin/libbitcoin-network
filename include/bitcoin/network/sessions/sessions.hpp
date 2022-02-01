@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_SESSIONS_HPP
 
 #include <bitcoin/network/sessions/session.hpp>
-#include <bitcoin/network/sessions/session_batch.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
 #include <bitcoin/network/sessions/session_outbound.hpp>

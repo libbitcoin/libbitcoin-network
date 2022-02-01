@@ -210,7 +210,6 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/protocols/protocol_version_31402.cpp"
     "../../src/protocols/protocol_version_70002.cpp"
     "../../src/sessions/session.cpp"
-    "../../src/sessions/session_batch.cpp"
     "../../src/sessions/session_inbound.cpp"
     "../../src/sessions/session_manual.cpp"
     "../../src/sessions/session_outbound.cpp"

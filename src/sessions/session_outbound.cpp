@@ -23,6 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
+#include <bitcoin/network/sessions/session.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -30,10 +31,13 @@ namespace network {
 #define CLASS session_outbound
 
 using namespace bc::system;
+using namespace config;
 using namespace std::placeholders;
 
 session_outbound::session_outbound(p2p& network)
-  : session_batch(network)
+  : session(network),
+    batch_(std::max(network.network_settings().connect_batch_size, 1u)),
+    count_(zero)
 {
 }
 
@@ -80,8 +84,8 @@ void session_outbound::new_connection(const code&)
     if (stopped())
         return;
 
-    // CONNECT (wait)
-    session_batch::connect(BIND2(handle_connect, _1, _2));
+    // BATCH CONNECT (wait)
+    batch(BIND2(handle_connect, _1, _2));
 }
 
 void session_outbound::handle_connect(const code& ec, channel::ptr channel)
@@ -167,6 +171,80 @@ void session_outbound::attach_handshake(channel::ptr channel,
         channel->do_attach<protocol_version_31402>(network_, own_version,
             own_services, invalid_services, minimum_version, min_service)
             ->start(handshake);
+}
+
+// Batch connect.
+// ----------------------------------------------------------------------------
+
+void session_outbound::batch(channel_handler handler)
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    const auto connects = create_connectors(batch_);
+
+    channel_handler start =
+        BIND4(handle_batch, _1, _2, connects, std::move(handler));
+
+    // Initialize batch of connectors.
+    for (auto it = connects->begin(); it != connects->end() && !stopped(); ++it)
+        network_.fetch_address(BIND4(start_batch, _1, _2, *it, start));
+}
+
+void session_outbound::start_batch(const code& ec, const authority& host,
+    connector::ptr connector, channel_handler handler)
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    if (stopped(ec))
+    {
+        handler(error::service_stopped, nullptr);
+        return;
+    }
+
+    // This termination prevents a tight loop in the empty address pool case.
+    if (ec)
+    {
+        handler(ec, nullptr);
+        return;
+    }
+
+    // This creates a tight loop in the case of a small address pool.
+    if (blacklisted(host))
+    {
+        handler(error::address_blocked, nullptr);
+        return;
+    }
+
+    // CONNECT (wait)
+    connector->connect(host, std::move(handler));
+}
+
+// Called once for each call to start_batch.
+void session_outbound::handle_batch(const code& ec, channel::ptr channel,
+    connectors_ptr connectors, channel_handler complete)
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    const auto finish = (++count_ == batch_);
+
+    if (!ec)
+    {
+        // Clear unfinished connectors.
+        if (!finish)
+        {
+            count_ = batch_;
+            for (auto it = connectors->begin(); it != connectors->end(); ++it)
+                (*it)->stop();
+        }
+
+        // Got a connection.
+        complete(error::success, channel);
+        return;
+    }
+
+    // Got no successful connection.
+    if (finish)
+        complete(error::connect_failed, nullptr);
 }
 
 } // namespace network

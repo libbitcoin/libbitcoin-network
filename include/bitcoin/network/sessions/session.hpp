@@ -56,6 +56,7 @@ class BCT_API session
 {
 public:
     typedef std::function<void(const code&)> result_handler;
+    typedef std::function<void(const code&, channel::ptr)> channel_handler;
 
     virtual void start(result_handler handler);
     virtual void stop();
