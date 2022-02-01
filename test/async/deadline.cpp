@@ -92,9 +92,9 @@ BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
     timer->start([timer](code ec)
     {
         // In the case of a race won by the slow timer, this catches success.
-        // In the case of a race won by the stop timer, this will not fire.
+        // In the case of a race won by the stop timer, this catches canceled.
         // A 10s delay indicates the slow timer has won the race (unexpected).
-        BOOST_REQUIRE(timer && !ec);
+        BOOST_REQUIRE(timer && ec == error::operation_canceled);
     });
 
     // Stop timer.

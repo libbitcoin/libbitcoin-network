@@ -33,9 +33,7 @@ namespace network {
 using namespace std::placeholders;
 
 deadline::deadline(asio::strand& strand, const duration& timeout)
-  : duration_(timeout),
-    timer_(strand),
-    track<deadline>()
+  : duration_(timeout), timer_(strand), track<deadline>()
 {
 }
 
@@ -67,14 +65,11 @@ void deadline::stop()
     timer_.cancel(ignore);
 }
 
-// If the timer expires the callback is fired with a success code.
-// If the timer fails the callback is fired with the normalized error code.
-// If the timer is canceled before it has fired, no call is made (but cleared).
+// Callback always (cancel or otherwise) fired with the normalized error code.
 void deadline::handle_timer(const error::boost_code& ec,
     const handler& handle) const
 {
-    if (!error::asio_is_cancelled(ec))
-        handle(error::asio_to_error_code(ec));
+    handle(error::asio_to_error_code(ec));
 }
 
 } // namespace network

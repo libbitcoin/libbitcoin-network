@@ -142,8 +142,8 @@ void connector::handle_connect(const code& ec, socket::ptr socket,
     // But timer handler does not invoke handle_timer on stop.
     timer_->stop();
     stopped_ = true;
-
-    // socket->connect sets channel_stopped when canceled, otherwise error.
+    
+    // stopped_ is set on cancellation, so this is an error.
     if (ec)
     {
         handler(ec, nullptr);
@@ -169,7 +169,7 @@ void connector::handle_timer(const code& ec, const connect_handler& handler)
     resolver_.cancel();
     stopped_ = true;
 
-    // Timer does not invoke handler when canceled, so this is an error.
+    // stopped_ is set on cancellation, so this is an error.
     if (ec)
     {
         handler(ec, nullptr);

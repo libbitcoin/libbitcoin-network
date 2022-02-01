@@ -128,7 +128,7 @@ void acceptor::handle_accept(const code& ec, socket::ptr socket,
     timer_->stop();
     stopped_ = true;
 
-    // socket->accept sets channel_stopped when canceled, otherwise error.
+    // stopped_ is set on cancellation, so this is an error.
     if (ec)
     {
         handler(ec, nullptr);
@@ -155,7 +155,7 @@ void acceptor::handle_timer(const code& ec, const accept_handler& handler)
     acceptor_.cancel(ignore);
     stopped_ = true;
 
-    // Timer does not invoke handler when canceled, so this is an error.
+    // stopped_ is set on cancellation, so this is an error.
     if (ec)
     {
         handler(ec, nullptr);
