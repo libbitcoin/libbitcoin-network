@@ -47,10 +47,11 @@ public:
     typedef std::function<void(const code&)> result_handler;
 
     template <class Message>
-    void send(typename Message::ptr message, const result_handler& complete)
+    void send(typename Message::ptr message, result_handler&& complete)
     {
         using namespace messages;
-        send(serialize(*message, protocol_magic(), version()), complete);
+        send(serialize(*message, protocol_magic(), version()),
+            std::move(complete));
     }
 
     template <class Message, typename Handler = pump::handler<Message>>
@@ -80,9 +81,6 @@ protected:
     proxy(socket::ptr socket);
     virtual ~proxy();
 
-    void do_stop(const code& ec);
-    void do_subscribe_stop(result_handler handler, result_handler complete);
-
     virtual size_t maximum_payload() const = 0;
     virtual uint32_t protocol_magic() const = 0;
     virtual bool validate_checksum() const = 0;
@@ -90,18 +88,20 @@ protected:
     virtual uint32_t version() const = 0;
     virtual void signal_activity() = 0;
 
+    virtual void send(system::chunk_ptr payload, result_handler&& handler);
+
 private:
     typedef messages::heading::ptr heading_ptr;
 
     static std::string extract_command(system::chunk_ptr payload);
 
+    void do_stop(const code& ec);
+    void do_subscribe_stop(result_handler handler, result_handler complete);
+
     void read_heading();
     void handle_read_heading(const code& ec, size_t heading_size);
     void handle_read_payload(const code& ec, size_t payload_size,
         heading_ptr head);
-
-    void send(system::chunk_ptr payload, result_handler&& handler);
-    void send(system::chunk_ptr payload, const result_handler& handler);
     void handle_send(const code& ec, size_t bytes, system::chunk_ptr payload,
         const result_handler& handler);
 

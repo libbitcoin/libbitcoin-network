@@ -161,15 +161,16 @@ void session_manual::attach_protocols(channel::ptr channel,
     const auto version = channel->negotiated_version();
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
+    // TODO: pass session to base protocol construct (derive settings as required).
     if (version >= messages::level::bip31)
-        channel->do_attach<protocol_ping_60001>(heartbeat)->start();
+        channel->do_attach<protocol_ping_60001>(*this, heartbeat)->start();
     else
-        channel->do_attach<protocol_ping_31402>(heartbeat)->start();
+        channel->do_attach<protocol_ping_31402>(*this, heartbeat)->start();
 
     if (version >= messages::level::bip61)
-        channel->do_attach<protocol_reject_70002>()->start();
+        channel->do_attach<protocol_reject_70002>(*this)->start();
 
-    channel->do_attach<protocol_address_31402>(network_)->start();
+    channel->do_attach<protocol_address_31402>(*this)->start();
 }
 
 void session_manual::handle_channel_stop(const code& ec,

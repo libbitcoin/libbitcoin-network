@@ -45,7 +45,8 @@ class BCT_API protocol_ping_60001
 public:
     typedef std::shared_ptr<protocol_ping_60001> ptr;
 
-    protocol_ping_60001(channel::ptr channel, const duration& heartbeat);
+    protocol_ping_60001(const session& session, channel::ptr channel,
+        const duration& heartbeat);
 
 protected:
     void send_ping(const code& ec) override;

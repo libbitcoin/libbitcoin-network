@@ -33,9 +33,9 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-protocol_timer::protocol_timer(channel::ptr channel, const duration& timeout,
-    bool perpetual)
-  : protocol_events(channel),
+protocol_timer::protocol_timer(const session& session, channel::ptr channel,
+    const duration& timeout, bool perpetual)
+  : protocol_events(session, channel),
     timeout_(timeout),
     perpetual_(perpetual),
     timer_(std::make_shared<deadline>(channel->strand()))

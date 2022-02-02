@@ -34,6 +34,7 @@ namespace network {
 #define CLASS protocol_address_31402
 static const std::string protocol_name = "address";
 
+using namespace bc;
 using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
@@ -46,11 +47,10 @@ static messages::address configured_self(const network::settings& settings)
     return { { settings.self.to_address_item() } };
 }
 
-protocol_address_31402::protocol_address_31402(channel::ptr channel,
-    p2p& network)
-  : protocol_events(channel),
-    network_(network),
-    self_(configured_self(network_.network_settings()))
+protocol_address_31402::protocol_address_31402(const session& session,
+    channel::ptr channel)
+  : protocol_events(session, channel),
+    self_(configured_self(session.settings()))
 {
 }
 
@@ -60,8 +60,6 @@ protocol_address_31402::protocol_address_31402(channel::ptr channel,
 void protocol_address_31402::start()
 {
     BC_ASSERT_MSG(stranded(), "stranded");
-
-    const auto& settings = network_.network_settings();
 
     // Events start completes without invoking the handler.
     // Must have a handler to capture a shared self pointer in stop subscriber.
@@ -73,7 +71,7 @@ void protocol_address_31402::start()
     }
 
     // If we can't store addresses we don't ask for or handle them.
-    if (is_zero(settings.host_pool_capacity))
+    if (is_zero(settings().host_pool_capacity))
         return;
 
     SUBSCRIBE2(address, handle_receive_address, _1, _2);
@@ -97,7 +95,7 @@ void protocol_address_31402::handle_receive_address(const code& ec,
         << message->addresses.size() << ")";
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.load(message->addresses, {});
+    saves(message->addresses);
 }
 
 void protocol_address_31402::handle_receive_get_address(const code& ec,
@@ -108,11 +106,7 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return;
 
-    // Restore strand context ater network load.
-    network_.fetch_addresses(
-        boost::asio::bind_executor(network_.strand(),
-            std::bind(&protocol_address_31402::handle_fetch_addresses,
-                shared_from_base<protocol_address_31402>(), _1, _2)));
+    fetches(BIND2(handle_fetch_addresses, _1, _2));
 }
 
 void protocol_address_31402::handle_fetch_addresses(const code& ec,

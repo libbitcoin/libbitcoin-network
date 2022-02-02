@@ -37,15 +37,17 @@ static const std::string protocol_name = "seed";
 
 // TODO: manage timestamps (active channels are connected < 3 hours ago).
 
+using namespace bc;
 using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
 
 // Require three callbacks (or any error) before calling complete.
-protocol_seed_31402::protocol_seed_31402(channel::ptr channel, p2p& network)
-  : protocol_timer(channel, network.network_settings().channel_germination(),
-      false),
-    network_(network), events_(zero)
+protocol_seed_31402::protocol_seed_31402(const session& session,
+    channel::ptr channel)
+  : protocol_timer(session, channel,
+      session.settings().channel_germination(), false),
+    events_(zero)
 {
 }
 
@@ -56,7 +58,7 @@ void protocol_seed_31402::start(result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (is_zero(network_.network_settings().host_pool_capacity))
+    if (is_zero(settings().host_pool_capacity))
     {
         handler(error::address_not_found);
         return;
@@ -97,11 +99,8 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
     LOG_DEBUG(LOG_NETWORK)
         << "Received addresses.";
 
-    // Restore strand context ater network load.
-    network_.load(message->addresses,
-        boost::asio::bind_executor(network_.strand(),
-            std::bind(&protocol_seed_31402::handle_load_addresses,
-                shared_from_base<protocol_seed_31402>(), _1)));
+    // TODO: manage timestamps (active channels are connected < 3 hours ago).
+    saves(message->addresses, BIND1(handle_load_addresses, _1));    
 }
 
 void protocol_seed_31402::handle_load_addresses(const code& ec)
@@ -138,7 +137,7 @@ void protocol_seed_31402::handle_receive_get_address(const code& ec,
         return;
     }
 
-    if (is_zero(network_.network_settings().self.port()))
+    if (is_zero(settings().self.port()))
     {
         set_event(error::success);
         return;
@@ -147,7 +146,7 @@ void protocol_seed_31402::handle_receive_get_address(const code& ec,
     LOG_DEBUG(LOG_NETWORK)
         << "Receive get_address.";
 
-    SEND1(address{ { network_.network_settings().self.to_address_item() } },
+    SEND1(address{ { settings().self.to_address_item() } },
         handle_send_address, _1);
 }
 

@@ -135,7 +135,7 @@ void channel::do_stop(const code& ec)
     BC_ASSERT_MSG(stranded(), "strand");
     inactivity_->stop();
     expiration_->stop();
-    proxy::do_stop(ec);
+    proxy::stop(ec);
 }
 
 // Properties.

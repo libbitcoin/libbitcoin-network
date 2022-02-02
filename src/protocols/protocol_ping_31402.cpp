@@ -37,9 +37,9 @@ using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
 
-protocol_ping_31402::protocol_ping_31402(channel::ptr channel,
-    const duration& heartbeat)
-  : protocol_timer(channel, heartbeat)
+protocol_ping_31402::protocol_ping_31402(const session& session,
+    channel::ptr channel, const duration& heartbeat)
+  : protocol_timer(session, channel, heartbeat)
 {
 }
 

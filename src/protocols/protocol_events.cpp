@@ -22,6 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -31,8 +32,8 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-protocol_events::protocol_events(channel::ptr channel)
-  : protocol(channel),
+protocol_events::protocol_events(const session& session, channel::ptr channel)
+  : protocol(session, channel),
     handler_([](const code&) {}),
     stopped_(false)
 {

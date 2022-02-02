@@ -73,7 +73,7 @@ bool proxy::stopped() const
 
 void proxy::stop(const code& ec)
 {
-    boost::asio::post(strand(),
+    boost::asio::dispatch(strand(),
         std::bind(&proxy::do_stop, shared_from_this(), ec));
 }
 
@@ -97,7 +97,7 @@ void proxy::do_stop(const code& ec)
 void proxy::subscribe_stop(result_handler&& handler, result_handler&& complete)
 {
     // Stop is posted to strand to protect socket and subscribers.
-    boost::asio::post(strand(),
+    boost::asio::dispatch(strand(),
         std::bind(&proxy::do_subscribe_stop,
             shared_from_this(), std::move(handler), std::move(complete)));
 }
@@ -261,14 +261,6 @@ void proxy::send(system::chunk_ptr payload, result_handler&& handler)
     socket_->write(*payload,
         std::bind(&proxy::handle_send,
             shared_from_this(), _1, _2, payload, std::move(handler)));
-}
-
-void proxy::send(system::chunk_ptr payload, const result_handler& handler)
-{
-    // Post handle_send to strand upon stop, error, or buffer fully sent.
-    socket_->write(*payload,
-        std::bind(&proxy::handle_send,
-            shared_from_this(), _1, _2, payload, handler));
 }
 
 void proxy::handle_send(const code& ec, size_t, system::chunk_ptr payload,

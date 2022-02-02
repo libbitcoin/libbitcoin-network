@@ -35,8 +35,8 @@ class BCT_API protocol_timer
 {
 protected:
 
-    protocol_timer(channel::ptr channel, const duration& timeout,
-        bool perpetual=true);
+    protocol_timer(const session& session, channel::ptr channel,
+        const duration& timeout, bool perpetual=true);
 
     virtual void start(result_handler handle_event);
 

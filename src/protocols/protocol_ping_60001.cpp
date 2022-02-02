@@ -38,9 +38,9 @@ using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
 
-protocol_ping_60001::protocol_ping_60001(channel::ptr channel,
-    const duration& heartbeat)
-  : protocol_ping_31402(channel, heartbeat),
+protocol_ping_60001::protocol_ping_60001(const session& session,
+    channel::ptr channel, const duration& heartbeat)
+  : protocol_ping_31402(session, channel, heartbeat),
     pending_(false)
 {
 }

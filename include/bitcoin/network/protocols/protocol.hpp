@@ -46,6 +46,8 @@ namespace network {
 #define BOUND_PROTOCOL_TYPE(handler, args) \
     std::bind(PROTOCOL_ARGS_TYPE(handler, args))
 
+class session;
+
 /// Virtual base class for protocol implementation, mostly thread safe.
 class BCT_API protocol
   : public enable_shared_from_base<protocol>, system::noncopyable
@@ -56,8 +58,10 @@ public:
 protected:
     typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> result_handler;
+    typedef std::function<void(const code&, const messages::address_items&)>
+        fetches_handler;
 
-    protocol(channel::ptr channel);
+    protocol(const session& session, channel::ptr channel);
     virtual ~protocol();
 
     /// Bind a method in the derived class.
@@ -105,11 +109,16 @@ protected:
     void set_negotiated_version(uint32_t value);
     void stop(const code& ec);
 
+    const settings& settings() const;
+    void saves(const messages::address_items& addresses, result_handler handler={});
+    void fetches(fetches_handler handler);
+
     virtual void handle_send(const code& ec, const std::string& command);
     virtual const std::string& name() const = 0;
 
 private:
     channel::ptr channel_;
+    const session& session_;
     const std::string name_;
 };
 

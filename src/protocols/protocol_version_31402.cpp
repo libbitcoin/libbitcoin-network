@@ -27,7 +27,6 @@
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_timer.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -44,24 +43,24 @@ using namespace std::placeholders;
 // Configured min version is our own but we may require higer for some stuff.
 // Configured services was our but we found that most incoming connections are
 // set to zero, so that is currently the default (see below).
-protocol_version_31402::protocol_version_31402(channel::ptr channel, p2p& network)
-  : protocol_version_31402(channel, network,
-        network.network_settings().protocol_maximum,
-        network.network_settings().services,
-        network.network_settings().invalid_services,
-        network.network_settings().protocol_minimum,
+protocol_version_31402::protocol_version_31402(const session& session,
+    channel::ptr channel)
+  : protocol_version_31402(session, channel,
+        session.settings().protocol_maximum,
+        session.settings().services,
+        session.settings().invalid_services,
+        session.settings().protocol_minimum,
         messages::service::node_none
-        /*network.network_settings().services*/)
+        /*session.settings().services*/)
 {
 }
 
-protocol_version_31402::protocol_version_31402(channel::ptr channel,
-    p2p& network, uint32_t own_version, uint64_t own_services,
+protocol_version_31402::protocol_version_31402(const session& session,
+    channel::ptr channel,
+    uint32_t own_version, uint64_t own_services,
     uint64_t invalid_services, uint32_t minimum_version,
     uint64_t minimum_services)
-  : protocol_timer(channel, network.network_settings().channel_handshake(),
-      false),
-    network_(network),
+  : protocol_timer(session, channel, session.settings().channel_handshake(), false),
     own_version_(own_version),
     own_services_(own_services),
     invalid_services_(invalid_services),
@@ -98,7 +97,6 @@ messages::version protocol_version_31402::version_factory() const
     BC_ASSERT_MSG(stranded(), "stranded");
 
     const auto timestamp = static_cast<uint32_t>(zulu_time());
-    const auto& settings = network_.network_settings();
     const auto height = zero;//// network_.top_block().height();
 
     BC_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
@@ -119,8 +117,8 @@ messages::version protocol_version_31402::version_factory() const
             // We always match the services declared in our version.services.
             timestamp,
             own_services_,
-            settings.self.to_ip_address(),
-            settings.self.port(),
+            settings().self.to_ip_address(),
+            settings().self.port(),
         },
         nonce(),
         BC_USER_AGENT,
@@ -156,9 +154,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     // TODO: move these three checks to initialization.
     //-------------------------------------------------------------------------
 
-    const auto& settings = network_.network_settings();
-
-    if (settings.protocol_minimum < level::minimum_protocol)
+    if (settings().protocol_minimum < level::minimum_protocol)
     {
         LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, minimum below ("
@@ -167,7 +163,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         return;
     }
 
-    if (settings.protocol_maximum > level::maximum_protocol)
+    if (settings().protocol_maximum > level::maximum_protocol)
     {
         LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, maximum above ("
@@ -176,7 +172,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         return;
     }
 
-    if (settings.protocol_minimum > settings.protocol_maximum)
+    if (settings().protocol_minimum > settings().protocol_maximum)
     {
         LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, "

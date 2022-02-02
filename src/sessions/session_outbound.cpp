@@ -127,15 +127,16 @@ void session_outbound::attach_protocols(channel::ptr channel,
     const auto version = channel->negotiated_version();
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
+    // TODO: pass session to base protocol construct (derive settings as required).
     if (version >= messages::level::bip31)
-        channel->do_attach<protocol_ping_60001>(heartbeat)->start();
+        channel->do_attach<protocol_ping_60001>(*this, heartbeat)->start();
     else
-        channel->do_attach<protocol_ping_31402>(heartbeat)->start();
+        channel->do_attach<protocol_ping_31402>(*this, heartbeat)->start();
 
     if (version >= messages::level::bip61)
-        channel->do_attach<protocol_reject_70002>()->start();
+        channel->do_attach<protocol_reject_70002>(*this)->start();
 
-    channel->do_attach<protocol_address_31402>(network_)->start();
+    channel->do_attach<protocol_address_31402>(*this)->start();
 }
 
 void session_outbound::handle_channel_stop(const code& ec,
@@ -162,14 +163,15 @@ void session_outbound::attach_handshake(channel::ptr channel,
     const auto min_service = (own_services & messages::service::node_witness) |
         messages::service::node_network;
 
+    // TODO: pass session to base protocol construct (derive settings as required).
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= messages::level::bip61)
-        channel->do_attach<protocol_version_70002>(network_, own_version,
+        channel->do_attach<protocol_version_70002>(*this, own_version,
             own_services, invalid_services, minimum_version, min_service, relay)
             ->start(handshake);
     else
-        channel->do_attach<protocol_version_31402>(network_, own_version,
+        channel->do_attach<protocol_version_31402>(*this, own_version,
             own_services, invalid_services, minimum_version, min_service)
             ->start(handshake);
 }
@@ -187,8 +189,8 @@ void session_outbound::batch(channel_handler handler)
         BIND4(handle_batch, _1, _2, connects, std::move(handler));
 
     // Initialize batch of connectors.
-    for (auto it = connects->begin(); it != connects->end() && !stopped(); ++it)
-        network_.fetch_address(BIND4(start_batch, _1, _2, *it, start));
+    for (auto it = connects->begin(); it != connects->end(); ++it)
+        fetch(BIND4(start_batch, _1, _2, *it, start));
 }
 
 void session_outbound::start_batch(const code& ec, const authority& host,

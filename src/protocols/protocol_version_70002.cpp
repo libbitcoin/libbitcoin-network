@@ -25,7 +25,6 @@
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -43,24 +42,24 @@ static const std::string insufficient_services = "insufficient-services";
 // TODO: set explicitly on inbound (none or new config) and self on outbound.
 // Configured services was one but we found that most incoming connections are
 // set to zero, so that is currently the default (see below).
-protocol_version_70002::protocol_version_70002(channel::ptr channel,
-    p2p& network)
-  : protocol_version_70002(channel, network,
-        network.network_settings().protocol_maximum,
-        network.network_settings().services,
-        network.network_settings().invalid_services,
-        network.network_settings().protocol_minimum,
+protocol_version_70002::protocol_version_70002(const session& session,
+    channel::ptr channel)
+  : protocol_version_70002(session, channel,
+        session.settings().protocol_maximum,
+        session.settings().services,
+        session.settings().invalid_services,
+        session.settings().protocol_minimum,
         service::node_none,
-        /*network.network_settings().services,*/
-        network.network_settings().relay_transactions)
+        /*session.settings().services,*/
+        session.settings().relay_transactions)
 {
 }
 
-protocol_version_70002::protocol_version_70002(channel::ptr channel,
-    p2p& network, uint32_t own_version, uint64_t own_services,
+protocol_version_70002::protocol_version_70002(const session& session,
+    channel::ptr channel, uint32_t own_version, uint64_t own_services,
     uint64_t invalid_services, uint32_t minimum_version,
     uint64_t minimum_services, bool relay)
-  : protocol_version_31402(channel, network, own_version, own_services,
+  : protocol_version_31402(session, channel, own_version, own_services,
         invalid_services, minimum_version, minimum_services),
     relay_(relay)
 {

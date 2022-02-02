@@ -42,10 +42,10 @@ public:
     typedef std::shared_ptr<protocol_version_70002> ptr;
 
     /// Construct a version protocol instance using configured minimums.
-    protocol_version_70002(channel::ptr channel, p2p& network);
+    protocol_version_70002(const session& session, channel::ptr channel);
 
     /// Construct a version protocol instance.
-    protocol_version_70002(channel::ptr channel, p2p& network,
+    protocol_version_70002(const session& session, channel::ptr channel,
         uint32_t own_version, uint64_t own_services, uint64_t invalid_services,
         uint32_t minimum_version, uint64_t minimum_services, bool relay);
 

@@ -40,7 +40,7 @@ class BCT_API protocol_address_31402
 public:
     typedef std::shared_ptr<protocol_address_31402> ptr;
 
-    protocol_address_31402(channel::ptr channel, p2p& network);
+    protocol_address_31402(const session& session, channel::ptr channel);
 
     virtual void start() override;
 
@@ -56,7 +56,6 @@ protected:
 
     virtual const std::string& name() const override;
 
-    p2p& network_;
     const messages::address self_;
 };
 

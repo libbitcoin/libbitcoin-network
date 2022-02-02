@@ -32,6 +32,8 @@
 namespace libbitcoin {
 namespace network {
 
+class session;
+
 /// This class is thread safe (see comments on versions in cpp).
 /// A channel is a proxy with logged timers and state.
 /// Stop is thread safe and idempotent, may be called multiple times.
@@ -43,9 +45,9 @@ public:
 
     /// Attach a protocol to the channel, caller must start returned protocol.
     template <class Protocol, typename... Args>
-    typename Protocol::ptr do_attach(Args&&... args)
+    typename Protocol::ptr do_attach(const session& session, Args&&... args)
     {
-        BC_ASSERT_MSG(stranded(), "do_subscribe_stop");
+        BC_ASSERT_MSG(stranded(), "subscribe_stop");
 
         // HACK: public but must be called from channel strand.
         // HACK: this avoids need for post/callback during attach.
@@ -53,11 +55,11 @@ public:
             return nullptr;
 
         // Protocols are attached after channel start.
-        const auto protocol = std::make_shared<Protocol>(
+        const auto protocol = std::make_shared<Protocol>(session,
             shared_from_base<channel>(), std::forward<Args>(args)...);
 
         // Protocol lifetime is ensured by the channel stop subscriber.
-        do_subscribe_stop([=](const code&) { protocol->nop(); }, {});
+        subscribe_stop([=](const code&) { protocol->nop(); }, {});
         return protocol;
     }
 

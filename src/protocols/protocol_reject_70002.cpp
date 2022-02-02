@@ -37,8 +37,9 @@ using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
 
-protocol_reject_70002::protocol_reject_70002(channel::ptr channel)
-  : protocol_events(channel)
+protocol_reject_70002::protocol_reject_70002(const session& session,
+    channel::ptr channel)
+  : protocol_events(session, channel)
 {
 }
 

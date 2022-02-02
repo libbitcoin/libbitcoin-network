@@ -42,7 +42,7 @@ class BCT_API protocol_seed_31402
 public:
     typedef std::shared_ptr<protocol_seed_31402> ptr;
 
-    protocol_seed_31402(channel::ptr channel, p2p& network);
+    protocol_seed_31402(const session& session, channel::ptr channel);
 
     virtual void start(result_handler handle_event) override;
 
@@ -62,7 +62,6 @@ protected:
 
     virtual const std::string& name() const override;
 
-    p2p& network_;
     size_t events_;
     ////const config::authority self_;
 };

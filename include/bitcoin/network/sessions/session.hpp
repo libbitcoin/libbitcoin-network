@@ -61,6 +61,8 @@ public:
     virtual void start(result_handler handler);
     virtual void stop();
 
+    const network::settings& settings() const;
+
 protected:
     session(p2p& network);
     ~session();
@@ -73,13 +75,21 @@ protected:
         return BOUND_SESSION(handler, args);
     }
 
+    acceptor::ptr create_acceptor();
+    connector::ptr create_connector();
+    connectors_ptr create_connectors(size_t count);
+
     bool stopped() const;
     bool stopped(const code& ec) const;
     bool blacklisted(const config::authority& authority) const;
 
-    acceptor::ptr create_acceptor();
-    connector::ptr create_connector();
-    connectors_ptr create_connectors(size_t count);
+    friend class protocol;
+    void fetch(hosts::address_item_handler handler) const;
+    void fetches(hosts::address_items_handler handler) const;
+    void save(const messages::address_item& address,
+        result_handler complete) const;
+    void saves(const messages::address_items& addresses,
+        result_handler complete) const;
 
     virtual void start_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);

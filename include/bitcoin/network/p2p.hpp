@@ -86,13 +86,6 @@ public:
     /// Calls close().
     virtual ~p2p();
 
-    // I/O factories.
-    // ------------------------------------------------------------------------
-
-    virtual acceptor::ptr create_acceptor();
-    virtual connector::ptr create_connector();
-    virtual connectors_ptr create_connectors(size_t count);
-
     // Sequences.
     // ------------------------------------------------------------------------
 
@@ -134,7 +127,10 @@ public:
     // Properties.
     // ------------------------------------------------------------------------
 
-    /// Network configuration settings.
+    /// Get the number of addresses (thread safe).
+    size_t address_count() const;
+
+    /// Get the number of channels (thread safe).
     size_t channel_count() const;
 
     /// Network configuration settings.
@@ -144,37 +140,11 @@ public:
     asio::io_context& service();
 
     /// Return a reference to the network strand (thread safe).
-    /// Network strand is for sessions, but also hosts, subscribe and stop.
     asio::strand& strand();
 
-    /// Is the strand running in this thread.
-    bool stranded() const;
-
-    // Hosts collection.
-    // ------------------------------------------------------------------------
-
-    /// Get the number of addresses (thread safe).
-    size_t address_count() const;
-
-    /// Store an address.
-    void load(const messages::address_item& address,
-        result_handler complete);
-
-    /// Store a collection of addresses.
-    void load(const messages::address_items& addresses,
-        result_handler complete);
-
-    /// Remove an address.
-    void unload(const messages::address_item& address,
-        result_handler complete);
-
-    /// Get a randomly-selected address.
-    void fetch_address(hosts::address_item_handler handler) const;
-
-    /// Get a list of stored hosts
-    void fetch_addresses(hosts::address_items_handler handler) const;
-
 protected:
+    friend class session;
+
     /// Attach a session to the network, caller must start returned session.
     template <class Session, typename... Args>
     typename Session::ptr do_attach(Args&&... args)
@@ -196,6 +166,9 @@ protected:
     virtual session_inbound::ptr attach_inbound_session();
     virtual session_outbound::ptr attach_outbound_session();
 
+    /// Is the strand running in this thread.
+    bool stranded() const;
+
 private:
     template <typename Message>
     void do_broadcast(typename Message::ptr message, result_handler handler)
@@ -206,35 +179,48 @@ private:
             channel->send<Message>(message, handler);
     }
 
-    void handle_start(code ec, result_handler handler);
-    void handle_run(code ec, result_handler handler);
-
     void do_start(result_handler handler);
     void do_run(result_handler handler);
     void do_close();
+
+    void handle_start(code ec, result_handler handler);
+    void handle_run(code ec, result_handler handler);
   
     void do_subscribe_connect(connect_handler handler, result_handler complete);
     void do_subscribe_close(result_handler handler, result_handler complete);
 
-    // Distinct names required to bind.
+    // Distinct method names required for std::bind.
     void do_connect1(const config::endpoint& endpoint);
     void do_connect2(const std::string& hostname, uint16_t port);
     void do_connect3(const std::string& hostname, uint16_t port,
         channel_handler handler);
 
-    // hosts
-    void do_load(const messages::address_item& host, result_handler complete);
-    void do_loads(const messages::address_items& hosts, result_handler complete);
-    void do_unload(const messages::address_item& host, result_handler complete);
-
-    void do_fetch_address(hosts::address_item_handler handler) const;
-    void do_fetch_addresses(hosts::address_items_handler handler) const;
-
-    friend class session;
+    ////friend class session;
     void pend(uint64_t nonce);
     void unpend(uint64_t nonce);
     void unstore(channel::ptr channel);
     code store(channel::ptr channel, bool notify, bool inbound);
+
+    ////friend class session;
+    void fetch(hosts::address_item_handler handler) const;
+    void fetches(hosts::address_items_handler handler) const;
+    void dump(const messages::address_item& address, result_handler complete);
+    void save(const messages::address_item& address, result_handler complete);
+    void saves(const messages::address_items& addresses,
+        result_handler complete);
+
+    // hosts
+    void do_fetch(hosts::address_item_handler handler) const;
+    void do_fetches(hosts::address_items_handler handler) const;
+    void do_dump(const messages::address_item& host, result_handler complete);
+    void do_save(const messages::address_item& host, result_handler complete);
+    void do_saves(const messages::address_items& hosts,
+        result_handler complete);
+
+    ////friend class session;
+    acceptor::ptr create_acceptor();
+    connector::ptr create_connector();
+    connectors_ptr create_connectors(size_t count);
 
     // These are thread safe.
     const settings& settings_;

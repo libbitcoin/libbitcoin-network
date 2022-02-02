@@ -40,7 +40,8 @@ class BCT_API protocol_ping_31402
 public:
     typedef std::shared_ptr<protocol_ping_31402> ptr;
 
-    protocol_ping_31402(channel::ptr channel, const duration& heartbeat);
+    protocol_ping_31402(const session& session, channel::ptr channel,
+        const duration& heartbeat);
 
     virtual void start() override;
 

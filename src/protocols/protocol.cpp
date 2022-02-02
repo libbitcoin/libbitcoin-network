@@ -20,9 +20,11 @@
 
 #include <cstdint>
 #include <string>
+#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 #include <bitcoin/network/net/net.hpp>
 
 namespace libbitcoin {
@@ -31,8 +33,8 @@ namespace network {
 using namespace bc::system;
 using namespace messages;
 
-protocol::protocol(channel::ptr channel)
-  : channel_(channel)
+protocol::protocol(const session& session, channel::ptr channel)
+  : channel_(channel), session_(session)
 {
 }
 
@@ -90,6 +92,24 @@ void protocol::handle_send(const code&, const std::string&)
     // Send and receive failures are logged by the proxy.
     // This provides a convenient default overridable handler.
     BC_ASSERT_MSG(stranded(), "strand");
+}
+
+const settings& protocol::settings() const
+{
+    return session_.settings();
+}
+
+void protocol::saves(const messages::address_items& addresses,
+    result_handler handler)
+{
+    session_.saves(addresses,
+        boost::asio::bind_executor(channel_->strand(), handler));
+}
+
+void protocol::fetches(fetches_handler handler)
+{
+    session_.fetches(
+        boost::asio::bind_executor(channel_->strand(), handler));
 }
 
 } // namespace network

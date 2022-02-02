@@ -169,15 +169,16 @@ void session_seed::attach_protocols(channel::ptr channel,
     const auto version = channel->negotiated_version();
     const auto heartbeat = network_.network_settings().channel_heartbeat();
 
+    // TODO: pass session to base protocol construct (derive settings as required).
     if (version >= messages::level::bip31)
-        channel->do_attach<protocol_ping_60001>(heartbeat)->start();
+        channel->do_attach<protocol_ping_60001>(*this, heartbeat)->start();
     else
-        channel->do_attach<protocol_ping_31402>(heartbeat)->start();
+        channel->do_attach<protocol_ping_31402>(*this, heartbeat)->start();
 
     if (version >= messages::level::bip61)
-        channel->do_attach<protocol_reject_70002>()->start();
+        channel->do_attach<protocol_reject_70002>(*this)->start();
 
-    channel->do_attach<protocol_seed_31402>(network_)->start(handler);
+    channel->do_attach<protocol_seed_31402>(*this)->start(handler);
 }
 
 void session_seed::handle_channel_stop(const code& ec)
@@ -210,14 +211,15 @@ void session_seed::attach_handshake(channel::ptr channel,
     const auto minimum_version = settings.protocol_minimum;
     const auto minimum_services = messages::service::node_none;
 
+    // TODO: pass session to base protocol construct (derive settings as required).
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= messages::level::bip61)
-        channel->do_attach<protocol_version_70002>(network_, own_version,
+        channel->do_attach<protocol_version_70002>(*this, own_version,
             own_services, invalid_services, minimum_version, minimum_services,
             relay)->start(handshake);
     else
-        channel->do_attach<protocol_version_31402>(network_, own_version,
+        channel->do_attach<protocol_version_31402>(*this, own_version,
             own_services, invalid_services, minimum_version, minimum_services)
             ->start(handshake);
 }

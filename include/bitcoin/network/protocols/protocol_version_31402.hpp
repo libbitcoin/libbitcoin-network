@@ -42,10 +42,10 @@ public:
     typedef std::shared_ptr<protocol_version_31402> ptr;
 
     /// Construct a version protocol instance using configured minimums.
-    protocol_version_31402(channel::ptr channel, p2p& network);
+    protocol_version_31402(const session& session, channel::ptr channel);
 
     /// Construct a version protocol instance.
-    protocol_version_31402(channel::ptr channel, p2p& network,
+    protocol_version_31402(const session& session, channel::ptr channel,
         uint32_t own_version, uint64_t own_services, uint64_t invalid_services,
         uint32_t minimum_version, uint64_t minimum_services);
 
@@ -65,7 +65,6 @@ protected:
 
     virtual const std::string& name() const override;
 
-    p2p& network_;
     const uint32_t own_version_;
     const uint64_t own_services_;
     const uint64_t invalid_services_;

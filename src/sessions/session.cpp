@@ -108,10 +108,10 @@ void session::attach_handshake(channel::ptr channel,
     // Channel attach and start both require channel strand.
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
-    if (network_.network_settings().protocol_maximum >= messages::level::bip61)
-        channel->do_attach<protocol_version_70002>(network_)->start(handshake);
+    if (settings().protocol_maximum >= messages::level::bip61)
+        channel->do_attach<protocol_version_70002>(*this)->start(handshake);
     else
-        channel->do_attach<protocol_version_31402>(network_)->start(handshake);
+        channel->do_attach<protocol_version_31402>(*this)->start(handshake);
 }
 
 void session::attach_protocols(channel::ptr channel,
@@ -173,23 +173,8 @@ void session::handle_stop(const code& ec, channel::ptr channel,
     stopped(ec);
 }
 
-// Properties.
+// Factories.
 // ----------------------------------------------------------------------------
-
-bool session::stopped() const
-{
-    return stopped_.load(std::memory_order_relaxed);
-}
-
-bool session::stopped(const code& ec) const
-{
-    return stopped() || ec == error::service_stopped;
-}
-
-bool session::blacklisted(const config::authority& authority) const
-{
-    return contains(network_.network_settings().blacklists, authority);
-}
 
 acceptor::ptr session::create_acceptor()
 {
@@ -206,6 +191,29 @@ connectors_ptr session::create_connectors(size_t count)
     return network_.create_connectors(count);
 }
 
+// Properties.
+// ----------------------------------------------------------------------------
+
+bool session::stopped() const
+{
+    return stopped_.load(std::memory_order_relaxed);
+}
+
+bool session::stopped(const code& ec) const
+{
+    return stopped() || ec == error::service_stopped;
+}
+
+bool session::blacklisted(const config::authority& authority) const
+{
+    return contains(settings().blacklists, authority);
+}
+
+const network::settings& session::settings() const
+{
+    return network_.network_settings();
+}
+
 bool session::inbound() const
 {
     return false;
@@ -214,6 +222,35 @@ bool session::inbound() const
 bool session::notify() const
 {
     return true;
+}
+
+// Methods.
+// ----------------------------------------------------------------------------
+
+void session::fetch(hosts::address_item_handler handler) const
+{
+    network_.fetch(handler);
+}
+
+void session::fetches(hosts::address_items_handler handler) const
+{
+    network_.fetches(handler);
+}
+
+void session::save(const messages::address_item& address,
+    result_handler complete) const
+{
+    // stackoverflow.com/questions/57411283/
+    // calling-non-const-function-of-another-class-by-reference-from-const-function
+    network_.save(address, complete);
+}
+
+void session::saves(const messages::address_items& addresses,
+    result_handler complete) const
+{
+    // stackoverflow.com/questions/57411283/
+    // calling-non-const-function-of-another-class-by-reference-from-const-function
+    network_.saves(addresses, complete);
 }
 
 } // namespace network

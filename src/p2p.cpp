@@ -91,7 +91,7 @@ connectors_ptr p2p::create_connectors(size_t count)
     const auto connects = std::make_shared<connectors>(connectors{});
     connects->reserve(count);
 
-    for (auto connect = 0; connect < count; ++connect)
+    for (size_t connect = 0; connect < count; ++connect)
         connects->push_back(create_connector());
 
     return connects;
@@ -288,6 +288,16 @@ void p2p::do_connect3(const std::string& hostname, uint16_t port,
 // Properties.
 // ----------------------------------------------------------------------------
 
+size_t p2p::address_count() const
+{
+    return hosts_.count();
+}
+
+size_t p2p::channel_count() const
+{
+    return channel_count_.load(std::memory_order_relaxed);
+}
+
 const settings& p2p::network_settings() const
 {
     return settings_;
@@ -303,6 +313,7 @@ asio::strand& p2p::strand()
     return strand_;
 }
 
+// protected
 bool p2p::stranded() const
 {
     return strand_.running_in_this_thread();
@@ -310,20 +321,51 @@ bool p2p::stranded() const
 
 // Hosts collection.
 // ----------------------------------------------------------------------------
-// TODO: protected, expose to session, wrapper to maintain protocol context.
 
-size_t p2p::address_count() const
+void p2p::fetch(hosts::address_item_handler handler) const
 {
-    return hosts_.count();
+    boost::asio::dispatch(
+        strand_, std::bind(&p2p::do_fetch, this, std::move(handler)));
 }
 
-void p2p::load(const messages::address_item& host, result_handler handler)
+void p2p::do_fetch(hosts::address_item_handler handler) const
+{
+    BC_ASSERT_MSG(stranded(), "hosts_");
+    hosts_.fetch(handler);
+}
+
+void p2p::fetches(hosts::address_items_handler handler) const
 {
     boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_load, this, host, std::move(handler)));
+        std::bind(&p2p::do_fetches, this, std::move(handler)));
 }
 
-void p2p::do_load(const messages::address_item& host, result_handler handler)
+void p2p::do_fetches(hosts::address_items_handler handler) const
+{
+    BC_ASSERT_MSG(stranded(), "hosts_");
+    hosts_.fetch(handler);
+}
+
+void p2p::dump(const messages::address_item& host, result_handler handler)
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_dump, this, host, std::move(handler)));
+}
+
+void p2p::do_dump(const messages::address_item& host, result_handler handler)
+{
+    BC_ASSERT_MSG(stranded(), "hosts_");
+    hosts_.remove(host);
+    handler(error::success);
+}
+
+void p2p::save(const messages::address_item& host, result_handler handler)
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_save, this, host, std::move(handler)));
+}
+
+void p2p::do_save(const messages::address_item& host, result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.store(host);
@@ -331,65 +373,21 @@ void p2p::do_load(const messages::address_item& host, result_handler handler)
 }
 
 // TODO: use pointer.
-void p2p::load(const messages::address_items& hosts, result_handler handler)
+void p2p::saves(const messages::address_items& hosts, result_handler handler)
 {
     boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_loads, this, hosts, std::move(handler)));
+        std::bind(&p2p::do_saves, this, hosts, std::move(handler)));
 }
 
-void p2p::do_loads(const messages::address_items& hosts, result_handler handler)
+void p2p::do_saves(const messages::address_items& hosts, result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.store(hosts);
     handler(error::success);
 }
 
-void p2p::unload(const messages::address_item& host, result_handler handler)
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_unload, this, host, std::move(handler)));
-}
-
-void p2p::do_unload(const messages::address_item& host, result_handler handler)
-{
-    BC_ASSERT_MSG(stranded(), "hosts_");
-    hosts_.remove(host);
-    handler(error::success);
-}
-
-void p2p::fetch_address(hosts::address_item_handler handler) const
-{
-    boost::asio::dispatch(
-        strand_, std::bind(&p2p::do_fetch_address, this, std::move(handler)));
-}
-
-void p2p::do_fetch_address(hosts::address_item_handler handler) const
-{
-    BC_ASSERT_MSG(stranded(), "hosts_");
-    hosts_.fetch(handler);
-}
-
-void p2p::fetch_addresses(hosts::address_items_handler handler) const
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_fetch_addresses, this, std::move(handler)));
-}
-
-void p2p::do_fetch_addresses(hosts::address_items_handler handler) const
-{
-    BC_ASSERT_MSG(stranded(), "hosts_");
-    hosts_.fetch(handler);
-}
-
 // Connection management.
 // ----------------------------------------------------------------------------
-// TODO: protected, expose to session, wrapper to maintain protocol context.
-
-// Thread safe, inexact (ok).
-size_t p2p::channel_count() const
-{
-    return channel_count_.load(std::memory_order_relaxed);
-}
 
 void p2p::pend(uint64_t nonce)
 {
@@ -439,7 +437,6 @@ void p2p::unstore(channel::ptr channel)
 
 // Specializations (protected).
 // ----------------------------------------------------------------------------
-// Create derived sessions and override these to inject from derived p2p class.
 
 // protected
 session_seed::ptr p2p::attach_seed_session()
