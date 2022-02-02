@@ -348,12 +348,6 @@ void p2p::do_fetches(hosts::address_items_handler handler) const
 
 void p2p::dump(const messages::address_item& host, result_handler handler)
 {
-    boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_dump, this, host, std::move(handler)));
-}
-
-void p2p::do_dump(const messages::address_item& host, result_handler handler)
-{
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.remove(host);
     handler(error::success);

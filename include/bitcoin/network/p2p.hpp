@@ -212,7 +212,6 @@ private:
     // hosts
     void do_fetch(hosts::address_item_handler handler) const;
     void do_fetches(hosts::address_items_handler handler) const;
-    void do_dump(const messages::address_item& host, result_handler complete);
     void do_save(const messages::address_item& host, result_handler complete);
     void do_saves(const messages::address_items& hosts,
         result_handler complete);
