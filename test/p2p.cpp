@@ -24,8 +24,199 @@
 #include <boost/format.hpp>
 #include <bitcoin/network.hpp>
 
-using namespace bc;
+using namespace bc::network;
+using namespace bc::system::chain;
 using namespace bc::network::messages;
+
+// Trivial tests just validate static inits (required because p2p tests disabled in travis).
+BOOST_AUTO_TEST_SUITE(network_tests)
+
+class accessor
+  : public p2p
+{
+public:
+    using p2p::p2p;
+
+    virtual session_seed::ptr attach_seed_session() override
+    {
+    }
+
+    virtual session_manual::ptr attach_manual_session() override
+    {
+    }
+
+    virtual session_inbound::ptr attach_inbound_session() override
+    {
+    }
+
+    virtual session_outbound::ptr attach_outbound_session() override
+    {
+    }
+};
+
+BOOST_AUTO_TEST_CASE(p2p__network_settings__unstarted__expected)
+{
+    settings set(selection::mainnet);
+    BOOST_REQUIRE_EQUAL(set.threads, 1u);
+
+    p2p net(set);
+    BOOST_REQUIRE_EQUAL(net.network_settings().threads, 1u);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__address_count__unstarted__zero)
+{
+    const settings set(selection::mainnet);
+    p2p net(set);
+    BOOST_REQUIRE_EQUAL(net.address_count(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__channel_count__unstarted__zero)
+{
+    const settings set(selection::mainnet);
+    p2p net(set);
+    BOOST_REQUIRE_EQUAL(net.channel_count(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__connect__unstarted__service_stopped)
+{
+    const settings set(selection::mainnet);
+    p2p net(set);
+
+    std::promise<bool> promise;
+    const auto handler = [&](const code& ec, channel::ptr channel)
+    {
+        BOOST_REQUIRE(!channel);
+        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
+        promise.set_value(true);
+    };
+
+    net.connect({ "truckers.ca" });
+    net.connect("truckers.ca", 42);
+    net.connect("truckers.ca", 42, handler);
+    BOOST_REQUIRE(promise.get_future().get());
+}
+
+BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstarted__success)
+{
+    const settings set(selection::mainnet);
+    p2p net(set);
+
+    std::promise<bool> promise_handler;
+    const auto handler = [&](const code& ec, channel::ptr channel)
+    {
+        BOOST_REQUIRE(!channel);
+        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
+        promise_handler.set_value(true);
+    };
+
+    std::promise<bool> promise_complete;
+    const auto complete = [&](const code& ec)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::success);
+        promise_complete.set_value(true);
+    };
+
+    net.subscribe_connect(handler, complete);
+    BOOST_REQUIRE(promise_complete.get_future().get());
+
+    // Close (or ~p2p) required to clear subscription.
+    net.close();
+    BOOST_REQUIRE(promise_handler.get_future().get());
+}
+
+BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstarted__service_stopped)
+{
+    const settings set(selection::mainnet);
+    p2p net(set);
+
+    std::promise<bool> promise_handler;
+    const auto handler = [&](const code& ec)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
+        promise_handler.set_value(true);
+    };
+
+    std::promise<bool> promise_complete;
+    const auto complete = [&](const code& ec)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::success);
+        promise_complete.set_value(true);
+    };
+
+    net.subscribe_close(handler, complete);
+    BOOST_REQUIRE(promise_complete.get_future().get());
+
+    // Close (or ~p2p) required to clear subscription.
+    net.close();
+    BOOST_REQUIRE(promise_handler.get_future().get());
+}
+
+BOOST_AUTO_TEST_CASE(p2p__start__no__peers_no_seeds__success)
+{
+    settings set(selection::mainnet);
+    BOOST_REQUIRE(set.peers.empty());
+    set.seeds.clear();
+
+    p2p net(set);
+    BOOST_REQUIRE(net.network_settings().peers.empty());
+    BOOST_REQUIRE(net.network_settings().seeds.empty());
+
+    std::promise<bool> promise;
+    const auto handler = [&](const code& ec)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::success);
+        promise.set_value(true);
+    };
+
+    net.start(handler);
+    BOOST_REQUIRE(promise.get_future().get());
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__not_started__service_stopped)
+{
+    settings set(selection::mainnet);
+    p2p net(set);
+
+    std::promise<bool> promise;
+    const auto handler = [&](const code& ec)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
+        promise.set_value(true);
+    };
+
+    net.run(handler);
+    BOOST_REQUIRE(promise.get_future().get());
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds__success)
+{
+    settings set(selection::mainnet);
+    BOOST_REQUIRE(set.peers.empty());
+    set.seeds.clear();
+
+    p2p net(set);
+    BOOST_REQUIRE(net.network_settings().peers.empty());
+    BOOST_REQUIRE(net.network_settings().seeds.empty());
+
+    std::promise<bool> promise_run;
+    const auto run_handler = [&](const code& ec)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::success);
+        promise_run.set_value(true);
+    };
+
+    std::promise<bool> promise_start;
+    const auto start_handler = [&](const code& ec)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::success);
+        net.run(run_handler);
+    };
+
+    net.start(start_handler);
+    BOOST_REQUIRE(promise_run.get_future().get());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
 
 // TODO: build mock and/or use dedicated test service.
 #define SEED1 "testnet1.libbitcoin.net:18333"
@@ -164,87 +355,7 @@ static int send_result(const Message& message, p2p& network, int channels)
     return result;
 }
 
-// Trivial tests just validate static inits (required because p2p tests disabled in travis).
-BOOST_AUTO_TEST_SUITE(empty_tests)
-
-BOOST_AUTO_TEST_CASE(empty_test)
-{
-    BOOST_REQUIRE(true);
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-
 BOOST_AUTO_TEST_SUITE(p2p_tests)
-
-// configuration
-
-////BOOST_AUTO_TEST_CASE(p2p__top_block__default__zero_null_hash)
-////{
-////    print_headers(TEST_NAME);
-////    const settings configuration;
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(network.top_block().height(), 0);
-////    BOOST_REQUIRE_EQUAL(network.top_block().hash(), null_hash);
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__set_top_block1__values__expected)
-////{
-////    print_headers(TEST_NAME);
-////    const settings configuration;
-////    p2p network(configuration);
-////    const size_t expected_height = 42;
-////    const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-////    network.set_top_block({ expected_hash, expected_height });
-////    BOOST_REQUIRE_EQUAL(network.top_block().hash(), expected_hash);
-////    BOOST_REQUIRE_EQUAL(network.top_block().height(), expected_height);
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__set_top_block2__values__expected)
-////{
-////    print_headers(TEST_NAME);
-////    const settings configuration;
-////    p2p network(configuration);
-////    const size_t expected_height = 42;
-////    const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-////    const system::chain::checkpoint expected{ hash, expected_height };
-////    network.set_top_block(expected);
-////    BOOST_REQUIRE_EQUAL(network.top_block().hash(), expected.hash());
-////    BOOST_REQUIRE_EQUAL(network.top_block().height(), expected.height());
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__top_header__default__zero_null_hash)
-////{
-////    print_headers(TEST_NAME);
-////    const settings configuration;
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(network.top_header().height(), 0);
-////    BOOST_REQUIRE_EQUAL(network.top_header().hash(), null_hash);
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__set_top_header1__values__expected)
-////{
-////    print_headers(TEST_NAME);
-////    const settings configuration;
-////    p2p network(configuration);
-////    const size_t expected_height = 42;
-////    const auto expected_hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-////    network.set_top_header({ expected_hash, expected_height });
-////    BOOST_REQUIRE_EQUAL(network.top_header().hash(), expected_hash);
-////    BOOST_REQUIRE_EQUAL(network.top_header().height(), expected_height);
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__set_top_header2__values__expected)
-////{
-////    print_headers(TEST_NAME);
-////    const settings configuration;
-////    p2p network(configuration);
-////    const size_t expected_height = 42;
-////    const auto hash = hash_literal("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
-////    const system::chain::checkpoint expected{ hash, expected_height };
-////    network.set_top_header(expected);
-////    BOOST_REQUIRE_EQUAL(network.top_header().hash(), expected.hash());
-////    BOOST_REQUIRE_EQUAL(network.top_header().height(), expected.height());
-////}
 
 // service stopped
 

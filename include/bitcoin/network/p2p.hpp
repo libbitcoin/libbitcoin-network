@@ -154,8 +154,11 @@ protected:
         const auto session = std::make_shared<Session>(*this,
             std::forward<Args>(args)...);
 
+        const auto handler = [=](const code&) { session->stop(); };
+        const auto complete = [=](const code&) {};
+
         // Session lifetime is ensured by the network stop subscriber.
-        do_subscribe_close([=](const code&){ session->stop(); }, {});
+        do_subscribe_close(handler, complete);
         return session;
     }
 

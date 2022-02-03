@@ -183,25 +183,25 @@ void p2p::do_close()
 {
     BC_ASSERT_MSG(stranded(), "do_stop (multiple members)");
 
-    // Stop and clear manual session.
+    // Release reference to manual session (also held by stop subscriber).
     if (manual_)
-    {
-        manual_->stop();
         manual_.reset();
-    }
 
-    // Stop and clear all other sessions.
+    // Notify and delete all stop subscribers (all sessions).
     stop_subscriber_->stop(error::service_stopped);
 
-    // Clear subscribers to new channel notifications.
+    // Notify and delete subscribers to channel notifications.
     channel_subscriber_->stop(error::service_stopped, nullptr);
 
-    // Stop and clear all channels.
+    // Stop all channels.
     // These are each posted to each channel strand by the channel proxy.
     // Each proxy stop subscriber will invoke stop handlers on that strand.
     // That causes session channel removal to be posted to network strand.
     for (const auto& channel: channels_)
         channel->stop(error::service_stopped);
+
+    // Release all channels.
+    channels_.clear();
 
     // Serialize hosts file (log results).
     /*code*/ hosts_.stop();
