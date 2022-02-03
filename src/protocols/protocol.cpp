@@ -94,7 +94,7 @@ void protocol::handle_send(const code&, const std::string&)
     BC_ASSERT_MSG(stranded(), "strand");
 }
 
-const settings& protocol::settings() const
+const network::settings& protocol::settings() const
 {
     return session_.settings();
 }

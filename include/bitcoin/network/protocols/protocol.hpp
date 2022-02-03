@@ -109,7 +109,7 @@ protected:
     void set_negotiated_version(uint32_t value);
     void stop(const code& ec);
 
-    const settings& settings() const;
+    const network::settings& settings() const;
     void saves(const messages::address_items& addresses, result_handler handler={});
     void fetches(fetches_handler handler);
 
