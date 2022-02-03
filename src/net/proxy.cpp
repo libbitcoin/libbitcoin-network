@@ -110,6 +110,11 @@ void proxy::do_subscribe_stop(result_handler handler, result_handler complete)
 // Read cycle (read continues until stop called).
 // ----------------------------------------------------------------------------
 
+code proxy::notify(identifier id, uint32_t version, system::reader& source)
+{
+    return pump_subscriber_.notify(id, version, source);
+}
+
 void proxy::read_heading()
 {
     // Terminates the read loop.
@@ -219,7 +224,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
     system::read::bytes::copy payload_reader(payload_buffer_);
 
     // Notify subscribers of the new message.
-    auto code = pump_subscriber_.notify(head->id(), version(), payload_reader);
+    auto code = notify(head->id(), version(), payload_reader);
 
     if (code)
     {

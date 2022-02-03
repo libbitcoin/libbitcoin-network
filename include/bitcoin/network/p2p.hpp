@@ -168,6 +168,11 @@ protected:
     virtual session_inbound::ptr attach_inbound_session();
     virtual session_outbound::ptr attach_outbound_session();
 
+    ////friend class session;
+    /// Override for test injection.
+    virtual acceptor::ptr create_acceptor();
+    virtual connector::ptr create_connector();
+
     /// Is the strand running in this thread.
     bool stranded() const;
 
@@ -180,6 +185,8 @@ private:
         for (const auto& channel: channels_)
             channel->send<Message>(message, handler);
     }
+
+    connectors_ptr create_connectors(size_t count);
 
     void do_start(result_handler handler);
     void do_run(result_handler handler);
@@ -211,17 +218,11 @@ private:
     void saves(const messages::address_items& addresses,
         result_handler complete);
 
-    // hosts
     void do_fetch(hosts::address_item_handler handler) const;
     void do_fetches(hosts::address_items_handler handler) const;
     void do_save(const messages::address_item& host, result_handler complete);
     void do_saves(const messages::address_items& hosts,
         result_handler complete);
-
-    ////friend class session;
-    acceptor::ptr create_acceptor();
-    connector::ptr create_connector();
-    connectors_ptr create_connectors(size_t count);
 
     // These are thread safe.
     const settings& settings_;

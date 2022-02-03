@@ -89,6 +89,8 @@ protected:
     virtual void signal_activity() = 0;
 
     virtual void send(system::chunk_ptr payload, result_handler&& handler);
+    virtual code notify(messages::identifier id, uint32_t version,
+        system::reader& source);
 
 private:
     typedef messages::heading::ptr heading_ptr;

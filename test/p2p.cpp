@@ -28,31 +28,173 @@ using namespace bc::network;
 using namespace bc::system::chain;
 using namespace bc::network::messages;
 
-// Trivial tests just validate static inits (required because p2p tests disabled in travis).
-BOOST_AUTO_TEST_SUITE(network_tests)
+class mock_channel
+  : public channel
+{
+public:
+    using channel::channel;
 
-class accessor
+    virtual void start() override
+    {
+        channel::start();
+    }
+
+    virtual void stop(const code& ec) override
+    {
+        channel::stop(ec);
+    }
+
+    // Override protected base capture sent payload.
+    virtual void send(system::chunk_ptr payload,
+        result_handler&& handler) override
+    {
+        payload_ = payload;
+    }
+
+    // Override protected base to notify subscribers.
+    code notify(identifier id, uint32_t version, system::reader& source)
+    {
+        return notify(id, version, source);
+    }
+
+    // Get last captured payload.
+    system::chunk_ptr sent() const
+    {
+
+        return payload_;
+    }
+
+private:
+    system::chunk_ptr payload_;
+};
+
+// Use mock acceptor to inject mock channel.
+class mock_acceptor
+  : public acceptor
+{
+public:
+    mock_acceptor(asio::strand& strand, asio::io_context& service,
+        const settings& settings)
+      : acceptor(strand, service, settings), stopped_(false), port_(0)
+    {
+    }
+
+    // Get captured port.
+    uint16_t port() const
+    {
+        return port_;
+    }
+
+    // Get captured stopped.
+    bool stopped() const
+    {
+        return stopped_;
+    }
+
+    // Capture port.
+    virtual code start(uint16_t port) override
+    {
+        port_ = port;
+    }
+
+    // Capture stopped.
+    virtual void stop() override
+    {
+        stopped_ = true;
+    }
+
+    // Inject mock channel.
+    virtual void accept(accept_handler&& handler) override
+    {
+        const auto socket = std::make_shared<network::socket>(service_);
+        const auto created = std::make_shared<mock_channel>(socket, settings_);
+        handler(error::success, created);
+    }
+
+private:
+    bool stopped_;
+    uint16_t port_;
+};
+
+// Use mock connector to inject mock channel.
+class mock_connector
+  : public connector
+{
+public:
+    mock_connector(asio::strand& strand, asio::io_context& service,
+        const settings& settings)
+      : connector(strand, service, settings), stopped_(false)
+    {
+    }
+
+    // Get captured stopped.
+    bool stopped() const
+    {
+        return stopped_;
+    }
+
+    // Capture stopped.
+    virtual void stop() override
+    {
+        stopped_ = true;
+    }
+
+    // Inject mock channel.
+    virtual void connect(const std::string& hostname, uint16_t port,
+        connect_handler&& handler) override
+    {
+        const auto socket = std::make_shared<network::socket>(service_);
+        const auto created = std::make_shared<mock_channel>(socket, settings_);
+        handler(error::success, created);
+    }
+
+private:
+    bool stopped_;
+};
+
+// Use mock p2p network to inject mock channels.
+class mock_p2p
   : public p2p
 {
 public:
     using p2p::p2p;
 
-    virtual session_seed::ptr attach_seed_session() override
+    ////virtual session_seed::ptr attach_seed_session() override
+    ////{
+    ////    return p2p::attach_seed_session();
+    ////}
+    ////
+    ////virtual session_manual::ptr attach_manual_session() override
+    ////{
+    ////    return p2p::attach_manual_session();
+    ////}
+    ////
+    ////virtual session_inbound::ptr attach_inbound_session() override
+    ////{
+    ////    return p2p::attach_inbound_session();
+    ////}
+    ////
+    ////virtual session_outbound::ptr attach_outbound_session() override
+    ////{
+    ////    return p2p::attach_outbound_session();
+    ////}
+
+    // Create mock acceptor to inject mock channel.
+    virtual acceptor::ptr create_acceptor() override
     {
+        return std::make_shared<mock_acceptor>(strand(), service(),
+            network_settings());
     }
 
-    virtual session_manual::ptr attach_manual_session() override
+    // Create mock connector to inject mock channel.
+    virtual connector::ptr create_connector() override
     {
-    }
-
-    virtual session_inbound::ptr attach_inbound_session() override
-    {
-    }
-
-    virtual session_outbound::ptr attach_outbound_session() override
-    {
+        return std::make_shared<mock_connector>(strand(), service(),
+            network_settings());
     }
 };
+
+BOOST_AUTO_TEST_SUITE(p2p_tests)
 
 BOOST_AUTO_TEST_CASE(p2p__network_settings__unstarted__expected)
 {
@@ -216,123 +358,6 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds__success)
     BOOST_REQUIRE(promise_run.get_future().get());
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
-// TODO: build mock and/or use dedicated test service.
-#define SEED1 "testnet1.libbitcoin.net:18333"
-#define SEED2 "testnet2.libbitcoin.net:18333"
-
-// NOTE: this is insufficient as the address varies.
-#define SEED_AUTHORITIES \
-{ \
-    { "72.65.246.83" }, \
-    { "72.65.246.84" }, \
-}
-
-#define SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(name) \
-    auto name = settings(system::chain::selection::testnet); \
-    name.threads = 1; \
-    name.outbound_connections = 0; \
-    name.manual_attempt_limit = 2
-
-#define SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(name) \
-    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(name); \
-    name.host_pool_capacity = 42; \
-    name.seeds = { { SEED1 } }; \
-    name.hosts_file = get_log_path(TEST_NAME, "hosts")
-
-#define SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(name) \
-    auto name = settings(system::chain::selection::testnet); \
-    name.threads = 3; \
-    name.host_pool_capacity = 42; \
-    name.outbound_connections = 5; \
-    name.seeds = { { SEED1 } }; \
-    name.hosts_file = get_log_path(TEST_NAME, "hosts")
-
-std::string get_log_path(const std::string& test, const std::string& file)
-{
-    const auto path = test + "." + file + ".log";
-    boost::filesystem::remove_all(path);
-    return path;
-}
-
-////static void print_headers(const std::string& test)
-////{
-////    const auto header = "=========== " + test + " ==========";
-////    LOG_INFO(SUITE_NAME) << header;
-////}
-////
-////static int start_result(p2p& network)
-////{
-////    std::promise<code> promise;
-////    const auto handler = [&promise](code ec)
-////    {
-////        promise.set_value(ec);
-////    };
-////    network.start(handler);
-////    return promise.get_future().get().value();
-////}
-////
-////static int connect_result(p2p& network, const config::endpoint& host)
-////{
-////    std::promise<code> promise;
-////    const auto handler = [&promise](code ec, channel::ptr)
-////    {
-////        promise.set_value(ec);
-////    };
-////    network.connect(host.host(), host.port(), handler);
-////    return promise.get_future().get().value();
-////}
-////
-////static int run_result(p2p& network)
-////{
-////    std::promise<code> promise;
-////    const auto handler = [&promise](code ec)
-////    {
-////        promise.set_value(ec);
-////    };
-////    network.run(handler);
-////    return promise.get_future().get().value();
-////}
-////
-////static int subscribe_result(p2p& network)
-////{
-////    std::promise<code> promise;
-////    const auto handler = [&promise](code ec, channel::ptr)
-////    {
-////        promise.set_value(ec);
-////        return false;
-////    };
-////    network.subscribe_connect(handler);
-////    return promise.get_future().get().value();
-////}
-////
-////static int subscribe_connect_result(p2p& network, const config::endpoint& host)
-////{
-////    std::promise<code> promise;
-////    const auto handler = [&promise](code ec, channel::ptr)
-////    {
-////        promise.set_value(ec);
-////        return false;
-////    };
-////    network.subscribe_connect(handler);
-////    network.connect(host);
-////    return promise.get_future().get().value();
-////}
-////
-////static int subscribe_connect_port_result(p2p& network, const config::endpoint& host)
-////{
-////    std::promise<code> promise;
-////    const auto handler = [&promise](code ec, channel::ptr)
-////    {
-////        promise.set_value(ec);
-////        return false;
-////    };
-////    network.subscribe_connect(handler);
-////    network.connect(host.host(), host.port());
-////    return promise.get_future().get().value();
-////}
-
 template<class Message>
 static int send_result(const Message& message, p2p& network, int channels)
 {
@@ -354,266 +379,5 @@ static int send_result(const Message& message, p2p& network, int channels)
     BOOST_REQUIRE_EQUAL(channels, 0);
     return result;
 }
-
-BOOST_AUTO_TEST_SUITE(p2p_tests)
-
-// service stopped
-
-////BOOST_AUTO_TEST_CASE(p2p__connect__stopped__service_stopped)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    p2p network(configuration);
-////    const config::endpoint host(SEED1);
-////    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::service_stopped);
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__subscribe__stopped__service_stopped)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(subscribe_result(network), error::service_stopped);
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__subscribe__started__service_stopped_on_destruct)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////
-////    const auto handler = [](code ec, channel::ptr channel)
-////    {
-////        BOOST_REQUIRE(!channel);
-////        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
-////        return false;
-////    };
-////
-////    // Expect queued handler until destruct because service is started.
-////    network.subscribe_connect(handler);
-////}
-
-// start with no connections
-
-////BOOST_AUTO_TEST_CASE(p2p__start__no_connections__start_success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__start__no_connections__stop_success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////    BOOST_REQUIRE(network.stop());
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__start__no_connections_restart__start_operation_failed)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::operation_failed);
-////}
-
-// one connection with no seeds
-
-////BOOST_AUTO_TEST_CASE(p2p__start__outbound_no_seeds__success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    configuration.outbound_connections = 1;
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////}
-
-// channel_timeout (node offline)
-////BOOST_AUTO_TEST_CASE(p2p__connect__started__success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    p2p network(configuration);
-////    const config::endpoint host(SEED1);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(run_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::channel_timeout);
-////}
-
-// single seed start
-
-// long delay (peer timeout?)
-////// unresponsive?
-////BOOST_AUTO_TEST_CASE(p2p__start__seed_session__start_stop_start_success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::unresponsive);
-////    BOOST_REQUIRE(network.stop());
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::unresponsive);
-////}
-////
-////BOOST_AUTO_TEST_CASE(p2p__start__seed_session_handshake_timeout__start_unresponsive_stop_success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
-////    configuration.channel_handshake_seconds = 0;
-////    p2p network(configuration);
-////
-////    // The (timeout) error on the individual connection is ignored.
-////    // The connection failure results in a failure to generate any addresses.
-////    // The failure to generate an increase of 100 addresses produces error::unresponsive.
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::unresponsive);
-////
-////    // The service never started but stop will still succeed (and is optional).
-////    BOOST_REQUIRE(network.stop());
-////}
-////
-////BOOST_AUTO_TEST_CASE(p2p__start__seed_session_connect_timeout__start_unresponsive_stop_success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
-////    configuration.connect_timeout_seconds = 0;
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::unresponsive);
-////    BOOST_REQUIRE(network.stop());
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__start__seed_session_germination_timeout__start_unresponsive_stop_success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
-////    configuration.channel_germination_seconds = 0;
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::unresponsive);
-////    BOOST_REQUIRE(network.stop());
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__start__seed_session_inactivity_timeout__start_unresponsive_stop_success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
-////    configuration.channel_inactivity_minutes = 0;
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::unresponsive);
-////    BOOST_REQUIRE(network.stop());
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__start__seed_session_expiration_timeout__start_unresponsive_stop_success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_ONE_SEED(configuration);
-////    configuration.channel_expiration_minutes = 0;
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::unresponsive);
-////    BOOST_REQUIRE(network.stop());
-////}
-
-// blacklisted seeds
-
-////// This may fail due to missing blacklist entries for the specified seed hosts.
-////BOOST_AUTO_TEST_CASE(p2p__start__seed_session_blacklisted__start_unresponsive_stop_success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    configuration.host_pool_capacity = 42;
-////    configuration.hosts_file = get_log_path(TEST_NAME, "hosts");
-////    configuration.seeds = { { SEED1 }, { SEED2 } };
-////    configuration.blacklists = SEED_AUTHORITIES;
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::unresponsive);
-////    BOOST_REQUIRE(network.stop());
-////}
-
-// Disabled for live test reliability.
-// This may fail due to connecting to the same host on different addresses.
-////BOOST_AUTO_TEST_CASE(p2p__connect__twice__address_in_use)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    p2p network(configuration);
-////    const config::endpoint host(SEED1);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(run_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::success);
-////    BOOST_REQUIRE_EQUAL(connect_result(network, host), error::address_in_use);
-////}
-
-// subscribe
-
-////BOOST_AUTO_TEST_CASE(p2p__subscribe__started_connect__success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    p2p network(configuration);
-////    const config::endpoint host(SEED1);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(subscribe_connect_result(network, host), error::success);
-////}
-
-////BOOST_AUTO_TEST_CASE(p2p__subscribe__started_connect_with_port__success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    p2p network(configuration);
-////    const config::endpoint host(SEED1);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(subscribe_connect_port_result(network, host), error::success);
-////}
-
-// broadcast to two manual connections
-
-////BOOST_AUTO_TEST_CASE(p2p__broadcast__ping_two_distinct_hosts__two_sends_and_successful_completion)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_ONE_THREAD_NO_CONNECTIONS(configuration);
-////    p2p network(configuration);
-////    const config::endpoint host1(SEED1);
-////    const config::endpoint host2(SEED2);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(run_result(network), error::success);
-////    BOOST_REQUIRE_EQUAL(connect_result(network, host1), error::success);
-////    BOOST_REQUIRE_EQUAL(connect_result(network, host2), error::success);
-////    BOOST_REQUIRE_EQUAL(send_result(ping(0), network, 2), error::success);
-////}
-
-// one seed and five outbound connections
-
-////BOOST_AUTO_TEST_CASE(p2p__subscribe__seed_outbound__success)
-////{
-////    print_headers(TEST_NAME);
-////    SETTINGS_TESTNET_THREE_THREADS_ONE_SEED_FIVE_OUTBOUND(configuration);
-////    p2p network(configuration);
-////    BOOST_REQUIRE_EQUAL(start_result(network), error::success);
-////
-////    std::promise<code> subscribe;
-////    const auto subscribe_handler = [&subscribe, &network](code ec, channel::ptr)
-////    {
-////        // Fires on first connection.
-////        subscribe.set_value(ec);
-////        return false;
-////    };
-////    network.subscribe_connect(subscribe_handler);
-////
-////    std::promise<code> run;
-////    const auto run_handler = [&run, &network](code ec)
-////    {
-////        // Fires once the session is started.
-////        run.set_value(ec);
-////    };
-////    network.run(run_handler);
-////
-////    BOOST_REQUIRE_EQUAL(run.get_future().get().value(), error::success);
-////    BOOST_REQUIRE_EQUAL(subscribe.get_future().get().value(), error::success);
-////
-////    // ~network blocks on stopping all channels.
-////    // during channel.stop each channel removes itself from the collection.
-////}
 
 BOOST_AUTO_TEST_SUITE_END()

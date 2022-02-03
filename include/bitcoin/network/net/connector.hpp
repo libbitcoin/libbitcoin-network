@@ -57,7 +57,7 @@ public:
     // ------------------------------------------------------------------------
 
     /// Cancel work and close the connector (idempotent).
-    void stop();
+    virtual void stop();
 
     // Methods.
     // ------------------------------------------------------------------------
@@ -77,7 +77,7 @@ public:
     virtual void connect(const std::string& hostname, uint16_t port,
         connect_handler&& handler);
 
-private:
+protected:
     void handle_resolve(const error::boost_code& ec, const asio::resolved& it,
         socket::ptr socket, connect_handler handler);
     void handle_connect(const code& ec, socket::ptr socket,
