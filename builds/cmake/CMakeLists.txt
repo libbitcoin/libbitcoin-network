@@ -308,7 +308,7 @@ if (with-tests)
         "../../test/sessions/session.cpp" )
 
     add_test( NAME libbitcoin-network-test COMMAND libbitcoin-network-test
-            --run_test=empty_tests
+            --run_test=*
             --show_progress=no
             --detect_memory_leak=0
             --report_level=no
