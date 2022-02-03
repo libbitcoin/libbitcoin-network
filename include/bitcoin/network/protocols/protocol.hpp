@@ -73,7 +73,7 @@ protected:
     }
 
     template <class Protocol, class Message, typename Handler, typename... Args,
-        typename system::if_const<Message> = true>
+        typename std::enable_if<std::is_const<Message>::value, bool>::type = true>
     void send(Message& message, Handler&& handler, Args&&... args)
     {
         channel_->send<Message>(system::to_shared(message),
@@ -81,7 +81,7 @@ protected:
     }
 
     template <class Protocol, class Message, typename Handler, typename... Args,
-        typename system::if_non_const<Message> = true>
+        typename std::enable_if<!std::is_const<Message>::value, bool>::type = true>
     void send(Message&& message, Handler&& handler, Args&&... args)
     {
         channel_->send<Message>(system::to_shared(std::move(message)),
