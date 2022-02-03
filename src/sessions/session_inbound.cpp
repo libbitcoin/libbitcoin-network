@@ -82,10 +82,15 @@ void session_inbound::handle_started(const code& ec,
     start_accept(code);
 }
 
-////void session_inbound::stop()
-////{
-////    acceptor_->stop();
-////}
+void session_inbound::stop()
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    if (acceptor_)
+        acceptor_->stop();
+
+    session::stop();
+}
 
 // Accept sequence.
 // ----------------------------------------------------------------------------

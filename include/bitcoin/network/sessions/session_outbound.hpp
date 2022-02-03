@@ -42,8 +42,9 @@ public:
     /// Construct an instance.
     session_outbound(p2p& network);
 
-    /// Start the session.
-    void start(result_handler handler) override;
+    /// Start/stop the session.
+    virtual void start(result_handler handler) override;
+    virtual void stop() override;
 
 protected:
     /// Overridden to attach minimum service level for witness support.

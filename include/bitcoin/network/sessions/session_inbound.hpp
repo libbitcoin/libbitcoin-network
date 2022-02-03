@@ -43,8 +43,9 @@ public:
     /// Construct an instance.
     session_inbound(p2p& network);
 
-    /// Start the session.
-    void start(result_handler handler) override;
+    /// Start/stop the session.
+    virtual void start(result_handler handler) override;
+    virtual void stop() override;
 
 protected:
     /// Override to attach specialized protocols upon channel start.

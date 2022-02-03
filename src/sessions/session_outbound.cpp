@@ -75,10 +75,15 @@ void session_outbound::handle_started(const code& ec,
     handler(error::success);
 }
 
-////void session_outbound::stop()
-////{
-////    handle_batch?
-////}
+void session_outbound::stop()
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    ////if (acceptor_)
+    ////    acceptor_->stop();
+
+    session::stop();
+}
 
 // Connnect cycle.
 // ----------------------------------------------------------------------------

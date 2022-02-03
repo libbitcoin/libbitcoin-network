@@ -44,8 +44,9 @@ public:
     /// Construct an instance.
     session_seed(p2p& network);
 
-    /// Start the session.
-    void start(result_handler handler) override;
+    /// Start/stop the session.
+    virtual void start(result_handler handler) override;
+    virtual void stop() override;
 
 protected:
     /// Overridden to set service and version mins upon session start.

@@ -57,8 +57,8 @@ void session_seed::start(result_handler handler)
 
     if (is_zero(settings().host_pool_capacity))
     {
-        LOG_INFO(LOG_NETWORK)
-            << "Not configured to populate an address pool.";
+        ////LOG_INFO(LOG_NETWORK)
+        ////    << "Not configured to populate an address pool.";
         handler(error::success);
         return;
     }
@@ -101,10 +101,15 @@ void session_seed::handle_started(const code& ec,
     start_seeding(start_size, handler);
 }
 
-////void session_seed::stop()
-////{
-////    connector->stop();
-////}
+void session_seed::stop()
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    ////if (acceptor_)
+    ////    acceptor_->stop();
+
+    session::stop();
+}
 
 // Seed sequence.
 // ----------------------------------------------------------------------------

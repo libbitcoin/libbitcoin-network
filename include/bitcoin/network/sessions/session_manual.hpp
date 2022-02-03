@@ -46,8 +46,9 @@ public:
     /// Construct an instance.
     session_manual(p2p& network);
 
-    /// Start the manual session.
-    void start(result_handler handler) override;
+    /// Start/stop the manual session.
+    virtual void start(result_handler handler) override;
+    virtual void stop() override;
 
     /// Maintain connection to a node.
     virtual void connect(const std::string& hostname, uint16_t port);
