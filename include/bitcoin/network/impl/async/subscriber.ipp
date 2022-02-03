@@ -72,11 +72,10 @@ void subscriber<Args...>::stop(const Args&... args) noexcept
     if (stopped_)
         return;
 
-    stopped_ = true;
     notify(args...);
+    stopped_ = true;
     queue_.clear();
 }
-
 
 } // namespace network
 } // namespace libbitcoin

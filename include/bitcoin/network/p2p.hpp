@@ -50,7 +50,6 @@ public:
     typedef std::function<void()> stop_handler;
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
-    typedef std::function<bool(const code&, channel::ptr)> connect_handler;
     typedef subscriber<code, channel::ptr> channel_subscriber;
     typedef subscriber<code> stop_subscriber;
 
@@ -103,7 +102,7 @@ public:
     // ------------------------------------------------------------------------
 
     /// Subscribe to connection creation events.
-    virtual void subscribe_connect(connect_handler handler,
+    virtual void subscribe_connect(channel_handler handler,
         result_handler complete);
 
     /// Subscribe to service stop event.
@@ -127,10 +126,10 @@ public:
     // Properties.
     // ------------------------------------------------------------------------
 
-    /// Get the number of addresses (thread safe).
+    /// Get the number of addresses.
     size_t address_count() const;
 
-    /// Get the number of channels (thread safe).
+    /// Get the number of channels.
     size_t channel_count() const;
 
     /// Network configuration settings.
@@ -186,7 +185,7 @@ private:
     void handle_start(code ec, result_handler handler);
     void handle_run(code ec, result_handler handler);
   
-    void do_subscribe_connect(connect_handler handler, result_handler complete);
+    void do_subscribe_connect(channel_handler handler, result_handler complete);
     void do_subscribe_close(result_handler handler, result_handler complete);
 
     // Distinct method names required for std::bind.

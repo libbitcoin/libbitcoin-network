@@ -30,7 +30,7 @@ using namespace messages;
 
 // Common default values (no settings context).
 settings::settings()
-  : threads(0),
+  : threads(1),
     protocol_maximum(level::maximum_protocol),
     protocol_minimum(level::minimum_protocol),
     services(service::node_none),

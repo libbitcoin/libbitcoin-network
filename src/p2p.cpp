@@ -66,6 +66,7 @@ p2p::p2p(const settings& settings)
     stop_subscriber_(std::make_shared<stop_subscriber>(strand_)),
     channel_subscriber_(std::make_shared<channel_subscriber>(strand_))
 {
+    BC_ASSERT_MSG(!is_zero(settings.threads), "empty threadpool");
 }
 
 p2p::~p2p()
@@ -183,8 +184,11 @@ void p2p::do_close()
     BC_ASSERT_MSG(stranded(), "do_stop (multiple members)");
 
     // Stop and clear manual session.
-    manual_->stop();
-    manual_.reset();
+    if (manual_)
+    {
+        manual_->stop();
+        manual_.reset();
+    }
 
     // Stop and clear all other sessions.
     stop_subscriber_->stop(error::service_stopped);
@@ -210,14 +214,14 @@ void p2p::do_close()
 // ----------------------------------------------------------------------------
 
 // External or derived callers.
-void p2p::subscribe_connect(connect_handler handler, result_handler complete)
+void p2p::subscribe_connect(channel_handler handler, result_handler complete)
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_subscribe_connect,
             this, std::move(handler), std::move(complete)));
 }
 
-void p2p::do_subscribe_connect(connect_handler handler, result_handler complete)
+void p2p::do_subscribe_connect(channel_handler handler, result_handler complete)
 {
     BC_ASSERT_MSG(stranded(), "channel_subscriber_");
     channel_subscriber_->subscribe(std::move(handler));
@@ -283,6 +287,8 @@ void p2p::do_connect3(const std::string& hostname, uint16_t port,
 
     if (manual_)
         manual_->connect(hostname, port, handler);
+    else
+        handler(error::service_stopped, nullptr);
 }
 
 // Properties.
