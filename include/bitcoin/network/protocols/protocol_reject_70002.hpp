@@ -41,13 +41,13 @@ public:
 
     protocol_reject_70002(const session& session, channel::ptr channel);
 
-    virtual void start() override;
+    void start() override;
 
 protected:
     virtual void handle_receive_reject(const code& ec,
         messages::reject::ptr reject);
 
-    virtual const std::string& name() const override;
+    const std::string& name() const override;
 };
 
 } // namespace network

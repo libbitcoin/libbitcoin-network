@@ -45,20 +45,20 @@ public:
     session_seed(p2p& network);
 
     /// Start/stop the session.
-    virtual void start(result_handler handler) override;
-    virtual void stop() override;
+    void start(result_handler handler) override;
+    void stop() override;
 
 protected:
     /// Overridden to set service and version mins upon session start.
-    virtual void attach_handshake(channel::ptr channel,
+    void attach_handshake(channel::ptr channel,
         result_handler handle_started) const override;
 
     /// Override to attach specialized protocols upon channel start.
-    virtual void attach_protocols(channel::ptr channel,
+    void attach_protocols(channel::ptr channel,
         result_handler handler) const override;
 
     /// Override to preclude notify on connect.
-    virtual bool notify() const override;
+    bool notify() const override;
 
 private:
     void start_seeding(size_t start_size, result_handler handler);

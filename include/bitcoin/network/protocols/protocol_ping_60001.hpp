@@ -57,7 +57,7 @@ protected:
     virtual void handle_receive_pong(const code& ec,
         messages::pong::ptr message, uint64_t nonce);
 
-    virtual const std::string& name() const override;
+    const std::string& name() const override;
 
 private:
     std::atomic<bool> pending_;

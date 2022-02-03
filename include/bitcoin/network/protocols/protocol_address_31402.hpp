@@ -42,7 +42,7 @@ public:
 
     protocol_address_31402(const session& session, channel::ptr channel);
 
-    virtual void start() override;
+    void start() override;
 
 protected:
     virtual void handle_stop(const code& ec);
@@ -54,7 +54,7 @@ protected:
     virtual void handle_receive_get_address(const code& ec,
         messages::get_address::ptr message);
 
-    virtual const std::string& name() const override;
+    const std::string& name() const override;
 
     const messages::address self_;
 };

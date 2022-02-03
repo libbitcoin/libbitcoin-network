@@ -44,16 +44,16 @@ public:
     session_inbound(p2p& network);
 
     /// Start/stop the session.
-    virtual void start(result_handler handler) override;
-    virtual void stop() override;
+    void start(result_handler handler) override;
+    void stop() override;
 
 protected:
     /// Override to attach specialized protocols upon channel start.
-    virtual void attach_protocols(channel::ptr channel,
+    void attach_protocols(channel::ptr channel,
         result_handler handler={}) const override;
 
     /// Override to preclude pending the nonce.
-    virtual bool inbound() const override;
+    bool inbound() const override;
 
 private:
     void start_accept(const code& ec);

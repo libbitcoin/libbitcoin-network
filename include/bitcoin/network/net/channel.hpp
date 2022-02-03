@@ -65,8 +65,8 @@ public:
 
     channel(socket::ptr socket, const settings& settings);
 
-    virtual void start() override;
-    virtual void stop(const code& ec) override;
+    void start() override;
+    void stop(const code& ec) override;
 
     uint64_t nonce() const;
     uint32_t negotiated_version() const;
@@ -77,12 +77,12 @@ public:
 protected:
     void do_stop(const code& ec);
 
-    virtual size_t maximum_payload() const override;
-    virtual uint32_t protocol_magic() const override;
-    virtual bool validate_checksum() const override;
-    virtual bool verbose() const override;
-    virtual uint32_t version() const override;
-    virtual void signal_activity() override;
+    size_t maximum_payload() const override;
+    uint32_t protocol_magic() const override;
+    bool validate_checksum() const override;
+    bool verbose() const override;
+    uint32_t version() const override;
+    void signal_activity() override;
 
 private:
     void start_expiration();

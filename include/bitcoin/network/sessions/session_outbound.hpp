@@ -43,16 +43,16 @@ public:
     session_outbound(p2p& network);
 
     /// Start/stop the session.
-    virtual void start(result_handler handler) override;
-    virtual void stop() override;
+    void start(result_handler handler) override;
+    void stop() override;
 
 protected:
     /// Overridden to attach minimum service level for witness support.
-    virtual void attach_handshake(channel::ptr channel,
+    void attach_handshake(channel::ptr channel,
         result_handler handle_started) const override;
 
     /// Override to attach specialized protocols upon channel start.
-    virtual void attach_protocols(channel::ptr channel,
+    void attach_protocols(channel::ptr channel,
         result_handler handler={}) const override;
 
 private:

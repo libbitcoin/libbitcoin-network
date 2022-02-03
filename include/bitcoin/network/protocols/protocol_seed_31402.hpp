@@ -44,7 +44,7 @@ public:
 
     protocol_seed_31402(const session& session, channel::ptr channel);
 
-    virtual void start(result_handler handle_event) override;
+    void start(result_handler handle_event) override;
 
 protected:
     // Expose polymorphic start method from base.
@@ -60,7 +60,7 @@ protected:
     virtual void handle_receive_get_address(const code& ec,
         messages::get_address::ptr message);
 
-    virtual const std::string& name() const override;
+    const std::string& name() const override;
 
     size_t events_;
     ////const config::authority self_;

@@ -47,8 +47,8 @@ public:
     session_manual(p2p& network);
 
     /// Start/stop the manual session.
-    virtual void start(result_handler handler) override;
-    virtual void stop() override;
+    void start(result_handler handler) override;
+    void stop() override;
 
     /// Maintain connection to a node.
     virtual void connect(const std::string& hostname, uint16_t port);
@@ -59,7 +59,7 @@ public:
 
 protected:
     /// Override to attach specialized protocols upon channel start.
-    virtual void attach_protocols(channel::ptr channel,
+    void attach_protocols(channel::ptr channel,
         result_handler handler={}) const override;
 
 private:

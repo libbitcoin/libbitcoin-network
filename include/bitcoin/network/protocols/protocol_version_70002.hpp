@@ -58,7 +58,7 @@ protected:
     virtual void handle_receive_reject(const code& ec,
         messages::reject::ptr reject);
 
-    virtual const std::string& name() const override;
+    const std::string& name() const override;
 
     const bool relay_;
 };

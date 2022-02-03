@@ -43,7 +43,7 @@ public:
     protocol_ping_31402(const session& session, channel::ptr channel,
         const duration& heartbeat);
 
-    virtual void start() override;
+    void start() override;
 
 protected:
     // Expose polymorphic start method from base.
@@ -54,7 +54,7 @@ protected:
     virtual void handle_receive_ping(const code& ec,
         messages::ping::ptr message);
 
-    virtual const std::string& name() const override;
+    const std::string& name() const override;
 };
 
 } // namespace network
