@@ -53,9 +53,9 @@ bool session_seed::notify() const
 
 void session_seed::start(result_handler handler)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(network_.network_settings().host_pool_capacity))
+    if (is_zero(settings().host_pool_capacity))
     {
         LOG_INFO(LOG_NETWORK)
             << "Not configured to populate an address pool.";
@@ -69,7 +69,7 @@ void session_seed::start(result_handler handler)
 void session_seed::handle_started(const code& ec,
     result_handler handler)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
     {
@@ -77,7 +77,7 @@ void session_seed::handle_started(const code& ec,
         return;
     }
 
-    const auto start_size = network_.address_count();
+    const auto start_size = address_count();
 
     if (!is_zero(start_size))
     {
@@ -88,7 +88,7 @@ void session_seed::handle_started(const code& ec,
         return;
     }
 
-    if (network_.network_settings().seeds.empty())
+    if (settings().seeds.empty())
     {
         LOG_ERROR(LOG_NETWORK)
             << "Seeding is required but no seeds are configured.";
@@ -163,11 +163,10 @@ void session_seed::handle_channel_start(const code& ec,
 void session_seed::attach_protocols(channel::ptr channel,
     result_handler handler) const
 {
-    // Channel attach and start both require channel strand.
-    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     const auto version = channel->negotiated_version();
-    const auto heartbeat = network_.network_settings().channel_heartbeat();
+    const auto heartbeat = settings().channel_heartbeat();
 
     // TODO: pass session to base protocol construct (derive settings as required).
     if (version >= messages::level::bip31)
@@ -189,8 +188,8 @@ void session_seed::handle_channel_stop(const code& ec)
 void session_seed::handle_complete(size_t start_size, result_handler handler)
 {
     // We succeed only if there is a host count increase of at least 100.
-    const auto increase = network_.address_count() >=
-        ceilinged_add(start_size, minimum_host_increase);
+    const auto increase = address_count() >= ceilinged_add(start_size,
+        minimum_host_increase);
 
     // This is the end of the seed sequence.
     handler(increase ? error::success : error::seeding_unsuccessful);
@@ -199,16 +198,14 @@ void session_seed::handle_complete(size_t start_size, result_handler handler)
 void session_seed::attach_handshake(channel::ptr channel,
     result_handler handshake) const
 {
-    // Channel attach and start both require channel strand.
-    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // Don't use configured services or relay for seeding.
     const auto relay = false;
-    const auto& settings = network_.network_settings();
-    const auto own_version = settings.protocol_maximum;
+    const auto own_version = settings().protocol_maximum;
     const auto own_services = messages::service::node_none;
-    const auto invalid_services = settings.invalid_services;
-    const auto minimum_version = settings.protocol_minimum;
+    const auto invalid_services = settings().invalid_services;
+    const auto minimum_version = settings().protocol_minimum;
     const auto minimum_services = messages::service::node_none;
 
     // TODO: pass session to base protocol construct (derive settings as required).

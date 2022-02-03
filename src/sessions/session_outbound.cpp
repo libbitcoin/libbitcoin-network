@@ -46,9 +46,9 @@ session_outbound::session_outbound(p2p& network)
 
 void session_outbound::start(result_handler handler)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(network_.network_settings().outbound_connections))
+    if (is_zero(settings().outbound_connections))
     {
         handler(error::success);
         return;
@@ -60,14 +60,15 @@ void session_outbound::start(result_handler handler)
 void session_outbound::handle_started(const code& ec,
     result_handler handler)
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
     if (ec)
     {
         handler(ec);
         return;
     }
 
-    for (size_t peer = 0; peer < 
-        network_.network_settings().outbound_connections; ++peer)
+    for (size_t peer = 0; peer < settings().outbound_connections; ++peer)
         new_connection(error::success);
 
     // This is the end of the start sequence.
@@ -79,7 +80,7 @@ void session_outbound::handle_started(const code& ec,
 
 void session_outbound::new_connection(const code&)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped())
         return;
@@ -90,7 +91,7 @@ void session_outbound::new_connection(const code&)
 
 void session_outbound::handle_connect(const code& ec, channel::ptr channel)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
     {
@@ -108,7 +109,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel)
 void session_outbound::handle_channel_start(const code& ec,
     channel::ptr channel)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // The start failure is also caught by handle_channel_stop.
     if (ec)
@@ -121,11 +122,10 @@ void session_outbound::handle_channel_start(const code& ec,
 void session_outbound::attach_protocols(channel::ptr channel,
     result_handler) const
 {
-    // Channel attach and start both require channel strand.
-    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     const auto version = channel->negotiated_version();
-    const auto heartbeat = network_.network_settings().channel_heartbeat();
+    const auto heartbeat = settings().channel_heartbeat();
 
     // TODO: pass session to base protocol construct (derive settings as required).
     if (version >= messages::level::bip31)
@@ -142,22 +142,20 @@ void session_outbound::attach_protocols(channel::ptr channel,
 void session_outbound::handle_channel_stop(const code& ec,
     channel::ptr channel)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     new_connection(error::success);
 }
 
 void session_outbound::attach_handshake(channel::ptr channel,
     result_handler handshake) const
 {
-    // Channel attach and start both require channel strand.
-    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+    BC_ASSERT_MSG(stranded(), "strand");
 
-    const auto& settings = network_.network_settings();
-    const auto relay = settings.relay_transactions;
-    const auto own_version = settings.protocol_maximum;
-    const auto own_services = settings.services;
-    const auto invalid_services = settings.invalid_services;
-    const auto minimum_version = settings.protocol_minimum;
+    const auto relay = settings().relay_transactions;
+    const auto own_version = settings().protocol_maximum;
+    const auto own_services = settings().services;
+    const auto invalid_services = settings().invalid_services;
+    const auto minimum_version = settings().protocol_minimum;
 
     // Require peer to serve network (and witness if configured on self).
     const auto min_service = (own_services & messages::service::node_witness) |
@@ -181,7 +179,7 @@ void session_outbound::attach_handshake(channel::ptr channel,
 
 void session_outbound::batch(channel_handler handler)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     const auto connects = create_connectors(batch_);
 
@@ -196,7 +194,7 @@ void session_outbound::batch(channel_handler handler)
 void session_outbound::start_batch(const code& ec, const authority& host,
     connector::ptr connector, channel_handler handler)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped(ec))
     {
@@ -226,7 +224,7 @@ void session_outbound::start_batch(const code& ec, const authority& host,
 void session_outbound::handle_batch(const code& ec, channel::ptr channel,
     connectors_ptr connectors, channel_handler complete)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     const auto finish = (++count_ == batch_);
 

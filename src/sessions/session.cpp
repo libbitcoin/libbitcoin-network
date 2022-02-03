@@ -214,6 +214,21 @@ const network::settings& session::settings() const
     return network_.network_settings();
 }
 
+size_t session::address_count() const
+{
+    return network_.address_count();
+}
+
+size_t session::channel_count() const
+{
+    return network_.channel_count();
+}
+
+bool session::stranded() const
+{
+    return network_.stranded();
+}
+
 bool session::inbound() const
 {
     return false;

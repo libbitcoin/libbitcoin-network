@@ -82,6 +82,9 @@ protected:
     bool stopped() const;
     bool stopped(const code& ec) const;
     bool blacklisted(const config::authority& authority) const;
+    bool stranded() const;
+    size_t address_count() const;
+    size_t channel_count() const;
 
     friend class protocol;
     void fetch(hosts::address_item_handler handler) const;
@@ -104,10 +107,6 @@ protected:
     virtual bool inbound() const;
     virtual bool notify() const;
 
-    // These are thread safe.
-    std::atomic<bool> stopped_;
-    p2p& network_;
-
 private:
     void handle_handshake(const code& ec, channel::ptr channel,
         result_handler handler);
@@ -115,6 +114,10 @@ private:
         result_handler handle_started, result_handler handle_stopped);
     void handle_stop(const code& ec, channel::ptr channel,
         result_handler handler);
+
+    // These are thread safe.
+    std::atomic<bool> stopped_;
+    p2p& network_;
 };
 
 #undef SESSION_ARGS

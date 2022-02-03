@@ -51,10 +51,10 @@ bool session_inbound::inbound() const
 
 void session_inbound::start(result_handler handler)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(network_.network_settings().inbound_port) ||
-        is_zero(network_.network_settings().inbound_connections))
+    if (is_zero(settings().inbound_port) ||
+        is_zero(settings().inbound_connections))
     {
         handler(error::success);
         return;
@@ -66,7 +66,7 @@ void session_inbound::start(result_handler handler)
 void session_inbound::handle_started(const code& ec,
     result_handler handler)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
     {
@@ -74,10 +74,8 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    const auto port = network_.network_settings().inbound_port;
-
     acceptor_ = create_acceptor();
-    const auto code = acceptor_->start(port);
+    const auto code = acceptor_->start(settings().inbound_port);
     handler(code);
 
     // LISTEN
@@ -89,7 +87,7 @@ void session_inbound::handle_started(const code& ec,
 
 void session_inbound::start_accept(const code& ec)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
         return;
@@ -100,7 +98,7 @@ void session_inbound::start_accept(const code& ec)
 
 void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped(ec))
         return;
@@ -113,7 +111,7 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
     if (ec)
         return;
 
-    if (network_.channel_count() >= connection_limit_)
+    if (channel_count() >= connection_limit_)
         return;
 
     if (blacklisted(channel->authority()))
@@ -127,7 +125,7 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 void session_inbound::handle_channel_start(const code& ec,
     channel::ptr channel)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
         return;
@@ -139,11 +137,10 @@ void session_inbound::handle_channel_start(const code& ec,
 void session_inbound::attach_protocols(channel::ptr channel,
     result_handler) const
 {
-    // Channel attach and start both require channel strand.
-    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     const auto version = channel->negotiated_version();
-    const auto heartbeat = network_.network_settings().channel_heartbeat();
+    const auto heartbeat = settings().channel_heartbeat();
 
     // TODO: pass session to base protocol construct (derive settings as required).
     if (version >= messages::level::bip31)
@@ -159,7 +156,7 @@ void session_inbound::attach_protocols(channel::ptr channel,
 
 void session_inbound::handle_channel_stop(const code&)
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 }
 
 } // namespace network
