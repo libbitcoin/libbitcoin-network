@@ -41,7 +41,7 @@ session_outbound::session_outbound(p2p& network)
 {
 }
 
-// Start sequence.
+// Start/stop sequence.
 // ----------------------------------------------------------------------------
 
 void session_outbound::start(result_handler handler)
@@ -74,6 +74,11 @@ void session_outbound::handle_started(const code& ec,
     // This is the end of the start sequence.
     handler(error::success);
 }
+
+////void session_outbound::stop()
+////{
+////    handle_batch?
+////}
 
 // Connnect cycle.
 // ----------------------------------------------------------------------------

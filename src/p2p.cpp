@@ -43,19 +43,19 @@ using namespace bc::system;
 using namespace bc::system::chain;
 using namespace std::placeholders;
 
-// This can be exceeded due to manual connection calls and race conditions.
-inline size_t nominal_connecting(const settings& settings)
-{
-    return settings.peers.size() + settings.connect_batch_size *
-        settings.outbound_connections;
-}
-
-// This can be exceeded due to manual connection calls and race conditions.
-inline size_t nominal_connected(const settings& settings)
-{
-    return settings.peers.size() + settings.outbound_connections +
-        settings.inbound_connections;
-}
+////// This can be exceeded due to manual connection calls and race conditions.
+////inline size_t nominal_connecting(const settings& settings)
+////{
+////    return settings.peers.size() + settings.connect_batch_size *
+////        settings.outbound_connections;
+////}
+////
+////// This can be exceeded due to manual connection calls and race conditions.
+////inline size_t nominal_connected(const settings& settings)
+////{
+////    return settings.peers.size() + settings.outbound_connections +
+////        settings.inbound_connections;
+////}
 
 p2p::p2p(const settings& settings)
   : settings_(settings),

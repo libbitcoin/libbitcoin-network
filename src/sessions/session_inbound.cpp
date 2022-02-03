@@ -46,7 +46,7 @@ bool session_inbound::inbound() const
     return true;
 }
 
-// Start sequence.
+// Start/stop sequence.
 // ----------------------------------------------------------------------------
 
 void session_inbound::start(result_handler handler)
@@ -81,6 +81,11 @@ void session_inbound::handle_started(const code& ec,
     // LISTEN
     start_accept(code);
 }
+
+////void session_inbound::stop()
+////{
+////    acceptor_->stop();
+////}
 
 // Accept sequence.
 // ----------------------------------------------------------------------------

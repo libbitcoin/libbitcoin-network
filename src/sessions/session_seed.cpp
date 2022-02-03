@@ -48,7 +48,7 @@ bool session_seed::notify() const
     return false;
 }
 
-// Start sequence.
+// Start/stop sequence.
 // ----------------------------------------------------------------------------
 
 void session_seed::start(result_handler handler)
@@ -100,6 +100,11 @@ void session_seed::handle_started(const code& ec,
     // is not invoked until seeding operations are complete.
     start_seeding(start_size, handler);
 }
+
+////void session_seed::stop()
+////{
+////    connector->stop();
+////}
 
 // Seed sequence.
 // ----------------------------------------------------------------------------

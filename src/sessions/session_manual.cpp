@@ -41,7 +41,7 @@ session_manual::session_manual(p2p& network)
 {
 }
 
-// Start sequence.
+// Start/stop sequence.
 // ----------------------------------------------------------------------------
 // Manual connections are always enabled.
 
@@ -57,6 +57,11 @@ void session_manual::handle_started(const code& ec,
     BC_ASSERT_MSG(stranded(), "strand");
     handler(ec);
 }
+
+////void session_manual::stop()
+////{
+////    connector->stop();
+////}
 
 // Connect sequence/cycle.
 // ----------------------------------------------------------------------------
