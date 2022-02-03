@@ -72,14 +72,14 @@ protected:
         return BOUND_PROTOCOL(handler, args);
     }
 
-    template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(const Message& message, Handler&& handler, Args&&... args)
+    template <class Protocol, class Message, typename Handler, typename... Args, typename std::enable_if<std::is_const<Message>::value, Message>::type* = nullptr>
+    void send(Message& message, Handler&& handler, Args&&... args)
     {
         channel_->send<Message>(system::to_shared(message),
             BOUND_PROTOCOL(handler, args));
     }
 
-    template <class Protocol, class Message, typename Handler, typename... Args>
+    template <class Protocol, class Message, typename Handler, typename... Args, typename std::enable_if<!std::is_const<Message>::value, Message>::type* = nullptr>
     void send(Message&& message, Handler&& handler, Args&&... args)
     {
         channel_->send<Message>(system::to_shared(std::move(message)),
@@ -109,7 +109,7 @@ protected:
     void set_negotiated_version(uint32_t value);
     void stop(const code& ec);
 
-    const settings& settings() const;
+    const network::settings& settings() const;
     void saves(const messages::address_items& addresses, result_handler handler={});
     void fetches(fetches_handler handler);
 
