@@ -72,19 +72,17 @@ protected:
         return BOUND_PROTOCOL(handler, args);
     }
 
-    template <class Protocol, class Message, typename Handler, typename... Args,
-        typename std::enable_if<std::is_const<Message>::value, bool>::type = true>
-    void send(Message& message, Handler&& handler, Args&&... args)
+    template <class Protocol, class Message, typename Handler, typename... Args>
+    void send(const Message& message, Handler&& handler, Args&&... args)
     {
         channel_->send<Message>(system::to_shared(message),
             BOUND_PROTOCOL(handler, args));
     }
 
-    template <class Protocol, class Message, typename Handler, typename... Args,
-        typename std::enable_if<!std::is_const<Message>::value, bool>::type = true>
+    template <class Protocol, class Message, typename Handler, typename... Args>
     void send(Message&& message, Handler&& handler, Args&&... args)
     {
-        channel_->send<Message>(system::to_shared(std::move(message)),
+        channel_->send<Message>(system::to_shared(std::forward<Message>(message)),
             BOUND_PROTOCOL(handler, args));
     }
 
