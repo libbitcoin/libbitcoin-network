@@ -45,7 +45,7 @@ public:
     }
 
     // Override protected base capture sent payload.
-    virtual void send(system::chunk_ptr payload,
+    virtual void send_bytes(system::chunk_ptr payload,
         result_handler&& handler) override
     {
         payload_ = payload;

@@ -260,7 +260,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
 // Message send sequence.
 // ----------------------------------------------------------------------------
 
-void proxy::send(system::chunk_ptr payload, result_handler&& handler)
+void proxy::send_bytes(system::chunk_ptr payload, result_handler&& handler)
 {
     // Post handle_send to strand upon stop, error, or buffer fully sent.
     socket_->write(*payload,

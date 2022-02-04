@@ -50,7 +50,7 @@ public:
     void send(typename Message::ptr message, result_handler&& complete)
     {
         using namespace messages;
-        send(serialize(*message, protocol_magic(), version()),
+        send_bytes(serialize(*message, protocol_magic(), version()),
             std::move(complete));
     }
 
@@ -88,7 +88,7 @@ protected:
     virtual uint32_t version() const = 0;
     virtual void signal_activity() = 0;
 
-    virtual void send(system::chunk_ptr payload, result_handler&& handler);
+    virtual void send_bytes(system::chunk_ptr payload, result_handler&& handler);
     virtual code notify(messages::identifier id, uint32_t version,
         system::reader& source);
 
