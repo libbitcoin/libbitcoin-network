@@ -67,7 +67,27 @@ void session::start(result_handler handler)
 
 void session::stop()
 {
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    clear_connectors();
     stopped_.store(true, std::memory_order_relaxed);
+}
+
+void session::clear_connectors()
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    // Connectors are stored so that they can be explicitly stopped.
+    for (const auto& connector: connectors_)
+        connector->stop();
+
+    connectors_.clear();
+}
+
+void session::store_connector(const connector::ptr& connector)
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    connectors_.push_back(connector);
 }
 
 // Channel sequence.

@@ -56,28 +56,30 @@ public:
     virtual void connect(const std::string& hostname, uint16_t port,
         channel_handler handler);
 
+    /// Maintain connection to a node.
+    virtual void connect(const config::authority& host,
+        channel_handler handler);
+
 protected:
+
     /// Override to attach specialized protocols upon channel start.
     void attach_protocols(channel::ptr channel,
         result_handler handler={}) const override;
 
 private:
-    void start_connect(const code& ec, const std::string& hostname,
-        uint16_t port, uint32_t attempts, channel_handler handler);
+    void start_connect(const code& ec, const config::authority& host,
+        connector::ptr connector, channel_handler handler);
 
     void handle_started(const code& ec, result_handler handler);
     void handle_connect(const code& ec, channel::ptr channel,
-        const std::string& hostname, uint16_t port, uint32_t remaining,
-        connector::ptr connector, channel_handler handler);
-
-    void handle_channel_start(const code& ec,
-        const std::string& hostname, uint16_t port, uint32_t remaining,
-        channel::ptr channel, channel_handler handler);
-    void handle_channel_stop(const code& ec,
-        const std::string& hostname, uint16_t port, uint32_t remaining,
+        const config::authority& host, connector::ptr connector,
         channel_handler handler);
 
-    uint32_t attempt_limit_;
+    void handle_channel_start(const code& ec, const config::authority& host,
+        channel::ptr channel, connector::ptr connector,
+        channel_handler handler);
+    void handle_channel_stop(const code& ec, const config::authority& host,
+        connector::ptr connector, channel_handler handler);
 };
 
 } // namespace network

@@ -33,11 +33,11 @@ namespace network {
 #define CLASS session_manual
 
 using namespace bc::system;
+using namespace config;
 using namespace std::placeholders;
 
 session_manual::session_manual(p2p& network)
-  : session(network),
-    attempt_limit_(network.network_settings().manual_attempt_limit)
+  : session(network)
 {
 }
 
@@ -71,13 +71,10 @@ void session_manual::connect(const std::string& hostname, uint16_t port,
     channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    start_connect(error::success, hostname, port, attempt_limit_, handler);
+    connect({ hostname, port }, {});
 }
 
-// The first connect is a sequence, which then spawns a cycle.
-void session_manual::start_connect(const code&,
-    const std::string& hostname, uint16_t port, uint32_t attempts,
-    channel_handler handler)
+void session_manual::connect(const authority& host, channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -87,68 +84,60 @@ void session_manual::start_connect(const code&,
         return;
     }
 
-    const auto retries = floored_subtract(attempts, 1u);
     const auto connector = create_connector();
-
-    // CONNECT
-    connector->connect(hostname, port,
-        BIND7(handle_connect, _1, _2, hostname, port, retries, connector, handler));
+    store_connector(connector);
+    start_connect(error::success, host, connector, handler);
 }
 
-void session_manual::handle_connect(const code& ec,
-    channel::ptr channel, const std::string& hostname, uint16_t port,
-    uint32_t remaining, connector::ptr connector, channel_handler handler)
+// The first connect is a sequence, which then spawns a cycle.
+void session_manual::start_connect(const code&, const authority& host,
+    connector::ptr connector, channel_handler handler)
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    if (stopped())
+    {
+        handler(error::service_stopped, nullptr);
+        return;
+    }
+
+    // CONNECT
+    connector->connect(host,
+        BIND5(handle_connect, _1, _2, host, connector, handler));
+}
+
+void session_manual::handle_connect(const code& ec, channel::ptr channel,
+    const authority& host, connector::ptr connector, channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
     {
-        // Retry forever if limit is zero.
-        remaining = attempt_limit_ == 0 ? 1 : remaining;
-
-        if (remaining > 0)
-        {
-            // TODO: use timer to delay start in case of error other than
-            // channel_timeout. use network_.network_settings().connect_timeout().
-
-            start_connect(error::success, hostname, port, remaining, handler);
-            return;
-        }
-
-        // This is a failure end of the connect sequence.
-        handler(ec, nullptr);
+        // TODO: use timer to delay start in case of error other than
+        // channel_timeout - use settings().connect_timeout().
+        start_connect(error::success, host, connector, handler);
         return;
     }
 
     start_channel(channel,
-        BIND6(handle_channel_start, _1, hostname, port, remaining, channel, handler),
-        BIND5(handle_channel_stop, _1, hostname, port, remaining, handler));
+        BIND5(handle_channel_start, _1, host, channel, connector, handler),
+        BIND4(handle_channel_stop, _1, host, connector, handler));
 }
 
 void session_manual::handle_channel_start(const code& ec,
-    const std::string& hostname, uint16_t port, uint32_t remaining,
-    channel::ptr channel, channel_handler handler)
+    const authority& host, channel::ptr channel,
+    connector::ptr connector, channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
     {
-        // Retry forever if limit is zero.
-        remaining = attempt_limit_ == 0 ? 1 : remaining;
-
-        // This is a failure end of the connect sequence.
-        // If stop handler won't retry, invoke handler with error.
-        if ((ec == error::address_in_use) || (remaining == 0))
-            handler(ec, channel);
-
+        start_connect(error::success, host, connector, handler);
         return;
     }
 
-    // Calls attach_protocols on channel strand.
     post_attach_protocols(channel);
-
-    // This is the success end of the connect sequence.
-    handler(error::success, channel);
+    handler(ec, channel);
 }
 
 // Communication will begin after this function returns, freeing the thread.
@@ -172,26 +161,11 @@ void session_manual::attach_protocols(channel::ptr channel,
     channel->do_attach<protocol_address_31402>(*this)->start();
 }
 
-void session_manual::handle_channel_stop(const code& ec,
-    const std::string& hostname, uint16_t port, uint32_t remaining,
-    channel_handler handler)
+void session_manual::handle_channel_stop(const code& ec, const authority& host,
+    connector::ptr connector, channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    // Special case for already connected, do not keep trying.
-    if (ec == error::address_in_use)
-        return;
-
-    // Retry forever if limit is zero.
-    remaining = attempt_limit_ == 0 ? 1 : remaining;
-
-    if (remaining > 0)
-    {
-        start_connect(error::success, hostname, port, remaining, handler);
-        return;
-    }
-
-    // hit attempt limit, no restart.
+    start_connect(error::success, host, connector, handler);
 }
 
 } // namespace network

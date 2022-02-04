@@ -48,7 +48,7 @@ public:
     uint16_t inbound_port;
     uint32_t inbound_connections;
     uint32_t outbound_connections;
-    uint32_t manual_attempt_limit;
+    ////uint32_t manual_attempt_limit;
     uint32_t connect_batch_size;
     uint32_t connect_timeout_seconds;
     uint32_t channel_handshake_seconds;

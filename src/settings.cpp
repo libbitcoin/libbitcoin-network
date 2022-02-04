@@ -39,7 +39,7 @@ settings::settings()
     validate_checksum(false),
     inbound_connections(0),
     outbound_connections(8),
-    manual_attempt_limit(0),
+    ////manual_attempt_limit(0),
     connect_batch_size(5),
     connect_timeout_seconds(5),
     channel_handshake_seconds(30),

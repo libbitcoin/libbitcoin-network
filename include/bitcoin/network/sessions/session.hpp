@@ -24,6 +24,7 @@
 #include <functional>
 #include <memory>
 #include <utility>
+#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -78,6 +79,8 @@ protected:
     acceptor::ptr create_acceptor();
     connector::ptr create_connector();
     connectors_ptr create_connectors(size_t count);
+    void store_connector(const connector::ptr& connector);
+    void clear_connectors();
 
     bool stopped() const;
     bool stopped(const code& ec) const;
@@ -118,6 +121,10 @@ private:
     // These are thread safe.
     std::atomic<bool> stopped_;
     p2p& network_;
+
+    // This is not thread safe.
+    std::vector<connector::ptr> connectors_;
+
 };
 
 #undef SESSION_ARGS
