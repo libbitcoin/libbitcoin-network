@@ -58,16 +58,6 @@ void session_manual::handle_started(const code& ec,
     handler(ec);
 }
 
-void session_manual::stop()
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    ////if (acceptor_)
-    ////    acceptor_->stop();
-
-    session::stop();
-}
-
 // Connect sequence/cycle.
 // ----------------------------------------------------------------------------
 

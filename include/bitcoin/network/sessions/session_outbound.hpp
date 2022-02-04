@@ -44,7 +44,6 @@ public:
 
     /// Start/stop the session.
     void start(result_handler handler) override;
-    void stop() override;
 
 protected:
     /// Overridden to attach minimum service level for witness support.

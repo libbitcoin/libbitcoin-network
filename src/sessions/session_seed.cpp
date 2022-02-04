@@ -101,16 +101,6 @@ void session_seed::handle_started(const code& ec,
     start_seeding(start_size, handler);
 }
 
-void session_seed::stop()
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    ////if (acceptor_)
-    ////    acceptor_->stop();
-
-    session::stop();
-}
-
 // Seed sequence.
 // ----------------------------------------------------------------------------
 

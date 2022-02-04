@@ -46,7 +46,6 @@ public:
 
     /// Start/stop the session.
     void start(result_handler handler) override;
-    void stop() override;
 
 protected:
     /// Overridden to set service and version mins upon session start.
