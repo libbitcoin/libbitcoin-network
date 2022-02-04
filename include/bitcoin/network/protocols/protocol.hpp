@@ -73,30 +73,17 @@ protected:
     }
 
     template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(const Message& message, Handler&& handler, Args&&... args)
-    {
-        channel_->send<Message>(system::to_shared(message),
-            BOUND_PROTOCOL(handler, args));
-    }
-
-    template <class Protocol, class Message, typename Handler, typename... Args>
     void send(Message&& message, Handler&& handler, Args&&... args)
     {
         channel_->send<Message>(system::to_shared(std::forward<Message>(message)),
             BOUND_PROTOCOL(handler, args));
     }
 
-    template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(typename Message::ptr message, Handler&& handler, Args&&... args)
-    {
-        channel_->send<Message>(message, BOUND_PROTOCOL(handler, args));
-    }
-
     /// Subscribe to channel messages by type.
     template <class Protocol, class Message, typename Handler, typename... Args>
     void subscribe(result_handler&& complete, Handler&& handler, Args&&... args)
     {
-        channel_->template subscribe<Message>(BOUND_PROTOCOL(handler, args),
+        channel_->subscribe<Message>(BOUND_PROTOCOL(handler, args),
             std::forward<result_handler>(complete));
     }
 

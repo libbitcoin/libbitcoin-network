@@ -63,7 +63,6 @@ protected:
     const std::string& name() const override;
 
     size_t events_;
-    ////const config::authority self_;
 };
 
 } // namespace network

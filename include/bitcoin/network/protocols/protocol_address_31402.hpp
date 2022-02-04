@@ -55,8 +55,6 @@ protected:
         messages::get_address::ptr message);
 
     const std::string& name() const override;
-
-    const messages::address self_;
 };
 
 } // namespace network

@@ -39,18 +39,9 @@ using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
 
-static messages::address configured_self(const network::settings& settings)
-{
-    if (is_zero(settings.self.port()))
-        return {};
-
-    return { { settings.self.to_address_item() } };
-}
-
 protocol_address_31402::protocol_address_31402(const session& session,
     channel::ptr channel)
-  : protocol_events(session, channel),
-    self_(configured_self(session.settings()))
+  : protocol_events(session, channel)
 {
 }
 
@@ -65,9 +56,10 @@ void protocol_address_31402::start()
     // Must have a handler to capture a shared self pointer in stop subscriber.
     protocol_events::start(BIND1(handle_stop, _1));
 
-    if (!self_.addresses.empty())
+    if (!is_zero(settings().self.port()))
     {
-        SEND2(self_, handle_send, _1, self_.command);
+        SEND2(address{ { settings().self.to_address_item() } }, handle_send,
+            _1, address::command);
     }
 
     // If we can't store addresses we don't ask for or handle them.
@@ -116,11 +108,11 @@ void protocol_address_31402::handle_fetch_addresses(const code& ec,
 
     if (!ec)
     {
-        SEND2(address{ hosts }, handle_send, _1, self_.command);
+        SEND2(address{ hosts }, handle_send, _1, address::command);
 
         LOG_DEBUG(LOG_NETWORK)
             << "Sending addresses to [" << authority() << "] ("
-            << self_.addresses.size() << ")";
+            << hosts.size() << ")";
     }
 }
 
