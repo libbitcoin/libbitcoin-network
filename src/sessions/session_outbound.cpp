@@ -69,7 +69,15 @@ void session_outbound::handle_started(const code& ec,
     }
 
     for (size_t peer = 0; peer < settings().outbound_connections; ++peer)
-        new_connection(error::success);
+    {
+        const auto connectors = create_connectors(batch_);
+
+        // Save each connector for stop.
+        for (const auto& connector: *connectors)
+            store_connector(connector);
+
+        start_connect(connectors);
+    }
 
     // This is the end of the start sequence.
     handler(error::success);
@@ -78,7 +86,7 @@ void session_outbound::handle_started(const code& ec,
 // Connnect cycle.
 // ----------------------------------------------------------------------------
 
-void session_outbound::new_connection(const code&)
+void session_outbound::start_connect(connectors_ptr connectors)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -86,24 +94,25 @@ void session_outbound::new_connection(const code&)
         return;
 
     // BATCH CONNECT (wait)
-    batch(BIND2(handle_connect, _1, _2));
+    batch(connectors, BIND3(handle_connect, _1, _2, connectors));
 }
 
-void session_outbound::handle_connect(const code& ec, channel::ptr channel)
+void session_outbound::handle_connect(const code& ec, channel::ptr channel,
+    connectors_ptr connectors)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
     {
         // TODO: use timer to delay start in case of error other than
-        // channel_timeout. use network_.network_settings().connect_timeout().
-        new_connection(error::success);
+        // channel_timeout - use settings().connect_timeout().
+        start_connect(connectors);
         return;
     }
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
-        BIND2(handle_channel_stop, _1, channel));
+        BIND2(handle_channel_stop, _1, connectors));
 }
 
 void session_outbound::handle_channel_start(const code& ec,
@@ -119,15 +128,13 @@ void session_outbound::handle_channel_start(const code& ec,
     post_attach_protocols(channel);
 }
 
-void session_outbound::attach_protocols(channel::ptr channel,
-    result_handler) const
+void session_outbound::attach_protocols(channel::ptr channel) const
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     const auto version = channel->negotiated_version();
     const auto heartbeat = settings().channel_heartbeat();
 
-    // TODO: pass session to base protocol construct (derive settings as required).
     if (version >= messages::level::bip31)
         channel->do_attach<protocol_ping_60001>(*this, heartbeat)->start();
     else
@@ -140,10 +147,10 @@ void session_outbound::attach_protocols(channel::ptr channel,
 }
 
 void session_outbound::handle_channel_stop(const code& ec,
-    channel::ptr channel)
+    connectors_ptr connectors)
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    new_connection(error::success);
+    start_connect(connectors);
 }
 
 void session_outbound::attach_handshake(channel::ptr channel,
@@ -161,7 +168,6 @@ void session_outbound::attach_handshake(channel::ptr channel,
     const auto min_service = (own_services & messages::service::node_witness) |
         messages::service::node_network;
 
-    // TODO: pass session to base protocol construct (derive settings as required).
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= messages::level::bip61)
@@ -177,18 +183,18 @@ void session_outbound::attach_handshake(channel::ptr channel,
 // Batch connect.
 // ----------------------------------------------------------------------------
 
-void session_outbound::batch(channel_handler handler)
+void session_outbound::batch(connectors_ptr connectors, 
+    channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    const auto connects = create_connectors(batch_);
 
     channel_handler start =
-        BIND4(handle_batch, _1, _2, connects, std::move(handler));
+        BIND4(handle_batch, _1, _2, connectors, std::move(handler));
 
     // Initialize batch of connectors.
-    for (auto it = connects->begin(); it != connects->end(); ++it)
-        fetch(BIND4(start_batch, _1, _2, *it, start));
+    for (const auto& connector: *connectors)
+        fetch(BIND4(start_batch, _1, _2, connector, start));
 }
 
 void session_outbound::start_batch(const code& ec, const authority& host,

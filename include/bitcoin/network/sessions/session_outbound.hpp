@@ -51,19 +51,19 @@ protected:
         result_handler handle_started) const override;
 
     /// Override to attach specialized protocols upon channel start.
-    void attach_protocols(channel::ptr channel,
-        result_handler handler={}) const override;
+    void attach_protocols(channel::ptr channel) const override;
 
 private:
-    void new_connection(const code&);
+    void start_connect(connectors_ptr connectors);
 
     void handle_started(const code& ec, result_handler handler);
-    void handle_connect(const code& ec, channel::ptr channel);
+    void handle_connect(const code& ec, channel::ptr channel,
+        connectors_ptr connectors);
 
-    void handle_channel_stop(const code& ec, channel::ptr channel);
     void handle_channel_start(const code& ec, channel::ptr channel);
+    void handle_channel_stop(const code& ec, connectors_ptr connectors);
 
-    void batch(channel_handler handler);
+    void batch(connectors_ptr connectors, channel_handler handler);
     void start_batch(const code& ec, const config::authority& host,
         connector::ptr connector, channel_handler handler);
     void handle_batch(const code& ec, channel::ptr channel,

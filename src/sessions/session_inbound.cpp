@@ -114,7 +114,7 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
         return;
 
     // TODO: use timer to delay start in case of error other than
-    // channel_timeout. use network_.network_settings().connect_timeout().
+    // channel_timeout - use settings().connect_timeout().
     start_accept(error::success);
 
     // There was an error accepting the channel, so drop it.
@@ -137,6 +137,7 @@ void session_inbound::handle_channel_start(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // The start failure is also caught by handle_channel_stop.
     if (ec)
         return;
 
@@ -144,15 +145,13 @@ void session_inbound::handle_channel_start(const code& ec,
     post_attach_protocols(channel);
 }
 
-void session_inbound::attach_protocols(channel::ptr channel,
-    result_handler) const
+void session_inbound::attach_protocols(channel::ptr channel) const
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     const auto version = channel->negotiated_version();
     const auto heartbeat = settings().channel_heartbeat();
 
-    // TODO: pass session to base protocol construct (derive settings as required).
     if (version >= messages::level::bip31)
         channel->do_attach<protocol_ping_60001>(*this, heartbeat)->start();
     else

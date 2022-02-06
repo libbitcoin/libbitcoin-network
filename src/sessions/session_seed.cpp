@@ -32,14 +32,11 @@ namespace network {
 #define CLASS session_seed
 #define NAME "session_seed"
 
-/// If seeding occurs it must generate an increase of 100 hosts or will fail.
-static const size_t minimum_host_increase = 100;
-
 using namespace bc::system;
 using namespace std::placeholders;
 
 session_seed::session_seed(p2p& network)
-  : session(network)
+  : session(network), remaining_(settings().seeds.size())
 {
 }
 
@@ -96,79 +93,69 @@ void session_seed::handle_started(const code& ec,
         return;
     }
 
-    // This is not technically the end of the start sequence, since the handler
-    // is not invoked until seeding operations are complete.
-    start_seeding(start_size, handler);
+    const auto counter = BIND3(handle_complete, _1, start_size, handler);
+
+    // The handler is invoked once any seeds are generated, though
+    // seeding continues until all seeding channels are closed.
+    for (const auto& seed: settings().seeds)
+        start_seed(seed, counter);
 }
 
 // Seed sequence.
 // ----------------------------------------------------------------------------
 
-void session_seed::start_seeding(size_t start_size, result_handler handler)
-{
-    ////for (const auto& seed: network_.network_settings().seeds)
-    ////    start_seed(seed, {});
-}
-
 void session_seed::start_seed(const config::endpoint& seed,
-    result_handler handler)
+    result_handler counter)
 {
     if (stopped())
     {
-        handler(error::channel_stopped);
+        counter(error::channel_stopped);
         return;
     }
 
     const auto connector = create_connector();
+    store_connector(connector);
 
     // OUTBOUND CONNECT
     connector->connect(seed,
-        BIND5(handle_connect, _1, _2, seed, connector, handler));
+        BIND5(handle_connect, _1, _2, seed, connector, counter));
 }
 
 void session_seed::handle_connect(const code& ec, channel::ptr channel,
     const config::endpoint& seed, connector::ptr connector,
-    result_handler handler)
+    result_handler counter)
 {
     if (ec)
     {
-        handler(ec);
+        counter(ec);
         return;
     }
 
     if (blacklisted(channel->authority()))
     {
-        handler(error::address_blocked);
+        counter(error::address_blocked);
         return;
     }
 
-    start_channel(channel,
-        BIND3(handle_channel_start, _1, channel, handler),
-        BIND1(handle_channel_stop, _1));
+    start_channel(channel, BIND2(handle_channel_start, _1, channel), counter);
 }
 
-void session_seed::handle_channel_start(const code& ec,
-    channel::ptr channel, result_handler handler)
+void session_seed::handle_channel_start(const code& ec, channel::ptr channel)
 {
     if (ec)
-    {
-        handler(ec);
         return;
-    }
 
     // Calls attach_protocols on channel strand.
-    post_attach_protocols(channel, std::move(handler));
+    post_attach_protocols(channel);
 }
 
-void session_seed::attach_protocols(channel::ptr channel,
-    result_handler handler) const
+void session_seed::attach_protocols(channel::ptr channel) const
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     const auto version = channel->negotiated_version();
     const auto heartbeat = settings().channel_heartbeat();
 
-    // TODO: pass session to base protocol construct (derive settings as required).
     if (version >= messages::level::bip31)
         channel->do_attach<protocol_ping_60001>(*this, heartbeat)->start();
     else
@@ -177,22 +164,39 @@ void session_seed::attach_protocols(channel::ptr channel,
     if (version >= messages::level::bip61)
         channel->do_attach<protocol_reject_70002>(*this)->start();
 
-    channel->do_attach<protocol_seed_31402>(*this)->start(handler);
+    channel->do_attach<protocol_seed_31402>(*this)->start();
 }
 
-void session_seed::handle_channel_stop(const code& ec)
-{
-}
+////void session_seed::handle_channel_stop(const code& ec, result_handler counter)
+////{
+////    counter(ec);
+////}
 
-// This accepts no error code because individual seed errors are suppressed.
-void session_seed::handle_complete(size_t start_size, result_handler handler)
+void session_seed::handle_complete(const code& ec, size_t start_size,
+    result_handler counter)
 {
-    // We succeed only if there is a host count increase of at least 100.
-    const auto increase = address_count() >= ceilinged_add(start_size,
-        minimum_host_increase);
+    BC_ASSERT_MSG(stranded(), "strand");
 
-    // This is the end of the seed sequence.
-    handler(increase ? error::success : error::seeding_unsuccessful);
+    // Objective previously completed (and handler invoked).
+    if (is_zero(remaining_))
+        return;
+
+    if (address_count() > start_size)
+    {
+        // Signal objective completed.
+        remaining_ = zero;
+
+        // Singular handler invoke (other seeds will continue).
+        counter(error::success);
+        return;
+    }
+
+    if (is_zero(--remaining_))
+    {
+        // Singular handler invoke.
+        // Not increased and none remaining, so signal unsuccessful.
+        counter(error::seeding_unsuccessful);
+    }
 }
 
 void session_seed::attach_handshake(channel::ptr channel,
@@ -208,7 +212,6 @@ void session_seed::attach_handshake(channel::ptr channel,
     const auto minimum_version = settings().protocol_minimum;
     const auto minimum_services = messages::service::node_none;
 
-    // TODO: pass session to base protocol construct (derive settings as required).
     // Reject messages are not handled until bip61 (70002).
     // The negotiated_version is initialized to the configured maximum.
     if (channel->negotiated_version() >= messages::level::bip61)

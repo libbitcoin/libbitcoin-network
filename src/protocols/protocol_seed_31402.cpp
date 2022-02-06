@@ -45,8 +45,8 @@ using namespace std::placeholders;
 // Require three callbacks (or any error) before calling complete.
 protocol_seed_31402::protocol_seed_31402(const session& session,
     channel::ptr channel)
-  : protocol_timer(session, channel,
-      session.settings().channel_germination(), false),
+  : protocol_timer(session, channel, session.settings().channel_germination(),
+      false),
     events_(zero)
 {
 }
@@ -54,15 +54,9 @@ protocol_seed_31402::protocol_seed_31402(const session& session,
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_seed_31402::start(result_handler handler)
+void protocol_seed_31402::start()
 {
     BC_ASSERT_MSG(stranded(), "stranded");
-
-    if (is_zero(settings().host_pool_capacity))
-    {
-        handler(error::address_not_found);
-        return;
-    }
 
     protocol_events::start(BIND1(handle_complete, _1));
     SUBSCRIBE2(address, handle_receive_address, _1, _2);

@@ -49,8 +49,7 @@ public:
 
 protected:
     /// Override to attach specialized protocols upon channel start.
-    void attach_protocols(channel::ptr channel,
-        result_handler handler={}) const override;
+    void attach_protocols(channel::ptr channel) const override;
 
     /// Override to preclude pending the nonce.
     bool inbound() const override;
@@ -64,8 +63,10 @@ private:
     void handle_channel_start(const code& ec, channel::ptr channel);
     void handle_channel_stop(const code& ec);
 
-    // These are thread safe.
+    // This is not thread safe.
     acceptor::ptr acceptor_;
+
+    // This is thread safe.
     const size_t connection_limit_;
 };
 

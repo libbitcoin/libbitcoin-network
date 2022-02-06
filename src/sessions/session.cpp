@@ -134,19 +134,16 @@ void session::attach_handshake(channel::ptr channel,
         channel->do_attach<protocol_version_31402>(*this)->start(handshake);
 }
 
-void session::attach_protocols(channel::ptr channel,
-    result_handler handler) const
+void session::attach_protocols(channel::ptr) const
 {
-    handler(error::success);
 }
 
-void session::post_attach_protocols(channel::ptr channel,
-    result_handler handler) const
+void session::post_attach_protocols(channel::ptr channel) const
 {
     // Protocol attach and start require channel context.
     boost::asio::post(channel->strand(),
         std::bind(&session::attach_protocols,
-            shared_from_this(), channel, std::move(handler)));
+            shared_from_this(), channel));
 }
 
 void session::handle_handshake(const code& ec, channel::ptr channel,

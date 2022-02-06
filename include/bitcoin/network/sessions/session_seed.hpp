@@ -53,25 +53,26 @@ protected:
         result_handler handle_started) const override;
 
     /// Override to attach specialized protocols upon channel start.
-    void attach_protocols(channel::ptr channel,
-        result_handler handler) const override;
+    void attach_protocols(channel::ptr channel) const override;
 
     /// Override to preclude notify on connect.
     bool notify() const override;
 
 private:
-    void start_seeding(size_t start_size, result_handler handler);
-    void start_seed(const config::endpoint& seed,
-        result_handler handler);
+    void start_seed(const config::endpoint& seed, result_handler handler);
     void handle_started(const code& ec, result_handler handler);
     void handle_connect(const code& ec, channel::ptr channel,
         const config::endpoint& seed, connector::ptr connector,
-        result_handler handler);
-    void handle_complete(size_t start_size, result_handler handler);
+        result_handler counter);
 
-    void handle_channel_start(const code& ec, channel::ptr channel,
-        result_handler handler);
-    void handle_channel_stop(const code& ec);
+    void handle_channel_start(const code& ec, channel::ptr channel);
+    ////void handle_channel_stop(const code& ec, result_handler counter);
+
+    void handle_complete(const code& ec, size_t start_size,
+        result_handler counter);
+
+    // This is not thread safe.
+    size_t remaining_;
 };
 
 } // namespace network

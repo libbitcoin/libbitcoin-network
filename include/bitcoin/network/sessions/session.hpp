@@ -102,10 +102,8 @@ protected:
     virtual void attach_handshake(channel::ptr channel,
         result_handler handler) const;
 
-    virtual void attach_protocols(channel::ptr channel,
-        result_handler handler={}) const;
-    virtual void post_attach_protocols(channel::ptr channel,
-        result_handler handler={}) const;
+    virtual void attach_protocols(channel::ptr channel) const;
+    virtual void post_attach_protocols(channel::ptr channel) const;
 
     virtual bool inbound() const;
     virtual bool notify() const;

@@ -44,7 +44,7 @@ public:
 
     protocol_seed_31402(const session& session, channel::ptr channel);
 
-    void start(result_handler handle_event) override;
+    void start() override;
 
 protected:
     // Expose polymorphic start method from base.

@@ -58,7 +58,7 @@ void session_manual::handle_started(const code& ec,
     handler(ec);
 }
 
-// Connect sequence/cycle.
+// Connect sequence.
 // ----------------------------------------------------------------------------
 
 void session_manual::connect(const std::string& hostname, uint16_t port)
@@ -86,11 +86,13 @@ void session_manual::connect(const authority& host, channel_handler handler)
 
     const auto connector = create_connector();
     store_connector(connector);
-    start_connect(error::success, host, connector, handler);
+    start_connect(host, connector, handler);
 }
 
-// The first connect is a sequence, which then spawns a cycle.
-void session_manual::start_connect(const code&, const authority& host,
+// Connect cycle.
+// ----------------------------------------------------------------------------
+
+void session_manual::start_connect(const authority& host,
     connector::ptr connector, channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -115,41 +117,36 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
     {
         // TODO: use timer to delay start in case of error other than
         // channel_timeout - use settings().connect_timeout().
-        start_connect(error::success, host, connector, handler);
+        start_connect(host, connector, handler);
         return;
     }
 
     start_channel(channel,
-        BIND5(handle_channel_start, _1, host, channel, connector, handler),
+        BIND4(handle_channel_start, _1, host, channel, handler),
         BIND4(handle_channel_stop, _1, host, connector, handler));
 }
 
 void session_manual::handle_channel_start(const code& ec,
-    const authority& host, channel::ptr channel,
-    connector::ptr connector, channel_handler handler)
+    const authority& host, channel::ptr channel, channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // The start failure is also caught by handle_channel_stop.
     if (ec)
-    {
-        start_connect(error::success, host, connector, handler);
         return;
-    }
 
     post_attach_protocols(channel);
     handler(ec, channel);
 }
 
 // Communication will begin after this function returns, freeing the thread.
-void session_manual::attach_protocols(channel::ptr channel,
-    result_handler) const
+void session_manual::attach_protocols(channel::ptr channel) const
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     const auto version = channel->negotiated_version();
     const auto heartbeat = settings().channel_heartbeat();
 
-    // TODO: pass session to base protocol construct (derive settings as required).
     if (version >= messages::level::bip31)
         channel->do_attach<protocol_ping_60001>(*this, heartbeat)->start();
     else
@@ -165,7 +162,7 @@ void session_manual::handle_channel_stop(const code& ec, const authority& host,
     connector::ptr connector, channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    start_connect(error::success, host, connector, handler);
+    start_connect(host, connector, handler);
 }
 
 } // namespace network
