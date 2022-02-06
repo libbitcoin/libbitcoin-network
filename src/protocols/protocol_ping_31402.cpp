@@ -81,10 +81,9 @@ void protocol_ping_31402::handle_receive_ping(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
-        return;
-
-    // RESUBSCRIBE
+    // TODO: log.
+    ////if (stopped(ec))
+    ////    return;
 }
 
 const std::string& protocol_ping_31402::name() const
