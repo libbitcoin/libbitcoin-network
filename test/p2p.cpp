@@ -347,7 +347,6 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds__success)
         promise_run.set_value(true);
     };
 
-    std::promise<bool> promise_start;
     const auto start_handler = [&](const code& ec)
     {
         BOOST_REQUIRE_EQUAL(ec, error::success);
@@ -358,26 +357,33 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds__success)
     BOOST_REQUIRE(promise_run.get_future().get());
 }
 
-template<class Message>
-static int send_result(const Message& message, p2p& network, int channels)
+BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_default_seeds__success)
 {
-    const auto channel_counter = [&channels](code ec, channel::ptr)
+    settings set(selection::mainnet);
+    BOOST_REQUIRE(set.peers.empty());
+    set.seeds.resize(1);
+    set.host_pool_capacity = 42;
+
+    p2p net(set);
+    BOOST_REQUIRE(net.network_settings().peers.empty());
+    BOOST_REQUIRE_EQUAL(net.network_settings().seeds.size(), 1u);
+    BOOST_REQUIRE_EQUAL(net.network_settings().host_pool_capacity, 42u);
+
+    std::promise<bool> promise;
+    const auto run_handler = [&](const code& ec)
     {
         BOOST_REQUIRE_EQUAL(ec, error::success);
-        --channels;
+        promise.set_value(true);
     };
 
-    std::promise<code> promise;
-    const auto completion_handler = [&promise](code ec)
+    const auto start_handler = [&](const code& ec)
     {
-        promise.set_value(ec);
+        BOOST_REQUIRE_EQUAL(ec, error::seeding_unsuccessful);
+        net.run(run_handler);
     };
 
-    network.broadcast(message, channel_counter, completion_handler);
-    const auto result = promise.get_future().get().value();
-
-    BOOST_REQUIRE_EQUAL(channels, 0);
-    return result;
+    net.start(start_handler);
+    BOOST_REQUIRE(promise.get_future().get());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

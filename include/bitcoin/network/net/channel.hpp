@@ -59,7 +59,7 @@ public:
             shared_from_base<channel>(), std::forward<Args>(args)...);
 
         // Protocol lifetime is ensured by the channel stop subscriber.
-        subscribe_stop([=](const code&) { protocol->nop(); }, {});
+        do_subscribe_stop([=](const code&) { protocol->nop(); });
         return protocol;
     }
 

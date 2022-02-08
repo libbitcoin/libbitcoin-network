@@ -77,7 +77,7 @@ void protocol_reject_70002::handle_receive_reject(const code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving reject from [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         stop(error::channel_stopped);
         return;
     }
@@ -96,7 +96,7 @@ void protocol_reject_70002::handle_receive_reject(const code& ec,
     LOG_DEBUG(LOG_NETWORK)
         << "Received " << message << " reject (" << static_cast<uint16_t>(code)
         << ") from [" << authority() << "] '" << reject->reason
-        << "'" << hash;
+        << "'" << hash << std::endl;
 }
 
 const std::string& protocol_reject_70002::name() const

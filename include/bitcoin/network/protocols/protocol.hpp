@@ -81,10 +81,10 @@ protected:
 
     /// Subscribe to channel messages by type.
     template <class Protocol, class Message, typename Handler, typename... Args>
-    void subscribe(result_handler&& complete, Handler&& handler, Args&&... args)
+    void subscribe(Handler&& handler, Args&&... args)
     {
-        channel_->subscribe<Message>(BOUND_PROTOCOL(handler, args),
-            std::forward<result_handler>(complete));
+        BC_ASSERT_MSG(stranded(), "strand");
+        channel_->do_subscribe<Message>(BOUND_PROTOCOL(handler, args));
     }
 
     bool stranded() const;
@@ -104,6 +104,10 @@ protected:
     virtual const std::string& name() const = 0;
 
 private:
+    void do_fetches(fetches_handler handler);
+    void do_saves(const messages::address_items& addresses,
+        result_handler handler);
+
     channel::ptr channel_;
     const session& session_;
     const std::string name_;
@@ -122,9 +126,9 @@ private:
     send<CLASS>(message, &CLASS::method, p1, p2, p3)
 
 #define SUBSCRIBE2(message, method, p1, p2) \
-    subscribe<CLASS, message>({}, &CLASS::method, p1, p2)
+    subscribe<CLASS, message>(&CLASS::method, p1, p2)
 #define SUBSCRIBE3(message, method, p1, p2, p3) \
-    subscribe<CLASS, message>({}, &CLASS::method, p1, p2, p3)
+    subscribe<CLASS, message>(&CLASS::method, p1, p2, p3)
 
 } // namespace network
 } // namespace libbitcoin

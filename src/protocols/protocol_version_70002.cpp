@@ -117,7 +117,7 @@ void protocol_version_70002::handle_receive_reject(const code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving reject from [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         set_event(error::channel_stopped);
         return;
     }
@@ -135,7 +135,7 @@ void protocol_version_70002::handle_receive_reject(const code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Obsolete version reject from [" << authority() << "] '"
-            << reject->reason << "'";
+            << reject->reason << "'" << std::endl;
         set_event(error::channel_stopped);
         return;
     }
@@ -145,7 +145,7 @@ void protocol_version_70002::handle_receive_reject(const code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Duplicate version reject from [" << authority() << "] '"
-            << reject->reason << "'";
+            << reject->reason << "'" << std::endl;
         set_event(error::channel_stopped);
     }
 }

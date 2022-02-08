@@ -133,9 +133,9 @@ void channel::stop(const code& ec)
 void channel::do_stop(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    proxy::stop(ec);
     inactivity_->stop();
     expiration_->stop();
-    proxy::stop(ec);
 }
 
 // Properties.
@@ -225,20 +225,20 @@ void channel::handle_expiration(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped())
+    if (stopped() || ec == error::operation_canceled)
         return;
 
     if (ec)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Channel lifetime timer failure [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         stop(ec);
         return;
     }
 
     LOG_DEBUG(LOG_NETWORK)
-        << "Channel lifetime expired [" << authority() << "]";
+        << "Channel lifetime expired [" << authority() << "]" << std::endl;
     stop(ec);
 }
 
@@ -258,20 +258,20 @@ void channel::handle_inactivity(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped())
+    if (stopped() || ec == error::operation_canceled)
         return;
 
     if (ec)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Channel inactivity timer failure [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         stop(ec);
         return;
     }
 
     LOG_DEBUG(LOG_NETWORK)
-        << "Channel inactivity timeout [" << authority() << "]";
+        << "Channel inactivity timeout [" << authority() << "]" << std::endl;
     stop(ec);
 }
 

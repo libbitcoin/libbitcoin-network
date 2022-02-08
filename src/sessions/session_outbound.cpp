@@ -156,7 +156,7 @@ void session_outbound::handle_channel_stop(const code& ec,
 void session_outbound::attach_handshake(channel::ptr channel,
     result_handler handshake) const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded(), "strand");
 
     const auto relay = settings().relay_transactions;
     const auto own_version = settings().protocol_maximum;

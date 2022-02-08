@@ -231,11 +231,17 @@ void p2p::do_subscribe_connect(channel_handler handler, result_handler complete)
 void p2p::subscribe_close(result_handler handler, result_handler complete)
 {
     boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_subscribe_close,
+        std::bind(&p2p::do_subscribe_close2,
             this, std::move(handler), std::move(complete)));
 }
 
-void p2p::do_subscribe_close(result_handler handler, result_handler complete)
+void p2p::do_subscribe_close(result_handler handler)
+{
+    BC_ASSERT_MSG(stranded(), "stop_subscriber_");
+    stop_subscriber_->subscribe(std::move(handler));
+}
+
+void p2p::do_subscribe_close2(result_handler handler, result_handler complete)
 {
     BC_ASSERT_MSG(stranded(), "stop_subscriber_");
     stop_subscriber_->subscribe(std::move(handler));

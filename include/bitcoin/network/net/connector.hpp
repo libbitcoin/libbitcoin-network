@@ -81,8 +81,11 @@ protected:
     void handle_resolve(const error::boost_code& ec, const asio::resolved& it,
         socket::ptr socket, connect_handler handler);
     void handle_connect(const code& ec, socket::ptr socket,
-        const connect_handler& handler);
+        connect_handler handler);
     void handle_timer(const code& ec, const connect_handler& handler);
+
+    void do_handle_connect(const code& ec, socket::ptr socket,
+        const connect_handler& handler);
 
     // These are thread safe
     const settings& settings_;

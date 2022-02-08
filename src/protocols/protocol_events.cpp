@@ -81,7 +81,7 @@ void protocol_events::handle_stopped(const code& ec)
     {
         LOG_VERBOSE(LOG_NETWORK)
             << "Stop protocol_" << name() << " on [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
     }
 
     // Event handlers can depend on this code for channel stop.

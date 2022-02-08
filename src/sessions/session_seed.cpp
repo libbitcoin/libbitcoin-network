@@ -55,7 +55,7 @@ void session_seed::start(result_handler handler)
     if (is_zero(settings().host_pool_capacity))
     {
         ////LOG_INFO(LOG_NETWORK)
-        ////    << "Not configured to populate an address pool.";
+        ////    << "Not configured to populate an address pool." << std::endl;
         handler(error::success);
         return;
     }
@@ -80,7 +80,7 @@ void session_seed::handle_started(const code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Seeding is not required because there are "
-            << start_size << " cached addresses.";
+            << start_size << " cached addresses." << std::endl;
         handler(error::success);
         return;
     }
@@ -88,7 +88,7 @@ void session_seed::handle_started(const code& ec,
     if (settings().seeds.empty())
     {
         LOG_ERROR(LOG_NETWORK)
-            << "Seeding is required but no seeds are configured.";
+            << "Seeding is required but no seeds are configured." << std::endl;
         handler(error::operation_failed);
         return;
     }
@@ -202,7 +202,7 @@ void session_seed::handle_complete(const code& ec, size_t start_size,
 void session_seed::attach_handshake(channel::ptr channel,
     result_handler handshake) const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded(), "strand");
 
     // Don't use configured services or relay for seeding.
     const auto relay = false;

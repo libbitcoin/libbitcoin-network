@@ -68,7 +68,7 @@ void protocol_ping_31402::send_ping(const code& ec)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure in ping timer for [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         stop(ec);
         return;
     }

@@ -84,7 +84,7 @@ void protocol_address_31402::handle_receive_address(const code& ec,
 
     LOG_VERBOSE(LOG_NETWORK)
         << "Storing addresses from [" << authority() << "] ("
-        << message->addresses.size() << ")";
+        << message->addresses.size() << ")" << std::endl;
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
     saves(message->addresses);
@@ -112,7 +112,7 @@ void protocol_address_31402::handle_fetch_addresses(const code& ec,
 
         LOG_DEBUG(LOG_NETWORK)
             << "Sending addresses to [" << authority() << "] ("
-            << hosts.size() << ")";
+            << hosts.size() << ")" << std::endl;
     }
 }
 

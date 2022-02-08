@@ -38,16 +38,6 @@ using namespace std::placeholders;
 // Dump up to 1k of payload as hex in order to diagnose failure.
 static const size_t invalid_payload_dump_size = 1024;
 
-// static
-std::string proxy::extract_command(system::chunk_ptr payload)
-{
-    if (payload->size() < sizeof(uint32_t) + heading::command_size)
-        return "<unknown>";
-
-    return data_slice(std::next(payload->begin(), sizeof(uint32_t)),
-        std::next(payload->end(), heading::command_size)).to_string();
-}
-
 proxy::proxy(socket::ptr socket)
   : socket_(socket),
     pump_subscriber_(socket->strand()),
@@ -94,17 +84,24 @@ void proxy::do_stop(const code& ec)
     socket_->stop();
 }
 
-void proxy::subscribe_stop(result_handler&& handler, result_handler&& complete)
+void proxy::subscribe_stop(result_handler handler, result_handler complete)
 {
-    // Stop is posted to strand to protect socket and subscribers.
     boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_subscribe_stop,
-            shared_from_this(), std::move(handler), std::move(complete)));
+        std::bind(&proxy::do_subscribe_stop2,
+            shared_from_this(), handler, complete));
 }
 
-void proxy::do_subscribe_stop(result_handler handler, result_handler complete)
+void proxy::do_subscribe_stop(result_handler handler)
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     stop_subscriber_->subscribe(std::move(handler));
+}
+
+void proxy::do_subscribe_stop2(result_handler handler, result_handler complete)
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    stop_subscriber_->subscribe(std::move(handler));
+    complete(error::success);
 }
 
 // Read cycle (read continues until stop called).
@@ -134,7 +131,7 @@ void proxy::handle_read_heading(const code& ec, size_t)
     if (ec == error::channel_stopped)
     {
         LOG_VERBOSE(LOG_NETWORK)
-            << "Heading read abort [" << authority() << "]";
+            << "Heading read abort [" << authority() << "]" << std::endl;
         stop(error::success);
         return;
     }
@@ -142,7 +139,8 @@ void proxy::handle_read_heading(const code& ec, size_t)
     if (ec)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Heading read failure [" << authority() << "] " << ec.message();
+            << "Heading read failure [" << authority() << "] " << ec.message()
+            << std::endl;
         stop(ec);
         return;
     }
@@ -153,7 +151,7 @@ void proxy::handle_read_heading(const code& ec, size_t)
     if (!heading_reader_)
     {
         LOG_WARNING(LOG_NETWORK)
-            << "Invalid heading from [" << authority() << "]";
+            << "Invalid heading from [" << authority() << "]" << std::endl;
         stop(error::invalid_heading);
         return;
     }
@@ -163,7 +161,7 @@ void proxy::handle_read_heading(const code& ec, size_t)
         // These are common, with magic 542393671 coming from http requests.
         LOG_DEBUG(LOG_NETWORK)
             << "Invalid heading magic (" << head->magic << ") from ["
-            << authority() << "]";
+            << authority() << "]" << std::endl;
         stop(error::invalid_magic);
         return;
     }
@@ -173,7 +171,7 @@ void proxy::handle_read_heading(const code& ec, size_t)
         LOG_DEBUG(LOG_NETWORK)
             << "Oversized payload indicated by " << head->command
             << " heading from [" << authority() << "] ("
-            << head->payload_size << " bytes)";
+            << head->payload_size << " bytes)" << std::endl;
         stop(error::oversized_payload);
         return;
     }
@@ -196,7 +194,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
     if (ec == error::channel_stopped)
     {
         LOG_VERBOSE(LOG_NETWORK)
-            << "Payload read abort [" << authority() << "]";
+            << "Payload read abort [" << authority() << "]" << std::endl;
         stop(error::success);
         return;
     }
@@ -205,7 +203,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Payload read failure [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         stop(ec);
         return;
     }
@@ -215,7 +213,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
     {
         LOG_WARNING(LOG_NETWORK)
             << "Invalid " << head->command << " payload from ["
-            << authority() << "] bad checksum.";
+            << authority() << "] bad checksum." << std::endl;
         stop(error::invalid_checksum);
         return;
     }
@@ -236,13 +234,14 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
 
             LOG_VERBOSE(LOG_NETWORK)
                 << "Invalid payload from [" << authority() << "] "
-                << encode_base16({ begin, std::next(begin, size) });
+                << encode_base16({ begin, std::next(begin, size) })
+                << std::endl;
         }
         else
         {
             LOG_WARNING(LOG_NETWORK)
                 << "Invalid " << head->command << " payload from ["
-                << authority() << "] " << code.message();
+                << authority() << "] " << code.message() << std::endl;
         }
 
         stop(code);
@@ -251,7 +250,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
 
     LOG_VERBOSE(LOG_NETWORK)
         << "Received " << head->command << " from [" << authority()
-        << "] (" << payload_size << " bytes)";
+        << "] (" << payload_size << " bytes)" << std::endl;
 
     signal_activity();
     read_heading();
@@ -268,6 +267,27 @@ void proxy::send_bytes(system::chunk_ptr payload, result_handler&& handler)
             shared_from_this(), _1, _2, payload, std::move(handler)));
 }
 
+void proxy::send_bytes(system::chunk_ptr payload, const result_handler& handler)
+{
+    // Post handle_send to strand upon stop, error, or buffer fully sent.
+    socket_->write(*payload,
+        std::bind(&proxy::handle_send,
+            shared_from_this(), _1, _2, payload, handler));
+}
+
+// static
+std::string proxy::extract_command(system::chunk_ptr payload)
+{
+    if (payload->size() < sizeof(uint32_t) + heading::command_size)
+        return "<unknown>";
+
+    data_slice slice(
+        std::next(payload->begin(), sizeof(uint32_t)),
+        std::next(payload->begin(), heading::command_size));
+
+    return slice.to_string();
+}
+
 void proxy::handle_send(const code& ec, size_t, system::chunk_ptr payload,
     const result_handler& handler)
 {
@@ -276,7 +296,7 @@ void proxy::handle_send(const code& ec, size_t, system::chunk_ptr payload,
     if (ec == error::channel_stopped)
     {
         LOG_VERBOSE(LOG_NETWORK)
-            << "Send abort [" << authority() << "]";
+            << "Send abort [" << authority() << "]" << std::endl;
         stop(error::success);
         return;
     }
@@ -286,7 +306,7 @@ void proxy::handle_send(const code& ec, size_t, system::chunk_ptr payload,
         LOG_DEBUG(LOG_NETWORK)
             << "Failure sending " << extract_command(payload) << " to ["
             << authority() << "] (" << payload->size() << " bytes) "
-            << ec.message();
+            << ec.message() << std::endl;
         stop(ec);
         handler(ec);
         return;
@@ -294,7 +314,7 @@ void proxy::handle_send(const code& ec, size_t, system::chunk_ptr payload,
 
     LOG_VERBOSE(LOG_NETWORK)
         << "Sent " << extract_command(payload) << " to [" << authority()
-        << "] (" << payload->size() << " bytes)";
+        << "] (" << payload->size() << " bytes)" << std::endl;
 
     handler(ec);
 }

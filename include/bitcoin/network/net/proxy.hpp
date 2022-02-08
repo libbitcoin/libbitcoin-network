@@ -54,30 +54,32 @@ public:
             std::move(complete));
     }
 
-    template <class Message, typename Handler = pump::handler<Message>>
-    void subscribe(Handler&& handler, result_handler&& complete)
+    template <class Message>
+    void send(typename Message::ptr message, const result_handler& complete)
     {
-        const auto self = shared_from_this();
-
-        // C++14: std::move handlers into closure.
-        boost::asio::post(strand(), [=]()
-        {
-            self->pump_subscriber_.subscribe(std::move(handler));
-            complete(error::success);
-        });
+        using namespace messages;
+        send_bytes(serialize(*message, protocol_magic(), version()), complete);
     }
 
     virtual void start();
     virtual void stop(const code& ec);
 
+    void subscribe_stop(result_handler handler, result_handler complete);
     bool stopped() const;
-    void subscribe_stop(result_handler&& handler, result_handler&& complete);
 
     bool stranded() const;
     asio::strand& strand();
     const config::authority& authority() const;
 
 protected:
+    friend class protocol;
+    template <class Message, typename Handler = pump::handler<Message>>
+    void do_subscribe(Handler&& handler)
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        pump_subscriber_.subscribe(std::move(handler));
+    }
+
     proxy(socket::ptr socket);
     virtual ~proxy();
 
@@ -88,9 +90,15 @@ protected:
     virtual uint32_t version() const = 0;
     virtual void signal_activity() = 0;
 
-    virtual void send_bytes(system::chunk_ptr payload, result_handler&& handler);
+    virtual void send_bytes(system::chunk_ptr payload,
+        result_handler&& handler);
+    virtual void send_bytes(system::chunk_ptr payload,
+        const result_handler& handler);
     virtual code notify(messages::identifier id, uint32_t version,
         system::reader& source);
+
+    void do_subscribe_stop(result_handler handler);
+    void do_subscribe_stop2(result_handler handler, result_handler complete);
 
 private:
     typedef messages::heading::ptr heading_ptr;
@@ -98,7 +106,6 @@ private:
     static std::string extract_command(system::chunk_ptr payload);
 
     void do_stop(const code& ec);
-    void do_subscribe_stop(result_handler handler, result_handler complete);
 
     void read_heading();
     void handle_read_heading(const code& ec, size_t heading_size);

@@ -142,14 +142,15 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving version from [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         set_event(ec);
         return;
     }
 
     LOG_DEBUG(LOG_NETWORK)
         << "Peer [" << authority() << "] protocol version ("
-        << message->value << ") user agent: " << message->user_agent;
+        << message->value << ") user agent: " << message->user_agent
+        << std::endl;
 
     // TODO: move these three checks to initialization.
     //-------------------------------------------------------------------------
@@ -158,7 +159,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     {
         LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, minimum below ("
-            << level::minimum_protocol << ").";
+            << level::minimum_protocol << ")." << std::endl;
         set_event(error::channel_stopped);
         return;
     }
@@ -167,7 +168,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     {
         LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, maximum above ("
-            << level::maximum_protocol << ").";
+            << level::maximum_protocol << ")." << std::endl;
         set_event(error::channel_stopped);
         return;
     }
@@ -176,7 +177,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     {
         LOG_ERROR(LOG_NETWORK)
             << "Invalid protocol version configuration, "
-            << "minimum exceeds maximum.";
+            << "minimum exceeds maximum." << std::endl;
         set_event(error::channel_stopped);
         return;
     }
@@ -195,7 +196,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
 
     LOG_DEBUG(LOG_NETWORK)
         << "Negotiated protocol version (" << version
-        << ") for [" << authority() << "]";
+        << ") for [" << authority() << "]" << std::endl;
 
     SEND2(version_acknowledge{}, handle_send, _1, version_acknowledge::command);
 
@@ -211,7 +212,7 @@ bool protocol_version_31402::sufficient_peer(version::ptr message)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Invalid peer network services (" << message->services
-            << ") for [" << authority() << "]";
+            << ") for [" << authority() << "]" << std::endl;
         return false;
     }
 
@@ -219,7 +220,7 @@ bool protocol_version_31402::sufficient_peer(version::ptr message)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Insufficient peer network services (" << message->services
-            << ") for [" << authority() << "]";
+            << ") for [" << authority() << "]" << std::endl;
         return false;
     }
 
@@ -227,7 +228,7 @@ bool protocol_version_31402::sufficient_peer(version::ptr message)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Insufficient peer protocol version (" << message->value
-            << ") for [" << authority() << "]";
+            << ") for [" << authority() << "]" << std::endl;
         return false;
     }
 
@@ -246,7 +247,7 @@ void protocol_version_31402::handle_receive_acknowledge(const code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving verack from [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         set_event(ec);
         return;
     }

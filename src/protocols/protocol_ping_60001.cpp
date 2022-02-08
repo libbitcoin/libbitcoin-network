@@ -57,7 +57,7 @@ void protocol_ping_60001::send_ping(const code& ec)
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure in ping timer for [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         stop(ec);
         return;
     }
@@ -65,7 +65,8 @@ void protocol_ping_60001::send_ping(const code& ec)
     if (pending_)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Ping latency limit exceeded [" << authority() << "]";
+            << "Ping latency limit exceeded [" << authority() << "]"
+            << std::endl;
         stop(error::channel_timeout);
         return;
     }
@@ -88,7 +89,7 @@ void protocol_ping_60001::handle_send_ping(const code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure sending ping to [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         stop(ec);
         return;
     }
@@ -106,7 +107,7 @@ void protocol_ping_60001::handle_receive_ping(const code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure getting ping from [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         stop(ec);
         return;
     }
@@ -126,7 +127,7 @@ void protocol_ping_60001::handle_receive_pong(const code& ec,
     {
         LOG_DEBUG(LOG_NETWORK)
             << "Failure getting pong from [" << authority() << "] "
-            << ec.message();
+            << ec.message() << std::endl;
         stop(ec);
     }
 
@@ -135,7 +136,7 @@ void protocol_ping_60001::handle_receive_pong(const code& ec,
     if (message->nonce != nonce)
     {
         LOG_WARNING(LOG_NETWORK)
-            << "Invalid pong nonce from [" << authority() << "]";
+            << "Invalid pong nonce from [" << authority() << "]" << std::endl;
         stop(error::bad_stream);
     }
 }

@@ -154,11 +154,9 @@ protected:
         const auto session = std::make_shared<Session>(*this,
             std::forward<Args>(args)...);
 
-        const auto handler = [=](const code&) { session->stop(); };
-        const auto complete = [=](const code&) {};
-
         // Session lifetime is ensured by the network stop subscriber.
-        do_subscribe_close(handler, complete);
+        const auto handler = [=](const code&) { session->stop(); };
+        do_subscribe_close(handler);
         return session;
     }
 
@@ -180,7 +178,7 @@ private:
     template <typename Message>
     void do_broadcast(typename Message::ptr message, result_handler handler)
     {
-        BC_ASSERT_MSG(strand_.running_in_this_thread(), "channels_");
+        BC_ASSERT_MSG(stranded(), "channels_");
 
         for (const auto& channel: channels_)
             channel->send<Message>(message, handler);
@@ -196,7 +194,8 @@ private:
     void handle_run(code ec, result_handler handler);
   
     void do_subscribe_connect(channel_handler handler, result_handler complete);
-    void do_subscribe_close(result_handler handler, result_handler complete);
+    void do_subscribe_close(result_handler handler);
+    void do_subscribe_close2(result_handler handler, result_handler complete);
 
     // Distinct method names required for std::bind.
     void do_connect1(const config::endpoint& endpoint);

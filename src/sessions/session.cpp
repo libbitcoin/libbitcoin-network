@@ -113,9 +113,9 @@ void session::start_channel(channel::ptr channel, result_handler started,
     result_handler start = std::bind(&session::handle_start,
         shared_from_this(), _1, channel, std::move(started), std::move(stopped));
 
-    result_handler shake = boost::asio::bind_executor(network_.strand(),
-        std::bind(&session::handle_handshake,
-            shared_from_this(), _1, channel, std::move(start)));
+    // boost::asio::bind_executor not working.
+    result_handler shake = std::bind(&session::handle_handshake,
+        shared_from_this(), _1, channel, std::move(start));
 
     boost::asio::post(channel->strand(),
         std::bind(&session::attach_handshake,
@@ -149,6 +149,14 @@ void session::post_attach_protocols(channel::ptr channel) const
 void session::handle_handshake(const code& ec, channel::ptr channel,
     result_handler start)
 {
+    boost::asio::post(channel->strand(),
+        std::bind(&session::do_handle_handshake,
+            shared_from_this(), ec, channel, start));
+}
+
+void session::do_handle_handshake(const code& ec, channel::ptr channel,
+    result_handler start)
+{
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     if (!inbound())
@@ -174,14 +182,23 @@ void session::handle_start(const code& ec, channel::ptr channel,
         return;
     }
 
-    result_handler subscribe = boost::asio::bind_executor(network_.strand(),
+    // boost::asio::bind_executor not working.
+    result_handler subscribe =
         std::bind(&session::handle_stop,
-            shared_from_this(), _1, channel, std::move(stopped)));
+            shared_from_this(), _1, channel, std::move(stopped));
 
     channel->subscribe_stop(std::move(subscribe), std::move(started));
 }
 
 void session::handle_stop(const code& ec, channel::ptr channel,
+    result_handler stopped)
+{
+    boost::asio::post(channel->strand(),
+        std::bind(&session::do_handle_stop,
+            shared_from_this(), ec, channel, stopped));
+}
+
+void session::do_handle_stop(const code& ec, channel::ptr channel,
     result_handler stopped)
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");

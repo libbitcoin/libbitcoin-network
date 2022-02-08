@@ -90,7 +90,7 @@ void protocol_timer::handle_timer(const code& ec)
 
     LOG_VERBOSE(LOG_NETWORK)
         << "Fired protocol_" << name() << " timer on [" << authority() << "] "
-        << ec.message();
+        << ec.message() << std::endl;
 
     set_event(error::channel_timeout);
 

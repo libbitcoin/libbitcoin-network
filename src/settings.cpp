@@ -78,7 +78,7 @@ settings::settings(chain::selection context)
             inbound_port = 8333;
             seeds.reserve(4);
             seeds.push_back({ "mainnet1.libbitcoin.net", 8333 });
-            seeds.push_back({ "mainnet2.libbitcoin.net", 8333 });
+            seeds.push_back({ "mainnet1.libbitcoin.net", 8333 });
             seeds.push_back({ "mainnet3.libbitcoin.net", 8333 });
             seeds.push_back({ "mainnet4.libbitcoin.net", 8333 });
             break;

@@ -23,6 +23,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/error.hpp>
@@ -120,16 +121,29 @@ void connector::handle_resolve(const error::boost_code& ec,
         return;
     }
 
-    // socket.connect copies iterator.
-    // Posts handle_connect to strand (after socket strand).
+    // boost::asio::bind_executor not working.
+    ////// Posts handle_connect to strand (after socket strand).
+    ////socket->connect(it,
+    ////    boost::asio::bind_executor(strand_,
+    ////        std::bind(&connector::handle_connect,
+    ////            shared_from_this(), _1, socket, std::move(handler))));
+
     socket->connect(it,
-        boost::asio::bind_executor(strand_,
-            std::bind(&connector::handle_connect,
-                shared_from_this(), _1, socket, std::move(handler))));
+        std::bind(&connector::handle_connect,
+            shared_from_this(), _1, socket, handler));
 }
 
 // private
 void connector::handle_connect(const code& ec, socket::ptr socket,
+    connect_handler handler)
+{
+    boost::asio::post(strand_,
+        std::bind(&connector::do_handle_connect,
+            shared_from_this(), ec, socket, handler));
+}
+
+// private
+void connector::do_handle_connect(const code& ec, socket::ptr socket,
     const connect_handler& handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -138,10 +152,11 @@ void connector::handle_connect(const code& ec, socket::ptr socket,
     if (stopped_)
         return;
 
+    stopped_ = true;
+
     // Posts timer handler to strand (if not expired).
     // But timer handler does not invoke handle_timer on stop.
     timer_->stop();
-    stopped_ = true;
     
     // stopped_ is set on cancellation, so this is an error.
     if (ec)

@@ -116,6 +116,11 @@ private:
     void handle_stop(const code& ec, channel::ptr channel,
         result_handler handler);
 
+    void do_handle_handshake(const code& ec, channel::ptr channel,
+        result_handler start);
+    void do_handle_stop(const code& ec, channel::ptr channel,
+        result_handler stopped);
+
     // These are thread safe.
     std::atomic<bool> stopped_;
     p2p& network_;

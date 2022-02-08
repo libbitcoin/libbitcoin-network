@@ -70,7 +70,7 @@ void protocol_seed_31402::start()
 void protocol_seed_31402::handle_complete(const code& ec)
 {
     LOG_DEBUG(LOG_NETWORK)
-        << "Seeding complete [" << authority() << "]";
+        << "Seeding complete [" << authority() << "]" << std::endl;
 
     // Could be timeout, failure or success.
     stop(ec);
@@ -111,7 +111,7 @@ void protocol_seed_31402::handle_load_addresses(const code& ec)
     }
 
     LOG_DEBUG(LOG_NETWORK)
-        << "Stored addresses.";
+        << "Stored addresses." << std::endl;
 
     if (++events_ == 3u)
         set_event(error::success);
@@ -138,7 +138,7 @@ void protocol_seed_31402::handle_receive_get_address(const code& ec,
     }
 
     LOG_DEBUG(LOG_NETWORK)
-        << "Receive get_address.";
+        << "Receive get_address." << std::endl;
 
     SEND1(address{ { settings().self.to_address_item() } },
         handle_send_address, _1);
@@ -156,7 +156,7 @@ void protocol_seed_31402::handle_send_address(const code& ec)
     }
 
     LOG_DEBUG(LOG_NETWORK)
-        << "Sent addresses.";
+        << "Sent addresses." << std::endl;
 
     if (++events_ == 3u)
         set_event(error::success);
@@ -176,7 +176,7 @@ void protocol_seed_31402::handle_send_get_address(const code& ec)
     }
 
     LOG_DEBUG(LOG_NETWORK)
-        << "Sent get_address.";
+        << "Sent get_address." << std::endl;
 
     if (++events_ == 3u)
         set_event(error::success);

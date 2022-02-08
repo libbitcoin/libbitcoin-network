@@ -39,7 +39,7 @@ track<Shared>::track()
 {
 #ifndef NDEBUG
     LOG_DEBUG(LOG_SYSTEM) << typeid(Shared).name()
-        << "(" << ++instances_ << ")";
+        << "(" << ++instances_ << ")" << std::endl;
 #endif
 }
 
@@ -48,7 +48,7 @@ track<Shared>::~track()
 {
 #ifndef NDEBUG
     LOG_DEBUG(LOG_SYSTEM) << "~" << typeid(Shared).name()
-        << "(" << --instances_ << ")";
+        << "(" << --instances_ << ")" << std::endl;
 #endif
 }
 
