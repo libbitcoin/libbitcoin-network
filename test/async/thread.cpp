@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include <bitcoin/network.hpp>
 
 #ifdef _MSC_VER
     #include <windows.h>

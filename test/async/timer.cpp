@@ -17,13 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include <bitcoin/network.hpp>
 
 BOOST_AUTO_TEST_SUITE(timer_tests)
 
-BOOST_AUTO_TEST_CASE(timer)
+BOOST_AUTO_TEST_CASE(timer__execution__always__non_empty)
 {
-    BOOST_REQUIRE(true);
+    const auto sleep = []() { std::this_thread::sleep_for(milliseconds(42)); };
+    const auto result = timer<milliseconds, steady_clock>::execution(sleep);
+    BOOST_REQUIRE_GT(result, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

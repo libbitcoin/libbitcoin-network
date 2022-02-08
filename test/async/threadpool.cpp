@@ -17,13 +17,42 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include <bitcoin/network.hpp>
 
 BOOST_AUTO_TEST_SUITE(threadpool_tests)
 
-BOOST_AUTO_TEST_CASE(threadpool)
+BOOST_AUTO_TEST_CASE(threadpool__construct__default__unstopped)
 {
-    BOOST_REQUIRE(true);
+    threadpool pool{};
+    BOOST_REQUIRE(!pool.service().stopped());
+}
+
+BOOST_AUTO_TEST_CASE(threadpool__construct__empty__joins)
+{
+    threadpool pool{ 0, thread_priority::low };
+    pool.join();
+    BOOST_REQUIRE(!pool.service().stopped());
+}
+
+BOOST_AUTO_TEST_CASE(threadpool__service__always__defined)
+{
+    threadpool pool{ 2, thread_priority::lowest };
+    pool.stop();
+    BOOST_REQUIRE(pool.service().stopped());
+}
+
+BOOST_AUTO_TEST_CASE(threadpool__stop__always__stopped)
+{
+    threadpool pool{};
+    pool.stop();
+    BOOST_REQUIRE(pool.service().stopped());
+}
+
+BOOST_AUTO_TEST_CASE(threadpool__join__stopped__stopped)
+{
+    threadpool pool{};
+    pool.stop();
+    pool.join();
+    BOOST_REQUIRE(pool.service().stopped());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

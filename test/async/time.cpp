@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -17,13 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include <bitcoin/network.hpp>
 
 BOOST_AUTO_TEST_SUITE(time_tests)
 
-BOOST_AUTO_TEST_CASE(time)
+BOOST_AUTO_TEST_CASE(time__local_time__always__non_empty)
 {
-    BOOST_REQUIRE(true);
+    BOOST_REQUIRE(!local_time().empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

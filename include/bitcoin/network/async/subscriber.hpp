@@ -43,6 +43,7 @@ public:
     void subscribe(handler&& notify) noexcept;
     void notify(const Args&... args) const noexcept;
     void stop(const Args&... args) noexcept;
+    bool stopped() noexcept;
 
 private:
     // This is thread safe.

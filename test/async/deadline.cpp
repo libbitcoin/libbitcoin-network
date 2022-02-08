@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include <bitcoin/network.hpp>
 
 BOOST_AUTO_TEST_SUITE(deadline_tests)
 
@@ -57,8 +56,6 @@ BOOST_AUTO_TEST_CASE(deadline__construct2__three_threads_start_zero_delay__succe
 BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
 {
     // Thread starved timer.
-    // ------------------------------------------------------------------------
-
     threadpool pool(0);
     asio::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(strand);
@@ -69,8 +66,6 @@ BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
     });
 
     // Stop timer.
-    // ------------------------------------------------------------------------
-
     threadpool stop_pool(1);
     asio::strand stop_strand(stop_pool.service().get_executor());
     const auto stopper = std::make_shared<deadline>(stop_strand, milliseconds(1));
@@ -84,8 +79,6 @@ BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
 BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
 {
     // Slow timer.
-    // ------------------------------------------------------------------------
-
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(strand, seconds(10));
@@ -98,8 +91,6 @@ BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
     });
 
     // Stop timer.
-    // ------------------------------------------------------------------------
-
     threadpool stop_pool(1);
     asio::strand stop_strand(stop_pool.service().get_executor());
     const auto stopper = std::make_shared<deadline>(stop_strand);

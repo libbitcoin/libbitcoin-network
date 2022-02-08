@@ -357,33 +357,33 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds__success)
     BOOST_REQUIRE(promise_run.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_default_seeds__success)
-{
-    settings set(selection::mainnet);
-    BOOST_REQUIRE(set.peers.empty());
-    set.seeds.resize(1);
-    set.host_pool_capacity = 42;
-
-    p2p net(set);
-    BOOST_REQUIRE(net.network_settings().peers.empty());
-    BOOST_REQUIRE_EQUAL(net.network_settings().seeds.size(), 1u);
-    BOOST_REQUIRE_EQUAL(net.network_settings().host_pool_capacity, 42u);
-
-    std::promise<bool> promise;
-    const auto run_handler = [&](const code& ec)
-    {
-        BOOST_REQUIRE_EQUAL(ec, error::success);
-        promise.set_value(true);
-    };
-
-    const auto start_handler = [&](const code& ec)
-    {
-        BOOST_REQUIRE_EQUAL(ec, error::seeding_unsuccessful);
-        net.run(run_handler);
-    };
-
-    net.start(start_handler);
-    BOOST_REQUIRE(promise.get_future().get());
-}
+////BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_default_seeds__success)
+////{
+////    settings set(selection::mainnet);
+////    BOOST_REQUIRE(set.peers.empty());
+////    set.seeds.resize(1);
+////    set.host_pool_capacity = 42;
+////
+////    p2p net(set);
+////    BOOST_REQUIRE(net.network_settings().peers.empty());
+////    BOOST_REQUIRE_EQUAL(net.network_settings().seeds.size(), 1u);
+////    BOOST_REQUIRE_EQUAL(net.network_settings().host_pool_capacity, 42u);
+////
+////    std::promise<bool> promise;
+////    const auto run_handler = [&](const code& ec)
+////    {
+////        BOOST_REQUIRE_EQUAL(ec, error::success);
+////        promise.set_value(true);
+////    };
+////
+////    const auto start_handler = [&](const code& ec)
+////    {
+////        BOOST_REQUIRE_EQUAL(ec, error::seeding_unsuccessful);
+////        net.run(run_handler);
+////    };
+////
+////    net.start(start_handler);
+////    BOOST_REQUIRE(promise.get_future().get());
+////}
 
 BOOST_AUTO_TEST_SUITE_END()

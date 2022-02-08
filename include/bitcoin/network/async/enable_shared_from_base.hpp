@@ -34,6 +34,7 @@ protected:
     template <class Derived, system::if_base_of<Base, Derived> = true>
     std::shared_ptr<Derived> shared_from_base()
     {
+        // Instance (not just type) must be upcastable to Derived.
         return std::static_pointer_cast<Derived>(this->shared_from_this());
     }
 };

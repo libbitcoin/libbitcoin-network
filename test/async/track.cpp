@@ -17,13 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "../test.hpp"
-#include <bitcoin/network.hpp>
 
 BOOST_AUTO_TEST_SUITE(track_tests)
 
-BOOST_AUTO_TEST_CASE(track)
+class simple
+  : track<simple>
 {
-    BOOST_REQUIRE(true);
+public:
+    bool method() const
+    {
+        return true;
+    };
+};
+
+BOOST_AUTO_TEST_CASE(track__construct__always__compiles)
+{
+    simple foo;
+    BOOST_REQUIRE(foo.method());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

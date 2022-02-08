@@ -72,6 +72,13 @@ void subscriber<Args...>::stop(const Args&... args) noexcept
     queue_.clear();
 }
 
+template <typename... Args>
+bool subscriber<Args...>::stopped() noexcept
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    return stopped_;
+}
+
 } // namespace network
 } // namespace libbitcoin
 
