@@ -51,39 +51,34 @@ public:
         return timer_;
     }
 
-    asio::acceptor& get_acceptor()
+    const asio::acceptor& get_acceptor() const
     {
         return acceptor_;
     }
 };
 
-BOOST_AUTO_TEST_CASE(acceptor__construct__default__expected_properties)
+BOOST_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
 {
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
+    const auto instance = std::make_shared<accessor>(strand, pool.service(), set);
 
+    BOOST_REQUIRE(instance->get_stopped());
     BOOST_REQUIRE(&instance->get_settings() == &set);
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
     BOOST_REQUIRE(&instance->get_strand() == &strand);
-    BOOST_REQUIRE(instance->get_stopped());
     BOOST_REQUIRE(instance->get_timer());
     BOOST_REQUIRE(!instance->get_acceptor().is_open());
-
-    pool.stop();
-    pool.join();
 }
 
-BOOST_AUTO_TEST_CASE(acceptor__start__always__expected)
+BOOST_AUTO_TEST_CASE(acceptor__start__always__success)
 {
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
     auto instance = std::make_shared<acceptor>(strand, pool.service(), set);
-    instance->start(42);
-    pool.stop();
-    pool.join();
+    BOOST_REQUIRE(!instance->start(42));
 }
 
 BOOST_AUTO_TEST_CASE(acceptor__accept__timeout__channel_timeout)

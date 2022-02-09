@@ -52,21 +52,18 @@ public:
     }
 };
 
-BOOST_AUTO_TEST_CASE(connector__construct__default__expected_properties)
+BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
 {
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
+    const auto instance = std::make_shared<accessor>(strand, pool.service(), set);
 
+    BOOST_REQUIRE(instance->get_stopped());
     BOOST_REQUIRE(&instance->get_settings() == &set);
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
     BOOST_REQUIRE(&instance->get_strand() == &strand);
-    BOOST_REQUIRE(instance->get_stopped());
     BOOST_REQUIRE(instance->get_timer());
-
-    pool.stop();
-    pool.join();
 }
 
 BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
