@@ -58,11 +58,8 @@ void connector::stop()
     if (stopped_)
         return;
 
-    // Posts handle_resolve to strand.
-    resolver_.cancel();
-
-    // Posts timer handler to strand (if not expired).
-    // But timer handler does not invoke handle_timer on stop.
+    // Posts timer handler to strand.
+    // resolver and socket.connect are canceled in the timer handler.
     timer_->stop();
 }
 
@@ -87,17 +84,16 @@ void connector::connect(const std::string& hostname, uint16_t port,
     // Enables reusability.
     stopped_ = false;
 
-    // The handler is copied by std::bind.
-    // Posts timer handler to strand (if not expired).
-    // But timer handler does not invoke handle_timer on stop.
-    timer_->start(
-        std::bind(&connector::handle_timer,
-            shared_from_this(), _1, handler));
-
     const auto socket = std::make_shared<network::socket>(service_);
 
-    // async_resolve copies string parameters.
+    // Posts timer handler to strand.
+    // The handler is copied by std::bind.
+    timer_->start(
+        std::bind(&connector::handle_timer,
+            shared_from_this(), _1, socket, handler));
+
     // Posts handle_resolve to strand.
+    // async_resolve copies string parameters.
     resolver_.async_resolve(hostname, std::to_string(port),
         std::bind(&connector::handle_resolve,
             shared_from_this(), _1, _2, socket, std::move(handler)));
@@ -109,14 +105,14 @@ void connector::handle_resolve(const error::boost_code& ec,
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    if (error::asio_is_cancelled(ec))
-    {
-        handler(error::channel_stopped, nullptr);
+    // Ensure only the handler executes only once, as both may be posted.
+    if (stopped_)
         return;
-    }
 
     if (ec)
     {
+        // Resolve result codes return here.
+        // Cancel not handled here because handled first in timer.
         handler(error::asio_to_error_code(ec), nullptr);
         return;
     }
@@ -155,24 +151,24 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
     stopped_ = true;
 
     // Posts timer handler to strand (if not expired).
-    // But timer handler does not invoke handle_timer on stop.
     timer_->stop();
-    
-    // stopped_ is set on cancellation, so this is an error.
+
     if (ec)
     {
+        // Connect result codes return here.
         handler(ec, nullptr);
         return;
     }
 
-    const auto created = std::make_shared<channel>(socket, settings_);
+    const auto channel = std::make_shared<network::channel>(socket, settings_);
 
-    // Successful channel creation.
-    handler(error::success, created);
+    // Successful connect.
+    handler(error::success, channel);
 }
 
 // private
-void connector::handle_timer(const code& ec, const connect_handler& handler)
+void connector::handle_timer(const code& ec, socket::ptr socket,
+    const connect_handler& handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -181,17 +177,18 @@ void connector::handle_timer(const code& ec, const connect_handler& handler)
         return;
 
     // Posts handle_resolve to strand (if not already posted).
+    socket->stop();
     resolver_.cancel();
     stopped_ = true;
 
-    // stopped_ is set on cancellation, so this is an error.
     if (ec)
     {
+        // Stop result code (error::operation_canceled) return here.
         handler(ec, nullptr);
         return;
     }
 
-    // Unsuccessful channel creation.
+    // Timeout result code (error::success) translated to channel_timeout here.
     handler(error::channel_timeout, nullptr);
 }
 
