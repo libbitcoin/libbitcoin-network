@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(acceptor__start__always__success)
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
     auto instance = std::make_shared<acceptor>(strand, pool.service(), set);
-    BOOST_REQUIRE(!instance->start(42));
+    BOOST_REQUIRE_EQUAL(instance->start(42), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(acceptor__accept__timeout__channel_timeout)
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__timeout__channel_timeout)
     settings set(bc::system::chain::selection::mainnet);
     set.connect_timeout_seconds = 0;
     auto instance = std::make_shared<acceptor>(strand, pool.service(), set);
-    BOOST_REQUIRE(!instance->start(42));
+    BOOST_REQUIRE_EQUAL(instance->start(42), error::success);
 
     boost::asio::post(strand, [&]()
     {
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__operation_canceled)
     settings set(bc::system::chain::selection::mainnet);
     set.connect_timeout_seconds = 1000;
     auto instance = std::make_shared<acceptor>(strand, pool.service(), set);
-    BOOST_REQUIRE(!instance->start(42));
+    BOOST_REQUIRE_EQUAL(instance->start(42), error::success);
 
     boost::asio::post(strand, [&]()
     {
