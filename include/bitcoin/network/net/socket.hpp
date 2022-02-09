@@ -89,7 +89,7 @@ public:
     /// Get the authority of the remote endpoint.
     virtual const config::authority& authority() const;
 
-private:
+protected:
     void do_stop();
     void do_connect(const asio::resolved& it, result_handler handler);
     void do_read(const boost::asio::mutable_buffer& out, io_handler handler);

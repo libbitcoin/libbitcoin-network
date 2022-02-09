@@ -54,12 +54,6 @@ socket::~socket()
 
 // Stop.
 // ----------------------------------------------------------------------------
-// These calls may originate from outside the strand on any thread.
-
-bool socket::stopped() const 
-{
-    return stopped_.load(std::memory_order_relaxed);
-}
 
 void socket::stop()
 {
@@ -88,7 +82,6 @@ void socket::do_stop()
 
 // I/O.
 // ----------------------------------------------------------------------------
-// These calls may originate from outside the strand on any thread.
 // Boost async functions are NOT THREAD SAFE for the same socket object.
 // This clarifies boost documentation: svn.boost.org/trac10/ticket/10009
 
@@ -214,7 +207,11 @@ void socket::handle_io(const error::boost_code& ec, size_t size,
 
 // Properties.
 // ----------------------------------------------------------------------------
-// These calls may originate from any thread.
+
+bool socket::stopped() const
+{
+    return stopped_.load(std::memory_order_relaxed);
+}
 
 bool socket::stranded() const
 {
