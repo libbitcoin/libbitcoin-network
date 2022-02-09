@@ -78,12 +78,8 @@ void acceptor::stop()
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    // Posts handle_accept to strand.
-    error::boost_code ignore;
-    acceptor_.cancel(ignore);
-
-    // Posts timer handler to strand (if not expired).
-    // But timer handler does not invoke handle_timer on stop.
+    // Posts timer handler to strand.
+    // Acceptor is canceled in the timer handler.
     timer_->stop();
 }
 
@@ -97,9 +93,8 @@ void acceptor::accept(accept_handler&& handler)
     // Enables reusability.
     stopped_ = false;
 
+    // Posts timer handler to strand.
     // The handler is copied by std::bind.
-    // Posts timer handler to strand (if not expired).
-    // But timer handler does not invoke handle_timer on stop.
     timer_->start(
         std::bind(&acceptor::handle_timer,
             shared_from_this(), _1, handler));
@@ -124,21 +119,21 @@ void acceptor::handle_accept(const code& ec, socket::ptr socket,
         return;
 
     // Posts timer handler to strand (if not expired).
-    // But timer handler does not invoke handle_timer on stop.
     timer_->stop();
     stopped_ = true;
 
-    // stopped_ is set on cancellation, so this is an error.
     if (ec)
     {
+        // Connect result codes return here.
+        // Cancel not handled here because handled first in timer.
         handler(ec, nullptr);
         return;
     }
 
-    const auto created = std::make_shared<channel>(socket, settings_);
+    const auto channel = std::make_shared<network::channel>(socket, settings_);
 
-    // Successful channel creation.
-    handler(error::success, created);
+    // Successful accept.
+    handler(error::success, channel);
 }
 
 // private
@@ -155,14 +150,14 @@ void acceptor::handle_timer(const code& ec, const accept_handler& handler)
     acceptor_.cancel(ignore);
     stopped_ = true;
 
-    // stopped_ is set on cancellation, so this is an error.
     if (ec)
     {
+        // Stop result code (error::operation_canceled) return here.
         handler(ec, nullptr);
         return;
     }
 
-    // Unsuccessful channel creation.
+    // Timeout result code (error::success) translated to channel_timeout here.
     handler(error::channel_timeout, nullptr);
 }
 

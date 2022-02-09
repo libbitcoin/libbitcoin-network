@@ -254,6 +254,7 @@ void channel::start_inactivity()
             shared_from_base<channel>(), _1));
 }
 
+// There is no timeout set on individual sends and receives, just inactivity.
 void channel::handle_inactivity(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");

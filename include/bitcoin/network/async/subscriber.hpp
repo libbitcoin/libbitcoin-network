@@ -37,6 +37,7 @@ public:
     typedef std::function<void(Args...)> handler;
     typedef std::shared_ptr<subscriber<Args...>> ptr;
 
+    // TODO: remove strand, is only used for assertions.
     subscriber(asio::strand& strand) noexcept;
     virtual ~subscriber() noexcept;
 

@@ -48,7 +48,7 @@ static std::string to_authority(const std::string& host, uint16_t port)
 {
     std::stringstream authority;
     authority << to_host_name(host);
-    if (port > 0)
+    if (!is_zero(port))
         authority << ":" << port;
 
     return authority.str();
