@@ -41,10 +41,10 @@ typedef boost::asio::ip::address_v4 ipv4;
 typedef boost::asio::ip::address_v6 ipv6;
 typedef boost::asio::ip::tcp tcp;
 
-typedef tcp::endpoint endpoint;
 typedef tcp::acceptor acceptor;
 typedef tcp::resolver resolver;
-typedef resolver::results_type resolved;
+typedef tcp::endpoint endpoint;
+typedef resolver::results_type endpoints;
 
 typedef tcp::socket socket;
 typedef std::shared_ptr<socket> socket_ptr;

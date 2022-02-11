@@ -87,6 +87,7 @@ void socket::do_stop()
 
 void socket::accept(asio::acceptor& acceptor, result_handler&& handler)
 {
+    // Closure of the acceptor, not the socket, releases this handler.
     // The socket is not guarded during async_accept. This is required so the
     // acceptor may be guarded from its own strand while preserving hiding of
     // socket internals. This makes concurrent calls unsafe, however only the
@@ -96,11 +97,11 @@ void socket::accept(asio::acceptor& acceptor, result_handler&& handler)
             shared_from_this(), _1, std::move(handler)));
 }
 
-void socket::connect(const asio::resolved& it, result_handler&& handler)
+void socket::connect(const asio::endpoints& range, result_handler&& handler)
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_connect,
-            shared_from_this(), it, std::move(handler)));
+            shared_from_this(), range, std::move(handler)));
 }
 
 void socket::read(const data_slab& out, io_handler&& handler)
@@ -123,9 +124,10 @@ void socket::write(const data_slice& in, io_handler&& handler)
 // ----------------------------------------------------------------------------
 // These execute on the strand to protect the member socket.
 
-void socket::do_connect(const asio::resolved& it, result_handler handler)
+void socket::do_connect(const asio::endpoints& range, result_handler handler)
 {
-    async_connect(socket_, it,
+    // Establishes a socket connection by trying each endpoint in a sequence.
+    boost::asio::async_connect(socket_, range,
         std::bind(&socket::handle_connect,
             shared_from_this(), _1, _2, std::move(handler)));
 }

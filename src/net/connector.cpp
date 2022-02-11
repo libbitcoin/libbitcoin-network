@@ -101,7 +101,7 @@ void connector::connect(const std::string& hostname, uint16_t port,
 
 // private
 void connector::handle_resolve(const error::boost_code& ec,
-    const asio::resolved& it, socket::ptr socket, connect_handler handler)
+    const asio::endpoints& range, socket::ptr socket, connect_handler handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -119,12 +119,12 @@ void connector::handle_resolve(const error::boost_code& ec,
 
     // boost::asio::bind_executor not working.
     ////// Posts handle_connect to strand (after socket strand).
-    ////socket->connect(it,
+    ////socket->connect(range,
     ////    boost::asio::bind_executor(strand_,
     ////        std::bind(&connector::handle_connect,
     ////            shared_from_this(), _1, socket, std::move(handler))));
 
-    socket->connect(it,
+    socket->connect(range,
         std::bind(&connector::handle_connect,
             shared_from_this(), _1, socket, handler));
 }

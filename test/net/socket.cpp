@@ -99,9 +99,8 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     asio::strand strand(pool.service().get_executor());
     asio::acceptor acceptor(strand);
 
-    // This is hardwired to listen on IPv6.
-    asio::endpoint endpoint(asio::tcp::v6(), 42);
     error::boost_code ec;
+    const asio::endpoint endpoint(asio::tcp::v6(), 42);
 
     acceptor.open(endpoint.protocol(), ec);
     BOOST_REQUIRE(!ec);
@@ -109,15 +108,17 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     acceptor.set_option(asio::acceptor::reuse_address(true), ec);
     BOOST_REQUIRE(!ec);
 
+    // Result codes inconsistent due to context.
     acceptor.bind(endpoint, ec);
     ////BOOST_REQUIRE(!ec);
 
+    // Result codes inconsistent due to context.
     acceptor.listen(1, ec);
     ////BOOST_REQUIRE(!ec);
 
     instance->accept(acceptor, [instance](const code& ec)
     {
-        // Acceptor cancelation sets channel_stopped and default authority.
+        // Acceptor cancelation sets channel_stopped and default ipv4 authority.
         BOOST_REQUIRE_EQUAL(ec, error::channel_stopped);
         BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::]");
     });
@@ -132,6 +133,35 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
         error::boost_code ignore;
         acceptor.cancel(ignore);
     });
+
+    pool.stop();
+    pool.join();
+}
+
+BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
+{
+    threadpool pool(2);
+    const auto instance = std::make_shared<socket_accessor>(pool.service());
+    asio::strand strand(pool.service().get_executor());
+
+    const asio::endpoint endpoint(asio::tcp::v6(), 42);
+    asio::endpoints endpoints;
+    endpoints.create(endpoint, "bogus.xxx", "service");
+
+    instance->connect(endpoints, [instance](const code& ec)
+    {
+        // Socket cancelation sets channel_stopped and default ipv6 authority.
+        // TODO: 3 (ERROR_PATH_NOT_FOUND) code gets mapped to unknown.
+        BOOST_REQUIRE(ec == error::unknown || ec == error::channel_stopped);
+        BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::ffff:0:0]");
+    });
+
+    // Test race.
+    std::this_thread::sleep_for(microseconds(1));
+
+    // Stopping the socket cancels connection attempt, but should fail first.
+    // Delay above increases chance that connect fail will win consistently.
+    instance->stop();
 
     pool.stop();
     pool.join();

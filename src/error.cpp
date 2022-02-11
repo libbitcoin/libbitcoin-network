@@ -18,8 +18,8 @@
  */
 #include <bitcoin/network/error.hpp>
 
-////#include <boost/asio.hpp>
-////#include <boost/system/error_code.hpp>
+#include <boost/asio.hpp>
+#include <boost/system/error_code.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 
@@ -83,127 +83,128 @@ bool asio_is_cancelled(const error::boost_code& ec)
 {
     // We test against the platform-independent condition (equivalence).
     // Boost documents that cancellation gives basic_errors::operation_aborted,
-    // however this is the platform-specific code:
+    // however that is the code (equality), not the condition (equivalence):
     ////operation_aborted = BOOST_ASIO_WIN_OR_POSIX(
     ////    BOOST_ASIO_NATIVE_ERROR(ERROR_OPERATION_ABORTED),
     ////    BOOST_ASIO_NATIVE_ERROR(ECANCELED))
-    return ec == boost_condition::operation_canceled;
+    ////return ec == boost::asio::error::operation_aborted;
+    return ec == boost_error_t::operation_canceled;
 }
 
 // This method is only invoked when asio returns an error that is not the
-// result of cancellation of the call (boost_condition::operation_canceled).
+// result of cancellation of the call (boost_error_t::operation_canceled).
 // Equivalence tests require equality operator override. The success and 
 // connection_aborted codes are the only expected in normal operation, so these
 // are first, to optimize the case where asio_is_cancelled is not used.
 code asio_to_error_code(const error::boost_code& ec)
 {
-    if (ec == boost_condition::success)
+    if (ec == boost_error_t::success)
         return error::success;
 
     // termination
-    if (ec == boost_condition::connection_aborted ||
-        ec == boost_condition::operation_canceled)
+    if (ec == boost_error_t::connection_aborted ||
+        ec == boost_error_t::operation_canceled)
         return error::operation_canceled;
 
     // network
-    if (ec == boost_condition::connection_refused ||
-        ec == boost_condition::connection_reset ||
-        ec == boost_condition::not_connected ||
-        ec == boost_condition::not_connected ||
-        ec == boost_condition::operation_not_permitted ||
-        ec == boost_condition::operation_not_supported ||
-        ec == boost_condition::owner_dead ||
-        ec == boost_condition::permission_denied)
+    if (ec == boost_error_t::connection_refused ||
+        ec == boost_error_t::connection_reset ||
+        ec == boost_error_t::not_connected ||
+        ec == boost_error_t::not_connected ||
+        ec == boost_error_t::operation_not_permitted ||
+        ec == boost_error_t::operation_not_supported ||
+        ec == boost_error_t::owner_dead ||
+        ec == boost_error_t::permission_denied)
         return error::operation_failed;
 
     // connect-resolve
-    if (ec == boost_condition::address_family_not_supported ||
-        ec == boost_condition::address_not_available ||
-        ec == boost_condition::bad_address ||
-        ec == boost_condition::destination_address_required)
+    if (ec == boost_error_t::address_family_not_supported ||
+        ec == boost_error_t::address_not_available ||
+        ec == boost_error_t::bad_address ||
+        ec == boost_error_t::destination_address_required)
         return error::resolve_failed;
 
     // connect-resolve
-    if (ec == boost_condition::broken_pipe ||
-        ec == boost_condition::host_unreachable ||
-        ec == boost_condition::network_down ||
-        ec == boost_condition::network_reset ||
-        ec == boost_condition::network_unreachable ||
-        ec == boost_condition::no_link ||
-        ec == boost_condition::no_protocol_option ||
-        ec == boost_condition::no_such_file_or_directory ||
-        ec == boost_condition::no_such_file_or_directory ||
-        ec == boost_condition::not_a_socket ||
-        ec == boost_condition::protocol_not_supported ||
-        ec == boost_condition::wrong_protocol_type)
+    if (ec == boost_error_t::broken_pipe ||
+        ec == boost_error_t::host_unreachable ||
+        ec == boost_error_t::network_down ||
+        ec == boost_error_t::network_reset ||
+        ec == boost_error_t::network_unreachable ||
+        ec == boost_error_t::no_link ||
+        ec == boost_error_t::no_protocol_option ||
+        ec == boost_error_t::no_such_file_or_directory ||
+        ec == boost_error_t::no_such_file_or_directory ||
+        ec == boost_error_t::not_a_socket ||
+        ec == boost_error_t::protocol_not_supported ||
+        ec == boost_error_t::wrong_protocol_type)
         return error::connect_failed;
 
     // connect-address
-    if (ec == boost_condition::address_in_use ||
-        ec == boost_condition::already_connected ||
-        ec == boost_condition::connection_already_in_progress ||
-        ec == boost_condition::operation_in_progress)
+    if (ec == boost_error_t::address_in_use ||
+        ec == boost_error_t::already_connected ||
+        ec == boost_error_t::connection_already_in_progress ||
+        ec == boost_error_t::operation_in_progress)
         return error::address_in_use;
 
     // I/O
-    if (ec == boost_condition::bad_message ||
-        ec == boost_condition::illegal_byte_sequence ||
-        ec == boost_condition::io_error ||
-        ec == boost_condition::message_size ||
-        ec == boost_condition::no_message_available ||
-        ec == boost_condition::no_message ||
-        ec == boost_condition::no_stream_resources ||
-        ec == boost_condition::not_a_stream ||
-        ec == boost_condition::protocol_error)
+    if (ec == boost_error_t::bad_message ||
+        ec == boost_error_t::illegal_byte_sequence ||
+        ec == boost_error_t::io_error ||
+        ec == boost_error_t::message_size ||
+        ec == boost_error_t::no_message_available ||
+        ec == boost_error_t::no_message ||
+        ec == boost_error_t::no_stream_resources ||
+        ec == boost_error_t::not_a_stream ||
+        ec == boost_error_t::protocol_error)
         return error::bad_stream;
 
     // timeout
-    if (ec == boost_condition::stream_timeout ||
-        ec == boost_condition::timed_out)
+    if (ec == boost_error_t::stream_timeout ||
+        ec == boost_error_t::timed_out)
         return error::channel_timeout;
 
     // file system errors
-    if (ec == boost_condition::cross_device_link ||
-        ec == boost_condition::bad_file_descriptor ||
-        ec == boost_condition::device_or_resource_busy ||
-        ec == boost_condition::directory_not_empty ||
-        ec == boost_condition::executable_format_error ||
-        ec == boost_condition::file_exists ||
-        ec == boost_condition::file_too_large ||
-        ec == boost_condition::filename_too_long ||
-        ec == boost_condition::invalid_seek ||
-        ec == boost_condition::is_a_directory ||
-        ec == boost_condition::no_space_on_device ||
-        ec == boost_condition::no_such_device ||
-        ec == boost_condition::no_such_device_or_address ||
-        ec == boost_condition::read_only_file_system ||
-        ec == boost_condition::resource_unavailable_try_again ||
-        ec == boost_condition::text_file_busy ||
-        ec == boost_condition::too_many_files_open ||
-        ec == boost_condition::too_many_files_open_in_system ||
-        ec == boost_condition::too_many_links ||
-        ec == boost_condition::too_many_symbolic_link_levels)
+    if (ec == boost_error_t::cross_device_link ||
+        ec == boost_error_t::bad_file_descriptor ||
+        ec == boost_error_t::device_or_resource_busy ||
+        ec == boost_error_t::directory_not_empty ||
+        ec == boost_error_t::executable_format_error ||
+        ec == boost_error_t::file_exists ||
+        ec == boost_error_t::file_too_large ||
+        ec == boost_error_t::filename_too_long ||
+        ec == boost_error_t::invalid_seek ||
+        ec == boost_error_t::is_a_directory ||
+        ec == boost_error_t::no_space_on_device ||
+        ec == boost_error_t::no_such_device ||
+        ec == boost_error_t::no_such_device_or_address ||
+        ec == boost_error_t::read_only_file_system ||
+        ec == boost_error_t::resource_unavailable_try_again ||
+        ec == boost_error_t::text_file_busy ||
+        ec == boost_error_t::too_many_files_open ||
+        ec == boost_error_t::too_many_files_open_in_system ||
+        ec == boost_error_t::too_many_links ||
+        ec == boost_error_t::too_many_symbolic_link_levels)
         return error::file_system;
 
     ////// unknown
-    ////if (ec == boost_condition::argument_list_too_long ||
-    ////    ec == boost_condition::argument_out_of_domain ||
-    ////    ec == boost_condition::function_not_supported ||
-    ////    ec == boost_condition::identifier_removed ||
-    ////    ec == boost_condition::inappropriate_io_control_operation ||
-    ////    ec == boost_condition::interrupted ||
-    ////    ec == boost_condition::invalid_argument ||
-    ////    ec == boost_condition::no_buffer_space ||
-    ////    ec == boost_condition::no_child_process ||
-    ////    ec == boost_condition::no_lock_available ||
-    ////    ec == boost_condition::no_such_process ||
-    ////    ec == boost_condition::not_a_directory ||
-    ////    ec == boost_condition::not_enough_memory ||
-    ////    ec == boost_condition::operation_would_block ||
-    ////    ec == boost_condition::resource_deadlock_would_occur ||
-    ////    ec == boost_condition::result_out_of_range ||
-    ////    ec == boost_condition::state_not_recoverable ||
-    ////    ec == boost_condition::value_too_large)
+    ////if (ec == boost_error_t::argument_list_too_long ||
+    ////    ec == boost_error_t::argument_out_of_domain ||
+    ////    ec == boost_error_t::function_not_supported ||
+    ////    ec == boost_error_t::identifier_removed ||
+    ////    ec == boost_error_t::inappropriate_io_control_operation ||
+    ////    ec == boost_error_t::interrupted ||
+    ////    ec == boost_error_t::invalid_argument ||
+    ////    ec == boost_error_t::no_buffer_space ||
+    ////    ec == boost_error_t::no_child_process ||
+    ////    ec == boost_error_t::no_lock_available ||
+    ////    ec == boost_error_t::no_such_process ||
+    ////    ec == boost_error_t::not_a_directory ||
+    ////    ec == boost_error_t::not_enough_memory ||
+    ////    ec == boost_error_t::operation_would_block ||
+    ////    ec == boost_error_t::resource_deadlock_would_occur ||
+    ////    ec == boost_error_t::result_out_of_range ||
+    ////    ec == boost_error_t::state_not_recoverable ||
+    ////    ec == boost_error_t::value_too_large)
     return error::unknown;
 }
 
