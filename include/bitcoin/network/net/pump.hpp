@@ -122,7 +122,7 @@ private:
         // TODO: account for witness parameter here.
         const auto message = messages::deserialize<Message>(source, version);
 
-        if (!message)
+        if (!source)
             return error::invalid_message;
 
         // Subscribers are notified only with stop code or error::success.
