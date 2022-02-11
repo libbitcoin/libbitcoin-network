@@ -41,16 +41,6 @@ public:
         return strand_;
     }
 
-    bool get_stopped() const
-    {
-        return stopped_;
-    }
-
-    deadline::ptr get_timer()
-    {
-        return timer_;
-    }
-
     const asio::acceptor& get_acceptor() const
     {
         return acceptor_;
@@ -64,11 +54,9 @@ BOOST_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
     const settings set(bc::system::chain::selection::mainnet);
     const auto instance = std::make_shared<accessor>(strand, pool.service(), set);
 
-    BOOST_REQUIRE(instance->get_stopped());
     BOOST_REQUIRE(&instance->get_settings() == &set);
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
     BOOST_REQUIRE(&instance->get_strand() == &strand);
-    BOOST_REQUIRE(instance->get_timer());
     BOOST_REQUIRE(!instance->get_acceptor().is_open());
 }
 
@@ -84,38 +72,11 @@ BOOST_AUTO_TEST_CASE(acceptor__start__always__success)
     instance->start(42);
 }
 
-BOOST_AUTO_TEST_CASE(acceptor__accept__timeout__channel_timeout)
+BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
-    ////set.connect_timeout_seconds = 0;
-    auto instance = std::make_shared<acceptor>(strand, pool.service(), set);
-
-    // Result codes inconsistent due to context.
-    /////BOOST_REQUIRE_EQUAL(instance->start(42), error::success);
-    instance->start(42);
-
-    boost::asio::post(strand, [instance]()
-    {
-        instance->accept([](const code& ec, channel::ptr channel)
-        {
-            // Result codes inconsistent due to context.
-            ////BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
-            BOOST_REQUIRE(!channel);
-        });
-    });
-
-    pool.stop();
-    pool.join();
-}
-
-BOOST_AUTO_TEST_CASE(acceptor__accept__stop__operation_canceled)
-{
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    settings set(bc::system::chain::selection::mainnet);
-    ////set.connect_timeout_seconds = 1000;
     auto instance = std::make_shared<acceptor>(strand, pool.service(), set);
 
     // Result codes inconsistent due to context.
@@ -127,7 +88,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__operation_canceled)
         instance->accept([](const code& ec, channel::ptr channel)
         {
             // Result codes inconsistent due to context.
-            ////BOOST_REQUIRE_EQUAL(ec, error::operation_canceled);
+            ////BOOST_REQUIRE_EQUAL(ec, error::channel_stopped);
             BOOST_REQUIRE(!channel);
         });
 

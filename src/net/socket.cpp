@@ -159,8 +159,8 @@ void socket::do_write(const boost::asio::const_buffer& in, io_handler handler)
 void socket::handle_accept(const error::boost_code& ec,
     const result_handler& handler)
 {
-    // This is running in the acceptor or socket execution context.
-    // socket and endpoint are not guarded here, see comments on accept method.
+    // This is running in the acceptor (not socket) execution context.
+    // socket_ and authority_ are not guarded here, see comments on accept.
 
     if (!ec)
         authority_ = { socket_.remote_endpoint() };

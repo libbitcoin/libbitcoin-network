@@ -44,9 +44,7 @@ acceptor::acceptor(asio::strand& strand, asio::io_context& service,
   : settings_(settings),
     service_(service),
     strand_(strand),
-    timer_(std::make_shared<deadline>(strand_, settings_.connect_timeout())),
-    acceptor_(strand_),
-    stopped_(true)
+    acceptor_(strand_)
 {
 }
 
@@ -78,9 +76,9 @@ void acceptor::stop()
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    // Posts timer handler to strand.
-    // Acceptor is canceled in the timer handler.
-    timer_->stop();
+    // Posts handle_accept to strand (if not already posted).
+    error::boost_code ignore;
+    acceptor_.cancel(ignore);
 }
 
 // Methods.
@@ -89,15 +87,6 @@ void acceptor::stop()
 void acceptor::accept(accept_handler&& handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
-    // Enables reusability.
-    stopped_ = false;
-
-    // Posts timer handler to strand.
-    // The handler is copied by std::bind.
-    timer_->start(
-        std::bind(&acceptor::handle_timer,
-            shared_from_this(), _1, handler));
 
     const auto socket = std::make_shared<network::socket>(service_);
 
@@ -114,14 +103,6 @@ void acceptor::handle_accept(const code& ec, socket::ptr socket,
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    // Ensure only the handler executes only once, as both may be posted.
-    if (stopped_)
-        return;
-
-    // Posts timer handler to strand (if not expired).
-    timer_->stop();
-    stopped_ = true;
-
     if (ec)
     {
         // Connect result codes return here.
@@ -134,31 +115,6 @@ void acceptor::handle_accept(const code& ec, socket::ptr socket,
 
     // Successful accept.
     handler(error::success, channel);
-}
-
-// private
-void acceptor::handle_timer(const code& ec, const accept_handler& handler)
-{
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
-    // Ensure only the handler executes only once, as both may be posted.
-    if (stopped_)
-        return;
-
-    // Posts handle_accept to strand (if not already posted).
-    error::boost_code ignore;
-    acceptor_.cancel(ignore);
-    stopped_ = true;
-
-    if (ec)
-    {
-        // Stop result code (error::operation_canceled) return here.
-        handler(ec, nullptr);
-        return;
-    }
-
-    // Timeout result code (error::success) translated to channel_timeout here.
-    handler(error::channel_timeout, nullptr);
 }
 
 } // namespace network

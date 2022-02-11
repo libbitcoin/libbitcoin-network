@@ -70,17 +70,14 @@ public:
 protected:
     void handle_accept(const code& ec, socket::ptr socket,
         const accept_handler& handler);
-    void handle_timer(const code& ec, const accept_handler& handler);
 
     // These are thread safe.
     const settings& settings_;
     asio::io_context& service_;
     asio::strand& strand_;
 
-    // These are protected by strand.
-    deadline::ptr timer_;
+    // This is protected by strand.
     asio::acceptor acceptor_;
-    bool stopped_;
 };
 
 } // namespace network

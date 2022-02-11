@@ -63,16 +63,6 @@ public:
         return strand_;
     }
 
-    bool get_stopped() const
-    {
-        return stopped_;
-    }
-
-    deadline::ptr get_timer()
-    {
-        return timer_;
-    }
-
     asio::acceptor& get_acceptor()
     {
         return acceptor_;
@@ -84,7 +74,6 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
     threadpool pool(1);
     const auto instance = std::make_shared<socket_accessor>(pool.service());
 
-    BOOST_REQUIRE(!instance->stopped());
     BOOST_REQUIRE(!instance->stranded());
     BOOST_REQUIRE(!instance->get_socket().is_open());
     BOOST_REQUIRE(&instance->get_strand() == &instance->strand());
@@ -127,7 +116,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     ////instance->stop();
 
     // Acceptor must be canceled to release/invoke the acecpt handler.
-    // This has the same effect as network::acceptor::stop|timeout.
+    // This has the same effect as network::acceptor::stop.
     boost::asio::post(strand, [&]()
     {
         error::boost_code ignore;
