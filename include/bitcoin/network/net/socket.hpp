@@ -74,6 +74,7 @@ public:
 
     /// Read from the socket, handler posted to socket strand.
     virtual void read(const system::data_slab& out, io_handler&& handler);
+    ////virtual void dynamic_read(system::data_chunk& out, io_handler&& handler);
 
     /// Write to the socket, handler posted to socket strand.
     virtual void write(const system::data_slice& in, io_handler&& handler);
@@ -93,6 +94,7 @@ public:
 protected:
     void do_stop();
     void do_connect(const asio::endpoints& range, result_handler handler);
+    ////void do_dynamic_read(system::data_chunk& out, io_handler handler);
     void do_read(const boost::asio::mutable_buffer& out, io_handler handler);
     void do_write(const boost::asio::const_buffer& in, io_handler handler);
 
