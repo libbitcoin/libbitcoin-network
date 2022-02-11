@@ -156,4 +156,51 @@ BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
     pool.join();
 }
 
+BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
+{
+    threadpool pool(2);
+    const auto instance = std::make_shared<socket_accessor>(pool.service());
+
+    system::data_array<42> data;
+    instance->read({ data }, [instance](const code& ec, size_t size)
+    {
+        // 10009 (WSAEBADF, invalid file handle) gets mapped to file_system.
+        BOOST_REQUIRE_EQUAL(ec, error::file_system);
+        BOOST_REQUIRE_EQUAL(size, 0u);
+    });
+
+    // Test race.
+    std::this_thread::sleep_for(microseconds(1));
+
+    // Stopping the socket is not required.
+    ////instance->stop();
+
+    pool.stop();
+    pool.join();
+}
+
+BOOST_AUTO_TEST_CASE(socket__write__disconnected__file_system)
+{
+    threadpool pool(2);
+    const auto instance = std::make_shared<socket_accessor>(pool.service());
+
+    system::data_array<42> data;
+    instance->write({ data }, [instance](const code& ec, size_t size)
+    {
+        // 10009 (WSAEBADF, invalid file handle) gets mapped to file_system.
+        BOOST_REQUIRE_EQUAL(ec, error::file_system);
+        BOOST_REQUIRE_EQUAL(size, 0u);
+    });
+
+    // Test race.
+    std::this_thread::sleep_for(microseconds(1));
+
+    // Stopping the socket is not required.
+    ////instance->stop();
+
+    pool.stop();
+    pool.join();
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
