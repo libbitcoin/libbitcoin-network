@@ -50,6 +50,7 @@ public:
 
     /// Construct an instance.
     hosts(const settings& settings);
+    virtual ~hosts();
 
     /// Load hosts file.
     virtual code start();

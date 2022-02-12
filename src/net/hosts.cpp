@@ -53,6 +53,11 @@ hosts::hosts(const settings& settings)
 {
 }
 
+hosts::~hosts()
+{
+    BC_ASSERT(stopped_);
+}
+
 size_t hosts::count() const
 {
     return count_.load(std::memory_order_relaxed);
@@ -72,8 +77,8 @@ code hosts::start()
 
     if (file_error)
     {
-        LOG_DEBUG(LOG_NETWORK) << "Failed to save hosts file.";
-        return error::file_save;
+        LOG_DEBUG(LOG_NETWORK) << "Failed to load hosts file." << std::endl;
+        return error::file_load;
     }
 
     std::string line;
@@ -106,7 +111,7 @@ code hosts::stop()
 
     if (file_error)
     {
-        LOG_DEBUG(LOG_NETWORK) << "Failed to load hosts file.";
+        LOG_DEBUG(LOG_NETWORK) << "Failed to load hosts file." << std::endl;
         return error::file_load;
     }
 
@@ -130,7 +135,8 @@ void hosts::store(const address_item& host)
     // Do not treat invalid address as an error, just log it.
     if (is_invalid(host))
     {
-        LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer.";
+        LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer."
+            << std::endl;
         return;
     }
 
@@ -166,7 +172,8 @@ void hosts::store(const address_items& hosts)
         // Do not treat invalid address as an error, just log it.
         if (is_invalid(host))
         {
-            LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer.";
+            LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer."
+                << std::endl;
             continue;
         }
 
@@ -182,7 +189,7 @@ void hosts::store(const address_items& hosts)
 
     LOG_VERBOSE(LOG_NETWORK)
         << "Accepted (" << accepted << " of " << hosts.size()
-        << ") host addresses from peer.";
+        << ") host addresses from peer." << std::endl;
 }
 
 void hosts::remove(const address_item& host)
@@ -193,7 +200,7 @@ void hosts::remove(const address_item& host)
     auto it = find(host);
     if (it == buffer_.end())
     {
-        LOG_DEBUG(LOG_NETWORK) << "Address to remove not found.";
+        LOG_DEBUG(LOG_NETWORK) << "Address to remove not found." << std::endl;
         return;
     }
 
@@ -246,7 +253,7 @@ void hosts::fetch(address_items_handler handler) const
     }
 
     const auto limit = sub1(buffer_.size());
-    auto index = pseudo_random::next(zero, limit);
+    auto index = pseudo_random::next(one, limit);
 
     address_items out;
     out.reserve(out_count);

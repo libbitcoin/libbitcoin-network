@@ -18,11 +18,337 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(hosts_tests)
-
-BOOST_AUTO_TEST_CASE(hosts)
+struct hosts_tests_setup_fixture
 {
-    BOOST_REQUIRE(true);
+    hosts_tests_setup_fixture()
+    {
+        test::clear(TEST_DIRECTORY);
+    }
+
+    ~hosts_tests_setup_fixture()
+    {
+        test::clear(TEST_DIRECTORY);
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(hosts_tests, hosts_tests_setup_fixture)
+
+using namespace messages;
+
+// start
+
+BOOST_AUTO_TEST_CASE(hosts__start__disabled__success)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(set.host_pool_capacity, 0u);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(hosts__start__enabled__success)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+
+    // Non-empty pool causes file open/load.
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__start__disabled_start__success)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__operation_failed)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::operation_failed);
+
+    instance.stop();
+}
+
+// stop
+
+BOOST_AUTO_TEST_CASE(hosts__stop__disabled__success)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.stop(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(hosts__stop__enabled_stopped__success)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.stop(), error::success);
+}
+
+// count
+
+BOOST_AUTO_TEST_CASE(hosts__count__empty__zero)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    const hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+}
+
+// store1
+
+const address_item null_host{ 0, 0, null_ip_address, 0 };
+const address_item host42{ 0, 0, unspecified_ip_address, 42 };
+
+BOOST_AUTO_TEST_CASE(hosts__store1__disabled_stopped__empty)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    hosts instance(set);
+    instance.store(null_host);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(hosts__store1__stopped__empty)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    instance.store(null_host);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(hosts__store1__invalid__empty)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+
+    // TODO: clear file.
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.store(null_host);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__store1__valid__one)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.store(host42);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+
+    instance.stop();
+}
+
+// store2
+
+const address_item host1{ 0, 0, unspecified_ip_address, 1 };
+const address_item host2{ 0, 0, unspecified_ip_address, 2 };
+const address_item host3{ 0, 0, unspecified_ip_address, 3 };
+
+BOOST_AUTO_TEST_CASE(hosts__store2__three_unique__three)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.store({ host1, host2, host3 });
+    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
+
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__store2__redundant__expected)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.store({ host1, host2, host3, host3, host2, host1 });
+    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
+
+    instance.stop();
+}
+
+// remove
+
+BOOST_AUTO_TEST_CASE(hosts__remove__only__empty)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.store(host42);
+    instance.remove(host42);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__remove__single_not_found__one)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.store(host1);
+    instance.remove(host2);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+
+    instance.stop();
+}
+
+// fetch1
+
+BOOST_AUTO_TEST_CASE(hosts__fetch1__stopped__service_stopped)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+
+    instance.store(host42);
+    instance.fetch([&](const code& ec, const messages::address_item&)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
+    });
+}
+
+BOOST_AUTO_TEST_CASE(hosts__fetch1__empty__address_not_found)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.fetch([&](const code& ec, const messages::address_item&)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::address_not_found);
+    });
+
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__fetch1__only__expected)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.store(host42);
+    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
+
+    instance.fetch([&](const code& ec, const messages::address_item& item)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::success);
+
+        // Message types do not have comparison operators.
+        BOOST_REQUIRE_EQUAL(item.ip, host42.ip);
+        BOOST_REQUIRE_EQUAL(item.port, host42.port);
+        BOOST_REQUIRE_EQUAL(item.services, host42.services);
+        BOOST_REQUIRE_EQUAL(item.timestamp, host42.timestamp);
+    });
+
+    instance.stop();
+}
+
+// fetch2
+
+BOOST_AUTO_TEST_CASE(hosts__fetch2__stopped__service_stopped)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+
+    instance.store(host42);
+    instance.fetch([&](const code& ec, const messages::address_items& items)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
+        BOOST_REQUIRE(items.empty());
+    });
+}
+
+BOOST_AUTO_TEST_CASE(hosts__fetch2__empty__address_not_found)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.fetch([&](const code& ec, const messages::address_items& items)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::address_not_found);
+        BOOST_REQUIRE(items.empty());
+    });
+
+    instance.stop();
+}
+
+BOOST_AUTO_TEST_CASE(hosts__fetch2__three__success_empty)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_PATH;
+    set.host_pool_capacity = 42;
+    hosts instance(set);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.store({ host1, host2, host3 });
+    BOOST_REQUIRE_EQUAL(instance.count(), 3u);
+
+    instance.fetch([&](const code& ec, const messages::address_items& items)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::success);
+        BOOST_REQUIRE(items.empty());
+    });
+
+    instance.stop();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
