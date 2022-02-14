@@ -223,7 +223,8 @@ void hosts::fetch(address_item_handler handler) const
     }
 
     // Randomly select an address from the buffer.
-    const auto index = pseudo_random::next(zero, sub1(buffer_.size()));
+    const auto limit = sub1(buffer_.size());
+    const auto index = pseudo_random::next(zero, limit);
     handler(error::success, buffer_[index]);
 }
 
@@ -241,19 +242,12 @@ void hosts::fetch(address_items_handler handler) const
         return;
     }
 
-    // TODO: extract configuration.
+    // TODO: extract 5/10 to configuration.
     const auto out_count = std::min(messages::max_address,
-        std::min(buffer_.size(), capacity_) /
-            pseudo_random::next<size_t>(5u, 10u));
-
-    if (is_zero(out_count))
-    {
-        handler(error::success, {});
-        return;
-    }
+        buffer_.size() / pseudo_random::next<size_t>(5u, 10u));
 
     const auto limit = sub1(buffer_.size());
-    auto index = pseudo_random::next(one, limit);
+    auto index = pseudo_random::next(zero, limit);
 
     address_items out;
     out.reserve(out_count);

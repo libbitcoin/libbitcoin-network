@@ -22,12 +22,12 @@ struct hosts_tests_setup_fixture
 {
     hosts_tests_setup_fixture()
     {
-        test::clear(TEST_DIRECTORY);
+        test::remove(TEST_NAME);
     }
 
     ~hosts_tests_setup_fixture()
     {
-        test::clear(TEST_DIRECTORY);
+        test::remove(TEST_NAME);
     }
 };
 
@@ -40,7 +40,6 @@ using namespace messages;
 BOOST_AUTO_TEST_CASE(hosts__start__disabled__success)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(set.host_pool_capacity, 0u);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -48,10 +47,9 @@ BOOST_AUTO_TEST_CASE(hosts__start__disabled__success)
 
 BOOST_AUTO_TEST_CASE(hosts__start__enabled__success)
 {
-    settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
-
     // Non-empty pool causes file open/load.
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -62,7 +60,6 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled__success)
 BOOST_AUTO_TEST_CASE(hosts__start__disabled_start__success)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -71,7 +68,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__disabled_start__success)
 BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__operation_failed)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -85,7 +82,6 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__operation_failed)
 BOOST_AUTO_TEST_CASE(hosts__stop__disabled__success)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.stop(), error::success);
@@ -94,7 +90,6 @@ BOOST_AUTO_TEST_CASE(hosts__stop__disabled__success)
 BOOST_AUTO_TEST_CASE(hosts__stop__enabled_stopped__success)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.stop(), error::success);
@@ -105,7 +100,6 @@ BOOST_AUTO_TEST_CASE(hosts__stop__enabled_stopped__success)
 BOOST_AUTO_TEST_CASE(hosts__count__empty__zero)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
     const hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
@@ -118,7 +112,6 @@ const address_item host42{ 0, 0, unspecified_ip_address, 42 };
 BOOST_AUTO_TEST_CASE(hosts__store1__disabled_stopped__empty)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
     hosts instance(set);
     instance.store(null_host);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
@@ -127,7 +120,6 @@ BOOST_AUTO_TEST_CASE(hosts__store1__disabled_stopped__empty)
 BOOST_AUTO_TEST_CASE(hosts__store1__stopped__empty)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
     set.host_pool_capacity = 42;
     hosts instance(set);
     instance.store(null_host);
@@ -137,7 +129,7 @@ BOOST_AUTO_TEST_CASE(hosts__store1__stopped__empty)
 BOOST_AUTO_TEST_CASE(hosts__store1__invalid__empty)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -154,7 +146,7 @@ BOOST_AUTO_TEST_CASE(hosts__store1__invalid__empty)
 BOOST_AUTO_TEST_CASE(hosts__store1__valid__one)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -175,7 +167,7 @@ const address_item host3{ 0, 0, unspecified_ip_address, 3 };
 BOOST_AUTO_TEST_CASE(hosts__store2__three_unique__three)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -190,7 +182,7 @@ BOOST_AUTO_TEST_CASE(hosts__store2__three_unique__three)
 BOOST_AUTO_TEST_CASE(hosts__store2__redundant__expected)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -207,7 +199,7 @@ BOOST_AUTO_TEST_CASE(hosts__store2__redundant__expected)
 BOOST_AUTO_TEST_CASE(hosts__remove__only__empty)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -223,7 +215,7 @@ BOOST_AUTO_TEST_CASE(hosts__remove__only__empty)
 BOOST_AUTO_TEST_CASE(hosts__remove__single_not_found__one)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -241,7 +233,7 @@ BOOST_AUTO_TEST_CASE(hosts__remove__single_not_found__one)
 BOOST_AUTO_TEST_CASE(hosts__fetch1__stopped__service_stopped)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
 
@@ -255,7 +247,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch1__stopped__service_stopped)
 BOOST_AUTO_TEST_CASE(hosts__fetch1__empty__address_not_found)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -272,7 +264,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch1__empty__address_not_found)
 BOOST_AUTO_TEST_CASE(hosts__fetch1__only__expected)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -280,7 +272,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch1__only__expected)
 
     instance.store(host42);
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-
+    
     instance.fetch([&](const code& ec, const messages::address_item& item)
     {
         BOOST_REQUIRE_EQUAL(ec, error::success);
@@ -315,7 +307,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch2__stopped__service_stopped)
 BOOST_AUTO_TEST_CASE(hosts__fetch2__empty__address_not_found)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -333,7 +325,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch2__empty__address_not_found)
 BOOST_AUTO_TEST_CASE(hosts__fetch2__three__success_empty)
 {
     settings set(bc::system::chain::selection::mainnet);
-    set.hosts_file = TEST_PATH;
+    set.hosts_file = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -350,5 +342,12 @@ BOOST_AUTO_TEST_CASE(hosts__fetch2__three__success_empty)
 
     instance.stop();
 }
+
+// file
+// open error
+// save error
+
+// start
+// stop
 
 BOOST_AUTO_TEST_SUITE_END()
