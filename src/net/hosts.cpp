@@ -72,14 +72,14 @@ code hosts::start()
         return error::operation_failed;
 
     stopped_ = false;
-    ifstream file(file_path_.string());
-    const auto file_error = file.bad();
+    ifstream file(file_path_.string(), ifstream::in);
 
-    if (file_error)
-    {
-        LOG_DEBUG(LOG_NETWORK) << "Failed to load hosts file." << std::endl;
-        return error::file_load;
-    }
+    // An invalid path or non-existent file will not cause an error on open.
+    ////if (file.bad())
+    ////{
+    ////    LOG_DEBUG(LOG_NETWORK) << "Failed to load hosts file." << std::endl;
+    ////    return error::file_load;
+    ////}
 
     std::string line;
     while (std::getline(file, line))
@@ -106,20 +106,27 @@ code hosts::stop()
         return error::success;
 
     stopped_ = true;
-    ofstream file(file_path_.string());
-    const auto file_error = file.bad();
+    ofstream file(file_path_.string(), ofstream::out);
 
-    if (file_error)
-    {
-        LOG_DEBUG(LOG_NETWORK) << "Failed to load hosts file." << std::endl;
-        return error::file_load;
-    }
+    // An invalid path or non-existent file will not cause an error on open.
+    ////if (file.bad())
+    ////{
+    ////    LOG_DEBUG(LOG_NETWORK) << "Failed to store hosts file." << std::endl;
+    ////    return error::file_load;
+    ////}
 
     for (const auto& entry: buffer_)
     {
         // TODO: create full space-delimited network_address serialization.
         // Use to/from string format as opposed to wire serialization.
         file << config::authority(entry) << std::endl;
+    }
+
+    // An invalid path or non-existent file will cause an error on write.
+    if (file.bad())
+    {
+        LOG_DEBUG(LOG_NETWORK) << "Failed to store hosts file." << std::endl;
+        return error::file_load;
     }
 
     buffer_.clear();

@@ -343,11 +343,27 @@ BOOST_AUTO_TEST_CASE(hosts__fetch2__three__success_empty)
     instance.stop();
 }
 
-// file
-// open error
-// save error
+BOOST_AUTO_TEST_CASE(hosts__fetch2__populated_file__expected)
+{
+    settings set(bc::system::chain::selection::mainnet);
+    set.hosts_file = TEST_NAME;
+    set.host_pool_capacity = 42;
+    hosts instance1(set);
+    BOOST_REQUIRE_EQUAL(instance1.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance1.count(), 0u);
 
-// start
-// stop
+    instance1.store({ host1, host2, host3 });
+    BOOST_REQUIRE_EQUAL(instance1.count(), 3u);
+
+    // File is created with three entries.
+    instance1.stop();
+
+    // Start with existing file and read entries.
+    hosts instance2(set);
+    BOOST_REQUIRE_EQUAL(instance2.start(), error::success);
+    BOOST_REQUIRE_EQUAL(instance2.count(), 3u);
+
+    instance2.stop();
+}
 
 BOOST_AUTO_TEST_SUITE_END()
