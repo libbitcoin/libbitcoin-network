@@ -74,8 +74,9 @@ code hosts::start()
     stopped_ = false;
     ifstream file(file_path_.string(), ifstream::in);
 
+    // TODO: handle case of existing file but failed read.
     // An invalid path or non-existent file will not cause an error on open.
-    ////if (file.bad())
+    ////if (!file.good())
     ////{
     ////    LOG_DEBUG(LOG_NETWORK) << "Failed to load hosts file." << std::endl;
     ////    return error::file_load;
@@ -108,12 +109,11 @@ code hosts::stop()
     stopped_ = true;
     ofstream file(file_path_.string(), ofstream::out);
 
-    // An invalid path or non-existent file will not cause an error on open.
-    ////if (file.bad())
-    ////{
-    ////    LOG_DEBUG(LOG_NETWORK) << "Failed to store hosts file." << std::endl;
-    ////    return error::file_load;
-    ////}
+    if (!file.good())
+    {
+        LOG_DEBUG(LOG_NETWORK) << "Failed to store hosts file." << std::endl;
+        return error::file_load;
+    }
 
     for (const auto& entry: buffer_)
     {
