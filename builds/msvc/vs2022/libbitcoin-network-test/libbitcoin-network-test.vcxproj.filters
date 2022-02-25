@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ |  Copyright (c) 2014-2021 libbitcoin-network developers (see COPYING).
+ |
+ |         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
+ |
+ -->
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000000}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\async">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\config">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\net">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\protocols">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sessions">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\test\async\deadline.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\subscriber.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\thread.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\threadpool.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\time.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\timer.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\track.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\config\authority.cpp">
+      <Filter>src\config</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\config\endpoint.cpp">
+      <Filter>src\config</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\error.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\address.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\address_item.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\alert.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\alert_item.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\block.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\bloom_filter_add.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\bloom_filter_clear.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\bloom_filter_load.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\client_filter.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\client_filter_checkpoint.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\client_filter_headers.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\compact_block.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\compact_block_item.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\compact_transactions.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\fee_filter.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\get_address.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\get_blocks.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\get_client_filter_checkpoint.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\get_client_filter_headers.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\get_client_filters.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\get_compact_transactions.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\get_data.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\get_headers.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\headers.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\heading.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\inventory.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\inventory_item.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\memory_pool.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\merkle_block.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\not_found.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\ping.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\pong.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\reject.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\send_compact.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\send_headers.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\transaction.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\version.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\version_acknowledge.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\acceptor.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\channel.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\connector.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\hosts.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\proxy.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\pump.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\socket.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\p2p.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\test.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\test\test.hpp">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\..\debug.natvis" />
+  </ItemGroup>
+</Project>

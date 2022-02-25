@@ -1,0 +1,38 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2010
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin-network", "libbitcoin-network\libbitcoin-network.vcxproj", "{564EB540-D6B6-425C-B8DB-B0BEE8970C18}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbitcoin-network-test", "libbitcoin-network-test\libbitcoin-network-test.vcxproj", "{D28FC18A-8B81-4247-92EE-6967FEEFEEFF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		StaticDebug|Win32 = StaticDebug|Win32
+		StaticDebug|x64 = StaticDebug|x64
+		StaticRelease|Win32 = StaticRelease|Win32
+		StaticRelease|x64 = StaticRelease|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{564EB540-D6B6-425C-B8DB-B0BEE8970C18}.StaticDebug|Win32.ActiveCfg = DebugLIB|Win32
+		{564EB540-D6B6-425C-B8DB-B0BEE8970C18}.StaticDebug|Win32.Build.0 = DebugLIB|Win32
+		{564EB540-D6B6-425C-B8DB-B0BEE8970C18}.StaticDebug|x64.ActiveCfg = DebugLIB|x64
+		{564EB540-D6B6-425C-B8DB-B0BEE8970C18}.StaticDebug|x64.Build.0 = DebugLIB|x64
+		{564EB540-D6B6-425C-B8DB-B0BEE8970C18}.StaticRelease|Win32.ActiveCfg = ReleaseLIB|Win32
+		{564EB540-D6B6-425C-B8DB-B0BEE8970C18}.StaticRelease|Win32.Build.0 = ReleaseLIB|Win32
+		{564EB540-D6B6-425C-B8DB-B0BEE8970C18}.StaticRelease|x64.ActiveCfg = ReleaseLIB|x64
+		{564EB540-D6B6-425C-B8DB-B0BEE8970C18}.StaticRelease|x64.Build.0 = ReleaseLIB|x64
+		{D28FC18A-8B81-4247-92EE-6967FEEFEEFF}.StaticDebug|Win32.ActiveCfg = DebugSEXE|Win32
+		{D28FC18A-8B81-4247-92EE-6967FEEFEEFF}.StaticDebug|Win32.Build.0 = DebugSEXE|Win32
+		{D28FC18A-8B81-4247-92EE-6967FEEFEEFF}.StaticDebug|x64.ActiveCfg = DebugSEXE|x64
+		{D28FC18A-8B81-4247-92EE-6967FEEFEEFF}.StaticDebug|x64.Build.0 = DebugSEXE|x64
+		{D28FC18A-8B81-4247-92EE-6967FEEFEEFF}.StaticRelease|Win32.ActiveCfg = ReleaseSEXE|Win32
+		{D28FC18A-8B81-4247-92EE-6967FEEFEEFF}.StaticRelease|Win32.Build.0 = ReleaseSEXE|Win32
+		{D28FC18A-8B81-4247-92EE-6967FEEFEEFF}.StaticRelease|x64.ActiveCfg = ReleaseSEXE|x64
+		{D28FC18A-8B81-4247-92EE-6967FEEFEEFF}.StaticRelease|x64.Build.0 = ReleaseSEXE|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
