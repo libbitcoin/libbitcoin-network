@@ -10,4 +10,4 @@ ECHO.
 ECHO Downloading libbitcoin vs2017 dependencies from NuGet
 CALL nuget.exe install ..\vs2017\libbitcoin-network\packages.config
 CALL nuget.exe install ..\vs2017\libbitcoin-network-test\packages.config
-ECHO.
+
