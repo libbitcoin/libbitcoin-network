@@ -142,8 +142,8 @@ void hosts::store(const address_item& host)
     // Do not treat invalid address as an error, just log it.
     if (is_invalid(host))
     {
-        LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer."
-            << std::endl;
+        ////LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer."
+        ////    << std::endl;
         return;
     }
 
@@ -204,10 +204,10 @@ void hosts::remove(const address_item& host)
     if (stopped_ || buffer_.empty())
         return;
 
-    auto it = find(host);
+    const auto it = find(host);
     if (it == buffer_.end())
     {
-        LOG_DEBUG(LOG_NETWORK) << "Address to remove not found." << std::endl;
+        ////LOG_DEBUG(LOG_NETWORK) << "Address to remove not found." << std::endl;
         return;
     }
 
