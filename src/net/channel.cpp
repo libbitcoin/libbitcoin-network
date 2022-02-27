@@ -112,10 +112,6 @@ channel::channel(socket::ptr socket, const settings& settings)
 {
 }
 
-channel::~channel()
-{
-}
-
 // Start/stop.
 // ----------------------------------------------------------------------------
 
@@ -148,27 +144,27 @@ void channel::do_stop(const code& ec)
 // protocol, and only read thereafter. Otherwise values may be corrupted.
 
 // channel_nonce_ is const.
-uint64_t channel::nonce() const
+uint64_t channel::nonce() const noexcept
 {
     return channel_nonce_;
 }
 
-uint32_t channel::negotiated_version() const
+uint32_t channel::negotiated_version() const noexcept
 {
     return negotiated_version_;
 }
 
-void channel::set_negotiated_version(uint32_t value)
+void channel::set_negotiated_version(uint32_t value) noexcept
 {
     negotiated_version_ = value;
 }
 
-version::ptr channel::peer_version() const
+version::ptr channel::peer_version() const noexcept
 {
     return peer_version_;
 }
 
-void channel::set_peer_version(version::ptr value)
+void channel::set_peer_version(version::ptr value) noexcept
 {
     peer_version_ = value;
 }
@@ -177,27 +173,27 @@ void channel::set_peer_version(version::ptr value)
 // ----------------------------------------------------------------------------
 // These are const except for version (safe) and signal_activity (stranded).
 
-size_t channel::maximum_payload() const
+size_t channel::maximum_payload() const noexcept
 {
     return maximum_payload_;
 }
 
-uint32_t channel::protocol_magic() const
+uint32_t channel::protocol_magic() const noexcept
 {
     return protocol_magic_;
 }
 
-bool channel::validate_checksum() const
+bool channel::validate_checksum() const noexcept
 {
     return validate_checksum_;
 }
 
-bool channel::verbose() const
+bool channel::verbose() const noexcept
 {
     return verbose_logging_;
 }
 
-uint32_t channel::version() const
+uint32_t channel::version() const noexcept
 {
     return negotiated_version();
 }

@@ -83,7 +83,7 @@ protected:
         connect_handler handler);
     void handle_connect(const code& ec, socket::ptr socket,
         connect_handler handler);
-    void handle_timer(const code& ec, socket::ptr socket,
+    void handle_timer(const code& ec, const socket::ptr& socket,
         const connect_handler& handler);
 
     void do_handle_connect(const code& ec, socket::ptr socket,

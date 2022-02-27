@@ -49,10 +49,10 @@ public:
 
 protected:
     /// Override to attach specialized protocols upon channel start.
-    void attach_protocols(channel::ptr channel) const override;
+    void attach_protocols(const channel::ptr& channel) const override;
 
     /// Override to preclude pending the nonce.
-    bool inbound() const override;
+    bool inbound() const noexcept override;
 
 private:
     void start_accept(const code& ec);

@@ -50,7 +50,7 @@ public:
 
     /// Construct an instance.
     hosts(const settings& settings);
-    virtual ~hosts();
+    ~hosts();
 
     /// Load hosts file.
     virtual code start();
@@ -59,7 +59,7 @@ public:
     virtual code stop();
 
     // Thread safe, inexact (ok).
-    virtual size_t count() const;
+    virtual size_t count() const noexcept;
 
     virtual void store(const messages::address_item& host);
     virtual void store(const messages::address_items& hosts);

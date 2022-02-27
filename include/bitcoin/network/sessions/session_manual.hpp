@@ -63,7 +63,7 @@ public:
 protected:
 
     /// Override to attach specialized protocols upon channel start.
-    void attach_protocols(channel::ptr channel) const override;
+    void attach_protocols(const channel::ptr& channel) const override;
 
 private:
     void start_connect(const config::authority& host, connector::ptr connector,

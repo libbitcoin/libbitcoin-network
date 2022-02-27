@@ -66,7 +66,7 @@ public:
 
 protected:
     session(p2p& network);
-    ~session();
+    virtual ~session();
 
     /// Bind a method in the derived class.
     template <class Session, typename Handler, typename... Args>
@@ -82,7 +82,7 @@ protected:
     void store_connector(const connector::ptr& connector);
     void clear_connectors();
 
-    bool stopped() const;
+    bool stopped() const noexcept;
     bool stopped(const code& ec) const;
     bool blacklisted(const config::authority& authority) const;
     bool stranded() const;
@@ -99,14 +99,14 @@ protected:
 
     virtual void start_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
-    virtual void attach_handshake(channel::ptr channel,
+    virtual void attach_handshake(const channel::ptr& channel,
         result_handler handler) const;
 
-    virtual void attach_protocols(channel::ptr channel) const;
+    virtual void attach_protocols(const channel::ptr& channel) const;
     virtual void post_attach_protocols(channel::ptr channel) const;
 
-    virtual bool inbound() const;
-    virtual bool notify() const;
+    virtual bool inbound() const noexcept;
+    virtual bool notify() const noexcept;
 
 private:
     void handle_handshake(const code& ec, channel::ptr channel,

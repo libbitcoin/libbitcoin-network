@@ -38,12 +38,8 @@ protocol::protocol(const session& session, channel::ptr channel)
 {
 }
 
-protocol::~protocol()
-{
-}
-
 // This nop holds protocol shared pointer in attach closure.
-void protocol::nop() volatile
+void protocol::nop() volatile noexcept
 {
 }
 
@@ -57,27 +53,27 @@ config::authority protocol::authority() const
     return channel_->authority();
 }
 
-uint64_t protocol::nonce() const
+uint64_t protocol::nonce() const noexcept
 {
     return channel_->nonce();
 }
 
-version::ptr protocol::peer_version() const
+version::ptr protocol::peer_version() const noexcept
 {
     return channel_->peer_version();
 }
 
-void protocol::set_peer_version(version::ptr value)
+void protocol::set_peer_version(version::ptr value) noexcept
 {
     channel_->set_peer_version(value);
 }
 
-uint32_t protocol::negotiated_version() const
+uint32_t protocol::negotiated_version() const noexcept
 {
     return channel_->negotiated_version();
 }
 
-void protocol::set_negotiated_version(uint32_t value)
+void protocol::set_negotiated_version(uint32_t value) noexcept
 {
     channel_->set_negotiated_version(value);
 }

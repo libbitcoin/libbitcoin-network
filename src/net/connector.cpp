@@ -167,7 +167,7 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
 }
 
 // private
-void connector::handle_timer(const code& ec, socket::ptr socket,
+void connector::handle_timer(const code& ec, const socket::ptr& socket,
     const connect_handler& handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");

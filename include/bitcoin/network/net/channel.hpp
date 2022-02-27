@@ -64,25 +64,24 @@ public:
     }
 
     channel(socket::ptr socket, const settings& settings);
-    ~channel();
 
     void start() override;
     void stop(const code& ec) override;
 
-    uint64_t nonce() const;
-    uint32_t negotiated_version() const;
-    void set_negotiated_version(uint32_t value);
-    messages::version::ptr peer_version() const;
-    void set_peer_version(messages::version::ptr value);
+    uint64_t nonce() const noexcept;
+    uint32_t negotiated_version() const noexcept;
+    void set_negotiated_version(uint32_t value) noexcept;
+    messages::version::ptr peer_version() const noexcept;
+    void set_peer_version(messages::version::ptr value) noexcept;
 
 protected:
     void do_stop(const code& ec);
 
-    size_t maximum_payload() const override;
-    uint32_t protocol_magic() const override;
-    bool validate_checksum() const override;
-    bool verbose() const override;
-    uint32_t version() const override;
+    size_t maximum_payload() const noexcept override;
+    uint32_t protocol_magic() const noexcept override;
+    bool validate_checksum() const noexcept override;
+    bool verbose() const noexcept override;
+    uint32_t version() const noexcept override;
     void signal_activity() override;
 
 private:

@@ -57,7 +57,7 @@ code acceptor::start(uint16_t port)
     error::boost_code ec;
 
     // This is hardwired to listen on IPv6.
-    asio::endpoint endpoint(asio::tcp::v6(), port);
+    const asio::endpoint endpoint(asio::tcp::v6(), port);
     acceptor_.open(endpoint.protocol(), ec);
 
     if (!ec)

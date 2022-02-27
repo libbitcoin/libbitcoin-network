@@ -36,7 +36,7 @@ using namespace messages;
 using namespace std::placeholders;
 
 // Dump up to 1k of payload as hex in order to diagnose failure.
-static const size_t invalid_payload_dump_size = 1024;
+static constexpr size_t invalid_payload_dump_size = 1024;
 
 proxy::proxy(socket::ptr socket)
   : socket_(socket),
@@ -187,7 +187,7 @@ void proxy::handle_read_heading(const code& ec, size_t)
 
 // Handle errors and post message to subscribers.
 void proxy::handle_read_payload(const code& ec, size_t payload_size,
-    heading_ptr head)
+    const heading_ptr& head)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -222,7 +222,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
     system::read::bytes::copy payload_reader(payload_buffer_);
 
     // Notify subscribers of the new message.
-    auto code = notify(head->id(), version(), payload_reader);
+    const auto code = notify(head->id(), version(), payload_reader);
 
     if (code)
     {
@@ -276,12 +276,12 @@ void proxy::send_bytes(system::chunk_ptr payload, const result_handler& handler)
 }
 
 // static
-std::string proxy::extract_command(system::chunk_ptr payload)
+std::string proxy::extract_command(const system::chunk_ptr& payload)
 {
     if (payload->size() < sizeof(uint32_t) + heading::command_size)
         return "<unknown>";
 
-    data_slice slice(
+    const data_slice slice(
         std::next(payload->begin(), sizeof(uint32_t)),
         std::next(payload->begin(), heading::command_size));
 

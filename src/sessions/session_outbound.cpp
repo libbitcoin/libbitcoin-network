@@ -128,7 +128,7 @@ void session_outbound::handle_channel_start(const code& ec,
     post_attach_protocols(channel);
 }
 
-void session_outbound::attach_protocols(channel::ptr channel) const
+void session_outbound::attach_protocols(const channel::ptr& channel) const
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -153,7 +153,7 @@ void session_outbound::handle_channel_stop(const code& ec,
     start_connect(connectors);
 }
 
-void session_outbound::attach_handshake(channel::ptr channel,
+void session_outbound::attach_handshake(const channel::ptr& channel,
     result_handler handshake) const
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");

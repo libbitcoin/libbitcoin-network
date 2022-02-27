@@ -58,7 +58,7 @@ hosts::~hosts()
     BC_ASSERT(stopped_);
 }
 
-size_t hosts::count() const
+size_t hosts::count() const noexcept
 {
     return count_.load(std::memory_order_relaxed);
 }
@@ -87,8 +87,8 @@ code hosts::start()
     {
         // TODO: create full space-delimited network_address serialization.
         // Use to/from string format as opposed to wire serialization.
-        config::authority entry(line);
-        auto host = entry.to_address_item();
+        const config::authority entry(line);
+        const auto host = entry.to_address_item();
 
         if (!is_invalid(host))
             buffer_.push_back(host);
@@ -174,6 +174,7 @@ void hosts::store(const address_items& hosts)
 
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
+        // Use non-throwing index, already guarded.
         const auto& host = hosts[index];
 
         // Do not treat invalid address as an error, just log it.

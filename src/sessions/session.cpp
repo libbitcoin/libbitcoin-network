@@ -122,7 +122,7 @@ void session::start_channel(channel::ptr channel, result_handler started,
             shared_from_this(), channel, std::move(shake)));
 }
 
-void session::attach_handshake(channel::ptr channel,
+void session::attach_handshake(const channel::ptr& channel,
     result_handler handshake) const
 {
     // Channel attach and start both require channel strand.
@@ -134,7 +134,7 @@ void session::attach_handshake(channel::ptr channel,
         channel->do_attach<protocol_version_31402>(*this)->start(handshake);
 }
 
-void session::attach_protocols(channel::ptr) const
+void session::attach_protocols(const channel::ptr&) const
 {
 }
 
@@ -228,7 +228,7 @@ connectors_ptr session::create_connectors(size_t count)
 // Properties.
 // ----------------------------------------------------------------------------
 
-bool session::stopped() const
+bool session::stopped() const noexcept
 {
     return stopped_.load(std::memory_order_relaxed);
 }
@@ -263,12 +263,12 @@ bool session::stranded() const
     return network_.stranded();
 }
 
-bool session::inbound() const
+bool session::inbound() const noexcept
 {
     return false;
 }
 
-bool session::notify() const
+bool session::notify() const noexcept
 {
     return true;
 }

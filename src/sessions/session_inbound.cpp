@@ -41,7 +41,7 @@ session_inbound::session_inbound(p2p& network)
 {
 }
 
-bool session_inbound::inbound() const
+bool session_inbound::inbound() const noexcept
 {
     return true;
 }
@@ -145,7 +145,7 @@ void session_inbound::handle_channel_start(const code& ec,
     post_attach_protocols(channel);
 }
 
-void session_inbound::attach_protocols(channel::ptr channel) const
+void session_inbound::attach_protocols(const channel::ptr& channel) const
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

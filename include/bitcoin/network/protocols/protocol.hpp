@@ -53,7 +53,7 @@ class BCT_API protocol
   : public enable_shared_from_base<protocol>, system::noncopyable
 {
 public:
-    void nop() volatile;
+    void nop() volatile noexcept;
 
 protected:
     typedef std::function<void()> completion_handler;
@@ -62,7 +62,6 @@ protected:
         fetches_handler;
 
     protocol(const session& session, channel::ptr channel);
-    virtual ~protocol();
 
     /// Bind a method in the derived class.
     template <class Protocol, typename Handler, typename... Args>
@@ -89,11 +88,11 @@ protected:
 
     bool stranded() const;
     config::authority authority() const;
-    uint64_t nonce() const;
-    messages::version::ptr peer_version() const;
-    void set_peer_version(messages::version::ptr value);
-    uint32_t negotiated_version() const;
-    void set_negotiated_version(uint32_t value);
+    uint64_t nonce() const noexcept;
+    messages::version::ptr peer_version() const noexcept;
+    void set_peer_version(messages::version::ptr value) noexcept;
+    uint32_t negotiated_version() const noexcept;
+    void set_negotiated_version(uint32_t value) noexcept;
     void stop(const code& ec);
 
     const network::settings& settings() const;

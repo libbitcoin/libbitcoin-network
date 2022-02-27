@@ -40,7 +40,7 @@ session_seed::session_seed(p2p& network)
 {
 }
 
-bool session_seed::notify() const
+bool session_seed::notify() const noexcept
 {
     return false;
 }
@@ -149,7 +149,7 @@ void session_seed::handle_channel_start(const code& ec, channel::ptr channel)
     post_attach_protocols(channel);
 }
 
-void session_seed::attach_protocols(channel::ptr channel) const
+void session_seed::attach_protocols(const channel::ptr& channel) const
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -199,7 +199,7 @@ void session_seed::handle_complete(const code& ec, size_t start_size,
     }
 }
 
-void session_seed::attach_handshake(channel::ptr channel,
+void session_seed::attach_handshake(const channel::ptr& channel,
     result_handler handshake) const
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");

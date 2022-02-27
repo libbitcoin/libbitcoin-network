@@ -81,7 +81,7 @@ protected:
     }
 
     proxy(socket::ptr socket);
-    virtual ~proxy();
+    ~proxy();
 
     virtual size_t maximum_payload() const = 0;
     virtual uint32_t protocol_magic() const = 0;
@@ -103,14 +103,14 @@ protected:
 private:
     typedef messages::heading::ptr heading_ptr;
 
-    static std::string extract_command(system::chunk_ptr payload);
+    static std::string extract_command(const system::chunk_ptr& payload);
 
     void do_stop(const code& ec);
 
     void read_heading();
     void handle_read_heading(const code& ec, size_t heading_size);
     void handle_read_payload(const code& ec, size_t payload_size,
-        heading_ptr head);
+        const heading_ptr& head);
     void handle_send(const code& ec, size_t bytes, system::chunk_ptr payload,
         const result_handler& handler);
 

@@ -47,11 +47,11 @@ public:
 
 protected:
     /// Overridden to attach minimum service level for witness support.
-    void attach_handshake(channel::ptr channel,
+    void attach_handshake(const channel::ptr& channel,
         result_handler handle_started) const override;
 
     /// Override to attach specialized protocols upon channel start.
-    void attach_protocols(channel::ptr channel) const override;
+    void attach_protocols(const channel::ptr& channel) const override;
 
 private:
     void start_connect(connectors_ptr connectors);
