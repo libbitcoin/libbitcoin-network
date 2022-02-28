@@ -283,7 +283,7 @@ std::string proxy::extract_command(const system::chunk_ptr& payload)
 
     const data_slice slice(
         std::next(payload->begin(), sizeof(uint32_t)),
-        std::next(payload->begin(), heading::command_size));
+        std::next(payload->begin(), sizeof(uint32_t) + heading::command_size));
 
     return slice.to_string();
 }

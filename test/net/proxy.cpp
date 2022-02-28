@@ -24,6 +24,11 @@ class proxy_accessor
   : public proxy
 {
 public:
+    static std::string extract_command(const system::chunk_ptr& payload)
+    {
+        return proxy::extract_command(payload);
+    }
+
     // Call must be stranded.
     template <class Message, typename Handler = pump::handler<Message>>
     void subscribe_message(Handler&& handler)
@@ -71,6 +76,41 @@ public:
     {
     }
 };
+
+BOOST_AUTO_TEST_CASE(proxy__extract_command__empty_payload__unknown)
+{
+    const auto payload = std::make_shared<system::data_chunk>();
+    BOOST_REQUIRE_EQUAL(proxy_accessor::extract_command(payload), "<unknown>");
+}
+
+BOOST_AUTO_TEST_CASE(proxy__extract_command__short_payload__unknown)
+{
+    constexpr auto minimum = sizeof(uint32_t) + messages::heading::command_size;
+    const auto payload = std::make_shared<system::data_chunk>(sub1(minimum), 'a');
+    BOOST_REQUIRE_EQUAL(proxy_accessor::extract_command(payload), "<unknown>");
+}
+
+BOOST_AUTO_TEST_CASE(proxy__extract_command__minimal_payload__expected)
+{
+    constexpr auto minimum = sizeof(uint32_t) + messages::heading::command_size;
+    const auto payload = std::make_shared<system::data_chunk>(system::data_chunk
+    {
+        'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z'
+    });
+
+    BOOST_REQUIRE_EQUAL(proxy_accessor::extract_command(payload), "wxyzwxyzwxyz");
+}
+
+BOOST_AUTO_TEST_CASE(proxy__extract_command__extra_payload__expected)
+{
+    constexpr auto minimum = sizeof(uint32_t) + messages::heading::command_size;
+    const auto payload = std::make_shared<system::data_chunk>(system::data_chunk
+    {
+        'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'A', 'B', 'C'
+    });
+
+    BOOST_REQUIRE_EQUAL(proxy_accessor::extract_command(payload), "wxyzwxyzwxyz");
+}
 
 BOOST_AUTO_TEST_CASE(proxy__stopped__default__false)
 {
@@ -260,8 +300,6 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected__expected)
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to file_system.
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::file_system);
-
-    proxy_ptr->stop(error::invalid_magic);
     proxy_ptr.reset();
 }
 
@@ -284,8 +322,6 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected_move__expected)
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to file_system.
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::file_system);
-
-    proxy_ptr->stop(error::invalid_magic);
     proxy_ptr.reset();
 }
 

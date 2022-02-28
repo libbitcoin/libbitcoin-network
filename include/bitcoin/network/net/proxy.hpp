@@ -72,6 +72,8 @@ public:
     const config::authority& authority() const;
 
 protected:
+    static std::string extract_command(const system::chunk_ptr& payload);
+
     friend class protocol;
     template <class Message, typename Handler = pump::handler<Message>>
     void do_subscribe(Handler&& handler)
@@ -102,8 +104,6 @@ protected:
 
 private:
     typedef messages::heading::ptr heading_ptr;
-
-    static std::string extract_command(const system::chunk_ptr& payload);
 
     void do_stop(const code& ec);
 
