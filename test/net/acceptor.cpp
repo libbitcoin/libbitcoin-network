@@ -26,22 +26,22 @@ class accessor
 public:
     using acceptor::acceptor;
 
-    const settings& get_settings() const
+    const settings& get_settings() const noexcept
     {
         return settings_;
     }
 
-    const asio::io_context& get_service() const
+    const asio::io_context& get_service() const noexcept
     {
         return service_;
     }
 
-    const asio::strand& get_strand() const
+    const asio::strand& get_strand() const noexcept
     {
         return strand_;
     }
 
-    const asio::acceptor& get_acceptor() const
+    const asio::acceptor& get_acceptor() const noexcept
     {
         return acceptor_;
     }
@@ -52,12 +52,13 @@ BOOST_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    const auto instance = std::make_shared<accessor>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
 
     BOOST_REQUIRE(&instance->get_settings() == &set);
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
     BOOST_REQUIRE(&instance->get_strand() == &strand);
     BOOST_REQUIRE(!instance->get_acceptor().is_open());
+    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(acceptor__start__always__success)
@@ -70,6 +71,7 @@ BOOST_AUTO_TEST_CASE(acceptor__start__always__success)
     // Result codes inconsistent due to context.
     ////BOOST_REQUIRE_EQUAL(instance->start(42), error::success);
     instance->start(42);
+    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)

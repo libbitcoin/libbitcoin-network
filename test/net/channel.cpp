@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(channel_tests)
 
-BOOST_AUTO_TEST_CASE(channel)
+BOOST_AUTO_TEST_CASE(channel_test)
 {
     BOOST_REQUIRE(true);
 }
