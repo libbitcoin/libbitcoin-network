@@ -77,7 +77,7 @@ protected:
     void do_subscribe(Handler&& handler)
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        pump_subscriber_.subscribe(std::move(handler));
+        pump_subscriber_.subscribe(std::forward<Handler>(handler));
     }
 
     proxy(socket::ptr socket);
