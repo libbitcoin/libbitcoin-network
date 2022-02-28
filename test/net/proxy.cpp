@@ -128,7 +128,6 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_stop__subscribed__expected)
 
     BOOST_REQUIRE(!proxy_ptr->stopped());
     BOOST_REQUIRE_EQUAL(stop_subscribed.get_future().get(), error::success);
-    BOOST_REQUIRE(!proxy_ptr->stopped());
 
     proxy_ptr->stop(expected_ec);
     BOOST_REQUIRE_EQUAL(stop2_stopped.get_future().get(), expected_ec);
@@ -179,7 +178,6 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_message__subscribed__expected)
             {
                 BOOST_REQUIRE(!ping);
                 message_stopped.set_value(ec);
-                return;
             });
     });
 
@@ -226,13 +224,11 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
             {
                 BOOST_REQUIRE(!ping);
                 message_stopped.set_value(ec);
-                return;
             });
     });
 
     BOOST_REQUIRE(!proxy_ptr->stopped());
     BOOST_REQUIRE_EQUAL(stop_subscribed.get_future().get(), error::success);
-    BOOST_REQUIRE(!proxy_ptr->stopped());
 
     proxy_ptr->stop(expected_ec);
     BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
@@ -242,4 +238,55 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
 
     proxy_ptr.reset();
 }
+
+BOOST_AUTO_TEST_CASE(proxy__send__not_connected__expected)
+{
+    threadpool pool(2);
+    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
+
+    constexpr uint64_t expected_nonce = 42;
+    auto ping_ptr = std::shared_ptr<messages::ping>(new messages::ping{ expected_nonce });
+
+    std::promise<code> promise;
+    const auto handler = [&](code ec)
+    {
+        // Send failure causes stop before handler invoked.
+        BOOST_REQUIRE(proxy_ptr->stopped());
+        promise.set_value(ec);
+    };
+
+    proxy_ptr->send<messages::ping>(ping_ptr, handler);
+
+    // 10009 (WSAEBADF, invalid file handle) gets mapped to file_system.
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::file_system);
+
+    proxy_ptr->stop(error::invalid_magic);
+    proxy_ptr.reset();
+}
+
+BOOST_AUTO_TEST_CASE(proxy__send__not_connected_move__expected)
+{
+    threadpool pool(2);
+    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
+
+    constexpr uint64_t expected_nonce = 42;
+    auto ping_ptr = std::shared_ptr<messages::ping>(new messages::ping{ expected_nonce });
+
+    std::promise<code> promise;
+    proxy_ptr->send<messages::ping>(ping_ptr, [&](code ec)
+    {
+        // Send failure causes stop before handler invoked.
+        BOOST_REQUIRE(proxy_ptr->stopped());
+        promise.set_value(ec);
+    });
+
+    // 10009 (WSAEBADF, invalid file handle) gets mapped to file_system.
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::file_system);
+
+    proxy_ptr->stop(error::invalid_magic);
+    proxy_ptr.reset();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
