@@ -281,11 +281,13 @@ std::string proxy::extract_command(const system::chunk_ptr& payload)
     if (payload->size() < sizeof(uint32_t) + heading::command_size)
         return "<unknown>";
 
-    const data_slice slice(
-        std::next(payload->begin(), sizeof(uint32_t)),
-        std::next(payload->begin(), sizeof(uint32_t) + heading::command_size));
+    std::string out;
+    auto at = std::next(payload->begin(), sizeof(uint32_t));
+    const auto end = std::next(at, heading::command_size);
+    while (at != end && *at != 0x00)
+        out.push_back(*at++);
 
-    return slice.to_string();
+    return out;
 }
 
 void proxy::handle_send(const code& ec, size_t, system::chunk_ptr payload,
