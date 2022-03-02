@@ -20,9 +20,80 @@
 
 BOOST_AUTO_TEST_SUITE(channel_tests)
 
-BOOST_AUTO_TEST_CASE(channel_test)
+class channel_accessor
+  : public channel
 {
-    BOOST_REQUIRE(true);
+public:
+    using channel::channel;
+
+    size_t maximum_payload() const noexcept override
+    {
+        return channel::maximum_payload();
+    }
+
+    uint32_t protocol_magic() const noexcept override
+    {
+        return channel::protocol_magic();
+    }
+
+    bool validate_checksum() const noexcept override
+    {
+        return channel::validate_checksum();
+    }
+
+    bool verbose() const noexcept override
+    {
+        return channel::verbose();
+    }
+
+    uint32_t version() const noexcept override
+    {
+        return channel::version();
+    }
+};
+
+BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
+{
+    threadpool pool(1);
+    asio::strand strand(pool.service().get_executor());
+    const settings set(bc::system::chain::selection::mainnet);
+    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto channel_ptr = std::make_shared<channel>(socket_ptr, set);
+    BOOST_REQUIRE(!channel_ptr->stopped());
+
+    // Stop completion is asynchronous.
+    channel_ptr->stop(error::invalid_magic);
+    channel_ptr.reset();
+}
+
+inline size_t payload_maximum(const settings& settings)
+{
+    return messages::heading::maximum_payload_size(settings.protocol_maximum,
+        to_bool(settings.services & messages::service::node_witness));
+}
+
+BOOST_AUTO_TEST_CASE(channel__properties__default__false)
+{
+    threadpool pool(1);
+    asio::strand strand(pool.service().get_executor());
+    const settings set(bc::system::chain::selection::mainnet);
+    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto channel_ptr = std::make_shared<channel_accessor>(socket_ptr, set);
+
+    BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
+    BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
+
+    // TODO: compare to default instance.
+    BOOST_REQUIRE(channel_ptr->peer_version());
+
+    BOOST_REQUIRE_EQUAL(channel_ptr->maximum_payload(), payload_maximum(set));
+    BOOST_REQUIRE_EQUAL(channel_ptr->protocol_magic(), set.identifier);
+    BOOST_REQUIRE_EQUAL(channel_ptr->validate_checksum(), set.validate_checksum);
+    BOOST_REQUIRE_EQUAL(channel_ptr->verbose(), set.verbose);
+    BOOST_REQUIRE_EQUAL(channel_ptr->version(), set.protocol_maximum);
+
+    channel_ptr->stop(error::invalid_magic);
+    channel_ptr.reset();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
