@@ -34,10 +34,8 @@ using namespace std::placeholders;
 
 session_inbound::session_inbound(p2p& network)
   : session(network),
-    connection_limit_(
-        network.network_settings().inbound_connections +
-        network.network_settings().outbound_connections +
-        network.network_settings().peers.size())
+    timer_(std::make_shared<deadline>(network.strand())),
+    connection_limit_(network.network_settings().inbound_connections)
 {
 }
 
@@ -89,6 +87,7 @@ void session_inbound::stop()
     if (acceptor_)
         acceptor_->stop();
 
+    timer_->stop();
     session::stop();
 }
 
@@ -99,6 +98,7 @@ void session_inbound::start_accept(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // May be acceptor start failure or cancelation from timer.
     if (ec)
         return;
 
@@ -113,15 +113,18 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
     if (stopped(ec))
         return;
 
-    // TODO: use timer to delay start in case of error other than
-    // channel_timeout - use settings().connect_timeout().
+    // There was an error accepting the channel, so drop it and try again.
+    if (ec)
+    {
+        timer_->start(BIND1(start_accept, _1), settings().connect_timeout());
+        return;
+    }
+
+    // There was no error, so listen again, and accept the channel if allowed.
     start_accept(error::success);
 
-    // There was an error accepting the channel, so drop it.
-    if (ec)
-        return;
-
-    if (channel_count() >= connection_limit_)
+    // Could instead stop listening when at limit, though that requires event.
+    if (inbound_channel_count() >= settings().inbound_connections)
         return;
 
     if (blacklisted(channel->authority()))

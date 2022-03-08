@@ -60,6 +60,7 @@ using namespace std::placeholders;
 p2p::p2p(const settings& settings)
   : settings_(settings),
     channel_count_(zero),
+    inbound_channel_count_(zero),
     hosts_(settings_),
     threadpool_(settings_.threads),
     strand_(threadpool_.service().get_executor()),
@@ -310,6 +311,11 @@ size_t p2p::channel_count() const
     return channel_count_.load(std::memory_order_relaxed);
 }
 
+size_t p2p::inbound_channel_count() const
+{
+    return inbound_channel_count_.load(std::memory_order_relaxed);
+}
+
 const settings& p2p::network_settings() const
 {
     return settings_;
@@ -395,6 +401,8 @@ void p2p::do_saves(const messages::address_items& hosts, result_handler handler)
 // Connection management.
 // ----------------------------------------------------------------------------
 
+// TODO: if a channel is created with a conflicting nonce, the first deletion
+// will remove both, resulting in removal of self-connect protection for first.
 void p2p::pend(uint64_t nonce)
 {
     BC_ASSERT_MSG(stranded(), "nonces_");
@@ -428,14 +436,25 @@ code p2p::store(channel::ptr channel, bool notify, bool inbound)
     if (notify)
         channel_subscriber_->notify(error::success, channel);
 
+    // TODO: guard overflow.
+    if (inbound)
+        ++inbound_channel_count_;
+
+    // TODO: guard overflow.
     ++channel_count_;
     channels_.insert(channel);
     return error::success;
 }
 
-void p2p::unstore(channel::ptr channel)
+void p2p::unstore(channel::ptr channel, bool inbound)
 {
     BC_ASSERT_MSG(stranded(), "channels_, authorities_");
+
+    // TODO: guard underflow.
+    if (inbound)
+        --inbound_channel_count_;
+
+    // TODO: guard underflow.
     --channel_count_;
     channels_.erase(channel);
     authorities_.erase(channel->authority());

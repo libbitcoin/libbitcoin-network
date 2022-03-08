@@ -203,7 +203,7 @@ void session::do_handle_stop(const code& ec, channel::ptr channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    network_.unstore(channel);
+    network_.unstore(channel, inbound());
     stopped(ec);
 }
 
@@ -256,6 +256,11 @@ size_t session::address_count() const
 size_t session::channel_count() const
 {
     return network_.channel_count();
+}
+
+size_t session::inbound_channel_count() const
+{
+    return network_.inbound_channel_count();
 }
 
 bool session::stranded() const

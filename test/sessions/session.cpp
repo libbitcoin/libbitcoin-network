@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(session_tests)
 
-BOOST_AUTO_TEST_CASE(session)
+BOOST_AUTO_TEST_CASE(session_test)
 {
     BOOST_REQUIRE(true);
 }

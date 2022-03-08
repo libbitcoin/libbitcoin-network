@@ -106,7 +106,7 @@ void acceptor::handle_accept(const code& ec, socket::ptr socket,
     if (ec)
     {
         // Connect result codes return here.
-        // Cancel not handled here because handled first in timer.
+        // Stop result code (error::operation_canceled) return here.
         handler(ec, nullptr);
         return;
     }

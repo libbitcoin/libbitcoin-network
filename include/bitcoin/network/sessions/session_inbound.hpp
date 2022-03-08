@@ -24,6 +24,7 @@
 #include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -54,16 +55,18 @@ protected:
     /// Override to preclude pending the nonce.
     bool inbound() const noexcept override;
 
-private:
-    void start_accept(const code& ec);
+    /// Override in test.
+    virtual void start_accept(const code& ec);
 
+private:
     void handle_started(const code& ec, result_handler handler);
     void handle_accept(const code& ec, channel::ptr channel);
 
     void handle_channel_start(const code& ec, channel::ptr channel);
     void handle_channel_stop(const code& ec);
 
-    // This is not thread safe.
+    // These are not thread safe.
+    deadline::ptr timer_;
     acceptor::ptr acceptor_;
 
     // This is thread safe.

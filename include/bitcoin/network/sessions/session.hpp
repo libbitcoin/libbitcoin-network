@@ -88,6 +88,7 @@ protected:
     bool stranded() const;
     size_t address_count() const;
     size_t channel_count() const;
+    size_t inbound_channel_count() const;
 
     friend class protocol;
     void fetch(hosts::address_item_handler handler) const;

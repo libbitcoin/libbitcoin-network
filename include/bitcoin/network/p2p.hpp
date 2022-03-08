@@ -129,6 +129,9 @@ public:
     /// Get the number of addresses.
     size_t address_count() const;
 
+    /// Get the number of inbound channels.
+    size_t inbound_channel_count() const;
+
     /// Get the number of channels.
     size_t channel_count() const;
 
@@ -206,7 +209,7 @@ private:
     ////friend class session;
     void pend(uint64_t nonce);
     void unpend(uint64_t nonce);
-    void unstore(channel::ptr channel);
+    void unstore(channel::ptr channel, bool inbound);
     code store(channel::ptr channel, bool notify, bool inbound);
 
     ////friend class session;
@@ -226,6 +229,7 @@ private:
     // These are thread safe.
     const settings& settings_;
     std::atomic<size_t> channel_count_;
+    std::atomic<size_t> inbound_channel_count_;
 
     // These are not thread safe.
     hosts hosts_;

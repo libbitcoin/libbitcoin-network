@@ -28,173 +28,20 @@ using namespace bc::network;
 using namespace bc::system::chain;
 using namespace bc::network::messages;
 
-class mock_channel
-  : public channel
+struct p2p_tests_setup_fixture
 {
-public:
-    using channel::channel;
-
-    virtual void start() override
+    p2p_tests_setup_fixture()
     {
-        channel::start();
+        test::remove(TEST_NAME);
     }
 
-    virtual void stop(const code& ec) override
+    ~p2p_tests_setup_fixture()
     {
-        channel::stop(ec);
-    }
-
-    // Override protected base capture sent payload.
-    virtual void send_bytes(system::chunk_ptr payload,
-        result_handler&& handler) override
-    {
-        payload_ = payload;
-    }
-
-    // Override protected base to notify subscribers.
-    code notify(identifier id, uint32_t version, system::reader& source)
-    {
-        return notify(id, version, source);
-    }
-
-    // Get last captured payload.
-    system::chunk_ptr sent() const
-    {
-
-        return payload_;
-    }
-
-private:
-    system::chunk_ptr payload_;
-};
-
-// Use mock acceptor to inject mock channel.
-class mock_acceptor
-  : public acceptor
-{
-public:
-    mock_acceptor(asio::strand& strand, asio::io_context& service,
-        const settings& settings)
-      : acceptor(strand, service, settings), stopped_(false), port_(0)
-    {
-    }
-
-    // Get captured port.
-    uint16_t port() const
-    {
-        return port_;
-    }
-
-    // Get captured stopped.
-    bool stopped() const
-    {
-        return stopped_;
-    }
-
-    // Capture port.
-    virtual code start(uint16_t port) override
-    {
-        port_ = port;
-    }
-
-    // Capture stopped.
-    virtual void stop() override
-    {
-        stopped_ = true;
-    }
-
-    // Inject mock channel.
-    virtual void accept(accept_handler&& handler) override
-    {
-        const auto socket = std::make_shared<network::socket>(service_);
-        const auto created = std::make_shared<mock_channel>(socket, settings_);
-        handler(error::success, created);
-    }
-
-private:
-    bool stopped_;
-    uint16_t port_;
-};
-
-// Use mock connector to inject mock channel.
-class mock_connector
-  : public connector
-{
-public:
-    mock_connector(asio::strand& strand, asio::io_context& service,
-        const settings& settings)
-      : connector(strand, service, settings), stopped_(false)
-    {
-    }
-
-    // Get captured stopped.
-    bool stopped() const
-    {
-        return stopped_;
-    }
-
-    // Capture stopped.
-    virtual void stop() override
-    {
-        stopped_ = true;
-    }
-
-    // Inject mock channel.
-    virtual void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) override
-    {
-        const auto socket = std::make_shared<network::socket>(service_);
-        const auto created = std::make_shared<mock_channel>(socket, settings_);
-        handler(error::success, created);
-    }
-
-private:
-    bool stopped_;
-};
-
-// Use mock p2p network to inject mock channels.
-class mock_p2p
-  : public p2p
-{
-public:
-    using p2p::p2p;
-
-    ////virtual session_seed::ptr attach_seed_session() override
-    ////{
-    ////    return p2p::attach_seed_session();
-    ////}
-    ////
-    ////virtual session_manual::ptr attach_manual_session() override
-    ////{
-    ////    return p2p::attach_manual_session();
-    ////}
-    ////
-    ////virtual session_inbound::ptr attach_inbound_session() override
-    ////{
-    ////    return p2p::attach_inbound_session();
-    ////}
-    ////
-    ////virtual session_outbound::ptr attach_outbound_session() override
-    ////{
-    ////    return p2p::attach_outbound_session();
-    ////}
-
-    // Create mock acceptor to inject mock channel.
-    virtual acceptor::ptr create_acceptor() override
-    {
-        return std::make_shared<mock_acceptor>(strand(), service(),
-            network_settings());
-    }
-
-    // Create mock connector to inject mock channel.
-    virtual connector::ptr create_connector() override
-    {
-        return std::make_shared<mock_connector>(strand(), service(),
-            network_settings());
+        test::remove(TEST_NAME);
     }
 };
 
-BOOST_AUTO_TEST_SUITE(p2p_tests)
+BOOST_FIXTURE_TEST_SUITE(p2p_tests, p2p_tests_setup_fixture)
 
 BOOST_AUTO_TEST_CASE(p2p__network_settings__unstarted__expected)
 {
@@ -357,33 +204,43 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds__success)
     BOOST_REQUIRE(promise_run.get_future().get());
 }
 
-////BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_default_seeds__success)
-////{
-////    settings set(selection::mainnet);
-////    BOOST_REQUIRE(set.peers.empty());
-////    set.seeds.resize(1);
-////    set.host_pool_capacity = 42;
-////
-////    p2p net(set);
-////    BOOST_REQUIRE(net.network_settings().peers.empty());
-////    BOOST_REQUIRE_EQUAL(net.network_settings().seeds.size(), 1u);
-////    BOOST_REQUIRE_EQUAL(net.network_settings().host_pool_capacity, 42u);
-////
-////    std::promise<bool> promise;
-////    const auto run_handler = [&](const code& ec)
-////    {
-////        BOOST_REQUIRE_EQUAL(ec, error::success);
-////        promise.set_value(true);
-////    };
-////
-////    const auto start_handler = [&](const code& ec)
-////    {
-////        BOOST_REQUIRE_EQUAL(ec, error::seeding_unsuccessful);
-////        net.run(run_handler);
-////    };
-////
-////    net.start(start_handler);
-////    BOOST_REQUIRE(promise.get_future().get());
-////}
+BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_no_batch__success)
+{
+    settings set(selection::mainnet);
+    BOOST_REQUIRE(set.peers.empty());
+
+    // This implies seeding would be required.
+    set.host_pool_capacity = 1;
+
+    // There are no seeds, so seeding would fail.
+    set.seeds.clear();
+
+    // Cache one address to preclude seeding.
+    set.hosts_file = TEST_NAME;
+    system::ofstream file(set.hosts_file);
+    file << config::authority{ "1.2.3.4:42" } << std::endl;
+
+    // Configure one connection with no batching.
+    set.connect_batch_size = 1;
+    set.outbound_connections = 1;
+
+    p2p net(set);
+
+    std::promise<bool> promise_run;
+    const auto run_handler = [&](const code& ec)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::success);
+        promise_run.set_value(true);
+    };
+
+    const auto start_handler = [&](const code& ec)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::success);
+        net.run(run_handler);
+    };
+
+    net.start(start_handler);
+    BOOST_REQUIRE(promise_run.get_future().get());
+}
 
 BOOST_AUTO_TEST_SUITE_END()
