@@ -305,7 +305,20 @@ if (with-tests)
         "../../test/net/pump.cpp"
         "../../test/net/socket.cpp"
         "../../test/protocols/protocol.cpp"
-        "../../test/sessions/session.cpp" )
+        "../../test/protocols/protocol_address_31402.cpp"
+        "../../test/protocols/protocol_events.cpp"
+        "../../test/protocols/protocol_ping_31402.cpp"
+        "../../test/protocols/protocol_ping_60001.cpp"
+        "../../test/protocols/protocol_reject_70002.cpp"
+        "../../test/protocols/protocol_seed_31402.cpp"
+        "../../test/protocols/protocol_timer.cpp"
+        "../../test/protocols/protocol_version_31402.cpp"
+        "../../test/protocols/protocol_version_70002.cpp"
+        "../../test/sessions/session.cpp"
+        "../../test/sessions/session_inbound.cpp"
+        "../../test/sessions/session_manual.cpp"
+        "../../test/sessions/session_outbound.cpp"
+        "../../test/sessions/session_seed.cpp" )
 
     add_test( NAME libbitcoin-network-test COMMAND libbitcoin-network-test
             --run_test=*
