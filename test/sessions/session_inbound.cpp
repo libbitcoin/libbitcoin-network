@@ -202,7 +202,7 @@ class mock_session_inbound
 {
 public:
     mock_session_inbound(p2p& network)
-      : session_inbound(network), attached_(false)
+      : session_inbound(network), accepted_(false), attached_(false)
     {
     }
 
@@ -214,6 +214,27 @@ public:
     bool stopped() const noexcept
     {
         return session_inbound::stopped();
+    }
+
+    bool accepted() const noexcept
+    {
+        return accepted_;
+    }
+
+    bool require_accepted() const noexcept
+    {
+        return accept_.get_future().get();
+    }
+
+    void start_accept(const code& ec) override
+    {
+        if (!accepted_)
+        {
+            accepted_ = true;
+            accept_.set_value(true);
+        }
+
+        session_inbound::start_accept(ec);
     }
 
     bool attached() const noexcept
@@ -237,7 +258,9 @@ public:
     }
 
 private:
+    mutable bool accepted_;
     mutable bool attached_;
+    mutable std::promise<bool> accept_;
     mutable std::promise<bool> attach_;
 };
 
@@ -499,7 +522,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accept)
     BOOST_REQUIRE(net.acceptor);
     BOOST_REQUIRE(!net.acceptor->stopped());
 
-    // Accept is not invoked.
+    // Accept is not invoked (race, but always false).
     BOOST_REQUIRE(!net.acceptor->accepted());
 
     std::promise<bool> stopped;
@@ -545,7 +568,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
     BOOST_REQUIRE(net.acceptor);
     BOOST_REQUIRE(!net.acceptor->stopped());
 
-    // Accept is invoked, but not reinvoked.
+    // Block until accepted.
+    BOOST_REQUIRE(session->require_accepted());
+
+    // Accept is invoked, but not reinvoked (race, but always false).
     BOOST_REQUIRE(net.acceptor->accepted());
     BOOST_REQUIRE(!net.acceptor->reaccepted());
 
@@ -592,7 +618,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
     BOOST_REQUIRE(net.acceptor);
     BOOST_REQUIRE(!net.acceptor->stopped());
 
-    // Accept is invoked, but not reinvoked.
+    // Block until accepted.
+    BOOST_REQUIRE(session->require_accepted());
+
+    // Accept is invoked, but not reinvoked (race, but always false).
     BOOST_REQUIRE(net.acceptor->accepted());
     BOOST_REQUIRE(!net.acceptor->reaccepted());
 
@@ -642,7 +671,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     BOOST_REQUIRE(net.acceptor);
     BOOST_REQUIRE(!net.acceptor->stopped());
 
-    // Accept is invoked, but not reinvoked.
+    // Block until accepted.
+    BOOST_REQUIRE(session->require_accepted());
+
+    // Accept is invoked, but not reinvoked (race, but always false).
     BOOST_REQUIRE(net.acceptor->accepted());
     BOOST_REQUIRE(!net.acceptor->reaccepted());
 

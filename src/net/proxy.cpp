@@ -71,6 +71,10 @@ void proxy::do_stop(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // Stops the read loop.
+    // Signals socket to stop accepting new work, cancels pending work.
+    socket_->stop();
+
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
     pump_subscriber_.stop(ec);
@@ -78,10 +82,6 @@ void proxy::do_stop(const code& ec)
     // Post stop handlers to strand and clear/stop accepting subscriptions.
     // The code provides information on the reason that the channel stopped.
     stop_subscriber_->stop(ec);
-
-    // Stops the read loop.
-    // Signals socket to stop accepting new work, cancels pending work.
-    socket_->stop();
 }
 
 void proxy::subscribe_stop(result_handler handler, result_handler complete)

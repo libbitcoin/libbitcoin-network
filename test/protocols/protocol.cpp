@@ -45,12 +45,12 @@ public:
 
     void start() override
     {
-        channel::start();
+        ////channel::start();
     }
 
     void stop(const code& ec) override
     {
-        channel::stop(ec);
+        ////channel::stop(ec);
     }
 
     // Override protected base capture sent payload.
@@ -63,7 +63,8 @@ public:
     // Override protected base to notify subscribers.
     code notify(identifier id, uint32_t version, system::reader& source)
     {
-        return notify(id, version, source);
+        return error::success;
+        ////return notify(id, version, source);
     }
 
     // Get last captured payload.
@@ -118,7 +119,13 @@ public:
     {
         const auto socket = std::make_shared<network::socket>(service_);
         const auto created = std::make_shared<mock_channel>(socket, settings_);
-        handler(error::success, created);
+
+        // Must be asynchronous or is an infinite recursion.
+        // This error code will set the re-listener timer and channel pointer is ignored.
+        boost::asio::post(strand_, [=]()
+        {
+            handler(error::success, created);
+        });
     }
 
 private:
@@ -203,6 +210,31 @@ public:
             network_settings());
     }
 };
+
+class mock_session
+  : public session
+{
+public:
+    mock_session(p2p& network)
+      : session(network)
+    {
+    }
+
+    bool stopped() const noexcept
+    {
+        return session::stopped();
+    }
+
+    void attach_handshake(const channel::ptr& channel,
+        result_handler handshake) const override
+    {
+    }
+};
+
+BOOST_AUTO_TEST_CASE(protocol__foobar)
+{
+
+}
 
 BOOST_AUTO_TEST_CASE(protocol__run__one_connection__success)
 {
