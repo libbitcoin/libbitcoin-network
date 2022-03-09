@@ -69,6 +69,7 @@ private:
     void handle_batch(const code& ec, channel::ptr channel,
         connectors_ptr connectors, channel_handler complete);
 
+    // These are not thread safe.
     const size_t batch_;
     size_t count_;
 };
