@@ -102,11 +102,11 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // There was an error connecting the channel, so drop it and try again.
     if (ec)
     {
-        // TODO: use timer to delay start in case of error other than
-        // channel_timeout - use settings().connect_timeout().
-        start_connect(connectors);
+        timer_->start(BIND1(start_connect, connectors),
+            settings().connect_timeout());
         return;
     }
 
