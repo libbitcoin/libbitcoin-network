@@ -24,7 +24,6 @@
 #include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -66,7 +65,6 @@ private:
     void handle_channel_stop(const code& ec);
 
     // These are not thread safe.
-    deadline::ptr timer_;
     acceptor::ptr acceptor_;
 
     // This is thread safe.

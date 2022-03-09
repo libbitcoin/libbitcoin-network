@@ -34,7 +34,6 @@ using namespace std::placeholders;
 
 session_inbound::session_inbound(p2p& network)
   : session(network),
-    timer_(std::make_shared<deadline>(network.strand())),
     connection_limit_(network.network_settings().inbound_connections)
 {
 }
@@ -87,7 +86,6 @@ void session_inbound::stop()
     if (acceptor_)
         acceptor_->stop();
 
-    timer_->stop();
     session::stop();
 }
 

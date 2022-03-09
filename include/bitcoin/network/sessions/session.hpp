@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
@@ -108,6 +109,10 @@ protected:
 
     virtual bool inbound() const noexcept;
     virtual bool notify() const noexcept;
+
+protected:
+    // This is not thread safe.
+    deadline::ptr timer_;
 
 private:
     void handle_handshake(const code& ec, channel::ptr channel,

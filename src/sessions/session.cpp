@@ -41,7 +41,8 @@ using namespace bc::system;
 using namespace std::placeholders;
 
 session::session(p2p& network)
-  : stopped_(true),
+  : timer_(std::make_shared<deadline>(network.strand())),
+    stopped_(true),
     network_(network)
 {
 }
@@ -69,6 +70,7 @@ void session::stop()
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
+    timer_->stop();
     clear_connectors();
     stopped_.store(true, std::memory_order_relaxed);
 }
