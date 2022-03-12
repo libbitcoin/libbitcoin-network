@@ -105,7 +105,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
     if (stopped(ec))
         return;
 
-    // There was an error connecting the channel, so drop it and try again.
+    // There was an error connecting the channel, so try again.
     if (ec)
     {
         timer_->start(BIND1(start_connect, connectors),

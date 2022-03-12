@@ -116,7 +116,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
     if (stopped(ec))
         return;
 
-    // There was an error connecting the channel, so drop it and try again.
+    // There was an error connecting the channel, so try again.
     if (ec)
     {
         timer_->start(BIND3(start_connect, host, connector, handler),
