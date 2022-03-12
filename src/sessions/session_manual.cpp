@@ -113,6 +113,9 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    if (stopped(ec))
+        return;
+
     // There was an error connecting the channel, so drop it and try again.
     if (ec)
     {
