@@ -111,7 +111,7 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
     if (stopped(ec))
         return;
 
-    // There was an error accepting the channel, so drop it and try again.
+    // There was an error accepting the channel, so try again.
     if (ec)
     {
         timer_->start(BIND1(start_accept, _1), settings().connect_timeout());
@@ -123,10 +123,16 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 
     // Could instead stop listening when at limit, though that requires event.
     if (inbound_channel_count() >= settings().inbound_connections)
+    {
+        channel->stop(error::oversubscribed);
         return;
+    }
 
     if (blacklisted(channel->authority()))
+    {
+        channel->stop(error::address_blocked);
         return;
+    }
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),

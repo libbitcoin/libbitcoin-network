@@ -102,6 +102,7 @@ void session::start_channel(channel::ptr channel, result_handler started,
 
     if (session::stopped())
     {
+        channel->stop(error::service_stopped);
         started(error::service_stopped);
         stopped(error::service_stopped);
         return;
