@@ -107,9 +107,9 @@ private:
     void do_saves(const messages::address_items& addresses,
         result_handler handler);
 
+    // These are thread safe.
     channel::ptr channel_;
     const session& session_;
-    const std::string name_;
 };
 
 #undef PROTOCOL_ARGS
