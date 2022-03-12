@@ -112,6 +112,10 @@ channel::channel(socket::ptr socket, const settings& settings)
 {
 }
 
+channel::~channel()
+{
+}
+
 // Start/stop.
 // ----------------------------------------------------------------------------
 

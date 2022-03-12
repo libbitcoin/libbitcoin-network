@@ -83,7 +83,7 @@ protected:
     }
 
     proxy(socket::ptr socket);
-    ~proxy();
+    virtual ~proxy();
 
     virtual size_t maximum_payload() const = 0;
     virtual uint32_t protocol_magic() const = 0;
