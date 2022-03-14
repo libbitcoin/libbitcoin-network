@@ -43,14 +43,14 @@ class mock_channel
 public:
     using channel::channel;
 
-    void start() override
+    void begin() override
     {
-        ////channel::start();
+        channel::begin();
     }
 
     void stop(const code& ec) override
     {
-        ////channel::stop(ec);
+        channel::stop(ec);
     }
 
     // Override protected base capture sent payload.
@@ -176,26 +176,6 @@ class mock_p2p
 public:
     using p2p::p2p;
 
-    ////session_seed::ptr attach_seed_session() override
-    ////{
-    ////    return p2p::attach_seed_session();
-    ////}
-    ////
-    ////session_manual::ptr attach_manual_session() override
-    ////{
-    ////    return p2p::attach_manual_session();
-    ////}
-    ////
-    ////session_inbound::ptr attach_inbound_session() override
-    ////{
-    ////    return p2p::attach_inbound_session();
-    ////}
-    ////
-    ////session_outbound::ptr attach_outbound_session() override
-    ////{
-    ////    return p2p::attach_outbound_session();
-    ////}
-
     // Create mock acceptor to inject mock channel.
     acceptor::ptr create_acceptor() override
     {
@@ -231,48 +211,162 @@ public:
     }
 };
 
-BOOST_AUTO_TEST_CASE(protocol__foobar)
+class mock_protocol
+  : public protocol
 {
+public:
+    typedef std::shared_ptr<mock_protocol> ptr;
 
-}
+    mock_protocol(const session& session, channel::ptr channel)
+      : protocol(session, channel)
+    {
+    }
 
-BOOST_AUTO_TEST_CASE(protocol__run__one_connection__success)
+    /// Bind a method in the derived class.
+    template <class Protocol, typename Handler, typename... Args>
+    auto bind(Handler&& handler, Args&&... args) ->
+        decltype(std::bind(std::forward<Handler>(handler),
+            std::shared_ptr<Protocol>(), std::forward<Args>(args)...)) const
+    {
+        return protocol::bind(std::forward<Handler>(handler),
+            std::forward<Args>(args));
+    }
+
+    template <class Protocol, class Message, typename Handler, typename... Args>
+    void send(Message&& message, Handler&& handler, Args&&... args)
+    {
+        protocol::send(std::forward<Message>(message),
+            std::forward<Handler>(handler), std::forward<Args>(args));
+    }
+
+    /// Subscribe to channel messages by type.
+    template <class Protocol, class Message, typename Handler, typename... Args>
+    void subscribe(Handler&& handler, Args&&... args)
+    {
+        protocol::subscribe<Message>(std::forward<Handler>(handler),
+            std::forward<Args>(args));
+    }
+
+    bool stranded() const
+    {
+        return protocol::stranded();
+    }
+
+    config::authority authority() const
+    {
+        return protocol::authority();
+    }
+
+    uint64_t nonce() const noexcept
+    {
+        return protocol::nonce();
+    }
+
+    messages::version::ptr peer_version() const noexcept
+    {
+        return protocol::peer_version();
+    }
+
+    void set_peer_version(messages::version::ptr value) noexcept
+    {
+        protocol::set_peer_version(value);
+    }
+
+    uint32_t negotiated_version() const noexcept
+    {
+        return protocol::negotiated_version();
+    }
+
+    void set_negotiated_version(uint32_t value) noexcept
+    {
+        protocol::set_negotiated_version(value);
+    }
+
+    void stop(const code& ec)
+    {
+        protocol::stop(ec);
+    }
+
+    const network::settings& settings() const
+    {
+        return protocol::settings();
+    }
+
+    void saves(const messages::address_items& addresses, result_handler handler={})
+    {
+        return protocol::saves(addresses, handler);
+    }
+
+    void fetches(fetches_handler handler)
+    {
+        return protocol::fetches(handler);
+    }
+
+    void handle_send(const code& ec, const std::string& command) override
+    {
+        return protocol::handle_send(ec, command);
+    }
+
+    virtual const std::string& name() const
+    {
+        static const std::string name{ "name" };
+        return name;
+    }
+};
+
+BOOST_AUTO_TEST_CASE(protocol__nop__always__nop)
 {
     settings set(selection::mainnet);
-    BOOST_REQUIRE(set.peers.empty());
+    p2p net(set);
+    auto socket = std::make_shared<network::socket>(net.service());
+    mock_session session(net);
+    auto channel = std::make_shared<mock_channel>(socket, set);
+    BOOST_REQUIRE(!channel->stopped());
 
-    // This implies seeding would be required.
-    set.host_pool_capacity = 1;
-
-    // There are no seeds, so seeding would fail.
-    set.seeds.clear();
-
-    // Cache one address to preclude seeding.
-    set.hosts_file = TEST_NAME;
-    system::ofstream file(set.hosts_file);
-    file << config::authority{ "1.2.3.4:42" } << std::endl;
-
-    // Configure one connection with no batching.
-    set.connect_batch_size = 5;
-    set.outbound_connections = 1;
-
-    mock_p2p net(set);
-
-    std::promise<bool> promise_run;
-    const auto run_handler = [&](const code& ec)
-    {
-        BOOST_REQUIRE_EQUAL(ec, error::success);
-        promise_run.set_value(true);
-    };
-
-    const auto start_handler = [&](const code& ec)
-    {
-        BOOST_REQUIRE_EQUAL(ec, error::success);
-        net.run(run_handler);
-    };
-
-    net.start(start_handler);
-    BOOST_REQUIRE(promise_run.get_future().get());
+    auto protocol = std::make_shared<mock_protocol>(session, channel);
+    
+    // Stop completion is asynchronous.
+    channel->stop(error::channel_stopped);
+    channel.reset();
 }
+
+////BOOST_AUTO_TEST_CASE(protocol__run__one_connection__success)
+////{
+////    settings set(selection::mainnet);
+////    BOOST_REQUIRE(set.peers.empty());
+////
+////    // This implies seeding would be required.
+////    set.host_pool_capacity = 1;
+////
+////    // There are no seeds, so seeding would fail.
+////    set.seeds.clear();
+////
+////    // Cache one address to preclude seeding.
+////    set.hosts_file = TEST_NAME;
+////    system::ofstream file(set.hosts_file);
+////    file << config::authority{ "1.2.3.4:42" } << std::endl;
+////
+////    // Configure one connection with no batching.
+////    set.connect_batch_size = 5;
+////    set.outbound_connections = 1;
+////
+////    mock_p2p net(set);
+////
+////    std::promise<bool> promise_run;
+////    const auto run_handler = [&](const code& ec)
+////    {
+////        BOOST_REQUIRE_EQUAL(ec, error::success);
+////        promise_run.set_value(true);
+////    };
+////
+////    const auto start_handler = [&](const code& ec)
+////    {
+////        BOOST_REQUIRE_EQUAL(ec, error::success);
+////        net.run(run_handler);
+////    };
+////
+////    net.start(start_handler);
+////    BOOST_REQUIRE(promise_run.get_future().get());
+////}
 
 BOOST_AUTO_TEST_SUITE_END()

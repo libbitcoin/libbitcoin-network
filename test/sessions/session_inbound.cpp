@@ -85,12 +85,7 @@ public:
     void stop() override
     {
         stopped_ = true;
-
-        if (channel_)
-        {
-            channel_->stop(error::channel_stopped);
-            channel_.reset();
-        }
+        acceptor::stop();
     }
 
     // Handle accept.
@@ -98,13 +93,13 @@ public:
     {
         ++accepts_;
         const auto socket = std::make_shared<network::socket>(service_);
-        channel_ = std::make_shared<network::channel>(socket, settings_);
+        const auto channel = std::make_shared<network::channel>(socket, settings_);
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
         boost::asio::post(strand_, [=]()
         {
-            handler(error::success, channel_);
+            handler(error::success, channel);
         });
     }
 
@@ -112,7 +107,6 @@ protected:
     bool stopped_;
     size_t accepts_;
     uint16_t port_;
-    network::channel::ptr channel_;
 };
 
 // Use to fake start success.
@@ -255,6 +249,9 @@ public:
             attached_ = true;
             attach_.set_value(true);
         }
+
+        // Simulate handshake successful completion.
+        handshake(error::success);
     }
 
 private:
@@ -594,6 +591,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_attach)
 {
     settings set(selection::mainnet);
+    set.seeds.clear();
     set.inbound_connections = 1;
     set.inbound_port = 42;
     mock_p2p<mock_acceptor_start_success_accept_fail> net(set);
@@ -650,21 +648,34 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     set.inbound_connections = 1;
     set.inbound_port = 42;
     mock_p2p<mock_acceptor_start_success_accept_success> net(set);
+
+    // Start the network so that it can be stopped.
+    std::promise<bool> promise_net_started;
+    const auto net_start_handler = [&](const code& ec)
+    {
+        BOOST_REQUIRE_EQUAL(ec, error::success);
+        promise_net_started.set_value(true);
+    };
+
+    net.start(net_start_handler);
+    BOOST_REQUIRE(promise_net_started.get_future().get());
+
+    // Start the session using the network reference.
     auto session = std::make_shared<mock_session_inbound>(net);
     BOOST_REQUIRE(session->stopped());
 
-    std::promise<code> started;
+    std::promise<code> promise_session_started;
     boost::asio::post(net.strand(), [&]()
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec)
         {
-            started.set_value(ec);
+            promise_session_started.set_value(ec);
         });
     });
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(promise_session_started.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(net.acceptor->port(), set.inbound_port);
 
     BOOST_REQUIRE(!session->stopped());
@@ -685,18 +696,20 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     boost::asio::post(net.strand(), [&]()
     {
         session->stop();
+        BOOST_REQUIRE(session->stopped());
+        BOOST_REQUIRE(session->attached());
+
+        session.reset();
         stopped.set_value(true);
     });
 
     BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE(net.acceptor->stopped());
 
     // Another accept is not generally invoked because stop is set first, but this is a race.
     ////BOOST_REQUIRE(!net.acceptor->reaccepted());
 
-    BOOST_REQUIRE(session->attached());
-    session.reset();
+    net.close();
 }
 
 // handle_accept:inbound_channel_count

@@ -40,18 +40,20 @@ class BCT_API session_inbound
 public:
     typedef std::shared_ptr<session_inbound> ptr;
 
-    /// Construct an instance.
     session_inbound(p2p& network);
 
-    /// Start/stop the session.
     void start(result_handler handler) override;
     void stop() override;
 
 protected:
-    /// Override to attach specialized protocols upon channel start.
+    /// Overridden to attach specialized protocols for channel handshake.
+    ////void attach_handshake(const channel::ptr& channel,
+    ////    result_handler handshake) const override;
+
+    /// Overridden to attach specialized protocols upon channel start.
     void attach_protocols(const channel::ptr& channel) const override;
 
-    /// Override to preclude pending the nonce.
+    /// Overridden to preclude pending the nonce.
     bool inbound() const noexcept override;
 
     /// Override in test.
@@ -62,9 +64,9 @@ private:
     void handle_accept(const code& ec, channel::ptr channel);
 
     void handle_channel_start(const code& ec, channel::ptr channel);
-    void handle_channel_stop(const code& ec);
+    void handle_channel_stop(const code& ec, channel::ptr channel);
 
-    // These are not thread safe.
+    // This is not thread safe.
     acceptor::ptr acceptor_;
 
     // This is thread safe.

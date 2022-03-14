@@ -84,7 +84,10 @@ void session_inbound::stop()
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (acceptor_)
+    {
         acceptor_->stop();
+        acceptor_.reset();
+    }
 
     session::stop();
 }
@@ -96,7 +99,7 @@ void session_inbound::start_accept(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // May be acceptor start failure or cancelation from timer.
+    // May be acceptor start failure or cancelation from timer, terminal.
     if (ec)
         return;
 
@@ -108,17 +111,28 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped(ec))
+    if (ec == error::service_stopped)
+    {
+        BC_ASSERT_MSG(!channel, "unexpected channel instance");
         return;
+    }
 
     // There was an error accepting the channel, so try again.
     if (ec)
     {
+        BC_ASSERT_MSG(!channel, "unexpected channel instance");
         timer_->start(BIND1(start_accept, _1), settings().connect_timeout());
         return;
     }
 
-    // There was no error, so listen again, and accept the channel if allowed.
+    // This guards acceptor_ in start_accept.
+    if (stopped())
+    {
+        channel->stop(error::service_stopped);
+        return;
+    }
+
+    // There was no error, so listen again.
     start_accept(error::success);
 
     // Could instead stop listening when at limit, though that requires event.
@@ -136,25 +150,22 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
-        BIND1(handle_channel_stop, _1));
+        BIND2(handle_channel_stop, _1, channel));
 }
 
-void session_inbound::handle_channel_start(const code& ec,
-    channel::ptr channel)
+void session_inbound::handle_channel_start(const code&, channel::ptr)
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    // The start failure is also caught by handle_channel_stop.
-    if (ec)
-        return;
-
-    // Calls attach_protocols on channel strand.
-    post_attach_protocols(channel);
 }
+
+////void session_inbound::attach_handshake(const channel::ptr& channel,
+////    result_handler handshake) const
+////{
+////}
 
 void session_inbound::attach_protocols(const channel::ptr& channel) const
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded(), "strand");
 
     const auto version = channel->negotiated_version();
     const auto heartbeat = settings().channel_heartbeat();
@@ -170,7 +181,7 @@ void session_inbound::attach_protocols(const channel::ptr& channel) const
     channel->do_attach<protocol_address_31402>(*this)->start();
 }
 
-void session_inbound::handle_channel_stop(const code&)
+void session_inbound::handle_channel_stop(const code&, channel::ptr)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }

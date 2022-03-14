@@ -43,14 +43,13 @@ class BCT_API channel
 public:
     typedef std::shared_ptr<channel> ptr;
 
+    // HACK: public but must be called from channel strand.
     /// Attach a protocol to the channel, caller must start returned protocol.
     template <class Protocol, typename... Args>
     typename Protocol::ptr do_attach(const session& session, Args&&... args)
     {
-        BC_ASSERT_MSG(stranded(), "subscribe_stop");
+        BC_ASSERT_MSG(stranded(), "do_subscribe_stop");
 
-        // HACK: public but must be called from channel strand.
-        // HACK: this avoids need for post/callback during attach.
         if (!stranded())
             return nullptr;
 
@@ -59,14 +58,18 @@ public:
             shared_from_base<channel>(), std::forward<Args>(args)...);
 
         // Protocol lifetime is ensured by the channel stop subscriber.
-        do_subscribe_stop([=](const code&) { protocol->nop(); });
+        do_subscribe_stop([=](const code&)
+        {
+            protocol->nop();
+        });
+
         return protocol;
     }
 
     channel(socket::ptr socket, const settings& settings);
     virtual channel::~channel();
 
-    void start() override;
+    void begin() override;
     void stop(const code& ec) override;
 
     uint64_t nonce() const noexcept;

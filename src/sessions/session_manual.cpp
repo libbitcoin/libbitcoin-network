@@ -85,7 +85,14 @@ void session_manual::connect(const authority& host, channel_handler handler)
     }
 
     const auto connector = create_connector();
-    store_connector(connector);
+
+    // BUGBUG: this accumulates connectors until stop (leak).
+    // TODO: requires subscription removal on completion.
+    stop_subscriber_->subscribe([=](const code&)
+    {
+        connector->stop();
+    });
+
     start_connect(host, connector, handler);
 }
 
@@ -113,14 +120,23 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped(ec))
+    if (ec == error::service_stopped)
+    {
+        BC_ASSERT_MSG(!channel, "unexpected channel instance");
         return;
+    }
 
     // There was an error connecting the channel, so try again.
     if (ec)
     {
         timer_->start(BIND3(start_connect, host, connector, handler),
             settings().connect_timeout());
+        return;
+    }
+
+    if (stopped())
+    {
+        channel->stop(error::service_stopped);
         return;
     }
 
@@ -134,11 +150,13 @@ void session_manual::handle_channel_start(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // The start failure is also caught by handle_channel_stop.
     if (ec)
+    {
+        // The start failure is also caught by handle_channel_stop.
+        ////channel->stop(ec);
         return;
+    }
 
-    post_attach_protocols(channel);
     handler(ec, channel);
 }
 

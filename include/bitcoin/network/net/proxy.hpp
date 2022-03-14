@@ -61,7 +61,7 @@ public:
         send_bytes(serialize(*message, protocol_magic(), version()), complete);
     }
 
-    virtual void start();
+    virtual void begin();
     virtual void stop(const code& ec);
 
     void subscribe_stop(result_handler handler, result_handler complete);

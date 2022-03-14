@@ -194,13 +194,6 @@ void p2p::do_close()
     // Notify and delete subscribers to channel notifications.
     channel_subscriber_->stop(error::service_stopped, nullptr);
 
-    // Stop all channels.
-    // These are each posted to each channel strand by the channel proxy.
-    // Each proxy stop subscriber will invoke stop handlers on that strand.
-    // That causes session channel removal to be posted to network strand.
-    for (const auto& channel: channels_)
-        channel->stop(error::service_stopped);
-
     // Release all channels.
     channels_.clear();
 

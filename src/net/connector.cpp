@@ -81,7 +81,7 @@ void connector::connect(const std::string& hostname, uint16_t port,
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    // Enables reusability.
+    // BUGUBUG: allows connect after stop.
     stopped_ = false;
 
     const auto socket = std::make_shared<network::socket>(service_);

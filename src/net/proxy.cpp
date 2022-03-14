@@ -38,6 +38,12 @@ using namespace std::placeholders;
 // Dump up to 1k of payload as hex in order to diagnose failure.
 static constexpr size_t invalid_payload_dump_size = 1024;
 
+
+// This is always in a started state and must be stopped if created, as the
+// subscribers assert if not stopped. Subscribers may hold protocols even if
+// the service is not started.
+
+
 proxy::proxy(socket::ptr socket)
   : socket_(socket),
     pump_subscriber_(socket->strand()),
@@ -49,9 +55,10 @@ proxy::proxy(socket::ptr socket)
 
 proxy::~proxy()
 {
+    BC_ASSERT_MSG(stopped(), "proxy is not stopped");
 }
 
-void proxy::start()
+void proxy::begin()
 {
     read_heading();
 }

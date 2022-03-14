@@ -72,7 +72,9 @@ protocol_version_31402::protocol_version_31402(const session& session,
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void protocol_version_31402::start(result_handler /*handle_event*/)
+
+// handle_event must be invoked upon completion or failure.
+void protocol_version_31402::start(result_handler handle_event)
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 

@@ -74,7 +74,10 @@ void session_outbound::handle_started(const code& ec,
 
         // Save each connector for stop.
         for (const auto& connector: *connectors)
-            store_connector(connector);
+            stop_subscriber_->subscribe([=](const code&)
+            {
+                connector->stop();
+            });
 
         start_connect(connectors);
     }
@@ -102,8 +105,11 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped(ec))
+    if (ec == error::service_stopped)
+    {
+        BC_ASSERT_MSG(!channel, "unexpected channel instance");
         return;
+    }
 
     // There was an error connecting the channel, so try again.
     if (ec)
@@ -113,22 +119,26 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
         return;
     }
 
+    if (stopped())
+    {
+        channel->stop(error::service_stopped);
+        return;
+    }
+
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
         BIND2(handle_channel_stop, _1, connectors));
 }
 
-void session_outbound::handle_channel_start(const code& ec,
-    channel::ptr channel)
+void session_outbound::handle_channel_start(const code& ec, channel::ptr)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // The start failure is also caught by handle_channel_stop.
     if (ec)
-        return;
-
-    // Calls attach_protocols on channel strand.
-    post_attach_protocols(channel);
+    {
+        // The start failure is also caught by handle_channel_stop.
+        ////channel->stop(ec);
+    }
 }
 
 void session_outbound::attach_protocols(const channel::ptr& channel) const
@@ -205,7 +215,7 @@ void session_outbound::start_batch(const code& ec, const authority& host,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped(ec))
+    if (stopped())
     {
         handler(error::service_stopped, nullptr);
         return;

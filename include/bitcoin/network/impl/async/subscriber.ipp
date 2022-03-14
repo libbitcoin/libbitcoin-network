@@ -25,6 +25,8 @@
 namespace libbitcoin {
 namespace network {
 
+// This is always started and asserts if not stopped.
+
 template <typename... Args>
 subscriber<Args...>::subscriber(asio::strand& strand) noexcept
   : strand_(strand), stopped_(false)
@@ -62,7 +64,7 @@ void subscriber<Args...>::notify(const Args&... args) const noexcept
 template <typename... Args>
 void subscriber<Args...>::stop(const Args&... args) noexcept
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    ////BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (stopped_)
         return;

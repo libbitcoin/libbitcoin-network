@@ -52,7 +52,7 @@ namespace network {
 
 class p2p;
 
-/// Base class for maintaining the lifetime of a channel set, thread safe.
+/// Virtual base class for maintaining the lifetime of a channel set, thread safe.
 class BCT_API session
   : public enable_shared_from_base<session>, system::noncopyable
 {
@@ -77,20 +77,33 @@ protected:
         return BOUND_SESSION(handler, args);
     }
 
+    // Channel sequence.
+
+    // Call from base to initialize a new channel.
+    void start_channel(channel::ptr channel,
+        result_handler handle_started, result_handler handle_stopped);
+
+    // Override to change default protocol attachments.
+    virtual void attach_handshake(const channel::ptr& channel,
+        result_handler handler) const;
+    virtual void attach_protocols(const channel::ptr& channel) const;
+
+    // Factories.
     acceptor::ptr create_acceptor();
     connector::ptr create_connector();
     connectors_ptr create_connectors(size_t count);
-    void store_connector(const connector::ptr& connector);
-    void clear_connectors();
 
+    // Properties.
     bool stopped() const noexcept;
-    bool stopped(const code& ec) const;
     bool blacklisted(const config::authority& authority) const;
     bool stranded() const;
     size_t address_count() const;
     size_t channel_count() const;
     size_t inbound_channel_count() const;
+    virtual bool inbound() const noexcept;
+    virtual bool notify() const noexcept;
 
+    // Utilities.
     friend class protocol;
     void fetch(hosts::address_item_handler handler) const;
     void fetches(hosts::address_items_handler handler) const;
@@ -99,32 +112,32 @@ protected:
     void saves(const messages::address_items& addresses,
         result_handler complete) const;
 
-    virtual void start_channel(channel::ptr channel,
-        result_handler handle_started, result_handler handle_stopped);
-    virtual void attach_handshake(const channel::ptr& channel,
-        result_handler handler) const;
-
-    virtual void attach_protocols(const channel::ptr& channel) const;
-    virtual void post_attach_protocols(channel::ptr channel) const;
-
-    virtual bool inbound() const noexcept;
-    virtual bool notify() const noexcept;
-
 protected:
-    // This is not thread safe.
+    typedef subscriber<code> stop_subscriber;
+
+    // These are not thread safe.
     deadline::ptr timer_;
+    stop_subscriber::ptr stop_subscriber_;
 
 private:
+    void handle_channel_start(const code& ec, channel::ptr channel,
+        result_handler started, result_handler stopped);
+
     void handle_handshake(const code& ec, channel::ptr channel,
         result_handler handler);
-    void handle_start(const code& ec, channel::ptr channel,
-        result_handler handle_started, result_handler handle_stopped);
-    void handle_stop(const code& ec, channel::ptr channel,
+    void handle_channel_started(const code& ec, channel::ptr channel,
+        result_handler handler);
+    void handle_channel_stopped(const code& ec, channel::ptr channel,
         result_handler handler);
 
+    void do_attach_handshake(const channel::ptr& channel,
+        result_handler handshake) const;
     void do_handle_handshake(const code& ec, channel::ptr channel,
         result_handler start);
-    void do_handle_stop(const code& ec, channel::ptr channel,
+    void do_attach_protocols(const channel::ptr& channel) const;
+    void do_handle_channel_started(const code& ec, channel::ptr channel,
+        result_handler started);
+    void do_handle_channel_stopped(const code& ec, channel::ptr channel,
         result_handler stopped);
 
     // These are thread safe.

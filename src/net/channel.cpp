@@ -114,16 +114,17 @@ channel::channel(socket::ptr socket, const settings& settings)
 
 channel::~channel()
 {
+    BC_ASSERT_MSG(stopped(), "channel is not stopped");
 }
 
 // Start/stop.
 // ----------------------------------------------------------------------------
 
-void channel::start()
+void channel::begin()
 {
     start_expiration();
     start_inactivity();
-    proxy::start();
+    proxy::begin();
 }
 
 void channel::stop(const code& ec)

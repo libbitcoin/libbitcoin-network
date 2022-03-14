@@ -157,10 +157,11 @@ protected:
         const auto session = std::make_shared<Session>(*this,
             std::forward<Args>(args)...);
 
-        // This may be optimized out for NDEBUG builds.
         // Session lifetime is ensured by the network stop subscriber.
-        const auto handler = [=](const code&) { session->stop(); };
-        do_subscribe_close(handler);
+        do_subscribe_close([=](const code&)
+        {
+            session->stop();
+        });
 
         return session;
     }

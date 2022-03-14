@@ -42,6 +42,7 @@ using namespace std::placeholders;
 
 session::session(p2p& network)
   : timer_(std::make_shared<deadline>(network.strand())),
+    stop_subscriber_(std::make_shared<stop_subscriber>(network.strand())),
     stopped_(true),
     network_(network)
 {
@@ -71,25 +72,8 @@ void session::stop()
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     timer_->stop();
-    clear_connectors();
     stopped_.store(true, std::memory_order_relaxed);
-}
-
-void session::clear_connectors()
-{
-    BC_ASSERT_MSG(network_.stranded(), "strand");
-
-    // Connectors are stored so that they can be explicitly stopped.
-    for (const auto& connector: connectors_)
-        connector->stop();
-
-    connectors_.clear();
-}
-
-void session::store_connector(const connector::ptr& connector)
-{
-    BC_ASSERT_MSG(network_.stranded(), "strand");
-    connectors_.push_back(connector);
+    stop_subscriber_->stop(error::service_stopped);
 }
 
 // Channel sequence.
@@ -102,57 +86,58 @@ void session::start_channel(channel::ptr channel, result_handler started,
 
     if (session::stopped())
     {
-        channel->stop(error::service_stopped);
         started(error::service_stopped);
         stopped(error::service_stopped);
         return;
     }
 
-    channel->start();
-
     if (!inbound())
         network_.pend(channel->nonce());
 
-    result_handler start = std::bind(&session::handle_start,
+    // Channel is started upon creation, this only starts the read loop.
+    channel->begin();
+
+    result_handler start = std::bind(&session::handle_channel_start,
         shared_from_this(), _1, channel, std::move(started), std::move(stopped));
 
-    // boost::asio::bind_executor not working.
     result_handler shake = std::bind(&session::handle_handshake,
         shared_from_this(), _1, channel, std::move(start));
 
+    // Switch to channel context.
     boost::asio::post(channel->strand(),
-        std::bind(&session::attach_handshake,
+        std::bind(&session::do_attach_handshake,
             shared_from_this(), channel, std::move(shake)));
+}
+
+void session::do_attach_handshake(const channel::ptr& channel,
+    result_handler handshake) const
+{
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+
+    // Do not allow attachment if already stopped as attachments cannot clear.
+    if (channel->stopped())
+        return;
+
+    attach_handshake(channel, handshake);
 }
 
 void session::attach_handshake(const channel::ptr& channel,
     result_handler handshake) const
 {
-    // Channel attach and start both require channel strand.
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
+    // Handshake protocols must invoke handler upon completion or failure.
     if (settings().protocol_maximum >= messages::level::bip61)
         channel->do_attach<protocol_version_70002>(*this)->start(handshake);
     else
         channel->do_attach<protocol_version_31402>(*this)->start(handshake);
 }
 
-void session::attach_protocols(const channel::ptr&) const
-{
-}
-
-void session::post_attach_protocols(channel::ptr channel) const
-{
-    // Protocol attach and start require channel context.
-    boost::asio::post(channel->strand(),
-        std::bind(&session::attach_protocols,
-            shared_from_this(), channel));
-}
-
 void session::handle_handshake(const code& ec, channel::ptr channel,
     result_handler start)
 {
-    boost::asio::post(channel->strand(),
+    // Return to network context.
+    boost::asio::post(network_.strand(),
         std::bind(&session::do_handle_handshake,
             shared_from_this(), ec, channel, start));
 }
@@ -171,42 +156,92 @@ void session::do_handle_handshake(const code& ec, channel::ptr channel,
         return;
     }
 
+    // This registers the channel for broadcasts.
     start(network_.store(channel, notify(), inbound()));
 }
 
-void session::handle_start(const code& ec, channel::ptr channel,
+// Context free method.
+void session::handle_channel_start(const code& ec, channel::ptr channel,
     result_handler started, result_handler stopped)
 {
+    result_handler stop =
+        std::bind(&session::handle_channel_stopped,
+            shared_from_this(), _1, channel, std::move(stopped));
+
+    result_handler start =
+        std::bind(&session::handle_channel_started,
+            shared_from_this(), _1, channel, std::move(started));
+
+    // Handles network_.store code.
     if (ec)
     {
-        channel->stop(ec);
-        stopped(ec);
-        started(ec);
+        stop(ec);
+        start(ec);
         return;
     }
 
-    // boost::asio::bind_executor not working.
-    result_handler subscribe =
-        std::bind(&session::handle_stop,
-            shared_from_this(), _1, channel, std::move(stopped));
-
-    channel->subscribe_stop(std::move(subscribe), std::move(started));
+    // This registers the channel for service stop notification.
+    network_.subscribe_close(std::move(stop), std::move(start));
 }
 
-void session::handle_stop(const code& ec, channel::ptr channel,
+void session::handle_channel_started(const code& ec, channel::ptr channel,
+    result_handler started)
+{
+    // Return to network context.
+    boost::asio::post(network_.strand(),
+        std::bind(&session::do_handle_channel_started,
+            shared_from_this(), ec, channel, std::move(started)));
+}
+
+void session::do_handle_channel_started(const code& ec, channel::ptr channel,
+    result_handler started)
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    // Handles network_.subscribe_close code.
+    started(ec);
+
+    // Switch to channel context.
+    boost::asio::post(channel->strand(),
+        std::bind(&session::do_attach_protocols,
+            shared_from_this(), channel));
+}
+
+void session::do_attach_protocols(const channel::ptr& channel) const
+{
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+
+    // Do not allow attachment if already stopped as attachments cannot clear.
+    if (channel->stopped())
+        return;
+
+    attach_protocols(channel);
+}
+
+// Override in derived sessions to attach protocols.
+void session::attach_protocols(const channel::ptr& channel) const
+{
+    BC_ASSERT_MSG(channel->stranded(), "strand");
+}
+
+void session::handle_channel_stopped(const code& ec, channel::ptr channel,
     result_handler stopped)
 {
-    boost::asio::post(channel->strand(),
-        std::bind(&session::do_handle_stop,
-            shared_from_this(), ec, channel, stopped));
+    // Return to network context.
+    boost::asio::post(network_.strand(),
+        std::bind(&session::do_handle_channel_stopped,
+            shared_from_this(), ec, channel, std::move(stopped)));
 }
 
-void session::do_handle_stop(const code& ec, channel::ptr channel,
+void session::do_handle_channel_stopped(const code& ec, channel::ptr channel,
     result_handler stopped)
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     network_.unstore(channel, inbound());
+    channel->stop(ec);
+
+    // Handles stop reason code.
     stopped(ec);
 }
 
@@ -236,14 +271,14 @@ bool session::stopped() const noexcept
     return stopped_.load(std::memory_order_relaxed);
 }
 
-bool session::stopped(const code& ec) const
-{
-    return stopped() || ec == error::service_stopped;
-}
-
 bool session::blacklisted(const config::authority& authority) const
 {
     return contains(settings().blacklists, authority);
+}
+
+bool session::stranded() const
+{
+    return network_.stranded();
 }
 
 const network::settings& session::settings() const
@@ -266,11 +301,6 @@ size_t session::inbound_channel_count() const
     return network_.inbound_channel_count();
 }
 
-bool session::stranded() const
-{
-    return network_.stranded();
-}
-
 bool session::inbound() const noexcept
 {
     return false;
@@ -281,7 +311,7 @@ bool session::notify() const noexcept
     return true;
 }
 
-// Methods.
+// Utilities.
 // ----------------------------------------------------------------------------
 
 void session::fetch(hosts::address_item_handler handler) const

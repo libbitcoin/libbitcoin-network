@@ -114,7 +114,12 @@ void session_seed::start_seed(const config::endpoint& seed,
     }
 
     const auto connector = create_connector();
-    store_connector(connector);
+
+    // BUGUBUG: preserves connector until stop.
+    stop_subscriber_->subscribe([=](const code&)
+    {
+        connector->stop();
+    });
 
     // OUTBOUND CONNECT
     connector->connect(seed,
@@ -140,13 +145,15 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
     start_channel(channel, BIND2(handle_channel_start, _1, channel), counter);
 }
 
-void session_seed::handle_channel_start(const code& ec, channel::ptr channel)
+void session_seed::handle_channel_start(const code& ec, channel::ptr)
 {
-    if (ec)
-        return;
+    BC_ASSERT_MSG(stranded(), "strand");
 
-    // Calls attach_protocols on channel strand.
-    post_attach_protocols(channel);
+    if (ec)
+    {
+        // The start failure is also caught by handle_channel_stop.
+        ////channel->stop(ec);
+    }
 }
 
 void session_seed::attach_protocols(const channel::ptr& channel) const
