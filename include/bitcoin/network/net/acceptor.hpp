@@ -61,7 +61,7 @@ public:
     // Methods.
     // ------------------------------------------------------------------------
     /// Subsequent accepts may only be attempted following handler invocation.
-    /// May return channel_stopped, channel_timeout, success or an error code.
+    /// May return operation_canceled, channel_timeout, success or error code.
     /// The channel paramter is nullptr unless success is returned.
 
     /// Accept next connection available until stop or timeout, starts timer.

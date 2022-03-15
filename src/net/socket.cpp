@@ -188,7 +188,7 @@ void socket::handle_accept(const error::boost_code& ec,
 
     if (error::asio_is_cancelled(ec))
     {
-        handler(error::channel_stopped);
+        handler(error::operation_canceled);
         return;
     }
 
@@ -205,7 +205,7 @@ void socket::handle_connect(const error::boost_code& ec,
 
     if (error::asio_is_cancelled(ec))
     {
-        handler(error::channel_stopped);
+        handler(error::operation_canceled);
         return;
     }
 
