@@ -62,12 +62,6 @@ public:
         return !is_zero(accepts_);
     }
 
-    // Get captured reaccepted.
-    virtual bool reaccepted() const
-    {
-        return accepts_ > one;
-    }
-
     // Get captured stopped.
     virtual bool stopped() const
     {
@@ -567,10 +561,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 
     // Block until accepted.
     BOOST_REQUIRE(session->require_accepted());
-
-    // Accept is invoked, but not reinvoked (race, but always false).
     BOOST_REQUIRE(net.acceptor->accepted());
-    BOOST_REQUIRE(!net.acceptor->reaccepted());
 
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [&]()
@@ -618,10 +609,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
 
     // Block until accepted.
     BOOST_REQUIRE(session->require_accepted());
-
-    // Accept is invoked, but not reinvoked (race, but always false).
     BOOST_REQUIRE(net.acceptor->accepted());
-    BOOST_REQUIRE(!net.acceptor->reaccepted());
 
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [&]()
@@ -633,9 +621,6 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE(net.acceptor->stopped());
-
-    // Another accept is not generally invoked because stop is set first, but this is a race.
-    ////BOOST_REQUIRE(!net.acceptor->reaccepted());
 
     // Not attached because accept returned error.
     BOOST_REQUIRE(!session->attached());
@@ -684,10 +669,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
 
     // Block until accepted.
     BOOST_REQUIRE(session->require_accepted());
-
-    // Accept is invoked, but not reinvoked (race, but always false).
     BOOST_REQUIRE(net.acceptor->accepted());
-    BOOST_REQUIRE(!net.acceptor->reaccepted());
 
     // Attached on first accept and before stop (blocking).
     BOOST_REQUIRE(session->require_attached());
@@ -705,9 +687,6 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(net.acceptor->stopped());
-
-    // Another accept is not generally invoked because stop is set first, but this is a race.
-    ////BOOST_REQUIRE(!net.acceptor->reaccepted());
 
     net.close();
 }
