@@ -37,14 +37,13 @@ public:
     typedef std::function<void(Args...)> handler;
     typedef std::shared_ptr<subscriber<Args...>> ptr;
 
-    // TODO: remove strand, is only used for assertions.
+    // Strand is only used for assertions.
     subscriber(asio::strand& strand) noexcept;
     virtual ~subscriber() noexcept;
 
     void subscribe(handler&& notify) noexcept;
     void notify(const Args&... args) const noexcept;
     void stop(const Args&... args) noexcept;
-    bool stopped() noexcept;
 
 private:
     // This is thread safe.

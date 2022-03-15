@@ -22,38 +22,6 @@ BOOST_AUTO_TEST_SUITE(subscriber_tests)
 
 typedef subscriber<bool, size_t> test_subscriber;
 
-BOOST_AUTO_TEST_CASE(subscriber__stopped__not_stop__false)
-{
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
-
-    boost::asio::post(strand, [&]()
-    {
-        BOOST_REQUIRE(!instance.stopped());
-        instance.stop(false, 0);
-    });
-
-    pool.stop();
-    pool.join();
-}
-
-BOOST_AUTO_TEST_CASE(subscriber__stopped__stop__true)
-{
-    threadpool pool(2);
-    asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
-
-    boost::asio::post(strand, [&]()
-    {
-            instance.stop(false, 0);
-            BOOST_REQUIRE(instance.stopped());
-    });
-
-    pool.stop();
-    pool.join();
-}
-
 BOOST_AUTO_TEST_CASE(subscriber__subscribe__stop__expected)
 {
     threadpool pool(2);

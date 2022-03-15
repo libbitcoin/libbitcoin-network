@@ -25,8 +25,6 @@
 namespace libbitcoin {
 namespace network {
 
-// This is always started and asserts if not stopped.
-
 template <typename... Args>
 subscriber<Args...>::subscriber(asio::strand& strand) noexcept
   : strand_(strand), stopped_(false)
@@ -36,7 +34,8 @@ subscriber<Args...>::subscriber(asio::strand& strand) noexcept
 template <typename... Args>
 subscriber<Args...>::~subscriber() noexcept
 {
-    BC_ASSERT_MSG(stopped_, "subscriber is not stopped");
+    // Cannot clear queue on destruct as required parameterization is unknown.
+    BC_ASSERT_MSG(queue_.empty(), "subscriber is not cleared");
 }
 
 template <typename... Args>
@@ -64,7 +63,7 @@ void subscriber<Args...>::notify(const Args&... args) const noexcept
 template <typename... Args>
 void subscriber<Args...>::stop(const Args&... args) noexcept
 {
-    ////BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (stopped_)
         return;
@@ -72,13 +71,6 @@ void subscriber<Args...>::stop(const Args&... args) noexcept
     notify(args...);
     stopped_ = true;
     queue_.clear();
-}
-
-template <typename... Args>
-bool subscriber<Args...>::stopped() noexcept
-{
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-    return stopped_;
 }
 
 } // namespace network
