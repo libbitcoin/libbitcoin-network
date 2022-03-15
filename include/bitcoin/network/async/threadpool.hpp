@@ -29,6 +29,8 @@
 namespace libbitcoin {
 namespace network {
 
+// TODO: investigate boost::threadpool.
+
 /// Not thread safe.
 /// A collection of threads that share an asio I/O context (service).
 class BCT_API threadpool
