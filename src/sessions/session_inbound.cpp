@@ -100,7 +100,7 @@ void session_inbound::start_accept(const code& ec)
     BC_ASSERT_MSG(stranded(), "strand");
 
     // May be acceptor start failure or cancelation from timer, terminal.
-    if (ec)
+    if (stopped() || ec)
         return;
 
     // ACCEPT (wait)
@@ -111,7 +111,7 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (ec == error::service_stopped)
+    if (ec == error::operation_canceled)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         return;
@@ -125,7 +125,6 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
         return;
     }
 
-    // This guards acceptor_ in start_accept.
     if (stopped())
     {
         channel->stop(error::service_stopped);
