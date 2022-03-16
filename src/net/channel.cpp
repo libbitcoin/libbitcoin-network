@@ -129,8 +129,8 @@ void channel::begin()
 
 void channel::stop(const code& ec)
 {
-    // Stop is posted to strand to protect timers.
-    boost::asio::post(strand(),
+    // Stop is dispatched to strand to protect timers.
+    boost::asio::dispatch(strand(),
         std::bind(&channel::do_stop,
             shared_from_base<channel>(), ec));
 }
