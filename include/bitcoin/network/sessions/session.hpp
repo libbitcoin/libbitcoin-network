@@ -66,6 +66,8 @@ public:
     const network::settings& settings() const;
 
 protected:
+    typedef subscriber<code> stop_subscriber;
+
     session(p2p& network);
     virtual ~session();
 
@@ -112,9 +114,6 @@ protected:
     void saves(const messages::address_items& addresses,
         result_handler complete) const;
 
-protected:
-    typedef subscriber<code> stop_subscriber;
-
     // These are not thread safe.
     deadline::ptr timer_;
     stop_subscriber::ptr stop_subscriber_;
@@ -146,7 +145,6 @@ private:
 
     // This is not thread safe.
     std::vector<connector::ptr> connectors_;
-
 };
 
 #undef SESSION_ARGS
