@@ -18,20 +18,7 @@
  */
 #include "../test.hpp"
 
-struct session_inbound_tests_setup_fixture
-{
-    session_inbound_tests_setup_fixture()
-    {
-        test::remove(TEST_NAME);
-    }
-
-    ~session_inbound_tests_setup_fixture()
-    {
-        test::remove(TEST_NAME);
-    }
-};
-
-BOOST_FIXTURE_TEST_SUITE(session_inbound_tests, session_inbound_tests_setup_fixture)
+BOOST_AUTO_TEST_SUITE(session_inbound_tests)
 
 using namespace bc::network;
 using namespace bc::system::chain;
@@ -199,17 +186,17 @@ public:
         return session_inbound::inbound();
     }
 
-    bool stopped() const noexcept
+    bool stopped() const
     {
         return session_inbound::stopped();
     }
 
-    bool accepted() const noexcept
+    bool accepted() const
     {
         return accepted_;
     }
 
-    bool require_accepted() const noexcept
+    bool require_accepted() const
     {
         return accept_.get_future().get();
     }
@@ -225,12 +212,12 @@ public:
         session_inbound::start_accept(ec);
     }
 
-    bool attached() const noexcept
+    bool attached() const
     {
         return attached_;
     }
 
-    bool require_attached() const noexcept
+    bool require_attached() const
     {
         return attach_.get_future().get();
     }
