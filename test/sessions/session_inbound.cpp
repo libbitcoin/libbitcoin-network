@@ -33,7 +33,7 @@ public:
 
     mock_acceptor_start_success_accept_success(asio::strand& strand,
         asio::io_context& service, const settings& settings)
-      : acceptor(strand, service, settings), stopped_(false), accepts_(zero), port_(0)
+      : acceptor(strand, service, settings)
     {
     }
 
@@ -85,9 +85,9 @@ public:
     }
 
 protected:
-    bool stopped_;
-    size_t accepts_;
-    uint16_t port_;
+    bool stopped_{ false };
+    size_t accepts_{ zero };
+    uint16_t port_{ 0 };
 };
 
 // Use to fake start success.
@@ -165,10 +165,8 @@ public:
     // Create mock acceptor to inject mock channel.
     acceptor::ptr create_acceptor() override
     {
-        acceptor = std::make_shared<Acceptor>(strand(), service(),
+        return std::make_shared<Acceptor>(strand(), service(),
             network_settings());
-
-        return acceptor;
     }
 };
 
@@ -177,7 +175,7 @@ class mock_session_inbound
 {
 public:
     mock_session_inbound(p2p& network)
-      : session_inbound(network), accepted_(false), attached_(false)
+      : session_inbound(network)
     {
     }
 
@@ -212,23 +210,23 @@ public:
         session_inbound::start_accept(ec);
     }
 
-    bool attached() const
+    bool attached_handshake() const
     {
-        return attached_;
+        return handshaked_;
     }
 
-    bool require_attached() const
+    bool require_attached_handshake() const
     {
-        return attach_.get_future().get();
+        return handshake_.get_future().get();
     }
 
     void attach_handshake(const channel::ptr& channel,
         result_handler handshake) const override
     {
-        if (!attached_)
+        if (!handshaked_)
         {
-            attached_ = true;
-            attach_.set_value(true);
+            handshaked_ = true;
+            handshake_.set_value(true);
         }
 
         // Simulate handshake successful completion.
@@ -236,10 +234,10 @@ public:
     }
 
 private:
-    mutable bool accepted_;
-    mutable bool attached_;
+    mutable bool accepted_{ false };
+    mutable bool handshaked_{ false };
     mutable std::promise<bool> accept_;
-    mutable std::promise<bool> attach_;
+    mutable std::promise<bool> handshake_;
 };
 
 // inbound
@@ -515,7 +513,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accept)
     BOOST_REQUIRE(net.acceptor->stopped());
 
     // Attach is not invoked.
-    BOOST_REQUIRE(!session->attached());
+    BOOST_REQUIRE(!session->attached_handshake());
     session.reset();
 }
 
@@ -562,7 +560,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
     BOOST_REQUIRE(net.acceptor->stopped());
 
     // Not attached because accept returned stopped.
-    BOOST_REQUIRE(!session->attached());
+    BOOST_REQUIRE(!session->attached_handshake());
     session.reset();
 }
 
@@ -610,7 +608,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
     BOOST_REQUIRE(net.acceptor->stopped());
 
     // Not attached because accept returned error.
-    BOOST_REQUIRE(!session->attached());
+    BOOST_REQUIRE(!session->attached_handshake());
     session.reset();
 }
 
@@ -659,14 +657,14 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     BOOST_REQUIRE(net.acceptor->accepted());
 
     // Attached on first accept and before stop (blocking).
-    BOOST_REQUIRE(session->require_attached());
+    BOOST_REQUIRE(session->require_attached_handshake());
 
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [&]()
     {
         session->stop();
         BOOST_REQUIRE(session->stopped());
-        BOOST_REQUIRE(session->attached());
+        BOOST_REQUIRE(session->attached_handshake());
 
         session.reset();
         stopped.set_value(true);
