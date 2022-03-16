@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(session_tests)
+BOOST_AUTO_TEST_SUITE(session_seed_tests)
 
 BOOST_AUTO_TEST_CASE(session_seed_test)
 {
