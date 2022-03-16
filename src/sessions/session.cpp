@@ -59,7 +59,7 @@ void session::start(result_handler handler)
 
     if (!stopped())
     {
-        handler(error::operation_failed);
+        handler(error::service_stopped);
         return;
     }
 
@@ -172,8 +172,8 @@ void session::handle_channel_start(const code& ec, channel::ptr channel,
     // Handles network_.store code.
     if (ec)
     {
-        stop(ec);
         start(ec);
+        stop(ec);
         return;
     }
 
@@ -260,6 +260,11 @@ connectors_ptr session::create_connectors(size_t count)
 // Properties.
 // ----------------------------------------------------------------------------
 
+const network::settings& session::settings() const
+{
+    return network_.network_settings();
+}
+
 bool session::stopped() const noexcept
 {
     return stopped_.load(std::memory_order_relaxed);
@@ -273,11 +278,6 @@ bool session::blacklisted(const config::authority& authority) const
 bool session::stranded() const
 {
     return network_.stranded();
-}
-
-const network::settings& session::settings() const
-{
-    return network_.network_settings();
 }
 
 size_t session::address_count() const
