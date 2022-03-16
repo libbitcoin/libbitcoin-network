@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     instance->accept(acceptor, [instance](const code& ec)
     {
         // Acceptor cancelation sets channel_stopped and default ipv4 authority.
-        BOOST_REQUIRE_EQUAL(ec, error::channel_stopped);
+        BOOST_REQUIRE_EQUAL(ec, error::operation_canceled);
         BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::]");
     });
 
