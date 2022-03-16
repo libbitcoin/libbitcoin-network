@@ -50,6 +50,7 @@ socket::socket(asio::io_context& service)
 
 socket::~socket()
 {
+    BC_ASSERT_MSG(stopped(), "socket is not stopped");
 }
 
 // Stop.
