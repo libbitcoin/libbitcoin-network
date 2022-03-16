@@ -97,16 +97,16 @@ void session::start_channel(channel::ptr channel, result_handler started,
     // Channel is started upon creation, this only starts the read loop.
     channel->begin();
 
-    result_handler start = std::bind(&session::handle_channel_start,
-        shared_from_this(), _1, channel, std::move(started), std::move(stopped));
+    result_handler start =
+        BIND4(handle_channel_start, _1, channel, std::move(started),
+            std::move(stopped));
 
-    result_handler shake = std::bind(&session::handle_handshake,
-        shared_from_this(), _1, channel, std::move(start));
+    result_handler shake =
+        BIND3(handle_handshake, _1, channel, std::move(start));
 
     // Switch to channel context.
     boost::asio::post(channel->strand(),
-        std::bind(&session::do_attach_handshake,
-            shared_from_this(), channel, std::move(shake)));
+        BIND2(do_attach_handshake, channel, std::move(shake)));
 }
 
 void session::do_attach_handshake(const channel::ptr& channel,
@@ -138,8 +138,7 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
 {
     // Return to network context.
     boost::asio::post(network_.strand(),
-        std::bind(&session::do_handle_handshake,
-            shared_from_this(), ec, channel, start));
+        BIND3(do_handle_handshake, ec, channel, start));
 }
 
 void session::do_handle_handshake(const code& ec, channel::ptr channel,
@@ -165,12 +164,10 @@ void session::handle_channel_start(const code& ec, channel::ptr channel,
     result_handler started, result_handler stopped)
 {
     result_handler stop =
-        std::bind(&session::handle_channel_stopped,
-            shared_from_this(), _1, channel, std::move(stopped));
+        BIND3(handle_channel_stopped, _1, channel, std::move(stopped));
 
     result_handler start =
-        std::bind(&session::handle_channel_started,
-            shared_from_this(), _1, channel, std::move(started));
+        BIND3(handle_channel_started, _1, channel, std::move(started));
 
     // Handles network_.store code.
     if (ec)
@@ -189,8 +186,7 @@ void session::handle_channel_started(const code& ec, channel::ptr channel,
 {
     // Return to network context.
     boost::asio::post(network_.strand(),
-        std::bind(&session::do_handle_channel_started,
-            shared_from_this(), ec, channel, std::move(started)));
+        BIND3(do_handle_channel_started, ec, channel, std::move(started)));
 }
 
 void session::do_handle_channel_started(const code& ec, channel::ptr channel,
@@ -203,8 +199,7 @@ void session::do_handle_channel_started(const code& ec, channel::ptr channel,
 
     // Switch to channel context.
     boost::asio::post(channel->strand(),
-        std::bind(&session::do_attach_protocols,
-            shared_from_this(), channel));
+        BIND1(do_attach_protocols, channel));
 }
 
 void session::do_attach_protocols(const channel::ptr& channel) const
@@ -229,8 +224,7 @@ void session::handle_channel_stopped(const code& ec, channel::ptr channel,
 {
     // Return to network context.
     boost::asio::post(network_.strand(),
-        std::bind(&session::do_handle_channel_stopped,
-            shared_from_this(), ec, channel, std::move(stopped)));
+        BIND3(do_handle_channel_stopped, ec, channel, std::move(stopped)));
 }
 
 void session::do_handle_channel_stopped(const code& ec, channel::ptr channel,
