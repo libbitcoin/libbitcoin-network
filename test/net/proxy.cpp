@@ -92,7 +92,6 @@ BOOST_AUTO_TEST_CASE(proxy__extract_command__short_payload__unknown)
 
 BOOST_AUTO_TEST_CASE(proxy__extract_command__minimal_payload__expected)
 {
-    constexpr auto minimum = sizeof(uint32_t) + messages::heading::command_size;
     const auto payload = std::make_shared<system::data_chunk>(system::data_chunk
     {
         'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z'
@@ -103,7 +102,6 @@ BOOST_AUTO_TEST_CASE(proxy__extract_command__minimal_payload__expected)
 
 BOOST_AUTO_TEST_CASE(proxy__extract_command__extra_payload__expected)
 {
-    constexpr auto minimum = sizeof(uint32_t) + messages::heading::command_size;
     const auto payload = std::make_shared<system::data_chunk>(system::data_chunk
     {
         'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'A', 'B', 'C'
@@ -152,7 +150,6 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_stop__subscribed__expected)
     auto socket_ptr = std::make_shared<network::socket>(pool.service());
     auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
-    constexpr uint64_t expected_nonce = 42;
 
     std::promise<code> stop2_stopped;
     std::promise<code> stop_subscribed;
@@ -182,7 +179,6 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
     auto socket_ptr = std::make_shared<network::socket>(pool.service());
     auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
-    constexpr uint64_t expected_nonce = 42;
 
     std::promise<code> stop1_stopped;
     boost::asio::post(proxy_ptr->strand(), [&]()
@@ -208,7 +204,6 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_message__subscribed__expected)
     auto socket_ptr = std::make_shared<network::socket>(pool.service());
     auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
-    constexpr uint64_t expected_nonce = 42;
 
     std::promise<code> message_stopped;
     boost::asio::post(proxy_ptr->strand(), [&]()
@@ -236,7 +231,6 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
     auto socket_ptr = std::make_shared<network::socket>(pool.service());
     auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
-    constexpr uint64_t expected_nonce = 42;
 
     std::promise<code> stop2_stopped;
     std::promise<code> stop_subscribed;
@@ -284,9 +278,7 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected__expected)
     threadpool pool(2);
     auto socket_ptr = std::make_shared<network::socket>(pool.service());
     auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
-
-    constexpr uint64_t expected_nonce = 42;
-    auto ping_ptr = std::shared_ptr<messages::ping>(new messages::ping{ expected_nonce });
+    auto ping_ptr = std::shared_ptr<messages::ping>(new messages::ping{ 42 });
 
     std::promise<code> promise;
     const auto handler = [&](code ec)
@@ -308,9 +300,7 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected_move__expected)
     threadpool pool(2);
     auto socket_ptr = std::make_shared<network::socket>(pool.service());
     auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
-
-    constexpr uint64_t expected_nonce = 42;
-    auto ping_ptr = std::shared_ptr<messages::ping>(new messages::ping{ expected_nonce });
+    auto ping_ptr = std::shared_ptr<messages::ping>(new messages::ping{ 42 });
 
     std::promise<code> promise;
     proxy_ptr->send<messages::ping>(ping_ptr, [&](code ec)

@@ -54,14 +54,13 @@ public:
     }
 
     // Override protected base capture sent payload.
-    void send_bytes(system::chunk_ptr payload,
-        result_handler&& handler) override
+    void send_bytes(system::chunk_ptr payload, result_handler&&) override
     {
         payload_ = payload;
     }
 
     // Override protected base to notify subscribers.
-    code notify(identifier id, uint32_t version, system::reader& source)
+    code notify(identifier, uint32_t, system::reader&) override
     {
         return error::success;
         ////return notify(id, version, source);
@@ -157,8 +156,7 @@ public:
     }
 
     // Inject mock channel.
-    void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) override
+    void connect(const std::string&, uint16_t, connect_handler&& handler) override
     {
         const auto socket = std::make_shared<network::socket>(service_);
         const auto created = std::make_shared<mock_channel>(socket, settings_);
@@ -205,8 +203,7 @@ public:
         return session::stopped();
     }
 
-    void attach_handshake(const channel::ptr& channel,
-        result_handler handshake) const override
+    void attach_handshake(const channel::ptr&, result_handler) const override
     {
     }
 };
@@ -222,6 +219,10 @@ public:
     {
     }
 
+    virtual ~mock_protocol()
+    {
+    }
+
     /// Bind a method in the derived class.
     template <class Protocol, typename Handler, typename... Args>
     auto bind(Handler&& handler, Args&&... args) ->
@@ -229,14 +230,14 @@ public:
             std::shared_ptr<Protocol>(), std::forward<Args>(args)...)) const
     {
         return protocol::bind(std::forward<Handler>(handler),
-            std::forward<Args>(args));
+            std::forward<Args>(args)...);
     }
 
     template <class Protocol, class Message, typename Handler, typename... Args>
     void send(Message&& message, Handler&& handler, Args&&... args)
     {
         protocol::send(std::forward<Message>(message),
-            std::forward<Handler>(handler), std::forward<Args>(args));
+            std::forward<Handler>(handler), std::forward<Args>(args)...);
     }
 
     /// Subscribe to channel messages by type.
@@ -244,7 +245,7 @@ public:
     void subscribe(Handler&& handler, Args&&... args)
     {
         protocol::subscribe<Message>(std::forward<Handler>(handler),
-            std::forward<Args>(args));
+            std::forward<Args>(args)...);
     }
 
     bool stranded() const
@@ -307,7 +308,7 @@ public:
         return protocol::handle_send(ec, command);
     }
 
-    virtual const std::string& name() const
+    const std::string& name() const override
     {
         static const std::string name{ "name" };
         return name;
