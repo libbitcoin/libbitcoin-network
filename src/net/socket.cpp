@@ -62,7 +62,8 @@ void socket::stop()
     stopped_.store(true, std::memory_order_relaxed);
 
     // Stop is posted to strand to protect the socket.
-    post(strand_, std::bind(&socket::do_stop, shared_from_this()));
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_stop, shared_from_this()));
 }
 
 // private
