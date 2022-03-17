@@ -79,6 +79,7 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
     BOOST_REQUIRE(&instance->get_strand() == &instance->strand());
     BOOST_REQUIRE(instance->get_authority() == instance->authority());
     BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::]");
+    instance->stop();
 }
 
 BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
@@ -112,10 +113,10 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
         BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::]");
     });
 
-    // Stopping the socket does not cancel the acceptor.
-    ////instance->stop();
+    // Stopping the socket does not cancel the acceptor but precludes assertion.
+    instance->stop();
 
-    // Acceptor must be canceled to release/invoke the acecpt handler.
+    // Acceptor must be canceled to release/invoke the accept handler.
     // This has the same effect as network::acceptor::stop.
     boost::asio::post(strand, [&]()
     {
@@ -175,8 +176,8 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
     // Test race.
     std::this_thread::sleep_for(microseconds(1));
 
-    // Stopping the socket is not required.
-    ////instance->stop();
+    // Stopping the socket precludes assertion.
+    instance->stop();
 
     pool.stop();
     pool.join();
@@ -198,8 +199,8 @@ BOOST_AUTO_TEST_CASE(socket__write__disconnected__file_system)
     // Test race.
     std::this_thread::sleep_for(microseconds(1));
 
-    // Stopping the socket is not required.
-    ////instance->stop();
+    // Stopping the socket precludes assertion.
+    instance->stop();
 
     pool.stop();
     pool.join();

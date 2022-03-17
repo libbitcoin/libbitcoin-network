@@ -105,6 +105,9 @@ void acceptor::handle_accept(const code& ec, socket::ptr socket,
 
     if (ec)
     {
+        // Prevent non-stop assertion (accept failed but socket is started).
+        socket->stop();
+
         // Connect result codes return here.
         // Stop result code (error::operation_canceled) return here.
         handler(ec, nullptr);
