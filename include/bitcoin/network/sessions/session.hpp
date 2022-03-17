@@ -97,11 +97,11 @@ protected:
 
     // Properties.
     bool stopped() const noexcept;
-    bool blacklisted(const config::authority& authority) const;
     bool stranded() const;
     size_t address_count() const;
     size_t channel_count() const;
     size_t inbound_channel_count() const;
+    bool blacklisted(const config::authority& authority) const;
     virtual bool inbound() const noexcept;
     virtual bool notify() const noexcept;
 

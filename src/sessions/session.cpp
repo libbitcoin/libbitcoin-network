@@ -59,7 +59,7 @@ void session::start(result_handler handler)
 
     if (!stopped())
     {
-        handler(error::service_stopped);
+        handler(error::operation_failed);
         return;
     }
 
@@ -280,11 +280,6 @@ bool session::stopped() const noexcept
     return stopped_.load(std::memory_order_relaxed);
 }
 
-bool session::blacklisted(const config::authority& authority) const
-{
-    return contains(settings().blacklists, authority);
-}
-
 bool session::stranded() const
 {
     return network_.stranded();
@@ -303,6 +298,11 @@ size_t session::channel_count() const
 size_t session::inbound_channel_count() const
 {
     return network_.inbound_channel_count();
+}
+
+bool session::blacklisted(const config::authority& authority) const
+{
+    return contains(settings().blacklists, authority);
 }
 
 bool session::inbound() const noexcept
