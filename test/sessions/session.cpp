@@ -183,6 +183,31 @@ public:
         return session::stopped();
     }
 
+    bool stranded() const
+    {
+        return session::stranded();
+    }
+
+    size_t address_count() const
+    {
+        return session::address_count();
+    }
+
+    size_t channel_count() const
+    {
+        return session::channel_count();
+    }
+
+    size_t inbound_channel_count() const
+    {
+        return session::inbound_channel_count();
+    }
+
+    bool blacklisted(const config::authority& authority) const
+    {
+        return session::blacklisted(authority);
+    }
+
     bool inbound() const noexcept
     {
         return session::inbound();
@@ -201,16 +226,6 @@ public:
 
     // Handshake
 
-    bool attached_handshake() const
-    {
-        return handshaked_;
-    }
-
-    bool require_attached_handshake() const
-    {
-        return handshake_.get_future().get();
-    }
-
     void attach_handshake(const channel::ptr& channel,
         result_handler handshake) const override
     {
@@ -224,7 +239,26 @@ public:
         handshake(channel->stopped() ? error::channel_stopped : error::success);
     }
 
+    bool attached_handshake() const
+    {
+        return handshaked_;
+    }
+
+    bool require_attached_handshake() const
+    {
+        return handshake_.get_future().get();
+    }
+
     // Protocols
+
+    void attach_protocols(const channel::ptr&) const override
+    {
+        if (!protocoled_)
+        {
+            protocoled_ = true;
+            protocols_.set_value(true);
+        }
+    }
 
     bool attached_protocol() const
     {
@@ -234,15 +268,6 @@ public:
     bool require_attached_protocol() const
     {
         return protocols_.get_future().get();
-    }
-
-    void attach_protocols(const channel::ptr&) const override
-    {
-        if (!protocoled_)
-        {
-            protocoled_ = true;
-            protocols_.set_value(true);
-        }
     }
 
 private:
@@ -264,23 +289,31 @@ BOOST_AUTO_TEST_CASE(session__construct__always__expected_settings)
     BOOST_REQUIRE_EQUAL(session.settings().threads, expected);
 }
 
-BOOST_AUTO_TEST_CASE(session__notify__always__true)
-{
-    settings set(selection::mainnet);
-    p2p net(set);
-    mock_session session(net);
-    BOOST_REQUIRE(session.notify());
-}
+// properties
 
-BOOST_AUTO_TEST_CASE(session__inbound__always__true)
+BOOST_AUTO_TEST_CASE(session__properties__default__expected)
 {
     settings set(selection::mainnet);
     p2p net(set);
     mock_session session(net);
+    BOOST_REQUIRE(session.stopped());
+    BOOST_REQUIRE(!session.stranded());
+    BOOST_REQUIRE_EQUAL(session.address_count(), zero);
+    BOOST_REQUIRE_EQUAL(session.channel_count(), zero);
+    BOOST_REQUIRE_EQUAL(session.inbound_channel_count(), zero);;
+    BOOST_REQUIRE(!session.blacklisted({ "[2001:db8::2]", 42 }));
+    BOOST_REQUIRE(session.notify());
     BOOST_REQUIRE(!session.inbound());
 }
 
-// start/stop
+// utilities
+
+BOOST_AUTO_TEST_CASE(session__utilities__always__expected)
+{
+    BOOST_REQUIRE(true);
+}
+
+// stop
 
 BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
 {
@@ -299,7 +332,9 @@ BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
     BOOST_REQUIRE(stopped.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(session__stop__started__stopped)
+// start
+
+BOOST_AUTO_TEST_CASE(session__start__stop__stopped)
 {
     settings set(selection::mainnet);
     p2p net(set);
@@ -484,9 +519,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
             });
     });
 
-    BOOST_REQUIRE(session->require_attached_handshake());
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::service_stopped);
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
+    BOOST_REQUIRE(session->require_attached_handshake());
 
     // Channel stopped by heading read fail, then by network.store code (network stopped).
     BOOST_REQUIRE(channel->stopped());
@@ -516,11 +551,12 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
     BOOST_REQUIRE(!net.unstore_found());
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__network_started__todo)
+BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_channel_service_stopped_pent_store_succeeded)
 {
     settings set(selection::mainnet);
     set.host_pool_capacity = 0;
     mock_p2p net(set);
+    auto session = std::make_shared<mock_session>(net);
 
     std::promise<code> started_net;
     boost::asio::post(net.strand(), [&net, &started_net]()
@@ -532,8 +568,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_started__todo)
     });
 
     BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
-
-    auto session = std::make_shared<mock_session>(net);
 
     std::promise<code> started;
     boost::asio::post(net.strand(), [=, &started]()
@@ -565,10 +599,10 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_started__todo)
             });
     });
 
-    // Channel stopped on heading read failure.
-    BOOST_REQUIRE(session->require_attached_handshake());
+    // Channel stopped by heading read fail.
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
+    BOOST_REQUIRE(session->require_attached_handshake());
 
     // Channel stopped by heading read fail, stop method called by session.
     BOOST_REQUIRE(channel->stopped());
@@ -604,14 +638,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_started__todo)
 // create_connector
 // create_connectors
 
-// stopped
-// blacklisted
-// stranded
-// address_count
-// channel_count
-// inbound_channel_count
-// inbound
-
 BOOST_AUTO_TEST_CASE(session__inbound__always__false)
 {
     settings set(selection::mainnet);
@@ -619,14 +645,5 @@ BOOST_AUTO_TEST_CASE(session__inbound__always__false)
     mock_session session(net);
     BOOST_REQUIRE(!session.inbound());
 }
-
-// notify
-
-// fetch
-// fetches
-// save
-// saves
-
-
 
 BOOST_AUTO_TEST_SUITE_END()
