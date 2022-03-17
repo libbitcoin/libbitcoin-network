@@ -142,7 +142,34 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
         return;
     }
 
-    start_channel(channel, BIND2(handle_channel_start, _1, channel), counter);
+    start_channel(channel,
+        BIND2(handle_channel_start, _1, channel),
+        counter);
+}
+
+void session_seed::attach_handshake(const channel::ptr& channel,
+    result_handler handshake) const
+{
+    BC_ASSERT_MSG(channel->stranded(), "strand");
+
+    // Don't use configured services or relay for seeding.
+    const auto relay = false;
+    const auto own_version = settings().protocol_maximum;
+    const auto own_services = messages::service::node_none;
+    const auto invalid_services = settings().invalid_services;
+    const auto minimum_version = settings().protocol_minimum;
+    const auto minimum_services = messages::service::node_none;
+
+    // Reject messages are not handled until bip61 (70002).
+    // The negotiated_version is initialized to the configured maximum.
+    if (channel->negotiated_version() >= messages::level::bip61)
+        channel->do_attach<protocol_version_70002>(*this, own_version,
+            own_services, invalid_services, minimum_version, minimum_services,
+            relay)->start(handshake);
+    else
+        channel->do_attach<protocol_version_31402>(*this, own_version,
+            own_services, invalid_services, minimum_version, minimum_services)
+            ->start(handshake);
 }
 
 void session_seed::handle_channel_start(const code& ec, channel::ptr)
@@ -204,31 +231,6 @@ void session_seed::handle_complete(const code& ec, size_t start_size,
         // Not increased and none remaining, so signal unsuccessful.
         counter(error::seeding_unsuccessful);
     }
-}
-
-void session_seed::attach_handshake(const channel::ptr& channel,
-    result_handler handshake) const
-{
-    BC_ASSERT_MSG(channel->stranded(), "strand");
-
-    // Don't use configured services or relay for seeding.
-    const auto relay = false;
-    const auto own_version = settings().protocol_maximum;
-    const auto own_services = messages::service::node_none;
-    const auto invalid_services = settings().invalid_services;
-    const auto minimum_version = settings().protocol_minimum;
-    const auto minimum_services = messages::service::node_none;
-
-    // Reject messages are not handled until bip61 (70002).
-    // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= messages::level::bip61)
-        channel->do_attach<protocol_version_70002>(*this, own_version,
-            own_services, invalid_services, minimum_version, minimum_services,
-            relay)->start(handshake);
-    else
-        channel->do_attach<protocol_version_31402>(*this, own_version,
-            own_services, invalid_services, minimum_version, minimum_services)
-            ->start(handshake);
 }
 
 } // namespace network

@@ -88,6 +88,7 @@ void session_manual::connect(const authority& host, channel_handler handler)
 
     // BUGBUG: this accumulates connectors until stop (leak).
     // TODO: requires subscription removal on completion.
+    // Required for premature stop.
     stop_subscriber_->subscribe([=](const code&)
     {
         connector->stop();
@@ -144,6 +145,11 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
         BIND4(handle_channel_start, _1, host, channel, handler),
         BIND4(handle_channel_stop, _1, host, connector, handler));
 }
+
+////void session_manual::attach_handshake(const channel::ptr& channel,
+////    result_handler handshake) const
+////{
+////}
 
 void session_manual::handle_channel_start(const code& ec,
     const authority& host, channel::ptr channel, channel_handler handler)

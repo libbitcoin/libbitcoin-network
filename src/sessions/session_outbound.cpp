@@ -130,6 +130,33 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
         BIND2(handle_channel_stop, _1, connectors));
 }
 
+void session_outbound::attach_handshake(const channel::ptr& channel,
+    result_handler handshake) const
+{
+    BC_ASSERT_MSG(channel->stranded(), "strand");
+
+    const auto relay = settings().relay_transactions;
+    const auto own_version = settings().protocol_maximum;
+    const auto own_services = settings().services;
+    const auto invalid_services = settings().invalid_services;
+    const auto minimum_version = settings().protocol_minimum;
+
+    // Require peer to serve network (and witness if configured on self).
+    const auto min_service = (own_services & messages::service::node_witness) |
+        messages::service::node_network;
+
+    // Reject messages are not handled until bip61 (70002).
+    // The negotiated_version is initialized to the configured maximum.
+    if (channel->negotiated_version() >= messages::level::bip61)
+        channel->do_attach<protocol_version_70002>(*this, own_version,
+            own_services, invalid_services, minimum_version, min_service, relay)
+            ->start(handshake);
+    else
+        channel->do_attach<protocol_version_31402>(*this, own_version,
+            own_services, invalid_services, minimum_version, min_service)
+            ->start(handshake);
+}
+
 void session_outbound::handle_channel_start(const code& ec, channel::ptr)
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -164,33 +191,6 @@ void session_outbound::handle_channel_stop(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "strand");
     start_connect(connectors);
-}
-
-void session_outbound::attach_handshake(const channel::ptr& channel,
-    result_handler handshake) const
-{
-    BC_ASSERT_MSG(channel->stranded(), "strand");
-
-    const auto relay = settings().relay_transactions;
-    const auto own_version = settings().protocol_maximum;
-    const auto own_services = settings().services;
-    const auto invalid_services = settings().invalid_services;
-    const auto minimum_version = settings().protocol_minimum;
-
-    // Require peer to serve network (and witness if configured on self).
-    const auto min_service = (own_services & messages::service::node_witness) |
-        messages::service::node_network;
-
-    // Reject messages are not handled until bip61 (70002).
-    // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= messages::level::bip61)
-        channel->do_attach<protocol_version_70002>(*this, own_version,
-            own_services, invalid_services, minimum_version, min_service, relay)
-            ->start(handshake);
-    else
-        channel->do_attach<protocol_version_31402>(*this, own_version,
-            own_services, invalid_services, minimum_version, min_service)
-            ->start(handshake);
 }
 
 // Batch connect.
