@@ -82,7 +82,7 @@ protected:
     // Channel sequence.
 
     // Call from base to initialize a new channel.
-    void start_channel(channel::ptr channel,
+    virtual void start_channel(channel::ptr channel,
         result_handler handle_started, result_handler handle_stopped);
 
     // Override to change default protocol attachments.
