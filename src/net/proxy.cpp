@@ -120,14 +120,10 @@ void proxy::do_subscribe_stop2(result_handler handler, result_handler complete)
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped())
-    {
         handler(error::channel_stopped);
-        complete(error::success);
-        return;
-    }
+    else
+        stop_subscriber_->subscribe(std::move(handler));
 
-    // Not invoked if subscriber is stopped.
-    stop_subscriber_->subscribe(std::move(handler));
     complete(error::success);
 }
 
