@@ -194,7 +194,11 @@ void p2p::do_close()
     // Notify and delete subscribers to channel notifications.
     channel_subscriber_->stop(error::service_stopped, nullptr);
 
-    // Release all channels.
+    // Stop all channels.
+    for (const auto& channel: channels_)
+        channel->stop(error::service_stopped);
+
+    // Free all channels.
     channels_.clear();
 
     // Serialize hosts file (log results).
@@ -429,28 +433,40 @@ code p2p::store(channel::ptr channel, bool notify, bool inbound)
     if (notify)
         channel_subscriber_->notify(error::success, channel);
 
-    // TODO: guard overflow.
     if (inbound)
+    {
         ++inbound_channel_count_;
+        BC_ASSERT_MSG(!is_zero(inbound_channel_count_.load()), "overflow");
+    }
 
-    // TODO: guard overflow.
     ++channel_count_;
+    BC_ASSERT_MSG(!is_zero(channel_count_.load()), "overflow");
+
     channels_.insert(channel);
     return error::success;
 }
 
-void p2p::unstore(channel::ptr channel, bool inbound)
+bool p2p::unstore(channel::ptr channel, bool inbound)
 {
     BC_ASSERT_MSG(stranded(), "channels_, authorities_");
 
-    // TODO: guard underflow.
-    if (inbound)
-        --inbound_channel_count_;
+    // Erasure must be idempotent, as the channel may not have been stored.
+    if (!is_zero(channels_.erase(channel)))
+    {
+        if (inbound)
+        {
+            BC_ASSERT_MSG(!is_zero(inbound_channel_count_.load()), "underflow");
+            --inbound_channel_count_;
+        }
 
-    // TODO: guard underflow.
-    --channel_count_;
-    channels_.erase(channel);
-    authorities_.erase(channel->authority());
+        BC_ASSERT_MSG(!is_zero(channel_count_.load()), "underflow");
+        --channel_count_;
+
+        authorities_.erase(channel->authority());
+        return true;
+    }
+
+    return false;
 }
 
 // Specializations (protected).
