@@ -165,8 +165,10 @@ public:
     // Create mock acceptor to inject mock channel.
     acceptor::ptr create_acceptor() override
     {
-        return std::make_shared<Acceptor>(strand(), service(),
+        acceptor = std::make_shared<Acceptor>(strand(), service(),
             network_settings());
+
+        return acceptor;
     }
 };
 
@@ -274,7 +276,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__stopped)
     BOOST_REQUIRE(session.stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__start__started__operation_failed)
+BOOST_AUTO_TEST_CASE(session_inbound__start__started__service_stopped)
 {
     settings set(selection::mainnet);
     set.inbound_connections = 1;
@@ -298,14 +300,14 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__started__operation_failed)
     std::promise<code> restarted;
     boost::asio::post(net.strand(), [&]()
     {
-        // Already started returns operation_failed.
+        // Already started returns service_stopped.
         session->start([&](const code& ec)
         {
             restarted.set_value(ec);
         });
     });
 
-    BOOST_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
+    BOOST_REQUIRE_EQUAL(restarted.get_future().get(), error::service_stopped);
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
