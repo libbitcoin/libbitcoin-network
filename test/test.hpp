@@ -27,16 +27,6 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network.hpp>
 
- // \vc\tools\msvc\14.16.27023\include\atomic(620) :
- // error C2338 : You've instantiated std::atomic<T> with sizeof(T) equal to
- // 2/4/8 and alignof(T) < sizeof(T). Before VS 2015 Update 2, this would have
- // misbehaved at runtime. VS 2015 Update 2 was fixed to handle this correctly,
- // but the fix inherently changes layout and breaks binary compatibility.
- // Please define _ENABLE_ATOMIC_ALIGNMENT_FIX to acknowledge that you
- // understand this, and that everything you're linking has been compiled with
- // VS 2015 Update 2 (or later).
-#define _ENABLE_ATOMIC_ALIGNMENT_FIX
-
  // copied from libbitcoin-system-test
 
 using namespace bc;
