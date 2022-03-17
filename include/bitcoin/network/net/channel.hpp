@@ -67,7 +67,7 @@ public:
     }
 
     channel(socket::ptr socket, const settings& settings);
-    virtual channel::~channel();
+    virtual ~channel();
 
     void begin() override;
     void stop(const code& ec) override;
