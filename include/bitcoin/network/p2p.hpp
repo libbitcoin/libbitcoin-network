@@ -180,6 +180,23 @@ protected:
     /// Is the strand running in this thread.
     bool stranded() const;
 
+protected:
+    ////friend class session;
+    virtual void pend(uint64_t nonce);
+    virtual void unpend(uint64_t nonce);
+    virtual code store(channel::ptr channel, bool notify, bool inbound);
+    virtual bool unstore(channel::ptr channel, bool inbound);
+
+    ////friend class session;
+    virtual void fetch(hosts::address_item_handler handler) const;
+    virtual void fetches(hosts::address_items_handler handler) const;
+    virtual void dump(const messages::address_item& address,
+        result_handler complete);
+    virtual void save(const messages::address_item& address,
+        result_handler complete);
+    virtual void saves(const messages::address_items& addresses,
+        result_handler complete);
+
 private:
     template <typename Message>
     void do_broadcast(typename Message::ptr message, result_handler handler)
@@ -208,20 +225,6 @@ private:
     void do_connect2(const std::string& hostname, uint16_t port);
     void do_connect3(const std::string& hostname, uint16_t port,
         channel_handler handler);
-
-    ////friend class session;
-    void pend(uint64_t nonce);
-    void unpend(uint64_t nonce);
-    void unstore(channel::ptr channel, bool inbound);
-    code store(channel::ptr channel, bool notify, bool inbound);
-
-    ////friend class session;
-    void fetch(hosts::address_item_handler handler) const;
-    void fetches(hosts::address_items_handler handler) const;
-    void dump(const messages::address_item& address, result_handler complete);
-    void save(const messages::address_item& address, result_handler complete);
-    void saves(const messages::address_items& addresses,
-        result_handler complete);
 
     void do_fetch(hosts::address_item_handler handler) const;
     void do_fetches(hosts::address_items_handler handler) const;
