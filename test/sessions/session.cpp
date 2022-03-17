@@ -61,8 +61,8 @@ public:
     }
 
 private:
-    std::atomic<bool> begun_;
-    std::atomic<code> stop_code_;
+    std::atomic<bool> begun_{ false };
+    std::atomic<code> stop_code_{ error::success };
 };
 
 class mock_p2p
@@ -152,17 +152,17 @@ protected:
     }
 
 private:
-    std::atomic<uint64_t> pend_;
-    std::atomic<uint64_t> unpend_;
+    std::atomic<uint64_t> pend_{ 0 };
+    std::atomic<uint64_t> unpend_{ 0 };
 
-    std::atomic<uint64_t> store_nonce_;
-    std::atomic<bool> store_notify_;
-    std::atomic<bool> store_inbound_;
-    std::atomic<code> store_result_;
+    std::atomic<uint64_t> store_nonce_{ 0 };
+    std::atomic<bool> store_notify_{ false };
+    std::atomic<bool> store_inbound_{ false };
+    std::atomic<code> store_result_{ error::success };
 
-    std::atomic<uint64_t> unstore_nonce_;
-    std::atomic<bool> unstore_inbound_;
-    std::atomic<bool> unstore_found_;
+    std::atomic<uint64_t> unstore_nonce_{ 0 };
+    std::atomic<bool> unstore_inbound_{ false };
+    std::atomic<bool> unstore_found_{ false };
 };
 
 class mock_session
