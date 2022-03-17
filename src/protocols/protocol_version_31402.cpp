@@ -78,6 +78,13 @@ void protocol_version_31402::start(result_handler handle_event)
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
+    // Any protocol might be on a stopped channel upon start.
+    if (stopped())
+    {
+        handle_event(error::channel_stopped);
+        return;
+    }
+
     // TODO: just use a state member variable, this is stranded.
 
     ////// TODO: add custom handle_send here and make this 3 events (see seed).
