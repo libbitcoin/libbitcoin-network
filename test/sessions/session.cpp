@@ -770,7 +770,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
-    // Unstored on close, but may not found because channels cleared in a race.
+    // Unstored on close, but may not be found because channels cleared in a race.
     ////BOOST_REQUIRE(!net.unstore_found());
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
     BOOST_REQUIRE(!net.unstored_inbound());
