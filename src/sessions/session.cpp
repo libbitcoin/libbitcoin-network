@@ -122,7 +122,6 @@ void session::do_attach_handshake(const channel::ptr& channel,
 
     // Channel is started upon creation, this only starts the read loop.
     channel->begin();
-
     attach_handshake(channel, handshake);
 }
 
@@ -131,9 +130,7 @@ void session::attach_handshake(const channel::ptr& channel,
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
-    // Protocols are attached by the channel strand, which ensures a channel
-    // stop, which frees the stop protocol subscriptions, will not be missed.
-
+    // Channel remains started through attachment.
     // Handshake protocols must invoke handler upon completion or failure.
     if (settings().protocol_maximum >= messages::level::bip61)
         channel->do_attach<protocol_version_70002>(*this)->start(handshake);
