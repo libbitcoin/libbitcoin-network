@@ -262,6 +262,7 @@ public:
         if (!protocoled_)
         {
             protocoled_ = true;
+            require_protocoled_.set_value(true);
         }
     }
 
@@ -270,9 +271,15 @@ public:
         return protocoled_;
     }
 
+    bool require_attached_protocol() const
+    {
+        return require_protocoled_.get_future().get();
+    }
+
 private:
     mutable bool handshaked_{ false };
     mutable bool protocoled_{ false };
+    mutable std::promise<bool> require_protocoled_;
 };
 
 // construct/settings
@@ -734,7 +741,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
     BOOST_REQUIRE(channel->begun());
     BOOST_REQUIRE(session->attached_handshake());
-    BOOST_REQUIRE(session->attached_protocol());
+    BOOST_REQUIRE(session->require_attached_protocol());
     BOOST_REQUIRE(!channel->stopped());
 
     // Channel pent and store succeeded.
