@@ -70,7 +70,7 @@ void protocol_reject_70002::handle_receive_reject(const code& ec,
     BC_ASSERT_MSG(stranded(), "stranded");
 
     // protocol_events is the base class only for this check.
-    if (stopped(ec))
+    if (stopping(ec))
         return;
 
     if (ec)

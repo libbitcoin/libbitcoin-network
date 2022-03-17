@@ -34,21 +34,14 @@ using namespace std::placeholders;
 
 protocol_events::protocol_events(const session& session, channel::ptr channel)
   : protocol(session, channel),
-    handler_([](const code&) {}),
-    stopped_(false)
+    handler_([](const code&) {})
 {
 }
 
 // Properties.
 // ----------------------------------------------------------------------------
 
-bool protocol_events::stopped() const
-{
-    // Used for context-free stop testing.
-    return stopped_;
-}
-
-bool protocol_events::stopped(const code& ec) const
+bool protocol_events::stopping(const code& ec) const
 {
     // The service stop code may also make its way into protocol handlers.
     return stopped() || ec == error::channel_stopped ||
@@ -77,7 +70,7 @@ void protocol_events::handle_stopped(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (!stopped(ec))
+    if (!stopping(ec))
     {
         LOG_VERBOSE(LOG_NETWORK)
             << "Stop protocol_" << name() << " on [" << authority() << "] "
@@ -95,9 +88,9 @@ void protocol_events::set_event(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
+    if (stopping(ec))
     {
-        stopped_ = true;
+        stop(ec);
         return;
     }
     

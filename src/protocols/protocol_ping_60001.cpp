@@ -50,7 +50,7 @@ void protocol_ping_60001::send_ping(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
+    if (stopping(ec))
         return;
 
     if (ec && ec != error::channel_timeout)
@@ -82,7 +82,7 @@ void protocol_ping_60001::handle_send_ping(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
+    if (stopping(ec))
         return;
 
     if (ec)
@@ -100,7 +100,7 @@ void protocol_ping_60001::handle_receive_ping(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
+    if (stopping(ec))
         return;
 
     if (ec)
@@ -120,7 +120,7 @@ void protocol_ping_60001::handle_receive_pong(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
+    if (stopping(ec))
         return;
 
     if (ec)

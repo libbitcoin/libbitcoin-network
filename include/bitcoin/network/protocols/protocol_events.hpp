@@ -43,17 +43,13 @@ protected:
     /// Invoke the event handler.
     virtual void set_event(const code& ec);
 
-    /// Determine if the event handler has been cleared.
-    virtual bool stopped() const;
-
     /// Determine if the code is a stop code or the handler has been cleared.
-    virtual bool stopped(const code& ec) const;
+    virtual bool stopping(const code& ec) const;
 
 private:
     void handle_stopped(const code& ec);
 
     result_handler handler_;
-    std::atomic<bool> stopped_;
 };
 
 } // namespace network

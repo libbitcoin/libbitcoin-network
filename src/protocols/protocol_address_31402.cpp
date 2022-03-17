@@ -79,7 +79,7 @@ void protocol_address_31402::handle_receive_address(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
+    if (stopping(ec))
         return;
 
     LOG_VERBOSE(LOG_NETWORK)
@@ -95,7 +95,7 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
+    if (stopping(ec))
         return;
 
     fetches(BIND2(handle_fetch_addresses, _1, _2));

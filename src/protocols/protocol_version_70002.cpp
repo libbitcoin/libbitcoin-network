@@ -110,7 +110,7 @@ void protocol_version_70002::handle_receive_reject(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
+    if (stopping(ec))
         return;
 
     if (ec)

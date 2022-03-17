@@ -87,6 +87,7 @@ protected:
     }
 
     bool stranded() const;
+    bool stopped() const;
     config::authority authority() const;
     uint64_t nonce() const noexcept;
     messages::version::ptr peer_version() const noexcept;

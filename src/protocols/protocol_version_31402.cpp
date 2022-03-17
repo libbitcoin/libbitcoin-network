@@ -72,18 +72,11 @@ protocol_version_31402::protocol_version_31402(const session& session,
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-
 // handle_event must be invoked upon completion or failure.
 void protocol_version_31402::start(result_handler handle_event)
 {
     BC_ASSERT_MSG(stranded(), "stranded");
-
-    // Any protocol might be on a stopped channel upon start.
-    if (stopped())
-    {
-        handle_event(error::channel_stopped);
-        return;
-    }
+    BC_ASSERT_MSG(!stopped(), "channel stopped");
 
     // TODO: just use a state member variable, this is stranded.
 
@@ -144,7 +137,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
+    if (stopping(ec))
         return;
 
     if (ec)
@@ -249,7 +242,7 @@ void protocol_version_31402::handle_receive_acknowledge(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
+    if (stopping(ec))
         return;
 
     if (ec)

@@ -61,7 +61,7 @@ void protocol_ping_31402::send_ping(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopped(ec))
+    if (stopping(ec))
         return;
 
     if (ec && ec != error::channel_timeout)

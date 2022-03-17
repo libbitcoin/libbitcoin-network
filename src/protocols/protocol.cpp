@@ -48,6 +48,11 @@ bool protocol::stranded() const
     return channel_->stranded();
 }
 
+bool protocol::stopped() const
+{
+    return channel_->stopped();
+}
+
 config::authority protocol::authority() const
 {
     return channel_->authority();
