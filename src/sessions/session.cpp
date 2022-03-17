@@ -86,16 +86,15 @@ void session::start_channel(channel::ptr channel, result_handler started,
 
     if (session::stopped())
     {
+        channel->stop(error::service_stopped);
         started(error::service_stopped);
         stopped(error::service_stopped);
         return;
     }
 
+    // Unpend in handle_handshake (success or failure).
     if (!inbound())
         network_.pend(channel->nonce());
-
-    // Channel is started upon creation, this only starts the read loop.
-    channel->begin();
 
     result_handler start =
         BIND4(handle_channel_start, _1, channel, std::move(started),
@@ -116,7 +115,13 @@ void session::do_attach_handshake(const channel::ptr& channel,
 
     // Do not allow attachment if already stopped as attachments cannot clear.
     if (channel->stopped())
+    {
+        handshake(error::channel_stopped);
         return;
+    }
+
+    // Channel is started upon creation, this only starts the read loop.
+    channel->begin();
 
     attach_handshake(channel, handshake);
 }
@@ -125,6 +130,9 @@ void session::attach_handshake(const channel::ptr& channel,
     result_handler handshake) const
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+
+    // Protocols are attached by the channel strand, which ensures a channel
+    // stop, which frees the stop protocol subscriptions, will not be missed.
 
     // Handshake protocols must invoke handler upon completion or failure.
     if (settings().protocol_maximum >= messages::level::bip61)
@@ -149,27 +157,22 @@ void session::do_handle_handshake(const code& ec, channel::ptr channel,
     if (!inbound())
         network_.unpend(channel->nonce());
 
-    if (ec)
-    {
-        start(ec);
-        return;
-    }
-
-    // This registers the channel for broadcasts.
-    start(network_.store(channel, notify(), inbound()));
+    // Handles channel stopped or protocol start code.
+    // This retains the channel and allows broadcasts, unstore if no code.
+    start(ec ? ec : network_.store(channel, notify(), inbound()));
 }
 
 // Context free method.
 void session::handle_channel_start(const code& ec, channel::ptr channel,
     result_handler started, result_handler stopped)
 {
-    result_handler stop =
-        BIND3(handle_channel_stopped, _1, channel, std::move(stopped));
-
     result_handler start =
         BIND3(handle_channel_started, _1, channel, std::move(started));
 
-    // Handles network_.store code.
+    result_handler stop =
+        BIND3(handle_channel_stopped, _1, channel, std::move(stopped));
+
+    // Handles network_.store, channel stopped or protocol start code.
     if (ec)
     {
         start(ec);
@@ -177,8 +180,9 @@ void session::handle_channel_start(const code& ec, channel::ptr channel,
         return;
     }
 
-    // This registers the channel for service stop notification.
-    network_.subscribe_close(std::move(stop), std::move(start));
+    // Capture the channel stop handler in the channel.
+    // If stopped, or upon channel stop, handler is invoked.
+    channel->subscribe_stop(std::move(stop), std::move(start));
 }
 
 void session::handle_channel_started(const code& ec, channel::ptr channel,
@@ -194,8 +198,12 @@ void session::do_handle_channel_started(const code& ec, channel::ptr channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    // Handles network_.subscribe_close code.
+    // Handles channel subscribe_stop code.
     started(ec);
+
+    // Do not attach protocols if failed.
+    if (ec)
+        return;
 
     // Switch to channel context.
     boost::asio::post(channel->strand(),
@@ -232,10 +240,12 @@ void session::do_handle_channel_stopped(const code& ec, channel::ptr channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    network_.unstore(channel, inbound());
+    // Assume stop notification, but may be subscribe failure (idempotent).
+    /*bool*/ network_.unstore(channel, inbound());
+
     channel->stop(ec);
 
-    // Handles stop reason code.
+    // Handles stop reason code, stop subscribe failure or stop notification.
     stopped(ec);
 }
 
