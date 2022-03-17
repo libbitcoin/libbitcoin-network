@@ -60,9 +60,25 @@ public:
         return stop_code_;
     }
 
-private:
-    std::atomic<bool> begun_{ false };
-    std::atomic<code> stop_code_{ error::success };
+protected:
+    bool begun_{ false };
+    code stop_code_{ error::success };
+};
+
+class mock_channel_no_read
+    : public mock_channel
+{
+public:
+    mock_channel_no_read(socket::ptr socket, const settings& settings)
+      : mock_channel(socket, settings)
+    {
+    }
+
+    void begin() override
+    {
+        begun_ = true;
+        ////channel::begin();
+    }
 };
 
 class mock_p2p
@@ -152,17 +168,17 @@ protected:
     }
 
 private:
-    std::atomic<uint64_t> pend_{ 0 };
-    std::atomic<uint64_t> unpend_{ 0 };
+    uint64_t pend_{ 0 };
+    uint64_t unpend_{ 0 };
 
-    std::atomic<uint64_t> store_nonce_{ 0 };
-    std::atomic<bool> store_notify_{ false };
-    std::atomic<bool> store_inbound_{ false };
-    std::atomic<code> store_result_{ error::success };
+    uint64_t store_nonce_{ 0 };
+    bool store_notify_{ false };
+    bool store_inbound_{ false };
+    code store_result_{ error::success };
 
-    std::atomic<uint64_t> unstore_nonce_{ 0 };
-    std::atomic<bool> unstore_inbound_{ false };
-    std::atomic<bool> unstore_found_{ false };
+    uint64_t unstore_nonce_{ 0 };
+    bool unstore_inbound_{ false };
+    bool unstore_found_{ false };
 };
 
 class mock_session
@@ -224,15 +240,12 @@ public:
         session::start_channel(channel, started, stopped);
     }
 
-    // Handshake
-
     void attach_handshake(const channel::ptr& channel,
         result_handler handshake) const override
     {
         if (!handshaked_)
         {
             handshaked_ = true;
-            handshake_.set_value(true);
         }
 
         // Simulate handshake completion.
@@ -244,19 +257,11 @@ public:
         return handshaked_;
     }
 
-    bool require_attached_handshake() const
-    {
-        return handshake_.get_future().get();
-    }
-
-    // Protocols
-
     void attach_protocols(const channel::ptr&) const override
     {
         if (!protocoled_)
         {
             protocoled_ = true;
-            protocols_.set_value(true);
         }
     }
 
@@ -265,16 +270,9 @@ public:
         return protocoled_;
     }
 
-    bool require_attached_protocol() const
-    {
-        return protocols_.get_future().get();
-    }
-
 private:
     mutable bool handshaked_{ false };
     mutable bool protocoled_{ false };
-    mutable std::promise<bool> handshake_;
-    mutable std::promise<bool> protocols_;
 };
 
 // construct/settings
@@ -302,11 +300,20 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE_EQUAL(session.channel_count(), zero);
     BOOST_REQUIRE_EQUAL(session.inbound_channel_count(), zero);;
     BOOST_REQUIRE(!session.blacklisted({ "[2001:db8::2]", 42 }));
-    BOOST_REQUIRE(session.notify());
     BOOST_REQUIRE(!session.inbound());
+    BOOST_REQUIRE(session.notify());
 }
 
-// utilities
+// factories:
+// create_acceptor
+// create_connector
+// create_connectors
+
+// utilities:
+// fetch
+// fetches
+// save
+// saves
 
 BOOST_AUTO_TEST_CASE(session__utilities__always__expected)
 {
@@ -334,7 +341,46 @@ BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
 
 // start
 
-BOOST_AUTO_TEST_CASE(session__start__stop__stopped)
+BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
+{
+    settings set(selection::mainnet);
+    p2p net(set);
+    mock_session session(net);
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [&]()
+    {
+        session.start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+
+    std::promise<code> restarted;
+    boost::asio::post(net.strand(), [&]()
+    {
+        session.start([&](const code& ec)
+        {
+            restarted.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [&]()
+    {
+        session.stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session.stopped());
+}
+
+BOOST_AUTO_TEST_CASE(session__start__stop_success)
 {
     settings set(selection::mainnet);
     p2p net(set);
@@ -390,11 +436,13 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
             });
     });
 
+    // Channel stopped early due to session being stopped (not started).
     BOOST_REQUIRE(!session->attached_handshake());
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::service_stopped);
+    BOOST_REQUIRE(!channel->begun());
+    BOOST_REQUIRE(!session->attached_handshake());
+    BOOST_REQUIRE(!session->attached_protocol());
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
-
-    // Channel stopped early due to session being stopped (not started).
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
@@ -454,11 +502,12 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
             });
     });
 
-    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::channel_stopped);
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
-    BOOST_REQUIRE(!session->attached_handshake());
-
     // Channel was already stopped, but re-stopped explicitly with expected code.
+    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::channel_stopped);
+    BOOST_REQUIRE(!channel->begun());
+    BOOST_REQUIRE(!session->attached_handshake());
+    BOOST_REQUIRE(!session->attached_protocol());
+    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::channel_stopped);
 
@@ -519,11 +568,12 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
             });
     });
 
-    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::service_stopped);
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
-    BOOST_REQUIRE(session->require_attached_handshake());
-
     // Channel stopped by heading read fail, then by network.store code (network stopped).
+    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::service_stopped);
+    BOOST_REQUIRE(channel->begun());
+    BOOST_REQUIRE(session->attached_handshake());
+    BOOST_REQUIRE(!session->attached_protocol());
+    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
@@ -599,12 +649,12 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
             });
     });
 
-    // Channel stopped by heading read fail.
-    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
-    BOOST_REQUIRE(session->require_attached_handshake());
-
     // Channel stopped by heading read fail, stop method called by session.
+    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
+    BOOST_REQUIRE(channel->begun());
+    BOOST_REQUIRE(session->attached_handshake());
+    BOOST_REQUIRE(!session->attached_protocol());
+    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::channel_stopped);
 
@@ -632,18 +682,91 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE(net.unstore_found());
 }
 
-// attach_handshake
-// attach_protocols
-// create_acceptor
-// create_connector
-// create_connectors
-
-BOOST_AUTO_TEST_CASE(session__inbound__always__false)
+BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_channel_success_pent_store_succeeded)
 {
     settings set(selection::mainnet);
-    p2p net(set);
-    mock_session session(net);
-    BOOST_REQUIRE(!session.inbound());
+    set.host_pool_capacity = 0;
+    mock_p2p net(set);
+    auto session = std::make_shared<mock_session>(net);
+
+    std::promise<code> started_net;
+    boost::asio::post(net.strand(), [&net, &started_net]()
+    {
+        net.start([&](const code& ec)
+        {
+            started_net.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]()
+    {
+        session->start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+
+    const auto socket = std::make_shared<network::socket>(net.service());
+    const auto channel = std::make_shared<mock_channel_no_read>(socket,
+        session->settings());
+    
+    std::promise<code> started_channel;
+    std::promise<code> stopped_channel;
+    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]()
+    {
+        session->start_channel(channel,
+            [&](const code& ec)
+            {
+                started_channel.set_value(ec);
+            },
+            [&](const code& ec)
+            {
+                stopped_channel.set_value(ec);
+            });
+    });
+
+    // Channel stopped by heading read fail, stop method called by session.
+    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
+    BOOST_REQUIRE(channel->begun());
+    BOOST_REQUIRE(session->attached_handshake());
+    BOOST_REQUIRE(session->attached_protocol());
+    BOOST_REQUIRE(!channel->stopped());
+
+    // Channel pent and store succeeded.
+    BOOST_REQUIRE_EQUAL(net.pent_nonce(), channel->nonce());
+    BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
+    BOOST_REQUIRE_EQUAL(net.stored_result(), error::success);
+    BOOST_REQUIRE(!net.stored_inbound());
+    BOOST_REQUIRE(net.stored_notify());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(!channel->stopped());
+
+    // Channel was unpent but and found on unstore.
+    BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
+
+    net.close();
+    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
+    BOOST_REQUIRE(channel->stopped());
+    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
+
+    // Unstored on close, but may not found because channels cleared in a race.
+    ////BOOST_REQUIRE(!net.unstore_found());
+    BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
+    BOOST_REQUIRE(!net.unstored_inbound());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
