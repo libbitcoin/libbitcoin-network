@@ -90,6 +90,62 @@ public:
     {
     }
 
+    acceptor::ptr create_acceptor() override
+    {
+        ++acceptors_;
+        return p2p::create_acceptor();
+    }
+
+    size_t acceptors() const
+    {
+        return acceptors_;
+    }
+
+    connector::ptr create_connector() override
+    {
+        ++connectors_;
+        return p2p::create_connector();
+    }
+
+    size_t connectors() const
+    {
+        return connectors_;
+    }
+
+    void fetch(hosts::address_item_handler handler) const override
+    {
+        handler(error::invalid_magic, {});
+    }
+
+    void fetches(hosts::address_items_handler handler) const override
+    {
+        handler(error::bad_stream, {});
+    }
+
+    void save(const messages::address_item& address,
+        result_handler complete) override
+    {
+        saved_ = address;
+        complete(error::invalid_magic);
+    }
+
+    const messages::address_item& saved() const
+    {
+        return saved_;
+    }
+
+    void saves(const messages::address_items& addresses,
+        result_handler complete) override
+    {
+        saveds_ = addresses;
+        complete(error::bad_stream);
+    }
+
+    const messages::address_items& saveds() const
+    {
+        return saveds_;
+    }
+
     uint64_t pent_nonce() const
     {
         return pend_;
@@ -168,6 +224,11 @@ protected:
     }
 
 private:
+    size_t acceptors_{ 0 };
+    size_t connectors_{ 0 };
+    messages::address_item saved_{};
+    messages::address_items saveds_{};
+
     uint64_t pend_{ 0 };
     uint64_t unpend_{ 0 };
 
@@ -185,8 +246,8 @@ class mock_session
   : public session
 {
 public:
-    mock_session(p2p& network)
-      : session(network)
+    mock_session(p2p& network, bool inbound=false, bool notify=true)
+      : session(network), inbound_(inbound), notify_(notify)
     {
     }
 
@@ -202,6 +263,21 @@ public:
     bool stranded() const
     {
         return session::stranded();
+    }
+
+    acceptor::ptr create_acceptor()
+    {
+        return session::create_acceptor();
+    }
+
+    connector::ptr create_connector()
+    {
+        return session::create_connector();
+    }
+
+    connectors_ptr create_connectors(size_t count)
+    {
+        return session::create_connectors(count);
     }
 
     size_t address_count() const
@@ -224,14 +300,36 @@ public:
         return session::blacklisted(authority);
     }
 
-    bool inbound() const noexcept
+    bool inbound() const noexcept override
     {
-        return session::inbound();
+        return inbound_;
     }
 
-    bool notify() const noexcept
+    bool notify() const noexcept override
     {
-        return session::notify();
+        return notify_;
+    }
+
+    void fetch(hosts::address_item_handler handler) const
+    {
+        session::fetch(handler);
+    }
+
+    void fetches(hosts::address_items_handler handler) const
+    {
+        session::fetches(handler);
+    }
+
+    void save(const messages::address_item& address,
+        result_handler complete) const
+    {
+        session::save(address, complete);
+    }
+
+    void saves(const messages::address_items& addresses,
+        result_handler complete) const
+    {
+        session::saves(addresses, complete);
     }
 
     void start_channel(channel::ptr channel, result_handler started,
@@ -277,6 +375,8 @@ public:
     }
 
 private:
+    const bool inbound_;
+    const bool notify_;
     mutable bool handshaked_{ false };
     mutable bool protocoled_{ false };
     mutable std::promise<bool> require_protocoled_;
@@ -311,20 +411,111 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE(session.notify());
 }
 
-// factories:
-// create_acceptor
-// create_connector
-// create_connectors
+// factories
 
-// utilities:
-// fetch
-// fetches
-// save
-// saves
-
-BOOST_AUTO_TEST_CASE(session__utilities__always__expected)
+BOOST_AUTO_TEST_CASE(session__create_acceptor__always__xpected)
 {
-    BOOST_REQUIRE(true);
+    settings set(selection::mainnet);
+    mock_p2p net(set);
+    mock_session session(net);
+    BOOST_REQUIRE(session.create_acceptor());
+    BOOST_REQUIRE_EQUAL(net.acceptors(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(session__create_connector__always__expected)
+{
+    settings set(selection::mainnet);
+    mock_p2p net(set);
+    mock_session session(net);
+    BOOST_REQUIRE(session.create_connector());
+    BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
+}
+
+BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
+{
+    settings set(selection::mainnet);
+    mock_p2p net(set);
+    mock_session session(net);
+    constexpr auto expected = 42u;
+    const auto connectors = session.create_connectors(expected);
+    BOOST_REQUIRE(connectors);
+    BOOST_REQUIRE_EQUAL(connectors->size(), expected);
+    BOOST_REQUIRE_EQUAL(net.connectors(), expected);
+}
+
+// utilities
+
+BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
+{
+    settings set(selection::mainnet);
+    mock_p2p net(set);
+    mock_session session(net);
+
+    std::promise<code> fetched;
+    session.fetch([&](const code& ec, messages::address_item)
+    {
+        fetched.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(fetched.get_future().get(), error::invalid_magic);
+}
+
+BOOST_AUTO_TEST_CASE(session__fetches__always__calls_network)
+{
+    settings set(selection::mainnet);
+    mock_p2p net(set);
+    mock_session session(net);
+
+    std::promise<code> fetched;
+    session.fetches([&](const code& ec, messages::address_items)
+    {
+        fetched.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(fetched.get_future().get(), error::bad_stream);
+}
+
+BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_address)
+{
+    settings set(selection::mainnet);
+    mock_p2p net(set);
+    mock_session session(net);
+
+    std::promise<code> save;
+    session.save({ 42, 24, unspecified_ip_address, 4224u }, [&](const code& ec)
+    {
+        save.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(save.get_future().get(), error::invalid_magic);
+
+    const auto& saved = net.saved();
+    BOOST_REQUIRE_EQUAL(saved.timestamp, 42u);
+    BOOST_REQUIRE_EQUAL(saved.services, 24u);
+    BOOST_REQUIRE_EQUAL(saved.ip, unspecified_ip_address);
+    BOOST_REQUIRE_EQUAL(saved.port, 4224u);
+}
+
+BOOST_AUTO_TEST_CASE(session__saves__always__calls_network_with_expected_addresses)
+{
+    settings set(selection::mainnet);
+    mock_p2p net(set);
+    mock_session session(net);
+
+    std::promise<code> saves;
+    session.saves({ {}, { 42, 24, unspecified_ip_address, 4224u } }, [&](const code& ec)
+    {
+        saves.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(saves.get_future().get(), error::bad_stream);
+
+    const auto& saveds = net.saveds();
+    BOOST_REQUIRE_EQUAL(saveds.size(), 2u);
+    BOOST_REQUIRE_EQUAL(saveds[1].timestamp, 42u);
+    BOOST_REQUIRE_EQUAL(saveds[1].services, 24u);
+    BOOST_REQUIRE_EQUAL(saveds[1].ip, unspecified_ip_address);
+    BOOST_REQUIRE_EQUAL(saveds[1].port, 4224u);
 }
 
 // stop
@@ -689,12 +880,15 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE(net.unstore_found());
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_channel_success_pent_store_succeeded)
+BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expected_channel_success_pent_store_succeeded)
 {
     settings set(selection::mainnet);
     set.host_pool_capacity = 0;
     mock_p2p net(set);
-    auto session = std::make_shared<mock_session>(net);
+
+    constexpr auto expected_inbound = false;
+    constexpr auto expected_notify = true;
+    auto session = std::make_shared<mock_session>(net, expected_inbound, expected_notify);
 
     std::promise<code> started_net;
     boost::asio::post(net.strand(), [&net, &started_net]()
@@ -748,8 +942,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE_EQUAL(net.pent_nonce(), channel->nonce());
     BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
     BOOST_REQUIRE_EQUAL(net.stored_result(), error::success);
-    BOOST_REQUIRE(!net.stored_inbound());
-    BOOST_REQUIRE(net.stored_notify());
+    BOOST_REQUIRE_EQUAL(net.stored_inbound(), expected_inbound);
+    BOOST_REQUIRE_EQUAL(net.stored_notify(), expected_notify);
 
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [=, &stopped]()
@@ -762,7 +956,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE(!channel->stopped());
 
-    // Channel was unpent but and found on unstore.
+    // Channel unpent (outbound).
     BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
 
     net.close();
@@ -773,7 +967,97 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     // Unstored on close, but may not be found because channels cleared in a race.
     ////BOOST_REQUIRE(!net.unstore_found());
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
-    BOOST_REQUIRE(!net.unstored_inbound());
+    BOOST_REQUIRE_EQUAL(net.unstored_inbound(), expected_inbound);
+}
+
+BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expected_channel_success_pent_store_succeeded)
+{
+    settings set(selection::mainnet);
+    set.host_pool_capacity = 0;
+    mock_p2p net(set);
+
+    constexpr auto expected_inbound = true;
+    constexpr auto expected_notify = false;
+    auto session = std::make_shared<mock_session>(net, expected_inbound, expected_notify);
+
+    std::promise<code> started_net;
+    boost::asio::post(net.strand(), [&net, &started_net]()
+    {
+        net.start([&](const code& ec)
+        {
+            started_net.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]()
+    {
+        session->start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+
+    const auto socket = std::make_shared<network::socket>(net.service());
+    const auto channel = std::make_shared<mock_channel_no_read>(socket,
+        session->settings());
+    
+    std::promise<code> started_channel;
+    std::promise<code> stopped_channel;
+    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]()
+    {
+        session->start_channel(channel,
+            [&](const code& ec)
+            {
+                started_channel.set_value(ec);
+            },
+            [&](const code& ec)
+            {
+                stopped_channel.set_value(ec);
+            });
+    });
+
+    // Channel stopped by heading read fail, stop method called by session.
+    BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
+    BOOST_REQUIRE(channel->begun());
+    BOOST_REQUIRE(session->attached_handshake());
+    BOOST_REQUIRE(session->require_attached_protocol());
+    BOOST_REQUIRE(!channel->stopped());
+
+    // Channel not pent (inbound) and store succeeded.
+    BOOST_REQUIRE_EQUAL(net.pent_nonce(), 0u);
+    BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
+    BOOST_REQUIRE_EQUAL(net.stored_result(), error::success);
+    BOOST_REQUIRE_EQUAL(net.stored_inbound(), expected_inbound);
+    BOOST_REQUIRE_EQUAL(net.stored_notify(), expected_notify);
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(!channel->stopped());
+
+    // Channel not unpent (inbound).
+    BOOST_REQUIRE_EQUAL(net.unpent_nonce(), 0u);
+
+    net.close();
+    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
+    BOOST_REQUIRE(channel->stopped());
+    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
+
+    // Unstored on close, but may not be found because channels cleared in a race.
+    ////BOOST_REQUIRE(!net.unstore_found());
+    BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
+    BOOST_REQUIRE_EQUAL(net.unstored_inbound(), expected_inbound);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
