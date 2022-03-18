@@ -24,7 +24,6 @@ using namespace bc::network;
 using namespace bc::system::chain;
 using namespace bc::network::messages;
 
-// Use to fake start success.
 class mock_acceptor_start_success_accept_success
   : public acceptor
 {
@@ -90,7 +89,6 @@ protected:
     uint16_t port_{ 0 };
 };
 
-// Use to fake start success.
 class mock_acceptor_start_success_accept_fail
   : public mock_acceptor_start_success_accept_success
 {
@@ -126,9 +124,6 @@ public:
     void accept(accept_handler&& handler) override
     {
         ++accepts_;
-
-        // Must be asynchronous or is an infinite recursion.
-        // This error code will terminate the listener loop.
         boost::asio::post(strand_, [=]()
         {
             handler(error::service_stopped, nullptr);
@@ -152,7 +147,6 @@ public:
     }
 };
 
-// Use mock p2p network to inject mock channels.
 template <class Acceptor>
 class mock_p2p
   : public p2p
@@ -165,10 +159,8 @@ public:
     // Create mock acceptor to inject mock channel.
     acceptor::ptr create_acceptor() override
     {
-        acceptor = std::make_shared<Acceptor>(strand(), service(),
-            network_settings());
-
-        return acceptor;
+        return ((acceptor = std::make_shared<Acceptor>(strand(), service(),
+            network_settings())));
     }
 };
 
@@ -193,13 +185,14 @@ public:
 
     void start_accept(const code& ec) override
     {
+        // Must be first to ensure acceptor::accept() preceeds promise release.
+        session_inbound::start_accept(ec);
+
         if (!accepted_)
         {
             accepted_ = true;
             accept_.set_value(true);
         }
-
-        session_inbound::start_accept(ec);
     }
 
     bool accepted() const
