@@ -173,7 +173,7 @@ public:
     {
     }
 
-    bool inbound() const noexcept
+    bool inbound() const noexcept override
     {
         return session_inbound::inbound();
     }
