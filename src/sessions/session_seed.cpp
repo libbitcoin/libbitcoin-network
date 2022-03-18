@@ -127,8 +127,7 @@ void session_seed::start_seed(const config::endpoint& seed,
 }
 
 void session_seed::handle_connect(const code& ec, channel::ptr channel,
-    const config::endpoint& seed, connector::ptr connector,
-    result_handler counter)
+    const config::endpoint&, connector::ptr, result_handler counter)
 {
     if (ec)
     {
@@ -206,7 +205,7 @@ void session_seed::attach_protocols(const channel::ptr& channel) const
 ////    counter(ec);
 ////}
 
-void session_seed::handle_complete(const code& ec, size_t start_size,
+void session_seed::handle_complete(const code&, size_t start_size,
     result_handler counter)
 {
     BC_ASSERT_MSG(stranded(), "strand");

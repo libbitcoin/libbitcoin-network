@@ -186,7 +186,7 @@ void session_outbound::attach_protocols(const channel::ptr& channel) const
     channel->do_attach<protocol_address_31402>(*this)->start();
 }
 
-void session_outbound::handle_channel_stop(const code& ec,
+void session_outbound::handle_channel_stop(const code&,
     connectors_ptr connectors)
 {
     BC_ASSERT_MSG(stranded(), "strand");

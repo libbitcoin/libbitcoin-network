@@ -205,7 +205,7 @@ public:
         return accept_.get_future().get();
     }
 
-    void attach_handshake(const channel::ptr& channel,
+    void attach_handshake(const channel::ptr&,
         result_handler handshake) const override
     {
         if (!handshaked_)
