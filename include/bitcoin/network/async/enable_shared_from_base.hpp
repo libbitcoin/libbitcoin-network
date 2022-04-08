@@ -30,9 +30,15 @@ template <class Base>
 class enable_shared_from_base
   : public std::enable_shared_from_this<Base>
 {
+public:
+    // Simplifies capture of the shared pointer for a nop handler.
+    void nop() volatile noexcept
+    {
+    }
+
 protected:
     template <class Derived, system::if_base_of<Base, Derived> = true>
-    std::shared_ptr<Derived> shared_from_base()
+    std::shared_ptr<Derived> shared_from_base() noexcept
     {
         // Instance (not just type) must be upcastable to Derived.
         return std::static_pointer_cast<Derived>(this->shared_from_this());

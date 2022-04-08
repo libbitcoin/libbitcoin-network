@@ -52,9 +52,6 @@ class session;
 class BCT_API protocol
   : public enable_shared_from_base<protocol>, system::noncopyable
 {
-public:
-    void nop() volatile noexcept;
-
 protected:
     typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> result_handler;

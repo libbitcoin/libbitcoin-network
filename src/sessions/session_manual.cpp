@@ -64,14 +64,25 @@ void session_manual::handle_started(const code& ec,
 void session_manual::connect(const std::string& hostname, uint16_t port)
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    connect(hostname, port, {});
+
+    const auto self = shared_from_base<session_manual>();
+    connect(hostname, port, [=](const code&, channel::ptr)
+    {
+        self->nop();
+    });
 }
 
+// BUGBUG: config::authority cons throws on invalid IP format, but this public.
 void session_manual::connect(const std::string& hostname, uint16_t port,
     channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    connect({ hostname, port }, {});
+
+    const auto self = shared_from_base<session_manual>();
+    connect({ hostname, port }, [=](const code&, channel::ptr)
+    {
+        self->nop();
+    });
 }
 
 void session_manual::connect(const authority& host, channel_handler handler)

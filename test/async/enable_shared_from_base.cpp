@@ -50,6 +50,12 @@ public:
     }
 };
 
+BOOST_AUTO_TEST_CASE(enable_shared_from_base__nop__nop)
+{
+    std::make_shared<base_class>()->shared_from_this()->nop();
+    BOOST_REQUIRE(true);
+}
+
 BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_this__from_base__base)
 {
     const auto alpha = std::make_shared<base_class>();

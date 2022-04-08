@@ -38,11 +38,6 @@ protocol::protocol(const session& session, channel::ptr channel)
 {
 }
 
-// This nop holds protocol shared pointer in attach closure.
-void protocol::nop() volatile noexcept
-{
-}
-
 bool protocol::stranded() const
 {
     return channel_->stranded();
