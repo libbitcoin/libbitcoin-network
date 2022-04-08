@@ -65,10 +65,11 @@ protected:
     /// Override to attach specialized protocols upon channel start.
     void attach_protocols(const channel::ptr& channel) const override;
 
-private:
-    void start_connect(const config::authority& host, connector::ptr connector,
-        channel_handler handler);
+    /// Override in test.
+    virtual void start_connect(const config::authority& host,
+        connector::ptr connector, channel_handler handler);
 
+private:
     void handle_started(const code& ec, result_handler handler);
     void handle_connect(const code& ec, channel::ptr channel,
         const config::authority& host, connector::ptr connector,
