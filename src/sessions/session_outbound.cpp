@@ -48,9 +48,16 @@ void session_outbound::start(result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(settings().outbound_connections))
+    if (is_zero(settings().outbound_connections) || 
+        is_zero(settings().host_pool_capacity))
     {
         handler(error::success);
+        return;
+    }
+
+    if (is_zero(address_count()))
+    {
+        handler(error::address_not_found);
         return;
     }
 
