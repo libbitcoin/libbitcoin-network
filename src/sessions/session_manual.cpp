@@ -78,11 +78,7 @@ void session_manual::connect(const std::string& hostname, uint16_t port,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    const auto self = shared_from_base<session_manual>();
-    connect({ hostname, port }, [=](const code&, channel::ptr)
-    {
-        self->nop();
-    });
+    connect({ hostname, port }, handler);
 }
 
 void session_manual::connect(const authority& host, channel_handler handler)
