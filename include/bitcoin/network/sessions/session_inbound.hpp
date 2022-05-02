@@ -47,8 +47,8 @@ public:
 
 protected:
     /// Overridden to attach specialized protocols for channel handshake.
-    ////void attach_handshake(const channel::ptr& channel,
-    ////    result_handler handshake) const override;
+    void attach_handshake(const channel::ptr& channel,
+        result_handler handshake) const override;
 
     /// Overridden to attach specialized protocols upon channel start.
     void attach_protocols(const channel::ptr& channel) const override;

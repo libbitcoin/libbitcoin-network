@@ -382,6 +382,26 @@ private:
     mutable std::promise<bool> require_protocoled_;
 };
 
+class session_accessor
+  : public session
+{
+public:
+    session_accessor(p2p& network)
+      : session(network)
+    {
+    }
+
+    bool inbound() const noexcept override
+    {
+        return session::inbound();
+    }
+
+    bool notify() const noexcept override
+    {
+        return session::notify();
+    }
+};
+
 // construct/settings
 
 BOOST_AUTO_TEST_CASE(session__construct__always__expected_settings)
@@ -411,9 +431,25 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE(session.notify());
 }
 
+BOOST_AUTO_TEST_CASE(session__inbound__default__false)
+{
+    settings set(selection::mainnet);
+    p2p net(set);
+    session_accessor session(net);
+    BOOST_REQUIRE(!session.inbound());
+}
+
+BOOST_AUTO_TEST_CASE(session__notify__default__true)
+{
+    settings set(selection::mainnet);
+    p2p net(set);
+    session_accessor session(net);
+    BOOST_REQUIRE(session.notify());
+}
+
 // factories
 
-BOOST_AUTO_TEST_CASE(session__create_acceptor__always__xpected)
+BOOST_AUTO_TEST_CASE(session__create_acceptor__always__expected)
 {
     settings set(selection::mainnet);
     mock_p2p net(set);

@@ -99,8 +99,11 @@ void session_inbound::start_accept(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    if (stopped())
+        return;
+
     // May be acceptor start failure or cancelation from timer, terminal.
-    if (stopped() || ec)
+    if (ec)
         return;
 
     // ACCEPT (wait)
@@ -152,10 +155,11 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
         BIND2(handle_channel_stop, _1, channel));
 }
 
-////void session_inbound::attach_handshake(const channel::ptr& channel,
-////    result_handler handshake) const
-////{
-////}
+void session_inbound::attach_handshake(const channel::ptr& channel,
+    result_handler handshake) const
+{
+    session::attach_handshake(channel, handshake);
+}
 
 void session_inbound::handle_channel_start(const code&, channel::ptr)
 {
