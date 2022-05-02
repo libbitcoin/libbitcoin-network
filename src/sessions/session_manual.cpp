@@ -114,6 +114,7 @@ void session_manual::start_connect(const authority& host,
 
     if (stopped())
     {
+        // This is unreachable from connect, but can occur from retry loops.
         handler(error::service_stopped, nullptr);
         return;
     }
@@ -131,6 +132,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
     if (ec == error::service_stopped)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
+        handler(ec, nullptr);
         return;
     }
 
@@ -153,10 +155,11 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
         BIND4(handle_channel_stop, _1, host, connector, handler));
 }
 
-////void session_manual::attach_handshake(const channel::ptr& channel,
-////    result_handler handshake) const
-////{
-////}
+void session_manual::attach_handshake(const channel::ptr& channel,
+    result_handler handshake) const
+{
+    session::attach_handshake(channel, handshake);
+}
 
 void session_manual::handle_channel_start(const code& ec,
     const authority& host, channel::ptr channel, channel_handler handler)
@@ -166,6 +169,7 @@ void session_manual::handle_channel_start(const code& ec,
     if (ec)
     {
         // The start failure is also caught by handle_channel_stop.
+        // handle_channel_stop obtains a copy of the handler for retry.
         ////channel->stop(ec);
         return;
     }
@@ -192,7 +196,7 @@ void session_manual::attach_protocols(const channel::ptr& channel) const
     channel->do_attach<protocol_address_31402>(*this)->start();
 }
 
-void session_manual::handle_channel_stop(const code& ec, const authority& host,
+void session_manual::handle_channel_stop(const code&, const authority& host,
     connector::ptr connector, channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
