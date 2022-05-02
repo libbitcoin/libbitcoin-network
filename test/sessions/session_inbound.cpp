@@ -21,8 +21,8 @@
 BOOST_AUTO_TEST_SUITE(session_inbound_tests)
 
 using namespace bc::network;
-using namespace bc::system::chain;
 using namespace bc::network::messages;
+using namespace bc::system::chain;
 
 class mock_channel
   : public channel
@@ -54,7 +54,7 @@ private:
     std::promise<bool>& coded_;
 };
 
-template <error::error_t ChannelStopCode>
+template <error::error_t ChannelStopCode = error::success>
 class mock_acceptor_start_success_accept_success
   : public acceptor
 {
@@ -234,6 +234,12 @@ public:
         return session_inbound::stopped();
     }
 
+    code start_accept_code() const
+    {
+        return start_accept_code_;
+    }
+
+    // Capture first start_accept call.
     void start_accept(const code& ec) override
     {
         // Must be first to ensure acceptor::accept() preceeds promise release.
@@ -241,6 +247,7 @@ public:
 
         if (!accepted_)
         {
+            start_accept_code_ = ec;
             accepted_ = true;
             accept_.set_value(true);
         }
@@ -280,6 +287,7 @@ public:
     }
 
 private:
+    code start_accept_code_;
     mutable bool accepted_{ false };
     mutable bool handshaked_{ false };
     mutable std::promise<bool> accept_;
@@ -366,6 +374,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
     session.reset();
 }
 
@@ -450,6 +459,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operat
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
     session.reset();
 }
 
@@ -488,6 +498,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepte
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::invalid_magic);
     BOOST_REQUIRE(net.get_acceptor()->stopped());
 
     // Attach is not invoked.
@@ -533,6 +544,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
     BOOST_REQUIRE(net.get_acceptor()->stopped());
 
     // Not attached because accept returned stopped.
@@ -579,6 +591,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
     BOOST_REQUIRE(net.get_acceptor()->stopped());
 
     // Not attached because accept returned error.
@@ -633,8 +646,9 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     });
 
     BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
     BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BOOST_REQUIRE(net.get_acceptor()->stopped());
 
     // Not attached because accept never succeeded.
     BOOST_REQUIRE(!session->attached_handshake());
@@ -690,6 +704,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(net.get_acceptor()->stopped());
     BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
 
     // Not attached because accept never succeeded.
     BOOST_REQUIRE(!session->attached_handshake());
@@ -747,20 +762,20 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     BOOST_REQUIRE(net.get_acceptor()->require_code());
 
     BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
     BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BOOST_REQUIRE(net.get_acceptor()->stopped());
 
     // Handshake protocols attached.
     BOOST_REQUIRE(session->attached_handshake());
     session.reset();
 }
 
-// start via network
+// start via network (not required for coverage)
 
 BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_no_inbound_connections__run_success)
 {
     settings set(selection::mainnet);
-    set.host_pool_capacity = 0;
     set.connect_batch_size = 0;
     set.outbound_connections = 0;
     set.seeds.clear();
@@ -789,7 +804,6 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_no_inbound_connecti
 BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_inbound_port_zero__run_success)
 {
     settings set(selection::mainnet);
-    set.host_pool_capacity = 0;
     set.connect_batch_size = 0;
     set.outbound_connections = 0;
     set.seeds.clear();
@@ -818,7 +832,6 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_inbound_port_zero__
 BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_port_and_connections__expected)
 {
     settings set(selection::mainnet);
-    set.host_pool_capacity = 0;
     set.connect_batch_size = 0;
     set.outbound_connections = 0;
     set.seeds.clear();
