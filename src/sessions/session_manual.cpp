@@ -114,7 +114,7 @@ void session_manual::start_connect(const authority& host,
 
     if (stopped())
     {
-        // This is unreachable from connect, but can occur from retry loops.
+        // This is unreachable from connect, but reachable from retry loops.
         handler(error::service_stopped, nullptr);
         return;
     }
@@ -146,6 +146,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
 
     if (stopped())
     {
+        handler(error::service_stopped, nullptr);
         channel->stop(error::service_stopped);
         return;
     }
@@ -162,18 +163,15 @@ void session_manual::attach_handshake(const channel::ptr& channel,
 }
 
 void session_manual::handle_channel_start(const code& ec,
-    const authority& host, channel::ptr channel, channel_handler handler)
+    const authority&, channel::ptr channel, channel_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (ec)
-    {
-        // The start failure is also caught by handle_channel_stop.
-        // handle_channel_stop obtains a copy of the handler for retry.
-        ////channel->stop(ec);
-        return;
-    }
+    // A handshake failure is caught by session::handle_channel_stopped,
+    // which stops the channel, so do not stop the channel here.
+    // handle_channel_stop has a copy of the same handler for retry.
 
+    // Notify upon each connection attempt.
     handler(ec, channel);
 }
 
