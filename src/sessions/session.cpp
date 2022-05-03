@@ -155,7 +155,7 @@ void session::do_handle_handshake(const code& ec, channel::ptr channel,
         network_.unpend(channel->nonce());
 
     // Handles channel stopped or protocol start code.
-    // This retains the channel and allows broadcasts, unstore if no code.
+    // This retains the channel and allows broadcasts, stored if no code.
     start(ec ? ec : network_.store(channel, notify(), inbound()));
 }
 
