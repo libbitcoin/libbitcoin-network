@@ -22,7 +22,6 @@ BOOST_AUTO_TEST_SUITE(session_manual_tests)
 
 using namespace bc::network;
 using namespace bc::network::config;
-using namespace bc::network::messages;
 using namespace bc::system::chain;
 
 class mock_connector_connect_success

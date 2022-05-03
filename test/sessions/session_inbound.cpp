@@ -21,7 +21,6 @@
 BOOST_AUTO_TEST_SUITE(session_inbound_tests)
 
 using namespace bc::network;
-using namespace bc::network::messages;
 using namespace bc::system::chain;
 
 class mock_channel
