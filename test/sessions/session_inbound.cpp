@@ -247,8 +247,8 @@ public:
 
         if (!accepted_)
         {
-            start_accept_code_ = ec;
             accepted_ = true;
+            start_accept_code_ = ec;
             accept_.set_value(true);
         }
     }
