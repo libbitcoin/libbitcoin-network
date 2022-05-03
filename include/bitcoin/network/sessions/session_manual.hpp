@@ -71,11 +71,11 @@ protected:
     /// Notify subscribers on channel start.
     bool notify() const noexcept override;
 
-    /// Overriden to change version protocol (base calls from channel strand).
+    /// Overridden to change version protocol (base calls from channel strand).
     void attach_handshake(const channel::ptr& channel,
         result_handler handler) const noexcept override;
 
-    /// Overriden to change channel protocols (base calls from channel strand).
+    /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
     /// Start or restart the given connection (call from network strand).

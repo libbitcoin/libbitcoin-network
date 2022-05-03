@@ -44,7 +44,8 @@ public:
     /// Construct an instance.
     session_seed(p2p& network) noexcept;
 
-    /// Start/stop the session.
+    /// Perform seeding as configured (call from network strand).
+    /// Seeding is complete invocation of the handler.
     void start(result_handler handler) noexcept override;
 
 protected:
@@ -54,15 +55,18 @@ protected:
     /// Do not notify subscribers on channel start.
     bool notify() const noexcept override;
 
-    /// Overridden to set service and version mins upon session start.
+    /// Overridden to set service and version minimums upon session start.
     void attach_handshake(const channel::ptr& channel,
-        result_handler handle_started) const noexcept override;
+        result_handler handler) const noexcept override;
 
-    /// Override to attach specialized protocols upon channel start.
+    /// Overridden to attach only seeding protocols upon channel start.
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
+    /// Start the seed connections (call from network strand).
+    virtual void start_seed(const config::endpoint& seed,
+        result_handler counter) noexcept;
+
 private:
-    void start_seed(const config::endpoint& seed, result_handler handler) noexcept;
     void handle_started(const code& ec, result_handler handler) noexcept;
     void handle_connect(const code& ec, channel::ptr channel,
         const config::endpoint& seed, connector::ptr connector,

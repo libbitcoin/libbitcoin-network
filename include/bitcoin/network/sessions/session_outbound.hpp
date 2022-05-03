@@ -39,10 +39,10 @@ class BCT_API session_outbound
 public:
     typedef std::shared_ptr<session_outbound> ptr;
 
-    /// Construct an instance.
+    /// Construct an instance (network should be started).
     session_outbound(p2p& network) noexcept;
 
-    /// Start/stop the session.
+    /// Start configured number of connections (call from network strand).
     void start(result_handler handler) noexcept override;
 
 protected:
@@ -52,15 +52,17 @@ protected:
     /// Notify subscribers on channel start.
     bool notify() const noexcept override;
 
-    /// Overridden to attach minimum service level for witness support.
+    /// Overridden to change version protocol (base calls from channel strand).
     void attach_handshake(const channel::ptr& channel,
         result_handler handle_started) const noexcept override;
 
-    /// Override to attach specialized protocols upon channel start.
+    /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
+    /// Start outbound connections based on config (call from network strand).
+    virtual void start_connect(connectors_ptr connectors) noexcept;
+
 private:
-    void start_connect(connectors_ptr connectors) noexcept;
 
     void handle_started(const code& ec, result_handler handler) noexcept;
     void handle_connect(const code& ec, channel::ptr channel,
@@ -73,7 +75,7 @@ private:
     void start_batch(const code& ec, const config::authority& host,
         connector::ptr connector, channel_handler handler) noexcept;
     void handle_batch(const code& ec, channel::ptr channel,
-        connectors_ptr connectors, channel_handler complete) noexcept;
+        connectors_ptr connectors, channel_handler handler) noexcept;
 
     // These are not thread safe.
     const size_t batch_;

@@ -206,9 +206,9 @@ void session_seed::attach_protocols(const channel::ptr& channel) const noexcept
 }
 
 ////void session_seed::handle_channel_stop(const code& ec,
-////    result_handler counter) noexcept
+////    result_handler handler) noexcept
 ////{
-////    counter(ec);
+////    handler(ec);
 ////}
 
 void session_seed::handle_complete(const code&, size_t start_size,

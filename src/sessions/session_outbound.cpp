@@ -148,7 +148,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
-    result_handler handshake) const noexcept
+    result_handler handler) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
 
@@ -167,11 +167,11 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
     if (channel->negotiated_version() >= messages::level::bip61)
         channel->do_attach<protocol_version_70002>(*this, own_version,
             own_services, invalid_services, minimum_version, min_service, relay)
-            ->start(handshake);
+            ->start(handler);
     else
         channel->do_attach<protocol_version_31402>(*this, own_version,
             own_services, invalid_services, minimum_version, min_service)
-            ->start(handshake);
+            ->start(handler);
 }
 
 void session_outbound::handle_channel_start(const code& ec,
@@ -260,7 +260,7 @@ void session_outbound::start_batch(const code& ec, const authority& host,
 
 // Called once for each call to start_batch.
 void session_outbound::handle_batch(const code& ec, channel::ptr channel,
-    connectors_ptr connectors, channel_handler complete) noexcept
+    connectors_ptr connectors, channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -277,13 +277,13 @@ void session_outbound::handle_batch(const code& ec, channel::ptr channel,
         }
 
         // Got a connection.
-        complete(error::success, channel);
+        handler(error::success, channel);
         return;
     }
 
     // Got no successful connection.
     if (finish)
-        complete(error::connect_failed, nullptr);
+        handler(error::connect_failed, nullptr);
 }
 
 } // namespace network
