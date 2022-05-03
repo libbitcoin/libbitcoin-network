@@ -35,9 +35,14 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-session_seed::session_seed(p2p& network)
+session_seed::session_seed(p2p& network) noexcept
   : session(network), remaining_(settings().seeds.size())
 {
+}
+
+bool session_seed::inbound() const noexcept
+{
+    return false;
 }
 
 bool session_seed::notify() const noexcept
@@ -48,7 +53,7 @@ bool session_seed::notify() const noexcept
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_seed::start(result_handler handler)
+void session_seed::start(result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -64,7 +69,7 @@ void session_seed::start(result_handler handler)
 }
 
 void session_seed::handle_started(const code& ec,
-    result_handler handler)
+    result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -105,7 +110,7 @@ void session_seed::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 void session_seed::start_seed(const config::endpoint& seed,
-    result_handler counter)
+    result_handler counter) noexcept
 {
     if (stopped())
     {
@@ -127,7 +132,7 @@ void session_seed::start_seed(const config::endpoint& seed,
 }
 
 void session_seed::handle_connect(const code& ec, channel::ptr channel,
-    const config::endpoint&, connector::ptr, result_handler counter)
+    const config::endpoint&, connector::ptr, result_handler counter) noexcept
 {
     if (ec)
     {
@@ -147,7 +152,7 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
 }
 
 void session_seed::attach_handshake(const channel::ptr& channel,
-    result_handler handshake) const
+    result_handler handshake) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
 
@@ -171,7 +176,7 @@ void session_seed::attach_handshake(const channel::ptr& channel,
             ->start(handshake);
 }
 
-void session_seed::handle_channel_start(const code& ec, channel::ptr)
+void session_seed::handle_channel_start(const code& ec, channel::ptr) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -182,7 +187,7 @@ void session_seed::handle_channel_start(const code& ec, channel::ptr)
     }
 }
 
-void session_seed::attach_protocols(const channel::ptr& channel) const
+void session_seed::attach_protocols(const channel::ptr& channel) const noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -200,13 +205,14 @@ void session_seed::attach_protocols(const channel::ptr& channel) const
     channel->do_attach<protocol_seed_31402>(*this)->start();
 }
 
-////void session_seed::handle_channel_stop(const code& ec, result_handler counter)
+////void session_seed::handle_channel_stop(const code& ec,
+////    result_handler counter) noexcept
 ////{
 ////    counter(ec);
 ////}
 
 void session_seed::handle_complete(const code&, size_t start_size,
-    result_handler counter)
+    result_handler counter) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

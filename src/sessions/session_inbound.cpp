@@ -32,7 +32,7 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-session_inbound::session_inbound(p2p& network)
+session_inbound::session_inbound(p2p& network) noexcept
   : session(network),
     connection_limit_(network.network_settings().inbound_connections)
 {
@@ -43,10 +43,15 @@ bool session_inbound::inbound() const noexcept
     return true;
 }
 
+bool session_inbound::notify() const noexcept
+{
+    return true;
+}
+
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start(result_handler handler)
+void session_inbound::start(result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -61,7 +66,7 @@ void session_inbound::start(result_handler handler)
 }
 
 void session_inbound::handle_started(const code& ec,
-    result_handler handler)
+    result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -75,11 +80,10 @@ void session_inbound::handle_started(const code& ec,
     const auto code = acceptor_->start(settings().inbound_port);
     handler(code);
 
-    // LISTEN
     start_accept(code);
 }
 
-void session_inbound::stop()
+void session_inbound::stop() noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -95,7 +99,7 @@ void session_inbound::stop()
 // Accept sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept(const code& ec)
+void session_inbound::start_accept(const code& ec) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -110,7 +114,8 @@ void session_inbound::start_accept(const code& ec)
     acceptor_->accept(BIND2(handle_accept, _1, _2));
 }
 
-void session_inbound::handle_accept(const code& ec, channel::ptr channel)
+void session_inbound::handle_accept(const code& ec,
+    channel::ptr channel) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -120,7 +125,7 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
         return;
     }
 
-    // There was an error accepting the channel, so try again.
+    // There was an error accepting the channel, so try again after delay.
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
@@ -156,17 +161,18 @@ void session_inbound::handle_accept(const code& ec, channel::ptr channel)
 }
 
 void session_inbound::attach_handshake(const channel::ptr& channel,
-    result_handler handshake) const
+    result_handler handler) const noexcept
 {
-    session::attach_handshake(channel, handshake);
+    session::attach_handshake(channel, handler);
 }
 
-void session_inbound::handle_channel_start(const code&, channel::ptr)
+void session_inbound::handle_channel_start(const code&, channel::ptr) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }
 
-void session_inbound::attach_protocols(const channel::ptr& channel) const
+void session_inbound::attach_protocols(
+    const channel::ptr& channel) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
 
@@ -184,7 +190,7 @@ void session_inbound::attach_protocols(const channel::ptr& channel) const
     channel->do_attach<protocol_address_31402>(*this)->start();
 }
 
-void session_inbound::handle_channel_stop(const code&, channel::ptr)
+void session_inbound::handle_channel_stop(const code&, channel::ptr) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }

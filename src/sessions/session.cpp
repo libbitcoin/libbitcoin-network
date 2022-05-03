@@ -40,7 +40,7 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-session::session(p2p& network)
+session::session(p2p& network) noexcept
   : timer_(std::make_shared<deadline>(network.strand())),
     stop_subscriber_(std::make_shared<stop_subscriber>(network.strand())),
     stopped_(true),
@@ -48,12 +48,12 @@ session::session(p2p& network)
 {
 }
 
-session::~session()
+session::~session() noexcept
 {
     BC_ASSERT_MSG(stopped(), "The session was not stopped.");
 }
 
-void session::start(result_handler handler)
+void session::start(result_handler handler) noexcept
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -67,7 +67,7 @@ void session::start(result_handler handler)
     handler(error::success);
 }
 
-void session::stop()
+void session::stop() noexcept
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -80,7 +80,7 @@ void session::stop()
 // ----------------------------------------------------------------------------
 
 void session::start_channel(channel::ptr channel, result_handler started,
-    result_handler stopped)
+    result_handler stopped) noexcept
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -109,7 +109,7 @@ void session::start_channel(channel::ptr channel, result_handler started,
 }
 
 void session::do_attach_handshake(const channel::ptr& channel,
-    result_handler handshake) const
+    result_handler handshake) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
@@ -126,20 +126,20 @@ void session::do_attach_handshake(const channel::ptr& channel,
 }
 
 void session::attach_handshake(const channel::ptr& channel,
-    result_handler handshake) const
+    result_handler handler) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
     // Channel remains started through attachment.
     // Handshake protocols must invoke handler upon completion or failure.
     if (settings().protocol_maximum >= messages::level::bip61)
-        channel->do_attach<protocol_version_70002>(*this)->start(handshake);
+        channel->do_attach<protocol_version_70002>(*this)->start(handler);
     else
-        channel->do_attach<protocol_version_31402>(*this)->start(handshake);
+        channel->do_attach<protocol_version_31402>(*this)->start(handler);
 }
 
 void session::handle_handshake(const code& ec, channel::ptr channel,
-    result_handler start)
+    result_handler start) noexcept
 {
     // Return to network context.
     boost::asio::post(network_.strand(),
@@ -147,7 +147,7 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
 }
 
 void session::do_handle_handshake(const code& ec, channel::ptr channel,
-    result_handler start)
+    result_handler start) noexcept
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -161,7 +161,7 @@ void session::do_handle_handshake(const code& ec, channel::ptr channel,
 
 // Context free method.
 void session::handle_channel_start(const code& ec, channel::ptr channel,
-    result_handler started, result_handler stopped)
+    result_handler started, result_handler stopped) noexcept
 {
     result_handler start =
         BIND3(handle_channel_started, _1, channel, std::move(started));
@@ -183,7 +183,7 @@ void session::handle_channel_start(const code& ec, channel::ptr channel,
 }
 
 void session::handle_channel_started(const code& ec, channel::ptr channel,
-    result_handler started)
+    result_handler started) noexcept
 {
     // Return to network context.
     boost::asio::post(network_.strand(),
@@ -191,7 +191,7 @@ void session::handle_channel_started(const code& ec, channel::ptr channel,
 }
 
 void session::do_handle_channel_started(const code& ec, channel::ptr channel,
-    result_handler started)
+    result_handler started) noexcept
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -207,7 +207,7 @@ void session::do_handle_channel_started(const code& ec, channel::ptr channel,
         BIND1(do_attach_protocols, channel));
 }
 
-void session::do_attach_protocols(const channel::ptr& channel) const
+void session::do_attach_protocols(const channel::ptr& channel) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
@@ -219,13 +219,13 @@ void session::do_attach_protocols(const channel::ptr& channel) const
 }
 
 // Override in derived sessions to attach protocols.
-void session::attach_protocols(const channel::ptr& channel) const
+void session::attach_protocols(const channel::ptr& channel) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
 }
 
 void session::handle_channel_stopped(const code& ec, channel::ptr channel,
-    result_handler stopped)
+    result_handler stopped) noexcept
 {
     // Return to network context.
     boost::asio::post(network_.strand(),
@@ -233,7 +233,7 @@ void session::handle_channel_stopped(const code& ec, channel::ptr channel,
 }
 
 void session::do_handle_channel_stopped(const code& ec, channel::ptr channel,
-    result_handler stopped)
+    result_handler stopped) noexcept
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -249,17 +249,17 @@ void session::do_handle_channel_stopped(const code& ec, channel::ptr channel,
 // Factories.
 // ----------------------------------------------------------------------------
 
-acceptor::ptr session::create_acceptor()
+acceptor::ptr session::create_acceptor() noexcept
 {
     return network_.create_acceptor();
 }
 
-connector::ptr session::create_connector()
+connector::ptr session::create_connector() noexcept
 {
     return network_.create_connector();
 }
 
-connectors_ptr session::create_connectors(size_t count)
+connectors_ptr session::create_connectors(size_t count) noexcept
 {
     return network_.create_connectors(count);
 }
@@ -267,7 +267,7 @@ connectors_ptr session::create_connectors(size_t count)
 // Properties.
 // ----------------------------------------------------------------------------
 
-const network::settings& session::settings() const
+const network::settings& session::settings() const noexcept
 {
     return network_.network_settings();
 }
@@ -277,68 +277,58 @@ bool session::stopped() const noexcept
     return stopped_.load(std::memory_order_relaxed);
 }
 
-bool session::stranded() const
+bool session::stranded() const noexcept
 {
     return network_.stranded();
 }
 
-size_t session::address_count() const
+size_t session::address_count() const noexcept
 {
     return network_.address_count();
 }
 
-size_t session::channel_count() const
+size_t session::channel_count() const noexcept
 {
     return network_.channel_count();
 }
 
-size_t session::inbound_channel_count() const
+size_t session::inbound_channel_count() const noexcept
 {
     return network_.inbound_channel_count();
 }
 
-bool session::blacklisted(const config::authority& authority) const
+bool session::blacklisted(const config::authority& authority) const noexcept
 {
     return contains(settings().blacklists, authority);
-}
-
-bool session::inbound() const noexcept
-{
-    return false;
-}
-
-bool session::notify() const noexcept
-{
-    return true;
 }
 
 // Utilities.
 // ----------------------------------------------------------------------------
 
-void session::fetch(hosts::address_item_handler handler) const
+void session::fetch(hosts::address_item_handler handler) const noexcept
 {
     network_.fetch(handler);
 }
 
-void session::fetches(hosts::address_items_handler handler) const
+void session::fetches(hosts::address_items_handler handler) const noexcept
 {
     network_.fetches(handler);
 }
 
 void session::save(const messages::address_item& address,
-    result_handler complete) const
+    result_handler handler) const noexcept
 {
     // stackoverflow.com/questions/57411283/
     // calling-non-const-function-of-another-class-by-reference-from-const-function
-    network_.save(address, complete);
+    network_.save(address, handler);
 }
 
 void session::saves(const messages::address_items& addresses,
-    result_handler complete) const
+    result_handler handler) const noexcept
 {
     // stackoverflow.com/questions/57411283/
     // calling-non-const-function-of-another-class-by-reference-from-const-function
-    network_.saves(addresses, complete);
+    network_.saves(addresses, handler);
 }
 
 } // namespace network

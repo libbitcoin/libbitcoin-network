@@ -203,8 +203,18 @@ public:
         return session::stopped();
     }
 
-    void attach_handshake(const channel::ptr&, result_handler) const override
+    void attach_handshake(const channel::ptr&, result_handler) const noexcept override
     {
+    }
+
+    bool inbound() const noexcept override
+    {
+        return false;
+    }
+
+    bool notify() const noexcept override
+    {
+        return true;
     }
 };
 

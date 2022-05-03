@@ -25,7 +25,7 @@ using namespace bc::network::messages;
 using namespace bc::system::chain;
 
 class mock_channel
-    : public channel
+  : public channel
 {
 public:
     mock_channel(socket::ptr socket, const settings& settings)
@@ -33,7 +33,7 @@ public:
     {
     }
 
-    void begin() override
+    void begin() noexcept override
     {
         begun_ = true;
         channel::begin();
@@ -44,7 +44,7 @@ public:
         return begun_;
     }
 
-    void stop(const code& ec) override
+    void stop(const code& ec) noexcept override
     {
         stop_code_ = ec;
         channel::stop(ec);
@@ -66,7 +66,7 @@ protected:
 };
 
 class mock_channel_no_read
-    : public mock_channel
+  : public mock_channel
 {
 public:
     mock_channel_no_read(socket::ptr socket, const settings& settings)
@@ -74,7 +74,7 @@ public:
     {
     }
 
-    void begin() override
+    void begin() noexcept override
     {
         begun_ = true;
         ////channel::begin();
@@ -90,7 +90,7 @@ public:
     {
     }
 
-    acceptor::ptr create_acceptor() override
+    acceptor::ptr create_acceptor() noexcept override
     {
         ++acceptors_;
         return p2p::create_acceptor();
@@ -101,7 +101,7 @@ public:
         return acceptors_;
     }
 
-    connector::ptr create_connector() override
+    connector::ptr create_connector() noexcept override
     {
         ++connectors_;
         return p2p::create_connector();
@@ -112,18 +112,18 @@ public:
         return connectors_;
     }
 
-    void fetch(hosts::address_item_handler handler) const override
+    void fetch(hosts::address_item_handler handler) const noexcept override
     {
         handler(error::invalid_magic, {});
     }
 
-    void fetches(hosts::address_items_handler handler) const override
+    void fetches(hosts::address_items_handler handler) const noexcept override
     {
         handler(error::bad_stream, {});
     }
 
     void save(const messages::address_item& address,
-        result_handler complete) override
+        result_handler complete) noexcept override
     {
         saved_ = address;
         complete(error::invalid_magic);
@@ -135,7 +135,7 @@ public:
     }
 
     void saves(const messages::address_items& addresses,
-        result_handler complete) override
+        result_handler complete) noexcept override
     {
         saveds_ = addresses;
         complete(error::bad_stream);
@@ -192,21 +192,21 @@ public:
     }
 
 protected:
-    void pend(uint64_t nonce) override
+    void pend(uint64_t nonce) noexcept override
     {
         BC_ASSERT(!is_zero(nonce));
         pend_ = nonce;
         p2p::pend(nonce);
     }
 
-    void unpend(uint64_t nonce) override
+    void unpend(uint64_t nonce) noexcept override
     {
         BC_ASSERT(!is_zero(nonce));
         unpend_ = nonce;
         p2p::unpend(nonce);
     }
 
-    code store(channel::ptr channel, bool notify, bool inbound) override
+    code store(channel::ptr channel, bool notify, bool inbound) noexcept override
     {
         BC_ASSERT(!is_zero(channel->nonce()));
         store_nonce_ = channel->nonce();
@@ -215,7 +215,7 @@ protected:
         return ((store_result_ = p2p::store(channel, notify, inbound)));
     }
 
-    bool unstore(channel::ptr channel, bool inbound) override
+    bool unstore(channel::ptr channel, bool inbound) noexcept override
     {
         BC_ASSERT(!is_zero(channel->nonce()));
         unstore_nonce_ = channel->nonce();
@@ -255,7 +255,7 @@ public:
     {
     }
 
-    bool stopped() const noexcept
+    bool stopped() const
     {
         return session::stopped();
     }
@@ -280,22 +280,22 @@ public:
         return session::create_connectors(count);
     }
 
-    size_t address_count() const
+    size_t address_count() const noexcept override
     {
         return session::address_count();
     }
 
-    size_t channel_count() const
+    size_t channel_count() const noexcept override
     {
         return session::channel_count();
     }
 
-    size_t inbound_channel_count() const
+    size_t inbound_channel_count() const noexcept override
     {
         return session::inbound_channel_count();
     }
 
-    bool blacklisted(const config::authority& authority) const
+    bool blacklisted(const config::authority& authority) const noexcept override
     {
         return session::blacklisted(authority);
     }
@@ -333,13 +333,13 @@ public:
     }
 
     void start_channel(channel::ptr channel, result_handler started,
-        result_handler stopped) override
+        result_handler stopped) noexcept override
     {
         session::start_channel(channel, started, stopped);
     }
 
     void attach_handshake(const channel::ptr& channel,
-        result_handler handshake) const override
+        result_handler handshake) const noexcept override
     {
         if (!handshaked_)
         {
@@ -355,7 +355,7 @@ public:
         return handshaked_;
     }
 
-    void attach_protocols(const channel::ptr&) const override
+    void attach_protocols(const channel::ptr&) const noexcept override
     {
         if (!protocoled_)
         {
@@ -380,26 +380,6 @@ private:
     mutable bool handshaked_{ false };
     mutable bool protocoled_{ false };
     mutable std::promise<bool> require_protocoled_;
-};
-
-class session_accessor
-  : public session
-{
-public:
-    session_accessor(p2p& network)
-      : session(network)
-    {
-    }
-
-    bool inbound() const noexcept override
-    {
-        return session::inbound();
-    }
-
-    bool notify() const noexcept override
-    {
-        return session::notify();
-    }
 };
 
 // construct/settings
@@ -428,22 +408,6 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE_EQUAL(session.inbound_channel_count(), zero);;
     BOOST_REQUIRE(!session.blacklisted({ "[2001:db8::2]", 42 }));
     BOOST_REQUIRE(!session.inbound());
-    BOOST_REQUIRE(session.notify());
-}
-
-BOOST_AUTO_TEST_CASE(session__inbound__default__false)
-{
-    settings set(selection::mainnet);
-    p2p net(set);
-    session_accessor session(net);
-    BOOST_REQUIRE(!session.inbound());
-}
-
-BOOST_AUTO_TEST_CASE(session__notify__default__true)
-{
-    settings set(selection::mainnet);
-    p2p net(set);
-    session_accessor session(net);
     BOOST_REQUIRE(session.notify());
 }
 
@@ -614,7 +578,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
     BOOST_REQUIRE(session.stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session__start__stop_success)
+BOOST_AUTO_TEST_CASE(session__start__stop__success)
 {
     settings set(selection::mainnet);
     p2p net(set);
@@ -642,7 +606,7 @@ BOOST_AUTO_TEST_CASE(session__start__stop_success)
     BOOST_REQUIRE(session.stopped());
 }
 
-// start_channel
+// channel sequence
 
 BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_service_stopped_channel_service_stopped_not_pent_or_stored)
 {

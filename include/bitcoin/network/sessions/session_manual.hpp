@@ -43,45 +43,55 @@ public:
     typedef std::function<void(const code&, channel::ptr)>
         channel_handler;
 
-    /// Construct an instance.
-    session_manual(p2p& network);
+    /// Construct an instance (network should be started).
+    session_manual(p2p& network) noexcept;
 
-    /// Start/stop the manual session.
-    void start(result_handler handler) override;
+    /// Start the session of persistent connections (call from network strand).
+    void start(result_handler handler) noexcept override;
 
-    /// Maintain connection to a node.
-    virtual void connect(const std::string& hostname, uint16_t port);
+    /// Connect.
+    /// ------------------------------------------------------------------------
+    /// Establish a persistent connection, call from network strand.
 
-    /// Maintain connection to a node, with callback on each connect and stop.
+    /// Maintain connection to a node until session stop.
+    virtual void connect(const std::string& hostname, uint16_t port) noexcept;
+
+    /// Maintain connection with callback on each connection attempt and stop.
     virtual void connect(const std::string& hostname, uint16_t port,
-        channel_handler handler);
+        channel_handler handler) noexcept;
 
-    /// Maintain connection to a node, with callback on each connect and stop.
+    /// Maintain connection with callback on each connection attempt and stop.
     virtual void connect(const config::authority& host,
-        channel_handler handler);
+        channel_handler handler) noexcept;
 
 protected:
-    /// Overridden to attach specialized protocols for channel handshake.
+    /// The channel is outbound (do not pend the nonce).
+    bool inbound() const noexcept override;
+
+    /// Notify subscribers on channel start.
+    bool notify() const noexcept override;
+
+    /// Overriden to change version protocol (base calls from channel strand).
     void attach_handshake(const channel::ptr& channel,
-        result_handler handshake) const override;
+        result_handler handler) const noexcept override;
 
-    /// Override to attach specialized protocols upon channel start.
-    void attach_protocols(const channel::ptr& channel) const override;
+    /// Overriden to change channel protocols (base calls from channel strand).
+    void attach_protocols(const channel::ptr& channel) const noexcept override;
 
-    /// Override in test.
+    /// Start or restart the given connection (call from network strand).
     virtual void start_connect(const config::authority& host,
-        connector::ptr connector, channel_handler handler);
+        connector::ptr connector, channel_handler handler) noexcept;
 
 private:
-    void handle_started(const code& ec, result_handler handler);
+    void handle_started(const code& ec, result_handler handler) noexcept;
     void handle_connect(const code& ec, channel::ptr channel,
         const config::authority& host, connector::ptr connector,
-        channel_handler handler);
+        channel_handler handler) noexcept;
 
     void handle_channel_start(const code& ec, const config::authority& host,
-        channel::ptr channel, channel_handler handler);
+        channel::ptr channel, channel_handler handler) noexcept;
     void handle_channel_stop(const code& ec, const config::authority& host,
-        connector::ptr connector, channel_handler handler);
+        connector::ptr connector, channel_handler handler) noexcept;
 };
 
 } // namespace network

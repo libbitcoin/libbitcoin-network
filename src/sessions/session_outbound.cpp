@@ -34,17 +34,27 @@ using namespace bc::system;
 using namespace config;
 using namespace std::placeholders;
 
-session_outbound::session_outbound(p2p& network)
+session_outbound::session_outbound(p2p& network) noexcept
   : session(network),
     batch_(std::max(network.network_settings().connect_batch_size, 1u)),
     count_(zero)
 {
 }
 
+bool session_outbound::inbound() const noexcept
+{
+    return false;
+}
+
+bool session_outbound::notify() const noexcept
+{
+    return true;
+}
+
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_outbound::start(result_handler handler)
+void session_outbound::start(result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -65,7 +75,7 @@ void session_outbound::start(result_handler handler)
 }
 
 void session_outbound::handle_started(const code& ec,
-    result_handler handler)
+    result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -96,7 +106,7 @@ void session_outbound::handle_started(const code& ec,
 // Connnect cycle.
 // ----------------------------------------------------------------------------
 
-void session_outbound::start_connect(connectors_ptr connectors)
+void session_outbound::start_connect(connectors_ptr connectors) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -108,7 +118,7 @@ void session_outbound::start_connect(connectors_ptr connectors)
 }
 
 void session_outbound::handle_connect(const code& ec, channel::ptr channel,
-    connectors_ptr connectors)
+    connectors_ptr connectors) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -138,7 +148,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
-    result_handler handshake) const
+    result_handler handshake) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
 
@@ -164,7 +174,8 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
             ->start(handshake);
 }
 
-void session_outbound::handle_channel_start(const code& ec, channel::ptr)
+void session_outbound::handle_channel_start(const code& ec,
+    channel::ptr) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -175,7 +186,8 @@ void session_outbound::handle_channel_start(const code& ec, channel::ptr)
     }
 }
 
-void session_outbound::attach_protocols(const channel::ptr& channel) const
+void session_outbound::attach_protocols(
+    const channel::ptr& channel) const noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -194,7 +206,7 @@ void session_outbound::attach_protocols(const channel::ptr& channel) const
 }
 
 void session_outbound::handle_channel_stop(const code&,
-    connectors_ptr connectors)
+    connectors_ptr connectors) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
     start_connect(connectors);
@@ -204,7 +216,7 @@ void session_outbound::handle_channel_stop(const code&,
 // ----------------------------------------------------------------------------
 
 void session_outbound::batch(connectors_ptr connectors, 
-    channel_handler handler)
+    channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -218,7 +230,7 @@ void session_outbound::batch(connectors_ptr connectors,
 }
 
 void session_outbound::start_batch(const code& ec, const authority& host,
-    connector::ptr connector, channel_handler handler)
+    connector::ptr connector, channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -248,7 +260,7 @@ void session_outbound::start_batch(const code& ec, const authority& host,
 
 // Called once for each call to start_batch.
 void session_outbound::handle_batch(const code& ec, channel::ptr channel,
-    connectors_ptr connectors, channel_handler complete)
+    connectors_ptr connectors, channel_handler complete) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

@@ -42,34 +42,37 @@ public:
     typedef std::shared_ptr<session_seed> ptr;
 
     /// Construct an instance.
-    session_seed(p2p& network);
+    session_seed(p2p& network) noexcept;
 
     /// Start/stop the session.
-    void start(result_handler handler) override;
+    void start(result_handler handler) noexcept override;
 
 protected:
-    /// Overridden to set service and version mins upon session start.
-    void attach_handshake(const channel::ptr& channel,
-        result_handler handle_started) const override;
+    /// The channel is outbound (do not pend the nonce).
+    bool inbound() const noexcept override;
 
-    /// Override to attach specialized protocols upon channel start.
-    void attach_protocols(const channel::ptr& channel) const override;
-
-    /// Override to preclude notify on connect.
+    /// Do not notify subscribers on channel start.
     bool notify() const noexcept override;
 
+    /// Overridden to set service and version mins upon session start.
+    void attach_handshake(const channel::ptr& channel,
+        result_handler handle_started) const noexcept override;
+
+    /// Override to attach specialized protocols upon channel start.
+    void attach_protocols(const channel::ptr& channel) const noexcept override;
+
 private:
-    void start_seed(const config::endpoint& seed, result_handler handler);
-    void handle_started(const code& ec, result_handler handler);
+    void start_seed(const config::endpoint& seed, result_handler handler) noexcept;
+    void handle_started(const code& ec, result_handler handler) noexcept;
     void handle_connect(const code& ec, channel::ptr channel,
         const config::endpoint& seed, connector::ptr connector,
-        result_handler counter);
+        result_handler counter) noexcept;
 
-    void handle_channel_start(const code& ec, channel::ptr channel);
-    ////void handle_channel_stop(const code& ec, result_handler counter);
+    void handle_channel_start(const code& ec, channel::ptr channel) noexcept;
+    ////void handle_channel_stop(const code& ec, result_handler counter) noexcept;
 
     void handle_complete(const code& ec, size_t start_size,
-        result_handler counter);
+        result_handler counter) noexcept;
 
     // This is not thread safe.
     size_t remaining_;

@@ -40,34 +40,40 @@ public:
     typedef std::shared_ptr<session_outbound> ptr;
 
     /// Construct an instance.
-    session_outbound(p2p& network);
+    session_outbound(p2p& network) noexcept;
 
     /// Start/stop the session.
-    void start(result_handler handler) override;
+    void start(result_handler handler) noexcept override;
 
 protected:
+    /// The channel is outbound (do not pend the nonce).
+    bool inbound() const noexcept override;
+
+    /// Notify subscribers on channel start.
+    bool notify() const noexcept override;
+
     /// Overridden to attach minimum service level for witness support.
     void attach_handshake(const channel::ptr& channel,
-        result_handler handle_started) const override;
+        result_handler handle_started) const noexcept override;
 
     /// Override to attach specialized protocols upon channel start.
-    void attach_protocols(const channel::ptr& channel) const override;
+    void attach_protocols(const channel::ptr& channel) const noexcept override;
 
 private:
-    void start_connect(connectors_ptr connectors);
+    void start_connect(connectors_ptr connectors) noexcept;
 
-    void handle_started(const code& ec, result_handler handler);
+    void handle_started(const code& ec, result_handler handler) noexcept;
     void handle_connect(const code& ec, channel::ptr channel,
-        connectors_ptr connectors);
+        connectors_ptr connectors) noexcept;
 
-    void handle_channel_start(const code& ec, channel::ptr channel);
-    void handle_channel_stop(const code& ec, connectors_ptr connectors);
+    void handle_channel_start(const code& ec, channel::ptr channel) noexcept;
+    void handle_channel_stop(const code& ec, connectors_ptr connectors) noexcept;
 
-    void batch(connectors_ptr connectors, channel_handler handler);
+    void batch(connectors_ptr connectors, channel_handler handler) noexcept;
     void start_batch(const code& ec, const config::authority& host,
-        connector::ptr connector, channel_handler handler);
+        connector::ptr connector, channel_handler handler) noexcept;
     void handle_batch(const code& ec, channel::ptr channel,
-        connectors_ptr connectors, channel_handler complete);
+        connectors_ptr connectors, channel_handler complete) noexcept;
 
     // These are not thread safe.
     const size_t batch_;

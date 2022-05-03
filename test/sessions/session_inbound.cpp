@@ -36,7 +36,7 @@ public:
     {
     }
 
-    void stop(const code& ec) override
+    void stop(const code& ec) noexcept override
     {
         // Set future on first code match.
         if (ec == match_ && !set_)
@@ -92,21 +92,21 @@ public:
     }
 
     // Capture port, succeed on first (others prevents tight success loop).
-    code start(uint16_t port) override
+    code start(uint16_t port) noexcept override
     {
         port_ = port;
         return !accepted() ? error::success : error::unknown;
     }
 
     // Capture stopped and free channel.
-    void stop() override
+    void stop() noexcept override
     {
         stopped_ = true;
         acceptor::stop();
     }
 
     // Handle accept.
-    void accept(accept_handler&& handler) override
+    void accept(accept_handler&& handler) noexcept override
     {
         ++accepts_;
         const auto socket = std::make_shared<network::socket>(service_);
@@ -142,7 +142,7 @@ public:
     }
 
     // Handle accept with unknown error.
-    void accept(accept_handler&& handler) override
+    void accept(accept_handler&& handler) noexcept override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]()
@@ -161,7 +161,7 @@ public:
     using mock_acceptor_start_success_accept_fail::mock_acceptor_start_success_accept_fail;
 
     // Handle accept with service_stopped error.
-    void accept(accept_handler&& handler) override
+    void accept(accept_handler&& handler) noexcept override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]()
@@ -180,7 +180,7 @@ public:
     using mock_acceptor_start_success_accept_fail::mock_acceptor_start_success_accept_fail;
 
     // Capture port, fail.
-    code start(uint16_t port) override
+    code start(uint16_t port) noexcept override
     {
         port_ = port;
         return error::invalid_magic;
@@ -200,7 +200,7 @@ public:
     }
 
     // Create mock acceptor to inject mock channel.
-    acceptor::ptr create_acceptor() override
+    acceptor::ptr create_acceptor() noexcept override
     {
         return ((acceptor_ = std::make_shared<Acceptor>(strand(), service(),
             network_settings())));
@@ -240,7 +240,7 @@ public:
     }
 
     // Capture first start_accept call.
-    void start_accept(const code& ec) override
+    void start_accept(const code& ec) noexcept override
     {
         // Must be first to ensure acceptor::accept() preceeds promise release.
         session_inbound::start_accept(ec);
@@ -264,7 +264,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler handshake) const override
+        result_handler handshake) const noexcept override
     {
         if (!handshaked_)
         {
@@ -303,7 +303,7 @@ public:
     {
     }
 
-    size_t inbound_channel_count() const override
+    size_t inbound_channel_count() const noexcept override
     {
         return 1;
     }
@@ -318,7 +318,7 @@ public:
     {
     }
 
-    bool blacklisted(const config::authority&) const override
+    bool blacklisted(const config::authority&) const noexcept override
     {
         return true;
     }

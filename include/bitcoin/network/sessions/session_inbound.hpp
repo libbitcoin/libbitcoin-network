@@ -40,31 +40,38 @@ class BCT_API session_inbound
 public:
     typedef std::shared_ptr<session_inbound> ptr;
 
-    session_inbound(p2p& network);
+    /// Construct an instance (network should be started).
+    session_inbound(p2p& network) noexcept;
 
-    void start(result_handler handler) override;
-    void stop() override;
+    /// Start accepting inbound connections as configured (call from network strand).
+    void start(result_handler handler) noexcept override;
+
+    /// Overridden to stop the acceptor (call from network strand).
+    void stop() noexcept override;
 
 protected:
-    /// Overridden to attach specialized protocols for channel handshake.
-    void attach_handshake(const channel::ptr& channel,
-        result_handler handshake) const override;
-
-    /// Overridden to attach specialized protocols upon channel start.
-    void attach_protocols(const channel::ptr& channel) const override;
-
-    /// Overridden to preclude pending the nonce.
+    /// The channel is inbound (pend the nonce).
     bool inbound() const noexcept override;
 
-    /// Override in test.
-    virtual void start_accept(const code& ec);
+    /// Notify subscribers on channel start.
+    bool notify() const noexcept override;
+
+    /// Overriden to change version protocol (base calls from channel strand).
+    void attach_handshake(const channel::ptr& channel,
+        result_handler handler) const noexcept override;
+
+    /// Overriden to change channel protocols (base calls from channel strand).
+    void attach_protocols(const channel::ptr& channel) const noexcept override;
+
+    /// Start accepting based on configuration (call from network strand).
+    virtual void start_accept(const code& ec) noexcept;
 
 private:
-    void handle_started(const code& ec, result_handler handler);
-    void handle_accept(const code& ec, channel::ptr channel);
+    void handle_started(const code& ec, result_handler handler) noexcept;
+    void handle_accept(const code& ec, channel::ptr channel) noexcept;
 
-    void handle_channel_start(const code& ec, channel::ptr channel);
-    void handle_channel_stop(const code& ec, channel::ptr channel);
+    void handle_channel_start(const code& ec, channel::ptr channel) noexcept;
+    void handle_channel_stop(const code& ec, channel::ptr channel) noexcept;
 
     // This is not thread safe.
     acceptor::ptr acceptor_;

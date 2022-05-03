@@ -62,7 +62,7 @@ public:
     }
 
     // Capture stopped and free channel.
-    void stop() override
+    void stop() noexcept override
     {
         stopped_ = true;
         connector::stop();
@@ -70,7 +70,7 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) override
+        connect_handler&& handler) noexcept override
     {
         if (is_zero(connects_++))
         {
@@ -111,7 +111,7 @@ public:
 
     // Handle connect with service_stopped error.
     void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) override
+        connect_handler&& handler) noexcept override
     {
         if (is_zero(connects_++))
         {
@@ -143,7 +143,7 @@ public:
 
     // Handle connect with service_stopped error.
     void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) override
+        connect_handler&& handler) noexcept override
     {
         if (is_zero(connects_++))
         {
@@ -175,7 +175,7 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector() override
+    connector::ptr create_connector() noexcept override
     {
         return ((connector_ = std::make_shared<Connector>(strand(), service(),
             network_settings())));
@@ -216,7 +216,7 @@ public:
 
     // Capture first start_connect call.
     void start_connect(const authority& host, connector::ptr connector,
-        channel_handler handler) override
+        channel_handler handler) noexcept override
     {
         // Must be first to ensure connector::connect() preceeds promise release.
         session_manual::start_connect(host, connector, handler);
@@ -247,7 +247,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler handshake) const override
+        result_handler handshake) const noexcept override
     {
         if (!handshaked_)
         {
@@ -291,7 +291,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler handshake) const override
+        result_handler handshake) const noexcept override
     {
         if (!handshaked_)
         {

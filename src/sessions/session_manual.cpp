@@ -36,23 +36,33 @@ using namespace bc::system;
 using namespace config;
 using namespace std::placeholders;
 
-session_manual::session_manual(p2p& network)
+session_manual::session_manual(p2p& network) noexcept
   : session(network)
 {
+}
+
+bool session_manual::inbound() const noexcept
+{
+    return false;
+}
+
+bool session_manual::notify() const noexcept
+{
+    return true;
 }
 
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 // Manual connections are always enabled.
 
-void session_manual::start(result_handler handler)
+void session_manual::start(result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
     session::start(BIND2(handle_started, _1, handler));
 }
 
 void session_manual::handle_started(const code& ec,
-    result_handler handler)
+    result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
     handler(ec);
@@ -61,7 +71,8 @@ void session_manual::handle_started(const code& ec,
 // Connect sequence.
 // ----------------------------------------------------------------------------
 
-void session_manual::connect(const std::string& hostname, uint16_t port)
+void session_manual::connect(const std::string& hostname,
+    uint16_t port) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -74,14 +85,15 @@ void session_manual::connect(const std::string& hostname, uint16_t port)
 
 // BUGBUG: config::authority cons throws on invalid IP format, but this public.
 void session_manual::connect(const std::string& hostname, uint16_t port,
-    channel_handler handler)
+    channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     connect({ hostname, port }, handler);
 }
 
-void session_manual::connect(const authority& host, channel_handler handler)
+void session_manual::connect(const authority& host,
+    channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -108,7 +120,7 @@ void session_manual::connect(const authority& host, channel_handler handler)
 // ----------------------------------------------------------------------------
 
 void session_manual::start_connect(const authority& host,
-    connector::ptr connector, channel_handler handler)
+    connector::ptr connector, channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -125,7 +137,8 @@ void session_manual::start_connect(const authority& host,
 }
 
 void session_manual::handle_connect(const code& ec, channel::ptr channel,
-    const authority& host, connector::ptr connector, channel_handler handler)
+    const authority& host, connector::ptr connector,
+    channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -136,7 +149,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
         return;
     }
 
-    // There was an error connecting the channel, so try again.
+    // There was an error connecting the channel, so try again after delay.
     if (ec)
     {
         timer_->start(BIND3(start_connect, host, connector, handler),
@@ -157,13 +170,13 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
 }
 
 void session_manual::attach_handshake(const channel::ptr& channel,
-    result_handler handshake) const
+    result_handler handler) const noexcept
 {
-    session::attach_handshake(channel, handshake);
+    session::attach_handshake(channel, handler);
 }
 
 void session_manual::handle_channel_start(const code& ec,
-    const authority&, channel::ptr channel, channel_handler handler)
+    const authority&, channel::ptr channel, channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -176,7 +189,8 @@ void session_manual::handle_channel_start(const code& ec,
 }
 
 // Communication will begin after this function returns, freeing the thread.
-void session_manual::attach_protocols(const channel::ptr& channel) const
+void session_manual::attach_protocols(
+    const channel::ptr& channel) const noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -195,9 +209,11 @@ void session_manual::attach_protocols(const channel::ptr& channel) const
 }
 
 void session_manual::handle_channel_stop(const code&, const authority& host,
-    connector::ptr connector, channel_handler handler)
+    connector::ptr connector, channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // The channel stopped following connection, try again without delay.
     start_connect(host, connector, handler);
 }
 
