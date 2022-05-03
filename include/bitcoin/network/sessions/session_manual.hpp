@@ -52,11 +52,11 @@ public:
     /// Maintain connection to a node.
     virtual void connect(const std::string& hostname, uint16_t port);
 
-    /// Maintain connection to a node with callback on first connect.
+    /// Maintain connection to a node, with callback on each connect and stop.
     virtual void connect(const std::string& hostname, uint16_t port,
         channel_handler handler);
 
-    /// Maintain connection to a node.
+    /// Maintain connection to a node, with callback on each connect and stop.
     virtual void connect(const config::authority& host,
         channel_handler handler);
 
