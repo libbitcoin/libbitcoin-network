@@ -90,6 +90,8 @@ BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
     boost::asio::post(strand, [&]()
     {
         constexpr auto nonced_ping_version = messages::level::bip31;
+
+        // This line throws and is caught internal to the low level stream.
         const auto ec = instance.notify(messages::identifier::ping, nonced_ping_version, reader);
         BOOST_REQUIRE_EQUAL(ec, error::invalid_message);
     });
