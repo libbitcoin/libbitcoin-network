@@ -119,59 +119,47 @@ void session_outbound::start_connect(connectors_ptr connectors) noexcept
     if (stopped())
         return;
 
-    batch(connectors, BIND3(handle_connect, _1, _2, connectors));
-}
-
-// Attempt to connect one peer using a batch subset of connectors.
-void session_outbound::batch(connectors_ptr connectors, 
-    channel_handler handle_connect) noexcept
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
     // Count the number of connection attempts within the batch.
     auto counter = std::make_shared<size_t>(zero);
 
-    channel_handler handle_batch =
-        BIND5(handle_batch, _1, _2, counter, connectors, std::move(handle_connect));
+    channel_handler connect =
+        BIND3(handle_connect, _1, _2, connectors);
+
+    channel_handler one =
+        BIND5(handle_one, _1, _2, counter, connectors, std::move(connect));
 
     // Attempt to connect with a unique address for each connector of batch.
     for (const auto& connector: *connectors)
-        fetch(BIND4(do_one, _1, _2, connector, handle_batch));
+        fetch(BIND4(do_one, _1, _2, connector, one));
 }
 
-// Attempt to connect the given host and invoke handle_connect.
+// Attempt to connect the given host and invoke handle_one.
 void session_outbound::do_one(const code& ec, const authority& host,
-    connector::ptr connector, channel_handler handle_batch) noexcept
+    connector::ptr connector, channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    if (stopped())
-    {
-        handle_batch(error::service_stopped, nullptr);
-        return;
-    }
 
     // This termination prevents a tight loop in the empty address pool case.
     if (ec)
     {
-        handle_batch(ec, nullptr);
+        handler(ec, nullptr);
         return;
     }
 
     // This termination prevents a tight loop in the case of a small address pool.
     if (blacklisted(host))
     {
-        handle_batch(error::address_blocked, nullptr);
+        handler(error::address_blocked, nullptr);
         return;
     }
 
-    connector->connect(host, std::move(handle_batch));
+    connector->connect(host, std::move(handler));
 }
 
 // Handle each do_one connection attempt, stopping on first success.
-void session_outbound::handle_batch(const code& ec, channel::ptr channel,
+void session_outbound::handle_one(const code& ec, channel::ptr channel,
     count_ptr count, connectors_ptr connectors,
-    channel_handler handle_connect) noexcept
+    channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -199,7 +187,7 @@ void session_outbound::handle_batch(const code& ec, channel::ptr channel,
     // Got a connection.
     if (!ec)
     {
-        handle_connect(error::success, channel);
+        handler(error::success, channel);
         return;
     }
 
@@ -207,14 +195,14 @@ void session_outbound::handle_batch(const code& ec, channel::ptr channel,
     if (ec && finished)
     {
         // Reduce the set of errors from the batch to connect_failed.
-        handle_connect(error::connect_failed, nullptr);
+        handler(error::connect_failed, nullptr);
         return;
     }
 
     BC_ASSERT_MSG(!channel, "unexpected channel instance");
 }
 
-// Handle each socket connection within the batch of connectors.
+// Handle the singular batch result.
 void session_outbound::handle_connect(const code& ec, channel::ptr channel,
     connectors_ptr connectors) noexcept
 {

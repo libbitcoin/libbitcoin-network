@@ -72,10 +72,9 @@ private:
     void handle_channel_start(const code& ec, channel::ptr channel) noexcept;
     void handle_channel_stop(const code& ec, connectors_ptr connectors) noexcept;
 
-    void batch(connectors_ptr connectors, channel_handler handler) noexcept;
     void do_one(const code& ec, const config::authority& host,
         connector::ptr connector, channel_handler handler) noexcept;
-    void handle_batch(const code& ec, channel::ptr channel,
+    void handle_one(const code& ec, channel::ptr channel,
         count_ptr count, connectors_ptr connectors,
         channel_handler handler) noexcept;
 
