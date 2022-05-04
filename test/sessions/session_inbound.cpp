@@ -605,31 +605,30 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     set.inbound_port = 42;
     mock_p2p<mock_acceptor_start_success_accept_success<error::oversubscribed>> net(set);
 
-    // Start the network so that it can be stopped.
-    std::promise<code> promise_net_started;
+    std::promise<code> net_started;
     net.start([&](const code& ec)
     {
-        promise_net_started.set_value(ec);
+        net_started.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(promise_net_started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session (with one mocked inbound channel) using the network reference.
     auto session = std::make_shared<mock_session_inbound_channel_count_fail>(net);
     BOOST_REQUIRE(session->stopped());
 
-    std::promise<code> promise_session_started;
-    boost::asio::post(net.strand(), [=, &promise_session_started]()
+    std::promise<code> session_started;
+    boost::asio::post(net.strand(), [=, &session_started]()
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec)
         {
-            promise_session_started.set_value(ec);
+            session_started.set_value(ec);
         });
     });
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
-    BOOST_REQUIRE_EQUAL(promise_session_started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound_port);
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
@@ -661,31 +660,30 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
     set.inbound_port = 42;
     mock_p2p<mock_acceptor_start_success_accept_success<error::address_blocked>> net(set);
 
-    // Start the network so that it can be stopped.
-    std::promise<code> promise_net_started;
+    std::promise<code> net_started;
     net.start([&](const code& ec)
     {
-        promise_net_started.set_value(ec);
+        net_started.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(promise_net_started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session (with one mocked inbound channel) using the network reference.
     auto session = std::make_shared<mock_session_inbound_blacklist_fail>(net);
     BOOST_REQUIRE(session->stopped());
 
-    std::promise<code> promise_session_started;
-    boost::asio::post(net.strand(), [=, &promise_session_started]()
+    std::promise<code> session_started;
+    boost::asio::post(net.strand(), [=, &session_started]()
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec)
         {
-            promise_session_started.set_value(ec);
+            session_started.set_value(ec);
         });
     });
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
-    BOOST_REQUIRE_EQUAL(promise_session_started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound_port);
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
@@ -718,31 +716,30 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     set.connect_timeout_seconds = 10000;
     mock_p2p<mock_acceptor_start_success_accept_success<error::service_stopped>> net(set);
 
-    // Start the network so that it can be stopped.
-    std::promise<code> promise_net_started;
+    std::promise<code> net_started;
     net.start([&](const code& ec)
     {
-        promise_net_started.set_value(ec);
+        net_started.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(promise_net_started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session using the network reference.
     auto session = std::make_shared<mock_session_inbound>(net);
     BOOST_REQUIRE(session->stopped());
 
-    std::promise<code> promise_session_started;
-    boost::asio::post(net.strand(), [=, &promise_session_started]()
+    std::promise<code> session_started;
+    boost::asio::post(net.strand(), [=, &session_started]()
     {
         // Will cause started to be set and acceptor created.
         session->start([&](const code& ec)
         {
-            promise_session_started.set_value(ec);
+            session_started.set_value(ec);
         });
     });
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
-    BOOST_REQUIRE_EQUAL(promise_session_started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound_port);
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
@@ -786,19 +783,19 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_no_inbound_connecti
     set.inbound_port = 42;
     mock_p2p<mock_acceptor_start_fail> net(set);
 
-    std::promise<code> promise_start;
-    std::promise<code> promise_run;
+    std::promise<code> start;
+    std::promise<code> run;
     net.start([&](const code& ec)
     {
-        promise_start.set_value(ec);
+        start.set_value(ec);
         net.run([&](const code& ec)
         {
-            promise_run.set_value(ec);
+            run.set_value(ec);
         });
     });
 
-    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_inbound_port_zero__run_success)
@@ -814,19 +811,19 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_inbound_port_zero__
     set.inbound_connections = 42;
     mock_p2p<mock_acceptor_start_fail> net(set);
 
-    std::promise<code> promise_start;
-    std::promise<code> promise_run;
+    std::promise<code> start;
+    std::promise<code> run;
     net.start([&](const code& ec)
     {
-        promise_start.set_value(ec);
+        start.set_value(ec);
         net.run([&](const code& ec)
         {
-            promise_run.set_value(ec);
+            run.set_value(ec);
         });
     });
 
-    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_port_and_connections__expected)
@@ -842,20 +839,20 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_port_and_connection
     set.inbound_connections = 1;
     mock_p2p<mock_acceptor_start_fail> net(set);
 
-    std::promise<code> promise_start;
-    std::promise<code> promise_run;
+    std::promise<code> start;
+    std::promise<code> run;
     net.start([&](const code& ec)
     {
-        promise_start.set_value(ec);
+        start.set_value(ec);
         net.run([&](const code& ec)
         {
-            promise_run.set_value(ec);
+            run.set_value(ec);
         });
     });
     
     // mock_acceptor configured to return invalid_magic.
-    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::invalid_magic);
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::invalid_magic);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

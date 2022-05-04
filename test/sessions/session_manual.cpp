@@ -717,19 +717,19 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
     // Connector is not invoked.
     mock_p2p<connector> net(set);
 
-    std::promise<code> promise_start;
-    std::promise<code> promise_run;
+    std::promise<code> start;
+    std::promise<code> run;
     net.start([&](const code& ec)
     {
-        promise_start.set_value(ec);
+        start.set_value(ec);
         net.run([&](const code& ec)
         {
-            promise_run.set_value(ec);
+            run.set_value(ec);
         });
     });
 
-    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__success)
@@ -748,20 +748,20 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__s
     // Connect will return invalid_magic when executed.
     mock_p2p<mock_connector_connect_fail> net(set);
 
-    std::promise<code> promise_start;
-    std::promise<code> promise_run;
+    std::promise<code> start;
+    std::promise<code> run;
     net.start([&](const code& ec)
     {
-        promise_start.set_value(ec);
+        start.set_value(ec);
         net.run([&](const code& ec)
         {
-            promise_run.set_value(ec);
+            run.set_value(ec);
         });
     });
 
     // Connection failures are logged and suppressed in retry loop.
-    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
 
     // Connector is established and connect is called for all configured
     // connections prior to completion of network run call.
@@ -789,20 +789,20 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__
     // Connect will return invalid_magic when executed.
     mock_p2p<mock_connector_connect_fail> net(set);
 
-    std::promise<code> promise_start;
-    std::promise<code> promise_run;
+    std::promise<code> start;
+    std::promise<code> run;
     net.start([&](const code& ec)
     {
-        promise_start.set_value(ec);
+        start.set_value(ec);
         net.run([&](const code& ec)
         {
-            promise_run.set_value(ec);
+            run.set_value(ec);
         });
     });
 
     // Connection failures are logged and suppressed in retry loop.
-    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
 
     // Connector is established and connect is called for all configured
     // connections prior to completion of network run call. The last connection
@@ -827,21 +827,21 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
     // Connect will return invalid_magic when executed.
     mock_p2p<mock_connector_connect_fail> net(set);
 
-    std::promise<code> promise_start;
-    std::promise<code> promise_run;
+    std::promise<code> start;
+    std::promise<code> run;
     net.start([&](const code& ec)
     {
-        promise_start.set_value(ec);
+        start.set_value(ec);
         net.run([&](const code& ec)
         {
             net.connect(endpoint{ hostname, port });
-            promise_run.set_value(ec);
+            run.set_value(ec);
         });
     });
 
     // Connection failures are logged and suppressed in retry loop.
-    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(net.get_connector()->hostname(), hostname);
     BOOST_REQUIRE_EQUAL(net.get_connector()->port(), port);
 }
@@ -861,21 +861,21 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
     // Connect will return invalid_magic when executed.
     mock_p2p<mock_connector_connect_fail> net(set);
 
-    std::promise<code> promise_start;
-    std::promise<code> promise_run;
+    std::promise<code> start;
+    std::promise<code> run;
     net.start([&](const code& ec)
     {
-        promise_start.set_value(ec);
+        start.set_value(ec);
         net.run([&](const code& ec)
         {
             net.connect(hostname, port);
-            promise_run.set_value(ec);
+            run.set_value(ec);
         });
     });
 
     // Connection failures are logged and suppressed in retry loop.
-    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(net.get_connector()->hostname(), hostname);
     BOOST_REQUIRE_EQUAL(net.get_connector()->port(), port);
 }
@@ -895,33 +895,33 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
     // Connect will return invalid_magic when executed.
     mock_p2p<mock_connector_connect_fail> net(set);
 
-    std::promise<code> promise_start;
-    std::promise<code> promise_run;
-    std::promise<code> promise_connect;
+    std::promise<code> start;
+    std::promise<code> run;
+    std::promise<code> connect;
     channel::ptr connected_channel;
     net.start([&](const code& ec)
     {
-        promise_start.set_value(ec);
+        start.set_value(ec);
         net.run([&](const code& ec)
         {
             net.connect(hostname, port, [&](const code& ec, channel::ptr channel)
             {
                 connected_channel = channel;
-                promise_connect.set_value(ec);
+                connect.set_value(ec);
             });
 
-            promise_run.set_value(ec);
+            run.set_value(ec);
         });
     });
 
     // Connection failures are logged and suppressed in retry loop.
-    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
 
     // The connection loops on connect failure until service stop.
     net.close();
     BOOST_REQUIRE(!connected_channel);
-    BOOST_REQUIRE_EQUAL(promise_connect.get_future().get(), error::service_stopped);
+    BOOST_REQUIRE_EQUAL(connect.get_future().get(), error::service_stopped);
     BOOST_REQUIRE_EQUAL(net.get_connector()->hostname(), hostname);
     BOOST_REQUIRE_EQUAL(net.get_connector()->port(), port);
 }
