@@ -119,12 +119,6 @@ void session_inbound::handle_accept(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (ec == error::operation_canceled)
-    {
-        BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        return;
-    }
-
     // Timer may start up again after service stop, so check first.
     if (stopped())
     {

@@ -96,38 +96,6 @@ protected:
     uint16_t port_;
 };
 
-class mock_connector_connect_stopped
-  : public mock_connector_connect_success
-{
-public:
-    typedef std::shared_ptr<mock_connector_connect_stopped> ptr;
-
-    mock_connector_connect_stopped(asio::strand& strand,
-        asio::io_context& service, const settings& settings)
-      : mock_connector_connect_success(strand, service, settings)
-    {
-    }
-
-    // Handle connect with service_stopped error.
-    void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) noexcept override
-    {
-        if (is_zero(connects_++))
-        {
-            hostname_ = hostname;
-            port_ = port;
-        }
-
-        boost::asio::post(strand_, [=]()
-        {
-            // This error is eaten by handle_connect, due to retry logic.
-            // service_stopped is the only terminal error code possible.
-            // Connect result code is independent of the channel stop code.
-            handler(error::service_stopped, nullptr);
-        });
-    }
-};
-
 class mock_connector_connect_fail
   : public mock_connector_connect_success
 {
@@ -492,53 +460,6 @@ BOOST_AUTO_TEST_CASE(session_manual__connect3__stopped__service_stopped)
 
     // A connector was not created.
     BOOST_REQUIRE(!net.get_connector());
-    session.reset();
-}
-
-BOOST_AUTO_TEST_CASE(session_manual__connect3__started_connect_service_stopped__not_attached)
-{
-    settings set(selection::mainnet);
-    mock_p2p<mock_connector_connect_stopped> net(set);
-    auto session = std::make_shared<mock_session_manual>(net);
-    BOOST_REQUIRE(session->stopped());
-
-    const uint16_t port = 42;
-    const auto hostname = "42.42.42.42";
-
-    std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
-    {
-        session->start([&](const code& ec)
-        {
-            started.set_value(ec);
-        });
-    });
-
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
-
-    std::promise<code> connected;
-    boost::asio::post(net.strand(), [=, &connected]()
-    {
-        session->connect({ hostname, port }, [&connected](const code& ec, channel::ptr channel)
-        {
-            BOOST_REQUIRE(!channel);
-            connected.set_value(ec);
-        });
-    });
-
-    // connector.connect sets service_stopped to avoid timer reconnect.
-    BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::service_stopped);
-
-    std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
-    {
-        session->stop();
-        stopped.set_value(true);
-    });
-
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
     session.reset();
 }
 

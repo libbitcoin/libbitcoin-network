@@ -175,11 +175,11 @@ void session_outbound::handle_batch(const code& ec, channel::ptr channel,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // A successful connection has already occurred.
+    // A successful connection has already occurred, drop this one.
     if (*count == batch_)
     {
         if (channel)
-            channel->stop(error::channel_stopped);
+            channel->stop(error::channel_dropped);
 
         return;
     }
@@ -206,6 +206,7 @@ void session_outbound::handle_batch(const code& ec, channel::ptr channel,
     // No more connectors remaining and no connections.
     if (ec && finished)
     {
+        // Reduce the set of errors from the batch to connect_failed.
         handle_connect(error::connect_failed, nullptr);
         return;
     }
@@ -218,12 +219,6 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
     connectors_ptr connectors) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    if (ec == error::service_stopped)
-    {
-        BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        return;
-    }
 
     // Timer may start up again after service stop, so check first.
     if (stopped())

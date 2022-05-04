@@ -144,13 +144,6 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (ec == error::service_stopped)
-    {
-        BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        handler(ec, nullptr);
-        return;
-    }
-
     // Timer may start up again after service stop, so check first.
     if (stopped())
     {
