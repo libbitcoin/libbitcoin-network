@@ -36,8 +36,7 @@ using namespace std::placeholders;
 
 session_outbound::session_outbound(p2p& network) noexcept
   : session(network),
-    batch_(std::max(network.network_settings().connect_batch_size, 1u)),
-    count_(zero)
+    batch_(std::max(network.network_settings().connect_batch_size, 1u))
 {
 }
 
@@ -87,25 +86,32 @@ void session_outbound::handle_started(const code& ec,
 
     for (size_t peer = 0; peer < settings().outbound_connections; ++peer)
     {
+        // Create batch connectors for each outbound connection.
+        // Connectors operate on the network strand but connect asynchronously.
+        // Resolution is asynchronous and connection occurs on socket strand.
+        // So actual connection attempts run in parallel, apart from setup and
+        // response handling within the connector.
         const auto connectors = create_connectors(batch_);
 
-        // Save each connector for stop.
+        // Stop all connectors upon session stop.
         for (const auto& connector: *connectors)
             stop_subscriber_->subscribe([=](const code&)
             {
                 connector->stop();
             });
 
+        // Start connection attempt with batch of connectors for one peer.
         start_connect(connectors);
     }
 
-    // This is the end of the start sequence.
+    // This is the end of the start sequence, does not indicate connect status.
     handler(error::success);
 }
 
 // Connnect cycle.
 // ----------------------------------------------------------------------------
 
+// Attempt to connect one peer using a batch subset of connectors.
 void session_outbound::start_connect(connectors_ptr connectors) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -113,10 +119,96 @@ void session_outbound::start_connect(connectors_ptr connectors) noexcept
     if (stopped())
         return;
 
-    // BATCH CONNECT (wait)
     batch(connectors, BIND3(handle_connect, _1, _2, connectors));
 }
 
+// Attempt to connect one peer using a batch subset of connectors.
+void session_outbound::batch(connectors_ptr connectors, 
+    channel_handler handle_connect) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Count the number of connection attempts within the batch.
+    auto counter = std::make_shared<size_t>(zero);
+
+    channel_handler handle_batch =
+        BIND5(handle_batch, _1, _2, counter, connectors, std::move(handle_connect));
+
+    // Attempt to connect with a unique address for each connector of batch.
+    for (const auto& connector: *connectors)
+        fetch(BIND4(do_one, _1, _2, connector, handle_batch));
+}
+
+// Attempt to connect the given host and invoke handle_connect.
+void session_outbound::do_one(const code& ec, const authority& host,
+    connector::ptr connector, channel_handler handle_batch) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    if (stopped())
+    {
+        handle_batch(error::service_stopped, nullptr);
+        return;
+    }
+
+    // This termination prevents a tight loop in the empty address pool case.
+    if (ec)
+    {
+        handle_batch(ec, nullptr);
+        return;
+    }
+
+    // This creates a tight loop in the case of a small address pool.
+    if (blacklisted(host))
+    {
+        handle_batch(error::address_blocked, nullptr);
+        return;
+    }
+
+    connector->connect(host, std::move(handle_batch));
+}
+
+// Handle each do_one connection attempt, stopping on first success.
+void session_outbound::handle_batch(const code& ec, channel::ptr channel,
+    count_ptr count, connectors_ptr connectors,
+    channel_handler handle_connect) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // A successful connection has already occurred.
+    if (*count == batch_)
+        return;
+
+    // Finished indicates that this is the last attempt.
+    const auto finished = (++(*count) == batch_);
+
+    // This connection is successful but there are others outstanding.
+    // Short-circuit subsequent attempts and clear outstanding connectors.
+    if (!ec && !finished)
+    {
+        *count = batch_;
+        for (auto it = connectors->begin(); it != connectors->end(); ++it)
+            (*it)->stop();
+    }
+
+    // Got a connection.
+    if (!ec)
+    {
+        handle_connect(error::success, channel);
+        return;
+    }
+
+    // No more connectors remaining and no connections.
+    if (ec && finished)
+    {
+        handle_connect(error::connect_failed, nullptr);
+        return;
+    }
+
+    BC_ASSERT_MSG(!channel, "unexpected channel instance");
+}
+
+// Handle each socket connection within the batch of connectors.
 void session_outbound::handle_connect(const code& ec, channel::ptr channel,
     connectors_ptr connectors) noexcept
 {
@@ -128,7 +220,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
         return;
     }
 
-    // There was an error connecting the channel, so try again.
+    // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
         timer_->start(BIND1(start_connect, connectors),
@@ -179,11 +271,9 @@ void session_outbound::handle_channel_start(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (ec)
-    {
-        // The start failure is also caught by handle_channel_stop.
-        ////channel->stop(ec);
-    }
+    // A handshake failure is caught by session::handle_channel_stopped,
+    // which stops the channel, so do not stop the channel here.
+    // handle_channel_stop has a copy of the connectors for retry.
 }
 
 void session_outbound::attach_protocols(
@@ -209,81 +299,9 @@ void session_outbound::handle_channel_stop(const code&,
     connectors_ptr connectors) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // When a connected channel drops, connect another.
     start_connect(connectors);
-}
-
-// Batch connect.
-// ----------------------------------------------------------------------------
-
-void session_outbound::batch(connectors_ptr connectors, 
-    channel_handler handler) noexcept
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-
-    channel_handler start =
-        BIND4(handle_batch, _1, _2, connectors, std::move(handler));
-
-    // Initialize batch of connectors.
-    for (const auto& connector: *connectors)
-        fetch(BIND4(start_batch, _1, _2, connector, start));
-}
-
-void session_outbound::start_batch(const code& ec, const authority& host,
-    connector::ptr connector, channel_handler handler) noexcept
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (stopped())
-    {
-        handler(error::service_stopped, nullptr);
-        return;
-    }
-
-    // This termination prevents a tight loop in the empty address pool case.
-    if (ec)
-    {
-        handler(ec, nullptr);
-        return;
-    }
-
-    // This creates a tight loop in the case of a small address pool.
-    if (blacklisted(host))
-    {
-        handler(error::address_blocked, nullptr);
-        return;
-    }
-
-    // CONNECT (wait)
-    connector->connect(host, std::move(handler));
-}
-
-// Called once for each call to start_batch.
-void session_outbound::handle_batch(const code& ec, channel::ptr channel,
-    connectors_ptr connectors, channel_handler handler) noexcept
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    const auto finish = (++count_ == batch_);
-
-    if (!ec)
-    {
-        // Clear unfinished connectors.
-        if (!finish)
-        {
-            count_ = batch_;
-            for (auto it = connectors->begin(); it != connectors->end(); ++it)
-                (*it)->stop();
-        }
-
-        // Got a connection.
-        handler(error::success, channel);
-        return;
-    }
-
-    // Got no successful connection.
-    if (finish)
-        handler(error::connect_failed, nullptr);
 }
 
 } // namespace network

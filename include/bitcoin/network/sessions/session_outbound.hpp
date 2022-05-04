@@ -63,6 +63,7 @@ protected:
     virtual void start_connect(connectors_ptr connectors) noexcept;
 
 private:
+    typedef std::shared_ptr<size_t> count_ptr;
 
     void handle_started(const code& ec, result_handler handler) noexcept;
     void handle_connect(const code& ec, channel::ptr channel,
@@ -72,14 +73,14 @@ private:
     void handle_channel_stop(const code& ec, connectors_ptr connectors) noexcept;
 
     void batch(connectors_ptr connectors, channel_handler handler) noexcept;
-    void start_batch(const code& ec, const config::authority& host,
+    void do_one(const code& ec, const config::authority& host,
         connector::ptr connector, channel_handler handler) noexcept;
     void handle_batch(const code& ec, channel::ptr channel,
-        connectors_ptr connectors, channel_handler handler) noexcept;
+        count_ptr count, connectors_ptr connectors,
+        channel_handler handler) noexcept;
 
-    // These are not thread safe.
+    // This is thread safe.
     const size_t batch_;
-    size_t count_;
 };
 
 } // namespace network
