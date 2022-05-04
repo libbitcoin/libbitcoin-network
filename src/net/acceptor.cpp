@@ -120,12 +120,6 @@ void acceptor::handle_accept(const code& ec, socket::ptr socket,
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    if (stopped_)
-    {
-        handler(error::service_stopped, nullptr);
-        return;
-    }
-
     if (ec)
     {
         // Prevent non-stop assertion (accept failed but socket is started).
@@ -134,6 +128,15 @@ void acceptor::handle_accept(const code& ec, socket::ptr socket,
         // Connect result codes return here.
         // Stop result code (error::operation_canceled) return here.
         handler(ec, nullptr);
+        return;
+    }
+
+    if (stopped_)
+    {
+        // Prevent non-stop assertion (socket unused).
+        socket->stop();
+
+        handler(error::service_stopped, nullptr);
         return;
     }
 
