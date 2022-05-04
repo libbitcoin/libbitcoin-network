@@ -276,6 +276,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__channel_timeout__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "connection timed out");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__channel_dropped__true_exected_message)
+{
+    constexpr auto value = error::channel_dropped;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "channel dropped");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__channel_stopped__true_exected_message)
 {
     constexpr auto value = error::channel_stopped;

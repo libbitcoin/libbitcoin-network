@@ -73,6 +73,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // termination
     { channel_timeout, "connection timed out" },
+    { channel_dropped, "channel dropped" },
     { channel_stopped, "channel stopped" },
     { service_stopped, "service stopped" },
 };
