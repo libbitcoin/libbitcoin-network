@@ -79,6 +79,7 @@ void session_manual::connect(const std::string& hostname,
     const auto self = shared_from_base<session_manual>();
     connect(hostname, port, [=](const code&, channel::ptr)
     {
+        // TODO: log discarded code.
         self->nop();
     });
 }
@@ -154,6 +155,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
         return;
     }
 
+    // TODO: log discarded code.
     // There was an error connecting the channel, so try again after delay.
     if (ec)
     {

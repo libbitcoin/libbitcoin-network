@@ -194,6 +194,7 @@ void session_outbound::handle_one(const code& ec, channel::ptr channel,
     // No more connectors remaining and no connections.
     if (ec && finished)
     {
+        // TODO: log discarded code.
         // Reduce the set of errors from the batch to connect_failed.
         handler(error::connect_failed, nullptr);
         return;
@@ -217,6 +218,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
         return;
     }
 
+    // This is always connect_failed, no log (reduced).
     // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
@@ -258,8 +260,7 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
             ->start(handler);
 }
 
-void session_outbound::handle_channel_start(const code& ec,
-    channel::ptr) noexcept
+void session_outbound::handle_channel_start(const code&, channel::ptr) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

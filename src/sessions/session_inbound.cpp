@@ -106,6 +106,7 @@ void session_inbound::start_accept(const code& ec) noexcept
     if (stopped())
         return;
 
+    // TODO: log potentially-discarded code.
     // May be acceptor start failure or cancelation from timer, terminal.
     if (ec)
         return;
@@ -128,6 +129,7 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
+    // TODO: log discarded code.
     // There was an error accepting the channel, so try again after delay.
     if (ec)
     {
