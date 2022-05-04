@@ -155,6 +155,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
     // There was an error connecting the channel, so try again after delay.
     if (ec)
     {
+        BC_ASSERT_MSG(!channel, "unexpected channel instance");
         timer_->start(BIND3(start_connect, host, connector, handler),
             settings().connect_timeout());
         return;
