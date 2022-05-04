@@ -125,17 +125,20 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
+    // Timer may start up again after service stop, so check first.
+    if (stopped())
+    {
+        if (channel)
+            channel->stop(error::service_stopped);
+
+        return;
+    }
+
     // There was an error accepting the channel, so try again after delay.
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         timer_->start(BIND1(start_accept, _1), settings().connect_timeout());
-        return;
-    }
-
-    if (stopped())
-    {
-        channel->stop(error::service_stopped);
         return;
     }
 

@@ -643,7 +643,6 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
     session.reset();
 }
 
-// TODO: appears to produce a delay stop.
 BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__invalid_checksum)
 {
     settings set(selection::mainnet);
@@ -699,11 +698,11 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__inva
     session.reset();
 }
 
-// TODO: appears to produce a delay stop.
 BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__success__success)
 {
     settings set(selection::mainnet);
     mock_p2p<mock_connector_connect_success> net(set);
+    set.connect_timeout_seconds = 10000;
     auto session = std::make_shared<mock_session_manual>(net);
     BOOST_REQUIRE(session->stopped());
 

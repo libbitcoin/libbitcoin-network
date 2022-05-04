@@ -152,19 +152,22 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
         return;
     }
 
+    // Timer may start up again after service stop, so check first.
+    if (stopped())
+    {
+        if (channel)
+            channel->stop(error::service_stopped);
+
+        handler(error::service_stopped, nullptr);
+        return;
+    }
+
     // There was an error connecting the channel, so try again after delay.
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         timer_->start(BIND3(start_connect, host, connector, handler),
             settings().connect_timeout());
-        return;
-    }
-
-    if (stopped())
-    {
-        handler(error::service_stopped, nullptr);
-        channel->stop(error::service_stopped);
         return;
     }
 

@@ -715,6 +715,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 42;
+    set.connect_timeout_seconds = 10000;
     mock_p2p<mock_acceptor_start_success_accept_success<error::service_stopped>> net(set);
 
     // Start the network so that it can be stopped.
