@@ -310,24 +310,24 @@ public:
         return notify_;
     }
 
-    void fetch(hosts::address_item_handler handler) const
+    void fetch(hosts::address_item_handler handler) const noexcept override
     {
         session::fetch(handler);
     }
 
-    void fetches(hosts::address_items_handler handler) const
+    void fetches(hosts::address_items_handler handler) const noexcept override
     {
         session::fetches(handler);
     }
 
     void save(const messages::address_item& address,
-        result_handler complete) const
+        result_handler complete) const noexcept override
     {
         session::save(address, complete);
     }
 
     void saves(const messages::address_items& addresses,
-        result_handler complete) const
+        result_handler complete) const noexcept override
     {
         session::saves(addresses, complete);
     }

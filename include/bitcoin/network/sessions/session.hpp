@@ -146,17 +146,17 @@ protected:
     friend class protocol;
 
     /// Fetch an entry from address pool.
-    void fetch(hosts::address_item_handler handler) const noexcept;
+    virtual void fetch(hosts::address_item_handler handler) const noexcept;
 
     /// Fetch a subset of entries (count based on config) from address pool.
-    void fetches(hosts::address_items_handler handler) const noexcept;
+    virtual void fetches(hosts::address_items_handler handler) const noexcept;
 
     /// Save an address to the address pool.
-    void save(const messages::address_item& address,
+    virtual void save(const messages::address_item& address,
         result_handler handler) const noexcept;
 
     /// Save a subset of entries (count based on config) from address pool.
-    void saves(const messages::address_items& addresses,
+    virtual void saves(const messages::address_items& addresses,
         result_handler handler) const noexcept;
 
     /// Members.
