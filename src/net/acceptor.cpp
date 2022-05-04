@@ -75,6 +75,7 @@ code acceptor::start(uint16_t port)
     if (!ec)
         acceptor_.listen(asio::max_connections, ec);
 
+    // This allows connect after stop (restartable).
     if (!ec)
         stopped_ = false;
 
@@ -98,6 +99,12 @@ void acceptor::accept(accept_handler&& handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
+    if (stopped_)
+    {
+        handler(error::service_stopped, nullptr);
+        return;
+    }
+
     const auto socket = std::make_shared<network::socket>(service_);
 
     // Posts handle_accept to strand.
@@ -112,6 +119,12 @@ void acceptor::handle_accept(const code& ec, socket::ptr socket,
     const accept_handler& handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
+    if (stopped_)
+    {
+        handler(error::service_stopped, nullptr);
+        return;
+    }
 
     if (ec)
     {
