@@ -134,7 +134,6 @@ void session_manual::start_connect(const authority& host,
         return;
     }
 
-    // CONNECT
     connector->connect(host,
         BIND5(handle_connect, _1, _2, host, connector, handler));
 }

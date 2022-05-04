@@ -158,7 +158,7 @@ void session_outbound::do_one(const code& ec, const authority& host,
         return;
     }
 
-    // This creates a tight loop in the case of a small address pool.
+    // This termination prevents a tight loop in the case of a small address pool.
     if (blacklisted(host))
     {
         handle_batch(error::address_blocked, nullptr);

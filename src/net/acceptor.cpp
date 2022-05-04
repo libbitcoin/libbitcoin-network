@@ -75,7 +75,7 @@ code acceptor::start(uint16_t port)
     if (!ec)
         acceptor_.listen(asio::max_connections, ec);
 
-    // This allows connect after stop (restartable).
+    // This allows accept after stop (restartable).
     if (!ec)
         stopped_ = false;
 
