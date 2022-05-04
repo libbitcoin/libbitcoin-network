@@ -82,7 +82,7 @@ public:
     // Properties.
     // ------------------------------------------------------------------------
 
-    /// Is the strand running in this thread.
+    /// The strand is running in this thread.
     virtual bool stranded() const;
 
     /// Get the strand of the socket.

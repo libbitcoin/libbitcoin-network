@@ -52,6 +52,8 @@ public:
     }
 };
 
+// TODO: increase test coverage.
+
 BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
 {
     threadpool pool(1);

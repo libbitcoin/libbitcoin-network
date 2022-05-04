@@ -177,7 +177,7 @@ protected:
     virtual acceptor::ptr create_acceptor();
     virtual connector::ptr create_connector();
 
-    /// Is the strand running in this thread.
+    /// The strand is running in this thread.
     bool stranded() const;
 
 protected:
