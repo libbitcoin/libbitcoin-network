@@ -177,7 +177,12 @@ void session_outbound::handle_batch(const code& ec, channel::ptr channel,
 
     // A successful connection has already occurred.
     if (*count == batch_)
+    {
+        if (channel)
+            channel->stop(error::channel_stopped);
+
         return;
+    }
 
     // Finished indicates that this is the last attempt.
     const auto finished = (++(*count) == batch_);
@@ -223,6 +228,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
     // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
+        BC_ASSERT_MSG(!channel, "unexpected channel instance");
         timer_->start(BIND1(start_connect, connectors),
             settings().connect_timeout());
         return;
