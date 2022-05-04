@@ -51,6 +51,11 @@ connector::connector(asio::strand& strand, asio::io_context& service,
 {
 }
 
+connector::~connector()
+{
+    BC_ASSERT_MSG(stopped_, "connector is not stopped");
+}
+
 void connector::stop()
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -111,6 +116,14 @@ void connector::handle_resolve(const error::boost_code& ec,
 
     if (ec)
     {
+        stopped_ = true;
+
+        // Posts handle_timer to strand (if not already posted).
+        timer_->stop();
+
+        // Prevent non-stop assertion (resolve failed but socket is started).
+        socket->stop();
+
         // Resolve result codes return here.
         // Cancel not handled here because handled first in timer.
         handler(error::asio_to_error_code(ec), nullptr);
@@ -150,11 +163,14 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
 
     stopped_ = true;
 
-    // Posts timer handler to strand (if not expired).
+    // Posts handle_timer to strand (if not already posted).
     timer_->stop();
 
     if (ec)
     {
+        // Prevent non-stop assertion (connect failed but socket is started).
+        socket->stop();
+
         // Connect result codes return here.
         handler(ec, nullptr);
         return;
@@ -176,10 +192,11 @@ void connector::handle_timer(const code& ec, const socket::ptr& socket,
     if (stopped_)
         return;
 
-    // Posts handle_resolve to strand (if not already posted).
+    stopped_ = true;
+
+    // Posts handle_connect|handle_resolve to strand (if not already posted).
     socket->stop();
     resolver_.cancel();
-    stopped_ = true;
 
     if (ec)
     {

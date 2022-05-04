@@ -41,14 +41,14 @@ public:
         return strand_;
     }
 
-    bool get_stopped() const
-    {
-        return stopped_;
-    }
-
     deadline::ptr get_timer()
     {
         return timer_;
+    }
+
+    bool get_stopped() const
+    {
+        return stopped_;
     }
 };
 
@@ -57,13 +57,14 @@ BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    const auto instance = std::make_shared<accessor>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
 
-    BOOST_REQUIRE(instance->get_stopped());
     BOOST_REQUIRE(&instance->get_settings() == &set);
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
     BOOST_REQUIRE(&instance->get_strand() == &strand);
     BOOST_REQUIRE(instance->get_timer());
+    BOOST_REQUIRE(instance->get_stopped());
+    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
@@ -72,9 +73,9 @@ BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
     set.connect_timeout_seconds = 0;
-    auto instance = std::make_shared<connector>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
 
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [instance]()
     {
         instance->connect(config::endpoint{ "bogus.xxx", 42 }, [](const code& ec, channel::ptr channel)
         {
@@ -85,6 +86,9 @@ BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
 
     pool.stop();
     pool.join();
+
+    BOOST_REQUIRE(instance->get_stopped());
+    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
@@ -93,9 +97,9 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
     set.connect_timeout_seconds = 0;
-    auto instance = std::make_shared<connector>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
 
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [instance]()
     {
         instance->connect(config::authority{ "42.42.42.42", 42 }, [](const code& ec, channel::ptr channel)
         {
@@ -106,6 +110,9 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
 
     pool.stop();
     pool.join();
+
+    BOOST_REQUIRE(instance->get_stopped());
+    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
@@ -114,7 +121,7 @@ BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
     set.connect_timeout_seconds = 0;
-    auto instance = std::make_shared<connector>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
 
     boost::asio::post(strand, [&]()
     {
@@ -127,6 +134,9 @@ BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
 
     pool.stop();
     pool.join();
+
+    BOOST_REQUIRE(instance->get_stopped());
+    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
@@ -135,9 +145,9 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
     set.connect_timeout_seconds = 1000;
-    auto instance = std::make_shared<connector>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
 
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [instance]()
     {
         instance->connect(config::endpoint{ "bogus.xxx", 42 }, [](const code& ec, channel::ptr channel)
         {
@@ -153,6 +163,9 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
 
     pool.stop();
     pool.join();
+
+    BOOST_REQUIRE(instance->get_stopped());
+    instance.reset();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -52,6 +52,7 @@ public:
     /// Construct an instance.
     connector(asio::strand& strand, asio::io_context& service,
         const settings& settings);
+    virtual ~connector();
 
     // Stop (no start).
     // ------------------------------------------------------------------------
