@@ -48,6 +48,7 @@ public:
     /// Construct an instance.
     acceptor(asio::strand& strand, asio::io_context& service,
         const settings& settings);
+    virtual ~acceptor();
 
     // Start/stop.
     // ------------------------------------------------------------------------
@@ -76,8 +77,9 @@ protected:
     asio::io_context& service_;
     asio::strand& strand_;
 
-    // This is protected by strand.
+    // These are protected by strand.
     asio::acceptor acceptor_;
+    bool stopped_;
 };
 
 } // namespace network

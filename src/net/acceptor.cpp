@@ -44,8 +44,14 @@ acceptor::acceptor(asio::strand& strand, asio::io_context& service,
   : settings_(settings),
     service_(service),
     strand_(strand),
-    acceptor_(strand_)
+    acceptor_(strand_),
+    stopped_(true)
 {
+}
+
+acceptor::~acceptor()
+{
+    BC_ASSERT_MSG(stopped_, "acceptor is not stopped");
 }
 
 // Start/stop.
@@ -69,6 +75,9 @@ code acceptor::start(uint16_t port)
     if (!ec)
         acceptor_.listen(asio::max_connections, ec);
 
+    if (!ec)
+        stopped_ = false;
+
     return error::asio_to_error_code(ec);
 }
 
@@ -79,6 +88,7 @@ void acceptor::stop()
     // Posts handle_accept to strand (if not already posted).
     error::boost_code ignore;
     acceptor_.cancel(ignore);
+    stopped_ = true;
 }
 
 // Methods.

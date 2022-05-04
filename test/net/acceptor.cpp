@@ -26,24 +26,29 @@ class accessor
 public:
     using acceptor::acceptor;
 
-    const settings& get_settings() const noexcept
+    const settings& get_settings() const
     {
         return settings_;
     }
 
-    const asio::io_context& get_service() const noexcept
+    const asio::io_context& get_service() const
     {
         return service_;
     }
 
-    const asio::strand& get_strand() const noexcept
+    const asio::strand& get_strand() const
     {
         return strand_;
     }
 
-    const asio::acceptor& get_acceptor() const noexcept
+    const asio::acceptor& get_acceptor() const
     {
         return acceptor_;
+    }
+
+    bool get_stopped() const
+    {
+        return stopped_;
     }
 };
 
@@ -58,28 +63,41 @@ BOOST_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
     BOOST_REQUIRE(&instance->get_strand() == &strand);
     BOOST_REQUIRE(!instance->get_acceptor().is_open());
+    BOOST_REQUIRE(instance->get_stopped());
     instance.reset();
 }
 
-BOOST_AUTO_TEST_CASE(acceptor__start__always__success)
+// TODO: There is no way to fake failures in start.
+BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
 {
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<acceptor>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
 
     // Result codes inconsistent due to context.
     ////BOOST_REQUIRE_EQUAL(instance->start(42), error::success);
     instance->start(42);
+
+    boost::asio::post(strand, [instance]()
+    {
+        instance->stop();
+    });
+
+    pool.stop();
+    pool.join();
+
+    BOOST_REQUIRE(instance->get_stopped());
     instance.reset();
 }
 
+// TODO: There is no way to fake successful acceptance.
 BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<acceptor>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
 
     // Result codes inconsistent due to context.
     ////BOOST_REQUIRE_EQUAL(instance->start(42), error::success);
@@ -101,6 +119,9 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
 
     pool.stop();
     pool.join();
+
+    BOOST_REQUIRE(instance->get_stopped());
+    instance.reset();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
