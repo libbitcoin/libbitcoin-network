@@ -240,6 +240,14 @@ void session::do_handle_channel_stopped(const code& ec, channel::ptr channel,
     // Assume stop notification, but may be subscribe failure (idempotent).
     /*bool*/ network_.unstore(channel, inbound());
 
+    // TODO:
+    // This is redundant in the case of invoked from channel stop subscriber.
+    // And the subscription can only fail if the proxy/channel is stopped.
+    // If removed, would need to be stopped on ec in handle_channel_start.
+    // However test cases expect channel.stop invocation, which this ensures.
+    // Otherwise proxy.do_stop often bypasses a call to stop. This could be
+    // worked around by providing a protected virtual stop method exposed for
+    // testing, invoked from do_stop, or by only calling do_stop from stop.
     channel->stop(ec);
 
     // Handles stop reason code, stop subscribe failure or stop notification.
