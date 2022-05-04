@@ -98,7 +98,7 @@ const network::settings& protocol::settings() const
 void protocol::saves(const messages::address_items& addresses,
     result_handler handler)
 {
-    // boost::asio::bind_executor not working.
+    // boost::asio::bind_executor not working due to type erasure.
     boost::asio::post(channel_->strand(),
         std::bind(&protocol::do_saves,
             shared_from_this(), addresses, handler));
@@ -112,7 +112,7 @@ void protocol::do_saves(const messages::address_items& addresses,
 
 void protocol::fetches(fetches_handler handler)
 {
-    // boost::asio::bind_executor not working.
+    // boost::asio::bind_executor not working due to type erasure.
     boost::asio::post(channel_->strand(),
         std::bind(&protocol::do_fetches,
             shared_from_this(), handler));

@@ -83,12 +83,12 @@ void session_manual::connect(const std::string& hostname,
     });
 }
 
-// BUGBUG: config::authority cons throws on invalid IP format, but this public.
 void session_manual::connect(const std::string& hostname, uint16_t port,
     channel_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // BUGBUG: config::authority cons throws on invalid IP format, but this public.
     connect({ hostname, port }, handler);
 }
 
@@ -103,11 +103,14 @@ void session_manual::connect(const authority& host,
         return;
     }
 
+    // Create a connector for each manual connection.
+    // Connectors operate on the network strand but connect asynchronously.
+    // Resolution is asynchronous and connection occurs on socket strand.
+    // So actual connection attempts run in parallel, apart from setup and
+    // response handling within the connector.
     const auto connector = create_connector();
 
-    // BUGBUG: this accumulates connectors until stop (leak).
-    // TODO: requires subscription removal on completion.
-    // Required for premature stop.
+    // Stop all connectors upon session stop.
     stop_subscriber_->subscribe([=](const code&)
     {
         connector->stop();
