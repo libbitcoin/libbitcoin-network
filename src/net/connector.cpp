@@ -117,7 +117,7 @@ void connector::handle_resolve(const error::boost_code& ec,
         return;
     }
 
-    // boost::asio::bind_executor not working.
+    // boost::asio::bind_executor not working due to type erasure.
     ////// Posts handle_connect to strand (after socket strand).
     ////socket->connect(range,
     ////    boost::asio::bind_executor(strand_,
