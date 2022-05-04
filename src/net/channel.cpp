@@ -135,6 +135,7 @@ void channel::stop(const code& ec)
             shared_from_base<channel>(), ec));
 }
 
+// This should not be called internally, as derived rely on stop() override.
 void channel::do_stop(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");

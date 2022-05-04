@@ -854,7 +854,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE(!session->attached_protocol());
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
     BOOST_REQUIRE(channel->stopped());
-    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::channel_stopped);
+
+    // Channel is stopped before handshake completion, due to read failure.
+    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::file_system);
 
     // Channel pent and store succeeded.
     BOOST_REQUIRE_EQUAL(net.pent_nonce(), channel->nonce());

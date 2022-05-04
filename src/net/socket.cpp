@@ -55,6 +55,7 @@ socket::~socket()
 
 // Stop.
 // ----------------------------------------------------------------------------
+// The socket is not allowed to stop itself (internally).
 
 void socket::stop()
 {
