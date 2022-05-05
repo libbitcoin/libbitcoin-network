@@ -819,12 +819,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
 BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_no_inbound_connections__run_success)
 {
     settings set(selection::mainnet);
-    set.connect_batch_size = 0;
     set.outbound_connections = 0;
     set.seeds.clear();
-    BOOST_REQUIRE(set.peers.empty());
 
-    // Start will return invalid_magic if executed, but this will bypass it.
+    // Start will return invalid_magic if executed, but this test will bypass it.
     set.inbound_connections = 0;
     set.inbound_port = 42;
     mock_p2p<mock_acceptor_start_fail> net(set);
@@ -847,12 +845,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_no_inbound_connecti
 BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_inbound_port_zero__run_success)
 {
     settings set(selection::mainnet);
-    set.connect_batch_size = 0;
     set.outbound_connections = 0;
     set.seeds.clear();
-    BOOST_REQUIRE(set.peers.empty());
 
-    // Start will return invalid_magic if executed, but this will bypass it.
+    // Start will return invalid_magic if executed, but this test will bypass it.
     set.inbound_port = 0;
     set.inbound_connections = 42;
     mock_p2p<mock_acceptor_start_fail> net(set);
@@ -872,13 +868,11 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_inbound_port_zero__
     BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_port_and_connections__expected)
+BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_port_and_connections__run_invalid_magic)
 {
     settings set(selection::mainnet);
-    set.connect_batch_size = 0;
     set.outbound_connections = 0;
     set.seeds.clear();
-    BOOST_REQUIRE(set.peers.empty());
 
     // Start will return invalid_magic when executed.
     set.inbound_port = 42;
@@ -896,7 +890,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_port_and_connection
         });
     });
     
-    // mock_acceptor configured to return invalid_magic.
+    // mock_acceptor_start_fail configured to return invalid_magic.
     BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(run.get_future().get(), error::invalid_magic);
 }
