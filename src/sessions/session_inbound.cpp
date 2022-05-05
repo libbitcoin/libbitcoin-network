@@ -76,47 +76,41 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    acceptor_ = create_acceptor();
-    const auto code = acceptor_->start(settings().inbound_port);
-    handler(code);
+    const auto acceptor = create_acceptor();
+    const auto error_code = acceptor->start(settings().inbound_port);
+    handler(error_code);
 
-    start_accept(code);
-}
-
-void session_inbound::stop() noexcept
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (acceptor_)
+    if (!error_code)
     {
-        acceptor_->stop();
-        acceptor_.reset();
-    }
+        stop_subscriber_->subscribe([=](const network::code&)
+        {
+            acceptor->stop();
+        });
 
-    session::stop();
+        start_accept(error::success, acceptor);
+    }
 }
 
 // Accept sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept(const code& ec) noexcept
+void session_inbound::start_accept(const code& ec,
+    acceptor::ptr acceptor) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped())
         return;
 
-    // TODO: log potentially-discarded code.
-    // May be acceptor start failure or cancelation from timer, terminal.
+    // TODO: log discarded timer failure code.
     if (ec)
         return;
 
-    // ACCEPT (wait)
-    acceptor_->accept(BIND2(handle_accept, _1, _2));
+    acceptor->accept(BIND3(handle_accept, _1, _2, acceptor));
 }
 
 void session_inbound::handle_accept(const code& ec,
-    channel::ptr channel) noexcept
+    channel::ptr channel, acceptor::ptr acceptor) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -134,14 +128,15 @@ void session_inbound::handle_accept(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        timer_->start(BIND1(start_accept, _1), settings().connect_timeout());
+        timer_->start(BIND2(start_accept, _1, acceptor),
+            settings().connect_timeout());
         return;
     }
 
-    // There was no error, so listen again.
-    start_accept(error::success);
+    // There was no error, so listen again without delay.
+    start_accept(error::success, acceptor);
 
-    // Could instead stop listening when at limit, though that requires event.
+    // Could instead stop listening when at limit, though this is simpler.
     if (inbound_channel_count() >= settings().inbound_connections)
     {
         channel->stop(error::oversubscribed);

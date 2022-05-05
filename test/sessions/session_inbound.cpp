@@ -231,10 +231,10 @@ public:
     }
 
     // Capture first start_accept call.
-    void start_accept(const code& ec) noexcept override
+    void start_accept(const code& ec, acceptor::ptr acceptor) noexcept override
     {
         // Must be first to ensure acceptor::accept() preceeds promise release.
-        session_inbound::start_accept(ec);
+        session_inbound::start_accept(ec, acceptor);
 
         if (!accepted_)
         {
@@ -278,7 +278,7 @@ public:
     }
 
 private:
-    code start_accept_code_;
+    code start_accept_code_{ error::unknown };
     mutable bool accepted_{ false };
     mutable bool handshaked_{ false };
     mutable std::promise<bool> accept_;
@@ -294,6 +294,18 @@ public:
     size_t inbound_channel_count() const noexcept override
     {
         return 1;
+    }
+};
+
+class mock_session_start_accept_parameter_error
+  : public mock_session_inbound
+{
+public:
+    using mock_session_inbound::mock_session_inbound;
+
+    void start_accept(const code&, acceptor::ptr acceptor) noexcept override
+    {
+        mock_session_inbound::start_accept(error::invalid_checksum, acceptor);
     }
 };
 
@@ -483,8 +495,12 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepte
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::invalid_magic);
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
+
+    // start_accept is not invoked in the case of a start error.
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::unknown);
+
+    // acceptor.stop is not called because acceptor.start failed.
+    BOOST_REQUIRE(!net.get_acceptor()->stopped());
 
     // Attach is not invoked.
     BOOST_REQUIRE(!session->attached_handshake());
@@ -533,6 +549,50 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
     BOOST_REQUIRE(net.get_acceptor()->stopped());
 
     // Not attached because accept returned stopped.
+    BOOST_REQUIRE(!session->attached_handshake());
+    session.reset();
+}
+
+BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started__timer_failure_code__no_accept)
+{
+    settings set(selection::mainnet);
+    set.inbound_connections = 1;
+    set.inbound_port = 42;
+    mock_p2p<mock_acceptor_start_success_accept_success<>> net(set);
+
+    // start_accept is invoked with invalid_checksum.
+    auto session = std::make_shared<mock_session_start_accept_parameter_error>(net);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]()
+    {
+        // Will cause started to be set and acceptor created.
+        session->start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound_port);
+    BOOST_REQUIRE(!net.get_acceptor()->stopped());
+    BOOST_REQUIRE(!net.get_acceptor()->accepted());
+    BOOST_REQUIRE(!session->stopped());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::invalid_checksum);
+    BOOST_REQUIRE(net.get_acceptor()->stopped());
+
+    // Attach is not invoked.
     BOOST_REQUIRE(!session->attached_handshake());
     session.reset();
 }

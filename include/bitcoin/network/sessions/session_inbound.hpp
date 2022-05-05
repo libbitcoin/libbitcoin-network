@@ -46,9 +46,6 @@ public:
     /// Start accepting inbound connections as configured (call from network strand).
     void start(result_handler handler) noexcept override;
 
-    /// Overridden to stop the acceptor (call from network strand).
-    void stop() noexcept override;
-
 protected:
     /// The channel is inbound (pend the nonce).
     bool inbound() const noexcept override;
@@ -64,17 +61,15 @@ protected:
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
     /// Start accepting based on configuration (call from network strand).
-    virtual void start_accept(const code& ec) noexcept;
+    virtual void start_accept(const code& ec, acceptor::ptr acceptor) noexcept;
 
 private:
     void handle_started(const code& ec, result_handler handler) noexcept;
-    void handle_accept(const code& ec, channel::ptr channel) noexcept;
+    void handle_accept(const code& ec, channel::ptr channel,
+        acceptor::ptr acceptor) noexcept;
 
     void handle_channel_start(const code& ec, channel::ptr channel) noexcept;
     void handle_channel_stop(const code& ec, channel::ptr channel) noexcept;
-
-    // This is not thread safe.
-    acceptor::ptr acceptor_;
 
     // This is thread safe.
     const size_t connection_limit_;
