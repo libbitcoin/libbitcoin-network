@@ -215,6 +215,7 @@ void session_manual::handle_channel_stop(const code&, const authority& host,
     BC_ASSERT_MSG(stranded(), "strand");
 
     // The channel stopped following connection, try again without delay.
+    // This is the only opportunity for a tight loop (could use timer).
     start_connect(host, connector, handler);
 }
 

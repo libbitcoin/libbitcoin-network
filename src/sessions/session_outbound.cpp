@@ -293,7 +293,8 @@ void session_outbound::handle_channel_stop(const code&,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // When a connected channel drops, connect another.
+    // The channel stopped following connection, try again without delay.
+    // This is the only opportunity for a tight loop (could use timer).
     start_connect(connectors);
 }
 
