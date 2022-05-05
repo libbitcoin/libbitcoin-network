@@ -28,10 +28,7 @@ class mock_channel
   : public channel
 {
 public:
-    mock_channel(socket::ptr socket, const settings& settings)
-      : channel(socket, settings)
-    {
-    }
+    using channel::channel;
 
     void begin() noexcept override
     {
@@ -69,10 +66,7 @@ class mock_channel_no_read
   : public mock_channel
 {
 public:
-    mock_channel_no_read(socket::ptr socket, const settings& settings)
-      : mock_channel(socket, settings)
-    {
-    }
+    using mock_channel::mock_channel;
 
     void begin() noexcept override
     {
@@ -85,10 +79,7 @@ class mock_p2p
   : public p2p
 {
 public:
-    mock_p2p(const settings& settings)
-      : p2p(settings)
-    {
-    }
+    using p2p::p2p;
 
     acceptor::ptr create_acceptor() noexcept override
     {

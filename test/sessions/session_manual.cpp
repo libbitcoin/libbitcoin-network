@@ -30,11 +30,7 @@ class mock_connector_connect_success
 public:
     typedef std::shared_ptr<mock_connector_connect_success> ptr;
 
-    mock_connector_connect_success(asio::strand& strand,
-        asio::io_context& service, const settings& settings)
-      : connector(strand, service, settings)
-    {
-    }
+    using connector::connector;
 
     // Get captured connected.
     virtual bool connected() const
@@ -102,11 +98,7 @@ class mock_connector_connect_fail
 public:
     typedef std::shared_ptr<mock_connector_connect_fail> ptr;
 
-    mock_connector_connect_fail(asio::strand& strand,
-        asio::io_context& service, const settings& settings)
-      : mock_connector_connect_success(strand, service, settings)
-    {
-    }
+    using mock_connector_connect_success::mock_connector_connect_success;
 
     // Handle connect with service_stopped error.
     void connect(const std::string& hostname, uint16_t port,
@@ -156,10 +148,7 @@ class mock_session_manual
   : public session_manual
 {
 public:
-    mock_session_manual(p2p& network)
-      : session_manual(network)
-    {
-    }
+    using session_manual::session_manual;
 
     bool inbound() const noexcept override
     {
@@ -252,10 +241,7 @@ class mock_session_manual_handshake_failure
   : public mock_session_manual
 {
 public:
-    mock_session_manual_handshake_failure(p2p& network)
-      : mock_session_manual(network)
-    {
-    }
+    using mock_session_manual::mock_session_manual;
 
     void attach_handshake(const channel::ptr&,
         result_handler handshake) const noexcept override

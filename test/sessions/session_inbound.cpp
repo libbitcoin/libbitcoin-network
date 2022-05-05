@@ -60,11 +60,7 @@ class mock_acceptor_start_success_accept_success
 public:
     typedef std::shared_ptr<mock_acceptor_start_success_accept_success> ptr;
 
-    mock_acceptor_start_success_accept_success(asio::strand& strand,
-        asio::io_context& service, const settings& settings)
-      : acceptor(strand, service, settings)
-    {
-    }
+    using acceptor::acceptor;
 
     // Require template parameterized channel stop code (ChannelStopCode).
     bool require_code() const
@@ -134,11 +130,8 @@ class mock_acceptor_start_success_accept_fail
 public:
     typedef std::shared_ptr<mock_acceptor_start_success_accept_fail> ptr;
 
-    mock_acceptor_start_success_accept_fail(asio::strand& strand,
-        asio::io_context& service, const settings& settings)
-      : mock_acceptor_start_success_accept_success(strand, service, settings)
-    {
-    }
+    using mock_acceptor_start_success_accept_success::
+        mock_acceptor_start_success_accept_success;
 
     // Handle accept with unknown error.
     void accept(accept_handler&& handler) noexcept override
@@ -157,7 +150,8 @@ class mock_acceptor_start_stopped
 public:
     typedef std::shared_ptr<mock_acceptor_start_stopped> ptr;
 
-    using mock_acceptor_start_success_accept_fail::mock_acceptor_start_success_accept_fail;
+    using mock_acceptor_start_success_accept_fail::
+        mock_acceptor_start_success_accept_fail;
 
     // Handle accept with service_stopped error.
     void accept(accept_handler&& handler) noexcept override
@@ -176,7 +170,8 @@ class mock_acceptor_start_fail
 public:
     typedef std::shared_ptr<mock_acceptor_start_fail> ptr;
 
-    using mock_acceptor_start_success_accept_fail::mock_acceptor_start_success_accept_fail;
+    using mock_acceptor_start_success_accept_fail::
+        mock_acceptor_start_success_accept_fail;
 
     // Capture port, fail.
     code start(uint16_t port) noexcept override
@@ -213,10 +208,7 @@ class mock_session_inbound
   : public session_inbound
 {
 public:
-    mock_session_inbound(p2p& network)
-      : session_inbound(network)
-    {
-    }
+    using session_inbound::session_inbound;
 
     bool inbound() const noexcept override
     {
@@ -297,10 +289,7 @@ class mock_session_inbound_channel_count_fail
   : public mock_session_inbound
 {
 public:
-    mock_session_inbound_channel_count_fail(p2p& network)
-      : mock_session_inbound(network)
-    {
-    }
+    using mock_session_inbound::mock_session_inbound;
 
     size_t inbound_channel_count() const noexcept override
     {
@@ -312,10 +301,7 @@ class mock_session_inbound_blacklist_fail
   : public mock_session_inbound
 {
 public:
-    mock_session_inbound_blacklist_fail(p2p& network)
-      : mock_session_inbound(network)
-    {
-    }
+    using mock_session_inbound::mock_session_inbound;
 
     bool blacklisted(const config::authority&) const noexcept override
     {
