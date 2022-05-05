@@ -82,9 +82,9 @@ void session_seed::handle_started(const code& ec,
 
     if (!is_zero(start_size))
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Seeding is not required because there are "
-            << start_size << " cached addresses." << std::endl;
+        ////LOG_DEBUG(LOG_NETWORK)
+        ////    << "Seeding is not required because there are "
+        ////    << start_size << " cached addresses." << std::endl;
         handler(error::success);
         return;
     }
@@ -119,13 +119,11 @@ void session_seed::start_seed(const config::endpoint& seed,
 
     const auto connector = create_connector();
 
-    // BUGUBUG: preserves connector until stop.
     stop_subscriber_->subscribe([=](const code&)
     {
         connector->stop();
     });
 
-    // OUTBOUND CONNECT
     connector->connect(seed,
         BIND5(handle_connect, _1, _2, seed, connector, counter));
 }

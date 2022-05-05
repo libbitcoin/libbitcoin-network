@@ -195,9 +195,9 @@ void hosts::store(const address_items& hosts)
         }
     }
 
-    LOG_VERBOSE(LOG_NETWORK)
-        << "Accepted (" << accepted << " of " << hosts.size()
-        << ") host addresses from peer." << std::endl;
+    ////LOG_VERBOSE(LOG_NETWORK)
+    ////    << "Accepted (" << accepted << " of " << hosts.size()
+    ////    << ") host addresses from peer." << std::endl;
 }
 
 void hosts::remove(const address_item& host)

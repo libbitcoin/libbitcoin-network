@@ -161,9 +161,9 @@ void proxy::handle_read_heading(const code& ec, size_t)
 
     if (ec)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Heading read failure [" << authority() << "] " << ec.message()
-            << std::endl;
+        ////LOG_DEBUG(LOG_NETWORK)
+        ////    << "Heading read failure [" << authority() << "] " << ec.message()
+        ////    << std::endl;
         stop(ec);
         return;
     }
@@ -328,10 +328,10 @@ void proxy::handle_send(const code& ec, size_t, system::chunk_ptr payload,
 
     if (ec)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure sending " << extract_command(payload) << " to ["
-            << authority() << "] (" << payload->size() << " bytes) "
-            << ec.message() << std::endl;
+        ////LOG_DEBUG(LOG_NETWORK)
+        ////    << "Failure sending " << extract_command(payload) << " to ["
+        ////    << authority() << "] (" << payload->size() << " bytes) "
+        ////    << ec.message() << std::endl;
         stop(ec);
         handler(ec);
         return;

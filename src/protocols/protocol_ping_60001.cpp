@@ -87,9 +87,9 @@ void protocol_ping_60001::handle_send_ping(const code& ec,
 
     if (ec)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure sending ping to [" << authority() << "] "
-            << ec.message() << std::endl;
+        ////LOG_DEBUG(LOG_NETWORK)
+        ////    << "Failure sending ping to [" << authority() << "] "
+        ////    << ec.message() << std::endl;
         stop(ec);
         return;
     }
