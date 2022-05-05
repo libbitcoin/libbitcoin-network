@@ -127,13 +127,13 @@ public:
     // ------------------------------------------------------------------------
 
     /// Get the number of addresses.
-    size_t address_count() const;
+    virtual size_t address_count() const;
 
     /// Get the number of inbound channels.
-    size_t inbound_channel_count() const;
+    virtual size_t inbound_channel_count() const;
 
     /// Get the number of channels.
-    size_t channel_count() const;
+    virtual size_t channel_count() const;
 
     /// Network configuration settings.
     const settings& network_settings() const;
