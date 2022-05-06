@@ -94,31 +94,31 @@ void proxy::do_stop(const code& ec)
     stop_subscriber_->stop(ec);
 }
 
-void proxy::subscribe_stop(result_handler handler, result_handler complete)
-{
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_subscribe_stop2,
-            shared_from_this(), handler, complete));
-}
-
-void proxy::do_subscribe_stop(result_handler handler)
+// protected
+void proxy::subscribe_stop(result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped())
-    {
-        handler(error::channel_stopped);
-        return;
-    }
-
-    // Not invoked if subscriber is stopped.
+    // A call after stop will return success but never invokes the handler.
     stop_subscriber_->subscribe(std::move(handler));
 }
 
-void proxy::do_subscribe_stop2(result_handler handler, result_handler complete)
+// public
+void proxy::subscribe_stop(result_handler handler, result_handler complete)
+{
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_subscribe_stop,
+            shared_from_this(), std::move(handler), std::move(complete)));
+}
+
+void proxy::do_subscribe_stop(result_handler handler, result_handler complete)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // A call after stop will return success but never invokes the handler.
+    // Guard against the channel becoming stopped before stop subscription.
+    // channel->begin() may cause stop before channel->subscribe_stop, which
+    // would preclude stop invocation (channel would hang).
     if (stopped())
         handler(error::channel_stopped);
     else

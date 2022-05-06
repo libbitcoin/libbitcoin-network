@@ -74,9 +74,12 @@ public:
 protected:
     static std::string extract_command(const system::chunk_ptr& payload);
 
+    // Protocols may subscribe<Message> and subscribe_stop from strand.
     friend class protocol;
+
+    void subscribe_stop(result_handler handler);
     template <class Message, typename Handler = pump::handler<Message>>
-    void do_subscribe(Handler&& handler)
+    void subscribe(Handler&& handler)
     {
         BC_ASSERT_MSG(stranded(), "strand");
         pump_subscriber_.subscribe(std::forward<Handler>(handler));
@@ -99,13 +102,11 @@ protected:
     virtual code notify(messages::identifier id, uint32_t version,
         system::reader& source);
 
-    void do_subscribe_stop(result_handler handler);
-    void do_subscribe_stop2(result_handler handler, result_handler complete);
-
 private:
     typedef messages::heading::ptr heading_ptr;
 
     void do_stop(const code& ec);
+    void do_subscribe_stop(result_handler handler, result_handler complete);
 
     void read_heading();
     void handle_read_heading(const code& ec, size_t heading_size);

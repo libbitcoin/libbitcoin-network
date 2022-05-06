@@ -63,19 +63,25 @@ void threadpool::stop()
     work_.reset();
 }
 
-void threadpool::join()
+bool threadpool::join()
 {
-    // Join cannot be called from a thread in the threadpool (deadlock).
-    BC_DEBUG_ONLY(const auto this_id = boost::this_thread::get_id();)
+    const auto this_id = boost::this_thread::get_id();
 
     for (auto& thread: threads_)
     {
-        BC_ASSERT_MSG(thread.joinable(), "unjoinable deadlock");
-        BC_ASSERT_MSG(this_id != thread.get_id(), "join deadlock");
+        // Thread must be joinable.
+        if (!thread.joinable())
+            return false;
+
+        // Join cannot be called from a thread in the threadpool (deadlock).
+        if (this_id == thread.get_id())
+            return false;
+
         thread.join();
     }
 
     threads_.clear();
+    return true;
 }
 
 asio::io_context& threadpool::service()

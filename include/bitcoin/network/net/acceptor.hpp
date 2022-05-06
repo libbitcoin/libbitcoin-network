@@ -69,9 +69,6 @@ public:
     virtual void accept(accept_handler&& handler);
 
 protected:
-    void handle_accept(const code& ec, socket::ptr socket,
-        const accept_handler& handler);
-
     // These are thread safe.
     const settings& settings_;
     asio::io_context& service_;
@@ -80,6 +77,10 @@ protected:
     // These are protected by strand.
     asio::acceptor acceptor_;
     bool stopped_;
+
+private:
+    void handle_accept(const code& ec, socket::ptr socket,
+        const accept_handler& handler);
 };
 
 } // namespace network

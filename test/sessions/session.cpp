@@ -49,7 +49,7 @@ public:
 
     void stopper(const code& ec)
     {
-        channel::do_stop(ec);
+        channel::stop(ec);
     }
 
     code stop_code() const

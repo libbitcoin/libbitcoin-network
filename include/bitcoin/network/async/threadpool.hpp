@@ -50,7 +50,8 @@ public:
 
     /// Block until all threads in the pool terminate.
     /// Safe to call from any thread not in the threadpool.
-    void join();
+    /// Returns false if called from within threadpool (would deadlock).
+    bool join();
 
     /// Non-const underlying boost::io_service object (thread safe).
     asio::io_context& service();

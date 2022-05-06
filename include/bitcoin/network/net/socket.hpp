@@ -92,6 +92,15 @@ public:
     virtual const config::authority& authority() const;
 
 protected:
+    // These are thread safe.
+    std::atomic<bool> stopped_;
+    asio::strand strand_;
+
+    // These are protected by strand (see also handle_accept).
+    asio::socket socket_;
+    config::authority authority_;
+
+private:
     void do_stop();
     void do_connect(const asio::endpoints& range, result_handler handler);
     ////void do_dynamic_read(system::data_chunk& out, io_handler handler);
@@ -104,14 +113,6 @@ protected:
         const asio::endpoint& peer, const result_handler& handler);
     void handle_io(const error::boost_code& ec, size_t size,
         const io_handler& handler);
-
-    // These are thread safe.
-    std::atomic<bool> stopped_;
-    asio::strand strand_;
-
-    // These are protected by strand (see also handle_accept).
-    asio::socket socket_;
-    config::authority authority_;
 };
 
 } // namespace network

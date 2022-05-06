@@ -79,6 +79,17 @@ public:
         connect_handler&& handler);
 
 protected:
+    // These are thread safe
+    const settings& settings_;
+    asio::io_context& service_;
+    asio::strand& strand_;
+
+    // These are protected by strand.
+    deadline::ptr timer_;
+    asio::resolver resolver_;
+    bool stopped_;
+
+private:
     void handle_resolve(const error::boost_code& ec,
         const asio::endpoints& range, socket::ptr socket,
         connect_handler handler);
@@ -89,16 +100,6 @@ protected:
 
     void do_handle_connect(const code& ec, socket::ptr socket,
         const connect_handler& handler);
-
-    // These are thread safe
-    const settings& settings_;
-    asio::io_context& service_;
-    asio::strand& strand_;
-
-    // These are protected by strand.
-    deadline::ptr timer_;
-    asio::resolver resolver_;
-    bool stopped_;
 };
 
 typedef std::vector<connector::ptr> connectors;

@@ -112,6 +112,7 @@ void session_manual::connect(const authority& host,
     const auto connector = create_connector();
 
     // Stop all connectors upon session stop.
+    // Guarded by stopped() above (subscribe after stop is not invoked).
     stop_subscriber_->subscribe([=](const code&)
     {
         connector->stop();
@@ -199,14 +200,14 @@ void session_manual::attach_protocols(
     const auto heartbeat = settings().channel_heartbeat();
 
     if (version >= messages::level::bip31)
-        channel->do_attach<protocol_ping_60001>(*this, heartbeat)->start();
+        channel->attach<protocol_ping_60001>(*this, heartbeat)->start();
     else
-        channel->do_attach<protocol_ping_31402>(*this, heartbeat)->start();
+        channel->attach<protocol_ping_31402>(*this, heartbeat)->start();
 
     if (version >= messages::level::bip61)
-        channel->do_attach<protocol_reject_70002>(*this)->start();
+        channel->attach<protocol_reject_70002>(*this)->start();
 
-    channel->do_attach<protocol_address_31402>(*this)->start();
+    channel->attach<protocol_address_31402>(*this)->start();
 }
 
 void session_manual::handle_channel_stop(const code&, const authority& host,

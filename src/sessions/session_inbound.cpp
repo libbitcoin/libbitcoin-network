@@ -69,6 +69,7 @@ void session_inbound::handle_started(const code& ec,
     result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(!stopped(), "session stopped in start (subscriber)");
 
     if (ec)
     {
@@ -174,14 +175,14 @@ void session_inbound::attach_protocols(
     const auto heartbeat = settings().channel_heartbeat();
 
     if (version >= messages::level::bip31)
-        channel->do_attach<protocol_ping_60001>(*this, heartbeat)->start();
+        channel->attach<protocol_ping_60001>(*this, heartbeat)->start();
     else
-        channel->do_attach<protocol_ping_31402>(*this, heartbeat)->start();
+        channel->attach<protocol_ping_31402>(*this, heartbeat)->start();
 
     if (version >= messages::level::bip61)
-        channel->do_attach<protocol_reject_70002>(*this)->start();
+        channel->attach<protocol_reject_70002>(*this)->start();
 
-    channel->do_attach<protocol_address_31402>(*this)->start();
+    channel->attach<protocol_address_31402>(*this)->start();
 }
 
 void session_inbound::handle_channel_stop(const code&, channel::ptr) noexcept

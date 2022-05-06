@@ -43,12 +43,12 @@ class BCT_API channel
 public:
     typedef std::shared_ptr<channel> ptr;
 
-    // HACK: public but must be called from channel strand.
+    /// Must be called from the channel strand.
     /// Attach a protocol to the channel, caller must start returned protocol.
     template <class Protocol, typename... Args>
-    typename Protocol::ptr do_attach(const session& session, Args&&... args)
+    typename Protocol::ptr attach(const session& session, Args&&... args)
     {
-        BC_ASSERT_MSG(stranded(), "do_subscribe_stop");
+        BC_ASSERT_MSG(stranded(), "subscribe_stop");
 
         if (!stranded())
             return nullptr;
@@ -58,8 +58,9 @@ public:
             shared_from_base<channel>(), std::forward<Args>(args)...);
 
         // Protocol lifetime is ensured by the channel stop subscriber.
-        do_subscribe_stop([=](const code&)
+        subscribe_stop([=](const code&)
         {
+            // An attach after stop never invokes this handler.
             protocol->nop();
         });
 
@@ -79,8 +80,6 @@ public:
     void set_peer_version(messages::version::ptr value) noexcept;
 
 protected:
-    void do_stop(const code& ec);
-
     size_t maximum_payload() const noexcept override;
     uint32_t protocol_magic() const noexcept override;
     bool validate_checksum() const noexcept override;
@@ -89,6 +88,7 @@ protected:
     void signal_activity() override;
 
 private:
+    void do_stop(const code& ec);
     void start_expiration();
     void handle_expiration(const code& ec);
 

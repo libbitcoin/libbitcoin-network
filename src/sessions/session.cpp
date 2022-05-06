@@ -133,9 +133,9 @@ void session::attach_handshake(const channel::ptr& channel,
     // Channel remains started through attachment.
     // Handshake protocols must invoke handler upon completion or failure.
     if (settings().protocol_maximum >= messages::level::bip61)
-        channel->do_attach<protocol_version_70002>(*this)->start(handler);
+        channel->attach<protocol_version_70002>(*this)->start(handler);
     else
-        channel->do_attach<protocol_version_31402>(*this)->start(handler);
+        channel->attach<protocol_version_31402>(*this)->start(handler);
 }
 
 void session::handle_handshake(const code& ec, channel::ptr channel,

@@ -80,7 +80,7 @@ protected:
     void subscribe(Handler&& handler, Args&&... args)
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        channel_->do_subscribe<Message>(BOUND_PROTOCOL(handler, args));
+        channel_->subscribe<Message>(BOUND_PROTOCOL(handler, args));
     }
 
     bool stranded() const;

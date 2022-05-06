@@ -94,18 +94,20 @@ public:
     /// Run inbound and outbound sessions, call from start result handler.
     virtual void run(result_handler handler);
 
-    /// Not thread safe (threadpool.clear).
+    /// Not thread safe, call only once, from non-threadpool thread.
     /// Idempotent call to block on work stop, start may be reinvoked after.
     virtual void close();
 
     // Subscriptions.
     // ------------------------------------------------------------------------
 
-    /// Subscribe to connection creation events.
+    /// Subscribe to connection creation events (allowed before start).
+    /// A call after close will return success but never invokes the handler.
     virtual void subscribe_connect(channel_handler handler,
         result_handler complete);
 
-    /// Subscribe to service stop event.
+    /// Subscribe to service stop event (allowed before start).
+    /// A call after close will return success but never invokes the handler.
     virtual void subscribe_close(result_handler handler,
         result_handler complete);
 
@@ -147,19 +149,21 @@ public:
 protected:
     friend class session;
 
+    /// Must be called from the channel strand, before close.
     /// Attach a session to the network, caller must start returned session.
     template <class Session, typename... Args>
-    typename Session::ptr do_attach(Args&&... args)
+    typename Session::ptr attach(Args&&... args)
     {
-        BC_ASSERT_MSG(stranded(), "do_subscribe_close");
+        BC_ASSERT_MSG(stranded(), "subscribe_close");
 
         // Sessions are attached after network start.
         const auto session = std::make_shared<Session>(*this,
             std::forward<Args>(args)...);
 
         // Session lifetime is ensured by the network stop subscriber.
-        do_subscribe_close([=](const code&)
+        subscribe_close([=](const code&)
         {
+            // An attach after close never invokes this handler.
             session->stop();
         });
 
@@ -180,14 +184,15 @@ protected:
     /// The strand is running in this thread.
     bool stranded() const;
 
+    /// Subscribe to service stop event from strand.
+    void subscribe_close(result_handler handler);
+
 protected:
-    ////friend class session;
     virtual void pend(uint64_t nonce);
     virtual void unpend(uint64_t nonce);
     virtual code store(channel::ptr channel, bool notify, bool inbound);
     virtual bool unstore(channel::ptr channel, bool inbound);
 
-    ////friend class session;
     virtual void fetch(hosts::address_item_handler handler) const;
     virtual void fetches(hosts::address_items_handler handler) const;
     virtual void dump(const messages::address_item& address,
@@ -209,6 +214,8 @@ private:
 
     connectors_ptr create_connectors(size_t count);
 
+    bool closed() const;
+
     void do_start(result_handler handler);
     void do_run(result_handler handler);
     void do_close();
@@ -217,8 +224,7 @@ private:
     void handle_run(code ec, result_handler handler);
   
     void do_subscribe_connect(channel_handler handler, result_handler complete);
-    void do_subscribe_close(result_handler handler);
-    void do_subscribe_close2(result_handler handler, result_handler complete);
+    void do_subscribe_close(result_handler handler, result_handler complete);
 
     // Distinct method names required for std::bind.
     void do_connect1(const config::endpoint& endpoint);

@@ -33,13 +33,13 @@ public:
     template <class Message, typename Handler = pump::handler<Message>>
     void subscribe_message(Handler&& handler)
     {
-        proxy::do_subscribe<Message>(std::forward<Handler>(handler));
+        proxy::subscribe<Message>(std::forward<Handler>(handler));
     }
 
     // Call must be stranded.
     void subscribe_stop1(result_handler handler)
     {
-        proxy::do_subscribe_stop(std::move(handler));
+        proxy::subscribe_stop(std::move(handler));
     }
 
     proxy_accessor(socket::ptr socket)

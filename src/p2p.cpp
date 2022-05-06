@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <string>
@@ -98,6 +99,7 @@ void p2p::do_start(result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "attach_manual_session");
 
+    // manual_ doubles as the closed indicator.
     manual_ = attach_manual_session();
     manual_->start(std::bind(&p2p::handle_start, this, _1, std::move(handler)));
 }
@@ -128,7 +130,7 @@ void p2p::do_run(result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "manual_, attach_inbound_session");
 
-    if (!manual_)
+    if (closed())
     {
         handler(error::service_stopped);
         return;
@@ -157,19 +159,25 @@ void p2p::handle_run(code ec, result_handler handler)
 // Shutdown sequence.
 // ----------------------------------------------------------------------------
 
-// Not thread safe.
+// Not thread safe (threadpool_), call only once.
 // Blocks on join of all threadpool threads.
-// Must not be called from a thread within threadpool_.
+// Results in std::abort if called from a thread within the threadpool.
 void p2p::close()
 {
     boost::asio::dispatch(strand_, std::bind(&p2p::do_close, this));
-    threadpool_.join();
+
+    if (!threadpool_.join())
+    {
+        BC_ASSERT_MSG(false, "failed to join threadpool");
+        std::abort();
+    }
 }
 
 void p2p::do_close()
 {
     BC_ASSERT_MSG(stranded(), "do_stop (multiple members)");
 
+    // manual_ doubles as the closed indicator.
     // Release reference to manual session (also held by stop subscriber).
     if (manual_)
         manual_.reset();
@@ -197,7 +205,7 @@ void p2p::do_close()
 // Subscriptions.
 // ----------------------------------------------------------------------------
 
-// External or derived callers.
+// public
 void p2p::subscribe_connect(channel_handler handler, result_handler complete)
 {
     boost::asio::dispatch(strand_,
@@ -208,26 +216,34 @@ void p2p::subscribe_connect(channel_handler handler, result_handler complete)
 void p2p::do_subscribe_connect(channel_handler handler, result_handler complete)
 {
     BC_ASSERT_MSG(stranded(), "channel_subscriber_");
+
+    // A call after close will return success but never invokes the handler.
     channel_subscriber_->subscribe(std::move(handler));
     complete(error::success);
 }
 
-void p2p::subscribe_close(result_handler handler, result_handler complete)
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_subscribe_close2,
-            this, std::move(handler), std::move(complete)));
-}
-
-void p2p::do_subscribe_close(result_handler handler)
+// protected
+void p2p::subscribe_close(result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "stop_subscriber_");
+
+    // A call after close will return success but never invokes the handler.
     stop_subscriber_->subscribe(std::move(handler));
 }
 
-void p2p::do_subscribe_close2(result_handler handler, result_handler complete)
+// public
+void p2p::subscribe_close(result_handler handler, result_handler complete)
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_subscribe_close,
+            this, std::move(handler), std::move(complete)));
+}
+
+void p2p::do_subscribe_close(result_handler handler, result_handler complete)
 {
     BC_ASSERT_MSG(stranded(), "stop_subscriber_");
+
+    // A call after close will return success but never invokes the handler.
     stop_subscriber_->subscribe(std::move(handler));
     complete(error::success);
 }
@@ -283,6 +299,15 @@ void p2p::do_connect3(const std::string& hostname, uint16_t port,
 
 // Properties.
 // ----------------------------------------------------------------------------
+
+// private
+bool p2p::closed() const
+{
+    BC_ASSERT_MSG(stranded(), "manual_");
+
+    // manual_ doubles as the closed indicator.
+    return !manual_;
+}
 
 size_t p2p::address_count() const
 {
@@ -403,7 +428,7 @@ code p2p::store(channel::ptr channel, bool notify, bool inbound)
     BC_ASSERT_MSG(stranded(), "do_store (multiple members)");
 
     // Cannot allow any storage once stopped, or do_stop will not free it.
-    if (!manual_)
+    if (closed())
         return error::service_stopped;
 
     // Check for connection incoming from outgoing self.
@@ -461,29 +486,29 @@ bool p2p::unstore(channel::ptr channel, bool inbound)
 // protected
 session_seed::ptr p2p::attach_seed_session()
 {
-    BC_ASSERT_MSG(stranded(), "attach (do_subscribe_close)");
-    return do_attach<session_seed>();
+    BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
+    return attach<session_seed>();
 }
 
 // protected
 session_manual::ptr p2p::attach_manual_session()
 {
-    BC_ASSERT_MSG(stranded(), "attach (do_subscribe_close)");
-    return do_attach<session_manual>();
+    BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
+    return attach<session_manual>();
 }
 
 // protected
 session_inbound::ptr p2p::attach_inbound_session()
 {
-    BC_ASSERT_MSG(stranded(), "attach (do_subscribe_close)");
-    return do_attach<session_inbound>();
+    BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
+    return attach<session_inbound>();
 }
 
 // protected
 session_outbound::ptr p2p::attach_outbound_session()
 {
-    BC_ASSERT_MSG(stranded(), "attach (do_subscribe_close)");
-    return do_attach<session_outbound>();
+    BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
+    return attach<session_outbound>();
 }
 
 } // namespace network
