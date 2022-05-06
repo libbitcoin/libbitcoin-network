@@ -45,6 +45,12 @@ void subscriber<Args...>::subscribe(handler&& notify) noexcept
 
     if (!stopped_)
         queue_.push_back(std::move(notify));
+
+    // This would require hardwiring `const code& ec` to the argument list.
+    // This would ensure that no handler is ever dropped on the floor.
+    // However it requires a default constructor for each argument type.
+    ////else
+    ////    notify(error::service_stopped, Args{}...);
 }
 
 template <typename... Args>
