@@ -303,4 +303,13 @@ BOOST_AUTO_TEST_CASE(error_t__code__service_stopped__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "service stopped");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__subscriber_stopped__true_exected_message)
+{
+    constexpr auto value = error::subscriber_stopped;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "subscriber stopped");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

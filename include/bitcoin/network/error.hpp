@@ -95,7 +95,8 @@ enum error_t
     channel_timeout,
     channel_dropped,
     channel_stopped,
-    service_stopped
+    service_stopped,
+    subscriber_stopped
 };
 
 // No current need for error_code equivalence mapping.

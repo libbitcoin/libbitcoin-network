@@ -76,6 +76,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { channel_dropped, "channel dropped" },
     { channel_stopped, "channel stopped" },
     { service_stopped, "service stopped" },
+    { subscriber_stopped, "subscriber stopped" },
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
