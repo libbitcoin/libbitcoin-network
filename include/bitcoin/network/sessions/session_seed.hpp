@@ -49,6 +49,8 @@ public:
     void start(result_handler handler) noexcept override;
 
 protected:
+    typedef std::shared_ptr<size_t> count_ptr;
+
     /// The channel is outbound (do not pend the nonce).
     bool inbound() const noexcept override;
 
@@ -62,24 +64,20 @@ protected:
     /// Overridden to attach only seeding protocols upon channel start.
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
-    /// Start the seed connections (call from network strand).
+    /// Start a seed connection (called from start).
     virtual void start_seed(const config::endpoint& seed,
-        result_handler counter) noexcept;
+        connector::ptr connector, channel_handler handler) noexcept;
 
 private:
+
     void handle_started(const code& ec, result_handler handler) noexcept;
     void handle_connect(const code& ec, channel::ptr channel,
-        const config::endpoint& seed, connector::ptr connector,
-        result_handler counter) noexcept;
+        const config::endpoint& seed, count_ptr counter,
+        result_handler handler) noexcept;
 
     void handle_channel_start(const code& ec, channel::ptr channel) noexcept;
-    ////void handle_channel_stop(const code& ec, result_handler counter) noexcept;
-
-    void handle_complete(const code& ec, size_t start_size,
-        result_handler counter) noexcept;
-
-    // This is not thread safe.
-    size_t remaining_;
+    void handle_channel_stop(const code& ec, count_ptr counter,
+        result_handler handler) noexcept;
 };
 
 } // namespace network

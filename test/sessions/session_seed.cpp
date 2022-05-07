@@ -62,10 +62,10 @@ public:
 
     // Capture first start_connect call.
     void start_seed(const config::endpoint& seed,
-        result_handler counter) noexcept override
+        connector::ptr connector, channel_handler handler) noexcept override
     {
         // Must be first to ensure connector::connect() preceeds promise release.
-        session_seed::start_seed(seed, counter);
+        session_seed::start_seed(seed, connector, handler);
 
         if (!seeded_)
             seed_.set_value(true);
