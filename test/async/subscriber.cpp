@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__subscribed__subscriber_stopped)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE_EQUAL(stop_result.first, ec);
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE_EQUAL(stop_result.first, ec);
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__once__expected)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE_EQUAL(stop_result.first, ec);
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__twice__second_dropped)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     // Handler is not invoked on stop after stop (handlers cleared).
     BOOST_REQUIRE_EQUAL(stop_result.first, ec);
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE_EQUAL(notify_result.first, ec);
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__once__expected)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE_EQUAL(notify_result.first, ec);
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__twice__expected)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE_EQUAL(notify_result.first, ec);
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);

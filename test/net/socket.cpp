@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 
     instance->accept(acceptor, [instance](const code& ec)
     {
-        // Acceptor cancelation sets channel_stopped and default ipv4 authority.
+        // Acceptor cancellation sets channel_stopped and default ipv4 authority.
         BOOST_REQUIRE_EQUAL(ec, error::operation_canceled);
         BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::]");
     });
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 }
 
 BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
 
     instance->connect(endpoints, [instance](const code& ec)
     {
-        // Socket cancelation sets channel_stopped and default ipv6 authority.
+        // Socket cancellation sets channel_stopped and default ipv6 authority.
         // TODO: 3 (ERROR_PATH_NOT_FOUND) code gets mapped to unknown.
         BOOST_REQUIRE(ec == error::unknown || ec == error::channel_stopped);
 
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
     instance->stop();
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 }
 
 BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
     instance->stop();
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 }
 
 BOOST_AUTO_TEST_CASE(socket__write__disconnected__file_system)
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(socket__write__disconnected__file_system)
     instance->stop();
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 }
 
 

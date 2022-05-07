@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(threadpool__construct__default__unstopped)
 BOOST_AUTO_TEST_CASE(threadpool__construct__empty__joins)
 {
     threadpool pool{ 0, thread_priority::low };
-    pool.join();
+    BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE(!pool.service().stopped());
 }
 
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(threadpool__join__stopped__stopped)
 {
     threadpool pool{};
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE(pool.service().stopped());
 }
 

@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
     instance.reset();
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
     instance.reset();

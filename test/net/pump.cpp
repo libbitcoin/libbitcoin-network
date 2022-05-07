@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(pump__construct__stop__stops)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE(promise.get_future().get());
 }
 
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(pump__subscribe__stop__expected_code)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
 }
 
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
     BOOST_REQUIRE(!reader);
 }
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notificatio
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
     BOOST_REQUIRE(!reader);
 }
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_nonced_ping__expected_notification)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
     BOOST_REQUIRE(reader);
 }

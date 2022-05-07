@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
     instance.reset();
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
     instance.reset();
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
     instance.reset();
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
     });
 
     pool.stop();
-    pool.join();
+    BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
     instance.reset();
