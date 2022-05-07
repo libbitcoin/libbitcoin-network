@@ -18,7 +18,20 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(session_outbound_tests)
+struct session_outbound_tests_setup_fixture
+{
+    session_outbound_tests_setup_fixture()
+    {
+        test::remove(TEST_NAME);
+    }
+
+    ~session_outbound_tests_setup_fixture()
+    {
+        test::remove(TEST_NAME);
+    }
+};
+
+BOOST_FIXTURE_TEST_SUITE(session_outbound_tests, session_outbound_tests_setup_fixture)
 
 using namespace bc::network;
 using namespace bc::network::messages;
@@ -722,6 +735,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
 BOOST_AUTO_TEST_CASE(session_outbound__start__network_started_no_outbound_connections__run_success)
 {
     settings set(selection::mainnet);
+    set.hosts_file = TEST_NAME;
     set.inbound_connections = 0;
     set.inbound_port = 0;
     set.seeds.clear();
@@ -748,6 +762,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__network_started_no_outbound_connec
 BOOST_AUTO_TEST_CASE(session_outbound__start__network_started_one_addresses_count__run_success)
 {
     settings set(selection::mainnet);
+    set.hosts_file = TEST_NAME;
     set.inbound_connections = 0;
     set.inbound_port = 0;
     set.seeds.clear();
@@ -774,6 +789,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__network_started_one_addresses_coun
 BOOST_AUTO_TEST_CASE(session_outbound__start__network_started_one_addresses__run_success)
 {
     settings set(selection::mainnet);
+    set.hosts_file = TEST_NAME;
     set.inbound_connections = 0;
     set.inbound_port = 0;
     set.seeds.clear();
