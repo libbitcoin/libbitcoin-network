@@ -397,7 +397,7 @@ private:
 
 // properties
 
-BOOST_AUTO_TEST_CASE(session_outbound__inbound__default__false)
+BOOST_AUTO_TEST_CASE(session_outbound__inbound__always__false)
 {
     settings set(selection::mainnet);
     p2p net(set);
@@ -405,7 +405,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__inbound__default__false)
     BOOST_REQUIRE(!session.inbound());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__notify__default__true)
+BOOST_AUTO_TEST_CASE(session_outbound__notify__always__true)
 {
     settings set(selection::mainnet);
     p2p net(set);
@@ -476,7 +476,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__stopped)
     set.outbound_connections = 0;
     set.host_pool_capacity = 1;
     p2p net(set);
-    auto session = std::make_shared<mock_session_outbound>(net);
+    auto session = std::make_shared<mock_session_outbound_one_address_count>(net);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
@@ -497,7 +497,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__stopped)
 {
     settings set(selection::mainnet);
     p2p net(set);
-    auto session = std::make_shared<mock_session_outbound>(net);
+    auto session = std::make_shared<mock_session_outbound_one_address_count>(net);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
@@ -514,7 +514,30 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__stopped)
     session.reset();
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__no_addresses__stopped)
+BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__stopped)
+{
+    settings set(selection::mainnet);
+    set.host_pool_capacity = 1;
+    set.connect_batch_size = 0;
+    p2p net(set);
+    auto session = std::make_shared<mock_session_outbound_one_address_count>(net);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]()
+    {
+        session->start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(session->stopped());
+    session.reset();
+}
+
+BOOST_AUTO_TEST_CASE(session_outbound__start__no_address_count__stopped)
 {
     settings set(selection::mainnet);
     set.host_pool_capacity = 1;

@@ -35,8 +35,7 @@ using namespace config;
 using namespace std::placeholders;
 
 session_outbound::session_outbound(p2p& network) noexcept
-  : session(network),
-    batch_(std::max(network.network_settings().connect_batch_size, 1u))
+  : session(network)
 {
 }
 
@@ -58,7 +57,8 @@ void session_outbound::start(result_handler handler) noexcept
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (is_zero(settings().outbound_connections) || 
-        is_zero(settings().host_pool_capacity))
+        is_zero(settings().host_pool_capacity) ||
+        is_zero(settings().connect_batch_size))
     {
         ////LOG_INFO(LOG_NETWORK)
         ////    << "Not configured for outbound connections." << std::endl;
@@ -92,7 +92,7 @@ void session_outbound::handle_started(const code& ec,
     for (size_t peer = 0; peer < settings().outbound_connections; ++peer)
     {
         // Create a batch of connectors for each outbount connection.
-        const auto connectors = create_connectors(batch_);
+        const auto connectors = create_connectors(settings().connect_batch_size);
 
         for (const auto& connector: *connectors)
             stop_subscriber_->subscribe([=](const code&)
@@ -120,8 +120,8 @@ void session_outbound::start_connect(connectors_ptr connectors) noexcept
     if (stopped())
         return;
 
-    // Count the number of connection attempts within the batch.
-    const auto counter = std::make_shared<size_t>(zero);
+    // Count down the number of connection attempts within the batch.
+    const auto counter = std::make_shared<size_t>(connectors->size());
 
     channel_handler connect =
         BIND3(handle_connect, _1, _2, connectors);
@@ -165,7 +165,7 @@ void session_outbound::handle_one(const code& ec, channel::ptr channel,
     BC_ASSERT_MSG(stranded(), "strand");
 
     // A successful connection has already occurred, drop this one.
-    if (*count == batch_)
+    if (is_zero(*count))
     {
         if (channel)
             channel->stop(error::channel_dropped);
@@ -174,13 +174,13 @@ void session_outbound::handle_one(const code& ec, channel::ptr channel,
     }
 
     // Finished indicates that this is the last attempt.
-    const auto finished = (++(*count) == batch_);
+    const auto finished = is_zero(--(*count));
 
     // This connection is successful but there are others outstanding.
     // Short-circuit subsequent attempts and clear outstanding connectors.
     if (!ec && !finished)
     {
-        *count = batch_;
+        *count = zero;
         for (auto it = connectors->begin(); it != connectors->end(); ++it)
             (*it)->stop();
     }

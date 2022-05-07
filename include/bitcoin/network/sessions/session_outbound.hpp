@@ -77,9 +77,6 @@ private:
     void handle_one(const code& ec, channel::ptr channel,
         count_ptr count, connectors_ptr connectors,
         channel_handler handler) noexcept;
-
-    // This is thread safe.
-    const size_t batch_;
 };
 
 } // namespace network
