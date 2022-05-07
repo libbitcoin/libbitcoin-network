@@ -98,17 +98,7 @@ void session_manual::connect(const authority& host,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped())
-    {
-        handler(error::service_stopped, nullptr);
-        return;
-    }
-
     // Create a connector for each manual connection.
-    // Connectors operate on the network strand but connect asynchronously.
-    // Resolution is asynchronous and connection occurs on socket strand.
-    // So actual connection attempts run in parallel, apart from setup and
-    // response handling within the connector.
     const auto connector = create_connector();
 
     stop_subscriber_->subscribe([=](const code&)
@@ -127,9 +117,9 @@ void session_manual::start_connect(const authority& host,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // Terminates retry loops (and connector is restartable).
     if (stopped())
     {
-        // This is unreachable from connect, but reachable from retry loops.
         handler(error::service_stopped, nullptr);
         return;
     }
@@ -144,7 +134,7 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Timer may start up again after service stop, so check first.
+    // Guard restartable timer (shutdown delay).
     if (stopped())
     {
         if (channel)
@@ -180,10 +170,6 @@ void session_manual::handle_channel_start(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // A handshake failure is caught by session::handle_channel_stopped,
-    // which stops the channel, so do not stop the channel here.
-    // handle_channel_stop has a copy of the same handler for retry.
-
     // Notify upon each connection attempt.
     handler(ec, channel);
 }
@@ -192,7 +178,7 @@ void session_manual::handle_channel_start(const code& ec,
 void session_manual::attach_protocols(
     const channel::ptr& channel) const noexcept
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded(), "strand");
 
     const auto version = channel->negotiated_version();
     const auto heartbeat = settings().channel_heartbeat();

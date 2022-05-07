@@ -390,8 +390,21 @@ BOOST_AUTO_TEST_CASE(session_manual__connect1__stopped__service_stopped)
         session->connect(hostname, port);
     });
 
-    // A connector was not created.
-    BOOST_REQUIRE(!net.get_connector());
+    // No handler so rely on connect.
+    BOOST_REQUIRE(session->require_connected());
+
+    // A connector was created/subscribed, which requires unstarted service stop.
+    BOOST_REQUIRE(net.get_connector());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
     session.reset();
 }
 
@@ -417,8 +430,18 @@ BOOST_AUTO_TEST_CASE(session_manual__connect2__stopped__service_stopped)
 
     BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::service_stopped);
 
-    // A connector was not created.
-    BOOST_REQUIRE(!net.get_connector());
+    // A connector was created/subscribed, which requires unstarted service stop.
+    BOOST_REQUIRE(net.get_connector());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
     session.reset();
 }
 
@@ -444,8 +467,18 @@ BOOST_AUTO_TEST_CASE(session_manual__connect3__stopped__service_stopped)
 
     BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::service_stopped);
 
-    // A connector was not created.
-    BOOST_REQUIRE(!net.get_connector());
+    // A connector was created/subscribed, which requires unstarted service stop.
+    BOOST_REQUIRE(net.get_connector());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
     session.reset();
 }
 
@@ -602,71 +635,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__inva
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
-    session.reset();
-}
-
-BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__success__success)
-{
-    settings set(selection::mainnet);
-    mock_p2p<mock_connector_connect_success> net(set);
-    set.connect_timeout_seconds = 10000;
-    auto session = std::make_shared<mock_session_manual>(net);
-    BOOST_REQUIRE(session->stopped());
-
-    const uint16_t port = 42;
-    const auto hostname = "42.42.42.42";
-    const authority expected{ hostname, port };
-
-    set.seeds.clear();
-    std::promise<code> p2p_started;
-    net.start([&](const code& ec)
-    {
-        p2p_started.set_value(ec);
-    });
-
-    // If stopped p2p.store() will return service_stopped in do_handle_handshake.
-    BOOST_REQUIRE_EQUAL(p2p_started.get_future().get(), error::success);
-
-    std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
-    {
-        session->start([&](const code& ec)
-        {
-            started.set_value(ec);
-        });
-    });
-
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
-
-    auto first = true;
-    std::promise<code> connected;
-    boost::asio::post(net.strand(), [=, &first, &connected]()
-    {
-        session->connect({ hostname, port }, [&](const code& ec, channel::ptr channel)
-        {
-            if (first)
-            {
-                first = false;
-                BOOST_REQUIRE(channel);
-                connected.set_value(ec);
-            }
-        });
-    });
-
-    BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::success);
-    BOOST_REQUIRE(session->require_connected());
-    BOOST_REQUIRE_EQUAL(session->start_connect_authority(), expected);
-
-    std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
-    {
-        session->stop();
-        stopped.set_value(true);
-    });
-
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(session->attached_handshake());
     session.reset();
 }
 

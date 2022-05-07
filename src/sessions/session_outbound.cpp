@@ -60,12 +60,16 @@ void session_outbound::start(result_handler handler) noexcept
     if (is_zero(settings().outbound_connections) || 
         is_zero(settings().host_pool_capacity))
     {
+        ////LOG_INFO(LOG_NETWORK)
+        ////    << "Not configured for outbound connections." << std::endl;
         handler(error::success);
         return;
     }
 
     if (is_zero(address_count()))
     {
+        ////LOG_INFO(LOG_NETWORK)
+        ////    << "Configured for outbound but no addresses." << std::endl;
         handler(error::address_not_found);
         return;
     }
@@ -77,7 +81,7 @@ void session_outbound::handle_started(const code& ec,
     result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    BC_ASSERT_MSG(!stopped(), "session stopped in start (subscriber)");
+    BC_ASSERT_MSG(!stopped(), "session stopped in start");
 
     if (ec)
     {
@@ -87,14 +91,9 @@ void session_outbound::handle_started(const code& ec,
 
     for (size_t peer = 0; peer < settings().outbound_connections; ++peer)
     {
-        // Create batch connectors for each outbound connection.
-        // Connectors operate on the network strand but connect asynchronously.
-        // Resolution is asynchronous and connection occurs on socket strand.
-        // So actual connection attempts run in parallel, apart from setup and
-        // response handling within the connector.
+        // Create a batch of connectors for each outbount connection.
         const auto connectors = create_connectors(batch_);
 
-        // Stop all connectors upon session stop.
         for (const auto& connector: *connectors)
             stop_subscriber_->subscribe([=](const code&)
             {
@@ -117,11 +116,12 @@ void session_outbound::start_connect(connectors_ptr connectors) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // Terminates retry loops (and connector is restartable).
     if (stopped())
         return;
 
     // Count the number of connection attempts within the batch.
-    auto counter = std::make_shared<size_t>(zero);
+    const auto counter = std::make_shared<size_t>(zero);
 
     channel_handler connect =
         BIND3(handle_connect, _1, _2, connectors);
@@ -210,7 +210,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Timer may start up again after service stop, so check first.
+    // Guard restartable timer (shutdown delay).
     if (stopped())
     {
         if (channel)
@@ -264,16 +264,12 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
 void session_outbound::handle_channel_start(const code&, channel::ptr) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    // A handshake failure is caught by session::handle_channel_stopped,
-    // which stops the channel, so do not stop the channel here.
-    // handle_channel_stop has a copy of the connectors for retry.
 }
 
 void session_outbound::attach_protocols(
     const channel::ptr& channel) const noexcept
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded(), "strand");
 
     const auto version = channel->negotiated_version();
     const auto heartbeat = settings().channel_heartbeat();

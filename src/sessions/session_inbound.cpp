@@ -33,8 +33,7 @@ using namespace bc::system;
 using namespace std::placeholders;
 
 session_inbound::session_inbound(p2p& network) noexcept
-  : session(network),
-    connection_limit_(network.network_settings().inbound_connections)
+  : session(network)
 {
 }
 
@@ -58,6 +57,8 @@ void session_inbound::start(result_handler handler) noexcept
     if (is_zero(settings().inbound_port) ||
         is_zero(settings().inbound_connections))
     {
+        ////LOG_INFO(LOG_NETWORK)
+        ////    << "Not configured for inbound connections." << std::endl;
         handler(error::success);
         return;
     }
@@ -69,7 +70,7 @@ void session_inbound::handle_started(const code& ec,
     result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    BC_ASSERT_MSG(!stopped(), "session stopped in start (subscriber)");
+    BC_ASSERT_MSG(!stopped(), "session stopped in start");
 
     if (ec)
     {
@@ -77,6 +78,7 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
+    // Create only one acceptor.
     const auto acceptor = create_acceptor();
     const auto error_code = acceptor->start(settings().inbound_port);
     handler(error_code);
@@ -92,7 +94,7 @@ void session_inbound::handle_started(const code& ec,
     }
 }
 
-// Accept sequence.
+// Accept cycle.
 // ----------------------------------------------------------------------------
 
 void session_inbound::start_accept(const code& ec,
@@ -100,6 +102,7 @@ void session_inbound::start_accept(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // Terminates accept loop (and acceptor is restartable).
     if (stopped())
         return;
 
@@ -115,7 +118,7 @@ void session_inbound::handle_accept(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Timer may start up again after service stop, so check first.
+    // Guard restartable timer (shutdown delay).
     if (stopped())
     {
         if (channel)
@@ -154,6 +157,9 @@ void session_inbound::handle_accept(const code& ec,
         BIND2(handle_channel_start, _1, channel),
         BIND2(handle_channel_stop, _1, channel));
 }
+
+// Completion sequence.
+// ----------------------------------------------------------------------------
 
 void session_inbound::attach_handshake(const channel::ptr& channel,
     result_handler handler) const noexcept

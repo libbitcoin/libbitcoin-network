@@ -277,12 +277,34 @@ public:
         return handshake_.get_future().get();
     }
 
+protected:
+    mutable bool handshaked_{ false };
+    mutable std::promise<bool> handshake_;
+
 private:
     code start_accept_code_{ error::unknown };
     mutable bool accepted_{ false };
-    mutable bool handshaked_{ false };
     mutable std::promise<bool> accept_;
-    mutable std::promise<bool> handshake_;
+};
+
+class mock_session_inbound_handshake_failure
+  : public mock_session_inbound
+{
+public:
+    using mock_session_inbound::mock_session_inbound;
+
+    void attach_handshake(const channel::ptr&,
+        result_handler handshake) const noexcept override
+    {
+        if (!handshaked_)
+        {
+            handshaked_ = true;
+            handshake_.set_value(true);
+        }
+
+        // Simulate handshake failure.
+        handshake(error::invalid_checksum);
+    }
 };
 
 class mock_session_inbound_channel_count_fail
@@ -771,7 +793,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session using the network reference.
-    auto session = std::make_shared<mock_session_inbound>(net);
+    auto session = std::make_shared<mock_session_inbound_handshake_failure>(net);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;

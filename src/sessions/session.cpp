@@ -113,14 +113,7 @@ void session::do_attach_handshake(const channel::ptr& channel,
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
-    // Do not allow attachment if already stopped as attachments cannot clear.
-    if (channel->stopped())
-    {
-        handshake(error::channel_stopped);
-        return;
-    }
-
-    // Channel is started upon creation, this only starts the read loop.
+    // Channel is started upon creation, this only begins the read loop.
     channel->begin();
     attach_handshake(channel, handshake);
 }
@@ -130,7 +123,6 @@ void session::attach_handshake(const channel::ptr& channel,
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
-    // Channel remains started through attachment.
     // Handshake protocols must invoke handler upon completion or failure.
     if (settings().protocol_maximum >= messages::level::bip61)
         channel->attach<protocol_version_70002>(*this)->start(handler);
@@ -213,10 +205,6 @@ void session::do_handle_channel_started(const code& ec, channel::ptr channel,
 void session::do_attach_protocols(const channel::ptr& channel) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
-
-    // Do not allow attachment if already stopped as attachments cannot clear.
-    if (channel->stopped())
-        return;
 
     attach_protocols(channel);
 }

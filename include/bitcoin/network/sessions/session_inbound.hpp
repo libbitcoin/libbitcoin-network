@@ -60,7 +60,7 @@ protected:
     /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
-    /// Start accepting based on configuration (call from network strand).
+    /// Start accepting based on configuration (called from start).
     virtual void start_accept(const code& ec, acceptor::ptr acceptor) noexcept;
 
 private:
@@ -70,9 +70,6 @@ private:
 
     void handle_channel_start(const code& ec, channel::ptr channel) noexcept;
     void handle_channel_stop(const code& ec, channel::ptr channel) noexcept;
-
-    // This is thread safe.
-    const size_t connection_limit_;
 };
 
 } // namespace network

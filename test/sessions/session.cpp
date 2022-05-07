@@ -691,10 +691,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
             });
     });
 
-    // Channel was already stopped, but re-stopped explicitly with expected code.
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::channel_stopped);
-    BOOST_REQUIRE(!channel->begun());
-    BOOST_REQUIRE(!session->attached_handshake());
+    BOOST_REQUIRE(channel->begun());
+    BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(!session->attached_protocol());
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
     BOOST_REQUIRE(channel->stopped());
@@ -842,7 +841,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
     BOOST_REQUIRE(channel->begun());
     BOOST_REQUIRE(session->attached_handshake());
-    BOOST_REQUIRE(!session->attached_protocol());
+////BOOST_REQUIRE(session->attached_protocol());
 
     // Subscriber is stopped prior to subscription by channel stop.
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::subscriber_stopped);
