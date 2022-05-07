@@ -143,6 +143,7 @@
     <ClCompile Include="..\..\..\..\test\sessions\session_manual.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_outbound.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_seed.cpp" />
+    <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>
   <ItemGroup>

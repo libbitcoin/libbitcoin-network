@@ -249,6 +249,9 @@
     <ClCompile Include="..\..\..\..\test\sessions\session_seed.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\settings.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
     </ClCompile>

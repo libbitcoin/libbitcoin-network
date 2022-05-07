@@ -119,6 +119,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/error.cpp \
     test/main.cpp \
     test/p2p.cpp \
+    test/settings.cpp \
     test/test.cpp \
     test/test.hpp \
     test/async/deadline.cpp \
