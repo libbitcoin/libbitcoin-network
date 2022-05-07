@@ -78,7 +78,7 @@ protected:
     /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
-    /// Start or restart the given connection (call from network strand).
+    /// Start or restart the given connection (called from connect).
     virtual void start_connect(const config::authority& host,
         connector::ptr connector, channel_handler handler) noexcept;
 

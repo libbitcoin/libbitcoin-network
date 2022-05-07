@@ -149,7 +149,7 @@ public:
 protected:
     friend class session;
 
-    /// Must be called from the channel strand, before close.
+    /// Must be called from the channel strand.
     /// Attach a session to the network, caller must start returned session.
     template <class Session, typename... Args>
     typename Session::ptr attach(Args&&... args)
@@ -163,7 +163,6 @@ protected:
         // Session lifetime is ensured by the network stop subscriber.
         subscribe_close([=](const code&)
         {
-            // An attach after close never invokes this handler.
             session->stop();
         });
 

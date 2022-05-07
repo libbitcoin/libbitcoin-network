@@ -59,7 +59,7 @@ protected:
     /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
-    /// Start outbound connections based on config (call from network strand).
+    /// Start outbound connections based on config (called from start).
     virtual void start_connect(connectors_ptr connectors) noexcept;
 
 private:

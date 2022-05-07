@@ -32,9 +32,9 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe.
-/// Class wrapper for boost::asio::basic_waitable_timer.
+/// Class wrapper for boost::asio::basic_waitable_timer (restartable).
 /// This simplifies invocation, eliminates boost-specific error handling and
-/// makes timer firing and cancelation conditions safe for shared objects.
+/// makes timer firing and cancellation conditions safe for shared objects.
 class deadline
   : public std::enable_shared_from_this<deadline>, system::noncopyable,
     track<deadline>

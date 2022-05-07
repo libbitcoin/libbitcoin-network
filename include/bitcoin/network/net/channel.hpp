@@ -60,7 +60,6 @@ public:
         // Protocol lifetime is ensured by the channel stop subscriber.
         subscribe_stop([=](const code&)
         {
-            // An attach after stop never invokes this handler.
             protocol->nop();
         });
 
