@@ -48,7 +48,6 @@ public:
     uint16_t inbound_port;
     uint32_t inbound_connections;
     uint32_t outbound_connections;
-    ////uint32_t manual_attempt_limit;
     uint32_t connect_batch_size;
     uint32_t connect_timeout_seconds;
     uint32_t channel_handshake_seconds;
@@ -64,18 +63,17 @@ public:
     config::endpoints seeds;
 
     // [log]
-    boost::filesystem::path debug_file;
-    boost::filesystem::path error_file;
-    boost::filesystem::path archive_directory;
-    size_t rotation_size;
-    size_t minimum_free_space;
-    size_t maximum_archive_size;
-    size_t maximum_archive_files;
-    config::authority statistics_server;
+    ////boost::filesystem::path debug_file;
+    ////boost::filesystem::path error_file;
+    ////boost::filesystem::path archive_directory;
+    ////size_t rotation_size;
+    ////size_t minimum_free_space;
+    ////size_t maximum_archive_size;
+    ////size_t maximum_archive_files;
+    ////config::authority statistics_server;
     bool verbose;
 
     /// Helpers.
-    size_t minimum_connections() const;
     duration connect_timeout() const;
     duration channel_handshake() const;
     duration channel_heartbeat() const;

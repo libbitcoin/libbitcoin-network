@@ -37,9 +37,10 @@ settings::settings()
     invalid_services(176),
     relay_transactions(false),
     validate_checksum(false),
+    identifier(0),
+    inbound_port(0),
     inbound_connections(0),
     outbound_connections(8),
-    ////manual_attempt_limit(0),
     connect_batch_size(5),
     connect_timeout_seconds(5),
     channel_handshake_seconds(30),
@@ -52,14 +53,14 @@ settings::settings()
     self(unspecified_address_item),
 
     // [log]
-    debug_file("debug.log"),
-    error_file("error.log"),
-    archive_directory("archive"),
-    rotation_size(0),
-    minimum_free_space(0),
-    maximum_archive_size(0),
-    maximum_archive_files(0),
-    statistics_server(unspecified_address_item),
+    ////debug_file("debug.log"),
+    ////error_file("error.log"),
+    ////archive_directory("archive"),
+    ////rotation_size(0),
+    ////minimum_free_space(0),
+    ////maximum_archive_size(0),
+    ////maximum_archive_files(0),
+    ////statistics_server(unspecified_address_item),
     verbose(false)
 {
 }
@@ -78,7 +79,7 @@ settings::settings(chain::selection context)
             inbound_port = 8333;
             seeds.reserve(4);
             seeds.push_back({ "mainnet1.libbitcoin.net", 8333 });
-            seeds.push_back({ "mainnet1.libbitcoin.net", 8333 });
+            seeds.push_back({ "mainnet2.libbitcoin.net", 8333 });
             seeds.push_back({ "mainnet3.libbitcoin.net", 8333 });
             seeds.push_back({ "mainnet4.libbitcoin.net", 8333 });
             break;
@@ -110,11 +111,6 @@ settings::settings(chain::selection context)
         {
         }
     }
-}
-
-size_t settings::minimum_connections() const
-{
-    return system::ceilinged_add<size_t>(outbound_connections, peers.size());
 }
 
 duration settings::connect_timeout() const
