@@ -186,7 +186,7 @@ void p2p::do_close()
     stop_subscriber_->stop(error::service_stopped);
 
     // Notify and delete subscribers to channel notifications.
-    channel_subscriber_->stop(error::service_stopped, nullptr);
+    channel_subscriber_->stop_default(error::service_stopped);
 
     // Stop all channels.
     for (const auto& channel: channels_)
@@ -216,8 +216,6 @@ void p2p::subscribe_connect(channel_handler handler, result_handler complete)
 void p2p::do_subscribe_connect(channel_handler handler, result_handler complete)
 {
     BC_ASSERT_MSG(stranded(), "channel_subscriber_");
-
-    // A call after close will return success but never invokes the handler.
     channel_subscriber_->subscribe(std::move(handler));
     complete(error::success);
 }
@@ -226,8 +224,6 @@ void p2p::do_subscribe_connect(channel_handler handler, result_handler complete)
 void p2p::subscribe_close(result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "stop_subscriber_");
-
-    // A call after close will return success but never invokes the handler.
     stop_subscriber_->subscribe(std::move(handler));
 }
 
@@ -242,8 +238,6 @@ void p2p::subscribe_close(result_handler handler, result_handler complete)
 void p2p::do_subscribe_close(result_handler handler, result_handler complete)
 {
     BC_ASSERT_MSG(stranded(), "stop_subscriber_");
-
-    // A call after close will return success but never invokes the handler.
     stop_subscriber_->subscribe(std::move(handler));
     complete(error::success);
 }

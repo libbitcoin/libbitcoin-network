@@ -25,36 +25,33 @@
 namespace libbitcoin {
 namespace network {
 
-template <typename... Args>
-subscriber<Args...>::subscriber(asio::strand& strand) noexcept
+template <typename ErrorCode, typename... Args>
+subscriber<ErrorCode, Args...>::subscriber(asio::strand& strand) noexcept
   : strand_(strand), stopped_(false)
 {
 }
 
-template <typename... Args>
-subscriber<Args...>::~subscriber() noexcept
+template <typename ErrorCode, typename... Args>
+subscriber<ErrorCode, Args...>::~subscriber() noexcept
 {
     // Cannot clear queue on destruct as required parameterization is unknown.
     BC_ASSERT_MSG(queue_.empty(), "subscriber is not cleared");
 }
 
-template <typename... Args>
-void subscriber<Args...>::subscribe(handler&& notify) noexcept
+template <typename ErrorCode, typename... Args>
+void subscriber<ErrorCode, Args...>::subscribe(handler&& handler) noexcept
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    if (!stopped_)
-        queue_.push_back(std::move(notify));
-
-    // This would require hardwiring `const code& ec` to the argument list.
-    // This would ensure that no handler is ever dropped on the floor.
-    // However it requires a default constructor for each argument type.
-    ////else
-    ////    notify(error::service_stopped, Args{}...);
+    if (stopped_)
+        handler(error::subscriber_stopped, Args{}...);
+    else
+        queue_.push_back(std::move(handler));
 }
 
-template <typename... Args>
-void subscriber<Args...>::notify(const Args&... args) const noexcept
+template <typename ErrorCode, typename... Args>
+void subscriber<ErrorCode, Args...>::notify(const ErrorCode& ec,
+    const Args&... args) const noexcept
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -63,20 +60,30 @@ void subscriber<Args...>::notify(const Args&... args) const noexcept
 
     // We are already on the strand to protect queue_, so execute each handler.
     for (const auto& handler: queue_)
-        handler(args...);
+        handler(ec, args...);
 }
 
-template <typename... Args>
-void subscriber<Args...>::stop(const Args&... args) noexcept
+template <typename ErrorCode, typename... Args>
+void subscriber<ErrorCode, Args...>::stop(const ErrorCode& ec,
+    const Args&... args) noexcept
 {
+    BC_ASSERT_MSG(ec, "subscriber stopped with success code");
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (stopped_)
         return;
 
-    notify(args...);
+    notify(ec, args...);
     stopped_ = true;
     queue_.clear();
+}
+
+template <typename ErrorCode, typename... Args>
+void subscriber<ErrorCode, Args...>::stop_default(const ErrorCode& ec) noexcept
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
+    stop(ec, Args{}...);
 }
 
 } // namespace network

@@ -28,22 +28,33 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe.
-template <typename... Args>
+template <typename ErrorCode, typename... Args>
 class subscriber
-  : public std::enable_shared_from_this<subscriber<Args...>>,
+  : public std::enable_shared_from_this<subscriber<ErrorCode, Args...>>,
     system::noncopyable
 {
 public:
-    typedef std::function<void(Args...)> handler;
-    typedef std::shared_ptr<subscriber<Args...>> ptr;
+    typedef std::function<void(ErrorCode, Args...)> handler;
+    typedef std::shared_ptr<subscriber<ErrorCode, Args...>> ptr;
 
     // Strand is only used for assertions.
     subscriber(asio::strand& strand) noexcept;
     virtual ~subscriber() noexcept;
 
-    void subscribe(handler&& notify) noexcept;
-    void notify(const Args&... args) const noexcept;
-    void stop(const Args&... args) noexcept;
+    /// If stopped this invokes handler(error::subscriber_stopped, Args{}...),
+    /// and the handler is dropped. Otherwise the handler is held until stop.
+    void subscribe(handler&& handler) noexcept;
+
+    /// Invokes each handler in order, on the strand, with specified arguments.
+    void notify(const ErrorCode& ec, const Args&... args) const noexcept;
+
+    /// Invokes each handler in order, on the strand, with specified arguments,
+    /// and then drops all handlers.
+    void stop(const ErrorCode& ec, const Args&... args) noexcept;
+
+    /// Invokes each handler in order, on the strand, with specified error code
+    /// and default arguments, and then drops all handlers.
+    void stop_default(const ErrorCode& ec) noexcept;
 
 private:
     // This is thread safe.

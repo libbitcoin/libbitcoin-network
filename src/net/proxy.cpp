@@ -98,8 +98,6 @@ void proxy::do_stop(const code& ec)
 void proxy::subscribe_stop(result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    // A call after stop will return success but never invokes the handler.
     stop_subscriber_->subscribe(std::move(handler));
 }
 
@@ -114,16 +112,7 @@ void proxy::subscribe_stop(result_handler handler, result_handler complete)
 void proxy::do_subscribe_stop(result_handler handler, result_handler complete)
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    // A call after stop will return success but never invokes the handler.
-    // Guard against the channel becoming stopped before stop subscription.
-    // channel->begin() may cause stop before channel->subscribe_stop, which
-    // would preclude stop invocation (channel would hang).
-    if (stopped())
-        handler(error::channel_stopped);
-    else
-        stop_subscriber_->subscribe(std::move(handler));
-
+    stop_subscriber_->subscribe(std::move(handler));
     complete(error::success);
 }
 

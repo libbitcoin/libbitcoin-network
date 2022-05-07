@@ -843,7 +843,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE(channel->begun());
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(!session->attached_protocol());
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
+
+    // Subscriber is stopped prior to subscription by channel stop.
+    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::subscriber_stopped);
     BOOST_REQUIRE(channel->stopped());
 
     // Channel is stopped before handshake completion, due to read failure.

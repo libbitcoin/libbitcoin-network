@@ -111,8 +111,6 @@ void session_manual::connect(const authority& host,
     // response handling within the connector.
     const auto connector = create_connector();
 
-    // Stop all connectors upon session stop.
-    // Guarded by stopped() above (subscribe after stop is not invoked).
     stop_subscriber_->subscribe([=](const code&)
     {
         connector->stop();

@@ -39,7 +39,7 @@ using namespace bc::system;
         return do_notify<messages::name>(SUBSCRIBER(name), version, source)
 
 #define STOP_SUBSCRIBER(name) \
-    SUBSCRIBER(name)->stop(ec, nullptr)
+    SUBSCRIBER(name)->stop_default(ec)
 
 pump::pump(asio::strand& strand)
   : MAKE_SUBSCRIBER(address),
