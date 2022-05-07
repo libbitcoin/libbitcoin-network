@@ -81,7 +81,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
 
-bool asio_is_cancelled(const error::boost_code& ec)
+bool asio_is_canceled(const error::boost_code& ec)
 {
     // We test against the platform-independent condition (equivalence).
     // Boost documents that cancellation gives basic_errors::operation_aborted,
@@ -97,7 +97,7 @@ bool asio_is_cancelled(const error::boost_code& ec)
 // result of cancellation of the call (boost_error_t::operation_canceled).
 // Equivalence tests require equality operator override. The success and 
 // connection_aborted codes are the only expected in normal operation, so these
-// are first, to optimize the case where asio_is_cancelled is not used.
+// are first, to optimize the case where asio_is_canceled is not used.
 code asio_to_error_code(const error::boost_code& ec)
 {
     if (ec == boost_error_t::success)
@@ -312,7 +312,7 @@ enum boost::asio::error::basic_errors
   /// Socket operation on non-socket.
   not_socket = BOOST_ASIO_SOCKET_ERROR(ENOTSOCK),
 
-  /// Operation cancelled.
+  /// Operation canceled.
   operation_aborted = BOOST_ASIO_WIN_OR_POSIX(
       BOOST_ASIO_NATIVE_ERROR(ERROR_OPERATION_ABORTED),
       BOOST_ASIO_NATIVE_ERROR(ECANCELED)),

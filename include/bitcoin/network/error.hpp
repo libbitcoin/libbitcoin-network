@@ -114,7 +114,7 @@ DECLARE_ERROR_T_CODE_CATEGORY(error);
 BCT_API code asio_to_error_code(const error::boost_code& ec);
 
 /// Shortcurcuit common code mapping.
-BCT_API bool asio_is_cancelled(const error::boost_code& ec);
+BCT_API bool asio_is_canceled(const error::boost_code& ec);
 
 } // namespace error
 } // namespace network

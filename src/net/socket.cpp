@@ -189,7 +189,7 @@ void socket::handle_accept(const error::boost_code& ec,
     if (!ec)
         authority_ = { socket_.remote_endpoint() };
 
-    if (error::asio_is_cancelled(ec))
+    if (error::asio_is_canceled(ec))
     {
         handler(error::operation_canceled);
         return;
@@ -206,7 +206,7 @@ void socket::handle_connect(const error::boost_code& ec,
 
     authority_ = peer;
 
-    if (error::asio_is_cancelled(ec))
+    if (error::asio_is_canceled(ec))
     {
         handler(error::operation_canceled);
         return;
@@ -221,7 +221,7 @@ void socket::handle_io(const error::boost_code& ec, size_t size,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (error::asio_is_cancelled(ec))
+    if (error::asio_is_canceled(ec))
     {
         handler(error::channel_stopped, size);
         return;
