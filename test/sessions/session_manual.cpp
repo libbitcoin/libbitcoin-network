@@ -259,7 +259,7 @@ public:
 
 // properties
 
-BOOST_AUTO_TEST_CASE(session_manual__inbound__default__false)
+BOOST_AUTO_TEST_CASE(session_manual__inbound__always__false)
 {
     settings set(selection::mainnet);
     p2p net(set);
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(session_manual__inbound__default__false)
     BOOST_REQUIRE(!session.inbound());
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__notify__default__true)
+BOOST_AUTO_TEST_CASE(session_manual__notify__always__true)
 {
     settings set(selection::mainnet);
     p2p net(set);

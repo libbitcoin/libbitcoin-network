@@ -345,7 +345,7 @@ public:
 
 // properties
 
-BOOST_AUTO_TEST_CASE(session_inbound__inbound__default__true)
+BOOST_AUTO_TEST_CASE(session_inbound__inbound__always__true)
 {
     settings set(selection::mainnet);
     p2p net(set);
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__inbound__default__true)
     BOOST_REQUIRE(session.inbound());
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__notify__default__true)
+BOOST_AUTO_TEST_CASE(session_inbound__notify__always__true)
 {
     settings set(selection::mainnet);
     p2p net(set);
