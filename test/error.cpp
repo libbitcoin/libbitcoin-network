@@ -42,6 +42,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__unknown__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "unknown error");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__bypassed__true_exected_message)
+{
+    constexpr auto value = error::bypassed;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "start bypassed without failure");
+}
+
 // addresses
 
 BOOST_AUTO_TEST_CASE(error_t__code__address_not_found__true_exected_message)

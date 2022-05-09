@@ -51,6 +51,7 @@ enum error_t
 {
     success,
     unknown,
+    bypassed,
 
     // addresses
     address_not_found,
