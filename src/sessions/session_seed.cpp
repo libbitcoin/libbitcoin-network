@@ -79,7 +79,9 @@ void session_seed::handle_started(const code& ec,
     result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    BC_ASSERT_MSG(!stopped(), "session stopped in start");
+
+    // Seeding runs entirely in start and is possible to stop.
+    ////BC_ASSERT_MSG(!stopped(), "session stopped in start");
 
     if (ec)
     {
@@ -113,6 +115,8 @@ void session_seed::handle_started(const code& ec,
 void session_seed::start_seed(const config::endpoint& seed,
     connector::ptr connector, channel_handler handler) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
     // Guard restartable connector (shutdown delay).
     if (stopped())
     {
@@ -168,7 +172,7 @@ void session_seed::attach_handshake(const channel::ptr& channel,
             ->start(handshake);
 }
 
-void session_seed::handle_channel_start(const code& ec, channel::ptr channel) noexcept
+void session_seed::handle_channel_start(const code&, channel::ptr) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }
@@ -192,16 +196,37 @@ void session_seed::attach_protocols(const channel::ptr& channel) const noexcept
     channel->attach<protocol_seed_31402>(*this)->start();
 }
 
-void session_seed::handle_channel_stop(const code& ec, count_ptr counter,
+void session_seed::handle_channel_stop(const code&, count_ptr counter,
     result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    BC_ASSERT_MSG(!is_zero(*counter), "unexpected seed count");
 
-    // Unless service is stopped, all channels will conclude here.
+    // Ignore result if previously handled (early termination).
+    if (is_zero(*counter))
+        return;
+
+    // Handle service stopped, ignoring possible success/fail result.
+    if (stopped())
+    {
+        *counter = zero;
+        handler(error::service_stopped);
+        return;
+    }
+
+    // Handle with success on first positive address count.
+    if (!is_zero(address_count()))
+    {
+        *counter = zero;
+        handler(error::success);
+        return;
+    }
+
+    // Handle failure now that all seeds are processed.
     if (is_zero(--(*counter)))
-        handler(is_zero(address_count()) ? error::seeding_unsuccessful :
-            error::success);
+    {
+        handler(error::seeding_unsuccessful);
+        return;
+    }
 }
 
 } // namespace network
