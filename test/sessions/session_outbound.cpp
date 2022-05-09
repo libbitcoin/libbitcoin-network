@@ -156,7 +156,10 @@ public:
     void connect(const std::string&, uint16_t,
         connect_handler&& handler) override
     {
-        handler(error::invalid_magic, nullptr);
+        boost::asio::post(strand_, [=]()
+        {
+            handler(error::invalid_magic, nullptr);
+        });
     }
 };
 
@@ -282,35 +285,6 @@ public:
     }
 };
 
-class mock_connector_stop_connect
-  : public mock_connector_connect_success<error::service_stopped>
-{
-public:
-    typedef std::shared_ptr<mock_connector_stop_connect> ptr;
-
-    mock_connector_stop_connect(asio::strand& strand, asio::io_context& service,
-        const settings& settings, mock_session_outbound::ptr session)
-      : mock_connector_connect_success(strand, service, settings),
-        session_(session)
-    {
-    }
-
-    void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) noexcept override
-    {
-        BC_ASSERT_MSG(session_, "call set_session");
-
-        // This connector.connect is invoked from network stranded method.
-        session_->stop();
-
-        mock_connector_connect_success<error::service_stopped>::connect(hostname,
-            port, std::move(handler));
-    }
-
-private:
-    mock_session_outbound::ptr session_;
-};
-
 template <class Connector = network::connector>
 class mock_p2p
   : public p2p
@@ -348,7 +322,6 @@ public:
     }
 };
 
-
 template <class Connector = network::connector>
 class mock_p2p_one_address
   : public mock_p2p_one_address_count<Connector>
@@ -360,6 +333,35 @@ public:
     {
         handler(error::success, address_item{});
     }
+};
+
+class mock_connector_stop_connect
+  : public mock_connector_connect_success<error::service_stopped>
+{
+public:
+    typedef std::shared_ptr<mock_connector_stop_connect> ptr;
+
+    mock_connector_stop_connect(asio::strand& strand, asio::io_context& service,
+        const settings& settings, mock_session_outbound::ptr session)
+      : mock_connector_connect_success(strand, service, settings),
+        session_(session)
+    {
+    }
+
+    void connect(const std::string& hostname, uint16_t port,
+        connect_handler&& handler) noexcept override
+    {
+        BC_ASSERT_MSG(session_, "call set_session");
+
+        // This connector.connect is invoked from network stranded method.
+        session_->stop();
+
+        mock_connector_connect_success<error::service_stopped>::connect(hostname,
+            port, std::move(handler));
+    }
+
+private:
+    mock_session_outbound::ptr session_;
 };
 
 // Can't derive from mock_p2p because Connector has more arguments.
