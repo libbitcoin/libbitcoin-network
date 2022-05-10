@@ -213,14 +213,16 @@ private:
 
     connectors_ptr create_connectors(size_t count);
 
-    bool closed() const;
+    virtual bool closed() const;
+    virtual code start_hosts();
+    virtual void stop_hosts();
 
     void do_start(result_handler handler);
     void do_run(result_handler handler);
     void do_close();
 
-    void handle_start(code ec, result_handler handler);
-    void handle_run(code ec, result_handler handler);
+    void handle_start(const code& ec, result_handler handler);
+    void handle_run(const code& ec, result_handler handler);
   
     void do_subscribe_connect(channel_handler handler, result_handler complete);
     void do_subscribe_close(result_handler handler, result_handler complete);

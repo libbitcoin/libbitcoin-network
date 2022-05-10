@@ -140,11 +140,11 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstarted__service_stopped)
     BOOST_REQUIRE(promise_handler.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(p2p__start__no__peers_no_seeds__success)
+BOOST_AUTO_TEST_CASE(p2p__start__outbound_connections_but_no_peers_no_seeds__seeding_unsuccessful)
 {
     settings set(selection::mainnet);
-    BOOST_REQUIRE(set.peers.empty());
     set.seeds.clear();
+    BOOST_REQUIRE(set.peers.empty());
 
     p2p net(set);
     BOOST_REQUIRE(net.network_settings().peers.empty());
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__no__peers_no_seeds__success)
     std::promise<bool> promise;
     const auto handler = [&](const code& ec)
     {
-        BOOST_REQUIRE_EQUAL(ec, error::success);
+        BOOST_REQUIRE_EQUAL(ec, error::seeding_unsuccessful);
         promise.set_value(true);
     };
 
@@ -177,11 +177,12 @@ BOOST_AUTO_TEST_CASE(p2p__run__not_started__service_stopped)
     BOOST_REQUIRE(promise.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds__success)
+BOOST_AUTO_TEST_CASE(p2p__run__started_no_outbound_connections__success)
 {
     settings set(selection::mainnet);
-    BOOST_REQUIRE(set.peers.empty());
+    set.outbound_connections = 0;
     set.seeds.clear();
+    BOOST_REQUIRE(set.peers.empty());
 
     p2p net(set);
     BOOST_REQUIRE(net.network_settings().peers.empty());
@@ -204,7 +205,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds__success)
     BOOST_REQUIRE(promise_run.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_no_batch__success)
+BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_one_batch__success)
 {
     settings set(selection::mainnet);
     BOOST_REQUIRE(set.peers.empty());
@@ -220,7 +221,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_no_batch
     system::ofstream file(set.hosts_file);
     file << config::authority{ "1.2.3.4:42" } << std::endl;
 
-    // Configure one connection with no batching.
+    // Configure one connection with one batch.
     set.connect_batch_size = 1;
     set.outbound_connections = 1;
 
@@ -241,6 +242,511 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_no_batch
 
     net.start(start_handler);
     BOOST_REQUIRE(promise_run.get_future().get());
+}
+
+// sessions
+
+template <error::error_t ManualCode = error::success,
+    error::error_t SeedCode = error::success>
+class mock_p2p_session_start
+  : public p2p
+{
+public:
+    mock_p2p_session_start(const settings& settings,
+        const code& hosts_start=error::success)
+      : p2p(settings), hosts_start_(hosts_start)
+    {
+    }
+
+    code start_hosts() override
+    {
+        return hosts_start_;
+    }
+
+    session_manual::ptr attach_manual_session() override
+    {
+        return attach<mock_session_manual>();
+    }
+
+    session_seed::ptr attach_seed_session() override
+    {
+        return attach<mock_session_seed>();
+    }
+
+private:
+    const code hosts_start_;
+
+    class mock_session_manual
+      : public session_manual
+    {
+    public:
+        mock_session_manual(p2p& network)
+          : session_manual(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(ManualCode);
+        }
+    };
+
+    class mock_session_seed
+      : public session_seed
+    {
+    public:
+        mock_session_seed(p2p& network)
+          : session_seed(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(SeedCode);
+        }
+    };
+};
+
+template <error::error_t InboundCode = error::success,
+    error::error_t OutboundCode = error::success>
+class mock_p2p_session_run
+  : public p2p
+{
+public:
+    mock_p2p_session_run(const settings& settings, bool started)
+      : p2p(settings), closed_(!started)
+    {
+    }
+
+    bool closed() const override
+    {
+        return closed_;
+    }
+
+    session_inbound::ptr attach_inbound_session() override
+    {
+        return attach<mock_session_inbound>();
+    }
+
+    session_outbound::ptr attach_outbound_session() override
+    {
+        return attach<mock_session_outbound>();
+    }
+
+private:
+    const bool closed_;
+
+    class mock_session_inbound
+      : public session_inbound
+    {
+    public:
+        mock_session_inbound(p2p& network)
+          : session_inbound(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(InboundCode);
+        }
+    };
+
+    class mock_session_outbound
+      : public session_outbound
+    {
+    public:
+        mock_session_outbound(p2p& network)
+          : session_outbound(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(OutboundCode);
+        }
+    };
+};
+
+// start
+
+BOOST_AUTO_TEST_CASE(p2p__start__success_success__success)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::success, error::success> net(set);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__start__unknown_success__unknown)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::unknown, error::success> net(set);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__start__success_unknown__unknown)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::success, error::unknown> net(set);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__start__unknown_unknown__unknown)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::unknown, error::unknown> net(set);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
+}
+
+// manual does not bypass
+BOOST_AUTO_TEST_CASE(p2p__start__bypassed_success__bypassed)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::bypassed, error::success> net(set);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::bypassed);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__start__success_bypassed__success)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::success, error::bypassed> net(set);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__start__unknown_bypassed__unknown)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::unknown, error::bypassed> net(set);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
+}
+
+// manual does not bypass
+BOOST_AUTO_TEST_CASE(p2p__start__bypassed_bypassed__bypassed)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::bypassed, error::bypassed> net(set);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::bypassed);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__start__file_load_success_success__file_load)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::success, error::success> net(set, error::file_load);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::file_load);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__start__file_load_unknown_success__unknown)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::unknown, error::success> net(set, error::file_load);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__start__file_load_success_unknown__file_load)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::success, error::unknown> net(set, error::file_load);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::file_load);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__start__file_load_unknown_unknown__unknown)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_start<error::unknown, error::unknown> net(set, error::file_load);
+
+    std::promise<code> start;
+    std::promise<code> run;
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::unknown);
+}
+
+// run
+
+BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_success__service_stopped)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::success, error::success> net(set, false);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__started_success_success__success)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::success, error::success> net(set, true);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__stopped_unknown_success__service_stopped)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::unknown, error::success> net(set, false);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__started_unknown_success__unknown)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::unknown, error::success> net(set, true);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::unknown);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_unknown__service_stopped)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::success, error::unknown> net(set, false);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__started_success_unknown__unknown)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::success, error::unknown> net(set, true);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::unknown);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__stopped_unknown_unknown__service_stopped)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::unknown, error::unknown> net(set, false);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__started_unknown_unknown__unknown)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::unknown, error::unknown> net(set, true);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::unknown);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__stopped_bypassed_success__service_stopped)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::bypassed, error::success> net(set, false);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__started_bypassed_success__success)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::bypassed, error::success> net(set, true);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_bypassed__service_stopped)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::success, error::bypassed> net(set, false);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__started_success_bypassed__success)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::success, error::bypassed> net(set, true);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__stopped_bypassed_bypassed__service_stopped)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::bypassed, error::bypassed> net(set, false);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__run__started_bypassed_bypassed__success)
+{
+    settings set(selection::mainnet);
+    mock_p2p_session_run<error::bypassed, error::bypassed> net(set, true);
+
+    std::promise<code> run;
+    net.run([&](const code& ec)
+    {
+        run.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

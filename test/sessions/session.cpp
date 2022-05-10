@@ -75,164 +75,6 @@ public:
     }
 };
 
-class mock_p2p
-  : public p2p
-{
-public:
-    using p2p::p2p;
-
-    acceptor::ptr create_acceptor() noexcept override
-    {
-        ++acceptors_;
-        return p2p::create_acceptor();
-    }
-
-    size_t acceptors() const
-    {
-        return acceptors_;
-    }
-
-    connector::ptr create_connector() noexcept override
-    {
-        ++connectors_;
-        return p2p::create_connector();
-    }
-
-    size_t connectors() const
-    {
-        return connectors_;
-    }
-
-    void fetch(hosts::address_item_handler handler) const noexcept override
-    {
-        handler(error::invalid_magic, {});
-    }
-
-    void fetches(hosts::address_items_handler handler) const noexcept override
-    {
-        handler(error::bad_stream, {});
-    }
-
-    void save(const messages::address_item& address,
-        result_handler complete) noexcept override
-    {
-        saved_ = address;
-        complete(error::invalid_magic);
-    }
-
-    const messages::address_item& saved() const
-    {
-        return saved_;
-    }
-
-    void saves(const messages::address_items& addresses,
-        result_handler complete) noexcept override
-    {
-        saveds_ = addresses;
-        complete(error::bad_stream);
-    }
-
-    const messages::address_items& saveds() const
-    {
-        return saveds_;
-    }
-
-    uint64_t pent_nonce() const
-    {
-        return pend_;
-    }
-
-    uint64_t unpent_nonce() const
-    {
-        return unpend_;
-    }
-
-    uint64_t stored_nonce() const
-    {
-        return store_nonce_;
-    }
-
-    bool stored_inbound() const
-    {
-        return store_inbound_;
-    }
-
-    bool stored_notify() const
-    {
-        return store_notify_;
-    }
-
-    code stored_result() const
-    {
-        return store_result_;
-    }
-
-    uint64_t unstored_nonce() const
-    {
-        return unstore_nonce_;
-    }
-
-    bool unstored_inbound() const
-    {
-        return unstore_inbound_;
-    }
-
-    bool unstore_found() const
-    {
-        return unstore_found_;
-    }
-
-protected:
-    void pend(uint64_t nonce) noexcept override
-    {
-        BC_ASSERT(!is_zero(nonce));
-        pend_ = nonce;
-        p2p::pend(nonce);
-    }
-
-    void unpend(uint64_t nonce) noexcept override
-    {
-        BC_ASSERT(!is_zero(nonce));
-        unpend_ = nonce;
-        p2p::unpend(nonce);
-    }
-
-    code store(channel::ptr channel, bool notify, bool inbound) noexcept override
-    {
-        BC_ASSERT(!is_zero(channel->nonce()));
-        store_nonce_ = channel->nonce();
-        store_notify_ = notify;
-        store_inbound_ = inbound;
-        return ((store_result_ = p2p::store(channel, notify, inbound)));
-    }
-
-    bool unstore(channel::ptr channel, bool inbound) noexcept override
-    {
-        BC_ASSERT(!is_zero(channel->nonce()));
-        unstore_nonce_ = channel->nonce();
-        unstore_inbound_ = inbound;
-        return ((unstore_found_ = p2p::unstore(channel, inbound)));
-    }
-
-private:
-    size_t acceptors_{ 0 };
-    size_t connectors_{ 0 };
-    messages::address_item saved_{};
-    messages::address_items saveds_{};
-
-    uint64_t pend_{ 0 };
-    uint64_t unpend_{ 0 };
-
-    uint64_t store_nonce_{ 0 };
-    bool store_notify_{ false };
-    bool store_inbound_{ false };
-    code store_result_{ error::success };
-
-    uint64_t unstore_nonce_{ 0 };
-    bool unstore_inbound_{ false };
-    bool unstore_found_{ false };
-};
-
 class mock_session
   : public session
 {
@@ -371,6 +213,184 @@ private:
     mutable bool handshaked_{ false };
     mutable bool protocoled_{ false };
     mutable std::promise<bool> require_protocoled_;
+};
+
+class mock_p2p
+  : public p2p
+{
+public:
+    using p2p::p2p;
+
+    acceptor::ptr create_acceptor() noexcept override
+    {
+        ++acceptors_;
+        return p2p::create_acceptor();
+    }
+
+    size_t acceptors() const
+    {
+        return acceptors_;
+    }
+
+    connector::ptr create_connector() noexcept override
+    {
+        ++connectors_;
+        return p2p::create_connector();
+    }
+
+    size_t connectors() const
+    {
+        return connectors_;
+    }
+
+    void fetch(hosts::address_item_handler handler) const noexcept override
+    {
+        handler(error::invalid_magic, {});
+    }
+
+    void fetches(hosts::address_items_handler handler) const noexcept override
+    {
+        handler(error::bad_stream, {});
+    }
+
+    void save(const messages::address_item& address,
+        result_handler complete) noexcept override
+    {
+        saved_ = address;
+        complete(error::invalid_magic);
+    }
+
+    const messages::address_item& saved() const
+    {
+        return saved_;
+    }
+
+    void saves(const messages::address_items& addresses,
+        result_handler complete) noexcept override
+    {
+        saveds_ = addresses;
+        complete(error::bad_stream);
+    }
+
+    const messages::address_items& saveds() const
+    {
+        return saveds_;
+    }
+
+    uint64_t pent_nonce() const
+    {
+        return pend_;
+    }
+
+    uint64_t unpent_nonce() const
+    {
+        return unpend_;
+    }
+
+    uint64_t stored_nonce() const
+    {
+        return store_nonce_;
+    }
+
+    bool stored_inbound() const
+    {
+        return store_inbound_;
+    }
+
+    bool stored_notify() const
+    {
+        return store_notify_;
+    }
+
+    code stored_result() const
+    {
+        return store_result_;
+    }
+
+    uint64_t unstored_nonce() const
+    {
+        return unstore_nonce_;
+    }
+
+    bool unstored_inbound() const
+    {
+        return unstore_inbound_;
+    }
+
+    bool unstore_found() const
+    {
+        return unstore_found_;
+    }
+
+    session_seed::ptr attach_seed_session() override
+    {
+        return attach<mock_session_seed>();
+    }
+
+protected:
+    void pend(uint64_t nonce) noexcept override
+    {
+        BC_ASSERT(!is_zero(nonce));
+        pend_ = nonce;
+        p2p::pend(nonce);
+    }
+
+    void unpend(uint64_t nonce) noexcept override
+    {
+        BC_ASSERT(!is_zero(nonce));
+        unpend_ = nonce;
+        p2p::unpend(nonce);
+    }
+
+    code store(channel::ptr channel, bool notify, bool inbound) noexcept override
+    {
+        BC_ASSERT(!is_zero(channel->nonce()));
+        store_nonce_ = channel->nonce();
+        store_notify_ = notify;
+        store_inbound_ = inbound;
+        return ((store_result_ = p2p::store(channel, notify, inbound)));
+    }
+
+    bool unstore(channel::ptr channel, bool inbound) noexcept override
+    {
+        BC_ASSERT(!is_zero(channel->nonce()));
+        unstore_nonce_ = channel->nonce();
+        unstore_inbound_ = inbound;
+        return ((unstore_found_ = p2p::unstore(channel, inbound)));
+    }
+
+private:
+    size_t acceptors_{ 0 };
+    size_t connectors_{ 0 };
+    messages::address_item saved_{};
+    messages::address_items saveds_{};
+
+    uint64_t pend_{ 0 };
+    uint64_t unpend_{ 0 };
+
+    uint64_t store_nonce_{ 0 };
+    bool store_notify_{ false };
+    bool store_inbound_{ false };
+    code store_result_{ error::success };
+
+    uint64_t unstore_nonce_{ 0 };
+    bool unstore_inbound_{ false };
+    bool unstore_found_{ false };
+
+    class mock_session_seed
+      : public session_seed
+    {
+    public:
+        mock_session_seed(p2p& network)
+          : session_seed(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
 };
 
 // construct/settings
@@ -514,7 +534,7 @@ BOOST_AUTO_TEST_CASE(session__saves__always__calls_network_with_expected_address
 BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
 {
     settings set(selection::mainnet);
-    p2p net(set);
+    mock_p2p net(set);
     mock_session session(net);
     BOOST_REQUIRE(session.stopped());
 
@@ -533,7 +553,7 @@ BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
 BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
 {
     settings set(selection::mainnet);
-    p2p net(set);
+    mock_p2p net(set);
     mock_session session(net);
 
     std::promise<code> started;
@@ -572,7 +592,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
 BOOST_AUTO_TEST_CASE(session__start__stop__success)
 {
     settings set(selection::mainnet);
-    p2p net(set);
+    mock_p2p net(set);
     mock_session session(net);
 
     std::promise<code> started;
@@ -841,7 +861,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
     BOOST_REQUIRE(channel->begun());
     BOOST_REQUIRE(session->attached_handshake());
-////BOOST_REQUIRE(session->attached_protocol());
 
     // Subscriber is stopped prior to subscription by channel stop.
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::subscriber_stopped);

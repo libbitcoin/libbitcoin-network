@@ -181,29 +181,6 @@ public:
     }
 };
 
-template <class Acceptor>
-class mock_p2p
-  : public p2p
-{
-public:
-    using p2p::p2p;
-
-    typename Acceptor::ptr get_acceptor() const
-    {
-        return acceptor_;
-    }
-
-    // Create mock acceptor to inject mock channel.
-    acceptor::ptr create_acceptor() noexcept override
-    {
-        return ((acceptor_ = std::make_shared<Acceptor>(strand(), service(),
-            network_settings())));
-    }
-
-private:
-    typename Acceptor::ptr acceptor_;
-};
-
 class mock_session_inbound
   : public session_inbound
 {
@@ -343,6 +320,89 @@ public:
     }
 };
 
+template <class Acceptor = acceptor>
+class mock_p2p
+  : public p2p
+{
+public:
+    using p2p::p2p;
+
+    typename Acceptor::ptr get_acceptor() const
+    {
+        return acceptor_;
+    }
+
+    // Create mock acceptor to inject mock channel.
+    acceptor::ptr create_acceptor() noexcept override
+    {
+        return ((acceptor_ = std::make_shared<Acceptor>(strand(), service(),
+            network_settings())));
+    }
+
+    session_inbound::ptr attach_inbound_session() override
+    {
+        return attach<mock_session_inbound>();
+    }
+
+    session_outbound::ptr attach_outbound_session() override
+    {
+        return attach<mock_session_outbound>();
+    }
+
+    session_seed::ptr attach_seed_session() override
+    {
+        return attach<mock_session_seed>();
+    }
+
+private:
+    typename Acceptor::ptr acceptor_;
+
+    class mock_session_inbound
+      : public session_inbound
+    {
+    public:
+        mock_session_inbound(p2p& network)
+          : session_inbound(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
+
+    class mock_session_outbound
+      : public session_outbound
+    {
+    public:
+        mock_session_outbound(p2p& network)
+          : session_outbound(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
+
+    class mock_session_seed
+      : public session_seed
+    {
+    public:
+        mock_session_seed(p2p& network)
+          : session_seed(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
+};
+
 // properties
 
 BOOST_AUTO_TEST_CASE(session_inbound__inbound__always__true)
@@ -367,7 +427,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
 {
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    p2p net(set);
+    mock_p2p<> net(set);
     auto session = std::make_shared<mock_session_inbound>(net);
     BOOST_REQUIRE(session->stopped());
 
@@ -400,7 +460,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
 BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
 {
     settings set(selection::mainnet);
-    p2p net(set);
+    mock_p2p<> net(set);
     mock_session_inbound session(net);
 
     std::promise<bool> promise;
@@ -416,11 +476,11 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
 
 // start
 
-BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__stopped)
+BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__bypassed)
 {
     settings set(selection::mainnet);
     set.inbound_connections = 0;
-    p2p net(set);
+    mock_p2p<> net(set);
     mock_session_inbound session(net);
     BOOST_REQUIRE(session.stopped());
 
@@ -433,7 +493,29 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__stopped)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
+    BOOST_REQUIRE(session.stopped());
+}
+
+BOOST_AUTO_TEST_CASE(session_inbound__start__port_zero__bypassed)
+{
+    settings set(selection::mainnet);
+    set.inbound_connections = 1;
+    set.inbound_port = 0;
+    mock_p2p<> net(set);
+    mock_session_inbound session(net);
+    BOOST_REQUIRE(session.stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [&]()
+    {
+        session.start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
     BOOST_REQUIRE(session.stopped());
 }
 
@@ -441,7 +523,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operat
 {
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    p2p net(set);
+    mock_p2p<> net(set);
     auto session = std::make_shared<mock_session_inbound>(net);
     BOOST_REQUIRE(session->stopped());
 
@@ -622,7 +704,6 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started__timer_failure_cod
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_attached)
 {
     settings set(selection::mainnet);
-    set.seeds.clear();
     set.inbound_connections = 1;
     set.inbound_port = 42;
     mock_p2p<mock_acceptor_start_success_accept_fail> net(set);
@@ -834,87 +915,6 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     // Handshake protocols attached.
     BOOST_REQUIRE(session->attached_handshake());
     session.reset();
-}
-
-// start via network (not required for coverage)
-
-BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_no_inbound_connections__run_success)
-{
-    settings set(selection::mainnet);
-    set.outbound_connections = 0;
-    set.seeds.clear();
-
-    // Start will return invalid_magic if executed, but this test will bypass it.
-    set.inbound_connections = 0;
-    set.inbound_port = 42;
-    mock_p2p<mock_acceptor_start_fail> net(set);
-
-    std::promise<code> start;
-    std::promise<code> run;
-    net.start([&](const code& ec)
-    {
-        start.set_value(ec);
-        net.run([&](const code& ec)
-        {
-            run.set_value(ec);
-        });
-    });
-
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
-}
-
-BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_inbound_port_zero__run_success)
-{
-    settings set(selection::mainnet);
-    set.outbound_connections = 0;
-    set.seeds.clear();
-
-    // Start will return invalid_magic if executed, but this test will bypass it.
-    set.inbound_port = 0;
-    set.inbound_connections = 42;
-    mock_p2p<mock_acceptor_start_fail> net(set);
-
-    std::promise<code> start;
-    std::promise<code> run;
-    net.start([&](const code& ec)
-    {
-        start.set_value(ec);
-        net.run([&](const code& ec)
-        {
-            run.set_value(ec);
-        });
-    });
-
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
-}
-
-BOOST_AUTO_TEST_CASE(session_inbound__start__network_started_port_and_connections__run_invalid_magic)
-{
-    settings set(selection::mainnet);
-    set.outbound_connections = 0;
-    set.seeds.clear();
-
-    // Start will return invalid_magic when executed.
-    set.inbound_port = 42;
-    set.inbound_connections = 1;
-    mock_p2p<mock_acceptor_start_fail> net(set);
-
-    std::promise<code> start;
-    std::promise<code> run;
-    net.start([&](const code& ec)
-    {
-        start.set_value(ec);
-        net.run([&](const code& ec)
-        {
-            run.set_value(ec);
-        });
-    });
-    
-    // mock_acceptor_start_fail configured to return invalid_magic.
-    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::invalid_magic);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

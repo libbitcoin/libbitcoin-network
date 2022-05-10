@@ -59,11 +59,11 @@ void session_inbound::start(result_handler handler) noexcept
     {
         ////LOG_INFO(LOG_NETWORK)
         ////    << "Not configured for inbound connections." << std::endl;
-        handler(error::success);
+        handler(error::bypassed);
         return;
     }
 
-    session::start(BIND2(handle_started, _1, handler));
+    session::start(BIND2(handle_started, _1, std::move(handler)));
 }
 
 void session_inbound::handle_started(const code& ec,

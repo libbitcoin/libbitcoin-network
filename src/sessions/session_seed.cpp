@@ -56,11 +56,11 @@ void session_seed::start(result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(settings().host_pool_capacity) || settings().seeds.empty())
+    if (is_zero(settings().outbound_connections))
     {
         ////LOG_INFO(LOG_NETWORK)
-        ////    << "Not configured to populate an address pool." << std::endl;
-        handler(error::success);
+        ////    << "Not configured for outbound connections." << std::endl;
+        handler(error::bypassed);
         return;
     }
 
@@ -68,11 +68,19 @@ void session_seed::start(result_handler handler) noexcept
     {
         ////LOG_INFO(LOG_NETWORK)
         ////    << "Bypassed seeding due to existing addresses." << std::endl;
-        handler(error::success);
+        handler(error::bypassed);
         return;
     }
 
-    session::start(BIND2(handle_started, _1, handler));
+    if (is_zero(settings().host_pool_capacity) || settings().seeds.empty())
+    {
+        ////LOG_INFO(LOG_NETWORK)
+        ////    << "Not configured to populate an address pool." << std::endl;
+        handler(error::seeding_unsuccessful);
+        return;
+    }
+
+    session::start(BIND2(handle_started, _1, std::move(handler)));
 }
 
 void session_seed::handle_started(const code& ec,

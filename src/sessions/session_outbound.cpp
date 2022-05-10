@@ -62,7 +62,7 @@ void session_outbound::start(result_handler handler) noexcept
     {
         ////LOG_INFO(LOG_NETWORK)
         ////    << "Not configured for outbound connections." << std::endl;
-        handler(error::success);
+        handler(error::bypassed);
         return;
     }
 
@@ -74,7 +74,7 @@ void session_outbound::start(result_handler handler) noexcept
         return;
     }
 
-    session::start(BIND2(handle_started, _1, handler));
+    session::start(BIND2(handle_started, _1, std::move(handler)));
 }
 
 void session_outbound::handle_started(const code& ec,

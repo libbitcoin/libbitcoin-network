@@ -58,7 +58,7 @@ bool session_manual::notify() const noexcept
 void session_manual::start(result_handler handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    session::start(BIND2(handle_started, _1, handler));
+    session::start(BIND2(handle_started, _1, std::move(handler)));
 }
 
 void session_manual::handle_started(const code& ec,
@@ -125,7 +125,7 @@ void session_manual::start_connect(const authority& host,
     }
 
     connector->connect(host,
-        BIND5(handle_connect, _1, _2, host, connector, handler));
+        BIND5(handle_connect, _1, _2, host, connector, std::move(handler)));
 }
 
 void session_manual::handle_connect(const code& ec, channel::ptr channel,

@@ -104,20 +104,34 @@ void p2p::do_start(result_handler handler)
     manual_->start(std::bind(&p2p::handle_start, this, _1, std::move(handler)));
 }
 
-void p2p::handle_start(code ec, result_handler handler)
+void p2p::handle_start(const code& ec, result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
 
-    if (ec || ((ec = hosts_.start())))
+    // Manual sessions cannot be bypassed.
+    if (ec)
     {
         handler(ec);
         return;
     }
 
-    attach_seed_session()->start(handler);
+    // Host population always required.
+    const auto error_code = start_hosts();
+
+    if (error_code)
+    {
+        handler(error_code);
+        return;
+    }
+
+    attach_seed_session()->start([this, handler](const code& ec)
+    {
+        BC_ASSERT_MSG(stranded(), "handler");
+        handler(ec == error::bypassed ? error::success : ec);
+    });
 }
 
-// Run sequence.
+// Run sequence (seeding may be ongoing after its handler is invoked).
 // ----------------------------------------------------------------------------
 
 void p2p::run(result_handler handler)
@@ -143,17 +157,22 @@ void p2p::do_run(result_handler handler)
         std::bind(&p2p::handle_run, this, _1, std::move(handler)));
 }
 
-void p2p::handle_run(code ec, result_handler handler)
+void p2p::handle_run(const code& ec, result_handler handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (ec)
+    // A bypass code allows continuation.
+    if (ec && ec != error::bypassed)
     {
         handler(ec);
         return;
     }
 
-    attach_outbound_session()->start(handler);
+    attach_outbound_session()->start([this, handler](const code& ec)
+    {
+        BC_ASSERT_MSG(stranded(), "handler");
+        handler(ec == error::bypassed ? error::success : ec);
+    });
 }
 
 // Shutdown sequence.
@@ -196,7 +215,7 @@ void p2p::do_close()
     channels_.clear();
 
     // Serialize hosts file (log results).
-    /*code*/ hosts_.stop();
+    stop_hosts();
 
     // Stop threadpool keep-alive, all work must self-terminate to affect join.
     threadpool_.stop();
@@ -341,6 +360,19 @@ bool p2p::stranded() const
 
 // Hosts collection.
 // ----------------------------------------------------------------------------
+
+// private
+code p2p::start_hosts()
+{
+    return hosts_.start();
+}
+
+// private
+void p2p::stop_hosts()
+{
+    // TODO: log discarded code.
+    /* code */ hosts_.stop();
+}
 
 void p2p::fetch(hosts::address_item_handler handler) const
 {

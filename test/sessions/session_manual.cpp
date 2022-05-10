@@ -120,30 +120,6 @@ public:
     }
 };
 
-template <class Connector>
-class mock_p2p
-  : public p2p
-{
-public:
-    using p2p::p2p;
-
-    // Get last created connector.
-    typename Connector::ptr get_connector() const
-    {
-        return connector_;
-    }
-
-    // Create mock connector to inject mock channel.
-    connector::ptr create_connector() noexcept override
-    {
-        return ((connector_ = std::make_shared<Connector>(strand(), service(),
-            network_settings())));
-    }
-
-private:
-    typename Connector::ptr connector_;
-};
-
 class mock_session_manual
   : public session_manual
 {
@@ -257,6 +233,90 @@ public:
     }
 };
 
+template <class Connector = connector>
+class mock_p2p
+  : public p2p
+{
+public:
+    using p2p::p2p;
+
+    // Get last created connector.
+    typename Connector::ptr get_connector() const
+    {
+        return connector_;
+    }
+
+    // Create mock connector to inject mock channel.
+    connector::ptr create_connector() noexcept override
+    {
+        return ((connector_ = std::make_shared<Connector>(strand(), service(),
+            network_settings())));
+    }
+
+    session_inbound::ptr attach_inbound_session() override
+    {
+        return attach<mock_session_inbound>();
+    }
+
+    session_outbound::ptr attach_outbound_session() override
+    {
+        return attach<mock_session_outbound>();
+    }
+
+    session_seed::ptr attach_seed_session() override
+    {
+        return attach<mock_session_seed>();
+    }
+
+private:
+    typename Connector::ptr connector_;
+
+    class mock_session_inbound
+      : public session_inbound
+    {
+    public:
+        mock_session_inbound(p2p& network)
+          : session_inbound(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
+
+    class mock_session_outbound
+      : public session_outbound
+    {
+    public:
+        mock_session_outbound(p2p& network)
+          : session_outbound(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
+
+    class mock_session_seed
+      : public session_seed
+    {
+    public:
+        mock_session_seed(p2p& network)
+          : session_seed(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
+};
+
 // properties
 
 BOOST_AUTO_TEST_CASE(session_manual__inbound__always__false)
@@ -280,8 +340,7 @@ BOOST_AUTO_TEST_CASE(session_manual__notify__always__true)
 BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
 {
     settings set(selection::mainnet);
-    set.inbound_connections = 1;
-    p2p net(set);
+    mock_p2p<> net(set);
     auto session = std::make_shared<mock_session_manual>(net);
     BOOST_REQUIRE(session->stopped());
 
@@ -313,7 +372,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
 BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
 {
     settings set(selection::mainnet);
-    p2p net(set);
+    mock_p2p<> net(set);
     mock_session_manual session(net);
 
     std::promise<bool> promise;
@@ -332,7 +391,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
 BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
 {
     settings set(selection::mainnet);
-    p2p net(set);
+    mock_p2p<> net(set);
     auto session = std::make_shared<mock_session_manual>(net);
     BOOST_REQUIRE(session->stopped());
 
@@ -377,7 +436,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
 BOOST_AUTO_TEST_CASE(session_manual__connect1__stopped__service_stopped)
 {
     settings set(selection::mainnet);
-    mock_p2p<network::connector> net(set);
+    mock_p2p<> net(set);
     auto session = std::make_shared<mock_session_manual>(net);
     BOOST_REQUIRE(session->stopped());
 
@@ -411,7 +470,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect1__stopped__service_stopped)
 BOOST_AUTO_TEST_CASE(session_manual__connect2__stopped__service_stopped)
 {
     settings set(selection::mainnet);
-    mock_p2p<network::connector> net(set);
+    mock_p2p<> net(set);
     auto session = std::make_shared<mock_session_manual>(net);
     BOOST_REQUIRE(session->stopped());
 
@@ -448,7 +507,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect2__stopped__service_stopped)
 BOOST_AUTO_TEST_CASE(session_manual__connect3__stopped__service_stopped)
 {
     settings set(selection::mainnet);
-    mock_p2p<network::connector> net(set);
+    mock_p2p<> net(set);
     auto session = std::make_shared<mock_session_manual>(net);
     BOOST_REQUIRE(session->stopped());
 
@@ -641,15 +700,10 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__inva
 
 // start via network (not required for coverage)
 
-BOOST_AUTO_TEST_CASE(session_manual__start__network_start_no_seeds__success)
+BOOST_AUTO_TEST_CASE(session_manual__start__network_start__success)
 {
     settings set(selection::mainnet);
-
-    // Preclude seeding.
-    set.seeds.clear();
-
-    // Connector is not invoked.
-    mock_p2p<connector> net(set);
+    mock_p2p<> net(set);
 
     std::promise<code> started;
     net.start([&](const code& ec)
@@ -663,14 +717,10 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_start_no_seeds__success)
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
 {
     settings set(selection::mainnet);
-
-    // Preclude seeding, inbound, outbound and no manual connections.
-    set.inbound_port = 0;
-    set.seeds.clear();
     BOOST_REQUIRE(set.peers.empty());
 
     // Connector is not invoked.
-    mock_p2p<connector> net(set);
+    mock_p2p<> net(set);
 
     std::promise<code> start;
     std::promise<code> run;
@@ -690,10 +740,6 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__success)
 {
     settings set(selection::mainnet);
-
-    // Preclude seeding, inbound, outbound and no manual connections.
-    set.inbound_port = 0;
-    set.seeds.clear();
     BOOST_REQUIRE(set.peers.empty());
 
     const uint16_t port = 42;
@@ -728,10 +774,6 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__s
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__success)
 {
     settings set(selection::mainnet);
-
-    // Preclude seeding, inbound, outbound and no manual connections.
-    set.inbound_port = 0;
-    set.seeds.clear();
     BOOST_REQUIRE(set.peers.empty());
 
     const uint16_t port = 42;
@@ -770,10 +812,6 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
 {
     settings set(selection::mainnet);
-
-    // Preclude seeding, inbound, outbound and no manual connections.
-    set.inbound_port = 0;
-    set.seeds.clear();
     BOOST_REQUIRE(set.peers.empty());
 
     const uint16_t port = 42;
@@ -804,10 +842,6 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
 {
     settings set(selection::mainnet);
-
-    // Preclude seeding, inbound, outbound and no manual connections.
-    set.inbound_port = 0;
-    set.seeds.clear();
     BOOST_REQUIRE(set.peers.empty());
 
     const uint16_t port = 42;
@@ -838,10 +872,6 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
 {
     settings set(selection::mainnet);
-
-    // Preclude seeding, inbound, outbound and no manual connections.
-    set.inbound_port = 0;
-    set.seeds.clear();
     BOOST_REQUIRE(set.peers.empty());
 
     const uint16_t port = 42;

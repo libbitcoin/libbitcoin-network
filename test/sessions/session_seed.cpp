@@ -265,7 +265,7 @@ private:
     mutable size_t count_{ zero };
 };
 
-template <class Connector = network::connector>
+template <class Connector = connector>
 class mock_p2p
   : public p2p
 {
@@ -285,8 +285,68 @@ public:
             network_settings())));
     }
 
+    session_inbound::ptr attach_inbound_session() override
+    {
+        return attach<mock_session_inbound>();
+    }
+
+    session_outbound::ptr attach_outbound_session() override
+    {
+        return attach<mock_session_outbound>();
+    }
+
+    session_seed::ptr attach_seed_session() override
+    {
+        return attach<mock_session_seed>();
+    }
+
 private:
     typename Connector::ptr connector_;
+
+    class mock_session_inbound
+      : public session_inbound
+    {
+    public:
+        mock_session_inbound(p2p& network)
+          : session_inbound(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
+
+    class mock_session_outbound
+      : public session_outbound
+    {
+    public:
+        mock_session_outbound(p2p& network)
+          : session_outbound(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
+
+    class mock_session_seed
+      : public session_seed
+    {
+    public:
+        mock_session_seed(p2p& network)
+          : session_seed(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
 };
 
 class mock_connector_stop_connect
@@ -346,9 +406,69 @@ public:
             strand(), service(), network_settings(), session_)));
     }
 
+    session_inbound::ptr attach_inbound_session() override
+    {
+        return attach<mock_session_inbound>();
+    }
+
+    session_outbound::ptr attach_outbound_session() override
+    {
+        return attach<mock_session_outbound>();
+    }
+
+    session_seed::ptr attach_seed_session() override
+    {
+        return attach<mock_session_seed>();
+    }
+
 private:
     mock_connector_stop_connect::ptr connector_;
     mock_session_seed::ptr session_;
+
+    class mock_session_inbound
+      : public session_inbound
+    {
+    public:
+        mock_session_inbound(p2p& network)
+          : session_inbound(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
+
+    class mock_session_outbound
+      : public session_outbound
+    {
+    public:
+        mock_session_outbound(p2p& network)
+          : session_outbound(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
+
+    class mock_session_seed
+      : public session_seed
+    {
+    public:
+        mock_session_seed(p2p& network)
+          : session_seed(network)
+        {
+        }
+
+        void start(result_handler handler) noexcept override
+        {
+            handler(error::success);
+        }
+    };
 };
 
 // properties
@@ -371,48 +491,44 @@ BOOST_AUTO_TEST_CASE(session_seed__notify__always__false)
 
 // stop
 
-BOOST_AUTO_TEST_CASE(session_seed__stop__started__stopped)
+BOOST_AUTO_TEST_CASE(session_seed__stop__started__service_stopped)
 {
     settings set(selection::mainnet);
+    set.outbound_connections = 1;
     set.host_pool_capacity = 1;
-    set.outbound_connections = 0;
-    mock_p2p<mock_connector_connect_fail> net(set);
-    auto session = std::make_shared<mock_session_seed>(net);
-    BOOST_REQUIRE(session->stopped());
+    mock_p2p_stop_connect net(set);
 
+    // Stop is invoked just before first connector.connect, one seed processed.
+    auto session = std::make_shared<mock_session_seed_increasing_address_count>(net);
+    net.set_session(session);
+    BOOST_REQUIRE(session->stopped());
+    
     std::promise<code> started;
     boost::asio::post(net.strand(), [=, &started]()
     {
         session->start([&](const code& ec)
         {
-            // This will not fire until seeding complete.
             started.set_value(ec);
         });
     });
 
-    // This indicates unsuccessful seeding (start), not connection(s) status.
-    // Because p2p is not started, connections will fail until stop.
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
-    BOOST_REQUIRE(!session->stopped());
-
-    std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
-    {
-        // This is blocked above until seeding completes.
-        session->stop();
-        stopped.set_value(true);
-    });
-
-    BOOST_REQUIRE(stopped.get_future().get());
+    // mock_p2p_stop_connect will set stop before started completes.
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::service_stopped);
+    BOOST_REQUIRE_EQUAL(net.get_connector()->connects(), 1u);
+    BOOST_REQUIRE(!session->attached_handshake());
     BOOST_REQUIRE(session->stopped());
+
+    // Block until started connectors/channels complete before clearing session.
+    net.close();
     session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_seed__stop__stopped__stopped)
 {
     settings set(selection::mainnet);
-    p2p net(set);
+    mock_p2p<> net(set);
     mock_session_seed session(net);
+    BOOST_REQUIRE(session.stopped());
 
     std::promise<bool> promise;
     boost::asio::post(net.strand(), [&]()
@@ -427,12 +543,11 @@ BOOST_AUTO_TEST_CASE(session_seed__stop__stopped__stopped)
 
 //start
 
-BOOST_AUTO_TEST_CASE(session_seed__start__no_host_pool_capacity__stopped)
+BOOST_AUTO_TEST_CASE(session_seed__start__no_outbound__bypassed)
 {
     settings set(selection::mainnet);
     set.outbound_connections = 0;
-    set.host_pool_capacity = 0;
-    p2p net(set);
+    mock_p2p<> net(set);
     auto session = std::make_shared<mock_session_seed>(net);
     BOOST_REQUIRE(session->stopped());
 
@@ -445,41 +560,17 @@ BOOST_AUTO_TEST_CASE(session_seed__start__no_host_pool_capacity__stopped)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
     BOOST_REQUIRE(session->stopped());
     session.reset();
 }
 
-BOOST_AUTO_TEST_CASE(session_seed__start__no_seeds__stopped)
+BOOST_AUTO_TEST_CASE(session_seed__start__outbound_one_address_count__bypassed)
 {
     settings set(selection::mainnet);
-    set.outbound_connections = 0;
+    set.outbound_connections = 1;
     set.host_pool_capacity = 1;
-    set.seeds.clear();
-    p2p net(set);
-    auto session = std::make_shared<mock_session_seed>(net);
-    BOOST_REQUIRE(session->stopped());
-
-    std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
-    {
-        session->start([&](const code& ec)
-        {
-            started.set_value(ec);
-        });
-    });
-
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(session->stopped());
-    session.reset();
-}
-
-BOOST_AUTO_TEST_CASE(session_seed__start__one_address_count__stopped)
-{
-    settings set(selection::mainnet);
-    set.outbound_connections = 0;
-    set.host_pool_capacity = 1;
-    p2p net(set);
+    mock_p2p<> net(set);
     auto session = std::make_shared<mock_session_seed_one_address_count>(net);
     BOOST_REQUIRE(session->stopped());
 
@@ -492,7 +583,54 @@ BOOST_AUTO_TEST_CASE(session_seed__start__one_address_count__stopped)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
+    BOOST_REQUIRE(session->stopped());
+    session.reset();
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_host_pool_capacity__seeding_unsuccessful)
+{
+    settings set(selection::mainnet);
+    set.outbound_connections = 1;
+    set.host_pool_capacity = 0;
+    mock_p2p<> net(set);
+    auto session = std::make_shared<mock_session_seed>(net);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]()
+    {
+        session->start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
+    BOOST_REQUIRE(session->stopped());
+    session.reset();
+}
+
+BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_seeds__seeding_unsuccessful)
+{
+    settings set(selection::mainnet);
+    set.outbound_connections = 1;
+    set.host_pool_capacity = 1;
+    set.seeds.clear();
+    mock_p2p<> net(set);
+    auto session = std::make_shared<mock_session_seed>(net);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]()
+    {
+        session->start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
     BOOST_REQUIRE(session->stopped());
     session.reset();
 }
@@ -500,7 +638,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__one_address_count__stopped)
 BOOST_AUTO_TEST_CASE(session_seed__start__restart__operation_failed)
 {
     settings set(selection::mainnet);
-    set.outbound_connections = 0;
+    set.outbound_connections = 1;
     set.host_pool_capacity = 1;
     set.seeds.resize(3);
     mock_p2p<mock_connector_connect_fail> net(set);
@@ -546,7 +684,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__restart__operation_failed)
 BOOST_AUTO_TEST_CASE(session_seed__start__seeded__success)
 {
     settings set(selection::mainnet);
-    set.outbound_connections = 0;
+    set.outbound_connections = 1;
     set.host_pool_capacity = 1;
     set.seeds.resize(2);
     mock_p2p<mock_connector_connect_success<error::success>> net(set);
@@ -581,16 +719,13 @@ BOOST_AUTO_TEST_CASE(session_seed__start__seeded__success)
     session.reset();
 }
 
-BOOST_AUTO_TEST_CASE(session_seed__start__stop_during_seeding__success)
+BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
 {
     settings set(selection::mainnet);
-    set.outbound_connections = 0;
+    set.outbound_connections = 1;
     set.host_pool_capacity = 1;
-    mock_p2p_stop_connect net(set);
-
-    // Stop is invoked just before first connector.connect, one seed processed.
-    auto session = std::make_shared<mock_session_seed_increasing_address_count>(net);
-    net.set_session(session);
+    mock_p2p<mock_connector_connect_success<error::success>> net(set);
+    auto session = std::make_shared<mock_session_seed>(net);
     BOOST_REQUIRE(session->stopped());
     
     std::promise<code> started;
@@ -602,17 +737,21 @@ BOOST_AUTO_TEST_CASE(session_seed__start__stop_during_seeding__success)
         });
     });
 
-    // mock_p2p_stop_connect will set stop before started completes.
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::service_stopped);
-    BOOST_REQUIRE_EQUAL(net.get_connector()->connects(), 1u);
-    BOOST_REQUIRE(!session->attached_handshake());
-    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
+    BOOST_REQUIRE(!session->stopped());
 
-    // Must block until start completes before clearing the session.
-    net.close();
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(net.get_connector()->connected());
+    BOOST_REQUIRE(session->attached_handshake());
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
     session.reset();
 }
-
-// start via network (not required for coverage)
 
 BOOST_AUTO_TEST_SUITE_END()
