@@ -43,7 +43,7 @@ class mock_channel
 public:
     typedef std::shared_ptr<mock_channel> ptr;
 
-    mock_channel::mock_channel(bool& set, std::promise<bool>& coded,
+    mock_channel(bool& set, std::promise<bool>& coded,
         const code& match, socket::ptr socket, const settings& settings)
       : channel(socket, settings), match_(match), set_(set), coded_(coded)
     {
@@ -314,7 +314,7 @@ class mock_p2p_one_address_count
   : public mock_p2p<Connector>
 {
 public:
-    using mock_p2p::mock_p2p;
+    using mock_p2p<Connector>::mock_p2p;
 
     size_t address_count() const override
     {
@@ -327,7 +327,7 @@ class mock_p2p_one_address
   : public mock_p2p_one_address_count<Connector>
 {
 public:
-    using mock_p2p_one_address_count::mock_p2p_one_address_count;
+    using mock_p2p_one_address_count<Connector>::mock_p2p_one_address_count;
 
     void fetch(hosts::address_item_handler handler) const override
     {

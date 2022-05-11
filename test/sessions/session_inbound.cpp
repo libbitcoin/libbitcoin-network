@@ -29,7 +29,7 @@ class mock_channel
 public:
     typedef std::shared_ptr<mock_channel> ptr;
 
-    mock_channel::mock_channel(bool& set, std::promise<bool>& coded,
+    mock_channel(bool& set, std::promise<bool>& coded,
         const code& match, socket::ptr socket, const settings& settings)
       : channel(socket, settings), match_(match), set_(set), coded_(coded)
     {
@@ -130,7 +130,7 @@ class mock_acceptor_start_success_accept_fail
 public:
     typedef std::shared_ptr<mock_acceptor_start_success_accept_fail> ptr;
 
-    using mock_acceptor_start_success_accept_success::
+    using mock_acceptor_start_success_accept_success<error::success>::
         mock_acceptor_start_success_accept_success;
 
     // Handle accept with unknown error.
