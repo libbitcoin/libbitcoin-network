@@ -130,7 +130,7 @@ class mock_acceptor_start_success_accept_fail
 public:
     typedef std::shared_ptr<mock_acceptor_start_success_accept_fail> ptr;
 
-    using mock_acceptor_start_success_accept_success::
+    using mock_acceptor_start_success_accept_success<error::success>::
         mock_acceptor_start_success_accept_success;
 
     // Handle accept with unknown error.

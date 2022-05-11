@@ -144,7 +144,7 @@ class mock_connector_connect_fail
 public:
     typedef std::shared_ptr<mock_connector_connect_fail> ptr;
 
-    using mock_connector_connect_success::mock_connector_connect_success;
+    using mock_connector_connect_success<error::success>::mock_connector_connect_success;
 
     void connect(const std::string&, uint16_t,
         connect_handler&& handler) override

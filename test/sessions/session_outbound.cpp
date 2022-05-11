@@ -314,7 +314,7 @@ class mock_p2p_one_address_count
   : public mock_p2p<Connector>
 {
 public:
-    using mock_p2p::mock_p2p;
+    using mock_p2p<Connector>::mock_p2p;
 
     size_t address_count() const override
     {
@@ -327,7 +327,7 @@ class mock_p2p_one_address
   : public mock_p2p_one_address_count<Connector>
 {
 public:
-    using mock_p2p_one_address_count::mock_p2p_one_address_count;
+    using mock_p2p_one_address_count<Connector>::mock_p2p_one_address_count;
 
     void fetch(hosts::address_item_handler handler) const override
     {
