@@ -54,12 +54,12 @@ public:
             std::move(complete));
     }
 
-    template <class Message>
-    void send(typename Message::ptr message, const result_handler& complete)
-    {
-        using namespace messages;
-        send_bytes(serialize(*message, protocol_magic(), version()), complete);
-    }
+    ////template <class Message>
+    ////void send(typename Message::ptr message, const result_handler& complete)
+    ////{
+    ////    using namespace messages;
+    ////    send_bytes(serialize(*message, protocol_magic(), version()), complete);
+    ////}
 
     virtual void stop(const code& ec);
 
@@ -67,7 +67,7 @@ public:
     virtual void resume();
     bool paused() const;
 
-    void subscribe_stop(result_handler handler, result_handler complete);
+    void subscribe_stop(result_handler&& handler, result_handler&& complete);
     bool stopped() const;
 
     bool stranded() const;
@@ -80,7 +80,7 @@ protected:
     // Protocols may subscribe<Message> and subscribe_stop from strand.
     friend class protocol;
 
-    void subscribe_stop(result_handler handler);
+    void subscribe_stop(result_handler&& handler);
     template <class Message, typename Handler = pump::handler<Message>>
     void subscribe(Handler&& handler)
     {
@@ -100,8 +100,8 @@ protected:
 
     virtual void send_bytes(system::chunk_ptr payload,
         result_handler&& handler);
-    virtual void send_bytes(system::chunk_ptr payload,
-        const result_handler& handler);
+    ////virtual void send_bytes(system::chunk_ptr payload,
+    ////    const result_handler& handler);
     virtual code notify(messages::identifier id, uint32_t version,
         system::reader& source);
 

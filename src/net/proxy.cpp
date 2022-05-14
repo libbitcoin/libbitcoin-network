@@ -119,14 +119,14 @@ void proxy::do_stop(const code& ec)
 }
 
 // protected
-void proxy::subscribe_stop(result_handler handler)
+void proxy::subscribe_stop(result_handler&& handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
     stop_subscriber_->subscribe(std::move(handler));
 }
 
 // public
-void proxy::subscribe_stop(result_handler handler, result_handler complete)
+void proxy::subscribe_stop(result_handler&& handler, result_handler&& complete)
 {
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_subscribe_stop,
@@ -309,13 +309,13 @@ void proxy::send_bytes(system::chunk_ptr payload, result_handler&& handler)
             shared_from_this(), _1, _2, payload, std::move(handler)));
 }
 
-void proxy::send_bytes(system::chunk_ptr payload, const result_handler& handler)
-{
-    // Post handle_send to strand upon stop, error, or buffer fully sent.
-    socket_->write(*payload,
-        std::bind(&proxy::handle_send,
-            shared_from_this(), _1, _2, payload, handler));
-}
+////void proxy::send_bytes(system::chunk_ptr payload, const result_handler& handler)
+////{
+////    // Post handle_send to strand upon stop, error, or buffer fully sent.
+////    socket_->write(*payload,
+////        std::bind(&proxy::handle_send,
+////            shared_from_this(), _1, _2, payload, handler));
+////}
 
 // static
 std::string proxy::extract_command(const system::chunk_ptr& payload)
