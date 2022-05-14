@@ -32,13 +32,33 @@ public:
 
     void resume() noexcept override
     {
-        begun_ = true;
+        if (resumed_)
+            reresumed_ = true;
+        else
+            resumed_ = true;
+
         channel::resume();
     }
 
-    bool begun() const
+    void pause() noexcept override
     {
-        return begun_;
+        paused_ = true;
+        channel::pause();
+    }
+
+    bool resumed() const
+    {
+        return resumed_;
+    }
+
+    bool paused() const
+    {
+        return paused_;
+    }
+
+    bool reresumed() const
+    {
+        return reresumed_;
     }
 
     void stop(const code& ec) noexcept override
@@ -58,7 +78,9 @@ public:
     }
 
 protected:
-    bool begun_{ false };
+    bool paused_{ false };
+    bool resumed_{ false };
+    bool reresumed_{ false };
     code stop_code_{ error::success };
 };
 
@@ -70,7 +92,11 @@ public:
 
     void resume() noexcept override
     {
-        begun_ = true;
+        if (resumed_)
+            reresumed_ = true;
+        else
+            resumed_ = true;
+
         ////channel::resume();
     }
 };
@@ -648,8 +674,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
     // Channel stopped early due to session being stopped (not started).
     BOOST_REQUIRE(!session->attached_handshake());
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::service_stopped);
-    BOOST_REQUIRE(!channel->begun());
     BOOST_REQUIRE(!session->attached_handshake());
+    BOOST_REQUIRE(!channel->resumed());
     BOOST_REQUIRE(!session->attached_protocol());
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
     BOOST_REQUIRE(channel->stopped());
@@ -712,9 +738,11 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     });
 
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::channel_stopped);
-    BOOST_REQUIRE(channel->begun());
     BOOST_REQUIRE(session->attached_handshake());
+    BOOST_REQUIRE(channel->resumed());
+    BOOST_REQUIRE(channel->paused());
     BOOST_REQUIRE(!session->attached_protocol());
+    BOOST_REQUIRE(!channel->reresumed());
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::channel_stopped);
@@ -778,9 +806,11 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
 
     // Channel stopped by heading read fail, then by network.store code (network stopped).
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::service_stopped);
-    BOOST_REQUIRE(channel->begun());
     BOOST_REQUIRE(session->attached_handshake());
+    BOOST_REQUIRE(channel->resumed());
+    BOOST_REQUIRE(channel->paused());
     BOOST_REQUIRE(!session->attached_protocol());
+    BOOST_REQUIRE(!channel->reresumed());
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
@@ -859,8 +889,11 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
 
     // Channel stopped by heading read fail, stop method called by session.
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
-    BOOST_REQUIRE(channel->begun());
     BOOST_REQUIRE(session->attached_handshake());
+    BOOST_REQUIRE(channel->resumed());
+    BOOST_REQUIRE(channel->paused());
+    ////BOOST_REQUIRE(session->attached_protocol());
+    ////BOOST_REQUIRE(channel->reresumed());
 
     // Subscriber is stopped prior to subscription by channel stop.
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::subscriber_stopped);
@@ -946,8 +979,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
 
     // Channel stopped by heading read fail, stop method called by session.
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
-    BOOST_REQUIRE(channel->begun());
     BOOST_REQUIRE(session->attached_handshake());
+    BOOST_REQUIRE(channel->resumed());
+    BOOST_REQUIRE(channel->paused());
     BOOST_REQUIRE(session->require_attached_protocol());
     BOOST_REQUIRE(!channel->stopped());
 
@@ -967,6 +1001,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(channel->reresumed());
     BOOST_REQUIRE(!channel->stopped());
 
     // Channel unpent (outbound).
@@ -1036,8 +1071,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
 
     // Channel stopped by heading read fail, stop method called by session.
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
-    BOOST_REQUIRE(channel->begun());
     BOOST_REQUIRE(session->attached_handshake());
+    BOOST_REQUIRE(channel->resumed());
+    BOOST_REQUIRE(channel->paused());
     BOOST_REQUIRE(session->require_attached_protocol());
     BOOST_REQUIRE(!channel->stopped());
 
@@ -1057,6 +1093,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(channel->reresumed());
     BOOST_REQUIRE(!channel->stopped());
 
     // Channel not unpent (inbound).
