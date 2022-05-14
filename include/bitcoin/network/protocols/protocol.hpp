@@ -94,7 +94,8 @@ protected:
     void stop(const code& ec);
 
     const network::settings& settings() const;
-    void saves(const messages::address_items& addresses, result_handler handler={});
+    void saves(const messages::address_items& addresses);
+    void saves(const messages::address_items& addresses, result_handler handler);
     void fetches(fetches_handler handler);
 
     virtual void handle_send(const code& ec, const std::string& command);

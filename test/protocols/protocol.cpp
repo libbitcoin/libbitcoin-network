@@ -303,9 +303,9 @@ public:
         return protocol::settings();
     }
 
-    void saves(const messages::address_items& addresses, result_handler handler={})
+    void saves(const messages::address_items& addresses)
     {
-        return protocol::saves(addresses, handler);
+        return protocol::saves(addresses);
     }
 
     void fetches(fetches_handler handler)

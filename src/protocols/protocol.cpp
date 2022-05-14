@@ -95,6 +95,15 @@ const network::settings& protocol::settings() const
     return session_.settings();
 }
 
+void protocol::saves(const messages::address_items& addresses)
+{
+    const auto self = shared_from_base<protocol>();
+    return saves(addresses, [self](const code&)
+    {
+        self->nop();
+    });
+}
+
 void protocol::saves(const messages::address_items& addresses,
     result_handler handler)
 {
