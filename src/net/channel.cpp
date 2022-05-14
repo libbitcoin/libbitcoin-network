@@ -238,7 +238,10 @@ void channel::handle_expiration(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped() || ec == error::operation_canceled)
+    if (stopped())
+        return;
+
+    if (ec == error::operation_canceled)
         return;
 
     if (ec)
@@ -272,7 +275,10 @@ void channel::handle_inactivity(const code& ec)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped() || ec == error::operation_canceled)
+    if (stopped())
+        return;
+
+    if (ec == error::operation_canceled)
         return;
 
     if (ec)
