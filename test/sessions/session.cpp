@@ -30,10 +30,10 @@ class mock_channel
 public:
     using channel::channel;
 
-    void begin() noexcept override
+    void resume() noexcept override
     {
         begun_ = true;
-        channel::begin();
+        channel::resume();
     }
 
     bool begun() const
@@ -68,10 +68,10 @@ class mock_channel_no_read
 public:
     using mock_channel::mock_channel;
 
-    void begin() noexcept override
+    void resume() noexcept override
     {
         begun_ = true;
-        ////channel::begin();
+        ////channel::resume();
     }
 };
 

@@ -117,15 +117,8 @@ channel::~channel()
     BC_ASSERT_MSG(stopped(), "channel is not stopped");
 }
 
-// Start/stop.
+// Stop (started upon create).
 // ----------------------------------------------------------------------------
-
-void channel::begin()
-{
-    start_expiration();
-    start_inactivity();
-    proxy::begin();
-}
 
 void channel::stop(const code& ec)
 {
@@ -144,12 +137,24 @@ void channel::do_stop(const code& ec)
     expiration_->stop();
 }
 
+// Pause/resume (paused upon create).
+// ----------------------------------------------------------------------------
+
+// Timers are set for handshake and reset upon protocol start.
+// Version protocols may have more restrictive completion timeouts.
+void channel::resume()
+{
+    start_expiration();
+    start_inactivity();
+    proxy::resume();
+}
+
 // Properties.
 // ----------------------------------------------------------------------------
-// Versions are not thread safe, but logically should only be set in handshake
-// protocol, and only read thereafter. Otherwise values may be corrupted.
+// Version members are protected by the presumption of no reads during writes.
+// Versions should only be set in handshake process, and only read thereafter.
 
-// channel_nonce_ is const.
+// Member is const.
 uint64_t channel::nonce() const noexcept
 {
     return channel_nonce_;
@@ -162,6 +167,7 @@ uint32_t channel::negotiated_version() const noexcept
 
 void channel::set_negotiated_version(uint32_t value) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     negotiated_version_ = value;
 }
 
@@ -172,6 +178,7 @@ version::ptr channel::peer_version() const noexcept
 
 void channel::set_peer_version(version::ptr value) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     peer_version_ = value;
 }
 

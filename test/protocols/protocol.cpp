@@ -43,9 +43,9 @@ class mock_channel
 public:
     using channel::channel;
 
-    void begin() override
+    void resume() override
     {
-        channel::begin();
+        channel::resume();
     }
 
     void stop(const code& ec) override

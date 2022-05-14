@@ -113,8 +113,9 @@ void session::do_attach_handshake(const channel::ptr& channel,
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
-    // Channel is started upon creation, this only begins the read loop.
-    channel->begin();
+    // Channel is started/paused upon creation, this begins the read loop.
+    channel->resume();
+
     attach_handshake(channel, handshake);
 }
 
@@ -122,6 +123,7 @@ void session::attach_handshake(const channel::ptr& channel,
     result_handler handler) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+    BC_ASSERT_MSG(!channel->paused(), "channel paused for handshake");
 
     // Handshake protocols must invoke handler upon completion or failure.
     if (settings().protocol_maximum >= messages::level::bip61)
@@ -133,6 +135,12 @@ void session::attach_handshake(const channel::ptr& channel,
 void session::handle_handshake(const code& ec, channel::ptr channel,
     result_handler start) noexcept
 {
+    BC_ASSERT_MSG(channel->stranded(), "channel start");
+
+    // Upon return the channel strand is released and would accept messages.
+    // Pause on the channel strand to delay read until protocols attached.
+    channel->pause();
+
     // Return to network context.
     boost::asio::post(network_.strand(),
         BIND3(do_handle_handshake, ec, channel, start));
@@ -155,31 +163,30 @@ void session::do_handle_handshake(const code& ec, channel::ptr channel,
 void session::handle_channel_start(const code& ec, channel::ptr channel,
     result_handler started, result_handler stopped) noexcept
 {
-    result_handler start =
-        BIND3(handle_channel_started, _1, channel, std::move(started));
-
-    result_handler stop =
-        BIND3(handle_channel_stopped, _1, channel, std::move(stopped));
-
-    // Handles network_.store, channel stopped or protocol start code.
+    // Handles network_.store, channel stopped, and protocol start code.
     if (ec)
     {
         BC_ASSERT_MSG(channel, "unexpected null channel");
         channel->stop(ec);
+        /* bool */ network_.unstore(channel, inbound());
 
-        start(ec);
-        stop(ec);
+        started(ec);
+        stopped(ec);
         return;
     }
 
     // Capture the channel stop handler in the channel.
     // If stopped, or upon channel stop, handler is invoked.
-    channel->subscribe_stop(std::move(stop), std::move(start));
+    channel->subscribe_stop(
+        BIND3(handle_channel_stopped, _1, channel, std::move(stopped)),
+        BIND3(handle_channel_started, _1, channel, std::move(started)));
 }
 
 void session::handle_channel_started(const code& ec, channel::ptr channel,
     result_handler started) noexcept
 {
+    BC_ASSERT_MSG(channel->stranded(), "channel started");
+
     // Return to network context.
     boost::asio::post(network_.strand(),
         BIND3(do_handle_channel_started, ec, channel, std::move(started)));
@@ -204,9 +211,13 @@ void session::do_handle_channel_started(const code& ec, channel::ptr channel,
 
 void session::do_attach_protocols(const channel::ptr& channel) const noexcept
 {
-    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, resume");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
     attach_protocols(channel);
+
+    // Resume accepting messages on the channel, timers restarted.
+    channel->resume();
 }
 
 // Override in derived sessions to attach protocols.

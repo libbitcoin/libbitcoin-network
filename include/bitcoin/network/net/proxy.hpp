@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_NET_PROXY_HPP
 #define LIBBITCOIN_NETWORK_NET_PROXY_HPP
 
-#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -36,7 +35,8 @@
 namespace libbitcoin {
 namespace network {
 
-/// Thread safe.
+/// This class is not thread safe:
+/// pause/resume/paused should only be called from channel strand.
 /// Virtual base for all channel communication, error handling and logging.
 class BCT_API proxy
   : public enable_shared_from_base<proxy>, system::noncopyable
@@ -61,8 +61,11 @@ public:
         send_bytes(serialize(*message, protocol_magic(), version()), complete);
     }
 
-    virtual void begin();
     virtual void stop(const code& ec);
+
+    virtual void pause();
+    virtual void resume();
+    bool paused() const;
 
     void subscribe_stop(result_handler handler, result_handler complete);
     bool stopped() const;
@@ -118,11 +121,14 @@ private:
     // This is thread safe.
     socket::ptr socket_;
 
+    // This is not thread safe.
+    bool paused_;
+
     // These are protected by the strand.
     pump pump_subscriber_;
     stop_subscriber::ptr stop_subscriber_;
 
-    // These are protected by read header/payload ordering.
+    // These are protected by read header/payload ordering (strand).
     system::data_chunk payload_buffer_;
     system::data_array<messages::heading::size()> heading_buffer_;
     system::read::bytes::copy heading_reader_;

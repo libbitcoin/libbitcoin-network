@@ -34,7 +34,9 @@ namespace network {
 
 class session;
 
-/// This class is thread safe (see comments on versions in cpp).
+/// This class is not thread safe:
+/// Versions should be only written in handshake and read thereafter.
+/// pause/resume/paused and attach should only be called from channel strand.
 /// A channel is a proxy with logged timers and state.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API channel
@@ -69,7 +71,7 @@ public:
     channel(socket::ptr socket, const settings& settings);
     virtual ~channel();
 
-    void begin() override;
+    void resume() override;
     void stop(const code& ec) override;
 
     uint64_t nonce() const noexcept;
@@ -104,6 +106,8 @@ private:
     // These are not thread safe.
     uint32_t negotiated_version_;
     messages::version::ptr peer_version_;
+
+    // These are protected by the strand.
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
 };

@@ -44,6 +44,7 @@ static constexpr size_t invalid_payload_dump_size = 1024;
 
 proxy::proxy(socket::ptr socket)
   : socket_(socket),
+    paused_(true),
     pump_subscriber_(socket->strand()),
     stop_subscriber_(std::make_shared<stop_subscriber>(socket->strand())),
     payload_buffer_(no_fill_byte_allocator),
@@ -56,12 +57,32 @@ proxy::~proxy()
     BC_ASSERT_MSG(stopped(), "proxy is not stopped");
 }
 
-void proxy::begin()
+// Pause (proxy is created paused).
+// ----------------------------------------------------------------------------
+
+void proxy::pause()
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+    paused_ = true;
+}
+
+void proxy::resume()
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    paused_ = false;
     read_heading();
 }
 
-// Socket not allowed to stop itself, which ensures channel::proxy stop invoke.
+bool proxy::paused() const
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    return paused_;
+}
+
+// Stop (socket/proxy is created started).
+// ----------------------------------------------------------------------------
+
+// Socket is not allowed to stop itself.
 bool proxy::stopped() const
 {
     return socket_->stopped();
@@ -84,6 +105,9 @@ void proxy::do_stop(const code& ec)
     // Stops the read loop.
     // Signals socket to stop accepting new work, cancels pending work.
     socket_->stop();
+
+    // Overruled by stop, set only for consistency.
+    paused_ = true;
 
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
@@ -126,8 +150,14 @@ code proxy::notify(identifier id, uint32_t version, system::reader& source)
 
 void proxy::read_heading()
 {
-    // Terminates the read loop.
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Terminates the read loop (cannot be resumed).
     if (stopped())
+        return;
+
+    // Pauses the read loop (can be resumed), does not pause timer.
+    if (paused())
         return;
 
     // Post handle_read_heading to strand upon stop, error, or buffer full.
