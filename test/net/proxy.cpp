@@ -110,6 +110,107 @@ BOOST_AUTO_TEST_CASE(proxy__extract_command__extra_payload__expected)
     BOOST_REQUIRE_EQUAL(proxy_accessor::extract_command(payload), "wxyzwxyzwxyz");
 }
 
+BOOST_AUTO_TEST_CASE(proxy__paused__default__true)
+{
+    threadpool pool(1);
+    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
+
+    std::promise<bool> paused;
+    boost::asio::post(proxy_ptr->strand(), [=, &paused]()
+    {
+        paused.set_value(proxy_ptr->paused());
+    });
+
+    BOOST_REQUIRE(paused.get_future().get());
+    proxy_ptr->stop(error::invalid_magic);
+    proxy_ptr.reset();
+}
+
+BOOST_AUTO_TEST_CASE(proxy__paused__pause__true)
+{
+    threadpool pool(1);
+    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
+
+    std::promise<bool> paused;
+    boost::asio::post(proxy_ptr->strand(), [=, &paused]()
+    {
+        proxy_ptr->pause();
+        paused.set_value(proxy_ptr->paused());
+    });
+
+    BOOST_REQUIRE(paused.get_future().get());
+    proxy_ptr->stop(error::invalid_magic);
+    proxy_ptr.reset();
+}
+
+BOOST_AUTO_TEST_CASE(proxy__paused__resume__false)
+{
+    threadpool pool(1);
+    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
+
+    std::promise<bool> paused;
+    boost::asio::post(proxy_ptr->strand(), [=, &paused]()
+    {
+        // Resume queues up a read that will not execute until after this. 
+        proxy_ptr->resume();
+        paused.set_value(proxy_ptr->paused());
+    });
+
+    BOOST_REQUIRE(!paused.get_future().get());
+    proxy_ptr->stop(error::invalid_magic);
+    proxy_ptr.reset();
+}
+
+BOOST_AUTO_TEST_CASE(proxy__paused__resume_pause__true)
+{
+    threadpool pool(1);
+    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
+
+    std::promise<bool> paused;
+    boost::asio::post(proxy_ptr->strand(), [=, &paused]()
+    {
+        // Resume queues up a read that will not execute until after this. 
+        proxy_ptr->resume();
+        proxy_ptr->pause();
+        paused.set_value(proxy_ptr->paused());
+    });
+
+    BOOST_REQUIRE(paused.get_future().get());
+    proxy_ptr->stop(error::invalid_magic);
+    proxy_ptr.reset();
+}
+
+BOOST_AUTO_TEST_CASE(proxy__paused__resume_after_read_fail__true)
+{
+    threadpool pool(2);
+    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto proxy_ptr = std::make_shared<proxy_accessor>(socket_ptr);
+
+    std::promise<bool> paused_after_resume;
+    boost::asio::post(proxy_ptr->strand(), [=, &paused_after_resume]()
+    {
+        // Resume queues up a read that will execute in order (before next post).
+        proxy_ptr->resume();
+        paused_after_resume.set_value(proxy_ptr->paused());
+    });
+
+    BOOST_REQUIRE(!paused_after_resume.get_future().get());
+
+    std::promise<bool> paused_after_read_fail;
+    boost::asio::post(proxy_ptr->strand(), [=, &paused_after_read_fail]()
+    {
+        paused_after_read_fail.set_value(proxy_ptr->paused());
+    });
+
+    BOOST_REQUIRE(paused_after_read_fail.get_future().get());
+    BOOST_REQUIRE(proxy_ptr->stopped());
+    proxy_ptr.reset();
+}
+
 BOOST_AUTO_TEST_CASE(proxy__stopped__default__false)
 {
     threadpool pool(2);
