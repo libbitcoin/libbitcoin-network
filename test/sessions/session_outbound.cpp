@@ -312,7 +312,7 @@ public:
 
     session_outbound::ptr attach_outbound_session() override
     {
-        return attach<mock_session_outbound>();
+        return attach<mock_outbound_session>();
     }
 
     session_seed::ptr attach_seed_session() override
@@ -338,11 +338,11 @@ private:
         }
     };
 
-    class mock_session_outbound
+    class mock_outbound_session
       : public session_outbound
     {
     public:
-        mock_session_outbound(p2p& network)
+        mock_outbound_session(p2p& network)
           : session_outbound(network)
         {
         }
@@ -433,7 +433,7 @@ public:
 
     session_outbound::ptr attach_outbound_session() override
     {
-        return attach<mock_session_outbound>();
+        return attach<mock_outbound_session>();
     }
 
     session_seed::ptr attach_seed_session() override
@@ -460,11 +460,11 @@ private:
         }
     };
 
-    class mock_session_outbound
+    class mock_outbound_session
       : public session_outbound
     {
     public:
-        mock_session_outbound(p2p& network)
+        mock_outbound_session(p2p& network)
           : session_outbound(network)
         {
         }

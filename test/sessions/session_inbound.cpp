@@ -342,7 +342,7 @@ public:
 
     session_inbound::ptr attach_inbound_session() override
     {
-        return attach<mock_session_inbound>();
+        return attach<mock_inbound_session>();
     }
 
     session_outbound::ptr attach_outbound_session() override
@@ -358,11 +358,11 @@ public:
 private:
     typename Acceptor::ptr acceptor_;
 
-    class mock_session_inbound
+    class mock_inbound_session
       : public session_inbound
     {
     public:
-        mock_session_inbound(p2p& network)
+        mock_inbound_session(p2p& network)
           : session_inbound(network)
         {
         }
