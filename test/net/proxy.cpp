@@ -180,7 +180,16 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume__false)
     });
 
     BOOST_REQUIRE(!paused.get_future().get());
-    proxy_ptr->stop(error::invalid_magic);
+
+    // Ensures stop is not executed concurrenty due to resume, guarding promise.
+    std::promise<bool> stopped;
+    boost::asio::post(proxy_ptr->strand(), [=, &stopped]()
+    {
+        proxy_ptr->stop(error::invalid_magic);
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
     proxy_ptr.reset();
 }
 
@@ -200,7 +209,16 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_pause__true)
     });
 
     BOOST_REQUIRE(paused.get_future().get());
-    proxy_ptr->stop(error::invalid_magic);
+
+    // Ensures stop is not executed concurrenty due to resume, guarding promise.
+    std::promise<bool> stopped;
+    boost::asio::post(proxy_ptr->strand(), [=, &stopped]()
+    {
+        proxy_ptr->stop(error::invalid_magic);
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
     proxy_ptr.reset();
 }
 
@@ -228,7 +246,16 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_after_read_fail__true)
     });
 
     BOOST_REQUIRE(paused_after_read_fail.get_future().get());
-    BOOST_REQUIRE(proxy_ptr->stopped());
+
+    // Ensures stop is not executed concurrenty due to resume, guarding promise.
+    std::promise<bool> stopped;
+    boost::asio::post(proxy_ptr->strand(), [=, &stopped]()
+    {
+        proxy_ptr->stop(error::invalid_magic);
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
     proxy_ptr.reset();
 }
 
