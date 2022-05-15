@@ -379,8 +379,8 @@ void p2p::stop_hosts()
 
 void p2p::fetch(hosts::address_item_handler&& handler) const
 {
-    boost::asio::dispatch(
-        strand_, std::bind(&p2p::do_fetch, this, std::move(handler)));
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_fetch, this, std::move(handler)));
 }
 
 void p2p::do_fetch(const hosts::address_item_handler& handler) const
