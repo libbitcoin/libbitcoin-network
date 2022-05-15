@@ -179,7 +179,8 @@ public:
 
     // Capture first start_connect call.
     void start_seed(const config::endpoint& seed,
-        connector::ptr connector, channel_handler handler) noexcept override
+        const connector::ptr& connector,
+        const channel_handler& handler) noexcept override
     {
         // Must be first to ensure connector::connect() preceeds promise release.
         session_seed::start_seed(seed, connector, handler);
@@ -202,7 +203,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler handshake) const noexcept override
+        result_handler&& handshake) const noexcept override
     {
         if (!handshaked_)
         {
@@ -250,10 +251,10 @@ public:
     using mock_session_seed::mock_session_seed;
 
     // Rest to zero on start for restart testing.
-    void start(result_handler handler) noexcept
+    void start(result_handler&& handler) noexcept
     {
         count_ = zero;
-        mock_session_seed::start(handler);
+        mock_session_seed::start(std::move(handler));
     }
 
     size_t address_count() const noexcept override
@@ -312,7 +313,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -327,7 +328,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -342,7 +343,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -434,7 +435,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -449,7 +450,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -464,7 +465,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }

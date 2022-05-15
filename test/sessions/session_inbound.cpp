@@ -208,7 +208,8 @@ public:
     }
 
     // Capture first start_accept call.
-    void start_accept(const code& ec, acceptor::ptr acceptor) noexcept override
+    void start_accept(const code& ec,
+        const acceptor::ptr& acceptor) noexcept override
     {
         // Must be first to ensure acceptor::accept() preceeds promise release.
         session_inbound::start_accept(ec, acceptor);
@@ -232,7 +233,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler handshake) const noexcept override
+        result_handler&& handshake) const noexcept override
     {
         if (!handshaked_)
         {
@@ -271,7 +272,7 @@ public:
     using mock_session_inbound::mock_session_inbound;
 
     void attach_handshake(const channel::ptr&,
-        result_handler handshake) const noexcept override
+        result_handler&& handshake) const noexcept override
     {
         if (!handshaked_)
         {
@@ -302,7 +303,7 @@ class mock_session_start_accept_parameter_error
 public:
     using mock_session_inbound::mock_session_inbound;
 
-    void start_accept(const code&, acceptor::ptr acceptor) noexcept override
+    void start_accept(const code&, const acceptor::ptr& acceptor) noexcept override
     {
         mock_session_inbound::start_accept(error::invalid_checksum, acceptor);
     }
@@ -366,7 +367,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -381,7 +382,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -396,7 +397,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }

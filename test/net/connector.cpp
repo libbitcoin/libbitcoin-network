@@ -79,11 +79,12 @@ BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
 
     boost::asio::post(strand, [instance]()
     {
-        instance->connect(config::endpoint{ "bogus.xxx", 42 }, [](const code& ec, channel::ptr channel)
-        {
-            BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
-            BOOST_REQUIRE(!channel);
-        });
+        instance->connect(config::endpoint{ "bogus.xxx", 42 },
+            [](const code& ec, const channel::ptr& channel)
+            {
+                BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
+                BOOST_REQUIRE(!channel);
+            });
     });
 
     pool.stop();
@@ -103,11 +104,12 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
 
     boost::asio::post(strand, [instance]()
     {
-        instance->connect(config::authority{ "42.42.42.42", 42 }, [](const code& ec, channel::ptr channel)
-        {
-            BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
-            BOOST_REQUIRE(!channel);
-        });
+        instance->connect(config::authority{ "42.42.42.42", 42 },
+            [](const code& ec, const channel::ptr& channel)
+            {
+                BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
+                BOOST_REQUIRE(!channel);
+            });
     });
 
     pool.stop();
@@ -127,11 +129,12 @@ BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
 
     boost::asio::post(strand, [&]()
     {
-        instance->connect("bogus.xxx", 42, [](const code& ec, channel::ptr channel)
-        {
-            BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
-            BOOST_REQUIRE(!channel);
-        });
+        instance->connect("bogus.xxx", 42,
+            [](const code& ec, const channel::ptr& channel)
+            {
+                BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
+                BOOST_REQUIRE(!channel);
+            });
     });
 
     pool.stop();
@@ -151,12 +154,13 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
 
     boost::asio::post(strand, [instance]()
     {
-        instance->connect(config::endpoint{ "bogus.xxx", 42 }, [](const code& ec, channel::ptr channel)
-        {
-            // TODO: 11001 (HOST_NOT_FOUND) gets mapped to unknown.
-            BOOST_REQUIRE(ec == error::unknown || ec == error::operation_canceled);
-            BOOST_REQUIRE(!channel);
-        });
+        instance->connect(config::endpoint{ "bogus.xxx", 42 },
+            [](const code& ec, const channel::ptr& channel)
+            {
+                // TODO: 11001 (HOST_NOT_FOUND) gets mapped to unknown.
+                BOOST_REQUIRE(ec == error::unknown || ec == error::operation_canceled);
+                BOOST_REQUIRE(!channel);
+            });
 
         // Test race.
         std::this_thread::sleep_for(microseconds(1));

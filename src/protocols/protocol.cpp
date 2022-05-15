@@ -20,8 +20,10 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -33,7 +35,7 @@ namespace network {
 using namespace bc::system;
 using namespace messages;
 
-protocol::protocol(const session& session, channel::ptr channel)
+protocol::protocol(const session& session, const channel::ptr& channel)
   : channel_(channel), session_(session)
 {
 }
@@ -63,7 +65,7 @@ version::ptr protocol::peer_version() const noexcept
     return channel_->peer_version();
 }
 
-void protocol::set_peer_version(version::ptr value) noexcept
+void protocol::set_peer_version(const version::ptr& value) noexcept
 {
     channel_->set_peer_version(value);
 }
@@ -105,31 +107,31 @@ void protocol::saves(const messages::address_items& addresses)
 }
 
 void protocol::saves(const messages::address_items& addresses,
-    result_handler handler)
+    result_handler&& handler)
 {
     // boost::asio::bind_executor not working due to type erasure.
     boost::asio::post(channel_->strand(),
         std::bind(&protocol::do_saves,
-            shared_from_this(), addresses, handler));
+            shared_from_this(), addresses, std::move(handler)));
 }
 
 void protocol::do_saves(const messages::address_items& addresses,
-    result_handler handler)
+    const result_handler& handler)
 {
-    session_.saves(addresses, handler);
+    session_.saves(addresses, move_copy(handler));
 }
 
-void protocol::fetches(fetches_handler handler)
+void protocol::fetches(fetches_handler&& handler)
 {
     // boost::asio::bind_executor not working due to type erasure.
     boost::asio::post(channel_->strand(),
         std::bind(&protocol::do_fetches,
-            shared_from_this(), handler));
+            shared_from_this(), std::move(handler)));
 }
 
-void protocol::do_fetches(fetches_handler handler)
+void protocol::do_fetches(const fetches_handler& handler)
 {
-    session_.fetches(handler);
+    session_.fetches(move_copy(handler));
 }
 
 } // namespace network

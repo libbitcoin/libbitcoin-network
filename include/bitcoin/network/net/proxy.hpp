@@ -43,23 +43,16 @@ class BCT_API proxy
 {
 public:
     typedef std::shared_ptr<proxy> ptr;
-    typedef subscriber<code> stop_subscriber;
+    typedef subscriber<const code&> stop_subscriber;
     typedef std::function<void(const code&)> result_handler;
 
     template <class Message>
-    void send(typename Message::ptr message, result_handler&& complete)
+    void send(const typename Message::ptr& message, result_handler&& complete)
     {
         using namespace messages;
         send_bytes(serialize(*message, protocol_magic(), version()),
             std::move(complete));
     }
-
-    ////template <class Message>
-    ////void send(typename Message::ptr message, const result_handler& complete)
-    ////{
-    ////    using namespace messages;
-    ////    send_bytes(serialize(*message, protocol_magic(), version()), complete);
-    ////}
 
     virtual void stop(const code& ec);
 
@@ -88,7 +81,7 @@ protected:
         pump_subscriber_.subscribe(std::forward<Handler>(handler));
     }
 
-    proxy(socket::ptr socket);
+    proxy(const socket::ptr& socket);
     virtual ~proxy();
 
     virtual size_t maximum_payload() const = 0;
@@ -98,10 +91,8 @@ protected:
     virtual uint32_t version() const = 0;
     virtual void signal_activity() = 0;
 
-    virtual void send_bytes(system::chunk_ptr payload,
+    virtual void send_bytes(const system::chunk_ptr& payload,
         result_handler&& handler);
-    ////virtual void send_bytes(system::chunk_ptr payload,
-    ////    const result_handler& handler);
     virtual code notify(messages::identifier id, uint32_t version,
         system::reader& source);
 
@@ -109,14 +100,15 @@ private:
     typedef messages::heading::ptr heading_ptr;
 
     void do_stop(const code& ec);
-    void do_subscribe_stop(result_handler handler, result_handler complete);
+    void do_subscribe_stop(const result_handler& handler,
+        const result_handler& complete);
 
     void read_heading();
     void handle_read_heading(const code& ec, size_t heading_size);
     void handle_read_payload(const code& ec, size_t payload_size,
         const heading_ptr& head);
-    void handle_send(const code& ec, size_t bytes, system::chunk_ptr payload,
-        const result_handler& handler);
+    void handle_send(const code& ec, size_t bytes,
+        const system::chunk_ptr& payload, const result_handler& handler);
 
     // This is thread safe.
     socket::ptr socket_;

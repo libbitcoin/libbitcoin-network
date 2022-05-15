@@ -49,32 +49,34 @@ public:
     typedef std::shared_ptr<p2p> ptr;
     typedef std::function<void()> stop_handler;
     typedef std::function<void(const code&)> result_handler;
-    typedef std::function<void(const code&, channel::ptr)> channel_handler;
-    typedef subscriber<code, channel::ptr> channel_subscriber;
-    typedef subscriber<code> stop_subscriber;
+    typedef std::function<void(const code&, const channel::ptr&)> channel_handler;
+    typedef subscriber<const code&, const channel::ptr&> channel_subscriber;
+    typedef subscriber<const code&> stop_subscriber;
 
     template <typename Message>
-    void broadcast(const Message& message, result_handler handler)
+    void broadcast(const Message& message, result_handler&& handler)
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, system::to_shared(message), handler));
+                this, system::to_shared(message), std::move(handler)));
     }
 
     template <typename Message>
-    void broadcast(Message&& message, result_handler handler)
+    void broadcast(Message&& message, result_handler&& handler)
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, system::to_shared(std::move(message)), handler));
+                this, system::to_shared(std::move(message)),
+                    std::move(handler)));
     }
 
     template <typename Message>
-    void broadcast(typename Message::ptr message, result_handler handler)
+    void broadcast(const typename Message::ptr& message,
+        result_handler&& handler)
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, message, handler));
+                this, message, std::move(handler)));
     }
 
     // Constructors.
@@ -89,10 +91,10 @@ public:
     // ------------------------------------------------------------------------
 
     /// Invoke startup and seeding sequence.
-    virtual void start(result_handler handler);
+    virtual void start(result_handler&& handler);
 
     /// Run inbound and outbound sessions, call from start result handler.
-    virtual void run(result_handler handler);
+    virtual void run(result_handler&& handler);
 
     /// Not thread safe, call only once, from non-threadpool thread.
     /// Idempotent call to block on work stop, start may be reinvoked after.
@@ -103,13 +105,13 @@ public:
 
     /// Subscribe to connection creation events (allowed before start).
     /// A call after close will return success but never invokes the handler.
-    virtual void subscribe_connect(channel_handler handler,
-        result_handler complete);
+    virtual void subscribe_connect(channel_handler&& handler,
+        result_handler&& complete);
 
     /// Subscribe to service stop event (allowed before start).
     /// A call after close will return success but never invokes the handler.
-    virtual void subscribe_close(result_handler handler,
-        result_handler complete);
+    virtual void subscribe_close(result_handler&& handler,
+        result_handler&& complete);
 
     // Manual connections.
     // ----------------------------------------------------------------------------
@@ -123,7 +125,7 @@ public:
     /// Maintain a connection to hostname:port.
     /// The callback is invoked by the first connection creation only.
     virtual void connect(const std::string& hostname, uint16_t port,
-        channel_handler handler);
+        channel_handler&& handler);
 
     // Properties.
     // ------------------------------------------------------------------------
@@ -184,26 +186,27 @@ protected:
     bool stranded() const;
 
     /// Subscribe to service stop event from strand.
-    void subscribe_close(result_handler handler);
+    void subscribe_close(result_handler&& handler);
 
 protected:
     virtual void pend(uint64_t nonce);
     virtual void unpend(uint64_t nonce);
-    virtual code store(channel::ptr channel, bool notify, bool inbound);
-    virtual bool unstore(channel::ptr channel, bool inbound);
+    virtual code store(const channel::ptr& channel, bool notify, bool inbound);
+    virtual bool unstore(const channel::ptr& channel, bool inbound);
 
-    virtual void fetch(hosts::address_item_handler handler) const;
-    virtual void fetches(hosts::address_items_handler handler) const;
+    virtual void fetch(hosts::address_item_handler&& handler) const;
+    virtual void fetches(hosts::address_items_handler&& handler) const;
     virtual void dump(const messages::address_item& address,
-        result_handler complete);
+        result_handler&& complete);
     virtual void save(const messages::address_item& address,
-        result_handler complete);
+        result_handler&& complete);
     virtual void saves(const messages::address_items& addresses,
-        result_handler complete);
+        result_handler&& complete);
 
 private:
     template <typename Message>
-    void do_broadcast(typename Message::ptr message, result_handler handler)
+    void do_broadcast(const typename Message::ptr& message,
+        const result_handler& handler)
     {
         BC_ASSERT_MSG(stranded(), "channels_");
 
@@ -217,27 +220,30 @@ private:
     virtual code start_hosts();
     virtual void stop_hosts();
 
-    void do_start(result_handler handler);
-    void do_run(result_handler handler);
+    void do_start(const result_handler& handler);
+    void do_run(const result_handler& handler);
     void do_close();
 
-    void handle_start(const code& ec, result_handler handler);
-    void handle_run(const code& ec, result_handler handler);
+    void handle_start(const code& ec, const result_handler& handler);
+    void handle_run(const code& ec, const result_handler& handler);
   
-    void do_subscribe_connect(channel_handler handler, result_handler complete);
-    void do_subscribe_close(result_handler handler, result_handler complete);
+    void do_subscribe_connect(const channel_handler& handler,
+        const result_handler& complete);
+    void do_subscribe_close(const result_handler& handler,
+        const result_handler& complete);
 
     // Distinct method names required for std::bind.
     void do_connect1(const config::endpoint& endpoint);
     void do_connect2(const std::string& hostname, uint16_t port);
     void do_connect3(const std::string& hostname, uint16_t port,
-        channel_handler handler);
+        const channel_handler& handler);
 
-    void do_fetch(hosts::address_item_handler handler) const;
-    void do_fetches(hosts::address_items_handler handler) const;
-    void do_save(const messages::address_item& host, result_handler complete);
+    void do_fetch(const hosts::address_item_handler& handler) const;
+    void do_fetches(const hosts::address_items_handler& handler) const;
+    void do_save(const messages::address_item& host,
+        const result_handler& complete);
     void do_saves(const messages::address_items& hosts,
-        result_handler complete);
+        const result_handler& complete);
 
     // These are thread safe.
     const settings& settings_;

@@ -43,7 +43,7 @@ public:
     session_outbound(p2p& network) noexcept;
 
     /// Start configured number of connections (call from network strand).
-    void start(result_handler handler) noexcept override;
+    void start(result_handler&& handler) noexcept override;
 
 protected:
     /// The channel is outbound (do not pend the nonce).
@@ -54,29 +54,29 @@ protected:
 
     /// Overridden to change version protocol (base calls from channel strand).
     void attach_handshake(const channel::ptr& channel,
-        result_handler handle_started) const noexcept override;
+        result_handler&& handle_started) const noexcept override;
 
     /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
     /// Start outbound connections based on config (called from start).
-    virtual void start_connect(connectors_ptr connectors) noexcept;
+    virtual void start_connect(const connectors_ptr& connectors) noexcept;
 
 private:
     typedef std::shared_ptr<size_t> count_ptr;
 
-    void handle_started(const code& ec, result_handler handler) noexcept;
-    void handle_connect(const code& ec, channel::ptr channel,
-        connectors_ptr connectors) noexcept;
+    void handle_started(const code& ec, const result_handler& handler) noexcept;
+    void handle_connect(const code& ec, const channel::ptr& channel,
+        const connectors_ptr& connectors) noexcept;
 
-    void handle_channel_start(const code& ec, channel::ptr channel) noexcept;
-    void handle_channel_stop(const code& ec, connectors_ptr connectors) noexcept;
+    void handle_channel_start(const code& ec, const channel::ptr& channel) noexcept;
+    void handle_channel_stop(const code& ec, const connectors_ptr& connectors) noexcept;
 
     void do_one(const code& ec, const config::authority& host,
-        connector::ptr connector, channel_handler handler) noexcept;
-    void handle_one(const code& ec, channel::ptr channel,
-        count_ptr count, connectors_ptr connectors,
-        channel_handler handler) noexcept;
+        const connector::ptr& connector, const channel_handler& handler) noexcept;
+    void handle_one(const code& ec, const channel::ptr& channel,
+        const count_ptr& count, const connectors_ptr& connectors,
+        const channel_handler& handler) noexcept;
 };
 
 } // namespace network

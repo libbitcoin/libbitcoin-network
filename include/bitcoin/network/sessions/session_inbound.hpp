@@ -44,7 +44,7 @@ public:
     session_inbound(p2p& network) noexcept;
 
     /// Start accepting inbound connections as configured (call from network strand).
-    void start(result_handler handler) noexcept override;
+    void start(result_handler&& handler) noexcept override;
 
 protected:
     /// The channel is inbound (pend the nonce).
@@ -55,21 +55,24 @@ protected:
 
     /// Overridden to change version protocol (base calls from channel strand).
     void attach_handshake(const channel::ptr& channel,
-        result_handler handler) const noexcept override;
+        result_handler&& handler) const noexcept override;
 
     /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
     /// Start accepting based on configuration (called from start).
-    virtual void start_accept(const code& ec, acceptor::ptr acceptor) noexcept;
+    virtual void start_accept(const code& ec,
+        const acceptor::ptr& acceptor) noexcept;
 
 private:
-    void handle_started(const code& ec, result_handler handler) noexcept;
-    void handle_accept(const code& ec, channel::ptr channel,
-        acceptor::ptr acceptor) noexcept;
+    void handle_started(const code& ec, const result_handler& handler) noexcept;
+    void handle_accept(const code& ec, const channel::ptr& channel,
+        const acceptor::ptr& acceptor) noexcept;
 
-    void handle_channel_start(const code& ec, channel::ptr channel) noexcept;
-    void handle_channel_stop(const code& ec, channel::ptr channel) noexcept;
+    void handle_channel_start(const code& ec,
+        const channel::ptr& channel) noexcept;
+    void handle_channel_stop(const code& ec,
+        const channel::ptr& channel) noexcept;
 };
 
 } // namespace network

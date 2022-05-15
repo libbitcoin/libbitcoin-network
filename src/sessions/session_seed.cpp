@@ -21,6 +21,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/p2p.hpp>
@@ -52,7 +53,7 @@ bool session_seed::notify() const noexcept
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_seed::start(result_handler handler) noexcept
+void session_seed::start(result_handler&& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -84,7 +85,7 @@ void session_seed::start(result_handler handler) noexcept
 }
 
 void session_seed::handle_started(const code& ec,
-    result_handler handler) noexcept
+    const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -121,7 +122,7 @@ void session_seed::handle_started(const code& ec,
 
 // Attempt to connect one seed.
 void session_seed::start_seed(const config::endpoint& seed,
-    connector::ptr connector, channel_handler handler) noexcept
+    const connector::ptr& connector, const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -135,9 +136,9 @@ void session_seed::start_seed(const config::endpoint& seed,
     connector->connect(seed, std::move(handler));
 }
 
-void session_seed::handle_connect(const code& ec, channel::ptr channel,
-    const config::endpoint& seed, count_ptr counter,
-    result_handler handler) noexcept
+void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
+    const config::endpoint& seed, const count_ptr& counter,
+    const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -156,7 +157,7 @@ void session_seed::handle_connect(const code& ec, channel::ptr channel,
 }
 
 void session_seed::attach_handshake(const channel::ptr& channel,
-    result_handler handshake) const noexcept
+    result_handler&& handler) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
 
@@ -173,14 +174,14 @@ void session_seed::attach_handshake(const channel::ptr& channel,
     if (channel->negotiated_version() >= messages::level::bip61)
         channel->attach<protocol_version_70002>(*this, own_version,
             own_services, invalid_services, minimum_version, minimum_services,
-            relay)->start(handshake);
+            relay)->start(std::move(handler));
     else
         channel->attach<protocol_version_31402>(*this, own_version,
             own_services, invalid_services, minimum_version, minimum_services)
-            ->start(handshake);
+            ->start(std::move(handler));
 }
 
-void session_seed::handle_channel_start(const code&, channel::ptr) noexcept
+void session_seed::handle_channel_start(const code&, const channel::ptr&) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }
@@ -204,8 +205,8 @@ void session_seed::attach_protocols(const channel::ptr& channel) const noexcept
     channel->attach<protocol_seed_31402>(*this)->start();
 }
 
-void session_seed::handle_channel_stop(const code&, count_ptr counter,
-    result_handler handler) noexcept
+void session_seed::handle_channel_stop(const code&, const count_ptr& counter,
+    const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

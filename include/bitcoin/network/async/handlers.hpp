@@ -25,20 +25,28 @@
 namespace libbitcoin {
 namespace network {
 
-/// Aliases for common handlers.
+/// Aliases for common handler definition.
 
-typedef std::function<void(const code&)> handle0;
+////typedef std::function<void(const code&)> handle0;
+////
+////template <typename Type>
+////using handle1 = std::function<void(const code&, const Type&)>;
+////
+////template <typename Type1, typename Type2>
+////using handle2 = std::function<void(const code&, const Type1&,
+////    const Type2&)>;
+////
+////template <typename Type1, typename Type2, typename Type3>
+////using handle3 = std::function<void(const code&, const Type1&,
+////    const Type2&, const Type3&)>;
 
+// Utility to convert a const reference instance to moveable.
 template <typename Type>
-using handle1 = std::function<void(const code&, const Type&)>;
-
-template <typename Type1, typename Type2>
-using handle2 = std::function<void(const code&, const Type1&,
-    const Type2&)>;
-
-template <typename Type1, typename Type2, typename Type3>
-using handle3 = std::function<void(const code&, const Type1&,
-    const Type2&, const Type3&)>;
+Type move_copy(const Type& instance)
+{
+    auto copy = instance;
+    return copy;
+}
 
 } // namespace network
 } // namespace libbitcoin

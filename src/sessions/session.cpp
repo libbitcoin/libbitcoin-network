@@ -53,7 +53,7 @@ session::~session() noexcept
     BC_ASSERT_MSG(stopped(), "The session was not stopped.");
 }
 
-void session::start(result_handler handler) noexcept
+void session::start(result_handler&& handler) noexcept
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -79,8 +79,8 @@ void session::stop() noexcept
 // Channel sequence.
 // ----------------------------------------------------------------------------
 
-void session::start_channel(channel::ptr channel, result_handler started,
-    result_handler stopped) noexcept
+void session::start_channel(const channel::ptr& channel,
+    result_handler&& started, result_handler&& stopped) noexcept
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -109,18 +109,18 @@ void session::start_channel(channel::ptr channel, result_handler started,
 }
 
 void session::do_attach_handshake(const channel::ptr& channel,
-    result_handler handshake) const noexcept
+    const result_handler& handshake) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
     // Channel is started/paused upon creation, this begins the read loop.
     channel->resume();
 
-    attach_handshake(channel, handshake);
+    attach_handshake(channel, move_copy(handshake));
 }
 
 void session::attach_handshake(const channel::ptr& channel,
-    result_handler handler) const noexcept
+    result_handler&& handler) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
     BC_ASSERT_MSG(!channel->paused(), "channel paused for handshake");
@@ -132,8 +132,8 @@ void session::attach_handshake(const channel::ptr& channel,
         channel->attach<protocol_version_31402>(*this)->start(handler);
 }
 
-void session::handle_handshake(const code& ec, channel::ptr channel,
-    result_handler start) noexcept
+void session::handle_handshake(const code& ec, const channel::ptr& channel,
+    const result_handler& start) noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "channel start");
 
@@ -146,8 +146,8 @@ void session::handle_handshake(const code& ec, channel::ptr channel,
         BIND3(do_handle_handshake, ec, channel, start));
 }
 
-void session::do_handle_handshake(const code& ec, channel::ptr channel,
-    result_handler start) noexcept
+void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
+    const result_handler& start) noexcept
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -160,8 +160,8 @@ void session::do_handle_handshake(const code& ec, channel::ptr channel,
 }
 
 // Context free method.
-void session::handle_channel_start(const code& ec, channel::ptr channel,
-    result_handler started, result_handler stopped) noexcept
+void session::handle_channel_start(const code& ec, const channel::ptr& channel,
+    const result_handler& started, const result_handler& stopped) noexcept
 {
     // Handles network_.store, channel stopped, and protocol start code.
     if (ec)
@@ -178,22 +178,22 @@ void session::handle_channel_start(const code& ec, channel::ptr channel,
     // Capture the channel stop handler in the channel.
     // If stopped, or upon channel stop, handler is invoked.
     channel->subscribe_stop(
-        BIND3(handle_channel_stopped, _1, channel, std::move(stopped)),
-        BIND3(handle_channel_started, _1, channel, std::move(started)));
+        BIND3(handle_channel_stopped, _1, channel, stopped),
+        BIND3(handle_channel_started, _1, channel, started));
 }
 
-void session::handle_channel_started(const code& ec, channel::ptr channel,
-    result_handler started) noexcept
+void session::handle_channel_started(const code& ec,
+    const channel::ptr& channel, const result_handler& started) noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "channel started");
 
     // Return to network context.
     boost::asio::post(network_.strand(),
-        BIND3(do_handle_channel_started, ec, channel, std::move(started)));
+        BIND3(do_handle_channel_started, ec, channel, started));
 }
 
-void session::do_handle_channel_started(const code& ec, channel::ptr channel,
-    result_handler started) noexcept
+void session::do_handle_channel_started(const code& ec,
+    const channel::ptr& channel, const result_handler& started) noexcept
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -226,16 +226,16 @@ void session::attach_protocols(const channel::ptr& channel) const noexcept
     BC_ASSERT_MSG(channel->stranded(), "strand");
 }
 
-void session::handle_channel_stopped(const code& ec, channel::ptr channel,
-    result_handler stopped) noexcept
+void session::handle_channel_stopped(const code& ec,
+    const channel::ptr& channel, const result_handler& stopped) noexcept
 {
     // Return to network context.
     boost::asio::post(network_.strand(),
-        BIND3(do_handle_channel_stopped, ec, channel, std::move(stopped)));
+        BIND3(do_handle_channel_stopped, ec, channel, stopped));
 }
 
-void session::do_handle_channel_stopped(const code& ec, channel::ptr channel,
-    result_handler stopped) noexcept
+void session::do_handle_channel_stopped(const code& ec,
+    const channel::ptr& channel, const result_handler& stopped) noexcept
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -305,30 +305,30 @@ bool session::blacklisted(const config::authority& authority) const noexcept
 // Utilities.
 // ----------------------------------------------------------------------------
 
-void session::fetch(hosts::address_item_handler handler) const noexcept
+void session::fetch(hosts::address_item_handler&& handler) const noexcept
 {
-    network_.fetch(handler);
+    network_.fetch(std::move(handler));
 }
 
-void session::fetches(hosts::address_items_handler handler) const noexcept
+void session::fetches(hosts::address_items_handler&& handler) const noexcept
 {
-    network_.fetches(handler);
+    network_.fetches(std::move(handler));
 }
 
 void session::save(const messages::address_item& address,
-    result_handler handler) const noexcept
+    result_handler&& handler) const noexcept
 {
     // stackoverflow.com/questions/57411283/
     // calling-non-const-function-of-another-class-by-reference-from-const-function
-    network_.save(address, handler);
+    network_.save(address, std::move(handler));
 }
 
 void session::saves(const messages::address_items& addresses,
-    result_handler handler) const noexcept
+    result_handler&& handler) const noexcept
 {
     // stackoverflow.com/questions/57411283/
     // calling-non-const-function-of-another-class-by-reference-from-const-function
-    network_.saves(addresses, handler);
+    network_.saves(addresses, std::move(handler));
 }
 
 } // namespace network

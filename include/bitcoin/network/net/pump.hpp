@@ -35,7 +35,7 @@ namespace network {
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 
 #define DEFINE_SUBSCRIBER(name) \
-    typedef subscriber<code, messages::name::ptr> \
+    typedef subscriber<const code&, const messages::name::ptr&> \
         SUBSCRIBER_TYPE(name)
 
 #define SUBSCRIBER_OVERLOAD(name) \
@@ -56,7 +56,7 @@ public:
     /// Helper for external declarations.
     template <class Message>
     using handler = std::function<void(const code&,
-        std::shared_ptr<const Message>)>;
+        const std::shared_ptr<const Message>&)>;
 
     DEFINE_SUBSCRIBER(address);
     DEFINE_SUBSCRIBER(alert);

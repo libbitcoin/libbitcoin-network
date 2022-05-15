@@ -58,7 +58,7 @@ protected:
     typedef std::function<void(const code&, const messages::address_items&)>
         fetches_handler;
 
-    protocol(const session& session, channel::ptr channel);
+    protocol(const session& session, const channel::ptr& channel);
 
     /// Bind a method in the derived class.
     template <class Protocol, typename Handler, typename... Args>
@@ -88,23 +88,23 @@ protected:
     config::authority authority() const;
     uint64_t nonce() const noexcept;
     messages::version::ptr peer_version() const noexcept;
-    void set_peer_version(messages::version::ptr value) noexcept;
+    void set_peer_version(const messages::version::ptr& value) noexcept;
     uint32_t negotiated_version() const noexcept;
     void set_negotiated_version(uint32_t value) noexcept;
     void stop(const code& ec);
 
     const network::settings& settings() const;
     void saves(const messages::address_items& addresses);
-    void saves(const messages::address_items& addresses, result_handler handler);
-    void fetches(fetches_handler handler);
+    void saves(const messages::address_items& addresses, result_handler&& handler);
+    void fetches(fetches_handler&& handler);
 
     virtual void handle_send(const code& ec, const std::string& command);
     virtual const std::string& name() const = 0;
 
 private:
-    void do_fetches(fetches_handler handler);
+    void do_fetches(const fetches_handler& handler);
     void do_saves(const messages::address_items& addresses,
-        result_handler handler);
+        const result_handler& handler);
 
     // These are thread safe.
     channel::ptr channel_;

@@ -147,8 +147,8 @@ public:
     }
 
     // Capture first start_connect call.
-    void start_connect(const authority& host, connector::ptr connector,
-        channel_handler handler) noexcept override
+    void start_connect(const authority& host, const connector::ptr& connector,
+        const channel_handler& handler) noexcept override
     {
         // Must be first to ensure connector::connect() preceeds promise release.
         session_manual::start_connect(host, connector, handler);
@@ -179,7 +179,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler handshake) const noexcept override
+        result_handler&& handshake) const noexcept override
     {
         if (!handshaked_)
         {
@@ -220,7 +220,7 @@ public:
     using mock_session_manual::mock_session_manual;
 
     void attach_handshake(const channel::ptr&,
-        result_handler handshake) const noexcept override
+        result_handler&& handshake) const noexcept override
     {
         if (!handshaked_)
         {
@@ -280,7 +280,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -295,7 +295,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -310,7 +310,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }

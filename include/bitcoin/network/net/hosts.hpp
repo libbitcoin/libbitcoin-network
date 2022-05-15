@@ -64,8 +64,8 @@ public:
     virtual void store(const messages::address_item& host);
     virtual void store(const messages::address_items& hosts);
     virtual void remove(const messages::address_item& host);
-    virtual void fetch(address_item_handler handler) const;
-    virtual void fetch(address_items_handler handler) const;
+    virtual void fetch(const address_item_handler& handler) const;
+    virtual void fetch(const address_items_handler& handler) const;
 
 private:
     typedef boost::circular_buffer<messages::address_item> buffer;

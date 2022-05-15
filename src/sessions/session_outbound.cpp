@@ -20,7 +20,9 @@
 
 #include <cstddef>
 #include <functional>
+#include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/sessions/session.hpp>
@@ -52,7 +54,7 @@ bool session_outbound::notify() const noexcept
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_outbound::start(result_handler handler) noexcept
+void session_outbound::start(result_handler&& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -78,7 +80,7 @@ void session_outbound::start(result_handler handler) noexcept
 }
 
 void session_outbound::handle_started(const code& ec,
-    result_handler handler) noexcept
+    const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
     BC_ASSERT_MSG(!stopped(), "session stopped in start");
@@ -112,7 +114,7 @@ void session_outbound::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Attempt to connect one peer using a batch subset of connectors.
-void session_outbound::start_connect(connectors_ptr connectors) noexcept
+void session_outbound::start_connect(const connectors_ptr& connectors) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -136,7 +138,7 @@ void session_outbound::start_connect(connectors_ptr connectors) noexcept
 
 // Attempt to connect the given host and invoke handle_one.
 void session_outbound::do_one(const code& ec, const authority& host,
-    connector::ptr connector, channel_handler handler) noexcept
+    const connector::ptr& connector, const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -154,13 +156,13 @@ void session_outbound::do_one(const code& ec, const authority& host,
         return;
     }
 
-    connector->connect(host, std::move(handler));
+    connector->connect(host, move_copy(handler));
 }
 
 // Handle each do_one connection attempt, stopping on first success.
-void session_outbound::handle_one(const code& ec, channel::ptr channel,
-    count_ptr count, connectors_ptr connectors,
-    channel_handler handler) noexcept
+void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
+    const count_ptr& count, const connectors_ptr& connectors,
+    const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -205,8 +207,8 @@ void session_outbound::handle_one(const code& ec, channel::ptr channel,
 }
 
 // Handle the singular batch result.
-void session_outbound::handle_connect(const code& ec, channel::ptr channel,
-    connectors_ptr connectors) noexcept
+void session_outbound::handle_connect(const code& ec,
+    const channel::ptr& channel, const connectors_ptr& connectors) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -235,7 +237,7 @@ void session_outbound::handle_connect(const code& ec, channel::ptr channel,
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
-    result_handler handler) const noexcept
+    result_handler&& handler) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
 
@@ -254,14 +256,14 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
     if (channel->negotiated_version() >= messages::level::bip61)
         channel->attach<protocol_version_70002>(*this, own_version,
             own_services, invalid_services, minimum_version, min_service, relay)
-            ->start(handler);
+            ->start(std::move(handler));
     else
         channel->attach<protocol_version_31402>(*this, own_version,
             own_services, invalid_services, minimum_version, min_service)
-            ->start(handler);
+            ->start(std::move(handler));
 }
 
-void session_outbound::handle_channel_start(const code&, channel::ptr) noexcept
+void session_outbound::handle_channel_start(const code&, const channel::ptr&) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }
@@ -286,7 +288,7 @@ void session_outbound::attach_protocols(
 }
 
 void session_outbound::handle_channel_stop(const code&,
-    connectors_ptr connectors) noexcept
+    const connectors_ptr& connectors) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

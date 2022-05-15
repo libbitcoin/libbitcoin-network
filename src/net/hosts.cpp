@@ -216,7 +216,7 @@ void hosts::remove(const address_item& host)
     count_.store(buffer_.size(), std::memory_order_relaxed);
 }
 
-void hosts::fetch(address_item_handler handler) const
+void hosts::fetch(const address_item_handler& handler) const
 {
     if (stopped_)
     {
@@ -236,7 +236,7 @@ void hosts::fetch(address_item_handler handler) const
     handler(error::success, buffer_[index]);
 }
 
-void hosts::fetch(address_items_handler handler) const
+void hosts::fetch(const address_items_handler& handler) const
 {
     if (stopped_)
     {

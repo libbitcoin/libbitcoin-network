@@ -185,7 +185,7 @@ public:
     }
 
     // Capture first start_connect call.
-    void start_connect(connectors_ptr connectors) noexcept override
+    void start_connect(const connectors_ptr& connectors) noexcept override
     {
         // Must be first to ensure connector::connect() preceeds promise release.
         session_outbound::start_connect(connectors);
@@ -213,7 +213,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler handshake) const noexcept override
+        result_handler&& handshake) const noexcept override
     {
         if (!handshaked_)
         {
@@ -267,7 +267,7 @@ public:
     using mock_session_outbound_one_address_count::
         mock_session_outbound_one_address_count;
 
-    void fetch(hosts::address_item_handler handler) const noexcept override
+    void fetch(hosts::address_item_handler&& handler) const noexcept override
     {
         handler(error::success, address_item{});
     }
@@ -332,7 +332,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -347,7 +347,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -362,7 +362,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -454,7 +454,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -469,7 +469,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }
@@ -484,7 +484,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }

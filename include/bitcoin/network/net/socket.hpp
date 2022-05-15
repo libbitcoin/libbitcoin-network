@@ -102,10 +102,12 @@ protected:
 
 private:
     void do_stop();
-    void do_connect(const asio::endpoints& range, result_handler handler);
-    ////void do_dynamic_read(system::data_chunk& out, io_handler handler);
-    void do_read(const boost::asio::mutable_buffer& out, io_handler handler);
-    void do_write(const boost::asio::const_buffer& in, io_handler handler);
+    void do_connect(const asio::endpoints& range,
+        const result_handler& handler);
+    void do_read(const boost::asio::mutable_buffer& out,
+        const io_handler& handler);
+    void do_write(const boost::asio::const_buffer& in,
+        const io_handler& handler);
 
     void handle_accept(const error::boost_code& ec,
         const result_handler& handler);

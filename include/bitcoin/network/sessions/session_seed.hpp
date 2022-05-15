@@ -46,7 +46,7 @@ public:
 
     /// Perform seeding as configured (call from network strand).
     /// Seeding is complete invocation of the handler.
-    void start(result_handler handler) noexcept override;
+    void start(result_handler&& handler) noexcept override;
 
 protected:
     typedef std::shared_ptr<size_t> count_ptr;
@@ -59,25 +59,26 @@ protected:
 
     /// Overridden to set service and version minimums upon session start.
     void attach_handshake(const channel::ptr& channel,
-        result_handler handler) const noexcept override;
+        result_handler&& handler) const noexcept override;
 
     /// Overridden to attach only seeding protocols upon channel start.
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
     /// Start a seed connection (called from start).
     virtual void start_seed(const config::endpoint& seed,
-        connector::ptr connector, channel_handler handler) noexcept;
+        const connector::ptr& connector,
+        const channel_handler& handler) noexcept;
 
 private:
 
-    void handle_started(const code& ec, result_handler handler) noexcept;
-    void handle_connect(const code& ec, channel::ptr channel,
-        const config::endpoint& seed, count_ptr counter,
-        result_handler handler) noexcept;
+    void handle_started(const code& ec, const result_handler& handler) noexcept;
+    void handle_connect(const code& ec, const channel::ptr& channel,
+        const config::endpoint& seed, const count_ptr& counter,
+        const result_handler& handler) noexcept;
 
-    void handle_channel_start(const code& ec, channel::ptr channel) noexcept;
-    void handle_channel_stop(const code& ec, count_ptr counter,
-        result_handler handler) noexcept;
+    void handle_channel_start(const code& ec, const channel::ptr& channel) noexcept;
+    void handle_channel_stop(const code& ec, const count_ptr& counter,
+        const result_handler& handler) noexcept;
 };
 
 } // namespace network

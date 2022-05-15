@@ -22,7 +22,9 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
@@ -55,14 +57,14 @@ bool session_manual::notify() const noexcept
 // ----------------------------------------------------------------------------
 // Manual connections are always enabled.
 
-void session_manual::start(result_handler handler) noexcept
+void session_manual::start(result_handler&& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
     session::start(BIND2(handle_started, _1, std::move(handler)));
 }
 
 void session_manual::handle_started(const code& ec,
-    result_handler handler) noexcept
+    const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
     handler(ec);
@@ -85,16 +87,16 @@ void session_manual::connect(const std::string& hostname,
 }
 
 void session_manual::connect(const std::string& hostname, uint16_t port,
-    channel_handler handler) noexcept
+    channel_handler&& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // BUGBUG: config::authority cons throws on invalid IP format, but this public.
-    connect({ hostname, port }, handler);
+    connect({ hostname, port }, std::move(handler));
 }
 
 void session_manual::connect(const authority& host,
-    channel_handler handler) noexcept
+    channel_handler&& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -106,14 +108,14 @@ void session_manual::connect(const authority& host,
         connector->stop();
     });
 
-    start_connect(host, connector, handler);
+    start_connect(host, connector, std::move(handler));
 }
 
 // Connect cycle.
 // ----------------------------------------------------------------------------
 
 void session_manual::start_connect(const authority& host,
-    connector::ptr connector, channel_handler handler) noexcept
+    const connector::ptr& connector, const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -125,12 +127,12 @@ void session_manual::start_connect(const authority& host,
     }
 
     connector->connect(host,
-        BIND5(handle_connect, _1, _2, host, connector, std::move(handler)));
+        BIND5(handle_connect, _1, _2, host, connector, handler));
 }
 
-void session_manual::handle_connect(const code& ec, channel::ptr channel,
-    const authority& host, connector::ptr connector,
-    channel_handler handler) noexcept
+void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
+    const authority& host, const connector::ptr& connector,
+    const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -160,13 +162,14 @@ void session_manual::handle_connect(const code& ec, channel::ptr channel,
 }
 
 void session_manual::attach_handshake(const channel::ptr& channel,
-    result_handler handler) const noexcept
+    result_handler&& handler) const noexcept
 {
-    session::attach_handshake(channel, handler);
+    session::attach_handshake(channel, std::move(handler));
 }
 
 void session_manual::handle_channel_start(const code& ec,
-    const authority&, channel::ptr channel, channel_handler handler) noexcept
+    const authority&, const channel::ptr& channel,
+    const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -195,13 +198,13 @@ void session_manual::attach_protocols(
 }
 
 void session_manual::handle_channel_stop(const code&, const authority& host,
-    connector::ptr connector, channel_handler handler) noexcept
+    const connector::ptr& connector, const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).
-    start_connect(host, connector, handler);
+    start_connect(host, connector, move_copy(handler));
 }
 
 } // namespace network

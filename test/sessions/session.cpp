@@ -169,36 +169,36 @@ public:
         return notify_;
     }
 
-    void fetch(hosts::address_item_handler handler) const noexcept override
+    void fetch(hosts::address_item_handler&& handler) const noexcept override
     {
-        session::fetch(handler);
+        session::fetch(std::move(handler));
     }
 
-    void fetches(hosts::address_items_handler handler) const noexcept override
+    void fetches(hosts::address_items_handler&& handler) const noexcept override
     {
-        session::fetches(handler);
+        session::fetches(std::move(handler));
     }
 
     void save(const messages::address_item& address,
-        result_handler complete) const noexcept override
+        result_handler&& complete) const noexcept override
     {
-        session::save(address, complete);
+        session::save(address, std::move(complete));
     }
 
     void saves(const messages::address_items& addresses,
-        result_handler complete) const noexcept override
+        result_handler&& complete) const noexcept override
     {
-        session::saves(addresses, complete);
+        session::saves(addresses, std::move(complete));
     }
 
-    void start_channel(channel::ptr channel, result_handler started,
-        result_handler stopped) noexcept override
+    void start_channel(const channel::ptr& channel, result_handler&& started,
+        result_handler&& stopped) noexcept override
     {
-        session::start_channel(channel, started, stopped);
+        session::start_channel(channel, std::move(started), std::move(stopped));
     }
 
     void attach_handshake(const channel::ptr& channel,
-        result_handler handshake) const noexcept override
+        result_handler&& handshake) const noexcept override
     {
         if (!handshaked_)
         {
@@ -269,18 +269,18 @@ public:
         return connectors_;
     }
 
-    void fetch(hosts::address_item_handler handler) const noexcept override
+    void fetch(hosts::address_item_handler&& handler) const noexcept override
     {
         handler(error::invalid_magic, {});
     }
 
-    void fetches(hosts::address_items_handler handler) const noexcept override
+    void fetches(hosts::address_items_handler&& handler) const noexcept override
     {
         handler(error::bad_stream, {});
     }
 
     void save(const messages::address_item& address,
-        result_handler complete) noexcept override
+        result_handler&& complete) noexcept override
     {
         saved_ = address;
         complete(error::invalid_magic);
@@ -292,7 +292,7 @@ public:
     }
 
     void saves(const messages::address_items& addresses,
-        result_handler complete) noexcept override
+        result_handler&& complete) noexcept override
     {
         saveds_ = addresses;
         complete(error::bad_stream);
@@ -368,7 +368,8 @@ protected:
         p2p::unpend(nonce);
     }
 
-    code store(channel::ptr channel, bool notify, bool inbound) noexcept override
+    code store(const channel::ptr& channel, bool notify,
+        bool inbound) noexcept override
     {
         BC_ASSERT(!is_zero(channel->nonce()));
         store_nonce_ = channel->nonce();
@@ -377,7 +378,7 @@ protected:
         return ((store_result_ = p2p::store(channel, notify, inbound)));
     }
 
-    bool unstore(channel::ptr channel, bool inbound) noexcept override
+    bool unstore(const channel::ptr& channel, bool inbound) noexcept override
     {
         BC_ASSERT(!is_zero(channel->nonce()));
         unstore_nonce_ = channel->nonce();
@@ -412,7 +413,7 @@ private:
         {
         }
 
-        void start(result_handler handler) noexcept override
+        void start(result_handler&& handler) noexcept override
         {
             handler(error::success);
         }

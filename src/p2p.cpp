@@ -89,22 +89,22 @@ connectors_ptr p2p::create_connectors(size_t count)
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void p2p::start(result_handler handler)
+void p2p::start(result_handler&& handler)
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_start, this, std::move(handler)));
 }
 
-void p2p::do_start(result_handler handler)
+void p2p::do_start(const result_handler& handler)
 {
     BC_ASSERT_MSG(stranded(), "attach_manual_session");
 
     // manual_ doubles as the closed indicator.
     manual_ = attach_manual_session();
-    manual_->start(std::bind(&p2p::handle_start, this, _1, std::move(handler)));
+    manual_->start(std::bind(&p2p::handle_start, this, _1, handler));
 }
 
-void p2p::handle_start(const code& ec, result_handler handler)
+void p2p::handle_start(const code& ec, const result_handler& handler)
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
 
@@ -134,13 +134,13 @@ void p2p::handle_start(const code& ec, result_handler handler)
 // Run sequence (seeding may be ongoing after its handler is invoked).
 // ----------------------------------------------------------------------------
 
-void p2p::run(result_handler handler)
+void p2p::run(result_handler&& handler)
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_run, this, std::move(handler)));
 }
 
-void p2p::do_run(result_handler handler)
+void p2p::do_run(const result_handler& handler)
 {
     BC_ASSERT_MSG(stranded(), "manual_, attach_inbound_session");
 
@@ -154,10 +154,10 @@ void p2p::do_run(result_handler handler)
         do_connect1(peer);
 
     attach_inbound_session()->start(
-        std::bind(&p2p::handle_run, this, _1, std::move(handler)));
+        std::bind(&p2p::handle_run, this, _1, handler));
 }
 
-void p2p::handle_run(const code& ec, result_handler handler)
+void p2p::handle_run(const code& ec, const result_handler& handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -225,39 +225,42 @@ void p2p::do_close()
 // ----------------------------------------------------------------------------
 
 // public
-void p2p::subscribe_connect(channel_handler handler, result_handler complete)
+void p2p::subscribe_connect(channel_handler&& handler,
+    result_handler&& complete)
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_subscribe_connect,
             this, std::move(handler), std::move(complete)));
 }
 
-void p2p::do_subscribe_connect(channel_handler handler, result_handler complete)
+void p2p::do_subscribe_connect(const channel_handler& handler,
+    const result_handler& complete)
 {
     BC_ASSERT_MSG(stranded(), "channel_subscriber_");
-    channel_subscriber_->subscribe(std::move(handler));
+    channel_subscriber_->subscribe(move_copy(handler));
     complete(error::success);
 }
 
 // protected
-void p2p::subscribe_close(result_handler handler)
+void p2p::subscribe_close(result_handler&& handler)
 {
     BC_ASSERT_MSG(stranded(), "stop_subscriber_");
     stop_subscriber_->subscribe(std::move(handler));
 }
 
 // public
-void p2p::subscribe_close(result_handler handler, result_handler complete)
+void p2p::subscribe_close(result_handler&& handler, result_handler&& complete)
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_subscribe_close,
             this, std::move(handler), std::move(complete)));
 }
 
-void p2p::do_subscribe_close(result_handler handler, result_handler complete)
+void p2p::do_subscribe_close(const result_handler& handler,
+    const result_handler& complete)
 {
     BC_ASSERT_MSG(stranded(), "stop_subscriber_");
-    stop_subscriber_->subscribe(std::move(handler));
+    stop_subscriber_->subscribe(move_copy(handler));
     complete(error::success);
 }
 
@@ -277,7 +280,7 @@ void p2p::connect(const std::string& hostname, uint16_t port)
 }
 
 void p2p::connect(const std::string& hostname, uint16_t port,
-    channel_handler handler)
+    channel_handler&& handler)
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_connect3, this, hostname, port, std::move(handler)));
@@ -300,12 +303,12 @@ void p2p::do_connect2(const std::string& hostname, uint16_t port)
 }
 
 void p2p::do_connect3(const std::string& hostname, uint16_t port,
-    channel_handler handler)
+    const channel_handler& handler)
 {
     BC_ASSERT_MSG(stranded(), "manual_");
 
     if (manual_)
-        manual_->connect(hostname, port, handler);
+        manual_->connect(hostname, port, move_copy(handler));
     else
         handler(error::service_stopped, nullptr);
 }
@@ -374,44 +377,45 @@ void p2p::stop_hosts()
     /* code */ hosts_.stop();
 }
 
-void p2p::fetch(hosts::address_item_handler handler) const
+void p2p::fetch(hosts::address_item_handler&& handler) const
 {
     boost::asio::dispatch(
         strand_, std::bind(&p2p::do_fetch, this, std::move(handler)));
 }
 
-void p2p::do_fetch(hosts::address_item_handler handler) const
+void p2p::do_fetch(const hosts::address_item_handler& handler) const
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.fetch(handler);
 }
 
-void p2p::fetches(hosts::address_items_handler handler) const
+void p2p::fetches(hosts::address_items_handler&& handler) const
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_fetches, this, std::move(handler)));
 }
 
-void p2p::do_fetches(hosts::address_items_handler handler) const
+void p2p::do_fetches(const hosts::address_items_handler& handler) const
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.fetch(handler);
 }
 
-void p2p::dump(const messages::address_item& host, result_handler handler)
+void p2p::dump(const messages::address_item& host, result_handler&& handler)
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.remove(host);
     handler(error::success);
 }
 
-void p2p::save(const messages::address_item& host, result_handler handler)
+void p2p::save(const messages::address_item& host, result_handler&& handler)
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_save, this, host, std::move(handler)));
 }
 
-void p2p::do_save(const messages::address_item& host, result_handler handler)
+void p2p::do_save(const messages::address_item& host,
+    const result_handler& handler)
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.store(host);
@@ -419,13 +423,14 @@ void p2p::do_save(const messages::address_item& host, result_handler handler)
 }
 
 // TODO: use pointer.
-void p2p::saves(const messages::address_items& hosts, result_handler handler)
+void p2p::saves(const messages::address_items& hosts, result_handler&& handler)
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_saves, this, hosts, std::move(handler)));
 }
 
-void p2p::do_saves(const messages::address_items& hosts, result_handler handler)
+void p2p::do_saves(const messages::address_items& hosts,
+    const result_handler& handler)
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.store(hosts);
@@ -449,7 +454,7 @@ void p2p::unpend(uint64_t nonce)
     nonces_.erase(nonce);
 }
 
-code p2p::store(channel::ptr channel, bool notify, bool inbound)
+code p2p::store(const channel::ptr& channel, bool notify, bool inbound)
 {
     BC_ASSERT_MSG(stranded(), "do_store (multiple members)");
 
@@ -483,7 +488,7 @@ code p2p::store(channel::ptr channel, bool notify, bool inbound)
     return error::success;
 }
 
-bool p2p::unstore(channel::ptr channel, bool inbound)
+bool p2p::unstore(const channel::ptr& channel, bool inbound)
 {
     BC_ASSERT_MSG(stranded(), "channels_, authorities_");
 

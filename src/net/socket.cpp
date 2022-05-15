@@ -136,12 +136,13 @@ void socket::write(const data_slice& in, io_handler&& handler)
 // ----------------------------------------------------------------------------
 // These execute on the strand to protect the member socket.
 
-void socket::do_connect(const asio::endpoints& range, result_handler handler)
+void socket::do_connect(const asio::endpoints& range,
+    const result_handler& handler)
 {
     // Establishes a socket connection by trying each endpoint in a sequence.
     boost::asio::async_connect(socket_, range,
         std::bind(&socket::handle_connect,
-            shared_from_this(), _1, _2, std::move(handler)));
+            shared_from_this(), _1, _2, handler));
 }
 
 ////// Read into dynamically-allocated buffer (web).
@@ -156,24 +157,26 @@ void socket::do_connect(const asio::endpoints& range, result_handler handler)
 ////}
 
 // Read into pre-allocated buffer (bitcoin).
-void socket::do_read(const boost::asio::mutable_buffer& out, io_handler handler)
+void socket::do_read(const boost::asio::mutable_buffer& out,
+    const io_handler& handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // This composed operation posts all intermediate handlers to the strand.
     boost::asio::async_read(socket_, out,
         std::bind(&socket::handle_io,
-            shared_from_this(), _1, _2, std::move(handler)));
+            shared_from_this(), _1, _2, handler));
 }
 
-void socket::do_write(const boost::asio::const_buffer& in, io_handler handler)
+void socket::do_write(const boost::asio::const_buffer& in,
+    const io_handler& handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // This composed operation posts all intermediate handlers to the strand.
     boost::asio::async_write(socket_, in,
         std::bind(&socket::handle_io,
-            shared_from_this(), _1, _2, std::move(handler)));
+            shared_from_this(), _1, _2, handler));
 }
 
 // handlers (private).

@@ -42,7 +42,7 @@ static constexpr size_t invalid_payload_dump_size = 1024;
 // assert if not stopped. Subscribers may hold protocols even if the service
 // is not started.
 
-proxy::proxy(socket::ptr socket)
+proxy::proxy(const socket::ptr& socket)
   : socket_(socket),
     paused_(true),
     pump_subscriber_(socket->strand()),
@@ -133,10 +133,11 @@ void proxy::subscribe_stop(result_handler&& handler, result_handler&& complete)
             shared_from_this(), std::move(handler), std::move(complete)));
 }
 
-void proxy::do_subscribe_stop(result_handler handler, result_handler complete)
+void proxy::do_subscribe_stop(const result_handler& handler,
+    const result_handler& complete)
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    stop_subscriber_->subscribe(std::move(handler));
+    stop_subscriber_->subscribe(move_copy(handler));
     complete(error::success);
 }
 
@@ -301,21 +302,15 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
 // Message send sequence.
 // ----------------------------------------------------------------------------
 
-void proxy::send_bytes(system::chunk_ptr payload, result_handler&& handler)
+void proxy::send_bytes(const system::chunk_ptr& payload,
+    result_handler&& handler)
 {
+    // chunk_ptr is copied into std::bind closure. 
     // Post handle_send to strand upon stop, error, or buffer fully sent.
     socket_->write(*payload,
         std::bind(&proxy::handle_send,
             shared_from_this(), _1, _2, payload, std::move(handler)));
 }
-
-////void proxy::send_bytes(system::chunk_ptr payload, const result_handler& handler)
-////{
-////    // Post handle_send to strand upon stop, error, or buffer fully sent.
-////    socket_->write(*payload,
-////        std::bind(&proxy::handle_send,
-////            shared_from_this(), _1, _2, payload, handler));
-////}
 
 // static
 std::string proxy::extract_command(const system::chunk_ptr& payload)
@@ -332,8 +327,8 @@ std::string proxy::extract_command(const system::chunk_ptr& payload)
     return out;
 }
 
-void proxy::handle_send(const code& ec, size_t, system::chunk_ptr payload,
-    const result_handler& handler)
+void proxy::handle_send(const code& ec, size_t,
+    const system::chunk_ptr& payload, const result_handler& handler)
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

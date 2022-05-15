@@ -97,7 +97,7 @@ inline deadline::ptr expiration(asio::strand& strand, const duration& span)
 // TODO: So toss boost:log and remove from dependencies. First implement a
 // TODO: simple console sink.
 
-channel::channel(socket::ptr socket, const settings& settings)
+channel::channel(const socket::ptr& socket, const settings& settings)
   : proxy(socket),
     maximum_payload_(payload_maximum(settings)),
     protocol_magic_(settings.identifier),
@@ -175,7 +175,7 @@ version::ptr channel::peer_version() const noexcept
     return peer_version_;
 }
 
-void channel::set_peer_version(version::ptr value) noexcept
+void channel::set_peer_version(const version::ptr& value) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
     peer_version_ = value;

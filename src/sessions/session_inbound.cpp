@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
@@ -50,7 +51,7 @@ bool session_inbound::notify() const noexcept
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start(result_handler handler) noexcept
+void session_inbound::start(result_handler&& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -67,7 +68,7 @@ void session_inbound::start(result_handler handler) noexcept
 }
 
 void session_inbound::handle_started(const code& ec,
-    result_handler handler) noexcept
+    const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
     BC_ASSERT_MSG(!stopped(), "session stopped in start");
@@ -98,7 +99,7 @@ void session_inbound::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 void session_inbound::start_accept(const code& ec,
-    acceptor::ptr acceptor) noexcept
+    const acceptor::ptr& acceptor) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -114,7 +115,7 @@ void session_inbound::start_accept(const code& ec,
 }
 
 void session_inbound::handle_accept(const code& ec,
-    channel::ptr channel, acceptor::ptr acceptor) noexcept
+    const channel::ptr& channel, const acceptor::ptr& acceptor) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -162,12 +163,13 @@ void session_inbound::handle_accept(const code& ec,
 // ----------------------------------------------------------------------------
 
 void session_inbound::attach_handshake(const channel::ptr& channel,
-    result_handler handler) const noexcept
+    result_handler&& handler) const noexcept
 {
-    session::attach_handshake(channel, handler);
+    session::attach_handshake(channel, std::move(handler));
 }
 
-void session_inbound::handle_channel_start(const code&, channel::ptr) noexcept
+void session_inbound::handle_channel_start(const code&,
+    const channel::ptr&) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }
@@ -191,7 +193,8 @@ void session_inbound::attach_protocols(
     channel->attach<protocol_address_31402>(*this)->start();
 }
 
-void session_inbound::handle_channel_stop(const code&, channel::ptr) noexcept
+void session_inbound::handle_channel_stop(const code&,
+    const channel::ptr&) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }

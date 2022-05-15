@@ -61,7 +61,7 @@ public:
     typedef std::function<void(const code&, channel::ptr)> channel_handler;
 
     /// Start the sesssion (call from network strand).
-    virtual void start(result_handler handler) noexcept;
+    virtual void start(result_handler&& handler) noexcept;
 
     /// Stop the sesssion timer and subscriber (call from network strand).
     virtual void stop() noexcept;
@@ -90,12 +90,12 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Perform handshake and attach protocols (call from network strand).
-    virtual void start_channel(channel::ptr channel, result_handler started,
-        result_handler stopped) noexcept;
+    virtual void start_channel(const channel::ptr& channel,
+        result_handler&& started, result_handler&& stopped) noexcept;
 
     /// Override to change version protocol (base calls from channel strand).
     virtual void attach_handshake(const channel::ptr& channel,
-        result_handler handler) const noexcept;
+        result_handler&& handler) const noexcept;
 
     /// Override to change channel protocols (base calls from channel strand).
     virtual void attach_protocols(const channel::ptr& channel) const noexcept;
@@ -146,18 +146,18 @@ protected:
     friend class protocol;
 
     /// Fetch an entry from address pool.
-    virtual void fetch(hosts::address_item_handler handler) const noexcept;
+    virtual void fetch(hosts::address_item_handler&& handler) const noexcept;
 
     /// Fetch a subset of entries (count based on config) from address pool.
-    virtual void fetches(hosts::address_items_handler handler) const noexcept;
+    virtual void fetches(hosts::address_items_handler&& handler) const noexcept;
 
     /// Save an address to the address pool.
     virtual void save(const messages::address_item& address,
-        result_handler handler) const noexcept;
+        result_handler&& handler) const noexcept;
 
     /// Save a subset of entries (count based on config) from address pool.
     virtual void saves(const messages::address_items& addresses,
-        result_handler handler) const noexcept;
+        result_handler&& handler) const noexcept;
 
     /// Members.
     /// -----------------------------------------------------------------------
@@ -167,25 +167,25 @@ protected:
     stop_subscriber::ptr stop_subscriber_;
 
 private:
-    void handle_channel_start(const code& ec, channel::ptr channel,
-        result_handler started, result_handler stopped) noexcept;
+    void handle_channel_start(const code& ec, const channel::ptr& channel,
+        const result_handler& started, const result_handler& stopped) noexcept;
 
-    void handle_handshake(const code& ec, channel::ptr channel,
-        result_handler start) noexcept;
-    void handle_channel_started(const code& ec, channel::ptr channel,
-        result_handler started) noexcept;
-    void handle_channel_stopped(const code& ec, channel::ptr channel,
-        result_handler stopped) noexcept;
+    void handle_handshake(const code& ec, const channel::ptr& channel,
+        const result_handler& start) noexcept;
+    void handle_channel_started(const code& ec, const channel::ptr& channel,
+        const result_handler& started) noexcept;
+    void handle_channel_stopped(const code& ec,const channel::ptr& channel,
+        const result_handler& stopped) noexcept;
 
     void do_attach_handshake(const channel::ptr& channel,
-        result_handler handshake) const noexcept;
-    void do_handle_handshake(const code& ec, channel::ptr channel,
-        result_handler start) noexcept;
+        const result_handler& handshake) const noexcept;
+    void do_handle_handshake(const code& ec, const channel::ptr& channel,
+        const result_handler& start) noexcept;
     void do_attach_protocols(const channel::ptr& channel) const noexcept;
-    void do_handle_channel_started(const code& ec, channel::ptr channel,
-        result_handler started) noexcept;
-    void do_handle_channel_stopped(const code& ec, channel::ptr channel,
-        result_handler stopped) noexcept;
+    void do_handle_channel_started(const code& ec, const channel::ptr& channel,
+        const result_handler& started) noexcept;
+    void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,
+        const result_handler& stopped) noexcept;
 
     // These are thread safe.
     std::atomic<bool> stopped_;

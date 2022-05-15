@@ -43,7 +43,7 @@ class BCT_API connector
 {
 public:
     typedef std::shared_ptr<connector> ptr;
-    typedef std::function<void(const code& ec, channel::ptr)>
+    typedef std::function<void(const code& ec, const channel::ptr&)>
         connect_handler;
 
     // Construct.
@@ -92,9 +92,9 @@ protected:
 private:
     void handle_resolve(const error::boost_code& ec,
         const asio::endpoints& range, socket::ptr socket,
-        connect_handler handler);
+        const connect_handler& handler);
     void handle_connect(const code& ec, socket::ptr socket,
-        connect_handler handler);
+        const connect_handler& handler);
     void handle_timer(const code& ec, const socket::ptr& socket,
         const connect_handler& handler);
 

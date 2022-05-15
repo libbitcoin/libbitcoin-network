@@ -40,7 +40,8 @@ class BCT_API acceptor
 {
 public:
     typedef std::shared_ptr<acceptor> ptr;
-    typedef std::function<void(const code&, channel::ptr)> accept_handler;
+    typedef std::function<void(const code&,
+        const channel::ptr&)> accept_handler;
 
     // Construct.
     // ------------------------------------------------------------------------
@@ -79,7 +80,7 @@ protected:
     bool stopped_;
 
 private:
-    void handle_accept(const code& ec, socket::ptr socket,
+    void handle_accept(const code& ec, const socket::ptr& socket,
         const accept_handler& handler);
 };
 

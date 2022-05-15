@@ -23,6 +23,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -106,7 +107,8 @@ void connector::connect(const std::string& hostname, uint16_t port,
 
 // private
 void connector::handle_resolve(const error::boost_code& ec,
-    const asio::endpoints& range, socket::ptr socket, connect_handler handler)
+    const asio::endpoints& range, socket::ptr socket,
+    const connect_handler& handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -144,7 +146,7 @@ void connector::handle_resolve(const error::boost_code& ec,
 
 // private
 void connector::handle_connect(const code& ec, socket::ptr socket,
-    connect_handler handler)
+    const connect_handler& handler)
 {
     boost::asio::post(strand_,
         std::bind(&connector::do_handle_connect,

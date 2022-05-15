@@ -116,7 +116,7 @@ void acceptor::accept(accept_handler&& handler)
 }
 
 // private
-void acceptor::handle_accept(const code& ec, socket::ptr socket,
+void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
     const accept_handler& handler)
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");

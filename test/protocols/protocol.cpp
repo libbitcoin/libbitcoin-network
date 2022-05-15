@@ -43,18 +43,19 @@ class mock_channel
 public:
     using channel::channel;
 
-    void resume() override
-    {
-        channel::resume();
-    }
+    ////void resume() override
+    ////{
+    ////    channel::resume();
+    ////}
 
-    void stop(const code& ec) override
-    {
-        channel::stop(ec);
-    }
+    ////void stop(const code& ec) override
+    ////{
+    ////    channel::stop(ec);
+    ////}
 
-    // Override protected base capture sent payload.
-    void send_bytes(system::chunk_ptr payload, result_handler&&) override
+    // Capture last sent payload.
+    void send_bytes(const system::chunk_ptr& payload,
+        result_handler&&) override
     {
         payload_ = payload;
     }
@@ -63,13 +64,12 @@ public:
     code notify(identifier, uint32_t, system::reader&) override
     {
         return error::success;
-        ////return notify(id, version, source);
+        ////return channel::notify(id, version, source);
     }
 
-    // Get last captured payload.
+    // Get last sent payload.
     system::chunk_ptr sent() const
     {
-
         return payload_;
     }
 
@@ -203,7 +203,8 @@ public:
         return session::stopped();
     }
 
-    void attach_handshake(const channel::ptr&, result_handler) const noexcept override
+    void attach_handshake(const channel::ptr&,
+        result_handler&&) const noexcept override
     {
     }
 
@@ -308,9 +309,9 @@ public:
         return protocol::saves(addresses);
     }
 
-    void fetches(fetches_handler handler)
+    void fetches(fetches_handler&& handler)
     {
-        return protocol::fetches(handler);
+        return protocol::fetches(std::move(handler));
     }
 
     void handle_send(const code& ec, const std::string& command) override

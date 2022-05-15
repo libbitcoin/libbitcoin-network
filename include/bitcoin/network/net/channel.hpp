@@ -68,7 +68,7 @@ public:
         return protocol;
     }
 
-    channel(socket::ptr socket, const settings& settings);
+    channel(const socket::ptr& socket, const settings& settings);
     virtual ~channel();
 
     void resume() override;
@@ -78,7 +78,7 @@ public:
     uint32_t negotiated_version() const noexcept;
     void set_negotiated_version(uint32_t value) noexcept;
     messages::version::ptr peer_version() const noexcept;
-    void set_peer_version(messages::version::ptr value) noexcept;
+    void set_peer_version(const messages::version::ptr& value) noexcept;
 
 protected:
     size_t maximum_payload() const noexcept override;
