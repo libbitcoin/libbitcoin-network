@@ -32,9 +32,16 @@ namespace network {
 
 using namespace std::placeholders;
 
+BC_DEBUG_ONLY(static const auto epoch = time_point();)
+
 deadline::deadline(asio::strand& strand, const duration& timeout)
   : duration_(timeout), timer_(strand), track<deadline>()
 {
+}
+
+deadline::~deadline()
+{
+    BC_ASSERT_MSG(timer_.expiry() == epoch, "");
 }
 
 // Start cannot be called concurrently with stop, strand restarts.
@@ -49,7 +56,7 @@ void deadline::start(handler&& handle, const duration& timeout)
     // Handling cancel error code creates exception safety.
     error::boost_code ignore;
     timer_.cancel(ignore);
-    timer_.expires_from_now(timeout);
+    timer_.expires_after(timeout);
 
     // Handler posted, invoked once, sets operation_aborted if canceled.
     timer_.async_wait(
@@ -63,12 +70,14 @@ void deadline::stop()
     // Handling cancel error code creates exception safety.
     error::boost_code ignore;
     timer_.cancel(ignore);
+    BC_DEBUG_ONLY(timer_.expires_at(epoch);)
 }
 
 // Callback always (cancel or otherwise) fired with the normalized error code.
 void deadline::handle_timer(const error::boost_code& ec,
-    const handler& handle) const
+    const handler& handle)
 {
+    BC_DEBUG_ONLY(timer_.expires_at(epoch);)
     handle(error::asio_to_error_code(ec));
 }
 

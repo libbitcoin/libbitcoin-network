@@ -46,6 +46,9 @@ public:
     /// Timer notification handler is posted to the service.
     deadline(asio::strand& strand, const duration& timeout=seconds(0));
 
+    /// Assert timer stopped.
+    ~deadline();
+
     /// Start or restart the timer.
     /// Use expired(ec) in handler to test for expiration.
     void start(handler&& handle);
@@ -58,8 +61,7 @@ public:
     void stop();
 
 private:
-    void handle_timer(const error::boost_code& ec,
-        const handler& handle) const;
+    void handle_timer(const error::boost_code& ec, const handler& handle);
 
     // This is thread safe.
     const duration duration_;
