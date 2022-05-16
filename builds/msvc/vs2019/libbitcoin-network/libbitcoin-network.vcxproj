@@ -134,6 +134,7 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_reject_70002.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_seed_31402.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_31402.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70001.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70002.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_inbound.cpp" />
@@ -219,6 +220,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_reject_70002.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_seed_31402.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_31402.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70001.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70002.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocols.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp" />

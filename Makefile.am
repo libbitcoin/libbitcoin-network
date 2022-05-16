@@ -97,6 +97,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/protocols/protocol_reject_70002.cpp \
     src/protocols/protocol_seed_31402.cpp \
     src/protocols/protocol_version_31402.cpp \
+    src/protocols/protocol_version_70001.cpp \
     src/protocols/protocol_version_70002.cpp \
     src/sessions/session.cpp \
     src/sessions/session_inbound.cpp \
@@ -182,6 +183,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/protocols/protocol_reject_70002.cpp \
     test/protocols/protocol_seed_31402.cpp \
     test/protocols/protocol_version_31402.cpp \
+    test/protocols/protocol_version_70001.cpp \
     test/protocols/protocol_version_70002.cpp \
     test/sessions/session.cpp \
     test/sessions/session_inbound.cpp \
@@ -299,6 +301,7 @@ include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol_reject_70002.hpp \
     include/bitcoin/network/protocols/protocol_seed_31402.hpp \
     include/bitcoin/network/protocols/protocol_version_31402.hpp \
+    include/bitcoin/network/protocols/protocol_version_70001.hpp \
     include/bitcoin/network/protocols/protocol_version_70002.hpp \
     include/bitcoin/network/protocols/protocols.hpp
 
