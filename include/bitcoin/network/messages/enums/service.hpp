@@ -28,7 +28,8 @@ namespace messages {
 
 enum service: uint64_t
 {
-    // The node exposes no services.
+    // The node exposes no defined services.
+    // At least version, address, ping/pong, and reject protocols.
     node_none = 0,
 
     // The node is capable of serving the block chain (full node).
@@ -48,7 +49,13 @@ enum service: uint64_t
 
     // The node is capable of responding to getcfilters, getcfheaders,
     // and getcfcheckpt protocol requests.
-    node_client_filters = system::bit_right<uint32_t>(6)
+    node_client_filters = system::bit_right<uint32_t>(6),
+
+    // The minimum supported capability.
+    minimum_services = node_none,
+
+    // The maximum supported capability.
+    maximum_services = node_network | node_witness | node_client_filters
 };
 
 } // namespace messages

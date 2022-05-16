@@ -40,7 +40,8 @@ public:
     uint32_t threads;
     uint32_t protocol_maximum;
     uint32_t protocol_minimum;
-    uint64_t services;
+    uint64_t services_maximum;
+    uint64_t services_minimum;
     uint64_t invalid_services;
     bool relay_transactions;
     bool validate_checksum;

@@ -31,9 +31,10 @@ using namespace messages;
 // Common default values (no settings context).
 settings::settings()
   : threads(1),
-    protocol_maximum(level::maximum_protocol),
     protocol_minimum(level::minimum_protocol),
-    services(service::node_none),
+    protocol_maximum(level::maximum_protocol),
+    services_minimum(service::minimum_services),
+    services_maximum(service::maximum_services),
     invalid_services(176),
     relay_transactions(false),
     validate_checksum(false),
