@@ -239,28 +239,7 @@ void session_outbound::handle_connect(const code& ec,
 void session_outbound::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) const noexcept
 {
-    BC_ASSERT_MSG(channel->stranded(), "strand");
-
-    const auto relay = settings().relay_transactions;
-    const auto own_version = settings().protocol_maximum;
-    const auto own_services = settings().services;
-    const auto invalid_services = settings().invalid_services;
-    const auto minimum_version = settings().protocol_minimum;
-
-    // Require peer to serve network (and witness if configured on self).
-    const auto min_service = (own_services & messages::service::node_witness) |
-        messages::service::node_network;
-
-    // Reject messages are not handled until bip61 (70002).
-    // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= messages::level::bip61)
-        channel->attach<protocol_version_70002>(*this, own_version,
-            own_services, invalid_services, minimum_version, min_service, relay)
-            ->start(std::move(handler));
-    else
-        channel->attach<protocol_version_31402>(*this, own_version,
-            own_services, invalid_services, minimum_version, min_service)
-            ->start(std::move(handler));
+    session::attach_handshake(channel, std::move(handler));
 }
 
 void session_outbound::handle_channel_start(const code&, const channel::ptr&) noexcept
@@ -271,20 +250,7 @@ void session_outbound::handle_channel_start(const code&, const channel::ptr&) no
 void session_outbound::attach_protocols(
     const channel::ptr& channel) const noexcept
 {
-    BC_ASSERT_MSG(channel->stranded(), "strand");
-
-    const auto version = channel->negotiated_version();
-    const auto heartbeat = settings().channel_heartbeat();
-
-    if (version >= messages::level::bip31)
-        channel->attach<protocol_ping_60001>(*this, heartbeat)->start();
-    else
-        channel->attach<protocol_ping_31402>(*this, heartbeat)->start();
-
-    if (version >= messages::level::bip61)
-        channel->attach<protocol_reject_70002>(*this)->start();
-
-    channel->attach<protocol_address_31402>(*this)->start();
+    session::attach_protocols(channel);
 }
 
 void session_outbound::handle_channel_stop(const code&,

@@ -177,20 +177,7 @@ void session_inbound::handle_channel_start(const code&,
 void session_inbound::attach_protocols(
     const channel::ptr& channel) const noexcept
 {
-    BC_ASSERT_MSG(channel->stranded(), "strand");
-
-    const auto version = channel->negotiated_version();
-    const auto heartbeat = settings().channel_heartbeat();
-
-    if (version >= messages::level::bip31)
-        channel->attach<protocol_ping_60001>(*this, heartbeat)->start();
-    else
-        channel->attach<protocol_ping_31402>(*this, heartbeat)->start();
-
-    if (version >= messages::level::bip61)
-        channel->attach<protocol_reject_70002>(*this)->start();
-
-    channel->attach<protocol_address_31402>(*this)->start();
+    session::attach_protocols(channel);
 }
 
 void session_inbound::handle_channel_stop(const code&,
