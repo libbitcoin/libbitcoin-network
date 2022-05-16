@@ -58,7 +58,8 @@ class BCT_API session
 {
 public:
     typedef std::function<void(const code&)> result_handler;
-    typedef std::function<void(const code&, channel::ptr)> channel_handler;
+    typedef std::function<void(const code&,
+        const channel::ptr&)> channel_handler;
 
     /// Start the sesssion (call from network strand).
     virtual void start(result_handler&& handler) noexcept;
@@ -78,7 +79,10 @@ protected:
     /// Asserts that session is stopped.
     virtual ~session() noexcept;
 
-    /// Utility to bind a method in the base or derived classes.
+    /// Macro helpers.
+    /// -----------------------------------------------------------------------
+
+    /// Bind a method in the base or derived class (use BIND#).
     template <class Session, typename Handler, typename... Args>
     auto bind(Handler&& handler, Args&&... args) noexcept ->
         decltype(BOUND_SESSION_TYPE(handler, args)) const
