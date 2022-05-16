@@ -39,7 +39,7 @@ using namespace std::placeholders;
 inline size_t payload_maximum(const settings& settings)
 {
     return heading::maximum_payload_size(settings.protocol_maximum,
-        to_bool(settings.services & service::node_witness));
+        to_bool(settings.services_maximum & service::node_witness));
 }
 
 // Factory for fixed deadline timer pointer construction.
@@ -240,9 +240,7 @@ void channel::handle_expiration(const code& ec)
     if (stopped())
         return;
 
-    if (ec == error::operation_canceled)
-        return;
-
+    // error::operation_canceled implies stopped, so this is something else.
     if (ec)
     {
         LOG_DEBUG(LOG_NETWORK)
@@ -277,9 +275,7 @@ void channel::handle_inactivity(const code& ec)
     if (stopped())
         return;
 
-    if (ec == error::operation_canceled)
-        return;
-
+    // error::operation_canceled implies stopped, so this is something else.
     if (ec)
     {
         LOG_DEBUG(LOG_NETWORK)
