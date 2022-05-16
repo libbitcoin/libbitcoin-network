@@ -36,6 +36,7 @@ settings::settings()
     services_minimum(service::minimum_services),
     services_maximum(service::maximum_services),
     invalid_services(176),
+    enable_reject(false),
     relay_transactions(false),
     validate_checksum(false),
     identifier(0),

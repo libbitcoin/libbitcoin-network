@@ -43,6 +43,7 @@ public:
     uint64_t services_maximum;
     uint64_t services_minimum;
     uint64_t invalid_services;
+    bool enable_reject;
     bool relay_transactions;
     bool validate_checksum;
     uint32_t identifier;

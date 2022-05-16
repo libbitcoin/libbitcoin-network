@@ -127,17 +127,18 @@ void session::attach_handshake(const channel::ptr& channel,
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
+    const auto enable_reject = settings().enable_reject;
     const auto maximum_version = settings().protocol_maximum;
 
-    // Reject is supported starting at bip61 (70002).
-    if (maximum_version >= messages::level::bip61)
+    // Reject is supported starting at bip61 (70002) and later deprecated.
+    if (enable_reject && maximum_version >= messages::level::bip61)
         channel->attach<protocol_version_70002>(self)
             ->start(std::move(handler));
 
-    // Relay is supported starting at bip37 (version 70001).
-    ////else if (maximum_version >= messages::level::bip37)
-    ////    channel->attach<protocol_version_70001>(self)
-    ////        ->start(std::move(handler));
+    // Relay is supported starting at bip37 (70001).
+    else if (maximum_version >= messages::level::bip37)
+        channel->attach<protocol_version_70001>(self)
+            ->start(std::move(handler));
 
     else
         channel->attach<protocol_version_31402>(self)
@@ -239,6 +240,7 @@ void session::attach_protocols(const channel::ptr& channel) const noexcept
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
+    const auto enable_reject = settings().enable_reject;
     const auto negotiated_version = channel->negotiated_version();
 
     if (negotiated_version >= messages::level::bip31)
@@ -246,8 +248,8 @@ void session::attach_protocols(const channel::ptr& channel) const noexcept
     else
         channel->attach<protocol_ping_31402>(self)->start();
 
-    // TODO: deprecated, make configurable as well.
-    if (negotiated_version >= messages::level::bip61)
+    // Reject is supported starting at bip61 (70002) and later deprecated.
+    if (enable_reject && negotiated_version >= messages::level::bip61)
         channel->attach<protocol_reject_70002>(self)->start();
 
     channel->attach<protocol_address_31402>(self)->start();
