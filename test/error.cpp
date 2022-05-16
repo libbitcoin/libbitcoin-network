@@ -244,7 +244,16 @@ BOOST_AUTO_TEST_CASE(error_t__code__protocol_violation__true_exected_message)
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "semantic protocol violation");
+    BOOST_REQUIRE_EQUAL(ec.message(), "protocol violation");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__invalid_configuration__true_exected_message)
+{
+    constexpr auto value = error::invalid_configuration;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "invalid configuration");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__operation_timeout__true_exected_message)

@@ -67,7 +67,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { unknown_message, "unknown message type" },
 
     // general failures
-    { protocol_violation, "semantic protocol violation" },
+    { protocol_violation, "protocol violation" },
+    { invalid_configuration, "invalid configuration" },
     { operation_timeout, "operation timed out" },
     { operation_canceled, "operation canceled" },
     { operation_failed, "operation failed" },

@@ -88,6 +88,7 @@ enum error_t
 
     // general failures
     protocol_violation,
+    invalid_configuration,
     operation_timeout,
     operation_canceled,
     operation_failed,
