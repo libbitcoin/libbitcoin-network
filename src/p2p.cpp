@@ -59,6 +59,7 @@ p2p::p2p(const settings& settings)
 
 p2p::~p2p()
 {
+    // Weak references in threadpool closures safe as p2p joins threads here.
     p2p::close();
 }
 

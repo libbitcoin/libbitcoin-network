@@ -36,7 +36,7 @@ namespace libbitcoin {
 namespace network {
 
 /// This class is thread safe, except for:
-/// pause/resume/paused should only be called from channel strand.
+/// * pause/resume/paused should only be called from channel strand.
 /// Virtual base for all channel communication, error handling and logging.
 class BCT_API proxy
   : public enable_shared_from_base<proxy>, system::noncopyable
