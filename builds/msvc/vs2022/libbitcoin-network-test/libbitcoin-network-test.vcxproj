@@ -130,12 +130,10 @@
     <ClCompile Include="..\..\..\..\test\p2p.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_31402.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_events.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_31402.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_60001.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_reject_70002.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_31402.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_timer.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_31402.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session.cpp" />

@@ -237,9 +237,6 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_31402.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\protocols\protocol_events.cpp">
-      <Filter>src\protocols</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_31402.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
@@ -250,9 +247,6 @@
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol_seed_31402.cpp">
-      <Filter>src\protocols</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\protocols\protocol_timer.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_31402.cpp">
@@ -494,9 +488,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_31402.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_events.hpp">
-      <Filter>include\bitcoin\network\protocols</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_31402.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
@@ -507,9 +498,6 @@
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_seed_31402.hpp">
-      <Filter>include\bitcoin\network\protocols</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_timer.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_31402.hpp">

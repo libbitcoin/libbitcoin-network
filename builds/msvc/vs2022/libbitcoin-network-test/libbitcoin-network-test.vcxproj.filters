@@ -210,9 +210,6 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_31402.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_events.cpp">
-      <Filter>src\protocols</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_31402.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
@@ -223,9 +220,6 @@
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_31402.cpp">
-      <Filter>src\protocols</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_timer.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_31402.cpp">
