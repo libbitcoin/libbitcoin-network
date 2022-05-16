@@ -21,12 +21,10 @@
 
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
-#include <bitcoin/network/protocols/protocol_events.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 #include <bitcoin/network/protocols/protocol_reject_70002.hpp>
 #include <bitcoin/network/protocols/protocol_seed_31402.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 
