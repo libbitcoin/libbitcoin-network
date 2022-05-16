@@ -44,6 +44,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // general I/O failures
     { bad_stream, "bad data stream" },
+    { insufficient_peer, "insufficient peer configuration" },
+    { protocol_violation, "protocol violation" },
 
     // incoming connection failures
     { listen_failed, "incoming connection failed" },
@@ -67,7 +69,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { unknown_message, "unknown message type" },
 
     // general failures
-    { protocol_violation, "protocol violation" },
     { invalid_configuration, "invalid configuration" },
     { operation_timeout, "operation timed out" },
     { operation_canceled, "operation canceled" },

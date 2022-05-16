@@ -64,6 +64,8 @@ enum error_t
 
     // general I/O failures
     bad_stream,
+    insufficient_peer,
+    protocol_violation,
 
     // incoming connection failures
     listen_failed,
@@ -87,7 +89,6 @@ enum error_t
     unknown_message,
 
     // general failures
-    protocol_violation,
     invalid_configuration,
     operation_timeout,
     operation_canceled,
