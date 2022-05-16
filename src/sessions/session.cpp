@@ -125,11 +125,23 @@ void session::attach_handshake(const channel::ptr& channel,
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
     BC_ASSERT_MSG(!channel->paused(), "channel paused for handshake");
 
-    // Handshake protocols must invoke handler upon completion or failure.
-    if (settings().protocol_maximum >= messages::level::bip61)
-        channel->attach<protocol_version_70002>(*this)->start(handler);
+    // Weak reference safe as sessions outlive protocols.
+    const auto& self = *this;
+    const auto maximum_version = settings().protocol_maximum;
+
+    // Reject is supported starting at bip61 (70002).
+    if (maximum_version >= messages::level::bip61)
+        channel->attach<protocol_version_70002>(self)
+            ->start(std::move(handler));
+
+    // Relay is supported starting at bip37 (version 70001).
+    ////else if (maximum_version >= messages::level::bip37)
+    ////    channel->attach<protocol_version_70001>(self)
+    ////        ->start(std::move(handler));
+
     else
-        channel->attach<protocol_version_31402>(*this)->start(handler);
+        channel->attach<protocol_version_31402>(self)
+            ->start(std::move(handler));
 }
 
 void session::handle_handshake(const code& ec, const channel::ptr& channel,
@@ -224,6 +236,21 @@ void session::do_attach_protocols(const channel::ptr& channel) const noexcept
 void session::attach_protocols(const channel::ptr& channel) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
+
+    // Weak reference safe as sessions outlive protocols.
+    const auto& self = *this;
+    const auto negotiated_version = channel->negotiated_version();
+
+    if (negotiated_version >= messages::level::bip31)
+        channel->attach<protocol_ping_60001>(self)->start();
+    else
+        channel->attach<protocol_ping_31402>(self)->start();
+
+    // TODO: deprecated, make configurable as well.
+    if (negotiated_version >= messages::level::bip61)
+        channel->attach<protocol_reject_70002>(self)->start();
+
+    channel->attach<protocol_address_31402>(self)->start();
 }
 
 void session::handle_channel_stopped(const code& ec,

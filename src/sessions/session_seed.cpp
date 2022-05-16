@@ -23,6 +23,7 @@
 #include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
@@ -133,7 +134,7 @@ void session_seed::start_seed(const config::endpoint& seed,
         return;
     }
 
-    connector->connect(seed, std::move(handler));
+    connector->connect(seed, move_copy(handler));
 }
 
 void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
@@ -161,24 +162,28 @@ void session_seed::attach_handshake(const channel::ptr& channel,
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
 
-    // Don't use configured services or relay for seeding.
-    const auto relay = false;
-    const auto own_version = settings().protocol_maximum;
-    const auto own_services = messages::service::node_none;
-    const auto invalid_services = settings().invalid_services;
-    const auto minimum_version = settings().protocol_minimum;
-    const auto minimum_services = messages::service::node_none;
+    // Weak reference safe as sessions outlive protocols.
+    const auto& self = *this;
+    const auto maximum_version = settings().protocol_maximum;
 
-    // Reject messages are not handled until bip61 (70002).
-    // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= messages::level::bip61)
-        channel->attach<protocol_version_70002>(*this, own_version,
-            own_services, invalid_services, minimum_version, minimum_services,
-            relay)->start(std::move(handler));
+    // Seeding does not require any node services or allow relay.
+    constexpr auto minimum_services = messages::service::node_none;
+    constexpr auto maximum_services = messages::service::node_none;
+    constexpr auto relay = false;
+
+    // Reject is supported starting at bip61 (70002).
+    if (maximum_version >= messages::level::bip61)
+        channel->attach<protocol_version_70002>(self, minimum_services,
+            maximum_services, relay)->start(std::move(handler));
+
+    // Relay is supported starting at bip37 (version 70001).
+    ////else if (maximum_version >= messages::level::bip37)
+    ////    channel->attach<protocol_version_70001>(self, minimum_services,
+    ////        maximum_services, relay)->start(std::move(handler));
+
     else
-        channel->attach<protocol_version_31402>(*this, own_version,
-            own_services, invalid_services, minimum_version, minimum_services)
-            ->start(std::move(handler));
+        channel->attach<protocol_version_31402>(self, minimum_services,
+            maximum_services)->start(std::move(handler));
 }
 
 void session_seed::handle_channel_start(const code&, const channel::ptr&) noexcept
@@ -190,19 +195,21 @@ void session_seed::attach_protocols(const channel::ptr& channel) const noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
 
-    const auto version = channel->negotiated_version();
-    const auto heartbeat = settings().channel_heartbeat();
+    // Weak reference safe as sessions outlive protocols.
+    const auto& self = *this;
+    const auto negotiated_version = channel->negotiated_version();
 
-    if (version >= messages::level::bip31)
-        channel->attach<protocol_ping_60001>(*this, heartbeat)->start();
+    if (negotiated_version >= messages::level::bip31)
+        channel->attach<protocol_ping_60001>(self)->start();
     else
-        channel->attach<protocol_ping_31402>(*this, heartbeat)->start();
+        channel->attach<protocol_ping_31402>(self)->start();
 
-    if (version >= messages::level::bip61)
-        channel->attach<protocol_reject_70002>(*this)->start();
+    // TODO: deprecated, make configurable as well.
+    if (negotiated_version >= messages::level::bip61)
+        channel->attach<protocol_reject_70002>(self)->start();
 
-    // The seed protocol will stop the channel upon completion/timeout.
-    channel->attach<protocol_seed_31402>(*this)->start();
+    // Seeding takes place of address protocol, stops upon completion/timeout.
+    ////channel->attach<protocol_seed_31402>(self)->start();
 }
 
 void session_seed::handle_channel_stop(const code&, const count_ptr& counter,
