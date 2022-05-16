@@ -42,6 +42,7 @@ inline bool is_invalid(const address_item& host)
     return is_zero(host.port) || host.ip == null_ip_address;
 }
 
+// TODO: manage timestamps (active channels are connected < 3 hours ago).
 // TODO: change to network_address bimap hash table with services and age.
 hosts::hosts(const settings& settings)
   : disabled_(is_zero(settings.host_pool_capacity)),
