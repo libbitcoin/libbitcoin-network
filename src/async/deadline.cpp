@@ -32,7 +32,7 @@ namespace network {
 
 using namespace std::placeholders;
 
-BC_DEBUG_ONLY(static const auto epoch = time_point();)
+BC_DEBUG_ONLY(static const time_point epoch{};)
 
 deadline::deadline(asio::strand& strand, const duration& timeout)
   : duration_(timeout), timer_(strand), track<deadline>()
