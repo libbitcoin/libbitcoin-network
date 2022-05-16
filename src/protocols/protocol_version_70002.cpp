@@ -18,63 +18,53 @@
  */
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 
-#include <cstdint>
 #include <string>
+#include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 #define CLASS protocol_version_70002
-static const std::string protocol_name = "version";
 
 using namespace bc::system;
 using namespace bc::network::messages;
 using namespace std::placeholders;
 
+static const std::string protocol_name = "version";
 static const std::string insufficient_version = "insufficient-version";
 static const std::string insufficient_services = "insufficient-services";
 
-// TODO: set explicitly on inbound (none or new config) and self on outbound.
-// Configured services was one but we found that most incoming connections are
-// set to zero, so that is currently the default (see below).
 protocol_version_70002::protocol_version_70002(const session& session,
-    channel::ptr channel)
+    const channel::ptr& channel)
   : protocol_version_70002(session, channel,
-        session.settings().protocol_maximum,
-        session.settings().services,
-        session.settings().invalid_services,
-        session.settings().protocol_minimum,
-        service::node_none,
-        /*session.settings().services,*/
+        session.settings().services_minimum,
+        session.settings().services_maximum,
         session.settings().relay_transactions)
 {
 }
 
 protocol_version_70002::protocol_version_70002(const session& session,
-    channel::ptr channel, uint32_t own_version, uint64_t own_services,
-    uint64_t invalid_services, uint32_t minimum_version,
-    uint64_t minimum_services, bool relay)
-  : protocol_version_31402(session, channel, own_version, own_services,
-        invalid_services, minimum_version, minimum_services),
+    const channel::ptr& channel, uint64_t minimum_services,
+    uint64_t maximum_services, bool relay)
+  : protocol_version_31402(session, channel, minimum_services,
+      maximum_services),
     relay_(relay)
 {
 }
 
-// Start sequence.
-// ----------------------------------------------------------------------------
-
-void protocol_version_70002::start(result_handler handle_event)
+const std::string& protocol_version_70002::name() const
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
-
-    protocol_version_31402::start(handle_event);
-    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
+    return protocol_name;
 }
+
+// Utilities.
+// ----------------------------------------------------------------------------
 
 version protocol_version_70002::version_factory() const
 {
@@ -84,33 +74,48 @@ version protocol_version_70002::version_factory() const
     return version;
 }
 
+// Start.
+// ----------------------------------------------------------------------------
+
+void protocol_version_70002::start(result_handler&& handle_event)
+{
+    BC_ASSERT_MSG(stranded(), "stranded");
+
+    if (started())
+        return;
+
+    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
+
+    protocol_version_31402::start(std::move(handle_event));
+}
+
 // Protocol.
 // ----------------------------------------------------------------------------
 
-bool protocol_version_70002::sufficient_peer(version::ptr message)
+bool protocol_version_70002::sufficient_peer(const version::ptr& message)
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
     if (message->value < minimum_version_)
     {
-        SEND2((reject{ version::command, reject::reason_code::obsolete }),
-            handle_send, _1, reject::command);
+        SEND1((reject{ version::command, reject::reason_code::obsolete }),
+            handle_send, _1);
     }
     else if ((message->services & minimum_services_) != minimum_services_)
     {
-        SEND2((reject { version::command, reject::reason_code::obsolete }),
-            handle_send, _1, reject::command);
+        SEND1((reject { version::command, reject::reason_code::obsolete }),
+            handle_send, _1);
     }
 
     return protocol_version_31402::sufficient_peer(message);
 }
 
 void protocol_version_70002::handle_receive_reject(const code& ec,
-    reject::ptr reject)
+    const reject::ptr& reject)
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopping(ec))
+    if (stopped(ec))
         return;
 
     if (ec)
@@ -118,7 +123,7 @@ void protocol_version_70002::handle_receive_reject(const code& ec,
         LOG_DEBUG(LOG_NETWORK)
             << "Failure receiving reject from [" << authority() << "] "
             << ec.message() << std::endl;
-        set_event(error::channel_stopped);
+        ////set_event(error::channel_stopped);
         return;
     }
 
@@ -136,7 +141,7 @@ void protocol_version_70002::handle_receive_reject(const code& ec,
         LOG_DEBUG(LOG_NETWORK)
             << "Obsolete version reject from [" << authority() << "] '"
             << reject->reason << "'" << std::endl;
-        set_event(error::channel_stopped);
+        ////set_event(error::channel_stopped);
         return;
     }
 
@@ -146,13 +151,8 @@ void protocol_version_70002::handle_receive_reject(const code& ec,
         LOG_DEBUG(LOG_NETWORK)
             << "Duplicate version reject from [" << authority() << "] '"
             << reject->reason << "'" << std::endl;
-        set_event(error::channel_stopped);
+        ////set_event(error::channel_stopped);
     }
-}
-
-const std::string& protocol_version_70002::name() const
-{
-    return protocol_name;
 }
 
 } // namespace network

@@ -19,13 +19,13 @@
 #include <bitcoin/network/protocols/protocol_reject_70002.hpp>
 
 #include <cstdint>
-#include <functional>
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_events.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -37,71 +37,63 @@ using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
 
+// This protocol creates log overflow DOS vector, and is not in widespread use.
 protocol_reject_70002::protocol_reject_70002(const session& session,
-    channel::ptr channel)
-  : protocol_events(session, channel)
+    const channel::ptr& channel)
+  : protocol(session, channel)
 {
-}
-
-// TODO: move stop handling into protocol and override in protocol_events.
-
-// Start sequence.
-// ----------------------------------------------------------------------------
-
-void protocol_reject_70002::start()
-{
-    BC_ASSERT_MSG(stranded(), "stranded");
-
-    // protocol_events has a nop start only for this overload.
-    protocol_events::start();
-
-    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
-}
-
-// Protocol.
-// ----------------------------------------------------------------------------
-
-// This creates a log fill DOS vector.
-// This protocol is no longer in widespread use.
-// TODO: update in protocol attachment configuration.
-void protocol_reject_70002::handle_receive_reject(const code& ec,
-    reject::ptr reject)
-{
-    BC_ASSERT_MSG(stranded(), "stranded");
-
-    // protocol_events is the base class only for this check.
-    if (stopping(ec))
-        return;
-
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure receiving reject from [" << authority() << "] "
-            << ec.message() << std::endl;
-        stop(error::channel_stopped);
-        return;
-    }
-
-    const auto& message = reject->message;
-
-    // Handle these in the version protocol.
-    if (message == version::command)
-        return;
-
-    std::string hash;
-    if (message == block::command || message == transaction::command)
-        hash = " [" + encode_hash(reject->hash) + "].";
-
-    const auto code = reject->code;
-    LOG_DEBUG(LOG_NETWORK)
-        << "Received " << message << " reject (" << static_cast<uint16_t>(code)
-        << ") from [" << authority() << "] '" << reject->reason
-        << "'" << hash << std::endl;
 }
 
 const std::string& protocol_reject_70002::name() const
 {
     return protocol_name;
+}
+
+// Start.
+// ----------------------------------------------------------------------------
+
+void protocol_reject_70002::start()
+{
+    BC_ASSERT_MSG(stranded(), "protocol_reject_70002");
+
+    if (started())
+        return;
+
+    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
+
+    protocol::start();
+}
+
+// Inbound (log).
+// ----------------------------------------------------------------------------
+
+void protocol_reject_70002::handle_receive_reject(const code& ec,
+    const reject::ptr& reject)
+{
+    BC_ASSERT_MSG(stranded(), "protocol_reject_70002");
+
+    if (stopped(ec))
+        return;
+
+    const auto& message = reject->message;
+
+    // vesion message rejection is handled in protocol_version_70002, however
+    // if received here (outside of handshake), a protocol error is implied.
+    if (reject->message == version::command)
+    {
+        // TODO: log protocol violation.
+        stop(error::protocol_violation);
+        return;
+    }
+
+    std::string hash;
+    if (message == block::command || message == transaction::command)
+        hash = " [" + encode_hash(reject->hash) + "].";
+
+    LOG_DEBUG(LOG_NETWORK)
+        << "Received " << message << " reject ("
+        << static_cast<uint16_t>(reject->code) << ") from ["
+        << authority() << "] '" << reject->reason << "'" << hash << std::endl;
 }
 
 } // namespace network

@@ -23,43 +23,43 @@
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class session;
 
-/// Ping-pong protocol.
-///Attach this to a channel immediately following handshake completion.
 class BCT_API protocol_ping_60001
   : public protocol_ping_31402, track<protocol_ping_60001>
 {
 public:
     typedef std::shared_ptr<protocol_ping_60001> ptr;
 
-    protocol_ping_60001(const session& session, channel::ptr channel,
-        const duration& heartbeat);
+    protocol_ping_60001(const session& session, const channel::ptr& channel);
+
+    /// Start protocol (strand required).
+    void start() override;
 
 protected:
-    void send_ping(const code& ec) override;
-
-    void handle_send_ping(const code& ec, const std::string& command);
-    void handle_receive_ping(const code& ec,
-        messages::ping::ptr message) override;
-    virtual void handle_receive_pong(const code& ec,
-        messages::pong::ptr message, uint64_t nonce);
-
     const std::string& name() const override;
 
+    void send_ping() override;
+    void handle_timer(const code& ec) override;
+    void handle_receive_ping(const code& ec,
+        const messages::ping::ptr& message) override;
+
+    virtual void handle_send_pong(const code& ec);
+    virtual void handle_receive_pong(const code& ec,
+        const messages::pong::ptr& message);
+
 private:
-    bool pending_;
+
+    // This is protected by strand.
+    uint64_t nonce_;
 };
 
 } // namespace network

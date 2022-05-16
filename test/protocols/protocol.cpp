@@ -43,16 +43,6 @@ class mock_channel
 public:
     using channel::channel;
 
-    ////void resume() override
-    ////{
-    ////    channel::resume();
-    ////}
-
-    ////void stop(const code& ec) override
-    ////{
-    ////    channel::stop(ec);
-    ////}
-
     // Capture last sent payload.
     void send_bytes(const system::chunk_ptr& payload,
         result_handler&&) override
@@ -234,36 +224,6 @@ public:
     {
     }
 
-    /// Bind a method in the derived class.
-    template <class Protocol, typename Handler, typename... Args>
-    auto bind(Handler&& handler, Args&&... args) ->
-        decltype(std::bind(std::forward<Handler>(handler),
-            std::shared_ptr<Protocol>(), std::forward<Args>(args)...)) const
-    {
-        return protocol::bind(std::forward<Handler>(handler),
-            std::forward<Args>(args)...);
-    }
-
-    template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(Message&& message, Handler&& handler, Args&&... args)
-    {
-        protocol::send(std::forward<Message>(message),
-            std::forward<Handler>(handler), std::forward<Args>(args)...);
-    }
-
-    /// Subscribe to channel messages by type.
-    template <class Protocol, class Message, typename Handler, typename... Args>
-    void subscribe(Handler&& handler, Args&&... args)
-    {
-        protocol::subscribe<Message>(std::forward<Handler>(handler),
-            std::forward<Args>(args)...);
-    }
-
-    bool stranded() const
-    {
-        return protocol::stranded();
-    }
-
     config::authority authority() const
     {
         return protocol::authority();
@@ -314,71 +274,11 @@ public:
         return protocol::fetches(std::move(handler));
     }
 
-    void handle_send(const code& ec, const std::string& command) override
-    {
-        return protocol::handle_send(ec, command);
-    }
-
     const std::string& name() const override
     {
         static const std::string name{ "name" };
         return name;
     }
 };
-
-BOOST_AUTO_TEST_CASE(protocol__nop__always__nop)
-{
-    settings set(selection::mainnet);
-    p2p net(set);
-    auto socket = std::make_shared<network::socket>(net.service());
-    mock_session session(net);
-    auto channel = std::make_shared<mock_channel>(socket, set);
-    BOOST_REQUIRE(!channel->stopped());
-
-    auto protocol = std::make_shared<mock_protocol>(session, channel);
-    
-    // Stop completion is asynchronous.
-    channel->stop(error::channel_stopped);
-    channel.reset();
-}
-
-////BOOST_AUTO_TEST_CASE(protocol__run__one_connection__success)
-////{
-////    settings set(selection::mainnet);
-////    BOOST_REQUIRE(set.peers.empty());
-////
-////    // This implies seeding would be required.
-////    set.host_pool_capacity = 1;
-////
-////    // There are no seeds, so seeding would fail.
-////    set.seeds.clear();
-////
-////    // Cache one address to preclude seeding.
-////    set.hosts_file = TEST_NAME;
-////    system::ofstream file(set.hosts_file);
-////    file << config::authority{ "1.2.3.4:42" } << std::endl;
-////
-////    // Configure one connection with no batching.
-////    set.connect_batch_size = 5;
-////    set.outbound_connections = 1;
-////
-////    mock_p2p net(set);
-////
-////    std::promise<bool> promise_run;
-////    const auto run_handler = [&](const code& ec)
-////    {
-////        BOOST_REQUIRE_EQUAL(ec, error::success);
-////        promise_run.set_value(true);
-////    };
-////
-////    const auto start_handler = [&](const code& ec)
-////    {
-////        BOOST_REQUIRE_EQUAL(ec, error::success);
-////        net.run(run_handler);
-////    };
-////
-////    net.start(start_handler);
-////    BOOST_REQUIRE(promise_run.get_future().get());
-////}
 
 BOOST_AUTO_TEST_SUITE_END()

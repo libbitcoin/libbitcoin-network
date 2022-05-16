@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_VERSION_70002_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_VERSION_70002_HPP
 
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -28,12 +27,11 @@
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class session;
 
 class BCT_API protocol_version_70002
   : public protocol_version_31402, track<protocol_version_70002>
@@ -41,25 +39,28 @@ class BCT_API protocol_version_70002
 public:
     typedef std::shared_ptr<protocol_version_70002> ptr;
 
-    /// Construct a version protocol instance using configured minimums.
-    protocol_version_70002(const session& session, channel::ptr channel);
+    /// Construct a version protocol instance using configured values.
+    protocol_version_70002(const session& session,
+        const channel::ptr& channel);
 
-    /// Construct a version protocol instance.
-    protocol_version_70002(const session& session, channel::ptr channel,
-        uint32_t own_version, uint64_t own_services, uint64_t invalid_services,
-        uint32_t minimum_version, uint64_t minimum_services, bool relay);
+    /// Construct a version protocol instance using parameterized services.
+    protocol_version_70002(const session& session,
+        const channel::ptr& channel, uint64_t minimum_services,
+        uint64_t maximum_services, bool relay);
 
-    void start(result_handler handle_event) override;
+    /// Perform the handshake (strand required), handler invoked on completion.
+    void start(result_handler&& handle_event) override;
 
 protected:
-    messages::version version_factory() const override;
-    bool sufficient_peer(messages::version::ptr message) override;
-
-    virtual void handle_receive_reject(const code& ec,
-        messages::reject::ptr reject);
-
     const std::string& name() const override;
 
+    messages::version version_factory() const override;
+    bool sufficient_peer(const messages::version::ptr& message) override;
+
+    virtual void handle_receive_reject(const code& ec,
+        const messages::reject::ptr& reject);
+
+    // This is thread safe (const).
     const bool relay_;
 };
 

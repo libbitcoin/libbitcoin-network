@@ -25,29 +25,29 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_events.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class session;
 
-/// A protocol for logging reject payloads.
 class BCT_API protocol_reject_70002
-  : public protocol_events, track<protocol_reject_70002>
+  : public protocol, track<protocol_reject_70002>
 {
 public:
     typedef std::shared_ptr<protocol_reject_70002> ptr;
 
-    protocol_reject_70002(const session& session, channel::ptr channel);
+    protocol_reject_70002(const session& session, const channel::ptr& channel);
 
+    /// Start protocol (strand required).
     void start() override;
 
 protected:
-    virtual void handle_receive_reject(const code& ec,
-        messages::reject::ptr reject);
-
     const std::string& name() const override;
+
+    virtual void handle_receive_reject(const code& ec,
+        const messages::reject::ptr& reject);
 };
 
 } // namespace network

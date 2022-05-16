@@ -49,27 +49,36 @@ version version::deserialize(uint32_t version, reader& source)
 {
     const auto value = source.read_4_bytes_little_endian();
 
-    // The relay field is optional at or above version 70001.
-    // But the peer doesn't know our version when it sends its version.
+    // ************************************************************************
+    // PROTOCOL:
+    // The relay field is optional >= bip37.
+    // But both peers cannot know each other's version when sending theirs.
     // This is a bug in the BIP37 design as it forces older peers to adapt to
     // the expansion of the version message, which is a clear compat break.
-    // So relay is enabled if either peer is below 70001, it is not set, or
-    // peers are at/above 70001 and the field is set.
+    // ************************************************************************
     const auto read_relay = [=](reader& source)
     {
-        const auto peer_bip37 = (value >= level::bip37);
-        const auto self_bip37 = (version >= level::bip37);
+        // ********************************************************************
+        // PROTOCOL:
+        // The exhaustion check allows peers that set 'value >= bip37' to
+        // succeed without providing the relay byte. This is broadly observed
+        // on the network, including by the satoshi client (see test cases).
+        // ********************************************************************
 
-        return
-            (peer_bip37 != self_bip37) || source.is_exhausted() ||
-            (self_bip37 && to_bool(source.read_byte()));
+        // Always read relay if 'value >= bip37 && !source.is_exhausted()'.
+        // This ignores the specified version, instead respecting the peer's
+        // version, since the specified version is not yet negotiated. A true
+        // relay value may then be ignored when negotiated version is < bip37.
+        // If value >= bip37 with no relay byte, the source is invalidated.
+        return (value >= bip37) && !source.is_exhausted() &&
+            to_bool(source.read_byte());
     };
 
-    // HACK: disabled check due to inconsistent node implementation.
-    // The protocol expects duplication of the sender's services.
-    ////if (services != address_sender.services())
-    ////    source.invalidate();
-
+    // ************************************************************************
+    // PROTOCOL:
+    // The protocol requires 'services' matches 'address_sender.services', but
+    // this validation is disabled due to the broad inconsistency of nodes.
+    // ************************************************************************
     return
     {
         value,
@@ -89,6 +98,27 @@ void version::serialize(uint32_t version, writer& sink) const
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
+    // ************************************************************************
+    // PROTOCOL:
+    // The relay field is optional >= bip37.
+    // But both peers cannot know each other's version when sending theirs.
+    // This is a bug in the BIP37 design as it forces older peers to adapt to
+    // the expansion of the version message, which is a clear compat break.
+    // ************************************************************************
+    const auto write_relay = [=](writer& sink)
+    {
+        // Write 'relay' if and only if the 'value' field supports bip37.
+        // This ignores the specified version, as it is not yet negotiated.
+        // The peer may ignore relay if negotiated version < bip37.
+        if (value >= level::bip37)
+            sink.write_byte(to_int<uint8_t>(relay));
+    };
+
+    // ************************************************************************
+    // PROTOCOL:
+    // The protocol requires 'services' matches 'address_sender.services', but
+    // this is not enforced here due to the broad inconsistency of nodes.
+    // ************************************************************************
     sink.write_4_bytes_little_endian(value);
     sink.write_8_bytes_little_endian(services);
     sink.write_8_bytes_little_endian(timestamp);
@@ -97,13 +127,13 @@ void version::serialize(uint32_t version, writer& sink) const
     sink.write_8_bytes_little_endian(nonce);
     sink.write_string(user_agent);
     sink.write_4_bytes_little_endian(start_height);
-
-    if (std::min(version, value) >= level::bip37)
-        sink.write_byte(to_int<uint8_t>(relay));
+    write_relay(sink);
 
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
+// The 'version' parameter is presumed to be set to expected sender 'value'.
+// This is required as the 'value' is not available on this static sizing.
 size_t version::size(uint32_t version) const
 {
     return sizeof(uint32_t)

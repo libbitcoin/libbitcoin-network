@@ -22,39 +22,42 @@
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
-#include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// Ping-pong protocol.
-/// Attach this to a channel immediately following handshake completion.
+class session;
+
 class BCT_API protocol_ping_31402
-  : public protocol_timer, track<protocol_ping_31402>
+  : public protocol, track<protocol_ping_31402>
 {
 public:
     typedef std::shared_ptr<protocol_ping_31402> ptr;
 
-    protocol_ping_31402(const session& session, channel::ptr channel,
-        const duration& heartbeat);
+    protocol_ping_31402(const session& session, const channel::ptr& channel);
 
+    /// Start protocol (strand required).
     void start() override;
 
+    /// The channel is stopping (called on strand by stop subscription).
+    void stopping(const code& ec) override;
+
 protected:
-    // Expose polymorphic start method from base.
-    using protocol_timer::start;
 
-    virtual void send_ping(const code& ec);
-
-    virtual void handle_receive_ping(const code& ec,
-        messages::ping::ptr message);
+    // This is protected by strand.
+    deadline::ptr timer_;
 
     const std::string& name() const override;
+
+    virtual void send_ping();
+    virtual void handle_timer(const code& ec);
+    virtual void handle_send_ping(const code& ec);
+    virtual void handle_receive_ping(const code& ec,
+        const messages::ping::ptr& message);
 };
 
 } // namespace network

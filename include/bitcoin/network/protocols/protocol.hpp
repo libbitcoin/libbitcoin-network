@@ -48,19 +48,31 @@ namespace network {
 
 class session;
 
-/// Virtual base class for protocol implementation, mostly thread safe.
+/// This class is thread safe, except for:
+/// * start/started must be called on strand.
+/// * setters should only be invoked during handshake.
+/// Pure virtual base class for protocols.
+/// handle_ methods are always invoked on the strand.
 class BCT_API protocol
   : public enable_shared_from_base<protocol>, system::noncopyable
 {
+public:
+    /// The channel is stopping (called on strand by stop subscription).
+    /// This must be called only from the channel strand (not thread safe).
+    virtual void stopping(const code& ec);
+
 protected:
-    typedef std::function<void()> completion_handler;
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, const messages::address_items&)>
         fetches_handler;
 
     protocol(const session& session, const channel::ptr& channel);
+    virtual ~protocol();
 
-    /// Bind a method in the derived class.
+    /// Macro helpers (use macros).
+    /// -----------------------------------------------------------------------
+
+    /// Bind a method in the base or derived class (use BIND#).
     template <class Protocol, typename Handler, typename... Args>
     auto bind(Handler&& handler, Args&&... args) ->
         decltype(BOUND_PROTOCOL_TYPE(handler, args)) const
@@ -68,6 +80,7 @@ protected:
         return BOUND_PROTOCOL(handler, args);
     }
 
+    /// Send a message instance to peer (use SEND#).
     template <class Protocol, class Message, typename Handler, typename... Args>
     void send(Message&& message, Handler&& handler, Args&&... args)
     {
@@ -75,7 +88,8 @@ protected:
             BOUND_PROTOCOL(handler, args));
     }
 
-    /// Subscribe to channel messages by type.
+    /// Subscribe to channel messages by type (use SUBSCRIBE#).
+    /// Handler is invoked with error::subscriber_stopped if already stopped.
     template <class Protocol, class Message, typename Handler, typename... Args>
     void subscribe(Handler&& handler, Args&&... args)
     {
@@ -83,38 +97,94 @@ protected:
         channel_->subscribe<Message>(BOUND_PROTOCOL(handler, args));
     }
 
-    bool stranded() const;
-    bool stopped() const;
-    config::authority authority() const;
-    uint64_t nonce() const noexcept;
-    messages::version::ptr peer_version() const noexcept;
-    void set_peer_version(const messages::version::ptr& value) noexcept;
-    uint32_t negotiated_version() const noexcept;
-    void set_negotiated_version(uint32_t value) noexcept;
-    void stop(const code& ec);
+    /// Start/Stop.
+    /// -----------------------------------------------------------------------
 
-    const network::settings& settings() const;
-    void saves(const messages::address_items& addresses);
-    void saves(const messages::address_items& addresses, result_handler&& handler);
-    void fetches(fetches_handler&& handler);
+    /// Set protocol started state (strand required).
+    virtual void start();
 
-    virtual void handle_send(const code& ec, const std::string& command);
+    /// Get protocol started state (strand required).
+    virtual bool protocol::started() const;
+
+    /// Channel is stopped or code set.
+    virtual bool stopped(const code& ec=error::success) const;
+
+    /// Stop the channel.
+    virtual void stop(const code& ec);
+
+    /// Properties.
+    /// -----------------------------------------------------------------------
+
+    // TODO: remove and use only in base.
+    bool stranded() const
+    {
+        return channel_->stranded();
+    }
+
+    /// Declare protocol canonical name.
     virtual const std::string& name() const = 0;
 
-private:
-    void do_fetches(const fetches_handler& handler);
-    void do_saves(const messages::address_items& addresses,
-        const result_handler& handler);
+    /// The authority of the peer.
+    virtual config::authority authority() const;
 
-    // These are thread safe.
+    /// The nonce of the channel.
+    virtual uint64_t nonce() const noexcept;
+
+    /// Network settings.
+    virtual const network::settings& settings() const;
+
+    /// The protocol version of the peer.
+    virtual messages::version::ptr peer_version() const noexcept;
+
+    /// Set protocol version of the peer (set only during handshake).
+    virtual void set_peer_version(const messages::version::ptr& value) noexcept;
+
+    /// The negotiated protocol version.
+    virtual uint32_t negotiated_version() const noexcept;
+
+    /// Set negotiated protocol version (set only during handshake).
+    virtual void set_negotiated_version(uint32_t value) noexcept;
+
+    /// Addresses.
+    /// -----------------------------------------------------------------------
+
+    /// Fetch a set of peer addresses from the address pool.
+    virtual void fetches(fetches_handler&& handler);
+
+    /// Save a set of peer addresses to the address pool.
+    virtual void saves(const messages::address_items& addresses);
+    virtual void saves(const messages::address_items& addresses,
+        result_handler&& handler);
+
+    // Capture send results, logged by default.
+    virtual void handle_send(const code& ec);
+
+private:
+    void do_fetches(const code& ec,
+        const messages::address_items& addresses, const fetches_handler& handler);
+    void handle_fetches(const code& ec, const messages::address_items& addresses,
+        const fetches_handler& handler);
+
+    void do_saves(const code& ec, const result_handler& handler);
+    void handle_saves(const code& ec, const result_handler& handler);
+
+    // This is mostly thread safe, and used in a thread safe manner.
+    // pause/resume/paused/attach not invoked, setters limited to handshake.
     channel::ptr channel_;
+
+    // This is thread safe.
     const session& session_;
+
+    // This is protected by strand.
+    bool started_;
 };
 
 #undef PROTOCOL_ARGS
 #undef BOUND_PROTOCOL
 #undef PROTOCOL_ARGS_TYPE
 #undef BOUND_PROTOCOL_TYPE
+
+// See define.hpp for BIND# macros.
 
 #define SEND1(message, method, p1) \
     send<CLASS>(message, &CLASS::method, p1)

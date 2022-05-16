@@ -25,36 +25,39 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_events.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class session;
 
-/// Address protocol.
-/// Attach this to a channel immediately following handshake completion.
 class BCT_API protocol_address_31402
-  : public protocol_events, track<protocol_address_31402>
+  : public protocol, track<protocol_address_31402>
 {
 public:
     typedef std::shared_ptr<protocol_address_31402> ptr;
 
-    protocol_address_31402(const session& session, channel::ptr channel);
+    protocol_address_31402(const session& session,
+        const channel::ptr& channel);
 
+    /// Start protocol (strand required).
     void start() override;
 
 protected:
-    virtual void handle_stop(const code& ec);
-    virtual void handle_fetch_addresses(const code& ec,
-        const messages::address_items& hosts);
-
-    virtual void handle_receive_address(const code& ec,
-        messages::address::ptr address);
-    virtual void handle_receive_get_address(const code& ec,
-        messages::get_address::ptr message);
-
     const std::string& name() const override;
+
+    virtual void handle_fetch_addresses(const code& ec,
+        const messages::address_items& addresses);
+    virtual void handle_receive_address(const code& ec,
+        const messages::address::ptr& address);
+    virtual void handle_receive_get_address(const code& ec,
+        const messages::get_address::ptr& message);
+
+private:
+
+    // This is protected by strand.
+    bool sent_;
 };
 
 } // namespace network

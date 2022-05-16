@@ -19,57 +19,71 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_VERSION_31402_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_VERSION_31402_HPP
 
-#include <cstddef>
 #include <cstdint>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
-#include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class session;
 
 class BCT_API protocol_version_31402
-  : public protocol_timer, track<protocol_version_31402>
+  : public protocol, track<protocol_version_31402>
 {
 public:
     typedef std::shared_ptr<protocol_version_31402> ptr;
 
-    /// Construct a version protocol instance using configured minimums.
-    protocol_version_31402(const session& session, channel::ptr channel);
+    /// Construct a version protocol instance using configured values.
+    protocol_version_31402(const session& session,
+        const channel::ptr& channel);
 
-    /// Construct a version protocol instance.
-    protocol_version_31402(const session& session, channel::ptr channel,
-        uint32_t own_version, uint64_t own_services, uint64_t invalid_services,
-        uint32_t minimum_version, uint64_t minimum_services);
+    /// Construct a version protocol instance using parameterized services.
+    protocol_version_31402(const session& session, const channel::ptr& channel,
+        uint64_t own_services, uint64_t minimum_services);
 
-    void start(result_handler handle_event) override;
+    /// Perform the handshake (strand required), handler invoked on completion.
+    virtual void start(result_handler&& handler);
+
+    /// The channel is stopping (called on strand by stop subscription).
+    void stopping(const code& ec) override;
 
 protected:
-    // Expose polymorphic start method from base.
-    using protocol_timer::start;
-
-    virtual messages::version version_factory() const;
-    virtual bool sufficient_peer(messages::version::ptr message);
-
-    virtual void handle_receive_version(const code& ec,
-        messages::version::ptr version);
-    virtual void handle_receive_acknowledge(const code& ec,
-        messages::version_acknowledge::ptr);
-
     const std::string& name() const override;
 
-    const uint32_t own_version_;
-    const uint64_t own_services_;
-    const uint64_t invalid_services_;
+    virtual messages::version version_factory() const;
+    virtual bool sufficient_peer(const messages::version::ptr& message);
+
+    virtual void complete(const code& ec);
+    virtual void handle_timer(const code& ec);
+
+    virtual void handle_send_version(const code& ec);
+    virtual void handle_receive_version(const code& ec,
+        const messages::version::ptr& message);
+
+    virtual void handle_send_acknowledge(const code& ec);
+    virtual void handle_receive_acknowledge(const code& ec,
+        const messages::version_acknowledge::ptr& message);
+
+    // These are thread safe (const).
     const uint32_t minimum_version_;
+    const uint32_t maximum_version_;
     const uint64_t minimum_services_;
+    const uint64_t maximum_services_;
+    const uint64_t invalid_services_;
+
+    // These are protected by strand.
+    bool sent_version_;
+    bool received_version_;
+    bool received_acknowledge_;
+    std::shared_ptr<result_handler> handler_;
+    deadline::ptr timer_;
 };
 
 } // namespace network

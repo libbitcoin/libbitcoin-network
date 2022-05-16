@@ -34,9 +34,9 @@ namespace network {
 
 class session;
 
-/// This class is not thread safe:
-/// Versions should be only written in handshake and read thereafter.
-/// pause/resume/paused and attach should only be called from channel strand.
+/// This class is thread safe, except for:
+/// * Versions should be only written in handshake and read thereafter.
+/// * pause/resume/paused and attach should only be called from channel strand.
 /// A channel is a proxy with logged timers and state.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API channel
@@ -60,9 +60,9 @@ public:
             shared_from_base<channel>(), std::forward<Args>(args)...);
 
         // Protocol lifetime is ensured by the channel stop subscriber.
-        subscribe_stop([=](const code&)
+        subscribe_stop([=](const code& ec)
         {
-            protocol->nop();
+            protocol->stopping(ec);
         });
 
         return protocol;
@@ -90,6 +90,7 @@ protected:
 
 private:
     void do_stop(const code& ec);
+
     void start_expiration();
     void handle_expiration(const code& ec);
 

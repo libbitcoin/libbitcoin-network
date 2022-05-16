@@ -18,15 +18,16 @@
  */
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
 
-#include <cstdint>
-#include <functional>
+#include <algorithm>
+#include <memory>
 #include <string>
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -38,178 +39,92 @@ using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
 
-// TODO: set explicitly on inbound (none or new config) and self on outbound.
-// Require the configured minimum and services by default.
-// Configured min version is our own but we may require higer for some stuff.
-// Configured services was our but we found that most incoming connections are
-// set to zero, so that is currently the default (see below).
+// Require the configured minimum protocol and services by default.
 protocol_version_31402::protocol_version_31402(const session& session,
-    channel::ptr channel)
+    const channel::ptr& channel)
   : protocol_version_31402(session, channel,
-        session.settings().protocol_maximum,
-        session.settings().services,
-        session.settings().invalid_services,
-        session.settings().protocol_minimum,
-        messages::service::node_none
-        /*session.settings().services*/)
+      session.settings().services_minimum,
+      session.settings().services_maximum)
 {
 }
 
+// Used for seeding (should probably not override these).
 protocol_version_31402::protocol_version_31402(const session& session,
-    channel::ptr channel,
-    uint32_t own_version, uint64_t own_services,
-    uint64_t invalid_services, uint32_t minimum_version,
-    uint64_t minimum_services)
-  : protocol_timer(session, channel, session.settings().channel_handshake(), false),
-    own_version_(own_version),
-    own_services_(own_services),
-    invalid_services_(invalid_services),
-    minimum_version_(minimum_version),
-    minimum_services_(minimum_services)
+    const channel::ptr& channel, uint64_t minimum_services,
+    uint64_t maximum_services)
+  : protocol(session, channel),
+    minimum_version_(session.settings().protocol_minimum),
+    maximum_version_(session.settings().protocol_maximum),
+    minimum_services_(minimum_services),
+    maximum_services_(maximum_services),
+    invalid_services_(session.settings().invalid_services),
+    sent_version_(false),
+    received_version_(false),
+    received_acknowledge_(false),
+    timer_(std::make_shared<deadline>(channel->strand(),
+        session.settings().channel_handshake()))
 {
 }
 
-// Start sequence.
+const std::string& protocol_version_31402::name() const
+{
+    return protocol_name;
+}
+
+// Utilities.
 // ----------------------------------------------------------------------------
 
-// handle_event must be invoked upon completion or failure.
-void protocol_version_31402::start(result_handler handle_event)
-{
-    BC_ASSERT_MSG(stranded(), "stranded");
-    BC_ASSERT_MSG(!stopped(), "channel stopped");
-
-    // TODO: just use a state member variable, this is stranded.
-
-    ////// TODO: add custom handle_send here and make this 3 events (see seed).
-    ////const auto join_handler = synchronize(handle_event, 2, "TODO",
-    ////    synchronizer_terminate::on_error);
-
-    ////// protocol_events retains join_handler to be invoked multiple times.
-    ////// handle_event is invoked on the channel thread.
-    ////protocol_timer::start(join_handler);
-
-    SUBSCRIBE2(version, handle_receive_version, _1, _2);
-    SUBSCRIBE2(version_acknowledge, handle_receive_acknowledge, _1, _2);
-    SEND2(version_factory(), handle_send, _1, version::command);
-}
-
-// TODO: allow for node to inject top height.
 messages::version protocol_version_31402::version_factory() const
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
+    // TODO: allow for node to inject top height.
+    const auto top_height = static_cast<uint32_t>(zero);
+    BC_ASSERT_MSG(top_height <= max_uint32, "Time to upgrade the protocol.");
 
+    // Relay always exposed on version, despite lack of definition < BIP37.
+    // See comments in version::deserialize regarding BIP37 protocol bug.
+    constexpr auto relay = false;
     const auto timestamp = static_cast<uint32_t>(zulu_time());
-    const auto height = zero;//// network_.top_block().height();
-
-    BC_ASSERT_MSG(height <= max_uint32, "Time to upgrade the protocol.");
 
     return
     {
-        own_version_,
-        own_services_,
+        maximum_version_,
+        maximum_services_,
         timestamp,
+
+        // ********************************************************************
+        // PROTOCOL:
+        // Peer address_item (timestamp/services are redundant/unused).
+        // Both peers cannot know each other's service level, so set node_none.
+        // ********************************************************************
         {
-            // The peer's services cannot be reflected, so zero it.
             timestamp,
             service::node_none,
             authority().to_ip_address(),
             authority().port(),
         },
+
+        // ********************************************************************
+        // PROTOCOL:
+        // Self address_item (timestamp/services are redundant).
+        // The protocol expects duplication of the sender's services, but this
+        // is broadly observed to be inconsistently implemented by other nodes.
+        // ********************************************************************
         {
-            // We always match the services declared in our version.services.
             timestamp,
-            own_services_,
+            maximum_services_,
             settings().self.to_ip_address(),
             settings().self.port(),
         },
+
         nonce(),
         BC_USER_AGENT,
-        static_cast<uint32_t>(height),
-        false
+        top_height,
+        relay
     };
 }
 
-// Protocol.
-// ----------------------------------------------------------------------------
-
-void protocol_version_31402::handle_receive_version(const code& ec,
-    version::ptr message)
+bool protocol_version_31402::sufficient_peer(const version::ptr& message)
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
-
-    if (stopping(ec))
-        return;
-
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure receiving version from [" << authority() << "] "
-            << ec.message() << std::endl;
-        set_event(ec);
-        return;
-    }
-
-    LOG_DEBUG(LOG_NETWORK)
-        << "Peer [" << authority() << "] protocol version ("
-        << message->value << ") user agent: " << message->user_agent
-        << std::endl;
-
-    // TODO: move these three checks to initialization.
-    //-------------------------------------------------------------------------
-
-    if (settings().protocol_minimum < level::minimum_protocol)
-    {
-        LOG_ERROR(LOG_NETWORK)
-            << "Invalid protocol version configuration, minimum below ("
-            << level::minimum_protocol << ")." << std::endl;
-        set_event(error::channel_stopped);
-        return;
-    }
-
-    if (settings().protocol_maximum > level::maximum_protocol)
-    {
-        LOG_ERROR(LOG_NETWORK)
-            << "Invalid protocol version configuration, maximum above ("
-            << level::maximum_protocol << ")." << std::endl;
-        set_event(error::channel_stopped);
-        return;
-    }
-
-    if (settings().protocol_minimum > settings().protocol_maximum)
-    {
-        LOG_ERROR(LOG_NETWORK)
-            << "Invalid protocol version configuration, "
-            << "minimum exceeds maximum." << std::endl;
-        set_event(error::channel_stopped);
-        return;
-    }
-
-    //-------------------------------------------------------------------------
-
-    if (!sufficient_peer(message))
-    {
-        set_event(error::channel_stopped);
-        return;
-    }
-
-    const auto version = std::min(message->value, own_version_);
-    set_negotiated_version(version);
-    set_peer_version(message);
-
-    LOG_DEBUG(LOG_NETWORK)
-        << "Negotiated protocol version (" << version
-        << ") for [" << authority() << "]" << std::endl;
-
-    SEND2(version_acknowledge{}, handle_send, _1, version_acknowledge::command);
-
-    // 1 of 2
-    set_event(error::success);
-}
-
-bool protocol_version_31402::sufficient_peer(version::ptr message)
-{
-    BC_ASSERT_MSG(stranded(), "stranded");
-
     if (to_bool(message->services & invalid_services_))
     {
         LOG_DEBUG(LOG_NETWORK)
@@ -218,6 +133,9 @@ bool protocol_version_31402::sufficient_peer(version::ptr message)
         return false;
     }
 
+    // Configured services on most incoming connections may be set to zero.
+    // So we use a peer minimum configuration distinct from our own services.
+    // This allows degradation from the services we provide, down to the min.
     if ((message->services & minimum_services_) != minimum_services_)
     {
         LOG_DEBUG(LOG_NETWORK)
@@ -237,30 +155,196 @@ bool protocol_version_31402::sufficient_peer(version::ptr message)
     return true;
 }
 
-void protocol_version_31402::handle_receive_acknowledge(const code& ec,
-    version_acknowledge::ptr)
+// Start/Stop.
+// ----------------------------------------------------------------------------
+
+void protocol_version_31402::start(result_handler&& handler)
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 
-    if (stopping(ec))
+    if (started())
+    {
+        handler(error::operation_failed);
+        return;
+    }
+
+    handler_ = std::make_shared<result_handler>(std::move(handler));
+
+    if (minimum_version_ < level::minimum_protocol)
+    {
+        LOG_ERROR(LOG_NETWORK)
+            << "Invalid protocol version configuration, minimum below ("
+            << level::minimum_protocol << ")." << std::endl;
+        complete(error::invalid_configuration);
+        return;
+    }
+
+    if (maximum_version_ > level::maximum_protocol)
+    {
+        LOG_ERROR(LOG_NETWORK)
+            << "Invalid protocol version configuration, maximum above ("
+            << level::maximum_protocol << ")." << std::endl;
+        complete(error::invalid_configuration);
+        return;
+    }
+
+    if (minimum_version_ > maximum_version_)
+    {
+        LOG_ERROR(LOG_NETWORK)
+            << "Invalid protocol version configuration, "
+            << "minimum exceeds maximum." << std::endl;
+        complete(error::invalid_configuration);
+        return;
+    }
+
+    SUBSCRIBE2(version, handle_receive_version, _1, _2);
+    SUBSCRIBE2(version_acknowledge, handle_receive_acknowledge, _1, _2);
+    SEND1(version_factory(), handle_send_version, _1);
+
+    protocol::start();
+}
+
+void protocol_version_31402::stopping(const code& ec)
+{
+    BC_ASSERT_MSG(stranded(), "stranded");
+
+    // Allow service shutdown to terminate handshake.
+    complete(ec);
+}
+
+// Idempotent on the strand, first caller gets handler.
+void protocol_version_31402::complete(const code& ec)
+{
+    BC_ASSERT_MSG(stranded(), "stranded");
+
+    // This will asynchronously invoke handle_timer and if the channel is not
+    // stopped, will then invoke complete(error::operation_canceled).
+    timer_->stop();
+
+    if (!handler_)
         return;
 
     if (ec)
     {
         LOG_DEBUG(LOG_NETWORK)
-            << "Failure receiving verack from [" << authority() << "] "
-            << ec.message() << std::endl;
-        set_event(ec);
+            << "Handshake with peer [" << authority() << "] failed ("
+            << ec.message() << ")" << std::endl;
+    }
+
+    (*handler_)(ec);
+    handler_.reset();
+}
+
+void protocol_version_31402::handle_timer(const code& ec)
+{
+    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+
+    if (stopped())
+        return;
+
+    // error::operation_canceled is set when stopped (caught above), but will
+    // also be set upon successful completion, as this also cancels the timer.
+    // However in this case the code will be ignored in the completion handler.
+    if (ec)
+    {
+        complete(ec);
         return;
     }
 
-    // 2 of 2
-    set_event(error::success);
+    complete(error::channel_timeout);
 }
 
-const std::string& protocol_version_31402::name() const
+// Outgoing [send_version... receive_acknowledge].
+// ----------------------------------------------------------------------------
+
+void protocol_version_31402::handle_send_version(const code& ec)
 {
-    return protocol_name;
+    BC_ASSERT_MSG(stranded(), "stranded");
+
+    if (stopped(ec))
+        return;
+
+    timer_->start(BIND1(handle_timer, _1));
+
+    sent_version_ = true;
+
+    // Unlikely that received_acknowledge_ will be set here, but asynchronous.
+    if (received_acknowledge_ && received_version_)
+        complete(error::success);
+}
+
+void protocol_version_31402::handle_receive_acknowledge(const code& ec,
+    const version_acknowledge::ptr&)
+{
+    BC_ASSERT_MSG(stranded(), "stranded");
+
+    if (stopped(ec))
+        return;
+
+    if (received_acknowledge_)
+    {
+        complete(error::protocol_violation);
+        return;
+    }
+
+    received_acknowledge_ = true;
+
+    // Unlikely that sent_version_ will be unset here, but asynchronous.
+    if (sent_version_ && received_version_)
+        complete(error::success);
+}
+
+// Incoming [receive_version => send_acknowledge].
+// ----------------------------------------------------------------------------
+
+void protocol_version_31402::handle_receive_version(const code& ec,
+    const version::ptr& message)
+{
+    BC_ASSERT_MSG(stranded(), "stranded");
+
+    if (stopped(ec))
+        return;
+
+    if (received_version_)
+    {
+        complete(error::protocol_violation);
+        return;
+    }
+
+    LOG_DEBUG(LOG_NETWORK)
+        << "Peer [" << authority() << "] protocol version ("
+        << message->value << ") user agent: " << message->user_agent
+        << std::endl;
+
+    if (!sufficient_peer(message))
+    {
+        complete(error::insufficient_peer);
+        return;
+    }
+
+    const auto version = std::min(message->value, maximum_version_);
+    set_negotiated_version(version);
+    set_peer_version(message);
+
+    LOG_DEBUG(LOG_NETWORK)
+        << "Negotiated protocol version (" << version
+        << ") for [" << authority() << "]" << std::endl;
+
+    SEND1(version_acknowledge{}, handle_send_acknowledge, _1);
+
+    // Handle in handle_send_acknowledge.
+    received_version_ = true;
+}
+
+void protocol_version_31402::handle_send_acknowledge(const code& ec)
+{
+    BC_ASSERT_MSG(stranded(), "stranded");
+
+    if (stopped(ec))
+        return;
+
+    if (sent_version_ && received_acknowledge_)
+        complete(error::success);
 }
 
 } // namespace network
