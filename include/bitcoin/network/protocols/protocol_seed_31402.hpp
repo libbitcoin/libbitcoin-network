@@ -41,7 +41,7 @@ public:
 
     protocol_seed_31402(const session& session, const channel::ptr& channel);
 
-    /// Perform seeding, stops channel on completion.
+    /// Perform seeding, stops channel on completion (strand required).
     void start() override;
 
 protected:

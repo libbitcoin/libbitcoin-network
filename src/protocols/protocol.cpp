@@ -92,6 +92,11 @@ void protocol::stop(const code& ec)
 // during handshake protocol operation. Thread safety requires that setters are
 // never invoked outside of the handshake protocol (start handler).
 
+bool protocol::stranded() const
+{
+    return channel_->stranded();
+}
+
 config::authority protocol::authority() const
 {
     return channel_->authority();

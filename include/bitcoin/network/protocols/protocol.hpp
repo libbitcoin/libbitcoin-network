@@ -116,11 +116,8 @@ protected:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    // TODO: remove and use only in base.
-    bool stranded() const
-    {
-        return channel_->stranded();
-    }
+    /// The current thread is on the channel strand.
+    bool stranded() const;
 
     /// Declare protocol canonical name.
     virtual const std::string& name() const = 0;
