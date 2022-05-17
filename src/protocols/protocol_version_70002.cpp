@@ -18,13 +18,14 @@
  */
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_version_31402.hpp>
+#include <bitcoin/network/protocols/protocol_version_70001.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
@@ -42,7 +43,7 @@ static const std::string insufficient_services = "insufficient-services";
 
 protocol_version_70002::protocol_version_70002(const session& session,
     const channel::ptr& channel)
-  : protocol_version_70002(session, channel,
+  : protocol_version_70001(session, channel,
         session.settings().services_minimum,
         session.settings().services_maximum,
         session.settings().relay_transactions)
@@ -52,9 +53,8 @@ protocol_version_70002::protocol_version_70002(const session& session,
 protocol_version_70002::protocol_version_70002(const session& session,
     const channel::ptr& channel, uint64_t minimum_services,
     uint64_t maximum_services, bool relay)
-  : protocol_version_31402(session, channel, minimum_services,
-      maximum_services),
-    relay_(relay)
+  : protocol_version_70001(session, channel, minimum_services,
+      maximum_services, relay)
 {
 }
 
@@ -63,96 +63,58 @@ const std::string& protocol_version_70002::name() const
     return protocol_name;
 }
 
-// Utilities.
-// ----------------------------------------------------------------------------
-
-version protocol_version_70002::version_factory() const
-{
-    // Relay is the only difference at protocol level 70001.
-    auto version = protocol_version_31402::version_factory();
-    version.relay = relay_;
-    return version;
-}
-
 // Start.
 // ----------------------------------------------------------------------------
 
 void protocol_version_70002::start(result_handler&& handle_event)
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
+    BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
     if (started())
         return;
 
     SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
 
-    protocol_version_31402::start(std::move(handle_event));
+    protocol_version_70001::start(std::move(handle_event));
 }
 
-// Protocol.
+// Outgoing [(in)sufficient_peer => send_reject].
 // ----------------------------------------------------------------------------
 
-bool protocol_version_70002::sufficient_peer(const version::ptr& message)
+void protocol_version_70002::rejection(const code& ec)
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
+    BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
-    if (message->value < minimum_version_)
+    // Handshake completion may result before completion of this send (okay).
+    if (ec == error::insufficient_peer)
     {
         SEND1((reject{ version::command, reject::reason_code::obsolete }),
             handle_send, _1);
     }
-    else if ((message->services & minimum_services_) != minimum_services_)
+    else if (ec == error::protocol_violation)
     {
-        SEND1((reject { version::command, reject::reason_code::obsolete }),
+        SEND1((reject{ version::command, reject::reason_code::duplicate }),
             handle_send, _1);
     }
 
-    return protocol_version_31402::sufficient_peer(message);
+    return protocol_version_70001::rejection(ec);
 }
+
+// Incoming [receive_reject => log].
+// ----------------------------------------------------------------------------
 
 void protocol_version_70002::handle_receive_reject(const code& ec,
     const reject::ptr& reject)
 {
-    BC_ASSERT_MSG(stranded(), "stranded");
+    BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
     if (stopped(ec))
         return;
 
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure receiving reject from [" << authority() << "] "
-            << ec.message() << std::endl;
-        ////set_event(error::channel_stopped);
-        return;
-    }
-
-    const auto& message = reject->message;
-
-    // Handle these in the reject protocol.
-    if (message != version::command)
-        return;
-
-    const auto code = reject->code;
-
-    // Client is an obsolete, unsupported version.
-    if (code == reject::reason_code::obsolete)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Obsolete version reject from [" << authority() << "] '"
-            << reject->reason << "'" << std::endl;
-        ////set_event(error::channel_stopped);
-        return;
-    }
-
-    // Duplicate version message received.
-    if (code == reject::reason_code::duplicate)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Duplicate version reject from [" << authority() << "] '"
-            << reject->reason << "'" << std::endl;
-        ////set_event(error::channel_stopped);
-    }
+    LOG_DEBUG(LOG_NETWORK)
+        << "Reject message '" << reject->message << "' ("
+        << static_cast<uint16_t>(reject->code) << ") from [" << authority()
+        << "] with reason: " << reject->reason << std::endl;
 }
 
 } // namespace network

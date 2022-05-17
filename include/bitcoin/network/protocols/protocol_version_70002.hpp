@@ -23,10 +23,11 @@
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_version_31402.hpp>
+#include <bitcoin/network/protocols/protocol_version_70001.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -34,7 +35,7 @@ namespace network {
 class session;
 
 class BCT_API protocol_version_70002
-  : public protocol_version_31402, track<protocol_version_70002>
+  : public protocol_version_70001, track<protocol_version_70002>
 {
 public:
     typedef std::shared_ptr<protocol_version_70002> ptr;
@@ -54,14 +55,10 @@ public:
 protected:
     const std::string& name() const override;
 
-    messages::version version_factory() const override;
-    bool sufficient_peer(const messages::version::ptr& message) override;
+    void rejection(const code& ec) override;
 
     virtual void handle_receive_reject(const code& ec,
         const messages::reject::ptr& reject);
-
-    // This is thread safe (const).
-    const bool relay_;
 };
 
 } // namespace network

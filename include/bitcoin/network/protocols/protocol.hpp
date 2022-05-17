@@ -24,6 +24,7 @@
 #include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -104,7 +105,7 @@ protected:
     virtual void start();
 
     /// Get protocol started state (strand required).
-    virtual bool protocol::started() const;
+    virtual bool started() const;
 
     /// Channel is stopped or code set.
     virtual bool stopped(const code& ec=error::success) const;

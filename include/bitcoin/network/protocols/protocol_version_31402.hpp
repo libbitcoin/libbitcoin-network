@@ -24,6 +24,7 @@
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -46,7 +47,7 @@ public:
 
     /// Construct a version protocol instance using parameterized services.
     protocol_version_31402(const session& session, const channel::ptr& channel,
-        uint64_t own_services, uint64_t minimum_services);
+        uint64_t minimum_services, uint64_t maximum_services);
 
     /// Perform the handshake (strand required), handler invoked on completion.
     virtual void start(result_handler&& handler);
@@ -55,12 +56,16 @@ public:
     void stopping(const code& ec) override;
 
 protected:
+    // Declare pointer to a non-const version (allows mutation in 70001).
+    typedef std::shared_ptr<messages::version> version_ptr;
+
     const std::string& name() const override;
 
-    virtual messages::version version_factory() const;
-    virtual bool sufficient_peer(const messages::version::ptr& message);
+    virtual version_ptr version_factory() const;
+    virtual void rejection(const code& ec);
 
-    virtual void complete(const code& ec);
+    virtual bool complete() const;
+    virtual void callback(const code& ec);
     virtual void handle_timer(const code& ec);
 
     virtual void handle_send_version(const code& ec);
@@ -78,6 +83,7 @@ protected:
     const uint64_t maximum_services_;
     const uint64_t invalid_services_;
 
+private:
     // These are protected by strand.
     bool sent_version_;
     bool received_version_;

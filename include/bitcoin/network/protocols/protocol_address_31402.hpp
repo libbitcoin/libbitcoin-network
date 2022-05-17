@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -55,7 +56,6 @@ protected:
         const messages::get_address::ptr& message);
 
 private:
-
     // This is protected by strand.
     bool sent_;
 };

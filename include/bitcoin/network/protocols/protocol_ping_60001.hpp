@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -57,7 +58,6 @@ protected:
         const messages::pong::ptr& message);
 
 private:
-
     // This is protected by strand.
     uint64_t nonce_;
 };

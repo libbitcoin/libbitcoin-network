@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -47,10 +48,6 @@ public:
     void stopping(const code& ec) override;
 
 protected:
-
-    // This is protected by strand.
-    deadline::ptr timer_;
-
     const std::string& name() const override;
 
     virtual void send_ping();
@@ -58,6 +55,10 @@ protected:
     virtual void handle_send_ping(const code& ec);
     virtual void handle_receive_ping(const code& ec,
         const messages::ping::ptr& message);
+
+private:
+    // This is protected by strand.
+    deadline::ptr timer_;
 };
 
 } // namespace network
