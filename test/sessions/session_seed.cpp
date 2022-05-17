@@ -419,7 +419,7 @@ public:
 
     session_seed::ptr attach_seed_session() override
     {
-        return attach<mock_session_seed>();
+        return attach<mock_seed_session>();
     }
 
 private:
@@ -456,11 +456,11 @@ private:
         }
     };
 
-    class mock_session_seed
+    class mock_seed_session
       : public session_seed
     {
     public:
-        mock_session_seed(p2p& network)
+        mock_seed_session(p2p& network)
           : session_seed(network)
         {
         }
