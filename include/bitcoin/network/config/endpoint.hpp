@@ -41,52 +41,55 @@ class BCT_API endpoint
 public:
     typedef std::shared_ptr<endpoint> ptr;
 
-    endpoint();
-    endpoint(const endpoint& other);
+    endpoint() noexcept;
+    endpoint(const endpoint& other) noexcept;
 
     /// The scheme and port may be undefined, in which case the port is
     /// reported as zero and the scheme is reported as an empty string.
     /// The value is of the form: [scheme://]host[:port]
-    endpoint(const std::string& uri);
-    endpoint(const authority& authority);
+    endpoint(const std::string& uri) noexcept(false);
+    endpoint(const authority& authority) noexcept;
 
     /// host may be host name or ip address.
-    endpoint(const std::string& host, uint16_t port);
-    endpoint(const std::string& scheme, const std::string& host, uint16_t port);
+    endpoint(const std::string& host, uint16_t port) noexcept;
+    endpoint(const std::string& scheme, const std::string& host,
+        uint16_t port) noexcept;
 
-    endpoint(const asio::endpoint& uri);
-    endpoint(const asio::address& ip, uint16_t port);
+    endpoint(const asio::endpoint& uri) noexcept;
+    endpoint(const asio::address& ip, uint16_t port) noexcept;
 
     /// True if the endpoint is initialized.
-    operator bool() const;
+    operator bool() const noexcept;
 
     /// The scheme of the endpoint or empty string.
-    const std::string& scheme() const;
+    const std::string& scheme() const noexcept;
 
     /// The host name or ip address of the endpoint.
-    const std::string& host() const;
+    const std::string& host() const noexcept;
 
     /// The tcp port of the endpoint.
-    uint16_t port() const;
+    uint16_t port() const noexcept;
 
     /// An empty scheme and/or empty port is omitted.
     /// The endpoint is of the form: [scheme://]host[:port]
-    std::string to_string() const;
+    std::string to_string() const noexcept;
 
     /// Return a new endpoint that replaces host instances of "*" with
     /// "localhost". This is intended for clients that wish to connect
     /// to a service that has been configured to bind to all interfaces.
     /// The endpoint is of the form: [scheme://]host[:port]
-    endpoint to_local() const;
+    endpoint to_local() const noexcept;
 
-    bool operator==(const endpoint& other) const;
+    bool operator==(const endpoint& other) const noexcept;
 
     friend std::istream& operator>>(std::istream& input,
-        endpoint& argument);
+        endpoint& argument) noexcept(false);
     friend std::ostream& operator<<(std::ostream& output,
-        const endpoint& argument);
+        const endpoint& argument) noexcept;
 
 private:
+    // These are not thread safe.
+
     std::string scheme_;
     std::string host_;
     uint16_t port_;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -31,7 +31,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Not thread safe.
+/// Not thread safe, non-virtual.
 /// Class wrapper for boost::asio::basic_waitable_timer (restartable).
 /// This simplifies invocation, eliminates boost-specific error handling and
 /// makes timer firing and cancellation conditions safe for shared objects.
@@ -44,26 +44,27 @@ public:
     typedef std::function<void(const code&)> handler;
     
     /// Timer notification handler is posted to the service.
-    deadline(asio::strand& strand, const duration& timeout=seconds(0));
+    deadline(asio::strand& strand, const duration& timeout=seconds(0)) noexcept;
 
     /// Assert timer stopped.
-    ~deadline();
+    ~deadline() noexcept;
 
     /// Start or restart the timer.
     /// Use expired(ec) in handler to test for expiration.
-    void start(handler&& handle);
+    void start(handler&& handle) noexcept;
 
     /// Start or restart the timer.
     /// Use expired(ec) in handler to test for expiration.
-    void start(handler&& handle, const duration& timeout);
+    void start(handler&& handle, const duration& timeout) noexcept;
 
     /// Cancel the timer. The handler will be invoked.
-    void stop();
+    void stop() noexcept;
 
 private:
-    void handle_timer(const error::boost_code& ec, const handler& handle);
+    void handle_timer(const error::boost_code& ec,
+        const handler& handle) noexcept;
 
-    // This is thread safe.
+    // This is thread safe (const).
     const duration duration_;
 
     // This is not thread safe.

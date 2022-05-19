@@ -62,7 +62,7 @@ namespace messages {
 // filteradd    --      70001   BIP037  no intent to support, deprecated (bip111)
 // filterclear  --      70001   BIP037  no intent to support, deprecated (bip111)
 // notfound     v2      70001           added at the same version as bip37
-// version      v2      70001           added relay field in bip37
+// version      v2      70001           added (optional) relay field in bip37
 // ----------------------------------------------------------------------------
 // mempool      v3      70002           allow multiple inv messages in reply
 // sendheaders  v3      70012   BIP130  "headers first" added in v4
@@ -71,6 +71,9 @@ namespace messages {
 // cmpctblock   v4      70014   BIP152
 // getblocktxn  v4      70014   BIP152
 // sendcmpct    v4      70014   BIP152
+
+// TODO: these should be based solely on NODE_COMPACT_FILTERS signal.
+// TODO: but we may associate protocol version at which it was deployed.
 // cfilter      v4      70015   BIP157  not BIP-associated to p2p version
 // getcfilters  v4      70015   BIP157  not BIP-associated to p2p version
 // cfcheckpt    v4      70015   BIP157  not BIP-associated to p2p version

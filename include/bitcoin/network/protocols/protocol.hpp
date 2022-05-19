@@ -52,7 +52,7 @@ class session;
 /// This class is thread safe, except for:
 /// * start/started must be called on strand.
 /// * setters should only be invoked during handshake.
-/// Pure virtual base class for protocols.
+/// Abstract base class for protocols.
 /// handle_ methods are always invoked on the strand.
 class BCT_API protocol
   : public enable_shared_from_base<protocol>, system::noncopyable
@@ -117,7 +117,7 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// The current thread is on the channel strand.
-    bool stranded() const;
+    virtual bool stranded() const;
 
     /// Declare protocol canonical name.
     virtual const std::string& name() const = 0;

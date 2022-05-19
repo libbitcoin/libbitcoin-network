@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_ENABLE_SHARED_FROM_BASE_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_ENABLE_SHARED_FROM_BASE_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_ENABLE_SHARED_FROM_BASE_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_ENABLE_SHARED_FROM_BASE_IPP
 
 #include <memory>
 #include <bitcoin/system.hpp>
@@ -25,27 +25,26 @@
 namespace libbitcoin {
 namespace network {
 
-/// Thread safe, base class.
-/// Because enable_shared_from_this does not support inheritance.
 template <class Base>
-class enable_shared_from_base
-  : public std::enable_shared_from_this<Base>
+enable_shared_from_base<Base>::~enable_shared_from_base() noexcept
 {
-public:
-    virtual ~enable_shared_from_base() noexcept;
+}
 
-    /// Simplifies capture of the shared pointer for a nop handler.
-    void nop() volatile noexcept;
+template <class Base>
+void enable_shared_from_base<Base>::nop() volatile noexcept
+{
+}
 
-protected:
-    /// Use in derived class to create shared instance of self.
-    template <class Derived, system::if_base_of<Base, Derived> = true>
-    std::shared_ptr<Derived> shared_from_base() noexcept;
-};
+template <class Base>
+template <class Derived, system::if_base_of<Base, Derived>>
+std::shared_ptr<Derived> enable_shared_from_base<Base>::
+shared_from_base() noexcept
+{
+    // Instance (not just type) must be upcastable to Derived.
+    return std::static_pointer_cast<Derived>(this->shared_from_this());
+}
 
 } // namespace network
 } // namespace libbitcoin
-
-#include <bitcoin/network/impl/async/enable_shared_from_base.ipp>
 
 #endif

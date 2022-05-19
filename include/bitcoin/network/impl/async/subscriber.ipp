@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -19,27 +19,26 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_IPP
 #define LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_IPP
 
-////#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-template <typename ErrorCode, typename... Args>
-subscriber<ErrorCode, Args...>::subscriber(asio::strand& strand) noexcept
+template <typename Code, typename... Args>
+subscriber<Code, Args...>::subscriber(asio::strand& strand) noexcept
   : strand_(strand), stopped_(false)
 {
 }
 
-template <typename ErrorCode, typename... Args>
-subscriber<ErrorCode, Args...>::~subscriber() noexcept
+template <typename Code, typename... Args>
+subscriber<Code, Args...>::~subscriber() noexcept
 {
-    // Cannot clear queue on destruct as required parameterization is unknown.
+    // Destruction may not occur on the strand.
     BC_ASSERT_MSG(queue_.empty(), "subscriber is not cleared");
 }
 
-template <typename ErrorCode, typename... Args>
-void subscriber<ErrorCode, Args...>::subscribe(handler&& handler) noexcept
+template <typename Code, typename... Args>
+void subscriber<Code, Args...>::subscribe(handler&& handler) noexcept
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -49,8 +48,8 @@ void subscriber<ErrorCode, Args...>::subscribe(handler&& handler) noexcept
         queue_.push_back(std::move(handler));
 }
 
-template <typename ErrorCode, typename... Args>
-void subscriber<ErrorCode, Args...>::notify(const ErrorCode& ec,
+template <typename Code, typename... Args>
+void subscriber<Code, Args...>::notify(const Code& ec,
     const Args&... args) const noexcept
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -63,8 +62,8 @@ void subscriber<ErrorCode, Args...>::notify(const ErrorCode& ec,
         handler(ec, args...);
 }
 
-template <typename ErrorCode, typename... Args>
-void subscriber<ErrorCode, Args...>::stop(const ErrorCode& ec,
+template <typename Code, typename... Args>
+void subscriber<Code, Args...>::stop(const Code& ec,
     const Args&... args) noexcept
 {
     BC_ASSERT_MSG(ec, "subscriber stopped with success code");
@@ -78,8 +77,8 @@ void subscriber<ErrorCode, Args...>::stop(const ErrorCode& ec,
     queue_.clear();
 }
 
-template <typename ErrorCode, typename... Args>
-void subscriber<ErrorCode, Args...>::stop_default(const ErrorCode& ec) noexcept
+template <typename Code, typename... Args>
+void subscriber<Code, Args...>::stop_default(const Code& ec) noexcept
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

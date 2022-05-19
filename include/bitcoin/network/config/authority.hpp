@@ -39,56 +39,58 @@ class BCT_API authority
 public:
     typedef std::shared_ptr<authority> ptr;
 
-    authority();
+    authority() noexcept;
 
     /// Deserialize a IPv4 or IPv6 address-based hostname[:port].
     /// The port is optional and will be set to zero if not provided.
     /// The host can be in one of two forms:
     /// [2001:db8::2]:port or 1.2.240.1:port.
-    authority(const std::string& authority);
+    authority(const std::string& authority) noexcept (false);
 
-    authority(const messages::address_item& address);
-    authority(const messages::ip_address& ip, uint16_t port);
+    authority(const messages::address_item& address) noexcept;
+    authority(const messages::ip_address& ip, uint16_t port) noexcept;
 
     /// The host can be in one of three forms:
     /// [2001:db8::2] or 2001:db8::2 or 1.2.240.1
-    authority(const std::string& host, uint16_t port);
-    authority(const asio::address& ip, uint16_t port);
-    authority(const asio::endpoint& endpoint);
+    authority(const std::string& host, uint16_t port) noexcept (false);
+    authority(const asio::address& ip, uint16_t port) noexcept;
+    authority(const asio::endpoint& endpoint) noexcept;
 
     /// True if the port is non-zero.
-    operator bool() const;
+    operator bool() const noexcept;
 
     /// The ip address of the authority.
-    const asio::ipv6& ip() const;
+    const asio::ipv6& ip() const noexcept;
 
     /// The tcp port of the authority.
-    uint16_t port() const;
+    uint16_t port() const noexcept;
 
     /// The hostname of the authority as a string.
     /// The form of the return is determined by the type of address, either:
     /// 2001:db8::2 or 1.2.240.1
-    std::string to_hostname() const;
+    std::string to_hostname() const noexcept;
 
     /// The authority as a string.
     /// The form of the return is determined by the type of address.
     /// The port is optional and not included if zero-valued.
     /// The authority in one of two forms: [2001:db8::2]:port or 1.2.240.1:port
-    std::string to_string() const;
+    std::string to_string() const noexcept;
 
     /// The authority converted to a network messages address/ip_address.
-    messages::address_item to_address_item() const;
-    messages::ip_address to_ip_address() const;
+    messages::address_item to_address_item() const noexcept;
+    messages::ip_address to_ip_address() const noexcept;
 
-    bool operator==(const authority& other) const;
-    bool operator!=(const authority& other) const;
+    bool operator==(const authority& other) const noexcept;
+    bool operator!=(const authority& other) const noexcept;
 
     friend std::istream& operator>>(std::istream& input,
-        authority& argument);
+        authority& argument) noexcept(false);
     friend std::ostream& operator<<(std::ostream& output,
-        const authority& argument);
+        const authority& argument) noexcept;
 
 private:
+    // These are not thread safe.
+
     asio::ipv6 ip_;
     uint16_t port_;
 };

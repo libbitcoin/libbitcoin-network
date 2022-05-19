@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -31,7 +31,7 @@ namespace network {
 
 // TODO: investigate boost::threadpool.
 
-/// Not thread safe.
+/// Not thread safe, non-virtual.
 /// A collection of threads that share an asio I/O context (service).
 class BCT_API threadpool
   : system::noncopyable
@@ -39,22 +39,22 @@ class BCT_API threadpool
 public:
     /// Threadpool constructor, initializes the specified number of threads.
     threadpool(size_t number_threads=one,
-        thread_priority priority=thread_priority::normal);
+        thread_priority priority=thread_priority::normal) noexcept;
 
     /// Stop and join threads.
-    virtual ~threadpool();
+    ~threadpool() noexcept;
 
     /// Destroy the work keep-alive. Safe to call from any thread.
     /// Allows threads to join when all outstanding work is complete.
-    void stop();
+    void stop() noexcept;
 
     /// Block until all threads in the pool terminate.
     /// Safe to call from any thread not in the threadpool.
     /// Returns false if called from within threadpool (would deadlock).
-    bool join();
+    bool join() noexcept;
 
     /// Non-const underlying boost::io_service object (thread safe).
-    asio::io_context& service();
+    asio::io_context& service() noexcept;
 
 private:
     // This is thread safe.

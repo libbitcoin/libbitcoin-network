@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -44,7 +44,7 @@ track<Shared>::track()
 }
 
 template <class Shared>
-track<Shared>::~track()
+track<Shared>::~track() noexcept
 {
 #ifndef NDEBUG
     LOG_DEBUG(LOG_SYSTEM) << "~" << typeid(Shared).name()

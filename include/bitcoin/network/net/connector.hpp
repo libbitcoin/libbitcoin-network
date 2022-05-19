@@ -66,12 +66,12 @@ public:
     /// May return operation_canceled, channel_timeout, success or error code.
     /// The channel paramter is nullptr unless success is returned.
 
-    /// Try to connect to the endpoint, starts timer.
-    virtual void connect(const config::endpoint& endpoint,
-        connect_handler&& handler);
-
     /// Try to connect to the authority, starts timer.
     virtual void connect(const config::authority& authority,
+        connect_handler&& handler);
+
+    /// Try to connect to the endpoint, starts timer.
+    virtual void connect(const config::endpoint& endpoint,
         connect_handler&& handler);
 
     /// Try to connect to host:port, starts timer.

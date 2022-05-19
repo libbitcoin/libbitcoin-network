@@ -34,24 +34,24 @@ using namespace std::placeholders;
 
 BC_DEBUG_ONLY(static const time_point epoch{};)
 
-deadline::deadline(asio::strand& strand, const duration& timeout)
+deadline::deadline(asio::strand& strand, const duration& timeout) noexcept
   : duration_(timeout), timer_(strand), track<deadline>()
 {
 }
 
-deadline::~deadline()
+deadline::~deadline() noexcept
 {
     BC_ASSERT_MSG(timer_.expiry() == epoch, "");
 }
 
 // Start cannot be called concurrently with stop, strand restarts.
-void deadline::start(handler&& handle)
+void deadline::start(handler&& handle) noexcept
 {
     start(std::move(handle), duration_);
 }
 
 // Start cannot be called concurrently with stop, strand restarts.
-void deadline::start(handler&& handle, const duration& timeout)
+void deadline::start(handler&& handle, const duration& timeout) noexcept
 {
     // Handling cancel error code creates exception safety.
     error::boost_code ignore;
@@ -65,7 +65,7 @@ void deadline::start(handler&& handle, const duration& timeout)
 }
 
 // Cancellation calls handle_timer with asio::error::operation_aborted.
-void deadline::stop()
+void deadline::stop() noexcept
 {
     // Handling cancel error code creates exception safety.
     error::boost_code ignore;
@@ -75,7 +75,7 @@ void deadline::stop()
 
 // Callback always (cancel or otherwise) fired with the normalized error code.
 void deadline::handle_timer(const error::boost_code& ec,
-    const handler& handle)
+    const handler& handle) noexcept
 {
     BC_DEBUG_ONLY(timer_.expires_at(epoch);)
     handle(error::asio_to_error_code(ec));

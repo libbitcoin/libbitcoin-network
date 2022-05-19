@@ -72,14 +72,14 @@ void connector::stop()
 // Methods.
 // ---------------------------------------------------------------------------
 
-void connector::connect(const endpoint& endpoint, connect_handler&& handler)
-{
-    connect(endpoint.host(), endpoint.port(), std::move(handler));
-}
-
 void connector::connect(const authority& authority, connect_handler&& handler)
 {
     connect(authority.to_hostname(), authority.port(), std::move(handler));
+}
+
+void connector::connect(const endpoint& endpoint, connect_handler&& handler)
+{
+    connect(endpoint.host(), endpoint.port(), std::move(handler));
 }
 
 void connector::connect(const std::string& hostname, uint16_t port,

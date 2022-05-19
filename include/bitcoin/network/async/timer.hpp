@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -26,16 +26,18 @@
 namespace libbitcoin {
 namespace network {
 
-// From: github.com/picanumber/bureaucrat/blob/master/time_lapse.h
+// Based on: github.com/picanumber/bureaucrat/blob/master/time_lapse.h
 // boost::timer::auto_cpu_timer requires the boost timer lib dependency.
 
+/// Thread safe, non-virtual.
 /// Class to measure the execution time of a callable.
-template <typename Time=milliseconds, class Clock=steady_clock>
-struct timer
+template <typename Time = milliseconds, class Clock = steady_clock>
+class timer
 {
+public:
     /// Returns the duration (in chrono's type system) of the elapsed time.
     template <typename Function, typename... Args>
-    static Time duration(Function func, Args&&... args)
+    static Time duration(const Function& func, Args&&... args) noexcept
     {
         auto start = Clock::now();
         func(std::forward<Args>(args)...);
@@ -44,7 +46,8 @@ struct timer
 
     /// Returns the quantity (count) of the elapsed time as TimeT units.
     template <typename Function, typename ...Args>
-    static typename Time::rep execution(Function func, Args&&... args)
+    static typename Time::rep execution(const Function& func,
+        Args&&... args) noexcept
     {
         return duration(func, std::forward<Args>(args)...).count();
     }

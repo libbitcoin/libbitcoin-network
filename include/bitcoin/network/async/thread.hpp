@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -54,11 +54,11 @@ enum class thread_priority
 // stackoverflow.com/q/22448022/1172329
 typedef boost::thread thread;
 
-BCT_API void set_priority(thread_priority priority);
-BCT_API thread_priority priority(bool priority);
-BCT_API size_t thread_default(size_t configured);
-BCT_API size_t thread_ceiling(size_t configured);
-BCT_API size_t thread_floor(size_t configured);
+BCT_API void set_priority(thread_priority priority) noexcept;
+BCT_API thread_priority priority(bool priority) noexcept;
+BCT_API size_t thread_default(size_t configured) noexcept;
+BCT_API size_t thread_ceiling(size_t configured) noexcept;
+BCT_API size_t thread_floor(size_t configured) noexcept;
 
 } // namespace network
 } // namespace libbitcoin

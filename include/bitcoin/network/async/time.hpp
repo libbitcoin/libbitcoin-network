@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -42,13 +42,13 @@ typedef steady_clock::time_point time_point;
 typedef std::chrono::system_clock wall_clock;
 
 /// Current zulu (utc) time using the wall clock.
-time_t zulu_time();
+time_t zulu_time() noexcept;
 
 /// Current local time using the wall clock, false and empty string on failure.
-bool local_time(tm& out_local, time_t zulu);
+bool local_time(tm& out_local, time_t zulu) noexcept;
 
 /// Standard date-time string, e.g. Sun Oct 17 04:41:13 2010, locale dependent.
-std::string local_time();
+std::string local_time() noexcept;
 
 } // namespace network
 } // namespace libbitcoin

@@ -44,7 +44,7 @@ namespace libbitcoin {
 namespace network {
 
 // Privately map the class enum thread priority value to an integer.
-static int get_priority(thread_priority priority)
+static int get_priority(thread_priority priority) noexcept
 {
     switch (priority)
     {
@@ -61,7 +61,7 @@ static int get_priority(thread_priority priority)
 }
 
 // Set the thread priority (or process if thread priority is not available).
-void set_priority(thread_priority priority)
+void set_priority(thread_priority priority) noexcept
 {
     const auto prioritization = get_priority(priority);
 
@@ -74,7 +74,7 @@ void set_priority(thread_priority priority)
 #endif
 }
 
-thread_priority priority(bool priority)
+thread_priority priority(bool priority) noexcept
 {
     return priority ? thread_priority::high : thread_priority::normal;
 }
@@ -87,7 +87,7 @@ inline size_t cores()
 
 // This is used to default the number of threads to the number of cores and to
 // ensure that no less than one thread is configured.
-size_t thread_default(size_t configured)
+size_t thread_default(size_t configured) noexcept
 {
     if (is_zero(configured))
         return cores();
@@ -99,7 +99,7 @@ size_t thread_default(size_t configured)
 // This is used to ensure that threads does not exceed cores in the case of
 // parallel work distribution, while allowing the user to reduce parallelism so
 // as not to monopolize the processor. It also makes optimal config easy (0).
-size_t thread_ceiling(size_t configured)
+size_t thread_ceiling(size_t configured) noexcept
 {
     if (is_zero(configured))
         return cores();
@@ -111,7 +111,7 @@ size_t thread_ceiling(size_t configured)
 // This is used to ensure that at least a minimum required number of threads is
 // allocated, so that thread starvation does not occur. It also allows the user
 // to increase threads above minimum. It always ensures at least core threads.
-size_t thread_floor(size_t configured)
+size_t thread_floor(size_t configured) noexcept
 {
     if (is_zero(configured))
         return cores();
