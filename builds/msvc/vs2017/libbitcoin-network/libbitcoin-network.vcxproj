@@ -233,6 +233,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\track.ipp" />
     <None Include="packages.config" />

@@ -541,6 +541,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp">
+      <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>

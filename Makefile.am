@@ -229,6 +229,7 @@ include_bitcoin_network_config_HEADERS = \
 
 include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \
+    include/bitcoin/network/impl/async/enable_shared_from_base.ipp \
     include/bitcoin/network/impl/async/subscriber.ipp \
     include/bitcoin/network/impl/async/track.ipp
 
