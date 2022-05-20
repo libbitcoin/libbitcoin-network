@@ -35,7 +35,7 @@ enum service: uint64_t
     // The node is capable of serving the block chain (full node).
     node_network = system::bit_right<uint32_t>(0),
 
-    // Requires version.value >= level::bip64 (BIP64 is draft only).
+    // Requires version.value >= level::bip64 (BIP64 is obsolete).
     // The node is capable of responding to the getutxo protocol request.
     node_utxo = system::bit_right<uint32_t>(1),
 
@@ -47,9 +47,13 @@ enum service: uint64_t
     // The node is capable of responding to witness inventory requests.
     node_witness = system::bit_right<uint32_t>(3),
 
+    // Independent of network protocol level.
     // The node is capable of responding to getcfilters, getcfheaders,
     // and getcfcheckpt protocol requests.
     node_client_filters = system::bit_right<uint32_t>(6),
+
+    // Serves only the last 288 (2 day) blocks.
+    node_xnetwork_limited = system::bit_right<uint32_t>(10),
 
     // The minimum supported capability.
     minimum_services = node_none,

@@ -64,7 +64,8 @@ namespace messages {
 // notfound     v2      70001           added at the same version as bip37
 // version      v2      70001           added (optional) relay field in bip37
 // ----------------------------------------------------------------------------
-// mempool      v3      70002           allow multiple inv messages in reply
+// mempool      v3      70002           allow multiple inv messages in reply:
+//                                      undocumented (satoshi v0.9.0)
 // sendheaders  v3      70012   BIP130  "headers first" added in v4
 // feefilter    v3      70013   BIP133
 // blocktxn     v4      70014   BIP152
