@@ -36,7 +36,8 @@ const identifier bloom_filter_add::id = identifier::bloom_filter_add;
 const uint32_t bloom_filter_add::version_minimum = level::bip37;
 const uint32_t bloom_filter_add::version_maximum = level::maximum_protocol;
 
-bloom_filter_add bloom_filter_add::deserialize(uint32_t version, reader& source)
+bloom_filter_add bloom_filter_add::deserialize(uint32_t version,
+    reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -44,7 +45,8 @@ bloom_filter_add bloom_filter_add::deserialize(uint32_t version, reader& source)
     return { source.read_bytes(source.read_size(max_bloom_filter_add)) };
 }
 
-void bloom_filter_add::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
+void bloom_filter_add::serialize(uint32_t BC_DEBUG_ONLY(version),
+    writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -55,7 +57,7 @@ void bloom_filter_add::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) 
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t bloom_filter_add::size(uint32_t) const
+size_t bloom_filter_add::size(uint32_t) const noexcept
 {
     return variable_size(data.size()) + data.size();
 }

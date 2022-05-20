@@ -38,12 +38,12 @@ const uint32_t get_compact_transactions::version_minimum = level::bip152;
 const uint32_t get_compact_transactions::version_maximum = level::maximum_protocol;
 
 get_compact_transactions get_compact_transactions::deserialize(uint32_t version,
-    reader& source)
+    reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    const auto read_indexes = [](reader& source)
+    const auto read_indexes = [](reader& source) noexcept
     {
         std::vector<uint64_t> indexes;
         indexes.reserve(source.read_size(chain::max_block_size));
@@ -62,7 +62,7 @@ get_compact_transactions get_compact_transactions::deserialize(uint32_t version,
 }
 
 void get_compact_transactions::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& sink) const
+    writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -76,9 +76,9 @@ void get_compact_transactions::serialize(uint32_t BC_DEBUG_ONLY(version),
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t get_compact_transactions::size(uint32_t) const
+size_t get_compact_transactions::size(uint32_t) const noexcept
 {
-    const auto values = [](size_t total, uint64_t output)
+    const auto values = [](size_t total, uint64_t output) noexcept
     {
         return total + variable_size(output);
     };

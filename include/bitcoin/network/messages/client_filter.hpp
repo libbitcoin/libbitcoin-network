@@ -43,9 +43,10 @@ struct BCT_API client_filter
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static client_filter deserialize(uint32_t version, system::reader& source);
-    void serialize(uint32_t version, system::writer& sink) const;
-    size_t size(uint32_t version) const;
+    static client_filter deserialize(uint32_t version,
+        system::reader& source) noexcept;
+    void serialize(uint32_t version, system::writer& sink) const noexcept;
+    size_t size(uint32_t version) const noexcept;
 
     uint8_t filter_type;
     system::hash_digest block_hash;

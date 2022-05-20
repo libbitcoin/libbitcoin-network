@@ -41,12 +41,12 @@ const uint32_t client_filter_headers::version_maximum = level::maximum_protocol;
 
 // static
 client_filter_headers client_filter_headers::deserialize(uint32_t version,
-    reader& source)
+    reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    const auto read_filter_hashes = [](reader& source)
+    const auto read_filter_hashes = [](reader& source) noexcept
     {
         hash_list filter_hashes;
         filter_hashes.reserve(source.read_size(chain::max_block_size));
@@ -67,7 +67,7 @@ client_filter_headers client_filter_headers::deserialize(uint32_t version,
 }
 
 void client_filter_headers::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& sink) const
+    writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -83,7 +83,7 @@ void client_filter_headers::serialize(uint32_t BC_DEBUG_ONLY(version),
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t client_filter_headers::size(uint32_t) const
+size_t client_filter_headers::size(uint32_t) const noexcept
 {
     return sizeof(uint8_t)
         + hash_size

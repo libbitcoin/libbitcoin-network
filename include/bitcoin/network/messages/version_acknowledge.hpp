@@ -41,9 +41,10 @@ struct BCT_API version_acknowledge
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static size_t size(uint32_t version);
-    static version_acknowledge deserialize(uint32_t version, system::reader& source);
-    void serialize(uint32_t version, system::writer& sink) const;
+    static size_t size(uint32_t version) noexcept;
+    static version_acknowledge deserialize(uint32_t version,
+        system::reader& source) noexcept;
+    void serialize(uint32_t version, system::writer& sink) const noexcept;
 };
 
 } // namespace messages

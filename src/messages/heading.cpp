@@ -75,7 +75,7 @@ using namespace bc::system;
 // The maximum block size inclusive of witness is greater than 1,800,003, so
 // with witness-enabled block size (4,000,000).
 // This calculation should be revisited given any protocol change.
-size_t heading::maximum_payload_size(uint32_t, bool witness)
+size_t heading::maximum_payload_size(uint32_t, bool witness) noexcept
 {
     static constexpr size_t vector = sizeof(uint32_t) + hash_size;
     static constexpr size_t maximum = 3u + vector * max_inventory;
@@ -84,7 +84,7 @@ size_t heading::maximum_payload_size(uint32_t, bool witness)
 
 // static
 heading heading::factory(uint32_t magic, const std::string& command,
-    const data_slice& payload)
+    const data_slice& payload) noexcept
 {
     const auto size = payload.size();
     const auto payload_size = size > max_uint32 ? zero : size;
@@ -100,7 +100,7 @@ heading heading::factory(uint32_t magic, const std::string& command,
 }
 
 // static
-heading heading::deserialize(reader& source)
+heading heading::deserialize(reader& source) noexcept
 {
     return
     {
@@ -111,7 +111,7 @@ heading heading::deserialize(reader& source)
     };
 }
 
-void heading::serialize(writer& sink) const
+void heading::serialize(writer& sink) const noexcept
 {
     sink.write_4_bytes_little_endian(magic);
     sink.write_string_buffer(command, command_size);
@@ -121,7 +121,7 @@ void heading::serialize(writer& sink) const
 
 #define COMMAND_ID(name) { name::command, name::id }
 
-identifier heading::id() const
+identifier heading::id() const noexcept
 {
     // Internal to function avoids static initialization race.
     static const std::map<std::string, identifier> identifiers
@@ -167,7 +167,7 @@ identifier heading::id() const
 
 #undef COMMAND_ID
 
-bool heading::verify_checksum(const data_slice& body) const
+bool heading::verify_checksum(const data_slice& body) const noexcept
 {
     return network_checksum(body) == checksum;
 }

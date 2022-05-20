@@ -42,12 +42,13 @@ struct BCT_API get_data
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static get_data deserialize(uint32_t version, system::reader& source);
-    ////void serialize(uint32_t version, system::writer& sink) const;
-    ////size_t size(uint32_t version) const;
+    static get_data deserialize(uint32_t version,
+        system::reader& source) noexcept;
+    ////void serialize(uint32_t version, system::writer& sink) const noexcept;
+    ////size_t size(uint32_t version) const noexcept;
 
     /// Convert message types to witness types.
-    void to_witness();
+    void to_witness() noexcept;
 };
 
 } // namespace messages

@@ -42,12 +42,13 @@ struct BCT_API get_blocks
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static size_t locator_size(size_t top);
-    static indexes locator_heights(size_t top);
+    static size_t locator_size(size_t top) noexcept;
+    static indexes locator_heights(size_t top) noexcept;
 
-    static get_blocks deserialize(uint32_t version, system::reader& source);
-    void serialize(uint32_t version, system::writer& sink) const;
-    size_t size(uint32_t version) const;
+    static get_blocks deserialize(uint32_t version,
+        system::reader& source) noexcept;
+    void serialize(uint32_t version, system::writer& sink) const noexcept;
+    size_t size(uint32_t version) const noexcept;
 
     ////uint32_t protocol_version;
     system::hash_list start_hashes;

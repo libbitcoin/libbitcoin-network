@@ -42,13 +42,14 @@ struct BCT_API headers
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static headers deserialize(uint32_t version, system::reader& source);
-    void serialize(uint32_t version, system::writer& sink) const;
-    size_t size(uint32_t version) const;
+    static headers deserialize(uint32_t version,
+        system::reader& source) noexcept;
+    void serialize(uint32_t version, system::writer& sink) const noexcept;
+    size_t size(uint32_t version) const noexcept;
 
-    bool is_sequential() const;
-    system::hash_list to_hashes() const;
-    inventory_items to_inventory(inventory::type_id type) const;
+    bool is_sequential() const noexcept;
+    system::hash_list to_hashes() const noexcept;
+    inventory_items to_inventory(inventory::type_id type) const noexcept;
 
     system::chain::header_ptrs header_ptrs;
 };

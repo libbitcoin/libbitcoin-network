@@ -40,7 +40,7 @@ const uint32_t get_client_filter_checkpoint::version_minimum = level::bip157;
 const uint32_t get_client_filter_checkpoint::version_maximum = level::maximum_protocol;
 
 // static
-size_t get_client_filter_checkpoint::size(uint32_t)
+size_t get_client_filter_checkpoint::size(uint32_t) noexcept
 {
     return sizeof(uint8_t)
         + hash_size;
@@ -48,7 +48,7 @@ size_t get_client_filter_checkpoint::size(uint32_t)
 
 // static
 get_client_filter_checkpoint get_client_filter_checkpoint::deserialize(
-    uint32_t version, reader& source)
+    uint32_t version, reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -61,7 +61,7 @@ get_client_filter_checkpoint get_client_filter_checkpoint::deserialize(
 }
 
 void get_client_filter_checkpoint::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& sink) const
+    writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)

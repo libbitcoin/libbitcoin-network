@@ -43,10 +43,10 @@ struct BCT_API get_client_filter_checkpoint
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static size_t size(uint32_t version);
+    static size_t size(uint32_t version) noexcept;
     static get_client_filter_checkpoint deserialize(uint32_t version,
-        system::reader& source);
-    void serialize(uint32_t version, system::writer& sink) const;
+        system::reader& source) noexcept;
+    void serialize(uint32_t version, system::writer& sink) const noexcept;
 
     uint8_t filter_type;
     system::hash_digest stop_hash;

@@ -41,7 +41,7 @@ const uint32_t headers::version_maximum = level::maximum_protocol;
 constexpr uint8_t trail = 0x00;
 
 // static
-headers headers::deserialize(uint32_t version, reader& source)
+headers headers::deserialize(uint32_t version, reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -60,7 +60,8 @@ headers headers::deserialize(uint32_t version, reader& source)
     return { header_ptrs };
 }
 
-void headers::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
+void headers::serialize(uint32_t BC_DEBUG_ONLY(version),
+    writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -76,14 +77,14 @@ void headers::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
     BC_ASSERT(sink&& sink.get_position() - start == bytes);
 }
 
-size_t headers::size(uint32_t) const
+size_t headers::size(uint32_t) const noexcept
 {
     return variable_size(header_ptrs.size()) +
         (header_ptrs.size() * chain::header::serialized_size() + sizeof(trail));
 }
 
 // TODO: This would benefit from block hash store/return as pointer.
-bool headers::is_sequential() const
+bool headers::is_sequential() const noexcept
 {
     if (header_ptrs.empty())
         return true;
@@ -103,7 +104,7 @@ bool headers::is_sequential() const
 }
 
 // TODO: This would benefit from hash_list as list of pointers.
-hash_list headers::to_hashes() const
+hash_list headers::to_hashes() const noexcept
 {
     hash_list out;
     out.reserve(header_ptrs.size());
@@ -115,7 +116,7 @@ hash_list headers::to_hashes() const
 }
 
 // TODO: This would benefit from inventory_item hash pointers.
-inventory_items headers::to_inventory(inventory::type_id type) const
+inventory_items headers::to_inventory(inventory::type_id type) const noexcept
 {
     inventory_items out;
     out.reserve(header_ptrs.size());

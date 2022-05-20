@@ -37,7 +37,8 @@ const uint32_t block::version_minimum = level::minimum_protocol;
 const uint32_t block::version_maximum = level::maximum_protocol;
 
 // static
-block block::deserialize(uint32_t version, reader& source, bool witness)
+block block::deserialize(uint32_t version, reader& source,
+    bool witness) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -46,7 +47,7 @@ block block::deserialize(uint32_t version, reader& source, bool witness)
 }
 
 void block::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
-    bool witness) const
+    bool witness) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -57,17 +58,17 @@ void block::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t block::size(uint32_t, bool witness) const
+size_t block::size(uint32_t, bool witness) const noexcept
 {
     return block_ptr ? block_ptr->serialized_size(witness) : zero;
 }
-////
+
 ////static void foo()
 ////{
 ////    system::chain::block::ptr alpha;
 ////    auto beta = std::move(alpha);
 ////}
-////
+
 ////static void bar()
 ////{
 ////    block alpha;

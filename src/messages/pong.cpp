@@ -37,13 +37,13 @@ const uint32_t pong::version_minimum = level::bip31;
 const uint32_t pong::version_maximum = level::maximum_protocol;
 
 // static
-size_t pong::size(uint32_t)
+size_t pong::size(uint32_t) noexcept
 {
     return sizeof(uint64_t);
 }
 
 // static
-pong pong::deserialize(uint32_t version, reader& source)
+pong pong::deserialize(uint32_t version, reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -51,7 +51,8 @@ pong pong::deserialize(uint32_t version, reader& source)
     return { source.read_8_bytes_little_endian() };
 }
 
-void pong::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
+void pong::serialize(uint32_t BC_DEBUG_ONLY(version),
+    writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)

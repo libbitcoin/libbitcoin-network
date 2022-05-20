@@ -40,9 +40,10 @@ struct BCT_API send_headers
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static size_t size(uint32_t version);
-    static send_headers deserialize(uint32_t version, system::reader& source);
-    void serialize(uint32_t version, system::writer& sink) const;
+    static size_t size(uint32_t version) noexcept;
+    static send_headers deserialize(uint32_t version,
+        system::reader& source) noexcept;
+    void serialize(uint32_t version, system::writer& sink) const noexcept;
 };
 
 } // namespace messages

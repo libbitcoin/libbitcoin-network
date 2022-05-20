@@ -40,12 +40,12 @@ const uint32_t compact_block::version_maximum = level::maximum_protocol;
 
 // static
 compact_block compact_block::deserialize(uint32_t version, reader& source,
-    bool witness)
+    bool witness) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    const auto read_short_ids = [](reader& source)
+    const auto read_short_ids = [](reader& source) noexcept
     {
         short_id_list short_ids;
         short_ids.reserve(source.read_size(chain::max_block_size));
@@ -56,7 +56,7 @@ compact_block compact_block::deserialize(uint32_t version, reader& source,
         return short_ids;
     };
 
-    const auto read_transactions = [=](reader& source)
+    const auto read_transactions = [=](reader& source) noexcept
     {
         compact_block_items txs;
         txs.reserve(source.read_size(chain::max_block_size));
@@ -78,7 +78,7 @@ compact_block compact_block::deserialize(uint32_t version, reader& source,
 }
 
 void compact_block::serialize(uint32_t version, writer& sink,
-    bool witness) const
+    bool witness) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -98,9 +98,10 @@ void compact_block::serialize(uint32_t version, writer& sink,
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t compact_block::size(uint32_t version, bool witness) const
+size_t compact_block::size(uint32_t version, bool witness) const noexcept
 {
-    const auto txs_sizes = [=](size_t total, const compact_block_item& tx)
+    const auto txs_sizes = [=](size_t total,
+        const compact_block_item& tx) noexcept
     {
         return total + tx.size(version, witness);
     };

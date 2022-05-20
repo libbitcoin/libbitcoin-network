@@ -41,10 +41,10 @@ struct BCT_API block
     static const uint32_t version_maximum;
 
     static block deserialize(uint32_t version, system::reader& source,
-        bool witness=true);
+        bool witness=true) noexcept;
     void serialize(uint32_t version, system::writer& sink,
-        bool witness=true) const;
-    size_t size(uint32_t version, bool witness) const;
+        bool witness=true) const noexcept;
+    size_t size(uint32_t version, bool witness) const noexcept;
 
     system::chain::block::ptr block_ptr;
 };

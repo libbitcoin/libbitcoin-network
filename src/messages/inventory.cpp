@@ -41,7 +41,7 @@ const uint32_t inventory::version_minimum = level::minimum_protocol;
 const uint32_t inventory::version_maximum = level::maximum_protocol;
 
 // static
-inventory inventory::factory(hash_list&& hashes, type_id type)
+inventory inventory::factory(hash_list&& hashes, type_id type) noexcept
 {
     static default_allocator<inventory_item> no_fill_allocator{};
 
@@ -49,7 +49,7 @@ inventory inventory::factory(hash_list&& hashes, type_id type)
     items.resize(hashes.size());
 
     std::transform(hashes.begin(), hashes.end(), items.begin(),
-        [=](hash_digest& hash)
+        [=](hash_digest& hash) noexcept
         {
             return inventory_item{ type, std::move(hash) };
         });
@@ -57,7 +57,7 @@ inventory inventory::factory(hash_list&& hashes, type_id type)
     return { items };
 }
 
-inventory inventory::factory(const hash_list& hashes, type_id type)
+inventory inventory::factory(const hash_list& hashes, type_id type) noexcept
 {
     static default_allocator<inventory_item> no_fill_allocator{};
 
@@ -65,7 +65,7 @@ inventory inventory::factory(const hash_list& hashes, type_id type)
     items.resize(hashes.size());
 
     std::transform(hashes.begin(), hashes.end(), items.begin(),
-        [=](const hash_digest& hash)
+        [=](const hash_digest& hash) noexcept
         {
             return inventory_item{ type, hash };
         });
@@ -73,7 +73,7 @@ inventory inventory::factory(const hash_list& hashes, type_id type)
     return { items };
 }
 
-inventory inventory::deserialize(uint32_t version, reader& source)
+inventory inventory::deserialize(uint32_t version, reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -87,7 +87,7 @@ inventory inventory::deserialize(uint32_t version, reader& source)
     return { items };
 }
 
-void inventory::serialize(uint32_t version, writer& sink) const
+void inventory::serialize(uint32_t version, writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -100,13 +100,13 @@ void inventory::serialize(uint32_t version, writer& sink) const
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t inventory::size(uint32_t version) const
+size_t inventory::size(uint32_t version) const noexcept
 {
     return variable_size(items.size()) +
         (items.size() * inventory_item::size(version));
 }
 
-inventory_items inventory::filter(type_id type) const
+inventory_items inventory::filter(type_id type) const noexcept
 {
     inventory_items out;
     out.reserve(count(type));
@@ -118,7 +118,7 @@ inventory_items inventory::filter(type_id type) const
     return out;
 }
 
-hash_list inventory::to_hashes(type_id type) const
+hash_list inventory::to_hashes(type_id type) const noexcept
 {
     hash_list out;
     out.reserve(count(type));
@@ -130,7 +130,7 @@ hash_list inventory::to_hashes(type_id type) const
     return out;
 }
 
-size_t inventory::count(type_id type) const
+size_t inventory::count(type_id type) const noexcept
 {
     const auto is_type = [type](const inventory_item& item)
     {

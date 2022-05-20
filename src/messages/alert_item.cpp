@@ -48,9 +48,9 @@ const ec_uncompressed alert_item::satoshi_public_key
     }
 };
 
-alert_item alert_item::deserialize(uint32_t, reader& source)
+alert_item alert_item::deserialize(uint32_t, reader& source) noexcept
 {
-    const auto read_cans = [](reader& source)
+    const auto read_cans = [](reader& source) noexcept
     {
         cancels cans;
         cans.reserve(source.read_size(max_messages));
@@ -61,7 +61,7 @@ alert_item alert_item::deserialize(uint32_t, reader& source)
         return cans;
     };
 
-    const auto read_subs = [](reader& source)
+    const auto read_subs = [](reader& source) noexcept
     {
         sub_versions subs;
         subs.reserve(source.read_size(max_messages));
@@ -90,7 +90,8 @@ alert_item alert_item::deserialize(uint32_t, reader& source)
     };
 }
 
-void alert_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
+void alert_item::serialize(uint32_t BC_DEBUG_ONLY(version),
+    writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -120,9 +121,9 @@ void alert_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t alert_item::size(uint32_t) const
+size_t alert_item::size(uint32_t) const noexcept
 {
-    const auto subs = [](size_t total, const std::string& sub)
+    const auto subs = [](size_t total, const std::string& sub) noexcept
     {
         return total + variable_size(sub.length()) + sub.length();
     };

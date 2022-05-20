@@ -40,7 +40,8 @@ const uint32_t client_filter::version_minimum = level::bip157;
 const uint32_t client_filter::version_maximum = level::maximum_protocol;
 
 // static
-client_filter client_filter::deserialize(uint32_t version, reader& source)
+client_filter client_filter::deserialize(uint32_t version,
+    reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -53,7 +54,8 @@ client_filter client_filter::deserialize(uint32_t version, reader& source)
     };
 }
 
-void client_filter::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
+void client_filter::serialize(uint32_t BC_DEBUG_ONLY(version),
+    writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -66,7 +68,7 @@ void client_filter::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) con
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t client_filter::size(uint32_t) const
+size_t client_filter::size(uint32_t) const noexcept
 {
     return sizeof(uint8_t)
         + hash_size

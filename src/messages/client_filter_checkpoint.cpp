@@ -41,12 +41,12 @@ const uint32_t client_filter_checkpoint::version_maximum = level::maximum_protoc
 
 // static
 client_filter_checkpoint client_filter_checkpoint::deserialize(
-    uint32_t version, reader& source)
+    uint32_t version, reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    const auto read_filter_headers = [](reader& source)
+    const auto read_filter_headers = [](reader& source) noexcept
     {
         hash_list filter_headers;
         filter_headers.reserve(source.read_size(chain::max_block_size));
@@ -65,7 +65,7 @@ client_filter_checkpoint client_filter_checkpoint::deserialize(
     };
 }
 
-void client_filter_checkpoint::serialize(uint32_t, writer& sink) const
+void client_filter_checkpoint::serialize(uint32_t, writer& sink) const noexcept
 {
     sink.write_byte(filter_type);
     sink.write_bytes(stop_hash);
@@ -75,7 +75,7 @@ void client_filter_checkpoint::serialize(uint32_t, writer& sink) const
         sink.write_bytes(header);
 }
 
-size_t client_filter_checkpoint::size(uint32_t) const
+size_t client_filter_checkpoint::size(uint32_t) const noexcept
 {
     return sizeof(uint8_t)
         + hash_size

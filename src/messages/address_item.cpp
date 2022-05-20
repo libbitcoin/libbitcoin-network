@@ -37,7 +37,7 @@ constexpr auto ip_address_size = std::tuple_size<ip_address>::value;
 
 // bytereader interface cannot expose templated method, so do here.
 template <size_t Size>
-data_array<Size> read_forward(reader& source)
+data_array<Size> read_forward(reader& source) noexcept
 {
     data_array<Size> out{};
     source.read_bytes(out.data(), Size);
@@ -45,7 +45,7 @@ data_array<Size> read_forward(reader& source)
 }
 
 // static
-size_t address_item::size(uint32_t, bool with_timestamp)
+size_t address_item::size(uint32_t, bool with_timestamp) noexcept
 {
     return (with_timestamp ? sizeof(uint32_t) : zero)
         + sizeof(uint64_t)
@@ -55,7 +55,7 @@ size_t address_item::size(uint32_t, bool with_timestamp)
 
 // static
 address_item address_item::deserialize(uint32_t, reader& source,
-    bool with_timestamp)
+    bool with_timestamp) noexcept
 {
     return
     {
@@ -67,7 +67,7 @@ address_item address_item::deserialize(uint32_t, reader& source,
 }
 
 void address_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
-    bool with_timestamp) const
+    bool with_timestamp) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version, with_timestamp);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)

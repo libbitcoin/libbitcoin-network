@@ -37,9 +37,9 @@ const identifier merkle_block::id = identifier::merkle_block;
 const uint32_t merkle_block::version_minimum = level::bip37;
 const uint32_t merkle_block::version_maximum = level::maximum_protocol;
 
-merkle_block merkle_block::deserialize(uint32_t, reader& source)
+merkle_block merkle_block::deserialize(uint32_t, reader& source) noexcept
 {
-    const auto read_hashes = [](reader& source)
+    const auto read_hashes = [](reader& source) noexcept
     {
         hash_list hashes;
         hashes.reserve(source.read_size(chain::max_block_size));
@@ -59,7 +59,8 @@ merkle_block merkle_block::deserialize(uint32_t, reader& source)
     };
 }
 
-void merkle_block::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
+void merkle_block::serialize(uint32_t BC_DEBUG_ONLY(version),
+    writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -79,7 +80,7 @@ void merkle_block::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) cons
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t merkle_block::size(uint32_t) const
+size_t merkle_block::size(uint32_t) const noexcept
 {
     return header ? header->serialized_size() : zero
         + sizeof(uint32_t)

@@ -37,11 +37,11 @@ struct BCT_API address_item
 {
     typedef std::shared_ptr<const address_item> ptr;
 
-    static size_t size(uint32_t version, bool with_timestamp);
+    static size_t size(uint32_t version, bool with_timestamp) noexcept;
     static address_item deserialize(uint32_t version, system::reader& source,
-        bool with_timestamp);
+        bool with_timestamp) noexcept;
     void serialize(uint32_t version, system::writer& sink,
-        bool with_timestamp) const;
+        bool with_timestamp) const noexcept;
 
     uint32_t timestamp;
     uint64_t services;

@@ -72,9 +72,10 @@ struct BCT_API reject
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static reject deserialize(uint32_t version, system::reader& source);
-    void serialize(uint32_t version, system::writer& sink) const;
-    size_t size(uint32_t version) const;
+    static reject deserialize(uint32_t version,
+        system::reader& source) noexcept;
+    void serialize(uint32_t version, system::writer& sink) const noexcept;
+    size_t size(uint32_t version) const noexcept;
 
     std::string message;
     reason_code code;
@@ -82,9 +83,9 @@ struct BCT_API reject
     system::hash_digest hash;
 
 private:
-    static bool is_chain(const std::string& message);
-    static uint8_t reason_to_byte(reason_code value);
-    static reason_code byte_to_reason(uint8_t value);
+    static bool is_chain(const std::string& message) noexcept;
+    static uint8_t reason_to_byte(reason_code value) noexcept;
+    static reason_code byte_to_reason(uint8_t value) noexcept;
 };
 
 } // namespace messages

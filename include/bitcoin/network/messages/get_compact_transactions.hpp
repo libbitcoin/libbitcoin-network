@@ -42,9 +42,9 @@ struct BCT_API get_compact_transactions
     static const uint32_t version_maximum;
 
     static get_compact_transactions deserialize(uint32_t version,
-        system::reader& source);
-    void serialize(uint32_t version, system::writer& sink) const;
-    size_t size(uint32_t version) const;
+        system::reader& source) noexcept;
+    void serialize(uint32_t version, system::writer& sink) const noexcept;
+    size_t size(uint32_t version) const noexcept;
 
     system::hash_digest block_hash;
     std::vector<uint64_t> indexes;

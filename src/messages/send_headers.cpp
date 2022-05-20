@@ -37,12 +37,13 @@ const uint32_t send_headers::version_minimum = level::bip130;
 const uint32_t send_headers::version_maximum = level::maximum_protocol;
 
 // static
-size_t send_headers::size(uint32_t)
+size_t send_headers::size(uint32_t) noexcept
 {
     return zero;
 }
 
-send_headers send_headers::deserialize(uint32_t version, reader& source)
+send_headers send_headers::deserialize(uint32_t version,
+    reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -51,7 +52,7 @@ send_headers send_headers::deserialize(uint32_t version, reader& source)
 }
 
 void send_headers::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& BC_DEBUG_ONLY(sink)) const
+    writer& BC_DEBUG_ONLY(sink)) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)

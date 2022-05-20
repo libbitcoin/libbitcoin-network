@@ -37,14 +37,15 @@ const uint32_t send_compact::version_minimum = level::bip152;
 const uint32_t send_compact::version_maximum = level::maximum_protocol;
 
 // static
-size_t send_compact::size(uint32_t)
+size_t send_compact::size(uint32_t) noexcept
 {
     return sizeof(uint8_t)
         + sizeof(uint64_t);
 }
 
 // static
-send_compact send_compact::deserialize(uint32_t version, reader& source)
+send_compact send_compact::deserialize(uint32_t version,
+    reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -63,7 +64,8 @@ send_compact send_compact::deserialize(uint32_t version, reader& source)
     return { to_bool(mode), protocol };
 }
 
-void send_compact::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink) const
+void send_compact::serialize(uint32_t BC_DEBUG_ONLY(version),
+    writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)

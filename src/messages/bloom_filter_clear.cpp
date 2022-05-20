@@ -37,13 +37,14 @@ const uint32_t bloom_filter_clear::version_minimum = level::bip37;
 const uint32_t bloom_filter_clear::version_maximum = level::maximum_protocol;
 
 // static
-size_t bloom_filter_clear::size(uint32_t)
+size_t bloom_filter_clear::size(uint32_t) noexcept
 {
     return zero;
 }
 
 // static
-bloom_filter_clear bloom_filter_clear::deserialize(uint32_t version, reader& source)
+bloom_filter_clear bloom_filter_clear::deserialize(uint32_t version,
+    reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -52,7 +53,7 @@ bloom_filter_clear bloom_filter_clear::deserialize(uint32_t version, reader& sou
 }
 
 void bloom_filter_clear::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& BC_DEBUG_ONLY(sink)) const
+    writer& BC_DEBUG_ONLY(sink)) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)

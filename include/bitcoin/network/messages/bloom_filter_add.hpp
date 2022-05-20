@@ -41,9 +41,9 @@ struct BCT_API bloom_filter_add
     static const uint32_t version_maximum;
 
     static bloom_filter_add deserialize(uint32_t version,
-        system::reader& source);
-    void serialize(uint32_t version, system::writer& sink) const;
-    size_t size(uint32_t version) const;
+        system::reader& source) noexcept;
+    void serialize(uint32_t version, system::writer& sink) const noexcept;
+    size_t size(uint32_t version) const noexcept;
 
     system::data_chunk data;
 };

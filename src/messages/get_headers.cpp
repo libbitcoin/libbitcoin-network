@@ -39,7 +39,7 @@ const uint32_t get_headers::version_maximum = level::maximum_protocol;
 // static
 // Reimplements base class read to prevent a list move operation as well
 // as the need to implement default, base move, and base copy constructors.
-get_headers get_headers::deserialize(uint32_t version, reader& source)
+get_headers get_headers::deserialize(uint32_t version, reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();

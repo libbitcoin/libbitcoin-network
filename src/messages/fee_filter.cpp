@@ -37,13 +37,13 @@ const uint32_t fee_filter::version_minimum = level::bip133;
 const uint32_t fee_filter::version_maximum = level::maximum_protocol;
 
 // static
-size_t fee_filter::size(uint32_t)
+size_t fee_filter::size(uint32_t) noexcept
 {
     return sizeof(uint64_t);
 }
 
 // static
-fee_filter fee_filter::deserialize(uint32_t version, reader& source)
+fee_filter fee_filter::deserialize(uint32_t version, reader& source) noexcept
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -51,7 +51,7 @@ fee_filter fee_filter::deserialize(uint32_t version, reader& source)
     return { source.read_8_bytes_little_endian() };
 }
 
-void fee_filter::serialize(uint32_t, writer& sink) const
+void fee_filter::serialize(uint32_t, writer& sink) const noexcept
 {
     sink.write_8_bytes_little_endian(minimum_fee);
 }

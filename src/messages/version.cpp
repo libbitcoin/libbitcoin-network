@@ -45,7 +45,7 @@ constexpr auto with_timestamp = false;
 constexpr size_t max_user_agent = max_uint8;
 
 // static
-version version::deserialize(uint32_t version, reader& source)
+version version::deserialize(uint32_t version, reader& source) noexcept
 {
     const auto value = source.read_4_bytes_little_endian();
 
@@ -56,7 +56,7 @@ version version::deserialize(uint32_t version, reader& source)
     // This is a bug in the BIP37 design as it forces older peers to adapt to
     // the expansion of the version message, which is a clear compat break.
     // ************************************************************************
-    const auto read_relay = [=](reader& source)
+    const auto read_relay = [=](reader& source) noexcept
     {
         // ********************************************************************
         // PROTOCOL:
@@ -93,7 +93,7 @@ version version::deserialize(uint32_t version, reader& source)
     };
 }
 
-void version::serialize(uint32_t version, writer& sink) const
+void version::serialize(uint32_t version, writer& sink) const noexcept
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -105,7 +105,7 @@ void version::serialize(uint32_t version, writer& sink) const
     // This is a bug in the BIP37 design as it forces older peers to adapt to
     // the expansion of the version message, which is a clear compat break.
     // ************************************************************************
-    const auto write_relay = [=](writer& sink)
+    const auto write_relay = [=](writer& sink) noexcept
     {
         // Write 'relay' if and only if the 'value' field supports bip37.
         // This ignores the specified version, as it is not yet negotiated.
@@ -134,7 +134,7 @@ void version::serialize(uint32_t version, writer& sink) const
 
 // The 'version' parameter is presumed to be set to expected sender 'value'.
 // This is required as the 'value' is not available on this static sizing.
-size_t version::size(uint32_t version) const
+size_t version::size(uint32_t version) const noexcept
 {
     return sizeof(uint32_t)
         + sizeof(uint64_t)
