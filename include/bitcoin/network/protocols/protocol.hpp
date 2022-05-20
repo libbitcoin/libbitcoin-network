@@ -60,22 +60,22 @@ class BCT_API protocol
 public:
     /// The channel is stopping (called on strand by stop subscription).
     /// This must be called only from the channel strand (not thread safe).
-    virtual void stopping(const code& ec);
+    virtual void stopping(const code& ec) noexcept;
 
 protected:
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, const messages::address_items&)>
         fetches_handler;
 
-    protocol(const session& session, const channel::ptr& channel);
-    virtual ~protocol();
+    protocol(const session& session, const channel::ptr& channel) noexcept;
+    virtual ~protocol() noexcept;
 
     /// Macro helpers (use macros).
     /// -----------------------------------------------------------------------
 
     /// Bind a method in the base or derived class (use BIND#).
     template <class Protocol, typename Handler, typename... Args>
-    auto bind(Handler&& handler, Args&&... args) ->
+    auto bind(Handler&& handler, Args&&... args) noexcept ->
         decltype(BOUND_PROTOCOL_TYPE(handler, args)) const
     {
         return BOUND_PROTOCOL(handler, args);
@@ -83,7 +83,7 @@ protected:
 
     /// Send a message instance to peer (use SEND#).
     template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(Message&& message, Handler&& handler, Args&&... args)
+    void send(Message&& message, Handler&& handler, Args&&... args) noexcept
     {
         channel_->send<Message>(system::to_shared(std::forward<Message>(message)),
             BOUND_PROTOCOL(handler, args));
@@ -92,7 +92,7 @@ protected:
     /// Subscribe to channel messages by type (use SUBSCRIBE#).
     /// Handler is invoked with error::subscriber_stopped if already stopped.
     template <class Protocol, class Message, typename Handler, typename... Args>
-    void subscribe(Handler&& handler, Args&&... args)
+    void subscribe(Handler&& handler, Args&&... args) noexcept
     {
         BC_ASSERT_MSG(stranded(), "strand");
         channel_->subscribe<Message>(BOUND_PROTOCOL(handler, args));
@@ -102,40 +102,40 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Set protocol started state (strand required).
-    virtual void start();
+    virtual void start() noexcept;
 
     /// Get protocol started state (strand required).
-    virtual bool started() const;
+    virtual bool started() const noexcept;
 
     /// Channel is stopped or code set.
-    virtual bool stopped(const code& ec=error::success) const;
+    virtual bool stopped(const code& ec=error::success) const noexcept;
 
     /// Stop the channel.
-    virtual void stop(const code& ec);
+    virtual void stop(const code& ec) noexcept;
 
     /// Pause the channel (strand required).
-    virtual void pause();
+    virtual void pause() noexcept;
 
     /////// Resume the channel (strand required).
-    ////virtual void resume();
+    ////virtual void resume() noexcept;
 
     /// Properties.
     /// -----------------------------------------------------------------------
 
     /// The current thread is on the channel strand.
-    virtual bool stranded() const;
+    virtual bool stranded() const noexcept;
 
     /// Declare protocol canonical name.
-    virtual const std::string& name() const = 0;
+    virtual const std::string& name() const noexcept = 0;
 
     /// The authority of the peer.
-    virtual config::authority authority() const;
+    virtual config::authority authority() const noexcept;
 
     /// The nonce of the channel.
     virtual uint64_t nonce() const noexcept;
 
     /// Network settings.
-    virtual const network::settings& settings() const;
+    virtual const network::settings& settings() const noexcept;
 
     /// The protocol version of the peer.
     virtual messages::version::ptr peer_version() const noexcept;
@@ -153,24 +153,25 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Fetch a set of peer addresses from the address pool.
-    virtual void fetches(fetches_handler&& handler);
+    virtual void fetches(fetches_handler&& handler) noexcept;
 
     /// Save a set of peer addresses to the address pool.
-    virtual void saves(const messages::address_items& addresses);
+    virtual void saves(const messages::address_items& addresses) noexcept;
     virtual void saves(const messages::address_items& addresses,
-        result_handler&& handler);
+        result_handler&& handler) noexcept;
 
     // Capture send results, logged by default.
-    virtual void handle_send(const code& ec);
+    virtual void handle_send(const code& ec) noexcept;
 
 private:
     void do_fetches(const code& ec,
-        const messages::address_items& addresses, const fetches_handler& handler);
+        const messages::address_items& addresses,
+        const fetches_handler& handler) noexcept;
     void handle_fetches(const code& ec, const messages::address_items& addresses,
-        const fetches_handler& handler);
+        const fetches_handler& handler) noexcept;
 
-    void do_saves(const code& ec, const result_handler& handler);
-    void handle_saves(const code& ec, const result_handler& handler);
+    void do_saves(const code& ec, const result_handler& handler) noexcept;
+    void handle_saves(const code& ec, const result_handler& handler) noexcept;
 
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.

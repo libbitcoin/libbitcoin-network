@@ -44,7 +44,7 @@ using namespace bc::system;
 using namespace bc::system::chain;
 using namespace std::placeholders;
 
-p2p::p2p(const settings& settings)
+p2p::p2p(const settings& settings) noexcept
   : settings_(settings),
     channel_count_(zero),
     inbound_channel_count_(zero),
@@ -57,7 +57,7 @@ p2p::p2p(const settings& settings)
     BC_ASSERT_MSG(!is_zero(settings.threads), "empty threadpool");
 }
 
-p2p::~p2p()
+p2p::~p2p() noexcept
 {
     // Weak references in threadpool closures safe as p2p joins threads here.
     p2p::close();
@@ -66,17 +66,17 @@ p2p::~p2p()
 // I/O factories.
 // ----------------------------------------------------------------------------
 
-acceptor::ptr p2p::create_acceptor()
+acceptor::ptr p2p::create_acceptor() noexcept
 {
     return std::make_shared<acceptor>(strand(), service(), network_settings());
 }
 
-connector::ptr p2p::create_connector()
+connector::ptr p2p::create_connector() noexcept
 {
     return std::make_shared<connector>(strand(), service(), network_settings());
 }
 
-connectors_ptr p2p::create_connectors(size_t count)
+connectors_ptr p2p::create_connectors(size_t count) noexcept
 {
     const auto connects = std::make_shared<connectors>(connectors{});
     connects->reserve(count);
@@ -90,13 +90,13 @@ connectors_ptr p2p::create_connectors(size_t count)
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void p2p::start(result_handler&& handler)
+void p2p::start(result_handler&& handler) noexcept
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_start, this, std::move(handler)));
 }
 
-void p2p::do_start(const result_handler& handler)
+void p2p::do_start(const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "attach_manual_session");
 
@@ -105,7 +105,7 @@ void p2p::do_start(const result_handler& handler)
     manual_->start(std::bind(&p2p::handle_start, this, _1, handler));
 }
 
-void p2p::handle_start(const code& ec, const result_handler& handler)
+void p2p::handle_start(const code& ec, const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
 
@@ -135,13 +135,13 @@ void p2p::handle_start(const code& ec, const result_handler& handler)
 // Run sequence (seeding may be ongoing after its handler is invoked).
 // ----------------------------------------------------------------------------
 
-void p2p::run(result_handler&& handler)
+void p2p::run(result_handler&& handler) noexcept
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_run, this, std::move(handler)));
 }
 
-void p2p::do_run(const result_handler& handler)
+void p2p::do_run(const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "manual_, attach_inbound_session");
 
@@ -152,13 +152,13 @@ void p2p::do_run(const result_handler& handler)
     }
 
     for (const auto& peer: settings_.peers)
-        do_connect1(peer);
+        do_connect(peer);
 
     attach_inbound_session()->start(
         std::bind(&p2p::handle_run, this, _1, handler));
 }
 
-void p2p::handle_run(const code& ec, const result_handler& handler)
+void p2p::handle_run(const code& ec, const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -182,7 +182,7 @@ void p2p::handle_run(const code& ec, const result_handler& handler)
 // Not thread safe (threadpool_), call only once.
 // Blocks on join of all threadpool threads.
 // Results in std::abort if called from a thread within the threadpool.
-void p2p::close()
+void p2p::close() noexcept
 {
     boost::asio::dispatch(strand_, std::bind(&p2p::do_close, this));
 
@@ -193,7 +193,7 @@ void p2p::close()
     }
 }
 
-void p2p::do_close()
+void p2p::do_close() noexcept
 {
     BC_ASSERT_MSG(stranded(), "do_stop (multiple members)");
 
@@ -227,7 +227,7 @@ void p2p::do_close()
 
 // public
 void p2p::subscribe_connect(channel_handler&& handler,
-    result_handler&& complete)
+    result_handler&& complete) noexcept
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_subscribe_connect,
@@ -235,22 +235,23 @@ void p2p::subscribe_connect(channel_handler&& handler,
 }
 
 void p2p::do_subscribe_connect(const channel_handler& handler,
-    const result_handler& complete)
+    const result_handler& complete) noexcept
 {
     BC_ASSERT_MSG(stranded(), "channel_subscriber_");
     channel_subscriber_->subscribe(move_copy(handler));
     complete(error::success);
 }
 
-// protected
-void p2p::subscribe_close(result_handler&& handler)
+// private
+void p2p::subscribe_close(result_handler&& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "stop_subscriber_");
     stop_subscriber_->subscribe(std::move(handler));
 }
 
 // public
-void p2p::subscribe_close(result_handler&& handler, result_handler&& complete)
+void p2p::subscribe_close(result_handler&& handler,
+    result_handler&& complete) noexcept
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_subscribe_close,
@@ -258,7 +259,7 @@ void p2p::subscribe_close(result_handler&& handler, result_handler&& complete)
 }
 
 void p2p::do_subscribe_close(const result_handler& handler,
-    const result_handler& complete)
+    const result_handler& complete) noexcept
 {
     BC_ASSERT_MSG(stranded(), "stop_subscriber_");
     stop_subscriber_->subscribe(move_copy(handler));
@@ -268,48 +269,35 @@ void p2p::do_subscribe_close(const result_handler& handler,
 // Manual connections.
 // ----------------------------------------------------------------------------
 
-void p2p::connect(const config::endpoint& endpoint)
+void p2p::connect(const config::endpoint& endpoint) noexcept
 {
     boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_connect1, this, endpoint));
+        std::bind(&p2p::do_connect, this, endpoint));
 }
 
-void p2p::connect(const std::string& hostname, uint16_t port)
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_connect2, this, hostname, port));
-}
-
-void p2p::connect(const std::string& hostname, uint16_t port,
-    channel_handler&& handler)
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_connect3, this, hostname, port, std::move(handler)));
-}
-
-void p2p::do_connect1(const config::endpoint& endpoint)
+void p2p::do_connect(const config::endpoint& endpoint) noexcept
 {
     BC_ASSERT_MSG(stranded(), "manual_");
 
     if (manual_)
-        manual_->connect(endpoint.host(), endpoint.port());
+        manual_->connect(endpoint);
 }
 
-void p2p::do_connect2(const std::string& hostname, uint16_t port)
+void p2p::connect(const config::endpoint& endpoint,
+    channel_handler&& handler) noexcept
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_connect_handled, this, endpoint,
+            std::move(handler)));
+}
+
+void p2p::do_connect_handled(const config::endpoint& endpoint,
+    const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "manual_");
 
     if (manual_)
-        manual_->connect(hostname, port);
-}
-
-void p2p::do_connect3(const std::string& hostname, uint16_t port,
-    const channel_handler& handler)
-{
-    BC_ASSERT_MSG(stranded(), "manual_");
-
-    if (manual_)
-        manual_->connect(hostname, port, move_copy(handler));
+        manual_->connect(endpoint, move_copy(handler));
     else
         handler(error::service_stopped, nullptr);
 }
@@ -318,7 +306,7 @@ void p2p::do_connect3(const std::string& hostname, uint16_t port,
 // ----------------------------------------------------------------------------
 
 // private
-bool p2p::closed() const
+bool p2p::closed() const noexcept
 {
     BC_ASSERT_MSG(stranded(), "manual_");
 
@@ -326,38 +314,38 @@ bool p2p::closed() const
     return !manual_;
 }
 
-size_t p2p::address_count() const
+size_t p2p::address_count() const noexcept
 {
     return hosts_.count();
 }
 
-size_t p2p::channel_count() const
+size_t p2p::channel_count() const noexcept
 {
     return channel_count_.load(std::memory_order_relaxed);
 }
 
-size_t p2p::inbound_channel_count() const
+size_t p2p::inbound_channel_count() const noexcept
 {
     return inbound_channel_count_.load(std::memory_order_relaxed);
 }
 
-const settings& p2p::network_settings() const
+const settings& p2p::network_settings() const noexcept
 {
     return settings_;
 }
 
-asio::io_context& p2p::service()
+asio::io_context& p2p::service() noexcept
 {
     return threadpool_.service();
 }
 
-asio::strand& p2p::strand()
+asio::strand& p2p::strand() noexcept
 {
     return strand_;
 }
 
 // protected
-bool p2p::stranded() const
+bool p2p::stranded() const noexcept
 {
     return strand_.running_in_this_thread();
 }
@@ -366,57 +354,60 @@ bool p2p::stranded() const
 // ----------------------------------------------------------------------------
 
 // private
-code p2p::start_hosts()
+code p2p::start_hosts() noexcept
 {
     return hosts_.start();
 }
 
 // private
-void p2p::stop_hosts()
+void p2p::stop_hosts() noexcept
 {
     // TODO: log discarded code.
     /* code */ hosts_.stop();
 }
 
-void p2p::fetch(hosts::address_item_handler&& handler) const
+void p2p::fetch(hosts::address_item_handler&& handler) const noexcept
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_fetch, this, std::move(handler)));
 }
 
-void p2p::do_fetch(const hosts::address_item_handler& handler) const
+void p2p::do_fetch(const hosts::address_item_handler& handler) const noexcept
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.fetch(handler);
 }
 
-void p2p::fetches(hosts::address_items_handler&& handler) const
+void p2p::fetches(hosts::address_items_handler&& handler) const noexcept
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_fetches, this, std::move(handler)));
 }
 
-void p2p::do_fetches(const hosts::address_items_handler& handler) const
+void p2p::do_fetches(
+    const hosts::address_items_handler& handler) const noexcept
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.fetch(handler);
 }
 
-void p2p::dump(const messages::address_item& host, result_handler&& handler)
+void p2p::dump(const messages::address_item& host,
+    result_handler&& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.remove(host);
     handler(error::success);
 }
 
-void p2p::save(const messages::address_item& host, result_handler&& handler)
+void p2p::save(const messages::address_item& host,
+    result_handler&& handler) noexcept
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_save, this, host, std::move(handler)));
 }
 
 void p2p::do_save(const messages::address_item& host,
-    const result_handler& handler)
+    const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.store(host);
@@ -424,14 +415,15 @@ void p2p::do_save(const messages::address_item& host,
 }
 
 // TODO: use pointer.
-void p2p::saves(const messages::address_items& hosts, result_handler&& handler)
+void p2p::saves(const messages::address_items& hosts,
+    result_handler&& handler) noexcept
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_saves, this, hosts, std::move(handler)));
 }
 
 void p2p::do_saves(const messages::address_items& hosts,
-    const result_handler& handler)
+    const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "hosts_");
     hosts_.store(hosts);
@@ -443,19 +435,20 @@ void p2p::do_saves(const messages::address_items& hosts,
 
 // TODO: if a channel is created with a conflicting nonce, the first deletion
 // will remove both, resulting in removal of self-connect protection for first.
-void p2p::pend(uint64_t nonce)
+void p2p::pend(uint64_t nonce) noexcept
 {
     BC_ASSERT_MSG(stranded(), "nonces_");
     nonces_.insert(nonce);
 }
 
-void p2p::unpend(uint64_t nonce)
+void p2p::unpend(uint64_t nonce) noexcept
 {
     BC_ASSERT_MSG(stranded(), "nonces_");
     nonces_.erase(nonce);
 }
 
-code p2p::store(const channel::ptr& channel, bool notify, bool inbound)
+code p2p::store(const channel::ptr& channel, bool notify,
+    bool inbound) noexcept
 {
     BC_ASSERT_MSG(stranded(), "do_store (multiple members)");
 
@@ -489,7 +482,7 @@ code p2p::store(const channel::ptr& channel, bool notify, bool inbound)
     return error::success;
 }
 
-bool p2p::unstore(const channel::ptr& channel, bool inbound)
+bool p2p::unstore(const channel::ptr& channel, bool inbound) noexcept
 {
     BC_ASSERT_MSG(stranded(), "channels_, authorities_");
 
@@ -515,29 +508,25 @@ bool p2p::unstore(const channel::ptr& channel, bool inbound)
 // Specializations (protected).
 // ----------------------------------------------------------------------------
 
-// protected
-session_seed::ptr p2p::attach_seed_session()
+session_seed::ptr p2p::attach_seed_session() noexcept
 {
     BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
     return attach<session_seed>();
 }
 
-// protected
-session_manual::ptr p2p::attach_manual_session()
+session_manual::ptr p2p::attach_manual_session() noexcept
 {
     BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
     return attach<session_manual>();
 }
 
-// protected
-session_inbound::ptr p2p::attach_inbound_session()
+session_inbound::ptr p2p::attach_inbound_session() noexcept
 {
     BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
     return attach<session_inbound>();
 }
 
-// protected
-session_outbound::ptr p2p::attach_outbound_session()
+session_outbound::ptr p2p::attach_outbound_session() noexcept
 {
     BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
     return attach<session_outbound>();

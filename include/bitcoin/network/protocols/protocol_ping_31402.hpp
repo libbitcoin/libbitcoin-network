@@ -39,22 +39,23 @@ class BCT_API protocol_ping_31402
 public:
     typedef std::shared_ptr<protocol_ping_31402> ptr;
 
-    protocol_ping_31402(const session& session, const channel::ptr& channel);
+    protocol_ping_31402(const session& session,
+        const channel::ptr& channel) noexcept;
 
     /// Start protocol (strand required).
-    void start() override;
+    void start() noexcept override;
 
     /// The channel is stopping (called on strand by stop subscription).
-    void stopping(const code& ec) override;
+    void stopping(const code& ec) noexcept override;
 
 protected:
-    const std::string& name() const override;
+    const std::string& name() const noexcept override;
 
-    virtual void send_ping();
-    virtual void handle_timer(const code& ec);
-    virtual void handle_send_ping(const code& ec);
+    virtual void send_ping() noexcept;
+    virtual void handle_timer(const code& ec) noexcept;
+    virtual void handle_send_ping(const code& ec) noexcept;
     virtual void handle_receive_ping(const code& ec,
-        const messages::ping::ptr& message);
+        const messages::ping::ptr& message) noexcept;
 
 private:
     // This is protected by strand.

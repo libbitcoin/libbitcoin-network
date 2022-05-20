@@ -17,16 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "test.hpp"
+
 #include <cstdio>
 #include <future>
 #include <iostream>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <bitcoin/network.hpp>
-
-using namespace bc::network;
-using namespace bc::system::chain;
-using namespace bc::network::messages;
 
 struct p2p_tests_setup_fixture
 {
@@ -42,6 +39,9 @@ struct p2p_tests_setup_fixture
 };
 
 BOOST_FIXTURE_TEST_SUITE(p2p_tests, p2p_tests_setup_fixture)
+
+using namespace bc::system::chain;
+using namespace bc::network::messages;
 
 BOOST_AUTO_TEST_CASE(p2p__network_settings__unstarted__expected)
 {
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(p2p__connect__unstarted__service_stopped)
     p2p net(set);
 
     std::promise<bool> promise;
-    const auto handler = [&](const code& ec, channel::ptr channel)
+    const auto handler = [&](const code& ec, const channel::ptr& channel)
     {
         BOOST_REQUIRE(!channel);
         BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(p2p__connect__unstarted__service_stopped)
     };
 
     net.connect({ "truckers.ca" });
-    net.connect("truckers.ca", 42);
-    net.connect("truckers.ca", 42, handler);
+    net.connect({ "truckers.ca", 42 });
+    net.connect({ "truckers.ca", 42 }, handler);
     BOOST_REQUIRE(promise.get_future().get());
 }
 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstarted__success)
     p2p net(set);
 
     std::promise<bool> promise_handler;
-    const auto handler = [&](const code& ec, channel::ptr channel)
+    const auto handler = [&](const code& ec, const channel::ptr& channel)
     {
         BOOST_REQUIRE(!channel);
         BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
@@ -258,17 +258,17 @@ public:
     {
     }
 
-    code start_hosts() override
+    code start_hosts() noexcept override
     {
         return hosts_start_;
     }
 
-    session_manual::ptr attach_manual_session() override
+    session_manual::ptr attach_manual_session() noexcept override
     {
         return attach<mock_session_manual>();
     }
 
-    session_seed::ptr attach_seed_session() override
+    session_seed::ptr attach_seed_session() noexcept override
     {
         return attach<mock_session_seed>();
     }
@@ -318,17 +318,17 @@ public:
     {
     }
 
-    bool closed() const override
+    bool closed() const noexcept override
     {
         return closed_;
     }
 
-    session_inbound::ptr attach_inbound_session() override
+    session_inbound::ptr attach_inbound_session() noexcept override
     {
         return attach<mock_session_inbound>();
     }
 
-    session_outbound::ptr attach_outbound_session() override
+    session_outbound::ptr attach_outbound_session() noexcept override
     {
         return attach<mock_session_outbound>();
     }

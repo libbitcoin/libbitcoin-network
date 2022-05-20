@@ -39,7 +39,7 @@ namespace network {
         SUBSCRIBER_TYPE(name)
 
 #define SUBSCRIBER_OVERLOAD(name) \
-void do_subscribe(pump::handler<messages::name>&& handler) const \
+void do_subscribe(pump::handler<messages::name>&& handler) const noexcept \
 { \
     SUBSCRIBER(name)->subscribe(std::move(handler)); \
 }
@@ -93,12 +93,12 @@ public:
     DEFINE_SUBSCRIBER(version_acknowledge);
 
     /// Create an instance of this class.
-    pump(asio::strand& strand);
+    pump(asio::strand& strand) noexcept;
 
     /// Subscription handlers are retained in the queue until stop.
     /// No invocation occurs if the subscriber is stopped at time of subscribe.
     template <typename Handler>
-    void subscribe(Handler&& handler)
+    void subscribe(Handler&& handler) noexcept
     {
         do_subscribe(std::forward<Handler>(handler));
     }
@@ -106,18 +106,18 @@ public:
     /// Relay a message instance to each subscriber of the type.
     /// Returns error code if fails to deserialize, otherwise success.
     virtual code notify(messages::identifier id, uint32_t version,
-        system::reader& source) const;
+        system::reader& source) const noexcept;
 
     /// Stop all subscribers, prevents subsequent subscription (idempotent).
     /// The subscriber is stopped regardless of the error code, however by
     /// convention handlers rely on the error code to avoid message processing.
-    virtual void stop(const code& ec);
+    virtual void stop(const code& ec) noexcept;
 
 private:
     // Deserialize a stream into a message instance and notify subscribers.
     template <typename Message, typename Subscriber>
     code do_notify(Subscriber& subscriber, uint32_t version,
-        system::reader& source) const
+        system::reader& source) const noexcept
     {
         // TODO: account for witness parameter here.
         const auto message = messages::deserialize<Message>(source, version);

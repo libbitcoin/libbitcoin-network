@@ -35,9 +35,11 @@
 namespace libbitcoin {
 namespace network {
 
-/// This class is thread safe, except for:
-/// * pause/resume/paused should only be called from channel strand.
-/// Virtual base for all channel communication, error handling and logging.
+/// Abstract, thread safe except for:
+/// * pause/resume/paused/ must be called from channel strand.
+/// * subscribe/subscribe_stop must be called from channel strand.
+/// notify/send_bytes are protected/virtual for test access only.
+/// Handles all channel communication, error handling, and logging.
 class BCT_API proxy
   : public enable_shared_from_base<proxy>, system::noncopyable
 {
@@ -46,69 +48,93 @@ public:
     typedef subscriber<const code&> stop_subscriber;
     typedef std::function<void(const code&)> result_handler;
 
+    /// Send a message to the peer.
     template <class Message>
-    void send(const typename Message::ptr& message, result_handler&& complete)
+    void send(const typename Message::ptr& message,
+        result_handler&& complete) noexcept
     {
         using namespace messages;
         send_bytes(serialize(*message, protocol_magic(), version()),
             std::move(complete));
     }
 
-    virtual void stop(const code& ec);
-
-    virtual void pause();
-    virtual void resume();
-    bool paused() const;
-
-    void subscribe_stop(result_handler&& handler, result_handler&& complete);
-    bool stopped() const;
-
-    bool stranded() const;
-    asio::strand& strand();
-    const config::authority& authority() const;
-
-protected:
-    static std::string extract_command(const system::chunk_ptr& payload);
-
-    // Protocols may subscribe<Message> and subscribe_stop from strand.
-    friend class protocol;
-
-    void subscribe_stop(result_handler&& handler);
+    /// Subscribe to messages from peer (requires strand).
     template <class Message, typename Handler = pump::handler<Message>>
-    void subscribe(Handler&& handler)
+        void subscribe(Handler&& handler) noexcept
     {
         BC_ASSERT_MSG(stranded(), "strand");
         pump_subscriber_.subscribe(std::forward<Handler>(handler));
     }
 
-    proxy(const socket::ptr& socket);
-    virtual ~proxy();
+    /// Pause reading from the socket (requires strand).
+    virtual void pause() noexcept;
 
-    virtual size_t maximum_payload() const = 0;
-    virtual uint32_t protocol_magic() const = 0;
-    virtual bool validate_checksum() const = 0;
-    virtual bool verbose() const = 0;
-    virtual uint32_t version() const = 0;
-    virtual void signal_activity() = 0;
+    /// Resume reading from the socket (requires strand).
+    virtual void resume() noexcept;
 
+    /// Reading from the socket is paused (requires strand).
+    bool paused() const noexcept;
+
+    /// Subscribe to stop notification with completion handler.
+    void subscribe_stop(result_handler&& handler,
+        result_handler&& complete) noexcept;
+
+    /// Idempotent, may be called multiple times.
+    virtual void stop(const code& ec) noexcept;
+
+    /// The channel strand.
+    asio::strand& strand() noexcept;
+
+    /// The strand is running in this thread.
+    bool stranded() const noexcept;
+
+    /// The proxy (socket) is stopped.
+    bool stopped() const noexcept;
+
+    /// The authority of the peer.
+    const config::authority& authority() const noexcept;
+
+protected:
+    /// Extract message command name from a payload.
+    static std::string extract_command(
+        const system::chunk_ptr& payload) noexcept;
+
+    proxy(const socket::ptr& socket) noexcept;
+    virtual ~proxy() noexcept;
+
+    /// Property values provided to the proxy.
+    virtual size_t maximum_payload() const noexcept = 0;
+    virtual uint32_t protocol_magic() const noexcept = 0;
+    virtual bool validate_checksum() const noexcept = 0;
+    virtual bool verbose() const noexcept = 0;
+    virtual uint32_t version() const noexcept = 0;
+    virtual void signal_activity() noexcept = 0;
+
+    /// Send bytes to the peer.
     virtual void send_bytes(const system::chunk_ptr& payload,
-        result_handler&& handler);
+        result_handler&& handler) noexcept;
+
+    /// Notify subscribers of an new message (requires strand).
     virtual code notify(messages::identifier id, uint32_t version,
-        system::reader& source);
+        system::reader& source) noexcept;
+
+    /// Subscribe to stop notification (requires strand).
+    void subscribe_stop(result_handler&& handler) noexcept;
 
 private:
     typedef messages::heading::ptr heading_ptr;
 
-    void do_stop(const code& ec);
+    void do_stop(const code& ec) noexcept;
     void do_subscribe_stop(const result_handler& handler,
-        const result_handler& complete);
+        const result_handler& complete) noexcept;
 
-    void read_heading();
-    void handle_read_heading(const code& ec, size_t heading_size);
+    void read_heading() noexcept;
+    void handle_read_heading(const code& ec, size_t heading_size) noexcept;
     void handle_read_payload(const code& ec, size_t payload_size,
-        const heading_ptr& head);
+        const heading_ptr& head) noexcept;
     void handle_send(const code& ec, size_t bytes,
-        const system::chunk_ptr& payload, const result_handler& handler);
+        const system::chunk_ptr& payload,
+        const result_handler& handler) noexcept;
 
     // This is thread safe.
     socket::ptr socket_;

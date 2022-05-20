@@ -42,23 +42,23 @@ public:
 
     /// Construct a version protocol instance using configured values.
     protocol_version_70002(const session& session,
-        const channel::ptr& channel);
+        const channel::ptr& channel) noexcept;
 
     /// Construct a version protocol instance using parameterized services.
     protocol_version_70002(const session& session,
         const channel::ptr& channel, uint64_t minimum_services,
-        uint64_t maximum_services, bool relay);
+        uint64_t maximum_services, bool relay) noexcept;
 
     /// Perform the handshake (strand required), handler invoked on completion.
-    void start(result_handler&& handle_event) override;
+    void start(result_handler&& handle_event) noexcept override;
 
 protected:
-    const std::string& name() const override;
+    const std::string& name() const noexcept override;
 
-    void rejection(const code& ec) override;
+    void rejection(const code& ec) noexcept override;
 
     virtual void handle_receive_reject(const code& ec,
-        const messages::reject::ptr& reject);
+        const messages::reject::ptr& reject) noexcept;
 };
 
 } // namespace network

@@ -41,18 +41,18 @@ constexpr auto minimum_nonce = add1(received);
 static const std::string protocol_name = "ping";
 
 protocol_ping_60001::protocol_ping_60001(const session& session,
-    const channel::ptr& channel)
+    const channel::ptr& channel) noexcept
   : protocol_ping_31402(session, channel),
     nonce_(received)
 {
 }
 
-const std::string& protocol_ping_60001::name() const
+const std::string& protocol_ping_60001::name() const noexcept
 {
     return protocol_name;
 }
 
-void protocol_ping_60001::start()
+void protocol_ping_60001::start() noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 
@@ -66,7 +66,7 @@ void protocol_ping_60001::start()
     protocol_ping_31402::start();
 }
 
-////void protocol_ping_31402::stopping(const code&)
+////void protocol_ping_31402::stopping(const code&) noexcept
 ////{
 ////    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
 ////
@@ -76,7 +76,7 @@ void protocol_ping_60001::start()
 // Outgoing (send_ping [on timer] => receive_pong [with timeout]).
 // ----------------------------------------------------------------------------
 
-void protocol_ping_60001::send_ping()
+void protocol_ping_60001::send_ping() noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 
@@ -88,7 +88,7 @@ void protocol_ping_60001::send_ping()
     SEND1(ping{ nonce_ }, handle_send, _1);
 }
 
-////void protocol_ping_31402::handle_send_ping(const code& ec)
+////void protocol_ping_31402::handle_send_ping(const code& ec) noexcept
 ////{
 ////    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
 ////
@@ -100,7 +100,7 @@ void protocol_ping_60001::send_ping()
 ////}
 
 void protocol_ping_60001::handle_receive_pong(const code& ec,
-    const pong::ptr& message)
+    const pong::ptr& message) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 
@@ -121,7 +121,7 @@ void protocol_ping_60001::handle_receive_pong(const code& ec,
     nonce_ = received;
 }
 
-void protocol_ping_60001::handle_timer(const code& ec)
+void protocol_ping_60001::handle_timer(const code& ec) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 
@@ -152,7 +152,7 @@ void protocol_ping_60001::handle_timer(const code& ec)
 // ----------------------------------------------------------------------------
 
 void protocol_ping_60001::handle_receive_ping(const code& ec,
-    const ping::ptr& message)
+    const ping::ptr& message) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 
@@ -162,7 +162,7 @@ void protocol_ping_60001::handle_receive_ping(const code& ec,
     SEND1(pong{ message->nonce }, handle_send_pong, _1);
 }
 
-void protocol_ping_60001::handle_send_pong(const code& ec)
+void protocol_ping_60001::handle_send_pong(const code& ec) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 }

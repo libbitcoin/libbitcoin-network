@@ -39,7 +39,7 @@ using namespace bc::network::messages;
 static const std::string protocol_name = "version";
 
 protocol_version_70001::protocol_version_70001(const session& session,
-    const channel::ptr& channel)
+    const channel::ptr& channel) noexcept
   : protocol_version_70001(session, channel,
         session.settings().services_minimum,
         session.settings().services_maximum,
@@ -49,14 +49,14 @@ protocol_version_70001::protocol_version_70001(const session& session,
 
 protocol_version_70001::protocol_version_70001(const session& session,
     const channel::ptr& channel, uint64_t minimum_services,
-    uint64_t maximum_services, bool relay)
+    uint64_t maximum_services, bool relay) noexcept
   : protocol_version_31402(session, channel, minimum_services,
       maximum_services),
     relay_(relay)
 {
 }
 
-const std::string& protocol_version_70001::name() const
+const std::string& protocol_version_70001::name() const noexcept
 {
     return protocol_name;
 }
@@ -65,7 +65,7 @@ const std::string& protocol_version_70001::name() const
 // ----------------------------------------------------------------------------
 
 protocol_version_70001::version_ptr
-protocol_version_70001::version_factory() const
+protocol_version_70001::version_factory() const noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70001");
 

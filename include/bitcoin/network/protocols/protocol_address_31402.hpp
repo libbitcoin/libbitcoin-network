@@ -40,20 +40,20 @@ public:
     typedef std::shared_ptr<protocol_address_31402> ptr;
 
     protocol_address_31402(const session& session,
-        const channel::ptr& channel);
+        const channel::ptr& channel) noexcept;
 
     /// Start protocol (strand required).
-    void start() override;
+    void start() noexcept override;
 
 protected:
-    const std::string& name() const override;
+    const std::string& name() const noexcept override;
 
     virtual void handle_fetch_addresses(const code& ec,
-        const messages::address_items& addresses);
+        const messages::address_items& addresses) noexcept;
     virtual void handle_receive_address(const code& ec,
-        const messages::address::ptr& address);
+        const messages::address::ptr& address) noexcept;
     virtual void handle_receive_get_address(const code& ec,
-        const messages::get_address::ptr& message);
+        const messages::get_address::ptr& message) noexcept;
 
 private:
     // This is protected by strand.

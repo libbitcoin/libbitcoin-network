@@ -39,26 +39,27 @@ class BCT_API protocol_seed_31402
 public:
     typedef std::shared_ptr<protocol_seed_31402> ptr;
 
-    protocol_seed_31402(const session& session, const channel::ptr& channel);
+    protocol_seed_31402(const session& session,
+        const channel::ptr& channel) noexcept;
 
     /// Perform seeding, stops channel on completion (strand required).
-    void start() override;
+    void start() noexcept override;
 
 protected:
-    const std::string& name() const override;
+    const std::string& name() const noexcept override;
 
-    void stop(const code& ec) override;
-    virtual bool complete() const;
-    virtual void handle_timer(const code& ec);
+    void stop(const code& ec) noexcept override;
+    virtual bool complete() const noexcept;
+    virtual void handle_timer(const code& ec) noexcept;
 
-    virtual void handle_send_get_address(const code& ec);
+    virtual void handle_send_get_address(const code& ec) noexcept;
     virtual void handle_receive_address(const code& ec,
-        const messages::address::ptr& address);
-    virtual void handle_save_addresses(const code& ec);
+        const messages::address::ptr& address) noexcept;
+    virtual void handle_save_addresses(const code& ec) noexcept;
 
     virtual void handle_receive_get_address(const code& ec,
-        const messages::get_address::ptr& message);
-    virtual void handle_send_address(const code& ec);
+        const messages::get_address::ptr& message) noexcept;
+    virtual void handle_send_address(const code& ec) noexcept;
 
 private:
     // These are protected by the strand.

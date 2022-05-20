@@ -34,7 +34,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Not thread safe.
+/// Not thread safe, virtual.
 /// Create outbound socket connections.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API connector
@@ -51,14 +51,14 @@ public:
 
     /// Construct an instance.
     connector(asio::strand& strand, asio::io_context& service,
-        const settings& settings);
-    virtual ~connector();
+        const settings& settings) noexcept;
+    virtual ~connector() noexcept;
 
     // Stop (no start).
     // ------------------------------------------------------------------------
 
     /// Cancel work and close the connector (idempotent).
-    virtual void stop();
+    virtual void stop() noexcept;
 
     // Methods.
     // ------------------------------------------------------------------------
@@ -68,15 +68,15 @@ public:
 
     /// Try to connect to the authority, starts timer.
     virtual void connect(const config::authority& authority,
-        connect_handler&& handler);
+        connect_handler&& handler) noexcept;
 
     /// Try to connect to the endpoint, starts timer.
     virtual void connect(const config::endpoint& endpoint,
-        connect_handler&& handler);
+        connect_handler&& handler) noexcept;
 
     /// Try to connect to host:port, starts timer.
     virtual void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler);
+        connect_handler&& handler) noexcept;
 
 protected:
     // These are thread safe
@@ -92,14 +92,14 @@ protected:
 private:
     void handle_resolve(const error::boost_code& ec,
         const asio::endpoints& range, socket::ptr socket,
-        const connect_handler& handler);
+        const connect_handler& handler) noexcept;
     void handle_connect(const code& ec, socket::ptr socket,
-        const connect_handler& handler);
+        const connect_handler& handler) noexcept;
     void handle_timer(const code& ec, const socket::ptr& socket,
-        const connect_handler& handler);
+        const connect_handler& handler) noexcept;
 
     void do_handle_connect(const code& ec, socket::ptr socket,
-        const connect_handler& handler);
+        const connect_handler& handler) noexcept;
 };
 
 typedef std::vector<connector::ptr> connectors;

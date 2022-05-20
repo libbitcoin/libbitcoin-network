@@ -42,7 +42,7 @@ static const std::string insufficient_version = "insufficient-version";
 static const std::string insufficient_services = "insufficient-services";
 
 protocol_version_70002::protocol_version_70002(const session& session,
-    const channel::ptr& channel)
+    const channel::ptr& channel) noexcept
   : protocol_version_70001(session, channel,
         session.settings().services_minimum,
         session.settings().services_maximum,
@@ -52,13 +52,13 @@ protocol_version_70002::protocol_version_70002(const session& session,
 
 protocol_version_70002::protocol_version_70002(const session& session,
     const channel::ptr& channel, uint64_t minimum_services,
-    uint64_t maximum_services, bool relay)
+    uint64_t maximum_services, bool relay) noexcept
   : protocol_version_70001(session, channel, minimum_services,
       maximum_services, relay)
 {
 }
 
-const std::string& protocol_version_70002::name() const
+const std::string& protocol_version_70002::name() const noexcept
 {
     return protocol_name;
 }
@@ -66,7 +66,7 @@ const std::string& protocol_version_70002::name() const
 // Start.
 // ----------------------------------------------------------------------------
 
-void protocol_version_70002::start(result_handler&& handle_event)
+void protocol_version_70002::start(result_handler&& handle_event) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
@@ -81,7 +81,7 @@ void protocol_version_70002::start(result_handler&& handle_event)
 // Outgoing [(in)sufficient_peer => send_reject].
 // ----------------------------------------------------------------------------
 
-void protocol_version_70002::rejection(const code& ec)
+void protocol_version_70002::rejection(const code& ec) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
@@ -104,7 +104,7 @@ void protocol_version_70002::rejection(const code& ec)
 // ----------------------------------------------------------------------------
 
 void protocol_version_70002::handle_receive_reject(const code& ec,
-    const reject::ptr& reject)
+    const reject::ptr& reject) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 

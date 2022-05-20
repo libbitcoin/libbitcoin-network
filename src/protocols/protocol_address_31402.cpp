@@ -36,12 +36,12 @@ using namespace messages;
 using namespace std::placeholders;
 
 protocol_address_31402::protocol_address_31402(const session& session,
-    const channel::ptr& channel)
+    const channel::ptr& channel) noexcept
   : protocol(session, channel), sent_(false)
 {
 }
 
-const std::string& protocol_address_31402::name() const
+const std::string& protocol_address_31402::name() const noexcept
 {
     static const std::string protocol_name = "address";
     return protocol_name;
@@ -50,7 +50,7 @@ const std::string& protocol_address_31402::name() const
 // Start.
 // ----------------------------------------------------------------------------
 
-void protocol_address_31402::start()
+void protocol_address_31402::start() noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
@@ -79,7 +79,7 @@ void protocol_address_31402::start()
 // ----------------------------------------------------------------------------
 
 void protocol_address_31402::handle_receive_address(const code& ec,
-    const address::ptr& message)
+    const address::ptr& message) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
@@ -96,7 +96,7 @@ void protocol_address_31402::handle_receive_address(const code& ec,
 // ----------------------------------------------------------------------------
 
 void protocol_address_31402::handle_receive_get_address(const code& ec,
-    const get_address::ptr&)
+    const get_address::ptr&) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
@@ -111,7 +111,7 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
 }
 
 void protocol_address_31402::handle_fetch_addresses(const code& ec,
-    const messages::address_items& addresses)
+    const messages::address_items& addresses) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 

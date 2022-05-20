@@ -39,12 +39,13 @@ using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
 
-protocol::protocol(const session& session, const channel::ptr& channel)
+protocol::protocol(const session& session,
+    const channel::ptr& channel) noexcept
   : channel_(channel), session_(session), started_(false)
 {
 }
 
-protocol::~protocol()
+protocol::~protocol() noexcept
 {
     BC_ASSERT_MSG(stopped(), "protocol destruct before channel stop");
 }
@@ -52,13 +53,13 @@ protocol::~protocol()
 // Start/Stop.
 // ----------------------------------------------------------------------------
 
-void protocol::start()
+void protocol::start() noexcept
 {
     BC_ASSERT_MSG(stranded(), "stranded");
     started_ = true;
 }
 
-bool protocol::started() const
+bool protocol::started() const noexcept
 {
     BC_ASSERT_MSG(stranded(), "stranded");
     return started_;
@@ -68,33 +69,33 @@ bool protocol::started() const
 // Any failure code from a send or receive handler implies channel::proxy stop.
 // So this should be used to test entry into those handlers. Other handlers,
 // such as timers, should use stopped() and independently evaluate the code.
-bool protocol::stopped(const code& ec) const
+bool protocol::stopped(const code& ec) const noexcept
 {
     return channel_->stopped() || ec;
 }
 
 // Called from stop subscription instead of stop (which would be a cycle).
-void protocol::stopping(const code& ec)
+void protocol::stopping(const code& ec) noexcept
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 }
 
 // Stop the channel::proxy, which results protocol stop handler invocation.
 // The stop handler invokes stopping(ec), for protocol cleanup operations.
-void protocol::stop(const code& ec)
+void protocol::stop(const code& ec) noexcept
 {
     channel_->stop(ec);
 }
 
 // Suspend reads from the socket until resume.
-void protocol::pause()
+void protocol::pause() noexcept
 {
     BC_ASSERT_MSG(stranded(), "stranded");
     channel_->pause();
 }
 
 ////// Resume reads from the socket until pause or stop.
-////void protocol::resume()
+////void protocol::resume() noexcept
 ////{
 ////    BC_ASSERT_MSG(stranded(), "stranded");
 ////    channel_->resume();
@@ -106,12 +107,12 @@ void protocol::pause()
 // during handshake protocol operation. Thread safety requires that setters are
 // never invoked outside of the handshake protocol (start handler).
 
-bool protocol::stranded() const
+bool protocol::stranded() const noexcept
 {
     return channel_->stranded();
 }
 
-config::authority protocol::authority() const
+config::authority protocol::authority() const noexcept
 {
     return channel_->authority();
 }
@@ -121,7 +122,7 @@ uint64_t protocol::nonce() const noexcept
     return channel_->nonce();
 }
 
-const network::settings& protocol::settings() const
+const network::settings& protocol::settings() const noexcept
 {
     return session_.settings();
 }
@@ -152,14 +153,15 @@ void protocol::set_negotiated_version(uint32_t value) noexcept
 // ----------------------------------------------------------------------------
 // Address completion handlers are invoked on the channel strand.
 
-void protocol::fetches(fetches_handler&& handler)
+void protocol::fetches(fetches_handler&& handler) noexcept
 {
     session_.fetches(BIND3(do_fetches, _1, _2, std::move(handler)));
 }
 
 // Return to channel strand.
 void protocol::do_fetches(const code& ec,
-    const messages::address_items& addresses, const fetches_handler& handler)
+    const messages::address_items& addresses,
+    const fetches_handler& handler) noexcept
 {
     // TODO: use addresses pointer (copies addresses).
     boost::asio::post(channel_->strand(),
@@ -167,7 +169,8 @@ void protocol::do_fetches(const code& ec,
 }
 
 void protocol::handle_fetches(const code& ec,
-    const messages::address_items& addresses, const fetches_handler& handler)
+    const messages::address_items& addresses,
+    const fetches_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol");
 
@@ -179,7 +182,7 @@ void protocol::handle_fetches(const code& ec,
     handler(ec, addresses);
 }
 
-void protocol::saves(const messages::address_items& addresses)
+void protocol::saves(const messages::address_items& addresses) noexcept
 {
     const auto self = shared_from_base<protocol>();
     return saves(addresses, [self](const code&)
@@ -190,7 +193,7 @@ void protocol::saves(const messages::address_items& addresses)
 }
 
 void protocol::saves(const messages::address_items& addresses,
-    result_handler&& handler)
+    result_handler&& handler) noexcept
 {
     ////LOG_VERBOSE(LOG_NETWORK)
     ////    << "Storing addresses from [" << authority() << "] ("
@@ -201,13 +204,13 @@ void protocol::saves(const messages::address_items& addresses,
 }
 
 // Return to channel strand.
-void protocol::do_saves(const code& ec, const result_handler& handler)
+void protocol::do_saves(const code& ec, const result_handler& handler) noexcept
 {
     boost::asio::post(channel_->strand(),
         BIND2(handle_saves, ec, std::move(handler)));
 }
 
-void protocol::handle_saves(const code& ec, const result_handler& handler)
+void protocol::handle_saves(const code& ec, const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol");
 
@@ -222,7 +225,7 @@ void protocol::handle_saves(const code& ec, const result_handler& handler)
 // Send and receive failures are logged by the proxy, so there is no need to
 // log here. This can be used as a no-op handler for sends. Some protocols may
 // create custom handlers to perform operations upon send completion.
-void protocol::handle_send(const code&)
+void protocol::handle_send(const code&) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }

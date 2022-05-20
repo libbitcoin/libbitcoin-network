@@ -21,7 +21,6 @@
 
 BOOST_AUTO_TEST_SUITE(settings_tests)
 
-using namespace bc::network;
 using namespace bc::system::chain;
 using namespace messages;
 

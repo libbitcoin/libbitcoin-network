@@ -41,14 +41,14 @@ using namespace std::placeholders;
 // use, by default, to dispatch handlers for any asynchronous operations
 // performed on the socket." Calls are stranded to protect the socket member.
 
-socket::socket(asio::io_context& service)
+socket::socket(asio::io_context& service) noexcept
   : stopped_(false),
     strand_(service.get_executor()),
     socket_(strand_)
 {
 }
 
-socket::~socket()
+socket::~socket() noexcept
 {
     BC_ASSERT_MSG(stopped(), "socket is not stopped");
 }
@@ -57,7 +57,7 @@ socket::~socket()
 // ----------------------------------------------------------------------------
 // The socket is not allowed to stop itself (internally).
 
-void socket::stop()
+void socket::stop() noexcept
 {
     // Stop flag can accelerate work stoppage, as it does not wait on strand.
     stopped_.store(true, std::memory_order_relaxed);
@@ -68,7 +68,7 @@ void socket::stop()
 }
 
 // private
-void socket::do_stop()
+void socket::do_stop() noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
     error::boost_code ignore;
@@ -88,7 +88,8 @@ void socket::do_stop()
 // Boost async functions are NOT THREAD SAFE for the same socket object.
 // This clarifies boost documentation: svn.boost.org/trac10/ticket/10009
 
-void socket::accept(asio::acceptor& acceptor, result_handler&& handler)
+void socket::accept(asio::acceptor& acceptor,
+    result_handler&& handler) noexcept
 {
     // Closure of the acceptor, not the socket, releases this handler.
     // The socket is not guarded during async_accept. This is required so the
@@ -100,7 +101,8 @@ void socket::accept(asio::acceptor& acceptor, result_handler&& handler)
             shared_from_this(), _1, std::move(handler)));
 }
 
-void socket::connect(const asio::endpoints& range, result_handler&& handler)
+void socket::connect(const asio::endpoints& range,
+    result_handler&& handler) noexcept
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_connect,
@@ -108,7 +110,7 @@ void socket::connect(const asio::endpoints& range, result_handler&& handler)
 }
 
 ////// Read into dynamically-allocated buffer (web).
-////void socket::dynamic_read(data_chunk& out, io_handler&& handler)
+////void socket::dynamic_read(data_chunk& out, io_handler&& handler) noexcept
 ////{
 ////    boost::asio::dispatch(strand_,
 ////        std::bind(&socket::do_dynamic_read, shared_from_this(),
@@ -116,7 +118,7 @@ void socket::connect(const asio::endpoints& range, result_handler&& handler)
 ////}
 
 // Read into pre-allocated buffer (bitcoin).
-void socket::read(const data_slab& out, io_handler&& handler)
+void socket::read(const data_slab& out, io_handler&& handler) noexcept
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_read, shared_from_this(),
@@ -124,7 +126,7 @@ void socket::read(const data_slab& out, io_handler&& handler)
             std::move(handler)));
 }
 
-void socket::write(const data_slice& in, io_handler&& handler)
+void socket::write(const data_slice& in, io_handler&& handler) noexcept
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_write, shared_from_this(),
@@ -137,7 +139,7 @@ void socket::write(const data_slice& in, io_handler&& handler)
 // These execute on the strand to protect the member socket.
 
 void socket::do_connect(const asio::endpoints& range,
-    const result_handler& handler)
+    const result_handler& handler) noexcept
 {
     // Establishes a socket connection by trying each endpoint in a sequence.
     boost::asio::async_connect(socket_, range,
@@ -146,7 +148,7 @@ void socket::do_connect(const asio::endpoints& range,
 }
 
 ////// Read into dynamically-allocated buffer (web).
-////void socket::do_dynamic_read(data_chunk& out, io_handler handler)
+////void socket::do_dynamic_read(data_chunk& out, io_handler handler) noexcept
 ////{
 ////    BC_ASSERT_MSG(stranded(), "strand");
 ////
@@ -158,7 +160,7 @@ void socket::do_connect(const asio::endpoints& range,
 
 // Read into pre-allocated buffer (bitcoin).
 void socket::do_read(const boost::asio::mutable_buffer& out,
-    const io_handler& handler)
+    const io_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -169,7 +171,7 @@ void socket::do_read(const boost::asio::mutable_buffer& out,
 }
 
 void socket::do_write(const boost::asio::const_buffer& in,
-    const io_handler& handler)
+    const io_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -184,7 +186,7 @@ void socket::do_write(const boost::asio::const_buffer& in,
 // These are invoked on strand upon failure, socket cancel, or completion.
 
 void socket::handle_accept(const error::boost_code& ec,
-    const result_handler& handler)
+    const result_handler& handler) noexcept
 {
     // This is running in the acceptor (not socket) execution context.
     // socket_ and authority_ are not guarded here, see comments on accept.
@@ -203,7 +205,7 @@ void socket::handle_accept(const error::boost_code& ec,
 }
 
 void socket::handle_connect(const error::boost_code& ec,
-    const asio::endpoint& peer, const result_handler& handler)
+    const asio::endpoint& peer, const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -220,7 +222,7 @@ void socket::handle_connect(const error::boost_code& ec,
 }
 
 void socket::handle_io(const error::boost_code& ec, size_t size,
-    const io_handler& handler)
+    const io_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -237,24 +239,24 @@ void socket::handle_io(const error::boost_code& ec, size_t size,
 // Properties.
 // ----------------------------------------------------------------------------
 
-bool socket::stopped() const
+const config::authority& socket::authority() const noexcept
+{
+    return authority_;
+}
+
+bool socket::stopped() const noexcept
 {
     return stopped_.load(std::memory_order_relaxed);
 }
 
-bool socket::stranded() const
+bool socket::stranded() const noexcept
 {
     return strand_.running_in_this_thread();
 }
 
-asio::strand& socket::strand()
+asio::strand& socket::strand() noexcept
 {
     return strand_;
-}
-
-const config::authority& socket::authority() const
-{
-    return authority_;
 }
 
 } // namespace network

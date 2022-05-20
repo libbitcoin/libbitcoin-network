@@ -42,7 +42,7 @@ threadpool::threadpool(size_t number_threads, thread_priority priority) noexcept
 
     for (size_t thread = 0; thread < number_threads; ++thread)
     {
-        threads_.push_back(network::thread([this, priority]()
+        threads_.push_back(network::thread([this, priority]() noexcept
         {
             set_priority(priority);
             service_.run();

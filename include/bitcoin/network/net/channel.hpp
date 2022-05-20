@@ -34,33 +34,33 @@ namespace network {
 
 class session;
 
-/// This class is thread safe, except for:
+/// Virtual, thread safe except for:
+/// * attach/resume/signal_activity must be called from the channel strand.
 /// * Versions should be only written in handshake and read thereafter.
-/// * pause/resume/paused and attach should only be called from channel strand.
+/// * See proxy for its thread safety constraints.
 /// A channel is a proxy with logged timers and state.
-/// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API channel
   : public proxy, track<channel>
 {
 public:
     typedef std::shared_ptr<channel> ptr;
 
-    /// Must be called from the channel strand.
-    /// Attach a protocol to the channel, caller must start returned protocol.
+    /// Attach protocol to channel, caller must start (requires strand).
     template <class Protocol, typename... Args>
-    typename Protocol::ptr attach(const session& session, Args&&... args)
+    typename Protocol::ptr attach(const session& session,
+        Args&&... args) noexcept
     {
         BC_ASSERT_MSG(stranded(), "subscribe_stop");
 
         if (!stranded())
             return nullptr;
 
-        // Protocols are attached after channel start.
+        // Protocols are attached after channel start (read paused).
         const auto protocol = std::make_shared<Protocol>(session,
             shared_from_base<channel>(), std::forward<Args>(args)...);
 
         // Protocol lifetime is ensured by the channel stop subscriber.
-        subscribe_stop([=](const code& ec)
+        subscribe_stop([=](const code& ec) noexcept
         {
             protocol->stopping(ec);
         });
@@ -68,34 +68,45 @@ public:
         return protocol;
     }
 
-    channel(const socket::ptr& socket, const settings& settings);
-    virtual ~channel();
+    channel(const socket::ptr& socket, const settings& settings) noexcept;
+    virtual ~channel() noexcept;
 
-    void resume() override;
-    void stop(const code& ec) override;
-
+    // Arbitrary nonce of the channel (for loopback guard).
     uint64_t nonce() const noexcept;
-    uint32_t negotiated_version() const noexcept;
+
+    /// Versions should be only written in handshake and read thereafter.
     void set_negotiated_version(uint32_t value) noexcept;
-    messages::version::ptr peer_version() const noexcept;
+    uint32_t negotiated_version() const noexcept;
     void set_peer_version(const messages::version::ptr& value) noexcept;
+    messages::version::ptr peer_version() const noexcept;
+
+    /// Resume reading from the socket (requires strand).
+    void resume() noexcept override;
+
+    /// Idempotent, may be called multiple times.
+    void stop(const code& ec) noexcept override;
 
 protected:
+    /// Property values provided to the proxy.
     size_t maximum_payload() const noexcept override;
     uint32_t protocol_magic() const noexcept override;
     bool validate_checksum() const noexcept override;
     bool verbose() const noexcept override;
     uint32_t version() const noexcept override;
-    void signal_activity() override;
+
+    /// Signals inbound traffic, called from proxy on strand (requires strand).
+    void signal_activity() noexcept override;
 
 private:
-    void do_stop(const code& ec);
+    void do_stop(const code& ec) noexcept;
 
-    void start_expiration();
-    void handle_expiration(const code& ec);
+    void start_expiration() noexcept;
+    void handle_expiration(const code& ec) noexcept;
 
-    void start_inactivity();
-    void handle_inactivity(const code& ec);
+    void start_inactivity() noexcept;
+    void handle_inactivity(const code& ec) noexcept;
+
+    // Proxy base class is not fully thread safe.
 
     // These are thread safe.
     const size_t maximum_payload_;
@@ -107,8 +118,6 @@ private:
     // These are not thread safe.
     uint32_t negotiated_version_;
     messages::version::ptr peer_version_;
-
-    // These are protected by the strand.
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
 };

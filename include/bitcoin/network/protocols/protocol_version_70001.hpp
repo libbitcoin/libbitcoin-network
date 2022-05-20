@@ -42,17 +42,17 @@ public:
 
     /// Construct a version protocol instance using configured values.
     protocol_version_70001(const session& session,
-        const channel::ptr& channel);
+        const channel::ptr& channel) noexcept;
 
     /// Construct a version protocol instance using parameterized services.
     protocol_version_70001(const session& session,
         const channel::ptr& channel, uint64_t minimum_services,
-        uint64_t maximum_services, bool relay);
+        uint64_t maximum_services, bool relay) noexcept;
 
 protected:
-    const std::string& name() const override;
+    const std::string& name() const noexcept override;
 
-    version_ptr version_factory() const override;
+    version_ptr version_factory() const noexcept override;
 
 private:
     // This is thread safe (const).

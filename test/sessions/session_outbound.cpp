@@ -33,7 +33,6 @@ struct session_outbound_tests_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(session_outbound_tests, session_outbound_tests_setup_fixture)
 
-using namespace bc::network;
 using namespace bc::network::messages;
 using namespace bc::system::chain;
 
@@ -83,31 +82,31 @@ public:
     }
 
     // Get captured connected.
-    virtual bool connected() const
+    bool connected() const
     {
         return !is_zero(connects_);
     }
 
     // Get captured hostname.
-    virtual std::string hostname() const
+    std::string hostname() const
     {
         return hostname_;
     }
 
     // Get captured port.
-    virtual uint16_t port() const
+    uint16_t port() const
     {
         return port_;
     }
 
     // Get captured stopped.
-    virtual bool stopped() const
+    bool stopped() const
     {
         return stopped_;
     }
 
     // Capture stopped and free channel.
-    void stop() override
+    void stop() noexcept override
     {
         stopped_ = true;
         connector::stop();
@@ -115,7 +114,7 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) override
+        connect_handler&& handler) noexcept override
     {
         if (is_zero(connects_++))
         {
@@ -154,7 +153,7 @@ public:
     using connector::connector;
 
     void connect(const std::string&, uint16_t,
-        connect_handler&& handler) override
+        connect_handler&& handler) noexcept override
     {
         boost::asio::post(strand_, [=]()
         {
@@ -179,7 +178,7 @@ public:
         return session_outbound::notify();
     }
 
-    bool stopped() const
+    bool stopped() const noexcept override
     {
         return session_outbound::stopped();
     }
@@ -305,29 +304,29 @@ public:
             network_settings())));
     }
 
-    session_inbound::ptr attach_inbound_session() override
+    session_inbound::ptr attach_inbound_session() noexcept override
     {
-        return attach<mock_session_inbound>();
+        return attach<mock_inbound_session>();
     }
 
-    session_outbound::ptr attach_outbound_session() override
+    session_outbound::ptr attach_outbound_session() noexcept override
     {
-        return attach<mock_outbound_session>();
+        return attach<mock_session_outbound>();
     }
 
-    session_seed::ptr attach_seed_session() override
+    session_seed::ptr attach_seed_session() noexcept override
     {
-        return attach<mock_session_seed>();
+        return attach<mock_seed_session>();
     }
 
 private:
     typename Connector::ptr connector_;
 
-    class mock_session_inbound
+    class mock_inbound_session
       : public session_inbound
     {
     public:
-        mock_session_inbound(p2p& network)
+        mock_inbound_session(p2p& network)
           : session_inbound(network)
         {
         }
@@ -338,11 +337,11 @@ private:
         }
     };
 
-    class mock_outbound_session
+    class mock_session_outbound
       : public session_outbound
     {
     public:
-        mock_outbound_session(p2p& network)
+        mock_session_outbound(p2p& network)
           : session_outbound(network)
         {
         }
@@ -353,11 +352,11 @@ private:
         }
     };
 
-    class mock_session_seed
+    class mock_seed_session
       : public session_seed
     {
     public:
-        mock_session_seed(p2p& network)
+        mock_seed_session(p2p& network)
           : session_seed(network)
         {
         }
@@ -426,30 +425,30 @@ public:
             strand(), service(), network_settings(), session_)));
     }
 
-    session_inbound::ptr attach_inbound_session() override
+    session_inbound::ptr attach_inbound_session() noexcept override
     {
-        return attach<mock_session_inbound>();
+        return attach<mock_inbound_session>();
     }
 
-    session_outbound::ptr attach_outbound_session() override
+    session_outbound::ptr attach_outbound_session() noexcept override
     {
         return attach<mock_outbound_session>();
     }
 
-    session_seed::ptr attach_seed_session() override
+    session_seed::ptr attach_seed_session() noexcept override
     {
-        return attach<mock_session_seed>();
+        return attach<mock_seed_session>();
     }
 
 private:
     mock_connector_stop_connect::ptr connector_;
     mock_session_outbound::ptr session_;
 
-    class mock_session_inbound
+    class mock_inbound_session
       : public session_inbound
     {
     public:
-        mock_session_inbound(p2p& network)
+        mock_inbound_session(p2p& network)
           : session_inbound(network)
         {
         }
@@ -475,11 +474,11 @@ private:
         }
     };
 
-    class mock_session_seed
+    class mock_seed_session
       : public session_seed
     {
     public:
-        mock_session_seed(p2p& network)
+        mock_seed_session(p2p& network)
           : session_seed(network)
         {
         }

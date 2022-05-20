@@ -20,7 +20,6 @@
 
 BOOST_AUTO_TEST_SUITE(session_inbound_tests)
 
-using namespace bc::network;
 using namespace bc::system::chain;
 
 class mock_channel
@@ -69,19 +68,19 @@ public:
     }
 
     // Get captured port.
-    virtual uint16_t port() const
+    uint16_t port() const
     {
         return port_;
     }
 
     // Get captured accepted.
-    virtual bool accepted() const
+    bool accepted() const
     {
         return !is_zero(accepts_);
     }
 
     // Get captured stopped.
-    virtual bool stopped() const
+    bool stopped() const
     {
         return stopped_;
     }
@@ -197,7 +196,7 @@ public:
         return session_inbound::notify();
     }
 
-    bool stopped() const
+    bool stopped() const noexcept override
     {
         return session_inbound::stopped();
     }
@@ -340,19 +339,19 @@ public:
             network_settings())));
     }
 
-    session_inbound::ptr attach_inbound_session() override
+    session_inbound::ptr attach_inbound_session() noexcept override
     {
         return attach<mock_inbound_session>();
     }
 
-    session_outbound::ptr attach_outbound_session() override
+    session_outbound::ptr attach_outbound_session() noexcept override
     {
-        return attach<mock_session_outbound>();
+        return attach<mock_outbound_session>();
     }
 
-    session_seed::ptr attach_seed_session() override
+    session_seed::ptr attach_seed_session() noexcept override
     {
-        return attach<mock_session_seed>();
+        return attach<mock_seed_session>();
     }
 
 private:
@@ -373,11 +372,11 @@ private:
         }
     };
 
-    class mock_session_outbound
+    class mock_outbound_session
       : public session_outbound
     {
     public:
-        mock_session_outbound(p2p& network)
+        mock_outbound_session(p2p& network)
           : session_outbound(network)
         {
         }
@@ -388,11 +387,11 @@ private:
         }
     };
 
-    class mock_session_seed
+    class mock_seed_session
       : public session_seed
     {
     public:
-        mock_session_seed(p2p& network)
+        mock_seed_session(p2p& network)
           : session_seed(network)
         {
         }

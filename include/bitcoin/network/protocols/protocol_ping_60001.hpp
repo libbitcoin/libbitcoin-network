@@ -40,22 +40,23 @@ class BCT_API protocol_ping_60001
 public:
     typedef std::shared_ptr<protocol_ping_60001> ptr;
 
-    protocol_ping_60001(const session& session, const channel::ptr& channel);
+    protocol_ping_60001(const session& session,
+        const channel::ptr& channel) noexcept;
 
     /// Start protocol (strand required).
-    void start() override;
+    void start() noexcept override;
 
 protected:
-    const std::string& name() const override;
+    const std::string& name() const noexcept override;
 
-    void send_ping() override;
-    void handle_timer(const code& ec) override;
+    void send_ping() noexcept override;
+    void handle_timer(const code& ec) noexcept override;
     void handle_receive_ping(const code& ec,
-        const messages::ping::ptr& message) override;
+        const messages::ping::ptr& message) noexcept override;
 
-    virtual void handle_send_pong(const code& ec);
+    virtual void handle_send_pong(const code& ec) noexcept;
     virtual void handle_receive_pong(const code& ec,
-        const messages::pong::ptr& message);
+        const messages::pong::ptr& message) noexcept;
 
 private:
     // This is protected by strand.

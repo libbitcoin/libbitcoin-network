@@ -33,8 +33,8 @@ namespace network {
 class BCT_API settings
 {
 public:
-    settings();
-    settings(system::chain::selection context);
+    settings() noexcept;
+    settings(system::chain::selection context)noexcept ;
 
     /// Properties.
     uint32_t threads;
@@ -76,12 +76,12 @@ public:
     bool verbose;
 
     /// Helpers.
-    duration connect_timeout() const;
-    duration channel_handshake() const;
-    duration channel_heartbeat() const;
-    duration channel_inactivity() const;
-    duration channel_expiration() const;
-    duration channel_germination() const;
+    duration connect_timeout() const noexcept;
+    duration channel_handshake() const noexcept;
+    duration channel_heartbeat() const noexcept;
+    duration channel_inactivity() const noexcept;
+    duration channel_expiration() const noexcept;
+    duration channel_germination() const noexcept;
 };
 
 } // namespace network

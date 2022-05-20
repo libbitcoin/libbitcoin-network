@@ -37,24 +37,24 @@ using namespace messages;
 
 #define NAME "hosts"
 
-inline bool is_invalid(const address_item& host)
+inline bool is_invalid(const address_item& host) noexcept
 {
     return is_zero(host.port) || host.ip == null_ip_address;
 }
 
 // TODO: manage timestamps (active channels are connected < 3 hours ago).
 // TODO: change to network_address bimap hash table with services and age.
-hosts::hosts(const settings& settings)
-  : disabled_(is_zero(settings.host_pool_capacity)),
+hosts::hosts(const settings& settings) noexcept
+  : count_(zero),
+    disabled_(is_zero(settings.host_pool_capacity)),
     capacity_(static_cast<size_t>(settings.host_pool_capacity)),
     file_path_(settings.hosts_file),
-    count_(zero),
     buffer_(std::max(capacity_, one)),
     stopped_(true)
 {
 }
 
-hosts::~hosts()
+hosts::~hosts() noexcept
 {
     BC_ASSERT(stopped_);
 }
@@ -64,7 +64,7 @@ size_t hosts::count() const noexcept
     return count_.load(std::memory_order_relaxed);
 }
 
-code hosts::start()
+code hosts::start() noexcept
 {
     if (disabled_)
         return error::success;
@@ -99,7 +99,7 @@ code hosts::start()
     return error::success;
 }
 
-code hosts::stop()
+code hosts::stop() noexcept
 {
     if (disabled_)
         return error::success;
@@ -135,7 +135,7 @@ code hosts::stop()
     return error::success;
 }
 
-void hosts::store(const address_item& host)
+void hosts::store(const address_item& host) noexcept
 {
     if (disabled_ || stopped_)
         return;
@@ -155,7 +155,7 @@ void hosts::store(const address_item& host)
     }
 }
 
-void hosts::store(const address_items& hosts)
+void hosts::store(const address_items& hosts) noexcept
 {
     if (disabled_ || stopped_ || hosts.empty())
         return;
@@ -201,7 +201,7 @@ void hosts::store(const address_items& hosts)
     ////    << ") host addresses from peer." << std::endl;
 }
 
-void hosts::remove(const address_item& host)
+void hosts::remove(const address_item& host) noexcept
 {
     if (stopped_ || buffer_.empty())
         return;
@@ -217,7 +217,7 @@ void hosts::remove(const address_item& host)
     count_.store(buffer_.size(), std::memory_order_relaxed);
 }
 
-void hosts::fetch(const address_item_handler& handler) const
+void hosts::fetch(const address_item_handler& handler) const noexcept
 {
     if (stopped_)
     {
@@ -237,7 +237,7 @@ void hosts::fetch(const address_item_handler& handler) const
     handler(error::success, buffer_[index]);
 }
 
-void hosts::fetch(const address_items_handler& handler) const
+void hosts::fetch(const address_items_handler& handler) const noexcept
 {
     if (stopped_)
     {
@@ -268,9 +268,9 @@ void hosts::fetch(const address_items_handler& handler) const
 }
 
 // private
-hosts::buffer::iterator hosts::find(const address_item& host)
+hosts::buffer::iterator hosts::find(const address_item& host) noexcept
 {
-    const auto found = [&host](const address_item& entry)
+    const auto found = [&host](const address_item& entry) noexcept
     {
         // Message types do not implement comparison operators.
         return entry.port == host.port && entry.ip == host.ip;

@@ -43,38 +43,38 @@ public:
 
     /// Construct a version protocol instance using configured values.
     protocol_version_31402(const session& session,
-        const channel::ptr& channel);
+        const channel::ptr& channel) noexcept;
 
     /// Construct a version protocol instance using parameterized services.
     protocol_version_31402(const session& session, const channel::ptr& channel,
-        uint64_t minimum_services, uint64_t maximum_services);
+        uint64_t minimum_services, uint64_t maximum_services) noexcept;
 
     /// Perform the handshake (strand required), handler invoked on completion.
-    virtual void start(result_handler&& handler);
+    virtual void start(result_handler&& handler) noexcept;
 
     /// The channel is stopping (called on strand by stop subscription).
-    void stopping(const code& ec) override;
+    void stopping(const code& ec) noexcept override;
 
 protected:
     // Declare pointer to a non-const version (allows mutation in 70001).
     typedef std::shared_ptr<messages::version> version_ptr;
 
-    const std::string& name() const override;
+    const std::string& name() const noexcept override;
 
-    virtual version_ptr version_factory() const;
-    virtual void rejection(const code& ec);
+    virtual version_ptr version_factory() const noexcept;
+    virtual void rejection(const code& ec) noexcept;
 
-    virtual bool complete() const;
-    virtual void callback(const code& ec);
-    virtual void handle_timer(const code& ec);
+    virtual bool complete() const noexcept;
+    virtual void callback(const code& ec) noexcept;
+    virtual void handle_timer(const code& ec) noexcept;
 
-    virtual void handle_send_version(const code& ec);
+    virtual void handle_send_version(const code& ec) noexcept;
     virtual void handle_receive_version(const code& ec,
-        const messages::version::ptr& message);
+        const messages::version::ptr& message) noexcept;
 
-    virtual void handle_send_acknowledge(const code& ec);
+    virtual void handle_send_acknowledge(const code& ec) noexcept;
     virtual void handle_receive_acknowledge(const code& ec,
-        const messages::version_acknowledge::ptr& message);
+        const messages::version_acknowledge::ptr& message) noexcept;
 
     // These are thread safe (const).
     const uint32_t minimum_version_;

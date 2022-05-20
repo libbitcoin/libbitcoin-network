@@ -84,7 +84,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
 
-bool asio_is_canceled(const error::boost_code& ec)
+bool asio_is_canceled(const error::boost_code& ec) noexcept
 {
     // We test against the platform-independent condition (equivalence).
     // Boost documents that cancellation gives basic_errors::operation_aborted,
@@ -101,7 +101,7 @@ bool asio_is_canceled(const error::boost_code& ec)
 // Equivalence tests require equality operator override. The success and 
 // connection_aborted codes are the only expected in normal operation, so these
 // are first, to optimize the case where asio_is_canceled is not used.
-code asio_to_error_code(const error::boost_code& ec)
+code asio_to_error_code(const error::boost_code& ec) noexcept
 {
     if (ec == boost_error_t::success)
         return error::success;

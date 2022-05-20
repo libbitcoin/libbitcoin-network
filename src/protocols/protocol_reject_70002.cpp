@@ -39,12 +39,12 @@ using namespace std::placeholders;
 
 // This protocol creates log overflow DOS vector, and is not in widespread use.
 protocol_reject_70002::protocol_reject_70002(const session& session,
-    const channel::ptr& channel)
+    const channel::ptr& channel) noexcept
   : protocol(session, channel)
 {
 }
 
-const std::string& protocol_reject_70002::name() const
+const std::string& protocol_reject_70002::name() const noexcept
 {
     return protocol_name;
 }
@@ -52,7 +52,7 @@ const std::string& protocol_reject_70002::name() const
 // Start.
 // ----------------------------------------------------------------------------
 
-void protocol_reject_70002::start()
+void protocol_reject_70002::start() noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_reject_70002");
 
@@ -68,7 +68,7 @@ void protocol_reject_70002::start()
 // ----------------------------------------------------------------------------
 
 void protocol_reject_70002::handle_receive_reject(const code& ec,
-    const reject::ptr& reject)
+    const reject::ptr& reject) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_reject_70002");
 

@@ -31,7 +31,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// This class is thread safe (see comments on accept).
+/// Virtual, thread safe (see comments on accept).
 /// Stop is thread safe and idempotent, may be called multiple times.
 /// All handlers (except accept) are posted to the internal strand.
 class BCT_API socket
@@ -43,53 +43,52 @@ public:
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, size_t)> io_handler;
 
-    // Construction.
-    // ------------------------------------------------------------------------
-
-    /// Construct an instance.
-    socket(asio::io_context& service);
-    virtual ~socket();
+    socket(asio::io_context& service) noexcept;
+    virtual ~socket() noexcept;
 
     // Stop.
     // ------------------------------------------------------------------------
 
     /// Stop has been signaled, work is stopping.
-    virtual bool stopped() const;
+    virtual bool stopped() const noexcept;
 
     /// Cancel work and close the socket (idempotent).
     /// This action is deferred to the strand, not immediately affected.
     /// Block on threadpool.join() to ensure termination of the connection.
-    virtual void stop();
+    virtual void stop() noexcept;
 
     // I/O.
     // ------------------------------------------------------------------------
 
     /// Accept an incoming connection, handler posted to *acceptor* strand.
     /// Concurrent calls are NOT thread safe until this handler is invoked.
-    virtual void accept(asio::acceptor& acceptor, result_handler&& handler);
+    virtual void accept(asio::acceptor& acceptor,
+        result_handler&& handler) noexcept;
 
     /// Create an outbound connection, handler posted to socket strand.
     virtual void connect(const asio::endpoints& range,
-        result_handler&& handler);
+        result_handler&& handler) noexcept;
 
     /// Read from the socket, handler posted to socket strand.
-    virtual void read(const system::data_slab& out, io_handler&& handler);
+    virtual void read(const system::data_slab& out,
+        io_handler&& handler) noexcept;
     ////virtual void dynamic_read(system::data_chunk& out, io_handler&& handler);
 
     /// Write to the socket, handler posted to socket strand.
-    virtual void write(const system::data_slice& in, io_handler&& handler);
+    virtual void write(const system::data_slice& in,
+        io_handler&& handler) noexcept;
 
     // Properties.
     // ------------------------------------------------------------------------
 
+    /// Get the authority of the remote endpoint.
+    virtual const config::authority& authority() const noexcept;
+
     /// The strand is running in this thread.
-    virtual bool stranded() const;
+    virtual bool stranded() const noexcept;
 
     /// Get the strand of the socket.
-    virtual asio::strand& strand();
-
-    /// Get the authority of the remote endpoint.
-    virtual const config::authority& authority() const;
+    virtual asio::strand& strand() noexcept;
 
 protected:
     // These are thread safe.
@@ -101,20 +100,20 @@ protected:
     config::authority authority_;
 
 private:
-    void do_stop();
+    void do_stop() noexcept;
     void do_connect(const asio::endpoints& range,
-        const result_handler& handler);
+        const result_handler& handler) noexcept;
     void do_read(const boost::asio::mutable_buffer& out,
-        const io_handler& handler);
+        const io_handler& handler) noexcept;
     void do_write(const boost::asio::const_buffer& in,
-        const io_handler& handler);
+        const io_handler& handler) noexcept;
 
     void handle_accept(const error::boost_code& ec,
-        const result_handler& handler);
+        const result_handler& handler) noexcept;
     void handle_connect(const error::boost_code& ec,
-        const asio::endpoint& peer, const result_handler& handler);
+        const asio::endpoint& peer, const result_handler& handler) noexcept;
     void handle_io(const error::boost_code& ec, size_t size,
-        const io_handler& handler);
+        const io_handler& handler) noexcept;
 };
 
 } // namespace network

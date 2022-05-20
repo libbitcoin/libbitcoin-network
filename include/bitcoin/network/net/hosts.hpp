@@ -34,7 +34,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Not thread safe.
+/// Virtual, not thread safe.
 /// The store can be loaded and saved from/to the specified file path.
 /// The file is a line-oriented set of config::authority serializations.
 /// Duplicate addresses and those with zero-valued ports are disacarded.
@@ -49,33 +49,36 @@ public:
         address_items_handler;
 
     /// Construct an instance.
-    hosts(const settings& settings);
-    ~hosts();
+    hosts(const settings& settings) noexcept;
+   virtual ~hosts() noexcept;
 
     /// Load hosts file.
-    virtual code start();
+    virtual code start() noexcept;
 
     // Save hosts to file.
-    virtual code stop();
+    virtual code stop() noexcept;
 
     // Thread safe, inexact (ok).
     virtual size_t count() const noexcept;
 
-    virtual void store(const messages::address_item& host);
-    virtual void store(const messages::address_items& hosts);
-    virtual void remove(const messages::address_item& host);
-    virtual void fetch(const address_item_handler& handler) const;
-    virtual void fetch(const address_items_handler& handler) const;
+    virtual void store(const messages::address_item& host) noexcept;
+    virtual void store(const messages::address_items& hosts) noexcept;
+    virtual void remove(const messages::address_item& host) noexcept;
+    virtual void fetch(const address_item_handler& handler) const noexcept;
+    virtual void fetch(const address_items_handler& handler) const noexcept;
 
 private:
     typedef boost::circular_buffer<messages::address_item> buffer;
 
-    buffer::iterator find(const messages::address_item& host);
+    buffer::iterator find(const messages::address_item& host) noexcept;
 
+    // This is thread safe.
+    std::atomic<size_t> count_;
+
+    // These are not thread safe.
     const bool disabled_;
     const size_t capacity_;
     const boost::filesystem::path file_path_;
-    std::atomic<size_t> count_;
     buffer buffer_;
     bool stopped_;
 };

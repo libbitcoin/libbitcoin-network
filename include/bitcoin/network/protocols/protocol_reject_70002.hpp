@@ -39,16 +39,17 @@ class BCT_API protocol_reject_70002
 public:
     typedef std::shared_ptr<protocol_reject_70002> ptr;
 
-    protocol_reject_70002(const session& session, const channel::ptr& channel);
+    protocol_reject_70002(const session& session,
+        const channel::ptr& channel) noexcept;
 
     /// Start protocol (strand required).
-    void start() override;
+    void start() noexcept override;
 
 protected:
-    const std::string& name() const override;
+    const std::string& name() const noexcept override;
 
     virtual void handle_receive_reject(const code& ec,
-        const messages::reject::ptr& reject);
+        const messages::reject::ptr& reject) noexcept;
 };
 
 } // namespace network
