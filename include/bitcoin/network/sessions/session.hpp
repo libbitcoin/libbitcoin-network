@@ -52,7 +52,7 @@ namespace network {
 
 class p2p;
 
-/// Pure virtual base class for maintaining a channel set, thread safe.
+/// Abstract base class for maintaining a channel set, thread safe.
 class BCT_API session
   : public enable_shared_from_base<session>, system::noncopyable
 {
@@ -69,6 +69,23 @@ public:
 
     /// Access network configuration settings.
     const network::settings& settings() const noexcept;
+
+    /// Utilities.
+    /// -----------------------------------------------------------------------
+
+    /// Fetch an entry from address pool.
+    virtual void fetch(hosts::address_item_handler&& handler) const noexcept;
+
+    /// Fetch a subset of entries (count based on config) from address pool.
+    virtual void fetches(hosts::address_items_handler&& handler) const noexcept;
+
+    /// Save an address to the address pool.
+    virtual void save(const messages::address_item& address,
+        result_handler&& handler) const noexcept;
+
+    /// Save a subset of entries (count based on config) from address pool.
+    virtual void saves(const messages::address_items& addresses,
+        result_handler&& handler) const noexcept;
 
 protected:
     typedef subscriber<code> stop_subscriber;
@@ -104,26 +121,36 @@ protected:
     /// Override to change channel protocols (base calls from channel strand).
     virtual void attach_protocols(const channel::ptr& channel) const noexcept;
 
+    /// Subscriptions.
+    /// -----------------------------------------------------------------------
+
+    /// Start timer with completion handler.
+    virtual void start_timer(result_handler&& handler,
+        const duration& timeout) noexcept;
+
+    /// Subscribe to stop notification.
+    virtual void subscribe_stop(result_handler&& handler) noexcept;
+
     /// Factories.
     /// -----------------------------------------------------------------------
 
     /// Call to create channel acceptor, owned by caller.
-    acceptor::ptr create_acceptor() noexcept;
+    virtual acceptor::ptr create_acceptor() noexcept;
 
     /// Call to create channel connector, owned by caller.
-    connector::ptr create_connector() noexcept;
+    virtual connector::ptr create_connector() noexcept;
 
     /// Call to create a set of channel connectors, owned by caller.
-    connectors_ptr create_connectors(size_t count) noexcept;
+    virtual connectors_ptr create_connectors(size_t count) noexcept;
 
     /// Properties.
     /// -----------------------------------------------------------------------
 
     /// The service is stopped.
-    bool stopped() const noexcept;
+    virtual bool stopped() const noexcept;
 
     /// The current thread is on the network strand.
-    bool stranded() const noexcept;
+    virtual bool stranded() const noexcept;
 
     /// Number of entries in the address pool.
     virtual size_t address_count() const noexcept;
@@ -142,33 +169,6 @@ protected:
 
     /// Notify subscribers on channel start (bypass seeds).
     virtual bool notify() const noexcept = 0;
-
-    /// Utilities.
-    /// -----------------------------------------------------------------------
-
-    /// Exposed to protocol for accesss to these methods.
-    friend class protocol;
-
-    /// Fetch an entry from address pool.
-    virtual void fetch(hosts::address_item_handler&& handler) const noexcept;
-
-    /// Fetch a subset of entries (count based on config) from address pool.
-    virtual void fetches(hosts::address_items_handler&& handler) const noexcept;
-
-    /// Save an address to the address pool.
-    virtual void save(const messages::address_item& address,
-        result_handler&& handler) const noexcept;
-
-    /// Save a subset of entries (count based on config) from address pool.
-    virtual void saves(const messages::address_items& addresses,
-        result_handler&& handler) const noexcept;
-
-    /// Members.
-    /// -----------------------------------------------------------------------
-
-    // These are not thread safe.
-    deadline::ptr timer_;
-    stop_subscriber::ptr stop_subscriber_;
 
 private:
     void handle_channel_start(const code& ec, const channel::ptr& channel,
@@ -192,10 +192,12 @@ private:
         const result_handler& stopped) noexcept;
 
     // These are thread safe.
-    std::atomic<bool> stopped_;
     p2p& network_;
+    std::atomic<bool> stopped_;
 
-    // This is not thread safe.
+    // These are not thread safe.
+    deadline::ptr timer_;
+    stop_subscriber::ptr stop_subscriber_;
     std::vector<connector::ptr> connectors_;
 };
 

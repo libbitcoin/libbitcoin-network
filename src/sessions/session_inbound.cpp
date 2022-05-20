@@ -86,7 +86,7 @@ void session_inbound::handle_started(const code& ec,
 
     if (!error_code)
     {
-        stop_subscriber_->subscribe([=](const network::code&)
+        subscribe_stop([=](const network::code&) noexcept
         {
             acceptor->stop();
         });
@@ -133,7 +133,7 @@ void session_inbound::handle_accept(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        timer_->start(BIND2(start_accept, _1, acceptor),
+        start_timer(BIND2(start_accept, _1, acceptor),
             settings().connect_timeout());
         return;
     }

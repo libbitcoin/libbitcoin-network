@@ -20,7 +20,6 @@
 
 BOOST_AUTO_TEST_SUITE(session_tests)
 
-using namespace bc::network;
 using namespace bc::network::messages;
 using namespace bc::system::chain;
 
@@ -40,20 +39,9 @@ public:
         channel::resume();
     }
 
-    void pause() noexcept override
-    {
-        paused_ = true;
-        channel::pause();
-    }
-
     bool resumed() const
     {
         return resumed_;
-    }
-
-    bool paused() const
-    {
-        return paused_;
     }
 
     bool reresumed() const
@@ -114,27 +102,27 @@ public:
     {
     }
 
-    bool stopped() const
+    bool stopped() const noexcept override
     {
         return session::stopped();
     }
 
-    bool stranded() const
+    bool stranded() const noexcept override
     {
         return session::stranded();
     }
 
-    acceptor::ptr create_acceptor()
+    acceptor::ptr create_acceptor() noexcept override
     {
         return session::create_acceptor();
     }
 
-    connector::ptr create_connector()
+    connector::ptr create_connector() noexcept override
     {
         return session::create_connector();
     }
 
-    connectors_ptr create_connectors(size_t count)
+    connectors_ptr create_connectors(size_t count) noexcept override
     {
         return session::create_connectors(count);
     }
@@ -169,28 +157,6 @@ public:
         return notify_;
     }
 
-    void fetch(hosts::address_item_handler&& handler) const noexcept override
-    {
-        session::fetch(std::move(handler));
-    }
-
-    void fetches(hosts::address_items_handler&& handler) const noexcept override
-    {
-        session::fetches(std::move(handler));
-    }
-
-    void save(const messages::address_item& address,
-        result_handler&& complete) const noexcept override
-    {
-        session::save(address, std::move(complete));
-    }
-
-    void saves(const messages::address_items& addresses,
-        result_handler&& complete) const noexcept override
-    {
-        session::saves(addresses, std::move(complete));
-    }
-
     void start_channel(const channel::ptr& channel, result_handler&& started,
         result_handler&& stopped) noexcept override
     {
@@ -214,7 +180,7 @@ public:
         return handshaked_;
     }
 
-    void attach_protocols(const channel::ptr&) const noexcept override
+    void attach_protocols(const channel::ptr& channel) const noexcept override
     {
         if (!protocoled_)
         {
@@ -348,7 +314,7 @@ public:
         return unstore_found_;
     }
 
-    session_seed::ptr attach_seed_session() override
+    session_seed::ptr attach_seed_session() noexcept override
     {
         return attach<mock_session_seed>();
     }
@@ -741,7 +707,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::channel_stopped);
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(channel->resumed());
-    BOOST_REQUIRE(channel->paused());
     BOOST_REQUIRE(!session->attached_protocol());
     BOOST_REQUIRE(!channel->reresumed());
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::channel_stopped);
@@ -805,16 +770,16 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
             });
     });
 
-    // Channel stopped by heading read fail, then by network.store code (network stopped).
+    // Channel stopped by network.store code then heading read fail (file_system).
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::service_stopped);
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(channel->resumed());
-    BOOST_REQUIRE(channel->paused());
     BOOST_REQUIRE(!session->attached_protocol());
     BOOST_REQUIRE(!channel->reresumed());
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
     BOOST_REQUIRE(channel->stopped());
-    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
+    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::file_system);
+    ////BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
     // Channel was pent (handshake invoked) and store failed.
     BOOST_REQUIRE_EQUAL(net.pent_nonce(), channel->nonce());
@@ -888,16 +853,16 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
             });
     });
 
-    // Channel stopped by heading read fail, stop method called by session.
+    // Channel stopped by heading read fail (file_system), stop method called by session.
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(channel->resumed());
-    BOOST_REQUIRE(channel->paused());
     ////BOOST_REQUIRE(session->attached_protocol());
     ////BOOST_REQUIRE(channel->reresumed());
 
     // Subscriber is stopped prior to subscription by channel stop.
-    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::subscriber_stopped);
+    BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::file_system);
+    ////BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::subscriber_stopped);
     BOOST_REQUIRE(channel->stopped());
 
     // Channel is stopped before handshake completion, due to read failure.
@@ -982,7 +947,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(channel->resumed());
-    BOOST_REQUIRE(channel->paused());
     BOOST_REQUIRE(session->require_attached_protocol());
     BOOST_REQUIRE(!channel->stopped());
 
@@ -1074,7 +1038,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(channel->resumed());
-    BOOST_REQUIRE(channel->paused());
     BOOST_REQUIRE(session->require_attached_protocol());
     BOOST_REQUIRE(!channel->stopped());
 

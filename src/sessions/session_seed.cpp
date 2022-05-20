@@ -108,7 +108,7 @@ void session_seed::handle_started(const code& ec,
     {
         const auto& seed = *(it++);
 
-        stop_subscriber_->subscribe([=](const code&)
+        subscribe_stop([=](const code&) noexcept
         {
             connector->stop();
         });

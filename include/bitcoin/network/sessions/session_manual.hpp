@@ -24,6 +24,7 @@
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
@@ -53,15 +54,15 @@ public:
     /// ------------------------------------------------------------------------
     /// Establish a persistent connection, call from network strand.
 
+    /////// Maintain connection with callback on each connection attempt and stop.
+    ////virtual void connect(const config::authority& peer,
+    ////    channel_handler&& handler) noexcept;
+
     /// Maintain connection to a node until session stop.
-    virtual void connect(const std::string& hostname, uint16_t port) noexcept;
+    virtual void connect(const config::endpoint& endpoint) noexcept;
 
     /// Maintain connection with callback on each connection attempt and stop.
-    virtual void connect(const std::string& hostname, uint16_t port,
-        channel_handler&& handler) noexcept;
-
-    /// Maintain connection with callback on each connection attempt and stop.
-    virtual void connect(const config::authority& host,
+    virtual void connect(const config::endpoint& endpoint,
         channel_handler&& handler) noexcept;
 
 protected:
@@ -79,18 +80,18 @@ protected:
     void attach_protocols(const channel::ptr& channel) const noexcept override;
 
     /// Start or restart the given connection (called from connect).
-    virtual void start_connect(const config::authority& host,
+    virtual void start_connect(const config::endpoint& peer,
         const connector::ptr& connector, const channel_handler& handler) noexcept;
 
 private:
     void handle_started(const code& ec, const result_handler& handler) noexcept;
     void handle_connect(const code& ec, const channel::ptr& channel,
-        const config::authority& host, const connector::ptr& connector,
+        const config::endpoint& peer, const connector::ptr& connector,
         const channel_handler& handler) noexcept;
 
-    void handle_channel_start(const code& ec, const config::authority& host,
+    void handle_channel_start(const code& ec, const config::endpoint& peer,
         const channel::ptr& channel, const channel_handler& handler) noexcept;
-    void handle_channel_stop(const code& ec, const config::authority& host,
+    void handle_channel_stop(const code& ec, const config::endpoint& peer,
         const connector::ptr& connector, const channel_handler& handler) noexcept;
 };
 

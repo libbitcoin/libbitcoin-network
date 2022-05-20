@@ -73,29 +73,27 @@ void session_manual::handle_started(const code& ec,
 // Connect sequence.
 // ----------------------------------------------------------------------------
 
-void session_manual::connect(const std::string& hostname,
-    uint16_t port) noexcept
+////void session_manual::connect(const config::authority& peer,
+////    channel_handler&& handler) noexcept
+////{
+////    BC_ASSERT_MSG(stranded(), "strand");
+////
+////    connect(endpoint{ peer.to_hostname(), peer.port() }, std::move(handler));
+////}
+
+void session_manual::connect(const config::endpoint& peer) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     const auto self = shared_from_base<session_manual>();
-    connect(hostname, port, [=](const code&, channel::ptr)
+    connect(peer, [=](const code&, channel::ptr) noexcept
     {
         // TODO: log discarded code.
         self->nop();
     });
 }
 
-void session_manual::connect(const std::string& hostname, uint16_t port,
-    channel_handler&& handler) noexcept
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // BUGBUG: config::authority cons throws on invalid IP format, but this public.
-    connect({ hostname, port }, std::move(handler));
-}
-
-void session_manual::connect(const authority& host,
+void session_manual::connect(const config::endpoint& peer,
     channel_handler&& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -103,18 +101,18 @@ void session_manual::connect(const authority& host,
     // Create a connector for each manual connection.
     const auto connector = create_connector();
 
-    stop_subscriber_->subscribe([=](const code&)
+    subscribe_stop([=](const code&) noexcept
     {
         connector->stop();
     });
 
-    start_connect(host, connector, std::move(handler));
+    start_connect(peer, connector, std::move(handler));
 }
 
 // Connect cycle.
 // ----------------------------------------------------------------------------
 
-void session_manual::start_connect(const authority& host,
+void session_manual::start_connect(const endpoint& peer,
     const connector::ptr& connector, const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -126,12 +124,12 @@ void session_manual::start_connect(const authority& host,
         return;
     }
 
-    connector->connect(host,
-        BIND5(handle_connect, _1, _2, host, connector, handler));
+    connector->connect(peer,
+        BIND5(handle_connect, _1, _2, peer, connector, handler));
 }
 
 void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
-    const authority& host, const connector::ptr& connector,
+    const endpoint& peer, const connector::ptr& connector,
     const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -151,14 +149,14 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        timer_->start(BIND3(start_connect, host, connector, handler),
+        start_timer(BIND3(start_connect, peer, connector, handler),
             settings().connect_timeout());
         return;
     }
 
     start_channel(channel,
-        BIND4(handle_channel_start, _1, host, channel, handler),
-        BIND4(handle_channel_stop, _1, host, connector, handler));
+        BIND4(handle_channel_start, _1, peer, channel, handler),
+        BIND4(handle_channel_stop, _1, peer, connector, handler));
 }
 
 void session_manual::attach_handshake(const channel::ptr& channel,
@@ -168,7 +166,7 @@ void session_manual::attach_handshake(const channel::ptr& channel,
 }
 
 void session_manual::handle_channel_start(const code& ec,
-    const authority&, const channel::ptr& channel,
+    const endpoint&, const channel::ptr& channel,
     const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -184,14 +182,14 @@ void session_manual::attach_protocols(
     session::attach_protocols(channel);
 }
 
-void session_manual::handle_channel_stop(const code&, const authority& host,
+void session_manual::handle_channel_stop(const code&, const endpoint& peer,
     const connector::ptr& connector, const channel_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).
-    start_connect(host, connector, move_copy(handler));
+    start_connect(peer, connector, move_copy(handler));
 }
 
 } // namespace network

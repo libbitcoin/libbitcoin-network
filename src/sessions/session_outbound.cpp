@@ -97,7 +97,7 @@ void session_outbound::handle_started(const code& ec,
         const auto connectors = create_connectors(settings().connect_batch_size);
 
         for (const auto& connector: *connectors)
-            stop_subscriber_->subscribe([=](const code&)
+            subscribe_stop([=](const code&) noexcept
             {
                 connector->stop();
             });
@@ -226,7 +226,7 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        timer_->start(BIND1(start_connect, connectors),
+        start_timer(BIND1(start_connect, connectors),
             settings().connect_timeout());
         return;
     }

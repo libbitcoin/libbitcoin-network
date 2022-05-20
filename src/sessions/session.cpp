@@ -41,10 +41,10 @@ using namespace bc::system;
 using namespace std::placeholders;
 
 session::session(p2p& network) noexcept
-  : timer_(std::make_shared<deadline>(network.strand())),
-    stop_subscriber_(std::make_shared<stop_subscriber>(network.strand())),
+  : network_(network),
     stopped_(true),
-    network_(network)
+    timer_(std::make_shared<deadline>(network.strand())),
+    stop_subscriber_(std::make_shared<stop_subscriber>(network.strand()))
 {
 }
 
@@ -113,10 +113,10 @@ void session::do_attach_handshake(const channel::ptr& channel,
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
+    attach_handshake(channel, move_copy(handshake));
+
     // Channel is started/paused upon creation, this begins the read loop.
     channel->resume();
-
-    attach_handshake(channel, move_copy(handshake));
 }
 
 void session::attach_handshake(const channel::ptr& channel,
@@ -129,6 +129,8 @@ void session::attach_handshake(const channel::ptr& channel,
     const auto& self = *this;
     const auto enable_reject = settings().enable_reject;
     const auto maximum_version = settings().protocol_maximum;
+
+    // Protocol must pause the channel after receiving version and verack.
 
     // Reject is supported starting at bip61 (70002) and later deprecated.
     if (enable_reject && maximum_version >= messages::level::bip61)
@@ -149,10 +151,6 @@ void session::handle_handshake(const code& ec, const channel::ptr& channel,
     const result_handler& start) noexcept
 {
     BC_ASSERT_MSG(channel->stranded(), "channel start");
-
-    // Upon return the channel strand is released and would accept messages.
-    // Pause on the channel strand to delay read until protocols attached.
-    channel->pause();
 
     // Return to network context.
     boost::asio::post(network_.strand(),
@@ -273,6 +271,20 @@ void session::do_handle_channel_stopped(const code& ec,
 
     // Handles stop reason code, stop subscribe failure or stop notification.
     stopped(ec);
+}
+
+// Subscriptions.
+// ----------------------------------------------------------------------------
+
+void session::start_timer(result_handler&& handler,
+    const duration& timeout) noexcept
+{
+    timer_->start(std::move(handler), timeout);
+}
+
+void session::subscribe_stop(result_handler&& handler) noexcept
+{
+    stop_subscriber_->subscribe(std::move(handler));
 }
 
 // Factories.
