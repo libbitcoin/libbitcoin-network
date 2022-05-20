@@ -113,6 +113,12 @@ protected:
     /// Stop the channel.
     virtual void stop(const code& ec);
 
+    /// Pause the channel (strand required).
+    virtual void pause();
+
+    /////// Resume the channel (strand required).
+    ////virtual void resume();
+
     /// Properties.
     /// -----------------------------------------------------------------------
 

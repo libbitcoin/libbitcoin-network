@@ -86,6 +86,20 @@ void protocol::stop(const code& ec)
     channel_->stop(ec);
 }
 
+// Suspend reads from the socket until resume.
+void protocol::pause()
+{
+    BC_ASSERT_MSG(stranded(), "stranded");
+    channel_->pause();
+}
+
+////// Resume reads from the socket until pause or stop.
+////void protocol::resume()
+////{
+////    BC_ASSERT_MSG(stranded(), "stranded");
+////    channel_->resume();
+////}
+
 // Properties.
 // ----------------------------------------------------------------------------
 // These public properties may be accessed outside the strand, but are never
