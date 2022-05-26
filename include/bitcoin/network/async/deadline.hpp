@@ -35,7 +35,7 @@ namespace network {
 /// Class wrapper for boost::asio::basic_waitable_timer (restartable).
 /// This simplifies invocation, eliminates boost-specific error handling and
 /// makes timer firing and cancellation conditions safe for shared objects.
-class deadline
+class BCT_API deadline
   : public std::enable_shared_from_this<deadline>, system::noncopyable,
     track<deadline>
 {
