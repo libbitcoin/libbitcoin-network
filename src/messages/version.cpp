@@ -63,6 +63,8 @@ version version::deserialize(uint32_t version, reader& source) noexcept
         // The exhaustion check allows peers that set 'value >= bip37' to
         // succeed without providing the relay byte. This is broadly observed
         // on the network, including by the satoshi client (see test cases).
+        // BIP37 defines the relay as a bool byte. Presumably this must be
+        // interpreted as any non-zero value and not simply bit zero.
         // ********************************************************************
 
         // Always read relay if 'value >= bip37 && !source.is_exhausted()'.
