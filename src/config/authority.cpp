@@ -24,7 +24,7 @@
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
-#include <boost/system.hpp>
+#include <boost/system/error_code.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/system.hpp>
