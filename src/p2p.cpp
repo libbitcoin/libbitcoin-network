@@ -127,7 +127,7 @@ void p2p::handle_start(const code& ec, const result_handler& handler) noexcept
 
     attach_seed_session()->start([handler](const code& ec)
     {
-        BC_ASSERT_MSG(stranded(), "handler");
+        ////BC_ASSERT_MSG(this->stranded(), "handler");
         handler(ec == error::bypassed ? error::success : ec);
     });
 }
@@ -171,7 +171,7 @@ void p2p::handle_run(const code& ec, const result_handler& handler) noexcept
 
     attach_outbound_session()->start([handler](const code& ec)
     {
-        BC_ASSERT_MSG(stranded(), "handler");
+        ////BC_ASSERT_MSG(this->stranded(), "handler");
         handler(ec == error::bypassed ? error::success : ec);
     });
 }
