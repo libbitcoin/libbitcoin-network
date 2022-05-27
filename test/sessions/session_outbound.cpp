@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
 
     // Started session calls session.stop upon first connect.
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started, &net]()
+    boost::asio::post(net.strand(), [=, &started]()
     {
         session->start([&](const code& ec)
         {

@@ -104,7 +104,7 @@ void session_seed::handle_started(const code& ec,
     const auto counter = std::make_shared<size_t>(connectors->size());
     auto it = settings().seeds.begin();
 
-    for (const auto connector: *connectors)
+    for (const auto& connector: *connectors)
     {
         const auto& seed = *(it++);
 
@@ -137,8 +137,9 @@ void session_seed::start_seed(const config::endpoint& seed,
     connector->connect(seed, move_copy(handler));
 }
 
+// TODO: remove seed parameter.
 void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
-    const config::endpoint& seed, const count_ptr& counter,
+    const config::endpoint&, const count_ptr& counter,
     const result_handler& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "strand");

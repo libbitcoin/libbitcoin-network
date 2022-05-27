@@ -269,37 +269,37 @@ public:
         return protocol::name();
     }
 
-    config::authority authority() const noexcept
+    config::authority authority() const noexcept override
     {
         return protocol::authority();
     }
 
-    uint64_t nonce() const noexcept
+    uint64_t nonce() const noexcept override
     {
         return protocol::nonce();
     }
 
-    const network::settings& settings() const noexcept
+    const network::settings& settings() const noexcept override
     {
         return protocol::settings();
     }
 
-    version::ptr peer_version() const noexcept
+    version::ptr peer_version() const noexcept override
     {
         return protocol::peer_version();
     }
 
-    void set_peer_version(const version::ptr& value) noexcept
+    void set_peer_version(const version::ptr& value) noexcept override
     {
         protocol::set_peer_version(value);
     }
 
-    uint32_t negotiated_version() const noexcept
+    uint32_t negotiated_version() const noexcept override
     {
         return protocol::negotiated_version();
     }
 
-    void set_negotiated_version(uint32_t value) noexcept
+    void set_negotiated_version(uint32_t value) noexcept override
     {
         protocol::set_negotiated_version(value);
     }
