@@ -176,16 +176,16 @@ void session_seed::attach_handshake(const channel::ptr& channel,
     // Reject is supported starting at bip61 (70002) and later deprecated.
     if (enable_reject && maximum_version >= messages::level::bip61)
         channel->attach<protocol_version_70002>(self, minimum_services,
-            maximum_services, relay)->start(std::move(handler));
+            maximum_services, relay)->shake(std::move(handler));
 
     // Relay is supported starting at bip37 (70001).
     else if (maximum_version >= messages::level::bip37)
         channel->attach<protocol_version_70001>(self, minimum_services,
-            maximum_services, relay)->start(std::move(handler));
+            maximum_services, relay)->shake(std::move(handler));
 
     else
         channel->attach<protocol_version_31402>(self, minimum_services,
-            maximum_services)->start(std::move(handler));
+            maximum_services)->shake(std::move(handler));
 }
 
 void session_seed::handle_channel_start(const code&, const channel::ptr&) noexcept

@@ -50,7 +50,7 @@ public:
         uint64_t maximum_services, bool relay) noexcept;
 
     /// Perform the handshake (strand required), handler invoked on completion.
-    void start(result_handler&& handle_event) noexcept override;
+    void shake(result_handler&& handle_event) noexcept override;
 
 protected:
     const std::string& name() const noexcept override;

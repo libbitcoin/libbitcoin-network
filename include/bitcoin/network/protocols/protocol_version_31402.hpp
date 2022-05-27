@@ -50,7 +50,7 @@ public:
         uint64_t minimum_services, uint64_t maximum_services) noexcept;
 
     /// Perform the handshake (strand required), handler invoked on completion.
-    virtual void start(result_handler&& handler) noexcept;
+    virtual void shake(result_handler&& handler) noexcept;
 
     /// The channel is stopping (called on strand by stop subscription).
     void stopping(const code& ec) noexcept override;

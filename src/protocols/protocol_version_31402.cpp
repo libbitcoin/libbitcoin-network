@@ -137,7 +137,7 @@ void protocol_version_31402::rejection(const code& ec) noexcept
 
 // Session resumes the channel following return from start().
 // Sends are not precluded, but no messages can be received while paused.
-void protocol_version_31402::start(result_handler&& handler) noexcept
+void protocol_version_31402::shake(result_handler&& handler) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 

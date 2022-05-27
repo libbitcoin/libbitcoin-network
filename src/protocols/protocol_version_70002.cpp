@@ -66,7 +66,7 @@ const std::string& protocol_version_70002::name() const noexcept
 // Start.
 // ----------------------------------------------------------------------------
 
-void protocol_version_70002::start(result_handler&& handle_event) noexcept
+void protocol_version_70002::shake(result_handler&& handle_event) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
@@ -75,7 +75,7 @@ void protocol_version_70002::start(result_handler&& handle_event) noexcept
 
     SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
 
-    protocol_version_70001::start(std::move(handle_event));
+    protocol_version_70001::shake(std::move(handle_event));
 }
 
 // Outgoing [(in)sufficient_peer => send_reject].
