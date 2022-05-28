@@ -180,7 +180,7 @@ public:
         return handshaked_;
     }
 
-    void attach_protocols(const channel::ptr& channel) const noexcept override
+    void attach_protocols(const channel::ptr&) const noexcept override
     {
         if (!protocoled_)
         {

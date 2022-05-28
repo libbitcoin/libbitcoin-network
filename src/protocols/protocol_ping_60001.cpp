@@ -162,7 +162,7 @@ void protocol_ping_60001::handle_receive_ping(const code& ec,
     SEND1(pong{ message->nonce }, handle_send_pong, _1);
 }
 
-void protocol_ping_60001::handle_send_pong(const code& ec) noexcept
+void protocol_ping_60001::handle_send_pong(const code&) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 }

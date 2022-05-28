@@ -75,7 +75,7 @@ bool protocol::stopped(const code& ec) const noexcept
 }
 
 // Called from stop subscription instead of stop (which would be a cycle).
-void protocol::stopping(const code& ec) noexcept
+void protocol::stopping(const code&) noexcept
 {
     BC_ASSERT_MSG(stranded(), "stranded");
 }

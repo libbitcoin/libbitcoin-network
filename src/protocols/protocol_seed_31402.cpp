@@ -78,7 +78,7 @@ bool protocol_seed_31402::complete() const noexcept
     return sent_address_ && sent_get_address_ && received_address_;
 }
 
-void protocol_seed_31402::stop(const code& ec) noexcept
+void protocol_seed_31402::stop(const code&) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 

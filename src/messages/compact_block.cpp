@@ -87,8 +87,8 @@ void compact_block::serialize(uint32_t version, writer& sink,
     sink.write_8_bytes_little_endian(nonce);
     sink.write_variable(short_ids.size());
 
-    for (const auto& id: short_ids)
-        sink.write_bytes(id);
+    for (const auto& identifier: short_ids)
+        sink.write_bytes(identifier);
 
     sink.write_variable(transactions.size());
 

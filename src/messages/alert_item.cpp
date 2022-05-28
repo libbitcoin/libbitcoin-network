@@ -90,13 +90,14 @@ alert_item alert_item::deserialize(uint32_t, reader& source) noexcept
     };
 }
 
-void alert_item::serialize(uint32_t BC_DEBUG_ONLY(version),
+// Use "_" to avoid 'version' parameter hiding class member.
+void alert_item::serialize(uint32_t BC_DEBUG_ONLY(version_),
     writer& sink) const noexcept
 {
-    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto bytes = size(version_);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
-    sink.write_4_bytes_little_endian(version);
+    sink.write_4_bytes_little_endian(version_);
     sink.write_8_bytes_little_endian(relay_until);
     sink.write_8_bytes_little_endian(expiration);
     sink.write_4_bytes_little_endian(id);

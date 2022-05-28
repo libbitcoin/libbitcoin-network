@@ -113,7 +113,7 @@ void protocol_ping_31402::handle_timer(const code& ec) noexcept
 // Incoming (receive_ping, the incoming traffic resets channel activity timer).
 // ----------------------------------------------------------------------------
 
-void protocol_ping_31402::handle_receive_ping(const code& ec,
+void protocol_ping_31402::handle_receive_ping(const code&,
     const ping::ptr&) noexcept
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
