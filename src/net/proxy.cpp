@@ -142,6 +142,7 @@ void proxy::do_subscribe_stop(const result_handler& handler,
 // Read cycle (read continues until stop called).
 // ----------------------------------------------------------------------------
 
+// TODO: change integer version() to active() structure.
 code proxy::notify(identifier id, uint32_t version,
     system::reader& source) noexcept
 {
@@ -219,6 +220,7 @@ void proxy::handle_read_heading(const code& ec, size_t) noexcept
         return;
     }
 
+    // TODO: shrink buffer on some event.
     // Buffer reserve increases with each larger message (up to maximum).
     payload_buffer_.resize(head->payload_size);
 
@@ -264,6 +266,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
     // Resizable payload buffer precludes reuse of the payload reader.
     system::read::bytes::copy payload_reader(payload_buffer_);
 
+    // TODO: change integer version() to active() structure.
     // Notify subscribers of the new message.
     const auto code = notify(head->id(), version(), payload_reader);
 

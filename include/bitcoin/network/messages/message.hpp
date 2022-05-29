@@ -57,6 +57,7 @@ constexpr size_t max_inventory = 50000;
 // Serialization templates.
 ///----------------------------------------------------------------------------
 
+// TODO: change integer version() to active() structure.
 template <typename Message>
 void serialize(Message& instance, system::writer& sink,
     uint32_t version) noexcept
@@ -64,6 +65,7 @@ void serialize(Message& instance, system::writer& sink,
     instance.serialize(version, sink);
 }
 
+// TODO: change integer version() to active() structure.
 /// Serialize a message object to the Bitcoin wire protocol encoding.
 template <typename Message>
 system::chunk_ptr serialize(const Message& instance, uint32_t magic,
@@ -84,6 +86,7 @@ system::chunk_ptr serialize(const Message& instance, uint32_t magic,
     return buffer;
 }
 
+// TODO: change integer version() to active() structure.
 template <typename Message>
 typename Message::ptr deserialize(system::reader& source,
     uint32_t version) noexcept

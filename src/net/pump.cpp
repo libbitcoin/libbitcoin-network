@@ -34,6 +34,7 @@ using namespace bc::system;
 #define MAKE_SUBSCRIBER(name) \
     SUBSCRIBER(name)(std::make_shared<SUBSCRIBER_TYPE(name)>(strand))
 
+// TODO: change integer version() to active() structure.
 #define CASE_NOTIFY(name) \
     case messages::identifier::name: \
         return do_notify<messages::name>(SUBSCRIBER(name), version, source)
@@ -78,6 +79,7 @@ pump::pump(asio::strand& strand) noexcept
 {
 }
 
+// TODO: change integer version() to active() structure.
 code pump::notify(messages::identifier id, uint32_t version,
     reader& source) const noexcept
 {

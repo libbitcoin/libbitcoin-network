@@ -114,12 +114,13 @@ public:
     virtual void stop(const code& ec) noexcept;
 
 private:
+    // TODO: change integer version() to active() structure.
     // Deserialize a stream into a message instance and notify subscribers.
     template <typename Message, typename Subscriber>
     code do_notify(Subscriber& subscriber, uint32_t version,
         system::reader& source) const noexcept
     {
-        // TODO: account for witness parameter here.
+        // TODO: account for witness parameter in active() structure.
         const auto message = messages::deserialize<Message>(source, version);
 
         if (!source)

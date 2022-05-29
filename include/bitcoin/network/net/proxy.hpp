@@ -48,13 +48,13 @@ public:
     typedef subscriber<const code&> stop_subscriber;
     typedef std::function<void(const code&)> result_handler;
 
+    // TODO: change integer version() to active() structure.
     /// Send a message to the peer.
     template <class Message>
     void send(const typename Message::ptr& message,
         result_handler&& complete) noexcept
     {
-        using namespace messages;
-        send_bytes(serialize(*message, protocol_magic(), version()),
+        send_bytes(messages::serialize(*message, protocol_magic(), version()),
             std::move(complete));
     }
 
