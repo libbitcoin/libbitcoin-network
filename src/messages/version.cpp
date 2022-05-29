@@ -67,13 +67,13 @@ version version::deserialize(uint32_t version, reader& source) noexcept
         // interpreted as any non-zero value and not simply bit zero.
         // ********************************************************************
 
-        // Always read relay if 'value >= bip37 && !source.is_exhausted()'.
+        // Read relay if bip37 and source is not exhausted, otherwise set true.
         // This ignores the specified version, instead respecting the peer's
         // version, since the specified version is not yet negotiated. A true
         // relay value may then be ignored when negotiated version is < bip37.
         // If value >= bip37 with no relay byte, the source is invalidated.
-        return (value >= bip37) && !source.is_exhausted() &&
-            to_bool(source.read_byte());
+        return (value >= bip37) && (source.is_exhausted() ||
+            to_bool(source.read_byte()));
     };
 
     // ************************************************************************
