@@ -18,10 +18,9 @@
  */
 #include <bitcoin/network/error.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/system/error_code.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/boost.hpp>
 
 namespace libbitcoin {
 namespace network {

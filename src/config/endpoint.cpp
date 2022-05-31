@@ -20,11 +20,9 @@
 
 #include <cstdint>
 #include <string>
-#include <boost/asio.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/regex.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/authority.hpp>
 
 namespace libbitcoin {

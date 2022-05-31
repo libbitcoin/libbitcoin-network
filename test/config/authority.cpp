@@ -18,7 +18,6 @@
  */
 #include "../test.hpp"
 #include <sstream>
-#include <boost/program_options.hpp>
 
 BOOST_AUTO_TEST_SUITE(authority_tests)
 

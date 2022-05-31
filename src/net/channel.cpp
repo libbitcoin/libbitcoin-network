@@ -24,6 +24,7 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/settings.hpp>

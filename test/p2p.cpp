@@ -21,9 +21,6 @@
 #include <cstdio>
 #include <future>
 #include <iostream>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
-#include <bitcoin/network.hpp>
 
 struct p2p_tests_setup_fixture
 {

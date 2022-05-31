@@ -21,6 +21,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <boost/asio.hpp>
+////#include <boost/filesystem.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>

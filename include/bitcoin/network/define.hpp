@@ -42,21 +42,11 @@
 // Log name.
 #define LOG_NETWORK "network"
 
-// Avoid namespace conflict between boost::placeholders and std::placeholders.
-#define BOOST_BIND_NO_PLACEHOLDERS
-
 #define LOG_INFO(name) std::cout << name << " : "
 #define LOG_DEBUG(name) std::cout << name << " : "
 #define LOG_VERBOSE(name) std::cout << name << " : "
 #define LOG_ERROR(name) std::cerr << name << " : "
 #define LOG_WARNING(name) std::cerr << name << " : "
-
-// Include boost only here, so placeholders exclusion works.
-#include <boost/asio.hpp>
-#include <boost/circular_buffer.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <boost/thread.hpp>
 
 namespace libbitcoin {
 namespace network {

@@ -1,0 +1,51 @@
+/**
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ *
+ * This file is part of libbitcoin.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#ifndef LIBBITCOIN_NETWORK_BOOST_HPP
+#define LIBBITCOIN_NETWORK_BOOST_HPP
+
+// "By default, enable_current_exception and enable_error_info are integrated
+// directly in the throw_exception function. Defining BOOST_EXCEPTION_DISABLE
+// disables this integration."
+// www.boost.org/doc/libs/1_78_0/libs/exception/doc/configuration_macros.html
+#define BOOST_EXCEPTION_DISABLE
+
+// Avoid namespace conflict between boost::placeholders and std::placeholders.
+// This arises when including <functional>, which declares std::placeholders.
+// www.boost.org/doc/libs/1_78_0/boost/bind.hpp
+#define BOOST_BIND_NO_PLACEHOLDERS
+
+// Apply any warning suppressions to boost.
+// Any boost includes within headers will not benefit from suppression, as the
+// warnings are included by define.hpp which follows boost includes.
+#include <bitcoin/network/define.hpp>
+
+// Include boost in cpp files only from here, so placeholders exclusion works.
+// Avoid use in header includes due to warning repetition (boost/format.hpp).
+#include <boost/algorithm/string.hpp>
+#include <boost/asio.hpp>
+#include <boost/circular_buffer.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/regex.hpp>
+#include <boost/system/error_code.hpp>
+#include <boost/thread.hpp>
+
+#endif

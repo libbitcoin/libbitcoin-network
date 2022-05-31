@@ -21,8 +21,8 @@
 #include <cstdint>
 #include <string>
 #include <utility>
-#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>

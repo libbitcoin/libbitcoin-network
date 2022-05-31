@@ -24,6 +24,7 @@
 #include <memory>
 #include <boost/thread.hpp>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

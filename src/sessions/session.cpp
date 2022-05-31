@@ -21,9 +21,9 @@
 #include <functional>
 #include <memory>
 #include <utility>
-#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/messages/messages.hpp>

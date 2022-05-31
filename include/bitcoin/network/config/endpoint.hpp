@@ -24,7 +24,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/authority.hpp>

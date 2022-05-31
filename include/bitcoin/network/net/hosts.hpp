@@ -25,6 +25,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <boost/circular_buffer.hpp>
+#include <boost/filesystem.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
