@@ -314,6 +314,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\track.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp">
+      <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp">
       <Filter>include\bitcoin\network\config</Filter>
     </ClInclude>

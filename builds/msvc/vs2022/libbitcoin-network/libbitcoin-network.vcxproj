@@ -156,6 +156,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\track.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\config.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\endpoint.hpp" />

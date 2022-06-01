@@ -201,6 +201,7 @@ include_bitcoin_HEADERS = \
 
 include_bitcoin_networkdir = ${includedir}/bitcoin/network
 include_bitcoin_network_HEADERS = \
+    include/bitcoin/network/boost.hpp \
     include/bitcoin/network/define.hpp \
     include/bitcoin/network/error.hpp \
     include/bitcoin/network/p2p.hpp \
