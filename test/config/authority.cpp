@@ -79,6 +79,11 @@ BOOST_AUTO_TEST_CASE(authority__construct__bogus_ip__throws_invalid_option)
     BOOST_REQUIRE_THROW(authority host("bogus"), invalid_option_value);
 }
 
+BOOST_AUTO_TEST_CASE(authority__construct__bogus_port__throws_invalid_option)
+{
+    BOOST_REQUIRE_THROW(authority host("[::]:bogus"), invalid_option_value);
+}
+
 BOOST_AUTO_TEST_CASE(authority__construct__invalid_ipv4__throws_invalid_option)
 {
     BOOST_REQUIRE_THROW(authority host("999.999.999.999"), invalid_option_value);

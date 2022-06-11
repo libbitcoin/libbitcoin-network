@@ -19,6 +19,7 @@
 #include <bitcoin/network/config/authority.hpp>
 
 #include <algorithm>
+#include <exception>
 #include <sstream>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
@@ -36,13 +37,11 @@ static std::string to_host_name(const std::string& host) noexcept
     if (host.find(":") == std::string::npos || host.find("[") == 0)
         return host;
 
-    const auto hostname = boost::format("[%1%]") % host;
-    return hostname.str();
+    return (boost::format("[%1%]") % host).str();
 }
 
 // host: [2001:db8::2] or 2001:db8::2 or 1.2.240.1
-static std::string to_text(const std::string& host,
-    uint16_t port) noexcept
+static std::string to_text(const std::string& host, uint16_t port) noexcept
 {
     std::stringstream authority;
     authority << to_host_name(host);
@@ -79,6 +78,7 @@ static asio::ipv6 to_ipv6(const asio::address& ip_address) noexcept
 
 static std::string to_ipv4_hostname(const asio::address& ip_address) noexcept
 {
+    // C++11: use std::regex.
     // std::regex requires gcc 4.9, so we are using boost::regex for now.
     static const boost::regex regular("^::ffff:([0-9\\.]+)$");
 
@@ -94,8 +94,7 @@ static std::string to_ipv4_hostname(const asio::address& ip_address) noexcept
 static std::string to_ipv6_hostname(const asio::address& ip_address) noexcept
 {
     // IPv6 URLs use a bracketed IPv6 address, see rfc2732.
-    const auto hostname = boost::format("[%1%]") % to_ipv6(ip_address);
-    return hostname.str();
+    return (boost::format("[%1%]") % to_ipv6(ip_address)).str();
 }
 
 authority::authority() noexcept
@@ -117,7 +116,7 @@ authority::authority(const messages::address_item& address) noexcept
 
 static asio::ipv6 to_boost_address(const messages::ip_address& in) noexcept
 {
-    asio::ipv6::bytes_type bytes;
+    asio::ipv6::bytes_type bytes{};
     BC_ASSERT(bytes.size() == in.size());
     std::copy_n(in.begin(), in.size(), bytes.begin());
     const asio::ipv6 out(bytes);
@@ -140,8 +139,8 @@ authority::authority(const messages::ip_address& ip, uint16_t port) noexcept
 
 // host: [2001:db8::2] or 2001:db8::2 or 1.2.240.1
 authority::authority(const std::string& host, uint16_t port) noexcept (false)
-  : authority(to_text(host, port))
 {
+    std::stringstream(to_text(host, port)) >> *this;
 }
 
 authority::authority(const asio::address& ip, uint16_t port) noexcept
@@ -209,11 +208,13 @@ bool authority::operator!=(const authority& other) const noexcept
     return !(*this == other);
 }
 
-std::istream& operator>>(std::istream& input, authority& argument) noexcept(false)
+std::istream& operator>>(std::istream& input,
+    authority& argument) noexcept(false)
 {
     std::string value;
     input >> value;
 
+    // C++11: use std::regex.
     // std::regex requires gcc 4.9, so we are using boost::regex for now.
     static const boost::regex regular(
         "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])(:([0-9]{1,5}))?$");
@@ -233,7 +234,7 @@ std::istream& operator>>(std::istream& input, authority& argument) noexcept(fals
         argument.ip_ = asio::ipv6::from_string(ip_address);
         argument.port_ = port.empty() ? 0 : boost::lexical_cast<uint16_t>(port);
     }
-    catch (const boost::exception&)
+    catch (const std::exception&)
     {
         throw bc::system::istream_exception(value);
     }
@@ -241,7 +242,8 @@ std::istream& operator>>(std::istream& input, authority& argument) noexcept(fals
     return input;
 }
 
-std::ostream& operator<<(std::ostream& output, const authority& argument) noexcept
+std::ostream& operator<<(std::ostream& output,
+    const authority& argument) noexcept
 {
     output << to_text(argument.to_hostname(), argument.port());
     return output;

@@ -117,6 +117,7 @@ std::istream& operator>>(std::istream& input,
     std::string value;
     input >> value;
 
+    // C++11: use std::regex.
     // std::regex requires gcc 4.9, so we are using boost::regex for now.
     static const boost::regex regular("^((tcp|udp|http|https|inproc):\\/\\/)?"
         "(\\[([0-9a-f:\\.]+)]|([^:]+))(:([0-9]{1,5}))?$");
@@ -134,7 +135,7 @@ std::istream& operator>>(std::istream& input,
     {
         argument.port_ = port.empty() ? 0u : boost::lexical_cast<uint16_t>(port);
     }
-    catch (const boost::exception&)
+    catch (const std::exception&)
     {
         throw istream_exception(value);
     }

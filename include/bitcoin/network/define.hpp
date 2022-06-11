@@ -68,6 +68,11 @@ namespace network {
     bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6, p7)
 
 } // namespace network
+
+// TODO: replace with non-derivation.
+namespace system {
+    class noncopyable {};
+}
 } // namespace libbitcoin
 
 #endif

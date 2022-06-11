@@ -49,7 +49,7 @@ struct BCT_API compact_block
         bool witness=true) const noexcept;
     size_t size(uint32_t version, bool witness) const noexcept;
 
-    system::chain::header::ptr header_ptr;
+    system::chain::header::cptr header_ptr;
     uint64_t nonce;
     short_id_list short_ids;
     compact_block_items transactions;

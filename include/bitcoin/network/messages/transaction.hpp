@@ -52,7 +52,7 @@ struct BCT_API transaction
         bool witness=true) const noexcept;
     size_t size(uint32_t version, bool witness) const noexcept;
 
-    system::chain::transaction::ptr transaction_ptr;
+    system::chain::transaction::cptr transaction_ptr;
 };
 
 } // namespace messages

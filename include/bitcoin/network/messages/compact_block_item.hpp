@@ -43,7 +43,7 @@ public:
     size_t size(uint32_t version, bool witness) const noexcept;
 
     uint64_t index;
-    system::chain::transaction::ptr transaction_ptr;
+    system::chain::transaction::cptr transaction_ptr;
 };
 
 typedef std::vector<compact_block_item> compact_block_items;

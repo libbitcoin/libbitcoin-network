@@ -39,11 +39,14 @@ struct BCT_API inventory_item
     enum class type_id : uint32_t
     {
         error = 0,
-        transaction = 1,
-        block = 2,
-        filtered_block = 3,
-        compact_block = 4,
-        witness = system::shift_left<uint32_t>(1, 30),
+
+        // Presumably not intended as flags at this time.
+        transaction = system::bit_right<uint32_t>(0),
+        block = system::bit_right<uint32_t>(1),
+        filtered_block = block | transaction,
+        compact_block = system::bit_right<uint32_t>(2),
+
+        witness = system::bit_right<uint32_t>(30),
         witness_transaction = witness | transaction,
         witness_block = witness | block,
         reserved = witness | filtered_block

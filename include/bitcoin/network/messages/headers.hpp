@@ -51,7 +51,7 @@ struct BCT_API headers
     system::hash_list to_hashes() const noexcept;
     inventory_items to_inventory(inventory::type_id type) const noexcept;
 
-    system::chain::header_ptrs header_ptrs;
+    system::chain::header_cptrs header_ptrs;
 };
 
 } // namespace messages

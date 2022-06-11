@@ -48,7 +48,7 @@ public:
     size_t size(uint32_t version) const noexcept;
 
     // TODO: could use size_t for transactions.
-    system::chain::header::ptr header;
+    system::chain::header::cptr header;
     uint32_t transactions;
     system::hash_list hashes;
     system::data_chunk flags;

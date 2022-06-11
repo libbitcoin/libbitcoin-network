@@ -46,7 +46,7 @@ struct BCT_API block
         bool witness=true) const noexcept;
     size_t size(uint32_t version, bool witness) const noexcept;
 
-    system::chain::block::ptr block_ptr;
+    system::chain::block::cptr block_ptr;
 };
 
 } // namespace messages

@@ -46,7 +46,7 @@ headers headers::deserialize(uint32_t version, reader& source) noexcept
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    chain::header_ptrs header_ptrs;
+    chain::header_cptrs header_ptrs;
     header_ptrs.reserve(source.read_size(max_get_headers));
 
     for (size_t header = 0; header < header_ptrs.capacity(); ++header)

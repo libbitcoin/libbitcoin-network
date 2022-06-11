@@ -65,7 +65,7 @@ size_t block::size(uint32_t, bool witness) const noexcept
 
 ////static void foo()
 ////{
-////    system::chain::block::ptr alpha;
+////    system::chain::block::cptr alpha;
 ////    auto beta = std::move(alpha);
 ////}
 

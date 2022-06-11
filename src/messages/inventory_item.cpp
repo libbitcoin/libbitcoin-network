@@ -117,8 +117,10 @@ bool inventory_item::is_witnessable_type() const noexcept
 // Requires a non-const instance for this in-place efficiency.
 void inventory_item::to_witness() noexcept
 {
+    // TODO: allow class enumerations in bitwise functions.
     if (is_witnessable_type())
-        type = to_type(to_number(type) | to_number(type_id::witness));
+        type = to_type(bit_or(to_number(type),
+            to_number(type_id::witness)));
 }
 
 } // namespace messages
