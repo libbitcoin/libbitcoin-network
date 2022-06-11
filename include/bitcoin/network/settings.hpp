@@ -21,8 +21,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
 #include <boost/asio.hpp>
-////#include <boost/filesystem.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -60,16 +60,16 @@ public:
     uint32_t channel_inactivity_minutes;
     uint32_t channel_expiration_minutes;
     uint32_t host_pool_capacity;
-    boost::filesystem::path hosts_file;
+    std::filesystem::path hosts_file;
     config::authority self;
     config::authorities blacklists;
     config::endpoints peers;
     config::endpoints seeds;
 
     // [log]
-    ////boost::filesystem::path debug_file;
-    ////boost::filesystem::path error_file;
-    ////boost::filesystem::path archive_directory;
+    ////std::filesystem::path debug_file;
+    ////std::filesystem::path error_file;
+    ////std::filesystem::path archive_directory;
     ////size_t rotation_size;
     ////size_t minimum_free_space;
     ////size_t maximum_archive_size;

@@ -48,8 +48,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 #include <boost/circular_buffer.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/format.hpp>
+////#include <boost/format.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>

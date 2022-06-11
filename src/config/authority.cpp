@@ -18,9 +18,11 @@
  */
 #include <bitcoin/network/config/authority.hpp>
 
+////#include <format>
 #include <algorithm>
 #include <exception>
 #include <sstream>
+#include <boost/format.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/messages/messages.hpp>

@@ -21,12 +21,12 @@
 
 #include <atomic>
 #include <cstddef>
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
 #include <boost/circular_buffer.hpp>
-#include <boost/filesystem.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -80,7 +80,7 @@ private:
     // These are not thread safe.
     const bool disabled_;
     const size_t capacity_;
-    const boost::filesystem::path file_path_;
+    const std::filesystem::path file_path_;
     buffer buffer_;
     bool stopped_;
 };
