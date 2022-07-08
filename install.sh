@@ -511,9 +511,6 @@ build_from_tarball()
     local SAVE_LDFLAGS="$LDFLAGS"
     local SAVE_CPPFLAGS="$CPPFLAGS"
 
-    local SAVE_LDFLAGS="$LDFLAGS"
-    local SAVE_CPPFLAGS="$CPPFLAGS"
-
     # For some platforms we need to set ICU pkg-config path.
     # TODO: clean this up?
     if [[ ! ($BUILD) ]]; then
