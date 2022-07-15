@@ -36,7 +36,7 @@ void enable_shared_from_base<Base>::nop() volatile noexcept
 }
 
 template <class Base>
-template <class Derived, system::if_base_of<Base, Derived>>
+template <class Derived, bc::if_base_of<Base, Derived>>
 std::shared_ptr<Derived> enable_shared_from_base<Base>::
 shared_from_base() noexcept
 {

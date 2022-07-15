@@ -223,7 +223,7 @@ std::istream& operator>>(std::istream& input,
 
     boost::sregex_iterator it(value.begin(), value.end(), regular), end;
     if (it == end)
-        throw bc::system::istream_exception(value);
+        throw istream_exception(value);
 
     const auto& match = *it;
     std::string port(match[5]);
@@ -238,7 +238,7 @@ std::istream& operator>>(std::istream& input,
     }
     catch (const std::exception&)
     {
-        throw bc::system::istream_exception(value);
+        throw istream_exception(value);
     }
 
     return input;

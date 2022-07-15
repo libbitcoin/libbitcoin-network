@@ -39,7 +39,7 @@ public:
 
 protected:
     /// Use in derived class to create shared instance of self.
-    template <class Derived, system::if_base_of<Base, Derived> = true>
+    template <class Derived, bc::if_base_of<Base, Derived> = true>
     std::shared_ptr<Derived> shared_from_base() noexcept;
 };
 
