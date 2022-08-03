@@ -36,7 +36,7 @@ class timer
 {
 public:
     /// Returns the duration (in chrono's type system) of the elapsed time.
-    template <typename Function, typename... Args>
+    template <typename Function, typename ...Args>
     static Time duration(const Function& func, Args&&... args) noexcept
     {
         auto start = Clock::now();
