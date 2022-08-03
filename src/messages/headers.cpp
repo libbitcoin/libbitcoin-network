@@ -46,10 +46,11 @@ headers headers::deserialize(uint32_t version, reader& source) noexcept
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
+    const auto size = source.read_size(max_get_headers);
     chain::header_cptrs header_ptrs;
-    header_ptrs.reserve(source.read_size(max_get_headers));
+    header_ptrs.reserve(size);
 
-    for (size_t header = 0; header < header_ptrs.capacity(); ++header)
+    for (size_t header = 0; header < size; ++header)
     {
         header_ptrs.emplace_back(new chain::header{ source });
 
@@ -103,10 +104,10 @@ bool headers::is_sequential() const noexcept
     return true;
 }
 
-// TODO: This would benefit from hash_list as list of pointers.
-hash_list headers::to_hashes() const noexcept
+// TODO: This would benefit from hashes as list of pointers.
+hashes headers::to_hashes() const noexcept
 {
-    hash_list out;
+    hashes out;
     out.reserve(header_ptrs.size());
 
     for (const auto& header: header_ptrs)

@@ -51,7 +51,7 @@ struct BCT_API get_blocks
     size_t size(uint32_t version) const noexcept;
 
     ////uint32_t protocol_version;
-    system::hash_list start_hashes;
+    system::hashes start_hashes;
     system::hash_digest stop_hash;
 };
 

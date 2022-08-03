@@ -51,7 +51,7 @@ struct BCT_API client_filter_headers
     uint8_t filter_type;
     system::hash_digest stop_hash;
     system::hash_digest previous_filter_header;
-    system::hash_list filter_hashes;
+    system::hashes filter_hashes;
 };
 
 } // namespace messages

@@ -41,7 +41,7 @@ const uint32_t inventory::version_minimum = level::minimum_protocol;
 const uint32_t inventory::version_maximum = level::maximum_protocol;
 
 // static
-inventory inventory::factory(hash_list&& hashes, type_id type) noexcept
+inventory inventory::factory(hashes&& hashes, type_id type) noexcept
 {
     static no_fill_allocator<inventory_item> no_fill_allocator{};
 
@@ -57,7 +57,7 @@ inventory inventory::factory(hash_list&& hashes, type_id type) noexcept
     return { items };
 }
 
-inventory inventory::factory(const hash_list& hashes, type_id type) noexcept
+inventory inventory::factory(const hashes& hashes, type_id type) noexcept
 {
     static no_fill_allocator<inventory_item> no_fill_allocator{};
 
@@ -78,10 +78,11 @@ inventory inventory::deserialize(uint32_t version, reader& source) noexcept
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
+    const auto size = source.read_size(max_inventory);
     inventory_items items;
-    items.resize(source.read_size(max_inventory));
+    items.resize(size);
 
-    for (size_t item = 0; item < items.capacity(); ++item)
+    for (size_t item = 0; item < size; ++item)
         items.push_back(inventory_item::deserialize(version, source));
 
     return { items };
@@ -118,9 +119,9 @@ inventory_items inventory::filter(type_id type) const noexcept
     return out;
 }
 
-hash_list inventory::to_hashes(type_id type) const noexcept
+hashes inventory::to_hashes(type_id type) const noexcept
 {
-    hash_list out;
+    hashes out;
     out.reserve(count(type));
 
     for (const auto& item: items)

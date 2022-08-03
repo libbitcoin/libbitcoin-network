@@ -47,10 +47,11 @@ get_data get_data::deserialize(uint32_t version, reader& source) noexcept
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
+    const auto size = source.read_size(max_inventory);
     get_data get;
-    get.items.resize(source.read_size(max_inventory));
+    get.items.resize(size);
 
-    for (size_t item = 0; item < get.items.capacity(); ++item)
+    for (size_t item = 0; item < size; ++item)
         get.items.push_back(inventory_item::deserialize(version, source));
 
     return get;

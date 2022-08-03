@@ -48,7 +48,7 @@ struct BCT_API headers
     size_t size(uint32_t version) const noexcept;
 
     bool is_sequential() const noexcept;
-    system::hash_list to_hashes() const noexcept;
+    system::hashes to_hashes() const noexcept;
     inventory_items to_inventory(inventory::type_id type) const noexcept;
 
     system::chain::header_cptrs header_ptrs;

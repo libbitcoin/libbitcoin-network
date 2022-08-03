@@ -41,10 +41,11 @@ merkle_block merkle_block::deserialize(uint32_t, reader& source) noexcept
 {
     const auto read_hashes = [](reader& source) noexcept
     {
-        hash_list hashes;
-        hashes.reserve(source.read_size(chain::max_block_size));
+        const auto size = source.read_size(chain::max_block_size);
+        system::hashes hashes;
+        hashes.reserve(size);
 
-        for (size_t hash = 0; hash < hashes.capacity(); ++hash)
+        for (size_t hash = 0; hash < size; ++hash)
             hashes.push_back(source.read_hash());
 
         return hashes;

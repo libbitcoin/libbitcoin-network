@@ -43,9 +43,9 @@ struct BCT_API inventory
     static const uint32_t version_maximum;
 
     // TODO: parameterize with witness parameter (once node is ready).
-    static inventory factory(system::hash_list&& hashes,
+    static inventory factory(system::hashes&& hashes,
         type_id type) noexcept;
-    static inventory factory(const system::hash_list& hashes,
+    static inventory factory(const system::hashes& hashes,
         type_id type) noexcept;
 
     static inventory deserialize(uint32_t version,
@@ -54,7 +54,7 @@ struct BCT_API inventory
     size_t size(uint32_t version) const noexcept;
 
     inventory_items filter(type_id type) const noexcept;
-    system::hash_list to_hashes(type_id type) const noexcept;
+    system::hashes to_hashes(type_id type) const noexcept;
     size_t count(type_id type) const noexcept;
 
     inventory_items items;

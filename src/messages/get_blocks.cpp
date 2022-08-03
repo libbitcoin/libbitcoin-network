@@ -79,10 +79,11 @@ get_blocks get_blocks::deserialize(uint32_t version, reader& source) noexcept
 
     const auto read_start_hashes = [](reader& source) noexcept
     {
-        hash_list start_hashes;
-        start_hashes.reserve(source.read_size(max_get_blocks));
+        const auto size = source.read_size(max_get_blocks);
+        hashes start_hashes;
+        start_hashes.reserve(size);
 
-        for (size_t hash = 0; hash < start_hashes.capacity(); ++hash)
+        for (size_t hash = 0; hash < size; ++hash)
             start_hashes.push_back(source.read_hash());
 
         return start_hashes;

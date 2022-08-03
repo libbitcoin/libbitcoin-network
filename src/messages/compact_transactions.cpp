@@ -46,10 +46,11 @@ compact_transactions compact_transactions::deserialize(uint32_t version,
 
     const auto read_transactions = [=](reader& source) noexcept
     {
+        const auto size = source.read_size(chain::max_block_size);
         chain::transactions transactions;
-        transactions.reserve(source.read_size(chain::max_block_size));
+        transactions.reserve(size);
 
-        for (size_t tx = 0; tx < transactions.capacity(); ++tx)
+        for (size_t tx = 0; tx < size; ++tx)
             transactions.emplace_back(source, witness);
 
         return transactions;

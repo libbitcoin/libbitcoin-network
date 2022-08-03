@@ -50,7 +50,7 @@ struct BCT_API client_filter_checkpoint
 
     uint8_t filter_type;
     system::hash_digest stop_hash;
-    system::hash_list filter_headers;
+    system::hashes filter_headers;
 };
 
 } // namespace messages

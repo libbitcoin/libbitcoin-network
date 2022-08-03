@@ -46,10 +46,11 @@ address address::deserialize(uint32_t version, system::reader& source) noexcept
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
+    const auto size = source.read_size(max_address);
     address_items addresses;
-    addresses.reserve(source.read_size(max_address));
+    addresses.reserve(size);
 
-    for (size_t address = 0; address < addresses.capacity(); ++address)
+    for (size_t address = 0; address < size; ++address)
         addresses.push_back(address_item::deserialize(
             version, source, with_timestamp));
 

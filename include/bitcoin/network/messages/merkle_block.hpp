@@ -50,7 +50,7 @@ public:
     // TODO: could use size_t for transactions.
     system::chain::header::cptr header;
     uint32_t transactions;
-    system::hash_list hashes;
+    system::hashes hashes;
     system::data_chunk flags;
 };
 

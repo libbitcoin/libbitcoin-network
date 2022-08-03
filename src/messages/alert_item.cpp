@@ -52,10 +52,11 @@ alert_item alert_item::deserialize(uint32_t, reader& source) noexcept
 {
     const auto read_cans = [](reader& source) noexcept
     {
+        const auto size = source.read_size(max_messages);
         cancels cans;
-        cans.reserve(source.read_size(max_messages));
+        cans.reserve(size);
 
-        for (size_t can = 0; can < cans.capacity(); can++)
+        for (size_t can = 0; can < size; can++)
             cans.push_back(source.read_4_bytes_little_endian());
 
         return cans;
@@ -63,10 +64,11 @@ alert_item alert_item::deserialize(uint32_t, reader& source) noexcept
 
     const auto read_subs = [](reader& source) noexcept
     {
+        const auto size = source.read_size(max_messages);
         sub_versions subs;
-        subs.reserve(source.read_size(max_messages));
+        subs.reserve(size);
 
-        for (size_t sub = 0; sub < subs.capacity(); sub++)
+        for (size_t sub = 0; sub < size; sub++)
             subs.push_back(source.read_string(max_message));
 
         return subs;

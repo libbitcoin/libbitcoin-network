@@ -36,7 +36,7 @@ struct BCT_API compact_block
 {
     typedef std::shared_ptr<const compact_block> ptr;
     typedef system::mini_hash short_id;
-    typedef system::mini_hash_list short_id_list;
+    typedef system::mini_hashes short_id_list;
 
     static const identifier id;
     static const std::string command;
