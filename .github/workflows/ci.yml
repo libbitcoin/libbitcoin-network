@@ -18,27 +18,27 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            cxx: "clang++-14"
+            cxx: "clang++-13"
             link: "dynamic"
             optimization: "size"
             assert: "debug"
             coverage: "nocov"
             boost: "--build-boost"
             icu: ""
-            cc: "clang-14"
+            cc: "clang-13"
             flags: "-Os -fPIE"
             packager: "apt"
             packages: ""
 
           - os: ubuntu-22.04
-            cxx: "clang++-14"
+            cxx: "clang++-13"
             link: "static"
             optimization: "size"
             assert: "ndebug"
             coverage: "nocov"
             boost: "--build-boost"
             icu: "--build-icu --with-icu"
-            cc: "clang-14"
+            cc: "clang-13"
             flags: "-Os -fPIE"
             packager: "apt"
             packages: ""
@@ -75,12 +75,12 @@ jobs:
             optimization: "size"
             assert: "ndebug"
             coverage: "nocov"
-            boost: "--build-boost"
+            boost: ""
             icu: "--with-icu"
             cc: "clang"
             flags: "-Os -fPIE"
             packager: "brew"
-            packages: "icu4c"
+            packages: "boost icu4c"
 
           - os: macos-latest
             cxx: "clang++-14"
@@ -108,10 +108,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Prepare toolchain [generic]
-        run: |
-          git config --global init.defaultBranch master
 
       - name: Prepare toolchain [apt]
         if: ${{ matrix.packager == 'apt' }}
@@ -143,7 +139,6 @@ jobs:
       - name: Execute install.sh
         run: >
           ./install.sh
-          --enable-isystem
           --build-dir=${{ github.workspace }}/build
           --prefix=${{ github.workspace }}/prefixenv
           ${{ env.LINKAGE }}
@@ -221,27 +216,27 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            cxx: "clang++-14"
+            cxx: "clang++-13"
             link: "dynamic"
             optimization: "size"
             assert: "debug"
             coverage: "nocov"
             boost: "--build-boost"
             icu: ""
-            cc: "clang-14"
+            cc: "clang-13"
             flags: "-Os -fPIE"
             packager: "apt"
             packages: ""
 
           - os: ubuntu-22.04
-            cxx: "clang++-14"
+            cxx: "clang++-13"
             link: "static"
             optimization: "size"
             assert: "ndebug"
             coverage: "nocov"
             boost: "--build-boost"
             icu: "--build-icu --with-icu"
-            cc: "clang-14"
+            cc: "clang-13"
             flags: "-Os -fPIE"
             packager: "apt"
             packages: ""
@@ -278,12 +273,12 @@ jobs:
             optimization: "size"
             assert: "ndebug"
             coverage: "nocov"
-            boost: "--build-boost"
+            boost: ""
             icu: "--with-icu"
             cc: "clang"
             flags: "-Os -fPIE"
             packager: "brew"
-            packages: "icu4c"
+            packages: "boost icu4c"
 
           - os: macos-latest
             cxx: "clang++-14"
@@ -311,10 +306,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Prepare toolchain [generic]
-        run: |
-          git config --global init.defaultBranch master
 
       - name: Prepare toolchain [apt]
         if: ${{ matrix.packager == 'apt' }}
