@@ -73,8 +73,8 @@ system::chunk_ptr serialize(const Message& instance, uint32_t magic,
 {
     using namespace system;
 
-    const auto buffer = std::make_shared<data_chunk>(no_fill_byte_allocator);
-    buffer->resize(heading::size() + instance.size(version));
+    const auto buffer = std::make_shared<data_chunk>(heading::size() +
+        instance.size(version));
 
     data_slab body(std::next(buffer->begin(), heading::size()), buffer->end());
     write::bytes::copy body_writer(body);

@@ -47,7 +47,7 @@ proxy::proxy(const socket::ptr& socket) noexcept
     paused_(true),
     pump_subscriber_(socket->strand()),
     stop_subscriber_(std::make_shared<stop_subscriber>(socket->strand())),
-    payload_buffer_(no_fill_byte_allocator),
+    payload_buffer_(),
     heading_reader_(heading_buffer_)
 {
 }
