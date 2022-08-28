@@ -94,7 +94,7 @@ heading heading::factory(uint32_t magic, const std::string& command,
     {
         magic,
         command,
-        static_cast<uint32_t>(payload_size),
+        possible_narrow_cast<uint32_t>(payload_size),
         network_checksum(payload_trimmed)
     };
 }
@@ -121,6 +121,7 @@ void heading::serialize(writer& sink) const noexcept
 
 #define COMMAND_ID(name) { name::command, name::id }
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 identifier heading::id() const noexcept
 {
     // Internal to function avoids static initialization race.
@@ -164,6 +165,7 @@ identifier heading::id() const noexcept
     const auto it = identifiers.find(command);
     return (it == identifiers.end() ? identifier::unknown : it->second);
 }
+BC_POP_WARNING()
 
 #undef COMMAND_ID
 
