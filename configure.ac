@@ -144,6 +144,10 @@ AS_CASE([${enable_isystem}],[yes],
 
 AC_MSG_NOTICE([boost_BUILD_CPPFLAGS : ${boost_BUILD_CPPFLAGS}])
 
+AX_BOOST_REGEX
+AC_SUBST([boost_regex_LIBS], [${BOOST_REGEX_LIB}])
+AC_MSG_NOTICE([boost_regex_LIBS : ${boost_regex_LIBS}])
+
 AS_CASE([${with_tests}], [yes],
     [AX_BOOST_UNIT_TEST_FRAMEWORK
      AC_SUBST([boost_unit_test_framework_LIBS], [${BOOST_UNIT_TEST_FRAMEWORK_LIB}])
