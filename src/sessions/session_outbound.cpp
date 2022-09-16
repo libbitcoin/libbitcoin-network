@@ -20,14 +20,12 @@
 
 #include <cstddef>
 #include <functional>
+#include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/protocols/protocol_address_31402.hpp>
-#include <bitcoin/network/protocols/protocol_ping_31402.hpp>
-#include <bitcoin/network/protocols/protocol_ping_60001.hpp>
-#include <bitcoin/network/protocols/protocol_reject_70002.hpp>
-#include <bitcoin/network/protocols/protocol_version_31402.hpp>
-#include <bitcoin/network/protocols/protocol_version_70002.hpp>
+#include <bitcoin/network/protocols/protocols.hpp>
+#include <bitcoin/network/sessions/session.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -35,178 +33,234 @@ namespace network {
 #define CLASS session_outbound
 
 using namespace bc::system;
+using namespace config;
 using namespace std::placeholders;
 
-session_outbound::session_outbound(p2p& network, bool notify_on_connect)
-  : session_batch(network, notify_on_connect),
-    CONSTRUCT_TRACK(session_outbound)
+session_outbound::session_outbound(p2p& network) noexcept
+  : session(network)
 {
 }
 
-// Start sequence.
+bool session_outbound::inbound() const noexcept
+{
+    return false;
+}
+
+bool session_outbound::notify() const noexcept
+{
+    return true;
+}
+
+// Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_outbound::start(result_handler handler)
+void session_outbound::start(result_handler&& handler) noexcept
 {
-    if (settings_.outbound_connections == 0)
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    if (is_zero(settings().outbound_connections) || 
+        is_zero(settings().host_pool_capacity) ||
+        is_zero(settings().connect_batch_size))
     {
-        LOG_INFO(LOG_NETWORK)
-            << "Not configured for generating outbound connections.";
-        handler(error::success);
+        ////LOG_INFO(LOG_NETWORK)
+        ////    << "Not configured for outbound connections." << std::endl;
+        handler(error::bypassed);
         return;
     }
 
-    LOG_INFO(LOG_NETWORK)
-        << "Starting outbound session.";
+    if (is_zero(address_count()))
+    {
+        ////LOG_INFO(LOG_NETWORK)
+        ////    << "Configured for outbound but no addresses." << std::endl;
+        handler(error::address_not_found);
+        return;
+    }
 
-    session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
+    session::start(BIND2(handle_started, _1, std::move(handler)));
 }
 
 void session_outbound::handle_started(const code& ec,
-    result_handler handler)
+    const result_handler& handler) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(!stopped(), "session stopped in start");
+
     if (ec)
     {
         handler(ec);
         return;
     }
 
-    for (size_t peer = 0; peer < settings_.outbound_connections; ++peer)
-        new_connection(error::success);
+    for (size_t peer = 0; peer < settings().outbound_connections; ++peer)
+    {
+        // Create a batch of connectors for each outbount connection.
+        const auto connectors = create_connectors(settings().connect_batch_size);
 
-    // This is the end of the start sequence.
+        for (const auto& connector: *connectors)
+            subscribe_stop([=](const code&) noexcept
+            {
+                connector->stop();
+            });
+
+        // Start connection attempt with batch of connectors for one peer.
+        start_connect(connectors);
+    }
+
+    // This is the end of the start sequence, does not indicate connect status.
     handler(error::success);
 }
 
 // Connnect cycle.
 // ----------------------------------------------------------------------------
 
-void session_outbound::new_connection(const code&)
+// Attempt to connect one peer using a batch subset of connectors.
+void session_outbound::start_connect(const connectors_ptr& connectors) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Terminates retry loops (and connector is restartable).
+    if (stopped())
+        return;
+
+    // Count down the number of connection attempts within the batch.
+    const auto counter = std::make_shared<size_t>(connectors->size());
+
+    channel_handler connect =
+        BIND3(handle_connect, _1, _2, connectors);
+
+    channel_handler one =
+        BIND5(handle_one, _1, _2, counter, connectors, std::move(connect));
+
+    // Attempt to connect with a unique address for each connector of batch.
+    for (const auto& connector: *connectors)
+        fetch(BIND4(do_one, _1, _2, connector, one));
+}
+
+// Attempt to connect the given host and invoke handle_one.
+void session_outbound::do_one(const code& ec, const authority& host,
+    const connector::ptr& connector, const channel_handler& handler) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // This termination prevents a tight loop in the empty address pool case.
+    if (ec)
+    {
+        handler(ec, nullptr);
+        return;
+    }
+
+    // This termination prevents a tight loop in the case of a small address pool.
+    if (blacklisted(host))
+    {
+        handler(error::address_blocked, nullptr);
+        return;
+    }
+
+    connector->connect(host, move_copy(handler));
+}
+
+// Handle each do_one connection attempt, stopping on first success.
+void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
+    const count_ptr& count, const connectors_ptr& connectors,
+    const channel_handler& handler) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // A successful connection has already occurred, drop this one.
+    if (is_zero(*count))
+    {
+        if (channel)
+            channel->stop(error::channel_dropped);
+
+        return;
+    }
+
+    // Finished indicates that this is the last attempt.
+    const auto finished = is_zero(--(*count));
+
+    // This connection is successful but there are others outstanding.
+    // Short-circuit subsequent attempts and clear outstanding connectors.
+    if (!ec && !finished)
+    {
+        *count = zero;
+        for (auto it = connectors->begin(); it != connectors->end(); ++it)
+            (*it)->stop();
+    }
+
+    // Got a connection.
+    if (!ec)
+    {
+        handler(error::success, channel);
+        return;
+    }
+
+    // No more connectors remaining and no connections.
+    if (ec && finished)
+    {
+        // TODO: log discarded code.
+        // Reduce the set of errors from the batch to connect_failed.
+        handler(error::connect_failed, nullptr);
+        return;
+    }
+
+    BC_ASSERT_MSG(!channel, "unexpected channel instance");
+}
+
+// Handle the singular batch result.
+void session_outbound::handle_connect(const code& ec,
+    const channel::ptr& channel, const connectors_ptr& connectors) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Guard restartable timer (shutdown delay).
     if (stopped())
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Suspended outbound connection.";
+        if (channel)
+            channel->stop(error::service_stopped);
+
         return;
     }
 
-    session_batch::connect(BIND2(handle_connect, _1, _2));
-}
-
-void session_outbound::handle_connect(const code& ec,
-    channel::ptr channel)
-{
+    // This is always connect_failed, no log (reduced).
+    // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure connecting outbound: " << ec.message();
-
-        // Retry with conditional delay in case of network error.
-        dispatch_delayed(cycle_delay(ec), BIND1(new_connection, _1));
+        BC_ASSERT_MSG(!channel, "unexpected channel instance");
+        start_timer(BIND1(start_connect, connectors),
+            settings().connect_timeout());
         return;
     }
 
-    register_channel(channel,
+    start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
-        BIND2(handle_channel_stop, _1, channel));
+        BIND2(handle_channel_stop, _1, connectors));
 }
 
-void session_outbound::handle_channel_start(const code& ec,
-    channel::ptr channel)
+void session_outbound::attach_handshake(const channel::ptr& channel,
+    result_handler&& handler) const noexcept
 {
-    // The start failure is also caught by handle_channel_stop.
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Outbound channel failed to start ["
-            << channel->authority() << "] " << ec.message();
-        return;
-    }
-
-    LOG_INFO(LOG_NETWORK)
-        << "Connected outbound channel [" << channel->authority() << "] ("
-        << connection_count() << ")";
-
-    attach_protocols(channel);
+    session::attach_handshake(channel, std::move(handler));
 }
 
-void session_outbound::attach_protocols(channel::ptr channel)
+void session_outbound::handle_channel_start(const code&, const channel::ptr&) noexcept
 {
-    const auto version = channel->negotiated_version();
-
-    if (version >= message::version::level::bip31)
-        attach<protocol_ping_60001>(channel)->start();
-    else
-        attach<protocol_ping_31402>(channel)->start();
-
-    if (version >= message::version::level::bip61)
-        attach<protocol_reject_70002>(channel)->start();
-
-    attach<protocol_address_31402>(channel)->start();
+    BC_ASSERT_MSG(stranded(), "strand");
 }
 
-void session_outbound::attach_handshake_protocols(channel::ptr channel,
-    result_handler handle_started)
+void session_outbound::attach_protocols(
+    const channel::ptr& channel) const noexcept
 {
-    using serve = message::version::service;
-    const auto relay = settings_.relay_transactions;
-    const auto own_version = settings_.protocol_maximum;
-    const auto own_services = settings_.services;
-    const auto invalid_services = settings_.invalid_services;
-    const auto minimum_version = settings_.protocol_minimum;
-
-    // Require peer to serve network (and witness if configured on self).
-    const auto minimum_services = (own_services & serve::node_witness) |
-        serve::node_network;
-
-    // Reject messages are not handled until bip61 (70002).
-    // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= message::version::level::bip61)
-        attach<protocol_version_70002>(channel, own_version, own_services,
-            invalid_services, minimum_version, minimum_services, relay)
-            ->start(handle_started);
-    else
-        attach<protocol_version_31402>(channel, own_version, own_services,
-            invalid_services, minimum_version, minimum_services)
-            ->start(handle_started);
+    session::attach_protocols(channel);
 }
 
-void session_outbound::handle_channel_stop(const code& ec,
-    channel::ptr channel)
+void session_outbound::handle_channel_stop(const code&,
+    const connectors_ptr& connectors) noexcept
 {
-    LOG_DEBUG(LOG_NETWORK)
-        << "Outbound channel stopped [" << channel->authority() << "] "
-        << ec.message();
+    BC_ASSERT_MSG(stranded(), "strand");
 
-    new_connection(error::success);
-}
-
-// Channel start sequence.
-// ----------------------------------------------------------------------------
-// Pend outgoing connections so we can detect connection to self.
-
-void session_outbound::start_channel(channel::ptr channel,
-    result_handler handle_started)
-{
-    const result_handler unpend_handler =
-        BIND3(do_unpend, _1, channel, handle_started);
-
-    const auto ec = pend(channel);
-
-    if (ec)
-    {
-        unpend_handler(ec);
-        return;
-    }
-
-    session::start_channel(channel, unpend_handler);
-}
-
-void session_outbound::do_unpend(const code& ec, channel::ptr channel,
-    result_handler handle_started)
-{
-    unpend(channel);
-    handle_started(ec);
+    // The channel stopped following connection, try again without delay.
+    // This is the only opportunity for a tight loop (could use timer).
+    start_connect(connectors);
 }
 
 } // namespace network

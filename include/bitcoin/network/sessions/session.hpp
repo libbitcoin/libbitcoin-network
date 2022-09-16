@@ -24,12 +24,13 @@
 #include <functional>
 #include <memory>
 #include <utility>
+#include <vector>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/acceptor.hpp>
-#include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/connector.hpp>
+#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/proxy.hpp>
+#include <bitcoin/network/error.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -51,181 +52,159 @@ namespace network {
 
 class p2p;
 
-/// Base class for maintaining the lifetime of a channel set, thread safe.
+/// Abstract base class for maintaining a channel set, thread safe.
 class BCT_API session
-  : public system::enable_shared_from_base<session>, system::noncopyable
+  : public enable_shared_from_base<session>, system::noncopyable
 {
 public:
-    typedef system::config::authority authority;
-    typedef system::message::network_address address;
-    typedef std::function<void(bool)> truth_handler;
-    typedef std::function<void(size_t)> count_handler;
-    typedef std::function<void(const system::code&)> result_handler;
-    typedef std::function<void(const system::code&, channel::ptr)> channel_handler;
-    typedef std::function<void(const system::code&, acceptor::ptr)> accept_handler;
-    typedef std::function<void(const system::code&, const authority&)> host_handler;
+    typedef std::function<void(const code&)> result_handler;
+    typedef std::function<void(const code&,
+        const channel::ptr&)> channel_handler;
 
-    /// Start the session, invokes handler once stop is registered.
-    virtual void start(result_handler handler);
+    /// Start the sesssion (call from network strand).
+    virtual void start(result_handler&& handler) noexcept;
 
-    /// Subscribe to receive session stop notification.
-    virtual void subscribe_stop(result_handler handler);
+    /// Stop the sesssion timer and subscriber (call from network strand).
+    virtual void stop() noexcept;
+
+    /// Access network configuration settings.
+    const network::settings& settings() const noexcept;
+
+    /// Utilities.
+    /// -----------------------------------------------------------------------
+
+    /// Fetch an entry from address pool.
+    virtual void fetch(hosts::address_item_handler&& handler) const noexcept;
+
+    /// Fetch a subset of entries (count based on config) from address pool.
+    virtual void fetches(hosts::address_items_handler&& handler) const noexcept;
+
+    /// Save an address to the address pool.
+    virtual void save(const messages::address_item& address,
+        result_handler&& handler) const noexcept;
+
+    /// Save a subset of entries (count based on config) from address pool.
+    virtual void saves(const messages::address_items& addresses,
+        result_handler&& handler) const noexcept;
 
 protected:
+    typedef subscriber<code> stop_subscriber;
 
-    /// Construct an instance.
-    session(p2p& network, bool notify_on_connect);
+    /// Construct an instance (network should be started).
+    session(p2p& network) noexcept;
 
-    /// Validate session stopped.
-    ~session();
+    /// Asserts that session is stopped.
+    virtual ~session() noexcept;
 
-    /// Template helpers.
-    // ------------------------------------------------------------------------
+    /// Macro helpers.
+    /// -----------------------------------------------------------------------
 
-    /// Attach a protocol to a channel, caller must start the channel.
-    template <class Protocol, typename... Args>
-    typename Protocol::ptr attach(channel::ptr channel, Args&&... args)
-    {
-        return std::make_shared<Protocol>(network_, channel,
-            std::forward<Args>(args)...);
-    }
-
-    /// Bind a method in the derived class.
+    /// Bind a method in the base or derived class (use BIND#).
     template <class Session, typename Handler, typename... Args>
-    auto bind(Handler&& handler, Args&&... args) ->
+    auto bind(Handler&& handler, Args&&... args) noexcept ->
         decltype(BOUND_SESSION_TYPE(handler, args)) const
     {
         return BOUND_SESSION(handler, args);
     }
 
-    /// Bind a concurrent delegate to a method in the derived class.
-    template <class Session, typename Handler, typename... Args>
-    auto concurrent_delegate(Handler&& handler, Args&&... args) ->
-        system::delegates::concurrent<decltype(BOUND_SESSION_TYPE(handler, args))> const
-    {
-        return dispatch_.concurrent_delegate(SESSION_ARGS(handler, args));
-    }
+    /// Channel sequence.
+    /// -----------------------------------------------------------------------
 
-    /// Invoke a method in the derived class after the specified delay.
-    inline void dispatch_delayed(const system::asio::duration& delay,
-        system::dispatcher::delay_handler handler) const
-    {
-        dispatch_.delayed(delay, handler);
-    }
+    /// Perform handshake and attach protocols (call from network strand).
+    virtual void start_channel(const channel::ptr& channel,
+        result_handler&& started, result_handler&& stopped) noexcept;
 
-    /// Delay timing for a tight failure loop, based on configured timeout.
-    inline system::asio::duration cycle_delay(const system::code& ec)
-    {
-        return (ec == system::error::channel_timeout ||
-            ec == system::error::service_stopped ||
-            ec == system::error::success) ?
-                system::asio::seconds(0) : settings_.connect_timeout();
-    }
+    /// Override to change version protocol (base calls from channel strand).
+    virtual void attach_handshake(const channel::ptr& channel,
+        result_handler&& handler) const noexcept;
+
+    /// Override to change channel protocols (base calls from channel strand).
+    virtual void attach_protocols(const channel::ptr& channel) const noexcept;
+
+    /// Subscriptions.
+    /// -----------------------------------------------------------------------
+
+    /// Start timer with completion handler.
+    virtual void start_timer(result_handler&& handler,
+        const duration& timeout) noexcept;
+
+    /// Subscribe to stop notification.
+    virtual void subscribe_stop(result_handler&& handler) noexcept;
+
+    /// Factories.
+    /// -----------------------------------------------------------------------
+
+    /// Call to create channel acceptor, owned by caller.
+    virtual acceptor::ptr create_acceptor() noexcept;
+
+    /// Call to create channel connector, owned by caller.
+    virtual connector::ptr create_connector() noexcept;
+
+    /// Call to create a set of channel connectors, owned by caller.
+    virtual connectors_ptr create_connectors(size_t count) noexcept;
 
     /// Properties.
-    // ------------------------------------------------------------------------
+    /// -----------------------------------------------------------------------
 
-    virtual size_t address_count() const;
-    virtual size_t connection_count() const;
-    virtual system::code fetch_address(address& out_address) const;
-    virtual bool blacklisted(const authority& authority) const;
-    virtual bool stopped() const;
-    virtual bool stopped(const system::code& ec) const;
+    /// The service is stopped.
+    virtual bool stopped() const noexcept;
 
-    /// Socket creators.
-    // ------------------------------------------------------------------------
+    /// The current thread is on the network strand.
+    virtual bool stranded() const noexcept;
 
-    virtual acceptor::ptr create_acceptor();
-    virtual connector::ptr create_connector();
+    /// Number of entries in the address pool.
+    virtual size_t address_count() const noexcept;
 
-    // Pending connect.
-    // ------------------------------------------------------------------------
+    /// Number of all connected channels.
+    virtual size_t channel_count() const noexcept;
 
-    /// Store a pending connection reference.
-    virtual system::code pend(connector::ptr connector);
+    /// Number of inbound connected channels.
+    virtual size_t inbound_channel_count() const noexcept;
 
-    /// Free a pending connection reference.
-    virtual void unpend(connector::ptr connector);
+    /// The address is blacklisted by configuration.
+    virtual bool blacklisted(const config::authority& authority) const noexcept;
 
-    // Pending handshake.
-    // ------------------------------------------------------------------------
+    /// The channel is inbound (pend the nonce).
+    virtual bool inbound() const noexcept = 0;
 
-    /// Store a pending connection reference.
-    virtual system::code pend(channel::ptr channel);
-
-    /// Free a pending connection reference.
-    virtual void unpend(channel::ptr channel);
-
-    /// Test for a pending connection reference.
-    virtual bool pending(uint64_t version_nonce) const;
-
-    // Registration sequence.
-    //-------------------------------------------------------------------------
-
-    /// Register a new channel with the session and bind its handlers.
-    virtual void register_channel(channel::ptr channel,
-        result_handler handle_started, result_handler handle_stopped);
-
-    /// Start the channel, override to perform pending registration.
-    virtual void start_channel(channel::ptr channel,
-        result_handler handle_started);
-
-    /// Override to attach specialized handshake protocols upon session start.
-    virtual void attach_handshake_protocols(channel::ptr channel,
-        result_handler handle_started);
-
-    /// The handshake is complete, override to perform loopback check.
-    virtual void handshake_complete(channel::ptr channel,
-        result_handler handle_started);
-
-    // TODO: create session_timer base class.
-    // Initialization order places these after privates.
-    system::threadpool& pool_;
-    const settings& settings_;
+    /// Notify subscribers on channel start (bypass seeds).
+    virtual bool notify() const noexcept = 0;
 
 private:
-    typedef system::pending<connector> connectors;
+    void handle_channel_start(const code& ec, const channel::ptr& channel,
+        const result_handler& started, const result_handler& stopped) noexcept;
 
-    void handle_stop(const system::code& ec);
-    void handle_starting(const system::code& ec, channel::ptr channel,
-        result_handler handle_started);
-    void handle_handshake(const system::code& ec, channel::ptr channel,
-        result_handler handle_started);
-    void handle_start(const system::code& ec, channel::ptr channel,
-        result_handler handle_started, result_handler handle_stopped);
-    void handle_remove(const system::code& ec, channel::ptr channel,
-        result_handler handle_stopped);
+    void handle_handshake(const code& ec, const channel::ptr& channel,
+        const result_handler& start) noexcept;
+    void handle_channel_started(const code& ec, const channel::ptr& channel,
+        const result_handler& started) noexcept;
+    void handle_channel_stopped(const code& ec,const channel::ptr& channel,
+        const result_handler& stopped) noexcept;
+
+    void do_attach_handshake(const channel::ptr& channel,
+        const result_handler& handshake) const noexcept;
+    void do_handle_handshake(const code& ec, const channel::ptr& channel,
+        const result_handler& start) noexcept;
+    void do_attach_protocols(const channel::ptr& channel) const noexcept;
+    void do_handle_channel_started(const code& ec, const channel::ptr& channel,
+        const result_handler& started) noexcept;
+    void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,
+        const result_handler& stopped) noexcept;
 
     // These are thread safe.
-    std::atomic<bool> stopped_;
-    const bool notify_on_connect_;
     p2p& network_;
-    mutable system::dispatcher dispatch_;
+    std::atomic<bool> stopped_;
+
+    // These are not thread safe.
+    deadline::ptr timer_;
+    stop_subscriber::ptr stop_subscriber_;
+    std::vector<connector::ptr> connectors_;
 };
 
 #undef SESSION_ARGS
 #undef BOUND_SESSION
 #undef SESSION_ARGS_TYPE
 #undef BOUND_SESSION_TYPE
-
-#define BIND1(method, p1) \
-    bind<CLASS>(&CLASS::method, p1)
-#define BIND2(method, p1, p2) \
-    bind<CLASS>(&CLASS::method, p1, p2)
-#define BIND3(method, p1, p2, p3) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3)
-#define BIND4(method, p1, p2, p3, p4) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4)
-#define BIND5(method, p1, p2, p3, p4, p5) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5)
-#define BIND6(method, p1, p2, p3, p4, p5, p6) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6)
-#define BIND7(method, p1, p2, p3, p4, p5, p6, p7) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6, p7)
-
-#define CONCURRENT_DELEGATE2(method, p1, p2) \
-    concurrent_delegate<CLASS>(&CLASS::method, p1, p2)
-
 
 } // namespace network
 } // namespace libbitcoin

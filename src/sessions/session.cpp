@@ -18,20 +18,18 @@
  */
 #include <bitcoin/network/sessions/session.hpp>
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <memory>
+#include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/acceptor.hpp>
-#include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/connector.hpp>
+#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/boost.hpp>
+#include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/error.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/proxy.hpp>
-#include <bitcoin/network/protocols/protocol_version_31402.hpp>
-#include <bitcoin/network/protocols/protocol_version_70002.hpp>
-#include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/protocols/protocols.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -42,244 +40,336 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-session::session(p2p& network, bool notify_on_connect)
-  : stopped_(true),
-    notify_on_connect_(notify_on_connect),
-    network_(network),
-    dispatch_(network.thread_pool(), NAME),
-    pool_(network.thread_pool()),
-    settings_(network.network_settings())
+session::session(p2p& network) noexcept
+  : network_(network),
+    stopped_(true),
+    timer_(std::make_shared<deadline>(network.strand())),
+    stop_subscriber_(std::make_shared<stop_subscriber>(network.strand()))
 {
 }
 
-session::~session()
+session::~session() noexcept
 {
-    BITCOIN_ASSERT_MSG(stopped(), "The session was not stopped.");
+    BC_ASSERT_MSG(stopped(), "The session was not stopped.");
 }
 
-// Properties.
-// ----------------------------------------------------------------------------
-// protected
-
-size_t session::address_count() const
+void session::start(result_handler&& handler) noexcept
 {
-    return network_.address_count();
-}
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
-size_t session::connection_count() const
-{
-    return network_.connection_count();
-}
-
-code session::fetch_address(address& out_address) const
-{
-    return network_.fetch_address(out_address);
-}
-
-bool session::blacklisted(const authority& authority) const
-{
-    const auto ip_compare = [&](const config::authority& blocked)
-    {
-        return authority.ip() == blocked.ip();
-    };
-
-    const auto& list = settings_.blacklists;
-    return std::any_of(list.begin(), list.end(), ip_compare);
-}
-
-bool session::stopped() const
-{
-    return stopped_;
-}
-
-bool session::stopped(const code& ec) const
-{
-    return stopped() || ec == error::service_stopped;
-}
-
-// Socket creators.
-// ----------------------------------------------------------------------------
-
-acceptor::ptr session::create_acceptor()
-{
-    return std::make_shared<acceptor>(pool_, settings_);
-}
-
-connector::ptr session::create_connector()
-{
-    return std::make_shared<connector>(pool_, settings_);
-}
-
-// Pending connect.
-// ----------------------------------------------------------------------------
-
-code session::pend(connector::ptr connector)
-{
-    return network_.pend(connector);
-}
-
-void session::unpend(connector::ptr connector)
-{
-    network_.unpend(connector);
-}
-
-// Pending handshake.
-// ----------------------------------------------------------------------------
-
-code session::pend(channel::ptr channel)
-{
-    return network_.pend(channel);
-}
-
-void session::unpend(channel::ptr channel)
-{
-    network_.unpend(channel);
-}
-
-bool session::pending(uint64_t version_nonce) const
-{
-    return network_.pending(version_nonce);
-}
-
-// Start sequence.
-// ----------------------------------------------------------------------------
-// Must not change context before subscribing.
-
-void session::start(result_handler handler)
-{
     if (!stopped())
     {
         handler(error::operation_failed);
         return;
     }
 
-    stopped_ = false;
-    subscribe_stop(BIND1(handle_stop, _1));
-
-    // This is the end of the start sequence.
+    stopped_.store(false, std::memory_order_relaxed);
     handler(error::success);
 }
 
-void session::handle_stop(const code& )
+void session::stop() noexcept
 {
-    // This signals the session to stop creating connections, but does not
-    // close the session. Channels stop, resulting in session loss of scope.
-    stopped_ = true;
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    timer_->stop();
+    stopped_.store(true, std::memory_order_relaxed);
+    stop_subscriber_->stop(error::service_stopped);
 }
 
-// Subscribe Stop.
+// Channel sequence.
 // ----------------------------------------------------------------------------
 
-void session::subscribe_stop(result_handler handler)
+void session::start_channel(const channel::ptr& channel,
+    result_handler&& started, result_handler&& stopped) noexcept
 {
-    network_.subscribe_stop(handler);
-}
+    BC_ASSERT_MSG(network_.stranded(), "strand");
 
-// Registration sequence.
-// ----------------------------------------------------------------------------
-// Must not change context in start or stop sequences (use bind).
-
-void session::register_channel(channel::ptr channel,
-    result_handler handle_started, result_handler handle_stopped)
-{
-    if (stopped())
+    if (session::stopped())
     {
-        handle_started(error::service_stopped);
-        handle_stopped(error::service_stopped);
+        channel->stop(error::service_stopped);
+        started(error::service_stopped);
+        stopped(error::service_stopped);
         return;
     }
 
-    start_channel(channel,
-        BIND4(handle_start, _1, channel, handle_started, handle_stopped));
+    // Unpend in handle_handshake (success or failure).
+    if (!inbound())
+        network_.pend(channel->nonce());
+
+    result_handler start =
+        BIND4(handle_channel_start, _1, channel, std::move(started),
+            std::move(stopped));
+
+    result_handler shake =
+        BIND3(handle_handshake, _1, channel, std::move(start));
+
+    // Switch to channel context.
+    boost::asio::post(channel->strand(),
+        BIND2(do_attach_handshake, channel, std::move(shake)));
 }
 
-void session::start_channel(channel::ptr channel,
-    result_handler handle_started)
+void session::do_attach_handshake(const channel::ptr& channel,
+    const result_handler& handshake) const noexcept
 {
-    channel->set_notify(notify_on_connect_);
-    channel->set_nonce(pseudo_random::next(1, max_uint64));
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
 
-    // The channel starts, invokes the handler, then starts the read cycle.
-    channel->start(
-        BIND3(handle_starting, _1, channel, handle_started));
+    attach_handshake(channel, move_copy(handshake));
+
+    // Channel is started/paused upon creation, this begins the read loop.
+    channel->resume();
 }
 
-void session::handle_starting(const code& ec, channel::ptr channel,
-    result_handler handle_started)
+void session::attach_handshake(const channel::ptr& channel,
+    result_handler&& handler) const noexcept
 {
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Channel failed to start [" << channel->authority() << "] "
-            << ec.message();
-        handle_started(ec);
-        return;
-    }
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+    BC_ASSERT_MSG(!channel->paused(), "channel paused for handshake");
 
-    attach_handshake_protocols(channel,
-        BIND3(handle_handshake, _1, channel, handle_started));
-}
+    // Weak reference safe as sessions outlive protocols.
+    const auto& self = *this;
+    const auto enable_reject = settings().enable_reject;
+    const auto maximum_version = settings().protocol_maximum;
 
-void session::attach_handshake_protocols(channel::ptr channel,
-    result_handler handle_started)
-{
-    // Reject messages are not handled until bip61 (70002).
-    // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= message::version::level::bip61)
-        attach<protocol_version_70002>(channel)->start(handle_started);
+    // Protocol must pause the channel after receiving version and verack.
+
+    // Reject is supported starting at bip61 (70002) and later deprecated.
+    if (enable_reject && maximum_version >= messages::level::bip61)
+        channel->attach<protocol_version_70002>(self)
+            ->shake(std::move(handler));
+
+    // Relay is supported starting at bip37 (70001).
+    else if (maximum_version >= messages::level::bip37)
+        channel->attach<protocol_version_70001>(self)
+            ->shake(std::move(handler));
+
     else
-        attach<protocol_version_31402>(channel)->start(handle_started);
+        channel->attach<protocol_version_31402>(self)
+            ->shake(std::move(handler));
 }
 
-void session::handle_handshake(const code& ec, channel::ptr channel,
-    result_handler handle_started)
+void session::handle_handshake(const code& ec, const channel::ptr& channel,
+    const result_handler& start) noexcept
 {
+    BC_ASSERT_MSG(channel->stranded(), "channel start");
+
+    // Return to network context.
+    boost::asio::post(network_.strand(),
+        BIND3(do_handle_handshake, ec, channel, start));
+}
+
+void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
+    const result_handler& start) noexcept
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    if (!inbound())
+        network_.unpend(channel->nonce());
+
+    // Handles channel stopped or protocol start code.
+    // This retains the channel and allows broadcasts, stored if no code.
+    start(ec ? ec : network_.store(channel, notify(), inbound()));
+}
+
+// Context free method.
+void session::handle_channel_start(const code& ec, const channel::ptr& channel,
+    const result_handler& started, const result_handler& stopped) noexcept
+{
+    // Handles network_.store, channel stopped, and protocol start code.
     if (ec)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure in handshake with [" << channel->authority()
-            << "] " << ec.message();
-
-        handle_started(ec);
-        return;
-    }
-
-    handshake_complete(channel, handle_started);
-}
-
-void session::handshake_complete(channel::ptr channel,
-    result_handler handle_started)
-{
-    // This will fail if the IP address or nonce is already connected.
-    handle_started(network_.store(channel));
-}
-
-void session::handle_start(const code& ec, channel::ptr channel,
-    result_handler handle_started, result_handler handle_stopped)
-{
-    // Must either stop or subscribe the channel for stop before returning.
-    // All closures must eventually be invoked as otherwise it is a leak.
-    // Therefore upon start failure expect start failure and stop callbacks.
-    if (ec)
-    {
+        BC_ASSERT_MSG(channel, "unexpected null channel");
         channel->stop(ec);
-        handle_stopped(ec);
-    }
-    else
-    {
-        channel->subscribe_stop(
-            BIND3(handle_remove, _1, channel, handle_stopped));
+        /* bool */ network_.unstore(channel, inbound());
+
+        started(ec);
+        stopped(ec);
+        return;
     }
 
-    // This is the end of the registration sequence.
-    handle_started(ec);
+    // Capture the channel stop handler in the channel.
+    // If stopped, or upon channel stop, handler is invoked.
+    channel->subscribe_stop(
+        BIND3(handle_channel_stopped, _1, channel, stopped),
+        BIND3(handle_channel_started, _1, channel, started));
 }
 
-void session::handle_remove(const code& , channel::ptr channel,
-    result_handler handle_stopped)
+void session::handle_channel_started(const code& ec,
+    const channel::ptr& channel, const result_handler& started) noexcept
 {
-    network_.remove(channel);
-    handle_stopped(error::success);
+    BC_ASSERT_MSG(channel->stranded(), "channel started");
+
+    // Return to network context.
+    boost::asio::post(network_.strand(),
+        BIND3(do_handle_channel_started, ec, channel, started));
+}
+
+void session::do_handle_channel_started(const code& ec,
+    const channel::ptr& channel, const result_handler& started) noexcept
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    // Handles channel subscribe_stop code.
+    started(ec);
+
+    // Do not attach protocols if failed.
+    if (ec)
+        return;
+
+    // Switch to channel context.
+    boost::asio::post(channel->strand(),
+        BIND1(do_attach_protocols, channel));
+}
+
+void session::do_attach_protocols(const channel::ptr& channel) const noexcept
+{
+    BC_ASSERT_MSG(channel->stranded(), "channel: attach, resume");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
+
+    attach_protocols(channel);
+
+    // Resume accepting messages on the channel, timers restarted.
+    channel->resume();
+}
+
+// Override in derived sessions to attach protocols.
+void session::attach_protocols(const channel::ptr& channel) const noexcept
+{
+    BC_ASSERT_MSG(channel->stranded(), "strand");
+
+    // Weak reference safe as sessions outlive protocols.
+    const auto& self = *this;
+    const auto enable_reject = settings().enable_reject;
+    const auto negotiated_version = channel->negotiated_version();
+
+    if (negotiated_version >= messages::level::bip31)
+        channel->attach<protocol_ping_60001>(self)->start();
+    else
+        channel->attach<protocol_ping_31402>(self)->start();
+
+    // Reject is supported starting at bip61 (70002) and later deprecated.
+    if (enable_reject && negotiated_version >= messages::level::bip61)
+        channel->attach<protocol_reject_70002>(self)->start();
+
+    channel->attach<protocol_address_31402>(self)->start();
+}
+
+void session::handle_channel_stopped(const code& ec,
+    const channel::ptr& channel, const result_handler& stopped) noexcept
+{
+    // Return to network context.
+    boost::asio::post(network_.strand(),
+        BIND3(do_handle_channel_stopped, ec, channel, stopped));
+}
+
+void session::do_handle_channel_stopped(const code& ec,
+    const channel::ptr& channel, const result_handler& stopped) noexcept
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    // Assume stop notification, but may be subscribe failure (idempotent).
+    /* bool */ network_.unstore(channel, inbound());
+
+    // Handles stop reason code, stop subscribe failure or stop notification.
+    stopped(ec);
+}
+
+// Subscriptions.
+// ----------------------------------------------------------------------------
+
+void session::start_timer(result_handler&& handler,
+    const duration& timeout) noexcept
+{
+    timer_->start(std::move(handler), timeout);
+}
+
+void session::subscribe_stop(result_handler&& handler) noexcept
+{
+    stop_subscriber_->subscribe(std::move(handler));
+}
+
+// Factories.
+// ----------------------------------------------------------------------------
+
+acceptor::ptr session::create_acceptor() noexcept
+{
+    return network_.create_acceptor();
+}
+
+connector::ptr session::create_connector() noexcept
+{
+    return network_.create_connector();
+}
+
+connectors_ptr session::create_connectors(size_t count) noexcept
+{
+    return network_.create_connectors(count);
+}
+
+// Properties.
+// ----------------------------------------------------------------------------
+
+const network::settings& session::settings() const noexcept
+{
+    return network_.network_settings();
+}
+
+bool session::stopped() const noexcept
+{
+    return stopped_.load(std::memory_order_relaxed);
+}
+
+bool session::stranded() const noexcept
+{
+    return network_.stranded();
+}
+
+size_t session::address_count() const noexcept
+{
+    return network_.address_count();
+}
+
+size_t session::channel_count() const noexcept
+{
+    return network_.channel_count();
+}
+
+size_t session::inbound_channel_count() const noexcept
+{
+    return network_.inbound_channel_count();
+}
+
+bool session::blacklisted(const config::authority& authority) const noexcept
+{
+    return contains(settings().blacklists, authority);
+}
+
+// Utilities.
+// ----------------------------------------------------------------------------
+
+void session::fetch(hosts::address_item_handler&& handler) const noexcept
+{
+    network_.fetch(std::move(handler));
+}
+
+void session::fetches(hosts::address_items_handler&& handler) const noexcept
+{
+    network_.fetches(std::move(handler));
+}
+
+void session::save(const messages::address_item& address,
+    result_handler&& handler) const noexcept
+{
+    // stackoverflow.com/questions/57411283/
+    // calling-non-const-function-of-another-class-by-reference-from-const-function
+    network_.save(address, std::move(handler));
+}
+
+void session::saves(const messages::address_items& addresses,
+    result_handler&& handler) const noexcept
+{
+    // stackoverflow.com/questions/57411283/
+    // calling-non-const-function-of-another-class-by-reference-from-const-function
+    network_.saves(addresses, std::move(handler));
 }
 
 } // namespace network

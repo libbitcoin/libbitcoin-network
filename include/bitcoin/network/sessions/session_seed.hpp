@@ -23,9 +23,9 @@
 #include <memory>
 #include <vector>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/connector.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -42,33 +42,43 @@ public:
     typedef std::shared_ptr<session_seed> ptr;
 
     /// Construct an instance.
-    session_seed(p2p& network);
+    session_seed(p2p& network) noexcept;
 
-    /// Start the session.
-    void start(result_handler handler) override;
+    /// Perform seeding as configured (call from network strand).
+    /// Seeding is complete invocation of the handler.
+    void start(result_handler&& handler) noexcept override;
 
 protected:
-    /// Overridden to set service and version mins upon session start.
-    void attach_handshake_protocols(channel::ptr channel,
-        result_handler handle_started) override;
+    typedef std::shared_ptr<size_t> count_ptr;
 
-    /// Override to attach specialized protocols upon channel start.
-    virtual void attach_protocols(channel::ptr channel,
-        result_handler handler);
+    /// The channel is outbound (do not pend the nonce).
+    bool inbound() const noexcept override;
+
+    /// Do not notify subscribers on channel start.
+    bool notify() const noexcept override;
+
+    /// Overridden to set service and version minimums upon session start.
+    void attach_handshake(const channel::ptr& channel,
+        result_handler&& handler) const noexcept override;
+
+    /// Overridden to attach only seeding protocols upon channel start.
+    void attach_protocols(const channel::ptr& channel) const noexcept override;
+
+    /// Start a seed connection (called from start).
+    virtual void start_seed(const config::endpoint& seed,
+        const connector::ptr& connector,
+        const channel_handler& handler) noexcept;
 
 private:
-    void start_seeding(size_t start_size, result_handler handler);
-    void start_seed(const system::config::endpoint& seed,
-        result_handler handler);
-    void handle_started(const system::code& ec, result_handler handler);
-    void handle_connect(const system::code& ec, channel::ptr channel,
-        const system::config::endpoint& seed, connector::ptr connector,
-        result_handler handler);
-    void handle_complete(size_t start_size, result_handler handler);
 
-    void handle_channel_start(const system::code& ec, channel::ptr channel,
-        result_handler handler);
-    void handle_channel_stop(const system::code& ec);
+    void handle_started(const code& ec, const result_handler& handler) noexcept;
+    void handle_connect(const code& ec, const channel::ptr& channel,
+        const config::endpoint& seed, const count_ptr& counter,
+        const result_handler& handler) noexcept;
+
+    void handle_channel_start(const code& ec, const channel::ptr& channel) noexcept;
+    void handle_channel_stop(const code& ec, const count_ptr& counter,
+        const result_handler& handler) noexcept;
 };
 
 } // namespace network

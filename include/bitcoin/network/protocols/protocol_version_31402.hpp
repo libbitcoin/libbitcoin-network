@@ -19,71 +19,77 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_VERSION_31402_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_VERSION_31402_HPP
 
-#include <cstddef>
 #include <cstdint>
+#include <cstddef>
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
-#include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class session;
 
 class BCT_API protocol_version_31402
-  : public protocol_timer, track<protocol_version_31402>
+  : public protocol, track<protocol_version_31402>
 {
 public:
     typedef std::shared_ptr<protocol_version_31402> ptr;
 
-    /**
-     * Construct a version protocol instance using configured minimums.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel for the protocol.
-     */
-    protocol_version_31402(p2p& network, channel::ptr channel);
+    /// Construct a version protocol instance using configured values.
+    protocol_version_31402(const session& session,
+        const channel::ptr& channel) noexcept;
 
-    /**
-     * Construct a version protocol instance.
-     * @param[in]  network           The network interface.
-     * @param[in]  channel           The channel for the protocol.
-     * @param[in]  own_version       This node's maximum version.
-     * @param[in]  own_services      This node's advertised services.
-     * @param[in]  invalid_services  The disallowed peers services.
-     * @param[in]  minimum_version   This required minimum version.
-     * @param[in]  minimum_services  This required minimum services.
-     */
-    protocol_version_31402(p2p& network, channel::ptr channel,
-        uint32_t own_version, uint64_t own_services, uint64_t invalid_services,
-        uint32_t minimum_version, uint64_t minimum_services);
+    /// Construct a version protocol instance using parameterized services.
+    protocol_version_31402(const session& session, const channel::ptr& channel,
+        uint64_t minimum_services, uint64_t maximum_services) noexcept;
 
-    /**
-     * Start the protocol.
-     * @param[in]  handler  Invoked upon stop or receipt of version and verack.
-     */
-    virtual void start(event_handler handler);
+    /// Perform the handshake (strand required), handler invoked on completion.
+    virtual void shake(result_handler&& handler) noexcept;
+
+    /// The channel is stopping (called on strand by stop subscription).
+    void stopping(const code& ec) noexcept override;
 
 protected:
-    // Expose polymorphic start method from base.
-    using protocol_timer::start;
+    // Declare pointer to a non-const version (allows mutation in 70001).
+    typedef std::shared_ptr<messages::version> version_ptr;
 
-    virtual system::message::version version_factory() const;
-    virtual bool sufficient_peer(system::version_const_ptr message);
+    const std::string& name() const noexcept override;
 
-    virtual bool handle_receive_version(const system::code& ec,
-        system::version_const_ptr version);
-    virtual bool handle_receive_verack(const system::code& ec,
-        system::verack_const_ptr);
+    virtual version_ptr version_factory() const noexcept;
+    virtual void rejection(const code& ec) noexcept;
 
-    p2p& network_;
-    const uint32_t own_version_;
-    const uint64_t own_services_;
-    const uint64_t invalid_services_;
+    virtual bool complete() const noexcept;
+    virtual void callback(const code& ec) noexcept;
+    virtual void handle_timer(const code& ec) noexcept;
+
+    virtual void handle_send_version(const code& ec) noexcept;
+    virtual void handle_receive_version(const code& ec,
+        const messages::version::ptr& message) noexcept;
+
+    virtual void handle_send_acknowledge(const code& ec) noexcept;
+    virtual void handle_receive_acknowledge(const code& ec,
+        const messages::version_acknowledge::ptr& message) noexcept;
+
+    // These are thread safe (const).
     const uint32_t minimum_version_;
+    const uint32_t maximum_version_;
     const uint64_t minimum_services_;
+    const uint64_t maximum_services_;
+    const uint64_t invalid_services_;
+
+private:
+    // These are protected by strand.
+    bool sent_version_;
+    bool received_version_;
+    bool received_acknowledge_;
+    std::shared_ptr<result_handler> handler_;
+    deadline::ptr timer_;
 };
 
 } // namespace network

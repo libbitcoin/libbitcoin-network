@@ -20,26 +20,29 @@
 
 #include <cstddef>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 using namespace bc::system;
-using namespace bc::system::asio;
-using namespace bc::system::message;
+using namespace messages;
 
 // Common default values (no settings context).
-settings::settings()
-  : threads(0),
-    protocol_maximum(version::level::maximum),
-    protocol_minimum(version::level::minimum),
-    services(version::service::none),
+settings::settings() noexcept
+  : threads(1),
+    protocol_minimum(level::minimum_protocol),
+    protocol_maximum(level::maximum_protocol),
+    services_minimum(service::minimum_services),
+    services_maximum(service::maximum_services),
     invalid_services(176),
+    enable_reject(false),
     relay_transactions(false),
     validate_checksum(false),
+    identifier(0),
+    inbound_port(0),
     inbound_connections(0),
     outbound_connections(8),
-    manual_attempt_limit(0),
     connect_batch_size(5),
     connect_timeout_seconds(5),
     channel_handshake_seconds(30),
@@ -49,30 +52,30 @@ settings::settings()
     channel_expiration_minutes(1440),
     host_pool_capacity(0),
     hosts_file("hosts.cache"),
-    self(unspecified_network_address),
+    self(unspecified_address_item),
 
     // [log]
-    debug_file("debug.log"),
-    error_file("error.log"),
-    archive_directory("archive"),
-    rotation_size(0),
-    minimum_free_space(0),
-    maximum_archive_size(0),
-    maximum_archive_files(0),
-    statistics_server(unspecified_network_address),
+    ////debug_file("debug.log"),
+    ////error_file("error.log"),
+    ////archive_directory("archive"),
+    ////rotation_size(0),
+    ////minimum_free_space(0),
+    ////maximum_archive_size(0),
+    ////maximum_archive_files(0),
+    ////statistics_server(unspecified_address_item),
     verbose(false)
 {
 }
 
 // Use push_back due to initializer_list bug:
 // stackoverflow.com/a/20168627/1172329
-settings::settings(config::settings context)
+settings::settings(chain::selection context) noexcept
   : settings()
 {
     // Handle deviations from common defaults.
     switch (context)
     {
-        case config::settings::mainnet:
+        case chain::selection::mainnet:
         {
             identifier = 3652501241;
             inbound_port = 8333;
@@ -84,7 +87,7 @@ settings::settings(config::settings context)
             break;
         }
 
-        case config::settings::testnet:
+        case chain::selection::testnet:
         {
             identifier = 118034699;
             inbound_port = 18333;
@@ -96,7 +99,7 @@ settings::settings(config::settings context)
             break;
         }
 
-        case config::settings::regtest:
+        case chain::selection::regtest:
         {
             identifier = 3669344250;
             inbound_port = 18444;
@@ -106,43 +109,38 @@ settings::settings(config::settings context)
         }
 
         default:
-        case config::settings::none:
+        case chain::selection::none:
         {
         }
     }
 }
 
-size_t settings::minimum_connections() const
-{
-    return ceiling_add<size_t>(outbound_connections, peers.size());
-}
-
-duration settings::connect_timeout() const
+duration settings::connect_timeout() const noexcept
 {
     return seconds(connect_timeout_seconds);
 }
 
-duration settings::channel_handshake() const
+duration settings::channel_handshake() const noexcept
 {
     return seconds(channel_handshake_seconds);
 }
 
-duration settings::channel_heartbeat() const
+duration settings::channel_heartbeat() const noexcept
 {
     return minutes(channel_heartbeat_minutes);
 }
 
-duration settings::channel_inactivity() const
+duration settings::channel_inactivity() const noexcept
 {
     return minutes(channel_inactivity_minutes);
 }
 
-duration settings::channel_expiration() const
+duration settings::channel_expiration() const noexcept
 {
     return minutes(channel_expiration_minutes);
 }
 
-duration settings::channel_germination() const
+duration settings::channel_germination() const noexcept
 {
     return seconds(channel_germination_seconds);
 }

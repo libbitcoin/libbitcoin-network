@@ -19,76 +19,81 @@
 #include <bitcoin/network/protocols/protocol_reject_70002.hpp>
 
 #include <cstdint>
-#include <functional>
 #include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/protocols/protocol_events.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-#define NAME "reject"
 #define CLASS protocol_reject_70002
+static const std::string protocol_name = "reject";
 
 using namespace bc::system;
-using namespace bc::system::message;
+using namespace messages;
 using namespace std::placeholders;
 
-protocol_reject_70002::protocol_reject_70002(p2p& network,
-    channel::ptr channel)
-  : protocol_events(network, channel, NAME),
-    CONSTRUCT_TRACK(protocol_reject_70002)
+// This protocol creates log overflow DOS vector, and is not in widespread use.
+protocol_reject_70002::protocol_reject_70002(const session& session,
+    const channel::ptr& channel) noexcept
+  : protocol(session, channel)
 {
 }
 
-// Start sequence.
+const std::string& protocol_reject_70002::name() const noexcept
+{
+    return protocol_name;
+}
+
+// Start.
 // ----------------------------------------------------------------------------
 
-void protocol_reject_70002::start()
+void protocol_reject_70002::start() noexcept
 {
-    protocol_events::start();
+    BC_ASSERT_MSG(stranded(), "protocol_reject_70002");
+
+    if (started())
+        return;
 
     SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
+
+    protocol::start();
 }
 
-// Protocol.
+// Inbound (log).
 // ----------------------------------------------------------------------------
 
-// TODO: mitigate log fill DOS.
-bool protocol_reject_70002::handle_receive_reject(const code& ec,
-    reject_const_ptr reject)
+void protocol_reject_70002::handle_receive_reject(const code& ec,
+    const reject::ptr& reject) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "protocol_reject_70002");
+
     if (stopped(ec))
-        return false;
+        return;
 
-    if (ec)
+    const auto& message = reject->message;
+
+    // vesion message rejection is handled in protocol_version_70002, however
+    // if received here (outside of handshake), a protocol error is implied.
+    if (reject->message == version::command)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure receiving reject from [" << authority() << "] "
-            << ec.message();
-        stop(error::channel_stopped);
-        return false;
+        // TODO: log protocol violation.
+        stop(error::protocol_violation);
+        return;
     }
-
-    const auto& message = reject->message();
-
-    // Handle these in the version protocol.
-    if (message == version::command)
-        return true;
 
     std::string hash;
     if (message == block::command || message == transaction::command)
-        hash = " [" + encode_hash(reject->data()) + "].";
+        hash = " [" + encode_hash(reject->hash) + "].";
 
-    const auto code = reject->code();
     LOG_DEBUG(LOG_NETWORK)
-        << "Received " << message << " reject (" << static_cast<uint16_t>(code)
-        << ") from [" << authority() << "] '" << reject->reason()
-        << "'" << hash;
-    return true;
+        << "Received " << message << " reject ("
+        << static_cast<uint16_t>(reject->code) << ") from ["
+        << authority() << "] '" << reject->reason << "'" << hash << std::endl;
 }
 
 } // namespace network

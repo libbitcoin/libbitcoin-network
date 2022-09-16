@@ -20,49 +20,44 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_31402_HPP
 
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/protocols/protocol_events.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class session;
 
-/**
- * Address protocol.
- * Attach this to a channel immediately following handshake completion.
- */
 class BCT_API protocol_address_31402
-  : public protocol_events, track<protocol_address_31402>
+  : public protocol, track<protocol_address_31402>
 {
 public:
     typedef std::shared_ptr<protocol_address_31402> ptr;
 
-    /**
-     * Construct an address protocol instance.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     */
-    protocol_address_31402(p2p& network, channel::ptr channel);
+    protocol_address_31402(const session& session,
+        const channel::ptr& channel) noexcept;
 
-    /**
-     * Start the protocol.
-     */
-    virtual void start();
+    /// Start protocol (strand required).
+    void start() noexcept override;
 
 protected:
-    virtual void handle_stop(const system::code& ec);
-    virtual void handle_store_addresses(const system::code& ec);
+    const std::string& name() const noexcept override;
 
-    virtual bool handle_receive_address(const system::code& ec,
-        system::address_const_ptr address);
-    virtual bool handle_receive_get_address(const system::code& ec,
-        system::get_address_const_ptr message);
+    virtual void handle_fetch_addresses(const code& ec,
+        const messages::address_items& addresses) noexcept;
+    virtual void handle_receive_address(const code& ec,
+        const messages::address::ptr& address) noexcept;
+    virtual void handle_receive_get_address(const code& ec,
+        const messages::get_address::ptr& message) noexcept;
 
-    p2p& network_;
-    const system::message::address self_;
+private:
+    // This is protected by strand.
+    bool sent_;
 };
 
 } // namespace network

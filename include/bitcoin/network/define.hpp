@@ -19,6 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_DEFINE_HPP
 #define LIBBITCOIN_NETWORK_DEFINE_HPP
 
+#include <iostream>
+#include <memory>
 #include <bitcoin/system.hpp>
 
 // We use the generic helper definitions in libbitcoin to define BCT_API
@@ -40,14 +42,37 @@
 // Log name.
 #define LOG_NETWORK "network"
 
-// Avoid namespace conflict between boost::placeholders and std::placeholders.
-#define BOOST_BIND_NO_PLACEHOLDERS
+#define LOG_INFO(name) std::cout << name << " : "
+#define LOG_DEBUG(name) std::cout << name << " : "
+#define LOG_VERBOSE(name) std::cout << name << " : "
+#define LOG_ERROR(name) std::cerr << name << " : "
+#define LOG_WARNING(name) std::cerr << name << " : "
 
-// Include boost only here, so placeholders exclusion works.
-#include <boost/asio.hpp>
-#include <boost/circular_buffer.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <boost/thread.hpp>
+namespace libbitcoin {
+namespace network {
+
+// The 'bind' method and 'CLASS' names are conventional.
+#define BIND1(method, p1) \
+    bind<CLASS>(&CLASS::method, p1)
+#define BIND2(method, p1, p2) \
+    bind<CLASS>(&CLASS::method, p1, p2)
+#define BIND3(method, p1, p2, p3) \
+    bind<CLASS>(&CLASS::method, p1, p2, p3)
+#define BIND4(method, p1, p2, p3, p4) \
+    bind<CLASS>(&CLASS::method, p1, p2, p3, p4)
+#define BIND5(method, p1, p2, p3, p4, p5) \
+    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5)
+#define BIND6(method, p1, p2, p3, p4, p5, p6) \
+    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6)
+#define BIND7(method, p1, p2, p3, p4, p5, p6, p7) \
+    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6, p7)
+
+} // namespace network
+
+// TODO: replace with non-derivation.
+namespace system {
+    class noncopyable {};
+}
+} // namespace libbitcoin
 
 #endif

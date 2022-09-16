@@ -24,9 +24,9 @@
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/connector.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -41,41 +41,58 @@ class BCT_API session_manual
 {
 public:
     typedef std::shared_ptr<session_manual> ptr;
-    typedef std::function<void(const system::code&, channel::ptr)>
+    typedef std::function<void(const code&, const channel::ptr&)>
         channel_handler;
 
-    /// Construct an instance.
-    session_manual(p2p& network, bool notify_on_connect);
+    /// Construct an instance (network should be started).
+    session_manual(p2p& network) noexcept;
 
-    /// Start the manual session.
-    void start(result_handler handler) override;
+    /// Start the session of persistent connections (call from network strand).
+    void start(result_handler&& handler) noexcept override;
 
-    /// Maintain connection to a node.
-    virtual void connect(const std::string& hostname, uint16_t port);
+    /// Connect.
+    /// ------------------------------------------------------------------------
+    /// Establish a persistent connection, call from network strand.
 
-    /// Maintain connection to a node with callback on first connect.
-    virtual void connect(const std::string& hostname, uint16_t port,
-        channel_handler handler);
+    /////// Maintain connection with callback on each connection attempt and stop.
+    ////virtual void connect(const config::authority& peer,
+    ////    channel_handler&& handler) noexcept;
+
+    /// Maintain connection to a node until session stop.
+    virtual void connect(const config::endpoint& endpoint) noexcept;
+
+    /// Maintain connection with callback on each connection attempt and stop.
+    virtual void connect(const config::endpoint& endpoint,
+        channel_handler&& handler) noexcept;
 
 protected:
-    /// Override to attach specialized protocols upon channel start.
-    virtual void attach_protocols(channel::ptr channel);
+    /// The channel is outbound (do not pend the nonce).
+    bool inbound() const noexcept override;
+
+    /// Notify subscribers on channel start.
+    bool notify() const noexcept override;
+
+    /// Overridden to change version protocol (base calls from channel strand).
+    void attach_handshake(const channel::ptr& channel,
+        result_handler&& handler) const noexcept override;
+
+    /// Overridden to change channel protocols (base calls from channel strand).
+    void attach_protocols(const channel::ptr& channel) const noexcept override;
+
+    /// Start or restart the given connection (called from connect).
+    virtual void start_connect(const config::endpoint& peer,
+        const connector::ptr& connector, const channel_handler& handler) noexcept;
 
 private:
-    void start_connect(const system::code& ec, const std::string& hostname,
-        uint16_t port, uint32_t attempts, channel_handler handler);
+    void handle_started(const code& ec, const result_handler& handler) noexcept;
+    void handle_connect(const code& ec, const channel::ptr& channel,
+        const config::endpoint& peer, const connector::ptr& connector,
+        const channel_handler& handler) noexcept;
 
-    void handle_started(const system::code& ec, result_handler handler);
-    void handle_connect(const system::code& ec, channel::ptr channel,
-        const std::string& hostname, uint16_t port, uint32_t remaining,
-        connector::ptr connector, channel_handler handler);
-
-    void handle_channel_start(const system::code& ec,
-        const std::string& hostname, uint16_t port, uint32_t remaining,
-        channel::ptr channel, channel_handler handler);
-    void handle_channel_stop(const system::code& ec,
-        const std::string& hostname, uint16_t port, uint32_t remaining,
-        channel_handler handler);
+    void handle_channel_start(const code& ec, const config::endpoint& peer,
+        const channel::ptr& channel, const channel_handler& handler) noexcept;
+    void handle_channel_stop(const code& ec, const config::endpoint& peer,
+        const connector::ptr& connector, const channel_handler& handler) noexcept;
 };
 
 } // namespace network

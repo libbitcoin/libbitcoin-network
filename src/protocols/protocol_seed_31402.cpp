@@ -18,140 +18,171 @@
  */
 #include <bitcoin/network/protocols/protocol_seed_31402.hpp>
 
-#include <functional>
+#include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-#define NAME "seed"
 #define CLASS protocol_seed_31402
+static const std::string protocol_name = "seed";
 
+using namespace bc;
 using namespace bc::system;
-using namespace bc::system::message;
+using namespace messages;
 using namespace std::placeholders;
 
-// Require three callbacks (or any error) before calling complete.
-protocol_seed_31402::protocol_seed_31402(p2p& network, channel::ptr channel)
-  : protocol_timer(network, channel, false, NAME),
-    network_(network),
-    CONSTRUCT_TRACK(protocol_seed_31402)
+protocol_seed_31402::protocol_seed_31402(const session& session,
+    const channel::ptr& channel) noexcept
+  : protocol(session, channel),
+    sent_address_(false),
+    sent_get_address_(false),
+    received_address_(false),
+    timer_(std::make_shared<deadline>(channel->strand(),
+        session.settings().channel_germination()))
 {
 }
 
-// Start sequence.
+const std::string& protocol_seed_31402::name() const noexcept
+{
+    return protocol_name;
+}
+
+// Start/Stop.
 // ----------------------------------------------------------------------------
 
-void protocol_seed_31402::start(event_handler handler)
+void protocol_seed_31402::start() noexcept
 {
-    const auto& settings = network_.network_settings();
-    const event_handler complete = BIND2(handle_seeding_complete, _1, handler);
+    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
-    if (settings.host_pool_capacity == 0)
-    {
-        complete(error::not_found);
+    if (started())
         return;
-    }
-
-    const auto join_handler = synchronize(complete, 3, NAME,
-        synchronizer_terminate::on_error);
-
-    protocol_timer::start(settings.channel_germination(), join_handler);
 
     SUBSCRIBE2(address, handle_receive_address, _1, _2);
-    send_own_address(settings);
-    SEND1(get_address(), handle_send_get_address, _1);
+    SUBSCRIBE2(address, handle_receive_get_address, _1, _2);
+    SEND1(get_address{}, handle_send_get_address, _1);
+
+    protocol::start();
 }
 
-// Protocol.
+bool protocol_seed_31402::complete() const noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+
+    return sent_address_ && sent_get_address_ && received_address_;
+}
+
+void protocol_seed_31402::stop(const code&) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+
+    timer_->stop();
+}
+
+void protocol_seed_31402::handle_timer(const code& ec) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+
+    if (stopped())
+        return;
+
+    // error::operation_canceled is set when timer stopped (caught above).
+    if (ec)
+    {
+        stop(ec);
+        return;
+    }
+
+    stop(error::channel_timeout);
+}
+
+// Outbound [send_get_address => receive_address (save_addresses)].
 // ----------------------------------------------------------------------------
 
-void protocol_seed_31402::send_own_address(const settings& settings)
+void protocol_seed_31402::handle_send_get_address(const code& ec) noexcept
 {
-    if (settings.self.port() == 0)
-    {
-        set_event(error::success);
-        return;
-    }
+    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
-    const address self(network_address::list{
-        network_address{ settings.self.to_network_address() } });
-
-    SEND1(self, handle_send_address, _1);
-}
-
-void protocol_seed_31402::handle_seeding_complete(const code& ec,
-    event_handler handler)
-{
-    handler(ec);
-    stop(ec);
-}
-
-bool protocol_seed_31402::handle_receive_address(const code& ec,
-    address_const_ptr message)
-{
-    if (stopped(ec))
-        return false;
-
-    LOG_DEBUG(LOG_NETWORK)
-        << "Storing addresses from seed [" << authority() << "] ("
-        << message->addresses().size() << ")";
-
-    // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.store(message->addresses(), BIND1(handle_store_addresses, _1));
-    return false;
-}
-
-void protocol_seed_31402::handle_send_address(const code& ec)
-{
     if (stopped(ec))
         return;
 
-    // 1 of 3
-    set_event(error::success);
+    timer_->start(BIND1(handle_timer, _1));
+    sent_get_address_ = true;
+
+    if (complete())
+        stop(error::success);
 }
 
-void protocol_seed_31402::handle_send_get_address(const code& ec)
+void protocol_seed_31402::handle_receive_address(const code& ec,
+    const address::ptr& message) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+
     if (stopped(ec))
         return;
 
+    saves(message->addresses, BIND1(handle_save_addresses, _1));
+}
+
+void protocol_seed_31402::handle_save_addresses(const code& ec) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+
+    if (stopped())
+        return;
+
+    // Save error does not stop the channel.
     if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure sending get_address to seed [" << authority() << "] "
-            << ec.message();
-        set_event(ec);
-        return;
-    }
+        stop(ec);
 
-    // 2 of 3
-    set_event(error::success);
+    // Multiple address messages are allowed, but do not delay stop.
+    received_address_ = true;
+
+    if (complete())
+        stop(error::success);
 }
 
-void protocol_seed_31402::handle_store_addresses(const code& ec)
+// Inbound [receive_get_address -> send_address (load_addresses)].
+// ----------------------------------------------------------------------------
+
+void protocol_seed_31402::handle_receive_get_address(const code& ec,
+    const get_address::ptr&) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+
     if (stopped(ec))
         return;
 
-    if (ec)
+    // Only send self address when seeding.
+    if (is_zero(settings().self.port()))
     {
-        LOG_ERROR(LOG_NETWORK)
-            << "Failure storing addresses from seed [" << authority() << "] "
-            << ec.message();
-        set_event(ec);
+        // handle_send_address has been bypassed, so invoke here.
+        handle_send_address(error::success);
         return;
     }
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Stopping completed seed [" << authority() << "] ";
+    static const auto item = settings().self.to_address_item();
+    SEND1(address{ { item } }, handle_send_address, _1);
+}
 
-    // 3 of 3
-    set_event(error::channel_stopped);
+void protocol_seed_31402::handle_send_address(const code& ec) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+
+    if (stopped(ec))
+        return;
+
+    // Multiple get_address messages are allowed, but do not delay stop.
+    sent_address_ = true;
+
+    if (complete())
+        stop(error::success);
 }
 
 } // namespace network

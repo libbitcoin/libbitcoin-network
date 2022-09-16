@@ -23,9 +23,8 @@
 #include <memory>
 #include <vector>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/acceptor.hpp>
-#include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -41,33 +40,39 @@ class BCT_API session_inbound
 public:
     typedef std::shared_ptr<session_inbound> ptr;
 
-    /// Construct an instance.
-    session_inbound(p2p& network, bool notify_on_connect);
+    /// Construct an instance (network should be started).
+    session_inbound(p2p& network) noexcept;
 
-    /// Start the session.
-    void start(result_handler handler) override;
+    /// Start accepting inbound connections as configured (call from network strand).
+    void start(result_handler&& handler) noexcept override;
 
 protected:
-    /// Overridden to implement pending test for inbound channels.
-    void handshake_complete(channel::ptr channel,
-        result_handler handle_started) override;
+    /// The channel is inbound (pend the nonce).
+    bool inbound() const noexcept override;
 
-    /// Override to attach specialized protocols upon channel start.
-    virtual void attach_protocols(channel::ptr channel);
+    /// Notify subscribers on channel start.
+    bool notify() const noexcept override;
+
+    /// Overridden to change version protocol (base calls from channel strand).
+    void attach_handshake(const channel::ptr& channel,
+        result_handler&& handler) const noexcept override;
+
+    /// Overridden to change channel protocols (base calls from channel strand).
+    void attach_protocols(const channel::ptr& channel) const noexcept override;
+
+    /// Start accepting based on configuration (called from start).
+    virtual void start_accept(const code& ec,
+        const acceptor::ptr& acceptor) noexcept;
 
 private:
-    void start_accept(const system::code& ec);
+    void handle_started(const code& ec, const result_handler& handler) noexcept;
+    void handle_accept(const code& ec, const channel::ptr& channel,
+        const acceptor::ptr& acceptor) noexcept;
 
-    void handle_stop(const system::code& ec);
-    void handle_started(const system::code& ec, result_handler handler);
-    void handle_accept(const system::code& ec, channel::ptr channel);
-
-    void handle_channel_start(const system::code& ec, channel::ptr channel);
-    void handle_channel_stop(const system::code& ec);
-
-    // These are thread safe.
-    acceptor::ptr acceptor_;
-    const size_t connection_limit_;
+    void handle_channel_start(const code& ec,
+        const channel::ptr& channel) noexcept;
+    void handle_channel_stop(const code& ec,
+        const channel::ptr& channel) noexcept;
 };
 
 } // namespace network

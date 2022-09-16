@@ -20,76 +20,214 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
-#include <bitcoin/network/p2p.hpp>
+#include <bitcoin/network/boost.hpp>
+#include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
+#define CLASS protocol
+
 using namespace bc::system;
+using namespace messages;
+using namespace std::placeholders;
 
-#define NAME "protocol"
-
-protocol::protocol(p2p& network, channel::ptr channel, const std::string& name)
-  : pool_(network.thread_pool()),
-    dispatch_(network.thread_pool(), NAME),
-    channel_(channel),
-    name_(name)
+protocol::protocol(const session& session,
+    const channel::ptr& channel) noexcept
+  : channel_(channel), session_(session), started_(false)
 {
 }
 
-config::authority protocol::authority() const
+protocol::~protocol() noexcept
 {
-    return channel_->authority();
+    BC_ASSERT_MSG(stopped(), "protocol destruct before channel stop");
 }
 
-const std::string& protocol::name() const
+// Start/Stop.
+// ----------------------------------------------------------------------------
+
+void protocol::start() noexcept
 {
-    return name_;
+    BC_ASSERT_MSG(stranded(), "stranded");
+    started_ = true;
 }
 
-uint64_t protocol::nonce() const
+bool protocol::started() const noexcept
 {
-    return channel_->nonce();
+    BC_ASSERT_MSG(stranded(), "stranded");
+    return started_;
 }
 
-version_const_ptr protocol::peer_version() const
+// Utility to test for failure code or stopped.
+// Any failure code from a send or receive handler implies channel::proxy stop.
+// So this should be used to test entry into those handlers. Other handlers,
+// such as timers, should use stopped() and independently evaluate the code.
+bool protocol::stopped(const code& ec) const noexcept
 {
-    return channel_->peer_version();
+    return channel_->stopped() || ec;
 }
 
-void protocol::set_peer_version(version_const_ptr value)
+// Called from stop subscription instead of stop (which would be a cycle).
+void protocol::stopping(const code&) noexcept
 {
-    channel_->set_peer_version(value);
+    BC_ASSERT_MSG(stranded(), "stranded");
 }
 
-uint32_t protocol::negotiated_version() const
-{
-    return channel_->negotiated_version();
-}
-
-void protocol::set_negotiated_version(uint32_t value)
-{
-    channel_->set_negotiated_version(value);
-}
-
-threadpool& protocol::pool()
-{
-    return pool_;
-}
-
-// Stop the channel.
-void protocol::stop(const code& ec)
+// Stop the channel::proxy, which results protocol stop handler invocation.
+// The stop handler invokes stopping(ec), for protocol cleanup operations.
+void protocol::stop(const code& ec) noexcept
 {
     channel_->stop(ec);
 }
 
-// protected
-void protocol::handle_send(const code& , const std::string& )
+// Suspend reads from the socket until resume.
+void protocol::pause() noexcept
 {
-    // Send and receive failures are logged by the proxy.
-    // This provides a convenient location for override if desired.
+    BC_ASSERT_MSG(stranded(), "stranded");
+    channel_->pause();
+}
+
+////// Resume reads from the socket until pause or stop.
+////void protocol::resume() noexcept
+////{
+////    BC_ASSERT_MSG(stranded(), "stranded");
+////    channel_->resume();
+////}
+
+// Properties.
+// ----------------------------------------------------------------------------
+// These public properties may be accessed outside the strand, but are never
+// during handshake protocol operation. Thread safety requires that setters are
+// never invoked outside of the handshake protocol (start handler).
+
+bool protocol::stranded() const noexcept
+{
+    return channel_->stranded();
+}
+
+config::authority protocol::authority() const noexcept
+{
+    return channel_->authority();
+}
+
+uint64_t protocol::nonce() const noexcept
+{
+    return channel_->nonce();
+}
+
+const network::settings& protocol::settings() const noexcept
+{
+    return session_.settings();
+}
+
+version::ptr protocol::peer_version() const noexcept
+{
+    return channel_->peer_version();
+}
+
+// Call only from handshake (version protocol), for thread safety.
+void protocol::set_peer_version(const version::ptr& value) noexcept
+{
+    channel_->set_peer_version(value);
+}
+
+uint32_t protocol::negotiated_version() const noexcept
+{
+    return channel_->negotiated_version();
+}
+
+// Call only from handshake (version protocol), for thread safety.
+void protocol::set_negotiated_version(uint32_t value) noexcept
+{
+    channel_->set_negotiated_version(value);
+}
+
+// Addresses.
+// ----------------------------------------------------------------------------
+// Address completion handlers are invoked on the channel strand.
+
+void protocol::fetches(fetches_handler&& handler) noexcept
+{
+    session_.fetches(BIND3(do_fetches, _1, _2, std::move(handler)));
+}
+
+// Return to channel strand.
+void protocol::do_fetches(const code& ec,
+    const messages::address_items& addresses,
+    const fetches_handler& handler) noexcept
+{
+    // TODO: use addresses pointer (copies addresses).
+    boost::asio::post(channel_->strand(),
+        BIND3(handle_fetches, ec, addresses, handler));
+}
+
+void protocol::handle_fetches(const code& ec,
+    const messages::address_items& addresses,
+    const fetches_handler& handler) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol");
+
+    // TODO: log code here for derived protocols.
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Fetched addresses for [" << authority() << "] ("
+    ////    << addresses.size() << ")" << std::endl;
+
+    handler(ec, addresses);
+}
+
+void protocol::saves(const messages::address_items& addresses) noexcept
+{
+    const auto self = shared_from_base<protocol>();
+    return saves(addresses, [self](const code&)
+    {
+        BC_ASSERT_MSG(self->stranded(), "protocol");
+        self->nop();
+    });
+}
+
+void protocol::saves(const messages::address_items& addresses,
+    result_handler&& handler) noexcept
+{
+    ////LOG_VERBOSE(LOG_NETWORK)
+    ////    << "Storing addresses from [" << authority() << "] ("
+    ////    << addresses.size() << ")" << std::endl;
+
+    // TODO: use addresses pointer (copies addresses).
+    session_.saves(addresses, BIND2(do_saves, _1, std::move(handler)));
+}
+
+// Return to channel strand.
+void protocol::do_saves(const code& ec, const result_handler& handler) noexcept
+{
+    boost::asio::post(channel_->strand(),
+        BIND2(handle_saves, ec, std::move(handler)));
+}
+
+void protocol::handle_saves(const code& ec, const result_handler& handler) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol");
+
+    // TODO: log code here for derived protocols.
+    handler(ec);
+}
+
+// Send.
+// ----------------------------------------------------------------------------
+// Send (and receive) completion handlers are invoked on the channel strand.
+
+// Send and receive failures are logged by the proxy, so there is no need to
+// log here. This can be used as a no-op handler for sends. Some protocols may
+// create custom handlers to perform operations upon send completion.
+void protocol::handle_send(const code&) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "strand");
 }
 
 } // namespace network

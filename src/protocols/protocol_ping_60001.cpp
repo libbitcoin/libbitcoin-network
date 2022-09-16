@@ -22,11 +22,10 @@
 #include <functional>
 #include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/p2p.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -34,106 +33,138 @@ namespace network {
 #define CLASS protocol_ping_60001
 
 using namespace bc::system;
-using namespace bc::system::message;
+using namespace messages;
 using namespace std::placeholders;
 
-protocol_ping_60001::protocol_ping_60001(p2p& network, channel::ptr channel)
-  : protocol_ping_31402(network, channel),
-    pending_(false),
-    CONSTRUCT_TRACK(protocol_ping_60001)
+constexpr uint64_t received = zero;
+constexpr auto minimum_nonce = add1(received);
+static const std::string protocol_name = "ping";
+
+protocol_ping_60001::protocol_ping_60001(const session& session,
+    const channel::ptr& channel) noexcept
+  : protocol_ping_31402(session, channel),
+    nonce_(received)
 {
 }
 
-// This is fired by the callback (i.e. base timer and stop handler).
-void protocol_ping_60001::send_ping(const code& ec)
+const std::string& protocol_ping_60001::name() const noexcept
 {
-    if (stopped(ec))
-        return;
-
-    if (ec && ec != error::channel_timeout)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure in ping timer for [" << authority() << "] "
-            << ec.message();
-        stop(ec);
-        return;
-    }
-
-    if (pending_)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Ping latency limit exceeded [" << authority() << "]";
-        stop(error::channel_timeout);
-        return;
-    }
-
-    pending_ = true;
-    const auto nonce = pseudo_random::next();
-    SUBSCRIBE3(pong, handle_receive_pong, _1, _2, nonce);
-    SEND2(ping{ nonce }, handle_send_ping, _1, ping::command);
+    return protocol_name;
 }
 
-void protocol_ping_60001::handle_send_ping(const code& ec,
-    const std::string&)
+void protocol_ping_60001::start() noexcept
 {
+    BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
+
+    if (started())
+        return;
+
+    SUBSCRIBE2(pong, handle_receive_pong, _1, _2);
+    ////SUBSCRIBE2(ping, handle_receive_ping, _1, _2);
+    ////send_ping();
+
+    protocol_ping_31402::start();
+}
+
+////void protocol_ping_31402::stopping(const code&) noexcept
+////{
+////    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+////
+////    timer_->stop();
+////}
+
+// Outgoing (send_ping [on timer] => receive_pong [with timeout]).
+// ----------------------------------------------------------------------------
+
+void protocol_ping_60001::send_ping() noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
+
+    if (stopped())
+        return;
+
+    // The ping/pong nonce is arbitrary and distinct from the channel nonce.
+    nonce_ = pseudo_random::next<uint64_t>(add1(minimum_nonce), bc::max_int64);
+    SEND1(ping{ nonce_ }, handle_send, _1);
+}
+
+////void protocol_ping_31402::handle_send_ping(const code& ec) noexcept
+////{
+////    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+////
+////    if (stopped(ec))
+////        return;
+////
+////    timer_->start(BIND1(handle_timer, _1));
+////    protocol::handle_send(ec);
+////}
+
+void protocol_ping_60001::handle_receive_pong(const code& ec,
+    const pong::ptr& message) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
+
     if (stopped(ec))
         return;
 
+    // Both nonce incorrect and already received are protocol violations.
+    if (message->nonce != nonce_)
+    {
+        ////LOG_WARNING(LOG_NETWORK)
+        ////    << "Incorrect pong nonce from [" << authority() << "]" << std::endl;
+
+        stop(error::protocol_violation);
+        return;
+    }
+
+    // Correct pong nonce, set sentinel.
+    nonce_ = received;
+}
+
+void protocol_ping_60001::handle_timer(const code& ec) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
+
+    if (stopped())
+        return;
+
+    // error::operation_canceled implies stopped, so this is something else.
     if (ec)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure sending ping to [" << authority() << "] "
-            << ec.message();
+        // TODO: log code.
         stop(ec);
         return;
     }
+
+    // No error code on timeout, so check for nonce receipt.
+    if (nonce_ != received)
+    {
+        // TODO: log ping timeout.
+        stop(ec);
+        return;
+    }
+
+    // Correct nonce received before timeout, time to send another ping.
+    send_ping();
 }
 
-bool protocol_ping_60001::handle_receive_ping(const code& ec,
-    ping_const_ptr message)
+// Incoming (receive_ping => send_pong).
+// ----------------------------------------------------------------------------
+
+void protocol_ping_60001::handle_receive_ping(const code& ec,
+    const ping::ptr& message) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
+
     if (stopped(ec))
-        return false;
+        return;
 
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure getting ping from [" << authority() << "] "
-            << ec.message();
-        stop(ec);
-        return false;
-    }
-
-    SEND2(pong{ message->nonce() }, handle_send, _1, pong::command);
-    return true;
+    SEND1(pong{ message->nonce }, handle_send_pong, _1);
 }
 
-bool protocol_ping_60001::handle_receive_pong(const code& ec,
-    pong_const_ptr message, uint64_t nonce)
+void protocol_ping_60001::handle_send_pong(const code&) noexcept
 {
-    if (stopped(ec))
-        return false;
-
-    if (ec)
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure getting pong from [" << authority() << "] "
-            << ec.message();
-        stop(ec);
-        return false;
-    }
-
-    pending_ = false;
-
-    if (message->nonce() != nonce)
-    {
-        LOG_WARNING(LOG_NETWORK)
-            << "Invalid pong nonce from [" << authority() << "]";
-        stop(error::bad_stream);
-        return false;
-    }
-
-    return false;
+    BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 }
 
 } // namespace network

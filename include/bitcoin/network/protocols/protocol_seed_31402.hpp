@@ -20,58 +20,53 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_SEED_31402_HPP
 
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class session;
 
-/**
- * Seeding protocol.
- * Attach this to a channel immediately following seed handshake completion.
- */
 class BCT_API protocol_seed_31402
-  : public protocol_timer, track<protocol_seed_31402>
+  : public protocol, track<protocol_seed_31402>
 {
 public:
     typedef std::shared_ptr<protocol_seed_31402> ptr;
 
-    /**
-     * Construct a seed protocol instance.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     */
-    protocol_seed_31402(p2p& network, channel::ptr channel);
+    protocol_seed_31402(const session& session,
+        const channel::ptr& channel) noexcept;
 
-    /**
-     * Start the protocol.
-     * @param[in]  handler   Invoked upon stop or complete.
-     */
-    virtual void start(event_handler handler);
+    /// Perform seeding, stops channel on completion (strand required).
+    void start() noexcept override;
 
 protected:
-    // Expose polymorphic start method from base.
-    using protocol_timer::start;
+    const std::string& name() const noexcept override;
 
-    virtual void send_own_address(const settings& settings);
+    void stop(const code& ec) noexcept override;
+    virtual bool complete() const noexcept;
+    virtual void handle_timer(const code& ec) noexcept;
 
-    virtual void handle_send_address(const system::code& ec);
-    virtual void handle_send_get_address(const system::code& ec);
-    virtual void handle_store_addresses(const system::code& ec);
-    virtual void handle_seeding_complete(const system::code& ec,
-        event_handler handler);
+    virtual void handle_send_get_address(const code& ec) noexcept;
+    virtual void handle_receive_address(const code& ec,
+        const messages::address::ptr& address) noexcept;
+    virtual void handle_save_addresses(const code& ec) noexcept;
 
-    virtual bool handle_receive_address(const system::code& ec,
-        system::address_const_ptr address);
-    ////virtual bool handle_receive_get_address(const code& ec,
-    ////    get_address_const_ptr message);
+    virtual void handle_receive_get_address(const code& ec,
+        const messages::get_address::ptr& message) noexcept;
+    virtual void handle_send_address(const code& ec) noexcept;
 
-    p2p& network_;
-    const system::config::authority self_;
+private:
+    // These are protected by the strand.
+    bool sent_address_;
+    bool sent_get_address_;
+    bool received_address_;
+    deadline::ptr timer_;
 };
 
 } // namespace network

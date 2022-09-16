@@ -22,12 +22,12 @@
 #include <cstdint>
 #include <functional>
 #include <string>
+#include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/protocols/protocol_address_31402.hpp>
-#include <bitcoin/network/protocols/protocol_ping_31402.hpp>
-#include <bitcoin/network/protocols/protocol_ping_60001.hpp>
-#include <bitcoin/network/protocols/protocol_reject_70002.hpp>
+#include <bitcoin/network/protocols/protocols.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -35,190 +35,161 @@ namespace network {
 #define CLASS session_manual
 
 using namespace bc::system;
+using namespace config;
 using namespace std::placeholders;
 
-session_manual::session_manual(p2p& network, bool notify_on_connect)
-  : session(network, notify_on_connect),
-    CONSTRUCT_TRACK(session_manual)
+session_manual::session_manual(p2p& network) noexcept
+  : session(network)
 {
 }
 
-// Start sequence.
+bool session_manual::inbound() const noexcept
+{
+    return false;
+}
+
+bool session_manual::notify() const noexcept
+{
+    return true;
+}
+
+// Start/stop sequence.
 // ----------------------------------------------------------------------------
 // Manual connections are always enabled.
-// Handshake pend not implemented for manual connections (connect to self ok).
 
-void session_manual::start(result_handler handler)
+void session_manual::start(result_handler&& handler) noexcept
 {
-    LOG_INFO(LOG_NETWORK)
-        << "Starting manual session.";
-
-    session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
+    BC_ASSERT_MSG(stranded(), "strand");
+    session::start(BIND2(handle_started, _1, std::move(handler)));
 }
 
 void session_manual::handle_started(const code& ec,
-    result_handler handler)
+    const result_handler& handler) noexcept
 {
-    if (ec)
+    BC_ASSERT_MSG(stranded(), "strand");
+    handler(ec);
+}
+
+// Connect sequence.
+// ----------------------------------------------------------------------------
+
+////void session_manual::connect(const config::authority& peer,
+////    channel_handler&& handler) noexcept
+////{
+////    BC_ASSERT_MSG(stranded(), "strand");
+////
+////    connect(endpoint{ peer.to_hostname(), peer.port() }, std::move(handler));
+////}
+
+void session_manual::connect(const config::endpoint& peer) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    const auto self = shared_from_base<session_manual>();
+    connect(peer, [=](const code&, channel::ptr) noexcept
     {
-        handler(ec);
+        // TODO: log discarded code.
+        self->nop();
+    });
+}
+
+void session_manual::connect(const config::endpoint& peer,
+    channel_handler&& handler) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Create a connector for each manual connection.
+    const auto connector = create_connector();
+
+    subscribe_stop([=](const code&) noexcept
+    {
+        connector->stop();
+    });
+
+    start_connect(peer, connector, std::move(handler));
+}
+
+// Connect cycle.
+// ----------------------------------------------------------------------------
+
+void session_manual::start_connect(const endpoint& peer,
+    const connector::ptr& connector, const channel_handler& handler) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Terminates retry loops (and connector is restartable).
+    if (stopped())
+    {
+        handler(error::service_stopped, nullptr);
         return;
     }
 
-    // This is the end of the start sequence.
-    handler(error::success);
+    connector->connect(peer,
+        BIND5(handle_connect, _1, _2, peer, connector, handler));
 }
 
-// Connect sequence/cycle.
-// ----------------------------------------------------------------------------
-
-void session_manual::connect(const std::string& hostname, uint16_t port)
+void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
+    const endpoint& peer, const connector::ptr& connector,
+    const channel_handler& handler) noexcept
 {
-    const auto unhandled = [](code, channel::ptr) {};
-    connect(hostname, port, unhandled);
-}
+    BC_ASSERT_MSG(stranded(), "strand");
 
-void session_manual::connect(const std::string& hostname, uint16_t port,
-    channel_handler handler)
-{
-    start_connect(error::success, hostname, port,
-        settings_.manual_attempt_limit, handler);
-}
-
-// The first connect is a sequence, which then spawns a cycle.
-void session_manual::start_connect(const code&,
-    const std::string& hostname, uint16_t port, uint32_t attempts,
-    channel_handler handler)
-{
+    // Guard restartable timer (shutdown delay).
     if (stopped())
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Suspended manual connection.";
+        if (channel)
+            channel->stop(error::service_stopped);
 
         handler(error::service_stopped, nullptr);
         return;
     }
 
-    const auto retries = floor_subtract(attempts, 1u);
-    const auto connector = create_connector();
-    pend(connector);
-
-    // MANUAL CONNECT OUTBOUND
-    connector->connect(hostname, port,
-        BIND7(handle_connect, _1, _2, hostname, port, retries, connector,
-            handler));
-}
-
-void session_manual::handle_connect(const code& ec,
-    channel::ptr channel, const std::string& hostname, uint16_t port,
-    uint32_t remaining, connector::ptr connector, channel_handler handler)
-{
-    unpend(connector);
-
+    // TODO: log discarded code.
+    // There was an error connecting the channel, so try again after delay.
     if (ec)
     {
-        LOG_WARNING(LOG_NETWORK)
-            << "Failure connecting ["
-            << config::endpoint(hostname, port)
-            << "] manually: " << ec.message();
-
-        // Retry forever if limit is zero.
-        remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
-
-        if (remaining > 0)
-        {
-            // Retry with conditional delay in case of network error.
-            dispatch_delayed(cycle_delay(ec),
-                BIND5(start_connect, _1, hostname, port, remaining, handler));
-            return;
-        }
-
-        LOG_WARNING(LOG_NETWORK)
-            << "Suspending manual connection to ["
-            << config::endpoint(hostname, port) << "] after "
-            << settings_.manual_attempt_limit << " failed attempts.";
-
-        // This is a failure end of the connect sequence.
-        handler(ec, nullptr);
+        BC_ASSERT_MSG(!channel, "unexpected channel instance");
+        start_timer(BIND3(start_connect, peer, connector, handler),
+            settings().connect_timeout());
         return;
     }
 
-    register_channel(channel,
-        BIND6(handle_channel_start, _1, hostname, port, remaining, channel, handler),
-        BIND5(handle_channel_stop, _1, hostname, port, remaining, handler));
+    start_channel(channel,
+        BIND4(handle_channel_start, _1, peer, channel, handler),
+        BIND4(handle_channel_stop, _1, peer, connector, handler));
+}
+
+void session_manual::attach_handshake(const channel::ptr& channel,
+    result_handler&& handler) const noexcept
+{
+    session::attach_handshake(channel, std::move(handler));
 }
 
 void session_manual::handle_channel_start(const code& ec,
-    const std::string& hostname, uint16_t port, uint32_t remaining,
-    channel::ptr channel, channel_handler handler)
+    const endpoint&, const channel::ptr& channel,
+    const channel_handler& handler) noexcept
 {
-    if (ec)
-    {
-        LOG_INFO(LOG_NETWORK)
-            << "Manual channel failed to start [" << channel->authority()
-            << "] " << ec.message();
+    BC_ASSERT_MSG(stranded(), "strand");
 
-        // Retry forever if limit is zero.
-        remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
-
-        // This is a failure end of the connect sequence.
-        // If stop handler won't retry, invoke handler with error.
-        if ((ec == error::address_in_use) || (remaining == 0))
-            handler(ec, channel);
-
-        return;
-    }
-
-    LOG_INFO(LOG_NETWORK)
-        << "Connected manual channel ["
-        << config::endpoint(hostname, port)
-        << "] as [" << channel->authority() << "] ("
-        << connection_count() << ")";
-
-    // This is the success end of the connect sequence.
-    handler(error::success, channel);
-    attach_protocols(channel);
+    // Notify upon each connection attempt.
+    handler(ec, channel);
 }
 
-void session_manual::attach_protocols(channel::ptr channel)
+// Communication will begin after this function returns, freeing the thread.
+void session_manual::attach_protocols(
+    const channel::ptr& channel) const noexcept
 {
-    const auto version = channel->negotiated_version();
-
-    if (version >= message::version::level::bip31)
-        attach<protocol_ping_60001>(channel)->start();
-    else
-        attach<protocol_ping_31402>(channel)->start();
-
-    if (version >= message::version::level::bip61)
-        attach<protocol_reject_70002>(channel)->start();
-
-    attach<protocol_address_31402>(channel)->start();
+    session::attach_protocols(channel);
 }
 
-void session_manual::handle_channel_stop(const code& ec,
-    const std::string& hostname, uint16_t port, uint32_t remaining,
-    channel_handler handler)
+void session_manual::handle_channel_stop(const code&, const endpoint& peer,
+    const connector::ptr& connector, const channel_handler& handler) noexcept
 {
-    LOG_DEBUG(LOG_NETWORK)
-        << "Manual channel stopped: " << ec.message();
+    BC_ASSERT_MSG(stranded(), "strand");
 
-    // Special case for already connected, do not keep trying.
-    if (ec == error::address_in_use)
-        return;
-
-    // Retry forever if limit is zero.
-    remaining = settings_.manual_attempt_limit == 0 ? 1 : remaining;
-
-    if (remaining > 0)
-    {
-        start_connect(error::success, hostname, port, remaining, handler);
-        return;
-    }
-
-    LOG_WARNING(LOG_NETWORK)
-        << "Not restarting manual connection to ["
-        << config::endpoint(hostname, port) << "] after "
-        << settings_.manual_attempt_limit << " failed attempts.";
+    // The channel stopped following connection, try again without delay.
+    // This is the only opportunity for a tight loop (could use timer).
+    start_connect(peer, connector, move_copy(handler));
 }
 
 } // namespace network

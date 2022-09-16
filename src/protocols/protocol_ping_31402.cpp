@@ -18,66 +18,105 @@
  */
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 
-#include <functional>
+#include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-#define NAME "ping"
 #define CLASS protocol_ping_31402
+static const std::string protocol_name = "ping";
 
 using namespace bc::system;
-using namespace bc::system::message;
+using namespace messages;
 using namespace std::placeholders;
 
-protocol_ping_31402::protocol_ping_31402(p2p& network, channel::ptr channel)
-  : protocol_timer(network, channel, true, NAME),
-    settings_(network.network_settings()),
-    CONSTRUCT_TRACK(protocol_ping_31402)
+protocol_ping_31402::protocol_ping_31402(const session& session,
+    const channel::ptr& channel) noexcept
+  : protocol(session, channel),
+    timer_(std::make_shared<deadline>(channel->strand(),
+        session.settings().channel_heartbeat()))
 {
 }
 
-void protocol_ping_31402::start()
+const std::string& protocol_ping_31402::name() const noexcept
 {
-    protocol_timer::start(settings_.channel_heartbeat(), BIND1(send_ping, _1));
+    return protocol_name;
+}
+
+// Also invoked by protocol_ping_31402.
+void protocol_ping_31402::start() noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+
+    if (started())
+        return;
 
     SUBSCRIBE2(ping, handle_receive_ping, _1, _2);
+    send_ping();
 
-    // Send initial ping message by simulating first heartbeat.
-    set_event(error::success);
+    protocol::start();
 }
 
-// This is fired by the callback (i.e. base timer and stop handler).
-void protocol_ping_31402::send_ping(const code& ec)
+// Also invoked by protocol_ping_31402.
+void protocol_ping_31402::stopping(const code&) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+
+    timer_->stop();
+}
+
+// Outgoing (send_ping [on timer] => handle_send).
+// ----------------------------------------------------------------------------
+
+void protocol_ping_31402::send_ping() noexcept
+{
+    SEND1(ping{}, handle_send_ping, _1);
+}
+
+// Also invoked by protocol_ping_31402.
+void protocol_ping_31402::handle_send_ping(const code& ec) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+
     if (stopped(ec))
         return;
 
-    if (ec && ec != error::channel_timeout)
+    timer_->start(BIND1(handle_timer, _1));
+    protocol::handle_send(ec);
+}
+
+void protocol_ping_31402::handle_timer(const code& ec) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+
+    if (stopped())
+        return;
+
+    // error::operation_canceled implies stopped, so this is something else.
+    if (ec)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Failure in ping timer for [" << authority() << "] "
-            << ec.message();
+        // TODO: log code.
         stop(ec);
         return;
     }
 
-    SEND2(ping{}, handle_send, _1, ping::command);
+    // No error code on timeout, time to send another ping.
+    send_ping();
 }
 
-bool protocol_ping_31402::handle_receive_ping(const code& ec,
-    ping_const_ptr )
-{
-    if (stopped(ec))
-        return false;
+// Incoming (receive_ping, the incoming traffic resets channel activity timer).
+// ----------------------------------------------------------------------------
 
-    // RESUBSCRIBE
-    return true;
+void protocol_ping_31402::handle_receive_ping(const code&,
+    const ping::ptr&) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
 }
 
 } // namespace network

@@ -21,7 +21,11 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <filesystem>
+#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -31,22 +35,23 @@ namespace network {
 class BCT_API settings
 {
 public:
-    settings();
-    settings(system::config::settings context);
+    settings() noexcept;
+    settings(system::chain::selection context)noexcept ;
 
     /// Properties.
     uint32_t threads;
     uint32_t protocol_maximum;
     uint32_t protocol_minimum;
-    uint64_t services;
+    uint64_t services_maximum;
+    uint64_t services_minimum;
     uint64_t invalid_services;
+    bool enable_reject;
     bool relay_transactions;
     bool validate_checksum;
     uint32_t identifier;
     uint16_t inbound_port;
     uint32_t inbound_connections;
     uint32_t outbound_connections;
-    uint32_t manual_attempt_limit;
     uint32_t connect_batch_size;
     uint32_t connect_timeout_seconds;
     uint32_t channel_handshake_seconds;
@@ -55,31 +60,30 @@ public:
     uint32_t channel_inactivity_minutes;
     uint32_t channel_expiration_minutes;
     uint32_t host_pool_capacity;
-    boost::filesystem::path hosts_file;
-    system::config::authority self;
-    system::config::authority::list blacklists;
-    system::config::endpoint::list peers;
-    system::config::endpoint::list seeds;
+    std::filesystem::path hosts_file;
+    config::authority self;
+    config::authorities blacklists;
+    config::endpoints peers;
+    config::endpoints seeds;
 
     // [log]
-    boost::filesystem::path debug_file;
-    boost::filesystem::path error_file;
-    boost::filesystem::path archive_directory;
-    size_t rotation_size;
-    size_t minimum_free_space;
-    size_t maximum_archive_size;
-    size_t maximum_archive_files;
-    system::config::authority statistics_server;
+    ////std::filesystem::path debug_file;
+    ////std::filesystem::path error_file;
+    ////std::filesystem::path archive_directory;
+    ////size_t rotation_size;
+    ////size_t minimum_free_space;
+    ////size_t maximum_archive_size;
+    ////size_t maximum_archive_files;
+    ////config::authority statistics_server;
     bool verbose;
 
     /// Helpers.
-    size_t minimum_connections() const;
-    system::asio::duration connect_timeout() const;
-    system::asio::duration channel_handshake() const;
-    system::asio::duration channel_heartbeat() const;
-    system::asio::duration channel_inactivity() const;
-    system::asio::duration channel_expiration() const;
-    system::asio::duration channel_germination() const;
+    duration connect_timeout() const noexcept;
+    duration channel_handshake() const noexcept;
+    duration channel_heartbeat() const noexcept;
+    duration channel_inactivity() const noexcept;
+    duration channel_expiration() const noexcept;
+    duration channel_germination() const noexcept;
 };
 
 } // namespace network

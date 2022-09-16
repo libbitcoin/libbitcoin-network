@@ -19,62 +19,46 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_VERSION_70002_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_VERSION_70002_HPP
 
-#include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/protocols/protocol_version_31402.hpp>
-#include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/protocols/protocol_version_70001.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class session;
 
 class BCT_API protocol_version_70002
-  : public protocol_version_31402, track<protocol_version_70002>
+  : public protocol_version_70001, track<protocol_version_70002>
 {
 public:
     typedef std::shared_ptr<protocol_version_70002> ptr;
 
-    /**
-     * Construct a version protocol instance using configured minimums.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     */
-    protocol_version_70002(p2p& network, channel::ptr channel);
+    /// Construct a version protocol instance using configured values.
+    protocol_version_70002(const session& session,
+        const channel::ptr& channel) noexcept;
 
-    /**
-     * Construct a version protocol instance.
-     * @param[in]  network           The network interface.
-     * @param[in]  channel           The channel for the protocol.
-     * @param[in]  own_version       This node's maximum version.
-     * @param[in]  own_services      This node's advertised services.
-     * @param[in]  invalid_services  The disallowed peers services.
-     * @param[in]  minimum_version   This required minimum version.
-     * @param[in]  minimum_services  This required minimum services.
-     * @param[in]  relay             The peer should relay transactions.
-     */
-    protocol_version_70002(p2p& network, channel::ptr channel,
-        uint32_t own_version, uint64_t own_services, uint64_t invalid_services,
-        uint32_t minimum_version, uint64_t minimum_services, bool relay);
+    /// Construct a version protocol instance using parameterized services.
+    protocol_version_70002(const session& session,
+        const channel::ptr& channel, uint64_t minimum_services,
+        uint64_t maximum_services, bool relay) noexcept;
 
-    /**
-     * Start the protocol.
-     * @param[in]  handler  Invoked upon stop or receipt of version and verack.
-     */
-    void start(event_handler handler) override;
+    /// Perform the handshake (strand required), handler invoked on completion.
+    void shake(result_handler&& handle_event) noexcept override;
 
 protected:
-    system::message::version version_factory() const override;
-    bool sufficient_peer(system::version_const_ptr message) override;
+    const std::string& name() const noexcept override;
 
-    virtual bool handle_receive_reject(const system::code& ec,
-        system::reject_const_ptr reject);
+    void rejection(const code& ec) noexcept override;
 
-    const bool relay_;
+    virtual void handle_receive_reject(const code& ec,
+        const messages::reject::ptr& reject) noexcept;
 };
 
 } // namespace network

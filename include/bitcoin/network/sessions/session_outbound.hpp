@@ -22,9 +22,9 @@
 #include <cstddef>
 #include <memory>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/sessions/session_batch.hpp>
+#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -34,40 +34,49 @@ class p2p;
 
 /// Outbound connections session, thread safe.
 class BCT_API session_outbound
-  : public session_batch, track<session_outbound>
+  : public session, track<session_outbound>
 {
 public:
     typedef std::shared_ptr<session_outbound> ptr;
 
-    /// Construct an instance.
-    session_outbound(p2p& network, bool notify_on_connect);
+    /// Construct an instance (network should be started).
+    session_outbound(p2p& network) noexcept;
 
-    /// Start the session.
-    void start(result_handler handler) override;
+    /// Start configured number of connections (call from network strand).
+    void start(result_handler&& handler) noexcept override;
 
 protected:
-    /// Overridden to implement pending outbound channels.
-    void start_channel(channel::ptr channel,
-        result_handler handle_started) override;
+    /// The channel is outbound (do not pend the nonce).
+    bool inbound() const noexcept override;
 
-    /// Overridden to attach minimum service level for witness support.
-    void attach_handshake_protocols(channel::ptr channel,
-        result_handler handle_started) override;
+    /// Notify subscribers on channel start.
+    bool notify() const noexcept override;
 
-    /// Override to attach specialized protocols upon channel start.
-    virtual void attach_protocols(channel::ptr channel);
+    /// Overridden to change version protocol (base calls from channel strand).
+    void attach_handshake(const channel::ptr& channel,
+        result_handler&& handle_started) const noexcept override;
+
+    /// Overridden to change channel protocols (base calls from channel strand).
+    void attach_protocols(const channel::ptr& channel) const noexcept override;
+
+    /// Start outbound connections based on config (called from start).
+    virtual void start_connect(const connectors_ptr& connectors) noexcept;
 
 private:
-    void new_connection(const system::code&);
+    typedef std::shared_ptr<size_t> count_ptr;
 
-    void handle_started(const system::code& ec, result_handler handler);
-    void handle_connect(const system::code& ec, channel::ptr channel);
+    void handle_started(const code& ec, const result_handler& handler) noexcept;
+    void handle_connect(const code& ec, const channel::ptr& channel,
+        const connectors_ptr& connectors) noexcept;
 
-    void do_unpend(const system::code& ec, channel::ptr channel,
-        result_handler handle_started);
+    void handle_channel_start(const code& ec, const channel::ptr& channel) noexcept;
+    void handle_channel_stop(const code& ec, const connectors_ptr& connectors) noexcept;
 
-    void handle_channel_stop(const system::code& ec, channel::ptr channel);
-    void handle_channel_start(const system::code& ec, channel::ptr channel);
+    void do_one(const code& ec, const config::authority& host,
+        const connector::ptr& connector, const channel_handler& handler) noexcept;
+    void handle_one(const code& ec, const channel::ptr& channel,
+        const count_ptr& count, const connectors_ptr& connectors,
+        const channel_handler& handler) noexcept;
 };
 
 } // namespace network

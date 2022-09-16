@@ -23,246 +23,243 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <vector>
+#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/hosts.hpp>
-#include <bitcoin/network/message_subscriber.hpp>
-#include <bitcoin/network/sessions/session_inbound.hpp>
-#include <bitcoin/network/sessions/session_manual.hpp>
-#include <bitcoin/network/sessions/session_outbound.hpp>
-#include <bitcoin/network/sessions/session_seed.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// Top level public networking interface, partly thread safe.
+/// Peer-to-Peer network class, virtual, thread safe with exceptions:
+/// * attach must be called from channel strand.
+/// * close must not be called concurrently or from threadpool thread.
 class BCT_API p2p
-  : public system::enable_shared_from_base<p2p>, system::noncopyable
+  : public enable_shared_from_base<p2p>, system::noncopyable
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
-    typedef system::message::network_address address;
     typedef std::function<void()> stop_handler;
-    typedef std::function<void(bool)> truth_handler;
-    typedef std::function<void(size_t)> count_handler;
-    typedef std::function<void(const system::code&)> result_handler;
-    typedef std::function<void(const system::code&, const address&)>
-        address_handler;
-    typedef std::function<void(const system::code&, channel::ptr)>
-        channel_handler;
-    typedef std::function<bool(const system::code&, channel::ptr)>
-        connect_handler;
-    typedef system::subscriber<system::code> stop_subscriber;
-    typedef system::resubscriber<system::code, channel::ptr> channel_subscriber;
+    typedef std::function<void(const code&)> result_handler;
+    typedef std::function<void(const code&, const channel::ptr&)> channel_handler;
+    typedef subscriber<const code&, const channel::ptr&> channel_subscriber;
+    typedef subscriber<const code&> stop_subscriber;
 
-    // Templates (send/receive).
-    // ------------------------------------------------------------------------
-
-    /// Send message to all connections.
     template <typename Message>
-    void broadcast(const Message& message, channel_handler handle_channel,
-        result_handler handle_complete)
+    void broadcast(const Message& message, result_handler&& handler) noexcept
     {
-        // Safely copy the channel collection.
-        const auto channels = pending_close_.collection();
+        boost::asio::post(strand_,
+            std::bind(&p2p::do_broadcast<Message>,
+                this, system::to_shared(message), std::move(handler)));
+    }
 
-        // Invoke the completion handler after send complete on all channels.
-        const auto join_handler = synchronize(handle_complete, channels.size(),
-            "p2p_join", system::synchronizer_terminate::on_count);
+    template <typename Message>
+    void broadcast(Message&& message, result_handler&& handler) noexcept
+    {
+        boost::asio::post(strand_,
+            std::bind(&p2p::do_broadcast<Message>,
+                this, system::to_shared(std::move(message)),
+                    std::move(handler)));
+    }
 
-        // No pre-serialize, channels may have different protocol versions.
-        for (const auto& channel: channels)
-            channel->send(message, std::bind(&p2p::handle_send, this,
-                std::placeholders::_1, channel, handle_channel, join_handler));
+    template <typename Message>
+    void broadcast(const typename Message::ptr& message,
+        result_handler&& handler) noexcept
+    {
+        boost::asio::post(strand_,
+            std::bind(&p2p::do_broadcast<Message>,
+                this, message, std::move(handler)));
     }
 
     // Constructors.
     // ------------------------------------------------------------------------
 
     /// Construct an instance.
-    p2p(const settings& settings);
+    p2p(const settings& settings) noexcept;
 
-    /// Ensure all threads are coalesced.
-    virtual ~p2p();
+    /// Calls close().
+    virtual ~p2p() noexcept;
 
-    // Start/Run sequences.
+    // Sequences.
     // ------------------------------------------------------------------------
 
-    /// Invoke startup and seeding sequence, call from constructing thread.
-    virtual void start(result_handler handler);
+    /// Invoke startup and seeding sequence.
+    virtual void start(result_handler&& handler) noexcept;
 
-    /// Synchronize the blockchain and then begin long running sessions,
-    /// call from start result handler. Call base method to skip sync.
-    virtual void run(result_handler handler);
+    /// Run inbound and outbound sessions, call from start result handler.
+    virtual void run(result_handler&& handler) noexcept;
 
-    // Shutdown.
-    // ------------------------------------------------------------------------
-
-    /// Idempotent call to signal work stop, start may be reinvoked after.
-    /// Returns the result of file save operation.
-    virtual bool stop();
-
-    /// Blocking call to coalesce all work and then terminate all threads.
-    /// Call from thread that constructed this class, or don't call at all.
-    /// This calls stop, and start may be reinvoked after calling this.
-    virtual bool close();
-
-    // Properties.
-    // ------------------------------------------------------------------------
-
-    /// Network configuration settings.
-    virtual const settings& network_settings() const;
-
-    /// Return the current top block identity.
-    virtual system::config::checkpoint top_block() const;
-
-    /// Set the current top block identity.
-    virtual void set_top_block(system::config::checkpoint&& top);
-
-    /// Set the current top block identity.
-    virtual void set_top_block(const system::config::checkpoint& top);
-
-    /// Return the current top header identity.
-    virtual system::config::checkpoint top_header() const;
-
-    /// Set the current top header identity.
-    virtual void set_top_header(system::config::checkpoint&& top);
-
-    /// Set the current top header identity.
-    virtual void set_top_header(const system::config::checkpoint& top);
-
-    /// Determine if the network is stopped.
-    virtual bool stopped() const;
-
-    /// Return a reference to the network threadpool.
-    virtual system::threadpool& thread_pool();
+    /// Idempotent call to block on work stop, start may be reinvoked after.
+    /// Must not call concurrently or from threadpool thread (see ~).
+    virtual void close() noexcept;
 
     // Subscriptions.
     // ------------------------------------------------------------------------
 
-    /// Subscribe to connection creation events.
-    virtual void subscribe_connection(connect_handler handler);
+    /// Subscribe to connection creation events (allowed before start).
+    /// A call after close will return success but never invokes the handler.
+    virtual void subscribe_connect(channel_handler&& handler,
+        result_handler&& complete) noexcept;
 
-    /// Subscribe to service stop event.
-    virtual void subscribe_stop(result_handler handler);
+    /// Subscribe to service stop event (allowed before start).
+    /// A call after close will return success but never invokes the handler.
+    virtual void subscribe_close(result_handler&& handler,
+        result_handler&& complete) noexcept;
 
     // Manual connections.
     // ----------------------------------------------------------------------------
 
-    /// Maintain a connection to hostname:port.
-    virtual void connect(const system::config::endpoint& peer);
+    /// Maintain a connection.
+    virtual void connect(const config::endpoint& endpoint) noexcept;
 
-    /// Maintain a connection to hostname:port.
-    virtual void connect(const std::string& hostname, uint16_t port);
+    /// Maintain a connection, callback is invoked on each try.
+    virtual void connect(const config::endpoint& endpoint,
+        channel_handler&& handler) noexcept;
 
-    /// Maintain a connection to hostname:port.
-    /// The callback is invoked by the first connection creation only.
-    virtual void connect(const std::string& hostname, uint16_t port,
-        channel_handler handler);
-
-    // Hosts collection.
+    // Properties.
     // ------------------------------------------------------------------------
 
     /// Get the number of addresses.
-    virtual size_t address_count() const;
+    virtual size_t address_count() const noexcept;
 
-    /// Store an address.
-    virtual system::code store(const address& address);
+    /// Get the number of inbound channels.
+    virtual size_t inbound_channel_count() const noexcept;
 
-    /// Store a collection of addresses (asynchronous).
-    virtual void store(const address::list& addresses, result_handler handler);
+    /// Get the number of channels.
+    virtual size_t channel_count() const noexcept;
 
-    /// Get a randomly-selected address.
-    virtual system::code fetch_address(address& out_address) const;
+    /// Network configuration settings.
+    const settings& network_settings() const noexcept;
 
-    /// Get a list of stored hosts
-    virtual system::code fetch_addresses(address::list& out_addresses) const;
+    /// Return a reference to the network io_context (thread safe).
+    asio::io_context& service() noexcept;
 
-    /// Remove an address.
-    virtual system::code remove(const address& address);
-
-    // Pending connect collection.
-    // ------------------------------------------------------------------------
-
-    /// Store a pending connection reference.
-    virtual system::code pend(connector::ptr connector);
-
-    /// Free a pending connection reference.
-    virtual void unpend(connector::ptr connector);
-
-    // Pending handshake collection.
-    // ------------------------------------------------------------------------
-
-    /// Store a pending connection reference.
-    virtual system::code pend(channel::ptr channel);
-
-    /// Test for a pending connection reference.
-    virtual bool pending(uint64_t version_nonce) const;
-
-    /// Free a pending connection reference.
-    virtual void unpend(channel::ptr channel);
-
-    // Pending close collection (open connections).
-    // ------------------------------------------------------------------------
-
-    /// Get the number of connections.
-    virtual size_t connection_count() const;
-
-    /// Store a connection.
-    virtual system::code store(channel::ptr channel);
-
-    /// Determine if there exists a connection to the address.
-    virtual bool connected(const address& address) const;
-
-    /// Remove a connection.
-    virtual void remove(channel::ptr channel);
+    /// Return a reference to the network strand (thread safe).
+    asio::strand& strand() noexcept;
 
 protected:
+    friend class session;
 
-    /// Attach a session to the network, caller must start the session.
+    /// Attach session to network, caller must start (requires strand).
     template <class Session, typename... Args>
-    typename Session::ptr attach(Args&&... args)
+    typename Session::ptr attach(Args&&... args) noexcept
     {
-        return std::make_shared<Session>(*this, std::forward<Args>(args)...);
+        BC_ASSERT_MSG(stranded(), "subscribe_close");
+
+        // Sessions are attached after network start.
+        const auto session = std::make_shared<Session>(*this,
+            std::forward<Args>(args)...);
+
+        // Session lifetime is ensured by the network stop subscriber.
+        subscribe_close([=](const code&) noexcept
+        {
+            session->stop();
+        });
+
+        return session;
     }
 
     /// Override to attach specialized sessions.
-    virtual session_seed::ptr attach_seed_session();
-    virtual session_manual::ptr attach_manual_session();
-    virtual session_inbound::ptr attach_inbound_session();
-    virtual session_outbound::ptr attach_outbound_session();
+    virtual session_seed::ptr attach_seed_session() noexcept;
+    virtual session_manual::ptr attach_manual_session() noexcept;
+    virtual session_inbound::ptr attach_inbound_session() noexcept;
+    virtual session_outbound::ptr attach_outbound_session() noexcept;
+
+    /// Override for test injection.
+    virtual acceptor::ptr create_acceptor() noexcept;
+    virtual connector::ptr create_connector() noexcept;
+
+    /// Maintain channel state.
+    virtual void pend(uint64_t nonce) noexcept;
+    virtual void unpend(uint64_t nonce) noexcept;
+    virtual code store(const channel::ptr& channel, bool notify,
+        bool inbound) noexcept;
+    virtual bool unstore(const channel::ptr& channel, bool inbound) noexcept;
+
+    /// Maintain address pool (TODO: move to store interface).
+    virtual void fetch(hosts::address_item_handler&& handler) const noexcept;
+    virtual void fetches(hosts::address_items_handler&& handler) const noexcept;
+    virtual void dump(const messages::address_item& address,
+        result_handler&& complete) noexcept;
+    virtual void save(const messages::address_item& address,
+        result_handler&& complete) noexcept;
+    virtual void saves(const messages::address_items& addresses,
+        result_handler&& complete) noexcept;
+
+    /// The strand is running in this thread.
+    bool stranded() const noexcept;
 
 private:
-    typedef system::pending<channel> pending_channels;
-    typedef system::pending<connector> pending_connectors;
+    template <typename Message>
+    void do_broadcast(const typename Message::ptr& message,
+        const result_handler& handler) noexcept
+    {
+        BC_ASSERT_MSG(stranded(), "channels_");
 
-    void handle_manual_started(const system::code& ec, result_handler handler);
-    void handle_inbound_started(const system::code& ec, result_handler handler);
-    void handle_hosts_loaded(const system::code& ec, result_handler handler);
-    void handle_send(const system::code& ec, channel::ptr channel,
-        channel_handler handle_channel, result_handler handle_complete);
+        for (const auto& channel: channels_)
+            channel->send<Message>(message, handler);
+    }
 
-    void handle_started(const system::code& ec, result_handler handler);
-    void handle_running(const system::code& ec, result_handler handler);
+    void subscribe_close(result_handler&& handler) noexcept;
+    connectors_ptr create_connectors(size_t count) noexcept;
+
+    virtual bool closed() const noexcept;
+    virtual code start_hosts() noexcept;
+    virtual void stop_hosts() noexcept;
+
+    void do_start(const result_handler& handler) noexcept;
+    void do_run(const result_handler& handler) noexcept;
+    void do_close() noexcept;
+
+    void handle_start(const code& ec, const result_handler& handler) noexcept;
+    void handle_run(const code& ec, const result_handler& handler) noexcept;
+  
+    void do_subscribe_connect(const channel_handler& handler,
+        const result_handler& complete) noexcept;
+    void do_subscribe_close(const result_handler& handler,
+        const result_handler& complete) noexcept;
+
+    // Distinct method names required for std::bind.
+    void do_connect(const config::endpoint& endpoint) noexcept;
+    void do_connect_handled(const config::endpoint& endpoint,
+        const channel_handler& handler) noexcept;
+
+    void do_fetch(const hosts::address_item_handler& handler) const noexcept;
+    void do_fetches(const hosts::address_items_handler& handler) const noexcept;
+    void do_save(const messages::address_item& host,
+        const result_handler& complete) noexcept;
+    void do_saves(const messages::address_items& hosts,
+        const result_handler& complete) noexcept;
 
     // These are thread safe.
     const settings& settings_;
-    std::atomic<bool> stopped_;
-    system::atomic<system::config::checkpoint> top_block_;
-    system::atomic<system::config::checkpoint> top_header_;
-    system::atomic<session_manual::ptr> manual_;
-    system::threadpool threadpool_;
+    std::atomic<size_t> channel_count_;
+    std::atomic<size_t> inbound_channel_count_;
+
+    // These are protected by strand.
     hosts hosts_;
-    pending_connectors pending_connect_;
-    pending_channels pending_handshake_;
-    pending_channels pending_close_;
+    threadpool threadpool_;
+    session_manual::ptr manual_;
+
+    // This is thread safe.
+    asio::strand strand_;
+
+    // These are protected by strand.
     stop_subscriber::ptr stop_subscriber_;
     channel_subscriber::ptr channel_subscriber_;
+    std::unordered_set<uint64_t> nonces_;
+    std::unordered_set<channel::ptr> channels_;
+    std::unordered_set<config::authority> authorities_;
 };
 
 } // namespace network

@@ -18,128 +18,110 @@
  */
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
 
-#include <functional>
+#include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/p2p.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
-#include <bitcoin/network/protocols/protocol_events.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-#define NAME "address"
 #define CLASS protocol_address_31402
 
 using namespace bc::system;
-using namespace bc::system::message;
+using namespace messages;
 using namespace std::placeholders;
 
-static message::address configured_self(
-    const network::settings& settings)
-{
-    if (settings.self.port() == 0)
-        return address{};
-
-    return address{ { settings.self.to_network_address() } };
-}
-
-protocol_address_31402::protocol_address_31402(p2p& network,
-    channel::ptr channel)
-  : protocol_events(network, channel, NAME),
-    network_(network),
-    self_(configured_self(network_.network_settings())),
-    CONSTRUCT_TRACK(protocol_address_31402)
+protocol_address_31402::protocol_address_31402(const session& session,
+    const channel::ptr& channel) noexcept
+  : protocol(session, channel), sent_(false)
 {
 }
 
-// Start sequence.
+const std::string& protocol_address_31402::name() const noexcept
+{
+    static const std::string protocol_name = "address";
+    return protocol_name;
+}
+
+// Start.
 // ----------------------------------------------------------------------------
 
-void protocol_address_31402::start()
+void protocol_address_31402::start() noexcept
 {
-    const auto& settings = network_.network_settings();
+    BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
-    // Must have a handler to capture a shared self pointer in stop subscriber.
-    protocol_events::start(BIND1(handle_stop, _1));
-
-    if (!self_.addresses().empty())
-    {
-        SEND2(self_, handle_send, _1, self_.command);
-    }
-
-    // If we can't store addresses we don't ask for or handle them.
-    if (settings.host_pool_capacity == 0)
+    if (started())
         return;
 
-    SUBSCRIBE2(address, handle_receive_address, _1, _2);
-    SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
-    SEND2(get_address{}, handle_send, _1, get_address::command);
+    // Own address message is derived from config, if port is non-zero.
+    if (!is_zero(settings().self.port()))
+    {
+        static const auto self = settings().self.to_address_item();
+        SEND1(address{ { self } }, handle_send, _1);
+    }
+
+    // If addresses can't be stored don't ask for them.
+    if (!is_zero(settings().host_pool_capacity))
+    {
+        SUBSCRIBE2(address, handle_receive_address, _1, _2);
+        SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
+        SEND1(get_address{}, handle_send, _1);
+    }
+
+    protocol::start();
 }
 
-// Protocol.
+// Inbound (store addresses).
 // ----------------------------------------------------------------------------
 
-bool protocol_address_31402::handle_receive_address(const code& ec,
-    address_const_ptr message)
+void protocol_address_31402::handle_receive_address(const code& ec,
+    const address::ptr& message) noexcept
 {
-    if (stopped(ec))
-        return false;
+    BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
-    LOG_VERBOSE(LOG_NETWORK)
-        << "Storing addresses from [" << authority() << "] ("
-        << message->addresses().size() << ")";
+    if (stopped(ec))
+        return;
 
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
-    network_.store(message->addresses(), BIND1(handle_store_addresses, _1));
 
-    // RESUBSCRIBE
-    return true;
+    // Protocol handles and logs code.
+    saves(message->addresses);
 }
 
-bool protocol_address_31402::handle_receive_get_address(const code& ec,
-    get_address_const_ptr )
+// Outbound (fetch and send addresses).
+// ----------------------------------------------------------------------------
+
+void protocol_address_31402::handle_receive_get_address(const code& ec,
+    const get_address::ptr&) noexcept
 {
-    if (stopped(ec))
-        return false;
+    BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
-    message::network_address::list addresses;
-    network_.fetch_addresses(addresses);
-
-    if (!addresses.empty())
-    {
-        const address address_subset(addresses);
-        SEND2(address_subset, handle_send, _1, self_.command);
-
-        LOG_DEBUG(LOG_NETWORK)
-            << "Sending addresses to [" << authority() << "] ("
-            << self_.addresses().size() << ")";
-    }
-
-    // do not resubscribe; one response per connection permitted
-    return false;
-}
-
-void protocol_address_31402::handle_store_addresses(const code& ec)
-{
     if (stopped(ec))
         return;
 
-    if (ec)
-    {
-        LOG_ERROR(LOG_NETWORK)
-            << "Failure storing addresses from [" << authority() << "] "
-            << ec.message();
-        stop(ec);
-    }
+    // TODO: log duplicate request (or drop channel).
+    if (sent_)
+        return;
+
+    fetches(BIND2(handle_fetch_addresses, _1, _2));
 }
 
-void protocol_address_31402::handle_stop(const code&)
+void protocol_address_31402::handle_fetch_addresses(const code& ec,
+    const messages::address_items& addresses) noexcept
 {
-    // None of the other bc::network protocols log their stop.
-    ////LOG_DEBUG(LOG_NETWORK)
-    ////    << "Stopped address protocol for [" << authority() << "].";
+    BC_ASSERT_MSG(stranded(), "protocol_address_31402");
+
+    if (stopped(ec))
+        return;
+
+    SEND1(address{ addresses }, handle_send, _1);
+
+    // Precludes multiple address requests.
+    sent_ = true;
 }
 
 } // namespace network

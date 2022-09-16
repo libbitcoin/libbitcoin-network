@@ -9,7 +9,7 @@
 # Define tests and options.
 #==============================================================================
 BOOST_UNIT_TEST_OPTIONS=\
-"--run_test=empty_tests "\
+"--run_test=* "\
 "--show_progress=no "\
 "--detect_memory_leak=0 "\
 "--report_level=no "\
@@ -18,4 +18,9 @@ BOOST_UNIT_TEST_OPTIONS=\
 
 # Run tests.
 #==============================================================================
-./test/libbitcoin-network-test ${BOOST_UNIT_TEST_OPTIONS} > test.log
+# ALlow CI to send errors to standard output
+if [[ $CI == true ]]; then
+    ./test/libbitcoin-network-test ${BOOST_UNIT_TEST_OPTIONS}
+else
+    ./test/libbitcoin-network-test ${BOOST_UNIT_TEST_OPTIONS} > test.log
+fi

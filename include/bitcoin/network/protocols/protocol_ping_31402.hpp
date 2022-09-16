@@ -20,49 +20,46 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_PING_31402_HPP
 
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
-#include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class session;
 
-/**
- * Ping-pong protocol.
- * Attach this to a channel immediately following handshake completion.
- */
 class BCT_API protocol_ping_31402
-  : public protocol_timer, track<protocol_ping_31402>
+  : public protocol, track<protocol_ping_31402>
 {
 public:
     typedef std::shared_ptr<protocol_ping_31402> ptr;
 
-    /**
-     * Construct a ping protocol instance.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     */
-    protocol_ping_31402(p2p& network, channel::ptr channel);
+    protocol_ping_31402(const session& session,
+        const channel::ptr& channel) noexcept;
 
-    /**
-     * Start the protocol.
-     */
-    virtual void start();
+    /// Start protocol (strand required).
+    void start() noexcept override;
+
+    /// The channel is stopping (called on strand by stop subscription).
+    void stopping(const code& ec) noexcept override;
 
 protected:
-    // Expose polymorphic start method from base.
-    using protocol_timer::start;
+    const std::string& name() const noexcept override;
 
-    virtual void send_ping(const system::code& ec);
+    virtual void send_ping() noexcept;
+    virtual void handle_timer(const code& ec) noexcept;
+    virtual void handle_send_ping(const code& ec) noexcept;
+    virtual void handle_receive_ping(const code& ec,
+        const messages::ping::ptr& message) noexcept;
 
-    virtual bool handle_receive_ping(const system::code& ec,
-        system::ping_const_ptr message);
-
-    const settings& settings_;
+private:
+    // This is protected by strand.
+    deadline::ptr timer_;
 };
 
 } // namespace network

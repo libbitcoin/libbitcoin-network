@@ -21,217 +21,231 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/p2p.hpp>
-#include <bitcoin/network/protocols/protocol_ping_31402.hpp>
-#include <bitcoin/network/protocols/protocol_ping_60001.hpp>
-#include <bitcoin/network/protocols/protocol_reject_70002.hpp>
-#include <bitcoin/network/protocols/protocol_seed_31402.hpp>
-#include <bitcoin/network/protocols/protocol_version_31402.hpp>
-#include <bitcoin/network/protocols/protocol_version_70002.hpp>
+#include <bitcoin/network/protocols/protocols.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 #define CLASS session_seed
-#define NAME "session_seed"
-
-/// If seeding occurs it must generate an increase of 100 hosts or will fail.
-static const size_t minimum_host_increase = 100;
 
 using namespace bc::system;
 using namespace std::placeholders;
 
-session_seed::session_seed(p2p& network)
-  : session(network, false),
-    CONSTRUCT_TRACK(session_seed)
+session_seed::session_seed(p2p& network) noexcept
+  : session(network)
 {
 }
 
-// Start sequence.
+bool session_seed::inbound() const noexcept
+{
+    return false;
+}
+
+bool session_seed::notify() const noexcept
+{
+    return false;
+}
+
+// Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_seed::start(result_handler handler)
+void session_seed::start(result_handler&& handler) noexcept
 {
-    if (settings_.host_pool_capacity == 0)
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    if (is_zero(settings().outbound_connections))
     {
-        LOG_INFO(LOG_NETWORK)
-            << "Not configured to populate an address pool.";
-        handler(error::success);
+        ////LOG_INFO(LOG_NETWORK)
+        ////    << "Not configured for outbound connections." << std::endl;
+        handler(error::bypassed);
         return;
     }
 
-    session::start(CONCURRENT_DELEGATE2(handle_started, _1, handler));
+    if (!is_zero(address_count()))
+    {
+        ////LOG_INFO(LOG_NETWORK)
+        ////    << "Bypassed seeding due to existing addresses." << std::endl;
+        handler(error::bypassed);
+        return;
+    }
+
+    if (is_zero(settings().host_pool_capacity) || settings().seeds.empty())
+    {
+        ////LOG_INFO(LOG_NETWORK)
+        ////    << "Not configured to populate an address pool." << std::endl;
+        handler(error::seeding_unsuccessful);
+        return;
+    }
+
+    session::start(BIND2(handle_started, _1, std::move(handler)));
 }
 
 void session_seed::handle_started(const code& ec,
-    result_handler handler)
+    const result_handler& handler) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Seeding runs entirely in start and is possible to stop.
+    ////BC_ASSERT_MSG(!stopped(), "session stopped in start");
+
     if (ec)
     {
         handler(ec);
         return;
     }
 
-    const auto start_size = address_count();
+    // Create a connector for each seed connection.
+    const auto connectors = create_connectors(settings().seeds.size());
+    const auto counter = std::make_shared<size_t>(connectors->size());
+    auto it = settings().seeds.begin();
 
-    if (start_size != 0)
+    for (const auto& connector: *connectors)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Seeding is not required because there are "
-            << start_size << " cached addresses.";
-        handler(error::success);
-        return;
+        const auto& seed = *(it++);
+
+        subscribe_stop([=](const code&) noexcept
+        {
+            connector->stop();
+        });
+
+        start_seed(seed, connector,
+            BIND5(handle_connect, _1, _2, seed, counter, handler));
     }
-
-    if (settings_.seeds.empty())
-    {
-        LOG_ERROR(LOG_NETWORK)
-            << "Seeding is required but no seeds are configured.";
-        handler(error::operation_failed);
-        return;
-    }
-
-    // This is NOT technically the end of the start sequence, since the handler
-    // is not invoked until seeding operations are complete.
-    start_seeding(start_size, handler);
-}
-
-void session_seed::attach_handshake_protocols(channel::ptr channel,
-    result_handler handle_started)
-{
-    // Don't use configured services or relay for seeding.
-    const auto relay = false;
-    const auto own_version = settings_.protocol_maximum;
-    const auto own_services = message::version::service::none;
-    const auto invalid_services = settings_.invalid_services;
-    const auto minimum_version = settings_.protocol_minimum;
-    const auto minimum_services = message::version::service::none;
-
-    // Reject messages are not handled until bip61 (70002).
-    // The negotiated_version is initialized to the configured maximum.
-    if (channel->negotiated_version() >= message::version::level::bip61)
-        attach<protocol_version_70002>(channel, own_version, own_services,
-            invalid_services, minimum_version, minimum_services, relay)
-            ->start(handle_started);
-    else
-        attach<protocol_version_31402>(channel, own_version, own_services,
-            invalid_services, minimum_version, minimum_services)
-            ->start(handle_started);
 }
 
 // Seed sequence.
 // ----------------------------------------------------------------------------
 
-void session_seed::start_seeding(size_t start_size, result_handler handler)
-{
-    const auto complete = BIND2(handle_complete, start_size, handler);
-
-    const auto join_handler = synchronize(complete, settings_.seeds.size(),
-        NAME, synchronizer_terminate::on_count);
-
-    // We don't use parallel here because connect is itself asynchronous.
-    for (const auto& seed: settings_.seeds)
-        start_seed(seed, join_handler);
-}
-
+// Attempt to connect one seed.
 void session_seed::start_seed(const config::endpoint& seed,
-    result_handler handler)
+    const connector::ptr& connector, const channel_handler& handler) noexcept
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Guard restartable connector (shutdown delay).
     if (stopped())
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Suspended seed connection";
-        handler(error::channel_stopped);
+        handler(error::service_stopped, nullptr);
         return;
     }
 
-    LOG_INFO(LOG_NETWORK)
-        << "Contacting seed [" << seed << "]";
-
-    const auto connector = create_connector();
-    pend(connector);
-
-    // OUTBOUND CONNECT
-    connector->connect(seed,
-        BIND5(handle_connect, _1, _2, seed, connector, handler));
+    connector->connect(seed, move_copy(handler));
 }
 
-void session_seed::handle_connect(const code& ec, channel::ptr channel,
-    const config::endpoint& seed, connector::ptr connector,
-    result_handler handler)
+// TODO: remove seed parameter.
+void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
+    const config::endpoint&, const count_ptr& counter,
+    const result_handler& handler) noexcept
 {
-    unpend(connector);
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
     {
-        LOG_INFO(LOG_NETWORK)
-            << "Failure contacting seed [" << seed << "] " << ec.message();
-        handler(ec);
+        BC_ASSERT_MSG(!channel, "unexpected channel instance");
+
+        // Handle channel result in stop handler (not yet registered).
+        handle_channel_stop(ec, counter, handler);
         return;
     }
 
-    if (blacklisted(channel->authority()))
-    {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Seed [" << seed << "] on blacklisted address ["
-            << channel->authority() << "]";
-        handler(error::address_blocked);
-        return;
-    }
-
-    LOG_INFO(LOG_NETWORK)
-        << "Connected seed [" << seed << "] as " << channel->authority();
-
-    register_channel(channel,
-        BIND3(handle_channel_start, _1, channel, handler),
-        BIND1(handle_channel_stop, _1));
+    start_channel(channel,
+        BIND2(handle_channel_start, _1, channel),
+        BIND3(handle_channel_stop, _1, counter, handler));
 }
 
-void session_seed::handle_channel_start(const code& ec,
-    channel::ptr channel, result_handler handler)
+void session_seed::attach_handshake(const channel::ptr& channel,
+    result_handler&& handler) const noexcept
 {
-    if (ec)
-    {
-        handler(ec);
-        return;
-    }
+    BC_ASSERT_MSG(channel->stranded(), "strand");
 
-    attach_protocols(channel, handler);
-}
+    // Weak reference safe as sessions outlive protocols.
+    const auto& self = *this;
+    const auto enable_reject = settings().enable_reject;
+    const auto maximum_version = settings().protocol_maximum;
 
-void session_seed::attach_protocols(channel::ptr channel,
-    result_handler handler)
-{
-    const auto version = channel->negotiated_version();
+    // Seeding does not require or provide any node services or allow relay.
+    constexpr auto minimum_services = messages::service::node_none;
+    constexpr auto maximum_services = messages::service::node_none;
+    constexpr auto relay = false;
 
-    if (version >= message::version::level::bip31)
-        attach<protocol_ping_60001>(channel)->start();
+    // Reject is supported starting at bip61 (70002) and later deprecated.
+    if (enable_reject && maximum_version >= messages::level::bip61)
+        channel->attach<protocol_version_70002>(self, minimum_services,
+            maximum_services, relay)->shake(std::move(handler));
+
+    // Relay is supported starting at bip37 (70001).
+    else if (maximum_version >= messages::level::bip37)
+        channel->attach<protocol_version_70001>(self, minimum_services,
+            maximum_services, relay)->shake(std::move(handler));
+
     else
-        attach<protocol_ping_31402>(channel)->start();
-
-    if (version >= message::version::level::bip61)
-        attach<protocol_reject_70002>(channel)->start();
-
-    attach<protocol_seed_31402>(channel)->start(handler);
+        channel->attach<protocol_version_31402>(self, minimum_services,
+            maximum_services)->shake(std::move(handler));
 }
 
-void session_seed::handle_channel_stop(const code& ec)
+void session_seed::handle_channel_start(const code&, const channel::ptr&) noexcept
 {
-    LOG_DEBUG(LOG_NETWORK)
-        << "Seed channel stopped: " << ec.message();
+    BC_ASSERT_MSG(stranded(), "strand");
 }
 
-// This accepts no error code because individual seed errors are suppressed.
-void session_seed::handle_complete(size_t start_size, result_handler handler)
+void session_seed::attach_protocols(const channel::ptr& channel) const noexcept
 {
-    // We succeed only if there is a host count increase of at least 100.
-    const auto increase = address_count() >=
-        ceiling_add(start_size, minimum_host_increase);
+    BC_ASSERT_MSG(channel->stranded(), "strand");
 
-    // This is the end of the seed sequence.
-    handler(increase ?
-        error::success : error::peer_throttling);
+    // Weak reference safe as sessions outlive protocols.
+    const auto& self = *this;
+    const auto enable_reject = settings().enable_reject;
+    const auto negotiated_version = channel->negotiated_version();
+
+    if (negotiated_version >= messages::level::bip31)
+        channel->attach<protocol_ping_60001>(self)->start();
+    else
+        channel->attach<protocol_ping_31402>(self)->start();
+
+    // Reject is supported starting at bip61 (70002) and later deprecated.
+    if (enable_reject && negotiated_version >= messages::level::bip61)
+        channel->attach<protocol_reject_70002>(self)->start();
+
+    // Seeding takes place of address protocol, stops upon completion/timeout.
+    channel->attach<protocol_seed_31402>(self)->start();
+}
+
+void session_seed::handle_channel_stop(const code&, const count_ptr& counter,
+    const result_handler& handler) noexcept
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Ignore result if previously handled (early termination).
+    if (is_zero(*counter))
+        return;
+
+    // Handle service stopped, ignoring possible success/fail result.
+    if (stopped())
+    {
+        *counter = zero;
+        handler(error::service_stopped);
+        return;
+    }
+
+    // Handle with success on first positive address count.
+    if (!is_zero(address_count()))
+    {
+        *counter = zero;
+        handler(error::success);
+        return;
+    }
+
+    // Handle failure now that all seeds are processed.
+    if (is_zero(--(*counter)))
+    {
+        handler(error::seeding_unsuccessful);
+        return;
+    }
 }
 
 } // namespace network

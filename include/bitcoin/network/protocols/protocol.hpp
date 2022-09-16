@@ -24,8 +24,11 @@
 #include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -44,96 +47,149 @@ namespace network {
 #define BOUND_PROTOCOL_TYPE(handler, args) \
     std::bind(PROTOCOL_ARGS_TYPE(handler, args))
 
-class p2p;
+class session;
 
-/// Virtual base class for protocol implementation, mostly thread safe.
+/// This class is thread safe, except for:
+/// * start/started must be called on strand.
+/// * setters should only be invoked during handshake.
+/// Abstract base class for protocols.
+/// handle_ methods are always invoked on the strand.
 class BCT_API protocol
-  : public system::enable_shared_from_base<protocol>, system::noncopyable
+  : public enable_shared_from_base<protocol>, system::noncopyable
 {
+public:
+    /// The channel is stopping (called on strand by stop subscription).
+    /// This must be called only from the channel strand (not thread safe).
+    virtual void stopping(const code& ec) noexcept;
+
 protected:
-    typedef std::function<void()> completion_handler;
-    typedef std::function<void(const system::code&)> event_handler;
-    typedef std::function<void(const system::code&, size_t)> count_handler;
+    typedef std::function<void(const code&)> result_handler;
+    typedef std::function<void(const code&, const messages::address_items&)>
+        fetches_handler;
 
-    /// Construct an instance.
-    protocol(p2p& network, channel::ptr channel, const std::string& name);
+    protocol(const session& session, const channel::ptr& channel) noexcept;
+    virtual ~protocol() noexcept;
 
-    /// Bind a method in the derived class.
+    /// Macro helpers (use macros).
+    /// -----------------------------------------------------------------------
+
+    /// Bind a method in the base or derived class (use BIND#).
     template <class Protocol, typename Handler, typename... Args>
-    auto bind(Handler&& handler, Args&&... args) ->
+    auto bind(Handler&& handler, Args&&... args) noexcept ->
         decltype(BOUND_PROTOCOL_TYPE(handler, args)) const
     {
         return BOUND_PROTOCOL(handler, args);
     }
 
-    template <class Protocol, typename Handler, typename... Args>
-    void dispatch_concurrent(Handler&& handler, Args&&... args)
-    {
-        dispatch_.concurrent(BOUND_PROTOCOL(handler, args));
-    }
-
-    /// Send a message on the channel and handle the result.
+    /// Send a message instance to peer (use SEND#).
     template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(const Message& packet, Handler&& handler, Args&&... args)
+    void send(Message&& message, Handler&& handler, Args&&... args) noexcept
     {
-        channel_->send(packet, BOUND_PROTOCOL(handler, args));
+        channel_->send<Message>(system::to_shared(std::forward<Message>(message)),
+            BOUND_PROTOCOL(handler, args));
     }
 
-    /// Subscribe to all channel messages, blocking until subscribed.
+    /// Subscribe to channel messages by type (use SUBSCRIBE#).
+    /// Handler is invoked with error::subscriber_stopped if already stopped.
     template <class Protocol, class Message, typename Handler, typename... Args>
-    void subscribe(Handler&& handler, Args&&... args)
+    void subscribe(Handler&& handler, Args&&... args) noexcept
     {
-        channel_->template subscribe<Message>(BOUND_PROTOCOL(handler, args));
+        BC_ASSERT_MSG(stranded(), "strand");
+        channel_->subscribe<Message>(BOUND_PROTOCOL(handler, args));
     }
 
-    /// Subscribe to the channel stop, blocking until subscribed.
-    template <class Protocol, typename Handler, typename... Args>
-    void subscribe_stop(Handler&& handler, Args&&... args)
-    {
-        channel_->subscribe_stop(BOUND_PROTOCOL(handler, args));
-    }
+    /// Start/Stop.
+    /// -----------------------------------------------------------------------
 
-    /// Get the address of the channel.
-    virtual system::config::authority authority() const;
+    /// Set protocol started state (strand required).
+    virtual void start() noexcept;
 
-    /// Get the protocol name, for logging purposes.
-    virtual const std::string& name() const;
+    /// Get protocol started state (strand required).
+    virtual bool started() const noexcept;
 
-    /// Get the channel nonce.
-    virtual uint64_t nonce() const;
+    /// Channel is stopped or code set.
+    virtual bool stopped(const code& ec=error::success) const noexcept;
 
-    /// Get the peer version message.
-    virtual system::version_const_ptr peer_version() const;
+    /// Stop the channel.
+    virtual void stop(const code& ec) noexcept;
 
-    /// Set the peer version message.
-    virtual void set_peer_version(system::version_const_ptr value);
+    /// Pause the channel (strand required).
+    virtual void pause() noexcept;
 
-    /// Get the negotiated protocol version.
-    virtual uint32_t negotiated_version() const;
+    /////// Resume the channel (strand required).
+    ////virtual void resume() noexcept;
 
-    /// Set the negotiated protocol version.
-    virtual void set_negotiated_version(uint32_t value);
+    /// Properties.
+    /// -----------------------------------------------------------------------
 
-    /// Get the threadpool.
-    virtual system::threadpool& pool();
+    /// The current thread is on the channel strand.
+    virtual bool stranded() const noexcept;
 
-    /// Stop the channel (and the protocol).
-    virtual void stop(const system::code& ec);
+    /// Declare protocol canonical name.
+    virtual const std::string& name() const noexcept = 0;
 
-protected:
-    void handle_send(const system::code& ec, const std::string& command);
+    /// The authority of the peer.
+    virtual config::authority authority() const noexcept;
+
+    /// The nonce of the channel.
+    virtual uint64_t nonce() const noexcept;
+
+    /// Network settings.
+    virtual const network::settings& settings() const noexcept;
+
+    /// The protocol version of the peer.
+    virtual messages::version::ptr peer_version() const noexcept;
+
+    /// Set protocol version of the peer (set only during handshake).
+    virtual void set_peer_version(const messages::version::ptr& value) noexcept;
+
+    /// The negotiated protocol version.
+    virtual uint32_t negotiated_version() const noexcept;
+
+    /// Set negotiated protocol version (set only during handshake).
+    virtual void set_negotiated_version(uint32_t value) noexcept;
+
+    /// Addresses.
+    /// -----------------------------------------------------------------------
+
+    /// Fetch a set of peer addresses from the address pool.
+    virtual void fetches(fetches_handler&& handler) noexcept;
+
+    /// Save a set of peer addresses to the address pool.
+    virtual void saves(const messages::address_items& addresses) noexcept;
+    virtual void saves(const messages::address_items& addresses,
+        result_handler&& handler) noexcept;
+
+    // Capture send results, logged by default.
+    virtual void handle_send(const code& ec) noexcept;
 
 private:
-    system::threadpool& pool_;
-    system::dispatcher dispatch_;
+    void do_fetches(const code& ec,
+        const messages::address_items& addresses,
+        const fetches_handler& handler) noexcept;
+    void handle_fetches(const code& ec, const messages::address_items& addresses,
+        const fetches_handler& handler) noexcept;
+
+    void do_saves(const code& ec, const result_handler& handler) noexcept;
+    void handle_saves(const code& ec, const result_handler& handler) noexcept;
+
+    // This is mostly thread safe, and used in a thread safe manner.
+    // pause/resume/paused/attach not invoked, setters limited to handshake.
     channel::ptr channel_;
-    const std::string name_;
+
+    // This is thread safe.
+    const session& session_;
+
+    // This is protected by strand.
+    bool started_;
 };
 
 #undef PROTOCOL_ARGS
 #undef BOUND_PROTOCOL
 #undef PROTOCOL_ARGS_TYPE
 #undef BOUND_PROTOCOL_TYPE
+
+// See define.hpp for BIND# macros.
 
 #define SEND1(message, method, p1) \
     send<CLASS>(message, &CLASS::method, p1)
@@ -146,15 +202,6 @@ private:
     subscribe<CLASS, message>(&CLASS::method, p1, p2)
 #define SUBSCRIBE3(message, method, p1, p2, p3) \
     subscribe<CLASS, message>(&CLASS::method, p1, p2, p3)
-
-#define SUBSCRIBE_STOP1(method, p1) \
-    subscribe_stop<CLASS>(&CLASS::method, p1)
-
-#define DISPATCH_CONCURRENT1(method, p1) \
-    dispatch_concurrent<CLASS>(&CLASS::method, p1)
-
-#define DISPATCH_CONCURRENT2(method, p1, p2) \
-    dispatch_concurrent<CLASS>(&CLASS::method, p1, p2)
 
 } // namespace network
 } // namespace libbitcoin

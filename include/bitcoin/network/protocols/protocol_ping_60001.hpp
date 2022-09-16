@@ -19,49 +19,48 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_PING_60001_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_PING_60001_HPP
 
-#include <atomic>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/channel.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
-#include <bitcoin/network/protocols/protocol_timer.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class session;
 
-/**
- * Ping-pong protocol.
- * Attach this to a channel immediately following handshake completion.
- */
 class BCT_API protocol_ping_60001
   : public protocol_ping_31402, track<protocol_ping_60001>
 {
 public:
     typedef std::shared_ptr<protocol_ping_60001> ptr;
 
-    /**
-     * Construct a ping protocol instance.
-     * @param[in]  network   The network interface.
-     * @param[in]  channel   The channel on which to start the protocol.
-     */
-    protocol_ping_60001(p2p& network, channel::ptr channel);
+    protocol_ping_60001(const session& session,
+        const channel::ptr& channel) noexcept;
+
+    /// Start protocol (strand required).
+    void start() noexcept override;
 
 protected:
-    void send_ping(const system::code& ec) override;
+    const std::string& name() const noexcept override;
 
-    void handle_send_ping(const system::code& ec, const std::string& command);
-    bool handle_receive_ping(const system::code& ec,
-        system::ping_const_ptr message) override;
-    virtual bool handle_receive_pong(const system::code& ec,
-        system::pong_const_ptr message, uint64_t nonce);
+    void send_ping() noexcept override;
+    void handle_timer(const code& ec) noexcept override;
+    void handle_receive_ping(const code& ec,
+        const messages::ping::ptr& message) noexcept override;
+
+    virtual void handle_send_pong(const code& ec) noexcept;
+    virtual void handle_receive_pong(const code& ec,
+        const messages::pong::ptr& message) noexcept;
 
 private:
-    std::atomic<bool> pending_;
+    // This is protected by strand.
+    uint64_t nonce_;
 };
 
 } // namespace network
