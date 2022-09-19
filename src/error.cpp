@@ -114,7 +114,6 @@ code asio_to_error_code(const error::boost_code& ec) noexcept
     if (ec == boost_error_t::connection_refused ||
         ec == boost_error_t::connection_reset ||
         ec == boost_error_t::not_connected ||
-        ec == boost_error_t::not_connected ||
         ec == boost_error_t::operation_not_permitted ||
         ec == boost_error_t::operation_not_supported ||
         ec == boost_error_t::owner_dead ||
@@ -136,7 +135,6 @@ code asio_to_error_code(const error::boost_code& ec) noexcept
         ec == boost_error_t::network_unreachable ||
         ec == boost_error_t::no_link ||
         ec == boost_error_t::no_protocol_option ||
-        ec == boost_error_t::no_such_file_or_directory ||
         ec == boost_error_t::no_such_file_or_directory ||
         ec == boost_error_t::not_a_socket ||
         ec == boost_error_t::protocol_not_supported ||
