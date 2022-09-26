@@ -26,27 +26,27 @@ class channel_accessor
 public:
     using channel::channel;
 
-    size_t maximum_payload() const noexcept override
+    size_t maximum_payload() const NOEXCEPT override
     {
         return channel::maximum_payload();
     }
 
-    uint32_t protocol_magic() const noexcept override
+    uint32_t protocol_magic() const NOEXCEPT override
     {
         return channel::protocol_magic();
     }
 
-    bool validate_checksum() const noexcept override
+    bool validate_checksum() const NOEXCEPT override
     {
         return channel::validate_checksum();
     }
 
-    bool verbose() const noexcept override
+    bool verbose() const NOEXCEPT override
     {
         return channel::verbose();
     }
 
-    uint32_t version() const noexcept override
+    uint32_t version() const NOEXCEPT override
     {
         return channel::version();
     }

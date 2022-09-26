@@ -44,25 +44,25 @@ public:
     typedef std::function<void(const code&)> handler;
     
     /// Timer notification handler is posted to the service.
-    deadline(asio::strand& strand, const duration& timeout=seconds(0)) noexcept;
+    deadline(asio::strand& strand, const duration& timeout=seconds(0)) NOEXCEPT;
 
     /// Assert timer stopped.
-    ~deadline() noexcept;
+    ~deadline() NOEXCEPT;
 
     /// Start or restart the timer.
     /// Use expired(ec) in handler to test for expiration.
-    void start(handler&& handle) noexcept;
+    void start(handler&& handle) NOEXCEPT;
 
     /// Start or restart the timer.
     /// Use expired(ec) in handler to test for expiration.
-    void start(handler&& handle, const duration& timeout) noexcept;
+    void start(handler&& handle, const duration& timeout) NOEXCEPT;
 
     /// Cancel the timer. The handler will be invoked.
-    void stop() noexcept;
+    void stop() NOEXCEPT;
 
 private:
     void handle_timer(const error::boost_code& ec,
-        const handler& handle) noexcept;
+        const handler& handle) NOEXCEPT;
 
     // This is thread safe (const).
     const duration duration_;

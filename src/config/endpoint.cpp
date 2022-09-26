@@ -31,88 +31,88 @@ namespace config {
 
 using namespace bc::system;
 
-endpoint::endpoint() noexcept
+endpoint::endpoint() NOEXCEPT
   : endpoint("localhost")
 {
 }
 
-endpoint::endpoint(const endpoint& other) noexcept
+endpoint::endpoint(const endpoint& other) NOEXCEPT
   : scheme_(other.scheme()), host_(other.host()), port_(other.port())
 {
 }
 
-endpoint::endpoint(const std::string& uri) noexcept(false)
+endpoint::endpoint(const std::string& uri) NOEXCEPT(false)
 {
     std::stringstream(uri) >> *this;
 }
 
-endpoint::endpoint(const authority& authority) noexcept
+endpoint::endpoint(const authority& authority) NOEXCEPT
   : endpoint(authority.to_string())
 {
 }
 
-endpoint::endpoint(const std::string& host, uint16_t port) noexcept
+endpoint::endpoint(const std::string& host, uint16_t port) NOEXCEPT
   : host_(host), port_(port)
 {
 }
 
 endpoint::endpoint(const std::string& scheme, const std::string& host,
-    uint16_t port) noexcept
+    uint16_t port) NOEXCEPT
   : scheme_(scheme), host_(host), port_(port)
 {
 }
 
-endpoint::endpoint(const asio::endpoint& uri) noexcept
+endpoint::endpoint(const asio::endpoint& uri) NOEXCEPT
   : endpoint(uri.address(), uri.port())
 {
 }
 
-endpoint::endpoint(const asio::address& ip, uint16_t port) noexcept
+endpoint::endpoint(const asio::address& ip, uint16_t port) NOEXCEPT
   : host_(ip.to_string()), port_(port)
 {
 }
 
-const std::string& endpoint::scheme() const noexcept
+const std::string& endpoint::scheme() const NOEXCEPT
 {
     return scheme_;
 }
 
-const std::string& endpoint::host() const noexcept
+const std::string& endpoint::host() const NOEXCEPT
 {
     return host_;
 }
 
-uint16_t endpoint::port() const noexcept
+uint16_t endpoint::port() const NOEXCEPT
 {
     return port_;
 }
 
-std::string endpoint::to_string() const noexcept
+std::string endpoint::to_string() const NOEXCEPT
 {
     std::stringstream value;
     value << *this;
     return value.str();
 }
 
-endpoint endpoint::to_local() const noexcept
+endpoint endpoint::to_local() const NOEXCEPT
 {
     const auto host = host_ == "*" ? "localhost" : host_;
     return endpoint(scheme_, host, port_);
 }
 
-endpoint::operator bool() const noexcept
+endpoint::operator bool() const NOEXCEPT
 {
     return !scheme_.empty();
 }
 
-bool endpoint::operator==(const endpoint& other) const noexcept
+bool endpoint::operator==(const endpoint& other) const NOEXCEPT
 {
     return host_ == other.host_ && port_ == other.port_ &&
         scheme_ == other.scheme_;
 }
 
 std::istream& operator>>(std::istream& input,
-    endpoint& argument) noexcept(false)
+    endpoint& argument) NOEXCEPT(false)
 {
     std::string value;
     input >> value;
@@ -144,7 +144,7 @@ std::istream& operator>>(std::istream& input,
 }
 
 std::ostream& operator<<(std::ostream& output,
-    const endpoint& argument) noexcept
+    const endpoint& argument) NOEXCEPT
 {
     if (!argument.scheme().empty())
         output << argument.scheme() << "://";

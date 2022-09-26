@@ -41,7 +41,7 @@ using namespace std::placeholders;
 // Calls are stranded to protect the acceptor member.
 
 acceptor::acceptor(asio::strand& strand, asio::io_context& service,
-    const settings& settings) noexcept
+    const settings& settings) NOEXCEPT
   : settings_(settings),
     service_(service),
     strand_(strand),
@@ -50,7 +50,7 @@ acceptor::acceptor(asio::strand& strand, asio::io_context& service,
 {
 }
 
-acceptor::~acceptor() noexcept
+acceptor::~acceptor() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped_, "acceptor is not stopped");
 }
@@ -58,7 +58,7 @@ acceptor::~acceptor() noexcept
 // Start/stop.
 // ----------------------------------------------------------------------------
 
-code acceptor::start(uint16_t port) noexcept
+code acceptor::start(uint16_t port) NOEXCEPT
 {
     static const auto reuse_address = asio::acceptor::reuse_address(true);
     error::boost_code ec;
@@ -83,7 +83,7 @@ code acceptor::start(uint16_t port) noexcept
     return error::asio_to_error_code(ec);
 }
 
-void acceptor::stop() noexcept
+void acceptor::stop() NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -96,7 +96,7 @@ void acceptor::stop() noexcept
 // Methods.
 // ----------------------------------------------------------------------------
 
-void acceptor::accept(accept_handler&& handler) noexcept
+void acceptor::accept(accept_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -117,7 +117,7 @@ void acceptor::accept(accept_handler&& handler) noexcept
 
 // private
 void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
-    const accept_handler& handler) noexcept
+    const accept_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

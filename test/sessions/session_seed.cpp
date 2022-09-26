@@ -35,7 +35,7 @@ public:
     {
     }
 
-    void stop(const code& ec) noexcept override
+    void stop(const code& ec) NOEXCEPT override
     {
         // Set future on first code match.
         if (ec == match_ && !set_)
@@ -99,7 +99,7 @@ public:
     }
 
     // Capture stopped and free channel.
-    void stop() noexcept override
+    void stop() NOEXCEPT override
     {
         stopped_ = true;
         connector::stop();
@@ -107,7 +107,7 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) noexcept override
+        connect_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
         {
@@ -146,7 +146,7 @@ public:
     using mock_connector_connect_success<error::success>::mock_connector_connect_success;
 
     void connect(const std::string&, uint16_t,
-        connect_handler&& handler) noexcept override
+        connect_handler&& handler) NOEXCEPT override
     {
         boost::asio::post(strand_, [=]()
         {
@@ -161,17 +161,17 @@ class mock_session_seed
 public:
     using session_seed::session_seed;
 
-    bool inbound() const noexcept override
+    bool inbound() const NOEXCEPT override
     {
         return session_seed::inbound();
     }
 
-    bool notify() const noexcept override
+    bool notify() const NOEXCEPT override
     {
         return session_seed::notify();
     }
 
-    bool stopped() const noexcept override
+    bool stopped() const NOEXCEPT override
     {
         return session_seed::stopped();
     }
@@ -179,7 +179,7 @@ public:
     // Capture first start_connect call.
     void start_seed(const config::endpoint& seed,
         const connector::ptr& connector,
-        const channel_handler& handler) noexcept override
+        const channel_handler& handler) NOEXCEPT override
     {
         // Must be first to ensure connector::connect() preceeds promise release.
         session_seed::start_seed(seed, connector, handler);
@@ -202,7 +202,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler&& handshake) const noexcept override
+        result_handler&& handshake) const NOEXCEPT override
     {
         if (!handshaked_)
         {
@@ -237,7 +237,7 @@ class mock_session_seed_one_address_count
 public:
     using mock_session_seed::mock_session_seed;
 
-    size_t address_count() const noexcept override
+    size_t address_count() const NOEXCEPT override
     {
         return 1;
     }
@@ -250,13 +250,13 @@ public:
     using mock_session_seed::mock_session_seed;
 
     // Rest to zero on start for restart testing.
-    void start(result_handler&& handler) noexcept override
+    void start(result_handler&& handler) NOEXCEPT override
     {
         count_ = zero;
         mock_session_seed::start(std::move(handler));
     }
 
-    size_t address_count() const noexcept override
+    size_t address_count() const NOEXCEPT override
     {
         return count_++;
     }
@@ -279,23 +279,23 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector() noexcept override
+    connector::ptr create_connector() NOEXCEPT override
     {
         return ((connector_ = std::make_shared<Connector>(strand(), service(),
             network_settings())));
     }
 
-    session_inbound::ptr attach_inbound_session() noexcept override
+    session_inbound::ptr attach_inbound_session() NOEXCEPT override
     {
         return attach<mock_inbound_session>();
     }
 
-    session_outbound::ptr attach_outbound_session() noexcept override
+    session_outbound::ptr attach_outbound_session() NOEXCEPT override
     {
         return attach<mock_outbound_session>();
     }
 
-    session_seed::ptr attach_seed_session() noexcept override
+    session_seed::ptr attach_seed_session() NOEXCEPT override
     {
         return attach<mock_seed_session>();
     }
@@ -312,7 +312,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }
@@ -327,7 +327,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }
@@ -342,7 +342,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }
@@ -363,7 +363,7 @@ public:
     }
 
     void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) noexcept override
+        connect_handler&& handler) NOEXCEPT override
     {
         BC_ASSERT_MSG(session_, "call set_session");
 
@@ -397,7 +397,7 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector() noexcept override
+    connector::ptr create_connector() NOEXCEPT override
     {
         if (connector_)
             return connector_;
@@ -406,17 +406,17 @@ public:
             strand(), service(), network_settings(), session_)));
     }
 
-    session_inbound::ptr attach_inbound_session() noexcept override
+    session_inbound::ptr attach_inbound_session() NOEXCEPT override
     {
         return attach<mock_inbound_session>();
     }
 
-    session_outbound::ptr attach_outbound_session() noexcept override
+    session_outbound::ptr attach_outbound_session() NOEXCEPT override
     {
         return attach<mock_outbound_session>();
     }
 
-    session_seed::ptr attach_seed_session() noexcept override
+    session_seed::ptr attach_seed_session() NOEXCEPT override
     {
         return attach<mock_seed_session>();
     }
@@ -434,7 +434,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }
@@ -449,7 +449,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }
@@ -464,7 +464,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }

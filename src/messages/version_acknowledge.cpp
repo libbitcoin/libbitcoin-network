@@ -37,14 +37,14 @@ const uint32_t version_acknowledge::version_minimum = level::minimum_protocol;
 const uint32_t version_acknowledge::version_maximum = level::maximum_protocol;
 
 // static
-size_t version_acknowledge::size(uint32_t) noexcept
+size_t version_acknowledge::size(uint32_t) NOEXCEPT
 {
     return zero;
 }
 
 // static
 version_acknowledge version_acknowledge::deserialize(uint32_t version,
-    reader& source) noexcept
+    reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -53,7 +53,7 @@ version_acknowledge version_acknowledge::deserialize(uint32_t version,
 }
 
 void version_acknowledge::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& BC_DEBUG_ONLY(sink)) const noexcept
+    writer& BC_DEBUG_ONLY(sink)) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)

@@ -42,7 +42,7 @@ const uint32_t get_data::version_maximum = level::maximum_protocol;
 // static
 // Reimplements base class read to prevent a list move operation as well
 // as the need to implement default, base move, and base copy constructors.
-get_data get_data::deserialize(uint32_t version, reader& source) noexcept
+get_data get_data::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -59,9 +59,9 @@ get_data get_data::deserialize(uint32_t version, reader& source) noexcept
 
 // TODO: add inventory factory witness parameter (once node is ready).
 // Requires a non-const instance for this in-place efficiency.
-void get_data::to_witness() noexcept
+void get_data::to_witness() NOEXCEPT
 {
-    const auto convert = [](inventory_item& item) noexcept
+    const auto convert = [](inventory_item& item) NOEXCEPT
     {
         item.to_witness();
     };

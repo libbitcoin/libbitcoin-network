@@ -38,12 +38,12 @@ const uint32_t bloom_filter_load::version_maximum = level::maximum_protocol;
 
 // static
 bloom_filter_load bloom_filter_load::deserialize(uint32_t version,
-    reader& source) noexcept
+    reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    const auto read_hash_functions = [](reader& source) noexcept
+    const auto read_hash_functions = [](reader& source) NOEXCEPT
     {
         const auto hash_functions = source.read_4_bytes_little_endian();
 
@@ -63,7 +63,7 @@ bloom_filter_load bloom_filter_load::deserialize(uint32_t version,
 }
 
 void bloom_filter_load::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& sink) const noexcept
+    writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -77,7 +77,7 @@ void bloom_filter_load::serialize(uint32_t BC_DEBUG_ONLY(version),
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t bloom_filter_load::size(uint32_t) const noexcept
+size_t bloom_filter_load::size(uint32_t) const NOEXCEPT
 {
     return variable_size(filter.size()) + filter.size() +
         + sizeof(uint32_t)

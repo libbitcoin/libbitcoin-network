@@ -37,20 +37,20 @@ using namespace messages;
 using namespace std::placeholders;
 
 protocol_ping_31402::protocol_ping_31402(const session& session,
-    const channel::ptr& channel) noexcept
+    const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     timer_(std::make_shared<deadline>(channel->strand(),
         session.settings().channel_heartbeat()))
 {
 }
 
-const std::string& protocol_ping_31402::name() const noexcept
+const std::string& protocol_ping_31402::name() const NOEXCEPT
 {
     return protocol_name;
 }
 
 // Also invoked by protocol_ping_31402.
-void protocol_ping_31402::start() noexcept
+void protocol_ping_31402::start() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
 
@@ -64,7 +64,7 @@ void protocol_ping_31402::start() noexcept
 }
 
 // Also invoked by protocol_ping_31402.
-void protocol_ping_31402::stopping(const code&) noexcept
+void protocol_ping_31402::stopping(const code&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
 
@@ -74,13 +74,13 @@ void protocol_ping_31402::stopping(const code&) noexcept
 // Outgoing (send_ping [on timer] => handle_send).
 // ----------------------------------------------------------------------------
 
-void protocol_ping_31402::send_ping() noexcept
+void protocol_ping_31402::send_ping() NOEXCEPT
 {
     SEND1(ping{}, handle_send_ping, _1);
 }
 
 // Also invoked by protocol_ping_31402.
-void protocol_ping_31402::handle_send_ping(const code& ec) noexcept
+void protocol_ping_31402::handle_send_ping(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
 
@@ -91,7 +91,7 @@ void protocol_ping_31402::handle_send_ping(const code& ec) noexcept
     protocol::handle_send(ec);
 }
 
-void protocol_ping_31402::handle_timer(const code& ec) noexcept
+void protocol_ping_31402::handle_timer(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
 
@@ -114,7 +114,7 @@ void protocol_ping_31402::handle_timer(const code& ec) noexcept
 // ----------------------------------------------------------------------------
 
 void protocol_ping_31402::handle_receive_ping(const code&,
-    const ping::ptr&) noexcept
+    const ping::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
 }

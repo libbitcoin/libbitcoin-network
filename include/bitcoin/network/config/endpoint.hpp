@@ -40,51 +40,51 @@ class BCT_API endpoint
 public:
     typedef std::shared_ptr<endpoint> ptr;
 
-    endpoint() noexcept;
-    endpoint(const endpoint& other) noexcept;
+    endpoint() NOEXCEPT;
+    endpoint(const endpoint& other) NOEXCEPT;
 
     /// The scheme and port may be undefined, in which case the port is
     /// reported as zero and the scheme is reported as an empty string.
     /// The value is of the form: [scheme://]host[:port]
-    endpoint(const std::string& uri) noexcept(false);
-    endpoint(const authority& authority) noexcept;
+    endpoint(const std::string& uri) NOEXCEPT(false);
+    endpoint(const authority& authority) NOEXCEPT;
 
     /// host may be host name or ip address.
-    endpoint(const std::string& host, uint16_t port) noexcept;
+    endpoint(const std::string& host, uint16_t port) NOEXCEPT;
     endpoint(const std::string& scheme, const std::string& host,
-        uint16_t port) noexcept;
+        uint16_t port) NOEXCEPT;
 
-    endpoint(const asio::endpoint& uri) noexcept;
-    endpoint(const asio::address& ip, uint16_t port) noexcept;
+    endpoint(const asio::endpoint& uri) NOEXCEPT;
+    endpoint(const asio::address& ip, uint16_t port) NOEXCEPT;
 
     /// True if the endpoint is initialized.
-    operator bool() const noexcept;
+    operator bool() const NOEXCEPT;
 
     /// The scheme of the endpoint or empty string.
-    const std::string& scheme() const noexcept;
+    const std::string& scheme() const NOEXCEPT;
 
     /// The host name or ip address of the endpoint.
-    const std::string& host() const noexcept;
+    const std::string& host() const NOEXCEPT;
 
     /// The tcp port of the endpoint.
-    uint16_t port() const noexcept;
+    uint16_t port() const NOEXCEPT;
 
     /// An empty scheme and/or empty port is omitted.
     /// The endpoint is of the form: [scheme://]host[:port]
-    std::string to_string() const noexcept;
+    std::string to_string() const NOEXCEPT;
 
     /// Return a new endpoint that replaces host instances of "*" with
     /// "localhost". This is intended for clients that wish to connect
     /// to a service that has been configured to bind to all interfaces.
     /// The endpoint is of the form: [scheme://]host[:port]
-    endpoint to_local() const noexcept;
+    endpoint to_local() const NOEXCEPT;
 
-    bool operator==(const endpoint& other) const noexcept;
+    bool operator==(const endpoint& other) const NOEXCEPT;
 
     friend std::istream& operator>>(std::istream& input,
-        endpoint& argument) noexcept(false);
+        endpoint& argument) NOEXCEPT(false);
     friend std::ostream& operator<<(std::ostream& output,
-        const endpoint& argument) noexcept;
+        const endpoint& argument) NOEXCEPT;
 
 private:
     // These are not thread safe.
@@ -105,7 +105,7 @@ namespace std
 template<>
 struct hash<bc::network::config::endpoint>
 {
-    size_t operator()(const bc::network::config::endpoint& value) const noexcept
+    size_t operator()(const bc::network::config::endpoint& value) const NOEXCEPT
     {
         return std::hash<std::string>{}(value.to_string());
     }

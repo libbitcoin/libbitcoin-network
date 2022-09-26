@@ -39,7 +39,7 @@ using namespace messages;
 using namespace std::placeholders;
 
 protocol_seed_31402::protocol_seed_31402(const session& session,
-    const channel::ptr& channel) noexcept
+    const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     sent_address_(false),
     sent_get_address_(false),
@@ -49,7 +49,7 @@ protocol_seed_31402::protocol_seed_31402(const session& session,
 {
 }
 
-const std::string& protocol_seed_31402::name() const noexcept
+const std::string& protocol_seed_31402::name() const NOEXCEPT
 {
     return protocol_name;
 }
@@ -57,7 +57,7 @@ const std::string& protocol_seed_31402::name() const noexcept
 // Start/Stop.
 // ----------------------------------------------------------------------------
 
-void protocol_seed_31402::start() noexcept
+void protocol_seed_31402::start() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -71,21 +71,21 @@ void protocol_seed_31402::start() noexcept
     protocol::start();
 }
 
-bool protocol_seed_31402::complete() const noexcept
+bool protocol_seed_31402::complete() const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
     return sent_address_ && sent_get_address_ && received_address_;
 }
 
-void protocol_seed_31402::stop(const code&) noexcept
+void protocol_seed_31402::stop(const code&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
     timer_->stop();
 }
 
-void protocol_seed_31402::handle_timer(const code& ec) noexcept
+void protocol_seed_31402::handle_timer(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -105,7 +105,7 @@ void protocol_seed_31402::handle_timer(const code& ec) noexcept
 // Outbound [send_get_address => receive_address (save_addresses)].
 // ----------------------------------------------------------------------------
 
-void protocol_seed_31402::handle_send_get_address(const code& ec) noexcept
+void protocol_seed_31402::handle_send_get_address(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -120,7 +120,7 @@ void protocol_seed_31402::handle_send_get_address(const code& ec) noexcept
 }
 
 void protocol_seed_31402::handle_receive_address(const code& ec,
-    const address::ptr& message) noexcept
+    const address::ptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -130,7 +130,7 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
     saves(message->addresses, BIND1(handle_save_addresses, _1));
 }
 
-void protocol_seed_31402::handle_save_addresses(const code& ec) noexcept
+void protocol_seed_31402::handle_save_addresses(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -152,7 +152,7 @@ void protocol_seed_31402::handle_save_addresses(const code& ec) noexcept
 // ----------------------------------------------------------------------------
 
 void protocol_seed_31402::handle_receive_get_address(const code& ec,
-    const get_address::ptr&) noexcept
+    const get_address::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -171,7 +171,7 @@ void protocol_seed_31402::handle_receive_get_address(const code& ec,
     SEND1(address{ { item } }, handle_send_address, _1);
 }
 
-void protocol_seed_31402::handle_send_address(const code& ec) noexcept
+void protocol_seed_31402::handle_send_address(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 

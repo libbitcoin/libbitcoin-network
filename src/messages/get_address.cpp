@@ -37,13 +37,13 @@ const uint32_t get_address::version_minimum = level::minimum_protocol;
 const uint32_t get_address::version_maximum = level::maximum_protocol;
 
 // static
-size_t get_address::size(uint32_t) noexcept
+size_t get_address::size(uint32_t) NOEXCEPT
 {
     return zero;
 }
 
 // static
-get_address get_address::deserialize(uint32_t version, reader& source) noexcept
+get_address get_address::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -52,7 +52,7 @@ get_address get_address::deserialize(uint32_t version, reader& source) noexcept
 }
 
 void get_address::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& BC_DEBUG_ONLY(sink)) const noexcept
+    writer& BC_DEBUG_ONLY(sink)) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)

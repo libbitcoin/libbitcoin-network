@@ -29,7 +29,7 @@ using namespace bc::system;
 using namespace messages;
 
 // Common default values (no settings context).
-settings::settings() noexcept
+settings::settings() NOEXCEPT
   : threads(1),
     protocol_minimum(level::minimum_protocol),
     protocol_maximum(level::maximum_protocol),
@@ -69,7 +69,7 @@ settings::settings() noexcept
 
 // Use push_back due to initializer_list bug:
 // stackoverflow.com/a/20168627/1172329
-settings::settings(chain::selection context) noexcept
+settings::settings(chain::selection context) NOEXCEPT
   : settings()
 {
     // Handle deviations from common defaults.
@@ -115,32 +115,32 @@ settings::settings(chain::selection context) noexcept
     }
 }
 
-duration settings::connect_timeout() const noexcept
+duration settings::connect_timeout() const NOEXCEPT
 {
     return seconds(connect_timeout_seconds);
 }
 
-duration settings::channel_handshake() const noexcept
+duration settings::channel_handshake() const NOEXCEPT
 {
     return seconds(channel_handshake_seconds);
 }
 
-duration settings::channel_heartbeat() const noexcept
+duration settings::channel_heartbeat() const NOEXCEPT
 {
     return minutes(channel_heartbeat_minutes);
 }
 
-duration settings::channel_inactivity() const noexcept
+duration settings::channel_inactivity() const NOEXCEPT
 {
     return minutes(channel_inactivity_minutes);
 }
 
-duration settings::channel_expiration() const noexcept
+duration settings::channel_expiration() const NOEXCEPT
 {
     return minutes(channel_expiration_minutes);
 }
 
-duration settings::channel_germination() const noexcept
+duration settings::channel_germination() const NOEXCEPT
 {
     return seconds(channel_germination_seconds);
 }

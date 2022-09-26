@@ -48,17 +48,17 @@ public:
 
     /// Construct an instance.
     acceptor(asio::strand& strand, asio::io_context& service,
-        const settings& settings) noexcept;
-    virtual ~acceptor() noexcept;
+        const settings& settings) NOEXCEPT;
+    virtual ~acceptor() NOEXCEPT;
 
     // Start/stop.
     // ------------------------------------------------------------------------
 
     /// Start the listener on the specified port (call only once).
-    virtual code start(uint16_t port) noexcept;
+    virtual code start(uint16_t port) NOEXCEPT;
 
     /// Cancel work and close the acceptor (idempotent).
-    virtual void stop() noexcept;
+    virtual void stop() NOEXCEPT;
 
     // Methods.
     // ------------------------------------------------------------------------
@@ -67,7 +67,7 @@ public:
     /// The channel paramter is nullptr unless success is returned.
 
     /// Accept next connection available until stop or timeout, starts timer.
-    virtual void accept(accept_handler&& handler) noexcept;
+    virtual void accept(accept_handler&& handler) NOEXCEPT;
 
 protected:
     // These are thread safe.
@@ -81,7 +81,7 @@ protected:
 
 private:
     void handle_accept(const code& ec, const socket::ptr& socket,
-        const accept_handler& handler) noexcept;
+        const accept_handler& handler) NOEXCEPT;
 };
 
 } // namespace network

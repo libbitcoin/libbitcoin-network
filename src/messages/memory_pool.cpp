@@ -38,12 +38,12 @@ const uint32_t memory_pool::version_minimum = level::bip35;
 const uint32_t memory_pool::version_maximum = level::maximum_protocol;
 
 // static
-size_t memory_pool::size(uint32_t) noexcept
+size_t memory_pool::size(uint32_t) NOEXCEPT
 {
     return zero;
 }
 
-memory_pool memory_pool::deserialize(uint32_t version, reader& source) noexcept
+memory_pool memory_pool::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -52,7 +52,7 @@ memory_pool memory_pool::deserialize(uint32_t version, reader& source) noexcept
 }
 
 void memory_pool::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& BC_DEBUG_ONLY(sink)) const noexcept
+    writer& BC_DEBUG_ONLY(sink)) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)

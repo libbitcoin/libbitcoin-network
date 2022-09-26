@@ -48,7 +48,7 @@ public:
     /// Attach protocol to channel, caller must start (requires strand).
     template <class Protocol, typename... Args>
     typename Protocol::ptr attach(const session& session,
-        Args&&... args) noexcept
+        Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "subscribe_stop");
 
@@ -60,7 +60,7 @@ public:
             shared_from_base<channel>(), std::forward<Args>(args)...);
 
         // Protocol lifetime is ensured by the channel stop subscriber.
-        subscribe_stop([=](const code& ec) noexcept
+        subscribe_stop([=](const code& ec) NOEXCEPT
         {
             protocol->stopping(ec);
         });
@@ -68,43 +68,43 @@ public:
         return protocol;
     }
 
-    channel(const socket::ptr& socket, const settings& settings) noexcept;
-    virtual ~channel() noexcept;
+    channel(const socket::ptr& socket, const settings& settings) NOEXCEPT;
+    virtual ~channel() NOEXCEPT;
 
     // Arbitrary nonce of the channel (for loopback guard).
-    uint64_t nonce() const noexcept;
+    uint64_t nonce() const NOEXCEPT;
 
     /// Versions should be only written in handshake and read thereafter.
-    void set_negotiated_version(uint32_t value) noexcept;
-    uint32_t negotiated_version() const noexcept;
-    void set_peer_version(const messages::version::ptr& value) noexcept;
-    messages::version::ptr peer_version() const noexcept;
+    void set_negotiated_version(uint32_t value) NOEXCEPT;
+    uint32_t negotiated_version() const NOEXCEPT;
+    void set_peer_version(const messages::version::ptr& value) NOEXCEPT;
+    messages::version::ptr peer_version() const NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
-    void resume() noexcept override;
+    void resume() NOEXCEPT override;
 
     /// Idempotent, may be called multiple times.
-    void stop(const code& ec) noexcept override;
+    void stop(const code& ec) NOEXCEPT override;
 
 protected:
     /// Property values provided to the proxy.
-    size_t maximum_payload() const noexcept override;
-    uint32_t protocol_magic() const noexcept override;
-    bool validate_checksum() const noexcept override;
-    bool verbose() const noexcept override;
-    uint32_t version() const noexcept override;
+    size_t maximum_payload() const NOEXCEPT override;
+    uint32_t protocol_magic() const NOEXCEPT override;
+    bool validate_checksum() const NOEXCEPT override;
+    bool verbose() const NOEXCEPT override;
+    uint32_t version() const NOEXCEPT override;
 
     /// Signals inbound traffic, called from proxy on strand (requires strand).
-    void signal_activity() noexcept override;
+    void signal_activity() NOEXCEPT override;
 
 private:
-    void do_stop(const code& ec) noexcept;
+    void do_stop(const code& ec) NOEXCEPT;
 
-    void start_expiration() noexcept;
-    void handle_expiration(const code& ec) noexcept;
+    void start_expiration() NOEXCEPT;
+    void handle_expiration(const code& ec) NOEXCEPT;
 
-    void start_inactivity() noexcept;
-    void handle_inactivity(const code& ec) noexcept;
+    void start_inactivity() NOEXCEPT;
+    void handle_inactivity(const code& ec) NOEXCEPT;
 
     // Proxy base class is not fully thread safe.
 

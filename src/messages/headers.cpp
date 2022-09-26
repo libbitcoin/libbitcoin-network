@@ -41,7 +41,7 @@ const uint32_t headers::version_maximum = level::maximum_protocol;
 constexpr uint8_t trail = 0x00;
 
 // static
-headers headers::deserialize(uint32_t version, reader& source) noexcept
+headers headers::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -62,7 +62,7 @@ headers headers::deserialize(uint32_t version, reader& source) noexcept
 }
 
 void headers::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& sink) const noexcept
+    writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -78,14 +78,14 @@ void headers::serialize(uint32_t BC_DEBUG_ONLY(version),
     BC_ASSERT(sink&& sink.get_position() - start == bytes);
 }
 
-size_t headers::size(uint32_t) const noexcept
+size_t headers::size(uint32_t) const NOEXCEPT
 {
     return variable_size(header_ptrs.size()) +
         (header_ptrs.size() * chain::header::serialized_size() + sizeof(trail));
 }
 
 // TODO: This would benefit from block hash store/return as pointer.
-bool headers::is_sequential() const noexcept
+bool headers::is_sequential() const NOEXCEPT
 {
     if (header_ptrs.empty())
         return true;
@@ -105,7 +105,7 @@ bool headers::is_sequential() const noexcept
 }
 
 // TODO: This would benefit from hashes as list of pointers.
-hashes headers::to_hashes() const noexcept
+hashes headers::to_hashes() const NOEXCEPT
 {
     hashes out;
     out.reserve(header_ptrs.size());
@@ -117,7 +117,7 @@ hashes headers::to_hashes() const noexcept
 }
 
 // TODO: This would benefit from inventory_item hash pointers.
-inventory_items headers::to_inventory(inventory::type_id type) const noexcept
+inventory_items headers::to_inventory(inventory::type_id type) const NOEXCEPT
 {
     inventory_items out;
     out.reserve(header_ptrs.size());

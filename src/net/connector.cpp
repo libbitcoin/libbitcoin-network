@@ -42,7 +42,7 @@ using namespace std::placeholders;
 // ---------------------------------------------------------------------------
 
 connector::connector(asio::strand& strand, asio::io_context& service,
-    const settings& settings) noexcept
+    const settings& settings) NOEXCEPT
   : settings_(settings),
     service_(service),
     strand_(strand),
@@ -52,12 +52,12 @@ connector::connector(asio::strand& strand, asio::io_context& service,
 {
 }
 
-connector::~connector() noexcept
+connector::~connector() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped_, "connector is not stopped");
 }
 
-void connector::stop() noexcept
+void connector::stop() NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -72,18 +72,18 @@ void connector::stop() noexcept
 // Methods.
 // ---------------------------------------------------------------------------
 
-void connector::connect(const authority& authority, connect_handler&& handler) noexcept
+void connector::connect(const authority& authority, connect_handler&& handler) NOEXCEPT
 {
     connect(authority.to_hostname(), authority.port(), std::move(handler));
 }
 
-void connector::connect(const endpoint& endpoint, connect_handler&& handler) noexcept
+void connector::connect(const endpoint& endpoint, connect_handler&& handler) NOEXCEPT
 {
     connect(endpoint.host(), endpoint.port(), std::move(handler));
 }
 
 void connector::connect(const std::string& hostname, uint16_t port,
-    connect_handler&& handler) noexcept
+    connect_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -108,7 +108,7 @@ void connector::connect(const std::string& hostname, uint16_t port,
 // private
 void connector::handle_resolve(const error::boost_code& ec,
     const asio::endpoints& range, socket::ptr socket,
-    const connect_handler& handler) noexcept
+    const connect_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -146,7 +146,7 @@ void connector::handle_resolve(const error::boost_code& ec,
 
 // private
 void connector::handle_connect(const code& ec, socket::ptr socket,
-    const connect_handler& handler) noexcept
+    const connect_handler& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&connector::do_handle_connect,
@@ -155,7 +155,7 @@ void connector::handle_connect(const code& ec, socket::ptr socket,
 
 // private
 void connector::do_handle_connect(const code& ec, socket::ptr socket,
-    const connect_handler& handler) noexcept
+    const connect_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -186,7 +186,7 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
 
 // private
 void connector::handle_timer(const code& ec, const socket::ptr& socket,
-    const connect_handler& handler) noexcept
+    const connect_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

@@ -55,11 +55,11 @@ enum class thread_priority
 // stackoverflow.com/q/22448022/1172329
 typedef boost::thread thread;
 
-BCT_API void set_priority(thread_priority priority) noexcept;
-BCT_API thread_priority priority(bool priority) noexcept;
-BCT_API size_t thread_default(size_t configured) noexcept;
-BCT_API size_t thread_ceiling(size_t configured) noexcept;
-BCT_API size_t thread_floor(size_t configured) noexcept;
+BCT_API void set_priority(thread_priority priority) NOEXCEPT;
+BCT_API thread_priority priority(bool priority) NOEXCEPT;
+BCT_API size_t thread_default(size_t configured) NOEXCEPT;
+BCT_API size_t thread_ceiling(size_t configured) NOEXCEPT;
+BCT_API size_t thread_floor(size_t configured) NOEXCEPT;
 
 } // namespace network
 } // namespace libbitcoin

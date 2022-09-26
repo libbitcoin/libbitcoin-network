@@ -39,54 +39,54 @@ class BCT_API authority
 public:
     typedef std::shared_ptr<authority> ptr;
 
-    authority() noexcept;
+    authority() NOEXCEPT;
 
     /// Deserialize a IPv4 or IPv6 address-based hostname[:port].
     /// The port is optional and will be set to zero if not provided.
     /// The host can be in one of two forms:
     /// [2001:db8::2]:port or 1.2.240.1:port.
-    authority(const std::string& authority) noexcept (false);
+    authority(const std::string& authority) NOEXCEPT(false);
 
-    authority(const messages::address_item& address) noexcept;
-    authority(const messages::ip_address& ip, uint16_t port) noexcept;
+    authority(const messages::address_item& address) NOEXCEPT;
+    authority(const messages::ip_address& ip, uint16_t port) NOEXCEPT;
 
     /// The host can be in one of three forms:
     /// [2001:db8::2] or 2001:db8::2 or 1.2.240.1
-    authority(const std::string& host, uint16_t port) noexcept (false);
-    authority(const asio::address& ip, uint16_t port) noexcept;
-    authority(const asio::endpoint& endpoint) noexcept;
+    authority(const std::string& host, uint16_t port) NOEXCEPT(false);
+    authority(const asio::address& ip, uint16_t port) NOEXCEPT;
+    authority(const asio::endpoint& endpoint) NOEXCEPT;
 
     /// True if the port is non-zero.
-    operator bool() const noexcept;
+    operator bool() const NOEXCEPT;
 
     /// The ip address of the authority.
-    const asio::ipv6& ip() const noexcept;
+    const asio::ipv6& ip() const NOEXCEPT;
 
     /// The tcp port of the authority.
-    uint16_t port() const noexcept;
+    uint16_t port() const NOEXCEPT;
 
     /// The hostname of the authority as a string.
     /// The form of the return is determined by the type of address, either:
     /// 2001:db8::2 or 1.2.240.1
-    std::string to_hostname() const noexcept;
+    std::string to_hostname() const NOEXCEPT;
 
     /// The authority as a string.
     /// The form of the return is determined by the type of address.
     /// The port is optional and not included if zero-valued.
     /// The authority in one of two forms: [2001:db8::2]:port or 1.2.240.1:port
-    std::string to_string() const noexcept;
+    std::string to_string() const NOEXCEPT;
 
     /// The authority converted to a network messages address/ip_address.
-    messages::address_item to_address_item() const noexcept;
-    messages::ip_address to_ip_address() const noexcept;
+    messages::address_item to_address_item() const NOEXCEPT;
+    messages::ip_address to_ip_address() const NOEXCEPT;
 
-    bool operator==(const authority& other) const noexcept;
-    bool operator!=(const authority& other) const noexcept;
+    bool operator==(const authority& other) const NOEXCEPT;
+    bool operator!=(const authority& other) const NOEXCEPT;
 
     friend std::istream& operator>>(std::istream& input,
-        authority& argument) noexcept(false);
+        authority& argument) NOEXCEPT(false);
     friend std::ostream& operator<<(std::ostream& output,
-        const authority& argument) noexcept;
+        const authority& argument) NOEXCEPT;
 
 private:
     // These are not thread safe.
@@ -106,7 +106,7 @@ namespace std
 template<>
 struct hash<bc::network::config::authority>
 {
-    size_t operator()(const bc::network::config::authority& value) const noexcept
+    size_t operator()(const bc::network::config::authority& value) const NOEXCEPT
     {
         return std::hash<std::string>{}(value.to_string());
     }

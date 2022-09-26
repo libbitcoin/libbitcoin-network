@@ -37,7 +37,7 @@ class timer
 public:
     /// Returns the duration (in chrono's type system) of the elapsed time.
     template <typename Function, typename ...Args>
-    static Time duration(const Function& func, Args&&... args) noexcept
+    static Time duration(const Function& func, Args&&... args) NOEXCEPT
     {
         auto start = Clock::now();
         func(std::forward<Args>(args)...);
@@ -47,7 +47,7 @@ public:
     /// Returns the quantity (count) of the elapsed time as TimeT units.
     template <typename Function, typename ...Args>
     static typename Time::rep execution(const Function& func,
-        Args&&... args) noexcept
+        Args&&... args) NOEXCEPT
     {
         return duration(func, std::forward<Args>(args)...).count();
     }

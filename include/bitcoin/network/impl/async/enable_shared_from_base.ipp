@@ -26,19 +26,14 @@ namespace libbitcoin {
 namespace network {
 
 template <class Base>
-enable_shared_from_base<Base>::~enable_shared_from_base() noexcept
-{
-}
-
-template <class Base>
-void enable_shared_from_base<Base>::nop() volatile noexcept
+void enable_shared_from_base<Base>::nop() volatile NOEXCEPT
 {
 }
 
 template <class Base>
 template <class Derived, bc::if_base_of<Base, Derived>>
 std::shared_ptr<Derived> enable_shared_from_base<Base>::
-shared_from_base() noexcept
+shared_from_base() NOEXCEPT
 {
     // Instance (not just type) must be upcastable to Derived.
     return std::static_pointer_cast<Derived>(this->shared_from_this());

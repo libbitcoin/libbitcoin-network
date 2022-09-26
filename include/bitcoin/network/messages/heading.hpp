@@ -38,12 +38,12 @@ struct BCT_API heading
     static constexpr size_t command_size = 12;
 
     static size_t maximum_payload_size(uint32_t version,
-        bool witness) noexcept;
+        bool witness) NOEXCEPT;
     static heading factory(uint32_t magic, const std::string& command,
-        const system::data_slice& payload) noexcept;
+        const system::data_slice& payload) NOEXCEPT;
 
     // Heading does not use version.
-    static constexpr size_t size() noexcept
+    static constexpr size_t size() NOEXCEPT
     {
         return sizeof(uint32_t)
             + command_size
@@ -51,11 +51,11 @@ struct BCT_API heading
             + sizeof(uint32_t);
     }
 
-    static heading deserialize(system::reader& source) noexcept;
-    void serialize(system::writer& sink) const noexcept;
+    static heading deserialize(system::reader& source) NOEXCEPT;
+    void serialize(system::writer& sink) const NOEXCEPT;
 
-    identifier id() const noexcept;
-    bool verify_checksum(const system::data_slice& body) const noexcept;
+    identifier id() const NOEXCEPT;
+    bool verify_checksum(const system::data_slice& body) const NOEXCEPT;
 
     uint32_t magic;
     std::string command;

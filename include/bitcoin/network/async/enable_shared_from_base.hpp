@@ -26,21 +26,20 @@ namespace libbitcoin {
 namespace network {
 
 /// Thread safe, base class.
+/// Empty base optimization using CRTP.
 /// Because enable_shared_from_this does not support inheritance.
 template <class Base>
 class enable_shared_from_base
   : public std::enable_shared_from_this<Base>
 {
 public:
-    virtual ~enable_shared_from_base() noexcept;
-
     /// Simplifies capture of the shared pointer for a nop handler.
-    void nop() volatile noexcept;
+    void nop() volatile NOEXCEPT;
 
 protected:
     /// Use in derived class to create shared instance of self.
     template <class Derived, bc::if_base_of<Base, Derived> = true>
-    std::shared_ptr<Derived> shared_from_base() noexcept;
+    std::shared_ptr<Derived> shared_from_base() NOEXCEPT;
 };
 
 } // namespace network

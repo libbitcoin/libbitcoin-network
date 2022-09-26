@@ -27,13 +27,13 @@ namespace libbitcoin {
 namespace network {
 
 // BUGBUG: en.wikipedia.org/wiki/Year_2038_problem
-time_t zulu_time() noexcept
+time_t zulu_time() NOEXCEPT
 {
     const auto now = wall_clock::now();
     return wall_clock::to_time_t(now);
 }
 
-bool local_time(tm& out_local, time_t zulu) noexcept
+bool local_time(tm& out_local, time_t zulu) NOEXCEPT
 {
     // localtime not threadsafe due to static buffer return, use localtime_s.
 #ifdef _MSC_VER
@@ -45,7 +45,7 @@ bool local_time(tm& out_local, time_t zulu) noexcept
 #endif
 }
 
-std::string local_time() noexcept
+std::string local_time() NOEXCEPT
 {
     tm out_local{};
     if (!local_time(out_local, zulu_time()))

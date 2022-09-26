@@ -62,46 +62,46 @@ public:
         const channel::ptr&)> channel_handler;
 
     /// Start the sesssion (call from network strand).
-    virtual void start(result_handler&& handler) noexcept;
+    virtual void start(result_handler&& handler) NOEXCEPT;
 
     /// Stop the sesssion timer and subscriber (call from network strand).
-    virtual void stop() noexcept;
+    virtual void stop() NOEXCEPT;
 
     /// Access network configuration settings.
-    const network::settings& settings() const noexcept;
+    const network::settings& settings() const NOEXCEPT;
 
     /// Utilities.
     /// -----------------------------------------------------------------------
 
     /// Fetch an entry from address pool.
-    virtual void fetch(hosts::address_item_handler&& handler) const noexcept;
+    virtual void fetch(hosts::address_item_handler&& handler) const NOEXCEPT;
 
     /// Fetch a subset of entries (count based on config) from address pool.
-    virtual void fetches(hosts::address_items_handler&& handler) const noexcept;
+    virtual void fetches(hosts::address_items_handler&& handler) const NOEXCEPT;
 
     /// Save an address to the address pool.
     virtual void save(const messages::address_item& address,
-        result_handler&& handler) const noexcept;
+        result_handler&& handler) const NOEXCEPT;
 
     /// Save a subset of entries (count based on config) from address pool.
     virtual void saves(const messages::address_items& addresses,
-        result_handler&& handler) const noexcept;
+        result_handler&& handler) const NOEXCEPT;
 
 protected:
     typedef subscriber<code> stop_subscriber;
 
     /// Construct an instance (network should be started).
-    session(p2p& network) noexcept;
+    session(p2p& network) NOEXCEPT;
 
     /// Asserts that session is stopped.
-    virtual ~session() noexcept;
+    virtual ~session() NOEXCEPT;
 
     /// Macro helpers.
     /// -----------------------------------------------------------------------
 
     /// Bind a method in the base or derived class (use BIND#).
     template <class Session, typename Handler, typename... Args>
-    auto bind(Handler&& handler, Args&&... args) noexcept ->
+    auto bind(Handler&& handler, Args&&... args) NOEXCEPT ->
         decltype(BOUND_SESSION_TYPE(handler, args)) const
     {
         return BOUND_SESSION(handler, args);
@@ -112,84 +112,84 @@ protected:
 
     /// Perform handshake and attach protocols (call from network strand).
     virtual void start_channel(const channel::ptr& channel,
-        result_handler&& started, result_handler&& stopped) noexcept;
+        result_handler&& started, result_handler&& stopped) NOEXCEPT;
 
     /// Override to change version protocol (base calls from channel strand).
     virtual void attach_handshake(const channel::ptr& channel,
-        result_handler&& handler) const noexcept;
+        result_handler&& handler) const NOEXCEPT;
 
     /// Override to change channel protocols (base calls from channel strand).
-    virtual void attach_protocols(const channel::ptr& channel) const noexcept;
+    virtual void attach_protocols(const channel::ptr& channel) const NOEXCEPT;
 
     /// Subscriptions.
     /// -----------------------------------------------------------------------
 
     /// Start timer with completion handler.
     virtual void start_timer(result_handler&& handler,
-        const duration& timeout) noexcept;
+        const duration& timeout) NOEXCEPT;
 
     /// Subscribe to stop notification.
-    virtual void subscribe_stop(result_handler&& handler) noexcept;
+    virtual void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
     /// Factories.
     /// -----------------------------------------------------------------------
 
     /// Call to create channel acceptor, owned by caller.
-    virtual acceptor::ptr create_acceptor() noexcept;
+    virtual acceptor::ptr create_acceptor() NOEXCEPT;
 
     /// Call to create channel connector, owned by caller.
-    virtual connector::ptr create_connector() noexcept;
+    virtual connector::ptr create_connector() NOEXCEPT;
 
     /// Call to create a set of channel connectors, owned by caller.
-    virtual connectors_ptr create_connectors(size_t count) noexcept;
+    virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------
 
     /// The service is stopped.
-    virtual bool stopped() const noexcept;
+    virtual bool stopped() const NOEXCEPT;
 
     /// The current thread is on the network strand.
-    virtual bool stranded() const noexcept;
+    virtual bool stranded() const NOEXCEPT;
 
     /// Number of entries in the address pool.
-    virtual size_t address_count() const noexcept;
+    virtual size_t address_count() const NOEXCEPT;
 
     /// Number of all connected channels.
-    virtual size_t channel_count() const noexcept;
+    virtual size_t channel_count() const NOEXCEPT;
 
     /// Number of inbound connected channels.
-    virtual size_t inbound_channel_count() const noexcept;
+    virtual size_t inbound_channel_count() const NOEXCEPT;
 
     /// The address is blacklisted by configuration.
-    virtual bool blacklisted(const config::authority& authority) const noexcept;
+    virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
 
     /// The channel is inbound (pend the nonce).
-    virtual bool inbound() const noexcept = 0;
+    virtual bool inbound() const NOEXCEPT = 0;
 
     /// Notify subscribers on channel start (bypass seeds).
-    virtual bool notify() const noexcept = 0;
+    virtual bool notify() const NOEXCEPT = 0;
 
 private:
     void handle_channel_start(const code& ec, const channel::ptr& channel,
-        const result_handler& started, const result_handler& stopped) noexcept;
+        const result_handler& started, const result_handler& stopped) NOEXCEPT;
 
     void handle_handshake(const code& ec, const channel::ptr& channel,
-        const result_handler& start) noexcept;
+        const result_handler& start) NOEXCEPT;
     void handle_channel_started(const code& ec, const channel::ptr& channel,
-        const result_handler& started) noexcept;
+        const result_handler& started) NOEXCEPT;
     void handle_channel_stopped(const code& ec,const channel::ptr& channel,
-        const result_handler& stopped) noexcept;
+        const result_handler& stopped) NOEXCEPT;
 
     void do_attach_handshake(const channel::ptr& channel,
-        const result_handler& handshake) const noexcept;
+        const result_handler& handshake) const NOEXCEPT;
     void do_handle_handshake(const code& ec, const channel::ptr& channel,
-        const result_handler& start) noexcept;
-    void do_attach_protocols(const channel::ptr& channel) const noexcept;
+        const result_handler& start) NOEXCEPT;
+    void do_attach_protocols(const channel::ptr& channel) const NOEXCEPT;
     void do_handle_channel_started(const code& ec, const channel::ptr& channel,
-        const result_handler& started) noexcept;
+        const result_handler& started) NOEXCEPT;
     void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,
-        const result_handler& stopped) noexcept;
+        const result_handler& stopped) NOEXCEPT;
 
     // These are thread safe.
     p2p& network_;

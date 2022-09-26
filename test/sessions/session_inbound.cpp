@@ -34,7 +34,7 @@ public:
     {
     }
 
-    void stop(const code& ec) noexcept override
+    void stop(const code& ec) NOEXCEPT override
     {
         // Set future on first code match.
         if (ec == match_ && !set_)
@@ -86,21 +86,21 @@ public:
     }
 
     // Capture port, succeed on first (others prevents tight success loop).
-    code start(uint16_t port) noexcept override
+    code start(uint16_t port) NOEXCEPT override
     {
         port_ = port;
         return !accepted() ? error::success : error::unknown;
     }
 
     // Capture stopped and free channel.
-    void stop() noexcept override
+    void stop() NOEXCEPT override
     {
         stopped_ = true;
         acceptor::stop();
     }
 
     // Handle accept.
-    void accept(accept_handler&& handler) noexcept override
+    void accept(accept_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         const auto socket = std::make_shared<network::socket>(service_);
@@ -133,7 +133,7 @@ public:
         mock_acceptor_start_success_accept_success;
 
     // Handle accept with unknown error.
-    void accept(accept_handler&& handler) noexcept override
+    void accept(accept_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]()
@@ -153,7 +153,7 @@ public:
         mock_acceptor_start_success_accept_fail;
 
     // Handle accept with service_stopped error.
-    void accept(accept_handler&& handler) noexcept override
+    void accept(accept_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]()
@@ -173,7 +173,7 @@ public:
         mock_acceptor_start_success_accept_fail;
 
     // Capture port, fail.
-    code start(uint16_t port) noexcept override
+    code start(uint16_t port) NOEXCEPT override
     {
         port_ = port;
         return error::invalid_magic;
@@ -186,17 +186,17 @@ class mock_session_inbound
 public:
     using session_inbound::session_inbound;
 
-    bool inbound() const noexcept override
+    bool inbound() const NOEXCEPT override
     {
         return session_inbound::inbound();
     }
 
-    bool notify() const noexcept override
+    bool notify() const NOEXCEPT override
     {
         return session_inbound::notify();
     }
 
-    bool stopped() const noexcept override
+    bool stopped() const NOEXCEPT override
     {
         return session_inbound::stopped();
     }
@@ -208,7 +208,7 @@ public:
 
     // Capture first start_accept call.
     void start_accept(const code& ec,
-        const acceptor::ptr& acceptor) noexcept override
+        const acceptor::ptr& acceptor) NOEXCEPT override
     {
         // Must be first to ensure acceptor::accept() preceeds promise release.
         session_inbound::start_accept(ec, acceptor);
@@ -232,7 +232,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler&& handshake) const noexcept override
+        result_handler&& handshake) const NOEXCEPT override
     {
         if (!handshaked_)
         {
@@ -271,7 +271,7 @@ public:
     using mock_session_inbound::mock_session_inbound;
 
     void attach_handshake(const channel::ptr&,
-        result_handler&& handshake) const noexcept override
+        result_handler&& handshake) const NOEXCEPT override
     {
         if (!handshaked_)
         {
@@ -290,7 +290,7 @@ class mock_session_inbound_channel_count_fail
 public:
     using mock_session_inbound::mock_session_inbound;
 
-    size_t inbound_channel_count() const noexcept override
+    size_t inbound_channel_count() const NOEXCEPT override
     {
         return 1;
     }
@@ -302,7 +302,7 @@ class mock_session_start_accept_parameter_error
 public:
     using mock_session_inbound::mock_session_inbound;
 
-    void start_accept(const code&, const acceptor::ptr& acceptor) noexcept override
+    void start_accept(const code&, const acceptor::ptr& acceptor) NOEXCEPT override
     {
         mock_session_inbound::start_accept(error::invalid_checksum, acceptor);
     }
@@ -314,7 +314,7 @@ class mock_session_inbound_blacklist_fail
 public:
     using mock_session_inbound::mock_session_inbound;
 
-    bool blacklisted(const config::authority&) const noexcept override
+    bool blacklisted(const config::authority&) const NOEXCEPT override
     {
         return true;
     }
@@ -333,23 +333,23 @@ public:
     }
 
     // Create mock acceptor to inject mock channel.
-    acceptor::ptr create_acceptor() noexcept override
+    acceptor::ptr create_acceptor() NOEXCEPT override
     {
         return ((acceptor_ = std::make_shared<Acceptor>(strand(), service(),
             network_settings())));
     }
 
-    session_inbound::ptr attach_inbound_session() noexcept override
+    session_inbound::ptr attach_inbound_session() NOEXCEPT override
     {
         return attach<mock_inbound_session>();
     }
 
-    session_outbound::ptr attach_outbound_session() noexcept override
+    session_outbound::ptr attach_outbound_session() NOEXCEPT override
     {
         return attach<mock_outbound_session>();
     }
 
-    session_seed::ptr attach_seed_session() noexcept override
+    session_seed::ptr attach_seed_session() NOEXCEPT override
     {
         return attach<mock_seed_session>();
     }
@@ -366,7 +366,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }
@@ -381,7 +381,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }
@@ -396,7 +396,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }

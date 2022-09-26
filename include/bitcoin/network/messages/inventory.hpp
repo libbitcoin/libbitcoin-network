@@ -44,18 +44,18 @@ struct BCT_API inventory
 
     // TODO: parameterize with witness parameter (once node is ready).
     static inventory factory(system::hashes&& hashes,
-        type_id type) noexcept;
+        type_id type) NOEXCEPT;
     static inventory factory(const system::hashes& hashes,
-        type_id type) noexcept;
+        type_id type) NOEXCEPT;
 
     static inventory deserialize(uint32_t version,
-        system::reader& source) noexcept;
-    void serialize(uint32_t version, system::writer& sink) const noexcept;
-    size_t size(uint32_t version) const noexcept;
+        system::reader& source) NOEXCEPT;
+    void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
+    size_t size(uint32_t version) const NOEXCEPT;
 
-    inventory_items filter(type_id type) const noexcept;
-    system::hashes to_hashes(type_id type) const noexcept;
-    size_t count(type_id type) const noexcept;
+    inventory_items filter(type_id type) const NOEXCEPT;
+    system::hashes to_hashes(type_id type) const NOEXCEPT;
+    size_t count(type_id type) const NOEXCEPT;
 
     inventory_items items;
 };

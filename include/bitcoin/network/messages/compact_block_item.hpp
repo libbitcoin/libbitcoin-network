@@ -37,10 +37,10 @@ public:
     typedef std::shared_ptr<const compact_block_item> ptr;
 
     static compact_block_item deserialize(uint32_t version,
-        system::reader& source, bool witness) noexcept;
+        system::reader& source, bool witness) NOEXCEPT;
     void serialize(uint32_t version, system::writer& sink,
-        bool witness) const noexcept;
-    size_t size(uint32_t version, bool witness) const noexcept;
+        bool witness) const NOEXCEPT;
+    size_t size(uint32_t version, bool witness) const NOEXCEPT;
 
     uint64_t index;
     system::chain::transaction::cptr transaction_ptr;

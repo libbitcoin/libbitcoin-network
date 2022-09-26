@@ -50,7 +50,7 @@ public:
     }
 
     // Capture stopped and free channel.
-    void stop() noexcept override
+    void stop() NOEXCEPT override
     {
         stopped_ = true;
         connector::stop();
@@ -58,7 +58,7 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void connect(const endpoint& peer,
-        connect_handler&& handler) noexcept override
+        connect_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
             peer_ = peer;
@@ -91,7 +91,7 @@ public:
 
     // Handle connect with service_stopped error.
     void connect(const endpoint& peer,
-        connect_handler&& handler) noexcept override
+        connect_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
             peer_ = peer;
@@ -112,17 +112,17 @@ class mock_session_manual
 public:
     using session_manual::session_manual;
 
-    bool inbound() const noexcept override
+    bool inbound() const NOEXCEPT override
     {
         return session_manual::inbound();
     }
 
-    bool notify() const noexcept override
+    bool notify() const NOEXCEPT override
     {
         return session_manual::notify();
     }
 
-    bool stopped() const noexcept override
+    bool stopped() const NOEXCEPT override
     {
         return session_manual::stopped();
     }
@@ -134,7 +134,7 @@ public:
 
     // Capture first start_connect call.
     void start_connect(const endpoint& peer, const connector::ptr& connector,
-        const channel_handler& handler) noexcept override
+        const channel_handler& handler) NOEXCEPT override
     {
         // Must be first to ensure connector::connect() preceeds promise release.
         session_manual::start_connect(peer, connector, handler);
@@ -165,7 +165,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler&& handshake) const noexcept override
+        result_handler&& handshake) const NOEXCEPT override
     {
         if (!handshaked_)
         {
@@ -206,7 +206,7 @@ public:
     using mock_session_manual::mock_session_manual;
 
     void attach_handshake(const channel::ptr&,
-        result_handler&& handshake) const noexcept override
+        result_handler&& handshake) const NOEXCEPT override
     {
         if (!handshaked_)
         {
@@ -233,23 +233,23 @@ public:
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector() noexcept override
+    connector::ptr create_connector() NOEXCEPT override
     {
         return ((connector_ = std::make_shared<Connector>(strand(), service(),
             network_settings())));
     }
 
-    session_inbound::ptr attach_inbound_session() noexcept override
+    session_inbound::ptr attach_inbound_session() NOEXCEPT override
     {
         return attach<mock_inbound_session>();
     }
 
-    session_outbound::ptr attach_outbound_session() noexcept override
+    session_outbound::ptr attach_outbound_session() NOEXCEPT override
     {
         return attach<mock_outbound_session>();
     }
 
-    session_seed::ptr attach_seed_session() noexcept override
+    session_seed::ptr attach_seed_session() NOEXCEPT override
     {
         return attach<mock_seed_session>();
     }
@@ -266,7 +266,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }
@@ -281,7 +281,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }
@@ -296,7 +296,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }

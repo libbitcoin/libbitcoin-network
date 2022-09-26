@@ -52,13 +52,13 @@ public:
 
     // Capture last sent payload.
     void send_bytes(const system::chunk_ptr& payload,
-        result_handler&&) noexcept override
+        result_handler&&) NOEXCEPT override
     {
         payload_ = payload;
     }
 
     // Override protected base to notify subscribers.
-    code notify(identifier, uint32_t, system::reader&) noexcept override
+    code notify(identifier, uint32_t, system::reader&) NOEXCEPT override
     {
         return error::success;
         ////return channel::notify(id, version, source);
@@ -98,20 +98,20 @@ public:
     }
 
     // Capture port.
-    code start(uint16_t port) noexcept override
+    code start(uint16_t port) NOEXCEPT override
     {
         port_ = port;
         return error::success;
     }
 
     // Capture stopped.
-    void stop() noexcept override
+    void stop() NOEXCEPT override
     {
         stopped_ = true;
     }
 
     // Inject mock channel.
-    void accept(accept_handler&& handler) noexcept override
+    void accept(accept_handler&& handler) NOEXCEPT override
     {
         const auto socket = std::make_shared<network::socket>(service_);
         const auto created = std::make_shared<mock_channel>(socket, settings_);
@@ -147,14 +147,14 @@ public:
     }
 
     // Capture stopped.
-    void stop() noexcept override
+    void stop() NOEXCEPT override
     {
         stopped_ = true;
     }
 
     // Inject mock channel.
     void connect(const std::string&, uint16_t,
-        connect_handler&& handler) noexcept override
+        connect_handler&& handler) NOEXCEPT override
     {
         const auto socket = std::make_shared<network::socket>(service_);
         const auto created = std::make_shared<mock_channel>(socket, settings_);
@@ -173,14 +173,14 @@ public:
     using p2p::p2p;
 
     // Create mock acceptor to inject mock channel.
-    acceptor::ptr create_acceptor() noexcept override
+    acceptor::ptr create_acceptor() NOEXCEPT override
     {
         return std::make_shared<mock_acceptor>(strand(), service(),
             network_settings());
     }
 
     // Create mock connector to inject mock channel.
-    connector::ptr create_connector() noexcept override
+    connector::ptr create_connector() NOEXCEPT override
     {
         return std::make_shared<mock_connector>(strand(), service(),
             network_settings());
@@ -196,32 +196,32 @@ public:
     {
     }
 
-    void start(result_handler&& handler) noexcept override
+    void start(result_handler&& handler) NOEXCEPT override
     {
         return session::start(std::move(handler));
     }
 
-    void stop() noexcept override
+    void stop() NOEXCEPT override
     {
         return session::stop();
     }
 
-    bool stopped() const noexcept override
+    bool stopped() const NOEXCEPT override
     {
         return session::stopped();
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler&&) const noexcept override
+        result_handler&&) const NOEXCEPT override
     {
     }
 
-    bool inbound() const noexcept override
+    bool inbound() const NOEXCEPT override
     {
         return false;
     }
 
-    bool notify() const noexcept override
+    bool notify() const NOEXCEPT override
     {
         return true;
     }
@@ -241,22 +241,22 @@ public:
     /// Start/Stop.
     /// -----------------------------------------------------------------------
 
-    void start() noexcept override
+    void start() NOEXCEPT override
     {
         protocol::start();
     }
 
-    bool started() const noexcept override
+    bool started() const NOEXCEPT override
     {
         return protocol::started();
     }
 
-    bool stopped(const code& ec=error::success) const noexcept override
+    bool stopped(const code& ec=error::success) const NOEXCEPT override
     {
         return protocol::stopped(ec);
     }
 
-    void stop(const code& ec) noexcept override
+    void stop(const code& ec) NOEXCEPT override
     {
         protocol::stop(ec);
     }
@@ -264,42 +264,42 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    const std::string& name() const noexcept override
+    const std::string& name() const NOEXCEPT override
     {
         return protocol::name();
     }
 
-    config::authority authority() const noexcept override
+    config::authority authority() const NOEXCEPT override
     {
         return protocol::authority();
     }
 
-    uint64_t nonce() const noexcept override
+    uint64_t nonce() const NOEXCEPT override
     {
         return protocol::nonce();
     }
 
-    const network::settings& settings() const noexcept override
+    const network::settings& settings() const NOEXCEPT override
     {
         return protocol::settings();
     }
 
-    version::ptr peer_version() const noexcept override
+    version::ptr peer_version() const NOEXCEPT override
     {
         return protocol::peer_version();
     }
 
-    void set_peer_version(const version::ptr& value) noexcept override
+    void set_peer_version(const version::ptr& value) NOEXCEPT override
     {
         protocol::set_peer_version(value);
     }
 
-    uint32_t negotiated_version() const noexcept override
+    uint32_t negotiated_version() const NOEXCEPT override
     {
         return protocol::negotiated_version();
     }
 
-    void set_negotiated_version(uint32_t value) noexcept override
+    void set_negotiated_version(uint32_t value) NOEXCEPT override
     {
         protocol::set_negotiated_version(value);
     }
@@ -307,23 +307,23 @@ public:
     /// Addresses.
     /// -----------------------------------------------------------------------
 
-    void fetches(fetches_handler&& handler) noexcept override
+    void fetches(fetches_handler&& handler) NOEXCEPT override
     {
         return protocol::fetches(std::move(handler));
     }
 
-    void saves(const messages::address_items& addresses) noexcept override
+    void saves(const messages::address_items& addresses) NOEXCEPT override
     {
         return protocol::saves(addresses);
     }
 
     void saves(const messages::address_items& addresses,
-        result_handler&& handler) noexcept override
+        result_handler&& handler) NOEXCEPT override
     {
         return protocol::saves(addresses, std::move(handler));
     }
 
-    virtual void handle_send(const code& ec) noexcept override
+    virtual void handle_send(const code& ec) NOEXCEPT override
     {
         return protocol::handle_send(ec);
     }

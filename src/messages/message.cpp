@@ -27,7 +27,7 @@ namespace messages {
 
 using namespace bc::system;
 
-uint32_t network_checksum(const data_slice& data) noexcept
+uint32_t network_checksum(const data_slice& data) NOEXCEPT
 {
     return from_little_endian<uint32_t>(bitcoin_hash(data.size(), data.data()));
 }

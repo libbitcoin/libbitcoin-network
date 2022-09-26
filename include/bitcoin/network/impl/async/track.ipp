@@ -44,7 +44,7 @@ track<Shared>::track()
 }
 
 template <class Shared>
-track<Shared>::~track() noexcept
+track<Shared>::~track() NOEXCEPT
 {
 #ifndef NDEBUG
     LOG_DEBUG(LOG_SYSTEM) << "~" << typeid(Shared).name()

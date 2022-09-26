@@ -60,7 +60,7 @@ constexpr size_t max_inventory = 50000;
 // TODO: change integer version() to active() structure.
 template <typename Message>
 void serialize(Message& instance, system::writer& sink,
-    uint32_t version) noexcept
+    uint32_t version) NOEXCEPT
 {
     instance.serialize(version, sink);
 }
@@ -69,7 +69,7 @@ void serialize(Message& instance, system::writer& sink,
 /// Serialize a message object to the Bitcoin wire protocol encoding.
 template <typename Message>
 system::chunk_ptr serialize(const Message& instance, uint32_t magic,
-    uint32_t version) noexcept
+    uint32_t version) NOEXCEPT
 {
     using namespace system;
 
@@ -89,13 +89,13 @@ system::chunk_ptr serialize(const Message& instance, uint32_t magic,
 // TODO: change integer version() to active() structure.
 template <typename Message>
 typename Message::ptr deserialize(system::reader& source,
-    uint32_t version) noexcept
+    uint32_t version) NOEXCEPT
 {
     return system::to_shared(Message::deserialize(version, source));
 }
 
 /// Compute an internal representation of the message checksum.
-BCT_API uint32_t network_checksum(const system::data_slice& data) noexcept;
+BCT_API uint32_t network_checksum(const system::data_slice& data) NOEXCEPT;
 
 } // namespace messages
 } // namespace network

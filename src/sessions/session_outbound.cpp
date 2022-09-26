@@ -36,17 +36,17 @@ using namespace bc::system;
 using namespace config;
 using namespace std::placeholders;
 
-session_outbound::session_outbound(p2p& network) noexcept
+session_outbound::session_outbound(p2p& network) NOEXCEPT
   : session(network)
 {
 }
 
-bool session_outbound::inbound() const noexcept
+bool session_outbound::inbound() const NOEXCEPT
 {
     return false;
 }
 
-bool session_outbound::notify() const noexcept
+bool session_outbound::notify() const NOEXCEPT
 {
     return true;
 }
@@ -54,7 +54,7 @@ bool session_outbound::notify() const noexcept
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_outbound::start(result_handler&& handler) noexcept
+void session_outbound::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -80,7 +80,7 @@ void session_outbound::start(result_handler&& handler) noexcept
 }
 
 void session_outbound::handle_started(const code& ec,
-    const result_handler& handler) noexcept
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     BC_ASSERT_MSG(!stopped(), "session stopped in start");
@@ -97,7 +97,7 @@ void session_outbound::handle_started(const code& ec,
         const auto connectors = create_connectors(settings().connect_batch_size);
 
         for (const auto& connector: *connectors)
-            subscribe_stop([=](const code&) noexcept
+            subscribe_stop([=](const code&) NOEXCEPT
             {
                 connector->stop();
             });
@@ -114,7 +114,7 @@ void session_outbound::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Attempt to connect one peer using a batch subset of connectors.
-void session_outbound::start_connect(const connectors_ptr& connectors) noexcept
+void session_outbound::start_connect(const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -138,7 +138,7 @@ void session_outbound::start_connect(const connectors_ptr& connectors) noexcept
 
 // Attempt to connect the given host and invoke handle_one.
 void session_outbound::do_one(const code& ec, const authority& host,
-    const connector::ptr& connector, const channel_handler& handler) noexcept
+    const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -162,7 +162,7 @@ void session_outbound::do_one(const code& ec, const authority& host,
 // Handle each do_one connection attempt, stopping on first success.
 void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
     const count_ptr& count, const connectors_ptr& connectors,
-    const channel_handler& handler) noexcept
+    const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -208,7 +208,7 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
 
 // Handle the singular batch result.
 void session_outbound::handle_connect(const code& ec,
-    const channel::ptr& channel, const connectors_ptr& connectors) noexcept
+    const channel::ptr& channel, const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -237,24 +237,24 @@ void session_outbound::handle_connect(const code& ec,
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
-    result_handler&& handler) const noexcept
+    result_handler&& handler) const NOEXCEPT
 {
     session::attach_handshake(channel, std::move(handler));
 }
 
-void session_outbound::handle_channel_start(const code&, const channel::ptr&) noexcept
+void session_outbound::handle_channel_start(const code&, const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }
 
 void session_outbound::attach_protocols(
-    const channel::ptr& channel) const noexcept
+    const channel::ptr& channel) const NOEXCEPT
 {
     session::attach_protocols(channel);
 }
 
 void session_outbound::handle_channel_stop(const code&,
-    const connectors_ptr& connectors) noexcept
+    const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

@@ -29,7 +29,7 @@ class mock_channel
 public:
     using channel::channel;
 
-    void resume() noexcept override
+    void resume() NOEXCEPT override
     {
         if (resumed_)
             reresumed_ = true;
@@ -49,7 +49,7 @@ public:
         return reresumed_;
     }
 
-    void stop(const code& ec) noexcept override
+    void stop(const code& ec) NOEXCEPT override
     {
         stop_code_ = ec;
         channel::stop(ec);
@@ -78,7 +78,7 @@ class mock_channel_no_read
 public:
     using mock_channel::mock_channel;
 
-    void resume() noexcept override
+    void resume() NOEXCEPT override
     {
         if (resumed_)
             reresumed_ = true;
@@ -102,69 +102,69 @@ public:
     {
     }
 
-    bool stopped() const noexcept override
+    bool stopped() const NOEXCEPT override
     {
         return session::stopped();
     }
 
-    bool stranded() const noexcept override
+    bool stranded() const NOEXCEPT override
     {
         return session::stranded();
     }
 
-    acceptor::ptr create_acceptor() noexcept override
+    acceptor::ptr create_acceptor() NOEXCEPT override
     {
         return session::create_acceptor();
     }
 
-    connector::ptr create_connector() noexcept override
+    connector::ptr create_connector() NOEXCEPT override
     {
         return session::create_connector();
     }
 
-    connectors_ptr create_connectors(size_t count) noexcept override
+    connectors_ptr create_connectors(size_t count) NOEXCEPT override
     {
         return session::create_connectors(count);
     }
 
-    size_t address_count() const noexcept override
+    size_t address_count() const NOEXCEPT override
     {
         return session::address_count();
     }
 
-    size_t channel_count() const noexcept override
+    size_t channel_count() const NOEXCEPT override
     {
         return session::channel_count();
     }
 
-    size_t inbound_channel_count() const noexcept override
+    size_t inbound_channel_count() const NOEXCEPT override
     {
         return session::inbound_channel_count();
     }
 
-    bool blacklisted(const config::authority& authority) const noexcept override
+    bool blacklisted(const config::authority& authority) const NOEXCEPT override
     {
         return session::blacklisted(authority);
     }
 
-    bool inbound() const noexcept override
+    bool inbound() const NOEXCEPT override
     {
         return inbound_;
     }
 
-    bool notify() const noexcept override
+    bool notify() const NOEXCEPT override
     {
         return notify_;
     }
 
     void start_channel(const channel::ptr& channel, result_handler&& started,
-        result_handler&& stopped) noexcept override
+        result_handler&& stopped) NOEXCEPT override
     {
         session::start_channel(channel, std::move(started), std::move(stopped));
     }
 
     void attach_handshake(const channel::ptr& channel,
-        result_handler&& handshake) const noexcept override
+        result_handler&& handshake) const NOEXCEPT override
     {
         if (!handshaked_)
         {
@@ -180,7 +180,7 @@ public:
         return handshaked_;
     }
 
-    void attach_protocols(const channel::ptr&) const noexcept override
+    void attach_protocols(const channel::ptr&) const NOEXCEPT override
     {
         if (!protocoled_)
         {
@@ -213,7 +213,7 @@ class mock_p2p
 public:
     using p2p::p2p;
 
-    acceptor::ptr create_acceptor() noexcept override
+    acceptor::ptr create_acceptor() NOEXCEPT override
     {
         ++acceptors_;
         return p2p::create_acceptor();
@@ -224,7 +224,7 @@ public:
         return acceptors_;
     }
 
-    connector::ptr create_connector() noexcept override
+    connector::ptr create_connector() NOEXCEPT override
     {
         ++connectors_;
         return p2p::create_connector();
@@ -235,18 +235,18 @@ public:
         return connectors_;
     }
 
-    void fetch(hosts::address_item_handler&& handler) const noexcept override
+    void fetch(hosts::address_item_handler&& handler) const NOEXCEPT override
     {
         handler(error::invalid_magic, {});
     }
 
-    void fetches(hosts::address_items_handler&& handler) const noexcept override
+    void fetches(hosts::address_items_handler&& handler) const NOEXCEPT override
     {
         handler(error::bad_stream, {});
     }
 
     void save(const messages::address_item& address,
-        result_handler&& complete) noexcept override
+        result_handler&& complete) NOEXCEPT override
     {
         saved_ = address;
         complete(error::invalid_magic);
@@ -258,7 +258,7 @@ public:
     }
 
     void saves(const messages::address_items& addresses,
-        result_handler&& complete) noexcept override
+        result_handler&& complete) NOEXCEPT override
     {
         saveds_ = addresses;
         complete(error::bad_stream);
@@ -314,20 +314,20 @@ public:
         return unstore_found_;
     }
 
-    session_seed::ptr attach_seed_session() noexcept override
+    session_seed::ptr attach_seed_session() NOEXCEPT override
     {
         return attach<mock_session_seed>();
     }
 
 protected:
-    void pend(uint64_t nonce) noexcept override
+    void pend(uint64_t nonce) NOEXCEPT override
     {
         BC_ASSERT(!is_zero(nonce));
         pend_ = nonce;
         p2p::pend(nonce);
     }
 
-    void unpend(uint64_t nonce) noexcept override
+    void unpend(uint64_t nonce) NOEXCEPT override
     {
         BC_ASSERT(!is_zero(nonce));
         unpend_ = nonce;
@@ -335,7 +335,7 @@ protected:
     }
 
     code store(const channel::ptr& channel, bool notify,
-        bool inbound) noexcept override
+        bool inbound) NOEXCEPT override
     {
         BC_ASSERT(!is_zero(channel->nonce()));
         store_nonce_ = channel->nonce();
@@ -344,7 +344,7 @@ protected:
         return ((store_result_ = p2p::store(channel, notify, inbound)));
     }
 
-    bool unstore(const channel::ptr& channel, bool inbound) noexcept override
+    bool unstore(const channel::ptr& channel, bool inbound) NOEXCEPT override
     {
         BC_ASSERT(!is_zero(channel->nonce()));
         unstore_nonce_ = channel->nonce();
@@ -379,7 +379,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(error::success);
         }

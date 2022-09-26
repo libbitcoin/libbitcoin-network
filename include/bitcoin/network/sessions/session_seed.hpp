@@ -42,43 +42,43 @@ public:
     typedef std::shared_ptr<session_seed> ptr;
 
     /// Construct an instance.
-    session_seed(p2p& network) noexcept;
+    session_seed(p2p& network) NOEXCEPT;
 
     /// Perform seeding as configured (call from network strand).
     /// Seeding is complete invocation of the handler.
-    void start(result_handler&& handler) noexcept override;
+    void start(result_handler&& handler) NOEXCEPT override;
 
 protected:
     typedef std::shared_ptr<size_t> count_ptr;
 
     /// The channel is outbound (do not pend the nonce).
-    bool inbound() const noexcept override;
+    bool inbound() const NOEXCEPT override;
 
     /// Do not notify subscribers on channel start.
-    bool notify() const noexcept override;
+    bool notify() const NOEXCEPT override;
 
     /// Overridden to set service and version minimums upon session start.
     void attach_handshake(const channel::ptr& channel,
-        result_handler&& handler) const noexcept override;
+        result_handler&& handler) const NOEXCEPT override;
 
     /// Overridden to attach only seeding protocols upon channel start.
-    void attach_protocols(const channel::ptr& channel) const noexcept override;
+    void attach_protocols(const channel::ptr& channel) const NOEXCEPT override;
 
     /// Start a seed connection (called from start).
     virtual void start_seed(const config::endpoint& seed,
         const connector::ptr& connector,
-        const channel_handler& handler) noexcept;
+        const channel_handler& handler) NOEXCEPT;
 
 private:
 
-    void handle_started(const code& ec, const result_handler& handler) noexcept;
+    void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, const channel::ptr& channel,
         const config::endpoint& seed, const count_ptr& counter,
-        const result_handler& handler) noexcept;
+        const result_handler& handler) NOEXCEPT;
 
-    void handle_channel_start(const code& ec, const channel::ptr& channel) noexcept;
+    void handle_channel_start(const code& ec, const channel::ptr& channel) NOEXCEPT;
     void handle_channel_stop(const code& ec, const count_ptr& counter,
-        const result_handler& handler) noexcept;
+        const result_handler& handler) NOEXCEPT;
 };
 
 } // namespace network

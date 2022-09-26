@@ -38,7 +38,7 @@ const uint32_t get_blocks::version_maximum = level::maximum_protocol;
 
 // static
 // Predict the size of locator_heights output.
-size_t get_blocks::locator_size(size_t top) noexcept
+size_t get_blocks::locator_size(size_t top) NOEXCEPT
 {
     auto size = zero, step = one;
 
@@ -51,7 +51,7 @@ size_t get_blocks::locator_size(size_t top) noexcept
 
 // static
 // This algorithm is a p2p best practice, not a consensus or p2p rule.
-get_blocks::indexes get_blocks::locator_heights(size_t top) noexcept
+get_blocks::indexes get_blocks::locator_heights(size_t top) NOEXCEPT
 {
     auto step = one;
     indexes heights;
@@ -72,12 +72,12 @@ get_blocks::indexes get_blocks::locator_heights(size_t top) noexcept
     return heights;
 }
 
-get_blocks get_blocks::deserialize(uint32_t version, reader& source) noexcept
+get_blocks get_blocks::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    const auto read_start_hashes = [](reader& source) noexcept
+    const auto read_start_hashes = [](reader& source) NOEXCEPT
     {
         const auto size = source.read_size(max_get_blocks);
         hashes start_hashes;
@@ -100,7 +100,7 @@ get_blocks get_blocks::deserialize(uint32_t version, reader& source) noexcept
     };
 }
 
-void get_blocks::serialize(uint32_t version, writer& sink) const noexcept
+void get_blocks::serialize(uint32_t version, writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -118,7 +118,7 @@ void get_blocks::serialize(uint32_t version, writer& sink) const noexcept
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t get_blocks::size(uint32_t) const noexcept
+size_t get_blocks::size(uint32_t) const NOEXCEPT
 {
     return sizeof(uint32_t) +
         hash_size +

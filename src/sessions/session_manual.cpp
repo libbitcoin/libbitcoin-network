@@ -38,17 +38,17 @@ using namespace bc::system;
 using namespace config;
 using namespace std::placeholders;
 
-session_manual::session_manual(p2p& network) noexcept
+session_manual::session_manual(p2p& network) NOEXCEPT
   : session(network)
 {
 }
 
-bool session_manual::inbound() const noexcept
+bool session_manual::inbound() const NOEXCEPT
 {
     return false;
 }
 
-bool session_manual::notify() const noexcept
+bool session_manual::notify() const NOEXCEPT
 {
     return true;
 }
@@ -57,14 +57,14 @@ bool session_manual::notify() const noexcept
 // ----------------------------------------------------------------------------
 // Manual connections are always enabled.
 
-void session_manual::start(result_handler&& handler) noexcept
+void session_manual::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     session::start(BIND2(handle_started, _1, std::move(handler)));
 }
 
 void session_manual::handle_started(const code& ec,
-    const result_handler& handler) noexcept
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     handler(ec);
@@ -74,19 +74,19 @@ void session_manual::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 ////void session_manual::connect(const config::authority& peer,
-////    channel_handler&& handler) noexcept
+////    channel_handler&& handler) NOEXCEPT
 ////{
 ////    BC_ASSERT_MSG(stranded(), "strand");
 ////
 ////    connect(endpoint{ peer.to_hostname(), peer.port() }, std::move(handler));
 ////}
 
-void session_manual::connect(const config::endpoint& peer) noexcept
+void session_manual::connect(const config::endpoint& peer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     const auto self = shared_from_base<session_manual>();
-    connect(peer, [=](const code&, channel::ptr) noexcept
+    connect(peer, [=](const code&, channel::ptr) NOEXCEPT
     {
         // TODO: log discarded code.
         self->nop();
@@ -94,14 +94,14 @@ void session_manual::connect(const config::endpoint& peer) noexcept
 }
 
 void session_manual::connect(const config::endpoint& peer,
-    channel_handler&& handler) noexcept
+    channel_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Create a connector for each manual connection.
     const auto connector = create_connector();
 
-    subscribe_stop([=](const code&) noexcept
+    subscribe_stop([=](const code&) NOEXCEPT
     {
         connector->stop();
     });
@@ -113,7 +113,7 @@ void session_manual::connect(const config::endpoint& peer,
 // ----------------------------------------------------------------------------
 
 void session_manual::start_connect(const endpoint& peer,
-    const connector::ptr& connector, const channel_handler& handler) noexcept
+    const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -130,7 +130,7 @@ void session_manual::start_connect(const endpoint& peer,
 
 void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
     const endpoint& peer, const connector::ptr& connector,
-    const channel_handler& handler) noexcept
+    const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -160,14 +160,14 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
 }
 
 void session_manual::attach_handshake(const channel::ptr& channel,
-    result_handler&& handler) const noexcept
+    result_handler&& handler) const NOEXCEPT
 {
     session::attach_handshake(channel, std::move(handler));
 }
 
 void session_manual::handle_channel_start(const code& ec,
     const endpoint&, const channel::ptr& channel,
-    const channel_handler& handler) noexcept
+    const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -177,13 +177,13 @@ void session_manual::handle_channel_start(const code& ec,
 
 // Communication will begin after this function returns, freeing the thread.
 void session_manual::attach_protocols(
-    const channel::ptr& channel) const noexcept
+    const channel::ptr& channel) const NOEXCEPT
 {
     session::attach_protocols(channel);
 }
 
 void session_manual::handle_channel_stop(const code&, const endpoint& peer,
-    const connector::ptr& connector, const channel_handler& handler) noexcept
+    const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

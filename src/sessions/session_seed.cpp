@@ -36,17 +36,17 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-session_seed::session_seed(p2p& network) noexcept
+session_seed::session_seed(p2p& network) NOEXCEPT
   : session(network)
 {
 }
 
-bool session_seed::inbound() const noexcept
+bool session_seed::inbound() const NOEXCEPT
 {
     return false;
 }
 
-bool session_seed::notify() const noexcept
+bool session_seed::notify() const NOEXCEPT
 {
     return false;
 }
@@ -54,7 +54,7 @@ bool session_seed::notify() const noexcept
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_seed::start(result_handler&& handler) noexcept
+void session_seed::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -86,7 +86,7 @@ void session_seed::start(result_handler&& handler) noexcept
 }
 
 void session_seed::handle_started(const code& ec,
-    const result_handler& handler) noexcept
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -108,7 +108,7 @@ void session_seed::handle_started(const code& ec,
     {
         const auto& seed = *(it++);
 
-        subscribe_stop([=](const code&) noexcept
+        subscribe_stop([=](const code&) NOEXCEPT
         {
             connector->stop();
         });
@@ -123,7 +123,7 @@ void session_seed::handle_started(const code& ec,
 
 // Attempt to connect one seed.
 void session_seed::start_seed(const config::endpoint& seed,
-    const connector::ptr& connector, const channel_handler& handler) noexcept
+    const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -140,7 +140,7 @@ void session_seed::start_seed(const config::endpoint& seed,
 // TODO: remove seed parameter.
 void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
     const config::endpoint&, const count_ptr& counter,
-    const result_handler& handler) noexcept
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -159,7 +159,7 @@ void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
 }
 
 void session_seed::attach_handshake(const channel::ptr& channel,
-    result_handler&& handler) const noexcept
+    result_handler&& handler) const NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
 
@@ -188,12 +188,12 @@ void session_seed::attach_handshake(const channel::ptr& channel,
             maximum_services)->shake(std::move(handler));
 }
 
-void session_seed::handle_channel_start(const code&, const channel::ptr&) noexcept
+void session_seed::handle_channel_start(const code&, const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }
 
-void session_seed::attach_protocols(const channel::ptr& channel) const noexcept
+void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "strand");
 
@@ -216,7 +216,7 @@ void session_seed::attach_protocols(const channel::ptr& channel) const noexcept
 }
 
 void session_seed::handle_channel_stop(const code&, const count_ptr& counter,
-    const result_handler& handler) noexcept
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

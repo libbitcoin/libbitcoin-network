@@ -30,19 +30,19 @@ namespace messages {
 using namespace bc::system;
 
 // static
-uint32_t inventory_item::to_number(type_id inventory_type) noexcept
+uint32_t inventory_item::to_number(type_id inventory_type) NOEXCEPT
 {
     return static_cast<uint32_t>(inventory_type);
 }
 
 // static
-inventory_item::type_id inventory_item::to_type(uint32_t value) noexcept
+inventory_item::type_id inventory_item::to_type(uint32_t value) NOEXCEPT
 {
     return static_cast<type_id>(value);
 }
 
 // static
-std::string inventory_item::to_string(type_id inventory_type) noexcept
+std::string inventory_item::to_string(type_id inventory_type) NOEXCEPT
 {
     switch (inventory_type)
     {
@@ -67,13 +67,13 @@ std::string inventory_item::to_string(type_id inventory_type) noexcept
 }
 
 // static
-size_t inventory_item::size(uint32_t) noexcept
+size_t inventory_item::size(uint32_t) NOEXCEPT
 {
     return hash_size
         + sizeof(uint32_t);
 }
 
-inventory_item inventory_item::deserialize(uint32_t, reader& source) noexcept
+inventory_item inventory_item::deserialize(uint32_t, reader& source) NOEXCEPT
 {
     return
     {
@@ -83,7 +83,7 @@ inventory_item inventory_item::deserialize(uint32_t, reader& source) noexcept
 }
 
 void inventory_item::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& sink) const noexcept
+    writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -94,7 +94,7 @@ void inventory_item::serialize(uint32_t BC_DEBUG_ONLY(version),
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-bool inventory_item::is_block_type() const noexcept
+bool inventory_item::is_block_type() const NOEXCEPT
 {
     return type == type_id::witness_block
         || type == type_id::block
@@ -102,20 +102,20 @@ bool inventory_item::is_block_type() const noexcept
         || type == type_id::filtered_block;
 }
 
-bool inventory_item::is_transaction_type() const noexcept
+bool inventory_item::is_transaction_type() const NOEXCEPT
 {
     return type == type_id::witness_transaction
         || type == type_id::transaction;
 }
 
-bool inventory_item::is_witnessable_type() const noexcept
+bool inventory_item::is_witnessable_type() const NOEXCEPT
 {
     return type == type_id::block
         || type == type_id::transaction;
 }
 
 // Requires a non-const instance for this in-place efficiency.
-void inventory_item::to_witness() noexcept
+void inventory_item::to_witness() NOEXCEPT
 {
     // TODO: allow class enumerations in bitwise functions.
     if (is_witnessable_type())

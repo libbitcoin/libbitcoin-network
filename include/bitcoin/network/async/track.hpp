@@ -32,7 +32,7 @@ class track
 {
 protected:
     track();
-    virtual ~track() noexcept;
+    virtual ~track() NOEXCEPT;
 
 private:
     // This is thread safe.

@@ -32,7 +32,7 @@ namespace messages {
 using namespace bc::system;
 
 compact_block_item compact_block_item::deserialize(uint32_t, reader& source,
-    bool witness) noexcept
+    bool witness) NOEXCEPT
 {
     return 
     {
@@ -42,7 +42,7 @@ compact_block_item compact_block_item::deserialize(uint32_t, reader& source,
 }
 
 void compact_block_item::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& sink, bool witness) const noexcept
+    writer& sink, bool witness) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -54,7 +54,7 @@ void compact_block_item::serialize(uint32_t BC_DEBUG_ONLY(version),
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t compact_block_item::size(uint32_t, bool witness) const noexcept
+size_t compact_block_item::size(uint32_t, bool witness) const NOEXCEPT
 {
     return sizeof(uint64_t)
         + (transaction_ptr ? transaction_ptr->serialized_size(witness) : zero);
