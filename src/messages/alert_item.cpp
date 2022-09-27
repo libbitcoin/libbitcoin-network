@@ -48,9 +48,9 @@ const ec_uncompressed alert_item::satoshi_public_key
     }
 };
 
-alert_item alert_item::deserialize(uint32_t, reader& source) noexcept
+alert_item alert_item::deserialize(uint32_t, reader& source) NOEXCEPT
 {
-    const auto read_cans = [](reader& source) noexcept
+    const auto read_cans = [](reader& source) NOEXCEPT
     {
         const auto size = source.read_size(max_messages);
         cancels cans;
@@ -62,7 +62,7 @@ alert_item alert_item::deserialize(uint32_t, reader& source) noexcept
         return cans;
     };
 
-    const auto read_subs = [](reader& source) noexcept
+    const auto read_subs = [](reader& source) NOEXCEPT
     {
         const auto size = source.read_size(max_messages);
         sub_versions subs;
@@ -94,7 +94,7 @@ alert_item alert_item::deserialize(uint32_t, reader& source) noexcept
 
 // Use "_" to avoid 'version' parameter hiding class member.
 void alert_item::serialize(uint32_t BC_DEBUG_ONLY(version_),
-    writer& sink) const noexcept
+    writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version_);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -124,9 +124,9 @@ void alert_item::serialize(uint32_t BC_DEBUG_ONLY(version_),
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t alert_item::size(uint32_t) const noexcept
+size_t alert_item::size(uint32_t) const NOEXCEPT
 {
-    const auto subs = [](size_t total, const std::string& sub) noexcept
+    const auto subs = [](size_t total, const std::string& sub) NOEXCEPT
     {
         return total + variable_size(sub.length()) + sub.length();
     };

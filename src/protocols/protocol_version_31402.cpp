@@ -41,7 +41,7 @@ using namespace std::placeholders;
 
 // Require the configured minimum protocol and services by default.
 protocol_version_31402::protocol_version_31402(const session& session,
-    const channel::ptr& channel) noexcept
+    const channel::ptr& channel) NOEXCEPT
   : protocol_version_31402(session, channel,
       session.settings().services_minimum,
       session.settings().services_maximum)
@@ -51,7 +51,7 @@ protocol_version_31402::protocol_version_31402(const session& session,
 // Used for seeding (should probably not override these).
 protocol_version_31402::protocol_version_31402(const session& session,
     const channel::ptr& channel, uint64_t minimum_services,
-    uint64_t maximum_services) noexcept
+    uint64_t maximum_services) NOEXCEPT
   : protocol(session, channel),
     minimum_version_(session.settings().protocol_minimum),
     maximum_version_(session.settings().protocol_maximum),
@@ -66,7 +66,7 @@ protocol_version_31402::protocol_version_31402(const session& session,
 {
 }
 
-const std::string& protocol_version_31402::name() const noexcept
+const std::string& protocol_version_31402::name() const NOEXCEPT
 {
     return protocol_name;
 }
@@ -76,7 +76,7 @@ const std::string& protocol_version_31402::name() const noexcept
 
 // Allow derived classes to modify the version message.
 protocol_version_31402::version_ptr
-protocol_version_31402::version_factory() const noexcept
+protocol_version_31402::version_factory() const NOEXCEPT
 {
     // TODO: allow for node to inject top height.
     const auto top_height = static_cast<uint32_t>(zero);
@@ -127,7 +127,7 @@ protocol_version_31402::version_factory() const noexcept
 }
 
 // Allow derived classes to handle message rejection.
-void protocol_version_31402::rejection(const code& ec) noexcept
+void protocol_version_31402::rejection(const code& ec) NOEXCEPT
 {
     callback(ec);
 }
@@ -137,7 +137,7 @@ void protocol_version_31402::rejection(const code& ec) noexcept
 
 // Session resumes the channel following return from start().
 // Sends are not precluded, but no messages can be received while paused.
-void protocol_version_31402::shake(result_handler&& handler) noexcept
+void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 
@@ -187,20 +187,20 @@ void protocol_version_31402::shake(result_handler&& handler) noexcept
 }
 
 // Allow service shutdown to terminate handshake.
-void protocol_version_31402::stopping(const code& ec) noexcept
+void protocol_version_31402::stopping(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
     callback(ec);
 }
 
-bool protocol_version_31402::complete() const noexcept
+bool protocol_version_31402::complete() const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
     return sent_version_ && received_version_ && received_acknowledge_;
 }
 
 // Idempotent on the strand, first caller gets handler.
-void protocol_version_31402::callback(const code& ec) noexcept
+void protocol_version_31402::callback(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 
@@ -219,7 +219,7 @@ void protocol_version_31402::callback(const code& ec) noexcept
     handler_.reset();
 }
 
-void protocol_version_31402::handle_timer(const code& ec) noexcept
+void protocol_version_31402::handle_timer(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
 
@@ -241,7 +241,7 @@ void protocol_version_31402::handle_timer(const code& ec) noexcept
 // Outgoing [send_version... receive_acknowledge].
 // ----------------------------------------------------------------------------
 
-void protocol_version_31402::handle_send_version(const code& ec) noexcept
+void protocol_version_31402::handle_send_version(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 
@@ -256,7 +256,7 @@ void protocol_version_31402::handle_send_version(const code& ec) noexcept
 }
 
 void protocol_version_31402::handle_receive_acknowledge(const code& ec,
-    const version_acknowledge::ptr&) noexcept
+    const version_acknowledge::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 
@@ -285,7 +285,7 @@ void protocol_version_31402::handle_receive_acknowledge(const code& ec,
 // ----------------------------------------------------------------------------
 
 void protocol_version_31402::handle_receive_version(const code& ec,
-    const version::ptr& message) noexcept
+    const version::ptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 
@@ -397,7 +397,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         pause();
 }
 
-void protocol_version_31402::handle_send_acknowledge(const code& ec) noexcept
+void protocol_version_31402::handle_send_acknowledge(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 

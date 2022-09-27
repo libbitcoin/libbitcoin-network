@@ -255,17 +255,17 @@ public:
     {
     }
 
-    code start_hosts() noexcept override
+    code start_hosts() NOEXCEPT override
     {
         return hosts_start_;
     }
 
-    session_manual::ptr attach_manual_session() noexcept override
+    session_manual::ptr attach_manual_session() NOEXCEPT override
     {
         return attach<mock_session_manual>();
     }
 
-    session_seed::ptr attach_seed_session() noexcept override
+    session_seed::ptr attach_seed_session() NOEXCEPT override
     {
         return attach<mock_session_seed>();
     }
@@ -282,7 +282,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(ManualCode);
         }
@@ -297,7 +297,7 @@ private:
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(SeedCode);
         }
@@ -310,22 +310,22 @@ class mock_p2p_session_run
   : public p2p
 {
 public:
-    mock_p2p_session_run(const settings& settings, bool started)
+    mock_p2p_session_run(const settings& settings, bool started) NOEXCEPT
       : p2p(settings), closed_(!started)
     {
     }
 
-    bool closed() const noexcept override
+    bool closed() const NOEXCEPT override
     {
         return closed_;
     }
 
-    session_inbound::ptr attach_inbound_session() noexcept override
+    session_inbound::ptr attach_inbound_session() NOEXCEPT override
     {
         return attach<mock_session_inbound>();
     }
 
-    session_outbound::ptr attach_outbound_session() noexcept override
+    session_outbound::ptr attach_outbound_session() NOEXCEPT override
     {
         return attach<mock_session_outbound>();
     }
@@ -337,12 +337,12 @@ private:
       : public session_inbound
     {
     public:
-        mock_session_inbound(p2p& network)
+        mock_session_inbound(p2p& network) NOEXCEPT
           : session_inbound(network)
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(InboundCode);
         }
@@ -352,12 +352,12 @@ private:
       : public session_outbound
     {
     public:
-        mock_session_outbound(p2p& network)
+        mock_session_outbound(p2p& network) NOEXCEPT
           : session_outbound(network)
         {
         }
 
-        void start(result_handler&& handler) noexcept override
+        void start(result_handler&& handler) NOEXCEPT override
         {
             handler(OutboundCode);
         }

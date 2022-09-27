@@ -40,16 +40,16 @@ public:
     typedef std::shared_ptr<protocol_reject_70002> ptr;
 
     protocol_reject_70002(const session& session,
-        const channel::ptr& channel) noexcept;
+        const channel::ptr& channel) NOEXCEPT;
 
     /// Start protocol (strand required).
-    void start() noexcept override;
+    void start() NOEXCEPT override;
 
 protected:
-    const std::string& name() const noexcept override;
+    const std::string& name() const NOEXCEPT override;
 
     virtual void handle_receive_reject(const code& ec,
-        const messages::reject::ptr& reject) noexcept;
+        const messages::reject::ptr& reject) NOEXCEPT;
 };
 
 } // namespace network

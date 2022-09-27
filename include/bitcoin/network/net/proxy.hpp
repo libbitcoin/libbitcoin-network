@@ -52,7 +52,7 @@ public:
     /// Send a message to the peer.
     template <class Message>
     void send(const typename Message::ptr& message,
-        result_handler&& complete) noexcept
+        result_handler&& complete) NOEXCEPT
     {
         send_bytes(messages::serialize(*message, protocol_magic(), version()),
             std::move(complete));
@@ -60,81 +60,81 @@ public:
 
     /// Subscribe to messages from peer (requires strand).
     template <class Message, typename Handler = pump::handler<Message>>
-        void subscribe(Handler&& handler) noexcept
+        void subscribe(Handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
         pump_subscriber_.subscribe(std::forward<Handler>(handler));
     }
 
     /// Pause reading from the socket (requires strand).
-    virtual void pause() noexcept;
+    virtual void pause() NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
-    virtual void resume() noexcept;
+    virtual void resume() NOEXCEPT;
 
     /// Reading from the socket is paused (requires strand).
-    bool paused() const noexcept;
+    bool paused() const NOEXCEPT;
 
     /// Subscribe to stop notification with completion handler.
     void subscribe_stop(result_handler&& handler,
-        result_handler&& complete) noexcept;
+        result_handler&& complete) NOEXCEPT;
 
     /// Idempotent, may be called multiple times.
-    virtual void stop(const code& ec) noexcept;
+    virtual void stop(const code& ec) NOEXCEPT;
 
     /// The channel strand.
-    asio::strand& strand() noexcept;
+    asio::strand& strand() NOEXCEPT;
 
     /// The strand is running in this thread.
-    bool stranded() const noexcept;
+    bool stranded() const NOEXCEPT;
 
     /// The proxy (socket) is stopped.
-    bool stopped() const noexcept;
+    bool stopped() const NOEXCEPT;
 
     /// The authority of the peer.
-    const config::authority& authority() const noexcept;
+    const config::authority& authority() const NOEXCEPT;
 
 protected:
     /// Extract message command name from a payload.
     static std::string extract_command(
-        const system::chunk_ptr& payload) noexcept;
+        const system::chunk_ptr& payload) NOEXCEPT;
 
-    proxy(const socket::ptr& socket) noexcept;
-    virtual ~proxy() noexcept;
+    proxy(const socket::ptr& socket) NOEXCEPT;
+    virtual ~proxy() NOEXCEPT;
 
     /// Property values provided to the proxy.
-    virtual size_t maximum_payload() const noexcept = 0;
-    virtual uint32_t protocol_magic() const noexcept = 0;
-    virtual bool validate_checksum() const noexcept = 0;
-    virtual bool verbose() const noexcept = 0;
-    virtual uint32_t version() const noexcept = 0;
-    virtual void signal_activity() noexcept = 0;
+    virtual size_t maximum_payload() const NOEXCEPT = 0;
+    virtual uint32_t protocol_magic() const NOEXCEPT = 0;
+    virtual bool validate_checksum() const NOEXCEPT = 0;
+    virtual bool verbose() const NOEXCEPT = 0;
+    virtual uint32_t version() const NOEXCEPT = 0;
+    virtual void signal_activity() NOEXCEPT = 0;
 
     /// Send bytes to the peer.
     virtual void send_bytes(const system::chunk_ptr& payload,
-        result_handler&& handler) noexcept;
+        result_handler&& handler) NOEXCEPT;
 
     /// Notify subscribers of an new message (requires strand).
     virtual code notify(messages::identifier id, uint32_t version,
-        system::reader& source) noexcept;
+        system::reader& source) NOEXCEPT;
 
     /// Subscribe to stop notification (requires strand).
-    void subscribe_stop(result_handler&& handler) noexcept;
+    void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
 private:
     typedef messages::heading::ptr heading_ptr;
 
-    void do_stop(const code& ec) noexcept;
+    void do_stop(const code& ec) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
-        const result_handler& complete) noexcept;
+        const result_handler& complete) NOEXCEPT;
 
-    void read_heading() noexcept;
-    void handle_read_heading(const code& ec, size_t heading_size) noexcept;
+    void read_heading() NOEXCEPT;
+    void handle_read_heading(const code& ec, size_t heading_size) NOEXCEPT;
     void handle_read_payload(const code& ec, size_t payload_size,
-        const heading_ptr& head) noexcept;
+        const heading_ptr& head) NOEXCEPT;
     void handle_send(const code& ec, size_t bytes,
         const system::chunk_ptr& payload,
-        const result_handler& handler) noexcept;
+        const result_handler& handler) NOEXCEPT;
 
     // This is thread safe.
     socket::ptr socket_;

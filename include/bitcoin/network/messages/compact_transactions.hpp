@@ -41,10 +41,10 @@ struct BCT_API compact_transactions
     static const uint32_t version_maximum;
 
     static compact_transactions deserialize(uint32_t version,
-        system::reader& source, bool witness=true) noexcept;
+        system::reader& source, bool witness=true) NOEXCEPT;
     void serialize(uint32_t version, system::writer& sink,
-        bool witness=true) const noexcept;
-    size_t size(uint32_t version, bool witness) const noexcept;
+        bool witness=true) const NOEXCEPT;
+    size_t size(uint32_t version, bool witness) const NOEXCEPT;
 
     system::hash_digest block_hash;
     system::chain::transactions transactions;

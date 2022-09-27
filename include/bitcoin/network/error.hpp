@@ -114,10 +114,10 @@ DECLARE_ERROR_T_CODE_CATEGORY(error);
 /// codes to network::error_t codes. This cannot be done using the equivalence
 /// operator overloads of either, since the error_code types are distinct,
 /// despite being effectively identical. So we provide this explicit mapping.
-BCT_API code asio_to_error_code(const error::boost_code& ec) noexcept;
+BCT_API code asio_to_error_code(const error::boost_code& ec) NOEXCEPT;
 
 /// Shortcurcuit common code mapping.
-BCT_API bool asio_is_canceled(const error::boost_code& ec) noexcept;
+BCT_API bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT;
 
 } // namespace error
 } // namespace network

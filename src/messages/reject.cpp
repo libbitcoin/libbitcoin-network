@@ -40,19 +40,19 @@ const uint32_t reject::version_maximum = level::maximum_protocol;
 constexpr size_t max_message = max_uint16;
 
 // static
-bool reject::is_chain(const std::string& message) noexcept
+bool reject::is_chain(const std::string& message) NOEXCEPT
 {
     return (message == block::command) || (message == transaction::command);
 }
 
 // static
-uint8_t reject::reason_to_byte(reason_code value) noexcept
+uint8_t reject::reason_to_byte(reason_code value) NOEXCEPT
 {
     return static_cast<uint8_t>(value);
 }
 
 // static
-reject::reason_code reject::byte_to_reason(uint8_t byte) noexcept
+reject::reason_code reject::byte_to_reason(uint8_t byte) NOEXCEPT
 {
     switch (byte)
     {
@@ -78,7 +78,7 @@ reject::reason_code reject::byte_to_reason(uint8_t byte) noexcept
 }
 
 // static
-reject reject::deserialize(uint32_t, reader& source) noexcept
+reject reject::deserialize(uint32_t, reader& source) NOEXCEPT
 {
     auto message = source.read_string(max_message);
     const auto chain = is_chain(message);
@@ -97,7 +97,7 @@ reject reject::deserialize(uint32_t, reader& source) noexcept
 }
 
 void reject::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& sink) const noexcept
+    writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -112,7 +112,7 @@ void reject::serialize(uint32_t BC_DEBUG_ONLY(version),
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t reject::size(uint32_t) const noexcept
+size_t reject::size(uint32_t) const NOEXCEPT
 {
     return variable_size(message.length()) + message.length()
         + sizeof(uint8_t)

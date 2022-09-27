@@ -39,22 +39,22 @@ class BCT_API threadpool
 public:
     /// Threadpool constructor, initializes the specified number of threads.
     threadpool(size_t number_threads=one,
-        thread_priority priority=thread_priority::normal) noexcept;
+        thread_priority priority=thread_priority::normal) NOEXCEPT;
 
     /// Stop and join threads.
-    ~threadpool() noexcept;
+    ~threadpool() NOEXCEPT;
 
     /// Destroy the work keep-alive. Safe to call from any thread.
     /// Allows threads to join when all outstanding work is complete.
-    void stop() noexcept;
+    void stop() NOEXCEPT;
 
     /// Block until all threads in the pool terminate.
     /// Safe to call from any thread not in the threadpool.
     /// Returns false if called from within threadpool (would deadlock).
-    bool join() noexcept;
+    bool join() NOEXCEPT;
 
     /// Non-const underlying boost::io_service object (thread safe).
-    asio::io_context& service() noexcept;
+    asio::io_context& service() NOEXCEPT;
 
 private:
     // This is thread safe.

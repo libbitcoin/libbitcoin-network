@@ -41,22 +41,22 @@ public:
     typedef std::shared_ptr<protocol_ping_60001> ptr;
 
     protocol_ping_60001(const session& session,
-        const channel::ptr& channel) noexcept;
+        const channel::ptr& channel) NOEXCEPT;
 
     /// Start protocol (strand required).
-    void start() noexcept override;
+    void start() NOEXCEPT override;
 
 protected:
-    const std::string& name() const noexcept override;
+    const std::string& name() const NOEXCEPT override;
 
-    void send_ping() noexcept override;
-    void handle_timer(const code& ec) noexcept override;
+    void send_ping() NOEXCEPT override;
+    void handle_timer(const code& ec) NOEXCEPT override;
     void handle_receive_ping(const code& ec,
-        const messages::ping::ptr& message) noexcept override;
+        const messages::ping::ptr& message) NOEXCEPT override;
 
-    virtual void handle_send_pong(const code& ec) noexcept;
+    virtual void handle_send_pong(const code& ec) NOEXCEPT;
     virtual void handle_receive_pong(const code& ec,
-        const messages::pong::ptr& message) noexcept;
+        const messages::pong::ptr& message) NOEXCEPT;
 
 private:
     // This is protected by strand.

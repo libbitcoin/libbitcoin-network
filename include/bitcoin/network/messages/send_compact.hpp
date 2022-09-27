@@ -40,10 +40,10 @@ struct BCT_API send_compact
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static size_t size(uint32_t version) noexcept;
+    static size_t size(uint32_t version) NOEXCEPT;
     static send_compact deserialize(uint32_t version,
-        system::reader& source) noexcept;
-    void serialize(uint32_t version, system::writer& sink) const noexcept;
+        system::reader& source) NOEXCEPT;
+    void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
 
     bool high_bandwidth;
     uint64_t compact_version;

@@ -56,7 +56,7 @@ public:
     typedef subscriber<const code&> stop_subscriber;
 
     template <typename Message>
-    void broadcast(const Message& message, result_handler&& handler) noexcept
+    void broadcast(const Message& message, result_handler&& handler) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
@@ -64,7 +64,7 @@ public:
     }
 
     template <typename Message>
-    void broadcast(Message&& message, result_handler&& handler) noexcept
+    void broadcast(Message&& message, result_handler&& handler) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
@@ -74,7 +74,7 @@ public:
 
     template <typename Message>
     void broadcast(const typename Message::ptr& message,
-        result_handler&& handler) noexcept
+        result_handler&& handler) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
@@ -85,23 +85,23 @@ public:
     // ------------------------------------------------------------------------
 
     /// Construct an instance.
-    p2p(const settings& settings) noexcept;
+    p2p(const settings& settings) NOEXCEPT;
 
     /// Calls close().
-    virtual ~p2p() noexcept;
+    virtual ~p2p() NOEXCEPT;
 
     // Sequences.
     // ------------------------------------------------------------------------
 
     /// Invoke startup and seeding sequence.
-    virtual void start(result_handler&& handler) noexcept;
+    virtual void start(result_handler&& handler) NOEXCEPT;
 
     /// Run inbound and outbound sessions, call from start result handler.
-    virtual void run(result_handler&& handler) noexcept;
+    virtual void run(result_handler&& handler) NOEXCEPT;
 
     /// Idempotent call to block on work stop, start may be reinvoked after.
     /// Must not call concurrently or from threadpool thread (see ~).
-    virtual void close() noexcept;
+    virtual void close() NOEXCEPT;
 
     // Subscriptions.
     // ------------------------------------------------------------------------
@@ -109,50 +109,50 @@ public:
     /// Subscribe to connection creation events (allowed before start).
     /// A call after close will return success but never invokes the handler.
     virtual void subscribe_connect(channel_handler&& handler,
-        result_handler&& complete) noexcept;
+        result_handler&& complete) NOEXCEPT;
 
     /// Subscribe to service stop event (allowed before start).
     /// A call after close will return success but never invokes the handler.
     virtual void subscribe_close(result_handler&& handler,
-        result_handler&& complete) noexcept;
+        result_handler&& complete) NOEXCEPT;
 
     // Manual connections.
     // ----------------------------------------------------------------------------
 
     /// Maintain a connection.
-    virtual void connect(const config::endpoint& endpoint) noexcept;
+    virtual void connect(const config::endpoint& endpoint) NOEXCEPT;
 
     /// Maintain a connection, callback is invoked on each try.
     virtual void connect(const config::endpoint& endpoint,
-        channel_handler&& handler) noexcept;
+        channel_handler&& handler) NOEXCEPT;
 
     // Properties.
     // ------------------------------------------------------------------------
 
     /// Get the number of addresses.
-    virtual size_t address_count() const noexcept;
+    virtual size_t address_count() const NOEXCEPT;
 
     /// Get the number of inbound channels.
-    virtual size_t inbound_channel_count() const noexcept;
+    virtual size_t inbound_channel_count() const NOEXCEPT;
 
     /// Get the number of channels.
-    virtual size_t channel_count() const noexcept;
+    virtual size_t channel_count() const NOEXCEPT;
 
     /// Network configuration settings.
-    const settings& network_settings() const noexcept;
+    const settings& network_settings() const NOEXCEPT;
 
     /// Return a reference to the network io_context (thread safe).
-    asio::io_context& service() noexcept;
+    asio::io_context& service() NOEXCEPT;
 
     /// Return a reference to the network strand (thread safe).
-    asio::strand& strand() noexcept;
+    asio::strand& strand() NOEXCEPT;
 
 protected:
     friend class session;
 
     /// Attach session to network, caller must start (requires strand).
     template <class Session, typename... Args>
-    typename Session::ptr attach(Args&&... args) noexcept
+    typename Session::ptr attach(Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "subscribe_close");
 
@@ -161,7 +161,7 @@ protected:
             std::forward<Args>(args)...);
 
         // Session lifetime is ensured by the network stop subscriber.
-        subscribe_close([=](const code&) noexcept
+        subscribe_close([=](const code&) NOEXCEPT
         {
             session->stop();
         });
@@ -170,39 +170,39 @@ protected:
     }
 
     /// Override to attach specialized sessions.
-    virtual session_seed::ptr attach_seed_session() noexcept;
-    virtual session_manual::ptr attach_manual_session() noexcept;
-    virtual session_inbound::ptr attach_inbound_session() noexcept;
-    virtual session_outbound::ptr attach_outbound_session() noexcept;
+    virtual session_seed::ptr attach_seed_session() NOEXCEPT;
+    virtual session_manual::ptr attach_manual_session() NOEXCEPT;
+    virtual session_inbound::ptr attach_inbound_session() NOEXCEPT;
+    virtual session_outbound::ptr attach_outbound_session() NOEXCEPT;
 
     /// Override for test injection.
-    virtual acceptor::ptr create_acceptor() noexcept;
-    virtual connector::ptr create_connector() noexcept;
+    virtual acceptor::ptr create_acceptor() NOEXCEPT;
+    virtual connector::ptr create_connector() NOEXCEPT;
 
     /// Maintain channel state.
-    virtual void pend(uint64_t nonce) noexcept;
-    virtual void unpend(uint64_t nonce) noexcept;
+    virtual void pend(uint64_t nonce) NOEXCEPT;
+    virtual void unpend(uint64_t nonce) NOEXCEPT;
     virtual code store(const channel::ptr& channel, bool notify,
-        bool inbound) noexcept;
-    virtual bool unstore(const channel::ptr& channel, bool inbound) noexcept;
+        bool inbound) NOEXCEPT;
+    virtual bool unstore(const channel::ptr& channel, bool inbound) NOEXCEPT;
 
     /// Maintain address pool (TODO: move to store interface).
-    virtual void fetch(hosts::address_item_handler&& handler) const noexcept;
-    virtual void fetches(hosts::address_items_handler&& handler) const noexcept;
+    virtual void fetch(hosts::address_item_handler&& handler) const NOEXCEPT;
+    virtual void fetches(hosts::address_items_handler&& handler) const NOEXCEPT;
     virtual void dump(const messages::address_item& address,
-        result_handler&& complete) noexcept;
+        result_handler&& complete) NOEXCEPT;
     virtual void save(const messages::address_item& address,
-        result_handler&& complete) noexcept;
+        result_handler&& complete) NOEXCEPT;
     virtual void saves(const messages::address_items& addresses,
-        result_handler&& complete) noexcept;
+        result_handler&& complete) NOEXCEPT;
 
     /// The strand is running in this thread.
-    bool stranded() const noexcept;
+    bool stranded() const NOEXCEPT;
 
 private:
     template <typename Message>
     void do_broadcast(const typename Message::ptr& message,
-        const result_handler& handler) noexcept
+        const result_handler& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "channels_");
 
@@ -210,36 +210,36 @@ private:
             channel->send<Message>(message, handler);
     }
 
-    void subscribe_close(result_handler&& handler) noexcept;
-    connectors_ptr create_connectors(size_t count) noexcept;
+    void subscribe_close(result_handler&& handler) NOEXCEPT;
+    connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
-    virtual bool closed() const noexcept;
-    virtual code start_hosts() noexcept;
-    virtual void stop_hosts() noexcept;
+    virtual bool closed() const NOEXCEPT;
+    virtual code start_hosts() NOEXCEPT;
+    virtual void stop_hosts() NOEXCEPT;
 
-    void do_start(const result_handler& handler) noexcept;
-    void do_run(const result_handler& handler) noexcept;
-    void do_close() noexcept;
+    void do_start(const result_handler& handler) NOEXCEPT;
+    void do_run(const result_handler& handler) NOEXCEPT;
+    void do_close() NOEXCEPT;
 
-    void handle_start(const code& ec, const result_handler& handler) noexcept;
-    void handle_run(const code& ec, const result_handler& handler) noexcept;
+    void handle_start(const code& ec, const result_handler& handler) NOEXCEPT;
+    void handle_run(const code& ec, const result_handler& handler) NOEXCEPT;
   
     void do_subscribe_connect(const channel_handler& handler,
-        const result_handler& complete) noexcept;
+        const result_handler& complete) NOEXCEPT;
     void do_subscribe_close(const result_handler& handler,
-        const result_handler& complete) noexcept;
+        const result_handler& complete) NOEXCEPT;
 
     // Distinct method names required for std::bind.
-    void do_connect(const config::endpoint& endpoint) noexcept;
+    void do_connect(const config::endpoint& endpoint) NOEXCEPT;
     void do_connect_handled(const config::endpoint& endpoint,
-        const channel_handler& handler) noexcept;
+        const channel_handler& handler) NOEXCEPT;
 
-    void do_fetch(const hosts::address_item_handler& handler) const noexcept;
-    void do_fetches(const hosts::address_items_handler& handler) const noexcept;
+    void do_fetch(const hosts::address_item_handler& handler) const NOEXCEPT;
+    void do_fetches(const hosts::address_items_handler& handler) const NOEXCEPT;
     void do_save(const messages::address_item& host,
-        const result_handler& complete) noexcept;
+        const result_handler& complete) NOEXCEPT;
     void do_saves(const messages::address_items& hosts,
-        const result_handler& complete) noexcept;
+        const result_handler& complete) NOEXCEPT;
 
     // These are thread safe.
     const settings& settings_;

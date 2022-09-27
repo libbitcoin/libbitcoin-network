@@ -51,7 +51,7 @@ bool clear(const std::filesystem::path& file_directory) noexcept
     // create_directories returns true if path exists or created.
     // used for setup, with no expectations of file/directory existence.
     const auto path = system::to_extended_path(file_directory);
-    boost::system::error_code ec;
+    std::error_code ec;
     std::filesystem::remove_all(path, ec);
     return !ec && std::filesystem::create_directories(path, ec);
 }
@@ -81,7 +81,7 @@ bool remove(const std::filesystem::path& file_path) noexcept
 {
     // C++17: use std::filesystem.
     // Deletes and returns false if file did not exist (or error).
-    boost::system::error_code ec;
+    std::error_code ec;
     return std::filesystem::remove(system::to_extended_path(file_path), ec);
 }
 

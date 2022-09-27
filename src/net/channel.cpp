@@ -37,7 +37,7 @@ using namespace messages;
 using namespace std::placeholders;
 
 // Helper to derive maximum message payload size from settings.
-inline size_t payload_maximum(const settings& settings) noexcept
+inline size_t payload_maximum(const settings& settings) NOEXCEPT
 {
     return heading::maximum_payload_size(settings.protocol_maximum,
         to_bool(settings.services_maximum & service::node_witness));
@@ -45,14 +45,14 @@ inline size_t payload_maximum(const settings& settings) noexcept
 
 // Factory for fixed deadline timer pointer construction.
 inline deadline::ptr timeout(asio::strand& strand,
-    const duration& span) noexcept
+    const duration& span) NOEXCEPT
 {
     return std::make_shared<deadline>(strand, span);
 }
 
 // Factory for varied deadline timer pointer construction.
 inline deadline::ptr expiration(asio::strand& strand,
-    const duration& span) noexcept
+    const duration& span) NOEXCEPT
 {
     return timeout(strand, pseudo_random::duration(span));
 }
@@ -100,7 +100,7 @@ inline deadline::ptr expiration(asio::strand& strand,
 // TODO: So toss boost:log and remove from dependencies. First implement a
 // TODO: simple console sink.
 
-channel::channel(const socket::ptr& socket, const settings& settings) noexcept
+channel::channel(const socket::ptr& socket, const settings& settings) NOEXCEPT
   : proxy(socket),
     maximum_payload_(payload_maximum(settings)),
     protocol_magic_(settings.identifier),
@@ -114,7 +114,7 @@ channel::channel(const socket::ptr& socket, const settings& settings) noexcept
 {
 }
 
-channel::~channel() noexcept
+channel::~channel() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "channel is not stopped");
 }
@@ -122,7 +122,7 @@ channel::~channel() noexcept
 // Stop (started upon create).
 // ----------------------------------------------------------------------------
 
-void channel::stop(const code& ec) noexcept
+void channel::stop(const code& ec) NOEXCEPT
 {
     // Stop is dispatched to strand to protect timers.
     boost::asio::dispatch(strand(),
@@ -131,7 +131,7 @@ void channel::stop(const code& ec) noexcept
 }
 
 // This should not be called internally, as derived rely on stop() override.
-void channel::do_stop(const code& ec) noexcept
+void channel::do_stop(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     proxy::stop(ec);
@@ -144,7 +144,7 @@ void channel::do_stop(const code& ec) noexcept
 
 // Timers are set for handshake and reset upon protocol start.
 // Version protocols may have more restrictive completion timeouts.
-void channel::resume() noexcept
+void channel::resume() NOEXCEPT
 {
     start_expiration();
     start_inactivity();
@@ -157,28 +157,28 @@ void channel::resume() noexcept
 // Versions should only be set in handshake process, and only read thereafter.
 
 // Member is const.
-uint64_t channel::nonce() const noexcept
+uint64_t channel::nonce() const NOEXCEPT
 {
     return channel_nonce_;
 }
 
-uint32_t channel::negotiated_version() const noexcept
+uint32_t channel::negotiated_version() const NOEXCEPT
 {
     return negotiated_version_;
 }
 
-void channel::set_negotiated_version(uint32_t value) noexcept
+void channel::set_negotiated_version(uint32_t value) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     negotiated_version_ = value;
 }
 
-version::ptr channel::peer_version() const noexcept
+version::ptr channel::peer_version() const NOEXCEPT
 {
     return peer_version_;
 }
 
-void channel::set_peer_version(const version::ptr& value) noexcept
+void channel::set_peer_version(const version::ptr& value) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     peer_version_ = value;
@@ -188,34 +188,34 @@ void channel::set_peer_version(const version::ptr& value) noexcept
 // ----------------------------------------------------------------------------
 // These are const except for version (safe) and signal_activity (stranded).
 
-size_t channel::maximum_payload() const noexcept
+size_t channel::maximum_payload() const NOEXCEPT
 {
     return maximum_payload_;
 }
 
-uint32_t channel::protocol_magic() const noexcept
+uint32_t channel::protocol_magic() const NOEXCEPT
 {
     return protocol_magic_;
 }
 
-bool channel::validate_checksum() const noexcept
+bool channel::validate_checksum() const NOEXCEPT
 {
     return validate_checksum_;
 }
 
-bool channel::verbose() const noexcept
+bool channel::verbose() const NOEXCEPT
 {
     return verbose_logging_;
 }
 
-uint32_t channel::version() const noexcept
+uint32_t channel::version() const NOEXCEPT
 {
     return negotiated_version();
 }
 
 // Cancels previous timer and retains configured duration.
 // A canceled timer does not invoke its completion handler.
-void channel::signal_activity() noexcept
+void channel::signal_activity() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return start_inactivity();
@@ -225,7 +225,7 @@ void channel::signal_activity() noexcept
 // ----------------------------------------------------------------------------
 
 // Called from start or strand.
-void channel::start_expiration() noexcept
+void channel::start_expiration() NOEXCEPT
 {
     if (stopped())
         return;
@@ -236,7 +236,7 @@ void channel::start_expiration() noexcept
             shared_from_base<channel>(), _1));
 }
 
-void channel::handle_expiration(const code& ec) noexcept
+void channel::handle_expiration(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -259,7 +259,7 @@ void channel::handle_expiration(const code& ec) noexcept
 }
 
 // Called from start or strand.
-void channel::start_inactivity() noexcept
+void channel::start_inactivity() NOEXCEPT
 {
     if (stopped())
         return;
@@ -271,7 +271,7 @@ void channel::start_inactivity() noexcept
 }
 
 // There is no timeout set on individual sends and receives, just inactivity.
-void channel::handle_inactivity(const code& ec) noexcept
+void channel::handle_inactivity(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

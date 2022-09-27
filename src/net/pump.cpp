@@ -42,7 +42,7 @@ using namespace bc::system;
 #define STOP_SUBSCRIBER(name) \
     SUBSCRIBER(name)->stop_default(ec)
 
-pump::pump(asio::strand& strand) noexcept
+pump::pump(asio::strand& strand) NOEXCEPT
   : MAKE_SUBSCRIBER(address),
     MAKE_SUBSCRIBER(alert),
     MAKE_SUBSCRIBER(block),
@@ -81,7 +81,7 @@ pump::pump(asio::strand& strand) noexcept
 
 // TODO: change integer version() to active() structure.
 code pump::notify(messages::identifier id, uint32_t version,
-    reader& source) const noexcept
+    reader& source) const NOEXCEPT
 {
     switch (id)
     {
@@ -124,7 +124,7 @@ code pump::notify(messages::identifier id, uint32_t version,
     }
 }
 
-void pump::stop(const code& ec) noexcept
+void pump::stop(const code& ec) NOEXCEPT
 {
     STOP_SUBSCRIBER(address);
     STOP_SUBSCRIBER(address);

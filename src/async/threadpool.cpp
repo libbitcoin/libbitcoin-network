@@ -36,14 +36,14 @@ namespace network {
 // The run() function blocks until all work has finished and there are no
 // more handlers to be dispatched, or until the io_context has been stopped.
 
-threadpool::threadpool(size_t number_threads, thread_priority priority) noexcept
+threadpool::threadpool(size_t number_threads, thread_priority priority) NOEXCEPT
   : work_(boost::asio::make_work_guard(service_))
 {
     // Work keeps the threadpool alive when there are no threads running.
 
     for (size_t thread = 0; thread < number_threads; ++thread)
     {
-        threads_.push_back(network::thread([this, priority]() noexcept
+        threads_.push_back(network::thread([this, priority]() NOEXCEPT
         {
             set_priority(priority);
             service_.run();
@@ -51,20 +51,20 @@ threadpool::threadpool(size_t number_threads, thread_priority priority) noexcept
     }
 }
 
-threadpool::~threadpool() noexcept
+threadpool::~threadpool() NOEXCEPT
 {
     stop();
     join();
 }
 
-void threadpool::stop() noexcept
+void threadpool::stop() NOEXCEPT
 {
     // Clear the work keep-alive.
     // Allows all operations and handlers to finish normally.
     work_.reset();
 }
 
-bool threadpool::join() noexcept
+bool threadpool::join() NOEXCEPT
 {
     const auto this_id = boost::this_thread::get_id();
 
@@ -85,7 +85,7 @@ bool threadpool::join() noexcept
     return true;
 }
 
-asio::io_context& threadpool::service() noexcept
+asio::io_context& threadpool::service() NOEXCEPT
 {
     return service_;
 }

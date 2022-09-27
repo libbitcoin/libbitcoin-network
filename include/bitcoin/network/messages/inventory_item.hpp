@@ -52,21 +52,21 @@ struct BCT_API inventory_item
         reserved = witness | filtered_block
     };
 
-    static type_id to_type(uint32_t value) noexcept;
-    static uint32_t to_number(type_id type) noexcept;
-    static std::string to_string(type_id type) noexcept;
+    static type_id to_type(uint32_t value) NOEXCEPT;
+    static uint32_t to_number(type_id type) NOEXCEPT;
+    static std::string to_string(type_id type) NOEXCEPT;
 
-    static size_t size(uint32_t version) noexcept;
+    static size_t size(uint32_t version) NOEXCEPT;
     static inventory_item deserialize(uint32_t version,
-        system::reader& source) noexcept;
-    void serialize(uint32_t version, system::writer& sink) const noexcept;
+        system::reader& source) NOEXCEPT;
+    void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
 
-    bool is_block_type() const noexcept;
-    bool is_transaction_type() const noexcept;
-    bool is_witnessable_type() const noexcept;
+    bool is_block_type() const NOEXCEPT;
+    bool is_transaction_type() const NOEXCEPT;
+    bool is_witnessable_type() const NOEXCEPT;
 
     /// Convert message types to witness types.
-    void to_witness() noexcept;
+    void to_witness() NOEXCEPT;
 
     type_id type;
     system::hash_digest hash;

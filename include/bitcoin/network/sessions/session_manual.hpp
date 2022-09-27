@@ -45,10 +45,10 @@ public:
         channel_handler;
 
     /// Construct an instance (network should be started).
-    session_manual(p2p& network) noexcept;
+    session_manual(p2p& network) NOEXCEPT;
 
     /// Start the session of persistent connections (call from network strand).
-    void start(result_handler&& handler) noexcept override;
+    void start(result_handler&& handler) NOEXCEPT override;
 
     /// Connect.
     /// ------------------------------------------------------------------------
@@ -56,43 +56,43 @@ public:
 
     /////// Maintain connection with callback on each connection attempt and stop.
     ////virtual void connect(const config::authority& peer,
-    ////    channel_handler&& handler) noexcept;
+    ////    channel_handler&& handler) NOEXCEPT;
 
     /// Maintain connection to a node until session stop.
-    virtual void connect(const config::endpoint& endpoint) noexcept;
+    virtual void connect(const config::endpoint& endpoint) NOEXCEPT;
 
     /// Maintain connection with callback on each connection attempt and stop.
     virtual void connect(const config::endpoint& endpoint,
-        channel_handler&& handler) noexcept;
+        channel_handler&& handler) NOEXCEPT;
 
 protected:
     /// The channel is outbound (do not pend the nonce).
-    bool inbound() const noexcept override;
+    bool inbound() const NOEXCEPT override;
 
     /// Notify subscribers on channel start.
-    bool notify() const noexcept override;
+    bool notify() const NOEXCEPT override;
 
     /// Overridden to change version protocol (base calls from channel strand).
     void attach_handshake(const channel::ptr& channel,
-        result_handler&& handler) const noexcept override;
+        result_handler&& handler) const NOEXCEPT override;
 
     /// Overridden to change channel protocols (base calls from channel strand).
-    void attach_protocols(const channel::ptr& channel) const noexcept override;
+    void attach_protocols(const channel::ptr& channel) const NOEXCEPT override;
 
     /// Start or restart the given connection (called from connect).
     virtual void start_connect(const config::endpoint& peer,
-        const connector::ptr& connector, const channel_handler& handler) noexcept;
+        const connector::ptr& connector, const channel_handler& handler) NOEXCEPT;
 
 private:
-    void handle_started(const code& ec, const result_handler& handler) noexcept;
+    void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, const channel::ptr& channel,
         const config::endpoint& peer, const connector::ptr& connector,
-        const channel_handler& handler) noexcept;
+        const channel_handler& handler) NOEXCEPT;
 
     void handle_channel_start(const code& ec, const config::endpoint& peer,
-        const channel::ptr& channel, const channel_handler& handler) noexcept;
+        const channel::ptr& channel, const channel_handler& handler) NOEXCEPT;
     void handle_channel_stop(const code& ec, const config::endpoint& peer,
-        const connector::ptr& connector, const channel_handler& handler) noexcept;
+        const connector::ptr& connector, const channel_handler& handler) NOEXCEPT;
 };
 
 } // namespace network

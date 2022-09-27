@@ -44,19 +44,19 @@ public:
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, size_t)> io_handler;
 
-    socket(asio::io_context& service) noexcept;
-    virtual ~socket() noexcept;
+    socket(asio::io_context& service) NOEXCEPT;
+    virtual ~socket() NOEXCEPT;
 
     // Stop.
     // ------------------------------------------------------------------------
 
     /// Stop has been signaled, work is stopping.
-    virtual bool stopped() const noexcept;
+    virtual bool stopped() const NOEXCEPT;
 
     /// Cancel work and close the socket (idempotent).
     /// This action is deferred to the strand, not immediately affected.
     /// Block on threadpool.join() to ensure termination of the connection.
-    virtual void stop() noexcept;
+    virtual void stop() NOEXCEPT;
 
     // I/O.
     // ------------------------------------------------------------------------
@@ -64,32 +64,32 @@ public:
     /// Accept an incoming connection, handler posted to *acceptor* strand.
     /// Concurrent calls are NOT thread safe until this handler is invoked.
     virtual void accept(asio::acceptor& acceptor,
-        result_handler&& handler) noexcept;
+        result_handler&& handler) NOEXCEPT;
 
     /// Create an outbound connection, handler posted to socket strand.
     virtual void connect(const asio::endpoints& range,
-        result_handler&& handler) noexcept;
+        result_handler&& handler) NOEXCEPT;
 
     /// Read from the socket, handler posted to socket strand.
     virtual void read(const system::data_slab& out,
-        io_handler&& handler) noexcept;
+        io_handler&& handler) NOEXCEPT;
     ////virtual void dynamic_read(system::data_chunk& out, io_handler&& handler);
 
     /// Write to the socket, handler posted to socket strand.
     virtual void write(const system::data_slice& in,
-        io_handler&& handler) noexcept;
+        io_handler&& handler) NOEXCEPT;
 
     // Properties.
     // ------------------------------------------------------------------------
 
     /// Get the authority of the remote endpoint.
-    virtual const config::authority& authority() const noexcept;
+    virtual const config::authority& authority() const NOEXCEPT;
 
     /// The strand is running in this thread.
-    virtual bool stranded() const noexcept;
+    virtual bool stranded() const NOEXCEPT;
 
     /// Get the strand of the socket.
-    virtual asio::strand& strand() noexcept;
+    virtual asio::strand& strand() NOEXCEPT;
 
 protected:
     // These are thread safe.
@@ -101,20 +101,20 @@ protected:
     config::authority authority_;
 
 private:
-    void do_stop() noexcept;
+    void do_stop() NOEXCEPT;
     void do_connect(const asio::endpoints& range,
-        const result_handler& handler) noexcept;
+        const result_handler& handler) NOEXCEPT;
     void do_read(const boost::asio::mutable_buffer& out,
-        const io_handler& handler) noexcept;
+        const io_handler& handler) NOEXCEPT;
     void do_write(const boost::asio::const_buffer& in,
-        const io_handler& handler) noexcept;
+        const io_handler& handler) NOEXCEPT;
 
     void handle_accept(const error::boost_code& ec,
-        const result_handler& handler) noexcept;
+        const result_handler& handler) NOEXCEPT;
     void handle_connect(const error::boost_code& ec,
-        const asio::endpoint& peer, const result_handler& handler) noexcept;
+        const asio::endpoint& peer, const result_handler& handler) NOEXCEPT;
     void handle_io(const error::boost_code& ec, size_t size,
-        const io_handler& handler) noexcept;
+        const io_handler& handler) NOEXCEPT;
 };
 
 } // namespace network

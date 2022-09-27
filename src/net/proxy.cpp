@@ -42,17 +42,17 @@ static constexpr size_t invalid_payload_dump_size = 1024;
 // This is created in a started state and must be stopped, as the subscribers
 // assert if not stopped. Subscribers may hold protocols even if the service
 // is not started.
-proxy::proxy(const socket::ptr& socket) noexcept
+proxy::proxy(const socket::ptr& socket) NOEXCEPT
   : socket_(socket),
     paused_(true),
     pump_subscriber_(socket->strand()),
     stop_subscriber_(std::make_shared<stop_subscriber>(socket->strand())),
-    payload_buffer_(no_fill_byte_allocator),
+    payload_buffer_(),
     heading_reader_(heading_buffer_)
 {
 }
 
-proxy::~proxy() noexcept
+proxy::~proxy() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "proxy is not stopped");
 }
@@ -60,20 +60,20 @@ proxy::~proxy() noexcept
 // Pause (proxy is created paused).
 // ----------------------------------------------------------------------------
 
-void proxy::pause() noexcept
+void proxy::pause() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     paused_ = true;
 }
 
-void proxy::resume() noexcept
+void proxy::resume() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     paused_ = false;
     read_heading();
 }
 
-bool proxy::paused() const noexcept
+bool proxy::paused() const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return paused_;
@@ -83,19 +83,19 @@ bool proxy::paused() const noexcept
 // ----------------------------------------------------------------------------
 
 // Socket is not allowed to stop itself.
-bool proxy::stopped() const noexcept
+bool proxy::stopped() const NOEXCEPT
 {
     return socket_->stopped();
 }
 
-void proxy::stop(const code& ec) noexcept
+void proxy::stop(const code& ec) NOEXCEPT
 {
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_stop, shared_from_this(), ec));
 }
 
 // This should not be called internally, as derived rely on stop() override.
-void proxy::do_stop(const code& ec) noexcept
+void proxy::do_stop(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -118,14 +118,14 @@ void proxy::do_stop(const code& ec) noexcept
     stop_subscriber_->stop(ec);
 }
 
-void proxy::subscribe_stop(result_handler&& handler) noexcept
+void proxy::subscribe_stop(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     stop_subscriber_->subscribe(move_copy(handler));
 }
 
 void proxy::subscribe_stop(result_handler&& handler,
-    result_handler&& complete) noexcept
+    result_handler&& complete) NOEXCEPT
 {
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_subscribe_stop,
@@ -133,7 +133,7 @@ void proxy::subscribe_stop(result_handler&& handler,
 }
 
 void proxy::do_subscribe_stop(const result_handler& handler,
-    const result_handler& complete) noexcept
+    const result_handler& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     stop_subscriber_->subscribe(move_copy(handler));
@@ -145,13 +145,13 @@ void proxy::do_subscribe_stop(const result_handler& handler,
 
 // TODO: change integer version() to active() structure.
 code proxy::notify(identifier id, uint32_t version,
-    system::reader& source) noexcept
+    system::reader& source) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return pump_subscriber_.notify(id, version, source);
 }
 
-void proxy::read_heading() noexcept
+void proxy::read_heading() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -169,7 +169,7 @@ void proxy::read_heading() noexcept
             shared_from_this(), _1, _2));
 }
 
-void proxy::handle_read_heading(const code& ec, size_t) noexcept
+void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -233,7 +233,7 @@ void proxy::handle_read_heading(const code& ec, size_t) noexcept
 
 // Handle errors and post message to subscribers.
 void proxy::handle_read_payload(const code& ec, size_t payload_size,
-    const heading_ptr& head) noexcept
+    const heading_ptr& head) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -307,7 +307,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
 // ----------------------------------------------------------------------------
 
 void proxy::send_bytes(const system::chunk_ptr& payload,
-    result_handler&& handler) noexcept
+    result_handler&& handler) NOEXCEPT
 {
     // chunk_ptr is copied into std::bind closure. 
     // Post handle_send to strand upon stop, error, or buffer fully sent.
@@ -317,7 +317,7 @@ void proxy::send_bytes(const system::chunk_ptr& payload,
 }
 
 // static
-std::string proxy::extract_command(const system::chunk_ptr& payload) noexcept
+std::string proxy::extract_command(const system::chunk_ptr& payload) NOEXCEPT
 {
     if (payload->size() < sizeof(uint32_t) + heading::command_size)
         return "<unknown>";
@@ -332,7 +332,7 @@ std::string proxy::extract_command(const system::chunk_ptr& payload) noexcept
 }
 
 void proxy::handle_send(const code& ec, size_t,
-    const system::chunk_ptr& payload, const result_handler& handler) noexcept
+    const system::chunk_ptr& payload, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -365,17 +365,17 @@ void proxy::handle_send(const code& ec, size_t,
 // Properties.
 // ----------------------------------------------------------------------------
 
-asio::strand& proxy::strand() noexcept
+asio::strand& proxy::strand() NOEXCEPT
 {
     return socket_->strand();
 }
 
-bool proxy::stranded() const noexcept
+bool proxy::stranded() const NOEXCEPT
 {
     return socket_->stranded();
 }
 
-const config::authority& proxy::authority() const noexcept
+const config::authority& proxy::authority() const NOEXCEPT
 {
     return socket_->authority();
 }

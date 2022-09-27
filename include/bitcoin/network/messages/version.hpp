@@ -43,9 +43,9 @@ struct BCT_API version
     static const uint32_t version_maximum;
 
     static version deserialize(uint32_t version,
-        system::reader& source) noexcept;
-    void serialize(uint32_t version, system::writer& sink) const noexcept;
-    size_t size(uint32_t version) const noexcept;
+        system::reader& source) NOEXCEPT;
+    void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
+    size_t size(uint32_t version) const NOEXCEPT;
 
     uint32_t value;
     uint64_t services;

@@ -25,20 +25,20 @@ namespace libbitcoin {
 namespace network {
 
 template <typename Code, typename... Args>
-subscriber<Code, Args...>::subscriber(asio::strand& strand) noexcept
+subscriber<Code, Args...>::subscriber(asio::strand& strand) NOEXCEPT
   : strand_(strand), stopped_(false)
 {
 }
 
 template <typename Code, typename... Args>
-subscriber<Code, Args...>::~subscriber() noexcept
+subscriber<Code, Args...>::~subscriber() NOEXCEPT
 {
     // Destruction may not occur on the strand.
     BC_ASSERT_MSG(queue_.empty(), "subscriber is not cleared");
 }
 
 template <typename Code, typename... Args>
-void subscriber<Code, Args...>::subscribe(handler&& handler) noexcept
+void subscriber<Code, Args...>::subscribe(handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -50,7 +50,7 @@ void subscriber<Code, Args...>::subscribe(handler&& handler) noexcept
 
 template <typename Code, typename... Args>
 void subscriber<Code, Args...>::notify(const Code& ec,
-    const Args&... args) const noexcept
+    const Args&... args) const NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -64,7 +64,7 @@ void subscriber<Code, Args...>::notify(const Code& ec,
 
 template <typename Code, typename... Args>
 void subscriber<Code, Args...>::stop(const Code& ec,
-    const Args&... args) noexcept
+    const Args&... args) NOEXCEPT
 {
     BC_ASSERT_MSG(ec, "subscriber stopped with success code");
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -78,7 +78,7 @@ void subscriber<Code, Args...>::stop(const Code& ec,
 }
 
 template <typename Code, typename... Args>
-void subscriber<Code, Args...>::stop_default(const Code& ec) noexcept
+void subscriber<Code, Args...>::stop_default(const Code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

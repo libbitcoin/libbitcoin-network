@@ -41,7 +41,7 @@ const uint32_t address::version_maximum = level::maximum_protocol;
 // Time stamps are always used in address messages.
 constexpr auto with_timestamp = true;
 
-address address::deserialize(uint32_t version, system::reader& source) noexcept
+address address::deserialize(uint32_t version, system::reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -57,7 +57,7 @@ address address::deserialize(uint32_t version, system::reader& source) noexcept
     return { addresses };
 }
 
-void address::serialize(uint32_t version, writer& sink) const noexcept
+void address::serialize(uint32_t version, writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -70,7 +70,7 @@ void address::serialize(uint32_t version, writer& sink) const noexcept
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t address::size(uint32_t version) const noexcept
+size_t address::size(uint32_t version) const NOEXCEPT
 {
     return variable_size(addresses.size()) +
         (addresses.size() * address_item::size(version, with_timestamp));

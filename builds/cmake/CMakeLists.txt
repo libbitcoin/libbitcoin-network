@@ -96,8 +96,10 @@ endif()
 # Find boost
 #------------------------------------------------------------------------------
 find_package( Boost 1.76.0 REQUIRED COMPONENTS
+    regex
     unit_test_framework )
 
+set( boost_regex_LIBS "-lboost_regex" )
 set( boost_unit_test_framework_LIBS "-lboost_unit_test_framework" )
 
 if (enable-ndebug)
@@ -139,11 +141,13 @@ if (BUILD_SHARED_LIBS)
     link_libraries(
         "-fstack-protector"
         "-fstack-protector-all"
+        ${Boost_REGEX_LIBRARY}
         ${bitcoin_system_LIBRARIES} )
 else()
     link_libraries(
         "-fstack-protector"
         "-fstack-protector-all"
+        ${Boost_REGEX_LIBRARY}
         ${bitcoin_system_STATIC_LIBRARIES} )
 endif()
 
@@ -239,9 +243,11 @@ target_include_directories( ${CANONICAL_LIB_NAME} PUBLIC
 #------------------------------------------------------------------------------
 if (BUILD_SHARED_LIBS)
     target_link_libraries( ${CANONICAL_LIB_NAME}
+        ${Boost_REGEX_LIBRARY}
         ${bitcoin_system_LIBRARIES} )
 else()
     target_link_libraries( ${CANONICAL_LIB_NAME}
+        ${Boost_REGEX_LIBRARY}
         ${bitcoin_system_STATIC_LIBRARIES} )
 endif()
 

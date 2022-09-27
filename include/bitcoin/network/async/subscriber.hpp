@@ -38,23 +38,23 @@ public:
     typedef std::shared_ptr<subscriber<Code, Args...>> ptr;
 
     // Strand is only used for assertions.
-    subscriber(asio::strand& strand) noexcept;
-    ~subscriber() noexcept;
+    subscriber(asio::strand& strand) NOEXCEPT;
+    ~subscriber() NOEXCEPT;
 
     /// If stopped this invokes handler(error::subscriber_stopped, Args{}...),
     /// and the handler is dropped. Otherwise the handler is held until stop.
-    void subscribe(handler&& handler) noexcept;
+    void subscribe(handler&& handler) NOEXCEPT;
 
     /// Invokes each handler in order, on the strand, with specified arguments.
-    void notify(const Code& ec, const Args&... args) const noexcept;
+    void notify(const Code& ec, const Args&... args) const NOEXCEPT;
 
     /// Invokes each handler in order, on the strand, with specified arguments,
     /// and then drops all handlers.
-    void stop(const Code& ec, const Args&... args) noexcept;
+    void stop(const Code& ec, const Args&... args) NOEXCEPT;
 
     /// Invokes each handler in order, on the strand, with specified error code
     /// and default arguments, and then drops all handlers.
-    void stop_default(const Code& ec) noexcept;
+    void stop_default(const Code& ec) NOEXCEPT;
 
 private:
     // This is thread safe.

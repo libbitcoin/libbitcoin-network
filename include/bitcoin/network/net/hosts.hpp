@@ -51,28 +51,28 @@ public:
         address_items_handler;
 
     /// Construct an instance.
-    hosts(const settings& settings) noexcept;
-   virtual ~hosts() noexcept;
+    hosts(const settings& settings) NOEXCEPT;
+   virtual ~hosts() NOEXCEPT;
 
     /// Load hosts file.
-    virtual code start() noexcept;
+    virtual code start() NOEXCEPT;
 
     // Save hosts to file.
-    virtual code stop() noexcept;
+    virtual code stop() NOEXCEPT;
 
     // Thread safe, inexact (ok).
-    virtual size_t count() const noexcept;
+    virtual size_t count() const NOEXCEPT;
 
-    virtual void store(const messages::address_item& host) noexcept;
-    virtual void store(const messages::address_items& hosts) noexcept;
-    virtual void remove(const messages::address_item& host) noexcept;
-    virtual void fetch(const address_item_handler& handler) const noexcept;
-    virtual void fetch(const address_items_handler& handler) const noexcept;
+    virtual void store(const messages::address_item& host) NOEXCEPT;
+    virtual void store(const messages::address_items& hosts) NOEXCEPT;
+    virtual void remove(const messages::address_item& host) NOEXCEPT;
+    virtual void fetch(const address_item_handler& handler) const NOEXCEPT;
+    virtual void fetch(const address_items_handler& handler) const NOEXCEPT;
 
 private:
     typedef boost::circular_buffer<messages::address_item> buffer;
 
-    buffer::iterator find(const messages::address_item& host) noexcept;
+    buffer::iterator find(const messages::address_item& host) NOEXCEPT;
 
     // This is thread safe.
     std::atomic<size_t> count_;

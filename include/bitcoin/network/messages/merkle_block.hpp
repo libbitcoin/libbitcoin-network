@@ -43,9 +43,9 @@ public:
     static const uint32_t version_maximum;
 
     static merkle_block deserialize(uint32_t version,
-        system::reader& source) noexcept;
-    void serialize(uint32_t version, system::writer& sink) const noexcept;
-    size_t size(uint32_t version) const noexcept;
+        system::reader& source) NOEXCEPT;
+    void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
+    size_t size(uint32_t version) const NOEXCEPT;
 
     // TODO: could use size_t for transactions.
     system::chain::header::cptr header;

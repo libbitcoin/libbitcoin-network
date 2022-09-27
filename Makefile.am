@@ -33,7 +33,7 @@ doc_DATA = \
 #------------------------------------------------------------------------------
 lib_LTLIBRARIES = src/libbitcoin-network.la
 src_libbitcoin_network_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
-src_libbitcoin_network_la_LIBADD = ${bitcoin_system_LIBS}
+src_libbitcoin_network_la_LIBADD = ${boost_regex_LIBS} ${bitcoin_system_LIBS}
 src_libbitcoin_network_la_SOURCES = \
     src/error.cpp \
     src/p2p.cpp \
@@ -113,7 +113,7 @@ TESTS = libbitcoin-network-test_runner.sh
 
 check_PROGRAMS = test/libbitcoin-network-test
 test_libbitcoin_network_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
-test_libbitcoin_network_test_LDADD = src/libbitcoin-network.la ${boost_unit_test_framework_LIBS} ${bitcoin_system_LIBS}
+test_libbitcoin_network_test_LDADD = src/libbitcoin-network.la ${boost_unit_test_framework_LIBS} ${boost_regex_LIBS} ${bitcoin_system_LIBS}
 test_libbitcoin_network_test_SOURCES = \
     test/error.cpp \
     test/main.cpp \

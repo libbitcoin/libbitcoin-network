@@ -38,14 +38,14 @@ const uint32_t ping::version_minimum = level::minimum_protocol;
 const uint32_t ping::version_maximum = level::maximum_protocol;
 
 // static
-size_t ping::size(uint32_t version) noexcept
+size_t ping::size(uint32_t version) NOEXCEPT
 {
     // bip31 added nonce field
     return version < level::bip31 ? zero : sizeof(uint64_t);
 }
 
 // static
-ping ping::deserialize(uint32_t version, reader& source) noexcept
+ping ping::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -56,7 +56,7 @@ ping ping::deserialize(uint32_t version, reader& source) noexcept
     return { nonce };
 }
 
-void ping::serialize(uint32_t version, writer& sink) const noexcept
+void ping::serialize(uint32_t version, writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)

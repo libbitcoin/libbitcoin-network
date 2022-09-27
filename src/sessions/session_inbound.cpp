@@ -33,17 +33,17 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
-session_inbound::session_inbound(p2p& network) noexcept
+session_inbound::session_inbound(p2p& network) NOEXCEPT
   : session(network)
 {
 }
 
-bool session_inbound::inbound() const noexcept
+bool session_inbound::inbound() const NOEXCEPT
 {
     return true;
 }
 
-bool session_inbound::notify() const noexcept
+bool session_inbound::notify() const NOEXCEPT
 {
     return true;
 }
@@ -51,7 +51,7 @@ bool session_inbound::notify() const noexcept
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start(result_handler&& handler) noexcept
+void session_inbound::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -68,7 +68,7 @@ void session_inbound::start(result_handler&& handler) noexcept
 }
 
 void session_inbound::handle_started(const code& ec,
-    const result_handler& handler) noexcept
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     BC_ASSERT_MSG(!stopped(), "session stopped in start");
@@ -86,7 +86,7 @@ void session_inbound::handle_started(const code& ec,
 
     if (!error_code)
     {
-        subscribe_stop([=](const network::code&) noexcept
+        subscribe_stop([=](const network::code&) NOEXCEPT
         {
             acceptor->stop();
         });
@@ -99,7 +99,7 @@ void session_inbound::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 void session_inbound::start_accept(const code& ec,
-    const acceptor::ptr& acceptor) noexcept
+    const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -115,7 +115,7 @@ void session_inbound::start_accept(const code& ec,
 }
 
 void session_inbound::handle_accept(const code& ec,
-    const channel::ptr& channel, const acceptor::ptr& acceptor) noexcept
+    const channel::ptr& channel, const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -163,25 +163,25 @@ void session_inbound::handle_accept(const code& ec,
 // ----------------------------------------------------------------------------
 
 void session_inbound::attach_handshake(const channel::ptr& channel,
-    result_handler&& handler) const noexcept
+    result_handler&& handler) const NOEXCEPT
 {
     session::attach_handshake(channel, std::move(handler));
 }
 
 void session_inbound::handle_channel_start(const code&,
-    const channel::ptr&) noexcept
+    const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }
 
 void session_inbound::attach_protocols(
-    const channel::ptr& channel) const noexcept
+    const channel::ptr& channel) const NOEXCEPT
 {
     session::attach_protocols(channel);
 }
 
 void session_inbound::handle_channel_stop(const code&,
-    const channel::ptr&) noexcept
+    const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }

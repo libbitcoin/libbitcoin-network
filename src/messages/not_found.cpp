@@ -41,7 +41,7 @@ const uint32_t not_found::version_maximum = level::maximum_protocol;
 // static
 // Reimplements base class read to prevent a list move operation as well
 // as the need to implement default, base move, and base copy constructors.
-not_found not_found::deserialize(uint32_t version, reader& source) noexcept
+not_found not_found::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();

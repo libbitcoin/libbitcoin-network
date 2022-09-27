@@ -40,26 +40,26 @@ public:
     typedef std::shared_ptr<protocol_seed_31402> ptr;
 
     protocol_seed_31402(const session& session,
-        const channel::ptr& channel) noexcept;
+        const channel::ptr& channel) NOEXCEPT;
 
     /// Perform seeding, stops channel on completion (strand required).
-    void start() noexcept override;
+    void start() NOEXCEPT override;
 
 protected:
-    const std::string& name() const noexcept override;
+    const std::string& name() const NOEXCEPT override;
 
-    void stop(const code& ec) noexcept override;
-    virtual bool complete() const noexcept;
-    virtual void handle_timer(const code& ec) noexcept;
+    void stop(const code& ec) NOEXCEPT override;
+    virtual bool complete() const NOEXCEPT;
+    virtual void handle_timer(const code& ec) NOEXCEPT;
 
-    virtual void handle_send_get_address(const code& ec) noexcept;
+    virtual void handle_send_get_address(const code& ec) NOEXCEPT;
     virtual void handle_receive_address(const code& ec,
-        const messages::address::ptr& address) noexcept;
-    virtual void handle_save_addresses(const code& ec) noexcept;
+        const messages::address::ptr& address) NOEXCEPT;
+    virtual void handle_save_addresses(const code& ec) NOEXCEPT;
 
     virtual void handle_receive_get_address(const code& ec,
-        const messages::get_address::ptr& message) noexcept;
-    virtual void handle_send_address(const code& ec) noexcept;
+        const messages::get_address::ptr& message) NOEXCEPT;
+    virtual void handle_send_address(const code& ec) NOEXCEPT;
 
 private:
     // These are protected by the strand.

@@ -38,9 +38,9 @@ struct BCT_API alert_item
     static const system::ec_uncompressed satoshi_public_key;
 
     static alert_item deserialize(uint32_t version,
-        system::reader& source) noexcept;
-    void serialize(uint32_t version, system::writer& sink) const noexcept;
-    size_t size(uint32_t version) const noexcept;
+        system::reader& source) NOEXCEPT;
+    void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
+    size_t size(uint32_t version) const NOEXCEPT;
 
     uint32_t version;
     uint64_t relay_until;

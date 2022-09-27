@@ -41,9 +41,9 @@ struct BCT_API alert
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static alert deserialize(uint32_t version, system::reader& source) noexcept;
-    void serialize(uint32_t version, system::writer& sink) const noexcept;
-    size_t size(uint32_t version) const noexcept;
+    static alert deserialize(uint32_t version, system::reader& source) NOEXCEPT;
+    void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
+    size_t size(uint32_t version) const NOEXCEPT;
 
     // TODO:
     ////alert_item payload;

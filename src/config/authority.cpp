@@ -34,7 +34,7 @@ namespace config {
 
 // host:    [2001:db8::2] or  2001:db8::2  or 1.2.240.1
 // returns: [2001:db8::2] or [2001:db8::2] or 1.2.240.1
-static std::string to_host_name(const std::string& host) noexcept
+static std::string to_host_name(const std::string& host) NOEXCEPT
 {
     if (host.find(":") == std::string::npos || host.find("[") == 0)
         return host;
@@ -43,7 +43,7 @@ static std::string to_host_name(const std::string& host) noexcept
 }
 
 // host: [2001:db8::2] or 2001:db8::2 or 1.2.240.1
-static std::string to_text(const std::string& host, uint16_t port) noexcept
+static std::string to_text(const std::string& host, uint16_t port) NOEXCEPT
 {
     std::stringstream authority;
     authority << to_host_name(host);
@@ -53,12 +53,12 @@ static std::string to_text(const std::string& host, uint16_t port) noexcept
     return authority.str();
 }
 
-static std::string to_ipv6(const std::string& ipv4_address) noexcept
+static std::string to_ipv6(const std::string& ipv4_address) NOEXCEPT
 {
     return std::string("::ffff:") + ipv4_address;
 }
 
-static asio::ipv6 to_ipv6(const asio::ipv4& ipv4_address) noexcept
+static asio::ipv6 to_ipv6(const asio::ipv4& ipv4_address) NOEXCEPT
 {
     boost::system::error_code ignore;
 
@@ -67,7 +67,7 @@ static asio::ipv6 to_ipv6(const asio::ipv4& ipv4_address) noexcept
     return asio::ipv6::from_string(ipv6, ignore);
 }
 
-static asio::ipv6 to_ipv6(const asio::address& ip_address) noexcept
+static asio::ipv6 to_ipv6(const asio::address& ip_address) NOEXCEPT
 {
     if (ip_address.is_v6())
         return ip_address.to_v6();
@@ -78,7 +78,7 @@ static asio::ipv6 to_ipv6(const asio::address& ip_address) noexcept
     return to_ipv6(ip_address.to_v4());
 }
 
-static std::string to_ipv4_hostname(const asio::address& ip_address) noexcept
+static std::string to_ipv4_hostname(const asio::address& ip_address) NOEXCEPT
 {
     // C++11: use std::regex.
     // std::regex requires gcc 4.9, so we are using boost::regex for now.
@@ -93,30 +93,30 @@ static std::string to_ipv4_hostname(const asio::address& ip_address) noexcept
     return match[1];
 }
 
-static std::string to_ipv6_hostname(const asio::address& ip_address) noexcept
+static std::string to_ipv6_hostname(const asio::address& ip_address) NOEXCEPT
 {
     // IPv6 URLs use a bracketed IPv6 address, see rfc2732.
     return (boost::format("[%1%]") % to_ipv6(ip_address)).str();
 }
 
-authority::authority() noexcept
+authority::authority() NOEXCEPT
   : authority(messages::null_ip_address, 0)
 {
 }
 
 // authority: [2001:db8::2]:port or 1.2.240.1:port
-authority::authority(const std::string& authority) noexcept(false)
+authority::authority(const std::string& authority) NOEXCEPT(false)
 {
     std::stringstream(authority) >> *this;
 }
 
 // This is the format returned from peers on the bitcoin network.
-authority::authority(const messages::address_item& address) noexcept
+authority::authority(const messages::address_item& address) NOEXCEPT
   : authority(address.ip, address.port)
 {
 }
 
-static asio::ipv6 to_boost_address(const messages::ip_address& in) noexcept
+static asio::ipv6 to_boost_address(const messages::ip_address& in) NOEXCEPT
 {
     asio::ipv6::bytes_type bytes{};
     BC_ASSERT(bytes.size() == in.size());
@@ -125,7 +125,7 @@ static asio::ipv6 to_boost_address(const messages::ip_address& in) noexcept
     return out;
 }
 
-static messages::ip_address to_message_address(const asio::ipv6& in) noexcept
+static messages::ip_address to_message_address(const asio::ipv6& in) NOEXCEPT
 {
     messages::ip_address out;
     const auto bytes = in.to_bytes();
@@ -134,56 +134,56 @@ static messages::ip_address to_message_address(const asio::ipv6& in) noexcept
     return out;
 }
 
-authority::authority(const messages::ip_address& ip, uint16_t port) noexcept
+authority::authority(const messages::ip_address& ip, uint16_t port) NOEXCEPT
   : ip_(to_boost_address(ip)), port_(port)
 {
 }
 
 // host: [2001:db8::2] or 2001:db8::2 or 1.2.240.1
-authority::authority(const std::string& host, uint16_t port) noexcept (false)
+authority::authority(const std::string& host, uint16_t port) NOEXCEPT(false)
 {
     std::stringstream(to_text(host, port)) >> *this;
 }
 
-authority::authority(const asio::address& ip, uint16_t port) noexcept
+authority::authority(const asio::address& ip, uint16_t port) NOEXCEPT
   : ip_(to_ipv6(ip)), port_(port)
 {
 }
 
-authority::authority(const asio::endpoint& endpoint) noexcept
+authority::authority(const asio::endpoint& endpoint) NOEXCEPT
   : authority(endpoint.address(), endpoint.port())
 {
 }
 
-authority::operator bool() const noexcept
+authority::operator bool() const NOEXCEPT
 {
     return port_ != 0;
 }
 
-const asio::ipv6& authority::ip() const noexcept
+const asio::ipv6& authority::ip() const NOEXCEPT
 {
     return ip_;
 }
 
-uint16_t authority::port() const noexcept
+uint16_t authority::port() const NOEXCEPT
 {
     return port_;
 }
 
-std::string authority::to_hostname() const noexcept
+std::string authority::to_hostname() const NOEXCEPT
 {
     auto ipv4_hostname = to_ipv4_hostname(ip_);
     return ipv4_hostname.empty() ? to_ipv6_hostname(ip_) : ipv4_hostname;
 }
 
-std::string authority::to_string() const noexcept
+std::string authority::to_string() const NOEXCEPT
 {
     std::stringstream value;
     value << *this;
     return value.str();
 }
 
-messages::address_item authority::to_address_item() const noexcept
+messages::address_item authority::to_address_item() const NOEXCEPT
 {
     static constexpr uint32_t services = 0;
     static constexpr uint32_t timestamp = 0;
@@ -195,23 +195,23 @@ messages::address_item authority::to_address_item() const noexcept
     return address_item;
 }
 
-messages::ip_address authority::to_ip_address() const noexcept
+messages::ip_address authority::to_ip_address() const NOEXCEPT
 {
     return to_message_address(ip_);
 }
 
-bool authority::operator==(const authority& other) const noexcept
+bool authority::operator==(const authority& other) const NOEXCEPT
 {
     return port() == other.port() && ip() == other.ip();
 }
 
-bool authority::operator!=(const authority& other) const noexcept
+bool authority::operator!=(const authority& other) const NOEXCEPT
 {
     return !(*this == other);
 }
 
 std::istream& operator>>(std::istream& input,
-    authority& argument) noexcept(false)
+    authority& argument) NOEXCEPT(false)
 {
     std::string value;
     input >> value;
@@ -245,7 +245,7 @@ std::istream& operator>>(std::istream& input,
 }
 
 std::ostream& operator<<(std::ostream& output,
-    const authority& argument) noexcept
+    const authority& argument) NOEXCEPT
 {
     output << to_text(argument.to_hostname(), argument.port());
     return output;

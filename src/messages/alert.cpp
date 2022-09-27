@@ -38,7 +38,7 @@ const uint32_t alert::version_minimum = level::minimum_protocol;
 const uint32_t alert::version_maximum = level::maximum_protocol;
 
 // static
-alert alert::deserialize(uint32_t version, reader& source) noexcept
+alert alert::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
@@ -51,7 +51,7 @@ alert alert::deserialize(uint32_t version, reader& source) noexcept
 }
 
 void alert::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& sink) const noexcept
+    writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_position();)
@@ -64,7 +64,7 @@ void alert::serialize(uint32_t BC_DEBUG_ONLY(version),
     BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
-size_t alert::size(uint32_t) const noexcept
+size_t alert::size(uint32_t) const NOEXCEPT
 {
     return variable_size(payload.size()) + payload.size()
         + variable_size(signature.size()) + signature.size();

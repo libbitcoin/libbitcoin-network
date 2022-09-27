@@ -42,12 +42,12 @@ public:
         proxy::subscribe_stop(std::move(handler));
     }
 
-    mock_proxy(socket::ptr socket) noexcept
+    mock_proxy(socket::ptr socket) NOEXCEPT
       : proxy(socket)
     {
     }
 
-    void stop(const code& ec) noexcept override
+    void stop(const code& ec) NOEXCEPT override
     {
         proxy::stop(ec);
 
@@ -63,32 +63,32 @@ public:
         return stopped_.get_future().get();
     }
 
-    size_t maximum_payload() const noexcept override
+    size_t maximum_payload() const NOEXCEPT override
     {
         return 0;
     }
 
-    uint32_t protocol_magic() const noexcept override
+    uint32_t protocol_magic() const NOEXCEPT override
     {
         return 0;
     }
 
-    bool validate_checksum() const noexcept override
+    bool validate_checksum() const NOEXCEPT override
     {
         return false;
     }
 
-    bool verbose() const noexcept override
+    bool verbose() const NOEXCEPT override
     {
         return false;
     }
 
-    uint32_t version() const noexcept override
+    uint32_t version() const NOEXCEPT override
     {
         return 0;
     }
 
-    void signal_activity() noexcept override
+    void signal_activity() NOEXCEPT override
     {
     }
 
