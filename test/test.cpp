@@ -43,20 +43,19 @@ namespace test {
 
 const std::string directory = "tests";
 
-// C++17: use std::filesystem.
 bool clear(const std::filesystem::path& file_directory) noexcept
 {
-    // C++17: use std::filesystem.
     // remove_all returns count removed, and error code if fails.
     // create_directories returns true if path exists or created.
     // used for setup, with no expectations of file/directory existence.
     const auto path = system::to_extended_path(file_directory);
     std::error_code ec;
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     std::filesystem::remove_all(path, ec);
     return !ec && std::filesystem::create_directories(path, ec);
+    BC_POP_WARNING()
 }
 
-// C++17: use std::filesystem.
 bool create(const std::filesystem::path& file_path) noexcept
 {
     // Creates and returns true if file already existed (and no error).
@@ -66,7 +65,6 @@ bool create(const std::filesystem::path& file_path) noexcept
     BC_POP_WARNING()
 }
 
-// C++17: use std::filesystem.
 bool exists(const std::filesystem::path& file_path) noexcept
 {
     // Returns true only if file existed.
@@ -76,13 +74,13 @@ bool exists(const std::filesystem::path& file_path) noexcept
     BC_POP_WARNING()
 }
 
-// C++17: use std::filesystem.
 bool remove(const std::filesystem::path& file_path) noexcept
 {
-    // C++17: use std::filesystem.
     // Deletes and returns false if file did not exist (or error).
     std::error_code ec;
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return std::filesystem::remove(system::to_extended_path(file_path), ec);
+    BC_POP_WARNING()
 }
 
 } // namespace test
