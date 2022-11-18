@@ -54,12 +54,14 @@ pong pong::deserialize(uint32_t version, reader& source) NOEXCEPT
 void pong::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {
-    BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_DEBUG_ONLY(const auto bytes = size(version);)
+    // BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_8_bytes_little_endian(nonce);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 } // namespace messages

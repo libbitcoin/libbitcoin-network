@@ -65,8 +65,9 @@ bloom_filter_load bloom_filter_load::deserialize(uint32_t version,
 void bloom_filter_load::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {
-    BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_DEBUG_ONLY(const auto bytes = size(version);)
+    // BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_variable(filter.size());
     sink.write_bytes(filter);
@@ -74,7 +75,8 @@ void bloom_filter_load::serialize(uint32_t BC_DEBUG_ONLY(version),
     sink.write_4_bytes_little_endian(tweak);
     sink.write_byte(flags);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t bloom_filter_load::size(uint32_t) const NOEXCEPT

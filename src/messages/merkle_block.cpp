@@ -63,8 +63,9 @@ merkle_block merkle_block::deserialize(uint32_t, reader& source) NOEXCEPT
 void merkle_block::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {
-    BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_DEBUG_ONLY(const auto bytes = size(version);)
+    // BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     if (header)
         header->to_data(sink);
@@ -78,7 +79,8 @@ void merkle_block::serialize(uint32_t BC_DEBUG_ONLY(version),
     sink.write_variable(flags.size());
     sink.write_bytes(flags);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t merkle_block::size(uint32_t) const NOEXCEPT

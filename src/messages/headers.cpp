@@ -64,8 +64,9 @@ headers headers::deserialize(uint32_t version, reader& source) NOEXCEPT
 void headers::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {
-    BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_DEBUG_ONLY(const auto bytes = size(version);)
+    // BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_variable(header_ptrs.size());
 
@@ -75,7 +76,8 @@ void headers::serialize(uint32_t BC_DEBUG_ONLY(version),
         sink.write_byte(trail);
     }
 
-    BC_ASSERT(sink&& sink.get_position() - start == bytes);
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_ASSERT(sink&& sink.get_position() - start == bytes);
 }
 
 size_t headers::size(uint32_t) const NOEXCEPT

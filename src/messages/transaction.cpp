@@ -49,13 +49,15 @@ transaction transaction::deserialize(uint32_t version, reader& source,
 void transaction::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     bool witness) const NOEXCEPT
 {
-    BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
+    // BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     if (transaction_ptr)
         transaction_ptr->to_data(sink, witness);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t transaction::size(uint32_t, bool witness) const NOEXCEPT

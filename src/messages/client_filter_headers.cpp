@@ -70,8 +70,9 @@ client_filter_headers client_filter_headers::deserialize(uint32_t version,
 void client_filter_headers::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {
-    BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_DEBUG_ONLY(const auto bytes = size(version);)
+    // BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_byte(filter_type);
     sink.write_bytes(stop_hash);
@@ -81,7 +82,8 @@ void client_filter_headers::serialize(uint32_t BC_DEBUG_ONLY(version),
     for (const auto& hash: filter_hashes)
         sink.write_bytes(hash);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t client_filter_headers::size(uint32_t) const NOEXCEPT

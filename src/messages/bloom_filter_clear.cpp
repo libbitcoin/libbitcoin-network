@@ -55,9 +55,10 @@ bloom_filter_clear bloom_filter_clear::deserialize(uint32_t version,
 void bloom_filter_clear::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& BC_DEBUG_ONLY(sink)) const NOEXCEPT
 {
-    BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_DEBUG_ONLY(const auto bytes = size(version);)
+    // BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    // BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 } // namespace messages

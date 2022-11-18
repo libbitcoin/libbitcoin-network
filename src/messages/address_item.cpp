@@ -69,8 +69,9 @@ address_item address_item::deserialize(uint32_t, reader& source,
 void address_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     bool with_timestamp) const NOEXCEPT
 {
-    BC_DEBUG_ONLY(const auto bytes = size(version, with_timestamp);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_DEBUG_ONLY(const auto bytes = size(version, with_timestamp);)
+    // BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     if (with_timestamp)
         sink.write_4_bytes_little_endian(timestamp);
@@ -79,7 +80,8 @@ void address_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     sink.write_bytes(ip.data(), ip.size());
     sink.write_2_bytes_big_endian(port);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 } // namespace messages

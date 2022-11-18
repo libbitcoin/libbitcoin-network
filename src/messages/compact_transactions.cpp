@@ -66,8 +66,9 @@ compact_transactions compact_transactions::deserialize(uint32_t version,
 void compact_transactions::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink, bool witness) const NOEXCEPT
 {
-    BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
+    // BC_DEBUG_ONLY(const auto start = sink.get_position();)
 
     sink.write_bytes(block_hash);
     sink.write_variable(transactions.size());
@@ -75,7 +76,8 @@ void compact_transactions::serialize(uint32_t BC_DEBUG_ONLY(version),
     for (const auto& tx: transactions)
         tx.to_data(sink, witness);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    // sink.get_position() removed due to flipper conflict, commenting out debug
+    // BC_ASSERT(sink && sink.get_position() - start == bytes);
 }
 
 size_t compact_transactions::size(uint32_t, bool witness) const NOEXCEPT
