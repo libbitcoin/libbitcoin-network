@@ -67,7 +67,7 @@ void compact_transactions::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink, bool witness) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     sink.write_bytes(block_hash);
     sink.write_variable(transactions.size());
@@ -75,7 +75,7 @@ void compact_transactions::serialize(uint32_t BC_DEBUG_ONLY(version),
     for (const auto& tx: transactions)
         tx.to_data(sink, witness);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 size_t compact_transactions::size(uint32_t, bool witness) const NOEXCEPT

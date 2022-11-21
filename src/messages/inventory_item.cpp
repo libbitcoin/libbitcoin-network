@@ -86,12 +86,12 @@ void inventory_item::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     sink.write_4_bytes_little_endian(to_number(type));
     sink.write_bytes(hash);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 bool inventory_item::is_block_type() const NOEXCEPT

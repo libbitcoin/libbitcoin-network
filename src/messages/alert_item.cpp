@@ -97,7 +97,7 @@ void alert_item::serialize(uint32_t BC_DEBUG_ONLY(version_),
     writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version_);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     sink.write_4_bytes_little_endian(version);
     sink.write_8_bytes_little_endian(relay_until);
@@ -121,7 +121,7 @@ void alert_item::serialize(uint32_t BC_DEBUG_ONLY(version_),
     sink.write_string(status_bar);
     sink.write_string(reserved);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 size_t alert_item::size(uint32_t) const NOEXCEPT

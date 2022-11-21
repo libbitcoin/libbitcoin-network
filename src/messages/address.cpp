@@ -60,14 +60,14 @@ address address::deserialize(uint32_t version, system::reader& source) NOEXCEPT
 void address::serialize(uint32_t version, writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     sink.write_variable(addresses.size());
 
     for (const auto& net: addresses)
         net.serialize(version, sink, with_timestamp);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 size_t address::size(uint32_t version) const NOEXCEPT

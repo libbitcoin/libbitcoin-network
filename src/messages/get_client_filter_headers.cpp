@@ -66,13 +66,13 @@ void get_client_filter_headers::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     sink.write_byte(filter_type);
     sink.write_4_bytes_little_endian(start_height);
     sink.write_bytes(stop_hash);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 } // namespace messages

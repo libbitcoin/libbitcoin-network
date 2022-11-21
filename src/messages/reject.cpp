@@ -100,7 +100,7 @@ void reject::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     sink.write_string(message);
     sink.write_byte(reason_to_byte(code));
@@ -109,7 +109,7 @@ void reject::serialize(uint32_t BC_DEBUG_ONLY(version),
     if (is_chain(message))
         sink.write_bytes(hash);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 size_t reject::size(uint32_t) const NOEXCEPT
