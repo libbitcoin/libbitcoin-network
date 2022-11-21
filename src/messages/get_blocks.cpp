@@ -103,7 +103,7 @@ get_blocks get_blocks::deserialize(uint32_t version, reader& source) NOEXCEPT
 void get_blocks::serialize(uint32_t version, writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     // Write version vs. member protocol_version.
     ////sink.write_4_bytes_little_endian(protocol_version);
@@ -115,7 +115,7 @@ void get_blocks::serialize(uint32_t version, writer& sink) const NOEXCEPT
 
     sink.write_bytes(stop_hash);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 size_t get_blocks::size(uint32_t) const NOEXCEPT

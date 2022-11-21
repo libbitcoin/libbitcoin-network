@@ -59,12 +59,12 @@ ping ping::deserialize(uint32_t version, reader& source) NOEXCEPT
 void ping::serialize(uint32_t version, writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     if (version >= level::bip31)
         sink.write_8_bytes_little_endian(nonce);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 } // namespace messages

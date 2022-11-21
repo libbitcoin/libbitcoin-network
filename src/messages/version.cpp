@@ -98,7 +98,7 @@ version version::deserialize(uint32_t version, reader& source) NOEXCEPT
 void version::serialize(uint32_t version, writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     // ************************************************************************
     // PROTOCOL:
@@ -131,7 +131,7 @@ void version::serialize(uint32_t version, writer& sink) const NOEXCEPT
     sink.write_4_bytes_little_endian(start_height);
     write_relay(sink);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 // The 'version' parameter is presumed to be set to expected sender 'value'.

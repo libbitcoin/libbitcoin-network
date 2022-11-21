@@ -65,7 +65,7 @@ void headers::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     sink.write_variable(header_ptrs.size());
 
@@ -75,7 +75,7 @@ void headers::serialize(uint32_t BC_DEBUG_ONLY(version),
         sink.write_byte(trail);
     }
 
-    BC_ASSERT(sink&& sink.get_position() - start == bytes);
+    BC_ASSERT(sink&& sink.get_write_position() - start == bytes);
 }
 
 size_t headers::size(uint32_t) const NOEXCEPT

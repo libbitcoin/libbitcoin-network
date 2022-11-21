@@ -56,8 +56,8 @@ void version_acknowledge::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& BC_DEBUG_ONLY(sink)) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 } // namespace messages

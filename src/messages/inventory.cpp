@@ -91,14 +91,14 @@ inventory inventory::deserialize(uint32_t version, reader& source) NOEXCEPT
 void inventory::serialize(uint32_t version, writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_position();)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     sink.write_variable(items.size());
 
     for (const auto& item: items)
         item.serialize(version, sink);
 
-    BC_ASSERT(sink && sink.get_position() - start == bytes);
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 size_t inventory::size(uint32_t version) const NOEXCEPT
