@@ -42,7 +42,7 @@ struct BCT_API get_blocks
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static size_t locator_size(size_t top) NOEXCEPT;
+    static constexpr size_t locator_size(size_t top) NOEXCEPT;
     static indexes locator_heights(size_t top) NOEXCEPT;
 
     static get_blocks deserialize(uint32_t version,
