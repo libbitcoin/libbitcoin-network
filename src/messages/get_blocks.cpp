@@ -38,7 +38,7 @@ const uint32_t get_blocks::version_maximum = level::maximum_protocol;
 
 // static
 // Predict the size of locator_heights output.
-size_t get_blocks::locator_size(size_t top) NOEXCEPT
+constexpr size_t get_blocks::locator_size(size_t top) NOEXCEPT
 {
     auto size = zero, step = one;
 
