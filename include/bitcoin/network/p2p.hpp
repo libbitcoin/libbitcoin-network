@@ -43,7 +43,7 @@ namespace network {
 
 /// Peer-to-Peer network class, virtual, thread safe with exceptions:
 /// * attach must be called from channel strand.
-/// * close must not be called concurrently or from threadpool thread.
+/// * close must not be called concurrently or from any threadpool thread.
 class BCT_API p2p
   : public enable_shared_from_base<p2p>, system::noncopyable
 {
@@ -100,7 +100,7 @@ public:
     virtual void run(result_handler&& handler) NOEXCEPT;
 
     /// Idempotent call to block on work stop, start may be reinvoked after.
-    /// Must not call concurrently or from threadpool thread (see ~).
+    /// Must not call concurrently or from any threadpool thread (see ~).
     virtual void close() NOEXCEPT;
 
     // Subscriptions.
