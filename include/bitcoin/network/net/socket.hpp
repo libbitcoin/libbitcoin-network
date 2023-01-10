@@ -23,7 +23,6 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
-#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>

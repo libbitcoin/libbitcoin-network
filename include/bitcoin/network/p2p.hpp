@@ -20,16 +20,12 @@
 #define LIBBITCOIN_NETWORK_P2P_HPP
 
 #include <atomic>
-#include <cstddef>
-#include <cstdint>
 #include <functional>
-#include <map>
 #include <memory>
-#include <string>
 #include <unordered_set>
 #include <vector>
-#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -83,6 +79,8 @@ public:
 
     // Constructors.
     // ------------------------------------------------------------------------
+
+    DELETE4(p2p);
 
     /// Construct an instance.
     p2p(const settings& settings) NOEXCEPT;
