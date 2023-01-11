@@ -39,6 +39,8 @@ class BCT_API acceptor
     track<acceptor>
 {
 public:
+    DEFAULT4(acceptor);
+
     typedef std::shared_ptr<acceptor> ptr;
     typedef std::function<void(const code&,
         const channel::ptr&)> accept_handler;

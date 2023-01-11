@@ -39,6 +39,8 @@ class BCT_API socket
     track<socket>
 {
 public:
+    DEFAULT4(socket);
+
     typedef std::shared_ptr<socket> ptr;
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, size_t)> io_handler;

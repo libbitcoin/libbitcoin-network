@@ -29,7 +29,7 @@ namespace network {
 
 /// Not thread safe, non-virtual.
 template <typename Code, typename... Args>
-class subscriber
+class subscriber final
   : public std::enable_shared_from_this<subscriber<Code, Args...>>,
     system::noncopyable
 {

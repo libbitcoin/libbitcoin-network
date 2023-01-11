@@ -36,11 +36,6 @@ endpoint::endpoint() NOEXCEPT
 {
 }
 
-endpoint::endpoint(const endpoint& other) NOEXCEPT
-  : scheme_(other.scheme()), host_(other.host()), port_(other.port())
-{
-}
-
 endpoint::endpoint(const std::string& uri) NOEXCEPT(false)
 {
     std::stringstream(uri) >> *this;

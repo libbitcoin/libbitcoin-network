@@ -32,7 +32,7 @@ namespace network {
 /// Thread safe, non-virtual.
 /// Class to measure the execution time of a callable.
 template <typename Time = milliseconds, class Clock = steady_clock>
-class timer
+class timer final
 {
 public:
     /// Returns the duration (in chrono's type system) of the elapsed time.

@@ -40,6 +40,8 @@ class BCT_API session_manual
   : public session, track<session_manual>
 {
 public:
+    DEFAULT4(session_manual);
+
     typedef std::shared_ptr<session_manual> ptr;
     typedef std::function<void(const code&, const channel::ptr&)>
         channel_handler;

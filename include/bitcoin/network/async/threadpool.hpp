@@ -33,7 +33,7 @@ namespace network {
 
 /// Not thread safe, non-virtual.
 /// A collection of threads that share an asio I/O context (service).
-class BCT_API threadpool
+class BCT_API threadpool final
   : system::noncopyable
 {
 public:

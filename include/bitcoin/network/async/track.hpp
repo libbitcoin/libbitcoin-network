@@ -21,6 +21,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -31,6 +32,8 @@ template <class Shared>
 class track
 {
 protected:
+    DEFAULT4(track);
+
     track();
     virtual ~track() NOEXCEPT;
 
