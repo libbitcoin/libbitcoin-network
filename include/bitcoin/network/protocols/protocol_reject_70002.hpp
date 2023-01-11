@@ -37,6 +37,8 @@ class BCT_API protocol_reject_70002
   : public protocol, track<protocol_reject_70002>
 {
 public:
+    DEFAULT5(protocol_reject_70002);
+
     typedef std::shared_ptr<protocol_reject_70002> ptr;
 
     protocol_reject_70002(const session& session,

@@ -38,10 +38,11 @@ namespace config {
 class BCT_API endpoint
 {
 public:
+    DEFAULT5(endpoint);
+
     typedef std::shared_ptr<endpoint> ptr;
 
     endpoint() NOEXCEPT;
-    endpoint(const endpoint& other) NOEXCEPT;
 
     /// The scheme and port may be undefined, in which case the port is
     /// reported as zero and the scheme is reported as an empty string.

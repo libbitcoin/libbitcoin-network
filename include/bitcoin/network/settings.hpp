@@ -19,10 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_SETTINGS_HPP
 #define LIBBITCOIN_NETWORK_SETTINGS_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <filesystem>
-#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -32,11 +29,10 @@ namespace libbitcoin {
 namespace network {
 
 /// Common database configuration settings, properties not thread safe.
-class BCT_API settings
+struct BCT_API settings
 {
-public:
     settings() NOEXCEPT;
-    settings(system::chain::selection context)NOEXCEPT ;
+    settings(system::chain::selection context) NOEXCEPT;
 
     /// Properties.
     uint32_t threads;

@@ -20,8 +20,8 @@
 #define LIBBITCOIN_NETWORK_ASYNC_ASIO_HPP
 
 #include <memory>
-#include <boost/asio.hpp>
 #include <bitcoin/network/async/time.hpp>
+#include <bitcoin/network/boost.hpp>
 
 /// Convenience namespace for commonly used boost async i/o aliases.
 

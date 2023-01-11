@@ -44,6 +44,8 @@ class BCT_API hosts
   : system::noncopyable
 {
 public:
+    DEFAULT4(hosts);
+
     ////typedef std::shared_ptr<hosts> ptr;
     typedef std::function<void(const code&, const messages::address_item&)>
         address_item_handler;
@@ -52,7 +54,7 @@ public:
 
     /// Construct an instance.
     hosts(const settings& settings) NOEXCEPT;
-   virtual ~hosts() NOEXCEPT;
+    virtual ~hosts() NOEXCEPT;
 
     /// Load hosts file.
     virtual code start() NOEXCEPT;

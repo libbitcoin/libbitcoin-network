@@ -20,16 +20,12 @@
 #define LIBBITCOIN_NETWORK_P2P_HPP
 
 #include <atomic>
-#include <cstddef>
-#include <cstdint>
 #include <functional>
-#include <map>
 #include <memory>
-#include <string>
 #include <unordered_set>
 #include <vector>
-#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -43,7 +39,7 @@ namespace network {
 
 /// Peer-to-Peer network class, virtual, thread safe with exceptions:
 /// * attach must be called from channel strand.
-/// * close must not be called concurrently or from threadpool thread.
+/// * close must not be called concurrently or from any threadpool thread.
 class BCT_API p2p
   : public enable_shared_from_base<p2p>, system::noncopyable
 {
@@ -84,6 +80,8 @@ public:
     // Constructors.
     // ------------------------------------------------------------------------
 
+    DELETE4(p2p);
+
     /// Construct an instance.
     p2p(const settings& settings) NOEXCEPT;
 
@@ -100,7 +98,7 @@ public:
     virtual void run(result_handler&& handler) NOEXCEPT;
 
     /// Idempotent call to block on work stop, start may be reinvoked after.
-    /// Must not call concurrently or from threadpool thread (see ~).
+    /// Must not call concurrently or from any threadpool thread (see ~).
     virtual void close() NOEXCEPT;
 
     // Subscriptions.

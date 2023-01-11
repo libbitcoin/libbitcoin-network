@@ -57,6 +57,8 @@ class BCT_API session
   : public enable_shared_from_base<session>, system::noncopyable
 {
 public:
+    DEFAULT4(session);
+
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&,
         const channel::ptr&)> channel_handler;

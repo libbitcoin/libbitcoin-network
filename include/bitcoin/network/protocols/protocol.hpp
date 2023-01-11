@@ -58,6 +58,8 @@ class BCT_API protocol
   : public enable_shared_from_base<protocol>, system::noncopyable
 {
 public:
+    DEFAULT4(protocol);
+
     /// The channel is stopping (called on strand by stop subscription).
     /// This must be called only from the channel strand (not thread safe).
     virtual void stopping(const code& ec) NOEXCEPT;
@@ -67,7 +69,10 @@ protected:
     typedef std::function<void(const code&, const messages::address_items&)>
         fetches_handler;
 
+    /// Construct an instance.
     protocol(const session& session, const channel::ptr& channel) NOEXCEPT;
+
+    /// Asserts that protocol is stopped.
     virtual ~protocol() NOEXCEPT;
 
     /// Macro helpers (use macros).

@@ -37,6 +37,8 @@ namespace config {
 class BCT_API authority
 {
 public:
+    DEFAULT5(authority);
+
     typedef std::shared_ptr<authority> ptr;
 
     authority() NOEXCEPT;
@@ -90,7 +92,6 @@ public:
 
 private:
     // These are not thread safe.
-
     asio::ipv6 ip_;
     uint16_t port_;
 };

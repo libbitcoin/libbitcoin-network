@@ -23,7 +23,6 @@
 #include <cstddef>
 #include <functional>
 #include <memory>
-#include <boost/asio.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -40,6 +39,8 @@ class BCT_API socket
     track<socket>
 {
 public:
+    DEFAULT4(socket);
+
     typedef std::shared_ptr<socket> ptr;
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, size_t)> io_handler;

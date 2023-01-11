@@ -43,6 +43,8 @@ class BCT_API channel
   : public proxy, track<channel>
 {
 public:
+    DEFAULT4(channel);
+
     typedef std::shared_ptr<channel> ptr;
 
     /// Attach protocol to channel, caller must start (requires strand).
