@@ -80,7 +80,7 @@ public:
     // Constructors.
     // ------------------------------------------------------------------------
 
-    DELETE4(p2p);
+    DELETE_COPY_MOVE(p2p);
 
     /// Construct an instance.
     p2p(const settings& settings) NOEXCEPT;

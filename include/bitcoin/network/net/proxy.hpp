@@ -44,7 +44,7 @@ class BCT_API proxy
   : public enable_shared_from_base<proxy>, system::noncopyable
 {
 public:
-    DEFAULT4(proxy);
+    DEFAULT_COPY_MOVE(proxy);
 
     typedef std::shared_ptr<proxy> ptr;
     typedef subscriber<const code&> stop_subscriber;

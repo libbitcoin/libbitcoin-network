@@ -43,7 +43,7 @@ class BCT_API channel
   : public proxy, track<channel>
 {
 public:
-    DEFAULT4(channel);
+    DEFAULT_COPY_MOVE(channel);
 
     typedef std::shared_ptr<channel> ptr;
 

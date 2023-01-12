@@ -32,7 +32,7 @@ template <class Shared>
 class track
 {
 protected:
-    DEFAULT4(track);
+    DEFAULT_COPY_MOVE(track);
 
     track();
     virtual ~track() NOEXCEPT;

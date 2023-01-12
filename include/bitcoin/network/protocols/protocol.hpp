@@ -58,7 +58,7 @@ class BCT_API protocol
   : public enable_shared_from_base<protocol>, system::noncopyable
 {
 public:
-    DEFAULT4(protocol);
+    DEFAULT_COPY_MOVE(protocol);
 
     /// The channel is stopping (called on strand by stop subscription).
     /// This must be called only from the channel strand (not thread safe).

@@ -39,7 +39,7 @@ class BCT_API socket
     track<socket>
 {
 public:
-    DEFAULT4(socket);
+    DEFAULT_COPY_MOVE(socket);
 
     typedef std::shared_ptr<socket> ptr;
     typedef std::function<void(const code&)> result_handler;

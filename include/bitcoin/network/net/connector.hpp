@@ -42,7 +42,7 @@ class BCT_API connector
     track<connector>
 {
 public:
-    DEFAULT4(connector);
+    DEFAULT_COPY_MOVE(connector);
 
     typedef std::shared_ptr<connector> ptr;
     typedef std::function<void(const code& ec, const channel::ptr&)>

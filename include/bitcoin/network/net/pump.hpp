@@ -53,7 +53,7 @@ class BCT_API pump
   : system::noncopyable
 {
 public:
-    DELETE5(pump);
+    DELETE_COPY_MOVE_DESTRUCT(pump);
 
     /// Helper for external declarations.
     template <class Message>

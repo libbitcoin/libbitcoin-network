@@ -39,7 +39,7 @@ class BCT_API acceptor
     track<acceptor>
 {
 public:
-    DEFAULT4(acceptor);
+    DEFAULT_COPY_MOVE(acceptor);
 
     typedef std::shared_ptr<acceptor> ptr;
     typedef std::function<void(const code&,
