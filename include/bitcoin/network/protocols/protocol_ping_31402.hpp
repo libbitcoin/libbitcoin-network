@@ -37,8 +37,6 @@ class BCT_API protocol_ping_31402
   : public protocol, track<protocol_ping_31402>
 {
 public:
-    DEFAULT5(protocol_ping_31402);
-
     typedef std::shared_ptr<protocol_ping_31402> ptr;
 
     protocol_ping_31402(const session& session,

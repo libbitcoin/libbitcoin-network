@@ -39,8 +39,6 @@ class BCT_API session_seed
   : public session, track<session_seed>
 {
 public:
-    DEFAULT4(session_seed);
-
     typedef std::shared_ptr<session_seed> ptr;
 
     /// Construct an instance.

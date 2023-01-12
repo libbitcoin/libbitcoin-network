@@ -38,8 +38,6 @@ class BCT_API protocol_ping_60001
   : public protocol_ping_31402, track<protocol_ping_60001>
 {
 public:
-    DEFAULT5(protocol_ping_60001);
-
     typedef std::shared_ptr<protocol_ping_60001> ptr;
 
     protocol_ping_60001(const session& session,
