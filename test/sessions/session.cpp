@@ -316,7 +316,7 @@ public:
 
     session_seed::ptr attach_seed_session() NOEXCEPT override
     {
-        return attach<mock_session_seed>();
+        return attach<mock_session_seed>(*this);
     }
 
 protected:

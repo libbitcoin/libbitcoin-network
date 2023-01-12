@@ -149,13 +149,13 @@ protected:
     friend class session;
 
     /// Attach session to network, caller must start (requires strand).
-    template <class Session, typename... Args>
-    typename Session::ptr attach(Args&&... args) NOEXCEPT
+    template <class Session, class Network, typename... Args>
+    typename Session::ptr attach(Network& net, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "subscribe_close");
 
         // Sessions are attached after network start.
-        const auto session = std::make_shared<Session>(*this,
+        const auto session = std::make_shared<Session>(net,
             std::forward<Args>(args)...);
 
         // Session lifetime is ensured by the network stop subscriber.

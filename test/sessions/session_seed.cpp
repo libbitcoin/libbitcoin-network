@@ -287,17 +287,17 @@ public:
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
     {
-        return attach<mock_inbound_session>();
+        return attach<mock_inbound_session>(*this);
     }
 
     session_outbound::ptr attach_outbound_session() NOEXCEPT override
     {
-        return attach<mock_outbound_session>();
+        return attach<mock_outbound_session>(*this);
     }
 
     session_seed::ptr attach_seed_session() NOEXCEPT override
     {
-        return attach<mock_seed_session>();
+        return attach<mock_seed_session>(*this);
     }
 
 private:
@@ -408,17 +408,17 @@ public:
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
     {
-        return attach<mock_inbound_session>();
+        return attach<mock_inbound_session>(*this);
     }
 
     session_outbound::ptr attach_outbound_session() NOEXCEPT override
     {
-        return attach<mock_outbound_session>();
+        return attach<mock_outbound_session>(*this);
     }
 
     session_seed::ptr attach_seed_session() NOEXCEPT override
     {
-        return attach<mock_seed_session>();
+        return attach<mock_seed_session>(*this);
     }
 
 private:
