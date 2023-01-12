@@ -43,7 +43,7 @@ class BCT_API channel
   : public proxy, track<channel>
 {
 public:
-    DEFAULT_COPY_MOVE(channel);
+    DELETE_COPY_MOVE(channel);
 
     typedef std::shared_ptr<channel> ptr;
 
@@ -73,7 +73,7 @@ public:
     channel(const socket::ptr& socket, const settings& settings) NOEXCEPT;
     virtual ~channel() NOEXCEPT;
 
-    // Arbitrary nonce of the channel (for loopback guard).
+    /// Arbitrary nonce of the channel (for loopback guard).
     uint64_t nonce() const NOEXCEPT;
 
     /// Versions should be only written in handshake and read thereafter.

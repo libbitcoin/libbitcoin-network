@@ -36,10 +36,11 @@ namespace network {
 /// This simplifies invocation, eliminates boost-specific error handling and
 /// makes timer firing and cancellation conditions safe for shared objects.
 class BCT_API deadline final
-  : public std::enable_shared_from_this<deadline>, system::noncopyable,
-    track<deadline>
+  : public std::enable_shared_from_this<deadline>, track<deadline>
 {
 public:
+    DELETE_COPY_MOVE(deadline);
+
     typedef std::shared_ptr<deadline> ptr;
     typedef std::function<void(const code&)> handler;
     

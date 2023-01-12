@@ -50,7 +50,6 @@ void do_subscribe(pump::handler<messages::name>&& handler) const NOEXCEPT \
 /// Not thread safe.
 /// All handlers are posted to the strand.
 class BCT_API pump
-  : system::noncopyable
 {
 public:
     DELETE_COPY_MOVE_DESTRUCT(pump);

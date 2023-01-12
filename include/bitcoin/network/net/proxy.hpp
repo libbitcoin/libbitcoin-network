@@ -41,10 +41,10 @@ namespace network {
 /// notify/send_bytes are protected/virtual for test access only.
 /// Handles all channel communication, error handling, and logging.
 class BCT_API proxy
-  : public enable_shared_from_base<proxy>, system::noncopyable
+  : public enable_shared_from_base<proxy>
 {
 public:
-    DEFAULT_COPY_MOVE(proxy);
+    DELETE_COPY_MOVE(proxy);
 
     typedef std::shared_ptr<proxy> ptr;
     typedef subscriber<const code&> stop_subscriber;

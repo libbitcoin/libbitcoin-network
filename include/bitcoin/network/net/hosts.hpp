@@ -41,10 +41,9 @@ namespace network {
 /// The file is a line-oriented set of config::authority serializations.
 /// Duplicate addresses and those with zero-valued ports are disacarded.
 class BCT_API hosts
-  : system::noncopyable
 {
 public:
-    DEFAULT_COPY_MOVE(hosts);
+    DELETE_COPY_MOVE(hosts);
 
     ////typedef std::shared_ptr<hosts> ptr;
     typedef std::function<void(const code&, const messages::address_item&)>

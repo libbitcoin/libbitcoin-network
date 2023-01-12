@@ -34,9 +34,10 @@ namespace network {
 /// Not thread safe, non-virtual.
 /// A collection of threads that share an asio I/O context (service).
 class BCT_API threadpool final
-  : system::noncopyable
 {
 public:
+    DELETE_COPY_MOVE(threadpool);
+
     /// Threadpool constructor, initializes the specified number of threads.
     threadpool(size_t number_threads=one,
         thread_priority priority=thread_priority::normal) NOEXCEPT;
