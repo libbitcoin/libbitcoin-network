@@ -43,13 +43,13 @@ class BCT_API channel
   : public proxy, track<channel>
 {
 public:
-    DEFAULT4(channel);
+    DELETE_COPY_MOVE(channel);
 
     typedef std::shared_ptr<channel> ptr;
 
     /// Attach protocol to channel, caller must start (requires strand).
-    template <class Protocol, typename... Args>
-    typename Protocol::ptr attach(const session& session,
+    template <class Protocol, class Session, typename... Args>
+    typename Protocol::ptr attach(const Session& session,
         Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "subscribe_stop");
@@ -73,7 +73,7 @@ public:
     channel(const socket::ptr& socket, const settings& settings) NOEXCEPT;
     virtual ~channel() NOEXCEPT;
 
-    // Arbitrary nonce of the channel (for loopback guard).
+    /// Arbitrary nonce of the channel (for loopback guard).
     uint64_t nonce() const NOEXCEPT;
 
     /// Versions should be only written in handshake and read thereafter.

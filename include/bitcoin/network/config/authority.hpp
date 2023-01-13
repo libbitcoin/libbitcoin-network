@@ -37,7 +37,7 @@ namespace config {
 class BCT_API authority
 {
 public:
-    DEFAULT5(authority);
+    DEFAULT_COPY_MOVE_DESTRUCT(authority);
 
     typedef std::shared_ptr<authority> ptr;
 

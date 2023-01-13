@@ -37,8 +37,6 @@ class BCT_API protocol_address_31402
   : public protocol, track<protocol_address_31402>
 {
 public:
-    DEFAULT5(protocol_address_31402);
-
     typedef std::shared_ptr<protocol_address_31402> ptr;
 
     protocol_address_31402(const session& session,

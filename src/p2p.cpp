@@ -511,25 +511,25 @@ bool p2p::unstore(const channel::ptr& channel, bool inbound) NOEXCEPT
 session_seed::ptr p2p::attach_seed_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
-    return attach<session_seed>();
+    return attach<session_seed>(*this);
 }
 
 session_manual::ptr p2p::attach_manual_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
-    return attach<session_manual>();
+    return attach<session_manual>(*this);
 }
 
 session_inbound::ptr p2p::attach_inbound_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
-    return attach<session_inbound>();
+    return attach<session_inbound>(*this);
 }
 
 session_outbound::ptr p2p::attach_outbound_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
-    return attach<session_outbound>();
+    return attach<session_outbound>(*this);
 }
 
 } // namespace network

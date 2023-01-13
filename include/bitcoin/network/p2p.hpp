@@ -41,7 +41,7 @@ namespace network {
 /// * attach must be called from channel strand.
 /// * close must not be called concurrently or from any threadpool thread.
 class BCT_API p2p
-  : public enable_shared_from_base<p2p>, system::noncopyable
+  : public enable_shared_from_base<p2p>
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
@@ -80,7 +80,7 @@ public:
     // Constructors.
     // ------------------------------------------------------------------------
 
-    DELETE4(p2p);
+    DELETE_COPY_MOVE(p2p);
 
     /// Construct an instance.
     p2p(const settings& settings) NOEXCEPT;
@@ -149,13 +149,13 @@ protected:
     friend class session;
 
     /// Attach session to network, caller must start (requires strand).
-    template <class Session, typename... Args>
-    typename Session::ptr attach(Args&&... args) NOEXCEPT
+    template <class Session, class Network, typename... Args>
+    typename Session::ptr attach(Network& net, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "subscribe_close");
 
         // Sessions are attached after network start.
-        const auto session = std::make_shared<Session>(*this,
+        const auto session = std::make_shared<Session>(net,
             std::forward<Args>(args)...);
 
         // Session lifetime is ensured by the network stop subscriber.

@@ -38,7 +38,7 @@ namespace config {
 class BCT_API endpoint
 {
 public:
-    DEFAULT5(endpoint);
+    DEFAULT_COPY_MOVE_DESTRUCT(endpoint);
 
     typedef std::shared_ptr<endpoint> ptr;
 

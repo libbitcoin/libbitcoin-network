@@ -39,8 +39,6 @@ class BCT_API protocol_version_31402
   : public protocol, track<protocol_version_31402>
 {
 public:
-    DEFAULT5(protocol_version_31402);
-
     typedef std::shared_ptr<protocol_version_31402> ptr;
 
     /// Construct a version protocol instance using configured values.

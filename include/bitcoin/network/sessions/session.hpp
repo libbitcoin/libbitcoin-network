@@ -54,10 +54,10 @@ class p2p;
 
 /// Abstract base class for maintaining a channel set, thread safe.
 class BCT_API session
-  : public enable_shared_from_base<session>, system::noncopyable
+  : public enable_shared_from_base<session>
 {
 public:
-    DEFAULT4(session);
+    DELETE_COPY_MOVE(session);
 
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&,

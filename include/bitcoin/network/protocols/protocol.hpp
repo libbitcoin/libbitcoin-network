@@ -55,10 +55,10 @@ class session;
 /// Abstract base class for protocols.
 /// handle_ methods are always invoked on the strand.
 class BCT_API protocol
-  : public enable_shared_from_base<protocol>, system::noncopyable
+  : public enable_shared_from_base<protocol>
 {
 public:
-    DEFAULT4(protocol);
+    DELETE_COPY_MOVE(protocol);
 
     /// The channel is stopping (called on strand by stop subscription).
     /// This must be called only from the channel strand (not thread safe).

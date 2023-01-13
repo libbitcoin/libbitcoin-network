@@ -38,8 +38,6 @@ class BCT_API session_inbound
   : public session, track<session_inbound>
 {
 public:
-    DEFAULT4(session_inbound);
-
     typedef std::shared_ptr<session_inbound> ptr;
 
     /// Construct an instance (network should be started).
