@@ -111,10 +111,10 @@ void protocol_version_70002::handle_receive_reject(const code& ec,
     if (stopped(ec))
         return;
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Reject message '" << reject->message << "' ("
-        << static_cast<uint16_t>(reject->code) << ") from [" << authority()
-        << "] with reason: " << reject->reason << std::endl;
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Reject message '" << reject->message << "' ("
+    ////    << static_cast<uint16_t>(reject->code) << ") from [" << authority()
+    ////    << "] with reason: " << reject->reason << std::endl;
 }
 
 } // namespace network
