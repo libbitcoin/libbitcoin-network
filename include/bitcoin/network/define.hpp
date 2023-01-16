@@ -42,11 +42,11 @@
 // Log name.
 #define LOG_NETWORK "network"
 
-#define LOG_INFO(name) std::cout << name << " : "
-#define LOG_DEBUG(name) std::cout << name << " : "
-#define LOG_VERBOSE(name) std::cout << name << " : "
-#define LOG_ERROR(name) std::cerr << name << " : "
-#define LOG_WARNING(name) std::cerr << name << " : "
+////#define LOG_INFO(name) std::cout << name << " : "
+////#define LOG_DEBUG(name) std::cout << name << " : "
+////#define LOG_VERBOSE(name) std::cout << name << " : "
+////#define LOG_ERROR(name) std::cerr << name << " : "
+////#define LOG_WARNING(name) std::cerr << name << " : "
 
 namespace libbitcoin {
 namespace network {
