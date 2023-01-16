@@ -310,6 +310,18 @@ public:
         return true;
     }
 
+    void saves(const messages::address_items& addresses,
+        result_handler&& complete) NOEXCEPT override
+    {
+        hosts_ += addresses.size();
+        complete(error::success);
+    }
+
+    size_t address_count() const NOEXCEPT override
+    {
+        return hosts_;
+    }
+
 private:
     typename Connector::ptr connector_;
 
@@ -357,6 +369,8 @@ private:
             handler(error::success);
         }
     };
+
+    size_t hosts_{};
 };
 
 class mock_connector_stop_connect
@@ -767,9 +781,10 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
 BOOST_AUTO_TEST_CASE(session_seed__live__one_address__expected)
 {
     settings set(selection::mainnet);
+    set.seeds.resize(1);
+    set.channel_germination_seconds = 5;
     set.outbound_connections = 1;
     set.host_pool_capacity = 1;
-    set.seeds.resize(1);
     mock_p2p<> net(set);
     auto session = std::make_shared<session_seed>(net);
 
@@ -782,7 +797,7 @@ BOOST_AUTO_TEST_CASE(session_seed__live__one_address__expected)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [=, &stopped]()
@@ -792,6 +807,7 @@ BOOST_AUTO_TEST_CASE(session_seed__live__one_address__expected)
     });
 
     BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE_GT(net.address_count(), zero);
     session.reset();
 }
 
