@@ -137,7 +137,6 @@ void session_seed::start_seed(const config::endpoint& seed,
     connector->connect(seed, move_copy(handler));
 }
 
-// TODO: remove seed parameter.
 void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
     const config::endpoint&, const count_ptr& counter,
     const result_handler& handler) NOEXCEPT
