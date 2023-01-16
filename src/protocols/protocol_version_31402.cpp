@@ -335,49 +335,6 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         return;
     }
 
-    // TODO: * denotes unversioned protocol.
-    // TODO: Versioned protocol classes are suffixed as: x_version[_sub].
-    // TODO: Unversioned protocol classes are suffixed as: x_unversioned[_sub].
-    // TODO: Handle unversioned handhshake PIDs in base: version_unversioned.
-
-    // TODO: Get own PIDs from settings ([protocol].bipXXX).
-    // TODO: These augment protocol minimum version levels.
-    // TODO: Own PID values are const (relay overriden in seeding).
-    // TODO: Could set version < bip37 for seeding, allows sendaddrv2, though
-    // TODO: this would require making certain assumptions about peer support.
-
-    // TODO: sendrecon is two PIDs for both own/peer (*sendrecon_in/out[1]).
-    // TODO: relay is one PID for both own/peer (all PIDs have own/peer).
-    // TODO: Nodes with bip133 version level do not have to implement bip133.
-    // TODO: Peer may not send disabletx if our relay PID is true (bip338).
-    // TODO: The disabletx and relay PIDs are independent (bip338).
-    // TODO: Drop peer for send of message if its state is already set.
-
-    // TODO: PID handshake messages may also be caught by their protocols but
-    // TODO: handshake PID state must only be updated by the version protocols.
-    // TODO: This is necessary only to obtain draft:sendrecon.salt (bip330).
-
-    // TODO: Send own relay PID in version written to version.relay.
-    // TODO: Send own handshake PIDs in version as handshake messages:
-    // TODO:    *sendaddrv2[], wtxidrelay[], disabletx[]
-    // TODO: Send own post-handshake PIDs in protocols.
-    // TODO:    sendheaders[], sendcmpct[0|1],
-    // TODO:    (draft: *sendrecon_in[1], *sendrecon_out[1])
-
-    // TODO: Set peer relay PID in version read from version.relay.
-    // TODO: Set peer handshake PIDs in version from handshake messages:
-    // TODO:    *sendaddrv2[], wtxidrelay[], disabletx[]
-    // TODO: Set peer post-handshake PIDs in protocols:
-    // TODO:    sendheaders[], sendcmpct[0|1],
-    // TODO:    (draft: *sendrecon_in[1], *sendrecon_out[1])
-
-    // TODO: Compute negotiated PIDs.
-    // TODO: PID protocols are independently own/peer.
-    // TODO: Versioned PID protocols are opt in (assured).
-    // TODO: Unversioned PID protocols are opt in (maybe).
-    // TODO: Dynamic computation is only necessary for dynamic PID protocols:
-    //          sendheaders, sendcmpct, (draft: sendrecon)
-
     const auto version = std::min(message->value, maximum_version_);
     set_negotiated_version(version);
     set_peer_version(message);
