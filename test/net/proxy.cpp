@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected__expected)
     threadpool pool(2);
     auto socket_ptr = std::make_shared<network::socket>(pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
-    auto ping_ptr = std::shared_ptr<messages::ping>(new messages::ping{ 42 });
+    auto ping_ptr = system::to_shared<messages::ping>(42);
 
     std::promise<code> promise;
     const auto handler = [&](code ec)
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected_move__expected)
     threadpool pool(2);
     auto socket_ptr = std::make_shared<network::socket>(pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
-    auto ping_ptr = std::shared_ptr<messages::ping>(new messages::ping{ 42 });
+    auto ping_ptr = system::to_shared<messages::ping>(42);
 
     std::promise<code> promise;
     proxy_ptr->send<messages::ping>(ping_ptr, [&](code ec)
