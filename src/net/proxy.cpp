@@ -37,7 +37,7 @@ using namespace messages;
 using namespace std::placeholders;
 
 // Dump up to 1k of payload as hex in order to diagnose failure.
-static constexpr size_t invalid_payload_dump_size = 1024;
+////static constexpr size_t invalid_payload_dump_size = 1024;
 
 // This is created in a started state and must be stopped, as the subscribers
 // assert if not stopped. Subscribers may hold protocols even if the service
