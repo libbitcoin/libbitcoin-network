@@ -144,6 +144,7 @@ void channel::do_stop(const code& ec) NOEXCEPT
 
 // Timers are set for handshake and reset upon protocol start.
 // Version protocols may have more restrictive completion timeouts.
+// A restarted timer invokes completion handler with error::operation_canceled.
 void channel::resume() NOEXCEPT
 {
     start_expiration();
@@ -214,7 +215,6 @@ uint32_t channel::version() const NOEXCEPT
 }
 
 // Cancels previous timer and retains configured duration.
-// A restarted timer invokes completion handler with error::operation_canceled.
 void channel::signal_activity() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -225,6 +225,7 @@ void channel::signal_activity() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // Called from start or strand.
+// A restarted timer invokes completion handler with error::operation_canceled.
 void channel::start_expiration() NOEXCEPT
 {
     if (stopped())
@@ -240,10 +241,10 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped())
+    // error::operation_canceled is set by timer reset (channel not stopped).
+    if (stopped() || ec == error::operation_canceled)
         return;
 
-    // error::operation_canceled implies stopped, so this is something else.
     if (ec)
     {
         LOG_DEBUG(LOG_NETWORK)
