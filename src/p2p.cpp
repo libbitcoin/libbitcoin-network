@@ -40,6 +40,8 @@
 namespace libbitcoin {
 namespace network {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 using namespace bc::system;
 using namespace bc::system::chain;
 using namespace std::placeholders;
@@ -531,6 +533,8 @@ session_outbound::ptr p2p::attach_outbound_session() NOEXCEPT
     BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
     return attach<session_outbound>(*this);
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
