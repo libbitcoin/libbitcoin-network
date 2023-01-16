@@ -214,7 +214,7 @@ uint32_t channel::version() const NOEXCEPT
 }
 
 // Cancels previous timer and retains configured duration.
-// A canceled timer does not invoke its completion handler.
+// A restarted timer invokes completion handler with error::operation_canceled.
 void channel::signal_activity() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -275,10 +275,10 @@ void channel::handle_inactivity(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped())
+    // error::operation_canceled is set by timer reset (channel not stopped).
+    if (stopped() || ec == error::operation_canceled)
         return;
 
-    // error::operation_canceled implies stopped, so this is something else.
     if (ec)
     {
         LOG_DEBUG(LOG_NETWORK)
