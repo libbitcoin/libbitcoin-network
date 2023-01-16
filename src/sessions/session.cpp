@@ -123,7 +123,7 @@ void session::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) const NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
-    BC_ASSERT_MSG(!channel->paused(), "channel paused for handshake");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
