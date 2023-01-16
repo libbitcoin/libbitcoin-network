@@ -175,8 +175,8 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (ec == error::channel_stopped)
     {
-        ////LOG_VERBOSE(LOG_NETWORK)
-        ////    << "Heading read abort [" << authority() << "]" << std::endl;
+        LOG_VERBOSE(LOG_NETWORK)
+            << "Heading read abort [" << authority() << "]" << std::endl;
         stop(error::success);
         return;
     }
@@ -195,28 +195,28 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (!heading_reader_)
     {
-        ////LOG_WARNING(LOG_NETWORK)
-        ////    << "Invalid heading from [" << authority() << "]" << std::endl;
+        LOG_WARNING(LOG_NETWORK)
+            << "Invalid heading from [" << authority() << "]" << std::endl;
         stop(error::invalid_heading);
         return;
     }
 
     if (head->magic != protocol_magic())
     {
-        ////// These are common, with magic 542393671 coming from http requests.
-        ////LOG_DEBUG(LOG_NETWORK)
-        ////    << "Invalid heading magic (" << head->magic << ") from ["
-        ////    << authority() << "]" << std::endl;
+        // These are common, with magic 542393671 coming from http requests.
+        LOG_DEBUG(LOG_NETWORK)
+            << "Invalid heading magic (" << head->magic << ") from ["
+            << authority() << "]" << std::endl;
         stop(error::invalid_magic);
         return;
     }
 
     if (head->payload_size > maximum_payload())
     {
-        ////LOG_DEBUG(LOG_NETWORK)
-        ////    << "Oversized payload indicated by " << head->command
-        ////    << " heading from [" << authority() << "] ("
-        ////    << head->payload_size << " bytes)" << std::endl;
+        LOG_DEBUG(LOG_NETWORK)
+            << "Oversized payload indicated by " << head->command
+            << " heading from [" << authority() << "] ("
+            << head->payload_size << " bytes)" << std::endl;
         stop(error::oversized_payload);
         return;
     }
@@ -239,17 +239,17 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
 
     if (ec == error::channel_stopped)
     {
-        ////LOG_VERBOSE(LOG_NETWORK)
-        ////    << "Payload read abort [" << authority() << "]" << std::endl;
+        LOG_VERBOSE(LOG_NETWORK)
+            << "Payload read abort [" << authority() << "]" << std::endl;
         stop(error::success);
         return;
     }
 
     if (ec)
     {
-        ////LOG_DEBUG(LOG_NETWORK)
-        ////    << "Payload read failure [" << authority() << "] "
-        ////    << ec.message() << std::endl;
+        LOG_DEBUG(LOG_NETWORK)
+            << "Payload read failure [" << authority() << "] "
+            << ec.message() << std::endl;
         stop(ec);
         return;
     }
@@ -257,9 +257,9 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
     // This is a pointless test but we allow it as an option for completeness.
     if (validate_checksum() && !head->verify_checksum(payload_buffer_))
     {
-        ////LOG_WARNING(LOG_NETWORK)
-        ////    << "Invalid " << head->command << " payload from ["
-        ////    << authority() << "] bad checksum." << std::endl;
+        LOG_WARNING(LOG_NETWORK)
+            << "Invalid " << head->command << " payload from ["
+            << authority() << "] bad checksum." << std::endl;
         stop(error::invalid_checksum);
         return;
     }
@@ -274,30 +274,30 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
     if (code)
     {
         // TODO: consolidated with verbose log.
-        ////if (verbose())
-        ////{
-        ////    const auto size = std::min(payload_size, invalid_payload_dump_size);
-        ////    const auto begin = payload_buffer_.begin();
-        ////
-        ////    LOG_VERBOSE(LOG_NETWORK)
-        ////        << "Invalid payload from [" << authority() << "] "
-        ////        << encode_base16({ begin, std::next(begin, size) })
-        ////        << std::endl;
-        ////}
-        ////else
-        ////{
-        ////    LOG_WARNING(LOG_NETWORK)
-        ////        << "Invalid " << head->command << " payload from ["
-        ////        << authority() << "] " << code.message() << std::endl;
-        ////}
+        if (verbose())
+        {
+            const auto size = std::min(payload_size, invalid_payload_dump_size);
+            const auto begin = payload_buffer_.begin();
+
+            LOG_VERBOSE(LOG_NETWORK)
+                << "Invalid payload from [" << authority() << "] "
+                << encode_base16({ begin, std::next(begin, size) })
+                << std::endl;
+        }
+        else
+        {
+            LOG_WARNING(LOG_NETWORK)
+                << "Invalid " << head->command << " payload from ["
+                << authority() << "] " << code.message() << std::endl;
+        }
 
         stop(code);
         return;
     }
 
-    ////LOG_VERBOSE(LOG_NETWORK)
-    ////    << "Received " << head->command << " from [" << authority()
-    ////    << "] (" << payload_size << " bytes)" << std::endl;
+    LOG_VERBOSE(LOG_NETWORK)
+        << "Received " << head->command << " from [" << authority()
+        << "] (" << payload_size << " bytes)" << std::endl;
 
     signal_activity();
     read_heading();
@@ -338,8 +338,8 @@ void proxy::handle_send(const code& ec, size_t,
 
     if (ec == error::channel_stopped)
     {
-        ////LOG_VERBOSE(LOG_NETWORK)
-        ////    << "Send abort [" << authority() << "]" << std::endl;
+        LOG_VERBOSE(LOG_NETWORK)
+            << "Send abort [" << authority() << "]" << std::endl;
         stop(error::success);
         return;
     }
@@ -355,9 +355,9 @@ void proxy::handle_send(const code& ec, size_t,
         return;
     }
 
-    ////LOG_VERBOSE(LOG_NETWORK)
-    ////    << "Sent " << extract_command(payload) << " to [" << authority()
-    ////    << "] (" << payload->size() << " bytes)" << std::endl;
+    LOG_VERBOSE(LOG_NETWORK)
+        << "Sent " << extract_command(payload) << " to [" << authority()
+        << "] (" << payload->size() << " bytes)" << std::endl;
 
     handler(ec);
 }

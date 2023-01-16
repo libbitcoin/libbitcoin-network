@@ -38,8 +38,8 @@ template <class Shared>
 track<Shared>::track()
 {
 #ifndef NDEBUG
-    ////LOG_DEBUG(LOG_SYSTEM) << typeid(Shared).name()
-    ////    << "(" << ++instances_ << ")" << std::endl;
+    LOG_DEBUG(LOG_SYSTEM) << typeid(Shared).name()
+        << "(" << ++instances_ << ")" << std::endl;
 #endif
 }
 
@@ -47,8 +47,8 @@ template <class Shared>
 track<Shared>::~track() NOEXCEPT
 {
 #ifndef NDEBUG
-    ////LOG_DEBUG(LOG_SYSTEM) << "~" << typeid(Shared).name()
-    ////    << "(" << --instances_ << ")" << std::endl;
+    LOG_DEBUG(LOG_SYSTEM) << "~" << typeid(Shared).name()
+        << "(" << --instances_ << ")" << std::endl;
 #endif
 }
 
