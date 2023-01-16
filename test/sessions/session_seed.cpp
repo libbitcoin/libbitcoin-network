@@ -300,6 +300,16 @@ public:
         return attach<mock_seed_session>(*this);
     }
 
+    code store(const channel::ptr&, bool, bool) NOEXCEPT override
+    {
+        return error::success;
+    }
+
+    bool unstore(const channel::ptr&, bool) NOEXCEPT override
+    {
+        return true;
+    }
+
 private:
     typename Connector::ptr connector_;
 
