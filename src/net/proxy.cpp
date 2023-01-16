@@ -232,7 +232,7 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 }
 
 // Handle errors and post message to subscribers.
-void proxy::handle_read_payload(const code& ec, size_t payload_size,
+void proxy::handle_read_payload(const code& ec, size_t,
     const heading_ptr& head) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -332,7 +332,7 @@ std::string proxy::extract_command(const system::chunk_ptr& payload) NOEXCEPT
 }
 
 void proxy::handle_send(const code& ec, size_t,
-    const system::chunk_ptr& payload, const result_handler& handler) NOEXCEPT
+    const system::chunk_ptr&, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

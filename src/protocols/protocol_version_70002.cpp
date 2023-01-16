@@ -104,7 +104,7 @@ void protocol_version_70002::rejection(const code& ec) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_version_70002::handle_receive_reject(const code& ec,
-    const reject::ptr& reject) NOEXCEPT
+    const reject::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
