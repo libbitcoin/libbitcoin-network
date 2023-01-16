@@ -26,27 +26,27 @@ class accessor
 public:
     using acceptor::acceptor;
 
-    const settings& get_settings() const
+    const settings& get_settings() const NOEXCEPT
     {
         return settings_;
     }
 
-    const asio::io_context& get_service() const
+    const asio::io_context& get_service() const NOEXCEPT
     {
         return service_;
     }
 
-    const asio::strand& get_strand() const
+    const asio::strand& get_strand() const NOEXCEPT
     {
         return strand_;
     }
 
-    const asio::acceptor& get_acceptor() const
+    const asio::acceptor& get_acceptor() const NOEXCEPT
     {
         return acceptor_;
     }
 
-    bool get_stopped() const
+    bool get_stopped() const NOEXCEPT
     {
         return stopped_;
     }

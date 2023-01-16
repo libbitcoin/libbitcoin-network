@@ -26,17 +26,17 @@ class socket_accessor
 public:
     using socket::socket;
 
-    const asio::strand& get_strand() const
+    const asio::strand& get_strand() const NOEXCEPT
     {
         return strand_;
     }
 
-    const asio::socket& get_socket() const
+    const asio::socket& get_socket() const NOEXCEPT
     {
         return socket_;
     }
 
-    const config::authority& get_authority() const
+    const config::authority& get_authority() const NOEXCEPT
     {
         return authority_;
     }
@@ -48,22 +48,22 @@ class acceptor_accessor
 public:
     using acceptor::acceptor;
 
-    const settings& get_settings() const
+    const settings& get_settings() const NOEXCEPT
     {
         return settings_;
     }
 
-    const asio::io_context& get_service() const
+    const asio::io_context& get_service() const NOEXCEPT
     {
         return service_;
     }
 
-    const asio::strand& get_strand() const
+    const asio::strand& get_strand() const NOEXCEPT
     {
         return strand_;
     }
 
-    asio::acceptor& get_acceptor()
+    asio::acceptor& get_acceptor() NOEXCEPT
     {
         return acceptor_;
     }

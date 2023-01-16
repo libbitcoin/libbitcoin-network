@@ -65,7 +65,7 @@ public:
     }
 
     // Get last sent payload.
-    system::chunk_ptr sent() const
+    system::chunk_ptr sent() const NOEXCEPT
     {
         return payload_;
     }
@@ -80,19 +80,19 @@ class mock_acceptor
 {
 public:
     mock_acceptor(asio::strand& strand, asio::io_context& service,
-        const settings& settings)
+        const settings& settings) NOEXCEPT
       : acceptor(strand, service, settings), stopped_(false), port_(0)
     {
     }
 
     // Get captured port.
-    uint16_t port() const
+    uint16_t port() const NOEXCEPT
     {
         return port_;
     }
 
     // Get captured stopped.
-    bool stopped() const
+    bool stopped() const NOEXCEPT
     {
         return stopped_;
     }
@@ -135,13 +135,13 @@ class mock_connector
 {
 public:
     mock_connector(asio::strand& strand, asio::io_context& service,
-        const settings& settings)
+        const settings& settings) NOEXCEPT
       : connector(strand, service, settings), stopped_(false)
     {
     }
 
     // Get captured stopped.
-    bool stopped() const
+    bool stopped() const NOEXCEPT
     {
         return stopped_;
     }
@@ -191,7 +191,7 @@ class mock_session
   : public session
 {
 public:
-    mock_session(p2p& network)
+    mock_session(p2p& network) NOEXCEPT
       : session(network)
     {
     }
@@ -233,7 +233,7 @@ class mock_protocol
 public:
     typedef std::shared_ptr<mock_protocol> ptr;
 
-    mock_protocol(const session& session, const channel::ptr& channel)
+    mock_protocol(const session& session, const channel::ptr& channel) NOEXCEPT
       : protocol(session, channel)
     {
     }

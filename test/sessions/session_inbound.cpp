@@ -29,7 +29,7 @@ public:
     typedef std::shared_ptr<mock_channel> ptr;
 
     mock_channel(bool& set, std::promise<bool>& coded,
-        const code& match, socket::ptr socket, const settings& settings)
+        const code& match, socket::ptr socket, const settings& settings) NOEXCEPT
       : channel(socket, settings), match_(match), set_(set), coded_(coded)
     {
     }
@@ -62,25 +62,25 @@ public:
     using acceptor::acceptor;
 
     // Require template parameterized channel stop code (ChannelStopCode).
-    bool require_code() const
+    bool require_code() const NOEXCEPT
     {
         return coded_.get_future().get();
     }
 
     // Get captured port.
-    uint16_t port() const
+    uint16_t port() const NOEXCEPT
     {
         return port_;
     }
 
     // Get captured accepted.
-    bool accepted() const
+    bool accepted() const NOEXCEPT
     {
         return !is_zero(accepts_);
     }
 
     // Get captured stopped.
-    bool stopped() const
+    bool stopped() const NOEXCEPT
     {
         return stopped_;
     }
@@ -109,7 +109,7 @@ public:
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
-        boost::asio::post(strand_, [=]()
+        boost::asio::post(strand_, [=]() NOEXCEPT
         {
             handler(error::success, channel);
         });
@@ -136,7 +136,7 @@ public:
     void accept(accept_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
-        boost::asio::post(strand_, [=]()
+        boost::asio::post(strand_, [=]() NOEXCEPT
         {
             handler(error::unknown, nullptr);
         });
@@ -156,7 +156,7 @@ public:
     void accept(accept_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
-        boost::asio::post(strand_, [=]()
+        boost::asio::post(strand_, [=]() NOEXCEPT
         {
             handler(error::service_stopped, nullptr);
         });
@@ -201,7 +201,7 @@ public:
         return session_inbound::stopped();
     }
 
-    code start_accept_code() const
+    code start_accept_code() const NOEXCEPT
     {
         return start_accept_code_;
     }
@@ -221,12 +221,12 @@ public:
         }
     }
 
-    bool accepted() const
+    bool accepted() const NOEXCEPT
     {
         return accepted_;
     }
 
-    bool require_accepted() const
+    bool require_accepted() const NOEXCEPT
     {
         return accept_.get_future().get();
     }
@@ -244,7 +244,7 @@ public:
         handshake(error::success);
     }
 
-    bool attached_handshake() const
+    bool attached_handshake() const NOEXCEPT
     {
         return handshaked_;
     }
@@ -327,7 +327,7 @@ class mock_p2p
 public:
     using p2p::p2p;
 
-    typename Acceptor::ptr get_acceptor() const
+    typename Acceptor::ptr get_acceptor() const NOEXCEPT
     {
         return acceptor_;
     }
@@ -361,7 +361,7 @@ private:
       : public session_inbound
     {
     public:
-        mock_inbound_session(p2p& network)
+        mock_inbound_session(p2p& network) NOEXCEPT
           : session_inbound(network)
         {
         }
@@ -376,7 +376,7 @@ private:
       : public session_outbound
     {
     public:
-        mock_outbound_session(p2p& network)
+        mock_outbound_session(p2p& network) NOEXCEPT
           : session_outbound(network)
         {
         }
@@ -391,7 +391,7 @@ private:
       : public session_seed
     {
     public:
-        mock_seed_session(p2p& network)
+        mock_seed_session(p2p& network) NOEXCEPT
           : session_seed(network)
         {
         }

@@ -24,7 +24,7 @@ class simple
   : track<simple>
 {
 public:
-    bool method() const
+    bool method() const NOEXCEPT
     {
         return true;
     };

@@ -30,7 +30,7 @@ public:
     typedef std::shared_ptr<mock_channel> ptr;
 
     mock_channel(bool& set, std::promise<bool>& coded,
-        const code& match, socket::ptr socket, const settings& settings)
+        const code& match, socket::ptr socket, const settings& settings) NOEXCEPT
       : channel(socket, settings), match_(match), set_(set), coded_(coded)
     {
     }
@@ -63,37 +63,37 @@ public:
     using connector::connector;
 
     // Require template parameterized channel stop code (ChannelStopCode).
-    bool require_code() const
+    bool require_code() const NOEXCEPT
     {
         return coded_.get_future().get();
     }
 
     // Get captured connected.
-    bool connected() const
+    bool connected() const NOEXCEPT
     {
         return !is_zero(connects_);
     }
 
     // Get captured connection count.
-    size_t connects() const
+    size_t connects() const NOEXCEPT
     {
         return connects_;
     }
 
     // Get captured hostname.
-    std::string hostname() const
+    std::string hostname() const NOEXCEPT
     {
         return hostname_;
     }
 
     // Get captured port.
-    uint16_t port() const
+    uint16_t port() const NOEXCEPT
     {
         return port_;
     }
 
     // Get captured stopped.
-    bool stopped() const
+    bool stopped() const NOEXCEPT
     {
         return stopped_;
     }
@@ -120,7 +120,7 @@ public:
             ChannelStopCode, socket, settings_);
 
         // Must be asynchronous or is an infinite recursion.
-        boost::asio::post(strand_, [=]()
+        boost::asio::post(strand_, [=]() NOEXCEPT
         {
             // Connect result code is independent of the channel stop code.
             // As error code would set the re-listener timer, channel pointer is ignored.
@@ -148,7 +148,7 @@ public:
     void connect(const std::string&, uint16_t,
         connect_handler&& handler) NOEXCEPT override
     {
-        boost::asio::post(strand_, [=]()
+        boost::asio::post(strand_, [=]() NOEXCEPT
         {
             handler(error::invalid_magic, nullptr);
         });
@@ -191,12 +191,12 @@ public:
         }
     }
 
-    bool seeded() const
+    bool seeded() const NOEXCEPT
     {
         return seeded_;
     }
 
-    bool require_seeded() const
+    bool require_seeded() const NOEXCEPT
     {
         return seed_.get_future().get();
     }
@@ -214,12 +214,12 @@ public:
         handshake(error::success);
     }
 
-    bool attached_handshake() const
+    bool attached_handshake() const NOEXCEPT
     {
         return handshaked_;
     }
 
-    bool require_attached_handshake() const
+    bool require_attached_handshake() const NOEXCEPT
     {
         return handshake_.get_future().get();
     }
@@ -273,7 +273,7 @@ public:
     using p2p::p2p;
 
     // Get last created connector.
-    typename Connector::ptr get_connector() const
+    typename Connector::ptr get_connector() const NOEXCEPT
     {
         return connector_;
     }
@@ -307,7 +307,7 @@ private:
       : public session_inbound
     {
     public:
-        mock_inbound_session(p2p& network)
+        mock_inbound_session(p2p& network) NOEXCEPT
           : session_inbound(network)
         {
         }
@@ -322,7 +322,7 @@ private:
       : public session_outbound
     {
     public:
-        mock_outbound_session(p2p& network)
+        mock_outbound_session(p2p& network) NOEXCEPT
           : session_outbound(network)
         {
         }
@@ -337,7 +337,7 @@ private:
       : public session_seed
     {
     public:
-        mock_seed_session(p2p& network)
+        mock_seed_session(p2p& network) NOEXCEPT
           : session_seed(network)
         {
         }
@@ -356,7 +356,7 @@ public:
     typedef std::shared_ptr<mock_connector_stop_connect> ptr;
 
     mock_connector_stop_connect(asio::strand& strand, asio::io_context& service,
-        const settings& settings, mock_session_seed::ptr session)
+        const settings& settings, mock_session_seed::ptr session) NOEXCEPT
       : mock_connector_connect_success(strand, service, settings),
         session_(session)
     {
@@ -385,13 +385,13 @@ class mock_p2p_stop_connect
 public:
     using p2p::p2p;
 
-    void set_session(mock_session_seed::ptr session)
+    void set_session(mock_session_seed::ptr session) NOEXCEPT
     {
         session_ = session;
     }
 
     // Get first created connector.
-    mock_connector_stop_connect::ptr get_connector() const
+    mock_connector_stop_connect::ptr get_connector() const NOEXCEPT
     {
         return connector_;
     }
@@ -429,7 +429,7 @@ private:
       : public session_inbound
     {
     public:
-        mock_inbound_session(p2p& network)
+        mock_inbound_session(p2p& network) NOEXCEPT
           : session_inbound(network)
         {
         }
@@ -444,7 +444,7 @@ private:
       : public session_outbound
     {
     public:
-        mock_outbound_session(p2p& network)
+        mock_outbound_session(p2p& network) NOEXCEPT
           : session_outbound(network)
         {
         }
@@ -459,7 +459,7 @@ private:
       : public session_seed
     {
     public:
-        mock_seed_session(p2p& network)
+        mock_seed_session(p2p& network) NOEXCEPT
           : session_seed(network)
         {
         }

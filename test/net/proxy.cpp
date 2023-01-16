@@ -24,20 +24,20 @@ class mock_proxy
   : public proxy
 {
 public:
-    static std::string extract_command(const system::chunk_ptr& payload)
+    static std::string extract_command(const system::chunk_ptr& payload) NOEXCEPT
     {
         return proxy::extract_command(payload);
     }
 
     // Call must be stranded.
     template <class Message, typename Handler = pump::handler<Message>>
-    void subscribe_message(Handler&& handler)
+    void subscribe_message(Handler&& handler) NOEXCEPT
     {
         proxy::subscribe<Message>(std::forward<Handler>(handler));
     }
 
     // Call must be stranded.
-    void subscribe_stop1(result_handler handler)
+    void subscribe_stop1(result_handler handler) NOEXCEPT
     {
         proxy::subscribe_stop(std::move(handler));
     }
@@ -58,7 +58,7 @@ public:
         }
     }
 
-    code require_stopped() const
+    code require_stopped() const NOEXCEPT
     {
         return stopped_.get_future().get();
     }
