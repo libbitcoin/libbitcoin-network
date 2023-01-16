@@ -52,7 +52,11 @@ headers headers::deserialize(uint32_t version, reader& source) NOEXCEPT
 
     for (size_t header = 0; header < size; ++header)
     {
+        BC_PUSH_WARNING(NO_NEW_OR_DELETE)
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         header_ptrs.emplace_back(new chain::header{ source });
+        BC_POP_WARNING()
+        BC_POP_WARNING()
 
         if (source.read_byte() != trail)
             source.invalidate();
