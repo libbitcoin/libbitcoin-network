@@ -87,43 +87,44 @@ protocol_version_31402::version_factory() const NOEXCEPT
     constexpr auto relay = false;
     const auto timestamp = static_cast<uint32_t>(zulu_time());
 
-    return std::make_shared<version>(
-        version
+    return std::make_shared<version>
+    (
+        maximum_version_,
+        maximum_services_,
+        timestamp,
+
+        // ********************************************************************
+        // PROTOCOL:
+        // Peer address_item (timestamp/services are redundant/unused).
+        // Both peers cannot know each other's service level, so set node_none.
+        // ********************************************************************
+        address_item
         {
-            maximum_version_,
-            maximum_services_,
             timestamp,
+            service::node_none,
+            authority().to_ip_address(),
+            authority().port(),
+        },
 
-            // ********************************************************************
-            // PROTOCOL:
-            // Peer address_item (timestamp/services are redundant/unused).
-            // Both peers cannot know each other's service level, so set node_none.
-            // ********************************************************************
-            {
-                timestamp,
-                service::node_none,
-                authority().to_ip_address(),
-                authority().port(),
-            },
+        // ********************************************************************
+        // PROTOCOL:
+        // Self address_item (timestamp/services are redundant).
+        // The protocol expects duplication of the sender's services, but this
+        // is broadly observed to be inconsistently implemented by other nodes.
+        // ********************************************************************
+        address_item
+        {
+            timestamp,
+            maximum_services_,
+            settings().self.to_ip_address(),
+            settings().self.port(),
+        },
 
-            // ********************************************************************
-            // PROTOCOL:
-            // Self address_item (timestamp/services are redundant).
-            // The protocol expects duplication of the sender's services, but this
-            // is broadly observed to be inconsistently implemented by other nodes.
-            // ********************************************************************
-            {
-                timestamp,
-                maximum_services_,
-                settings().self.to_ip_address(),
-                settings().self.port(),
-            },
-
-            nonce(),
-            BC_USER_AGENT,
-            top_height,
-            relay
-        });
+        nonce(),
+        BC_USER_AGENT,
+        top_height,
+        relay
+    );
 }
 
 // Allow derived classes to handle message rejection.

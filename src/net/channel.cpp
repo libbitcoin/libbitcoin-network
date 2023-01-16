@@ -108,7 +108,7 @@ channel::channel(const socket::ptr& socket, const settings& settings) NOEXCEPT
     validate_checksum_(settings.validate_checksum),
     verbose_logging_(settings.verbose),
     negotiated_version_(settings.protocol_maximum),
-    peer_version_(std::make_shared<messages::version>()),
+    peer_version_(to_shared<messages::version>()),
     expiration_(expiration(socket->strand(), settings.channel_expiration())),
     inactivity_(timeout(socket->strand(), settings.channel_inactivity()))
 {
