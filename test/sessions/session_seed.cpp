@@ -754,4 +754,35 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
     session.reset();
 }
 
+BOOST_AUTO_TEST_CASE(session_seed__live__one_address__expected)
+{
+    settings set(selection::mainnet);
+    set.outbound_connections = 1;
+    set.host_pool_capacity = 1;
+    set.seeds.resize(1);
+    mock_p2p<> net(set);
+    auto session = std::make_shared<session_seed>(net);
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]()
+    {
+        session->start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    session.reset();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
