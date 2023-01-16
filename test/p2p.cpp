@@ -40,6 +40,127 @@ BOOST_FIXTURE_TEST_SUITE(p2p_tests, p2p_tests_setup_fixture)
 using namespace bc::system::chain;
 using namespace bc::network::messages;
 
+template <error::error_t ManualCode = error::success,
+    error::error_t SeedCode = error::success>
+class mock_p2p_session_start
+  : public p2p
+{
+public:
+    mock_p2p_session_start(const settings& settings,
+        const code& hosts_start=error::success) NOEXCEPT
+      : p2p(settings), hosts_start_(hosts_start)
+    {
+    }
+
+    code start_hosts() NOEXCEPT override
+    {
+        return hosts_start_;
+    }
+
+    session_manual::ptr attach_manual_session() NOEXCEPT override
+    {
+        return attach<mock_session_manual>(*this);
+    }
+
+    session_seed::ptr attach_seed_session() NOEXCEPT override
+    {
+        return attach<mock_session_seed>(*this);
+    }
+
+private:
+    const code hosts_start_;
+
+    class mock_session_manual
+      : public session_manual
+    {
+    public:
+        mock_session_manual(p2p& network) NOEXCEPT
+          : session_manual(network)
+        {
+        }
+
+        void start(result_handler&& handler) NOEXCEPT override
+        {
+            handler(ManualCode);
+        }
+    };
+
+    class mock_session_seed
+      : public session_seed
+    {
+    public:
+        mock_session_seed(p2p& network) NOEXCEPT
+          : session_seed(network)
+        {
+        }
+
+        void start(result_handler&& handler) NOEXCEPT override
+        {
+            handler(SeedCode);
+        }
+    };
+};
+
+template <error::error_t InboundCode = error::success,
+    error::error_t OutboundCode = error::success>
+class mock_p2p_session_run
+  : public p2p
+{
+public:
+    mock_p2p_session_run(const settings& settings, bool started) NOEXCEPT
+      : p2p(settings), closed_(!started)
+    {
+    }
+
+    bool closed() const NOEXCEPT override
+    {
+        return closed_;
+    }
+
+    session_inbound::ptr attach_inbound_session() NOEXCEPT override
+    {
+        return attach<mock_session_inbound>(*this);
+    }
+
+    session_outbound::ptr attach_outbound_session() NOEXCEPT override
+    {
+        return attach<mock_session_outbound>(*this);
+    }
+
+private:
+    const bool closed_;
+
+    class mock_session_inbound
+      : public session_inbound
+    {
+    public:
+        mock_session_inbound(p2p& network) NOEXCEPT
+          : session_inbound(network)
+        {
+        }
+
+        void start(result_handler&& handler) NOEXCEPT override
+        {
+            handler(InboundCode);
+        }
+    };
+
+    class mock_session_outbound
+      : public session_outbound
+    {
+    public:
+        mock_session_outbound(p2p& network) NOEXCEPT
+          : session_outbound(network)
+        {
+        }
+
+        void start(result_handler&& handler) NOEXCEPT override
+        {
+            handler(OutboundCode);
+        }
+    };
+};
+
 BOOST_AUTO_TEST_CASE(p2p__network_settings__unstarted__expected)
 {
     settings set(selection::mainnet);
@@ -240,129 +361,6 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_one_batc
     net.start(start_handler);
     BOOST_REQUIRE(promise_run.get_future().get());
 }
-
-// sessions
-
-template <error::error_t ManualCode = error::success,
-    error::error_t SeedCode = error::success>
-class mock_p2p_session_start
-  : public p2p
-{
-public:
-    mock_p2p_session_start(const settings& settings,
-        const code& hosts_start=error::success)
-      : p2p(settings), hosts_start_(hosts_start)
-    {
-    }
-
-    code start_hosts() NOEXCEPT override
-    {
-        return hosts_start_;
-    }
-
-    session_manual::ptr attach_manual_session() NOEXCEPT override
-    {
-        return attach<mock_session_manual>(*this);
-    }
-
-    session_seed::ptr attach_seed_session() NOEXCEPT override
-    {
-        return attach<mock_session_seed>(*this);
-    }
-
-private:
-    const code hosts_start_;
-
-    class mock_session_manual
-      : public session_manual
-    {
-    public:
-        mock_session_manual(p2p& network)
-          : session_manual(network)
-        {
-        }
-
-        void start(result_handler&& handler) NOEXCEPT override
-        {
-            handler(ManualCode);
-        }
-    };
-
-    class mock_session_seed
-      : public session_seed
-    {
-    public:
-        mock_session_seed(p2p& network)
-          : session_seed(network)
-        {
-        }
-
-        void start(result_handler&& handler) NOEXCEPT override
-        {
-            handler(SeedCode);
-        }
-    };
-};
-
-template <error::error_t InboundCode = error::success,
-    error::error_t OutboundCode = error::success>
-class mock_p2p_session_run
-  : public p2p
-{
-public:
-    mock_p2p_session_run(const settings& settings, bool started) NOEXCEPT
-      : p2p(settings), closed_(!started)
-    {
-    }
-
-    bool closed() const NOEXCEPT override
-    {
-        return closed_;
-    }
-
-    session_inbound::ptr attach_inbound_session() NOEXCEPT override
-    {
-        return attach<mock_session_inbound>(*this);
-    }
-
-    session_outbound::ptr attach_outbound_session() NOEXCEPT override
-    {
-        return attach<mock_session_outbound>(*this);
-    }
-
-private:
-    const bool closed_;
-
-    class mock_session_inbound
-      : public session_inbound
-    {
-    public:
-        mock_session_inbound(p2p& network) NOEXCEPT
-          : session_inbound(network)
-        {
-        }
-
-        void start(result_handler&& handler) NOEXCEPT override
-        {
-            handler(InboundCode);
-        }
-    };
-
-    class mock_session_outbound
-      : public session_outbound
-    {
-    public:
-        mock_session_outbound(p2p& network) NOEXCEPT
-          : session_outbound(network)
-        {
-        }
-
-        void start(result_handler&& handler) NOEXCEPT override
-        {
-            handler(OutboundCode);
-        }
-    };
-};
 
 // start
 
