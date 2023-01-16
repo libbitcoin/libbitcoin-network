@@ -143,7 +143,6 @@ void proxy::do_subscribe_stop(const result_handler& handler,
 // Read cycle (read continues until stop called).
 // ----------------------------------------------------------------------------
 
-// TODO: change integer version() to active() structure.
 code proxy::notify(identifier id, uint32_t version,
     system::reader& source) NOEXCEPT
 {
@@ -267,7 +266,6 @@ void proxy::handle_read_payload(const code& ec, size_t,
     // Resizable payload buffer precludes reuse of the payload reader.
     system::read::bytes::copy payload_reader(payload_buffer_);
 
-    // TODO: change integer version() to active() structure.
     // Notify subscribers of the new message.
     const auto code = notify(head->id(), version(), payload_reader);
 

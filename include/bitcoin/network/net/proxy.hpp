@@ -50,7 +50,6 @@ public:
     typedef subscriber<const code&> stop_subscriber;
     typedef std::function<void(const code&)> result_handler;
 
-    // TODO: change integer version() to active() structure.
     /// Send a message to the peer.
     template <class Message>
     void send(const typename Message::ptr& message,
