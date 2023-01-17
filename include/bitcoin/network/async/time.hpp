@@ -36,17 +36,20 @@ typedef std::chrono::milliseconds milliseconds;
 typedef std::chrono::microseconds microseconds;
 typedef std::chrono::nanoseconds nanoseconds;
 
-/// Use steady_clock for continuity, wall_clock for time of day.
+/// Use steady_clock for continuity.
 typedef std::chrono::steady_clock steady_clock;
 typedef steady_clock::duration duration;
 typedef steady_clock::time_point time_point;
+
+/// Use wall_clock for time of day.
+/// C++20: std::chrono::system_clock measures Unix Time.
 typedef std::chrono::system_clock wall_clock;
 
 /// Current zulu (utc) time using the wall clock.
 BCT_API time_t zulu_time() NOEXCEPT;
 
-/// Current local time using the wall clock, false and empty string on failure.
-BCT_API bool local_time(tm& out_local, time_t zulu) NOEXCEPT;
+/// Current zulu (utc) time using the wall clock, cast to uint32_t.
+BCT_API uint32_t unix_time() NOEXCEPT;
 
 /// Standard date-time string, e.g. Sun Oct 17 04:41:13 2010, locale dependent.
 BCT_API std::string local_time() NOEXCEPT;

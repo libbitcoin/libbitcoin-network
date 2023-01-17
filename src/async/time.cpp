@@ -26,14 +26,22 @@
 namespace libbitcoin {
 namespace network {
 
-// BUGBUG: en.wikipedia.org/wiki/Year_2038_problem
 time_t zulu_time() NOEXCEPT
 {
     const auto now = wall_clock::now();
     return wall_clock::to_time_t(now);
 }
 
-bool local_time(tm& out_local, time_t zulu) NOEXCEPT
+// BUGBUG: en.wikipedia.org/wiki/Year_2038_problem
+uint32_t unix_time() NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_STATIC_CAST)
+    return static_cast<uint32_t>(zulu_time());
+    BC_POP_WARNING()
+}
+
+// local
+static bool local_time(tm& out_local, time_t zulu) NOEXCEPT
 {
     // localtime not threadsafe due to static buffer return, use localtime_s.
 #ifdef _MSC_VER
@@ -53,7 +61,7 @@ std::string local_time() NOEXCEPT
 
     // %c writes standard date and time string, e.g.
     // Sun Oct 17 04:41:13 2010 (locale dependent)
-    static const auto format = "%c";
+    static constexpr auto format = "%c";
     static constexpr size_t size = 25;
     char buffer[size];
 

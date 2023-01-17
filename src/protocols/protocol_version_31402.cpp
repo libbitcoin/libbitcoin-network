@@ -32,6 +32,8 @@
 namespace libbitcoin {
 namespace network {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 #define CLASS protocol_version_31402
 static const std::string protocol_name = "version";
 
@@ -80,14 +82,16 @@ protocol_version_31402::version_ptr
 protocol_version_31402::version_factory() const NOEXCEPT
 {
     // TODO: allow for node to inject top height.
-    const auto top_height = possible_narrow_cast<uint32_t>(zero);
+    constexpr auto top_height = possible_narrow_cast<uint32_t>(zero);
     BC_ASSERT_MSG(top_height <= max_uint32, "Time to upgrade the protocol.");
 
     // Relay always exposed on version, despite lack of definition < BIP37.
     // See comments in version::deserialize regarding BIP37 protocol bug.
     constexpr auto relay = false;
-    const auto timestamp = static_cast<uint32_t>(zulu_time());
+    const auto timestamp = unix_time();
 
+    // Should construct using makes_shared(vargs) overload, but fails on clang.
+    BC_PUSH_WARNING(NO_NEW_OR_DELETE)
     return std::shared_ptr<version>(new version
     {
         maximum_version_,
@@ -126,6 +130,7 @@ protocol_version_31402::version_factory() const NOEXCEPT
         top_height,
         relay
     });
+    BC_POP_WARNING()
 }
 
 // Allow derived classes to handle message rejection.
@@ -366,6 +371,8 @@ void protocol_version_31402::handle_send_acknowledge(const code& ec) NOEXCEPT
     if (complete())
         callback(error::success);
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
