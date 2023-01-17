@@ -24,7 +24,11 @@
 namespace libbitcoin {
 namespace network {
 
-void logger::log(const std::string&) NOEXCEPT
+logger::logger() NOEXCEPT
+{
+}
+
+void logger::log(const std::string&) const NOEXCEPT
 {
 }
 

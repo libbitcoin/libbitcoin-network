@@ -35,7 +35,7 @@ namespace network {
 /// Create inbound socket connections.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API acceptor
-  : public std::enable_shared_from_this<acceptor>, track<acceptor>
+  : public std::enable_shared_from_this<acceptor>, public track<acceptor>
 {
 public:
     DELETE_COPY_MOVE(acceptor);
@@ -48,8 +48,8 @@ public:
     // ------------------------------------------------------------------------
 
     /// Construct an instance.
-    acceptor(asio::strand& strand, asio::io_context& service,
-        const settings& settings) NOEXCEPT;
+    acceptor(const logger& log, asio::strand& strand,
+        asio::io_context& service, const settings& settings) NOEXCEPT;
     virtual ~acceptor() NOEXCEPT;
 
     // Start/stop.

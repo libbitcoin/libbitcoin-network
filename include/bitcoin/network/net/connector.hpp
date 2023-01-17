@@ -38,7 +38,7 @@ namespace network {
 /// Create outbound socket connections.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API connector
-  : public std::enable_shared_from_this<connector>, track<connector>
+  : public std::enable_shared_from_this<connector>, public track<connector>
 {
 public:
     DELETE_COPY_MOVE(connector);
@@ -51,8 +51,8 @@ public:
     // ------------------------------------------------------------------------
 
     /// Construct an instance.
-    connector(asio::strand& strand, asio::io_context& service,
-        const settings& settings) NOEXCEPT;
+    connector(const logger& log, asio::strand& strand,
+        asio::io_context& service, const settings& settings) NOEXCEPT;
     virtual ~connector() NOEXCEPT;
 
     // Stop (no start).

@@ -24,6 +24,11 @@ class simple
   : track<simple>
 {
 public:
+    simple(const logger& log) NOEXCEPT
+      : track<simple>(log)
+    {
+    }
+
     bool method() const NOEXCEPT
     {
         return true;
@@ -32,7 +37,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(track__construct__always__compiles)
 {
-    simple foo;
+    logger log{};
+    simple foo{ log };
     BOOST_REQUIRE(foo.method());
 }
 

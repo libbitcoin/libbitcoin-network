@@ -72,6 +72,9 @@ public:
     /// Access network configuration settings.
     const network::settings& settings() const NOEXCEPT;
 
+    /// Return a logging instance.
+    const logger& log() const NOEXCEPT;
+
     /// Utilities.
     /// -----------------------------------------------------------------------
 

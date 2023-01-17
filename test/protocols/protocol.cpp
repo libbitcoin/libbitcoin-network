@@ -79,9 +79,9 @@ class mock_acceptor
   : public acceptor
 {
 public:
-    mock_acceptor(asio::strand& strand, asio::io_context& service,
-        const settings& settings) NOEXCEPT
-      : acceptor(strand, service, settings), stopped_(false), port_(0)
+    mock_acceptor(const logger& log, asio::strand& strand,
+        asio::io_context& service, const settings& settings) NOEXCEPT
+      : acceptor(log, strand, service, settings), stopped_(false), port_(0)
     {
     }
 
@@ -113,8 +113,8 @@ public:
     // Inject mock channel.
     void accept(accept_handler&& handler) NOEXCEPT override
     {
-        const auto socket = std::make_shared<network::socket>(service_);
-        const auto created = std::make_shared<mock_channel>(socket, settings_);
+        const auto socket = std::make_shared<network::socket>(log(), service_);
+        const auto created = std::make_shared<mock_channel>(log(), socket, settings_);
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
@@ -134,9 +134,9 @@ class mock_connector
   : public connector
 {
 public:
-    mock_connector(asio::strand& strand, asio::io_context& service,
-        const settings& settings) NOEXCEPT
-      : connector(strand, service, settings), stopped_(false)
+    mock_connector(const logger& log, asio::strand& strand,
+        asio::io_context& service, const settings& settings) NOEXCEPT
+      : connector(log, strand, service, settings), stopped_(false)
     {
     }
 
@@ -156,8 +156,8 @@ public:
     void connect(const std::string&, uint16_t,
         connect_handler&& handler) NOEXCEPT override
     {
-        const auto socket = std::make_shared<network::socket>(service_);
-        const auto created = std::make_shared<mock_channel>(socket, settings_);
+        const auto socket = std::make_shared<network::socket>(log(), service_);
+        const auto created = std::make_shared<mock_channel>(log(), socket, settings_);
         handler(error::success, created);
     }
 
@@ -175,14 +175,14 @@ public:
     // Create mock acceptor to inject mock channel.
     acceptor::ptr create_acceptor() NOEXCEPT override
     {
-        return std::make_shared<mock_acceptor>(strand(), service(),
+        return std::make_shared<mock_acceptor>(log(), strand(), service(),
             network_settings());
     }
 
     // Create mock connector to inject mock channel.
     connector::ptr create_connector() NOEXCEPT override
     {
-        return std::make_shared<mock_connector>(strand(), service(),
+        return std::make_shared<mock_connector>(log(), strand(), service(),
             network_settings());
     }
 };

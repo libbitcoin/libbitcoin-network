@@ -61,8 +61,9 @@ protocol_version_31402::protocol_version_31402(const session& session,
     sent_version_(false),
     received_version_(false),
     received_acknowledge_(false),
-    timer_(std::make_shared<deadline>(channel->strand(),
-        session.settings().channel_handshake()))
+    timer_(std::make_shared<deadline>(session.log(), channel->strand(),
+        session.settings().channel_handshake())),
+    track<protocol_version_31402>(session.log())
 {
 }
 

@@ -35,13 +35,16 @@ class track
 protected:
     DEFAULT_COPY_MOVE(track);
 
-    track(/*logger& log*/);
+    track(const logger& log) NOEXCEPT;
     virtual ~track() NOEXCEPT;
+
+public:
+    const logger& log() const NOEXCEPT;
 
 private:
     // These are thread safe.
     static std::atomic<size_t> instances_;
-    ////logger log_;
+    const logger& log_;
 };
 
 } // namespace network

@@ -132,8 +132,9 @@ BOOST_AUTO_TEST_CASE(proxy__extract_command__extra_payload__expected)
 
 BOOST_AUTO_TEST_CASE(proxy__paused__default__true)
 {
+    const logger log{};
     threadpool pool(1);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
@@ -149,8 +150,9 @@ BOOST_AUTO_TEST_CASE(proxy__paused__default__true)
 
 BOOST_AUTO_TEST_CASE(proxy__paused__pause__true)
 {
+    const logger log{};
     threadpool pool(1);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
@@ -167,8 +169,9 @@ BOOST_AUTO_TEST_CASE(proxy__paused__pause__true)
 
 BOOST_AUTO_TEST_CASE(proxy__paused__resume__false)
 {
+    const logger log{};
     threadpool pool(1);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
@@ -195,8 +198,9 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume__false)
 
 BOOST_AUTO_TEST_CASE(proxy__paused__resume_pause__true)
 {
+    const logger log{};
     threadpool pool(1);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
@@ -224,8 +228,9 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_pause__true)
 
 BOOST_AUTO_TEST_CASE(proxy__paused__resume_after_read_fail__true)
 {
+    const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused_after_resume;
@@ -261,8 +266,9 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_after_read_fail__true)
 
 BOOST_AUTO_TEST_CASE(proxy__stopped__default__false)
 {
+    const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BOOST_REQUIRE(!proxy_ptr->stopped());
 
@@ -272,8 +278,9 @@ BOOST_AUTO_TEST_CASE(proxy__stopped__default__false)
 
 BOOST_AUTO_TEST_CASE(proxy__stranded__default__false)
 {
+    const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BOOST_REQUIRE(!proxy_ptr->stranded());
 
@@ -283,9 +290,10 @@ BOOST_AUTO_TEST_CASE(proxy__stranded__default__false)
 
 BOOST_AUTO_TEST_CASE(proxy__authority__default__expected)
 {
+    const logger log{};
     threadpool pool(2);
     const config::authority default_authority{};
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     BOOST_REQUIRE(proxy_ptr->authority() == default_authority);
 
@@ -295,8 +303,9 @@ BOOST_AUTO_TEST_CASE(proxy__authority__default__expected)
 
 BOOST_AUTO_TEST_CASE(proxy__subscribe_stop__subscribed__expected)
 {
+    const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
 
@@ -324,8 +333,9 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_stop__subscribed__expected)
 
 BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
 {
+    const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
 
@@ -349,8 +359,9 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
 
 BOOST_AUTO_TEST_CASE(proxy__subscribe_message__subscribed__expected)
 {
+    const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
 
@@ -376,8 +387,9 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_message__subscribed__expected)
 
 BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
 {
+    const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
 
@@ -424,10 +436,11 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
 
 BOOST_AUTO_TEST_CASE(proxy__send__not_connected__expected)
 {
+    const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
-    auto ping_ptr = system::to_shared<messages::ping>(42);
+    auto ping_ptr = system::to_shared<messages::ping>(new messages::ping{ 42 });
 
     std::promise<code> promise;
     const auto handler = [&](code ec)
@@ -446,10 +459,11 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected__expected)
 
 BOOST_AUTO_TEST_CASE(proxy__send__not_connected_move__expected)
 {
+    const logger log{};
     threadpool pool(2);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
-    auto ping_ptr = system::to_shared<messages::ping>(42);
+    auto ping_ptr = system::to_shared<messages::ping>(new messages::ping{ 42 });
 
     std::promise<code> promise;
     proxy_ptr->send<messages::ping>(ping_ptr, [&](code ec)

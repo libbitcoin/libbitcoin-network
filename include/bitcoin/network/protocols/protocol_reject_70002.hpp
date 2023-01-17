@@ -34,7 +34,7 @@ namespace network {
 class session;
 
 class BCT_API protocol_reject_70002
-  : public protocol, track<protocol_reject_70002>
+  : public protocol, public track<protocol_reject_70002>
 {
 public:
     typedef std::shared_ptr<protocol_reject_70002> ptr;

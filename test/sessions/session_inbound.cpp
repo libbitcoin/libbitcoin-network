@@ -28,9 +28,9 @@ class mock_channel
 public:
     typedef std::shared_ptr<mock_channel> ptr;
 
-    mock_channel(bool& set, std::promise<bool>& coded,
+    mock_channel(const logger& log, bool& set, std::promise<bool>& coded,
         const code& match, socket::ptr socket, const settings& settings) NOEXCEPT
-      : channel(socket, settings), match_(match), set_(set), coded_(coded)
+      : channel(log, socket, settings), match_(match), set_(set), coded_(coded)
     {
     }
 
@@ -103,9 +103,9 @@ public:
     void accept(accept_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
-        const auto socket = std::make_shared<network::socket>(service_);
-        const auto channel = std::make_shared<mock_channel>(set_, coded_,
-            ChannelStopCode, socket, settings_);
+        const auto socket = std::make_shared<network::socket>(log(), service_);
+        const auto channel = std::make_shared<mock_channel>(log(), set_,
+            coded_, ChannelStopCode, socket, settings_);
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
@@ -335,8 +335,8 @@ public:
     // Create mock acceptor to inject mock channel.
     acceptor::ptr create_acceptor() NOEXCEPT override
     {
-        return ((acceptor_ = std::make_shared<Acceptor>(strand(), service(),
-            network_settings())));
+        return ((acceptor_ = std::make_shared<Acceptor>(log(), strand(),
+            service(), network_settings())));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override

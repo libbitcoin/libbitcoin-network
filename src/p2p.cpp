@@ -70,17 +70,19 @@ p2p::~p2p() NOEXCEPT
 
 acceptor::ptr p2p::create_acceptor() NOEXCEPT
 {
-    return std::make_shared<acceptor>(strand(), service(), network_settings());
+    return std::make_shared<acceptor>(log(), strand(), service(),
+        network_settings());
 }
 
 connector::ptr p2p::create_connector() NOEXCEPT
 {
-    return std::make_shared<connector>(strand(), service(), network_settings());
+    return std::make_shared<connector>(log(), strand(), service(),
+        network_settings());
 }
 
 connectors_ptr p2p::create_connectors(size_t count) NOEXCEPT
 {
-    const auto connects = std::make_shared<connectors>(connectors{});
+    const auto connects = std::make_shared<connectors>();
     connects->reserve(count);
 
     for (size_t connect = 0; connect < count; ++connect)
@@ -344,6 +346,11 @@ asio::io_context& p2p::service() NOEXCEPT
 asio::strand& p2p::strand() NOEXCEPT
 {
     return strand_;
+}
+
+const logger& p2p::log() const NOEXCEPT
+{
+    return log_;
 }
 
 // protected

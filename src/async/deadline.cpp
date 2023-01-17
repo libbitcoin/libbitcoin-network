@@ -22,6 +22,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
+#include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/async/time.hpp>
@@ -34,8 +35,11 @@ using namespace std::placeholders;
 
 BC_DEBUG_ONLY(static const time_point epoch{};)
 
-deadline::deadline(asio::strand& strand, const duration& timeout) NOEXCEPT
-  : duration_(timeout), timer_(strand), track<deadline>()
+deadline::deadline(const logger& log, asio::strand& strand,
+    const duration& timeout) NOEXCEPT
+  : duration_(timeout),
+    timer_(strand),
+    track<deadline>(log)
 {
 }
 

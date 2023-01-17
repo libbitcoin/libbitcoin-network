@@ -34,7 +34,7 @@ using namespace bc::system;
 using namespace std::placeholders;
 
 session_inbound::session_inbound(p2p& network) NOEXCEPT
-  : session(network)
+  : session(network), track<session_inbound>(network.log())
 {
 }
 

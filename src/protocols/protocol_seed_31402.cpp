@@ -44,8 +44,9 @@ protocol_seed_31402::protocol_seed_31402(const session& session,
     sent_address_(false),
     sent_get_address_(false),
     received_address_(false),
-    timer_(std::make_shared<deadline>(channel->strand(),
-        session.settings().channel_germination()))
+    timer_(std::make_shared<deadline>(session.log(), channel->strand(),
+        session.settings().channel_germination())),
+    track<protocol_seed_31402>(session.log())
 {
 }
 

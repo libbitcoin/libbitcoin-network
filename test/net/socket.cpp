@@ -71,8 +71,9 @@ public:
 
 BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
 {
+    const logger log{};
     threadpool pool(1);
-    const auto instance = std::make_shared<socket_accessor>(pool.service());
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
 
     BOOST_REQUIRE(!instance->stranded());
     BOOST_REQUIRE(!instance->get_socket().is_open());
@@ -84,8 +85,9 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
 
 BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 {
+    const logger log{};
     threadpool pool(2);
-    const auto instance = std::make_shared<socket_accessor>(pool.service());
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
     asio::strand strand(pool.service().get_executor());
     asio::acceptor acceptor(strand);
 
@@ -130,8 +132,9 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 
 BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
 {
+    const logger log{};
     threadpool pool(2);
-    const auto instance = std::make_shared<socket_accessor>(pool.service());
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
     asio::strand strand(pool.service().get_executor());
 
     const asio::endpoint endpoint(asio::tcp::v6(), 42);
@@ -162,8 +165,9 @@ BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
 
 BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
 {
+    const logger log{};
     threadpool pool(2);
-    const auto instance = std::make_shared<socket_accessor>(pool.service());
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
 
     system::data_array<42> data;
     instance->read({ data }, [instance](const code& ec, size_t size)
@@ -185,8 +189,9 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
 
 BOOST_AUTO_TEST_CASE(socket__write__disconnected__file_system)
 {
+    const logger log{};
     threadpool pool(2);
-    const auto instance = std::make_shared<socket_accessor>(pool.service());
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
 
     system::data_array<42> data;
     instance->write({ data }, [instance](const code& ec, size_t size)

@@ -44,17 +44,17 @@ inline size_t payload_maximum(const settings& settings) NOEXCEPT
 }
 
 // Factory for fixed deadline timer pointer construction.
-inline deadline::ptr timeout(asio::strand& strand,
+inline deadline::ptr timeout(const logger& log, asio::strand& strand,
     const duration& span) NOEXCEPT
 {
-    return std::make_shared<deadline>(strand, span);
+    return std::make_shared<deadline>(log, strand, span);
 }
 
 // Factory for varied deadline timer pointer construction.
-inline deadline::ptr expiration(asio::strand& strand,
+inline deadline::ptr expiration(const logger& log, asio::strand& strand,
     const duration& span) NOEXCEPT
 {
-    return timeout(strand, pseudo_random::duration(span));
+    return timeout(log, strand, pseudo_random::duration(span));
 }
 
 // TODO: implement logging in the same manner as tracking, passing the shared
@@ -100,7 +100,8 @@ inline deadline::ptr expiration(asio::strand& strand,
 // TODO: So toss boost:log and remove from dependencies. First implement a
 // TODO: simple console sink.
 
-channel::channel(const socket::ptr& socket, const settings& settings) NOEXCEPT
+channel::channel(const logger& log, const socket::ptr& socket,
+    const settings& settings) NOEXCEPT
   : proxy(socket),
     maximum_payload_(payload_maximum(settings)),
     protocol_magic_(settings.identifier),
@@ -109,8 +110,9 @@ channel::channel(const socket::ptr& socket, const settings& settings) NOEXCEPT
     verbose_logging_(settings.verbose),
     negotiated_version_(settings.protocol_maximum),
     peer_version_(to_shared<messages::version>()),
-    expiration_(expiration(socket->strand(), settings.channel_expiration())),
-    inactivity_(timeout(socket->strand(), settings.channel_inactivity()))
+    expiration_(expiration(log, socket->strand(), settings.channel_expiration())),
+    inactivity_(timeout(log, socket->strand(), settings.channel_inactivity())),
+    track<channel>(log)
 {
 }
 

@@ -43,7 +43,7 @@ using namespace std::placeholders;
 session::session(p2p& network) NOEXCEPT
   : network_(network),
     stopped_(true),
-    timer_(std::make_shared<deadline>(network.strand())),
+    timer_(std::make_shared<deadline>(network.log(), network.strand())),
     stop_subscriber_(std::make_shared<stop_subscriber>(network.strand()))
 {
 }
@@ -311,6 +311,11 @@ connectors_ptr session::create_connectors(size_t count) NOEXCEPT
 const network::settings& session::settings() const NOEXCEPT
 {
     return network_.network_settings();
+}
+
+const logger& session::log() const NOEXCEPT
+{
+    return network_.log();
 }
 
 bool session::stopped() const NOEXCEPT

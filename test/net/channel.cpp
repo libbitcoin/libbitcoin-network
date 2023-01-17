@@ -54,11 +54,12 @@ public:
 
 BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
 {
+    const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
-    auto channel_ptr = std::make_shared<channel>(socket_ptr, set);
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
+    auto channel_ptr = std::make_shared<channel>(log, socket_ptr, set);
     BOOST_REQUIRE(!channel_ptr->stopped());
 
     // Stop completion is asynchronous.
@@ -74,11 +75,12 @@ inline size_t payload_maximum(const settings& settings)
 
 BOOST_AUTO_TEST_CASE(channel__properties__default__false)
 {
+    const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto socket_ptr = std::make_shared<network::socket>(pool.service());
-    auto channel_ptr = std::make_shared<channel_accessor>(socket_ptr, set);
+    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
+    auto channel_ptr = std::make_shared<channel_accessor>(log, socket_ptr, set);
 
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
     BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);

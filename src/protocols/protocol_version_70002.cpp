@@ -43,7 +43,7 @@ static const std::string insufficient_services = "insufficient-services";
 
 protocol_version_70002::protocol_version_70002(const session& session,
     const channel::ptr& channel) NOEXCEPT
-  : protocol_version_70001(session, channel,
+  : protocol_version_70002(session, channel,
         session.settings().services_minimum,
         session.settings().services_maximum,
         session.settings().relay_transactions)
@@ -54,7 +54,8 @@ protocol_version_70002::protocol_version_70002(const session& session,
     const channel::ptr& channel, uint64_t minimum_services,
     uint64_t maximum_services, bool relay) NOEXCEPT
   : protocol_version_70001(session, channel, minimum_services,
-      maximum_services, relay)
+      maximum_services, relay),
+    track<protocol_version_70002>(session.log())
 {
 }
 

@@ -35,7 +35,7 @@ namespace network {
 /// Stop is thread safe and idempotent, may be called multiple times.
 /// All handlers (except accept) are posted to the internal strand.
 class BCT_API socket
-  : public std::enable_shared_from_this<socket>, track<socket>
+  : public std::enable_shared_from_this<socket>, public track<socket>
 {
 public:
     DELETE_COPY_MOVE(socket);
@@ -44,7 +44,7 @@ public:
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, size_t)> io_handler;
 
-    socket(asio::io_context& service) NOEXCEPT;
+    socket(const logger& log, asio::io_context& service) NOEXCEPT;
     virtual ~socket() NOEXCEPT;
 
     // Stop.
