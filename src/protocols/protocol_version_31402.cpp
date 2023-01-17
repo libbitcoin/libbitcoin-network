@@ -80,7 +80,7 @@ protocol_version_31402::version_ptr
 protocol_version_31402::version_factory() const NOEXCEPT
 {
     // TODO: allow for node to inject top height.
-    const auto top_height = narrow_cast<uint32_t>(zero);
+    const auto top_height = possible_narrow_cast<uint32_t>(zero);
     BC_ASSERT_MSG(top_height <= max_uint32, "Time to upgrade the protocol.");
 
     // Relay always exposed on version, despite lack of definition < BIP37.
