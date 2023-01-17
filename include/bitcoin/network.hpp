@@ -26,6 +26,7 @@
 #include <bitcoin/network/async/deadline.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/handlers.hpp>
+#include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/async/subscriber.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
