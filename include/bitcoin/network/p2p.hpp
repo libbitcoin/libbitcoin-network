@@ -139,14 +139,14 @@ public:
     /// Network configuration settings.
     const settings& network_settings() const NOEXCEPT;
 
+    /// Return a logging instance.
+    const logger& log() const NOEXCEPT;
+
     /// Return a reference to the network io_context (thread safe).
     asio::io_context& service() NOEXCEPT;
 
     /// Return a reference to the network strand (thread safe).
     asio::strand& strand() NOEXCEPT;
-
-    /// Return a logging instance.
-    const logger& log() const NOEXCEPT;
 
 protected:
     friend class session;

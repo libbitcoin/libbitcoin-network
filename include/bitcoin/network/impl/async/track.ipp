@@ -51,7 +51,7 @@ track<Shared>::~track() NOEXCEPT
 }
 
 template <class Shared>
-const logger& track<Shared>::log() const NOEXCEPT
+const logger& track<Shared>::get_log() const NOEXCEPT
 {
     return log_;
 }

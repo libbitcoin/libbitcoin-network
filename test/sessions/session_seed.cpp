@@ -115,8 +115,8 @@ public:
             port_ = port;
         }
 
-        const auto socket = std::make_shared<network::socket>(log(), service_);
-        const auto channel = std::make_shared<mock_channel>(log(), set_, coded_,
+        const auto socket = std::make_shared<network::socket>(get_log(), service_);
+        const auto channel = std::make_shared<mock_channel>(get_log(), set_, coded_,
             ChannelStopCode, socket, settings_);
 
         // Must be asynchronous or is an infinite recursion.

@@ -90,7 +90,7 @@ void connector::connect(const std::string& hostname, uint16_t port,
     // This allows connect after stop (restartable).
     stopped_ = false;
 
-    const auto socket = std::make_shared<network::socket>(log(), service_);
+    const auto socket = std::make_shared<network::socket>(get_log(), service_);
 
     // Posts timer handler to strand.
     // The handler is copied by std::bind.
@@ -178,7 +178,7 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
         return;
     }
 
-    const auto channel = std::make_shared<network::channel>(log(), socket,
+    const auto channel = std::make_shared<network::channel>(get_log(), socket,
         settings_);
 
     // Successful connect.

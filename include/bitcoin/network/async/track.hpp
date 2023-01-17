@@ -39,7 +39,7 @@ protected:
     virtual ~track() NOEXCEPT;
 
 public:
-    const logger& log() const NOEXCEPT;
+    const logger& get_log() const NOEXCEPT;
 
 private:
     // These are thread safe.

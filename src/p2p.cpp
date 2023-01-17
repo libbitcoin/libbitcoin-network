@@ -338,6 +338,11 @@ const settings& p2p::network_settings() const NOEXCEPT
     return settings_;
 }
 
+const logger& p2p::log() const NOEXCEPT
+{
+    return log_;
+}
+
 asio::io_context& p2p::service() NOEXCEPT
 {
     return threadpool_.service();
@@ -346,11 +351,6 @@ asio::io_context& p2p::service() NOEXCEPT
 asio::strand& p2p::strand() NOEXCEPT
 {
     return strand_;
-}
-
-const logger& p2p::log() const NOEXCEPT
-{
-    return log_;
 }
 
 // protected

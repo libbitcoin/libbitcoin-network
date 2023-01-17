@@ -308,16 +308,6 @@ connectors_ptr session::create_connectors(size_t count) NOEXCEPT
 // Properties.
 // ----------------------------------------------------------------------------
 
-const network::settings& session::settings() const NOEXCEPT
-{
-    return network_.network_settings();
-}
-
-const logger& session::log() const NOEXCEPT
-{
-    return network_.log();
-}
-
 bool session::stopped() const NOEXCEPT
 {
     return stopped_.load(std::memory_order_relaxed);
@@ -346,6 +336,16 @@ size_t session::inbound_channel_count() const NOEXCEPT
 bool session::blacklisted(const config::authority& authority) const NOEXCEPT
 {
     return contains(settings().blacklists, authority);
+}
+
+const network::settings& session::settings() const NOEXCEPT
+{
+    return network_.network_settings();
+}
+
+const logger& session::log() const NOEXCEPT
+{
+    return network_.log();
 }
 
 // Utilities.
