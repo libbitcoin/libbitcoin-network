@@ -32,7 +32,9 @@ using namespace bc::system;
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 
 #define MAKE_SUBSCRIBER(name) \
-    SUBSCRIBER(name)(std::make_shared<SUBSCRIBER_TYPE(name)>(strand))
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
+    SUBSCRIBER(name)(std::make_shared<SUBSCRIBER_TYPE(name)>(strand)) \
+    BC_POP_WARNING()
 
 #define CASE_NOTIFY(name) \
     case messages::identifier::name: \
