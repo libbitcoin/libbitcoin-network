@@ -79,7 +79,7 @@ protocol_version_31402::version_ptr
 protocol_version_31402::version_factory() const NOEXCEPT
 {
     // TODO: allow for node to inject top height.
-    const auto top_height = static_cast<uint32_t>(zero);
+    const auto top_height = narrow_cast<uint32_t>(zero);
     BC_ASSERT_MSG(top_height <= max_uint32, "Time to upgrade the protocol.");
 
     // Relay always exposed on version, despite lack of definition < BIP37.
@@ -87,8 +87,8 @@ protocol_version_31402::version_factory() const NOEXCEPT
     constexpr auto relay = false;
     const auto timestamp = static_cast<uint32_t>(zulu_time());
 
-    return std::make_shared<version>
-    (
+    return std::shared_ptr<version>(new version
+    {
         maximum_version_,
         maximum_services_,
         timestamp,
@@ -124,7 +124,7 @@ protocol_version_31402::version_factory() const NOEXCEPT
         BC_USER_AGENT,
         top_height,
         relay
-    );
+    });
 }
 
 // Allow derived classes to handle message rejection.
