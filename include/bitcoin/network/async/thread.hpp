@@ -19,8 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_THREAD_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_THREAD_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <boost/thread.hpp>
 #include <bitcoin/system.hpp>

@@ -172,8 +172,8 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
     system::data_array<42> data;
     instance->read({ data }, [instance](const code& ec, size_t size)
     {
-        // 10009 (WSAEBADF, invalid file handle) gets mapped to file_system.
-        BOOST_REQUIRE_EQUAL(ec, error::file_system);
+        // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
+        BOOST_REQUIRE_EQUAL(ec, error::bad_stream);
         BOOST_REQUIRE_EQUAL(size, 0u);
     });
 
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(socket__write__disconnected__file_system)
+BOOST_AUTO_TEST_CASE(socket__write__disconnected__bad_stream)
 {
     const logger log{};
     threadpool pool(2);
@@ -196,8 +196,8 @@ BOOST_AUTO_TEST_CASE(socket__write__disconnected__file_system)
     system::data_array<42> data;
     instance->write({ data }, [instance](const code& ec, size_t size)
     {
-        // 10009 (WSAEBADF, invalid file handle) gets mapped to file_system.
-        BOOST_REQUIRE_EQUAL(ec, error::file_system);
+        // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
+        BOOST_REQUIRE_EQUAL(ec, error::bad_stream);
         BOOST_REQUIRE_EQUAL(size, 0u);
     });
 

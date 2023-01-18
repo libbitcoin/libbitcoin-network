@@ -243,7 +243,7 @@ private:
         const result_handler& complete) NOEXCEPT;
 
     // These are thread safe.
-    const logger log_{};
+    const logger log_;
     const settings& settings_;
     std::atomic<size_t> channel_count_;
     std::atomic<size_t> inbound_channel_count_;

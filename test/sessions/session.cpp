@@ -767,7 +767,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
             });
     });
 
-    // Channel stopped by network.store code then heading read fail (file_system).
+    // Channel stopped by network.store code then heading read fail (bad_stream).
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::service_stopped);
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(channel->resumed());
@@ -776,9 +776,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
     BOOST_REQUIRE(channel->stopped());
 
-    // Race between file_system and service_stopped.
+    // Race between bad_stream and service_stopped.
     BOOST_REQUIRE(channel->stop_code());
-    ////BOOST_REQUIRE_EQUAL(channel->stop_code(), error::file_system);
+    ////BOOST_REQUIRE_EQUAL(channel->stop_code(), error::bad_stream);
     ////BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
     // Channel was pent (handshake invoked) and store failed.
@@ -852,21 +852,21 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
             });
     });
 
-    // Channel stopped by heading read fail (file_system), stop method called by session.
+    // Channel stopped by heading read fail (bad_stream), stop method called by session.
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(channel->resumed());
     ////BOOST_REQUIRE(session->attached_protocol());
     ////BOOST_REQUIRE(channel->reresumed());
 
-    // Race between file_system and service_stopped.
+    // Race between bad_stream and service_stopped.
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE(channel->stop_code());
-    ////BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::file_system);
+    ////BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::bad_stream);
     ////BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::subscriber_stopped);
 
     // Channel is stopped before handshake completion, due to read failure.
-    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::file_system);
+    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::bad_stream);
 
     // Channel pent and store succeeded.
     BOOST_REQUIRE_EQUAL(net.pent_nonce(), channel->nonce());

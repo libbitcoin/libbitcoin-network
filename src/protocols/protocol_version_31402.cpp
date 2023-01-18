@@ -158,9 +158,9 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (minimum_version_ < level::minimum_protocol)
     {
-        ////LOG_ERROR(LOG_NETWORK)
-        ////    << "Invalid protocol version configuration, minimum below ("
-        ////    << level::minimum_protocol << ")." << std::endl;
+        log().write()
+            << "Invalid protocol version configuration, minimum below ("
+            << level::minimum_protocol << ")." << std::endl;
 
         callback(error::invalid_configuration);
         return;
@@ -168,9 +168,9 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (maximum_version_ > level::maximum_protocol)
     {
-        ////LOG_ERROR(LOG_NETWORK)
-        ////    << "Invalid protocol version configuration, maximum above ("
-        ////    << level::maximum_protocol << ")." << std::endl;
+        log().write()
+            << "Invalid protocol version configuration, maximum above ("
+            << level::maximum_protocol << ")." << std::endl;
 
         callback(error::invalid_configuration);
         return;
@@ -178,9 +178,9 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (minimum_version_ > maximum_version_)
     {
-        ////LOG_ERROR(LOG_NETWORK)
-        ////    << "Invalid protocol version configuration, "
-        ////    << "minimum exceeds maximum." << std::endl;
+        log().write()
+            << "Invalid protocol version configuration, "
+            << "minimum exceeds maximum." << std::endl;
 
         callback(error::invalid_configuration);
         return;
@@ -306,16 +306,16 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         return;
     }
 
-    ////LOG_DEBUG(LOG_NETWORK)
-    ////    << "Peer [" << authority() << "] protocol version ("
-    ////    << message->value << ") user agent: " << message->user_agent
-    ////    << std::endl;
+    log().write()
+        << "Peer [" << authority() << "] protocol version ("
+        << message->value << ") user agent: " << message->user_agent
+        << std::endl;
 
     if (to_bool(message->services & invalid_services_))
     {
-        ////LOG_DEBUG(LOG_NETWORK)
-        ////    << "Invalid peer network services (" << message->services
-        ////    << ") for [" << authority() << "]" << std::endl;
+        log().write()
+            << "Invalid peer network services (" << message->services
+            << ") for [" << authority() << "]" << std::endl;
 
         rejection(error::insufficient_peer);
         return;
@@ -324,9 +324,9 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     // Advertised services on many incoming connections may be set to zero.
     if ((message->services & minimum_services_) != minimum_services_)
     {
-        ////LOG_DEBUG(LOG_NETWORK)
-        ////    << "Insufficient peer network services (" << message->services
-        ////    << ") for [" << authority() << "]" << std::endl;
+        log().write()
+            << "Insufficient peer network services (" << message->services
+            << ") for [" << authority() << "]" << std::endl;
 
         rejection(error::insufficient_peer);
         return;
@@ -334,9 +334,9 @@ void protocol_version_31402::handle_receive_version(const code& ec,
 
     if (message->value < minimum_version_)
     {
-        ////LOG_DEBUG(LOG_NETWORK)
-        ////    << "Insufficient peer protocol version (" << message->value
-        ////    << ") for [" << authority() << "]" << std::endl;
+        log().write()
+            << "Insufficient peer protocol version (" << message->value
+            << ") for [" << authority() << "]" << std::endl;
 
         rejection(error::insufficient_peer);
         return;
@@ -346,9 +346,9 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     set_negotiated_version(version);
     set_peer_version(message);
 
-    ////LOG_DEBUG(LOG_NETWORK)
-    ////    << "Negotiated protocol version (" << version
-    ////    << ") for [" << authority() << "]" << std::endl;
+    log().write()
+        << "Negotiated protocol version (" << version
+        << ") for [" << authority() << "]" << std::endl;
 
     SEND1(version_acknowledge{}, handle_send_acknowledge, _1);
 

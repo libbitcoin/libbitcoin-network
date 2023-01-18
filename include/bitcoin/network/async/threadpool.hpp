@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_THREADPOOL_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_THREADPOOL_HPP
 
-#include <cstddef>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>

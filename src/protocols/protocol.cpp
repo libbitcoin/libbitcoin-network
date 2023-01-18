@@ -180,9 +180,9 @@ void protocol::handle_fetches(const code& ec,
     BC_ASSERT_MSG(stranded(), "protocol");
 
     // TODO: log code here for derived protocols.
-    ////LOG_DEBUG(LOG_NETWORK)
-    ////    << "Fetched addresses for [" << authority() << "] ("
-    ////    << addresses.size() << ")" << std::endl;
+    log().write()
+        << "Fetched addresses for [" << authority() << "] ("
+        << addresses.size() << ")" << std::endl;
 
     handler(ec, addresses);
 }
@@ -200,9 +200,9 @@ void protocol::saves(const messages::address_items& addresses) NOEXCEPT
 void protocol::saves(const messages::address_items& addresses,
     result_handler&& handler) NOEXCEPT
 {
-    ////LOG_VERBOSE(LOG_NETWORK)
-    ////    << "Storing addresses from [" << authority() << "] ("
-    ////    << addresses.size() << ")" << std::endl;
+    log().write()
+        << "Storing addresses from [" << authority() << "] ("
+        << addresses.size() << ")" << std::endl;
 
     // TODO: use addresses pointer (copies addresses).
     session_.saves(addresses, BIND2(do_saves, _1, std::move(handler)));

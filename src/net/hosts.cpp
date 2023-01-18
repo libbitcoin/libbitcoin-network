@@ -31,6 +31,8 @@
 namespace libbitcoin {
 namespace network {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 using namespace bc::system;
 using namespace config;
 using namespace messages;
@@ -44,13 +46,14 @@ inline bool is_invalid(const address_item& host) NOEXCEPT
 
 // TODO: manage timestamps (active channels are connected < 3 hours ago).
 // TODO: change to network_address bimap hash table with services and age.
-hosts::hosts(const settings& settings) NOEXCEPT
+hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
   : count_(zero),
     disabled_(is_zero(settings.host_pool_capacity)),
     capacity_(static_cast<size_t>(settings.host_pool_capacity)),
     file_path_(settings.hosts_file),
     buffer_(std::max(capacity_, one)),
-    stopped_(true)
+    stopped_(true),
+    track<hosts>(log)
 {
 }
 
@@ -76,12 +79,12 @@ code hosts::start() NOEXCEPT
     ifstream file(file_path_.string(), ifstream::in);
 
     // TODO: handle case of existing file but failed read.
-    // An invalid path or non-existent file will not cause an error on open.
-    ////if (!file.good())
-    ////{
-    ////    LOG_DEBUG(LOG_NETWORK) << "Failed to load hosts file." << std::endl;
-    ////    return error::file_load;
-    ////}
+    // An invalid path/non-existent file will not cause an error on open.
+    if (!file.good())
+    {
+        get_log().write() << "Failed to load hosts file." << std::endl;
+        return error::file_load;
+    }
 
     std::string line;
     while (std::getline(file, line))
@@ -112,7 +115,7 @@ code hosts::stop() NOEXCEPT
 
     if (!file.good())
     {
-        ////LOG_DEBUG(LOG_NETWORK) << "Failed to store hosts file." << std::endl;
+        get_log().write() << "Failed to store hosts file." << std::endl;
         return error::file_load;
     }
 
@@ -126,7 +129,7 @@ code hosts::stop() NOEXCEPT
     // An invalid path or non-existent file will cause an error on write.
     if (file.bad())
     {
-        ////LOG_DEBUG(LOG_NETWORK) << "Failed to store hosts file." << std::endl;
+        get_log().write() << "Failed to store hosts." << std::endl;
         return error::file_load;
     }
 
@@ -143,8 +146,7 @@ void hosts::store(const address_item& host) NOEXCEPT
     // Do not treat invalid address as an error, just log it.
     if (is_invalid(host))
     {
-        ////LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer."
-        ////    << std::endl;
+        get_log().write() << "Invalid host address from peer." << std::endl;
         return;
     }
 
@@ -181,8 +183,7 @@ void hosts::store(const address_items& hosts) NOEXCEPT
         // Do not treat invalid address as an error, just log it.
         if (is_invalid(host))
         {
-            ////LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer."
-            ////    << std::endl;
+            get_log().write() << "Invalid host addresses from peer." << std::endl;
             continue;
         }
 
@@ -196,9 +197,9 @@ void hosts::store(const address_items& hosts) NOEXCEPT
         }
     }
 
-    ////LOG_VERBOSE(LOG_NETWORK)
-    ////    << "Accepted (" << accepted << " of " << hosts.size()
-    ////    << ") host addresses from peer." << std::endl;
+    get_log().write()
+        << "Accepted (" << accepted << " of " << hosts.size()
+        << ") host addresses from peer." << std::endl;
 }
 
 void hosts::remove(const address_item& host) NOEXCEPT
@@ -209,7 +210,7 @@ void hosts::remove(const address_item& host) NOEXCEPT
     const auto it = find(host);
     if (it == buffer_.end())
     {
-        ////LOG_DEBUG(LOG_NETWORK) << "Address to remove not found." << std::endl;
+        get_log().write() << "Address to remove not found." << std::endl;
         return;
     }
 
@@ -278,6 +279,8 @@ hosts::buffer::iterator hosts::find(const address_item& host) NOEXCEPT
 
     return std::find_if(buffer_.begin(), buffer_.end(), found);
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

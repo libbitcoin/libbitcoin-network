@@ -47,10 +47,11 @@ using namespace bc::system::chain;
 using namespace std::placeholders;
 
 p2p::p2p(const settings& settings) NOEXCEPT
-  : settings_(settings),
+  : log_(),
+    settings_(settings),
     channel_count_(zero),
     inbound_channel_count_(zero),
-    hosts_(settings_),
+    hosts_(log_, settings_),
     threadpool_(settings_.threads),
     strand_(threadpool_.service().get_executor()),
     stop_subscriber_(std::make_shared<stop_subscriber>(strand_)),

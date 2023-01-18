@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_ASYNC_TRACK_HPP
 
 #include <atomic>
-#include <cstddef>
 #include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/define.hpp>
 

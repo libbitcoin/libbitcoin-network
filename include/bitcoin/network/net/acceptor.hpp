@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_NET_ACCEPTOR_HPP
 #define LIBBITCOIN_NETWORK_NET_ACCEPTOR_HPP
 
-#include <cstdint>
 #include <functional>
 #include <memory>
 #include <bitcoin/system.hpp>
