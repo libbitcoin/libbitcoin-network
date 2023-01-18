@@ -39,15 +39,6 @@
     #define BCT_INTERNAL BC_HELPER_DLL_LOCAL
 #endif
 
-// Log name.
-#define LOG_NETWORK "network"
-
-////#define LOG_INFO(name) std::cout << name << " : "
-////#define LOG_DEBUG(name) std::cout << name << " : "
-////#define LOG_VERBOSE(name) std::cout << name << " : "
-////#define LOG_ERROR(name) std::cerr << name << " : "
-////#define LOG_WARNING(name) std::cerr << name << " : "
-
 namespace libbitcoin {
 namespace network {
 
@@ -68,11 +59,6 @@ namespace network {
     bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6, p7)
 
 } // namespace network
-
-// TODO: replace with non-derivation.
-namespace system {
-    class noncopyable {};
-}
 } // namespace libbitcoin
 
 #endif
