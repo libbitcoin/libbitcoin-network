@@ -148,8 +148,9 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
         ec == boost_error_t::operation_in_progress)
         return error::address_in_use;
 
-    // I/O
-    if (ec == boost_error_t::bad_message ||
+    // I/O (bad_file_descriptor if socket is not initialized)
+    if (ec == boost_error_t::bad_file_descriptor || 
+        ec == boost_error_t::bad_message ||
         ec == boost_error_t::illegal_byte_sequence ||
         ec == boost_error_t::io_error ||
         ec == boost_error_t::message_size ||
@@ -165,9 +166,8 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
         ec == boost_error_t::timed_out)
         return error::channel_timeout;
 
-    // file system errors
+    // file system errors (bad_file_descriptor used in I/O)
     if (ec == boost_error_t::cross_device_link ||
-        ec == boost_error_t::bad_file_descriptor ||
         ec == boost_error_t::device_or_resource_busy ||
         ec == boost_error_t::directory_not_empty ||
         ec == boost_error_t::executable_format_error ||

@@ -19,10 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_NET_CHANNEL_HPP
 #define LIBBITCOIN_NETWORK_NET_CHANNEL_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>

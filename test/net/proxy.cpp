@@ -24,7 +24,7 @@ class mock_proxy
   : public proxy
 {
 public:
-    static std::string extract_command(const system::chunk_ptr& payload) NOEXCEPT
+    static std::string extract_command(const system::data_chunk& payload) NOEXCEPT
     {
         return proxy::extract_command(payload);
     }
@@ -99,20 +99,20 @@ private:
 
 BOOST_AUTO_TEST_CASE(proxy__extract_command__empty_payload__unknown)
 {
-    const auto payload = std::make_shared<system::data_chunk>();
+    const system::data_chunk payload{};
     BOOST_REQUIRE_EQUAL(mock_proxy::extract_command(payload), "<unknown>");
 }
 
 BOOST_AUTO_TEST_CASE(proxy__extract_command__short_payload__unknown)
 {
     constexpr auto minimum = sizeof(uint32_t) + messages::heading::command_size;
-    const auto payload = std::make_shared<system::data_chunk>(sub1(minimum), 'a');
+    const system::data_chunk payload(sub1(minimum), 'a');
     BOOST_REQUIRE_EQUAL(mock_proxy::extract_command(payload), "<unknown>");
 }
 
 BOOST_AUTO_TEST_CASE(proxy__extract_command__minimal_payload__expected)
 {
-    const auto payload = std::make_shared<system::data_chunk>(system::data_chunk
+    const system::data_chunk payload(
     {
         'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z'
     });
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(proxy__extract_command__minimal_payload__expected)
 
 BOOST_AUTO_TEST_CASE(proxy__extract_command__extra_payload__expected)
 {
-    const auto payload = std::make_shared<system::data_chunk>(system::data_chunk
+    const system::data_chunk payload(
     {
         'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'A', 'B', 'C'
     });
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume__false)
     std::promise<bool> paused;
     boost::asio::post(proxy_ptr->strand(), [=, &paused]()
     {
-        // Resume queues up a read that will not execute until after this. 
+        // Resume queues up a (failing) read that will not execute until after this.
         proxy_ptr->resume();
         paused.set_value(proxy_ptr->paused());
     });
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_pause__true)
     std::promise<bool> paused;
     boost::asio::post(proxy_ptr->strand(), [=, &paused]()
     {
-        // Resume queues up a read that will not execute until after this. 
+        // Resume queues up a (failing) read that will not execute until after this. 
         proxy_ptr->resume();
         proxy_ptr->pause();
         paused.set_value(proxy_ptr->paused());
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_after_read_fail__true)
     std::promise<bool> paused_after_resume;
     boost::asio::post(proxy_ptr->strand(), [=, &paused_after_resume]()
     {
-        // Resume queues up a read that will invoke stopped.
+        // Resume queues up a (failing) read that will invoke stopped.
         proxy_ptr->resume();
         paused_after_resume.set_value(proxy_ptr->paused());
     });
@@ -452,8 +452,8 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected__expected)
 
     proxy_ptr->send<messages::ping>(ping_ptr, handler);
 
-    // 10009 (WSAEBADF, invalid file handle) gets mapped to file_system.
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::file_system);
+    // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
     proxy_ptr.reset();
 }
 
@@ -473,8 +473,8 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected_move__expected)
         promise.set_value(ec);
     });
 
-    // 10009 (WSAEBADF, invalid file handle) gets mapped to file_system.
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::file_system);
+    // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
     proxy_ptr.reset();
 }
 

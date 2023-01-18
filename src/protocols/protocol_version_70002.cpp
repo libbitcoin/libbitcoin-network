@@ -105,17 +105,17 @@ void protocol_version_70002::rejection(const code& ec) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_version_70002::handle_receive_reject(const code& ec,
-    const reject::ptr&) NOEXCEPT
+    const reject::ptr& reject) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
     if (stopped(ec))
         return;
 
-    ////LOG_DEBUG(LOG_NETWORK)
-    ////    << "Reject message '" << reject->message << "' ("
-    ////    << static_cast<uint16_t>(reject->code) << ") from [" << authority()
-    ////    << "] with reason: " << reject->reason << std::endl;
+    log().write()
+        << "Reject message '" << reject->message << "' ("
+        << static_cast<uint16_t>(reject->code) << ") from [" << authority()
+        << "] with reason: " << reject->reason << std::endl;
 }
 
 } // namespace network

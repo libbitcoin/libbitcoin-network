@@ -91,10 +91,10 @@ void protocol_reject_70002::handle_receive_reject(const code& ec,
     if (message == block::command || message == transaction::command)
         hash = " [" + encode_hash(reject->hash) + "].";
 
-    ////LOG_DEBUG(LOG_NETWORK)
-    ////    << "Received " << message << " reject ("
-    ////    << static_cast<uint16_t>(reject->code) << ") from ["
-    ////    << authority() << "] '" << reject->reason << "'" << hash << std::endl;
+    log().write()
+        << "Received " << message << " reject ("
+        << static_cast<uint16_t>(reject->code) << ") from ["
+        << authority() << "] '" << reject->reason << "'" << hash << std::endl;
 }
 
 } // namespace network

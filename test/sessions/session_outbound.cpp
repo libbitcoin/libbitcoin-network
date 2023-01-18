@@ -814,7 +814,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
     set.connect_timeout_seconds = 10000;
 
     // Started channel results in read failure.
-    mock_p2p<mock_connector_connect_success<error::file_system>> net(set);
+    mock_p2p<mock_connector_connect_success<error::bad_stream>> net(set);
     auto session = std::make_shared<mock_session_outbound_one_address>(net);
     BOOST_REQUIRE(session->stopped());
 

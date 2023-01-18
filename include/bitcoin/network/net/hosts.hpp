@@ -20,12 +20,9 @@
 #define LIBBITCOIN_NETWORK_NET_HOSTS_HPP
 
 #include <atomic>
-#include <cstddef>
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <string>
-#include <vector>
 #include <boost/circular_buffer.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -41,6 +38,7 @@ namespace network {
 /// The file is a line-oriented set of config::authority serializations.
 /// Duplicate addresses and those with zero-valued ports are disacarded.
 class BCT_API hosts
+  : public track<hosts>
 {
 public:
     DELETE_COPY_MOVE(hosts);
@@ -52,7 +50,7 @@ public:
         address_items_handler;
 
     /// Construct an instance.
-    hosts(const settings& settings) NOEXCEPT;
+    hosts(const logger& log, const settings& settings) NOEXCEPT;
     virtual ~hosts() NOEXCEPT;
 
     /// Load hosts file.

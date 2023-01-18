@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_NET_SOCKET_HPP
 
 #include <atomic>
-#include <cstddef>
 #include <functional>
 #include <memory>
 #include <bitcoin/system.hpp>

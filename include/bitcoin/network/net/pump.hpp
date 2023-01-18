@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_NET_PUMP_HPP
 #define LIBBITCOIN_NETWORK_NET_PUMP_HPP
 
-#include <cstdint>
 #include <functional>
 #include <memory>
 #include <utility>

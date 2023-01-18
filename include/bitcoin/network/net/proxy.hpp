@@ -19,11 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_NET_PROXY_HPP
 #define LIBBITCOIN_NETWORK_NET_PROXY_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <memory>
-#include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -41,7 +38,7 @@ namespace network {
 /// notify/send_bytes are protected/virtual for test access only.
 /// Handles all channel communication, error handling, and logging.
 class BCT_API proxy
-  : public enable_shared_from_base<proxy>
+  : public enable_shared_from_base<proxy>, public track<proxy, false>
 {
 public:
     DELETE_COPY_MOVE(proxy);
@@ -99,7 +96,7 @@ public:
 protected:
     /// Extract message command name from a payload.
     static std::string extract_command(
-        const system::chunk_ptr& payload) NOEXCEPT;
+        const system::data_chunk& payload) NOEXCEPT;
 
     proxy(const socket::ptr& socket) NOEXCEPT;
 

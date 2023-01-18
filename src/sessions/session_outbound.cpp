@@ -62,16 +62,14 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
         is_zero(settings().host_pool_capacity) ||
         is_zero(settings().connect_batch_size))
     {
-        ////LOG_INFO(LOG_NETWORK)
-        ////    << "Not configured for outbound connections." << std::endl;
+        log().write() << "Not configured for outbound connections." << std::endl;
         handler(error::bypassed);
         return;
     }
 
     if (is_zero(address_count()))
     {
-        ////LOG_INFO(LOG_NETWORK)
-        ////    << "Configured for outbound but no addresses." << std::endl;
+        log().write() << "Configured for outbound but no addresses." << std::endl;
         handler(error::address_not_found);
         return;
     }

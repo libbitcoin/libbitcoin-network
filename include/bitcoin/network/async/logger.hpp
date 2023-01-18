@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_LOGGER_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_LOGGER_HPP
 
+#include <ostream>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -28,10 +29,9 @@ namespace network {
 class BCT_API logger
 {
 public:
-    ////DEFAULT_COPY_MOVE_DESTRUCT(logger);
-
     logger() NOEXCEPT;
-    void log(const std::string& text) const NOEXCEPT;
+    std::ostream& write() const NOEXCEPT;
+    std::ostream& error() const NOEXCEPT;
 };
 
 } // namespace network

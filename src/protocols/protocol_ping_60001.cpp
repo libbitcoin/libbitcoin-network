@@ -111,8 +111,8 @@ void protocol_ping_60001::handle_receive_pong(const code& ec,
     // Both nonce incorrect and already received are protocol violations.
     if (message->nonce != nonce_)
     {
-        ////LOG_WARNING(LOG_NETWORK)
-        ////    << "Incorrect pong nonce from [" << authority() << "]" << std::endl;
+        log().write()
+            << "Incorrect pong nonce from [" << authority() << "]" << std::endl;
 
         stop(error::protocol_violation);
         return;
