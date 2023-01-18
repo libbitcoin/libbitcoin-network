@@ -40,7 +40,7 @@ class session;
 /// * See proxy for its thread safety constraints.
 /// A channel is a proxy with logged timers and state.
 class BCT_API channel
-  : public proxy, track<channel>
+  : public proxy, public track<channel>
 {
 public:
     DELETE_COPY_MOVE(channel);
@@ -70,7 +70,8 @@ public:
         return protocol;
     }
 
-    channel(const socket::ptr& socket, const settings& settings) NOEXCEPT;
+    channel(const logger& log, const socket::ptr& socket,
+        const settings& settings) NOEXCEPT;
     virtual ~channel() NOEXCEPT;
 
     /// Arbitrary nonce of the channel (for loopback guard).

@@ -139,9 +139,6 @@ protected:
     /// The nonce of the channel.
     virtual uint64_t nonce() const NOEXCEPT;
 
-    /// Network settings.
-    virtual const network::settings& settings() const NOEXCEPT;
-
     /// The protocol version of the peer.
     virtual messages::version::ptr peer_version() const NOEXCEPT;
 
@@ -153,6 +150,12 @@ protected:
 
     /// Set negotiated protocol version (set only during handshake).
     virtual void set_negotiated_version(uint32_t value) NOEXCEPT;
+
+    /// Network settings.
+    const network::settings& settings() const NOEXCEPT;
+
+    /// Return a logging instance.
+    const logger& log() const NOEXCEPT;
 
     /// Addresses.
     /// -----------------------------------------------------------------------

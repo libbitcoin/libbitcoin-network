@@ -29,9 +29,9 @@ class mock_channel
 public:
     typedef std::shared_ptr<mock_channel> ptr;
 
-    mock_channel(bool& set, std::promise<bool>& coded,
-        const code& match, socket::ptr socket, const settings& settings)
-      : channel(socket, settings), match_(match), set_(set), coded_(coded)
+    mock_channel(const logger& log, bool& set, std::promise<bool>& coded,
+        const code& match, socket::ptr socket, const settings& settings) NOEXCEPT
+      : channel(log, socket, settings), match_(match), set_(set), coded_(coded)
     {
     }
 
@@ -63,37 +63,37 @@ public:
     using connector::connector;
 
     // Require template parameterized channel stop code (ChannelStopCode).
-    bool require_code() const
+    bool require_code() const NOEXCEPT
     {
         return coded_.get_future().get();
     }
 
     // Get captured connected.
-    bool connected() const
+    bool connected() const NOEXCEPT
     {
         return !is_zero(connects_);
     }
 
     // Get captured connection count.
-    size_t connects() const
+    size_t connects() const NOEXCEPT
     {
         return connects_;
     }
 
     // Get captured hostname.
-    std::string hostname() const
+    std::string hostname() const NOEXCEPT
     {
         return hostname_;
     }
 
     // Get captured port.
-    uint16_t port() const
+    uint16_t port() const NOEXCEPT
     {
         return port_;
     }
 
     // Get captured stopped.
-    bool stopped() const
+    bool stopped() const NOEXCEPT
     {
         return stopped_;
     }
@@ -115,12 +115,12 @@ public:
             port_ = port;
         }
 
-        const auto socket = std::make_shared<network::socket>(service_);
-        const auto channel = std::make_shared<mock_channel>(set_, coded_,
+        const auto socket = std::make_shared<network::socket>(get_log(), service_);
+        const auto channel = std::make_shared<mock_channel>(get_log(), set_, coded_,
             ChannelStopCode, socket, settings_);
 
         // Must be asynchronous or is an infinite recursion.
-        boost::asio::post(strand_, [=]()
+        boost::asio::post(strand_, [=]() NOEXCEPT
         {
             // Connect result code is independent of the channel stop code.
             // As error code would set the re-listener timer, channel pointer is ignored.
@@ -148,7 +148,7 @@ public:
     void connect(const std::string&, uint16_t,
         connect_handler&& handler) NOEXCEPT override
     {
-        boost::asio::post(strand_, [=]()
+        boost::asio::post(strand_, [=]() NOEXCEPT
         {
             handler(error::invalid_magic, nullptr);
         });
@@ -191,12 +191,12 @@ public:
         }
     }
 
-    bool seeded() const
+    bool seeded() const NOEXCEPT
     {
         return seeded_;
     }
 
-    bool require_seeded() const
+    bool require_seeded() const NOEXCEPT
     {
         return seed_.get_future().get();
     }
@@ -214,12 +214,12 @@ public:
         handshake(error::success);
     }
 
-    bool attached_handshake() const
+    bool attached_handshake() const NOEXCEPT
     {
         return handshaked_;
     }
 
-    bool require_attached_handshake() const
+    bool require_attached_handshake() const NOEXCEPT
     {
         return handshake_.get_future().get();
     }
@@ -273,7 +273,7 @@ public:
     using p2p::p2p;
 
     // Get last created connector.
-    typename Connector::ptr get_connector() const
+    typename Connector::ptr get_connector() const NOEXCEPT
     {
         return connector_;
     }
@@ -281,8 +281,8 @@ public:
     // Create mock connector to inject mock channel.
     connector::ptr create_connector() NOEXCEPT override
     {
-        return ((connector_ = std::make_shared<Connector>(strand(), service(),
-            network_settings())));
+        return ((connector_ = std::make_shared<Connector>(log(), strand(),
+            service(), network_settings())));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -300,6 +300,28 @@ public:
         return attach<mock_seed_session>(*this);
     }
 
+    code store(const channel::ptr&, bool, bool) NOEXCEPT override
+    {
+        return error::success;
+    }
+
+    bool unstore(const channel::ptr&, bool) NOEXCEPT override
+    {
+        return true;
+    }
+
+    void saves(const messages::address_items& addresses,
+        result_handler&& complete) NOEXCEPT override
+    {
+        hosts_ += addresses.size();
+        complete(error::success);
+    }
+
+    size_t address_count() const NOEXCEPT override
+    {
+        return hosts_;
+    }
+
 private:
     typename Connector::ptr connector_;
 
@@ -307,7 +329,7 @@ private:
       : public session_inbound
     {
     public:
-        mock_inbound_session(p2p& network)
+        mock_inbound_session(p2p& network) NOEXCEPT
           : session_inbound(network)
         {
         }
@@ -322,7 +344,7 @@ private:
       : public session_outbound
     {
     public:
-        mock_outbound_session(p2p& network)
+        mock_outbound_session(p2p& network) NOEXCEPT
           : session_outbound(network)
         {
         }
@@ -337,7 +359,7 @@ private:
       : public session_seed
     {
     public:
-        mock_seed_session(p2p& network)
+        mock_seed_session(p2p& network) NOEXCEPT
           : session_seed(network)
         {
         }
@@ -347,6 +369,8 @@ private:
             handler(error::success);
         }
     };
+
+    size_t hosts_{};
 };
 
 class mock_connector_stop_connect
@@ -355,9 +379,10 @@ class mock_connector_stop_connect
 public:
     typedef std::shared_ptr<mock_connector_stop_connect> ptr;
 
-    mock_connector_stop_connect(asio::strand& strand, asio::io_context& service,
-        const settings& settings, mock_session_seed::ptr session)
-      : mock_connector_connect_success(strand, service, settings),
+    mock_connector_stop_connect(const logger& log, asio::strand& strand,
+        asio::io_context& service, const settings& settings,
+        mock_session_seed::ptr session) NOEXCEPT
+      : mock_connector_connect_success(log, strand, service, settings),
         session_(session)
     {
     }
@@ -385,13 +410,13 @@ class mock_p2p_stop_connect
 public:
     using p2p::p2p;
 
-    void set_session(mock_session_seed::ptr session)
+    void set_session(mock_session_seed::ptr session) NOEXCEPT
     {
         session_ = session;
     }
 
     // Get first created connector.
-    mock_connector_stop_connect::ptr get_connector() const
+    mock_connector_stop_connect::ptr get_connector() const NOEXCEPT
     {
         return connector_;
     }
@@ -403,7 +428,7 @@ public:
             return connector_;
 
         return ((connector_ = std::make_shared<mock_connector_stop_connect>(
-            strand(), service(), network_settings(), session_)));
+            log(), strand(), service(), network_settings(), session_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -429,7 +454,7 @@ private:
       : public session_inbound
     {
     public:
-        mock_inbound_session(p2p& network)
+        mock_inbound_session(p2p& network) NOEXCEPT
           : session_inbound(network)
         {
         }
@@ -444,7 +469,7 @@ private:
       : public session_outbound
     {
     public:
-        mock_outbound_session(p2p& network)
+        mock_outbound_session(p2p& network) NOEXCEPT
           : session_outbound(network)
         {
         }
@@ -459,7 +484,7 @@ private:
       : public session_seed
     {
     public:
-        mock_seed_session(p2p& network)
+        mock_seed_session(p2p& network) NOEXCEPT
           : session_seed(network)
         {
         }
@@ -753,5 +778,38 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
     BOOST_REQUIRE(session->stopped());
     session.reset();
 }
+
+////BOOST_AUTO_TEST_CASE(session_seed__live__one_address__expected)
+////{
+////    settings set(selection::mainnet);
+////    set.seeds.resize(1);
+////    set.channel_germination_seconds = 5;
+////    set.outbound_connections = 1;
+////    set.host_pool_capacity = 1;
+////    mock_p2p<> net(set);
+////    auto session = std::make_shared<session_seed>(net);
+////
+////    std::promise<code> started;
+////    boost::asio::post(net.strand(), [=, &started]()
+////    {
+////        session->start([&](const code& ec)
+////        {
+////            started.set_value(ec);
+////        });
+////    });
+////
+////    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+////
+////    std::promise<bool> stopped;
+////    boost::asio::post(net.strand(), [=, &stopped]()
+////    {
+////        session->stop();
+////        stopped.set_value(true);
+////    });
+////
+////    BOOST_REQUIRE(stopped.get_future().get());
+////    BOOST_REQUIRE_GT(net.address_count(), zero);
+////    session.reset();
+////}
 
 BOOST_AUTO_TEST_SUITE_END()

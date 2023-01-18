@@ -80,10 +80,10 @@ settings::settings(chain::selection context) NOEXCEPT
             identifier = 3652501241;
             inbound_port = 8333;
             seeds.reserve(4);
-            seeds.push_back({ "mainnet1.libbitcoin.net", 8333 });
-            seeds.push_back({ "mainnet2.libbitcoin.net", 8333 });
-            seeds.push_back({ "mainnet3.libbitcoin.net", 8333 });
-            seeds.push_back({ "mainnet4.libbitcoin.net", 8333 });
+            seeds.push_back({ "194.5.152.211", 8333 });
+            ////seeds.push_back({ "96.126.123.143", 8333 });
+            ////seeds.push_back({ "165.227.196.254", 8333 });
+            ////seeds.push_back({ "34.73.164.207", 8333 });
             break;
         }
 

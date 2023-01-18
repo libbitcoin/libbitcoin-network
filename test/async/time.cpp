@@ -20,6 +20,16 @@
 
 BOOST_AUTO_TEST_SUITE(time_tests)
 
+BOOST_AUTO_TEST_CASE(time__zulu_time__always__non_default)
+{
+    BOOST_REQUIRE_NE(zulu_time(), time_t{});
+}
+
+BOOST_AUTO_TEST_CASE(time__unix_time__always__non_zero)
+{
+    BOOST_REQUIRE_NE(unix_time(), 0_u32);
+}
+
 BOOST_AUTO_TEST_CASE(time__local_time__always__non_empty)
 {
     BOOST_REQUIRE(!local_time().empty());

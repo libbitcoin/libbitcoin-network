@@ -26,27 +26,27 @@ class accessor
 public:
     using connector::connector;
 
-    const settings& get_settings() const
+    const settings& get_settings() const NOEXCEPT
     {
         return settings_;
     }
 
-    const asio::io_context& get_service() const
+    const asio::io_context& get_service() const NOEXCEPT
     {
         return service_;
     }
 
-    const asio::strand& get_strand() const
+    const asio::strand& get_strand() const NOEXCEPT
     {
         return strand_;
     }
 
-    deadline::ptr get_timer()
+    deadline::ptr get_timer() NOEXCEPT
     {
         return timer_;
     }
 
-    bool get_stopped() const
+    bool get_stopped() const NOEXCEPT
     {
         return stopped_;
     }
@@ -56,10 +56,11 @@ public:
 
 BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
 {
+    const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
 
     BOOST_REQUIRE(&instance->get_settings() == &set);
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
@@ -71,11 +72,12 @@ BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
 
 BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
 {
+    const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
     set.connect_timeout_seconds = 0;
-    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
 
     boost::asio::post(strand, [instance]()
     {
@@ -96,11 +98,12 @@ BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
 
 BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
 {
+    const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
     set.connect_timeout_seconds = 0;
-    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
 
     boost::asio::post(strand, [instance]()
     {
@@ -121,11 +124,12 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
 
 BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
 {
+    const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
     set.connect_timeout_seconds = 0;
-    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
 
     boost::asio::post(strand, [&]()
     {
@@ -146,11 +150,12 @@ BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
 
 BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
 {
+    const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
     set.connect_timeout_seconds = 1000;
-    auto instance = std::make_shared<accessor>(strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
 
     boost::asio::post(strand, [instance]()
     {

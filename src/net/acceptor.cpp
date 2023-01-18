@@ -31,6 +31,8 @@
 namespace libbitcoin {
 namespace network {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 using namespace bc::system;
 using namespace std::placeholders;
 
@@ -40,13 +42,14 @@ using namespace std::placeholders;
 // handlers for any asynchronous operations performed on the acceptor."
 // Calls are stranded to protect the acceptor member.
 
-acceptor::acceptor(asio::strand& strand, asio::io_context& service,
-    const settings& settings) NOEXCEPT
+acceptor::acceptor(const logger& log, asio::strand& strand,
+    asio::io_context& service, const settings& settings) NOEXCEPT
   : settings_(settings),
     service_(service),
     strand_(strand),
     acceptor_(strand_),
-    stopped_(true)
+    stopped_(true),
+    track<acceptor>(log)
 {
 }
 
@@ -106,7 +109,7 @@ void acceptor::accept(accept_handler&& handler) NOEXCEPT
         return;
     }
 
-    const auto socket = std::make_shared<network::socket>(service_);
+    const auto socket = std::make_shared<network::socket>(get_log(), service_);
 
     // Posts handle_accept to strand.
     // This does not post to the socket strand, unlike other socket calls.
@@ -141,11 +144,14 @@ void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    const auto channel = std::make_shared<network::channel>(socket, settings_);
+    const auto channel = std::make_shared<network::channel>(get_log(), socket,
+        settings_);
 
     // Successful accept.
     handler(error::success, channel);
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

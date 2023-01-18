@@ -43,7 +43,7 @@ block block::deserialize(uint32_t version, reader& source,
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    return { to_shared(new chain::block{ source, witness }) };
+    return { to_shared<chain::block>(source, witness) };
 }
 
 void block::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,

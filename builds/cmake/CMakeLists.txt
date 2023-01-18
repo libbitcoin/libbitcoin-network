@@ -158,6 +158,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/p2p.cpp"
     "../../src/settings.cpp"
     "../../src/async/deadline.cpp"
+    "../../src/async/logger.cpp"
     "../../src/async/thread.cpp"
     "../../src/async/threadpool.cpp"
     "../../src/async/time.cpp"

@@ -18,11 +18,8 @@
  */
 #include <bitcoin/network/net/connector.hpp>
 
-#include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <memory>
-#include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -34,6 +31,8 @@
 namespace libbitcoin {
 namespace network {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 using namespace bc::system;
 using namespace network::config;
 using namespace std::placeholders;
@@ -41,14 +40,15 @@ using namespace std::placeholders;
 // Construct.
 // ---------------------------------------------------------------------------
 
-connector::connector(asio::strand& strand, asio::io_context& service,
-    const settings& settings) NOEXCEPT
+connector::connector(const logger& log, asio::strand& strand,
+    asio::io_context& service, const settings& settings) NOEXCEPT
   : settings_(settings),
     service_(service),
     strand_(strand),
-    timer_(std::make_shared<deadline>(strand_, settings_.connect_timeout())),
+    timer_(std::make_shared<deadline>(log, strand_, settings_.connect_timeout())),
     resolver_(strand_),
-    stopped_(true)
+    stopped_(true),
+    track<connector>(log)
 {
 }
 
@@ -90,7 +90,7 @@ void connector::connect(const std::string& hostname, uint16_t port,
     // This allows connect after stop (restartable).
     stopped_ = false;
 
-    const auto socket = std::make_shared<network::socket>(service_);
+    const auto socket = std::make_shared<network::socket>(get_log(), service_);
 
     // Posts timer handler to strand.
     // The handler is copied by std::bind.
@@ -178,7 +178,8 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
         return;
     }
 
-    const auto channel = std::make_shared<network::channel>(socket, settings_);
+    const auto channel = std::make_shared<network::channel>(get_log(), socket,
+        settings_);
 
     // Successful connect.
     handler(error::success, channel);
@@ -210,6 +211,8 @@ void connector::handle_timer(const code& ec, const socket::ptr& socket,
     // Timeout result code (error::success) translated to channel_timeout here.
     handler(error::channel_timeout, nullptr);
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

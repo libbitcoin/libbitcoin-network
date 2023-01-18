@@ -112,7 +112,7 @@ code hosts::stop() NOEXCEPT
 
     if (!file.good())
     {
-        LOG_DEBUG(LOG_NETWORK) << "Failed to store hosts file." << std::endl;
+        ////LOG_DEBUG(LOG_NETWORK) << "Failed to store hosts file." << std::endl;
         return error::file_load;
     }
 
@@ -126,7 +126,7 @@ code hosts::stop() NOEXCEPT
     // An invalid path or non-existent file will cause an error on write.
     if (file.bad())
     {
-        LOG_DEBUG(LOG_NETWORK) << "Failed to store hosts file." << std::endl;
+        ////LOG_DEBUG(LOG_NETWORK) << "Failed to store hosts file." << std::endl;
         return error::file_load;
     }
 
@@ -181,8 +181,8 @@ void hosts::store(const address_items& hosts) NOEXCEPT
         // Do not treat invalid address as an error, just log it.
         if (is_invalid(host))
         {
-            LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer."
-                << std::endl;
+            ////LOG_DEBUG(LOG_NETWORK) << "Invalid host address from peer."
+            ////    << std::endl;
             continue;
         }
 

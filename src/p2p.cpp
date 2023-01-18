@@ -40,6 +40,8 @@
 namespace libbitcoin {
 namespace network {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 using namespace bc::system;
 using namespace bc::system::chain;
 using namespace std::placeholders;
@@ -68,17 +70,19 @@ p2p::~p2p() NOEXCEPT
 
 acceptor::ptr p2p::create_acceptor() NOEXCEPT
 {
-    return std::make_shared<acceptor>(strand(), service(), network_settings());
+    return std::make_shared<acceptor>(log(), strand(), service(),
+        network_settings());
 }
 
 connector::ptr p2p::create_connector() NOEXCEPT
 {
-    return std::make_shared<connector>(strand(), service(), network_settings());
+    return std::make_shared<connector>(log(), strand(), service(),
+        network_settings());
 }
 
 connectors_ptr p2p::create_connectors(size_t count) NOEXCEPT
 {
-    const auto connects = std::make_shared<connectors>(connectors{});
+    const auto connects = std::make_shared<connectors>();
     connects->reserve(count);
 
     for (size_t connect = 0; connect < count; ++connect)
@@ -334,6 +338,11 @@ const settings& p2p::network_settings() const NOEXCEPT
     return settings_;
 }
 
+const logger& p2p::log() const NOEXCEPT
+{
+    return log_;
+}
+
 asio::io_context& p2p::service() NOEXCEPT
 {
     return threadpool_.service();
@@ -531,6 +540,8 @@ session_outbound::ptr p2p::attach_outbound_session() NOEXCEPT
     BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
     return attach<session_outbound>(*this);
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

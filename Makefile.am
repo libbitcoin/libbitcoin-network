@@ -39,6 +39,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/p2p.cpp \
     src/settings.cpp \
     src/async/deadline.cpp \
+    src/async/logger.cpp \
     src/async/thread.cpp \
     src/async/threadpool.cpp \
     src/async/time.cpp \
@@ -215,6 +216,7 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/deadline.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
     include/bitcoin/network/async/handlers.hpp \
+    include/bitcoin/network/async/logger.hpp \
     include/bitcoin/network/async/subscriber.hpp \
     include/bitcoin/network/async/thread.hpp \
     include/bitcoin/network/async/threadpool.hpp \

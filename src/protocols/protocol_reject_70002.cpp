@@ -40,7 +40,8 @@ using namespace std::placeholders;
 // This protocol creates log overflow DOS vector, and is not in widespread use.
 protocol_reject_70002::protocol_reject_70002(const session& session,
     const channel::ptr& channel) NOEXCEPT
-  : protocol(session, channel)
+  : protocol(session, channel),
+    track<protocol_reject_70002>(session.log())
 {
 }
 
@@ -90,10 +91,10 @@ void protocol_reject_70002::handle_receive_reject(const code& ec,
     if (message == block::command || message == transaction::command)
         hash = " [" + encode_hash(reject->hash) + "].";
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Received " << message << " reject ("
-        << static_cast<uint16_t>(reject->code) << ") from ["
-        << authority() << "] '" << reject->reason << "'" << hash << std::endl;
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Received " << message << " reject ("
+    ////    << static_cast<uint16_t>(reject->code) << ") from ["
+    ////    << authority() << "] '" << reject->reason << "'" << hash << std::endl;
 }
 
 } // namespace network

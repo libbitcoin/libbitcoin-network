@@ -32,6 +32,8 @@
 namespace libbitcoin {
 namespace network {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 #define CLASS protocol_version_31402
 static const std::string protocol_name = "version";
 
@@ -61,8 +63,9 @@ protocol_version_31402::protocol_version_31402(const session& session,
     sent_version_(false),
     received_version_(false),
     received_acknowledge_(false),
-    timer_(std::make_shared<deadline>(channel->strand(),
-        session.settings().channel_handshake()))
+    timer_(std::make_shared<deadline>(session.log(), channel->strand(),
+        session.settings().channel_handshake())),
+    track<protocol_version_31402>(session.log())
 {
 }
 
@@ -79,51 +82,55 @@ protocol_version_31402::version_ptr
 protocol_version_31402::version_factory() const NOEXCEPT
 {
     // TODO: allow for node to inject top height.
-    const auto top_height = static_cast<uint32_t>(zero);
+    constexpr auto top_height = possible_narrow_cast<uint32_t>(zero);
     BC_ASSERT_MSG(top_height <= max_uint32, "Time to upgrade the protocol.");
 
     // Relay always exposed on version, despite lack of definition < BIP37.
     // See comments in version::deserialize regarding BIP37 protocol bug.
     constexpr auto relay = false;
-    const auto timestamp = static_cast<uint32_t>(zulu_time());
+    const auto timestamp = unix_time();
 
-    return std::make_shared<version>(
-        version
+    // Should construct using makes_shared(vargs) overload, but fails on clang.
+    BC_PUSH_WARNING(NO_NEW_OR_DELETE)
+    return std::shared_ptr<version>(new version
+    {
+        maximum_version_,
+        maximum_services_,
+        timestamp,
+
+        // ********************************************************************
+        // PROTOCOL:
+        // Peer address_item (timestamp/services are redundant/unused).
+        // Both peers cannot know each other's service level, so set node_none.
+        // ********************************************************************
+        address_item
         {
-            maximum_version_,
-            maximum_services_,
             timestamp,
+            service::node_none,
+            authority().to_ip_address(),
+            authority().port(),
+        },
 
-            // ********************************************************************
-            // PROTOCOL:
-            // Peer address_item (timestamp/services are redundant/unused).
-            // Both peers cannot know each other's service level, so set node_none.
-            // ********************************************************************
-            {
-                timestamp,
-                service::node_none,
-                authority().to_ip_address(),
-                authority().port(),
-            },
+        // ********************************************************************
+        // PROTOCOL:
+        // Self address_item (timestamp/services are redundant).
+        // The protocol expects duplication of the sender's services, but this
+        // is broadly observed to be inconsistently implemented by other nodes.
+        // ********************************************************************
+        address_item
+        {
+            timestamp,
+            maximum_services_,
+            settings().self.to_ip_address(),
+            settings().self.port(),
+        },
 
-            // ********************************************************************
-            // PROTOCOL:
-            // Self address_item (timestamp/services are redundant).
-            // The protocol expects duplication of the sender's services, but this
-            // is broadly observed to be inconsistently implemented by other nodes.
-            // ********************************************************************
-            {
-                timestamp,
-                maximum_services_,
-                settings().self.to_ip_address(),
-                settings().self.port(),
-            },
-
-            nonce(),
-            BC_USER_AGENT,
-            top_height,
-            relay
-        });
+        nonce(),
+        BC_USER_AGENT,
+        top_height,
+        relay
+    });
+    BC_POP_WARNING()
 }
 
 // Allow derived classes to handle message rejection.
@@ -151,9 +158,9 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (minimum_version_ < level::minimum_protocol)
     {
-        LOG_ERROR(LOG_NETWORK)
-            << "Invalid protocol version configuration, minimum below ("
-            << level::minimum_protocol << ")." << std::endl;
+        ////LOG_ERROR(LOG_NETWORK)
+        ////    << "Invalid protocol version configuration, minimum below ("
+        ////    << level::minimum_protocol << ")." << std::endl;
 
         callback(error::invalid_configuration);
         return;
@@ -161,9 +168,9 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (maximum_version_ > level::maximum_protocol)
     {
-        LOG_ERROR(LOG_NETWORK)
-            << "Invalid protocol version configuration, maximum above ("
-            << level::maximum_protocol << ")." << std::endl;
+        ////LOG_ERROR(LOG_NETWORK)
+        ////    << "Invalid protocol version configuration, maximum above ("
+        ////    << level::maximum_protocol << ")." << std::endl;
 
         callback(error::invalid_configuration);
         return;
@@ -171,9 +178,9 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (minimum_version_ > maximum_version_)
     {
-        LOG_ERROR(LOG_NETWORK)
-            << "Invalid protocol version configuration, "
-            << "minimum exceeds maximum." << std::endl;
+        ////LOG_ERROR(LOG_NETWORK)
+        ////    << "Invalid protocol version configuration, "
+        ////    << "minimum exceeds maximum." << std::endl;
 
         callback(error::invalid_configuration);
         return;
@@ -299,16 +306,16 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         return;
     }
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Peer [" << authority() << "] protocol version ("
-        << message->value << ") user agent: " << message->user_agent
-        << std::endl;
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Peer [" << authority() << "] protocol version ("
+    ////    << message->value << ") user agent: " << message->user_agent
+    ////    << std::endl;
 
     if (to_bool(message->services & invalid_services_))
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Invalid peer network services (" << message->services
-            << ") for [" << authority() << "]" << std::endl;
+        ////LOG_DEBUG(LOG_NETWORK)
+        ////    << "Invalid peer network services (" << message->services
+        ////    << ") for [" << authority() << "]" << std::endl;
 
         rejection(error::insufficient_peer);
         return;
@@ -317,9 +324,9 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     // Advertised services on many incoming connections may be set to zero.
     if ((message->services & minimum_services_) != minimum_services_)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Insufficient peer network services (" << message->services
-            << ") for [" << authority() << "]" << std::endl;
+        ////LOG_DEBUG(LOG_NETWORK)
+        ////    << "Insufficient peer network services (" << message->services
+        ////    << ") for [" << authority() << "]" << std::endl;
 
         rejection(error::insufficient_peer);
         return;
@@ -327,64 +334,21 @@ void protocol_version_31402::handle_receive_version(const code& ec,
 
     if (message->value < minimum_version_)
     {
-        LOG_DEBUG(LOG_NETWORK)
-            << "Insufficient peer protocol version (" << message->value
-            << ") for [" << authority() << "]" << std::endl;
+        ////LOG_DEBUG(LOG_NETWORK)
+        ////    << "Insufficient peer protocol version (" << message->value
+        ////    << ") for [" << authority() << "]" << std::endl;
 
         rejection(error::insufficient_peer);
         return;
     }
 
-    // TODO: * denotes unversioned protocol.
-    // TODO: Versioned protocol classes are suffixed as: x_version[_sub].
-    // TODO: Unversioned protocol classes are suffixed as: x_unversioned[_sub].
-    // TODO: Handle unversioned handhshake PIDs in base: version_unversioned.
-
-    // TODO: Get own PIDs from settings ([protocol].bipXXX).
-    // TODO: These augment protocol minimum version levels.
-    // TODO: Own PID values are const (relay overriden in seeding).
-    // TODO: Could set version < bip37 for seeding, allows sendaddrv2, though
-    // TODO: this would require making certain assumptions about peer support.
-
-    // TODO: sendrecon is two PIDs for both own/peer (*sendrecon_in/out[1]).
-    // TODO: relay is one PID for both own/peer (all PIDs have own/peer).
-    // TODO: Nodes with bip133 version level do not have to implement bip133.
-    // TODO: Peer may not send disabletx if our relay PID is true (bip338).
-    // TODO: The disabletx and relay PIDs are independent (bip338).
-    // TODO: Drop peer for send of message if its state is already set.
-
-    // TODO: PID handshake messages may also be caught by their protocols but
-    // TODO: handshake PID state must only be updated by the version protocols.
-    // TODO: This is necessary only to obtain draft:sendrecon.salt (bip330).
-
-    // TODO: Send own relay PID in version written to version.relay.
-    // TODO: Send own handshake PIDs in version as handshake messages:
-    // TODO:    *sendaddrv2[], wtxidrelay[], disabletx[]
-    // TODO: Send own post-handshake PIDs in protocols.
-    // TODO:    sendheaders[], sendcmpct[0|1],
-    // TODO:    (draft: *sendrecon_in[1], *sendrecon_out[1])
-
-    // TODO: Set peer relay PID in version read from version.relay.
-    // TODO: Set peer handshake PIDs in version from handshake messages:
-    // TODO:    *sendaddrv2[], wtxidrelay[], disabletx[]
-    // TODO: Set peer post-handshake PIDs in protocols:
-    // TODO:    sendheaders[], sendcmpct[0|1],
-    // TODO:    (draft: *sendrecon_in[1], *sendrecon_out[1])
-
-    // TODO: Compute negotiated PIDs.
-    // TODO: PID protocols are independently own/peer.
-    // TODO: Versioned PID protocols are opt in (assured).
-    // TODO: Unversioned PID protocols are opt in (maybe).
-    // TODO: Dynamic computation is only necessary for dynamic PID protocols:
-    //          sendheaders, sendcmpct, (draft: sendrecon)
-
     const auto version = std::min(message->value, maximum_version_);
     set_negotiated_version(version);
     set_peer_version(message);
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Negotiated protocol version (" << version
-        << ") for [" << authority() << "]" << std::endl;
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Negotiated protocol version (" << version
+    ////    << ") for [" << authority() << "]" << std::endl;
 
     SEND1(version_acknowledge{}, handle_send_acknowledge, _1);
 
@@ -407,6 +371,8 @@ void protocol_version_31402::handle_send_acknowledge(const code& ec) NOEXCEPT
     if (complete())
         callback(error::success);
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

@@ -45,12 +45,12 @@ class BCT_API proxy
 {
 public:
     DELETE_COPY_MOVE(proxy);
+    virtual ~proxy() NOEXCEPT;
 
     typedef std::shared_ptr<proxy> ptr;
     typedef subscriber<const code&> stop_subscriber;
     typedef std::function<void(const code&)> result_handler;
 
-    // TODO: change integer version() to active() structure.
     /// Send a message to the peer.
     template <class Message>
     void send(const typename Message::ptr& message,
@@ -102,7 +102,6 @@ protected:
         const system::chunk_ptr& payload) NOEXCEPT;
 
     proxy(const socket::ptr& socket) NOEXCEPT;
-    virtual ~proxy() NOEXCEPT;
 
     /// Property values provided to the proxy.
     virtual size_t maximum_payload() const NOEXCEPT = 0;

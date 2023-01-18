@@ -105,17 +105,17 @@ public:
     // ------------------------------------------------------------------------
 
     /// Subscribe to connection creation events (allowed before start).
-    /// A call after close will return success but never invokes the handler.
+    /// A call after close invokes complete with error::subscriber_stopped.
     virtual void subscribe_connect(channel_handler&& handler,
         result_handler&& complete) NOEXCEPT;
 
     /// Subscribe to service stop event (allowed before start).
-    /// A call after close will return success but never invokes the handler.
+    /// A call after close invokes complete with error::subscriber_stopped.
     virtual void subscribe_close(result_handler&& handler,
         result_handler&& complete) NOEXCEPT;
 
     // Manual connections.
-    // ----------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     /// Maintain a connection.
     virtual void connect(const config::endpoint& endpoint) NOEXCEPT;
@@ -138,6 +138,9 @@ public:
 
     /// Network configuration settings.
     const settings& network_settings() const NOEXCEPT;
+
+    /// Return a logging instance.
+    const logger& log() const NOEXCEPT;
 
     /// Return a reference to the network io_context (thread safe).
     asio::io_context& service() NOEXCEPT;
@@ -240,6 +243,7 @@ private:
         const result_handler& complete) NOEXCEPT;
 
     // These are thread safe.
+    const logger log_{};
     const settings& settings_;
     std::atomic<size_t> channel_count_;
     std::atomic<size_t> inbound_channel_count_;

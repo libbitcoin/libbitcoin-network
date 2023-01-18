@@ -20,13 +20,10 @@
 #define LIBBITCOIN_NETWORK_ASYNC_TRACK_IPP
 
 #include <atomic>
-#include <cstddef>
 #include <typeinfo>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/define.hpp>
-
-// Log name.
-#define LOG_SYSTEM "system"
 
 namespace libbitcoin {
 namespace network {
@@ -35,11 +32,12 @@ template <class Shared>
 std::atomic<size_t> track<Shared>::instances_(0);
 
 template <class Shared>
-track<Shared>::track()
+track<Shared>::track(const logger& log) NOEXCEPT
+  : log_(log)
 {
 #ifndef NDEBUG
-    LOG_DEBUG(LOG_SYSTEM) << typeid(Shared).name()
-        << "(" << ++instances_ << ")" << std::endl;
+    ////LOG_DEBUG(LOG_SYSTEM) << typeid(Shared).name()
+    ////    << "(" << ++instances_ << ")" << std::endl;
 #endif
 }
 
@@ -47,9 +45,15 @@ template <class Shared>
 track<Shared>::~track() NOEXCEPT
 {
 #ifndef NDEBUG
-    LOG_DEBUG(LOG_SYSTEM) << "~" << typeid(Shared).name()
-        << "(" << --instances_ << ")" << std::endl;
+    ////LOG_DEBUG(LOG_SYSTEM) << "~" << typeid(Shared).name()
+    ////    << "(" << --instances_ << ")" << std::endl;
 #endif
+}
+
+template <class Shared>
+const logger& track<Shared>::get_log() const NOEXCEPT
+{
+    return log_;
 }
 
 } // namespace network

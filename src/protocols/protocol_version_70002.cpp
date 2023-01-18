@@ -43,7 +43,7 @@ static const std::string insufficient_services = "insufficient-services";
 
 protocol_version_70002::protocol_version_70002(const session& session,
     const channel::ptr& channel) NOEXCEPT
-  : protocol_version_70001(session, channel,
+  : protocol_version_70002(session, channel,
         session.settings().services_minimum,
         session.settings().services_maximum,
         session.settings().relay_transactions)
@@ -54,7 +54,8 @@ protocol_version_70002::protocol_version_70002(const session& session,
     const channel::ptr& channel, uint64_t minimum_services,
     uint64_t maximum_services, bool relay) NOEXCEPT
   : protocol_version_70001(session, channel, minimum_services,
-      maximum_services, relay)
+      maximum_services, relay),
+    track<protocol_version_70002>(session.log())
 {
 }
 
@@ -104,17 +105,17 @@ void protocol_version_70002::rejection(const code& ec) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_version_70002::handle_receive_reject(const code& ec,
-    const reject::ptr& reject) NOEXCEPT
+    const reject::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
     if (stopped(ec))
         return;
 
-    LOG_DEBUG(LOG_NETWORK)
-        << "Reject message '" << reject->message << "' ("
-        << static_cast<uint16_t>(reject->code) << ") from [" << authority()
-        << "] with reason: " << reject->reason << std::endl;
+    ////LOG_DEBUG(LOG_NETWORK)
+    ////    << "Reject message '" << reject->message << "' ("
+    ////    << static_cast<uint16_t>(reject->code) << ") from [" << authority()
+    ////    << "] with reason: " << reject->reason << std::endl;
 }
 
 } // namespace network

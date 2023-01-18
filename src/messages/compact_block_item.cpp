@@ -37,7 +37,7 @@ compact_block_item compact_block_item::deserialize(uint32_t, reader& source,
     return 
     {
         source.read_variable(),
-        to_shared(new chain::transaction{ source, witness })
+        to_shared<chain::transaction>(source, witness)
     };
 }
 

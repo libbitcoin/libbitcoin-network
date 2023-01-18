@@ -69,9 +69,6 @@ public:
     /// Stop the sesssion timer and subscriber (call from network strand).
     virtual void stop() NOEXCEPT;
 
-    /// Access network configuration settings.
-    const network::settings& settings() const NOEXCEPT;
-
     /// Utilities.
     /// -----------------------------------------------------------------------
 
@@ -88,6 +85,15 @@ public:
     /// Save a subset of entries (count based on config) from address pool.
     virtual void saves(const messages::address_items& addresses,
         result_handler&& handler) const NOEXCEPT;
+
+    /// Properties.
+    /// -----------------------------------------------------------------------
+
+    /// Access network configuration settings.
+    const network::settings& settings() const NOEXCEPT;
+
+    /// Return a logging instance.
+    const logger& log() const NOEXCEPT;
 
 protected:
     typedef subscriber<code> stop_subscriber;

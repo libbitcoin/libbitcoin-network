@@ -27,12 +27,12 @@ public:
     typedef std::shared_ptr<base_class> ptr;
 
     template <typename Derived>
-    typename Derived::ptr self()
+    typename Derived::ptr self() NOEXCEPT
     {
         return shared_from_base<Derived>();
     }
 
-    bool base_method(bool value) const
+    bool base_method(bool value) const NOEXCEPT
     {
         return value;
     }
@@ -44,7 +44,7 @@ class derived_class
 public:
     typedef std::shared_ptr<derived_class> ptr;
 
-    bool derived_method(bool value) const
+    bool derived_method(bool value) const NOEXCEPT
     {
         return value;
     }

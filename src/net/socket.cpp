@@ -41,10 +41,11 @@ using namespace std::placeholders;
 // use, by default, to dispatch handlers for any asynchronous operations
 // performed on the socket." Calls are stranded to protect the socket member.
 
-socket::socket(asio::io_context& service) NOEXCEPT
+socket::socket(const logger& log, asio::io_context& service) NOEXCEPT
   : stopped_(false),
     strand_(service.get_executor()),
-    socket_(strand_)
+    socket_(strand_),
+    track<socket>(log)
 {
 }
 

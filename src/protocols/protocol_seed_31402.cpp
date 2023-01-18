@@ -44,8 +44,9 @@ protocol_seed_31402::protocol_seed_31402(const session& session,
     sent_address_(false),
     sent_get_address_(false),
     received_address_(false),
-    timer_(std::make_shared<deadline>(channel->strand(),
-        session.settings().channel_germination()))
+    timer_(std::make_shared<deadline>(session.log(), channel->strand(),
+        session.settings().channel_germination())),
+    track<protocol_seed_31402>(session.log())
 {
 }
 
@@ -78,11 +79,12 @@ bool protocol_seed_31402::complete() const NOEXCEPT
     return sent_address_ && sent_get_address_ && received_address_;
 }
 
-void protocol_seed_31402::stop(const code&) NOEXCEPT
+void protocol_seed_31402::stop(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
     timer_->stop();
+    protocol::stop(ec);
 }
 
 void protocol_seed_31402::handle_timer(const code& ec) NOEXCEPT

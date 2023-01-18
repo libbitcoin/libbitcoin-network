@@ -32,19 +32,19 @@ public:
     using connector::connector;
 
     // Get captured connected.
-    bool connected() const
+    bool connected() const NOEXCEPT
     {
         return !is_zero(connects_);
     }
 
     // Get captured endpoint.
-    const endpoint& peer() const
+    const endpoint& peer() const NOEXCEPT
     {
         return peer_;
     }
 
     // Get captured stopped.
-    bool stopped() const
+    bool stopped() const NOEXCEPT
     {
         return stopped_;
     }
@@ -63,11 +63,12 @@ public:
         if (is_zero(connects_++))
             peer_ = peer;
 
-        const auto socket = std::make_shared<network::socket>(service_);
-        const auto channel = std::make_shared<network::channel>(socket, settings_);
+        const auto socket = std::make_shared<network::socket>(get_log(), service_);
+        const auto channel = std::make_shared<network::channel>(get_log(), socket,
+            settings_);
 
         // Must be asynchronous or is an infinite recursion.
-        boost::asio::post(strand_, [=]()
+        boost::asio::post(strand_, [=]() NOEXCEPT
         {
             // Connect result code is independent of the channel stop code.
             // As error code woulod set the re-listener timer, channel pointer is ignored.
@@ -96,7 +97,7 @@ public:
         if (is_zero(connects_++))
             peer_ = peer;
 
-        boost::asio::post(strand_, [=]()
+        boost::asio::post(strand_, [=]() NOEXCEPT
         {
             // This error is eaten by handle_connect, due to retry logic.
             // invalid_magic is a non-terminal code (timer retry).
@@ -127,7 +128,7 @@ public:
         return session_manual::stopped();
     }
 
-    endpoint start_connect_endpoint() const
+    endpoint start_connect_endpoint() const NOEXCEPT
     {
         return start_connect_endpoint_;
     }
@@ -149,17 +150,17 @@ public:
         }
     }
 
-    bool connected() const
+    bool connected() const NOEXCEPT
     {
         return !is_zero(connects_);
     }
 
-    bool require_connected() const
+    bool require_connected() const NOEXCEPT
     {
         return connect_.get_future().get();
     }
 
-    bool require_reconnect() const
+    bool require_reconnect() const NOEXCEPT
     {
         return reconnect_.get_future().get();
     }
@@ -177,12 +178,12 @@ public:
         handshake(error::success);
     }
 
-    bool attached_handshake() const
+    bool attached_handshake() const NOEXCEPT
     {
         return handshaked_;
     }
 
-    bool require_attached_handshake() const
+    bool require_attached_handshake() const NOEXCEPT
     {
         return handshake_.get_future().get();
     }
@@ -227,7 +228,7 @@ public:
     using p2p::p2p;
 
     // Get last created connector.
-    typename Connector::ptr get_connector() const
+    typename Connector::ptr get_connector() const NOEXCEPT
     {
         return connector_;
     }
@@ -235,8 +236,8 @@ public:
     // Create mock connector to inject mock channel.
     connector::ptr create_connector() NOEXCEPT override
     {
-        return ((connector_ = std::make_shared<Connector>(strand(), service(),
-            network_settings())));
+        return ((connector_ = std::make_shared<Connector>(log(), strand(),
+            service(), network_settings())));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -261,7 +262,7 @@ private:
       : public session_inbound
     {
     public:
-        mock_inbound_session(p2p& network)
+        mock_inbound_session(p2p& network) NOEXCEPT
           : session_inbound(network)
         {
         }
@@ -276,7 +277,7 @@ private:
       : public session_outbound
     {
     public:
-        mock_outbound_session(p2p& network)
+        mock_outbound_session(p2p& network) NOEXCEPT
           : session_outbound(network)
         {
         }
@@ -291,7 +292,7 @@ private:
       : public session_seed
     {
     public:
-        mock_seed_session(p2p& network)
+        mock_seed_session(p2p& network) NOEXCEPT
           : session_seed(network)
         {
         }

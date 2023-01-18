@@ -22,6 +22,7 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
+#include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/track.hpp>
@@ -36,7 +37,7 @@ namespace network {
 /// This simplifies invocation, eliminates boost-specific error handling and
 /// makes timer firing and cancellation conditions safe for shared objects.
 class BCT_API deadline final
-  : public std::enable_shared_from_this<deadline>, track<deadline>
+  : public std::enable_shared_from_this<deadline>, public track<deadline>
 {
 public:
     DELETE_COPY_MOVE(deadline);
@@ -45,7 +46,8 @@ public:
     typedef std::function<void(const code&)> handler;
     
     /// Timer notification handler is posted to the service.
-    deadline(asio::strand& strand, const duration& timeout=seconds(0)) NOEXCEPT;
+    deadline(const logger& log, asio::strand& strand,
+        const duration& timeout=seconds(0)) NOEXCEPT;
 
     /// Assert timer stopped.
     ~deadline() NOEXCEPT;

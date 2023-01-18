@@ -115,7 +115,6 @@ public:
     virtual void stop(const code& ec) NOEXCEPT;
 
 private:
-    // TODO: change integer version() to active() structure.
     // Deserialize a stream into a message instance and notify subscribers.
     template <typename Message, typename Subscriber>
     code do_notify(Subscriber& subscriber, uint32_t version,

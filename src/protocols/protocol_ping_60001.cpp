@@ -43,7 +43,8 @@ static const std::string protocol_name = "ping";
 protocol_ping_60001::protocol_ping_60001(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_ping_31402(session, channel),
-    nonce_(received)
+    nonce_(received),
+    track<protocol_ping_60001>(session.log())
 {
 }
 

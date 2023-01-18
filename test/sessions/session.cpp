@@ -39,12 +39,12 @@ public:
         channel::resume();
     }
 
-    bool resumed() const
+    bool resumed() const NOEXCEPT
     {
         return resumed_;
     }
 
-    bool reresumed() const
+    bool reresumed() const NOEXCEPT
     {
         return reresumed_;
     }
@@ -55,12 +55,12 @@ public:
         channel::stop(ec);
     }
 
-    void stopper(const code& ec)
+    void stopper(const code& ec) NOEXCEPT
     {
         channel::stop(ec);
     }
 
-    code stop_code() const
+    code stop_code() const NOEXCEPT
     {
         return stop_code_;
     }
@@ -93,12 +93,12 @@ class mock_session
   : public session
 {
 public:
-    mock_session(p2p& network, bool inbound=false, bool notify=true)
+    mock_session(p2p& network, bool inbound=false, bool notify=true) NOEXCEPT
       : session(network), inbound_(inbound), notify_(notify)
     {
     }
 
-    virtual ~mock_session()
+    virtual ~mock_session() NOEXCEPT
     {
     }
 
@@ -175,7 +175,7 @@ public:
         handshake(channel->stopped() ? error::channel_stopped : error::success);
     }
 
-    bool attached_handshake() const
+    bool attached_handshake() const NOEXCEPT
     {
         return handshaked_;
     }
@@ -189,12 +189,12 @@ public:
         }
     }
 
-    bool attached_protocol() const
+    bool attached_protocol() const NOEXCEPT
     {
         return protocoled_;
     }
 
-    bool require_attached_protocol() const
+    bool require_attached_protocol() const NOEXCEPT
     {
         return require_protocoled_.get_future().get();
     }
@@ -219,7 +219,7 @@ public:
         return p2p::create_acceptor();
     }
 
-    size_t acceptors() const
+    size_t acceptors() const NOEXCEPT
     {
         return acceptors_;
     }
@@ -230,7 +230,7 @@ public:
         return p2p::create_connector();
     }
 
-    size_t connectors() const
+    size_t connectors() const NOEXCEPT
     {
         return connectors_;
     }
@@ -252,7 +252,7 @@ public:
         complete(error::invalid_magic);
     }
 
-    const messages::address_item& saved() const
+    const messages::address_item& saved() const NOEXCEPT
     {
         return saved_;
     }
@@ -264,52 +264,52 @@ public:
         complete(error::bad_stream);
     }
 
-    const messages::address_items& saveds() const
+    const messages::address_items& saveds() const NOEXCEPT
     {
         return saveds_;
     }
 
-    uint64_t pent_nonce() const
+    uint64_t pent_nonce() const NOEXCEPT
     {
         return pend_;
     }
 
-    uint64_t unpent_nonce() const
+    uint64_t unpent_nonce() const NOEXCEPT
     {
         return unpend_;
     }
 
-    uint64_t stored_nonce() const
+    uint64_t stored_nonce() const NOEXCEPT
     {
         return store_nonce_;
     }
 
-    bool stored_inbound() const
+    bool stored_inbound() const NOEXCEPT
     {
         return store_inbound_;
     }
 
-    bool stored_notify() const
+    bool stored_notify() const NOEXCEPT
     {
         return store_notify_;
     }
 
-    code stored_result() const
+    code stored_result() const NOEXCEPT
     {
         return store_result_;
     }
 
-    uint64_t unstored_nonce() const
+    uint64_t unstored_nonce() const NOEXCEPT
     {
         return unstore_nonce_;
     }
 
-    bool unstored_inbound() const
+    bool unstored_inbound() const NOEXCEPT
     {
         return unstore_inbound_;
     }
 
-    bool unstore_found() const
+    bool unstore_found() const NOEXCEPT
     {
         return unstore_found_;
     }
@@ -374,7 +374,7 @@ private:
       : public session_seed
     {
     public:
-        mock_session_seed(p2p& network)
+        mock_session_seed(p2p& network) NOEXCEPT
           : session_seed(network)
         {
         }
@@ -619,9 +619,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
     auto session = std::make_shared<mock_session>(net);
     BOOST_REQUIRE(session->stopped());
 
-    const auto socket = std::make_shared<network::socket>(net.service());
-    const auto channel = std::make_shared<mock_channel>(socket,
-        session->settings());
+    const auto socket = std::make_shared<network::socket>(net.log(), net.service());
+    const auto channel = std::make_shared<mock_channel>(net.log(), socket, session->settings());
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -674,9 +673,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.service());
-    const auto channel = std::make_shared<mock_channel>(socket,
-        session->settings());
+    const auto socket = std::make_shared<network::socket>(net.log(), net.service());
+    const auto channel = std::make_shared<mock_channel>(net.log(), socket, session->settings());
 
     // Stop the channel (started by default).
     std::promise<bool> unstarted_channel;
@@ -751,9 +749,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.service());
-    const auto channel = std::make_shared<mock_channel>(socket,
-        session->settings());
+    const auto socket = std::make_shared<network::socket>(net.log(), net.service());
+    const auto channel = std::make_shared<mock_channel>(net.log(), socket, session->settings());
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -837,9 +834,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.service());
-    const auto channel = std::make_shared<mock_channel>(socket,
-        session->settings());
+    const auto socket = std::make_shared<network::socket>(net.log(), net.service());
+    const auto channel = std::make_shared<mock_channel>(net.log(), socket, session->settings());
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -928,9 +924,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.service());
-    const auto channel = std::make_shared<mock_channel_no_read>(socket,
-        session->settings());
+    const auto socket = std::make_shared<network::socket>(net.log(), net.service());
+    const auto channel = std::make_shared<mock_channel_no_read>(net.log(), socket, session->settings());
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
@@ -1019,9 +1014,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
-    const auto socket = std::make_shared<network::socket>(net.service());
-    const auto channel = std::make_shared<mock_channel_no_read>(socket,
-        session->settings());
+    const auto socket = std::make_shared<network::socket>(net.log(), net.service());
+    const auto channel = std::make_shared<mock_channel_no_read>(net.log(), socket, session->settings());
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;

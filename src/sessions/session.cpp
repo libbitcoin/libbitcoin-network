@@ -43,7 +43,7 @@ using namespace std::placeholders;
 session::session(p2p& network) NOEXCEPT
   : network_(network),
     stopped_(true),
-    timer_(std::make_shared<deadline>(network.strand())),
+    timer_(std::make_shared<deadline>(network.log(), network.strand())),
     stop_subscriber_(std::make_shared<stop_subscriber>(network.strand()))
 {
 }
@@ -123,7 +123,7 @@ void session::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) const NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
-    BC_ASSERT_MSG(!channel->paused(), "channel paused for handshake");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
@@ -308,11 +308,6 @@ connectors_ptr session::create_connectors(size_t count) NOEXCEPT
 // Properties.
 // ----------------------------------------------------------------------------
 
-const network::settings& session::settings() const NOEXCEPT
-{
-    return network_.network_settings();
-}
-
 bool session::stopped() const NOEXCEPT
 {
     return stopped_.load(std::memory_order_relaxed);
@@ -341,6 +336,16 @@ size_t session::inbound_channel_count() const NOEXCEPT
 bool session::blacklisted(const config::authority& authority) const NOEXCEPT
 {
     return contains(settings().blacklists, authority);
+}
+
+const network::settings& session::settings() const NOEXCEPT
+{
+    return network_.network_settings();
+}
+
+const logger& session::log() const NOEXCEPT
+{
+    return network_.log();
 }
 
 // Utilities.

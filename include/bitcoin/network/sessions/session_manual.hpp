@@ -37,7 +37,7 @@ class p2p;
 
 /// Manual connections session, thread safe.
 class BCT_API session_manual
-  : public session, track<session_manual>
+  : public session, public track<session_manual>
 {
 public:
     typedef std::shared_ptr<session_manual> ptr;

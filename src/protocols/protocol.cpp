@@ -103,9 +103,19 @@ void protocol::pause() NOEXCEPT
 
 // Properties.
 // ----------------------------------------------------------------------------
-// These public properties may be accessed outside the strand, but are never
+// The two public properties may be accessed outside the strand, but are never
 // during handshake protocol operation. Thread safety requires that setters are
 // never invoked outside of the handshake protocol (start handler).
+
+const network::settings& protocol::settings() const NOEXCEPT
+{
+    return session_.settings();
+}
+
+const logger& protocol::log() const NOEXCEPT
+{
+    return session_.log();
+}
 
 bool protocol::stranded() const NOEXCEPT
 {
@@ -120,11 +130,6 @@ config::authority protocol::authority() const NOEXCEPT
 uint64_t protocol::nonce() const NOEXCEPT
 {
     return channel_->nonce();
-}
-
-const network::settings& protocol::settings() const NOEXCEPT
-{
-    return session_.settings();
 }
 
 version::ptr protocol::peer_version() const NOEXCEPT
