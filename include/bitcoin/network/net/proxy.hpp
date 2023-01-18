@@ -41,7 +41,7 @@ namespace network {
 /// notify/send_bytes are protected/virtual for test access only.
 /// Handles all channel communication, error handling, and logging.
 class BCT_API proxy
-  : public enable_shared_from_base<proxy>
+  : public enable_shared_from_base<proxy>, public track<proxy>
 {
 public:
     DELETE_COPY_MOVE(proxy);

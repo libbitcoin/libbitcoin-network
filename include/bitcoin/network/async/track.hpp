@@ -29,14 +29,14 @@ namespace network {
 
 /// Thread safe, base class.
 /// Class to log changes in the reference count of shared objects.
-template <class Shared>
+template <class Shared, bool Track = true>
 class track
 {
 protected:
     DEFAULT_COPY_MOVE(track);
 
     track(const logger& log) NOEXCEPT;
-    virtual ~track() NOEXCEPT;
+    ~track() NOEXCEPT;
 
 public:
     const logger& get_log() const NOEXCEPT;

@@ -48,7 +48,8 @@ proxy::proxy(const socket::ptr& socket) NOEXCEPT
     pump_subscriber_(socket->strand()),
     stop_subscriber_(std::make_shared<stop_subscriber>(socket->strand())),
     payload_buffer_(),
-    heading_reader_(heading_buffer_)
+    heading_reader_(heading_buffer_),
+    track<proxy>(socket->get_log())
 {
 }
 

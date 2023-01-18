@@ -28,30 +28,36 @@
 namespace libbitcoin {
 namespace network {
 
-template <class Shared>
-std::atomic<size_t> track<Shared>::instances_(0);
+template <class Shared, bool Track>
+std::atomic<size_t> track<Shared, Track>::instances_(0);
 
-template <class Shared>
-track<Shared>::track(const logger& log) NOEXCEPT
+template <class Shared, bool Track>
+track<Shared, Track>::track(const logger& log) NOEXCEPT
   : log_(log)
 {
-#ifndef NDEBUG
-    ////LOG_DEBUG(LOG_SYSTEM) << typeid(Shared).name()
-    ////    << "(" << ++instances_ << ")" << std::endl;
-#endif
+    if constexpr (Track && bc::build_checked)
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        log_.write() << typeid(Shared).name()
+            << "(" << ++instances_ << ")" << std::endl;
+        BC_POP_WARNING()
+    }
 }
 
-template <class Shared>
-track<Shared>::~track() NOEXCEPT
+template <class Shared, bool Track>
+track<Shared, Track>::~track() NOEXCEPT
 {
-#ifndef NDEBUG
-    ////LOG_DEBUG(LOG_SYSTEM) << "~" << typeid(Shared).name()
-    ////    << "(" << --instances_ << ")" << std::endl;
-#endif
+    if constexpr (Track && bc::build_checked)
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        log_.write() << typeid(Shared).name()
+            << "(" << --instances_ << ")~" << std::endl;
+        BC_POP_WARNING()
+    }
 }
 
-template <class Shared>
-const logger& track<Shared>::get_log() const NOEXCEPT
+template <class Shared, bool Track>
+const logger& track<Shared, Track>::get_log() const NOEXCEPT
 {
     return log_;
 }

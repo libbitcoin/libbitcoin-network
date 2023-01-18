@@ -24,12 +24,27 @@
 namespace libbitcoin {
 namespace network {
 
+// TODO: pass log sink(s) on construct.
+// TODO: define sink interface, allowing runtime variations.
 logger::logger() NOEXCEPT
 {
 }
 
-void logger::log(const std::string&) const NOEXCEPT
+// TODO: incorporate log levels/types.
+// BUGBUG: console streams are not thread safe.
+
+std::ostream& logger::write() const NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return system::cout_stream();
+    BC_POP_WARNING()
+}
+
+std::ostream& logger::error() const NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return system::cerr_stream();
+    BC_POP_WARNING()
 }
 
 } // namespace network
