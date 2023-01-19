@@ -16,52 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
+#include <bitcoin/network/async/report.hpp>
 
-BOOST_AUTO_TEST_SUITE(track_tests)
+#include <bitcoin/system.hpp>
+#include <bitcoin/network/define.hpp>
 
-class tracked
-  : track<tracked>
+namespace libbitcoin {
+namespace network {
+
+report::report(const logger& log) NOEXCEPT
+  : log_(log)
 {
-public:
-    tracked(const logger& log) NOEXCEPT
-      : track<tracked>(log)
-    {
-    }
-
-    bool method() const NOEXCEPT
-    {
-        return true;
-    };
-};
-
-class reported
-  : protected report
-{
-public:
-    reported(const logger& log) NOEXCEPT
-      : report(log)
-    {
-    }
-
-    std::ostream& method() const NOEXCEPT
-    {
-        return log().write();
-    };
-};
-
-BOOST_AUTO_TEST_CASE(track__construct__always__compiles)
-{
-    const logger log{};
-    tracked foo{ log };
-    BOOST_REQUIRE(foo.method());
 }
 
-BOOST_AUTO_TEST_CASE(report__log__always__good)
+const logger& report::log() const NOEXCEPT
 {
-    const logger log{};
-    reported foo{ log };
-    BOOST_REQUIRE(foo.method().good());
+    return log_;
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+} // namespace network
+} // namespace libbitcoin

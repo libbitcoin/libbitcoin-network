@@ -44,7 +44,8 @@ session::session(p2p& network) NOEXCEPT
   : network_(network),
     stopped_(true),
     timer_(std::make_shared<deadline>(network.log(), network.strand())),
-    stop_subscriber_(std::make_shared<stop_subscriber>(network.strand()))
+    stop_subscriber_(std::make_shared<stop_subscriber>(network.strand())),
+    report(network.log())
 {
 }
 
@@ -341,11 +342,6 @@ bool session::blacklisted(const config::authority& authority) const NOEXCEPT
 const network::settings& session::settings() const NOEXCEPT
 {
     return network_.network_settings();
-}
-
-const logger& session::log() const NOEXCEPT
-{
-    return network_.log();
 }
 
 // Utilities.

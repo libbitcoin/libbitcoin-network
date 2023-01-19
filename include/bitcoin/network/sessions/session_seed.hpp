@@ -36,7 +36,7 @@ class p2p;
 
 /// Seed connections session, thread safe.
 class BCT_API session_seed
-  : public session, public track<session_seed>
+  : public session, protected track<session_seed>
 {
 public:
     typedef std::shared_ptr<session_seed> ptr;

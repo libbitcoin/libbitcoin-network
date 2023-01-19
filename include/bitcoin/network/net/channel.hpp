@@ -37,7 +37,7 @@ class session;
 /// * See proxy for its thread safety constraints.
 /// A channel is a proxy with logged timers and state.
 class BCT_API channel
-  : public proxy, public track<channel>
+  : public proxy, protected track<channel>
 {
 public:
     DELETE_COPY_MOVE(channel);

@@ -16,45 +16,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_TRACK_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_TRACK_IPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_REPORT_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_REPORT_HPP
 
-#include <atomic>
-#include <typeinfo>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-template <class Class>
-std::atomic<size_t> track<Class>::instances_(zero);
-
-template <class Class>
-track<Class>::track(const logger& log) NOEXCEPT
-  : log_(log)
+class BCT_API report
 {
-    if constexpr (build_checked)
-    {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        log_.write() << typeid(Class).name()
-            << "(" << ++instances_ << ")" << std::endl;
-        BC_POP_WARNING()
-    }
-}
+protected:
+    report(const logger& log) NOEXCEPT;
 
-template <class Class>
-track<Class>::~track() NOEXCEPT
-{
-    if constexpr (build_checked)
-    {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-            log_.write() << typeid(Class).name()
-            << "(" << --instances_ << ")~" << std::endl;
-        BC_POP_WARNING()
-    }
-}
+public:
+    const logger& log() const NOEXCEPT;
+
+private:
+    // This is thread safe.
+    const logger& log_;
+};
 
 } // namespace network
 } // namespace libbitcoin

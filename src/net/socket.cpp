@@ -45,6 +45,7 @@ socket::socket(const logger& log, asio::io_context& service) NOEXCEPT
   : stopped_(false),
     strand_(service.get_executor()),
     socket_(strand_),
+    report(log),
     track<socket>(log)
 {
 }

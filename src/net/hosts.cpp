@@ -53,6 +53,7 @@ hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
     file_path_(settings.hosts_file),
     buffer_(std::max(capacity_, one)),
     stopped_(true),
+    report(log),
     track<hosts>(log)
 {
 }
@@ -82,7 +83,7 @@ code hosts::start() NOEXCEPT
     // An invalid path/non-existent file will not cause an error on open.
     if (!file.good())
     {
-        get_log().write() << "Failed to load hosts file." << std::endl;
+        log().write() << "Failed to load hosts file." << std::endl;
         return error::file_load;
     }
 
@@ -115,7 +116,7 @@ code hosts::stop() NOEXCEPT
 
     if (!file.good())
     {
-        get_log().write() << "Failed to store hosts file." << std::endl;
+        log().write() << "Failed to store hosts file." << std::endl;
         return error::file_load;
     }
 
@@ -129,7 +130,7 @@ code hosts::stop() NOEXCEPT
     // An invalid path or non-existent file will cause an error on write.
     if (file.bad())
     {
-        get_log().write() << "Failed to store hosts." << std::endl;
+        log().write() << "Failed to store hosts." << std::endl;
         return error::file_load;
     }
 
@@ -146,7 +147,7 @@ void hosts::store(const address_item& host) NOEXCEPT
     // Do not treat invalid address as an error, just log it.
     if (is_invalid(host))
     {
-        get_log().write() << "Invalid host address from peer." << std::endl;
+        log().write() << "Invalid host address from peer." << std::endl;
         return;
     }
 
@@ -183,7 +184,7 @@ void hosts::store(const address_items& hosts) NOEXCEPT
         // Do not treat invalid address as an error, just log it.
         if (is_invalid(host))
         {
-            get_log().write() << "Invalid host addresses from peer." << std::endl;
+            log().write() << "Invalid host addresses from peer." << std::endl;
             continue;
         }
 
@@ -197,7 +198,7 @@ void hosts::store(const address_items& hosts) NOEXCEPT
         }
     }
 
-    get_log().write()
+    log().write()
         << "Accepted (" << accepted << " of " << hosts.size()
         << ") host addresses from peer." << std::endl;
 }
@@ -210,7 +211,7 @@ void hosts::remove(const address_item& host) NOEXCEPT
     const auto it = find(host);
     if (it == buffer_.end())
     {
-        get_log().write() << "Address to remove not found." << std::endl;
+        log().write() << "Address to remove not found." << std::endl;
         return;
     }
 

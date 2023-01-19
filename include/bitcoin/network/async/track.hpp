@@ -26,9 +26,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Thread safe, base class.
-/// Class to log changes in the reference count of shared objects.
-template <class Shared, bool Track = true>
+template <class Class>
 class track
 {
 protected:
@@ -36,9 +34,6 @@ protected:
 
     track(const logger& log) NOEXCEPT;
     ~track() NOEXCEPT;
-
-public:
-    const logger& get_log() const NOEXCEPT;
 
 private:
     // These are thread safe.

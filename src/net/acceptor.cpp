@@ -49,6 +49,7 @@ acceptor::acceptor(const logger& log, asio::strand& strand,
     strand_(strand),
     acceptor_(strand_),
     stopped_(true),
+    report(log),
     track<acceptor>(log)
 {
 }
@@ -109,7 +110,7 @@ void acceptor::accept(accept_handler&& handler) NOEXCEPT
         return;
     }
 
-    const auto socket = std::make_shared<network::socket>(get_log(), service_);
+    const auto socket = std::make_shared<network::socket>(log(), service_);
 
     // Posts handle_accept to strand.
     // This does not post to the socket strand, unlike other socket calls.
@@ -144,7 +145,7 @@ void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    const auto channel = std::make_shared<network::channel>(get_log(), socket,
+    const auto channel = std::make_shared<network::channel>(log(), socket,
         settings_);
 
     // Successful accept.

@@ -34,7 +34,8 @@ namespace network {
 /// Stop is thread safe and idempotent, may be called multiple times.
 /// All handlers (except accept) are posted to the internal strand.
 class BCT_API socket
-  : public std::enable_shared_from_this<socket>, public track<socket>
+  : public std::enable_shared_from_this<socket>, public report,
+    protected track<socket>
 {
 public:
     DELETE_COPY_MOVE(socket);
