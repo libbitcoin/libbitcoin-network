@@ -21,11 +21,11 @@
 BOOST_AUTO_TEST_SUITE(track_tests)
 
 class tracked
-  : track<tracked>
+  : tracker<tracked>
 {
 public:
     tracked(const logger& log) NOEXCEPT
-      : track<tracked>(log)
+      : tracker<tracked>(log)
     {
     }
 
@@ -36,11 +36,11 @@ public:
 };
 
 class reported
-  : protected report
+  : protected reporter
 {
 public:
     reported(const logger& log) NOEXCEPT
-      : report(log)
+      : reporter(log)
     {
     }
 

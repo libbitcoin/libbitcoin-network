@@ -40,7 +40,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/settings.cpp \
     src/async/deadline.cpp \
     src/async/logger.cpp \
-    src/async/report.cpp \
+    src/async/reporter.cpp \
     src/async/thread.cpp \
     src/async/threadpool.cpp \
     src/async/time.cpp \
@@ -218,13 +218,13 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
     include/bitcoin/network/async/handlers.hpp \
     include/bitcoin/network/async/logger.hpp \
-    include/bitcoin/network/async/report.hpp \
+    include/bitcoin/network/async/reporter.hpp \
     include/bitcoin/network/async/subscriber.hpp \
     include/bitcoin/network/async/thread.hpp \
     include/bitcoin/network/async/threadpool.hpp \
     include/bitcoin/network/async/time.hpp \
     include/bitcoin/network/async/timer.hpp \
-    include/bitcoin/network/async/track.hpp
+    include/bitcoin/network/async/tracker.hpp
 
 include_bitcoin_network_configdir = ${includedir}/bitcoin/network/config
 include_bitcoin_network_config_HEADERS = \
@@ -236,7 +236,7 @@ include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \
     include/bitcoin/network/impl/async/enable_shared_from_base.ipp \
     include/bitcoin/network/impl/async/subscriber.ipp \
-    include/bitcoin/network/impl/async/track.ipp
+    include/bitcoin/network/impl/async/tracker.ipp
 
 include_bitcoin_network_messagesdir = ${includedir}/bitcoin/network/messages
 include_bitcoin_network_messages_HEADERS = \

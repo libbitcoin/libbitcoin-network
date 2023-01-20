@@ -37,7 +37,7 @@ using namespace config;
 using namespace std::placeholders;
 
 session_outbound::session_outbound(p2p& network) NOEXCEPT
-  : session(network), track<session_outbound>(network.log())
+  : session(network), tracker<session_outbound>(network.log())
 {
 }
 

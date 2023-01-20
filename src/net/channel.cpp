@@ -112,7 +112,7 @@ channel::channel(const logger& log, const socket::ptr& socket,
     peer_version_(to_shared<messages::version>()),
     expiration_(expiration(log, socket->strand(), settings.channel_expiration())),
     inactivity_(timeout(log, socket->strand(), settings.channel_inactivity())),
-    track<channel>(log)
+    tracker<channel>(log)
 {
 }
 

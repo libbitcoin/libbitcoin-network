@@ -49,8 +49,8 @@ acceptor::acceptor(const logger& log, asio::strand& strand,
     strand_(strand),
     acceptor_(strand_),
     stopped_(true),
-    report(log),
-    track<acceptor>(log)
+    reporter(log),
+    tracker<acceptor>(log)
 {
 }
 

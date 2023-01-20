@@ -24,12 +24,12 @@
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/async/logger.hpp>
-#include <bitcoin/network/async/report.hpp>
+#include <bitcoin/network/async/reporter.hpp>
 #include <bitcoin/network/async/subscriber.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/timer.hpp>
-#include <bitcoin/network/async/track.hpp>
+#include <bitcoin/network/async/tracker.hpp>
 
 #endif

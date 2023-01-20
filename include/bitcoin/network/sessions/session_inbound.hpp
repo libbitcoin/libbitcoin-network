@@ -35,7 +35,7 @@ class p2p;
 
 /// Inbound connections session, thread safe.
 class BCT_API session_inbound
-  : public session, protected track<session_inbound>
+  : public session, protected tracker<session_inbound>
 {
 public:
     typedef std::shared_ptr<session_inbound> ptr;

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_REPORT_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_REPORT_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_REPORTER_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_REPORTER_HPP
 
 #include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/define.hpp>
@@ -25,10 +25,10 @@
 namespace libbitcoin {
 namespace network {
 
-class BCT_API report
+class BCT_API reporter
 {
 protected:
-    report(const logger& log) NOEXCEPT;
+    reporter(const logger& log) NOEXCEPT;
 
 public:
     const logger& log() const NOEXCEPT;

@@ -38,7 +38,7 @@ namespace network {
 /// The file is a line-oriented set of config::authority serializations.
 /// Duplicate addresses and those with zero-valued ports are disacarded.
 class BCT_API hosts
-  : public report, protected track<hosts>
+  : public reporter, protected tracker<hosts>
 {
 public:
     DELETE_COPY_MOVE(hosts);

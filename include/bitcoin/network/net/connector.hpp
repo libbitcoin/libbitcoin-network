@@ -36,8 +36,8 @@ namespace network {
 /// Create outbound socket connections.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API connector
-  : public std::enable_shared_from_this<connector>, public report,
-    protected track<connector>
+  : public std::enable_shared_from_this<connector>, public reporter,
+    protected tracker<connector>
 {
 public:
     DELETE_COPY_MOVE(connector);

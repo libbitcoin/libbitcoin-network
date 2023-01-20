@@ -34,7 +34,7 @@ namespace network {
 class session;
 
 class BCT_API protocol_address_31402
-  : public protocol, protected track<protocol_address_31402>
+  : public protocol, protected tracker<protocol_address_31402>
 {
 public:
     typedef std::shared_ptr<protocol_address_31402> ptr;

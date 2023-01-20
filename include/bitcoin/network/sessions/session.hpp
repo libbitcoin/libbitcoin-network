@@ -54,7 +54,7 @@ class p2p;
 
 /// Abstract base class for maintaining a channel set, thread safe.
 class BCT_API session
-  : public enable_shared_from_base<session>, public report
+  : public enable_shared_from_base<session>, public reporter
 {
 public:
     DELETE_COPY_MOVE(session);

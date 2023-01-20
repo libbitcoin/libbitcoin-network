@@ -53,8 +53,8 @@ hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
     file_path_(settings.hosts_file),
     buffer_(std::max(capacity_, one)),
     stopped_(true),
-    report(log),
-    track<hosts>(log)
+    reporter(log),
+    tracker<hosts>(log)
 {
 }
 

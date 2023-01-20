@@ -45,7 +45,7 @@ session::session(p2p& network) NOEXCEPT
     stopped_(true),
     timer_(std::make_shared<deadline>(network.log(), network.strand())),
     stop_subscriber_(std::make_shared<stop_subscriber>(network.strand())),
-    report(network.log())
+    reporter(network.log())
 {
 }
 

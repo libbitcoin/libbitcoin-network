@@ -49,7 +49,7 @@ proxy::proxy(const socket::ptr& socket) NOEXCEPT
     stop_subscriber_(std::make_shared<stop_subscriber>(socket->strand())),
     payload_buffer_(),
     heading_reader_(heading_buffer_),
-    report(socket->log())
+    reporter(socket->log())
 {
 }
 

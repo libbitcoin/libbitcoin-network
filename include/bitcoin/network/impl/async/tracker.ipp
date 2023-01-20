@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,23 +16,47 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/async/report.hpp>
+#ifndef LIBBITCOIN_NETWORK_ASYNC_TRACKER_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_TRACKER_IPP
 
+#include <atomic>
+#include <typeinfo>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-report::report(const logger& log) NOEXCEPT
+template <class Class>
+std::atomic<size_t> tracker<Class>::instances_(zero);
+
+template <class Class>
+tracker<Class>::tracker(const logger& log) NOEXCEPT
   : log_(log)
 {
+    if constexpr (build_checked)
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        log_.write() << typeid(Class).name()
+            << "(" << ++instances_ << ")" << std::endl;
+        BC_POP_WARNING()
+    }
 }
 
-const logger& report::log() const NOEXCEPT
+template <class Class>
+tracker<Class>::~tracker() NOEXCEPT
 {
-    return log_;
+    if constexpr (build_checked)
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+            log_.write() << typeid(Class).name()
+            << "(" << --instances_ << ")~" << std::endl;
+        BC_POP_WARNING()
+    }
 }
 
 } // namespace network
 } // namespace libbitcoin
+
+#endif

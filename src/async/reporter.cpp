@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,34 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_TRACK_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_TRACK_HPP
+#include <bitcoin/network/async/reporter.hpp>
 
-#include <atomic>
-#include <bitcoin/network/async/logger.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-template <class Class>
-class track
+reporter::reporter(const logger& log) NOEXCEPT
+  : log_(log)
 {
-protected:
-    DEFAULT_COPY_MOVE(track);
+}
 
-    track(const logger& log) NOEXCEPT;
-    ~track() NOEXCEPT;
-
-private:
-    // These are thread safe.
-    static std::atomic<size_t> instances_;
-    const logger& log_;
-};
+const logger& reporter::log() const NOEXCEPT
+{
+    return log_;
+}
 
 } // namespace network
 } // namespace libbitcoin
-
-#include <bitcoin/network/impl/async/track.ipp>
-
-#endif

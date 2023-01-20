@@ -35,7 +35,7 @@ namespace network {
 class session;
 
 class BCT_API protocol_version_70001
-  : public protocol_version_31402, protected track<protocol_version_70001>
+  : public protocol_version_31402, protected tracker<protocol_version_70001>
 {
 public:
     typedef std::shared_ptr<protocol_version_70001> ptr;

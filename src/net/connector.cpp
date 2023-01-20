@@ -48,8 +48,8 @@ connector::connector(const logger& log, asio::strand& strand,
     timer_(std::make_shared<deadline>(log, strand_, settings_.connect_timeout())),
     resolver_(strand_),
     stopped_(true),
-    report(log),
-    track<connector>(log)
+    reporter(log),
+    tracker<connector>(log)
 {
 }
 
