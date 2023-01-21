@@ -54,8 +54,8 @@ p2p::p2p(const settings& settings) NOEXCEPT
     hosts_(log_, settings_),
     threadpool_(settings_.threads),
     strand_(threadpool_.service().get_executor()),
-    stop_subscriber_(std::make_shared<stop_subscriber>(strand_)),
-    channel_subscriber_(std::make_shared<channel_subscriber>(strand_)),
+    stop_subscriber_(strand_),
+    channel_subscriber_(strand_),
     reporter(log_),
     tracker<p2p>(log_)
 {
@@ -210,10 +210,10 @@ void p2p::do_close() NOEXCEPT
         manual_.reset();
 
     // Notify and delete all stop subscribers (all sessions).
-    stop_subscriber_->stop(error::service_stopped);
+    stop_subscriber_.stop(error::service_stopped);
 
     // Notify and delete subscribers to channel notifications.
-    channel_subscriber_->stop_default(error::service_stopped);
+    channel_subscriber_.stop_default(error::service_stopped);
 
     // Stop all channels.
     for (const auto& channel: channels_)
@@ -245,7 +245,7 @@ void p2p::do_subscribe_connect(const channel_handler& handler,
     const result_handler& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "channel_subscriber_");
-    channel_subscriber_->subscribe(move_copy(handler));
+    channel_subscriber_.subscribe(move_copy(handler));
     complete(error::success);
 }
 
@@ -253,7 +253,7 @@ void p2p::do_subscribe_connect(const channel_handler& handler,
 void p2p::subscribe_close(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "stop_subscriber_");
-    stop_subscriber_->subscribe(std::move(handler));
+    stop_subscriber_.subscribe(std::move(handler));
 }
 
 // public
@@ -269,7 +269,7 @@ void p2p::do_subscribe_close(const result_handler& handler,
     const result_handler& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "stop_subscriber_");
-    stop_subscriber_->subscribe(move_copy(handler));
+    stop_subscriber_.subscribe(move_copy(handler));
     complete(error::success);
 }
 
@@ -474,7 +474,7 @@ code p2p::store(const channel::ptr& channel, bool notify,
 
     // Notify channel subscribers of started channel.
     if (notify)
-        channel_subscriber_->notify(error::success, channel);
+        channel_subscriber_.notify(error::success, channel);
 
     if (inbound)
     {

@@ -112,7 +112,7 @@ protected:
     virtual void send_bytes(const system::chunk_ptr& payload,
         result_handler&& handler) NOEXCEPT;
 
-    /// Notify subscribers of an new message (requires strand).
+    /// Notify subscribers of a new message (requires strand).
     virtual code notify(messages::identifier id, uint32_t version,
         system::reader& source) NOEXCEPT;
 
@@ -142,7 +142,7 @@ private:
 
     // These are protected by the strand.
     pump pump_subscriber_;
-    stop_subscriber::ptr stop_subscriber_;
+    stop_subscriber stop_subscriber_;
 
     // These are protected by read header/payload ordering (strand).
     system::data_chunk payload_buffer_;

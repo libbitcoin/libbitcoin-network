@@ -254,8 +254,8 @@ private:
     asio::strand strand_;
 
     // These are protected by strand.
-    stop_subscriber::ptr stop_subscriber_;
-    channel_subscriber::ptr channel_subscriber_;
+    stop_subscriber stop_subscriber_;
+    channel_subscriber channel_subscriber_;
     std::unordered_set<uint64_t> nonces_;
     std::unordered_set<channel::ptr> channels_;
     std::unordered_set<config::authority> authorities_;

@@ -38,13 +38,13 @@ namespace network {
         SUBSCRIBER_TYPE(name)
 
 #define SUBSCRIBER_OVERLOAD(name) \
-void do_subscribe(pump::handler<messages::name>&& handler) const NOEXCEPT \
+void do_subscribe(pump::handler<messages::name>&& handler) NOEXCEPT \
 { \
-    SUBSCRIBER(name)->subscribe(std::move(handler)); \
+    SUBSCRIBER(name).subscribe(std::move(handler)); \
 }
 
 #define DECLARE_SUBSCRIBER(name) \
-    SUBSCRIBER_TYPE(name)::ptr SUBSCRIBER(name)
+    SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
 
 /// Not thread safe.
 /// All handlers are posted to the strand.
@@ -126,7 +126,7 @@ private:
             return error::invalid_message;
 
         // Subscribers are notified only with stop code or error::success.
-        subscriber->notify(error::success, message);
+        subscriber.notify(error::success, message);
         return error::success;
     }
 

@@ -44,7 +44,7 @@ session::session(p2p& network) NOEXCEPT
   : network_(network),
     stopped_(true),
     timer_(std::make_shared<deadline>(network.log(), network.strand())),
-    stop_subscriber_(std::make_shared<stop_subscriber>(network.strand())),
+    stop_subscriber_(network.strand()),
     reporter(network.log())
 {
 }
@@ -74,7 +74,7 @@ void session::stop() NOEXCEPT
 
     timer_->stop();
     stopped_.store(true, std::memory_order_relaxed);
-    stop_subscriber_->stop(error::service_stopped);
+    stop_subscriber_.stop(error::service_stopped);
 }
 
 // Channel sequence.
@@ -285,7 +285,7 @@ void session::start_timer(result_handler&& handler,
 
 void session::subscribe_stop(result_handler&& handler) NOEXCEPT
 {
-    stop_subscriber_->subscribe(std::move(handler));
+    stop_subscriber_.subscribe(std::move(handler));
 }
 
 // Factories.

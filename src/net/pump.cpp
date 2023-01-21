@@ -29,19 +29,16 @@ namespace network {
 using namespace bc::system;
 
 #define SUBSCRIBER(name) name##_subscriber_
-#define SUBSCRIBER_TYPE(name) name##_subscriber
 
 #define MAKE_SUBSCRIBER(name) \
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
-    SUBSCRIBER(name)(std::make_shared<SUBSCRIBER_TYPE(name)>(strand)) \
-    BC_POP_WARNING()
+    SUBSCRIBER(name)(strand)
 
 #define CASE_NOTIFY(name) \
     case messages::identifier::name: \
         return do_notify<messages::name>(SUBSCRIBER(name), version, source)
 
 #define STOP_SUBSCRIBER(name) \
-    SUBSCRIBER(name)->stop_default(ec)
+    SUBSCRIBER(name).stop_default(ec)
 
 pump::pump(asio::strand& strand) NOEXCEPT
   : MAKE_SUBSCRIBER(address),
@@ -163,7 +160,6 @@ void pump::stop(const code& ec) NOEXCEPT
 }
 
 #undef SUBSCRIBER
-#undef SUBSCRIBER_TYPE
 #undef MAKE_SUBSCRIBER
 #undef CASE_NOTIFY
 #undef STOP_SUBSCRIBER
