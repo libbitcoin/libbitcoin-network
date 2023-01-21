@@ -39,7 +39,7 @@ protocol_address_31402::protocol_address_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     sent_(false),
-    track<protocol_address_31402>(session.log())
+    tracker<protocol_address_31402>(session.log())
 {
 }
 

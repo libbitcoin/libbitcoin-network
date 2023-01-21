@@ -16,39 +16,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_TRACK_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_TRACK_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_REPORTER_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_REPORTER_HPP
 
-#include <atomic>
 #include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// Thread safe, base class.
-/// Class to log changes in the reference count of shared objects.
-template <class Shared, bool Track = true>
-class track
+class BCT_API reporter
 {
 protected:
-    DEFAULT_COPY_MOVE(track);
-
-    track(const logger& log) NOEXCEPT;
-    ~track() NOEXCEPT;
+    reporter(const logger& log) NOEXCEPT;
 
 public:
-    const logger& get_log() const NOEXCEPT;
+    const logger& log() const NOEXCEPT;
 
 private:
-    // These are thread safe.
-    static std::atomic<size_t> instances_;
+    // This is thread safe.
     const logger& log_;
 };
 
 } // namespace network
 } // namespace libbitcoin
-
-#include <bitcoin/network/impl/async/track.ipp>
 
 #endif

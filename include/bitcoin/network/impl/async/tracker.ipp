@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_TRACK_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_TRACK_IPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_TRACKER_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_TRACKER_IPP
 
 #include <atomic>
 #include <typeinfo>
@@ -28,38 +28,32 @@
 namespace libbitcoin {
 namespace network {
 
-template <class Shared, bool Track>
-std::atomic<size_t> track<Shared, Track>::instances_(0);
+template <class Class>
+std::atomic<size_t> tracker<Class>::instances_(zero);
 
-template <class Shared, bool Track>
-track<Shared, Track>::track(const logger& log) NOEXCEPT
+template <class Class>
+tracker<Class>::tracker(const logger& log) NOEXCEPT
   : log_(log)
 {
-    if constexpr (Track && bc::build_checked)
+    if constexpr (build_checked)
     {
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        log_.write() << typeid(Shared).name()
+        log_.write() << typeid(Class).name()
             << "(" << ++instances_ << ")" << std::endl;
         BC_POP_WARNING()
     }
 }
 
-template <class Shared, bool Track>
-track<Shared, Track>::~track() NOEXCEPT
+template <class Class>
+tracker<Class>::~tracker() NOEXCEPT
 {
-    if constexpr (Track && bc::build_checked)
+    if constexpr (build_checked)
     {
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        log_.write() << typeid(Shared).name()
+            log_.write() << typeid(Class).name()
             << "(" << --instances_ << ")~" << std::endl;
         BC_POP_WARNING()
     }
-}
-
-template <class Shared, bool Track>
-const logger& track<Shared, Track>::get_log() const NOEXCEPT
-{
-    return log_;
 }
 
 } // namespace network

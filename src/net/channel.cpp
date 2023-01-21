@@ -112,7 +112,7 @@ channel::channel(const logger& log, const socket::ptr& socket,
     peer_version_(to_shared<messages::version>()),
     expiration_(expiration(log, socket->strand(), settings.channel_expiration())),
     inactivity_(timeout(log, socket->strand(), settings.channel_inactivity())),
-    track<channel>(log)
+    tracker<channel>(log)
 {
 }
 
@@ -249,7 +249,7 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        track<channel>::get_log().write()
+        log().write()
             << "Channel lifetime timer failure [" << authority() << "] "
             << ec.message() << std::endl;
 
@@ -257,7 +257,7 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
         return;
     }
 
-    track<channel>::get_log().write()
+    log().write()
         << "Channel lifetime expired [" << authority() << "]" << std::endl;
 
     stop(ec);
@@ -286,7 +286,7 @@ void channel::handle_inactivity(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        track<channel>::get_log().write()
+        log().write()
             << "Channel inactivity timer failure [" << authority() << "] "
             << ec.message() << std::endl;
 
@@ -294,7 +294,7 @@ void channel::handle_inactivity(const code& ec) NOEXCEPT
         return;
     }
 
-    track<channel>::get_log().write()
+    log().write()
         << "Channel inactivity timeout [" << authority() << "]" << std::endl;
 
     stop(ec);

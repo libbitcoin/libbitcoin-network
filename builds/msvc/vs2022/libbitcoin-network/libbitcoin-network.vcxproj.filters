@@ -75,6 +75,9 @@
     <ClCompile Include="..\..\..\..\src\async\logger.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\async\reporter.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\async\thread.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
@@ -302,6 +305,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\logger.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\reporter.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
@@ -317,7 +323,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\timer.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\track.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\tracker.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp">
@@ -556,7 +562,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\track.ipp">
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\tracker.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="packages.config" />

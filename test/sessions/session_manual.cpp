@@ -63,8 +63,8 @@ public:
         if (is_zero(connects_++))
             peer_ = peer;
 
-        const auto socket = std::make_shared<network::socket>(get_log(), service_);
-        const auto channel = std::make_shared<network::channel>(get_log(), socket,
+        const auto socket = std::make_shared<network::socket>(log(), service_);
+        const auto channel = std::make_shared<network::channel>(log(), socket,
             settings_);
 
         // Must be asynchronous or is an infinite recursion.

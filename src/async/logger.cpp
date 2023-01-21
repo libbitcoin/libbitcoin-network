@@ -35,24 +35,16 @@ logger::logger() NOEXCEPT
 
 std::ostream& logger::write() const NOEXCEPT
 {
-#ifdef HAVE_MSC
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return system::cerr_stream();
     BC_POP_WARNING()
-#else
-    return std::cout;
-#endif
 }
 
 std::ostream& logger::error() const NOEXCEPT
 {
-#ifdef HAVE_MSC
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return system::cerr_stream();
     BC_POP_WARNING()
-#else
-    return std::cerr;
-#endif
 }
 
 } // namespace network

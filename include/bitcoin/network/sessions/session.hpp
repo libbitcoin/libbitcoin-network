@@ -54,7 +54,7 @@ class p2p;
 
 /// Abstract base class for maintaining a channel set, thread safe.
 class BCT_API session
-  : public enable_shared_from_base<session>
+  : public enable_shared_from_base<session>, public reporter
 {
 public:
     DELETE_COPY_MOVE(session);
@@ -91,9 +91,6 @@ public:
 
     /// Access network configuration settings.
     const network::settings& settings() const NOEXCEPT;
-
-    /// Return a logging instance.
-    const logger& log() const NOEXCEPT;
 
 protected:
     typedef subscriber<code> stop_subscriber;

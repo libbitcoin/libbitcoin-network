@@ -55,7 +55,7 @@ class session;
 /// Abstract base class for protocols.
 /// handle_ methods are always invoked on the strand.
 class BCT_API protocol
-  : public enable_shared_from_base<protocol>
+  : public enable_shared_from_base<protocol>, public reporter
 {
 public:
     DELETE_COPY_MOVE(protocol);
@@ -153,9 +153,6 @@ protected:
 
     /// Network settings.
     const network::settings& settings() const NOEXCEPT;
-
-    /// Return a logging instance.
-    const logger& log() const NOEXCEPT;
 
     /// Addresses.
     /// -----------------------------------------------------------------------

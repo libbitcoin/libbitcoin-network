@@ -20,12 +20,12 @@
 
 BOOST_AUTO_TEST_SUITE(track_tests)
 
-class simple
-  : track<simple>
+class tracked
+  : tracker<tracked>
 {
 public:
-    simple(const logger& log) NOEXCEPT
-      : track<simple>(log)
+    tracked(const logger& log) NOEXCEPT
+      : tracker<tracked>(log)
     {
     }
 
@@ -35,11 +35,33 @@ public:
     };
 };
 
+class reported
+  : protected reporter
+{
+public:
+    reported(const logger& log) NOEXCEPT
+      : reporter(log)
+    {
+    }
+
+    std::ostream& method() const NOEXCEPT
+    {
+        return log().write();
+    };
+};
+
 BOOST_AUTO_TEST_CASE(track__construct__always__compiles)
 {
-    logger log{};
-    simple foo{ log };
+    const logger log{};
+    tracked foo{ log };
     BOOST_REQUIRE(foo.method());
+}
+
+BOOST_AUTO_TEST_CASE(report__log__always__good)
+{
+    const logger log{};
+    reported foo{ log };
+    BOOST_REQUIRE(foo.method().good());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -48,7 +48,8 @@ connector::connector(const logger& log, asio::strand& strand,
     timer_(std::make_shared<deadline>(log, strand_, settings_.connect_timeout())),
     resolver_(strand_),
     stopped_(true),
-    track<connector>(log)
+    reporter(log),
+    tracker<connector>(log)
 {
 }
 
@@ -90,7 +91,7 @@ void connector::connect(const std::string& hostname, uint16_t port,
     // This allows connect after stop (restartable).
     stopped_ = false;
 
-    const auto socket = std::make_shared<network::socket>(get_log(), service_);
+    const auto socket = std::make_shared<network::socket>(log(), service_);
 
     // Posts timer handler to strand.
     // The handler is copied by std::bind.
@@ -178,7 +179,7 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
         return;
     }
 
-    const auto channel = std::make_shared<network::channel>(get_log(), socket,
+    const auto channel = std::make_shared<network::channel>(log(), socket,
         settings_);
 
     // Successful connect.

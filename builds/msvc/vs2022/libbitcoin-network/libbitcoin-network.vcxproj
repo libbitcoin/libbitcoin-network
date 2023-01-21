@@ -75,6 +75,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\..\src\async\deadline.cpp" />
     <ClCompile Include="..\..\..\..\src\async\logger.cpp" />
+    <ClCompile Include="..\..\..\..\src\async\reporter.cpp" />
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
@@ -152,12 +153,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\logger.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\reporter.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\thread.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\threadpool.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\timer.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\track.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\tracker.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\config.hpp" />
@@ -238,7 +240,7 @@
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\track.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\tracker.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

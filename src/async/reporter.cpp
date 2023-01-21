@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,20 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_ASYNC_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_ASYNC_HPP
-
-#include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/deadline.hpp>
-#include <bitcoin/network/async/enable_shared_from_base.hpp>
-#include <bitcoin/network/async/handlers.hpp>
-#include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/async/reporter.hpp>
-#include <bitcoin/network/async/subscriber.hpp>
-#include <bitcoin/network/async/thread.hpp>
-#include <bitcoin/network/async/threadpool.hpp>
-#include <bitcoin/network/async/time.hpp>
-#include <bitcoin/network/async/timer.hpp>
-#include <bitcoin/network/async/tracker.hpp>
 
-#endif
+#include <bitcoin/system.hpp>
+#include <bitcoin/network/define.hpp>
+
+namespace libbitcoin {
+namespace network {
+
+reporter::reporter(const logger& log) NOEXCEPT
+  : log_(log)
+{
+}
+
+const logger& reporter::log() const NOEXCEPT
+{
+    return log_;
+}
+
+} // namespace network
+} // namespace libbitcoin

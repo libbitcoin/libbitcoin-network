@@ -35,7 +35,7 @@ namespace network {
 class session;
 
 class BCT_API protocol_ping_60001
-  : public protocol_ping_31402, public track<protocol_ping_60001>
+  : public protocol_ping_31402, protected tracker<protocol_ping_60001>
 {
 public:
     typedef std::shared_ptr<protocol_ping_60001> ptr;

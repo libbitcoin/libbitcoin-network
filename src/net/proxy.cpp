@@ -49,7 +49,7 @@ proxy::proxy(const socket::ptr& socket) NOEXCEPT
     stop_subscriber_(std::make_shared<stop_subscriber>(socket->strand())),
     payload_buffer_(),
     heading_reader_(heading_buffer_),
-    track<proxy, false>(socket->get_log())
+    reporter(socket->log())
 {
 }
 
@@ -175,7 +175,7 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (ec == error::channel_stopped)
     {
-        get_log().write()
+        log().write()
             << "Heading read abort [" << authority() << "]" << std::endl;
 
         stop(error::success);
@@ -184,7 +184,7 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (ec)
     {
-        get_log().write()
+        log().write()
             << "Heading read failure [" << authority() << "] " << ec.message()
             << std::endl;
 
@@ -197,7 +197,7 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (!heading_reader_)
     {
-        get_log().write()
+        log().write()
             << "Invalid heading from [" << authority() << "]" << std::endl;
 
         stop(error::invalid_heading);
@@ -207,7 +207,7 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
     if (head->magic != protocol_magic())
     {
         // These are common, with magic 542393671 coming from http requests.
-        get_log().write()
+        log().write()
             << "Invalid heading magic (" << head->magic << ") from ["
             << authority() << "]" << std::endl;
 
@@ -217,7 +217,7 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (head->payload_size > maximum_payload())
     {
-        get_log().write()
+        log().write()
             << "Oversized payload indicated by " << head->command
             << " heading from [" << authority() << "] ("
             << head->payload_size << " bytes)" << std::endl;
@@ -244,7 +244,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
 
     if (ec == error::channel_stopped)
     {
-        get_log().write()
+        log().write()
             << "Payload read abort [" << authority() << "]" << std::endl;
 
         stop(error::success);
@@ -253,7 +253,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
 
     if (ec)
     {
-        get_log().write()
+        log().write()
             << "Payload read failure [" << authority() << "] "
             << ec.message() << std::endl;
 
@@ -264,7 +264,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
     // This is a pointless test but we allow it as an option for completeness.
     if (validate_checksum() && !head->verify_checksum(payload_buffer_))
     {
-        get_log().write()
+        log().write()
             << "Invalid " << head->command << " payload from ["
             << authority() << "] bad checksum." << std::endl;
 
@@ -286,14 +286,14 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
             const auto size = std::min(payload_size, invalid_payload_dump_size);
             const auto begin = payload_buffer_.begin();
 
-            get_log().write()
+            log().write()
                 << "Invalid payload from [" << authority() << "] "
                 << encode_base16({ begin, std::next(begin, size) })
                 << std::endl;
         }
         else
         {
-            get_log().write()
+            log().write()
                 << "Invalid " << head->command << " payload from ["
                 << authority() << "] " << code.message() << std::endl;
         }
@@ -302,7 +302,7 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
         return;
     }
 
-    get_log().write()
+    log().write()
         << "Received " << head->command << " from [" << authority()
         << "] (" << payload_size << " bytes)" << std::endl;
 
@@ -345,7 +345,7 @@ void proxy::handle_send(const code& ec, size_t,
 
     if (ec == error::channel_stopped)
     {
-        get_log().write()
+        log().write()
             << "Send abort [" << authority() << "]" << std::endl;
 
         stop(error::success);
@@ -354,7 +354,7 @@ void proxy::handle_send(const code& ec, size_t,
 
     if (ec)
     {
-        get_log().write()
+        log().write()
             << "Failure sending " << extract_command(*payload) << " to ["
             << authority() << "] (" << payload->size() << " bytes) "
             << ec.message() << std::endl;
@@ -364,7 +364,7 @@ void proxy::handle_send(const code& ec, size_t,
         return;
     }
 
-    get_log().write()
+    log().write()
         << "Sent " << extract_command(*payload) << " to [" << authority()
         << "] (" << payload->size() << " bytes)" << std::endl;
 

@@ -41,7 +41,8 @@ using namespace std::placeholders;
 
 protocol::protocol(const session& session,
     const channel::ptr& channel) NOEXCEPT
-  : channel_(channel), session_(session), started_(false)
+  : channel_(channel), session_(session), started_(false),
+    reporter(session.log())
 {
 }
 
@@ -110,11 +111,6 @@ void protocol::pause() NOEXCEPT
 const network::settings& protocol::settings() const NOEXCEPT
 {
     return session_.settings();
-}
-
-const logger& protocol::log() const NOEXCEPT
-{
-    return session_.log();
 }
 
 bool protocol::stranded() const NOEXCEPT

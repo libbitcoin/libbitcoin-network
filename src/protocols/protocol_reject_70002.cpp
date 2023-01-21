@@ -41,7 +41,7 @@ using namespace std::placeholders;
 protocol_reject_70002::protocol_reject_70002(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    track<protocol_reject_70002>(session.log())
+    tracker<protocol_reject_70002>(session.log())
 {
 }
 
