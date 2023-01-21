@@ -19,9 +19,7 @@
 #include <bitcoin/network/net/proxy.hpp>
 
 #include <algorithm>
-#include <cstddef>
 #include <functional>
-#include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -46,7 +44,7 @@ proxy::proxy(const socket::ptr& socket) NOEXCEPT
   : socket_(socket),
     paused_(true),
     pump_subscriber_(socket->strand()),
-    stop_subscriber_(std::make_shared<stop_subscriber>(socket->strand())),
+    stop_subscriber_(socket->strand()),
     payload_buffer_(),
     heading_reader_(heading_buffer_),
     reporter(socket->log())
@@ -116,13 +114,13 @@ void proxy::do_stop(const code& ec) NOEXCEPT
 
     // Post stop handlers to strand and clear/stop accepting subscriptions.
     // The code provides information on the reason that the channel stopped.
-    stop_subscriber_->stop(ec);
+    stop_subscriber_.stop(ec);
 }
 
 void proxy::subscribe_stop(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    stop_subscriber_->subscribe(move_copy(handler));
+    stop_subscriber_.subscribe(move_copy(handler));
 }
 
 void proxy::subscribe_stop(result_handler&& handler,
@@ -137,7 +135,7 @@ void proxy::do_subscribe_stop(const result_handler& handler,
     const result_handler& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    stop_subscriber_->subscribe(move_copy(handler));
+    stop_subscriber_.subscribe(move_copy(handler));
     complete(error::success);
 }
 

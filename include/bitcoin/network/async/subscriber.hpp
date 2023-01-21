@@ -30,13 +30,11 @@ namespace network {
 /// Not thread safe, non-virtual.
 template <typename Code, typename... Args>
 class subscriber final
-  : public std::enable_shared_from_this<subscriber<Code, Args...>>
 {
 public:
     DELETE_COPY_MOVE(subscriber);
 
     typedef std::function<void(Code, Args...)> handler;
-    typedef std::shared_ptr<subscriber<Code, Args...>> ptr;
 
     // Strand is only used for assertions.
     subscriber(asio::strand& strand) NOEXCEPT;

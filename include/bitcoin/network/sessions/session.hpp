@@ -202,7 +202,7 @@ private:
 
     // These are not thread safe.
     deadline::ptr timer_;
-    stop_subscriber::ptr stop_subscriber_;
+    stop_subscriber stop_subscriber_;
     std::vector<connector::ptr> connectors_;
 };
 
