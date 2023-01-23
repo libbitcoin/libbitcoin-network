@@ -41,7 +41,7 @@ namespace network {
 /// * attach must be called from channel strand.
 /// * close must not be called concurrently or from any threadpool thread.
 class BCT_API p2p
-  : public enable_shared_from_base<p2p>, public reporter, protected tracker<p2p>
+  : public reporter, protected tracker<p2p>
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
@@ -83,7 +83,7 @@ public:
     DELETE_COPY_MOVE(p2p);
 
     /// Construct an instance.
-    p2p(const settings& settings) NOEXCEPT;
+    p2p(const settings& settings, const logger& log) NOEXCEPT;
 
     /// Calls close().
     virtual ~p2p() NOEXCEPT;

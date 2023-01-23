@@ -30,6 +30,8 @@
 namespace libbitcoin {
 namespace network {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
@@ -120,7 +122,7 @@ void proxy::do_stop(const code& ec) NOEXCEPT
 void proxy::subscribe_stop(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    stop_subscriber_.subscribe(move_copy(handler));
+    stop_subscriber_.subscribe(std::move(handler));
 }
 
 void proxy::subscribe_stop(result_handler&& handler,
@@ -386,6 +388,8 @@ const config::authority& proxy::authority() const NOEXCEPT
 {
     return socket_->authority();
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

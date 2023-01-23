@@ -18,34 +18,80 @@
  */
 #include <bitcoin/network/async/logger.hpp>
 
+#include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/handlers.hpp>
+#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-// TODO: pass log sink(s) on construct.
-// TODO: define sink interface, allowing runtime variations.
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 logger::logger() NOEXCEPT
+  : pool_(1, thread_priority::low),
+    strand_(pool_.service().get_executor()),
+    subscriber_(strand_)
 {
 }
 
-// TODO: incorporate log levels/types.
-// BUGBUG: console streams are not thread safe.
-
-std::ostream& logger::write() const NOEXCEPT
+logger::writer logger::write() const NOEXCEPT
 {
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return system::cerr_stream();
-    BC_POP_WARNING()
+    return { *this };
 }
 
-std::ostream& logger::error() const NOEXCEPT
+// protected
+void logger::notify(const code& ec, std::string&& message) const NOEXCEPT
 {
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return system::cerr_stream();
-    BC_POP_WARNING()
+    boost::asio::dispatch(strand_,
+        std::bind(&logger::do_notify, this, ec, std::move(message)));
 }
+
+// private
+void logger::do_notify(const code& ec,
+    const std::string& message) const NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    subscriber_.notify(ec, message);
+}
+
+void logger::subscribe(handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&logger::do_subscribe, this, std::move(handler)));
+}
+
+// private
+void logger::do_subscribe(const handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    subscriber_.subscribe(move_copy(handler));
+}
+
+void logger::stop(const std::string& message) NOEXCEPT
+{
+    // Subscriber asserts if stopped with a success code.
+    stop(error::service_stopped, message);
+}
+
+void logger::stop(const code& ec, const std::string& message) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&logger::do_stop, this, ec, message));
+
+    pool_.stop();
+    pool_.join();
+}
+
+// private
+void logger::do_stop(const code& ec, const std::string& message) NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    subscriber_.stop(ec, message);
+ }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

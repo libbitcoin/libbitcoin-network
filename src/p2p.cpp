@@ -46,18 +46,17 @@ using namespace bc::system;
 using namespace bc::system::chain;
 using namespace std::placeholders;
 
-p2p::p2p(const settings& settings) NOEXCEPT
-  : log_(),
-    settings_(settings),
+p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
+  : settings_(settings),
     channel_count_(zero),
     inbound_channel_count_(zero),
-    hosts_(log_, settings_),
+    hosts_(log, settings_),
     threadpool_(settings_.threads),
     strand_(threadpool_.service().get_executor()),
     stop_subscriber_(strand_),
     channel_subscriber_(strand_),
-    reporter(log_),
-    tracker<p2p>(log_)
+    reporter(log),
+    tracker<p2p>(log)
 {
     BC_ASSERT_MSG(!is_zero(settings.threads), "empty threadpool");
 }

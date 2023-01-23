@@ -35,7 +35,6 @@ namespace libbitcoin {
 namespace network {
 
 #define CLASS session
-#define NAME "session"
 
 using namespace bc::system;
 using namespace std::placeholders;
