@@ -35,33 +35,11 @@ public:
     };
 };
 
-////class reported
-////  : protected reporter
-////{
-////public:
-////    reported(const logger& log) NOEXCEPT
-////      : reporter(log)
-////    {
-////    }
-////
-////    logger::log_writer method() const NOEXCEPT
-////    {
-////        return log().write();
-////    };
-////};
-
 BOOST_AUTO_TEST_CASE(track__construct__always__compiles)
 {
     const logger log{};
     tracked foo{ log };
     BOOST_REQUIRE(foo.method());
 }
-
-////BOOST_AUTO_TEST_CASE(report__log__always__good)
-////{
-////    const logger log{};
-////    reported foo{ log };
-////    BOOST_REQUIRE(foo.method().good());
-////}
 
 BOOST_AUTO_TEST_SUITE_END()
