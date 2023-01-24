@@ -158,9 +158,8 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (minimum_version_ < level::minimum_protocol)
     {
-        log().write()
-            << "Invalid protocol version configuration, minimum below ("
-            << level::minimum_protocol << ")." << std::endl;
+        LOG("Invalid protocol version configuration, minimum below ("
+            << level::minimum_protocol << ").");
 
         callback(error::invalid_configuration);
         return;
@@ -168,9 +167,8 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (maximum_version_ > level::maximum_protocol)
     {
-        log().write()
-            << "Invalid protocol version configuration, maximum above ("
-            << level::maximum_protocol << ")." << std::endl;
+        LOG("Invalid protocol version configuration, maximum above ("
+            << level::maximum_protocol << ").");
 
         callback(error::invalid_configuration);
         return;
@@ -178,10 +176,7 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (minimum_version_ > maximum_version_)
     {
-        log().write()
-            << "Invalid protocol version configuration, "
-            << "minimum exceeds maximum." << std::endl;
-
+        LOG("Invalid protocol version configuration, minimum above maximum.");
         callback(error::invalid_configuration);
         return;
     }
@@ -306,16 +301,13 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         return;
     }
 
-    log().write()
-        << "Peer [" << authority() << "] protocol version ("
-        << message->value << ") user agent: " << message->user_agent
-        << std::endl;
+    LOG("Peer [" << authority() << "] protocol version ("
+        << message->value << ") user agent: " << message->user_agent);
 
     if (to_bool(message->services & invalid_services_))
     {
-        log().write()
-            << "Invalid peer network services (" << message->services
-            << ") for [" << authority() << "]" << std::endl;
+        LOG("Invalid peer network services (" << message->services
+            << ") for [" << authority() << "]");
 
         rejection(error::insufficient_peer);
         return;
@@ -324,9 +316,8 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     // Advertised services on many incoming connections may be set to zero.
     if ((message->services & minimum_services_) != minimum_services_)
     {
-        log().write()
-            << "Insufficient peer network services (" << message->services
-            << ") for [" << authority() << "]" << std::endl;
+        LOG("Insufficient peer network services (" << message->services
+            << ") for [" << authority() << "]");
 
         rejection(error::insufficient_peer);
         return;
@@ -334,9 +325,8 @@ void protocol_version_31402::handle_receive_version(const code& ec,
 
     if (message->value < minimum_version_)
     {
-        log().write()
-            << "Insufficient peer protocol version (" << message->value
-            << ") for [" << authority() << "]" << std::endl;
+        LOG("Insufficient peer protocol version (" << message->value
+            << ") for [" << authority() << "]");
 
         rejection(error::insufficient_peer);
         return;
@@ -346,9 +336,8 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     set_negotiated_version(version);
     set_peer_version(message);
 
-    log().write()
-        << "Negotiated protocol version (" << version
-        << ") for [" << authority() << "]" << std::endl;
+    LOG("Negotiated protocol version (" << version << ") for ["
+        << authority() << "]");
 
     SEND1(version_acknowledge{}, handle_send_acknowledge, _1);
 

@@ -204,17 +204,14 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        log().write()
-            << "Channel lifetime timer failure [" << authority() << "] "
-            << ec.message() << std::endl;
+        LOG("Channel lifetime timer failure [" << authority() << "] "
+            << ec.message());
 
         stop(ec);
         return;
     }
 
-    log().write()
-        << "Channel lifetime expired [" << authority() << "]" << std::endl;
-
+    LOG("Channel lifetime expired [" << authority() << "]");
     stop(ec);
 }
 
@@ -241,17 +238,14 @@ void channel::handle_inactivity(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        log().write()
-            << "Channel inactivity timer failure [" << authority() << "] "
-            << ec.message() << std::endl;
+        LOG("Channel inactivity timer failure [" << authority() << "] "
+            << ec.message());
 
         stop(ec);
         return;
     }
 
-    log().write()
-        << "Channel inactivity timeout [" << authority() << "]" << std::endl;
-
+    LOG("Channel inactivity timeout [" << authority() << "]");
     stop(ec);
 }
 

@@ -58,7 +58,7 @@ void session_inbound::start(result_handler&& handler) NOEXCEPT
     if (is_zero(settings().inbound_port) ||
         is_zero(settings().inbound_connections))
     {
-        log().write() << "Not configured for inbound connections." << std::endl;
+        LOG("Not configured for inbound connections.");
         handler(error::bypassed);
         return;
     }

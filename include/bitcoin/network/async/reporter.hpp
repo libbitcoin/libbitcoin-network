@@ -40,8 +40,10 @@ private:
 };
 
 #if defined(NDEBUG)
+    #define LOG_ONLY(name)
     #define LOG(message)
 #else
+    #define LOG_ONLY(name) name
     #define LOG(message) log().write() << message << std::endl
 #endif
 

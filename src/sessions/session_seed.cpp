@@ -60,21 +60,21 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 
     if (is_zero(settings().outbound_connections))
     {
-        log().write() << "Not configured for outbound connections." << std::endl;
+        LOG("Not configured for outbound connections.");
         handler(error::bypassed);
         return;
     }
 
     if (!is_zero(address_count()))
     {
-        log().write() << "Bypassed seeding for existing addresses." << std::endl;
+        LOG("Bypassed seeding for existing addresses.");
         handler(error::bypassed);
         return;
     }
 
     if (is_zero(settings().host_pool_capacity) || settings().seeds.empty())
     {
-        log().write() << "Not configured to populate address pool." << std::endl;
+        LOG("Not configured to populate address pool.");
         handler(error::seeding_unsuccessful);
         return;
     }
