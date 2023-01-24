@@ -39,12 +39,12 @@ private:
     const logger& log_;
 };
 
-#if defined(NDEBUG)
-    #define LOG_ONLY(name)
-    #define LOG(message)
-#else
+#if defined(HAVE_LOGGING)
     #define LOG_ONLY(name) name
     #define LOG(message) log().write() << message << std::endl
+#else
+    #define LOG_ONLY(name)
+    #define LOG(message)
 #endif
 
 } // namespace network
