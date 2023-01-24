@@ -38,8 +38,8 @@ tracker<Class>::tracker(const logger& log) NOEXCEPT
     if constexpr (build_checked)
     {
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        log_.write() << typeid(Class).name()
-            << "(" << ++instances_ << ")" << std::endl;
+        log_.write() << typeid(Class).name() << "(" << ++instances_ << ")"
+            << std::endl;
         BC_POP_WARNING()
     }
 }
@@ -50,8 +50,8 @@ tracker<Class>::~tracker() NOEXCEPT
     if constexpr (build_checked)
     {
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-            log_.write() << typeid(Class).name()
-            << "(" << --instances_ << ")~" << std::endl;
+        log_.write() << typeid(Class).name() << "(" << --instances_ << ")~"
+            << std::endl;
         BC_POP_WARNING()
     }
 }

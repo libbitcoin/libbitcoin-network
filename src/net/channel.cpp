@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/net/channel.hpp>
 
-#include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <memory>
 #include <bitcoin/system.hpp>
@@ -56,49 +54,6 @@ inline deadline::ptr expiration(const logger& log, asio::strand& strand,
 {
     return timeout(log, strand, pseudo_random::duration(span));
 }
-
-// TODO: implement logging in the same manner as tracking, passing the shared
-// TODO: log instance on construct of classes derived from a logger class.
-// TODO: logger exposes read/write methods and can be specialized using an
-// TODO: intermediate logger, such as channel_logger so that formatting can
-// TODO: be isolated from class logic. 
-//
-// TODO: Give the shared log instance a strand for each "file" that it writes,
-// TODO: such as standard out. Place the strand in a low priority threadpool
-// TODO: owned by log, with its own start/stop methods. This can bypass the
-// TODO: string serialization when a particular log level is turned off, with
-// TODO: log calls short-circuited. The strand preserves message order while
-// TODO: preserving concurrency across the threadpool.
-//
-// TODO: I/O can be specialized in construction of the log instance and even
-// TODO: injected to the network instance on construct, allowing for dynamic
-// TODO: log control of a running instance and injection of a custom log sink.
-//
-// TODO: The server could then sink log messages directly to ZMQ subscribers.
-// TODO: This can then easily be shipped out of process or even over the net.
-// TODO: Moving it out of the process allows log processing to operate on an
-// TODO: external buffer and CPU, while remaining dynamic. Client can implement
-// TODO: the log stub for other process, and BX can then sink messages from BS.
-// TODO: Multiple instances of BX can sink different endpoints, such as one for
-// TODO: each type of log message.
-//
-// TODO: Server can also accept control messages through ZeroMQ query, allowing
-// TODO: it to dynamically alter state, including log levels. This allows one
-// TODO: enable and view log output without restarting the box, or to force a
-// TODO: checkpoint flush, enable endpoints, change configurable state, etc.
-// TODO: This can be managed through an updateable version of settings.
-//
-// TODO: Can also implement settings using the same technique as log. Pass the
-// TODO: shared settings instance on construct and to an intermediate base.
-// TODO: have the base retain the reference and expose values directly, and
-// TODO: compute values from them, without cluttering constructors and without
-// TODO: copying individual values. More importantly this allows the values to
-// TODO: be dynamically-updated, and for the instance to handle a configuration
-// TODO: change event, filtered for the type or instance. The log and settings
-// TODO: instances can be injected through a single configuration object.
-//
-// TODO: So toss boost:log and remove from dependencies. First implement a
-// TODO: simple console sink.
 
 channel::channel(const logger& log, const socket::ptr& socket,
     const settings& settings) NOEXCEPT
@@ -249,17 +204,14 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        log().write()
-            << "Channel lifetime timer failure [" << authority() << "] "
-            << ec.message() << std::endl;
+        LOG("Channel lifetime timer failure [" << authority() << "] "
+            << ec.message());
 
         stop(ec);
         return;
     }
 
-    log().write()
-        << "Channel lifetime expired [" << authority() << "]" << std::endl;
-
+    LOG("Channel lifetime expired [" << authority() << "]");
     stop(ec);
 }
 
@@ -286,17 +238,14 @@ void channel::handle_inactivity(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        log().write()
-            << "Channel inactivity timer failure [" << authority() << "] "
-            << ec.message() << std::endl;
+        LOG("Channel inactivity timer failure [" << authority() << "] "
+            << ec.message());
 
         stop(ec);
         return;
     }
 
-    log().write()
-        << "Channel inactivity timeout [" << authority() << "]" << std::endl;
-
+    LOG("Channel inactivity timeout [" << authority() << "]");
     stop(ec);
 }
 

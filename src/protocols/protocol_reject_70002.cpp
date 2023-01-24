@@ -76,8 +76,6 @@ void protocol_reject_70002::handle_receive_reject(const code& ec,
     if (stopped(ec))
         return;
 
-    const auto& message = reject->message;
-
     // vesion message rejection is handled in protocol_version_70002, however
     // if received here (outside of handshake), a protocol error is implied.
     if (reject->message == version::command)
@@ -87,14 +85,12 @@ void protocol_reject_70002::handle_receive_reject(const code& ec,
         return;
     }
 
-    std::string hash;
-    if (message == block::command || message == transaction::command)
-        hash = " [" + encode_hash(reject->hash) + "].";
-
-    log().write()
-        << "Received " << message << " reject ("
+    LOG("Received " << reject->message << " reject ("
         << static_cast<uint16_t>(reject->code) << ") from ["
-        << authority() << "] '" << reject->reason << "'" << hash << std::endl;
+        << authority() << "] '" << reject->reason << "'"
+        << (reject->message == block::command ||
+            reject->message == transaction::command ? " [" +
+            encode_hash(reject->hash) + "]." : ""));
 }
 
 } // namespace network

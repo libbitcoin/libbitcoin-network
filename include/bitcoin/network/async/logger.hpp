@@ -20,8 +20,14 @@
 #define LIBBITCOIN_NETWORK_ASYNC_LOGGER_HPP
 
 #include <ostream>
+#include <sstream>
+#include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/asio.hpp>
+#include <bitcoin/network/async/subscriber.hpp>
+#include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -29,9 +35,60 @@ namespace network {
 class BCT_API logger
 {
 public:
+    class writer final
+    {
+    public:
+        DELETE_COPY_MOVE(writer);
+
+        inline writer(const logger& log) NOEXCEPT
+          : log_(log)
+        {
+        }
+
+        inline ~writer() NOEXCEPT
+        {
+            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+            log_.notify(error::success, stream_.str());
+            BC_POP_WARNING()
+        }
+
+        template <typename Type>
+        inline std::ostream& operator<<(const Type& message) NOEXCEPT
+        {
+            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+            stream_ << message;
+            BC_POP_WARNING()
+
+            return stream_;
+        }
+
+    private:
+        const logger& log_;
+        std::ostringstream stream_{};
+    };
+
+    typedef std::function<void(const code&, const std::string&)> handler;
+
     logger() NOEXCEPT;
-    std::ostream& write() const NOEXCEPT;
-    std::ostream& error() const NOEXCEPT;
+
+    writer write() const NOEXCEPT;
+    void subscribe(handler&& handler) NOEXCEPT;
+
+    /// Stop the subscriber/pool with a final message posted to subscribers.
+    void stop(const std::string& message) NOEXCEPT;
+    void stop(const code& ec, const std::string& message) NOEXCEPT;
+
+protected:
+    void notify(const code& ec, std::string&& message) const NOEXCEPT;
+
+private:
+    threadpool pool_;
+    asio::strand strand_;
+    subscriber<const code&, const std::string&> subscriber_;
+
+    void do_subscribe(const handler& handler) NOEXCEPT;
+    void do_notify(const code& ec, const std::string& message) const NOEXCEPT;
+    void do_stop(const code& ec, const std::string& message) NOEXCEPT;
 };
 
 } // namespace network

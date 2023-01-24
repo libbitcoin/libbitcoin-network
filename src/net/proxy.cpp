@@ -30,6 +30,8 @@
 namespace libbitcoin {
 namespace network {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
@@ -120,7 +122,7 @@ void proxy::do_stop(const code& ec) NOEXCEPT
 void proxy::subscribe_stop(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    stop_subscriber_.subscribe(move_copy(handler));
+    stop_subscriber_.subscribe(std::move(handler));
 }
 
 void proxy::subscribe_stop(result_handler&& handler,
@@ -173,19 +175,14 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (ec == error::channel_stopped)
     {
-        log().write()
-            << "Heading read abort [" << authority() << "]" << std::endl;
-
+        LOG("Heading read abort [" << authority() << "]");
         stop(error::success);
         return;
     }
 
     if (ec)
     {
-        log().write()
-            << "Heading read failure [" << authority() << "] " << ec.message()
-            << std::endl;
-
+        LOG("Heading read failure [" << authority() << "] " << ec.message());
         stop(ec);
         return;
     }
@@ -195,8 +192,7 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (!heading_reader_)
     {
-        log().write()
-            << "Invalid heading from [" << authority() << "]" << std::endl;
+        LOG("Invalid heading from [" << authority() << "]");
 
         stop(error::invalid_heading);
         return;
@@ -205,9 +201,8 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
     if (head->magic != protocol_magic())
     {
         // These are common, with magic 542393671 coming from http requests.
-        log().write()
-            << "Invalid heading magic (" << head->magic << ") from ["
-            << authority() << "]" << std::endl;
+        LOG("Invalid heading magic (" << head->magic << ") from ["
+            << authority() << "]");
 
         stop(error::invalid_magic);
         return;
@@ -215,10 +210,9 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (head->payload_size > maximum_payload())
     {
-        log().write()
-            << "Oversized payload indicated by " << head->command
+        LOG("Oversized payload indicated by " << head->command
             << " heading from [" << authority() << "] ("
-            << head->payload_size << " bytes)" << std::endl;
+            << head->payload_size << " bytes)");
 
         stop(error::oversized_payload);
         return;
@@ -235,25 +229,22 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 }
 
 // Handle errors and post message to subscribers.
-void proxy::handle_read_payload(const code& ec, size_t payload_size,
+void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     const heading_ptr& head) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec == error::channel_stopped)
     {
-        log().write()
-            << "Payload read abort [" << authority() << "]" << std::endl;
-
+        LOG("Payload read abort [" << authority() << "]");
         stop(error::success);
         return;
     }
 
     if (ec)
     {
-        log().write()
-            << "Payload read failure [" << authority() << "] "
-            << ec.message() << std::endl;
+        LOG("Payload read failure [" << authority() << "] "
+            << ec.message());
 
         stop(ec);
         return;
@@ -262,9 +253,8 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
     // This is a pointless test but we allow it as an option for completeness.
     if (validate_checksum() && !head->verify_checksum(payload_buffer_))
     {
-        log().write()
-            << "Invalid " << head->command << " payload from ["
-            << authority() << "] bad checksum." << std::endl;
+        LOG("Invalid " << head->command << " payload from ["
+            << authority() << "] bad checksum.");
 
         stop(error::invalid_checksum);
         return;
@@ -278,31 +268,28 @@ void proxy::handle_read_payload(const code& ec, size_t payload_size,
 
     if (code)
     {
-        // TODO: consolidated with verbose log.
         if (verbose())
         {
-            const auto size = std::min(payload_size, invalid_payload_dump_size);
-            const auto begin = payload_buffer_.begin();
-
-            log().write()
-                << "Invalid payload from [" << authority() << "] "
-                << encode_base16({ begin, std::next(begin, size) })
-                << std::endl;
+            LOG("Invalid payload from [" << authority() << "] "
+                << encode_base16(
+                {
+                    payload_buffer_.begin(),
+                    std::next(payload_buffer_.begin(),
+                        std::min(payload_size, invalid_payload_dump_size))
+                }));
         }
         else
         {
-            log().write()
-                << "Invalid " << head->command << " payload from ["
-                << authority() << "] " << code.message() << std::endl;
+            LOG("Invalid " << head->command << " payload from ["
+                << authority() << "] " << code.message());
         }
 
         stop(code);
         return;
     }
 
-    log().write()
-        << "Received " << head->command << " from [" << authority()
-        << "] (" << payload_size << " bytes)" << std::endl;
+    LOG("Received " << head->command << " from [" << authority()
+        << "] (" << payload_size << " bytes)");
 
     signal_activity();
     read_heading();
@@ -337,34 +324,31 @@ std::string proxy::extract_command(const system::data_chunk& payload) NOEXCEPT
 }
 
 void proxy::handle_send(const code& ec, size_t,
-    const system::chunk_ptr& payload, const result_handler& handler) NOEXCEPT
+    const system::chunk_ptr& LOG_ONLY(payload),
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec == error::channel_stopped)
     {
-        log().write()
-            << "Send abort [" << authority() << "]" << std::endl;
-
+        LOG("Send abort [" << authority() << "]");
         stop(error::success);
         return;
     }
 
     if (ec)
     {
-        log().write()
-            << "Failure sending " << extract_command(*payload) << " to ["
+        LOG("Failure sending " << extract_command(*payload) << " to ["
             << authority() << "] (" << payload->size() << " bytes) "
-            << ec.message() << std::endl;
+            << ec.message());
 
         stop(ec);
         handler(ec);
         return;
     }
 
-    log().write()
-        << "Sent " << extract_command(*payload) << " to [" << authority()
-        << "] (" << payload->size() << " bytes)" << std::endl;
+    LOG("Sent " << extract_command(*payload) << " to [" << authority()
+        << "] (" << payload->size() << " bytes)");
 
     handler(ec);
 }
@@ -386,6 +370,8 @@ const config::authority& proxy::authority() const NOEXCEPT
 {
     return socket_->authority();
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

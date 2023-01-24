@@ -37,8 +37,6 @@ using namespace bc::system;
 using namespace config;
 using namespace messages;
 
-#define NAME "hosts"
-
 inline bool is_invalid(const address_item& host) NOEXCEPT
 {
     return is_zero(host.port) || host.ip == null_ip_address;
@@ -83,7 +81,7 @@ code hosts::start() NOEXCEPT
     // An invalid path/non-existent file will not cause an error on open.
     if (!file.good())
     {
-        log().write() << "Failed to load hosts file." << std::endl;
+        LOG("Failed to load hosts file.");
         return error::file_load;
     }
 
@@ -116,7 +114,7 @@ code hosts::stop() NOEXCEPT
 
     if (!file.good())
     {
-        log().write() << "Failed to store hosts file." << std::endl;
+        LOG("Failed to store hosts file.");
         return error::file_load;
     }
 
@@ -130,7 +128,7 @@ code hosts::stop() NOEXCEPT
     // An invalid path or non-existent file will cause an error on write.
     if (file.bad())
     {
-        log().write() << "Failed to store hosts." << std::endl;
+        LOG("Failed to store hosts.");
         return error::file_load;
     }
 
@@ -147,7 +145,7 @@ void hosts::store(const address_item& host) NOEXCEPT
     // Do not treat invalid address as an error, just log it.
     if (is_invalid(host))
     {
-        log().write() << "Invalid host address from peer." << std::endl;
+        LOG("Invalid host address from peer.");
         return;
     }
 
@@ -184,7 +182,7 @@ void hosts::store(const address_items& hosts) NOEXCEPT
         // Do not treat invalid address as an error, just log it.
         if (is_invalid(host))
         {
-            log().write() << "Invalid host addresses from peer." << std::endl;
+            LOG("Invalid host addresses from peer.");
             continue;
         }
 
@@ -198,9 +196,8 @@ void hosts::store(const address_items& hosts) NOEXCEPT
         }
     }
 
-    log().write()
-        << "Accepted (" << accepted << " of " << hosts.size()
-        << ") host addresses from peer." << std::endl;
+    LOG("Accepted (" << accepted << " of " << hosts.size() <<
+        ") host addresses from peer.");
 }
 
 void hosts::remove(const address_item& host) NOEXCEPT
@@ -211,7 +208,7 @@ void hosts::remove(const address_item& host) NOEXCEPT
     const auto it = find(host);
     if (it == buffer_.end())
     {
-        log().write() << "Address to remove not found." << std::endl;
+        LOG("Address to remove not found.");
         return;
     }
 

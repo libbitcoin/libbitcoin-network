@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_REPORTER_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_REPORTER_HPP
 
+#include <iostream>
 #include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -37,6 +38,14 @@ private:
     // This is thread safe.
     const logger& log_;
 };
+
+#if defined(NDEBUG)
+    #define LOG_ONLY(name)
+    #define LOG(message)
+#else
+    #define LOG_ONLY(name) name
+    #define LOG(message) log().write() << message << std::endl
+#endif
 
 } // namespace network
 } // namespace libbitcoin
