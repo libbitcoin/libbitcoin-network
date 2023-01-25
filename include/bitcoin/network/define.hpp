@@ -39,6 +39,16 @@
     #define BCT_INTERNAL BC_HELPER_DLL_LOCAL
 #endif
 
+/// WITH_ indicates build symbol.
+/// ---------------------------------------------------------------------------
+
+#define WITH_LOGGING
+
+/// Build configured.
+#if defined(WITH_LOGGING)
+    #define HAVE_LOGGING
+#endif
+
 namespace libbitcoin {
 namespace network {
 
