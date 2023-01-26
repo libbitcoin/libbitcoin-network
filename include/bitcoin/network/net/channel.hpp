@@ -45,8 +45,8 @@ public:
     typedef std::shared_ptr<channel> ptr;
 
     /// Attach protocol to channel, caller must start (requires strand).
-    template <class Protocol, class Session, typename... Args>
-    typename Protocol::ptr attach(const Session& session,
+    template <class Protocol, typename... Args>
+    typename Protocol::ptr attach(const session& session,
         Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "subscribe_stop");
