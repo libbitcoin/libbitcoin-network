@@ -84,7 +84,7 @@ void session::start_channel(const channel::ptr& channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    if (session::stopped())
+    if (this->stopped())
     {
         channel->stop(error::service_stopped);
         started(error::service_stopped);
@@ -112,6 +112,7 @@ void session::do_attach_handshake(const channel::ptr& channel,
     const result_handler& handshake) const NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
 
     attach_handshake(channel, move_copy(handshake));
 
@@ -279,11 +280,20 @@ void session::do_handle_channel_stopped(const code& ec,
 void session::start_timer(result_handler&& handler,
     const duration& timeout) NOEXCEPT
 {
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    if (stopped())
+    {
+        handler(error::service_stopped);
+        return;
+    }
+
     timer_->start(std::move(handler), timeout);
 }
 
 void session::subscribe_stop(result_handler&& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(network_.stranded(), "strand");
     stop_subscriber_.subscribe(std::move(handler));
 }
 

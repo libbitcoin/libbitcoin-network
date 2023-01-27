@@ -104,6 +104,7 @@ void channel::do_stop(const code& ec) NOEXCEPT
 // A restarted timer invokes completion handler with error::operation_canceled.
 void channel::resume() NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     start_expiration();
     start_inactivity();
     proxy::resume();
@@ -185,6 +186,8 @@ void channel::signal_activity() NOEXCEPT
 // A restarted timer invokes completion handler with error::operation_canceled.
 void channel::start_expiration() NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
     if (stopped())
         return;
 
@@ -218,6 +221,8 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
 // Called from start or strand.
 void channel::start_inactivity() NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
     if (stopped())
         return;
 
