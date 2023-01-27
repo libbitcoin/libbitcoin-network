@@ -20,11 +20,10 @@
 #define LIBBITCOIN_NETWORK_SESSION_HPP
 
 #include <atomic>
-#include <cstddef>
 #include <functional>
 #include <memory>
+#include <unordered_set>
 #include <utility>
-#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -204,6 +203,7 @@ private:
     deadline::ptr timer_;
     stop_subscriber stop_subscriber_;
     std::vector<connector::ptr> connectors_;
+    std::unordered_set<channel::ptr> pending_;
 };
 
 #undef SESSION_ARGS

@@ -36,6 +36,8 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 session_seed::session_seed(p2p& network) NOEXCEPT
   : session(network), tracker<session_seed>(network.log())
 {
@@ -243,6 +245,8 @@ void session_seed::handle_channel_stop(const code&, const count_ptr& counter,
         return;
     }
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

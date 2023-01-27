@@ -23,7 +23,6 @@ struct hosts_tests_setup_fixture
     hosts_tests_setup_fixture()
     {
         test::remove(TEST_NAME);
-        test::create(TEST_NAME);
     }
 
     ~hosts_tests_setup_fixture()
@@ -144,8 +143,6 @@ BOOST_AUTO_TEST_CASE(hosts__store1__invalid__empty)
     set.host_pool_capacity = 42;
     hosts instance(log, set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
-
-    // TODO: clear file.
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
     instance.store(null_host);

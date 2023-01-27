@@ -156,11 +156,8 @@ void proxy::read_heading() NOEXCEPT
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Terminates the read loop (cannot be resumed).
-    if (stopped())
-        return;
-
     // Pauses the read loop (can be resumed), does not pause timer.
-    if (paused())
+    if (stopped() || paused())
         return;
 
     // Post handle_read_heading to strand upon stop, error, or buffer full.

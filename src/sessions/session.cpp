@@ -39,6 +39,8 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 session::session(p2p& network) NOEXCEPT
   : network_(network),
     stopped_(true),
@@ -74,6 +76,10 @@ void session::stop() NOEXCEPT
     timer_->stop();
     stopped_.store(true, std::memory_order_relaxed);
     stop_subscriber_.stop(error::service_stopped);
+
+    // Stop all pending channels.
+    for (const auto& channel: pending_)
+        channel->stop(error::service_stopped);
 }
 
 // Channel sequence.
@@ -84,7 +90,7 @@ void session::start_channel(const channel::ptr& channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    if (session::stopped())
+    if (this->stopped())
     {
         channel->stop(error::service_stopped);
         started(error::service_stopped);
@@ -93,6 +99,7 @@ void session::start_channel(const channel::ptr& channel,
     }
 
     // Unpend in handle_handshake (success or failure).
+    pending_.insert(channel);
     if (!inbound())
         network_.pend(channel->nonce());
 
@@ -112,6 +119,7 @@ void session::do_attach_handshake(const channel::ptr& channel,
     const result_handler& handshake) const NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
 
     attach_handshake(channel, move_copy(handshake));
 
@@ -162,6 +170,8 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
+    BC_DEBUG_ONLY(const auto count =) pending_.erase(channel);
+    BC_ASSERT_MSG(count == one, "unexpected channel unpend count");
     if (!inbound())
         network_.unpend(channel->nonce());
 
@@ -177,7 +187,6 @@ void session::handle_channel_start(const code& ec, const channel::ptr& channel,
     // Handles network_.store, channel stopped, and protocol start code.
     if (ec)
     {
-        BC_ASSERT_MSG(channel, "unexpected null channel");
         channel->stop(ec);
         /* bool */ network_.unstore(channel, inbound());
 
@@ -279,11 +288,20 @@ void session::do_handle_channel_stopped(const code& ec,
 void session::start_timer(result_handler&& handler,
     const duration& timeout) NOEXCEPT
 {
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    if (stopped())
+    {
+        handler(error::service_stopped);
+        return;
+    }
+
     timer_->start(std::move(handler), timeout);
 }
 
 void session::subscribe_stop(result_handler&& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(network_.stranded(), "strand");
     stop_subscriber_.subscribe(std::move(handler));
 }
 
@@ -371,6 +389,8 @@ void session::saves(const messages::address_items& addresses,
     // calling-non-const-function-of-another-class-by-reference-from-const-function
     network_.saves(addresses, std::move(handler));
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

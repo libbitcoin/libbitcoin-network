@@ -31,8 +31,6 @@
 namespace libbitcoin {
 namespace network {
 
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
 using namespace bc::system;
 using namespace config;
 using namespace messages;
@@ -44,6 +42,7 @@ inline bool is_invalid(const address_item& host) NOEXCEPT
 
 // TODO: manage timestamps (active channels are connected < 3 hours ago).
 // TODO: change to network_address bimap hash table with services and age.
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
   : count_(zero),
     disabled_(is_zero(settings.host_pool_capacity)),
@@ -55,6 +54,7 @@ hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
     tracker<hosts>(log)
 {
 }
+BC_POP_WARNING()
 
 hosts::~hosts() NOEXCEPT
 {
@@ -75,26 +75,33 @@ code hosts::start() NOEXCEPT
         return error::operation_failed;
 
     stopped_ = false;
-    ifstream file(file_path_.string(), ifstream::in);
 
-    // TODO: handle case of existing file but failed read.
-    // An invalid path/non-existent file will not cause an error on open.
-    if (!file.good())
+    try
     {
-        LOG("Failed to load hosts file.");
-        return error::file_load;
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        ifstream file(file_path_.string(), ifstream::in);
+        if (!file.good())
+        {
+            LOG("Hosts file not found.");
+            return error::success;
+        }
+
+        std::string line;
+        while (std::getline(file, line))
+        {
+            // TODO: create full space-delimited network_address serialization.
+            // Use to/from string format as opposed to wire serialization.
+            const config::authority entry(line);
+            const auto host = entry.to_address_item();
+
+            if (!is_invalid(host))
+                buffer_.push_back(host);
+        }
+        BC_POP_WARNING()
     }
-
-    std::string line;
-    while (std::getline(file, line))
+    catch (const std::exception&)
     {
-        // TODO: create full space-delimited network_address serialization.
-        // Use to/from string format as opposed to wire serialization.
-        const config::authority entry(line);
-        const auto host = entry.to_address_item();
-
-        if (!is_invalid(host))
-            buffer_.push_back(host);
+        return error::operation_failed;
     }
 
     count_.store(buffer_.size(), std::memory_order_relaxed);
@@ -110,26 +117,35 @@ code hosts::stop() NOEXCEPT
         return error::success;
 
     stopped_ = true;
-    ofstream file(file_path_.string(), ofstream::out);
 
-    if (!file.good())
+    try
     {
-        LOG("Failed to store hosts file.");
-        return error::file_load;
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        ofstream file(file_path_.string(), ofstream::out);
+        if (!file.good())
+        {
+            LOG("Failed to store hosts file.");
+            return error::file_load;
+        }
+
+        for (const auto& entry : buffer_)
+        {
+            // TODO: create full space-delimited network_address serialization.
+            // Use to/from string format as opposed to wire serialization.
+            file << config::authority(entry) << std::endl;
+        }
+
+        // An invalid path file will cause an error on write.
+        if (file.bad())
+        {
+            LOG("Failed to store hosts.");
+            return error::file_load;
+        }
+        BC_POP_WARNING()
     }
-
-    for (const auto& entry: buffer_)
+    catch (const std::exception&)
     {
-        // TODO: create full space-delimited network_address serialization.
-        // Use to/from string format as opposed to wire serialization.
-        file << config::authority(entry) << std::endl;
-    }
-
-    // An invalid path or non-existent file will cause an error on write.
-    if (file.bad())
-    {
-        LOG("Failed to store hosts.");
-        return error::file_load;
+        return error::operation_failed;
     }
 
     buffer_.clear();
@@ -149,11 +165,13 @@ void hosts::store(const address_item& host) NOEXCEPT
         return;
     }
 
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     if (find(host) == buffer_.end())
     {
         buffer_.push_back(host);
         count_.store(buffer_.size(), std::memory_order_relaxed);
     }
+    BC_POP_WARNING()
 }
 
 void hosts::store(const address_items& hosts) NOEXCEPT
@@ -177,23 +195,28 @@ void hosts::store(const address_items& hosts) NOEXCEPT
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
         // Use non-throwing index, already guarded.
-        const auto& host = hosts[index];
+        const auto& host = hosts.at(index);
 
         // Do not treat invalid address as an error, just log it.
         if (is_invalid(host))
         {
-            LOG("Invalid host addresses from peer.");
+            LOG("Invalid host address in peer set.");
+            continue;
+        }
+
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        if (find(host) != buffer_.end())
+        BC_POP_WARNING()
+        {
+            // Verbose.
+            ////LOG("Redundant host address in peer set.");
             continue;
         }
 
         // TODO: use std::map.
-        // Do not allow duplicates in the host cache.
-        if (find(host) == buffer_.end())
-        {
-            ++accepted;
-            buffer_.push_back(host);
-            count_.store(buffer_.size(), std::memory_order_relaxed);
-        }
+        ++accepted;
+        buffer_.push_back(host);
+        count_.store(buffer_.size(), std::memory_order_relaxed);
     }
 
     LOG("Accepted (" << accepted << " of " << hosts.size() <<
@@ -206,16 +229,20 @@ void hosts::remove(const address_item& host) NOEXCEPT
         return;
 
     const auto it = find(host);
-    if (it == buffer_.end())
+
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    if (it != buffer_.end())
     {
-        LOG("Address to remove not found.");
+        buffer_.erase(it);
+        count_.store(buffer_.size(), std::memory_order_relaxed);
         return;
     }
+    BC_POP_WARNING()
 
-    buffer_.erase(it);
-    count_.store(buffer_.size(), std::memory_order_relaxed);
+    LOG("Address to remove not found.");
 }
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 void hosts::fetch(const address_item_handler& handler) const NOEXCEPT
 {
     if (stopped_)
@@ -233,9 +260,11 @@ void hosts::fetch(const address_item_handler& handler) const NOEXCEPT
     // Randomly select an address from the buffer.
     const auto limit = sub1(buffer_.size());
     const auto index = pseudo_random::next(zero, limit);
-    handler(error::success, buffer_[index]);
+    handler(error::success, buffer_.at(index));
 }
+BC_POP_WARNING()
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
 {
     if (stopped_)
@@ -250,7 +279,7 @@ void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
         return;
     }
 
-    // TODO: extract 5/10 to configuration.
+    // TODO: extract 5/10 (20%-10%) to configuration.
     const auto out_count = std::min(messages::max_address,
         buffer_.size() / pseudo_random::next<size_t>(5u, 10u));
 
@@ -260,11 +289,12 @@ void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
     address_items out;
     out.reserve(out_count);
     for (size_t count = 0; count < out_count; ++count)
-        out.push_back(buffer_[index++ % limit]);
+        out.push_back(buffer_.at(index++ % limit));
 
     pseudo_random::shuffle(out);
     handler(error::success, out);
 }
+BC_POP_WARNING()
 
 // private
 hosts::buffer::iterator hosts::find(const address_item& host) NOEXCEPT
@@ -277,8 +307,6 @@ hosts::buffer::iterator hosts::find(const address_item& host) NOEXCEPT
 
     return std::find_if(buffer_.begin(), buffer_.end(), found);
 }
-
-BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

@@ -36,6 +36,8 @@ using namespace bc::system;
 using namespace config;
 using namespace std::placeholders;
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 session_outbound::session_outbound(p2p& network) NOEXCEPT
   : session(network), tracker<session_outbound>(network.log())
 {
@@ -147,10 +149,17 @@ void session_outbound::do_one(const code& ec, const authority& host,
         return;
     }
 
-    // This termination prevents a tight loop in the case of a small address pool.
+    // This termination prevents a tight loop in the small address pool case.
     if (blacklisted(host))
     {
         handler(error::address_blocked, nullptr);
+        return;
+    }
+
+    // Guard restartable connector (shutdown delay).
+    if (stopped())
+    {
+        handler(error::service_stopped, nullptr);
         return;
     }
 
@@ -260,6 +269,8 @@ void session_outbound::handle_channel_stop(const code&,
     // This is the only opportunity for a tight loop (could use timer).
     start_connect(connectors);
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
