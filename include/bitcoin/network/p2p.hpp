@@ -178,8 +178,8 @@ protected:
     virtual connector::ptr create_connector() NOEXCEPT;
 
     /// Maintain channel state.
-    virtual void pend(uint64_t nonce) NOEXCEPT;
-    virtual void unpend(uint64_t nonce) NOEXCEPT;
+    virtual bool pend(uint64_t nonce) NOEXCEPT;
+    virtual bool unpend(uint64_t nonce) NOEXCEPT;
     virtual code store(const channel::ptr& channel, bool notify,
         bool inbound) NOEXCEPT;
     virtual bool unstore(const channel::ptr& channel, bool inbound) NOEXCEPT;
@@ -213,7 +213,7 @@ private:
 
     virtual bool closed() const NOEXCEPT;
     virtual code start_hosts() NOEXCEPT;
-    virtual void stop_hosts() NOEXCEPT;
+    virtual code stop_hosts() NOEXCEPT;
 
     void do_start(const result_handler& handler) NOEXCEPT;
     void do_run(const result_handler& handler) NOEXCEPT;
