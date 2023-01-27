@@ -76,6 +76,10 @@ void session::stop() NOEXCEPT
     timer_->stop();
     stopped_.store(true, std::memory_order_relaxed);
     stop_subscriber_.stop(error::service_stopped);
+
+    // Stop all pending channels.
+    for (const auto& channel: pending_)
+        channel->stop(error::service_stopped);
 }
 
 // Channel sequence.
@@ -95,6 +99,7 @@ void session::start_channel(const channel::ptr& channel,
     }
 
     // Unpend in handle_handshake (success or failure).
+    pending_.insert(channel);
     if (!inbound())
         network_.pend(channel->nonce());
 
@@ -165,6 +170,8 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
+    BC_DEBUG_ONLY(const auto count =) pending_.erase(channel);
+    BC_ASSERT_MSG(count == one, "unexpected channel unpend count");
     if (!inbound())
         network_.unpend(channel->nonce());
 
@@ -180,7 +187,6 @@ void session::handle_channel_start(const code& ec, const channel::ptr& channel,
     // Handles network_.store, channel stopped, and protocol start code.
     if (ec)
     {
-        BC_ASSERT_MSG(channel, "unexpected null channel");
         channel->stop(ec);
         /* bool */ network_.unstore(channel, inbound());
 
