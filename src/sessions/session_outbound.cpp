@@ -204,7 +204,8 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
     // No more connectors remaining and no connections.
     if (ec && finished)
     {
-        // TODO: log discarded code.
+        LOG("Failed to connect outbound channel, " << ec.message());
+
         // Reduce the set of errors from the batch to connect_failed.
         handler(error::connect_failed, nullptr);
         return;
