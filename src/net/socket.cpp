@@ -35,6 +35,8 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 // Construction.
 // ----------------------------------------------------------------------------
 // Boost: "The execution context provides the I/O executor that the socket will
@@ -93,6 +95,8 @@ void socket::do_stop() NOEXCEPT
 void socket::accept(asio::acceptor& acceptor,
     result_handler&& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(!socket_.is_open(), "accept on open socket");
+
     // Closure of the acceptor, not the socket, releases this handler.
     // The socket is not guarded during async_accept. This is required so the
     // acceptor may be guarded from its own strand while preserving hiding of
@@ -143,6 +147,9 @@ void socket::write(const data_slice& in, io_handler&& handler) NOEXCEPT
 void socket::do_connect(const asio::endpoints& range,
     const result_handler& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(!socket_.is_open(), "connect on open socket");
+
     // Establishes a socket connection by trying each endpoint in a sequence.
     boost::asio::async_connect(socket_, range,
         std::bind(&socket::handle_connect,
@@ -260,6 +267,8 @@ asio::strand& socket::strand() NOEXCEPT
 {
     return strand_;
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
