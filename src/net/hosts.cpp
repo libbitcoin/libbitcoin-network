@@ -208,7 +208,8 @@ void hosts::store(const address_items& hosts) NOEXCEPT
         if (find(host) != buffer_.end())
         BC_POP_WARNING()
         {
-            LOG("Redundant host address in peer set.");
+            // Verbose.
+            ////LOG("Redundant host address in peer set.");
             continue;
         }
 
