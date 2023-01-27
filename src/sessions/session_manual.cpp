@@ -38,6 +38,8 @@ using namespace bc::system;
 using namespace config;
 using namespace std::placeholders;
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 session_manual::session_manual(p2p& network) NOEXCEPT
   : session(network), tracker<session_manual>(network.log())
 {
@@ -191,6 +193,8 @@ void session_manual::handle_channel_stop(const code&, const endpoint& peer,
     // This is the only opportunity for a tight loop (could use timer).
     start_connect(peer, connector, move_copy(handler));
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

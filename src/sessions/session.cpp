@@ -39,6 +39,8 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 session::session(p2p& network) NOEXCEPT
   : network_(network),
     stopped_(true),
@@ -381,6 +383,8 @@ void session::saves(const messages::address_items& addresses,
     // calling-non-const-function-of-another-class-by-reference-from-const-function
     network_.saves(addresses, std::move(handler));
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
