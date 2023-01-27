@@ -80,6 +80,9 @@ void session::stop() NOEXCEPT
     // Stop all pending channels.
     for (const auto& channel: pending_)
         channel->stop(error::service_stopped);
+
+    // Free all pending channels.
+    pending_.clear();
 }
 
 // Channel sequence.
@@ -98,10 +101,17 @@ void session::start_channel(const channel::ptr& channel,
         return;
     }
 
-    // Unpend in handle_handshake (success or failure).
+    // Pend shaking outgoing nonce (unless redundant).
+    if (!inbound() && !network_.pend(channel->nonce()))
+    {
+        channel->stop(error::channel_conflict);
+        started(error::channel_conflict);
+        stopped(error::channel_conflict);
+        return;
+    }
+
+    // Pending shaking channel.
     pending_.insert(channel);
-    if (!inbound())
-        network_.pend(channel->nonce());
 
     result_handler start =
         BIND4(handle_channel_start, _1, channel, std::move(started),
@@ -170,10 +180,16 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
+    // Unpend shaken channel.
     BC_DEBUG_ONLY(const auto count =) pending_.erase(channel);
     BC_ASSERT_MSG(count == one, "unexpected channel unpend count");
+
+    // Unpend shaken outgoing nonce.
     if (!inbound())
-        network_.unpend(channel->nonce());
+    {
+        BC_DEBUG_ONLY(const auto found =) network_.unpend(channel->nonce());
+        BC_ASSERT_MSG(found, "unexpected nonce unpend count");
+    }
 
     // Handles channel stopped or protocol start code.
     // This retains the channel and allows broadcasts, stored if no code.
