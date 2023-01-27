@@ -41,7 +41,10 @@ private:
 
 #if defined(HAVE_LOGGING)
     #define LOG_ONLY(name) name
-    #define LOG(message) log().write() << message << std::endl
+    #define LOG(message) \
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
+        log().write() << message << std::endl; \
+        BC_POP_WARNING()
 #else
     #define LOG_ONLY(name)
     #define LOG(message)
