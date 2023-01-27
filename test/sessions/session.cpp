@@ -320,18 +320,18 @@ public:
     }
 
 protected:
-    void pend(uint64_t nonce) NOEXCEPT override
+    bool pend(uint64_t nonce) NOEXCEPT override
     {
         BC_ASSERT(!is_zero(nonce));
         pend_ = nonce;
-        p2p::pend(nonce);
+        return p2p::pend(nonce);
     }
 
-    void unpend(uint64_t nonce) NOEXCEPT override
+    bool unpend(uint64_t nonce) NOEXCEPT override
     {
         BC_ASSERT(!is_zero(nonce));
         unpend_ = nonce;
-        p2p::unpend(nonce);
+        return p2p::unpend(nonce);
     }
 
     code store(const channel::ptr& channel, bool notify,
