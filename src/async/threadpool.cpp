@@ -18,8 +18,7 @@
  */
 #include <bitcoin/network/async/threadpool.hpp>
 
-#include <cstddef>
-#include <memory>
+#include <exception>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/thread.hpp>
@@ -28,25 +27,30 @@
 namespace libbitcoin {
 namespace network {
 
-// Stopping the I/O service will abandon unfinished operations without
-// permitting ready handlers to be dispatched. More information here:
-// www.boost.org/doc/libs/1_69_0/doc/html/boost_asio/reference/io_context.html#
-// boost_asio.reference.io_context.stopping_the_io_context_from_running_out_of_work
+// Work keeps the threadpool alive when there are no threads running.
+threadpool::work_guard threadpool::keep_alive(asio::io_context& service) NOEXCEPT
+{
+    // If make_work_guard throws, application will abort at startup.
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return boost::asio::make_work_guard(service);
+    BC_POP_WARNING()
+}
 
 // The run() function blocks until all work has finished and there are no
 // more handlers to be dispatched, or until the io_context has been stopped.
-
 threadpool::threadpool(size_t number_threads, thread_priority priority) NOEXCEPT
-  : work_(boost::asio::make_work_guard(service_))
+  : work_(keep_alive(service_))
 {
-    // Work keeps the threadpool alive when there are no threads running.
-
     for (size_t thread = 0; thread < number_threads; ++thread)
     {
         threads_.push_back(network::thread([this, priority]() NOEXCEPT
         {
             set_priority(priority);
+
+            // If service.run throws, application will abort at startup.
+            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
             service_.run();
+            BC_POP_WARNING()
         }));
     }
 }
@@ -57,6 +61,10 @@ threadpool::~threadpool() NOEXCEPT
     join();
 }
 
+// Stopping the I/O service would abandon unfinished operations without
+// permitting ready handlers to be dispatched. More information here:
+// www.boost.org/doc/libs/1_69_0/doc/html/boost_asio/reference/io_context.html#
+// boost_asio.reference.io_context.stopping_the_io_context_from_running_out_of_work
 void threadpool::stop() NOEXCEPT
 {
     // Clear the work keep-alive.
@@ -78,7 +86,15 @@ bool threadpool::join() NOEXCEPT
         if (this_id == thread.get_id())
             return false;
 
-        thread.join();
+        // Join should not throw given deadlock guard above, but just in case.
+        try
+        {
+            thread.join();
+        }
+        catch (std::exception&)
+        {
+            return false;
+        }
     }
 
     threads_.clear();
