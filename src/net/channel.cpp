@@ -62,7 +62,6 @@ channel::channel(const logger& log, const socket::ptr& socket,
     protocol_magic_(settings.identifier),
     channel_nonce_(pseudo_random::next<uint64_t>(1, max_uint64)),
     validate_checksum_(settings.validate_checksum),
-    verbose_logging_(settings.verbose),
     negotiated_version_(settings.protocol_maximum),
     peer_version_(to_shared<messages::version>()),
     expiration_(expiration(log, socket->strand(), settings.channel_expiration())),
@@ -160,11 +159,6 @@ uint32_t channel::protocol_magic() const NOEXCEPT
 bool channel::validate_checksum() const NOEXCEPT
 {
     return validate_checksum_;
-}
-
-bool channel::verbose() const NOEXCEPT
-{
-    return verbose_logging_;
 }
 
 uint32_t channel::version() const NOEXCEPT

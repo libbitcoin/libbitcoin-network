@@ -91,7 +91,6 @@ protected:
     size_t maximum_payload() const NOEXCEPT override;
     uint32_t protocol_magic() const NOEXCEPT override;
     bool validate_checksum() const NOEXCEPT override;
-    bool verbose() const NOEXCEPT override;
     uint32_t version() const NOEXCEPT override;
 
     /// Signals inbound traffic, called from proxy on strand (requires strand).
@@ -113,7 +112,6 @@ private:
     const uint32_t protocol_magic_;
     const uint64_t channel_nonce_;
     const bool validate_checksum_;
-    const bool verbose_logging_;
 
     // These are not thread safe.
     uint32_t negotiated_version_;

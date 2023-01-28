@@ -41,11 +41,6 @@ public:
         return channel::validate_checksum();
     }
 
-    bool verbose() const NOEXCEPT override
-    {
-        return channel::verbose();
-    }
-
     uint32_t version() const NOEXCEPT override
     {
         return channel::version();
@@ -91,7 +86,6 @@ BOOST_AUTO_TEST_CASE(channel__properties__default__false)
     BOOST_REQUIRE_EQUAL(channel_ptr->maximum_payload(), payload_maximum(set));
     BOOST_REQUIRE_EQUAL(channel_ptr->protocol_magic(), set.identifier);
     BOOST_REQUIRE_EQUAL(channel_ptr->validate_checksum(), set.validate_checksum);
-    BOOST_REQUIRE_EQUAL(channel_ptr->verbose(), set.verbose);
     BOOST_REQUIRE_EQUAL(channel_ptr->version(), set.protocol_maximum);
 
     channel_ptr->stop(error::invalid_magic);

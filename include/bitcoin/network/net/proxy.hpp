@@ -104,7 +104,6 @@ protected:
     virtual size_t maximum_payload() const NOEXCEPT = 0;
     virtual uint32_t protocol_magic() const NOEXCEPT = 0;
     virtual bool validate_checksum() const NOEXCEPT = 0;
-    virtual bool verbose() const NOEXCEPT = 0;
     virtual uint32_t version() const NOEXCEPT = 0;
     virtual void signal_activity() NOEXCEPT = 0;
 

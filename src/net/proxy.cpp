@@ -265,21 +265,16 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 
     if (code)
     {
-        if (verbose())
-        {
-            LOG("Invalid payload from [" << authority() << "] "
-                << encode_base16(
-                {
-                    payload_buffer_.begin(),
-                    std::next(payload_buffer_.begin(),
-                        std::min(payload_size, invalid_payload_dump_size))
-                }));
-        }
-        else
-        {
-            LOG("Invalid " << head->command << " payload from ["
-                << authority() << "] " << code.message());
-        }
+        LOGV("Invalid payload from [" << authority() << "] "
+            << encode_base16(
+            {
+                payload_buffer_.begin(),
+                std::next(payload_buffer_.begin(),
+                    std::min(payload_size, invalid_payload_dump_size))
+            }));
+
+        LOG("Invalid " << head->command << " payload from ["
+            << authority() << "] " << code.message());
 
         stop(code);
         return;
