@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/settings.hpp>
 
-#include <cstddef>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 
@@ -52,18 +51,7 @@ settings::settings() NOEXCEPT
     channel_expiration_minutes(1440),
     host_pool_capacity(0),
     hosts_file("hosts.cache"),
-    self(unspecified_address_item),
-
-    // [log]
-    ////debug_file("debug.log"),
-    ////error_file("error.log"),
-    ////archive_directory("archive"),
-    ////rotation_size(0),
-    ////minimum_free_space(0),
-    ////maximum_archive_size(0),
-    ////maximum_archive_files(0),
-    ////statistics_server(unspecified_address_item),
-    verbose(false)
+    self(unspecified_address_item)
 {
 }
 
@@ -81,9 +69,9 @@ settings::settings(chain::selection context) NOEXCEPT
             inbound_port = 8333;
             seeds.reserve(4);
             seeds.push_back({ "194.5.152.211", 8333 });
-            ////seeds.push_back({ "96.126.123.143", 8333 });
-            ////seeds.push_back({ "165.227.196.254", 8333 });
-            ////seeds.push_back({ "34.73.164.207", 8333 });
+            seeds.push_back({ "96.126.123.143", 8333 });
+            seeds.push_back({ "165.227.196.254", 8333 });
+            seeds.push_back({ "34.73.164.207", 8333 });
             break;
         }
 
@@ -125,6 +113,11 @@ duration settings::channel_handshake() const NOEXCEPT
     return seconds(channel_handshake_seconds);
 }
 
+duration settings::channel_germination() const NOEXCEPT
+{
+    return seconds(channel_germination_seconds);
+}
+
 duration settings::channel_heartbeat() const NOEXCEPT
 {
     return minutes(channel_heartbeat_minutes);
@@ -138,11 +131,6 @@ duration settings::channel_inactivity() const NOEXCEPT
 duration settings::channel_expiration() const NOEXCEPT
 {
     return minutes(channel_expiration_minutes);
-}
-
-duration settings::channel_germination() const NOEXCEPT
-{
-    return seconds(channel_germination_seconds);
 }
 
 } // namespace network

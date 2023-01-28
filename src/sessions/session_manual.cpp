@@ -88,9 +88,9 @@ void session_manual::connect(const config::endpoint& peer) NOEXCEPT
     BC_ASSERT_MSG(stranded(), "strand");
 
     const auto self = shared_from_base<session_manual>();
-    connect(peer, [=](const code&, channel::ptr) NOEXCEPT
+    connect(peer, [=](const code& LOG_ONLY(ec), channel::ptr) NOEXCEPT
     {
-        // TODO: log discarded code.
+        LOGP(self, "Failed to connect channel, " << ec.message());
         self->nop();
     });
 }
@@ -146,11 +146,12 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
         return;
     }
 
-    // TODO: log discarded code.
     // There was an error connecting the channel, so try again after delay.
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
+        LOG("Failed to connect manual channel, " << ec.message());
+
         start_timer(BIND3(start_connect, peer, connector, handler),
             settings().connect_timeout());
         return;

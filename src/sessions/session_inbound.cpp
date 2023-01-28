@@ -108,9 +108,11 @@ void session_inbound::start_accept(const code& ec,
     if (stopped())
         return;
 
-    // TODO: log discarded timer failure code.
     if (ec)
+    {
+        LOG("Failed to start acceptor, " << ec.message());
         return;
+    }
 
     acceptor->accept(BIND3(handle_accept, _1, _2, acceptor));
 }
@@ -129,11 +131,12 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
-    // TODO: log discarded code.
     // There was an error accepting the channel, so try again after delay.
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
+        LOG("Failed to accept inbound channel, " << ec.message());
+
         start_timer(BIND2(start_accept, _1, acceptor),
             settings().connect_timeout());
         return;

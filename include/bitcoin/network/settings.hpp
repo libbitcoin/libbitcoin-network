@@ -58,28 +58,17 @@ struct BCT_API settings
     uint32_t host_pool_capacity;
     std::filesystem::path hosts_file;
     config::authority self;
-    config::authorities blacklists;
-    config::endpoints peers;
-    config::endpoints seeds;
-
-    // [log]
-    ////std::filesystem::path debug_file;
-    ////std::filesystem::path error_file;
-    ////std::filesystem::path archive_directory;
-    ////size_t rotation_size;
-    ////size_t minimum_free_space;
-    ////size_t maximum_archive_size;
-    ////size_t maximum_archive_files;
-    ////config::authority statistics_server;
-    bool verbose;
+    config::authorities blacklists{};
+    config::endpoints peers{};
+    config::endpoints seeds{};
 
     /// Helpers.
     duration connect_timeout() const NOEXCEPT;
     duration channel_handshake() const NOEXCEPT;
+    duration channel_germination() const NOEXCEPT;
     duration channel_heartbeat() const NOEXCEPT;
     duration channel_inactivity() const NOEXCEPT;
     duration channel_expiration() const NOEXCEPT;
-    duration channel_germination() const NOEXCEPT;
 };
 
 } // namespace network

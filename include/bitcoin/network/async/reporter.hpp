@@ -45,9 +45,16 @@ private:
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
         log().write() << message << std::endl; \
         BC_POP_WARNING()
+    #define LOGV(message) LOG(message)
+    #define LOGP(self, message) \
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
+        self->log().write() << message << std::endl; \
+        BC_POP_WARNING()
 #else
     #define LOG_ONLY(name)
     #define LOG(message)
+    #define LOGP(message)
+    #define LOGV(message)
 #endif
 
 } // namespace network

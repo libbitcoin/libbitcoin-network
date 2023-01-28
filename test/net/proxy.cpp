@@ -78,11 +78,6 @@ public:
         return false;
     }
 
-    bool verbose() const NOEXCEPT override
-    {
-        return false;
-    }
-
     uint32_t version() const NOEXCEPT override
     {
         return 0;

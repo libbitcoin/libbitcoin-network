@@ -40,15 +40,20 @@ inline bool is_invalid(const address_item& host) NOEXCEPT
     return is_zero(host.port) || host.ip == null_ip_address;
 }
 
+// TODO: add min/max denominators to settings.
+// TODO: create full space-delimited network_address serialization.
+// TODO: Use to/from string format as opposed to wire serialization.
 // TODO: manage timestamps (active channels are connected < 3 hours ago).
 // TODO: change to network_address bimap hash table with services and age.
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
-  : count_(zero),
-    disabled_(is_zero(settings.host_pool_capacity)),
-    capacity_(static_cast<size_t>(settings.host_pool_capacity)),
-    file_path_(settings.hosts_file),
-    buffer_(std::max(capacity_, one)),
+  : file_path_(settings.hosts_file),
+    count_(zero),
+    minimum_(5),
+    maximum_(10),
+    capacity_(possible_narrow_cast<size_t>(settings.host_pool_capacity)),
+    disabled_(is_zero(capacity_)),
+    buffer_(capacity_),
     stopped_(true),
     reporter(log),
     tracker<hosts>(log)
@@ -89,19 +94,21 @@ code hosts::start() NOEXCEPT
         std::string line;
         while (std::getline(file, line))
         {
-            // TODO: create full space-delimited network_address serialization.
-            // Use to/from string format as opposed to wire serialization.
             const config::authority entry(line);
             const auto host = entry.to_address_item();
 
             if (!is_invalid(host))
                 buffer_.push_back(host);
         }
+
+        if (file.bad())
+            return error::file_load;
+
         BC_POP_WARNING()
     }
     catch (const std::exception&)
     {
-        return error::operation_failed;
+        return error::file_load;
     }
 
     count_.store(buffer_.size(), std::memory_order_relaxed);
@@ -123,29 +130,22 @@ code hosts::stop() NOEXCEPT
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         ofstream file(file_path_.string(), ofstream::out);
         if (!file.good())
-        {
-            LOG("Failed to store hosts file.");
-            return error::file_load;
-        }
+            return error::file_save;
 
-        for (const auto& entry : buffer_)
-        {
-            // TODO: create full space-delimited network_address serialization.
-            // Use to/from string format as opposed to wire serialization.
+        // TODO: create full space-delimited network_address serialization.
+        // Use to/from string format as opposed to wire serialization.
+        for (const auto& entry: buffer_)
             file << config::authority(entry) << std::endl;
-        }
 
         // An invalid path file will cause an error on write.
         if (file.bad())
-        {
-            LOG("Failed to store hosts.");
-            return error::file_load;
-        }
+            return error::file_save;
+
         BC_POP_WARNING()
     }
     catch (const std::exception&)
     {
-        return error::operation_failed;
+        return error::file_save;
     }
 
     buffer_.clear();
@@ -176,22 +176,23 @@ void hosts::store(const address_item& host) NOEXCEPT
 
 void hosts::store(const address_items& hosts) NOEXCEPT
 {
+    // If enabled then minimum capacity is one and buffer is at capacity.
     if (disabled_ || stopped_ || hosts.empty())
         return;
 
     // Accept between 1 and all of this peer's addresses up to capacity.
-    const auto capacity = buffer_.capacity();
-    const auto usable = std::min(hosts.size(), capacity);
+    const auto usable = std::min(hosts.size(), capacity_);
     const auto random = pseudo_random::next(one, usable);
 
     // But always accept at least the amount we are short if available.
-    const auto gap = capacity - buffer_.size();
+    const auto gap = capacity_ - buffer_.size();
     const auto accept = std::max(gap, random);
 
-    // Convert minimum desired to step for iteration, no less than 1.
+    // Convert minimum desired to nonzero step for iteration.
     const auto step = std::max(usable / accept, one);
-    size_t accepted = 0;
+    auto accepted = zero;
 
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
         // Use non-throwing index, already guarded.
@@ -204,20 +205,16 @@ void hosts::store(const address_items& hosts) NOEXCEPT
             continue;
         }
 
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         if (find(host) != buffer_.end())
-        BC_POP_WARNING()
-        {
-            // Verbose.
-            ////LOG("Redundant host address in peer set.");
             continue;
-        }
 
         // TODO: use std::map.
         ++accepted;
         buffer_.push_back(host);
         count_.store(buffer_.size(), std::memory_order_relaxed);
+
     }
+    BC_POP_WARNING()
 
     LOG("Accepted (" << accepted << " of " << hosts.size() <<
         ") host addresses from peer.");
@@ -279,14 +276,13 @@ void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
         return;
     }
 
-    // TODO: extract 5/10 (20%-10%) to configuration.
     const auto out_count = std::min(messages::max_address,
-        buffer_.size() / pseudo_random::next<size_t>(5u, 10u));
+        buffer_.size() / pseudo_random::next<size_t>(minimum_, maximum_));
 
     const auto limit = sub1(buffer_.size());
     auto index = pseudo_random::next(zero, limit);
 
-    address_items out;
+    address_items out{};
     out.reserve(out_count);
     for (size_t count = 0; count < out_count; ++count)
         out.push_back(buffer_.at(index++ % limit));
@@ -299,9 +295,9 @@ BC_POP_WARNING()
 // private
 hosts::buffer::iterator hosts::find(const address_item& host) NOEXCEPT
 {
+    // TODO: add equality operator to address_item.
     const auto found = [&host](const address_item& entry) NOEXCEPT
     {
-        // Message types do not implement comparison operators.
         return entry.port == host.port && entry.ip == host.ip;
     };
 

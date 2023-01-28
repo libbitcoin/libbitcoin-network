@@ -73,13 +73,15 @@ private:
 
     buffer::iterator find(const messages::address_item& host) NOEXCEPT;
 
-    // This is thread safe.
+    // These are thread safe.
+    const std::filesystem::path file_path_;
     std::atomic<size_t> count_;
+    const size_t minimum_;
+    const size_t maximum_;
+    const size_t capacity_;
+    const bool disabled_;
 
     // These are not thread safe.
-    const bool disabled_;
-    const size_t capacity_;
-    const std::filesystem::path file_path_;
     buffer buffer_;
     bool stopped_;
 };

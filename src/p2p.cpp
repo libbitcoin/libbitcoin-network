@@ -121,10 +121,9 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
     }
 
     // Host population always required.
-    const auto error_code = start_hosts();
-
-    if (error_code)
+    if (const auto error_code = start_hosts())
     {
+        LOG("Hosts file failed to deserialize, " << error_code.message());
         handler(error_code);
         return;
     }
@@ -219,8 +218,11 @@ void p2p::do_close() NOEXCEPT
     // Free all channels.
     channels_.clear();
 
-    // Serialize hosts file (log results).
-    stop_hosts();
+    // Serialize hosts to file.
+    if (const auto error_code = stop_hosts())
+    {
+        LOG("Hosts file failed to serialize, " << error_code.message());
+    }
 
     // Stop threadpool keep-alive, all work must self-terminate to affect join.
     threadpool_.stop();
@@ -312,9 +314,8 @@ void p2p::do_connect_handled(const config::endpoint& endpoint,
 // private
 bool p2p::closed() const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "manual_");
-
     // manual_ doubles as the closed indicator.
+    BC_ASSERT_MSG(stranded(), "manual_");
     return !manual_;
 }
 
@@ -364,10 +365,9 @@ code p2p::start_hosts() NOEXCEPT
 }
 
 // private
-void p2p::stop_hosts() NOEXCEPT
+code p2p::stop_hosts() NOEXCEPT
 {
-    // TODO: log discarded code.
-    /* code */ hosts_.stop();
+    return hosts_.stop();
 }
 
 void p2p::fetch(hosts::address_item_handler&& handler) const NOEXCEPT
@@ -437,18 +437,21 @@ void p2p::do_saves(const messages::address_items& hosts,
 // Connection management.
 // ----------------------------------------------------------------------------
 
-// TODO: if a channel is created with a conflicting nonce, the first deletion
-// will remove both, resulting in removal of self-connect protection for first.
-void p2p::pend(uint64_t nonce) NOEXCEPT
+// Preclude pending redundant channel nonces.
+bool p2p::pend(uint64_t nonce) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "nonces_");
+    if (nonces_.find(nonce) != nonces_.end())
+        return false;
+
     nonces_.insert(nonce);
+    return true;
 }
 
-void p2p::unpend(uint64_t nonce) NOEXCEPT
+bool p2p::unpend(uint64_t nonce) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "nonces_");
-    nonces_.erase(nonce);
+    return !is_zero(nonces_.erase(nonce));
 }
 
 code p2p::store(const channel::ptr& channel, bool notify,

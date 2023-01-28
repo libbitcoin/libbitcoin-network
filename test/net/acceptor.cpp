@@ -95,6 +95,24 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     instance.reset();
 }
 
+// Seen this failure twice (intermittent).
+//----------------------------------------------------------
+//Running 437 test cases...
+//Platform: linux
+//Compiler: Clang version 14.0.0 
+//STL     : GNU libstdc++ version 20220513
+//Boost   : 1.78.0
+//terminate called after throwing an instance of 'std::length_error'
+//  what():  basic_string::_M_create
+//unknown location(0): fatal error: in "acceptor_tests/acceptor__accept__stop__channel_stopped": signal: SIGABRT (application abort requested)
+///home/runner/work/libbitcoin-network/libbitcoin-network/test/net/acceptor.cpp(126): last checkpoint
+//<end of output>
+//Test time =   0.32 sec
+//----------------------------------------------------------
+//Test Failed.
+//"libbitcoin-network-test" end time: Jan 28 02:55 UTC
+//"libbitcoin-network-test" time elapsed: 00:00:00
+//----------------------------------------------------------
 // TODO: There is no way to fake successful acceptance.
 BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
 {

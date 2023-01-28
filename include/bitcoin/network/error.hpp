@@ -96,6 +96,7 @@ enum error_t
 
     // termination
     channel_timeout,
+    channel_conflict,
     channel_dropped,
     channel_stopped,
     service_stopped,
