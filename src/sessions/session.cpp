@@ -101,7 +101,7 @@ void session::start_channel(const channel::ptr& channel,
         return;
     }
 
-    // Pend shaking outgoing nonce (unless redundant).
+    // Pend shaking outgoing nonce (unless nonce conflict).
     if (!inbound() && !network_.pend(channel->nonce()))
     {
         channel->stop(error::channel_conflict);
@@ -180,16 +180,12 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    // Unpend shaken channel.
-    BC_DEBUG_ONLY(const auto count =) pending_.erase(channel);
-    BC_ASSERT_MSG(count == one, "unexpected channel unpend count");
+    // Unpend shaken channel (intervening stop/clear could clear first).
+    pending_.erase(channel);
 
     // Unpend shaken outgoing nonce.
     if (!inbound())
-    {
-        BC_DEBUG_ONLY(const auto found =) network_.unpend(channel->nonce());
-        BC_ASSERT_MSG(found, "unexpected nonce unpend count");
-    }
+        network_.unpend(channel->nonce());
 
     // Handles channel stopped or protocol start code.
     // This retains the channel and allows broadcasts, stored if no code.
