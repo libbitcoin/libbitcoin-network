@@ -57,12 +57,15 @@ public:
     asio::io_context& service() NOEXCEPT;
 
 private:
+    using work_guard = boost::asio::executor_work_guard<asio::executor_type>;
+    static inline work_guard keep_alive(asio::io_context& service) NOEXCEPT;
+
     // This is thread safe.
     asio::io_context service_;
 
     // These are not thread safe.
     std::vector<thread> threads_;
-    boost::asio::executor_work_guard<asio::executor_type> work_;
+    work_guard work_;
 };
 
 } // namespace network

@@ -81,7 +81,8 @@ void logger::stop(const code& ec, const std::string& message) NOEXCEPT
         std::bind(&logger::do_stop, this, ec, message));
 
     pool_.stop();
-    pool_.join();
+    BC_DEBUG_ONLY(const auto result =) pool_.join();
+    BC_ASSERT_MSG(result, "logger::join");
 }
 
 // private
