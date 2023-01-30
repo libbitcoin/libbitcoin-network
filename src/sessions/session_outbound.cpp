@@ -251,9 +251,12 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
     session::attach_handshake(channel, std::move(handler));
 }
 
-void session_outbound::handle_channel_start(const code&, const channel::ptr&) NOEXCEPT
+void session_outbound::handle_channel_start(const code& ec, const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
+    LOG("Outbound channel started: " << ec.message() << " ("
+        << outbound_channel_count() << ")");
 }
 
 void session_outbound::attach_protocols(
@@ -262,10 +265,11 @@ void session_outbound::attach_protocols(
     session::attach_protocols(channel);
 }
 
-void session_outbound::handle_channel_stop(const code&,
+void session_outbound::handle_channel_stop(const code& ec,
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    LOG("Outbound channel stopped: " << ec.message());
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).

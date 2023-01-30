@@ -172,10 +172,12 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
     session::attach_handshake(channel, std::move(handler));
 }
 
-void session_inbound::handle_channel_start(const code&,
+void session_inbound::handle_channel_start(const code& ec,
     const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    LOG("Inbound channel started: " << ec.message() << " ("
+        << inbound_channel_count() << ")");
 }
 
 void session_inbound::attach_protocols(
@@ -184,10 +186,11 @@ void session_inbound::attach_protocols(
     session::attach_protocols(channel);
 }
 
-void session_inbound::handle_channel_stop(const code&,
+void session_inbound::handle_channel_stop(const code& ec,
     const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    LOG("Inbound channel stopped: " << ec.message());
 }
 
 BC_POP_WARNING()
