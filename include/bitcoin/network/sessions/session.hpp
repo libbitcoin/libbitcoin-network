@@ -165,6 +165,9 @@ protected:
     /// Number of inbound connected channels.
     virtual size_t inbound_channel_count() const NOEXCEPT;
 
+    /// Number of outbound connected channels (including manual).
+    virtual size_t outbound_channel_count() const NOEXCEPT;
+
     /// The address is blacklisted by configuration.
     virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
 

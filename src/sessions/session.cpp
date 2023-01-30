@@ -377,6 +377,11 @@ size_t session::inbound_channel_count() const NOEXCEPT
     return network_.inbound_channel_count();
 }
 
+size_t session::outbound_channel_count() const NOEXCEPT
+{
+    return floored_subtract(channel_count(), inbound_channel_count());
+}
+
 bool session::blacklisted(const config::authority& authority) const NOEXCEPT
 {
     return contains(settings().blacklists, authority);
