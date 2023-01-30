@@ -41,10 +41,13 @@ inline bool is_invalid(const address_item& host) NOEXCEPT
 }
 
 // TODO: add min/max denominators to settings.
+// TODO: use std::map to avoid insertion searches.
 // TODO: create full space-delimited network_address serialization.
 // TODO: Use to/from string format as opposed to wire serialization.
 // TODO: manage timestamps (active channels are connected < 3 hours ago).
 // TODO: change to network_address bimap hash table with services and age.
+// TODO: create full space-delimited network_address serialization.
+// TODO: Use to/from string format as opposed to wire serialization.
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
   : file_path_(settings.hosts_file),
@@ -131,12 +134,9 @@ code hosts::stop() NOEXCEPT
         if (!file.good())
             return error::file_save;
 
-        // TODO: create full space-delimited network_address serialization.
-        // Use to/from string format as opposed to wire serialization.
         for (const auto& entry: buffer_)
             file << config::authority(entry) << std::endl;
 
-        // An invalid path file will cause an error on write.
         if (file.bad())
             return error::file_save;
 
@@ -194,10 +194,8 @@ void hosts::store(const address_items& hosts) NOEXCEPT
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
-        // Use non-throwing index, already guarded.
         const auto& host = hosts.at(index);
 
-        // Do not treat invalid address as an error, just log it.
         if (is_invalid(host))
         {
             LOG("Invalid host address in peer set.");
@@ -207,7 +205,6 @@ void hosts::store(const address_items& hosts) NOEXCEPT
         if (find(host) != buffer_.end())
             continue;
 
-        // TODO: use std::map.
         ++accepted;
         buffer_.push_back(host);
         count_.store(buffer_.size(), std::memory_order_relaxed);
