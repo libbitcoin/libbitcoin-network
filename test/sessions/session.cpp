@@ -309,9 +309,9 @@ public:
         return unstore_inbound_;
     }
 
-    bool unstore_found() const NOEXCEPT
+    code unstore_result() const NOEXCEPT
     {
-        return unstore_found_;
+        return unstore_result_;
     }
 
     session_seed::ptr attach_seed_session() NOEXCEPT override
@@ -344,12 +344,12 @@ protected:
         return ((store_result_ = p2p::store(channel, notify, inbound)));
     }
 
-    bool unstore(const channel::ptr& channel, bool inbound) NOEXCEPT override
+    code unstore(const channel::ptr& channel, bool inbound) NOEXCEPT override
     {
         BC_ASSERT(!is_zero(channel->nonce()));
         unstore_nonce_ = channel->nonce();
         unstore_inbound_ = inbound;
-        return ((unstore_found_ = p2p::unstore(channel, inbound)));
+        return ((unstore_result_ = p2p::unstore(channel, inbound)));
     }
 
 private:
@@ -368,7 +368,7 @@ private:
 
     uint64_t unstore_nonce_{ 0 };
     bool unstore_inbound_{ false };
-    bool unstore_found_{ false };
+    code unstore_result_{ error::unknown };
 
     class mock_session_seed
       : public session_seed
@@ -739,11 +739,11 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
 
-    // Channel was unpent (handshake completed) but not found on unstore.
+    // Channel was unpent (handshake completed), not found on unstore returns success.
     BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
     BOOST_REQUIRE(!net.unstored_inbound());
-    BOOST_REQUIRE(!net.unstore_found());
+    BOOST_REQUIRE_EQUAL(net.unstore_result(), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_service_stopped_channel_service_stopped_pent_store_failed)
@@ -812,12 +812,12 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
-
-    // Channel was unpent (handshake completed) but not found on unstore.
+    
+    // Channel was unpent (handshake completed), not found on unstore returns success.
     BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
     BOOST_REQUIRE(!net.unstored_inbound());
-    BOOST_REQUIRE(!net.unstore_found());
+    BOOST_REQUIRE_EQUAL(net.unstore_result(), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_channel_service_stopped_pent_store_succeeded)
@@ -901,11 +901,11 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
 
-    // Channel was unpent but and found on unstore.
+    // Channel was unpent, found on unstore returns success.
     BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
     BOOST_REQUIRE(!net.unstored_inbound());
-    BOOST_REQUIRE(net.unstore_found());
+    BOOST_REQUIRE_EQUAL(net.unstore_result(), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expected_channel_success_pent_store_succeeded)

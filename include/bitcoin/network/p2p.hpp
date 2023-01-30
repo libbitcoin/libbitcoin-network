@@ -180,9 +180,9 @@ protected:
     /// Maintain channel state.
     virtual bool pend(uint64_t nonce) NOEXCEPT;
     virtual bool unpend(uint64_t nonce) NOEXCEPT;
+    virtual code unstore(const channel::ptr& channel, bool inbound) NOEXCEPT;
     virtual code store(const channel::ptr& channel, bool notify,
         bool inbound) NOEXCEPT;
-    virtual bool unstore(const channel::ptr& channel, bool inbound) NOEXCEPT;
 
     /// Maintain address pool (TODO: move to store interface).
     virtual void fetch(hosts::address_item_handler&& handler) const NOEXCEPT;

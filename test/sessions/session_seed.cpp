@@ -305,9 +305,9 @@ public:
         return error::success;
     }
 
-    bool unstore(const channel::ptr&, bool) NOEXCEPT override
+    code unstore(const channel::ptr&, bool) NOEXCEPT override
     {
-        return true;
+        return error::success;
     }
 
     void saves(const messages::address_items& addresses,
