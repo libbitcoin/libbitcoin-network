@@ -66,6 +66,8 @@ enum error_t
     bad_stream,
     insufficient_peer,
     protocol_violation,
+    channel_overflow,
+    channel_underflow,
 
     // incoming connection failures
     listen_failed,

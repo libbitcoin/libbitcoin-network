@@ -128,6 +128,24 @@ BOOST_AUTO_TEST_CASE(error_t__code__protocol_violation__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "protocol violation");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__channel_overflow__true_exected_message)
+{
+    constexpr auto value = error::channel_overflow;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "channel overflow");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__channel_underflow__true_exected_message)
+{
+    constexpr auto value = error::channel_underflow;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "channel underflow");
+}
+
 // incoming connection failures
 
 BOOST_AUTO_TEST_CASE(error_t__code__listen_failed__true_exected_message)
