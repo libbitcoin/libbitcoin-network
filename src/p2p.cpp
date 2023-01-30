@@ -53,8 +53,7 @@ p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
     strand_(threadpool_.service().get_executor()),
     stop_subscriber_(strand_),
     channel_subscriber_(strand_),
-    reporter(log),
-    tracker<p2p>(log)
+    reporter(log)
 {
     BC_ASSERT_MSG(!is_zero(settings.threads), "empty threadpool");
 }
