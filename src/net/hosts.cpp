@@ -55,8 +55,7 @@ hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
     disabled_(is_zero(capacity_)),
     buffer_(capacity_),
     stopped_(true),
-    reporter(log),
-    tracker<hosts>(log)
+    reporter(log)
 {
 }
 BC_POP_WARNING()
