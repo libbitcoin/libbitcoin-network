@@ -43,7 +43,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // general I/O failures
     { bad_stream, "bad data stream" },
-    { insufficient_peer, "insufficient peer configuration" },
+    { insufficient_peer, "insufficient peer" },
     { protocol_violation, "protocol violation" },
     { channel_overflow, "channel overflow" },
     { channel_underflow, "channel underflow" },
