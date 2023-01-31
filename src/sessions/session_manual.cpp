@@ -90,7 +90,7 @@ void session_manual::connect(const config::endpoint& peer) NOEXCEPT
     const auto self = shared_from_base<session_manual>();
     connect(peer, [=](const code& LOG_ONLY(ec), channel::ptr) NOEXCEPT
     {
-        LOGP(self, "Failed to connect channel, " << ec.message());
+        LOGP(self, "Connected channel, " << ec.message());
         self->nop();
     });
 }
