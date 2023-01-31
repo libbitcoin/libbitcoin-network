@@ -133,5 +133,13 @@ duration settings::channel_expiration() const NOEXCEPT
     return minutes(channel_expiration_minutes);
 }
 
+size_t settings::minimum_address_count() const NOEXCEPT
+{
+    // Guarded by parameterization (config).
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return system::safe_multiply(connect_batch_size, outbound_connections);
+    BC_POP_WARNING()
+}
+
 } // namespace network
 } // namespace libbitcoin

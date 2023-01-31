@@ -227,4 +227,13 @@ BOOST_AUTO_TEST_CASE(settings__channel_germination__always__channel_germination_
     BOOST_REQUIRE(instance.channel_germination() == seconds(expected));
 }
 
+BOOST_AUTO_TEST_CASE(settings__minimum_address_count__always__outbound_product)
+{
+    settings instance;
+    instance.connect_batch_size = 24;
+    instance.outbound_connections = 42;
+    const auto product = instance.connect_batch_size * instance.outbound_connections;
+    BOOST_REQUIRE_EQUAL(instance.minimum_address_count(), product);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
