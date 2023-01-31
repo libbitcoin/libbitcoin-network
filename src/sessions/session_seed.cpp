@@ -72,7 +72,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    if (!is_zero(address_count()))
+    if (address_count() >= settings().minimum_address_count())
     {
         LOG("Bypassed seeding for existing addresses.");
         handler(error::bypassed);
