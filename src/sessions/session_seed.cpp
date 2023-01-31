@@ -91,7 +91,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 
 void session_seed::stop() NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // Set stopped state.
     session::stop();
