@@ -21,7 +21,7 @@
 
 #include <cstddef>
 #include <memory>
-#include <vector>
+#include <unordered_set>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -48,6 +48,9 @@ public:
     /// Seeding is complete invocation of the handler.
     void start(result_handler&& handler) NOEXCEPT override;
 
+    /// Stop the session timer and subscriber (call from network strand).
+    void stop() NOEXCEPT override;
+
 protected:
     typedef std::shared_ptr<size_t> count_ptr;
 
@@ -70,7 +73,6 @@ protected:
         const channel_handler& handler) NOEXCEPT;
 
 private:
-
     void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, const channel::ptr& channel,
         const config::endpoint& seed, const count_ptr& counter,
@@ -78,7 +80,9 @@ private:
 
     void handle_channel_start(const code& ec, const channel::ptr& channel) NOEXCEPT;
     void handle_channel_stop(const code& ec, const count_ptr& counter,
-        const result_handler& handler) NOEXCEPT;
+        const channel::ptr& channel, const result_handler& handler) NOEXCEPT;
+
+    std::unordered_set<channel::ptr> seeding_{};
 };
 
 } // namespace network
