@@ -110,7 +110,7 @@ void session::start_channel(const channel::ptr& channel,
         return;
     }
 
-    // Pending shaking channel.
+    // Pend shaking channel.
     pending_.insert(channel);
 
     result_handler start =
@@ -181,7 +181,7 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     // Unpend shaken channel (intervening stop/clear could clear first).
-    if (!to_bool(pending_.erase(channel)))
+    if (ec != error::service_stopped && !to_bool(pending_.erase(channel)))
     {
         LOG("Unpend failed to locate channel (ok on stop).");
     }
