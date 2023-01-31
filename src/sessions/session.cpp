@@ -110,7 +110,7 @@ void session::start_channel(const channel::ptr& channel,
         return;
     }
 
-    // Pending shaking channel.
+    // Pend shaking channel.
     pending_.insert(channel);
 
     result_handler start =
@@ -181,11 +181,16 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     // Unpend shaken channel (intervening stop/clear could clear first).
-    pending_.erase(channel);
+    if (ec != error::service_stopped && !to_bool(pending_.erase(channel)))
+    {
+        LOG("Unpend failed to locate channel (ok on stop).");
+    }
 
-    // Unpend shaken outgoing nonce.
-    if (!inbound())
-        network_.unpend(channel->nonce());
+    // Unpend shaken outgoing nonce (implies bug).
+    if (!inbound() && !network_.unpend(channel->nonce()))
+    {
+        LOG("Unpend failed to locate channel nonce.");
+    }
 
     // Handles channel stopped or protocol start code.
     // This retains the channel and allows broadcasts, stored if no code.
@@ -200,7 +205,12 @@ void session::handle_channel_start(const code& ec, const channel::ptr& channel,
     if (ec)
     {
         channel->stop(ec);
-        /* bool */ network_.unstore(channel, inbound());
+
+        // Unstore fails on counter underflows (implies bug).
+        if (const auto error_code = network_.unstore(channel, inbound()))
+        {
+            LOG("Unstore on channel start failed: " << error_code.message());
+        }
 
         started(ec);
         stopped(ec);
@@ -287,9 +297,13 @@ void session::do_handle_channel_stopped(const code& ec,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    // Assume stop notification, but may be subscribe failure (idempotent).
-    /* bool */ network_.unstore(channel, inbound());
+    // Unstore fails on counter underflows (implies bug).
+    if (const auto error_code = network_.unstore(channel, inbound()))
+    {
+        LOG("Unstore on channel stop failed: " << error_code.message());
+    }
 
+    // Assume stop notification, but may be subscribe failure (idempotent).
     // Handles stop reason code, stop subscribe failure or stop notification.
     stopped(ec);
 }
@@ -363,6 +377,11 @@ size_t session::inbound_channel_count() const NOEXCEPT
     return network_.inbound_channel_count();
 }
 
+size_t session::outbound_channel_count() const NOEXCEPT
+{
+    return floored_subtract(channel_count(), inbound_channel_count());
+}
+
 bool session::blacklisted(const config::authority& authority) const NOEXCEPT
 {
     return contains(settings().blacklists, authority);
@@ -375,6 +394,8 @@ const network::settings& session::settings() const NOEXCEPT
 
 // Utilities.
 // ----------------------------------------------------------------------------
+// stackoverflow.com/questions/57411283/
+// calling-non-const-function-of-another-class-by-reference-from-const-function
 
 void session::fetch(hosts::address_item_handler&& handler) const NOEXCEPT
 {
@@ -389,16 +410,12 @@ void session::fetches(hosts::address_items_handler&& handler) const NOEXCEPT
 void session::save(const messages::address_item& address,
     result_handler&& handler) const NOEXCEPT
 {
-    // stackoverflow.com/questions/57411283/
-    // calling-non-const-function-of-another-class-by-reference-from-const-function
     network_.save(address, std::move(handler));
 }
 
 void session::saves(const messages::address_items& addresses,
     result_handler&& handler) const NOEXCEPT
 {
-    // stackoverflow.com/questions/57411283/
-    // calling-non-const-function-of-another-class-by-reference-from-const-function
     network_.saves(addresses, std::move(handler));
 }
 

@@ -169,10 +169,11 @@ void session_manual::attach_handshake(const channel::ptr& channel,
 }
 
 void session_manual::handle_channel_start(const code& ec,
-    const endpoint&, const channel::ptr& channel,
+    const endpoint& peer, const channel::ptr& channel,
     const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    LOG("Manual channel started: " << ec.message() << " [" << peer << "]");
 
     // Notify upon each connection attempt.
     handler(ec, channel);
@@ -185,10 +186,11 @@ void session_manual::attach_protocols(
     session::attach_protocols(channel);
 }
 
-void session_manual::handle_channel_stop(const code&, const endpoint& peer,
+void session_manual::handle_channel_stop(const code& ec, const endpoint& peer,
     const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    LOG("Manual channel stopped: " << ec.message() << " [" << peer << "]");
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).

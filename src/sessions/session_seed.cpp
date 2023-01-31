@@ -36,7 +36,12 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
+// Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_seed::session_seed(p2p& network) NOEXCEPT
   : session(network), tracker<session_seed>(network.log())
@@ -67,7 +72,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    if (!is_zero(address_count()))
+    if (address_count() >= settings().minimum_address_count())
     {
         LOG("Bypassed seeding for existing addresses.");
         handler(error::bypassed);
@@ -82,6 +87,21 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
     }
 
     session::start(BIND2(handle_started, _1, std::move(handler)));
+}
+
+void session_seed::stop() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Set stopped state.
+    session::stop();
+
+    // Stop all seeding channels.
+    for (const auto& channel: seeding_)
+        channel->stop(error::service_stopped);
+
+    // Free all seeding channels.
+    seeding_.clear();
 }
 
 void session_seed::handle_started(const code& ec,
@@ -137,23 +157,26 @@ void session_seed::start_seed(const config::endpoint& seed,
 }
 
 void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
-    const config::endpoint&, const count_ptr& counter,
+    const config::endpoint& seed, const count_ptr& counter,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // If ec channel will be nullptr in handle_channel_stop.
+    LOG("Connect seed [" << seed << "]: " << ec.message());
 
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
 
         // Handle channel result in stop handler (not yet registered).
-        handle_channel_stop(ec, counter, handler);
+        handle_channel_stop(ec, counter, channel, handler);
         return;
     }
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
-        BIND3(handle_channel_stop, _1, counter, handler));
+        BIND4(handle_channel_stop, _1, counter, channel, handler));
 }
 
 void session_seed::attach_handshake(const channel::ptr& channel,
@@ -186,9 +209,13 @@ void session_seed::attach_handshake(const channel::ptr& channel,
             maximum_services)->shake(std::move(handler));
 }
 
-void session_seed::handle_channel_start(const code&, const channel::ptr&) NOEXCEPT
+void session_seed::handle_channel_start(const code&,
+    const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // Pend seeding channel.
+    seeding_.insert(channel);
 }
 
 void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
@@ -213,10 +240,16 @@ void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
     channel->attach<protocol_seed_31402>(self)->start();
 }
 
-void session_seed::handle_channel_stop(const code&, const count_ptr& counter,
-    const result_handler& handler) NOEXCEPT
+void session_seed::handle_channel_stop(const code& ec, const count_ptr& counter,
+    const channel::ptr& channel, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // Channel may be null if ec.
+    if (ec != error::service_stopped && !to_bool(seeding_.erase(channel)))
+    {
+        LOG("Unpend failed to locate seed channel (ok on stop).");
+    }
 
     // Ignore result if previously handled (early termination).
     if (is_zero(*counter))
@@ -231,7 +264,7 @@ void session_seed::handle_channel_stop(const code&, const count_ptr& counter,
     }
 
     // Handle with success on first positive address count.
-    if (!is_zero(address_count()))
+    if (address_count() >= settings().minimum_address_count())
     {
         *counter = zero;
         handler(error::success);
@@ -246,6 +279,8 @@ void session_seed::handle_channel_stop(const code&, const count_ptr& counter,
     }
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

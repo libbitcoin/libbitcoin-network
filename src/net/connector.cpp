@@ -73,12 +73,14 @@ void connector::stop() NOEXCEPT
 // Methods.
 // ---------------------------------------------------------------------------
 
-void connector::connect(const authority& authority, connect_handler&& handler) NOEXCEPT
+void connector::connect(const authority& authority,
+    connect_handler&& handler) NOEXCEPT
 {
     connect(authority.to_hostname(), authority.port(), std::move(handler));
 }
 
-void connector::connect(const endpoint& endpoint, connect_handler&& handler) NOEXCEPT
+void connector::connect(const endpoint& endpoint,
+    connect_handler&& handler) NOEXCEPT
 {
     connect(endpoint.host(), endpoint.port(), std::move(handler));
 }
@@ -93,7 +95,7 @@ void connector::connect(const std::string& hostname, uint16_t port,
 
     const auto socket = std::make_shared<network::socket>(log(), service_);
 
-    // Posts timer handler to strand.
+    // Posts handle_timer to strand.
     // The handler is copied by std::bind.
     timer_->start(
         std::bind(&connector::handle_timer,
@@ -113,7 +115,7 @@ void connector::handle_resolve(const error::boost_code& ec,
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    // Ensure only the handler executes only once, as both may be posted.
+    // Ensure the handler executes only once, as both may be posted.
     if (stopped_)
         return;
 

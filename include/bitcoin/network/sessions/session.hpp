@@ -62,10 +62,10 @@ public:
     typedef std::function<void(const code&,
         const channel::ptr&)> channel_handler;
 
-    /// Start the sesssion (call from network strand).
+    /// Start the session (call from network strand).
     virtual void start(result_handler&& handler) NOEXCEPT;
 
-    /// Stop the sesssion timer and subscriber (call from network strand).
+    /// Stop the session timer and subscriber (call from network strand).
     virtual void stop() NOEXCEPT;
 
     /// Utilities.
@@ -165,6 +165,9 @@ protected:
     /// Number of inbound connected channels.
     virtual size_t inbound_channel_count() const NOEXCEPT;
 
+    /// Number of outbound connected channels (including manual).
+    virtual size_t outbound_channel_count() const NOEXCEPT;
+
     /// The address is blacklisted by configuration.
     virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
 
@@ -202,8 +205,8 @@ private:
     // These are not thread safe.
     deadline::ptr timer_;
     stop_subscriber stop_subscriber_;
-    std::vector<connector::ptr> connectors_;
-    std::unordered_set<channel::ptr> pending_;
+    std::vector<connector::ptr> connectors_{};
+    std::unordered_set<channel::ptr> pending_{};
 };
 
 #undef SESSION_ARGS

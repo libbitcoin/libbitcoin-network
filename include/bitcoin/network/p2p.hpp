@@ -180,9 +180,9 @@ protected:
     /// Maintain channel state.
     virtual bool pend(uint64_t nonce) NOEXCEPT;
     virtual bool unpend(uint64_t nonce) NOEXCEPT;
+    virtual code unstore(const channel::ptr& channel, bool inbound) NOEXCEPT;
     virtual code store(const channel::ptr& channel, bool notify,
         bool inbound) NOEXCEPT;
-    virtual bool unstore(const channel::ptr& channel, bool inbound) NOEXCEPT;
 
     /// Maintain address pool (TODO: move to store interface).
     virtual void fetch(hosts::address_item_handler&& handler) const NOEXCEPT;
@@ -240,7 +240,6 @@ private:
         const result_handler& complete) NOEXCEPT;
 
     // These are thread safe.
-    const logger log_;
     const settings& settings_;
     std::atomic<size_t> channel_count_;
     std::atomic<size_t> inbound_channel_count_;
@@ -256,9 +255,9 @@ private:
     // These are protected by strand.
     stop_subscriber stop_subscriber_;
     channel_subscriber channel_subscriber_;
-    std::unordered_set<uint64_t> nonces_;
-    std::unordered_set<channel::ptr> channels_;
-    std::unordered_set<config::authority> authorities_;
+    std::unordered_set<uint64_t> nonces_{};
+    std::unordered_set<channel::ptr> channels_{};
+    std::unordered_set<config::authority> authorities_{};
 };
 
 } // namespace network

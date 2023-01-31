@@ -18,7 +18,7 @@
  */
 #include <bitcoin/network/sessions/session_outbound.hpp>
 
-#include <cstddef>
+#include <algorithm>
 #include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -182,16 +182,19 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
         return;
     }
 
-    // Finished indicates that this is the last attempt.
-    const auto finished = is_zero(--(*count));
+    // Last indicates that this is the last attempt.
+    const auto last = is_zero(--(*count));
 
     // This connection is successful but there are others outstanding.
     // Short-circuit subsequent attempts and clear outstanding connectors.
-    if (!ec && !finished)
+    if (!ec && !last)
     {
         *count = zero;
-        for (auto it = connectors->begin(); it != connectors->end(); ++it)
-            (*it)->stop();
+        std::for_each(connectors->begin(), connectors->end(),
+            [](const auto& connector)
+            {
+                connector->stop();
+            });
     }
 
     // Got a connection.
@@ -202,8 +205,9 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
     }
 
     // No more connectors remaining and no connections.
-    if (ec && finished)
+    if (ec && last)
     {
+        // Disabled due to verbosity, reenable under verbose logging.
         ////LOG("Failed to connect outbound channel, " << ec.message());
 
         // Reduce the set of errors from the batch to connect_failed.
@@ -211,6 +215,7 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
         return;
     }
 
+    // ec && !last/done, drop this connector attempt.
     BC_ASSERT_MSG(!channel, "unexpected channel instance");
 }
 
@@ -250,9 +255,14 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
     session::attach_handshake(channel, std::move(handler));
 }
 
-void session_outbound::handle_channel_start(const code&, const channel::ptr&) NOEXCEPT
+void session_outbound::handle_channel_start(const code&,
+    const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // Verbose.
+    ////LOG("Outbound channel started: " << ec.message() << " ("
+    ////    << outbound_channel_count() << ")");
 }
 
 void session_outbound::attach_protocols(
@@ -265,6 +275,9 @@ void session_outbound::handle_channel_stop(const code&,
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // Verbose.
+    ////LOG("Outbound channel stopped: " << ec.message());
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).

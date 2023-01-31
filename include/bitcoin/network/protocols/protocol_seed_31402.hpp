@@ -45,10 +45,12 @@ public:
     /// Perform seeding, stops channel on completion (strand required).
     void start() NOEXCEPT override;
 
+    /// Capture stop subscription to clear timer.
+    void stopping(const code& ec) NOEXCEPT override;
+
 protected:
     const std::string& name() const NOEXCEPT override;
 
-    void stop(const code& ec) NOEXCEPT override;
     virtual bool complete() const NOEXCEPT;
     virtual void handle_timer(const code& ec) NOEXCEPT;
 

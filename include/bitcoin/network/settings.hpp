@@ -69,6 +69,7 @@ struct BCT_API settings
     duration channel_heartbeat() const NOEXCEPT;
     duration channel_inactivity() const NOEXCEPT;
     duration channel_expiration() const NOEXCEPT;
+    size_t minimum_address_count() const NOEXCEPT;
 };
 
 } // namespace network

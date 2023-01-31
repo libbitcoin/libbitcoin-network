@@ -22,9 +22,7 @@
 #include <cstdlib>
 #include <functional>
 #include <memory>
-#include <string>
 #include <utility>
-#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
@@ -41,7 +39,6 @@ namespace network {
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 using namespace bc::system;
-using namespace bc::system::chain;
 using namespace std::placeholders;
 
 p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
@@ -127,9 +124,9 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    attach_seed_session()->start([handler](const code& ec)
+    attach_seed_session()->start([handler, this](const code& ec)
     {
-        ////BC_ASSERT_MSG(this->stranded(), "handler");
+        BC_ASSERT_MSG(this->stranded(), "handler");
         handler(ec == error::bypassed ? error::success : ec);
     });
 }
@@ -182,12 +179,12 @@ void p2p::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // Not thread safe (threadpool_), call only once.
-// Blocks on join of all threadpool threads.
 // Results in std::abort if called from a thread within the threadpool.
 void p2p::close() NOEXCEPT
 {
     boost::asio::dispatch(strand_, std::bind(&p2p::do_close, this));
 
+    // Blocks on join of all threadpool threads.
     if (!threadpool_.join())
     {
         BC_ASSERT_MSG(false, "failed to join threadpool");
@@ -199,7 +196,7 @@ void p2p::do_close() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "do_stop (multiple members)");
 
-    // manual_ doubles as the closed indicator.
+    // manual_ is also the closed indicator.
     // Release reference to manual session (also held by stop subscriber).
     if (manual_)
         manual_.reset();
@@ -325,12 +322,12 @@ size_t p2p::address_count() const NOEXCEPT
 
 size_t p2p::channel_count() const NOEXCEPT
 {
-    return channel_count_.load(std::memory_order_relaxed);
+    return channel_count_;
 }
 
 size_t p2p::inbound_channel_count() const NOEXCEPT
 {
-    return inbound_channel_count_.load(std::memory_order_relaxed);
+    return inbound_channel_count_;
 }
 
 const settings& p2p::network_settings() const NOEXCEPT
@@ -440,17 +437,13 @@ void p2p::do_saves(const messages::address_items& hosts,
 bool p2p::pend(uint64_t nonce) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "nonces_");
-    if (nonces_.find(nonce) != nonces_.end())
-        return false;
-
-    nonces_.insert(nonce);
-    return true;
+    return nonces_.insert(nonce).second;
 }
 
 bool p2p::unpend(uint64_t nonce) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "nonces_");
-    return !is_zero(nonces_.erase(nonce));
+    return to_bool(nonces_.erase(nonce));
 }
 
 code p2p::store(const channel::ptr& channel, bool notify,
@@ -462,12 +455,19 @@ code p2p::store(const channel::ptr& channel, bool notify,
     if (closed())
         return error::service_stopped;
 
-    // Check for connection incoming from outgoing self.
-    if (inbound &&
-        nonces_.find(channel->peer_version()->nonce) != nonces_.end())
+    // Check for incoming connection from outgoing self (loopback).
+    if (inbound && to_bool(nonces_.count(channel->peer_version()->nonce)))
         return error::accept_failed;
 
-    // Store the peer address, fail if already exists.
+    // Guard against integer overflow.
+    if (inbound && is_zero(add1(inbound_channel_count_.load())))
+        return error::channel_overflow;
+
+    // Guard against integer overflow.
+    if (is_zero(add1(channel_count_.load())))
+        return error::channel_overflow;
+
+    // Store peer address, unless channel/authority is non-distinct.
     if (!authorities_.insert(channel->authority()).second)
         return error::address_in_use;
 
@@ -475,40 +475,44 @@ code p2p::store(const channel::ptr& channel, bool notify,
     if (notify)
         channel_subscriber_.notify(error::success, channel);
 
+    // Increment inbound channel counter.
     if (inbound)
-    {
         ++inbound_channel_count_;
-        BC_ASSERT_MSG(!is_zero(inbound_channel_count_.load()), "overflow");
-    }
 
+    // Increment total channel counter.
     ++channel_count_;
-    BC_ASSERT_MSG(!is_zero(channel_count_.load()), "overflow");
 
+    // Store channel for message broadcast and stop notification.
     channels_.insert(channel);
     return error::success;
 }
 
-bool p2p::unstore(const channel::ptr& channel, bool inbound) NOEXCEPT
+code p2p::unstore(const channel::ptr& channel, bool inbound) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "channels_, authorities_");
 
-    // Erasure must be idempotent, as the channel may not have been stored.
-    if (!is_zero(channels_.erase(channel)))
-    {
-        if (inbound)
-        {
-            BC_ASSERT_MSG(!is_zero(inbound_channel_count_.load()), "underflow");
-            --inbound_channel_count_;
-        }
+    // Ok if not found, as the channel may not have been stored.
+    if (is_zero(channels_.erase(channel)))
+        return error::success;
 
-        BC_ASSERT_MSG(!is_zero(channel_count_.load()), "underflow");
-        --channel_count_;
+    // Guard against integer underflow.
+    if (inbound && is_zero(inbound_channel_count_.load()))
+        return error::channel_underflow;
 
-        authorities_.erase(channel->authority());
-        return true;
-    }
+    // Guard against integer underflow.
+    if (is_zero(channel_count_.load()))
+        return error::channel_underflow;
 
-    return false;
+    // Decrement inbound channel counter.
+    if (inbound)
+        --inbound_channel_count_;
+
+    // Decrement total channel counter.
+    --channel_count_;
+
+    // Unstore peer address (ok if not found).
+    authorities_.erase(channel->authority());
+    return  error::success;
 }
 
 // Specializations (protected).
