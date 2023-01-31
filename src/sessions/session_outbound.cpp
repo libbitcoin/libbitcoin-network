@@ -18,7 +18,7 @@
  */
 #include <bitcoin/network/sessions/session_outbound.hpp>
 
-#include <cstddef>
+#include <algorithm>
 #include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -182,16 +182,19 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
         return;
     }
 
-    // Finished indicates that this is the last attempt.
-    const auto finished = is_zero(--(*count));
+    // Last indicates that this is the last attempt.
+    const auto last = is_zero(--(*count));
 
     // This connection is successful but there are others outstanding.
     // Short-circuit subsequent attempts and clear outstanding connectors.
-    if (!ec && !finished)
+    if (!ec && !last)
     {
         *count = zero;
-        for (auto it = connectors->begin(); it != connectors->end(); ++it)
-            (*it)->stop();
+        std::for_each(connectors->begin(), connectors->end(),
+            [](const auto& connector)
+            {
+                connector->stop();
+            });
     }
 
     // Got a connection.
@@ -202,7 +205,7 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
     }
 
     // No more connectors remaining and no connections.
-    if (ec && finished)
+    if (ec && last)
     {
         // Disabled due to verbosity, reenable under verbose logging.
         ////LOG("Failed to connect outbound channel, " << ec.message());
