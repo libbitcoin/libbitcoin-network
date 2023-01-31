@@ -215,6 +215,7 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
         return;
     }
 
+    // ec && !last/done, drop this connector attempt.
     BC_ASSERT_MSG(!channel, "unexpected channel instance");
 }
 
