@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_REJECT_70002_HPP
 
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -49,11 +48,13 @@ protected:
     const std::string& name() const NOEXCEPT override;
 
     virtual void handle_receive_reject(const code& ec,
-        const messages::reject::ptr& reject) NOEXCEPT;
+        const messages::reject::ptr& message) NOEXCEPT;
+
+private:
+    std::string get_hash(const messages::reject& message) const NOEXCEPT;
 };
 
 } // namespace network
 } // namespace libbitcoin
 
 #endif
-

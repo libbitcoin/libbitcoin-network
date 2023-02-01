@@ -68,8 +68,15 @@ void protocol_reject_70002::start() NOEXCEPT
 // Inbound (log).
 // ----------------------------------------------------------------------------
 
+std::string protocol_reject_70002::get_hash(const reject& message) const NOEXCEPT
+{
+    return message.message == block::command ||
+        message.message == transaction::command ?
+        system::encode_hash(message.hash) : std::string{ "n/a" };
+}
+
 void protocol_reject_70002::handle_receive_reject(const code& ec,
-    const reject::ptr& reject) NOEXCEPT
+    const reject::ptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_reject_70002");
 
@@ -78,19 +85,20 @@ void protocol_reject_70002::handle_receive_reject(const code& ec,
 
     // vesion message rejection is handled in protocol_version_70002, however
     // if received here (outside of handshake), a protocol error is implied.
-    if (reject->message == version::command)
+    if (message->message == version::command)
     {
-        // TODO: log protocol violation.
+        LOG("Version reject after handshake [" << authority() << "]");
         stop(error::protocol_violation);
         return;
     }
 
-    LOG("Received " << reject->message << " reject ("
-        << static_cast<uint16_t>(reject->code) << ") from ["
-        << authority() << "] '" << reject->reason << "'"
-        << (reject->message == block::command ||
-            reject->message == transaction::command ? " [" +
-            encode_hash(reject->hash) + "]." : ""));
+    // system::serialize require for uint8_t serialization.
+    LOG("Reject from [" << authority() << "]..."
+        << "\ncode   : " << system::serialize(reject::reason_to_byte(
+                            message->code))
+        << "\nmessage: " << message->message
+        << "\nreason : " << message->reason
+        << "\nhash   : " << get_hash(*message));
 }
 
 } // namespace network
