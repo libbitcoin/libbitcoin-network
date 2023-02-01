@@ -90,6 +90,7 @@
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/protocols/protocol_address_31402.hpp>
+#include <bitcoin/network/protocols/protocol_alert_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 #include <bitcoin/network/protocols/protocol_reject_70002.hpp>
