@@ -51,8 +51,8 @@ address address::deserialize(uint32_t version, system::reader& source) NOEXCEPT
     addresses.reserve(size);
 
     for (size_t address = 0; address < size; ++address)
-        addresses.push_back(address_item::deserialize(
-            version, source, with_timestamp));
+        addresses.push_back(address_item::deserialize(version, source,
+            with_timestamp));
 
     return { addresses };
 }
