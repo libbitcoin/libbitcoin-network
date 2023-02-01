@@ -129,7 +129,7 @@ void socket::read(const data_slab& out, io_handler&& handler) NOEXCEPT
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_read, shared_from_this(),
             boost::asio::mutable_buffer{ out.data(), out.size() },
-            std::move(handler)));
+                std::move(handler)));
 }
 
 void socket::write(const data_slice& in, io_handler&& handler) NOEXCEPT
@@ -137,7 +137,7 @@ void socket::write(const data_slice& in, io_handler&& handler) NOEXCEPT
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_write, shared_from_this(),
             boost::asio::const_buffer{ in.data(), in.size() },
-            std::move(handler)));
+                std::move(handler)));
 }
 
 // executors (private).
