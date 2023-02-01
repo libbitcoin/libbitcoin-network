@@ -224,6 +224,7 @@ void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
+    const auto enable_alert = settings().enable_alert;
     const auto enable_reject = settings().enable_reject;
     const auto negotiated_version = channel->negotiated_version();
 
@@ -231,6 +232,10 @@ void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
         channel->attach<protocol_ping_60001>(self)->start();
     else
         channel->attach<protocol_ping_31402>(self)->start();
+
+    // Alert is deprecated.
+    if (enable_alert)
+        channel->attach<protocol_alert_31402>(self)->start();
 
     // Reject is supported starting at bip61 (70002) and later deprecated.
     if (enable_reject && negotiated_version >= messages::level::bip61)
