@@ -75,20 +75,11 @@ protected:
         return BOUND_PROTOCOL(handler, args);
     }
 
-    /// Send a message::ptr instance to peer (use SEND#).
-    template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(std::shared_ptr<const Message>&& message, Handler&& handler,
-        Args&&... args) NOEXCEPT
-    {
-        channel_->send<Message>(message, BOUND_PROTOCOL(handler, args));
-    }
-
     /// Send a message instance to peer (use SEND#).
     template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(Message&& message, Handler&& handler, Args&&... args) NOEXCEPT
+    void send(const Message& message, Handler&& handler, Args&&... args) NOEXCEPT
     {
-        channel_->send<Message>(system::to_shared(std::forward<Message>(message)),
-            BOUND_PROTOCOL(handler, args));
+        channel_->send<Message>(message, BOUND_PROTOCOL(handler, args));
     }
 
     /// Subscribe to channel messages by type (use SUBSCRIBE#).

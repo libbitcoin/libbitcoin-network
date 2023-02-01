@@ -79,8 +79,8 @@ const std::string& protocol_version_31402::name() const NOEXCEPT
 // Allow derived classes to modify the version message.
 // Relay always exposed on version, despite lack of definition < BIP37.
 // See comments in version::deserialize regarding BIP37 protocol bug.
-protocol_version_31402::version_ptr
-protocol_version_31402::version_factory(bool relay) const NOEXCEPT
+messages::version protocol_version_31402::version_factory(
+    bool relay) const NOEXCEPT
 {
     // TODO: allow for node to inject top height.
     const auto timestamp = unix_time();
@@ -89,7 +89,7 @@ protocol_version_31402::version_factory(bool relay) const NOEXCEPT
 
     // Should construct using makes_shared(vargs) overload, but fails on clang.
     BC_PUSH_WARNING(NO_NEW_OR_DELETE)
-    return to_shared(new version
+    return
     {
         maximum_version_,
         maximum_services_,
@@ -127,7 +127,7 @@ protocol_version_31402::version_factory(bool relay) const NOEXCEPT
         settings().user_agent,
         top_height,
         relay
-    });
+    };
     BC_POP_WARNING()
 }
 
@@ -338,7 +338,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         << "for [" << authority() << "] ");
 
     // TODO: verbose (helpful for identifying own address for config of self).
-    LOG("Peer (" << authority() << ") "
+    LOG("Peer [" << authority() << "] "
         << "as {" << config::authority(message->address_sender) << "} "
         << "us {" << config::authority(message->address_receiver) << "}");
 

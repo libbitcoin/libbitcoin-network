@@ -52,7 +52,7 @@ public:
 protected:
     const std::string& name() const NOEXCEPT override;
 
-    version_ptr version_factory(bool relay=false) const NOEXCEPT override;
+    messages::version version_factory(bool relay=false) const NOEXCEPT override;
 
 private:
     // This is thread safe (const).

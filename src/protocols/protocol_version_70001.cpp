@@ -64,8 +64,7 @@ const std::string& protocol_version_70001::name() const NOEXCEPT
 // ----------------------------------------------------------------------------
 // Relay is the only difference at protocol level 70001.
 
-protocol_version_70001::version_ptr
-protocol_version_70001::version_factory(bool) const NOEXCEPT
+messages::version protocol_version_70001::version_factory(bool) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70001");
     return protocol_version_31402::version_factory(relay_);

@@ -126,6 +126,7 @@ void socket::connect(const asio::endpoints& range,
 // Read into pre-allocated buffer (bitcoin).
 void socket::read(const data_slab& out, io_handler&& handler) NOEXCEPT
 {
+    // asio::mutable_buffer is essentially a data_slab.
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_read, shared_from_this(),
             boost::asio::mutable_buffer{ out.data(), out.size() },
@@ -134,6 +135,7 @@ void socket::read(const data_slab& out, io_handler&& handler) NOEXCEPT
 
 void socket::write(const data_slice& in, io_handler&& handler) NOEXCEPT
 {
+    // asio::const_buffer is essentially a data_slice.
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_write, shared_from_this(),
             boost::asio::const_buffer{ in.data(), in.size() },

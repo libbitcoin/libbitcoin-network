@@ -50,10 +50,10 @@ public:
 
     /// Send a message to the peer.
     template <class Message>
-    void send(const typename Message::ptr& message,
-        result_handler&& complete) NOEXCEPT
+    void send(const Message& message, result_handler&& complete) NOEXCEPT
     {
-        send_bytes(messages::serialize(*message, protocol_magic(), version()),
+        // Serializes message to a chunk pointer for type-agnostic send.
+        send_bytes(messages::serialize(message, protocol_magic(), version()),
             std::move(complete));
     }
 

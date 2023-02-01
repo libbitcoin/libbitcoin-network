@@ -56,12 +56,9 @@ public:
     void stopping(const code& ec) NOEXCEPT override;
 
 protected:
-    // Declare pointer to a non-const version (allows mutation in 70001).
-    typedef std::shared_ptr<const messages::version> version_ptr;
-
     const std::string& name() const NOEXCEPT override;
 
-    virtual version_ptr version_factory(bool relay=false) const NOEXCEPT;
+    virtual messages::version version_factory(bool relay=false) const NOEXCEPT;
     virtual void rejection(const code& ec) NOEXCEPT;
 
     virtual bool complete() const NOEXCEPT;

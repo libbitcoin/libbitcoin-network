@@ -293,7 +293,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 void proxy::send_bytes(const system::chunk_ptr& payload,
     result_handler&& handler) NOEXCEPT
 {
-    // chunk_ptr is copied into std::bind closure. 
+    // chunk_ptr is copied into std::bind closure to keep data alive. 
     // Post handle_send to strand upon stop, error, or buffer fully sent.
     socket_->write(*payload,
         std::bind(&proxy::handle_send,
