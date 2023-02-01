@@ -74,9 +74,8 @@ void protocol_alert_31402::handle_receive_alert(const code& ec,
     if (stopped(ec))
         return;
 
-    // TODO: verify the signature (legacy).
     // TODO: serialize cancels and sub_versions.
-
+    // Signature not validated because is not relevant (private key published).
     LOG("Alert from [" << authority() << "]..."
         << "\nversion     : " << alert->payload.version
         << "\nrelay_until : " << alert->payload.relay_until
