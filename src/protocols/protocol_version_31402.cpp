@@ -77,22 +77,20 @@ const std::string& protocol_version_31402::name() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // Allow derived classes to modify the version message.
+// Relay always exposed on version, despite lack of definition < BIP37.
+// See comments in version::deserialize regarding BIP37 protocol bug.
 protocol_version_31402::version_ptr
-protocol_version_31402::version_factory() const NOEXCEPT
+protocol_version_31402::version_factory(bool relay) const NOEXCEPT
 {
     // TODO: allow for node to inject top height.
+    const auto timestamp = unix_time();
     constexpr auto top_height = possible_narrow_cast<uint32_t>(zero);
     BC_ASSERT_MSG(top_height <= max_uint32, "Time to upgrade the protocol.");
 
-    // Relay always exposed on version, despite lack of definition < BIP37.
-    // See comments in version::deserialize regarding BIP37 protocol bug.
-    constexpr auto relay = false;
-    const auto timestamp = unix_time();
-
     // Should construct using makes_shared(vargs) overload, but fails on clang.
     BC_PUSH_WARNING(NO_NEW_OR_DELETE)
-    return std::shared_ptr<version>(new version
-    {
+    return to_shared<version>
+    (
         maximum_version_,
         maximum_services_,
         timestamp,
@@ -129,7 +127,7 @@ protocol_version_31402::version_factory() const NOEXCEPT
         settings().user_agent,
         top_height,
         relay
-    });
+    );
     BC_POP_WARNING()
 }
 
@@ -183,7 +181,7 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
     SUBSCRIBE2(version_acknowledge, handle_receive_acknowledge, _1, _2);
-    SEND1(std::move(*version_factory()), handle_send_version, _1);
+    SENDP1(version_factory(), handle_send_version, _1);
 
     protocol::start();
 }

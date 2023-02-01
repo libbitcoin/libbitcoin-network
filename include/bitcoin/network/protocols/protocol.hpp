@@ -86,6 +86,14 @@ protected:
         return BOUND_PROTOCOL(handler, args);
     }
 
+    /// Send a message::ptr instance to peer (use SEND#).
+    template <class Protocol, class Message, typename Handler, typename... Args>
+    void sendp(const std::shared_ptr<const Message>& message, Handler&& handler,
+        Args&&... args) NOEXCEPT
+    {
+        channel_->send<Message>(message, BOUND_PROTOCOL(handler, args));
+    }
+
     /// Send a message instance to peer (use SEND#).
     template <class Protocol, class Message, typename Handler, typename... Args>
     void send(Message&& message, Handler&& handler, Args&&... args) NOEXCEPT
@@ -202,6 +210,13 @@ private:
     send<CLASS>(message, &CLASS::method, p1, p2)
 #define SEND3(message, method, p1, p2, p3) \
     send<CLASS>(message, &CLASS::method, p1, p2, p3)
+
+#define SENDP1(message, method, p1) \
+    sendp<CLASS>(message, &CLASS::method, p1)
+#define SENDP2(message, method, p1, p2) \
+    sendp<CLASS>(message, &CLASS::method, p1, p2)
+#define SENDP3(message, method, p1, p2, p3) \
+    sendp<CLASS>(message, &CLASS::method, p1, p2, p3)
 
 #define SUBSCRIBE2(message, method, p1, p2) \
     subscribe<CLASS, message>(&CLASS::method, p1, p2)
