@@ -114,6 +114,9 @@ void session_inbound::start_accept(const code& ec,
         return;
     }
 
+    LOG("Accepting up to " << settings().inbound_connections
+        << " connections on port " << settings().inbound_port << ".");
+
     acceptor->accept(BIND3(handle_accept, _1, _2, acceptor));
 }
 
