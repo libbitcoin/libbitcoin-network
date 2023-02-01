@@ -96,8 +96,7 @@ bool headers::is_sequential() const NOEXCEPT
 
     auto previous = header_ptrs.front()->hash();
 
-    for (auto it = std::next(header_ptrs.begin()); it != header_ptrs.end();
-        ++it)
+    for (auto it = std::next(header_ptrs.begin()); it != header_ptrs.end(); ++it)
     {
         if ((*it)->previous_block_hash() != previous)
             return false;
