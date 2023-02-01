@@ -179,8 +179,7 @@ void session_inbound::handle_channel_start(const code& ec,
     const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Inbound channel started: " << ec.message() << " ("
-        << inbound_channel_count() << ")");
+    LOG("Inbound channel started: " << ec.message());
 }
 
 void session_inbound::attach_protocols(

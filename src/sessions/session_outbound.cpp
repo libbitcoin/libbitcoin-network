@@ -261,8 +261,7 @@ void session_outbound::handle_channel_start(const code&,
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Verbose.
-    ////LOG("Outbound channel started: " << ec.message() << " ("
-    ////    << outbound_channel_count() << ")");
+    ////LOG("Outbound channel started: " << ec.message());
 }
 
 void session_outbound::attach_protocols(

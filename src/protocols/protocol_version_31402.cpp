@@ -317,8 +317,8 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     // Advertised services on many incoming connections are set to zero.
     if ((message->services & minimum_services_) != minimum_services_)
     {
-        LOG("Insufficient peer network services (" << message->services
-            << ") for [" << authority() << "]");
+        LOG("Insufficient peer network services (" << message->services << ") "
+            "for [" << authority() << "]");
 
         rejection(error::insufficient_peer);
         return;
@@ -326,8 +326,8 @@ void protocol_version_31402::handle_receive_version(const code& ec,
 
     if (message->value < minimum_version_)
     {
-        LOG("Insufficient peer protocol version (" << message->value
-            << ") for [" << authority() << "]");
+        LOG("Insufficient peer protocol version (" << message->value << ") "
+            "for [" << authority() << "]");
 
         rejection(error::insufficient_peer);
         return;

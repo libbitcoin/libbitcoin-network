@@ -171,10 +171,10 @@ protected:
     /// The address is blacklisted by configuration.
     virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
 
-    /// The channel is inbound (pend the nonce).
+    /// The direction of channel initiation.
     virtual bool inbound() const NOEXCEPT = 0;
 
-    /// Notify subscribers on channel start (bypass seeds).
+    /// Notify (non-seed) subscribers on channel start.
     virtual bool notify() const NOEXCEPT = 0;
 
 private:
