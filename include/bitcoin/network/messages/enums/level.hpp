@@ -37,9 +37,9 @@ namespace messages {
 // ping         v1
 // ping         v2      60001   BIP031  added nonce field
 // pong         v1      60001   BIP031
-// reject       v3      70002   BIP061  deprecated (TODO: make configurable)
+// reject       v3      70002   BIP061  disabled by default, deprecated
 // ----------------------------------------------------------------------------
-// alert        --                      disabled by default, deprecated
+// alert        v4                      disabled by default, deprecated
 // checkorder   --                      obsolete
 // reply        --                      obsolete
 // submitorder  --                      obsolete
