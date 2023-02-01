@@ -25,7 +25,7 @@
 #include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
-////#include <bitcoin/network/messages/alert_item.hpp>
+#include <bitcoin/network/messages/alert_item.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 
 namespace libbitcoin {
@@ -45,9 +45,7 @@ struct BCT_API alert
     void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
     size_t size(uint32_t version) const NOEXCEPT;
 
-    // TODO:
-    ////alert_item payload;
-    system::data_chunk payload;
+    alert_item payload;
     system::data_chunk signature;
 };
 

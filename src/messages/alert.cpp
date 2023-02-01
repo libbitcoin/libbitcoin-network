@@ -18,10 +18,9 @@
  */
 #include <bitcoin/network/messages/alert.hpp>
 
-#include <cstddef>
-#include <cstdint>
+#include <utility>
 #include <bitcoin/system.hpp>
-////#include <bitcoin/network/messages/alert_item.hpp>
+#include <bitcoin/network/messages/alert_item.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
 #include <bitcoin/network/messages/message.hpp>
@@ -43,31 +42,39 @@ alert alert::deserialize(uint32_t version, reader& source) NOEXCEPT
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
+    // Stream limit is relative to current position.
+    source.set_limit(source.read_size(chain::max_block_size));
+    auto item = alert_item::deserialize(level::minimum_protocol, source);
+    source.set_limit();
+
     return
     {
-        source.read_bytes(source.read_size(chain::max_block_size)),
+        std::move(item),
         source.read_bytes(source.read_size(chain::max_block_size))
     };
 }
 
-void alert::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& sink) const NOEXCEPT
+void alert::serialize(uint32_t version, writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
-    sink.write_variable(payload.size());
-    sink.write_bytes(payload);
+    sink.write_variable(payload.size(version));
+    payload.serialize(version, sink);
     sink.write_variable(signature.size());
     sink.write_bytes(signature);
 
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
-size_t alert::size(uint32_t) const NOEXCEPT
+size_t alert::size(uint32_t version) const NOEXCEPT
 {
-    return variable_size(payload.size()) + payload.size()
-        + variable_size(signature.size()) + signature.size();
+    const auto signature_size = signature.size();
+    const auto payload_size = payload.size(version);
+
+    return
+        variable_size(payload_size) + payload_size +
+        variable_size(signature_size) + signature_size;
 }
 
 } // namespace messages

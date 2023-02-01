@@ -33,8 +33,8 @@ namespace messages {
 
 struct BCT_API alert_item
 {
-    typedef std::vector<uint32_t> cancels;
-    typedef std::vector<std::string> sub_versions;
+    typedef std::vector<uint32_t> cancels_t;
+    typedef std::vector<std::string> sub_versions_t;
     static const system::ec_uncompressed satoshi_public_key;
 
     static alert_item deserialize(uint32_t version,
@@ -47,10 +47,10 @@ struct BCT_API alert_item
     uint64_t expiration;
     uint32_t id;
     uint32_t cancel;
-    cancels set_cancel;
+    cancels_t cancels;
     uint32_t min_version;
     uint32_t max_version;
-    sub_versions set_sub_version;
+    sub_versions_t sub_versions;
     uint32_t priority;
     std::string comment;
     std::string status_bar;
