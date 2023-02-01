@@ -93,6 +93,9 @@ void session_inbound::handle_started(const code& ec,
         });
 
         start_accept(error::success, acceptor);
+
+        LOG("Accepting up to " << settings().inbound_connections
+            << " connections on port " << settings().inbound_port << ".");
     }
 }
 
@@ -113,9 +116,6 @@ void session_inbound::start_accept(const code& ec,
         LOG("Failed to start acceptor, " << ec.message());
         return;
     }
-
-    LOG("Accepting up to " << settings().inbound_connections
-        << " connections on port " << settings().inbound_port << ".");
 
     acceptor->accept(BIND3(handle_accept, _1, _2, acceptor));
 }

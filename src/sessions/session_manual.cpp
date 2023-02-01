@@ -108,6 +108,8 @@ void session_manual::connect(const config::endpoint& peer,
         connector->stop();
     });
 
+    LOG("Maintaining manual connection to [" << peer << "]");
+
     start_connect(peer, connector, std::move(handler));
 }
 
