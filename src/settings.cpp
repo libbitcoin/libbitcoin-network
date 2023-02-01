@@ -35,6 +35,7 @@ settings::settings() NOEXCEPT
     services_minimum(service::minimum_services),
     services_maximum(service::maximum_services),
     invalid_services(176),
+    enable_alert(false),
     enable_reject(false),
     relay_transactions(false),
     validate_checksum(false),
