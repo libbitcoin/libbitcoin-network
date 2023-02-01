@@ -182,7 +182,8 @@ void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
 void session_seed::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) const NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
@@ -192,17 +193,17 @@ void session_seed::attach_handshake(const channel::ptr& channel,
     // Seeding does not require or provide any node services or allow relay.
     constexpr auto minimum_services = messages::service::node_none;
     constexpr auto maximum_services = messages::service::node_none;
-    constexpr auto relay = false;
+    constexpr auto enable_relay = false;
 
     // Reject is supported starting at bip61 (70002) and later deprecated.
     if (enable_reject && maximum_version >= messages::level::bip61)
         channel->attach<protocol_version_70002>(self, minimum_services,
-            maximum_services, relay)->shake(std::move(handler));
+            maximum_services, enable_relay)->shake(std::move(handler));
 
     // Relay is supported starting at bip37 (70001).
     else if (maximum_version >= messages::level::bip37)
         channel->attach<protocol_version_70001>(self, minimum_services,
-            maximum_services, relay)->shake(std::move(handler));
+            maximum_services, enable_relay)->shake(std::move(handler));
 
     else
         channel->attach<protocol_version_31402>(self, minimum_services,
@@ -220,7 +221,7 @@ void session_seed::handle_channel_start(const code&,
 
 void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
