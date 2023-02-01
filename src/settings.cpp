@@ -37,7 +37,7 @@ settings::settings() NOEXCEPT
     invalid_services(176),
     enable_alert(false),
     enable_reject(false),
-    relay_transactions(false),
+    enable_relay(false),
     validate_checksum(false),
     identifier(0),
     inbound_port(0),
@@ -51,6 +51,7 @@ settings::settings() NOEXCEPT
     channel_inactivity_minutes(10),
     channel_expiration_minutes(1440),
     host_pool_capacity(0),
+    user_agent(BC_USER_AGENT),
     hosts_file("hosts.cache"),
     self(unspecified_address_item)
 {

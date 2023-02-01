@@ -43,7 +43,7 @@ struct BCT_API settings
     uint64_t invalid_services;
     bool enable_alert;
     bool enable_reject;
-    bool relay_transactions;
+    bool enable_relay;
     bool validate_checksum;
     uint32_t identifier;
     uint16_t inbound_port;
@@ -57,6 +57,7 @@ struct BCT_API settings
     uint32_t channel_inactivity_minutes;
     uint32_t channel_expiration_minutes;
     uint32_t host_pool_capacity;
+    std::string user_agent;
     std::filesystem::path hosts_file;
     config::authority self;
     config::authorities blacklists{};

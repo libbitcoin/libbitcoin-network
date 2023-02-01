@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.relay_transactions, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
     BOOST_REQUIRE_EQUAL(instance.identifier, 0u);
     BOOST_REQUIRE_EQUAL(instance.inbound_port, 0u);
@@ -50,6 +50,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
     BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
+    BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
     BOOST_REQUIRE_EQUAL(instance.hosts_file, "hosts.cache");
     BOOST_REQUIRE(instance.self == unspecified_address_item);
     BOOST_REQUIRE(instance.blacklists.empty());
@@ -70,7 +71,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.relay_transactions, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
     BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.outbound_connections, 8u);
@@ -82,6 +83,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
     BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
+    BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
     BOOST_REQUIRE_EQUAL(instance.hosts_file, "hosts.cache");
     BOOST_REQUIRE(instance.self == unspecified_address_item);
     BOOST_REQUIRE(instance.blacklists.empty());
@@ -115,7 +117,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.relay_transactions, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
     BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.outbound_connections, 8u);
@@ -127,6 +129,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
     BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
+    BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
     BOOST_REQUIRE_EQUAL(instance.hosts_file, "hosts.cache");
     BOOST_REQUIRE(instance.self == unspecified_address_item);
     BOOST_REQUIRE(instance.blacklists.empty());
@@ -160,7 +163,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.relay_transactions, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
     BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.outbound_connections, 8u);
