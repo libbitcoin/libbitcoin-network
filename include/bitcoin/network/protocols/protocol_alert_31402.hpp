@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_REJECT_70002_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_REJECT_70002_HPP
+#ifndef LIBBITCOIN_NETWORK_PROTOCOL_ALERT_31402_HPP
+#define LIBBITCOIN_NETWORK_PROTOCOL_ALERT_31402_HPP
 
 #include <memory>
 #include <bitcoin/system.hpp>
@@ -32,13 +32,13 @@ namespace network {
 
 class session;
 
-class BCT_API protocol_reject_70002
-  : public protocol, protected tracker<protocol_reject_70002>
+class BCT_API protocol_alert_31402
+  : public protocol, protected tracker<protocol_alert_31402>
 {
 public:
-    typedef std::shared_ptr<protocol_reject_70002> ptr;
+    typedef std::shared_ptr<protocol_alert_31402> ptr;
 
-    protocol_reject_70002(const session& session,
+    protocol_alert_31402(const session& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Start protocol (strand required).
@@ -47,11 +47,12 @@ public:
 protected:
     const std::string& name() const NOEXCEPT override;
 
-    virtual void handle_receive_reject(const code& ec,
-        const messages::reject::ptr& message) NOEXCEPT;
+    virtual void handle_receive_alert(const code& ec,
+        const messages::alert::ptr& alert) NOEXCEPT;
 
 private:
-    std::string get_hash(const messages::reject& message) const NOEXCEPT;
+    // This is protected by strand.
+    bool sent_;
 };
 
 } // namespace network

@@ -25,8 +25,8 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
     
-// Minimum current libbitcoin protocol version:     31402
-// Minimum current satoshi client protocol version: 31800
+// Minimum current libbitcoin protocol version: 31402
+// Minimum current satoshi    protocol version: 31800
 
 // libbitcoin-network
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -37,9 +37,9 @@ namespace messages {
 // ping         v1
 // ping         v2      60001   BIP031  added nonce field
 // pong         v1      60001   BIP031
-// reject       v3      70002   BIP061  deprecated (TODO: make configurable)
+// reject       v3      70002   BIP061  disabled by default, deprecated
 // ----------------------------------------------------------------------------
-// alert        --                      no intent to support, deprecated
+// alert        v4                      disabled by default, deprecated
 // checkorder   --                      obsolete
 // reply        --                      obsolete
 // submitorder  --                      obsolete

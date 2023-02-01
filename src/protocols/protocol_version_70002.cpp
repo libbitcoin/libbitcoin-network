@@ -46,7 +46,7 @@ protocol_version_70002::protocol_version_70002(const session& session,
   : protocol_version_70002(session, channel,
         session.settings().services_minimum,
         session.settings().services_maximum,
-        session.settings().relay_transactions)
+        session.settings().enable_relay)
 {
 }
 
@@ -105,16 +105,16 @@ void protocol_version_70002::rejection(const code& ec) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_version_70002::handle_receive_reject(const code& ec,
-    const reject::ptr& LOG_ONLY(reject)) NOEXCEPT
+    const reject::ptr& LOG_ONLY(message)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
     if (stopped(ec))
         return;
 
-    LOG("Reject message '" << reject->message << "' ("
-        << static_cast<uint16_t>(reject->code) << ") from [" << authority()
-        << "] with reason: " << reject->reason);
+    LOG("Reject message '" << message->message << "' ("
+        << static_cast<uint16_t>(message->code) << ") from [" << authority()
+        << "] with reason: " << message->reason);
 }
 
 } // namespace network

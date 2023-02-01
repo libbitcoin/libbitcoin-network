@@ -60,13 +60,16 @@ void protocol_address_31402::start() NOEXCEPT
         return;
 
     // Own address message is derived from config, if port is non-zero.
+    // Own address is always sent, even without receipt of get_address.
+    // The version message address is therefore 
     if (!is_zero(settings().self.port()))
     {
         static const auto self = settings().self.to_address_item();
         SEND1(address{ { self } }, handle_send, _1);
     }
 
-    // If addresses can't be stored don't ask for them.
+    // If addresses can't be stored don't ask for or capture them.
+    // Satoshi peers send them anyway, despite get_address note sent.
     if (!is_zero(settings().host_pool_capacity))
     {
         SUBSCRIBE2(address, handle_receive_address, _1, _2);
@@ -105,9 +108,11 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return;
 
-    // TODO: log duplicate request (or drop channel).
     if (sent_)
+    {
+        LOG("Ignoring duplicate address request from [" << authority() << "]");
         return;
+    }
 
     fetches(BIND2(handle_fetch_addresses, _1, _2));
 }
@@ -121,8 +126,6 @@ void protocol_address_31402::handle_fetch_addresses(const code& ec,
         return;
 
     SEND1(address{ addresses }, handle_send, _1);
-
-    // Precludes multiple address requests.
     sent_ = true;
 }
 

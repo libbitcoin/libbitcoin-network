@@ -22,10 +22,6 @@ BOOST_AUTO_TEST_SUITE(reject_tests)
 
 using namespace bc::network::messages;
 
-// is_chain
-// reason_to_byte
-// byte_to_reason
-
 BOOST_AUTO_TEST_CASE(reject__properties__always__expected)
 {
     BOOST_REQUIRE_EQUAL(reject::command, "reject");
@@ -42,6 +38,54 @@ BOOST_AUTO_TEST_CASE(reject__size__default__expected)
         + zero;
 
     BOOST_REQUIRE_EQUAL(reject{}.size(level::canonical), expected);
+}
+
+struct accessor
+  : public reject
+{
+    static bool is_chain_(const std::string& message) NOEXCEPT
+    {
+        return reject::is_chain(message);
+    }
+};
+
+BOOST_AUTO_TEST_CASE(reject__is_chain__is__true)
+{
+    BOOST_REQUIRE(accessor::is_chain_(block::command));
+    BOOST_REQUIRE(accessor::is_chain_(transaction::command));
+}
+
+BOOST_AUTO_TEST_CASE(reject__is_chain__is_not__false)
+{
+    BOOST_REQUIRE(!accessor::is_chain_(reject::command));
+    BOOST_REQUIRE(!accessor::is_chain_(get_data::command));
+    BOOST_REQUIRE(!accessor::is_chain_("foobar"));
+}
+
+BOOST_AUTO_TEST_CASE(reject__reason_to_byte__all__expected)
+{
+    BOOST_REQUIRE_EQUAL(reject::reason_to_byte(reject::reason_code::undefined), 0x00u);
+    BOOST_REQUIRE_EQUAL(reject::reason_to_byte(reject::reason_code::malformed), 0x01);
+    BOOST_REQUIRE_EQUAL(reject::reason_to_byte(reject::reason_code::invalid), 0x10);
+    BOOST_REQUIRE_EQUAL(reject::reason_to_byte(reject::reason_code::obsolete), 0x11);
+    BOOST_REQUIRE_EQUAL(reject::reason_to_byte(reject::reason_code::duplicate), 0x12);
+    BOOST_REQUIRE_EQUAL(reject::reason_to_byte(reject::reason_code::nonstandard), 0x40);
+    BOOST_REQUIRE_EQUAL(reject::reason_to_byte(reject::reason_code::dust), 0x41);
+    BOOST_REQUIRE_EQUAL(reject::reason_to_byte(reject::reason_code::insufficient_fee), 0x42);
+    BOOST_REQUIRE_EQUAL(reject::reason_to_byte(reject::reason_code::checkpoint), 0x43);
+}
+
+BOOST_AUTO_TEST_CASE(reject__byte_to_reason__all__expected)
+{
+    BOOST_REQUIRE(reject::byte_to_reason(0x00) == reject::reason_code::undefined);
+    BOOST_REQUIRE(reject::byte_to_reason(0x01) == reject::reason_code::malformed);
+    BOOST_REQUIRE(reject::byte_to_reason(0x10) == reject::reason_code::invalid);
+    BOOST_REQUIRE(reject::byte_to_reason(0x11) == reject::reason_code::obsolete);
+    BOOST_REQUIRE(reject::byte_to_reason(0x12) == reject::reason_code::duplicate);
+    BOOST_REQUIRE(reject::byte_to_reason(0x40) == reject::reason_code::nonstandard);
+    BOOST_REQUIRE(reject::byte_to_reason(0x41) == reject::reason_code::dust);
+    BOOST_REQUIRE(reject::byte_to_reason(0x42) == reject::reason_code::insufficient_fee);
+    BOOST_REQUIRE(reject::byte_to_reason(0x43) == reject::reason_code::checkpoint);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -116,6 +116,7 @@ protocol_version_31402::version_factory() const NOEXCEPT
         // Self address_item (timestamp/services are redundant).
         // The protocol expects duplication of the sender's services, but this
         // is broadly observed to be inconsistently implemented by other nodes.
+        // Peers may provide a null address for self, commonly observed.
         // ********************************************************************
         address_item
         {
@@ -126,7 +127,7 @@ protocol_version_31402::version_factory() const NOEXCEPT
         },
 
         nonce(),
-        BC_USER_AGENT,
+        settings().user_agent,
         top_height,
         relay
     });
@@ -313,7 +314,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         return;
     }
 
-    // Advertised services on many incoming connections may be set to zero.
+    // Advertised services on many incoming connections are set to zero.
     if ((message->services & minimum_services_) != minimum_services_)
     {
         LOG("Insufficient peer network services (" << message->services
@@ -336,8 +337,13 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     set_negotiated_version(version);
     set_peer_version(message);
 
-    LOG("Negotiated protocol version (" << version << ") for ["
-        << authority() << "]");
+    LOG("Negotiated protocol version (" << version << ") "
+        << "for [" << authority() << "] ");
+
+    // TODO: verbose (helpful for identifying own address for config of self).
+    LOG("Peer (" << authority() << ") "
+        << "as {" << config::authority(message->address_sender) << "} "
+        << "us {" << config::authority(message->address_receiver) << "}");
 
     SEND1(version_acknowledge{}, handle_send_acknowledge, _1);
 

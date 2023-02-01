@@ -130,6 +130,7 @@
     <ClCompile Include="..\..\..\..\test\p2p.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_31402.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_31402.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_31402.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_60001.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_reject_70002.cpp" />

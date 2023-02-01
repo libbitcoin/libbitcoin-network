@@ -32,8 +32,9 @@ namespace messages {
 
 using namespace bc::system;
 
-constexpr size_t max_message = max_uint8;
-constexpr size_t max_messages = 42;
+// Unbounded except by network message size.
+constexpr size_t max_message = max_inventory;
+constexpr size_t max_messages = max_inventory;
 
 // Libbitcoin doesn't use this.
 const ec_uncompressed alert_item::satoshi_public_key
@@ -53,7 +54,7 @@ alert_item alert_item::deserialize(uint32_t, reader& source) NOEXCEPT
     const auto read_cans = [](reader& source) NOEXCEPT
     {
         const auto size = source.read_size(max_messages);
-        cancels cans;
+        cancels_t cans;
         cans.reserve(size);
 
         for (size_t can = 0; can < size; can++)
@@ -65,7 +66,7 @@ alert_item alert_item::deserialize(uint32_t, reader& source) NOEXCEPT
     const auto read_subs = [](reader& source) NOEXCEPT
     {
         const auto size = source.read_size(max_messages);
-        sub_versions subs;
+        sub_versions_t subs;
         subs.reserve(size);
 
         for (size_t sub = 0; sub < size; sub++)
@@ -104,16 +105,16 @@ void alert_item::serialize(uint32_t BC_DEBUG_ONLY(version_),
     sink.write_8_bytes_little_endian(expiration);
     sink.write_4_bytes_little_endian(id);
     sink.write_4_bytes_little_endian(cancel);
-    sink.write_variable(set_cancel.size());
+    sink.write_variable(cancels.size());
 
-    for (const auto& entry: set_cancel)
+    for (const auto& entry: cancels)
         sink.write_4_bytes_little_endian(entry);
 
     sink.write_4_bytes_little_endian(min_version);
     sink.write_4_bytes_little_endian(max_version);
-    sink.write_variable(set_sub_version.size());
+    sink.write_variable(sub_versions.size());
 
-    for (const auto& entry: set_sub_version)
+    for (const auto& entry: sub_versions)
         sink.write_string(entry);
 
     sink.write_4_bytes_little_endian(priority);
@@ -136,12 +137,12 @@ size_t alert_item::size(uint32_t) const NOEXCEPT
         + sizeof(uint64_t)
         + sizeof(uint32_t)
         + sizeof(uint32_t)
-        + variable_size(set_cancel.size()) + 
-            (set_cancel.size() * sizeof(uint32_t))
+        + variable_size(cancels.size()) + 
+            (cancels.size() * sizeof(uint32_t))
         + sizeof(uint32_t)
         + sizeof(uint32_t)
-        + variable_size(set_sub_version.size()) + std::accumulate(
-            set_sub_version.begin(), set_sub_version.end(), zero, subs)
+        + variable_size(sub_versions.size()) + std::accumulate(
+            sub_versions.begin(), sub_versions.end(), zero, subs)
         + sizeof(uint32_t)
         + variable_size(comment.length()) + comment.length()
         + variable_size(status_bar.length()) + status_bar.length()

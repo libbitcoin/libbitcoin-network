@@ -94,6 +94,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/net/socket.cpp \
     src/protocols/protocol.cpp \
     src/protocols/protocol_address_31402.cpp \
+    src/protocols/protocol_alert_31402.cpp \
     src/protocols/protocol_ping_31402.cpp \
     src/protocols/protocol_ping_60001.cpp \
     src/protocols/protocol_reject_70002.cpp \
@@ -180,6 +181,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/net/socket.cpp \
     test/protocols/protocol.cpp \
     test/protocols/protocol_address_31402.cpp \
+    test/protocols/protocol_alert_31402.cpp \
     test/protocols/protocol_ping_31402.cpp \
     test/protocols/protocol_ping_60001.cpp \
     test/protocols/protocol_reject_70002.cpp \
@@ -302,6 +304,7 @@ include_bitcoin_network_protocolsdir = ${includedir}/bitcoin/network/protocols
 include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol.hpp \
     include/bitcoin/network/protocols/protocol_address_31402.hpp \
+    include/bitcoin/network/protocols/protocol_alert_31402.hpp \
     include/bitcoin/network/protocols/protocol_ping_31402.hpp \
     include/bitcoin/network/protocols/protocol_ping_60001.hpp \
     include/bitcoin/network/protocols/protocol_reject_70002.hpp \

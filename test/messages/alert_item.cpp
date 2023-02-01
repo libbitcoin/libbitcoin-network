@@ -58,4 +58,33 @@ BOOST_AUTO_TEST_CASE(alert_item__size__default__expected)
     BOOST_REQUIRE_EQUAL(alert_item{}.size(level::canonical), expected);
 }
 
+BOOST_AUTO_TEST_CASE(alert_item__deserialize__bitcoin_wiki_sample__expected)
+{
+    // en.bitcoin.it/wiki/Protocol_documentation#alert
+    constexpr auto payload = system::base16_array(
+        "010000003766404f00000000b305434f00000000f2030000f10300000010270000"
+        "48ee00000064000000004653656520626974636f696e2e6f72672f66656232302069"
+        "6620796f7520686176652074726f75626c6520636f6e6e656374696e672061667465"
+        "7220323020466562727561727900");
+    constexpr auto expected_status_bar =
+        "See bitcoin.org/feb20 if you have trouble connecting after 20 February";
+
+    system::read::bytes::copy source(payload);
+    const auto message = alert_item::deserialize(0, source);
+    BOOST_REQUIRE(source);
+    BOOST_REQUIRE_EQUAL(message.version, 1u);
+    BOOST_REQUIRE_EQUAL(message.relay_until, 1329620535u);
+    BOOST_REQUIRE_EQUAL(message.expiration, 1329792435u);
+    BOOST_REQUIRE_EQUAL(message.id, 1010u);
+    BOOST_REQUIRE_EQUAL(message.cancel, 1009u);
+    BOOST_REQUIRE(message.cancels.empty());
+    BOOST_REQUIRE_EQUAL(message.min_version, 10000u);
+    BOOST_REQUIRE_EQUAL(message.max_version, 61000u);
+    BOOST_REQUIRE(message.sub_versions.empty());
+    BOOST_REQUIRE_EQUAL(message.priority, 100u);
+    BOOST_REQUIRE(message.comment.empty());
+    BOOST_REQUIRE_EQUAL(message.status_bar, expected_status_bar);
+    BOOST_REQUIRE(message.reserved.empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
