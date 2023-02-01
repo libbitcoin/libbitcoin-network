@@ -89,8 +89,8 @@ protocol_version_31402::version_factory(bool relay) const NOEXCEPT
 
     // Should construct using makes_shared(vargs) overload, but fails on clang.
     BC_PUSH_WARNING(NO_NEW_OR_DELETE)
-    return to_shared<version>
-    (
+    return to_shared(new version
+    {
         maximum_version_,
         maximum_services_,
         timestamp,
@@ -127,7 +127,7 @@ protocol_version_31402::version_factory(bool relay) const NOEXCEPT
         settings().user_agent,
         top_height,
         relay
-    );
+    });
     BC_POP_WARNING()
 }
 
@@ -181,7 +181,7 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     SUBSCRIBE2(version, handle_receive_version, _1, _2);
     SUBSCRIBE2(version_acknowledge, handle_receive_acknowledge, _1, _2);
-    SENDP1(version_factory(), handle_send_version, _1);
+    SEND1(version_factory(), handle_send_version, _1);
 
     protocol::start();
 }
