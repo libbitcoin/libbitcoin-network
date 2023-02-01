@@ -90,8 +90,7 @@ void protocol_alert_31402::handle_receive_alert(const code& ec,
         << "\npriority    : " << alert->payload.priority
         << "\ncomments    : " << alert->payload.comment.size()
         << "\nstatus_bar  : " << alert->payload.status_bar
-        << "\nsignature   : " << system::serialize(alert->signature)
-        << "\ncode        : " << ec.message());
+        << "\nsignature   : " << system::serialize(alert->signature));
 }
 
 } // namespace network
