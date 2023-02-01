@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol.hpp>
 
-#include <cstdint>
-#include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/boost.hpp>
@@ -175,9 +173,8 @@ void protocol::handle_fetches(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "protocol");
 
-    // TODO: log code here for derived protocols.
-    LOG("Fetched addresses for [" << authority() << "] ("
-        << addresses.size() << ")");
+    LOG("Fetched (" << addresses.size() << ") addresses for ["
+        << authority() << "] " << ec.message());
 
     handler(ec, addresses);
 }
@@ -195,8 +192,8 @@ void protocol::saves(const messages::address_items& addresses) NOEXCEPT
 void protocol::saves(const messages::address_items& addresses,
     result_handler&& handler) NOEXCEPT
 {
-    LOG("Storing addresses from [" << authority() << "] ("
-        << addresses.size() << ")");
+    LOG("Storing (" << addresses.size() << ") addresses from ["
+        << authority() << "]");
 
     // TODO: use addresses pointer (copies addresses).
     session_.saves(addresses, BIND2(do_saves, _1, std::move(handler)));

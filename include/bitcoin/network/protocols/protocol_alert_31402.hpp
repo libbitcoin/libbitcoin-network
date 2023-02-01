@@ -49,10 +49,6 @@ protected:
 
     virtual void handle_receive_alert(const code& ec,
         const messages::alert::ptr& alert) NOEXCEPT;
-
-private:
-    // This is protected by strand.
-    bool sent_;
 };
 
 } // namespace network

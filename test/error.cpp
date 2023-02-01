@@ -110,6 +110,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__bad_stream__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "bad data stream");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__peer_disconnect__true_exected_message)
+{
+    constexpr auto value = error::peer_disconnect;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "peer disconnect");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__insufficient_peer__true_exected_message)
 {
     constexpr auto value = error::insufficient_peer;

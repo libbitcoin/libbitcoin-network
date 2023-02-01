@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol_version_70001.hpp>
 
-#include <cstdint>
-#include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
@@ -64,17 +62,12 @@ const std::string& protocol_version_70001::name() const NOEXCEPT
 
 // Utilities.
 // ----------------------------------------------------------------------------
+// Relay is the only difference at protocol level 70001.
 
-protocol_version_70001::version_ptr
-protocol_version_70001::version_factory() const NOEXCEPT
+messages::version protocol_version_70001::version_factory(bool) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70001");
-
-    const auto version = protocol_version_31402::version_factory();
-
-    // Relay is the only difference at protocol level 70001.
-    version->relay = relay_;
-    return version;
+    return protocol_version_31402::version_factory(relay_);
 }
 
 } // namespace network

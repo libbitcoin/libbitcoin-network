@@ -35,20 +35,6 @@
 namespace libbitcoin {
 namespace network {
 
-#define SESSION_ARGS(handler, args) \
-    std::forward<Handler>(handler), \
-    shared_from_base<Session>(), \
-    std::forward<Args>(args)...
-#define BOUND_SESSION(handler, args) \
-    std::bind(SESSION_ARGS(handler, args))
-
-#define SESSION_ARGS_TYPE(handler, args) \
-    std::forward<Handler>(handler), \
-    std::shared_ptr<Session>(), \
-    std::forward<Args>(args)...
-#define BOUND_SESSION_TYPE(handler, args) \
-    std::bind(SESSION_ARGS_TYPE(handler, args))
-
 class p2p;
 
 /// Abstract base class for maintaining a channel set, thread safe.
@@ -105,10 +91,10 @@ protected:
 
     /// Bind a method in the base or derived class (use BIND#).
     template <class Session, typename Handler, typename... Args>
-    auto bind(Handler&& handler, Args&&... args) NOEXCEPT ->
-        decltype(BOUND_SESSION_TYPE(handler, args)) const
+    auto bind(Handler&& handler, Args&&... args) NOEXCEPT
     {
-        return BOUND_SESSION(handler, args);
+        return std::bind(std::forward<Handler>(handler),
+            shared_from_base<Session>(), std::forward<Args>(args)...);
     }
 
     /// Channel sequence.
@@ -171,10 +157,10 @@ protected:
     /// The address is blacklisted by configuration.
     virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
 
-    /// The channel is inbound (pend the nonce).
+    /// The direction of channel initiation.
     virtual bool inbound() const NOEXCEPT = 0;
 
-    /// Notify subscribers on channel start (bypass seeds).
+    /// Notify (non-seed) subscribers on channel start.
     virtual bool notify() const NOEXCEPT = 0;
 
 private:
@@ -208,11 +194,6 @@ private:
     std::vector<connector::ptr> connectors_{};
     std::unordered_set<channel::ptr> pending_{};
 };
-
-#undef SESSION_ARGS
-#undef BOUND_SESSION
-#undef SESSION_ARGS_TYPE
-#undef BOUND_SESSION_TYPE
 
 } // namespace network
 } // namespace libbitcoin

@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>

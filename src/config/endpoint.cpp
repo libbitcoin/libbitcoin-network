@@ -146,7 +146,7 @@ std::ostream& operator<<(std::ostream& output,
 
     output << argument.host();
 
-    if (argument.port() != 0u)
+    if (!is_zero(argument.port()))
         output << ":" << argument.port();
 
     return output;

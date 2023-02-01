@@ -19,7 +19,6 @@
 #include <bitcoin/network/protocols/protocol_seed_31402.hpp>
 
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>

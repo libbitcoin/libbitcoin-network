@@ -47,13 +47,14 @@ compact_transactions compact_transactions::deserialize(uint32_t version,
     const auto read_transactions = [=](reader& source) NOEXCEPT
     {
         const auto size = source.read_size(chain::max_block_size);
-        chain::transactions transactions;
-        transactions.reserve(size);
+        chain::transaction_cptrs transaction_ptrs;
+        transaction_ptrs.reserve(size);
 
         for (size_t tx = 0; tx < size; ++tx)
-            transactions.emplace_back(source, witness);
+            transaction_ptrs.emplace_back(
+                new chain::transaction{ source, witness });
 
-        return transactions;
+        return transaction_ptrs;
     };
 
     return
@@ -70,24 +71,24 @@ void compact_transactions::serialize(uint32_t BC_DEBUG_ONLY(version),
     BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     sink.write_bytes(block_hash);
-    sink.write_variable(transactions.size());
+    sink.write_variable(transaction_ptrs.size());
 
-    for (const auto& tx: transactions)
-        tx.to_data(sink, witness);
+    for (const auto& tx: transaction_ptrs)
+        tx->to_data(sink, witness);
 
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
 size_t compact_transactions::size(uint32_t, bool witness) const NOEXCEPT
 {
-    const auto sizes = [=](size_t total, const chain::transaction& tx) NOEXCEPT
+    const auto sizes = [=](size_t total, const chain::transaction::cptr& tx) NOEXCEPT
     {
-        return total + tx.serialized_size(witness);
+        return total + tx->serialized_size(witness);
     };
 
     return hash_size
-        + variable_size(transactions.size()) + std::accumulate(
-            transactions.begin(), transactions.end(), zero, sizes);
+        + variable_size(transaction_ptrs.size()) + std::accumulate(
+            transaction_ptrs.begin(), transaction_ptrs.end(), zero, sizes);
 }
 
 } // namespace messages

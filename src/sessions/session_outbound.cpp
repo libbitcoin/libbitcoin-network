@@ -36,7 +36,12 @@ using namespace bc::system;
 using namespace config;
 using namespace std::placeholders;
 
+// Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_outbound::session_outbound(p2p& network) NOEXCEPT
   : session(network), tracker<session_outbound>(network.log())
@@ -105,6 +110,9 @@ void session_outbound::handle_started(const code& ec,
         // Start connection attempt with batch of connectors for one peer.
         start_connect(connectors);
     }
+
+    LOG("Creating " << settings().outbound_connections << " connections "
+        << settings().connect_batch_size << " at a time.");
 
     // This is the end of the start sequence, does not indicate connect status.
     handler(error::success);
@@ -246,7 +254,7 @@ void session_outbound::handle_connect(const code& ec,
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
-        BIND2(handle_channel_stop, _1, connectors));
+        BIND3(handle_channel_stop, _1, channel, connectors));
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
@@ -255,14 +263,14 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
     session::attach_handshake(channel, std::move(handler));
 }
 
-void session_outbound::handle_channel_start(const code&,
-    const channel::ptr&) NOEXCEPT
+void session_outbound::handle_channel_start(const code& LOG_ONLY(ec),
+    const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Verbose.
-    ////LOG("Outbound channel started: " << ec.message() << " ("
-    ////    << outbound_channel_count() << ")");
+    LOG("Outbound channel start [" << channel->authority() << "] "
+        << ec.message());
 }
 
 void session_outbound::attach_protocols(
@@ -271,19 +279,23 @@ void session_outbound::attach_protocols(
     session::attach_protocols(channel);
 }
 
-void session_outbound::handle_channel_stop(const code&,
+void session_outbound::handle_channel_stop(const code& LOG_ONLY(ec),
+    const channel::ptr& LOG_ONLY(channel),
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Verbose.
-    ////LOG("Outbound channel stopped: " << ec.message());
+    LOG("Outbound channel stop [" << channel->authority() << "] "
+        << ec.message());
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).
     start_connect(connectors);
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

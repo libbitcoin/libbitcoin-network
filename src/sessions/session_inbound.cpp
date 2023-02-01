@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/sessions/session_inbound.hpp>
 
-#include <cstddef>
 #include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -33,7 +32,12 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
+// Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_inbound::session_inbound(p2p& network) NOEXCEPT
   : session(network), tracker<session_inbound>(network.log())
@@ -83,6 +87,13 @@ void session_inbound::handle_started(const code& ec,
     // Create only one acceptor.
     const auto acceptor = create_acceptor();
     const auto error_code = acceptor->start(settings().inbound_port);
+
+    if (!error_code)
+    {
+        LOG("Accepting up to " << settings().inbound_connections
+            << " connections on port " << settings().inbound_port << ".");
+    }
+
     handler(error_code);
 
     if (!error_code)
@@ -113,9 +124,6 @@ void session_inbound::start_accept(const code& ec,
         LOG("Failed to start acceptor, " << ec.message());
         return;
     }
-
-    LOG("Accepting up to " << settings().inbound_connections
-        << " connections on port " << settings().inbound_port << ".");
 
     acceptor->accept(BIND3(handle_accept, _1, _2, acceptor));
 }
@@ -172,15 +180,42 @@ void session_inbound::handle_accept(const code& ec,
 void session_inbound::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) const NOEXCEPT
 {
-    session::attach_handshake(channel, std::move(handler));
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
+
+    // Weak reference safe as sessions outlive protocols.
+    const auto& self = *this;
+    const auto enable_relay = settings().enable_relay;
+    const auto enable_reject = settings().enable_reject;
+    const auto maximum_version = settings().protocol_maximum;
+    const auto maximum_services = settings().services_maximum;
+
+    // Inbound does not require any node services (e.g. bitnodes.io is zero).
+    constexpr auto minimum_services = messages::service::node_none;
+
+    // Protocol must pause the channel after receiving version and verack.
+
+    // Reject is supported starting at bip61 (70002) and later deprecated.
+    if (enable_reject && maximum_version >= messages::level::bip61)
+        channel->attach<protocol_version_70002>(self, minimum_services,
+            maximum_services, enable_relay)->shake(std::move(handler));
+
+    // Relay is supported starting at bip37 (70001).
+    else if (maximum_version >= messages::level::bip37)
+        channel->attach<protocol_version_70001>(self, minimum_services,
+            maximum_services, enable_relay)->shake(std::move(handler));
+
+    else
+        channel->attach<protocol_version_31402>(self, minimum_services,
+            maximum_services)->shake(std::move(handler));
 }
 
-void session_inbound::handle_channel_start(const code& ec,
-    const channel::ptr&) NOEXCEPT
+void session_inbound::handle_channel_start(const code& LOG_ONLY(ec),
+    const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Inbound channel started: " << ec.message() << " ("
-        << inbound_channel_count() << ")");
+    LOG("Inbound channel start [" << channel->authority() << "] "
+        << ec.message());
 }
 
 void session_inbound::attach_protocols(
@@ -189,13 +224,16 @@ void session_inbound::attach_protocols(
     session::attach_protocols(channel);
 }
 
-void session_inbound::handle_channel_stop(const code& ec,
-    const channel::ptr&) NOEXCEPT
+void session_inbound::handle_channel_stop(const code& LOG_ONLY(ec),
+    const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Inbound channel stopped: " << ec.message());
+    LOG("Inbound channel stop [" << channel->authority() << "] "
+        << ec.message());
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

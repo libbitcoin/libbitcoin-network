@@ -39,7 +39,12 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
+// Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session::session(p2p& network) NOEXCEPT
   : network_(network),
@@ -128,7 +133,7 @@ void session::start_channel(const channel::ptr& channel,
 void session::do_attach_handshake(const channel::ptr& channel,
     const result_handler& handshake) const NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
 
     attach_handshake(channel, move_copy(handshake));
@@ -140,8 +145,8 @@ void session::do_attach_handshake(const channel::ptr& channel,
 void session::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) const NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded(), "channel: attach, start");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
@@ -168,7 +173,7 @@ void session::attach_handshake(const channel::ptr& channel,
 void session::handle_handshake(const code& ec, const channel::ptr& channel,
     const result_handler& start) NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded(), "channel start");
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
 
     // Return to network context.
     boost::asio::post(network_.strand(),
@@ -227,7 +232,7 @@ void session::handle_channel_start(const code& ec, const channel::ptr& channel,
 void session::handle_channel_started(const code& ec,
     const channel::ptr& channel, const result_handler& started) NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded(), "channel started");
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
 
     // Return to network context.
     boost::asio::post(network_.strand(),
@@ -253,7 +258,7 @@ void session::do_handle_channel_started(const code& ec,
 
 void session::do_attach_protocols(const channel::ptr& channel) const NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded(), "channel: attach, resume");
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
     attach_protocols(channel);
@@ -265,7 +270,8 @@ void session::do_attach_protocols(const channel::ptr& channel) const NOEXCEPT
 // Override in derived sessions to attach protocols.
 void session::attach_protocols(const channel::ptr& channel) const NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
@@ -424,6 +430,8 @@ void session::saves(const messages::address_items& addresses,
     network_.saves(addresses, std::move(handler));
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

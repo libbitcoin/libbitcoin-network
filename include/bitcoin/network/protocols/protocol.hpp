@@ -33,19 +33,9 @@
 namespace libbitcoin {
 namespace network {
 
-#define PROTOCOL_ARGS(handler, args) \
-    std::forward<Handler>(handler), \
-    shared_from_base<Protocol>(), \
-    std::forward<Args>(args)...
 #define BOUND_PROTOCOL(handler, args) \
-    std::bind(PROTOCOL_ARGS(handler, args))
-
-#define PROTOCOL_ARGS_TYPE(handler, args) \
-    std::forward<Handler>(handler), \
-    std::shared_ptr<Protocol>(), \
-    std::forward<Args>(args)...
-#define BOUND_PROTOCOL_TYPE(handler, args) \
-    std::bind(PROTOCOL_ARGS_TYPE(handler, args))
+    std::bind(std::forward<Handler>(handler), shared_from_base<Protocol>(), \
+        std::forward<Args>(args)...)
 
 class session;
 
@@ -80,18 +70,16 @@ protected:
 
     /// Bind a method in the base or derived class (use BIND#).
     template <class Protocol, typename Handler, typename... Args>
-    auto bind(Handler&& handler, Args&&... args) NOEXCEPT ->
-        decltype(BOUND_PROTOCOL_TYPE(handler, args)) const
+    auto bind(Handler&& handler, Args&&... args) NOEXCEPT
     {
         return BOUND_PROTOCOL(handler, args);
     }
 
     /// Send a message instance to peer (use SEND#).
     template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(Message&& message, Handler&& handler, Args&&... args) NOEXCEPT
+    void send(const Message& message, Handler&& handler, Args&&... args) NOEXCEPT
     {
-        channel_->send<Message>(system::to_shared(std::forward<Message>(message)),
-            BOUND_PROTOCOL(handler, args));
+        channel_->send<Message>(message, BOUND_PROTOCOL(handler, args));
     }
 
     /// Subscribe to channel messages by type (use SUBSCRIBE#).
@@ -189,10 +177,7 @@ private:
     bool started_;
 };
 
-#undef PROTOCOL_ARGS
 #undef BOUND_PROTOCOL
-#undef PROTOCOL_ARGS_TYPE
-#undef BOUND_PROTOCOL_TYPE
 
 // See define.hpp for BIND# macros.
 
@@ -203,6 +188,8 @@ private:
 #define SEND3(message, method, p1, p2, p3) \
     send<CLASS>(message, &CLASS::method, p1, p2, p3)
 
+#define SUBSCRIBE1(message, method, p1) \
+    subscribe<CLASS, message>(&CLASS::method, p1)
 #define SUBSCRIBE2(message, method, p1, p2) \
     subscribe<CLASS, message>(&CLASS::method, p1, p2)
 #define SUBSCRIBE3(message, method, p1, p2, p3) \

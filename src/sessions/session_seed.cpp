@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/sessions/session_seed.hpp>
 
-#include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -146,6 +144,8 @@ void session_seed::start_seed(const config::endpoint& seed,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    LOG("Connecting to seed node [" << seed << "]");
+
     // Guard restartable connector (shutdown delay).
     if (stopped())
     {
@@ -157,7 +157,7 @@ void session_seed::start_seed(const config::endpoint& seed,
 }
 
 void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
-    const config::endpoint& seed, const count_ptr& counter,
+    const config::endpoint& LOG_ONLY(seed), const count_ptr& counter,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -182,7 +182,8 @@ void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
 void session_seed::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) const NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
@@ -192,27 +193,29 @@ void session_seed::attach_handshake(const channel::ptr& channel,
     // Seeding does not require or provide any node services or allow relay.
     constexpr auto minimum_services = messages::service::node_none;
     constexpr auto maximum_services = messages::service::node_none;
-    constexpr auto relay = false;
+    constexpr auto enable_relay = false;
 
     // Reject is supported starting at bip61 (70002) and later deprecated.
     if (enable_reject && maximum_version >= messages::level::bip61)
         channel->attach<protocol_version_70002>(self, minimum_services,
-            maximum_services, relay)->shake(std::move(handler));
+            maximum_services, enable_relay)->shake(std::move(handler));
 
     // Relay is supported starting at bip37 (70001).
     else if (maximum_version >= messages::level::bip37)
         channel->attach<protocol_version_70001>(self, minimum_services,
-            maximum_services, relay)->shake(std::move(handler));
+            maximum_services, enable_relay)->shake(std::move(handler));
 
     else
         channel->attach<protocol_version_31402>(self, minimum_services,
             maximum_services)->shake(std::move(handler));
 }
 
-void session_seed::handle_channel_start(const code&,
+void session_seed::handle_channel_start(const code& LOG_ONLY(ec),
     const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    LOG("Seed channel start [" << channel->authority() << "] " << ec.message());
 
     // Pend seeding channel.
     seeding_.insert(channel);
@@ -220,7 +223,7 @@ void session_seed::handle_channel_start(const code&,
 
 void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
@@ -250,7 +253,13 @@ void session_seed::handle_channel_stop(const code& ec, const count_ptr& counter,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Channel may be null if ec.
+    // handle_channel_stop invoked with null if ec.
+    if (channel)
+    {
+        LOG("Seed channel stop [" << channel->authority() << "]");
+    }
+
+    // handle_channel_stop invoked with null if ec.
     if (ec != error::service_stopped && !to_bool(seeding_.erase(channel)))
     {
         LOG("Unpend failed to locate seed channel (ok on stop).");

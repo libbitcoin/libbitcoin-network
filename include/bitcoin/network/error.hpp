@@ -19,9 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_ERROR_HPP
 #define LIBBITCOIN_NETWORK_ERROR_HPP
 
-#include <boost/system/error_code.hpp>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/boost.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -43,6 +42,7 @@ typedef boost::system::error_code boost_code;
 /// boost::system::errc::errc_t is the boost::system error condition enum.
 /// By comparing against conditions we obtain platform-independent error codes.
 typedef boost::system::errc::errc_t boost_error_t;
+typedef boost::asio::error::misc_errors asio_error_t;
 
 /// Asio failures are normalized to the error codes below.
 /// Stop by explicit call is mapped to channel_stopped or service_stopped
@@ -64,6 +64,7 @@ enum error_t
 
     // general I/O failures
     bad_stream,
+    peer_disconnect,
     insufficient_peer,
     protocol_violation,
     channel_overflow,
