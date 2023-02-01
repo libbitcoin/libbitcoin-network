@@ -43,6 +43,7 @@ typedef boost::system::error_code boost_code;
 /// boost::system::errc::errc_t is the boost::system error condition enum.
 /// By comparing against conditions we obtain platform-independent error codes.
 typedef boost::system::errc::errc_t boost_error_t;
+typedef boost::asio::error::misc_errors asio_error_t;
 
 /// Asio failures are normalized to the error codes below.
 /// Stop by explicit call is mapped to channel_stopped or service_stopped

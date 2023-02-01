@@ -152,7 +152,8 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
         return error::address_in_use;
 
     // I/O (bad_file_descriptor if socket is not initialized)
-    if (ec == boost_error_t::bad_file_descriptor || 
+    if (ec == asio_error_t::eof ||
+        ec == boost_error_t::bad_file_descriptor ||
         ec == boost_error_t::bad_message ||
         ec == boost_error_t::illegal_byte_sequence ||
         ec == boost_error_t::io_error ||
