@@ -43,9 +43,7 @@ const uint32_t inventory::version_maximum = level::maximum_protocol;
 // static
 inventory inventory::factory(hashes&& hashes, type_id type) NOEXCEPT
 {
-    static no_fill_allocator<inventory_item> no_fill_allocator{};
-
-    inventory_items items(no_fill_allocator);
+    inventory_items items{};
     items.resize(hashes.size());
 
     std::transform(hashes.begin(), hashes.end(), items.begin(),
@@ -59,9 +57,7 @@ inventory inventory::factory(hashes&& hashes, type_id type) NOEXCEPT
 
 inventory inventory::factory(const hashes& hashes, type_id type) NOEXCEPT
 {
-    static no_fill_allocator<inventory_item> no_fill_allocator{};
-
-    inventory_items items(no_fill_allocator);
+    inventory_items items{};
     items.resize(hashes.size());
 
     std::transform(hashes.begin(), hashes.end(), items.begin(),
