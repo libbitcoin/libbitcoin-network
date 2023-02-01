@@ -98,7 +98,7 @@ void p2p::start(result_handler&& handler) NOEXCEPT
 
 void p2p::do_start(const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "attach_manual_session");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // manual_ doubles as the closed indicator.
     manual_ = attach_manual_session();
@@ -107,7 +107,7 @@ void p2p::do_start(const result_handler& handler) NOEXCEPT
 
 void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "hosts_");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // Manual sessions cannot be bypassed.
     if (ec)
@@ -142,7 +142,7 @@ void p2p::run(result_handler&& handler) NOEXCEPT
 
 void p2p::do_run(const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "manual_, attach_inbound_session");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (closed())
     {
@@ -194,7 +194,7 @@ void p2p::close() NOEXCEPT
 
 void p2p::do_close() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "do_stop (multiple members)");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // manual_ is also the closed indicator.
     // Release reference to manual session (also held by stop subscriber).
@@ -239,7 +239,7 @@ void p2p::subscribe_connect(channel_handler&& handler,
 void p2p::do_subscribe_connect(const channel_handler& handler,
     const result_handler& complete) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "channel_subscriber_");
+    BC_ASSERT_MSG(stranded(), "strand");
     channel_subscriber_.subscribe(move_copy(handler));
     complete(error::success);
 }
@@ -247,7 +247,7 @@ void p2p::do_subscribe_connect(const channel_handler& handler,
 // private
 void p2p::subscribe_close(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "stop_subscriber_");
+    BC_ASSERT_MSG(stranded(), "strand");
     stop_subscriber_.subscribe(std::move(handler));
 }
 
@@ -263,7 +263,7 @@ void p2p::subscribe_close(result_handler&& handler,
 void p2p::do_subscribe_close(const result_handler& handler,
     const result_handler& complete) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "stop_subscriber_");
+    BC_ASSERT_MSG(stranded(), "strand");
     stop_subscriber_.subscribe(move_copy(handler));
     complete(error::success);
 }
@@ -279,7 +279,7 @@ void p2p::connect(const config::endpoint& endpoint) NOEXCEPT
 
 void p2p::do_connect(const config::endpoint& endpoint) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "manual_");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (manual_)
         manual_->connect(endpoint);
@@ -296,7 +296,7 @@ void p2p::connect(const config::endpoint& endpoint,
 void p2p::do_connect_handled(const config::endpoint& endpoint,
     const channel_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "manual_");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (manual_)
         manual_->connect(endpoint, move_copy(handler));
@@ -311,7 +311,7 @@ void p2p::do_connect_handled(const config::endpoint& endpoint,
 bool p2p::closed() const NOEXCEPT
 {
     // manual_ doubles as the closed indicator.
-    BC_ASSERT_MSG(stranded(), "manual_");
+    BC_ASSERT_MSG(stranded(), "strand");
     return !manual_;
 }
 
@@ -374,7 +374,7 @@ void p2p::fetch(hosts::address_item_handler&& handler) const NOEXCEPT
 
 void p2p::do_fetch(const hosts::address_item_handler& handler) const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "hosts_");
+    BC_ASSERT_MSG(stranded(), "strand");
     hosts_.fetch(handler);
 }
 
@@ -387,14 +387,14 @@ void p2p::fetches(hosts::address_items_handler&& handler) const NOEXCEPT
 void p2p::do_fetches(
     const hosts::address_items_handler& handler) const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "hosts_");
+    BC_ASSERT_MSG(stranded(), "strand");
     hosts_.fetch(handler);
 }
 
 void p2p::dump(const messages::address_item& host,
     result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "hosts_");
+    BC_ASSERT_MSG(stranded(), "strand");
     hosts_.remove(host);
     handler(error::success);
 }
@@ -409,7 +409,7 @@ void p2p::save(const messages::address_item& host,
 void p2p::do_save(const messages::address_item& host,
     const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "hosts_");
+    BC_ASSERT_MSG(stranded(), "strand");
     hosts_.store(host);
     handler(error::success);
 }
@@ -425,7 +425,7 @@ void p2p::saves(const messages::address_items& hosts,
 void p2p::do_saves(const messages::address_items& hosts,
     const result_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "hosts_");
+    BC_ASSERT_MSG(stranded(), "strand");
     hosts_.store(hosts);
     handler(error::success);
 }
@@ -436,20 +436,20 @@ void p2p::do_saves(const messages::address_items& hosts,
 // Preclude pending redundant channel nonces.
 bool p2p::pend(uint64_t nonce) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "nonces_");
+    BC_ASSERT_MSG(stranded(), "strand");
     return nonces_.insert(nonce).second;
 }
 
 bool p2p::unpend(uint64_t nonce) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "nonces_");
+    BC_ASSERT_MSG(stranded(), "strand");
     return to_bool(nonces_.erase(nonce));
 }
 
 code p2p::store(const channel::ptr& channel, bool notify,
     bool inbound) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "do_store (multiple members)");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // Cannot allow any storage once stopped, or do_stop will not free it.
     if (closed())
@@ -489,7 +489,7 @@ code p2p::store(const channel::ptr& channel, bool notify,
 
 code p2p::unstore(const channel::ptr& channel, bool inbound) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "channels_, authorities_");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // Ok if not found, as the channel may not have been stored.
     if (is_zero(channels_.erase(channel)))
@@ -520,25 +520,25 @@ code p2p::unstore(const channel::ptr& channel, bool inbound) NOEXCEPT
 
 session_seed::ptr p2p::attach_seed_session() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
+    BC_ASSERT_MSG(stranded(), "strand");
     return attach<session_seed>(*this);
 }
 
 session_manual::ptr p2p::attach_manual_session() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
+    BC_ASSERT_MSG(stranded(), "strand");
     return attach<session_manual>(*this);
 }
 
 session_inbound::ptr p2p::attach_inbound_session() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
+    BC_ASSERT_MSG(stranded(), "strand");
     return attach<session_inbound>(*this);
 }
 
 session_outbound::ptr p2p::attach_outbound_session() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "attach (subscribe_close)");
+    BC_ASSERT_MSG(stranded(), "strand");
     return attach<session_outbound>(*this);
 }
 
