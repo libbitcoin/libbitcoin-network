@@ -47,7 +47,7 @@ struct BCT_API compact_transactions
     size_t size(uint32_t version, bool witness) const NOEXCEPT;
 
     system::hash_digest block_hash;
-    system::chain::transactions transactions;
+    system::chain::transaction_cptrs transaction_ptrs;
 };
 
 } // namespace messages
