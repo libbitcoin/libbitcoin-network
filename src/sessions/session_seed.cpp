@@ -67,21 +67,21 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 
     if (is_zero(settings().outbound_connections))
     {
-        LOG("Not configured for outbound connections.");
+        LOG("Bypassed seeding because no outbound connections configured.");
         handler(error::bypassed);
         return;
     }
 
     if (address_count() >= settings().minimum_address_count())
     {
-        LOG("Bypassed seeding for existing addresses.");
+        LOG("Bypassed seeding because of sufficient address quantity.");
         handler(error::bypassed);
         return;
     }
 
     if (is_zero(settings().host_pool_capacity) || settings().seeds.empty())
     {
-        LOG("Not configured to populate address pool.");
+        LOG("Bypassed seeding because of no address pool capacity.");
         handler(error::seeding_unsuccessful);
         return;
     }
