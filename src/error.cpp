@@ -43,6 +43,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // general I/O failures
     { bad_stream, "bad data stream" },
+    { peer_disconnect, "peer disconnect" },
     { insufficient_peer, "insufficient peer" },
     { protocol_violation, "protocol violation" },
     { channel_overflow, "channel overflow" },
@@ -108,10 +109,14 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
     if (ec == boost_error_t::success)
         return error::success;
 
-    // termination
+    // self termination
     if (ec == boost_error_t::connection_aborted ||
         ec == boost_error_t::operation_canceled)
         return error::operation_canceled;
+
+    // peer termination
+    if (ec == asio_error_t::eof)
+        return error::peer_disconnect;
 
     // network
     if (ec == boost_error_t::connection_refused ||
@@ -152,8 +157,7 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
         return error::address_in_use;
 
     // I/O (bad_file_descriptor if socket is not initialized)
-    if (ec == asio_error_t::eof ||
-        ec == boost_error_t::bad_file_descriptor ||
+    if (ec == boost_error_t::bad_file_descriptor ||
         ec == boost_error_t::bad_message ||
         ec == boost_error_t::illegal_byte_sequence ||
         ec == boost_error_t::io_error ||

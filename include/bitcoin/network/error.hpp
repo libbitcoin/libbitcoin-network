@@ -19,9 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_ERROR_HPP
 #define LIBBITCOIN_NETWORK_ERROR_HPP
 
-#include <boost/system/error_code.hpp>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/boost.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -65,6 +64,7 @@ enum error_t
 
     // general I/O failures
     bad_stream,
+    peer_disconnect,
     insufficient_peer,
     protocol_violation,
     channel_overflow,
