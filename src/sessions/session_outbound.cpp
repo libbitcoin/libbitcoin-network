@@ -111,8 +111,8 @@ void session_outbound::handle_started(const code& ec,
         start_connect(connectors);
     }
 
-    LOG("Creating up to " << settings().outbound_connections
-        << " outbound connections.");
+    LOG("Creating " << settings().outbound_connections << " connections "
+        << settings().connect_batch_size << " at a time.");
 
     // This is the end of the start sequence, does not indicate connect status.
     handler(error::success);
