@@ -173,7 +173,7 @@ void session_manual::attach_handshake(const channel::ptr& channel,
 }
 
 void session_manual::handle_channel_start(const code& ec,
-    const endpoint& peer, const channel::ptr& channel,
+    const endpoint& LOG_ONLY(peer), const channel::ptr& channel,
     const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -190,8 +190,9 @@ void session_manual::attach_protocols(
     session::attach_protocols(channel);
 }
 
-void session_manual::handle_channel_stop(const code& ec, const endpoint& peer,
-    const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
+void session_manual::handle_channel_stop(const code& LOG_ONLY(ec),
+    const endpoint& peer, const connector::ptr& connector,
+    const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Manual channel stop [" << peer << "] " << ec.message());

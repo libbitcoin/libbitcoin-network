@@ -210,7 +210,7 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
             maximum_services)->shake(std::move(handler));
 }
 
-void session_inbound::handle_channel_start(const code& ec,
+void session_inbound::handle_channel_start(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -224,7 +224,7 @@ void session_inbound::attach_protocols(
     session::attach_protocols(channel);
 }
 
-void session_inbound::handle_channel_stop(const code& ec,
+void session_inbound::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");

@@ -157,7 +157,7 @@ void session_seed::start_seed(const config::endpoint& seed,
 }
 
 void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
-    const config::endpoint& seed, const count_ptr& counter,
+    const config::endpoint& LOG_ONLY(seed), const count_ptr& counter,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
