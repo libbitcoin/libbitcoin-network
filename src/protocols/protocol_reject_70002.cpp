@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol_reject_70002.hpp>
 
-#include <cstdint>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>

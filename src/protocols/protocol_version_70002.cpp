@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 
-#include <cstdint>
-#include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>

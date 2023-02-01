@@ -70,7 +70,8 @@ private:
         const connectors_ptr& connectors) NOEXCEPT;
 
     void handle_channel_start(const code& ec, const channel::ptr& channel) NOEXCEPT;
-    void handle_channel_stop(const code& ec, const connectors_ptr& connectors) NOEXCEPT;
+    void handle_channel_stop(const code& ec, const channel::ptr& channel,
+        const connectors_ptr& connectors) NOEXCEPT;
 
     void do_one(const code& ec, const config::authority& host,
         const connector::ptr& connector, const channel_handler& handler) NOEXCEPT;

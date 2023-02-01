@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol.hpp>
 
-#include <cstdint>
-#include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/boost.hpp>

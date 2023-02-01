@@ -19,8 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_DEFINE_HPP
 #define LIBBITCOIN_NETWORK_DEFINE_HPP
 
-#include <iostream>
-#include <memory>
 #include <bitcoin/system.hpp>
 
 // We use the generic helper definitions in libbitcoin to define BCT_API

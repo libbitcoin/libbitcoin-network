@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/sessions/session_seed.hpp>
 
-#include <cstddef>
-#include <cstdint>
 #include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -146,6 +144,8 @@ void session_seed::start_seed(const config::endpoint& seed,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    LOG("Connecting to seed node [" << seed << "]");
+
     // Guard restartable connector (shutdown delay).
     if (stopped())
     {
@@ -210,10 +210,12 @@ void session_seed::attach_handshake(const channel::ptr& channel,
             maximum_services)->shake(std::move(handler));
 }
 
-void session_seed::handle_channel_start(const code&,
+void session_seed::handle_channel_start(const code& LOG_ONLY(ec),
     const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    LOG("Seed channel start [" << channel->authority() << "] " << ec.message());
 
     // Pend seeding channel.
     seeding_.insert(channel);
@@ -251,7 +253,13 @@ void session_seed::handle_channel_stop(const code& ec, const count_ptr& counter,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Channel may be null if ec.
+    // handle_channel_stop invoked with null if ec.
+    if (channel)
+    {
+        LOG("Seed channel stop [" << channel->authority() << "]");
+    }
+
+    // handle_channel_stop invoked with null if ec.
     if (ec != error::service_stopped && !to_bool(seeding_.erase(channel)))
     {
         LOG("Unpend failed to locate seed channel (ok on stop).");

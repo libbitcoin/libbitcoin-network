@@ -18,10 +18,7 @@
  */
 #include <bitcoin/network/sessions/session_manual.hpp>
 
-#include <cstddef>
-#include <cstdint>
 #include <functional>
-#include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -38,7 +35,12 @@ using namespace bc::system;
 using namespace config;
 using namespace std::placeholders;
 
+// Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_manual::session_manual(p2p& network) NOEXCEPT
   : session(network), tracker<session_manual>(network.log())
@@ -175,7 +177,7 @@ void session_manual::handle_channel_start(const code& ec,
     const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Manual channel started: " << ec.message() << " [" << peer << "]");
+    LOG("Manual channel start [" << peer << "] " << ec.message());
 
     // Notify upon each connection attempt.
     handler(ec, channel);
@@ -192,13 +194,15 @@ void session_manual::handle_channel_stop(const code& ec, const endpoint& peer,
     const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Manual channel stopped: " << ec.message() << " [" << peer << "]");
+    LOG("Manual channel stop [" << peer << "] " << ec.message());
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).
     start_connect(peer, connector, move_copy(handler));
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

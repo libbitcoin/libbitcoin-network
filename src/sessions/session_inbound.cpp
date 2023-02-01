@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/sessions/session_inbound.hpp>
 
-#include <cstddef>
 #include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -33,7 +32,12 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
+// Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_inbound::session_inbound(p2p& network) NOEXCEPT
   : session(network), tracker<session_inbound>(network.log())
@@ -83,6 +87,13 @@ void session_inbound::handle_started(const code& ec,
     // Create only one acceptor.
     const auto acceptor = create_acceptor();
     const auto error_code = acceptor->start(settings().inbound_port);
+
+    if (!error_code)
+    {
+        LOG("Accepting up to " << settings().inbound_connections
+            << " connections on port " << settings().inbound_port << ".");
+    }
+
     handler(error_code);
 
     if (!error_code)
@@ -93,9 +104,6 @@ void session_inbound::handle_started(const code& ec,
         });
 
         start_accept(error::success, acceptor);
-
-        LOG("Accepting up to " << settings().inbound_connections
-            << " connections on port " << settings().inbound_port << ".");
     }
 }
 
@@ -203,10 +211,11 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
 }
 
 void session_inbound::handle_channel_start(const code& ec,
-    const channel::ptr&) NOEXCEPT
+    const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Inbound channel started: " << ec.message());
+    LOG("Inbound channel start [" << channel->authority() << "] "
+        << ec.message());
 }
 
 void session_inbound::attach_protocols(
@@ -216,12 +225,15 @@ void session_inbound::attach_protocols(
 }
 
 void session_inbound::handle_channel_stop(const code& ec,
-    const channel::ptr&) NOEXCEPT
+    const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Inbound channel stopped: " << ec.message());
+    LOG("Inbound channel stop [" << channel->authority() << "] "
+        << ec.message());
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network
