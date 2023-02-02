@@ -220,7 +220,6 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
         return;
     }
 
-    // TODO: shrink buffer on some event.
     // Buffer reserve increases with each larger message (up to maximum).
     payload_buffer_.resize(head->payload_size);
 
@@ -292,39 +291,63 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     read_heading();
 }
 
-// Message send sequence.
+// Send cycle (send continues until queue is empty).
 // ----------------------------------------------------------------------------
+// stackoverflow.com/questions/7754695/boost-asio-async-write-how-to-not-
+// interleaving-async-write-calls
 
-void proxy::send_bytes(const system::chunk_ptr& payload,
+// protected
+void proxy::write(const system::chunk_ptr& payload,
     result_handler&& handler) NOEXCEPT
 {
-    // chunk_ptr is copied into std::bind closure to keep data alive. 
-    // Post handle_send to strand upon stop, error, or buffer fully sent.
-    socket_->write(*payload,
-        std::bind(&proxy::handle_send,
-            shared_from_this(), _1, _2, payload, std::move(handler)));
+    BC_ASSERT_MSG(stranded(), "strand");
+    queue_.emplace_back(payload, handler);
+
+    // TODO: build DoS protection around backlog rate.
+    backlog_ = ceilinged_add(backlog_.load(), queue_.back().data->size());
+
+    LOG("Queue for [" << authority() << "]: " << queue_.size()
+        << " (" << backlog_.load() << " bytes)");
+
+    // Start the loop if it wasn't already started.
+    if (is_one(queue_.size()))
+        write();
 }
 
-// static
-std::string proxy::extract_command(const system::data_chunk& payload) NOEXCEPT
+// private
+void proxy::write() NOEXCEPT
 {
-    if (payload.size() < sizeof(uint32_t) + heading::command_size)
-        return "<unknown>";
+    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(!queue_.empty(), "queue");
 
-    std::string out;
-    auto at = std::next(payload.begin(), sizeof(uint32_t));
-    const auto end = std::next(at, heading::command_size);
-    while (at != end && *at != 0x00)
-        out.push_back(*at++);
+    // guarded by do_write(is_one).
+    // All handlers must be invoked, so continue regardless of error state.
+    auto& next = queue_.front();
 
-    return out;
+    // chunk_ptr is copied into std::bind closure to keep data alive. 
+    socket_->write(*next.data,
+        std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, next.data, std::move(next.handler)));
 }
 
-void proxy::handle_send(const code& ec, size_t,
+void proxy::handle_write(const code& ec, size_t,
     const system::chunk_ptr& LOG_ONLY(payload),
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(!queue_.empty(), "queue");
+
+    // guarded by do_write(is_one).
+    backlog_ = floored_subtract(backlog_.load(), queue_.front().data->size());
+    queue_.pop_front();
+
+    LOG("Dequeue for [" << authority() << "]: " << queue_.size()
+        << " (" << backlog_.load() << " bytes)");
+
+    // All handlers must be invoked, so continue regardless of error state.
+    // Handlers are invoked in queued order, after all outstanding complete.
+    if (!queue_.empty())
+        write();
 
     if (ec == error::channel_stopped)
     {
@@ -350,6 +373,19 @@ void proxy::handle_send(const code& ec, size_t,
     handler(ec);
 }
 
+// static
+std::string proxy::extract_command(const system::data_chunk& payload) NOEXCEPT
+{
+    if (payload.size() < sizeof(uint32_t) + heading::command_size)
+        return "<unknown>";
+
+    std::string out{};
+    auto at = std::next(payload.begin(), sizeof(uint32_t));
+    const auto end = std::next(at, heading::command_size);
+    while (at != end && *at != 0x00) out.push_back(*at++);
+    return out;
+}
+
 // Properties.
 // ----------------------------------------------------------------------------
 
@@ -361,6 +397,11 @@ asio::strand& proxy::strand() NOEXCEPT
 bool proxy::stranded() const NOEXCEPT
 {
     return socket_->stranded();
+}
+
+size_t proxy::backlog() const NOEXCEPT
+{
+    return backlog_.load(std::memory_order_relaxed);
 }
 
 const config::authority& proxy::authority() const NOEXCEPT

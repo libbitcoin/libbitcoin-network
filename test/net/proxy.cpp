@@ -444,10 +444,15 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected__expected)
         promise.set_value(ec);
     };
 
-    proxy_ptr->send<messages::ping>(messages::ping{ 42 }, handler);
+    boost::asio::post(proxy_ptr->strand(), [&]()
+    {
+        proxy_ptr->send<messages::ping>(messages::ping{ 42 }, handler);
+    });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
+
+    proxy_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(proxy__send__not_connected_move__expected)
@@ -458,15 +463,19 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected_move__expected)
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<code> promise;
-    proxy_ptr->send<messages::ping>(messages::ping{ 42 }, [&](code ec)
+    boost::asio::post(proxy_ptr->strand(), [&]()
     {
-        // Send failure causes stop before handler invoked.
-        BOOST_REQUIRE(proxy_ptr->stopped());
-        promise.set_value(ec);
+        proxy_ptr->send<messages::ping>(messages::ping{ 42 }, [&](code ec)
+        {
+            // Send failure causes stop before handler invoked.
+            BOOST_REQUIRE(proxy_ptr->stopped());
+            promise.set_value(ec);
+        });
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
+
     proxy_ptr.reset();
 }
 
