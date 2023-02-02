@@ -69,7 +69,11 @@ static bool ip_equal(const messages::ip_address& left,
 static bool net_equal(const messages::address_item& left,
     const messages::address_item& right)
 {
-    return ip_equal(left.ip, right.ip) && (left.port == right.port);
+    return
+        (left.timestamp == right.timestamp) &&
+        (left.services == right.services) &&
+        ip_equal(left.ip, right.ip) &&
+        (left.port == right.port);
 }
 
 // construct
@@ -321,48 +325,59 @@ BOOST_AUTO_TEST_CASE(authority__to_hostname__ipv6_address__ipv6_compressed)
 
 // to_address_item
 
-BOOST_AUTO_TEST_CASE(authority__to_address_item__default__ipv6_unspecified)
+BOOST_AUTO_TEST_CASE(authority__to_address_item1__default__ipv6_unspecified)
 {
-    const messages::address_item expected_address
+    const messages::address_item expected
     {
         0, 0, test_unspecified_ip_address, 0,
     };
 
     const authority host;
-    BOOST_REQUIRE(net_equal(host.to_address_item(), expected_address));
+    BOOST_REQUIRE(net_equal(host.to_address_item(), expected));
 }
 
-BOOST_AUTO_TEST_CASE(authority__to_address_item__ipv4_mapped_ip_address__ipv4)
+BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv4_mapped_ip_address__ipv4)
 {
-    const messages::address_item expected_address
+    const messages::address_item expected
     {
         0, 0, test_mapped_ip_address, 42,
     };
 
-    const authority host(expected_address.ip, expected_address.port);
-    BOOST_REQUIRE(net_equal(host.to_address_item(), expected_address));
+    const authority host(expected.ip, expected.port);
+    BOOST_REQUIRE(net_equal(host.to_address_item(), expected));
 }
 
-BOOST_AUTO_TEST_CASE(authority__to_address_item__ipv4_compatible_ip_address__ipv6_alternative)
+BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv4_compatible_ip_address__ipv6_alternative)
 {
-    const messages::address_item expected_address
+    const messages::address_item expected
     {
         0, 0, test_compatible_ip_address, 42,
     };
 
-    const authority host(expected_address.ip, expected_address.port);
-    BOOST_REQUIRE(net_equal(host.to_address_item(), expected_address));
+    const authority host(expected.ip, expected.port);
+    BOOST_REQUIRE(net_equal(host.to_address_item(), expected));
 }
 
-BOOST_AUTO_TEST_CASE(authority__to_address_item__ipv6_address__ipv6_compressed)
+BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv6_address__ipv6_compressed)
 {
-    const messages::address_item expected_address
+    const messages::address_item expected
     {
         0, 0, test_ipv6_address, 42,
     };
 
-    const authority host(expected_address.ip, expected_address.port);
-    BOOST_REQUIRE(net_equal(host.to_address_item(), expected_address));
+    const authority host(expected.ip, expected.port);
+    BOOST_REQUIRE(net_equal(host.to_address_item(), expected));
+}
+
+BOOST_AUTO_TEST_CASE(authority__to_address_item2__parameters__expected)
+{
+    const messages::address_item expected
+    {
+        42, 24, test_ipv6_address, 42,
+    };
+
+    const authority host(expected.ip, expected.port);
+    BOOST_REQUIRE(net_equal(host.to_address_item(expected.timestamp, expected.services), expected));
 }
 
 // to_string

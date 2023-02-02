@@ -51,7 +51,7 @@ public:
     using channel::channel;
 
     // Capture last sent payload.
-    void send_bytes(const system::chunk_ptr& payload,
+    void write(const system::chunk_ptr& payload,
         result_handler&&) NOEXCEPT override
     {
         payload_ = payload;

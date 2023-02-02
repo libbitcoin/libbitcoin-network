@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2021 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,25 +16,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/message.hpp>
+#include "../test.hpp"
 
-#include <bitcoin/system.hpp>
-
-namespace libbitcoin {
-namespace network {
-namespace messages {
+BOOST_AUTO_TEST_SUITE(message_tests)
 
 using namespace bc::system;
+using namespace bc::network::messages;
 
-constexpr auto empty_checksum = from_little_endian<uint32_t>(sha256::double_hash(
-    sha256::ablocks_t<0>{}));
+constexpr auto empty_checksum = 0xe2e0f65d_u32;
+static_assert(from_little_endian<uint32_t>(sha256::double_hash(sha256::ablocks_t<0>{})) == empty_checksum);
 
-uint32_t network_checksum(const data_slice& data) NOEXCEPT
+BOOST_AUTO_TEST_CASE(message__network_checksum__empty_message__expected)
 {
-    return data.empty() ? empty_checksum :
-        from_little_endian<uint32_t>(bitcoin_hash(data.size(), data.data()));
+    BOOST_REQUIRE_EQUAL(network_checksum(data_array<0>{}), empty_checksum);
 }
 
-} // namespace messages
-} // namespace network
-} // namespace libbitcoin
+BOOST_AUTO_TEST_SUITE_END()

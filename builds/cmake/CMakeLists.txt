@@ -303,6 +303,7 @@ if (with-tests)
         "../../test/messages/inventory_item.cpp"
         "../../test/messages/memory_pool.cpp"
         "../../test/messages/merkle_block.cpp"
+        "../../test/messages/message.cpp"
         "../../test/messages/not_found.cpp"
         "../../test/messages/ping.cpp"
         "../../test/messages/pong.cpp"

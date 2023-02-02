@@ -58,6 +58,7 @@ inline deadline::ptr expiration(const logger& log, asio::strand& strand,
 channel::channel(const logger& log, const socket::ptr& socket,
     const settings& settings) NOEXCEPT
   : proxy(socket),
+    rate_limit_(settings.rate_limit),
     maximum_payload_(payload_maximum(settings)),
     protocol_magic_(settings.identifier),
     channel_nonce_(pseudo_random::next<uint64_t>(1, max_uint64)),
@@ -175,6 +176,7 @@ void channel::signal_activity() NOEXCEPT
 
 // Timers.
 // ----------------------------------------------------------------------------
+// TODO: build DoS protection around rate_limit_, backlog(), total(), and time.
 
 // Called from start or strand.
 // A restarted timer invokes completion handler with error::operation_canceled.

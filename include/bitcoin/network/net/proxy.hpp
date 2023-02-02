@@ -19,6 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_NET_PROXY_HPP
 #define LIBBITCOIN_NETWORK_NET_PROXY_HPP
 
+#include <atomic>
+#include <deque>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -33,9 +35,9 @@ namespace libbitcoin {
 namespace network {
 
 /// Abstract, thread safe except for:
-/// * pause/resume/paused/ must be called from channel strand.
+/// * send/pause/resume/paused must be called from channel strand.
 /// * subscribe/subscribe_stop must be called from channel strand.
-/// notify/send_bytes are protected/virtual for test access only.
+/// notify/write are protected/virtual for test access only.
 /// Handles all channel communication, error handling, and logging.
 class BCT_API proxy
   : public enable_shared_from_base<proxy>, public reporter
@@ -48,12 +50,12 @@ public:
     typedef subscriber<const code&> stop_subscriber;
     typedef std::function<void(const code&)> result_handler;
 
-    /// Send a message to the peer.
+    /// Send a message to the peer (requires strand).
     template <class Message>
     void send(const Message& message, result_handler&& complete) NOEXCEPT
     {
-        // Serializes message to a chunk pointer for type-agnostic send.
-        send_bytes(messages::serialize(message, protocol_magic(), version()),
+        BC_ASSERT_MSG(stranded(), "strand");
+        write(messages::serialize(message, protocol_magic(), version()),
             std::move(complete));
     }
 
@@ -90,6 +92,12 @@ public:
     /// The proxy (socket) is stopped.
     bool stopped() const NOEXCEPT;
 
+    /// The number of bytes in the write backlog.
+    virtual uint64_t backlog() const NOEXCEPT;
+
+    /// The total number of bytes queued/sent to the peer.
+    virtual uint64_t total() const NOEXCEPT;
+
     /// The authority of the peer.
     const config::authority& authority() const NOEXCEPT;
 
@@ -108,7 +116,7 @@ protected:
     virtual void signal_activity() NOEXCEPT = 0;
 
     /// Send bytes to the peer.
-    virtual void send_bytes(const system::chunk_ptr& payload,
+    virtual void write(const system::chunk_ptr& payload,
         result_handler&& handler) NOEXCEPT;
 
     /// Notify subscribers of a new message (requires strand).
@@ -120,6 +128,7 @@ protected:
 
 private:
     typedef messages::heading::ptr heading_ptr;
+    typedef std::deque<std::pair<system::chunk_ptr, result_handler>> queue;
 
     void do_stop(const code& ec) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
@@ -129,24 +138,31 @@ private:
     void handle_read_heading(const code& ec, size_t heading_size) NOEXCEPT;
     void handle_read_payload(const code& ec, size_t payload_size,
         const heading_ptr& head) NOEXCEPT;
-    void handle_send(const code& ec, size_t bytes,
+
+    void write() NOEXCEPT;
+    void handle_write(const code& ec, size_t bytes,
         const system::chunk_ptr& payload,
         const result_handler& handler) NOEXCEPT;
 
     // This is thread safe.
     socket::ptr socket_;
 
-    // This is not thread safe.
-    bool paused_;
-
     // These are protected by the strand.
+    bool paused_;
     pump pump_subscriber_;
     stop_subscriber stop_subscriber_;
 
-    // These are protected by read header/payload ordering (strand).
+    // These are protected by read ordering (strand).
     system::data_chunk payload_buffer_;
     system::data_array<messages::heading::size()> heading_buffer_;
     system::read::bytes::copy heading_reader_;
+
+    // These are thread safe.
+    std::atomic<uint64_t> total_{};
+    std::atomic<uint64_t> backlog_{};
+
+    // This is protected by write ordering (strand).
+    queue queue_{};
 };
 
 } // namespace network

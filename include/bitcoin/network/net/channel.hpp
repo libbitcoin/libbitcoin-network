@@ -108,6 +108,7 @@ private:
     // Proxy base class is not fully thread safe.
 
     // These are thread safe.
+    const uint32_t rate_limit_;
     const size_t maximum_payload_;
     const uint32_t protocol_magic_;
     const uint64_t channel_nonce_;

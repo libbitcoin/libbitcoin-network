@@ -346,8 +346,8 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_one_batc
     set.seeds.clear();
 
     // Cache one address to preclude seeding.
-    set.hosts_file = TEST_NAME;
-    system::ofstream file(set.hosts_file);
+    set.path = TEST_NAME;
+    system::ofstream file(set.path);
     file << config::authority{ "1.2.3.4:42" } << std::endl;
 
     // Configure one connection with one batch.

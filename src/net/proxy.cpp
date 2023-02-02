@@ -30,7 +30,12 @@
 namespace libbitcoin {
 namespace network {
 
+// Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 using namespace bc::system;
 using namespace messages;
@@ -215,7 +220,6 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
         return;
     }
 
-    // TODO: shrink buffer on some event.
     // Buffer reserve increases with each larger message (up to maximum).
     payload_buffer_.resize(head->payload_size);
 
@@ -287,39 +291,63 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     read_heading();
 }
 
-// Message send sequence.
+// Send cycle (send continues until queue is empty).
 // ----------------------------------------------------------------------------
+// stackoverflow.com/questions/7754695/boost-asio-async-write-how-to-not-
+// interleaving-async-write-calls
 
-void proxy::send_bytes(const system::chunk_ptr& payload,
+void proxy::write(const system::chunk_ptr& payload,
     result_handler&& handler) NOEXCEPT
 {
-    // chunk_ptr is copied into std::bind closure to keep data alive. 
-    // Post handle_send to strand upon stop, error, or buffer fully sent.
-    socket_->write(*payload,
-        std::bind(&proxy::handle_send,
-            shared_from_this(), _1, _2, payload, std::move(handler)));
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Clang no like emplace here.
+    queue_.push_back(std::make_pair(payload, std::move(handler)));
+    total_ = ceilinged_add(total_.load(), payload->size());
+    backlog_ = ceilinged_add(backlog_.load(), payload->size());
+
+    // Verbose.
+    LOG("Queue for [" << authority() << "]: " << queue_.size()
+        << " (" << backlog_.load() << " of " << total_.load() << "bytes)");
+
+    // Start the loop if it wasn't already started.
+    if (is_one(queue_.size()))
+        write();
 }
 
-// static
-std::string proxy::extract_command(const system::data_chunk& payload) NOEXCEPT
+void proxy::write() NOEXCEPT
 {
-    if (payload.size() < sizeof(uint32_t) + heading::command_size)
-        return "<unknown>";
+    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(!queue_.empty(), "queue");
 
-    std::string out;
-    auto at = std::next(payload.begin(), sizeof(uint32_t));
-    const auto end = std::next(at, heading::command_size);
-    while (at != end && *at != 0x00)
-        out.push_back(*at++);
+    // guarded by do_write(is_one).
+    auto& job = queue_.front();
 
-    return out;
+    // chunk_ptr is copied into std::bind closure to keep data alive. 
+    socket_->write(*job.first,
+        std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, job.first, std::move(job.second)));
 }
 
-void proxy::handle_send(const code& ec, size_t,
+void proxy::handle_write(const code& ec, size_t,
     const system::chunk_ptr& LOG_ONLY(payload),
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(!queue_.empty(), "queue");
+
+    // guarded by do_write(is_one).
+    backlog_ = floored_subtract(backlog_.load(), queue_.front().first->size());
+    queue_.pop_front();
+
+    // Verbose.
+    ////LOG("Dequeue for [" << authority() << "]: " << queue_.size()
+    ////    << " (" << backlog_.load() << " bytes)");
+
+    // All handlers must be invoked, so continue regardless of error state.
+    // Handlers are invoked in queued order, after all outstanding complete.
+    if (!queue_.empty())
+        write();
 
     if (ec == error::channel_stopped)
     {
@@ -345,6 +373,19 @@ void proxy::handle_send(const code& ec, size_t,
     handler(ec);
 }
 
+// static
+std::string proxy::extract_command(const system::data_chunk& payload) NOEXCEPT
+{
+    if (payload.size() < sizeof(uint32_t) + heading::command_size)
+        return "<unknown>";
+
+    std::string out{};
+    auto at = std::next(payload.begin(), sizeof(uint32_t));
+    const auto end = std::next(at, heading::command_size);
+    while (at != end && *at != 0x00) out.push_back(*at++);
+    return out;
+}
+
 // Properties.
 // ----------------------------------------------------------------------------
 
@@ -358,11 +399,25 @@ bool proxy::stranded() const NOEXCEPT
     return socket_->stranded();
 }
 
+// TODO: test.
+uint64_t proxy::backlog() const NOEXCEPT
+{
+    return backlog_.load(std::memory_order_relaxed);
+}
+
+// TODO: test.
+uint64_t proxy::total() const NOEXCEPT
+{
+    return total_.load(std::memory_order_relaxed);
+}
+
 const config::authority& proxy::authority() const NOEXCEPT
 {
     return socket_->authority();
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
     {
         // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
         BOOST_REQUIRE_EQUAL(ec, error::bad_stream);
-        BOOST_REQUIRE_EQUAL(size, 0u);
+        BOOST_REQUIRE_EQUAL(size, zero);
     });
 
     // Test race.
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(socket__write__disconnected__bad_stream)
     {
         // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
         BOOST_REQUIRE_EQUAL(ec, error::bad_stream);
-        BOOST_REQUIRE_EQUAL(size, 0u);
+        BOOST_REQUIRE_EQUAL(size, zero);
     });
 
     // Test race.
