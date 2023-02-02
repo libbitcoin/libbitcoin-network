@@ -111,6 +111,7 @@
     <ClCompile Include="..\..\..\..\test\messages\inventory_item.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\memory_pool.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\merkle_block.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\message.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\not_found.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\ping.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\pong.cpp" />

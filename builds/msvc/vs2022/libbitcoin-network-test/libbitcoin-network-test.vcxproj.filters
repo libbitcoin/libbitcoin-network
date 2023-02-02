@@ -153,6 +153,9 @@
     <ClCompile Include="..\..\..\..\test\messages\merkle_block.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\message.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\not_found.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
