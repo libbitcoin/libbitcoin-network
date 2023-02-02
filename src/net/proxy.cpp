@@ -308,7 +308,7 @@ void proxy::write(const system::chunk_ptr& payload,
 
     // Verbose.
     LOG("Queue for [" << authority() << "]: " << queue_.size()
-        << " (" << backlog_.load() << " of " << total_.load() << "bytes)");
+        << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
 
     // Start the loop if it wasn't already started.
     if (is_one(queue_.size()))
