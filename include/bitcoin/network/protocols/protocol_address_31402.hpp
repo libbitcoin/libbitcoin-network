@@ -56,8 +56,9 @@ protected:
         const messages::get_address::ptr& message) NOEXCEPT;
 
 private:
-    // This is protected by strand.
+    // These are protected by strand.
     bool sent_;
+    bool received_;
 };
 
 } // namespace network

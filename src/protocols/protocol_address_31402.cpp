@@ -38,6 +38,7 @@ protocol_address_31402::protocol_address_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     sent_(false),
+    received_(false),
     tracker<protocol_address_31402>(session.log())
 {
 }
@@ -58,21 +59,22 @@ void protocol_address_31402::start() NOEXCEPT
     if (started())
         return;
 
-    // Own address message is derived from config, if port is non-zero.
-    // Own address is always sent, even without receipt of get_address.
-    // The version message address is therefore 
-    if (!is_zero(settings().self.port()))
+    // Own address (from config) is sent unsolicited if inbound enabled.
+    if (!is_zero(settings().self.port()) &&
+        !is_zero(settings().inbound_connections))
     {
-        static const auto self = settings().self.to_address_item();
-        SEND1(address{ { self } }, handle_send, _1);
+        SEND1(address{ { settings().self.to_address_item(unix_time(),
+            settings().services_maximum) } }, handle_send, _1);
     }
 
-    // If addresses can't be stored don't ask for or capture them.
-    // Satoshi peers send them anyway, despite get_address note sent.
+    // If no address pool, do not ask for them or capture requests for them.
     if (!is_zero(settings().host_pool_capacity))
     {
         SUBSCRIBE2(address, handle_receive_address, _1, _2);
         SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
+
+        // TODO: this could be gated on state of the address pool.
+        // Satoshi peers send addr anyway, despite getaddr not being sent.
         SEND1(get_address{}, handle_send, _1);
     }
 
@@ -90,10 +92,21 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return;
 
+    // Allow only one singleton address message if addresses not requested.
+    // Allows peer to make one unsolicited broadcast of desire for incoming.
+    if (is_zero(settings().host_pool_capacity) &&
+        (received_ || message->addresses.size() > one))
+    {
+        LOG("Unsolicited address batch received from [" << authority() << "]");
+        stop(error::protocol_violation);
+        return;
+    }
+
     // TODO: manage timestamps (active channels are connected < 3 hours ago).
 
     // Protocol handles and logs code.
     saves(message->addresses);
+    received_ = true;
 }
 
 // Outbound (fetch and send addresses).
@@ -107,6 +120,7 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return;
 
+    // Limit requests to one per session (fingerprinting).
     if (sent_)
     {
         LOG("Ignoring duplicate address request from [" << authority() << "]");
@@ -114,6 +128,7 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
     }
 
     fetches(BIND2(handle_fetch_addresses, _1, _2));
+    sent_ = true;
 }
 
 void protocol_address_31402::handle_fetch_addresses(const code& ec,
@@ -125,7 +140,6 @@ void protocol_address_31402::handle_fetch_addresses(const code& ec,
         return;
 
     SEND1(address{ addresses }, handle_send, _1);
-    sent_ = true;
 }
 
 } // namespace network
