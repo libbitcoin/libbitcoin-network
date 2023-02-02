@@ -30,7 +30,12 @@
 namespace libbitcoin {
 namespace network {
 
+// Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 using namespace bc::system;
 using namespace messages;
@@ -363,6 +368,8 @@ const config::authority& proxy::authority() const NOEXCEPT
     return socket_->authority();
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network
