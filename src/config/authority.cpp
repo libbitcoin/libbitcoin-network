@@ -185,8 +185,12 @@ std::string authority::to_string() const NOEXCEPT
 
 messages::address_item authority::to_address_item() const NOEXCEPT
 {
-    static constexpr uint32_t services = 0;
-    static constexpr uint32_t timestamp = 0;
+    return to_address_item(0, 0);
+}
+
+messages::address_item authority::to_address_item(uint32_t timestamp,
+    uint64_t services) const NOEXCEPT
+{
     const messages::address_item address_item
     {
         timestamp, services, to_ip_address(), port(),

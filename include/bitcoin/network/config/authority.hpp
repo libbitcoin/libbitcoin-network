@@ -79,8 +79,10 @@ public:
     std::string to_string() const NOEXCEPT;
 
     /// The authority converted to a network messages address/ip_address.
-    messages::address_item to_address_item() const NOEXCEPT;
     messages::ip_address to_ip_address() const NOEXCEPT;
+    messages::address_item to_address_item() const NOEXCEPT;
+    messages::address_item to_address_item(uint32_t timestamp,
+        uint64_t services) const NOEXCEPT;
 
     bool operator==(const authority& other) const NOEXCEPT;
     bool operator!=(const authority& other) const NOEXCEPT;
