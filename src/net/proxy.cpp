@@ -300,13 +300,15 @@ void proxy::write(const system::chunk_ptr& payload,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    queue_.emplace_back(payload, std::move(handler));
 
-    // TODO: build DoS protection around backlog rate.
-    backlog_ = ceilinged_add(backlog_.load(), queue_.back().data->size());
+    // Clang no like emplace here.
+    queue_.push_back(std::make_pair(payload, std::move(handler)));
+    total_ = ceilinged_add(total_.load(), payload->size());
+    backlog_ = ceilinged_add(backlog_.load(), payload->size());
 
+    // Verbose.
     LOG("Queue for [" << authority() << "]: " << queue_.size()
-        << " (" << backlog_.load() << " bytes)");
+        << " (" << backlog_.load() << " of " << total_.load() << "bytes)");
 
     // Start the loop if it wasn't already started.
     if (is_one(queue_.size()))
@@ -319,12 +321,12 @@ void proxy::write() NOEXCEPT
     BC_ASSERT_MSG(!queue_.empty(), "queue");
 
     // guarded by do_write(is_one).
-    auto& next = queue_.front();
+    auto& job = queue_.front();
 
     // chunk_ptr is copied into std::bind closure to keep data alive. 
-    socket_->write(*next.data,
+    socket_->write(*job.first,
         std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, next.data, std::move(next.handler)));
+            shared_from_this(), _1, _2, job.first, std::move(job.second)));
 }
 
 void proxy::handle_write(const code& ec, size_t,
@@ -335,11 +337,12 @@ void proxy::handle_write(const code& ec, size_t,
     BC_ASSERT_MSG(!queue_.empty(), "queue");
 
     // guarded by do_write(is_one).
-    backlog_ = floored_subtract(backlog_.load(), queue_.front().data->size());
+    backlog_ = floored_subtract(backlog_.load(), queue_.front().first->size());
     queue_.pop_front();
 
-    LOG("Dequeue for [" << authority() << "]: " << queue_.size()
-        << " (" << backlog_.load() << " bytes)");
+    // Verbose.
+    ////LOG("Dequeue for [" << authority() << "]: " << queue_.size()
+    ////    << " (" << backlog_.load() << " bytes)");
 
     // All handlers must be invoked, so continue regardless of error state.
     // Handlers are invoked in queued order, after all outstanding complete.
@@ -396,9 +399,16 @@ bool proxy::stranded() const NOEXCEPT
     return socket_->stranded();
 }
 
-size_t proxy::backlog() const NOEXCEPT
+// TODO: test.
+uint64_t proxy::backlog() const NOEXCEPT
 {
     return backlog_.load(std::memory_order_relaxed);
+}
+
+// TODO: test.
+uint64_t proxy::total() const NOEXCEPT
+{
+    return total_.load(std::memory_order_relaxed);
 }
 
 const config::authority& proxy::authority() const NOEXCEPT

@@ -93,7 +93,10 @@ public:
     bool stopped() const NOEXCEPT;
 
     /// The number of bytes in the write backlog.
-    virtual size_t backlog() const NOEXCEPT;
+    virtual uint64_t backlog() const NOEXCEPT;
+
+    /// The total number of bytes queued/sent to the peer.
+    virtual uint64_t total() const NOEXCEPT;
 
     /// The authority of the peer.
     const config::authority& authority() const NOEXCEPT;
@@ -125,11 +128,7 @@ protected:
 
 private:
     typedef messages::heading::ptr heading_ptr;
-    struct writer
-    {
-        system::chunk_ptr data;
-        result_handler handler;
-    };
+    typedef std::deque<std::pair<system::chunk_ptr, result_handler>> queue;
 
     void do_stop(const code& ec) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
@@ -148,21 +147,22 @@ private:
     // This is thread safe.
     socket::ptr socket_;
 
-    // This is not thread safe.
-    bool paused_;
-
     // These are protected by the strand.
+    bool paused_;
     pump pump_subscriber_;
     stop_subscriber stop_subscriber_;
 
-    // These are protected by read header/payload ordering (strand).
+    // These are protected by read ordering (strand).
     system::data_chunk payload_buffer_;
     system::data_array<messages::heading::size()> heading_buffer_;
     system::read::bytes::copy heading_reader_;
 
-    // These are protected by write ordering (strand).
-    std::atomic<size_t> backlog_{};
-    std::deque<writer> queue_{};
+    // These are thread safe.
+    std::atomic<uint64_t> total_{};
+    std::atomic<uint64_t> backlog_{};
+
+    // This is protected by write ordering (strand).
+    queue queue_{};
 };
 
 } // namespace network
