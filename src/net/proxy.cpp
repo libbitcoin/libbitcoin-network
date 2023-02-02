@@ -321,7 +321,6 @@ void proxy::write() NOEXCEPT
     BC_ASSERT_MSG(!queue_.empty(), "queue");
 
     // guarded by do_write(is_one).
-    // All handlers must be invoked, so continue regardless of error state.
     auto& next = queue_.front();
 
     // chunk_ptr is copied into std::bind closure to keep data alive. 
