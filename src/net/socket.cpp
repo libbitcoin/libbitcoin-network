@@ -35,6 +35,7 @@ namespace network {
 using namespace bc::system;
 using namespace std::placeholders;
 
+// Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // Construction.
@@ -115,21 +116,13 @@ void socket::connect(const asio::endpoints& range,
             shared_from_this(), range, std::move(handler)));
 }
 
-////// Read into dynamically-allocated buffer (web).
-////void socket::dynamic_read(data_chunk& out, io_handler&& handler) NOEXCEPT
-////{
-////    boost::asio::dispatch(strand_,
-////        std::bind(&socket::do_dynamic_read, shared_from_this(),
-////            std::ref(out), std::move(handler)));
-////}
-
 // Read into pre-allocated buffer (bitcoin).
 void socket::read(const data_slab& out, io_handler&& handler) NOEXCEPT
 {
     // asio::mutable_buffer is essentially a data_slab.
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_read, shared_from_this(),
-            boost::asio::mutable_buffer{ out.data(), out.size() },
+            asio::mutable_buffer{ out.data(), out.size() },
                 std::move(handler)));
 }
 
@@ -138,7 +131,7 @@ void socket::write(const data_slice& in, io_handler&& handler) NOEXCEPT
     // asio::const_buffer is essentially a data_slice.
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_write, shared_from_this(),
-            boost::asio::const_buffer{ in.data(), in.size() },
+            asio::const_buffer{ in.data(), in.size() },
                 std::move(handler)));
 }
 
@@ -158,38 +151,55 @@ void socket::do_connect(const asio::endpoints& range,
             shared_from_this(), _1, _2, handler));
 }
 
-////// Read into dynamically-allocated buffer (web).
-////void socket::do_dynamic_read(data_chunk& out, io_handler handler) NOEXCEPT
-////{
-////    BC_ASSERT_MSG(stranded(), "strand");
-////
-////    // This composed operation posts all intermediate handlers to the strand.
-////    boost::asio::async_read(socket_, boost::asio::dynamic_buffer(out),
-////        std::bind(&socket::handle_io,
-////            shared_from_this(), _1, _2, std::move(handler)));
-////}
-
 // Read into pre-allocated buffer (bitcoin).
-void socket::do_read(const boost::asio::mutable_buffer& out,
+void socket::do_read(const asio::mutable_buffer& out,
     const io_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // This composed operation posts all intermediate handlers to the strand.
+    // However, reads must not be reinvoked before completion handler fires.
     boost::asio::async_read(socket_, out,
-        std::bind(&socket::handle_io,
+        std::bind(&socket::handle_read,
             shared_from_this(), _1, _2, handler));
 }
 
-void socket::do_write(const boost::asio::const_buffer& in,
+// Buffer writer and bump, referenced data must remain in scope until handler.
+void socket::do_write(const asio::const_buffer& in,
     const io_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // Enqueue copied data reference and handler.
+    queue_.emplace_back(in, handler);
+
+    // TODO: build DoS protection around backlog rate.
+    backlog_ = ceilinged_add(backlog_.load(), queue_.back().data.size());
+
+    LOG("Queue for [" << authority() << "]: " << queue_.size()
+        << " (" << backlog_.load() << " bytes)");
+
+    // Start the loop if it wasn't already started.
+    if (is_one(queue_.size()))
+        write();
+}
+
+// stackoverflow.com/questions/7754695/boost-asio-async-write-how-to-not-
+// interleaving-async-write-calls
+void socket::write() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(!queue_.empty(), "queue");
+
+    // guarded by do_write(is_one).
+    // All handlers must be invoked, so continue regardless of error state.
+    auto& writer = queue_.front();
+
     // This composed operation posts all intermediate handlers to the strand.
-    boost::asio::async_write(socket_, in,
-        std::bind(&socket::handle_io,
-            shared_from_this(), _1, _2, handler));
+    // However, writes must not be reinvoked before completion handler fires.
+    boost::asio::async_write(socket_, writer.data,
+        std::bind(&socket::handle_write,
+            shared_from_this(), _1, _2, std::move(writer.handler)));
 }
 
 // handlers (private).
@@ -232,10 +242,37 @@ void socket::handle_connect(const error::boost_code& ec,
     handler(error::asio_to_error_code(ec));
 }
 
-void socket::handle_io(const error::boost_code& ec, size_t size,
+void socket::handle_read(const error::boost_code& ec, size_t size,
     const io_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::channel_stopped, size);
+        return;
+    }
+
+    // Translate other boost error code and invoke caller handler.
+    handler(error::asio_to_error_code(ec), size);
+}
+
+void socket::handle_write(const error::boost_code& ec, size_t size,
+    const io_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(!queue_.empty(), "queue");
+
+    // guarded by do_write(is_one).
+    backlog_ = floored_subtract(backlog_.load(), queue_.front().data.size());
+    queue_.pop_front();
+
+    LOG("Dequeue for [" << authority() << "]: " << queue_.size()
+        << " (" << backlog_.load() << " bytes)");
+
+    // All handlers must be invoked, so continue regardless of error state.
+    if (!queue_.empty())
+        write();
 
     if (error::asio_is_canceled(ec))
     {
@@ -263,6 +300,11 @@ bool socket::stopped() const NOEXCEPT
 bool socket::stranded() const NOEXCEPT
 {
     return strand_.running_in_this_thread();
+}
+
+size_t socket::backlog() const NOEXCEPT
+{
+    return backlog_.load(std::memory_order_relaxed);
 }
 
 asio::strand& socket::strand() NOEXCEPT
