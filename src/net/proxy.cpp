@@ -296,12 +296,11 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 // stackoverflow.com/questions/7754695/boost-asio-async-write-how-to-not-
 // interleaving-async-write-calls
 
-// protected
 void proxy::write(const system::chunk_ptr& payload,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    queue_.emplace_back(payload, handler);
+    queue_.emplace_back(payload, std::move(handler));
 
     // TODO: build DoS protection around backlog rate.
     backlog_ = ceilinged_add(backlog_.load(), queue_.back().data->size());
@@ -314,7 +313,6 @@ void proxy::write(const system::chunk_ptr& payload,
         write();
 }
 
-// private
 void proxy::write() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
