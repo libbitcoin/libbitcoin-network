@@ -86,16 +86,17 @@ size_t heading::maximum_payload_size(uint32_t, bool witness) NOEXCEPT
 heading heading::factory(uint32_t magic, const std::string& command,
     const data_slice& payload) NOEXCEPT
 {
+    // Payload is constrained to uint32_t by protocol.
     const auto size = payload.size();
-    const auto payload_size = size > max_uint32 ? zero : size;
-    const auto payload_trimmed = is_zero(payload_size) ? data_slice{} : payload;
+    if (is_limited<uint32_t>(size))
+        return {};
 
     return
     {
         magic,
         command,
-        possible_narrow_cast<uint32_t>(payload_size),
-        network_checksum(payload_trimmed)
+        possible_narrow_cast<uint32_t>(size),
+        network_checksum(payload)
     };
 }
 
