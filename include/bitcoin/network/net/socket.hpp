@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_NET_SOCKET_HPP
 
 #include <atomic>
-#include <deque>
 #include <functional>
 #include <memory>
 #include <bitcoin/system.hpp>
@@ -89,9 +88,6 @@ public:
     /// The strand is running in this thread.
     virtual bool stranded() const NOEXCEPT;
 
-    /// The number of bytes in the write backlog.
-    virtual size_t backlog() const NOEXCEPT;
-
     /// Get the strand of the socket.
     virtual asio::strand& strand() NOEXCEPT;
 
@@ -105,34 +101,20 @@ protected:
     config::authority authority_;
 
 private:
-    struct writer
-    {
-        const asio::const_buffer data;
-        io_handler handler;
-    };
-
     void do_stop() NOEXCEPT;
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
-    void do_read(const asio::mutable_buffer& out,
+    void do_read(const boost::asio::mutable_buffer& out,
         const io_handler& handler) NOEXCEPT;
-    void do_write(const asio::const_buffer& in,
+    void do_write(const boost::asio::const_buffer& in,
         const io_handler& handler) NOEXCEPT;
 
     void handle_accept(const error::boost_code& ec,
         const result_handler& handler) NOEXCEPT;
     void handle_connect(const error::boost_code& ec,
         const asio::endpoint& peer, const result_handler& handler) NOEXCEPT;
-    void handle_read(const error::boost_code& ec, size_t size,
+    void handle_io(const error::boost_code& ec, size_t size,
         const io_handler& handler) NOEXCEPT;
-    void handle_write(const error::boost_code& ec, size_t size,
-        const io_handler& handler) NOEXCEPT;
-
-    void write() NOEXCEPT;
-
-    // These are protected by strand.
-    std::deque<writer> queue_{};
-    std::atomic<size_t> backlog_{};
 };
 
 } // namespace network
