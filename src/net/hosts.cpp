@@ -50,7 +50,7 @@ inline bool is_invalid(const address_item& host) NOEXCEPT
 // TODO: Use to/from string format as opposed to wire serialization.
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
-  : file_path_(settings.hosts_file),
+  : file_path_(settings.path),
     count_(zero),
     minimum_(5),
     maximum_(10),

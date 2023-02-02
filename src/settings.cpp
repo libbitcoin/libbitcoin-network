@@ -29,7 +29,7 @@ using namespace messages;
 
 // Common default values (no settings context).
 settings::settings() NOEXCEPT
-  : threads(1),
+    : threads(1),
     protocol_minimum(level::minimum_protocol),
     protocol_maximum(level::maximum_protocol),
     services_minimum(service::minimum_services),
@@ -51,8 +51,9 @@ settings::settings() NOEXCEPT
     channel_inactivity_minutes(10),
     channel_expiration_minutes(1440),
     host_pool_capacity(0),
+    rate_limit(1024),
     user_agent(BC_USER_AGENT),
-    hosts_file("hosts.cache"),
+    path("hosts.cache"),
     self(unspecified_address_item)
 {
 }
