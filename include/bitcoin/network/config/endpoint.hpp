@@ -81,6 +81,7 @@ public:
     endpoint to_local() const NOEXCEPT;
 
     bool operator==(const endpoint& other) const NOEXCEPT;
+    bool operator!=(const endpoint& other) const NOEXCEPT;
 
     friend std::istream& operator>>(std::istream& input,
         endpoint& argument) NOEXCEPT(false);
