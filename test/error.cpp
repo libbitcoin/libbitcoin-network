@@ -347,6 +347,24 @@ BOOST_AUTO_TEST_CASE(error_t__code__channel_dropped__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "channel dropped");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__channel_expired__true_exected_message)
+{
+    constexpr auto value = error::channel_expired;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "channel expired");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__channel_inactive__true_exected_message)
+{
+    constexpr auto value = error::channel_inactive;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "channel inactive");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__channel_stopped__true_exected_message)
 {
     constexpr auto value = error::channel_stopped;

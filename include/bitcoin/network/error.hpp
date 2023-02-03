@@ -101,6 +101,8 @@ enum error_t
     channel_timeout,
     channel_conflict,
     channel_dropped,
+    channel_expired,
+    channel_inactive,
     channel_stopped,
     service_stopped,
     subscriber_stopped
