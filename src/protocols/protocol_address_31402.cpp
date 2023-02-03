@@ -102,8 +102,6 @@ void protocol_address_31402::handle_receive_address(const code& ec,
         return;
     }
 
-    // TODO: manage timestamps (active channels are connected < 3 hours ago).
-
     // Protocol handles and logs code.
     saves(message->addresses);
     received_ = true;
