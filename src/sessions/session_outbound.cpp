@@ -269,10 +269,8 @@ void session_outbound::handle_channel_start(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel), size_t LOG_ONLY(peer)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    // Verbose.
-    LOG("Outbound channel start [" << channel->authority() << "] ("
-        << peer << ") " << ec.message());
+    LOG("Outbound channel start [" << channel->authority() << "] "
+        "(" << peer << ") " << ec.message());
 }
 
 void session_outbound::attach_protocols(
@@ -286,10 +284,8 @@ void session_outbound::handle_channel_stop(const code& LOG_ONLY(ec),
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    // Verbose.
-    LOG("Outbound channel stop [" << channel->authority() << "] ("
-        << peer << ") " << ec.message());
+    LOG("Outbound channel stop [" << channel->authority() << "] "
+        "(" << peer << ") " << ec.message());
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).

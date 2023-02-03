@@ -72,6 +72,10 @@ protected:
         const connector::ptr& connector,
         const channel_handler& handler) NOEXCEPT;
 
+    /// Accumulate the result of the seed connection.
+    virtual void stop_seed(const count_ptr& counter,
+        const result_handler& handler) NOEXCEPT;
+
 private:
     void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, const channel::ptr& channel,
