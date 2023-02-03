@@ -36,6 +36,8 @@ struct BCT_API settings
 
     /// Properties.
     uint32_t threads;
+    uint16_t address_maximum;
+    uint16_t address_minimum;
     uint32_t protocol_maximum;
     uint32_t protocol_minimum;
     uint64_t services_maximum;
