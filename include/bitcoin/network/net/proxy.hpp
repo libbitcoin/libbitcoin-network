@@ -50,12 +50,12 @@ public:
     typedef subscriber<const code&> stop_subscriber;
     typedef std::function<void(const code&)> result_handler;
 
-    /// Send a message to the peer (requires strand).
+    /// Serialize and send a message to the peer (requires strand).
     template <class Message>
     void send(const Message& message, result_handler&& complete) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        write(messages::serialize(message, protocol_magic(), version()),
+        do_write(messages::serialize(message, protocol_magic(), version()),
             std::move(complete));
     }
 
@@ -74,14 +74,18 @@ public:
     virtual void resume() NOEXCEPT;
 
     /// Reading from the socket is paused (requires strand).
-    bool paused() const NOEXCEPT;
+    virtual bool paused() const NOEXCEPT;
+
+    /// Idempotent, may be called multiple times.
+    virtual void stop(const code& ec) NOEXCEPT;
+
+    /// Send a serialized message to the peer (use messages::serialize).
+    virtual void write(const system::chunk_ptr& payload,
+        result_handler&& handler) NOEXCEPT;
 
     /// Subscribe to stop notification with completion handler.
     void subscribe_stop(result_handler&& handler,
         result_handler&& complete) NOEXCEPT;
-
-    /// Idempotent, may be called multiple times.
-    virtual void stop(const code& ec) NOEXCEPT;
 
     /// The channel strand.
     asio::strand& strand() NOEXCEPT;
@@ -93,10 +97,10 @@ public:
     bool stopped() const NOEXCEPT;
 
     /// The number of bytes in the write backlog.
-    virtual uint64_t backlog() const NOEXCEPT;
+    uint64_t backlog() const NOEXCEPT;
 
     /// The total number of bytes queued/sent to the peer.
-    virtual uint64_t total() const NOEXCEPT;
+    uint64_t total() const NOEXCEPT;
 
     /// The authority of the peer.
     const config::authority& authority() const NOEXCEPT;
@@ -114,10 +118,6 @@ protected:
     virtual bool validate_checksum() const NOEXCEPT = 0;
     virtual uint32_t version() const NOEXCEPT = 0;
     virtual void signal_activity() NOEXCEPT = 0;
-
-    /// Send bytes to the peer.
-    virtual void write(const system::chunk_ptr& payload,
-        result_handler&& handler) NOEXCEPT;
 
     /// Notify subscribers of a new message (requires strand).
     virtual code notify(messages::identifier id, uint32_t version,
@@ -140,6 +140,8 @@ private:
         const heading_ptr& head) NOEXCEPT;
 
     void write() NOEXCEPT;
+    void do_write(const system::chunk_ptr& payload,
+        const result_handler& handler) NOEXCEPT;
     void handle_write(const code& ec, size_t bytes,
         const system::chunk_ptr& payload,
         const result_handler& handler) NOEXCEPT;

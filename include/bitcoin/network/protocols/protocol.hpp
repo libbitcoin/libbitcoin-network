@@ -79,6 +79,7 @@ protected:
     template <class Protocol, class Message, typename Handler, typename... Args>
     void send(const Message& message, Handler&& handler, Args&&... args) NOEXCEPT
     {
+        BC_ASSERT_MSG(stranded(), "strand");
         channel_->send<Message>(message, BOUND_PROTOCOL(handler, args));
     }
 
@@ -153,7 +154,7 @@ protected:
     virtual void saves(const messages::address_items& addresses,
         result_handler&& handler) NOEXCEPT;
 
-    // Capture send results, logged by default.
+    /// Capture send results, use for no-op send handling (logged).
     virtual void handle_send(const code& ec) NOEXCEPT;
 
 private:

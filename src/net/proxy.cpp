@@ -299,10 +299,19 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 void proxy::write(const system::chunk_ptr& payload,
     result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_write,
+            shared_from_this(), payload, std::move(handler)));
+}
 
-    // Clang no like emplace here.
-    queue_.push_back(std::make_pair(payload, std::move(handler)));
+void proxy::do_write(const system::chunk_ptr& payload,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    const auto started = !queue_.empty();
+
+    // Clang does not like emplace here.
+    queue_.push_back(std::make_pair(payload, handler));
     total_ = ceilinged_add(total_.load(), payload->size());
     backlog_ = ceilinged_add(backlog_.load(), payload->size());
 
@@ -311,16 +320,17 @@ void proxy::write(const system::chunk_ptr& payload,
         << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
 
     // Start the loop if it wasn't already started.
-    if (is_one(queue_.size()))
+    if (!started)
         write();
 }
 
 void proxy::write() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    BC_ASSERT_MSG(!queue_.empty(), "queue");
 
-    // guarded by do_write(is_one).
+    if (queue_.empty())
+        return;
+
     auto& job = queue_.front();
 
     // chunk_ptr is copied into std::bind closure to keep data alive. 
@@ -336,7 +346,7 @@ void proxy::handle_write(const code& ec, size_t,
     BC_ASSERT_MSG(stranded(), "strand");
     BC_ASSERT_MSG(!queue_.empty(), "queue");
 
-    // guarded by do_write(is_one).
+    // guarded by write().
     backlog_ = floored_subtract(backlog_.load(), queue_.front().first->size());
     queue_.pop_front();
 
@@ -346,8 +356,7 @@ void proxy::handle_write(const code& ec, size_t,
 
     // All handlers must be invoked, so continue regardless of error state.
     // Handlers are invoked in queued order, after all outstanding complete.
-    if (!queue_.empty())
-        write();
+    write();
 
     if (ec == error::channel_stopped)
     {

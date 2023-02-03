@@ -201,10 +201,16 @@ private:
     void do_broadcast(const typename Message::ptr& message,
         const result_handler& handler) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "channels_");
+        BC_ASSERT_MSG(stranded(), "strand");
+
+        // TODO: Serialization may not be unique per channel (by version).
+        // TODO: Specialize this template for messages unique by version.
+        // Serialization is here to preclude serialization in each channel.
+        const auto data = messages::serialize(message, settings_.identifier,
+            /*channel->version()*/ messages::level::canonical);
 
         for (const auto& channel: channels_)
-            channel->send<Message>(message, handler);
+            channel->write(data, move_copy(handler));
     }
 
     void subscribe_close(result_handler&& handler) NOEXCEPT;
