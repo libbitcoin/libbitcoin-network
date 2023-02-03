@@ -142,7 +142,7 @@ void session_outbound::start_connect(const connectors_ptr& connectors,
 
     // Attempt to connect with a unique address for each connector of batch.
     for (const auto& connector: *connectors)
-        fetch(BIND4(do_one, _1, _2, connector, one));
+        take(BIND4(do_one, _1, _2, connector, one));
 }
 
 // Attempt to connect the given host and invoke handle_one.

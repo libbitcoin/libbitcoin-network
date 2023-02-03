@@ -235,7 +235,7 @@ public:
         return connectors_;
     }
 
-    void fetch(hosts::address_item_handler&& handler) const NOEXCEPT override
+    void take(hosts::address_item_handler&& handler) NOEXCEPT override
     {
         handler(error::invalid_magic, {});
     }
@@ -454,20 +454,20 @@ BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
 
 // utilities
 
-BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
+BOOST_AUTO_TEST_CASE(session__take__always__calls_network)
 {
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
     mock_session session(net);
 
-    std::promise<code> fetched;
-    session.fetch([&](const code& ec, messages::address_item)
+    std::promise<code> taken;
+    session.take([&](const code& ec, messages::address_item)
     {
-        fetched.set_value(ec);
+        taken.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(fetched.get_future().get(), error::invalid_magic);
+    BOOST_REQUIRE_EQUAL(taken.get_future().get(), error::invalid_magic);
 }
 
 BOOST_AUTO_TEST_CASE(session__fetches__always__calls_network)

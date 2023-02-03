@@ -300,66 +300,9 @@ BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
 
-// fetch1
+// fetch
 
-BOOST_AUTO_TEST_CASE(hosts__fetch1__stopped__service_stopped)
-{
-    const logger log{};
-    settings set(bc::system::chain::selection::mainnet);
-    set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
-    hosts instance(log, set);
-
-    instance.store(host42);
-    instance.fetch([&](const code& ec, const messages::address_item&)
-    {
-        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
-    });
-}
-
-BOOST_AUTO_TEST_CASE(hosts__fetch1__empty__address_not_found)
-{
-    const logger log{};
-    settings set(bc::system::chain::selection::mainnet);
-    set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
-    hosts instance(log, set);
-    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
-    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
-
-    instance.fetch([&](const code& ec, const messages::address_item&)
-    {
-        BOOST_REQUIRE_EQUAL(ec, error::address_not_found);
-    });
-
-    instance.stop();
-}
-
-BOOST_AUTO_TEST_CASE(hosts__fetch1__only__expected)
-{
-    const logger log{};
-    settings set(bc::system::chain::selection::mainnet);
-    set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
-    hosts instance(log, set);
-    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
-    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
-
-    instance.store(host42);
-    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-    
-    instance.fetch([&](const code& ec, const messages::address_item& item)
-    {
-        BOOST_REQUIRE_EQUAL(ec, error::success);
-        BOOST_REQUIRE(item == host42);
-    });
-
-    instance.stop();
-}
-
-// fetch2
-
-BOOST_AUTO_TEST_CASE(hosts__fetch2__stopped__service_stopped)
+BOOST_AUTO_TEST_CASE(hosts__fetch__stopped__service_stopped)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -375,7 +318,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch2__stopped__service_stopped)
     });
 }
 
-BOOST_AUTO_TEST_CASE(hosts__fetch2__empty__address_not_found)
+BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -394,7 +337,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch2__empty__address_not_found)
     instance.stop();
 }
 
-BOOST_AUTO_TEST_CASE(hosts__fetch2__three__success_empty)
+BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -416,7 +359,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch2__three__success_empty)
     instance.stop();
 }
 
-BOOST_AUTO_TEST_CASE(hosts__fetch2__populated_file__expected)
+BOOST_AUTO_TEST_CASE(hosts__fetch__populated_file__expected)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);

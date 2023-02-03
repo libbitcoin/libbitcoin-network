@@ -366,16 +366,16 @@ code p2p::stop_hosts() NOEXCEPT
     return hosts_.stop();
 }
 
-void p2p::fetch(hosts::address_item_handler&& handler) const NOEXCEPT
+void p2p::take(hosts::address_item_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_fetch, this, std::move(handler)));
+        std::bind(&p2p::do_take, this, std::move(handler)));
 }
 
-void p2p::do_fetch(const hosts::address_item_handler& handler) const NOEXCEPT
+void p2p::do_take(const hosts::address_item_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    hosts_.fetch(handler);
+    hosts_.take(handler);
 }
 
 void p2p::fetches(hosts::address_items_handler&& handler) const NOEXCEPT

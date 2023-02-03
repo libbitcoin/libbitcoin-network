@@ -240,26 +240,6 @@ void hosts::take(const address_item_handler& handler) NOEXCEPT
     handler(error::success, host);
 }
 
-void hosts::fetch(const address_item_handler& handler) const NOEXCEPT
-{
-    if (stopped_)
-    {
-        handler(error::service_stopped, {});
-        return;
-    }
-
-    if (buffer_.empty())
-    {
-        handler(error::address_not_found, {});
-        return;
-    }
-
-    // Randomly select an address from the buffer.
-    const auto limit = sub1(buffer_.size());
-    const auto index = pseudo_random::next(zero, limit);
-    handler(error::success, buffer_.at(index));
-}
-
 void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
 {
     if (stopped_)

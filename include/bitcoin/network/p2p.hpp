@@ -184,7 +184,7 @@ protected:
         bool inbound) NOEXCEPT;
 
     /// Maintain address pool (TODO: move to store interface).
-    virtual void fetch(hosts::address_item_handler&& handler) const NOEXCEPT;
+    virtual void take(hosts::address_item_handler&& handler) NOEXCEPT;
     virtual void fetches(hosts::address_items_handler&& handler) const NOEXCEPT;
     virtual void dump(const messages::address_item& address,
         result_handler&& complete) NOEXCEPT;
@@ -237,7 +237,7 @@ private:
     void do_connect_handled(const config::endpoint& endpoint,
         const channel_handler& handler) NOEXCEPT;
 
-    void do_fetch(const hosts::address_item_handler& handler) const NOEXCEPT;
+    void do_take(const hosts::address_item_handler& handler) NOEXCEPT;
     void do_fetches(const hosts::address_items_handler& handler) const NOEXCEPT;
     void do_save(const messages::address_item& host,
         const result_handler& complete) NOEXCEPT;
