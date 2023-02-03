@@ -86,4 +86,92 @@ BOOST_AUTO_TEST_CASE(address_item__size__without_timestamp__expected)
     BOOST_REQUIRE_EQUAL(address_item::size(level::canonical, false), expected);
 }
 
+// equality
+
+BOOST_AUTO_TEST_CASE(address_item__equality__default_default__true)
+{
+    const address_item item1{};
+    const address_item item2{};
+    BOOST_REQUIRE(item1 == item2);
+}
+
+BOOST_AUTO_TEST_CASE(address_item__equality__same__true)
+{
+    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item2{ 1, 2, unspecified_ip_address, 3 };
+    BOOST_REQUIRE(item1 == item2);
+}
+
+BOOST_AUTO_TEST_CASE(address_item__equality__distinct_port__false)
+{
+    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item2{ 1, 2, unspecified_ip_address, 4 };
+    BOOST_REQUIRE(!(item1 == item2));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__equality__distinct_ip__false)
+{
+    constexpr address_item item1{ 1, 2, null_ip_address, 3 };
+    constexpr address_item item2{ 1, 2, unspecified_ip_address, 3 };
+    BOOST_REQUIRE(!(item1 == item2));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__equality__distinct_services__false)
+{
+    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item2{ 1, 4, unspecified_ip_address, 3 };
+    BOOST_REQUIRE(!(item1 == item2));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__equality__distinct_timestamp__false)
+{
+    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item2{ 4, 2, unspecified_ip_address, 3 };
+    BOOST_REQUIRE(!(item1 == item2));
+}
+
+// inequality
+
+BOOST_AUTO_TEST_CASE(address_item__inequality__default_default__false)
+{
+    const address_item item1{};
+    const address_item item2{};
+    BOOST_REQUIRE(!(item1 != item2));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__inequality__same__false)
+{
+    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item2{ 1, 2, unspecified_ip_address, 3 };
+    BOOST_REQUIRE(!(item1 != item2));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__inequality__distinct_port__true)
+{
+    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item2{ 1, 2, unspecified_ip_address, 4 };
+    BOOST_REQUIRE(item1 != item2);
+}
+
+BOOST_AUTO_TEST_CASE(address_item__inequality__distinct_ip__true)
+{
+    constexpr address_item item1{ 1, 2, null_ip_address, 3 };
+    constexpr address_item item2{ 1, 2, unspecified_ip_address, 3 };
+    BOOST_REQUIRE(item1 != item2);
+}
+
+BOOST_AUTO_TEST_CASE(address_item__inequality__distinct_services__true)
+{
+    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item2{ 1, 4, unspecified_ip_address, 3 };
+    BOOST_REQUIRE(item1 != item2);
+}
+
+BOOST_AUTO_TEST_CASE(address_item__inequality__distinct_timestamp__true)
+{
+    constexpr address_item item1{ 1, 2, unspecified_ip_address, 3 };
+    constexpr address_item item2{ 4, 2, unspecified_ip_address, 3 };
+    BOOST_REQUIRE(item1 != item2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
