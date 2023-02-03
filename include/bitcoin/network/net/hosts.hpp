@@ -19,11 +19,13 @@
 #ifndef LIBBITCOIN_NETWORK_NET_HOSTS_HPP
 #define LIBBITCOIN_NETWORK_NET_HOSTS_HPP
 
+#include <algorithm>
 #include <atomic>
 #include <filesystem>
 #include <functional>
 #include <memory>
 #include <boost/circular_buffer.hpp>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -71,7 +73,21 @@ public:
 private:
     typedef boost::circular_buffer<messages::address_item> buffer;
 
-    buffer::iterator find(const messages::address_item& host) NOEXCEPT;
+    inline buffer::iterator find(const messages::address_item& host) NOEXCEPT
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        return std::find(buffer_.begin(), buffer_.end(), host);
+        BC_POP_WARNING()
+    }
+
+    inline bool exists(const messages::address_item& host) NOEXCEPT
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        return find(host) != buffer_.end();
+        BC_POP_WARNING()
+    }
+
+    size_t pseudo_random_count() const NOEXCEPT;
 
     // These are thread safe.
     const std::filesystem::path file_path_;
