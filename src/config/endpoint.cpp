@@ -106,6 +106,11 @@ bool endpoint::operator==(const endpoint& other) const NOEXCEPT
         scheme_ == other.scheme_;
 }
 
+bool endpoint::operator!=(const endpoint& other) const NOEXCEPT
+{
+    return !(*this == other);
+}
+
 std::istream& operator>>(std::istream& input,
     endpoint& argument) NOEXCEPT(false)
 {

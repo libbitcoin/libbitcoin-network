@@ -49,10 +49,13 @@ struct BCT_API address_item
     uint16_t port;
 };
 
+bool operator==(const address_item& left, const address_item& right) NOEXCEPT;
+bool operator!=(const address_item& left, const address_item& right) NOEXCEPT;
+
 typedef std::vector<address_item> address_items;
 typedef std::shared_ptr<address_items> address_items_ptr;
 
-static const ip_address null_ip_address
+constexpr ip_address null_ip_address
 {
     {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

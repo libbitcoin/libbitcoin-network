@@ -190,6 +190,12 @@ void p2p::close() NOEXCEPT
         BC_ASSERT_MSG(false, "failed to join threadpool");
         std::abort();
     }
+
+    // Serialize hosts to file.
+    if (const auto error_code = stop_hosts())
+    {
+        LOG("Hosts file failed to serialize, " << error_code.message());
+    }
 }
 
 void p2p::do_close() NOEXCEPT
@@ -213,12 +219,6 @@ void p2p::do_close() NOEXCEPT
 
     // Free all channels.
     channels_.clear();
-
-    // Serialize hosts to file.
-    if (const auto error_code = stop_hosts())
-    {
-        LOG("Hosts file failed to serialize, " << error_code.message());
-    }
 
     // Stop threadpool keep-alive, all work must self-terminate to affect join.
     threadpool_.stop();
@@ -366,16 +366,16 @@ code p2p::stop_hosts() NOEXCEPT
     return hosts_.stop();
 }
 
-void p2p::fetch(hosts::address_item_handler&& handler) const NOEXCEPT
+void p2p::take(hosts::address_item_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_fetch, this, std::move(handler)));
+        std::bind(&p2p::do_take, this, std::move(handler)));
 }
 
-void p2p::do_fetch(const hosts::address_item_handler& handler) const NOEXCEPT
+void p2p::do_take(const hosts::address_item_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    hosts_.fetch(handler);
+    hosts_.take(handler);
 }
 
 void p2p::fetches(hosts::address_items_handler&& handler) const NOEXCEPT

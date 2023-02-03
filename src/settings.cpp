@@ -29,11 +29,13 @@ using namespace messages;
 
 // Common default values (no settings context).
 settings::settings() NOEXCEPT
-    : threads(1),
-    protocol_minimum(level::minimum_protocol),
+  : threads(1),
+    address_maximum(10),
+    address_minimum(5),
     protocol_maximum(level::maximum_protocol),
-    services_minimum(service::minimum_services),
+    protocol_minimum(level::minimum_protocol),
     services_maximum(service::maximum_services),
+    services_minimum(service::minimum_services),
     invalid_services(176),
     enable_alert(false),
     enable_reject(false),

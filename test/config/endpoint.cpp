@@ -101,4 +101,57 @@ BOOST_AUTO_TEST_CASE(endpoint__to_local__host_port__expected_values)
     BOOST_REQUIRE_EQUAL(host.port(), 12345u);
 }
 
+// equality
+
+BOOST_AUTO_TEST_CASE(endpoint__equality__default_default__true)
+{
+    const endpoint host1{};
+    const endpoint host2{};
+    BOOST_REQUIRE(host1 == host2);
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__equality__distinct__false)
+{
+    const endpoint host1{};
+    const endpoint host2("tcp://*:12345");
+    BOOST_REQUIRE(!(host1 == host2));
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__equality__distinct_port__false)
+{
+    const endpoint host1("tcp://foo.bar:12345");
+    const endpoint host2("tcp://foo.bar:1234");
+    BOOST_REQUIRE(!(host1 == host2));
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__equality__same__true)
+{
+    const endpoint host1("tcp://*:12345");
+    const endpoint host2("tcp://*:12345");
+    BOOST_REQUIRE(host1 == host2);
+}
+
+// inequality
+
+BOOST_AUTO_TEST_CASE(endpoint__inequality__distinct__true)
+{
+    const endpoint host1{};
+    const endpoint host2("tcp://*:12345");
+    BOOST_REQUIRE(host1 != host2);
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__inequality__distinct_port__true)
+{
+    const endpoint host1("tcp://foo.bar:12345");
+    const endpoint host2("tcp://foo.bar:1234");
+    BOOST_REQUIRE(host1 != host2);
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__inequality__same__false)
+{
+    const endpoint host1("tcp://*:12345");
+    const endpoint host2("tcp://*:12345");
+    BOOST_REQUIRE(!(host1 != host2));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

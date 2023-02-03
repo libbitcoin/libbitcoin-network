@@ -82,6 +82,19 @@ void address_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
+bool operator==(const address_item& left, const address_item& right) NOEXCEPT
+{
+    return left.timestamp == right.timestamp
+        && left.services == right.services
+        && left.ip == right.ip
+        && left.port == right.port;
+}
+
+bool operator!=(const address_item& left, const address_item& right) NOEXCEPT
+{
+    return !(left == right);
+}
+
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

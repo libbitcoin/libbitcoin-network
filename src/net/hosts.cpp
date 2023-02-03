@@ -18,10 +18,6 @@
  */
 #include <bitcoin/network/net/hosts.hpp>
 
-#include <algorithm>
-#include <cstddef>
-#include <string>
-#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/error.hpp>
@@ -31,16 +27,17 @@
 namespace libbitcoin {
 namespace network {
 
-using namespace bc::system;
+using namespace system;
 using namespace config;
 using namespace messages;
+
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 inline bool is_invalid(const address_item& host) NOEXCEPT
 {
     return is_zero(host.port) || host.ip == null_ip_address;
 }
 
-// TODO: add min/max denominators to settings.
 // TODO: use std::map to avoid insertion searches.
 // TODO: create full space-delimited network_address serialization.
 // TODO: Use to/from string format as opposed to wire serialization.
@@ -48,12 +45,11 @@ inline bool is_invalid(const address_item& host) NOEXCEPT
 // TODO: change to network_address bimap hash table with services and age.
 // TODO: create full space-delimited network_address serialization.
 // TODO: Use to/from string format as opposed to wire serialization.
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
   : file_path_(settings.path),
     count_(zero),
-    minimum_(5),
-    maximum_(10),
+    minimum_(settings.address_minimum),
+    maximum_(settings.address_maximum),
     capacity_(possible_narrow_cast<size_t>(settings.host_pool_capacity)),
     disabled_(is_zero(capacity_)),
     buffer_(capacity_),
@@ -61,7 +57,6 @@ hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
     reporter(log)
 {
 }
-BC_POP_WARNING()
 
 hosts::~hosts() NOEXCEPT
 {
@@ -85,7 +80,6 @@ code hosts::start() NOEXCEPT
 
     try
     {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         ifstream file(file_path_.string(), ifstream::in);
         if (!file.good())
         {
@@ -105,8 +99,6 @@ code hosts::start() NOEXCEPT
 
         if (file.bad())
             return error::file_load;
-
-        BC_POP_WARNING()
     }
     catch (const std::exception&)
     {
@@ -129,7 +121,6 @@ code hosts::stop() NOEXCEPT
 
     try
     {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         ofstream file(file_path_.string(), ofstream::out);
         if (!file.good())
             return error::file_save;
@@ -139,8 +130,6 @@ code hosts::stop() NOEXCEPT
 
         if (file.bad())
             return error::file_save;
-
-        BC_POP_WARNING()
     }
     catch (const std::exception&)
     {
@@ -164,13 +153,11 @@ void hosts::store(const address_item& host) NOEXCEPT
         return;
     }
 
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    if (find(host) == buffer_.end())
+    if (!exists(host))
     {
         buffer_.push_back(host);
         count_.store(buffer_.size(), std::memory_order_relaxed);
     }
-    BC_POP_WARNING()
 }
 
 void hosts::store(const address_items& hosts) NOEXCEPT
@@ -191,7 +178,6 @@ void hosts::store(const address_items& hosts) NOEXCEPT
     const auto step = std::max(usable / accept, one);
     auto accepted = zero;
 
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
         const auto& host = hosts.at(index);
@@ -202,18 +188,16 @@ void hosts::store(const address_items& hosts) NOEXCEPT
             continue;
         }
 
-        if (find(host) != buffer_.end())
+        if (exists(host))
             continue;
 
         ++accepted;
         buffer_.push_back(host);
         count_.store(buffer_.size(), std::memory_order_relaxed);
-
     }
-    BC_POP_WARNING()
 
-    LOG("Accepted (" << accepted << " of " << hosts.size() <<
-        ") host addresses from peer.");
+    LOG("Accepted (" << accepted << " of " << hosts.size() << ") "
+        "host addresses from peer.");
 }
 
 void hosts::remove(const address_item& host) NOEXCEPT
@@ -222,21 +206,17 @@ void hosts::remove(const address_item& host) NOEXCEPT
         return;
 
     const auto it = find(host);
-
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     if (it != buffer_.end())
     {
         buffer_.erase(it);
         count_.store(buffer_.size(), std::memory_order_relaxed);
         return;
     }
-    BC_POP_WARNING()
 
     LOG("Address to remove not found.");
 }
 
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-void hosts::fetch(const address_item_handler& handler) const NOEXCEPT
+void hosts::take(const address_item_handler& handler) NOEXCEPT
 {
     if (stopped_)
     {
@@ -253,11 +233,13 @@ void hosts::fetch(const address_item_handler& handler) const NOEXCEPT
     // Randomly select an address from the buffer.
     const auto limit = sub1(buffer_.size());
     const auto index = pseudo_random::next(zero, limit);
-    handler(error::success, buffer_.at(index));
+    const auto it = std::next(buffer_.begin(), index);
+    const auto host = *it;
+    buffer_.erase(it);
+    count_.store(buffer_.size(), std::memory_order_relaxed);
+    handler(error::success, host);
 }
-BC_POP_WARNING()
 
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
 {
     if (stopped_)
@@ -272,33 +254,27 @@ void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
         return;
     }
 
-    const auto out_count = std::min(messages::max_address,
-        buffer_.size() / pseudo_random::next<size_t>(minimum_, maximum_));
-
+    const auto size = pseudo_random_count();
     const auto limit = sub1(buffer_.size());
     auto index = pseudo_random::next(zero, limit);
 
     address_items out{};
-    out.reserve(out_count);
-    for (size_t count = 0; count < out_count; ++count)
+    out.reserve(size);
+    for (size_t count = 0; count < size; ++count)
         out.push_back(buffer_.at(index++ % limit));
 
     pseudo_random::shuffle(out);
     handler(error::success, out);
 }
-BC_POP_WARNING()
 
-// private
-hosts::buffer::iterator hosts::find(const address_item& host) NOEXCEPT
+size_t hosts::pseudo_random_count() const NOEXCEPT
 {
-    // TODO: add equality operator to address_item.
-    const auto found = [&host](const address_item& entry) NOEXCEPT
-    {
-        return entry.port == host.port && entry.ip == host.ip;
-    };
-
-    return std::find_if(buffer_.begin(), buffer_.end(), found);
+    using namespace system;
+    const auto divide = pseudo_random::next<size_t>(minimum_, maximum_);
+    return std::min(messages::max_address, buffer_.size() / divide);
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

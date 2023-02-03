@@ -57,8 +57,8 @@ public:
     /// Utilities.
     /// -----------------------------------------------------------------------
 
-    /// Fetch an entry from address pool.
-    virtual void fetch(hosts::address_item_handler&& handler) const NOEXCEPT;
+    /// Take an entry from address pool.
+    virtual void take(hosts::address_item_handler&& handler) const NOEXCEPT;
 
     /// Fetch a subset of entries (count based on config) from address pool.
     virtual void fetches(hosts::address_items_handler&& handler) const NOEXCEPT;

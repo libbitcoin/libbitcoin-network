@@ -267,7 +267,7 @@ public:
     using mock_session_outbound_one_address_count::
         mock_session_outbound_one_address_count;
 
-    void fetch(hosts::address_item_handler&& handler) const NOEXCEPT override
+    void take(hosts::address_item_handler&& handler) const NOEXCEPT override
     {
         handler(error::success, address_item{});
     }

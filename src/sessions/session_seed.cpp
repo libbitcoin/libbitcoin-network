@@ -143,7 +143,6 @@ void session_seed::start_seed(const config::endpoint& seed,
     const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
     LOG("Connecting to seed node [" << seed << "]");
 
     // Guard restartable connector (shutdown delay).
@@ -161,16 +160,12 @@ void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    // If ec channel will be nullptr in handle_channel_stop.
     LOG("Connect seed [" << seed << "]: " << ec.message());
 
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-
-        // Handle channel result in stop handler (not yet registered).
-        handle_channel_stop(ec, counter, channel, handler);
+        stop_seed(counter, handler);
         return;
     }
 
@@ -214,7 +209,6 @@ void session_seed::handle_channel_start(const code& LOG_ONLY(ec),
     const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
     LOG("Seed channel start [" << channel->authority() << "] " << ec.message());
 
     // Pend seeding channel.
@@ -252,18 +246,20 @@ void session_seed::handle_channel_stop(const code& ec, const count_ptr& counter,
     const channel::ptr& channel, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    LOG("Seed channel stop [" << channel->authority() << "] " << ec.message());
 
-    // handle_channel_stop invoked with null if ec.
-    if (channel)
-    {
-        LOG("Seed channel stop [" << channel->authority() << "]");
-    }
-
-    // handle_channel_stop invoked with null if ec.
     if (ec != error::service_stopped && !to_bool(seeding_.erase(channel)))
     {
         LOG("Unpend failed to locate seed channel (ok on stop).");
     }
+
+    stop_seed(counter, handler);
+}
+
+void session_seed::stop_seed(const count_ptr& counter,
+     const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // Ignore result if previously handled (early termination).
     if (is_zero(*counter))

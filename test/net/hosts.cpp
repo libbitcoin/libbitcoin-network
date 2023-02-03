@@ -241,9 +241,9 @@ BOOST_AUTO_TEST_CASE(hosts__remove__single_not_found__one)
     instance.stop();
 }
 
-// fetch1
+// take
 
-BOOST_AUTO_TEST_CASE(hosts__fetch1__stopped__service_stopped)
+BOOST_AUTO_TEST_CASE(hosts__take__stopped__service_stopped)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -252,13 +252,13 @@ BOOST_AUTO_TEST_CASE(hosts__fetch1__stopped__service_stopped)
     hosts instance(log, set);
 
     instance.store(host42);
-    instance.fetch([&](const code& ec, const messages::address_item&)
+    instance.take([&](const code& ec, const messages::address_item&)
     {
         BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
     });
 }
 
-BOOST_AUTO_TEST_CASE(hosts__fetch1__empty__address_not_found)
+BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -268,15 +268,16 @@ BOOST_AUTO_TEST_CASE(hosts__fetch1__empty__address_not_found)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.fetch([&](const code& ec, const messages::address_item&)
+    instance.take([&](const code& ec, const messages::address_item&)
     {
         BOOST_REQUIRE_EQUAL(ec, error::address_not_found);
     });
 
     instance.stop();
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(hosts__fetch1__only__expected)
+BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -289,23 +290,19 @@ BOOST_AUTO_TEST_CASE(hosts__fetch1__only__expected)
     instance.store(host42);
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
     
-    instance.fetch([&](const code& ec, const messages::address_item& item)
+    instance.take([&](const code& ec, const messages::address_item& item)
     {
         BOOST_REQUIRE_EQUAL(ec, error::success);
-
-        // Message types do not have comparison operators.
-        BOOST_REQUIRE_EQUAL(item.ip, host42.ip);
-        BOOST_REQUIRE_EQUAL(item.port, host42.port);
-        BOOST_REQUIRE_EQUAL(item.services, host42.services);
-        BOOST_REQUIRE_EQUAL(item.timestamp, host42.timestamp);
+        BOOST_REQUIRE(item == host42);
     });
 
     instance.stop();
+    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
 
-// fetch2
+// fetch
 
-BOOST_AUTO_TEST_CASE(hosts__fetch2__stopped__service_stopped)
+BOOST_AUTO_TEST_CASE(hosts__fetch__stopped__service_stopped)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -321,7 +318,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch2__stopped__service_stopped)
     });
 }
 
-BOOST_AUTO_TEST_CASE(hosts__fetch2__empty__address_not_found)
+BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -340,7 +337,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch2__empty__address_not_found)
     instance.stop();
 }
 
-BOOST_AUTO_TEST_CASE(hosts__fetch2__three__success_empty)
+BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -362,7 +359,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch2__three__success_empty)
     instance.stop();
 }
 
-BOOST_AUTO_TEST_CASE(hosts__fetch2__populated_file__expected)
+BOOST_AUTO_TEST_CASE(hosts__fetch__populated_file__expected)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);

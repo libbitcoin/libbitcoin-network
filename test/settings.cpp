@@ -29,10 +29,12 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
 
     // [network]
     BOOST_REQUIRE_EQUAL(instance.threads, 1u);
-    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
+    BOOST_REQUIRE_EQUAL(instance.address_maximum, 10u);
+    BOOST_REQUIRE_EQUAL(instance.address_minimum, 5u);
     BOOST_REQUIRE_EQUAL(instance.protocol_maximum, level::maximum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
+    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
+    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
@@ -65,10 +67,12 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
 
     // unchanged from default
     BOOST_REQUIRE_EQUAL(instance.threads, 1u);
-    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
+    BOOST_REQUIRE_EQUAL(instance.address_maximum, 10u);
+    BOOST_REQUIRE_EQUAL(instance.address_minimum, 5u);
     BOOST_REQUIRE_EQUAL(instance.protocol_maximum, level::maximum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
+    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
+    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
@@ -112,10 +116,12 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
 
     // unchanged from default
     BOOST_REQUIRE_EQUAL(instance.threads, 1u);
-    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
+    BOOST_REQUIRE_EQUAL(instance.address_maximum, 10u);
+    BOOST_REQUIRE_EQUAL(instance.address_minimum, 5u);
     BOOST_REQUIRE_EQUAL(instance.protocol_maximum, level::maximum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
+    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
+    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
@@ -159,10 +165,12 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
 
     // unchanged from default
     BOOST_REQUIRE_EQUAL(instance.threads, 1u);
-    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
+    BOOST_REQUIRE_EQUAL(instance.address_maximum, 10u);
+    BOOST_REQUIRE_EQUAL(instance.address_minimum, 5u);
     BOOST_REQUIRE_EQUAL(instance.protocol_maximum, level::maximum_protocol);
-    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
+    BOOST_REQUIRE_EQUAL(instance.protocol_minimum, level::minimum_protocol);
     BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
+    BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);

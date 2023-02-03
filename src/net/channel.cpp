@@ -203,15 +203,12 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        LOG("Channel lifetime timer failure [" << authority() << "] "
-            << ec.message());
-
+        LOG("Lifetime timer fail [" << authority() << "] " << ec.message());
         stop(ec);
         return;
     }
 
-    LOG("Channel lifetime expired [" << authority() << "]");
-    stop(ec);
+    stop(error::channel_expired);
 }
 
 // Called from start or strand.
@@ -239,15 +236,12 @@ void channel::handle_inactivity(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        LOG("Channel inactivity timer failure [" << authority() << "] "
-            << ec.message());
-
+        LOG("Inactivity timer fail [" << authority() << "] " << ec.message());
         stop(ec);
         return;
     }
 
-    LOG("Channel inactivity timeout [" << authority() << "]");
-    stop(ec);
+    stop(error::channel_inactive);
 }
 
 } // namespace network
