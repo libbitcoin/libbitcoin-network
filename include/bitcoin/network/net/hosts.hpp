@@ -67,6 +67,7 @@ public:
     virtual void store(const messages::address_item& host) NOEXCEPT;
     virtual void store(const messages::address_items& hosts) NOEXCEPT;
     virtual void remove(const messages::address_item& host) NOEXCEPT;
+    virtual void take(const address_item_handler& handler) NOEXCEPT;
     virtual void fetch(const address_item_handler& handler) const NOEXCEPT;
     virtual void fetch(const address_items_handler& handler) const NOEXCEPT;
 

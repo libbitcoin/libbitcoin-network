@@ -216,6 +216,30 @@ void hosts::remove(const address_item& host) NOEXCEPT
     LOG("Address to remove not found.");
 }
 
+void hosts::take(const address_item_handler& handler) NOEXCEPT
+{
+    if (stopped_)
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
+    if (buffer_.empty())
+    {
+        handler(error::address_not_found, {});
+        return;
+    }
+
+    // Randomly select an address from the buffer.
+    const auto limit = sub1(buffer_.size());
+    const auto index = pseudo_random::next(zero, limit);
+    const auto it = std::next(buffer_.begin(), index);
+    const auto host = *it;
+    buffer_.erase(it);
+    count_.store(buffer_.size(), std::memory_order_relaxed);
+    handler(error::success, host);
+}
+
 void hosts::fetch(const address_item_handler& handler) const NOEXCEPT
 {
     if (stopped_)
