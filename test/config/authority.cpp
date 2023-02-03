@@ -467,14 +467,14 @@ BOOST_AUTO_TEST_CASE(authority__to_string__ipv6_compatible_port__expected)
 
 BOOST_AUTO_TEST_CASE(authority__equality__default_default__true)
 {
-    const authority host1;
-    const authority host2;
+    const authority host1{};
+    const authority host2{};
     BOOST_REQUIRE(host1 == host2);
 }
 
 BOOST_AUTO_TEST_CASE(authority__equality__default_unspecified_port__false)
 {
-    const authority host1;
+    const authority host1{};
     const authority host2(BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS, 42);
     BOOST_REQUIRE(!(host1 == host2));
 }
@@ -526,14 +526,14 @@ BOOST_AUTO_TEST_CASE(authority__equality__compatible_alternative__true)
 
 BOOST_AUTO_TEST_CASE(authority__inequality__default_default__false)
 {
-    const authority host1;
-    const authority host2;
+    const authority host1{};
+    const authority host2{};
     BOOST_REQUIRE(!(host1 != host2));
 }
 
 BOOST_AUTO_TEST_CASE(authority__inequality__default_unspecified_port__true)
 {
-    const authority host1;
+    const authority host1{};
     const authority host2(BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS, 42);
     BOOST_REQUIRE(host1 != host2);
 }
