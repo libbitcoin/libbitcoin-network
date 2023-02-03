@@ -108,7 +108,7 @@ void session_outbound::handle_started(const code& ec,
             });
 
         // Start connection attempt with batch of connectors for one peer.
-        start_connect(connectors);
+        start_connect(connectors, peer);
     }
 
     LOG("Creating " << settings().outbound_connections << " connections "
@@ -122,7 +122,8 @@ void session_outbound::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Attempt to connect one peer using a batch subset of connectors.
-void session_outbound::start_connect(const connectors_ptr& connectors) NOEXCEPT
+void session_outbound::start_connect(const connectors_ptr& connectors,
+    size_t peer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -134,7 +135,7 @@ void session_outbound::start_connect(const connectors_ptr& connectors) NOEXCEPT
     const auto counter = std::make_shared<size_t>(connectors->size());
 
     channel_handler connect =
-        BIND3(handle_connect, _1, _2, connectors);
+        BIND4(handle_connect, _1, _2, connectors, peer);
 
     channel_handler one =
         BIND5(handle_one, _1, _2, counter, connectors, std::move(connect));
@@ -229,7 +230,8 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
 
 // Handle the singular batch result.
 void session_outbound::handle_connect(const code& ec,
-    const channel::ptr& channel, const connectors_ptr& connectors) NOEXCEPT
+    const channel::ptr& channel, const connectors_ptr& connectors,
+    size_t peer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -247,14 +249,14 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        start_timer(BIND1(start_connect, connectors),
+        start_timer(BIND2(start_connect, connectors, peer),
             settings().connect_timeout());
         return;
     }
 
     start_channel(channel,
-        BIND2(handle_channel_start, _1, channel),
-        BIND3(handle_channel_stop, _1, channel, connectors));
+        BIND3(handle_channel_start, _1, channel, peer),
+        BIND4(handle_channel_stop, _1, channel, peer, connectors));
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
@@ -264,13 +266,13 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
 }
 
 void session_outbound::handle_channel_start(const code& LOG_ONLY(ec),
-    const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
+    const channel::ptr& LOG_ONLY(channel), size_t LOG_ONLY(peer)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Verbose.
-    LOG("Outbound channel start [" << channel->authority() << "] "
-        << ec.message());
+    LOG("Outbound channel start [" << channel->authority() << "] ("
+        << peer << ") " << ec.message());
 }
 
 void session_outbound::attach_protocols(
@@ -280,18 +282,18 @@ void session_outbound::attach_protocols(
 }
 
 void session_outbound::handle_channel_stop(const code& LOG_ONLY(ec),
-    const channel::ptr& LOG_ONLY(channel),
+    const channel::ptr& LOG_ONLY(channel), size_t peer,
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Verbose.
-    LOG("Outbound channel stop [" << channel->authority() << "] "
-        << ec.message());
+    LOG("Outbound channel stop [" << channel->authority() << "] ("
+        << peer << ") " << ec.message());
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).
-    start_connect(connectors);
+    start_connect(connectors, peer);
 }
 
 BC_POP_WARNING()
