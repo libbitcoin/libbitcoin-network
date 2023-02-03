@@ -58,17 +58,23 @@ public:
     /// Load hosts file.
     virtual code start() NOEXCEPT;
 
-    // Save hosts to file.
+    /// Save hosts to file.
     virtual code stop() NOEXCEPT;
 
-    // Thread safe, inexact (ok).
+    /// Thread safe, inexact (ok).
     virtual size_t count() const NOEXCEPT;
 
-    virtual void store(const messages::address_item& host) NOEXCEPT;
-    virtual void store(const messages::address_items& hosts) NOEXCEPT;
-    virtual void remove(const messages::address_item& host) NOEXCEPT;
+    /// Take one random host from the table.
     virtual void take(const address_item_handler& handler) NOEXCEPT;
+
+    /// Store the host in the table (e.g. after use).
+    virtual void restore(const messages::address_item& host) NOEXCEPT;
+
+    /// Obtain a random set of hosts (e.g for relay to peer).
     virtual void fetch(const address_items_handler& handler) const NOEXCEPT;
+
+    /// Obtain a random set of hosts (e.g obtained from peer).
+    virtual void store(const messages::address_items& hosts) NOEXCEPT;
 
 private:
     typedef boost::circular_buffer<messages::address_item> buffer;

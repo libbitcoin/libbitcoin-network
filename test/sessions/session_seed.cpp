@@ -310,7 +310,7 @@ public:
         return error::success;
     }
 
-    void saves(const messages::address_items& addresses,
+    void save(const messages::address_items& addresses,
         result_handler&& complete) NOEXCEPT override
     {
         hosts_ += addresses.size();

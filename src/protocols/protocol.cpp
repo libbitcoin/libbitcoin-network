@@ -152,24 +152,24 @@ void protocol::set_negotiated_version(uint32_t value) NOEXCEPT
 // ----------------------------------------------------------------------------
 // Address completion handlers are invoked on the channel strand.
 
-void protocol::fetches(fetches_handler&& handler) NOEXCEPT
+void protocol::fetch(fetch_handler&& handler) NOEXCEPT
 {
-    session_.fetches(BIND3(do_fetches, _1, _2, std::move(handler)));
+    session_.fetch(BIND3(do_fetch, _1, _2, std::move(handler)));
 }
 
 // Return to channel strand.
-void protocol::do_fetches(const code& ec,
+void protocol::do_fetch(const code& ec,
     const messages::address_items& addresses,
-    const fetches_handler& handler) NOEXCEPT
+    const fetch_handler& handler) NOEXCEPT
 {
     // TODO: use addresses pointer (copies addresses).
     boost::asio::post(channel_->strand(),
-        BIND3(handle_fetches, ec, addresses, handler));
+        BIND3(handle_fetch, ec, addresses, handler));
 }
 
-void protocol::handle_fetches(const code& ec,
+void protocol::handle_fetch(const code& ec,
     const messages::address_items& addresses,
-    const fetches_handler& handler) NOEXCEPT
+    const fetch_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol");
 
@@ -179,34 +179,34 @@ void protocol::handle_fetches(const code& ec,
     handler(ec, addresses);
 }
 
-void protocol::saves(const messages::address_items& addresses) NOEXCEPT
+void protocol::save(const messages::address_items& addresses) NOEXCEPT
 {
     const auto self = shared_from_base<protocol>();
-    return saves(addresses, [self](const code&)
+    return save(addresses, [self](const code&)
     {
         BC_ASSERT_MSG(self->stranded(), "protocol");
         self->nop();
     });
 }
 
-void protocol::saves(const messages::address_items& addresses,
+void protocol::save(const messages::address_items& addresses,
     result_handler&& handler) NOEXCEPT
 {
     LOG("Storing (" << addresses.size() << ") addresses from ["
         << authority() << "]");
 
     // TODO: use addresses pointer (copies addresses).
-    session_.saves(addresses, BIND2(do_saves, _1, std::move(handler)));
+    session_.save(addresses, BIND2(do_save, _1, std::move(handler)));
 }
 
 // Return to channel strand.
-void protocol::do_saves(const code& ec, const result_handler& handler) NOEXCEPT
+void protocol::do_save(const code& ec, const result_handler& handler) NOEXCEPT
 {
     boost::asio::post(channel_->strand(),
-        BIND2(handle_saves, ec, std::move(handler)));
+        BIND2(handle_save, ec, std::move(handler)));
 }
 
-void protocol::handle_saves(const code& ec, const result_handler& handler) NOEXCEPT
+void protocol::handle_save(const code& ec, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol");
 

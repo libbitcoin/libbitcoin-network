@@ -111,31 +111,31 @@ BOOST_AUTO_TEST_CASE(hosts__count__empty__zero)
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
 
-// store1
+// restore
 
 const address_item null_host{ 0, 0, null_ip_address, 0 };
 const address_item host42{ 0, 0, unspecified_ip_address, 42 };
 
-BOOST_AUTO_TEST_CASE(hosts__store1__disabled_stopped__empty)
+BOOST_AUTO_TEST_CASE(hosts__restore__disabled_stopped__empty)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
     hosts instance(log, set);
-    instance.store(null_host);
+    instance.restore(null_host);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(hosts__store1__stopped__empty)
+BOOST_AUTO_TEST_CASE(hosts__restore__stopped__empty)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
     set.host_pool_capacity = 42;
     hosts instance(log, set);
-    instance.store(null_host);
+    instance.restore(null_host);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
 
-BOOST_AUTO_TEST_CASE(hosts__store1__invalid__empty)
+BOOST_AUTO_TEST_CASE(hosts__restore__invalid__empty)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -145,13 +145,13 @@ BOOST_AUTO_TEST_CASE(hosts__store1__invalid__empty)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.store(null_host);
+    instance.restore(null_host);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
     instance.stop();
 }
 
-BOOST_AUTO_TEST_CASE(hosts__store1__valid__one)
+BOOST_AUTO_TEST_CASE(hosts__restore__valid__one)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -161,19 +161,19 @@ BOOST_AUTO_TEST_CASE(hosts__store1__valid__one)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.store(host42);
+    instance.restore(host42);
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
 
     instance.stop();
 }
 
-// store2
+// store
 
 const address_item host1{ 0, 0, unspecified_ip_address, 1 };
 const address_item host2{ 0, 0, unspecified_ip_address, 2 };
 const address_item host3{ 0, 0, unspecified_ip_address, 3 };
 
-BOOST_AUTO_TEST_CASE(hosts__store2__three_unique__three)
+BOOST_AUTO_TEST_CASE(hosts__store__three_unique__three)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(hosts__store2__three_unique__three)
     instance.stop();
 }
 
-BOOST_AUTO_TEST_CASE(hosts__store2__redundant__expected)
+BOOST_AUTO_TEST_CASE(hosts__store__redundant__expected)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -205,42 +205,6 @@ BOOST_AUTO_TEST_CASE(hosts__store2__redundant__expected)
     instance.stop();
 }
 
-// remove
-
-BOOST_AUTO_TEST_CASE(hosts__remove__only__empty)
-{
-    const logger log{};
-    settings set(bc::system::chain::selection::mainnet);
-    set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
-    hosts instance(log, set);
-    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
-    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
-
-    instance.store(host42);
-    instance.remove(host42);
-    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
-
-    instance.stop();
-}
-
-BOOST_AUTO_TEST_CASE(hosts__remove__single_not_found__one)
-{
-    const logger log{};
-    settings set(bc::system::chain::selection::mainnet);
-    set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
-    hosts instance(log, set);
-    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
-    BOOST_REQUIRE_EQUAL(instance.count(), 0u);
-
-    instance.store(host1);
-    instance.remove(host2);
-    BOOST_REQUIRE_EQUAL(instance.count(), 1u);
-
-    instance.stop();
-}
-
 // take
 
 BOOST_AUTO_TEST_CASE(hosts__take__stopped__service_stopped)
@@ -251,7 +215,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__stopped__service_stopped)
     set.host_pool_capacity = 42;
     hosts instance(log, set);
 
-    instance.store(host42);
+    instance.restore(host42);
     instance.take([&](const code& ec, const messages::address_item&)
     {
         BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
@@ -287,7 +251,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.store(host42);
+    instance.restore(host42);
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
     
     instance.take([&](const code& ec, const messages::address_item& item)
@@ -310,7 +274,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__stopped__service_stopped)
     set.host_pool_capacity = 42;
     hosts instance(log, set);
 
-    instance.store(host42);
+    instance.restore(host42);
     instance.fetch([&](const code& ec, const messages::address_items& items)
     {
         BOOST_REQUIRE_EQUAL(ec, error::service_stopped);

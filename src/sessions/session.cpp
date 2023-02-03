@@ -413,21 +413,21 @@ void session::take(hosts::address_item_handler&& handler) const NOEXCEPT
     network_.take(std::move(handler));
 }
 
-void session::fetches(hosts::address_items_handler&& handler) const NOEXCEPT
+void session::fetch(hosts::address_items_handler&& handler) const NOEXCEPT
 {
-    network_.fetches(std::move(handler));
+    network_.fetch(std::move(handler));
 }
 
-void session::save(const messages::address_item& address,
+void session::restore(const messages::address_item& address,
     result_handler&& handler) const NOEXCEPT
 {
-    network_.save(address, std::move(handler));
+    network_.restore(address, std::move(handler));
 }
 
-void session::saves(const messages::address_items& addresses,
+void session::save(const messages::address_items& addresses,
     result_handler&& handler) const NOEXCEPT
 {
-    network_.saves(addresses, std::move(handler));
+    network_.save(addresses, std::move(handler));
 }
 
 BC_POP_WARNING()

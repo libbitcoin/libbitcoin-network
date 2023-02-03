@@ -189,14 +189,14 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
         {
             channel->stop(error::channel_dropped);
             if (!ec || ec == error::service_stopped)
-                save({ channel->authority() }, [](code) NOEXCEPT {});
+                restore({ channel->authority() }, [](code) NOEXCEPT {});
         }
 
         return;
     }
 
     if (channel && ec == error::service_stopped)
-        save({ channel->authority() }, [](code) NOEXCEPT{});
+        restore({ channel->authority() }, [](code) NOEXCEPT{});
 
     // Last indicates that this is the last attempt.
     const auto last = is_zero(--(*count));
@@ -250,7 +250,7 @@ void session_outbound::handle_connect(const code& ec,
             channel->stop(error::service_stopped);
 
             if (!ec || ec == error::service_stopped)
-                save({ channel->authority() }, [](code) NOEXCEPT{});
+                restore({ channel->authority() }, [](code) NOEXCEPT{});
         }
 
         return;
@@ -300,7 +300,7 @@ void session_outbound::handle_channel_stop(const code& ec,
         "(" << peer << ") " << ec.message());
 
     if (ec == error::service_stopped || ec == error::channel_expired)
-        save({ channel->authority() }, [](code) NOEXCEPT {});
+        restore({ channel->authority() }, [](code) NOEXCEPT {});
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).

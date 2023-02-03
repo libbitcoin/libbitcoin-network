@@ -183,14 +183,12 @@ protected:
     virtual code store(const channel::ptr& channel, bool notify,
         bool inbound) NOEXCEPT;
 
-    /// Maintain address pool (TODO: move to store interface).
+    /// Maintain address pool.
     virtual void take(hosts::address_item_handler&& handler) NOEXCEPT;
-    virtual void fetches(hosts::address_items_handler&& handler) const NOEXCEPT;
-    virtual void dump(const messages::address_item& address,
+    virtual void restore(const messages::address_item& address,
         result_handler&& complete) NOEXCEPT;
-    virtual void save(const messages::address_item& address,
-        result_handler&& complete) NOEXCEPT;
-    virtual void saves(const messages::address_items& addresses,
+    virtual void fetch(hosts::address_items_handler&& handler) const NOEXCEPT;
+    virtual void save(const messages::address_items& addresses,
         result_handler&& complete) NOEXCEPT;
 
     /// The strand is running in this thread.
@@ -238,10 +236,10 @@ private:
         const channel_handler& handler) NOEXCEPT;
 
     void do_take(const hosts::address_item_handler& handler) NOEXCEPT;
-    void do_fetches(const hosts::address_items_handler& handler) const NOEXCEPT;
-    void do_save(const messages::address_item& host,
+    void do_restore(const messages::address_item& host,
         const result_handler& complete) NOEXCEPT;
-    void do_saves(const messages::address_items& hosts,
+    void do_fetch(const hosts::address_items_handler& handler) const NOEXCEPT;
+    void do_save(const messages::address_items& hosts,
         const result_handler& complete) NOEXCEPT;
 
     // These are thread safe.

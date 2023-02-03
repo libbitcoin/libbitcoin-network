@@ -141,7 +141,7 @@ code hosts::stop() NOEXCEPT
     return error::success;
 }
 
-void hosts::store(const address_item& host) NOEXCEPT
+void hosts::restore(const address_item& host) NOEXCEPT
 {
     if (disabled_ || stopped_)
         return;
@@ -198,22 +198,6 @@ void hosts::store(const address_items& hosts) NOEXCEPT
 
     LOG("Accepted (" << accepted << " of " << hosts.size() << ") "
         "host addresses from peer.");
-}
-
-void hosts::remove(const address_item& host) NOEXCEPT
-{
-    if (stopped_ || buffer_.empty())
-        return;
-
-    const auto it = find(host);
-    if (it != buffer_.end())
-    {
-        buffer_.erase(it);
-        count_.store(buffer_.size(), std::memory_order_relaxed);
-        return;
-    }
-
-    LOG("Address to remove not found.");
 }
 
 void hosts::take(const address_item_handler& handler) NOEXCEPT

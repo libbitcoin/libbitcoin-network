@@ -103,7 +103,7 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     }
 
     // Protocol handles and logs code.
-    saves(message->addresses);
+    save(message->addresses);
     received_ = true;
 }
 
@@ -125,7 +125,7 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
         return;
     }
 
-    fetches(BIND2(handle_fetch_addresses, _1, _2));
+    fetch(BIND2(handle_fetch_addresses, _1, _2));
     sent_ = true;
 }
 

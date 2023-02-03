@@ -302,20 +302,20 @@ public:
     /// Addresses.
     /// -----------------------------------------------------------------------
 
-    void fetches(fetches_handler&& handler) NOEXCEPT override
+    void fetch(fetch_handler&& handler) NOEXCEPT override
     {
-        return protocol::fetches(std::move(handler));
+        return protocol::fetch(std::move(handler));
     }
 
-    void saves(const messages::address_items& addresses) NOEXCEPT override
+    void save(const messages::address_items& addresses) NOEXCEPT override
     {
-        return protocol::saves(addresses);
+        return protocol::save(addresses);
     }
 
-    void saves(const messages::address_items& addresses,
+    void save(const messages::address_items& addresses,
         result_handler&& handler) NOEXCEPT override
     {
-        return protocol::saves(addresses, std::move(handler));
+        return protocol::save(addresses, std::move(handler));
     }
 
     virtual void handle_send(const code& ec) NOEXCEPT override

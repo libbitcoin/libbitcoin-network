@@ -61,14 +61,14 @@ public:
     virtual void take(hosts::address_item_handler&& handler) const NOEXCEPT;
 
     /// Fetch a subset of entries (count based on config) from address pool.
-    virtual void fetches(hosts::address_items_handler&& handler) const NOEXCEPT;
+    virtual void fetch(hosts::address_items_handler&& handler) const NOEXCEPT;
 
-    /// Save an address to the address pool.
-    virtual void save(const messages::address_item& address,
+    /// Restore an address to the address pool.
+    virtual void restore(const messages::address_item& address,
         result_handler&& handler) const NOEXCEPT;
 
     /// Save a subset of entries (count based on config) from address pool.
-    virtual void saves(const messages::address_items& addresses,
+    virtual void save(const messages::address_items& addresses,
         result_handler&& handler) const NOEXCEPT;
 
     /// Properties.

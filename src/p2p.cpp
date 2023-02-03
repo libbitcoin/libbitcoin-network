@@ -378,51 +378,43 @@ void p2p::do_take(const hosts::address_item_handler& handler) NOEXCEPT
     hosts_.take(handler);
 }
 
-void p2p::fetches(hosts::address_items_handler&& handler) const NOEXCEPT
+void p2p::restore(const messages::address_item& host,
+    result_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_fetches, this, std::move(handler)));
+        std::bind(&p2p::do_restore, this, host, std::move(handler)));
 }
 
-void p2p::do_fetches(
+void p2p::do_restore(const messages::address_item& host,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    hosts_.restore(host);
+    handler(error::success);
+}
+
+void p2p::fetch(hosts::address_items_handler&& handler) const NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_fetch, this, std::move(handler)));
+}
+
+void p2p::do_fetch(
     const hosts::address_items_handler& handler) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     hosts_.fetch(handler);
 }
 
-void p2p::dump(const messages::address_item& host,
-    result_handler&& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    hosts_.remove(host);
-    handler(error::success);
-}
-
-void p2p::save(const messages::address_item& host,
-    result_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_save, this, host, std::move(handler)));
-}
-
-void p2p::do_save(const messages::address_item& host,
-    const result_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    hosts_.store(host);
-    handler(error::success);
-}
-
 // TODO: use pointer.
-void p2p::saves(const messages::address_items& hosts,
+void p2p::save(const messages::address_items& hosts,
     result_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_saves, this, hosts, std::move(handler)));
+        std::bind(&p2p::do_save, this, hosts, std::move(handler)));
 }
 
-void p2p::do_saves(const messages::address_items& hosts,
+void p2p::do_save(const messages::address_items& hosts,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");

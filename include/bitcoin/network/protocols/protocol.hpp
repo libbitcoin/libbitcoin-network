@@ -57,7 +57,7 @@ public:
 protected:
     typedef std::function<void(const code&)> result_handler;
     typedef std::function<void(const code&, const messages::address_items&)>
-        fetches_handler;
+        fetch_handler;
 
     /// Construct an instance.
     protocol(const session& session, const channel::ptr& channel) NOEXCEPT;
@@ -147,25 +147,25 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Fetch a set of peer addresses from the address pool.
-    virtual void fetches(fetches_handler&& handler) NOEXCEPT;
+    virtual void fetch(fetch_handler&& handler) NOEXCEPT;
 
     /// Save a set of peer addresses to the address pool.
-    virtual void saves(const messages::address_items& addresses) NOEXCEPT;
-    virtual void saves(const messages::address_items& addresses,
+    virtual void save(const messages::address_items& addresses) NOEXCEPT;
+    virtual void save(const messages::address_items& addresses,
         result_handler&& handler) NOEXCEPT;
 
     /// Capture send results, use for no-op send handling (logged).
     virtual void handle_send(const code& ec) NOEXCEPT;
 
 private:
-    void do_fetches(const code& ec,
+    void do_fetch(const code& ec,
         const messages::address_items& addresses,
-        const fetches_handler& handler) NOEXCEPT;
-    void handle_fetches(const code& ec, const messages::address_items& addresses,
-        const fetches_handler& handler) NOEXCEPT;
+        const fetch_handler& handler) NOEXCEPT;
+    void handle_fetch(const code& ec, const messages::address_items& addresses,
+        const fetch_handler& handler) NOEXCEPT;
 
-    void do_saves(const code& ec, const result_handler& handler) NOEXCEPT;
-    void handle_saves(const code& ec, const result_handler& handler) NOEXCEPT;
+    void do_save(const code& ec, const result_handler& handler) NOEXCEPT;
+    void handle_save(const code& ec, const result_handler& handler) NOEXCEPT;
 
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
