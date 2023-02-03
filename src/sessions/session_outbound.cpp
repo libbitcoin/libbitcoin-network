@@ -98,7 +98,7 @@ void session_outbound::handle_started(const code& ec,
 
     for (size_t peer = 0; peer < settings().outbound_connections; ++peer)
     {
-        // Create a batch of connectors for each outbount connection.
+        // Create a batch of connectors for each outbound connection.
         const auto connectors = create_connectors(settings().connect_batch_size);
 
         for (const auto& connector: *connectors)
@@ -186,10 +186,17 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
     if (is_zero(*count))
     {
         if (channel)
+        {
             channel->stop(error::channel_dropped);
+            if (!ec || ec == error::service_stopped)
+                save({ channel->authority() }, [](code) NOEXCEPT {});
+        }
 
         return;
     }
+
+    if (channel && ec == error::service_stopped)
+        save({ channel->authority() }, [](code) NOEXCEPT{});
 
     // Last indicates that this is the last attempt.
     const auto last = is_zero(--(*count));
@@ -239,12 +246,17 @@ void session_outbound::handle_connect(const code& ec,
     if (stopped())
     {
         if (channel)
+        {
             channel->stop(error::service_stopped);
+
+            if (!ec || ec == error::service_stopped)
+                save({ channel->authority() }, [](code) NOEXCEPT{});
+        }
 
         return;
     }
 
-    // This is always connect_failed, no log (reduced).
+    // This is always connect_failed with nullptr, no log.
     // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
@@ -279,13 +291,16 @@ void session_outbound::attach_protocols(
     session::attach_protocols(channel);
 }
 
-void session_outbound::handle_channel_stop(const code& LOG_ONLY(ec),
-    const channel::ptr& LOG_ONLY(channel), size_t peer,
+void session_outbound::handle_channel_stop(const code& ec,
+    const channel::ptr& channel, size_t peer,
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Outbound channel stop [" << channel->authority() << "] "
         "(" << peer << ") " << ec.message());
+
+    if (ec == error::service_stopped || ec == error::channel_expired)
+        save({ channel->authority() }, [](code) NOEXCEPT {});
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).
