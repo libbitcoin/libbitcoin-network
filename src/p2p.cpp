@@ -190,6 +190,12 @@ void p2p::close() NOEXCEPT
         BC_ASSERT_MSG(false, "failed to join threadpool");
         std::abort();
     }
+
+    // Serialize hosts to file.
+    if (const auto error_code = stop_hosts())
+    {
+        LOG("Hosts file failed to serialize, " << error_code.message());
+    }
 }
 
 void p2p::do_close() NOEXCEPT
@@ -213,12 +219,6 @@ void p2p::do_close() NOEXCEPT
 
     // Free all channels.
     channels_.clear();
-
-    // Serialize hosts to file.
-    if (const auto error_code = stop_hosts())
-    {
-        LOG("Hosts file failed to serialize, " << error_code.message());
-    }
 
     // Stop threadpool keep-alive, all work must self-terminate to affect join.
     threadpool_.stop();
