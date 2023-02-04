@@ -34,6 +34,7 @@ namespace network {
 
 /// Not thread safe, virtual.
 /// Create outbound socket connections.
+/// All public/protected methods must be called from strand.
 /// Stop is thread safe and idempotent, may be called multiple times.
 class BCT_API connector
   : public std::enable_shared_from_this<connector>, public reporter,
@@ -64,10 +65,10 @@ public:
     // ------------------------------------------------------------------------
     /// A connection may only be reattempted following handler invocation.
     /// May return operation_canceled, channel_timeout, success or error code.
-    /// The channel paramter is nullptr unless success is returned.
+    /// The channel parameter is nullptr unless success is returned.
 
     /// Try to connect to the authority, starts timer.
-    virtual void connect(const config::authority& authority,
+    virtual void connect(const config::authority& host,
         connect_handler&& handler) NOEXCEPT;
 
     /// Try to connect to the endpoint, starts timer.
@@ -79,6 +80,9 @@ public:
         connect_handler&& handler) NOEXCEPT;
 
 protected:
+    virtual void start_connect(const std::string& hostname, uint16_t port,
+        const config::authority& host, connect_handler&& handler) NOEXCEPT;
+
     // These are thread safe
     const settings& settings_;
     asio::io_context& service_;
@@ -92,14 +96,14 @@ protected:
 private:
     void handle_resolve(const error::boost_code& ec,
         const asio::endpoints& range, socket::ptr socket,
-        const connect_handler& handler) NOEXCEPT;
+        const config::authority& host, const connect_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, socket::ptr socket,
-        const connect_handler& handler) NOEXCEPT;
+        const config::authority& host, const connect_handler& handler) NOEXCEPT;
     void handle_timer(const code& ec, const socket::ptr& socket,
         const connect_handler& handler) NOEXCEPT;
 
     void do_handle_connect(const code& ec, socket::ptr socket,
-        const connect_handler& handler) NOEXCEPT;
+        const config::authority& host, const connect_handler& handler) NOEXCEPT;
 };
 
 typedef std::vector<connector::ptr> connectors;

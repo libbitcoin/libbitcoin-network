@@ -34,6 +34,9 @@ using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
 
+// Bind throws (ok).
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 protocol_address_31402::protocol_address_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
@@ -102,9 +105,19 @@ void protocol_address_31402::handle_receive_address(const code& ec,
         return;
     }
 
-    // Protocol handles and logs code.
-    save(message->addresses);
+    save(message, BIND2(handle_save_addresses, _1, message->addresses.size()));
     received_ = true;
+}
+
+void protocol_address_31402::handle_save_addresses(const code& ec,
+    size_t LOG_ONLY(count)) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_address_31402");
+
+    if (stopped(ec))
+        return;
+
+    LOG("Received (" << count << ") addresses from [" << authority() << "]");
 }
 
 // Outbound (fetch and send addresses).
@@ -129,16 +142,27 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
     sent_ = true;
 }
 
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+
 void protocol_address_31402::handle_fetch_addresses(const code& ec,
-    const messages::address_items& addresses) NOEXCEPT
+    const address::ptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
     if (stopped(ec))
         return;
 
-    SEND1(address{ addresses }, handle_send, _1);
+    LOG("Sending (" << message->addresses.size() << ") addresses to "
+        "[" << authority() << "]");
+
+    SEND1(*message, handle_send, _1);
 }
+
+BC_POP_WARNING()
+BC_POP_WARNING()
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

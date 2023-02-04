@@ -68,7 +68,7 @@ public:
         result_handler&& handler) const NOEXCEPT;
 
     /// Save a subset of entries (count based on config) from address pool.
-    virtual void save(const messages::address_items& addresses,
+    virtual void save(const messages::address::ptr& message,
         result_handler&& handler) const NOEXCEPT;
 
     /// Properties.

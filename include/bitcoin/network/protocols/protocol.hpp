@@ -56,7 +56,7 @@ public:
 
 protected:
     typedef std::function<void(const code&)> result_handler;
-    typedef std::function<void(const code&, const messages::address_items&)>
+    typedef std::function<void(const code&, const messages::address::ptr&)>
         fetch_handler;
 
     /// Construct an instance.
@@ -150,18 +150,16 @@ protected:
     virtual void fetch(fetch_handler&& handler) NOEXCEPT;
 
     /// Save a set of peer addresses to the address pool.
-    virtual void save(const messages::address_items& addresses) NOEXCEPT;
-    virtual void save(const messages::address_items& addresses,
+    virtual void save(const messages::address::ptr& message,
         result_handler&& handler) NOEXCEPT;
 
     /// Capture send results, use for no-op send handling (logged).
     virtual void handle_send(const code& ec) NOEXCEPT;
 
 private:
-    void do_fetch(const code& ec,
-        const messages::address_items& addresses,
+    void do_fetch(const code& ec, const messages::address::ptr& message,
         const fetch_handler& handler) NOEXCEPT;
-    void handle_fetch(const code& ec, const messages::address_items& addresses,
+    void handle_fetch(const code& ec, const messages::address::ptr& message,
         const fetch_handler& handler) NOEXCEPT;
 
     void do_save(const code& ec, const result_handler& handler) NOEXCEPT;

@@ -61,25 +61,30 @@ protected:
 
     /// Start outbound connections based on config (called from start).
     virtual void start_connect(const connectors_ptr& connectors,
-        size_t peer) NOEXCEPT;
+        size_t id) NOEXCEPT;
 
 private:
     typedef std::shared_ptr<size_t> count_ptr;
 
+    /// Restore an address to the address pool.
+    void restore(const code& ec, const channel::ptr& channel) NOEXCEPT;
+
     void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, const channel::ptr& channel,
-        const connectors_ptr& connectors, size_t peer) NOEXCEPT;
+        const connectors_ptr& connectors, size_t id) NOEXCEPT;
 
     void handle_channel_start(const code& ec, const channel::ptr& channel,
-        size_t peer) NOEXCEPT;
+        size_t id) NOEXCEPT;
     void handle_channel_stop(const code& ec, const channel::ptr& channel,
-        size_t peer, const connectors_ptr& connectors) NOEXCEPT;
+        size_t id, const connectors_ptr& connectors) NOEXCEPT;
 
-    void do_one(const code& ec, const config::authority& host,
+    void do_one(const code& ec, const config::authority& peer,
         const connector::ptr& connector, const channel_handler& handler) NOEXCEPT;
     void handle_one(const code& ec, const channel::ptr& channel,
         const count_ptr& count, const connectors_ptr& connectors,
         const channel_handler& handler) NOEXCEPT;
+
+    void handle_restore(const code& ec) const NOEXCEPT;
 };
 
 } // namespace network

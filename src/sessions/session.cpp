@@ -424,10 +424,10 @@ void session::restore(const messages::address_item& address,
     network_.restore(address, std::move(handler));
 }
 
-void session::save(const messages::address_items& addresses,
+void session::save(const messages::address::ptr& message,
     result_handler&& handler) const NOEXCEPT
 {
-    network_.save(addresses, std::move(handler));
+    network_.save(message, std::move(handler));
 }
 
 BC_POP_WARNING()

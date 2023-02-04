@@ -115,14 +115,6 @@ void socket::connect(const asio::endpoints& range,
             shared_from_this(), range, std::move(handler)));
 }
 
-////// Read into dynamically-allocated buffer (web).
-////void socket::dynamic_read(data_chunk& out, io_handler&& handler) NOEXCEPT
-////{
-////    boost::asio::dispatch(strand_,
-////        std::bind(&socket::do_dynamic_read, shared_from_this(),
-////            std::ref(out), std::move(handler)));
-////}
-
 // Read into pre-allocated buffer (bitcoin).
 void socket::read(const data_slab& out, io_handler&& handler) NOEXCEPT
 {
@@ -152,22 +144,11 @@ void socket::do_connect(const asio::endpoints& range,
     BC_ASSERT_MSG(stranded(), "strand");
     BC_ASSERT_MSG(!socket_.is_open(), "connect on open socket");
 
-    // Establishes a socket connection by trying each endpoint in a sequence.
+    // Establishes a socket connection by trying each endpoint in sequence.
     boost::asio::async_connect(socket_, range,
         std::bind(&socket::handle_connect,
             shared_from_this(), _1, _2, handler));
 }
-
-////// Read into dynamically-allocated buffer (web).
-////void socket::do_dynamic_read(data_chunk& out, io_handler handler) NOEXCEPT
-////{
-////    BC_ASSERT_MSG(stranded(), "strand");
-////
-////    // This composed operation posts all intermediate handlers to the strand.
-////    boost::asio::async_read(socket_, boost::asio::dynamic_buffer(out),
-////        std::bind(&socket::handle_io,
-////            shared_from_this(), _1, _2, std::move(handler)));
-////}
 
 // Read into pre-allocated buffer (bitcoin).
 void socket::do_read(const boost::asio::mutable_buffer& out,

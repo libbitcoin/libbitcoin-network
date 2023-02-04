@@ -188,7 +188,7 @@ protected:
     virtual void restore(const messages::address_item& address,
         result_handler&& complete) NOEXCEPT;
     virtual void fetch(hosts::address_items_handler&& handler) const NOEXCEPT;
-    virtual void save(const messages::address_items& addresses,
+    virtual void save(const messages::address::ptr& message,
         result_handler&& complete) NOEXCEPT;
 
     /// The strand is running in this thread.
@@ -239,7 +239,7 @@ private:
     void do_restore(const messages::address_item& host,
         const result_handler& complete) NOEXCEPT;
     void do_fetch(const hosts::address_items_handler& handler) const NOEXCEPT;
-    void do_save(const messages::address_items& hosts,
+    void do_save(const messages::address::ptr& message,
         const result_handler& complete) NOEXCEPT;
 
     // These are thread safe.

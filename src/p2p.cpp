@@ -178,7 +178,7 @@ void p2p::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
 // Shutdown sequence.
 // ----------------------------------------------------------------------------
 
-// Not thread safe (threadpool_), call only once.
+// Not thread safe (threadpool_, hosts_), call only once.
 // Results in std::abort if called from a thread within the threadpool.
 void p2p::close() NOEXCEPT
 {
@@ -406,19 +406,18 @@ void p2p::do_fetch(
     hosts_.fetch(handler);
 }
 
-// TODO: use pointer.
-void p2p::save(const messages::address_items& hosts,
+void p2p::save(const messages::address::ptr& message,
     result_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_save, this, hosts, std::move(handler)));
+        std::bind(&p2p::do_save, this, message, std::move(handler)));
 }
 
-void p2p::do_save(const messages::address_items& hosts,
+void p2p::do_save(const messages::address::ptr& message,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    hosts_.store(hosts);
+    hosts_.store(message);
     handler(error::success);
 }
 

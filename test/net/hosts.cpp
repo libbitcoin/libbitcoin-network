@@ -48,13 +48,14 @@ BOOST_AUTO_TEST_CASE(hosts__start__disabled__success)
 
 BOOST_AUTO_TEST_CASE(hosts__start__enabled__success)
 {
-    // Non-empty pool causes file open/load.
+    // Non-empty capacity causes file open/load.
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(log, set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE(!test::exists(TEST_NAME));
 
     instance.stop();
 }
@@ -68,7 +69,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__disabled_start__success)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
 }
 
-BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__operation_failed)
+BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__success)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
@@ -76,7 +77,8 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__operation_failed)
     set.host_pool_capacity = 42;
     hosts instance(log, set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
-    BOOST_REQUIRE_EQUAL(instance.start(), error::operation_failed);
+    BOOST_REQUIRE_EQUAL(instance.start(), error::success);
+    BOOST_REQUIRE(!test::exists(TEST_NAME));
 
     instance.stop();
 }
@@ -89,16 +91,17 @@ BOOST_AUTO_TEST_CASE(hosts__stop__disabled__success)
     settings set(bc::system::chain::selection::mainnet);
     hosts instance(log, set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
-    BOOST_REQUIRE_EQUAL(instance.stop(), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(hosts__stop__enabled_stopped__success)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(log, set);
     BOOST_REQUIRE_EQUAL(instance.stop(), error::success);
+    BOOST_REQUIRE(!test::exists(TEST_NAME));
 }
 
 // count
@@ -129,10 +132,14 @@ BOOST_AUTO_TEST_CASE(hosts__restore__stopped__empty)
 {
     const logger log{};
     settings set(bc::system::chain::selection::mainnet);
+    set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(log, set);
     instance.restore(null_host);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+
+    instance.stop();
+    BOOST_REQUIRE(!test::exists(TEST_NAME));
 }
 
 BOOST_AUTO_TEST_CASE(hosts__restore__invalid__empty)
@@ -149,6 +156,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__invalid__empty)
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
     instance.stop();
+    BOOST_REQUIRE(!test::exists(TEST_NAME));
 }
 
 BOOST_AUTO_TEST_CASE(hosts__restore__valid__one)
@@ -165,6 +173,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__valid__one)
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
 
     instance.stop();
+    BOOST_REQUIRE(test::exists(TEST_NAME));
 }
 
 // store
@@ -183,10 +192,16 @@ BOOST_AUTO_TEST_CASE(hosts__store__three_unique__three)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.store({ host1, host2, host3 });
+    const auto message = system::to_shared<messages::address>
+        (
+            messages::address_items{ host1, host2, host3 }
+    );
+
+    instance.store(message);
     BOOST_REQUIRE_EQUAL(instance.count(), 3u);
 
     instance.stop();
+    BOOST_REQUIRE(test::exists(TEST_NAME));
 }
 
 BOOST_AUTO_TEST_CASE(hosts__store__redundant__expected)
@@ -199,28 +214,19 @@ BOOST_AUTO_TEST_CASE(hosts__store__redundant__expected)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.store({ host1, host2, host3, host3, host2, host1 });
+    const auto message = system::to_shared<messages::address>
+    (
+        messages::address_items{ host1, host2, host3, host3, host2, host1 }
+    );
+
+    instance.store(message);
     BOOST_REQUIRE_EQUAL(instance.count(), 3u);
 
     instance.stop();
+    BOOST_REQUIRE(test::exists(TEST_NAME));
 }
 
 // take
-
-BOOST_AUTO_TEST_CASE(hosts__take__stopped__service_stopped)
-{
-    const logger log{};
-    settings set(bc::system::chain::selection::mainnet);
-    set.path = TEST_NAME;
-    set.host_pool_capacity = 42;
-    hosts instance(log, set);
-
-    instance.restore(host42);
-    instance.take([&](const code& ec, const messages::address_item&)
-    {
-        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
-    });
-}
 
 BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
 {
@@ -239,6 +245,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
 
     instance.stop();
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE(!test::exists(TEST_NAME));
 }
 
 BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
@@ -262,25 +269,10 @@ BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
 
     instance.stop();
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
+    BOOST_REQUIRE(!test::exists(TEST_NAME));
 }
 
 // fetch
-
-BOOST_AUTO_TEST_CASE(hosts__fetch__stopped__service_stopped)
-{
-    const logger log{};
-    settings set(bc::system::chain::selection::mainnet);
-    set.path = TEST_PATH;
-    set.host_pool_capacity = 42;
-    hosts instance(log, set);
-
-    instance.restore(host42);
-    instance.fetch([&](const code& ec, const messages::address_items& items)
-    {
-        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
-        BOOST_REQUIRE(items.empty());
-    });
-}
 
 BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
 {
@@ -292,13 +284,14 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.fetch([&](const code& ec, const messages::address_items& items)
+    instance.fetch([&](const code& ec, const messages::address::ptr& message)
     {
         BOOST_REQUIRE_EQUAL(ec, error::address_not_found);
-        BOOST_REQUIRE(items.empty());
+        BOOST_REQUIRE(!message);
     });
 
     instance.stop();
+    BOOST_REQUIRE(!test::exists(TEST_NAME));
 }
 
 BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
@@ -311,16 +304,22 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.store({ host1, host2, host3 });
+    const auto message = system::to_shared<messages::address>
+    (
+        messages::address_items{ host1, host2, host3 }
+    );
+
+    instance.store(message);
     BOOST_REQUIRE_EQUAL(instance.count(), 3u);
 
-    instance.fetch([&](const code& ec, const messages::address_items& items)
+    instance.fetch([&](const code& ec, const messages::address::ptr& message)
     {
         BOOST_REQUIRE_EQUAL(ec, error::success);
-        BOOST_REQUIRE(items.empty());
+        BOOST_REQUIRE(message->addresses.empty());
     });
 
     instance.stop();
+    BOOST_REQUIRE(test::exists(TEST_NAME));
 }
 
 BOOST_AUTO_TEST_CASE(hosts__fetch__populated_file__expected)
@@ -330,14 +329,28 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__populated_file__expected)
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance1(log, set);
+
+    // File is deleted if empty on open.
+    BOOST_REQUIRE(test::create(TEST_NAME));
+    BOOST_REQUIRE(test::exists(TEST_NAME));
     BOOST_REQUIRE_EQUAL(instance1.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance1.count(), 0u);
+    BOOST_REQUIRE(!test::exists(TEST_NAME));
 
-    instance1.store({ host1, host2, host3 });
+    const auto message = system::to_shared<messages::address>
+    (
+        messages::address_items{ host1, host2, host3 }
+    );
+
+    instance1.store(message);
     BOOST_REQUIRE_EQUAL(instance1.count(), 3u);
+
+    // File is not created until stop.
+    BOOST_REQUIRE(!test::exists(TEST_NAME));
 
     // File is created with three entries.
     instance1.stop();
+    BOOST_REQUIRE(test::exists(TEST_NAME));
 
     // Start with existing file and read entries.
     hosts instance2(log, set);
@@ -345,6 +358,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__populated_file__expected)
     BOOST_REQUIRE_EQUAL(instance2.count(), 3u);
 
     instance2.stop();
+    BOOST_REQUIRE(test::exists(TEST_NAME));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

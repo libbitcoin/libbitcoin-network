@@ -106,8 +106,8 @@ public:
     }
 
     // Handle connect, capture first connected hostname and port.
-    void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) NOEXCEPT override
+    void start_connect(const std::string& hostname, uint16_t port,
+        const config::authority&, connect_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
         {
@@ -145,8 +145,8 @@ public:
 
     using mock_connector_connect_success<error::success>::mock_connector_connect_success;
 
-    void connect(const std::string&, uint16_t,
-        connect_handler&& handler) NOEXCEPT override
+    void start_connect(const std::string&, uint16_t,
+        const config::authority&, connect_handler&& handler) NOEXCEPT override
     {
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
@@ -181,7 +181,7 @@ public:
         const connector::ptr& connector,
         const channel_handler& handler) NOEXCEPT override
     {
-        // Must be first to ensure connector::connect() preceeds promise release.
+        // Must be first to ensure connector::start_connect() preceeds promise release.
         session_seed::start_seed(seed, connector, handler);
 
         if (!seeded_)
@@ -310,10 +310,10 @@ public:
         return error::success;
     }
 
-    void save(const messages::address_items& addresses,
+    void save(const messages::address::ptr& message,
         result_handler&& complete) NOEXCEPT override
     {
-        hosts_ += addresses.size();
+        hosts_ += message->addresses.size();
         complete(error::success);
     }
 
@@ -387,16 +387,16 @@ public:
     {
     }
 
-    void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) NOEXCEPT override
+    void start_connect(const std::string& hostname, uint16_t port,
+        const config::authority&, connect_handler&& handler) NOEXCEPT override
     {
         BC_ASSERT_MSG(session_, "call set_session");
 
-        // This connector.connect is invoked from network stranded method.
+        // This connector.start_connect is invoked from network stranded method.
         session_->stop();
 
-        mock_connector_connect_success<error::service_stopped>::connect(hostname,
-            port, std::move(handler));
+        mock_connector_connect_success<error::service_stopped>::start_connect(
+            hostname, port, {}, std::move(handler));
     }
 
 private:

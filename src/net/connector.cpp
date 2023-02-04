@@ -24,6 +24,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -73,26 +74,32 @@ void connector::stop() NOEXCEPT
 // Methods.
 // ---------------------------------------------------------------------------
 
-void connector::connect(const authority& authority,
+void connector::connect(const authority& host,
     connect_handler&& handler) NOEXCEPT
 {
-    connect(authority.to_hostname(), authority.port(), std::move(handler));
+    start_connect(host.to_hostname(), host.port(), host, std::move(handler));
 }
 
 void connector::connect(const endpoint& endpoint,
     connect_handler&& handler) NOEXCEPT
 {
-    connect(endpoint.host(), endpoint.port(), std::move(handler));
+    start_connect(endpoint.host(), endpoint.port(), {}, std::move(handler));
 }
 
 void connector::connect(const std::string& hostname, uint16_t port,
     connect_handler&& handler) NOEXCEPT
 {
+    start_connect(hostname, port, {}, std::move(handler));
+}
+
+// protected
+void connector::start_connect(const std::string& hostname, uint16_t port,
+    const config::authority& host, connect_handler&& handler) NOEXCEPT
+{
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     // This allows connect after stop (restartable).
     stopped_ = false;
-
     const auto socket = std::make_shared<network::socket>(log(), service_);
 
     // Posts handle_timer to strand.
@@ -105,13 +112,13 @@ void connector::connect(const std::string& hostname, uint16_t port,
     // async_resolve copies string parameters.
     resolver_.async_resolve(hostname, std::to_string(port),
         std::bind(&connector::handle_resolve,
-            shared_from_this(), _1, _2, socket, std::move(handler)));
+            shared_from_this(), _1, _2, socket, host, std::move(handler)));
 }
 
 // private
 void connector::handle_resolve(const error::boost_code& ec,
     const asio::endpoints& range, socket::ptr socket,
-    const connect_handler& handler) NOEXCEPT
+    const config::authority& host, const connect_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -135,30 +142,24 @@ void connector::handle_resolve(const error::boost_code& ec,
         return;
     }
 
-    // boost::asio::bind_executor not working due to type erasure.
-    ////// Posts handle_connect to strand (after socket strand).
-    ////socket->connect(range,
-    ////    boost::asio::bind_executor(strand_,
-    ////        std::bind(&connector::handle_connect,
-    ////            shared_from_this(), _1, socket, std::move(handler))));
-
+    // Establishes a socket connection by trying each endpoint in sequence.
     socket->connect(range,
         std::bind(&connector::handle_connect,
-            shared_from_this(), _1, socket, handler));
+            shared_from_this(), _1, socket, host, handler));
 }
 
 // private
 void connector::handle_connect(const code& ec, socket::ptr socket,
-    const connect_handler& handler) NOEXCEPT
+    const config::authority& host, const connect_handler& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&connector::do_handle_connect,
-            shared_from_this(), ec, socket, handler));
+            shared_from_this(), ec, socket, host, handler));
 }
 
 // private
 void connector::do_handle_connect(const code& ec, socket::ptr socket,
-    const connect_handler& handler) NOEXCEPT
+    const config::authority& host, const connect_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -181,8 +182,9 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
         return;
     }
 
+    // channel.originator set to socket.authority if not parameterized.
     const auto channel = std::make_shared<network::channel>(log(), socket,
-        settings_);
+        settings_, host ? host : socket->authority());
 
     // Successful connect.
     handler(error::success, channel);

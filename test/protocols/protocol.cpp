@@ -307,15 +307,10 @@ public:
         return protocol::fetch(std::move(handler));
     }
 
-    void save(const messages::address_items& addresses) NOEXCEPT override
-    {
-        return protocol::save(addresses);
-    }
-
-    void save(const messages::address_items& addresses,
+    void save(const messages::address::ptr& message,
         result_handler&& handler) NOEXCEPT override
     {
-        return protocol::save(addresses, std::move(handler));
+        return protocol::save(message, std::move(handler));
     }
 
     virtual void handle_send(const code& ec) NOEXCEPT override

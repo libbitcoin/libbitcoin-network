@@ -257,10 +257,10 @@ public:
         return restored_;
     }
 
-    void save(const messages::address_items& addresses,
+    void save(const messages::address::ptr& message,
         result_handler&& complete) NOEXCEPT override
     {
-        saveds_ = addresses;
+        saveds_ = message->addresses;
         complete(error::bad_stream);
     }
 
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
     mock_session session(net);
 
     std::promise<code> fetched;
-    session.fetch([&](const code& ec, messages::address_items)
+    session.fetch([&](const code& ec, const messages::address::ptr&)
     {
         fetched.set_value(ec);
     });
@@ -516,10 +516,12 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
     mock_session session(net);
 
     std::promise<code> save;
-    session.save({ {}, { 42, 24, unspecified_ip_address, 4224u } }, [&](const code& ec)
-    {
-        save.set_value(ec);
-    });
+    session.save(system::to_shared<messages::address>
+        (messages::address_items{ {}, { 42, 24, unspecified_ip_address, 4224u } }),
+        [&](const code& ec)
+        {
+            save.set_value(ec);
+        });
 
     BOOST_REQUIRE_EQUAL(save.get_future().get(), error::bad_stream);
 

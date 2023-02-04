@@ -96,7 +96,7 @@ void session_outbound::handle_started(const code& ec,
         return;
     }
 
-    for (size_t peer = 0; peer < settings().outbound_connections; ++peer)
+    for (size_t id = 0; id < settings().outbound_connections; ++id)
     {
         // Create a batch of connectors for each outbound connection.
         const auto connectors = create_connectors(settings().connect_batch_size);
@@ -108,7 +108,7 @@ void session_outbound::handle_started(const code& ec,
             });
 
         // Start connection attempt with batch of connectors for one peer.
-        start_connect(connectors, peer);
+        start_connect(connectors, id);
     }
 
     LOG("Creating " << settings().outbound_connections << " connections "
@@ -123,7 +123,7 @@ void session_outbound::handle_started(const code& ec,
 
 // Attempt to connect one peer using a batch subset of connectors.
 void session_outbound::start_connect(const connectors_ptr& connectors,
-    size_t peer) NOEXCEPT
+    size_t id) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -135,7 +135,7 @@ void session_outbound::start_connect(const connectors_ptr& connectors,
     const auto counter = std::make_shared<size_t>(connectors->size());
 
     channel_handler connect =
-        BIND4(handle_connect, _1, _2, connectors, peer);
+        BIND4(handle_connect, _1, _2, connectors, id);
 
     channel_handler one =
         BIND5(handle_one, _1, _2, counter, connectors, std::move(connect));
@@ -145,8 +145,8 @@ void session_outbound::start_connect(const connectors_ptr& connectors,
         take(BIND4(do_one, _1, _2, connector, one));
 }
 
-// Attempt to connect the given host and invoke handle_one.
-void session_outbound::do_one(const code& ec, const authority& host,
+// Attempt to connect the given peer and invoke handle_one.
+void session_outbound::do_one(const code& ec, const authority& peer,
     const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -159,7 +159,7 @@ void session_outbound::do_one(const code& ec, const authority& host,
     }
 
     // This termination prevents a tight loop in the small address pool case.
-    if (blacklisted(host))
+    if (blacklisted(peer))
     {
         handler(error::address_blocked, nullptr);
         return;
@@ -172,7 +172,7 @@ void session_outbound::do_one(const code& ec, const authority& host,
         return;
     }
 
-    connector->connect(host, move_copy(handler));
+    connector->connect(peer, move_copy(handler));
 }
 
 // Handle each do_one connection attempt, stopping on first success.
@@ -188,29 +188,22 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
         if (channel)
         {
             channel->stop(error::channel_dropped);
-            if (!ec || ec == error::service_stopped)
-                restore({ channel->authority() }, [](code) NOEXCEPT {});
+            restore(ec, channel);
         }
 
         return;
     }
 
-    if (channel && ec == error::service_stopped)
-        restore({ channel->authority() }, [](code) NOEXCEPT{});
-
     // Last indicates that this is the last attempt.
     const auto last = is_zero(--(*count));
 
-    // This connection is successful but there are others outstanding.
+    // This connection is successful but there may be others outstanding.
     // Short-circuit subsequent attempts and clear outstanding connectors.
     if (!ec && !last)
     {
         *count = zero;
-        std::for_each(connectors->begin(), connectors->end(),
-            [](const auto& connector)
-            {
-                connector->stop();
-            });
+        for (const auto& connector: *connectors)
+            connector->stop();
     }
 
     // Got a connection.
@@ -232,13 +225,16 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
     }
 
     // ec && !last/done, drop this connector attempt.
+    // service_stopped on a pending connect causes non-restore of that address,
+    // since a channel is never created if there is a connector error code.
+    // This is treated as an acceptable loss of a potentially valid address.
     BC_ASSERT_MSG(!channel, "unexpected channel instance");
 }
 
 // Handle the singular batch result.
 void session_outbound::handle_connect(const code& ec,
     const channel::ptr& channel, const connectors_ptr& connectors,
-    size_t peer) NOEXCEPT
+    size_t id) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -248,9 +244,7 @@ void session_outbound::handle_connect(const code& ec,
         if (channel)
         {
             channel->stop(error::service_stopped);
-
-            if (!ec || ec == error::service_stopped)
-                restore({ channel->authority() }, [](code) NOEXCEPT{});
+            restore(ec, channel);
         }
 
         return;
@@ -261,14 +255,14 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        start_timer(BIND2(start_connect, connectors, peer),
+        start_timer(BIND2(start_connect, connectors, id),
             settings().connect_timeout());
         return;
     }
 
     start_channel(channel,
-        BIND3(handle_channel_start, _1, channel, peer),
-        BIND4(handle_channel_stop, _1, channel, peer, connectors));
+        BIND3(handle_channel_start, _1, channel, id),
+        BIND4(handle_channel_stop, _1, channel, id, connectors));
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
@@ -278,11 +272,11 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
 }
 
 void session_outbound::handle_channel_start(const code& LOG_ONLY(ec),
-    const channel::ptr& LOG_ONLY(channel), size_t LOG_ONLY(peer)) NOEXCEPT
+    const channel::ptr& LOG_ONLY(channel), size_t LOG_ONLY(id)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Outbound channel start [" << channel->authority() << "] "
-        "(" << peer << ") " << ec.message());
+        "(" << id << ") " << ec.message());
 }
 
 void session_outbound::attach_protocols(
@@ -292,19 +286,38 @@ void session_outbound::attach_protocols(
 }
 
 void session_outbound::handle_channel_stop(const code& ec,
-    const channel::ptr& channel, size_t peer,
+    const channel::ptr& channel, size_t id,
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Outbound channel stop [" << channel->authority() << "] "
-        "(" << peer << ") " << ec.message());
+    LOG("Outbound channel stop "
+        "[" << channel->authority() << "] "
+        "[" << channel->originating() << "] "
+        "(" << id << ") " << ec.message());
 
-    if (ec == error::service_stopped || ec == error::channel_expired)
-        restore({ channel->authority() }, [](code) NOEXCEPT {});
+    restore(ec, channel);
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).
-    start_connect(connectors, peer);
+    start_connect(connectors, id);
+}
+
+void session_outbound::restore(const code& ec,
+    const channel::ptr& channel) NOEXCEPT
+{
+    BC_ASSERT_MSG(channel, "channel");
+
+    if (!ec || ec == error::service_stopped)
+    {
+        // TODO: change originating to address_item everywhere.
+        session::restore(channel->originating().to_address_item(),
+            BIND1(handle_restore, _1));
+    }
+}
+
+void session_outbound::handle_restore(const code&) const NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
 }
 
 BC_POP_WARNING()

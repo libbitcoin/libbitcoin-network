@@ -22,6 +22,7 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -32,10 +33,10 @@ namespace network {
 class session;
 
 /// Virtual, thread safe except for:
-/// * attach/resume/signal_activity must be called from the channel strand.
-/// * Versions should be only written in handshake and read thereafter.
 /// * See proxy for its thread safety constraints.
-/// A channel is a proxy with logged timers and state.
+/// * Versions should only be written in handshake.
+/// * attach/resume/signal_activity must be called from the strand.
+/// A channel is a proxy with timers and connection state.
 class BCT_API channel
   : public proxy, protected tracker<channel>
 {
@@ -67,24 +68,36 @@ public:
         return protocol;
     }
 
+    /// Sets origination to socket->authority().
     channel(const logger& log, const socket::ptr& socket,
         const settings& settings) NOEXCEPT;
+
+    /// Set origination to specified value (pre-resolved outbound address).
+    channel(const logger& log, const socket::ptr& socket,
+        const settings& settings, const config::authority& originating) NOEXCEPT;
+
+    /// Asserts channel stopped.
     virtual ~channel() NOEXCEPT;
 
-    /// Arbitrary nonce of the channel (for loopback guard).
-    uint64_t nonce() const NOEXCEPT;
-
-    /// Versions should be only written in handshake and read thereafter.
-    void set_negotiated_version(uint32_t value) NOEXCEPT;
-    uint32_t negotiated_version() const NOEXCEPT;
-    void set_peer_version(const messages::version::ptr& value) NOEXCEPT;
-    messages::version::ptr peer_version() const NOEXCEPT;
+    /// Idempotent, may be called multiple times.
+    void stop(const code& ec) NOEXCEPT override;
 
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
 
-    /// Idempotent, may be called multiple times.
-    void stop(const code& ec) NOEXCEPT override;
+    /// Arbitrary nonce of the channel (for loopback guard).
+    uint64_t nonce() const NOEXCEPT;
+
+    /// Originating address of the connection (if outbound).
+    const config::authority& originating() const NOEXCEPT;
+
+    /// Negotiated version should be written only in handshake.
+    uint32_t negotiated_version() const NOEXCEPT;
+    void set_negotiated_version(uint32_t value) NOEXCEPT;
+
+    /// Peer version should be written only in handshake.
+    messages::version::ptr peer_version() const NOEXCEPT;
+    void set_peer_version(const messages::version::ptr& value) NOEXCEPT;
 
 protected:
     /// Property values provided to the proxy.
@@ -113,6 +126,7 @@ private:
     const uint32_t protocol_magic_;
     const uint64_t channel_nonce_;
     const bool validate_checksum_;
+    const config::authority originating_;
 
     // These are not thread safe.
     uint32_t negotiated_version_;
