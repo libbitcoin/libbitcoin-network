@@ -34,6 +34,7 @@
 #include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/timer.hpp>
 #include <bitcoin/network/async/tracker.hpp>
+#include <bitcoin/network/config/address.hpp>
 #include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/config/endpoint.hpp>

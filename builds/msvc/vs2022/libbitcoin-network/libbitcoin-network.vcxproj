@@ -79,10 +79,15 @@
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
+    <ClCompile Include="..\..\..\..\src\config\address.cpp">
+      <ObjectFileName>$(IntDir)src_config_address.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\config\authority.cpp" />
     <ClCompile Include="..\..\..\..\src\config\endpoint.cpp" />
     <ClCompile Include="..\..\..\..\src\error.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\address.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\address.cpp">
+      <ObjectFileName>$(IntDir)src_messages_address.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\address_item.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\alert.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\alert_item.cpp" />
@@ -162,6 +167,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\tracker.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\config\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\config.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\endpoint.hpp" />

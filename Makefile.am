@@ -44,6 +44,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/async/thread.cpp \
     src/async/threadpool.cpp \
     src/async/time.cpp \
+    src/config/address.cpp \
     src/config/authority.cpp \
     src/config/endpoint.cpp \
     src/messages/address.cpp \
@@ -132,6 +133,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/async/time.cpp \
     test/async/timer.cpp \
     test/async/track.cpp \
+    test/config/address.cpp \
     test/config/authority.cpp \
     test/config/endpoint.cpp \
     test/messages/address.cpp \
@@ -231,6 +233,7 @@ include_bitcoin_network_async_HEADERS = \
 
 include_bitcoin_network_configdir = ${includedir}/bitcoin/network/config
 include_bitcoin_network_config_HEADERS = \
+    include/bitcoin/network/config/address.hpp \
     include/bitcoin/network/config/authority.hpp \
     include/bitcoin/network/config/config.hpp \
     include/bitcoin/network/config/endpoint.hpp

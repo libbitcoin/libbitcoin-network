@@ -78,11 +78,16 @@
     <ClCompile Include="..\..\..\..\test\async\time.cpp" />
     <ClCompile Include="..\..\..\..\test\async\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\async\track.cpp" />
+    <ClCompile Include="..\..\..\..\test\config\address.cpp">
+      <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\authority.cpp" />
     <ClCompile Include="..\..\..\..\test\config\endpoint.cpp" />
     <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\address.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\address.cpp">
+      <ObjectFileName>$(IntDir)test_messages_address.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\address_item.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\alert.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\alert_item.cpp" />
