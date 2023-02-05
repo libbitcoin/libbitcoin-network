@@ -68,11 +68,30 @@ code hosts::start() NOEXCEPT
         std::string line;
         while (std::getline(file, line))
         {
-            const config::authority entry(line);
-            const auto host = entry.to_address_item();
+            // TODO: config::address config.
+            const auto parts = system::split(line);
+            const config::authority entry(parts.at(0));
+            auto host = entry.to_address_item();
 
-            if (!is_invalid(host))
-                buffer_.push_back(host);
+            if (is_invalid(host))
+                continue;
+
+            if (parts.size() > 1)
+            {
+                if (!system::deserialize(host.timestamp, parts.at(1)))
+                    continue;
+
+                if (parts.size() > 2)
+                {
+                    if (!system::deserialize(host.services, parts.at(2)))
+                        continue;
+                }
+
+                if (parts.size() > 3)
+                    continue;
+            }
+
+            buffer_.push_back(host);
         }
 
         if (file.bad())
@@ -112,7 +131,14 @@ code hosts::stop() NOEXCEPT
             return error::file_save;
 
         for (const auto& entry: buffer_)
-            file << config::authority(entry) << std::endl;
+        {
+            // TODO: config::address config.
+            file
+                << config::authority(entry)
+                << " " << entry.timestamp
+                << " " << entry.services
+                << std::endl;
+        }
 
         if (file.bad())
             return error::file_save;
