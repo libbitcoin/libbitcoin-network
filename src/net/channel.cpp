@@ -65,7 +65,7 @@ channel::channel(const logger& log, const socket::ptr& socket,
 channel::channel(const logger& log, const socket::ptr& socket,
     const settings& settings, const config::authority& origination) NOEXCEPT
   : proxy(socket),
-    rate_limit_(settings.rate_limit),
+    ////rate_limit_(settings.rate_limit),
     maximum_payload_(payload_maximum(settings)),
     protocol_magic_(settings.identifier),
     channel_nonce_(pseudo_random::next<uint64_t>(one, max_uint64)),

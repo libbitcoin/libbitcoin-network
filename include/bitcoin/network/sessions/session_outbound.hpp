@@ -67,7 +67,8 @@ private:
     typedef std::shared_ptr<size_t> count_ptr;
 
     /// Restore an address to the address pool.
-    void restore(const code& ec, const channel::ptr& channel) NOEXCEPT;
+    void untake(const code& ec, const channel::ptr& channel) NOEXCEPT;
+    void handle_untake(const code& ec) const NOEXCEPT;
 
     void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, const channel::ptr& channel,
@@ -83,8 +84,6 @@ private:
     void handle_one(const code& ec, const channel::ptr& channel,
         const count_ptr& count, const connectors_ptr& connectors,
         const channel_handler& handler) NOEXCEPT;
-
-    void handle_restore(const code& ec) const NOEXCEPT;
 };
 
 } // namespace network

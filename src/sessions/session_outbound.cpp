@@ -169,6 +169,7 @@ void session_outbound::do_one(const code& ec, const authority& peer,
     if (stopped())
     {
         handler(error::service_stopped, nullptr);
+        session::restore(peer.to_address_item(), BIND1(handle_untake, _1));
         return;
     }
 
@@ -188,7 +189,7 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
         if (channel)
         {
             channel->stop(error::channel_dropped);
-            restore(ec, channel);
+            untake(ec, channel);
         }
 
         return;
@@ -244,7 +245,7 @@ void session_outbound::handle_connect(const code& ec,
         if (channel)
         {
             channel->stop(error::service_stopped);
-            restore(ec, channel);
+            untake(ec, channel);
         }
 
         return;
@@ -295,27 +296,27 @@ void session_outbound::handle_channel_stop(const code& ec,
         "[" << channel->origination() << "] "
         "(" << id << ") " << ec.message());
 
-    restore(ec, channel);
+    untake(ec, channel);
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).
     start_connect(connectors, id);
 }
 
-void session_outbound::restore(const code& ec,
+void session_outbound::untake(const code& ec,
     const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel, "channel");
 
-    if (!ec || ec == error::service_stopped)
-    {
-        // TODO: change origination to address_item everywhere.
-        session::restore(channel->origination().to_address_item(),
-            BIND1(handle_restore, _1));
-    }
+    if (ec && ec != error::service_stopped)
+        return;
+
+    // TODO: change origination to address_item everywhere.
+    session::restore(channel->origination().to_address_item(),
+        BIND1(handle_untake, _1));
 }
 
-void session_outbound::handle_restore(const code&) const NOEXCEPT
+void session_outbound::handle_untake(const code&) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 }
