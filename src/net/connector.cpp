@@ -182,7 +182,7 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
         return;
     }
 
-    // channel.originator set to socket.authority if not parameterized.
+    // channel.origination set to socket.authority if not parameterized.
     const auto channel = std::make_shared<network::channel>(log(), socket,
         settings_, host ? host : socket->authority());
 

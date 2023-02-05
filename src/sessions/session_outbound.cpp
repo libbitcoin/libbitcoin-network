@@ -292,7 +292,7 @@ void session_outbound::handle_channel_stop(const code& ec,
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Outbound channel stop "
         "[" << channel->authority() << "] "
-        "[" << channel->originating() << "] "
+        "[" << channel->origination() << "] "
         "(" << id << ") " << ec.message());
 
     restore(ec, channel);
@@ -309,8 +309,8 @@ void session_outbound::restore(const code& ec,
 
     if (!ec || ec == error::service_stopped)
     {
-        // TODO: change originating to address_item everywhere.
-        session::restore(channel->originating().to_address_item(),
+        // TODO: change origination to address_item everywhere.
+        session::restore(channel->origination().to_address_item(),
             BIND1(handle_restore, _1));
     }
 }

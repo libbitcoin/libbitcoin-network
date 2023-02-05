@@ -95,17 +95,27 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return;
 
-    // Allow only one singleton address message if addresses not requested.
-    // Allows peer to make one unsolicited broadcast of desire for incoming.
-    if (is_zero(settings().host_pool_capacity) &&
-        (received_ || message->addresses.size() > one))
+    const auto& addresses = message->addresses;
+
+    // Disallow multiples or more than one address message if not requested.
+    if ((addresses.size() != one || received_) &&
+        is_zero(settings().host_pool_capacity))
     {
-        LOG("Unsolicited address batch received from [" << authority() << "]");
+        LOG("Unsolicited addresses from [" << authority() << "]");
         stop(error::protocol_violation);
         return;
     }
 
-    save(message, BIND2(handle_save_addresses, _1, message->addresses.size()));
+    // Do not store redundant adresses, origination is checked out.
+    if (addresses.size() == one && addresses.front() == origination())
+    {
+        LOG("Skipping redundant address save from [" << authority() << "]");
+    }
+
+    // TODO: filter against p2p.authorities_ and session.pending_.origination.
+    // TODO: otherwise we end up storing addresses we are connected to, which
+    // TODO: results in redundant connect attempts (these are caught late).
+    save(message, BIND2(handle_save_addresses, _1, addresses.size()));
     received_ = true;
 }
 

@@ -121,6 +121,11 @@ config::authority protocol::authority() const NOEXCEPT
     return channel_->authority();
 }
 
+config::authority protocol::origination() const NOEXCEPT
+{
+    return channel_->origination();
+}
+
 uint64_t protocol::nonce() const NOEXCEPT
 {
     return channel_->nonce();

@@ -63,14 +63,14 @@ channel::channel(const logger& log, const socket::ptr& socket,
 }
 
 channel::channel(const logger& log, const socket::ptr& socket,
-    const settings& settings, const config::authority& originating) NOEXCEPT
+    const settings& settings, const config::authority& origination) NOEXCEPT
   : proxy(socket),
     rate_limit_(settings.rate_limit),
     maximum_payload_(payload_maximum(settings)),
     protocol_magic_(settings.identifier),
     channel_nonce_(pseudo_random::next<uint64_t>(one, max_uint64)),
     validate_checksum_(settings.validate_checksum),
-    originating_(originating),
+    origination_(origination),
     negotiated_version_(settings.protocol_maximum),
     peer_version_(to_shared<messages::version>()),
     expiration_(expiration(log, socket->strand(), settings.channel_expiration())),
@@ -151,9 +151,9 @@ void channel::set_peer_version(const version::ptr& value) NOEXCEPT
     peer_version_ = value;
 }
 
-const config::authority& channel::originating() const NOEXCEPT
+const config::authority& channel::origination() const NOEXCEPT
 {
-    return originating_;
+    return origination_;
 }
 
 // Proxy overrides (channel maintains state for the proxy).

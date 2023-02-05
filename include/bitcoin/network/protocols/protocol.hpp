@@ -125,6 +125,9 @@ protected:
     /// The authority of the peer.
     virtual config::authority authority() const NOEXCEPT;
 
+    /// The origination of the peer.
+    virtual config::authority origination() const NOEXCEPT;
+
     /// The nonce of the channel.
     virtual uint64_t nonce() const NOEXCEPT;
 

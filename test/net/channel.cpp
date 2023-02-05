@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(channel__properties__default__expected)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto channel_ptr = std::make_shared<channel_accessor>(log, socket_ptr, set);
 
-    BOOST_REQUIRE(!channel_ptr->originating());
+    BOOST_REQUIRE(!channel_ptr->origination());
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
     BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
 
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(channel__properties__default__expected)
     channel_ptr.reset();
 }
 
-BOOST_AUTO_TEST_CASE(channel__properties__originating__expected)
+BOOST_AUTO_TEST_CASE(channel__properties__origination__expected)
 {
     config::authority expected{ messages::unspecified_ip_address, 42 };
 
@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(channel__properties__originating__expected)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto channel_ptr = std::make_shared<channel_accessor>(log, socket_ptr, set, expected);
 
-    BOOST_REQUIRE(channel_ptr->originating());
-    BOOST_REQUIRE_EQUAL(channel_ptr->originating(), expected);
+    BOOST_REQUIRE(channel_ptr->origination());
+    BOOST_REQUIRE_EQUAL(channel_ptr->origination(), expected);
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
     BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
 
