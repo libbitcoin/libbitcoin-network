@@ -99,7 +99,7 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     const auto& addresses = message->addresses;
 
     // Disallow multiples or more than one address message if not requested.
-    if ((addresses.size() != one || received_) &&
+    if ((!is_one(addresses.size()) || received_) &&
         is_zero(settings().host_pool_capacity))
     {
         LOG("Unsolicited addresses from [" << authority() << "]");
@@ -109,7 +109,7 @@ void protocol_address_31402::handle_receive_address(const code& ec,
 
     received_ = true;
 
-    if (addresses.size() == one)
+    if (is_one(addresses.size()))
     {
         // Do not store redundant adresses, origination is checked out.
         if (addresses.front() == origination())

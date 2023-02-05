@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/config/endpoint.hpp>
 
-#include <cstdint>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
@@ -84,14 +82,17 @@ uint16_t endpoint::port() const NOEXCEPT
 
 std::string endpoint::to_string() const NOEXCEPT
 {
-    std::stringstream value;
+    std::stringstream value{};
     value << *this;
+
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return value.str();
+    BC_POP_WARNING()
 }
 
 endpoint endpoint::to_local() const NOEXCEPT
 {
-    const auto host = host_ == "*" ? "localhost" : host_;
+    const auto host = (host_ == "*" ? "localhost" : host_);
     return endpoint(scheme_, host, port_);
 }
 
@@ -102,8 +103,9 @@ endpoint::operator bool() const NOEXCEPT
 
 bool endpoint::operator==(const endpoint& other) const NOEXCEPT
 {
-    return host_ == other.host_ && port_ == other.port_ &&
-        scheme_ == other.scheme_;
+    return host_ == other.host_
+        && port_ == other.port_
+        && scheme_ == other.scheme_;
 }
 
 bool endpoint::operator!=(const endpoint& other) const NOEXCEPT
@@ -114,15 +116,16 @@ bool endpoint::operator!=(const endpoint& other) const NOEXCEPT
 std::istream& operator>>(std::istream& input,
     endpoint& argument) NOEXCEPT(false)
 {
-    std::string value;
+    std::string value{};
     input >> value;
 
     // C++11: use std::regex.
     // std::regex requires gcc 4.9, so we are using boost::regex for now.
-    static const boost::regex regular("^((tcp|udp|http|https|inproc):\\/\\/)?"
+    using namespace boost;
+    static const regex regular("^((tcp|udp|http|https|inproc):\\/\\/)?"
         "(\\[([0-9a-f:\\.]+)]|([^:]+))(:([0-9]{1,5}))?$");
 
-    boost::sregex_iterator it(value.begin(), value.end(), regular), end;
+    sregex_iterator it(value.begin(), value.end(), regular), end;
     if (it == end)
         throw istream_exception(value);
 
@@ -133,7 +136,7 @@ std::istream& operator>>(std::istream& input,
 
     try
     {
-        argument.port_ = port.empty() ? 0u : boost::lexical_cast<uint16_t>(port);
+        argument.port_ = port.empty() ? 0u : lexical_cast<uint16_t>(port);
     }
     catch (const std::exception&)
     {

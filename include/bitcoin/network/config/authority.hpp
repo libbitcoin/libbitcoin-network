@@ -94,8 +94,8 @@ public:
 
 private:
     // These are not thread safe.
-    asio::ipv6 ip_;
-    uint16_t port_;
+    asio::ipv6 ip_{};
+    uint16_t port_{};
 };
 
 typedef std::vector<authority> authorities;

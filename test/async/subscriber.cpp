@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__once__expected)
     {
         instance.subscribe([&](code value, size_t size)
         {
-            if (++count == 1u)
+            if (is_one(++count))
                 notify_result = { value, size };
         });
 
