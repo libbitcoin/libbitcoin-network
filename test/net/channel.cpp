@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(channel__properties__default__expected)
 
 BOOST_AUTO_TEST_CASE(channel__properties__origination__expected)
 {
-    config::authority expected{ messages::unspecified_ip_address, 42 };
+    config::authority expected{ messages::loopback_ip_address, 42 };
 
     const logger log{};
     threadpool pool(1);

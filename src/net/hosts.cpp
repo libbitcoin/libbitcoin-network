@@ -33,9 +33,10 @@ using namespace messages;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-inline bool is_invalid(const address_item& host) NOEXCEPT
+inline bool is_valid(const address_item& host) NOEXCEPT
 {
-    return is_zero(host.port) || host.ip == null_ip_address;
+    return host.port != unspecified_ip_port
+        && host.ip != unspecified_ip_address;
 }
 
 hosts::hosts(const settings& settings) NOEXCEPT
@@ -65,34 +66,10 @@ code hosts::start() NOEXCEPT
         if (!file.good())
             return error::success;
 
+        // No guard against invalid address entries in file (ok).
         std::string line;
         while (std::getline(file, line))
-        {
-            // TODO: config::address config.
-            const auto parts = system::split(line);
-            const config::authority entry(parts.at(0));
-            auto host = entry.to_address_item();
-
-            if (is_invalid(host))
-                continue;
-
-            if (parts.size() > 1)
-            {
-                if (!system::deserialize(host.timestamp, parts.at(1)))
-                    continue;
-
-                if (parts.size() > 2)
-                {
-                    if (!system::deserialize(host.services, parts.at(2)))
-                        continue;
-                }
-
-                if (parts.size() > 3)
-                    continue;
-            }
-
-            buffer_.push_back(host);
-        }
+            buffer_.push_back(config::address(line).item());
 
         if (file.bad())
             return error::file_load;
@@ -131,14 +108,7 @@ code hosts::stop() NOEXCEPT
             return error::file_save;
 
         for (const auto& entry: buffer_)
-        {
-            // TODO: config::address config.
-            file
-                << config::authority(entry)
-                << " " << entry.timestamp
-                << " " << entry.services
-                << std::endl;
-        }
+            file << config::address(entry) << std::endl;
 
         if (file.bad())
             return error::file_save;
@@ -162,7 +132,7 @@ bool hosts::restore(const address_item& address) NOEXCEPT
         return true;
 
     // Do not treat invalid address as an error, just log it.
-    if (is_invalid(address))
+    if (!is_valid(address))
         return false;
 
     if (!exists(address))
@@ -197,7 +167,7 @@ size_t hosts::store(const messages::address::ptr& addresses) NOEXCEPT
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
         const auto& host = hosts.at(index);
-        if (!is_invalid(host) && !exists(host))
+        if (is_valid(host) && !exists(host))
         {
             ++accepted;
             buffer_.push_back(host);

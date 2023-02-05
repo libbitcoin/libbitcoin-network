@@ -40,6 +40,13 @@ constexpr messages::ip_address test_unspecified_ip_address =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+// tools.ietf.org/html/rfc4291#section-2.5.3
+constexpr messages::ip_address test_loopback_ip_address =
+{
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
+};
+
 // tools.ietf.org/html/rfc4291#section-2.5.5.2
 constexpr messages::ip_address test_mapped_ip_address =
 {
@@ -184,19 +191,25 @@ BOOST_AUTO_TEST_CASE(authority__port__boost_endpoint__expected)
 
 BOOST_AUTO_TEST_CASE(authority__bool__default__false)
 {
-    const authority host;
+    const authority host{};
     BOOST_REQUIRE(!host);
 }
 
-BOOST_AUTO_TEST_CASE(authority__bool__zero_port__false)
+BOOST_AUTO_TEST_CASE(authority__bool__unspecified__false)
 {
-    const authority host(test_ipv6_address, 0);
+    const authority host{ messages::unspecified_ip_address, 42 };
     BOOST_REQUIRE(!host);
 }
 
-BOOST_AUTO_TEST_CASE(authority__bool__nonzero_port__true)
+BOOST_AUTO_TEST_CASE(authority__bool__unspecified_ip_port__false)
 {
-    const authority host(test_ipv6_address, 42);
+    const authority host{ test_ipv6_address, messages::unspecified_ip_port };
+    BOOST_REQUIRE(!host);
+}
+
+BOOST_AUTO_TEST_CASE(authority__bool__loopback_nonzero_port__true)
+{
+    const authority host{ messages::loopback_ip_address, 42 };
     BOOST_REQUIRE(host);
 }
 
@@ -204,7 +217,7 @@ BOOST_AUTO_TEST_CASE(authority__bool__nonzero_port__true)
 
 BOOST_AUTO_TEST_CASE(authority__to_ip_address__default__unspecified)
 {
-    const authority host;
+    const authority host{};
     BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_unspecified_ip_address));
 }
 

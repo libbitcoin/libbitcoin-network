@@ -18,6 +18,8 @@
  */
 #include <bitcoin/network/config/endpoint.hpp>
 
+#include <iostream>
+#include <sstream>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
@@ -60,10 +62,12 @@ endpoint::endpoint(const asio::endpoint& uri) NOEXCEPT
 {
 }
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 endpoint::endpoint(const asio::address& ip, uint16_t port) NOEXCEPT
   : host_(ip.to_string()), port_(port)
 {
 }
+BC_POP_WARNING()
 
 const std::string& endpoint::scheme() const NOEXCEPT
 {
@@ -136,7 +140,8 @@ std::istream& operator>>(std::istream& input,
 
     try
     {
-        argument.port_ = port.empty() ? 0u : lexical_cast<uint16_t>(port);
+        argument.port_ = port.empty() ? messages::unspecified_ip_port :
+            lexical_cast<uint16_t>(port);
     }
     catch (const std::exception&)
     {
@@ -154,7 +159,7 @@ std::ostream& operator<<(std::ostream& output,
 
     output << argument.host();
 
-    if (!is_zero(argument.port()))
+    if (argument.port() != messages::unspecified_ip_port)
         output << ":" << argument.port();
 
     return output;

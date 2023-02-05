@@ -109,14 +109,16 @@ BOOST_AUTO_TEST_CASE(hosts__count__empty__zero)
 
 // restore
 
-const address_item null_host{ 0, 0, null_ip_address, 0 };
-const address_item host42{ 0, 0, unspecified_ip_address, 42 };
+const address_item loopback00{ 0, 0, loopback_ip_address, 0 };
+const address_item loopback42{ 0, 0, loopback_ip_address, 42};
+const address_item unspecified00{ 0, 0, unspecified_ip_address, 0 };
+const address_item unspecified42{ 0, 0, unspecified_ip_address, 42 };
 
 BOOST_AUTO_TEST_CASE(hosts__restore__disabled_stopped__empty)
 {
     settings set(bc::system::chain::selection::mainnet);
     hosts instance(set);
-    instance.restore(null_host);
+    instance.restore(loopback00);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
 
@@ -126,7 +128,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__stopped__empty)
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
-    instance.restore(null_host);
+    instance.restore(unspecified00);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
     instance.stop();
@@ -142,7 +144,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__invalid__empty)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.restore(null_host);
+    instance.restore(unspecified42);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
     instance.stop();
@@ -158,7 +160,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__valid__one)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.restore(host42);
+    instance.restore(loopback42);
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
 
     instance.stop();
@@ -167,9 +169,9 @@ BOOST_AUTO_TEST_CASE(hosts__restore__valid__one)
 
 // store
 
-const address_item host1{ 0, 0, unspecified_ip_address, 1 };
-const address_item host2{ 0, 0, unspecified_ip_address, 2 };
-const address_item host3{ 0, 0, unspecified_ip_address, 3 };
+const address_item host1{ 0, 0, loopback_ip_address, 1 };
+const address_item host2{ 0, 0, loopback_ip_address, 2 };
+const address_item host3{ 0, 0, loopback_ip_address, 3 };
 
 BOOST_AUTO_TEST_CASE(hosts__store__three_unique__three)
 {
@@ -245,13 +247,13 @@ BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.restore(host42);
+    instance.restore(loopback42);
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
     
     instance.take([&](const code& ec, const messages::address_item& item)
     {
         BOOST_REQUIRE_EQUAL(ec, error::success);
-        BOOST_REQUIRE(item == host42);
+        BOOST_REQUIRE(item == loopback42);
     });
 
     instance.stop();

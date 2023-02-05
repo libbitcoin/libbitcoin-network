@@ -19,7 +19,7 @@
 #include <bitcoin/network/config/authority.hpp>
 
 ////#include <format>
-#include <algorithm>
+#include <iostream>
 #include <sstream>
 #include <boost/format.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -50,7 +50,7 @@ static std::string to_text(const std::string& host, uint16_t port) NOEXCEPT
 
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     authority << to_host_name(host);
-    if (!is_zero(port))
+    if (port != messages::unspecified_ip_port)
         authority << ":" << port;
 
     return authority.str();
@@ -118,7 +118,7 @@ static std::string to_ipv6_hostname(const asio::address& ip_address) NOEXCEPT
 }
 
 authority::authority() NOEXCEPT
-  : authority(messages::null_ip_address, 0)
+  : authority(messages::unspecified_address_item)
 {
 }
 
@@ -175,7 +175,7 @@ authority::authority(const asio::endpoint& endpoint) NOEXCEPT
 
 authority::operator bool() const NOEXCEPT
 {
-    return !is_zero(port_);
+    return port_ != messages::unspecified_ip_port && !ip_.is_unspecified();
 }
 
 const asio::ipv6& authority::ip() const NOEXCEPT
@@ -206,7 +206,8 @@ std::string authority::to_string() const NOEXCEPT
 
 messages::address_item authority::to_address_item() const NOEXCEPT
 {
-    return to_address_item(0, 0);
+    // Default timestamp and services.
+    return to_address_item({}, messages::service::node_none);
 }
 
 messages::address_item authority::to_address_item(uint32_t timestamp,
@@ -260,7 +261,8 @@ std::istream& operator>>(std::istream& input,
     try
     {
         argument.ip_ = asio::ipv6::from_string(ip_address);
-        argument.port_ = port.empty() ? 0 : lexical_cast<uint16_t>(port);
+        argument.port_ = port.empty() ? messages::unspecified_ip_port :
+            lexical_cast<uint16_t>(port);
     }
     catch (const std::exception&)
     {

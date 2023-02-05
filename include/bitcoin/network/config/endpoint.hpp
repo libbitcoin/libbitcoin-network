@@ -19,11 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_CONFIG_ENDPOINT_HPP
 #define LIBBITCOIN_NETWORK_CONFIG_ENDPOINT_HPP
 
-#include <cstdint>
 #include <iostream>
 #include <memory>
-#include <string>
-#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/authority.hpp>
