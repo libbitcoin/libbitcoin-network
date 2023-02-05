@@ -79,15 +79,14 @@ std::istream& operator>>(std::istream& input,
     input >> line;
 
     using namespace system;
-    const auto tokens = split(line);
+    const auto tokens = split(line, "/", true, false);
     if (is_limited(tokens.size(), 1, 3))
         throw istream_exception(line);
 
+    // Throws istream_exception if parse fails.
     const authority host{ tokens.at(0) };
-    if (!host)
-        throw istream_exception(tokens.at(0));
 
-    // Assign item with default (0) timestamp and services.
+    // Assign with default timestamp (0) and services (services::node_none).
     argument.address_ = host.to_address_item();
 
     if (tokens.size() > 1)
@@ -109,10 +108,12 @@ std::ostream& operator<<(std::ostream& output,
     const address& argument) NOEXCEPT
 {
     const authority host{ argument.address_ };
-    output << host << " "
-        << argument.address_.timestamp
-        << argument.address_.services;
 
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    output << host
+        << "/" << argument.address_.timestamp
+        << "/" << argument.address_.services;
+    BC_POP_WARNING()
     return output;
 }
 

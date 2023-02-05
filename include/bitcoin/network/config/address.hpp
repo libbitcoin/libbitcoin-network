@@ -28,6 +28,12 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
+// Always serializes to three tokens.
+// Deserialization formats (ipv4/ipv6).
+// 188.240.57.122:8333
+// 188.240.57.122:8333/1675574490
+// 188.240.57.122:8333/1675574490/1033
+
 /// This is a container for messages::address_item.
 class BCT_API address
 {
