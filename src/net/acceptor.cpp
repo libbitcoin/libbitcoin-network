@@ -100,7 +100,7 @@ void acceptor::stop() NOEXCEPT
 // Methods.
 // ----------------------------------------------------------------------------
 
-void acceptor::accept(accept_handler&& handler) NOEXCEPT
+void acceptor::accept(channel_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -121,7 +121,7 @@ void acceptor::accept(accept_handler&& handler) NOEXCEPT
 
 // private
 void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
-    const accept_handler& handler) NOEXCEPT
+    const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

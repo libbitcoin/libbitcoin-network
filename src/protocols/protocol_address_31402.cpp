@@ -54,6 +54,7 @@ const std::string& protocol_address_31402::name() const NOEXCEPT
 
 // Start.
 // ----------------------------------------------------------------------------
+// TODO: as peers connect inbound, broadcast new address.
 
 void protocol_address_31402::start() NOEXCEPT
 {
@@ -106,28 +107,38 @@ void protocol_address_31402::handle_receive_address(const code& ec,
         return;
     }
 
-    // Do not store redundant adresses, origination is checked out.
-    if (addresses.size() == one && addresses.front() == origination())
+    received_ = true;
+
+    if (addresses.size() == one)
     {
-        LOG("Skipping redundant address save from [" << authority() << "]");
+        // Do not store redundant adresses, origination is checked out.
+        if (addresses.front() == origination())
+        {
+            LOG("Dropping redundant address from [" << authority() << "]");
+            return;
+        }
+        else
+        {
+            LOG("Single unique address from [" << authority() << "]");
+        }
     }
 
     // TODO: filter against p2p.authorities_ and session.pending_.origination.
     // TODO: otherwise we end up storing addresses we are connected to, which
     // TODO: results in redundant connect attempts (these are caught late).
-    save(message, BIND2(handle_save_addresses, _1, addresses.size()));
-    received_ = true;
+    save(message, BIND3(handle_save_addresses, _1, _2, addresses.size()));
 }
 
 void protocol_address_31402::handle_save_addresses(const code& ec,
-    size_t LOG_ONLY(count)) NOEXCEPT
+    size_t LOG_ONLY(accepted), size_t LOG_ONLY(count)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
     if (stopped(ec))
         return;
 
-    LOG("Received (" << count << ") addresses from [" << authority() << "]");
+    LOG("Accepted (" << accepted << " of " << count << ") "
+        "addresses from [" << authority() << "].");
 }
 
 // Outbound (fetch and send addresses).

@@ -45,7 +45,7 @@ p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
   : settings_(settings),
     channel_count_(zero),
     inbound_channel_count_(zero),
-    hosts_(log, settings_),
+    hosts_(settings_),
     threadpool_(settings_.threads),
     strand_(threadpool_.service().get_executor()),
     stop_subscriber_(strand_),
@@ -366,13 +366,13 @@ code p2p::stop_hosts() NOEXCEPT
     return hosts_.stop();
 }
 
-void p2p::take(hosts::address_item_handler&& handler) NOEXCEPT
+void p2p::take(address_item_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_take, this, std::move(handler)));
 }
 
-void p2p::do_take(const hosts::address_item_handler& handler) NOEXCEPT
+void p2p::do_take(const address_item_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     hosts_.take(handler);
@@ -389,36 +389,33 @@ void p2p::do_restore(const messages::address_item& host,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    hosts_.restore(host);
-    handler(error::success);
+    handler(hosts_.restore(host) ? error::success : error::address_invalid);
 }
 
-void p2p::fetch(hosts::address_items_handler&& handler) const NOEXCEPT
+void p2p::fetch(address_items_handler&& handler) const NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_fetch, this, std::move(handler)));
 }
 
-void p2p::do_fetch(
-    const hosts::address_items_handler& handler) const NOEXCEPT
+void p2p::do_fetch(const address_items_handler& handler) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     hosts_.fetch(handler);
 }
 
 void p2p::save(const messages::address::ptr& message,
-    result_handler&& handler) NOEXCEPT
+    count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_save, this, message, std::move(handler)));
 }
 
 void p2p::do_save(const messages::address::ptr& message,
-    const result_handler& handler) NOEXCEPT
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    hosts_.store(message);
-    handler(error::success);
+    handler(error::success, hosts_.store(message));
 }
 
 // Connection management.

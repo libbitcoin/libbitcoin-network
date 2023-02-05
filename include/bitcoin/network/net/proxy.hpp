@@ -48,7 +48,6 @@ public:
 
     typedef std::shared_ptr<proxy> ptr;
     typedef subscriber<const code&> stop_subscriber;
-    typedef std::function<void(const code&)> result_handler;
 
     /// Serialize and send a message to the peer (requires strand).
     template <class Message>

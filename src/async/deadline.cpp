@@ -22,6 +22,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
+#include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
@@ -49,13 +50,13 @@ deadline::~deadline() NOEXCEPT
 }
 
 // Start cannot be called concurrently with stop, strand restarts.
-void deadline::start(handler&& handle) NOEXCEPT
+void deadline::start(result_handler&& handle) NOEXCEPT
 {
     start(std::move(handle), duration_);
 }
 
 // Start cannot be called concurrently with stop, strand restarts.
-void deadline::start(handler&& handle, const duration& timeout) NOEXCEPT
+void deadline::start(result_handler&& handle, const duration& timeout) NOEXCEPT
 {
     // Handling cancel error code creates exception safety.
     error::boost_code ignore;
@@ -79,7 +80,7 @@ void deadline::stop() NOEXCEPT
 
 // Callback always (cancel or otherwise) fired with the normalized error code.
 void deadline::handle_timer(const error::boost_code& ec,
-    const handler& handle) NOEXCEPT
+    const result_handler& handle) NOEXCEPT
 {
     BC_DEBUG_ONLY(timer_.expires_at(epoch);)
     handle(error::asio_to_error_code(ec));

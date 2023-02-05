@@ -54,6 +54,7 @@ enum error_t
     bypassed,
 
     // addresses
+    address_invalid,
     address_not_found,
     seeding_unsuccessful,
 

@@ -111,7 +111,7 @@ public:
     }
 
     // Inject mock channel.
-    void accept(accept_handler&& handler) NOEXCEPT override
+    void accept(channel_handler&& handler) NOEXCEPT override
     {
         const auto socket = std::make_shared<network::socket>(log(), service_);
         const auto created = std::make_shared<mock_channel>(log(), socket, settings_);
@@ -154,7 +154,7 @@ public:
 
     // Inject mock channel.
     void connect(const std::string&, uint16_t,
-        connect_handler&& handler) NOEXCEPT override
+        channel_handler&& handler) NOEXCEPT override
     {
         const auto socket = std::make_shared<network::socket>(log(), service_);
         const auto created = std::make_shared<mock_channel>(log(), socket, settings_);
@@ -302,13 +302,13 @@ public:
     /// Addresses.
     /// -----------------------------------------------------------------------
 
-    void fetch(fetch_handler&& handler) NOEXCEPT override
+    void fetch(address_items_handler&& handler) NOEXCEPT override
     {
         return protocol::fetch(std::move(handler));
     }
 
     void save(const messages::address::ptr& message,
-        result_handler&& handler) NOEXCEPT override
+        count_handler&& handler) NOEXCEPT override
     {
         return protocol::save(message, std::move(handler));
     }

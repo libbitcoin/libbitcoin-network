@@ -35,6 +35,8 @@ namespace network {
 class BCT_API logger
 {
 public:
+    typedef std::function<void(const code&, const std::string&)> handler;
+
     class writer final
     {
     public:
@@ -66,8 +68,6 @@ public:
         const logger& log_;
         std::ostringstream stream_{};
     };
-
-    typedef std::function<void(const code&, const std::string&)> handler;
 
     logger() NOEXCEPT;
 

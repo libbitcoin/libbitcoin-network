@@ -41,8 +41,6 @@ public:
     DELETE_COPY_MOVE(acceptor);
 
     typedef std::shared_ptr<acceptor> ptr;
-    typedef std::function<void(const code&,
-        const channel::ptr&)> accept_handler;
 
     // Construct.
     // ------------------------------------------------------------------------
@@ -68,7 +66,7 @@ public:
     /// The channel paramter is nullptr unless success is returned.
 
     /// Accept next connection available until stop or timeout, starts timer.
-    virtual void accept(accept_handler&& handler) NOEXCEPT;
+    virtual void accept(channel_handler&& handler) NOEXCEPT;
 
 protected:
     // These are thread safe.
@@ -82,7 +80,7 @@ protected:
 
 private:
     void handle_accept(const code& ec, const socket::ptr& socket,
-        const accept_handler& handler) NOEXCEPT;
+        const channel_handler& handler) NOEXCEPT;
 };
 
 } // namespace network

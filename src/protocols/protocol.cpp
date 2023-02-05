@@ -157,7 +157,7 @@ void protocol::set_negotiated_version(uint32_t value) NOEXCEPT
 // ----------------------------------------------------------------------------
 // Address completion handlers are invoked on the channel strand.
 
-void protocol::fetch(fetch_handler&& handler) NOEXCEPT
+void protocol::fetch(address_items_handler&& handler) NOEXCEPT
 {
     session_.fetch(BIND3(do_fetch, _1, _2, std::move(handler)));
 }
@@ -165,7 +165,7 @@ void protocol::fetch(fetch_handler&& handler) NOEXCEPT
 // Return to channel strand.
 void protocol::do_fetch(const code& ec,
     const messages::address::ptr& message,
-    const fetch_handler& handler) NOEXCEPT
+    const address_items_handler& handler) NOEXCEPT
 {
     // TODO: use addresses pointer (copies addresses).
     boost::asio::post(channel_->strand(),
@@ -174,31 +174,31 @@ void protocol::do_fetch(const code& ec,
 
 void protocol::handle_fetch(const code& ec,
     const messages::address::ptr& message,
-    const fetch_handler& handler) NOEXCEPT
+    const address_items_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol");
     handler(ec, message);
 }
 
 void protocol::save(const address::ptr& message,
-    result_handler&& handler) NOEXCEPT
+    count_handler&& handler) NOEXCEPT
 {
-    session_.save(message, BIND2(do_save, _1, std::move(handler)));
+    session_.save(message, BIND3(do_save, _1, _2, std::move(handler)));
 }
 
 // Return to channel strand.
-void protocol::do_save(const code& ec, const result_handler& handler) NOEXCEPT
+void protocol::do_save(const code& ec, size_t accepted,
+    const count_handler& handler) NOEXCEPT
 {
     boost::asio::post(channel_->strand(),
-        BIND2(handle_save, ec, std::move(handler)));
+        BIND3(handle_save, ec, accepted, std::move(handler)));
 }
 
-void protocol::handle_save(const code& ec, const result_handler& handler) NOEXCEPT
+void protocol::handle_save(const code& ec, size_t accepted,
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol");
-
-    // TODO: log code here for derived protocols.
-    handler(ec);
+    handler(ec, accepted);
 }
 
 // Send.

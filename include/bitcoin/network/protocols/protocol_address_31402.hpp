@@ -51,7 +51,7 @@ protected:
     virtual void handle_receive_address(const code& ec,
         const messages::address::ptr& message) NOEXCEPT;
     virtual void handle_save_addresses(const code& ec,
-        size_t count) NOEXCEPT;
+        size_t accepted, size_t count) NOEXCEPT;
 
     virtual void handle_receive_get_address(const code& ec,
         const messages::get_address::ptr& message) NOEXCEPT;

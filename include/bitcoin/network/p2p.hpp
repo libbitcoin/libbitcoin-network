@@ -44,11 +44,8 @@ class BCT_API p2p
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
-    typedef std::function<void()> stop_handler;
-    typedef std::function<void(const code&)> result_handler;
-    typedef std::function<void(const code&, const channel::ptr&)> channel_handler;
-    typedef subscriber<const code&, const channel::ptr&> channel_subscriber;
     typedef subscriber<const code&> stop_subscriber;
+    typedef subscriber<const code&, const channel::ptr&> channel_subscriber;
 
     template <typename Message>
     void broadcast(const Message& message, result_handler&& handler) NOEXCEPT
@@ -184,12 +181,12 @@ protected:
         bool inbound) NOEXCEPT;
 
     /// Maintain address pool.
-    virtual void take(hosts::address_item_handler&& handler) NOEXCEPT;
+    virtual void take(address_item_handler&& handler) NOEXCEPT;
     virtual void restore(const messages::address_item& address,
         result_handler&& complete) NOEXCEPT;
-    virtual void fetch(hosts::address_items_handler&& handler) const NOEXCEPT;
+    virtual void fetch(address_items_handler&& handler) const NOEXCEPT;
     virtual void save(const messages::address::ptr& message,
-        result_handler&& complete) NOEXCEPT;
+        count_handler&& complete) NOEXCEPT;
 
     /// The strand is running in this thread.
     bool stranded() const NOEXCEPT;
@@ -235,12 +232,12 @@ private:
     void do_connect_handled(const config::endpoint& endpoint,
         const channel_handler& handler) NOEXCEPT;
 
-    void do_take(const hosts::address_item_handler& handler) NOEXCEPT;
+    void do_take(const address_item_handler& handler) NOEXCEPT;
     void do_restore(const messages::address_item& host,
         const result_handler& complete) NOEXCEPT;
-    void do_fetch(const hosts::address_items_handler& handler) const NOEXCEPT;
+    void do_fetch(const address_items_handler& handler) const NOEXCEPT;
     void do_save(const messages::address::ptr& message,
-        const result_handler& complete) NOEXCEPT;
+        const count_handler& complete) NOEXCEPT;
 
     // These are thread safe.
     const settings& settings_;

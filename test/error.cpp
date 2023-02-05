@@ -52,6 +52,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__bypassed__true_exected_message)
 
 // addresses
 
+BOOST_AUTO_TEST_CASE(error_t__code__address_invalid__true_exected_message)
+{
+    constexpr auto value = error::address_invalid;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "address invalid");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__address_not_found__true_exected_message)
 {
     constexpr auto value = error::address_not_found;

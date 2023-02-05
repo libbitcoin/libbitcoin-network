@@ -75,26 +75,26 @@ void connector::stop() NOEXCEPT
 // ---------------------------------------------------------------------------
 
 void connector::connect(const authority& host,
-    connect_handler&& handler) NOEXCEPT
+    channel_handler&& handler) NOEXCEPT
 {
     start_connect(host.to_hostname(), host.port(), host, std::move(handler));
 }
 
 void connector::connect(const endpoint& endpoint,
-    connect_handler&& handler) NOEXCEPT
+    channel_handler&& handler) NOEXCEPT
 {
     start_connect(endpoint.host(), endpoint.port(), {}, std::move(handler));
 }
 
 void connector::connect(const std::string& hostname, uint16_t port,
-    connect_handler&& handler) NOEXCEPT
+    channel_handler&& handler) NOEXCEPT
 {
     start_connect(hostname, port, {}, std::move(handler));
 }
 
 // protected
 void connector::start_connect(const std::string& hostname, uint16_t port,
-    const config::authority& host, connect_handler&& handler) NOEXCEPT
+    const config::authority& host, channel_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -118,7 +118,7 @@ void connector::start_connect(const std::string& hostname, uint16_t port,
 // private
 void connector::handle_resolve(const error::boost_code& ec,
     const asio::endpoints& range, socket::ptr socket,
-    const config::authority& host, const connect_handler& handler) NOEXCEPT
+    const config::authority& host, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -150,7 +150,7 @@ void connector::handle_resolve(const error::boost_code& ec,
 
 // private
 void connector::handle_connect(const code& ec, socket::ptr socket,
-    const config::authority& host, const connect_handler& handler) NOEXCEPT
+    const config::authority& host, const channel_handler& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&connector::do_handle_connect,
@@ -159,7 +159,7 @@ void connector::handle_connect(const code& ec, socket::ptr socket,
 
 // private
 void connector::do_handle_connect(const code& ec, socket::ptr socket,
-    const config::authority& host, const connect_handler& handler) NOEXCEPT
+    const config::authority& host, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -192,7 +192,7 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
 
 // private
 void connector::handle_timer(const code& ec, const socket::ptr& socket,
-    const connect_handler& handler) NOEXCEPT
+    const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

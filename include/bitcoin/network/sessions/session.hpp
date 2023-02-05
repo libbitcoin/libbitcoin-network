@@ -44,10 +44,6 @@ class BCT_API session
 public:
     DELETE_COPY_MOVE(session);
 
-    typedef std::function<void(const code&)> result_handler;
-    typedef std::function<void(const code&,
-        const channel::ptr&)> channel_handler;
-
     /// Start the session (call from network strand).
     virtual void start(result_handler&& handler) NOEXCEPT;
 
@@ -58,10 +54,10 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Take an entry from address pool.
-    virtual void take(hosts::address_item_handler&& handler) const NOEXCEPT;
+    virtual void take(address_item_handler&& handler) const NOEXCEPT;
 
     /// Fetch a subset of entries (count based on config) from address pool.
-    virtual void fetch(hosts::address_items_handler&& handler) const NOEXCEPT;
+    virtual void fetch(address_items_handler&& handler) const NOEXCEPT;
 
     /// Restore an address to the address pool.
     virtual void restore(const messages::address_item& address,
@@ -69,7 +65,7 @@ public:
 
     /// Save a subset of entries (count based on config) from address pool.
     virtual void save(const messages::address::ptr& message,
-        result_handler&& handler) const NOEXCEPT;
+        count_handler&& handler) const NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------

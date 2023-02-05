@@ -408,12 +408,12 @@ const network::settings& session::settings() const NOEXCEPT
 // stackoverflow.com/questions/57411283/
 // calling-non-const-function-of-another-class-by-reference-from-const-function
 
-void session::take(hosts::address_item_handler&& handler) const NOEXCEPT
+void session::take(address_item_handler&& handler) const NOEXCEPT
 {
     network_.take(std::move(handler));
 }
 
-void session::fetch(hosts::address_items_handler&& handler) const NOEXCEPT
+void session::fetch(address_items_handler&& handler) const NOEXCEPT
 {
     network_.fetch(std::move(handler));
 }
@@ -425,7 +425,7 @@ void session::restore(const messages::address_item& address,
 }
 
 void session::save(const messages::address::ptr& message,
-    result_handler&& handler) const NOEXCEPT
+    count_handler&& handler) const NOEXCEPT
 {
     network_.save(message, std::move(handler));
 }

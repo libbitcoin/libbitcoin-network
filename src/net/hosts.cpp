@@ -38,15 +38,14 @@ inline bool is_invalid(const address_item& host) NOEXCEPT
     return is_zero(host.port) || host.ip == null_ip_address;
 }
 
-hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
+hosts::hosts(const settings& settings) NOEXCEPT
   : file_path_(settings.path),
     count_(zero),
     minimum_(settings.address_minimum),
     maximum_(settings.address_maximum),
     capacity_(possible_narrow_cast<size_t>(settings.host_pool_capacity)),
     disabled_(is_zero(capacity_)),
-    buffer_(capacity_),
-    reporter(log)
+    buffer_(capacity_)
 {
 }
 
@@ -64,10 +63,7 @@ code hosts::start() NOEXCEPT
     {
         ifstream file(file_path_, ifstream::in);
         if (!file.good())
-        {
-            LOG("Hosts file not found.");
             return error::success;
-        }
 
         std::string line;
         while (std::getline(file, line))
@@ -134,30 +130,29 @@ code hosts::stop() NOEXCEPT
     return error::success;
 }
 
-void hosts::restore(const address_item& address) NOEXCEPT
+bool hosts::restore(const address_item& address) NOEXCEPT
 {
     if (disabled_)
-        return;
+        return true;
 
     // Do not treat invalid address as an error, just log it.
     if (is_invalid(address))
-    {
-        LOG("Invalid host address from peer.");
-        return;
-    }
+        return false;
 
     if (!exists(address))
     {
         buffer_.push_back(address);
         count_.store(buffer_.size(), std::memory_order_relaxed);
     }
+
+    return true;
 }
 
-void hosts::store(const messages::address::ptr& addresses) NOEXCEPT
+size_t hosts::store(const messages::address::ptr& addresses) NOEXCEPT
 {
     // If enabled then minimum capacity is one and buffer is at capacity.
     if (disabled_ || !addresses || addresses->addresses.empty())
-        return;
+        return zero;
 
     // Accept between 1 and all of this peer's addresses up to capacity.
     const auto& hosts = addresses->addresses;
@@ -176,23 +171,15 @@ void hosts::store(const messages::address::ptr& addresses) NOEXCEPT
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
         const auto& host = hosts.at(index);
-
-        if (is_invalid(host))
+        if (!is_invalid(host) && !exists(host))
         {
-            LOG("Invalid host address in peer set.");
-            continue;
+            ++accepted;
+            buffer_.push_back(host);
+            count_.store(buffer_.size(), std::memory_order_relaxed);
         }
-
-        if (exists(host))
-            continue;
-
-        ++accepted;
-        buffer_.push_back(host);
-        count_.store(buffer_.size(), std::memory_order_relaxed);
     }
 
-    LOG("Accepted (" << accepted << " of " << hosts.size() << ") "
-        "host addresses from peer.");
+    return accepted;
 }
 
 void hosts::take(const address_item_handler& handler) NOEXCEPT

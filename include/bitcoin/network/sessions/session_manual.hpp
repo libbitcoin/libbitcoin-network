@@ -41,8 +41,6 @@ class BCT_API session_manual
 {
 public:
     typedef std::shared_ptr<session_manual> ptr;
-    typedef std::function<void(const code&, const channel::ptr&)>
-        channel_handler;
 
     /// Construct an instance (network should be started).
     session_manual(p2p& network) NOEXCEPT;

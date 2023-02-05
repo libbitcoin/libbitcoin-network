@@ -235,12 +235,12 @@ public:
         return connectors_;
     }
 
-    void take(hosts::address_item_handler&& handler) NOEXCEPT override
+    void take(address_item_handler&& handler) NOEXCEPT override
     {
         handler(error::invalid_magic, {});
     }
 
-    void fetch(hosts::address_items_handler&& handler) const NOEXCEPT override
+    void fetch(address_items_handler&& handler) const NOEXCEPT override
     {
         handler(error::bad_stream, {});
     }
@@ -258,10 +258,10 @@ public:
     }
 
     void save(const messages::address::ptr& message,
-        result_handler&& complete) NOEXCEPT override
+        count_handler&& complete) NOEXCEPT override
     {
         saveds_ = message->addresses;
-        complete(error::bad_stream);
+        complete(error::bad_stream, zero);
     }
 
     const messages::address_items& saveds() const NOEXCEPT
@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
     std::promise<code> save;
     session.save(system::to_shared<messages::address>
         (messages::address_items{ {}, { 42, 24, unspecified_ip_address, 4224u } }),
-        [&](const code& ec)
+        [&](const code& ec, size_t)
         {
             save.set_value(ec);
         });

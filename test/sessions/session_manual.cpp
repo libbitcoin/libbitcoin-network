@@ -58,7 +58,7 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void connect(const endpoint& peer,
-        connect_handler&& handler) NOEXCEPT override
+        channel_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
             peer_ = peer;
@@ -92,7 +92,7 @@ public:
 
     // Handle connect with service_stopped error.
     void connect(const endpoint& peer,
-        connect_handler&& handler) NOEXCEPT override
+        channel_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
             peer_ = peer;

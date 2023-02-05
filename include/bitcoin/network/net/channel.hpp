@@ -135,6 +135,8 @@ private:
     deadline::ptr inactivity_;
 };
 
+typedef std::function<void(const code&, const channel::ptr&)> channel_handler;
+
 } // namespace network
 } // namespace libbitcoin
 
