@@ -180,9 +180,10 @@ BOOST_AUTO_TEST_CASE(hosts__store__three_unique__three)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
+    // clang doesn't like emplacement (vargs) here.
     const auto message = system::to_shared<messages::address>
-        (
-            messages::address_items{ host1, host2, host3 }
+    (
+        { messages::address_items{ host1, host2, host3 } }
     );
 
     instance.store(message);
@@ -201,9 +202,10 @@ BOOST_AUTO_TEST_CASE(hosts__store__redundant__expected)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
+    // clang doesn't like emplacement (vargs) here.
     const auto message = system::to_shared<messages::address>
     (
-        messages::address_items{ host1, host2, host3, host3, host2, host1 }
+        { messages::address_items{ host1, host2, host3, host3, host2, host1 } }
     );
 
     instance.store(message);
@@ -287,9 +289,10 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
+    // clang doesn't like emplacement (vargs) here.
     const auto message = system::to_shared<messages::address>
     (
-        messages::address_items{ host1, host2, host3 }
+        { messages::address_items{ host1, host2, host3 } }
     );
 
     instance.store(message);
@@ -319,9 +322,10 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__populated_file__expected)
     BOOST_REQUIRE_EQUAL(instance1.count(), 0u);
     BOOST_REQUIRE(!test::exists(TEST_NAME));
 
+    // clang doesn't like emplacement (vargs) here.
     const auto message = system::to_shared<messages::address>
     (
-        messages::address_items{ host1, host2, host3 }
+        { messages::address_items{ host1, host2, host3 } }
     );
 
     instance1.store(message);
