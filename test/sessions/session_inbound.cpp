@@ -100,7 +100,7 @@ public:
     }
 
     // Handle accept.
-    void accept(accept_handler&& handler) NOEXCEPT override
+    void accept(channel_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         const auto socket = std::make_shared<network::socket>(log(), service_);
@@ -133,7 +133,7 @@ public:
         mock_acceptor_start_success_accept_success;
 
     // Handle accept with unknown error.
-    void accept(accept_handler&& handler) NOEXCEPT override
+    void accept(channel_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]() NOEXCEPT
@@ -153,7 +153,7 @@ public:
         mock_acceptor_start_success_accept_fail;
 
     // Handle accept with service_stopped error.
-    void accept(accept_handler&& handler) NOEXCEPT override
+    void accept(channel_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]() NOEXCEPT

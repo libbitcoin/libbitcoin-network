@@ -34,6 +34,9 @@ using namespace bc::system;
 using namespace messages;
 using namespace std::placeholders;
 
+// Bind throws (ok).
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 protocol_address_31402::protocol_address_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
@@ -51,6 +54,7 @@ const std::string& protocol_address_31402::name() const NOEXCEPT
 
 // Start.
 // ----------------------------------------------------------------------------
+// TODO: as peers connect inbound, broadcast new address.
 
 void protocol_address_31402::start() NOEXCEPT
 {
@@ -92,19 +96,49 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return;
 
-    // Allow only one singleton address message if addresses not requested.
-    // Allows peer to make one unsolicited broadcast of desire for incoming.
-    if (is_zero(settings().host_pool_capacity) &&
-        (received_ || message->addresses.size() > one))
+    const auto& addresses = message->addresses;
+
+    // Disallow multiples or more than one address message if not requested.
+    if ((!is_one(addresses.size()) || received_) &&
+        is_zero(settings().host_pool_capacity))
     {
-        LOG("Unsolicited address batch received from [" << authority() << "]");
+        LOG("Unsolicited addresses from [" << authority() << "]");
         stop(error::protocol_violation);
         return;
     }
 
-    // Protocol handles and logs code.
-    saves(message->addresses);
     received_ = true;
+
+    if (is_one(addresses.size()))
+    {
+        // Do not store redundant adresses, origination is checked out.
+        if (addresses.front() == origination())
+        {
+            LOG("Dropping redundant address from [" << authority() << "]");
+            return;
+        }
+        else
+        {
+            LOG("Single unique address from [" << authority() << "]");
+        }
+    }
+
+    // TODO: filter against p2p.authorities_ and session.pending_.origination.
+    // TODO: otherwise we end up storing addresses we are connected to, which
+    // TODO: results in redundant connect attempts (these are caught late).
+    save(message, BIND3(handle_save_addresses, _1, _2, addresses.size()));
+}
+
+void protocol_address_31402::handle_save_addresses(const code& ec,
+    size_t LOG_ONLY(accepted), size_t LOG_ONLY(count)) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_address_31402");
+
+    if (stopped(ec))
+        return;
+
+    LOG("Accepted (" << accepted << " of " << count << ") "
+        "addresses from [" << authority() << "].");
 }
 
 // Outbound (fetch and send addresses).
@@ -125,20 +159,31 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
         return;
     }
 
-    fetches(BIND2(handle_fetch_addresses, _1, _2));
+    fetch(BIND2(handle_fetch_addresses, _1, _2));
     sent_ = true;
 }
 
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+
 void protocol_address_31402::handle_fetch_addresses(const code& ec,
-    const messages::address_items& addresses) NOEXCEPT
+    const address::ptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
     if (stopped(ec))
         return;
 
-    SEND1(address{ addresses }, handle_send, _1);
+    LOG("Sending (" << message->addresses.size() << ") addresses to "
+        "[" << authority() << "]");
+
+    SEND1(*message, handle_send, _1);
 }
+
+BC_POP_WARNING()
+BC_POP_WARNING()
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

@@ -21,6 +21,7 @@
 
 #include <functional>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -32,6 +33,10 @@ Type move_copy(const Type& instance) NOEXCEPT
     auto copy = instance;
     return copy;
 }
+
+// Common handlers, used across types.
+typedef std::function<void(const code&)> result_handler;
+typedef std::function<void(const code&, size_t)> count_handler;
 
 } // namespace network
 } // namespace libbitcoin

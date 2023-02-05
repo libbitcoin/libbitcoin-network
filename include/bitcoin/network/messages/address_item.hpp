@@ -55,7 +55,15 @@ bool operator!=(const address_item& left, const address_item& right) NOEXCEPT;
 typedef std::vector<address_item> address_items;
 typedef std::shared_ptr<address_items> address_items_ptr;
 
-constexpr ip_address null_ip_address
+// tools.ietf.org/html/rfc4291#section-2.5.3
+constexpr ip_address loopback_ip_address =
+{
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
+};
+
+// tools.ietf.org/html/rfc4291#section-2.5.2
+constexpr ip_address unspecified_ip_address
 {
     {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -63,17 +71,8 @@ constexpr ip_address null_ip_address
     }
 };
 
-constexpr ip_address unspecified_ip_address
-{
-    {
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00
-    }
-};
-
 constexpr uint32_t unspecified_timestamp = 0;
 constexpr uint16_t unspecified_ip_port = 0;
-
 constexpr address_item unspecified_address_item
 {
     unspecified_timestamp,

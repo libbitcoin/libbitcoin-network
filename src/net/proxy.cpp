@@ -316,8 +316,8 @@ void proxy::do_write(const system::chunk_ptr& payload,
     backlog_ = ceilinged_add(backlog_.load(), payload->size());
 
     // Verbose.
-    LOG("Queue for [" << authority() << "]: " << queue_.size()
-        << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
+    ////LOG("Queue for [" << authority() << "]: " << queue_.size()
+    ////    << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
 
     // Start the loop if it wasn't already started.
     if (!started)

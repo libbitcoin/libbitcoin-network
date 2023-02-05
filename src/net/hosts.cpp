@@ -33,34 +33,21 @@ using namespace messages;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-inline bool is_invalid(const address_item& host) NOEXCEPT
+inline bool is_valid(const address_item& host) NOEXCEPT
 {
-    return is_zero(host.port) || host.ip == null_ip_address;
+    return host.port != unspecified_ip_port
+        && host.ip != unspecified_ip_address;
 }
 
-// TODO: use std::map to avoid insertion searches.
-// TODO: create full space-delimited network_address serialization.
-// TODO: Use to/from string format as opposed to wire serialization.
-// TODO: manage timestamps (active channels are connected < 3 hours ago).
-// TODO: change to network_address bimap hash table with services and age.
-// TODO: create full space-delimited network_address serialization.
-// TODO: Use to/from string format as opposed to wire serialization.
-hosts::hosts(const logger& log, const settings& settings) NOEXCEPT
+hosts::hosts(const settings& settings) NOEXCEPT
   : file_path_(settings.path),
     count_(zero),
     minimum_(settings.address_minimum),
     maximum_(settings.address_maximum),
     capacity_(possible_narrow_cast<size_t>(settings.host_pool_capacity)),
     disabled_(is_zero(capacity_)),
-    buffer_(capacity_),
-    stopped_(true),
-    reporter(log)
+    buffer_(capacity_)
 {
-}
-
-hosts::~hosts() NOEXCEPT
-{
-    BC_ASSERT(stopped_);
 }
 
 size_t hosts::count() const NOEXCEPT
@@ -73,29 +60,16 @@ code hosts::start() NOEXCEPT
     if (disabled_)
         return error::success;
 
-    if (!stopped_)
-        return error::operation_failed;
-
-    stopped_ = false;
-
     try
     {
-        ifstream file(file_path_.string(), ifstream::in);
+        ifstream file(file_path_, ifstream::in);
         if (!file.good())
-        {
-            LOG("Hosts file not found.");
             return error::success;
-        }
 
+        // No guard against invalid address entries in file (ok).
         std::string line;
         while (std::getline(file, line))
-        {
-            const config::authority entry(line);
-            const auto host = entry.to_address_item();
-
-            if (!is_invalid(host))
-                buffer_.push_back(host);
-        }
+            buffer_.push_back(config::address(line).item());
 
         if (file.bad())
             return error::file_load;
@@ -103,6 +77,12 @@ code hosts::start() NOEXCEPT
     catch (const std::exception&)
     {
         return error::file_load;
+    }
+
+    if (buffer_.empty())
+    {
+        code ec;
+        std::filesystem::remove(file_path_, ec);
     }
 
     count_.store(buffer_.size(), std::memory_order_relaxed);
@@ -114,19 +94,21 @@ code hosts::stop() NOEXCEPT
     if (disabled_)
         return error::success;
 
-    if (stopped_)
-        return error::success;
-
-    stopped_ = true;
+    if (buffer_.empty())
+    {
+        code ec;
+        std::filesystem::remove(file_path_, ec);
+        return ec ? error::file_save : error::success;
+    }
 
     try
     {
-        ofstream file(file_path_.string(), ofstream::out);
+        ofstream file(file_path_, ofstream::out);
         if (!file.good())
             return error::file_save;
 
         for (const auto& entry: buffer_)
-            file << config::authority(entry) << std::endl;
+            file << config::address(entry) << std::endl;
 
         if (file.bad())
             return error::file_save;
@@ -136,37 +118,40 @@ code hosts::stop() NOEXCEPT
         return error::file_save;
     }
 
+    // Idempotent stop.
+    disabled_ = true;
+
     buffer_.clear();
     count_.store(zero, std::memory_order_relaxed);
     return error::success;
 }
 
-void hosts::store(const address_item& host) NOEXCEPT
+bool hosts::restore(const address_item& address) NOEXCEPT
 {
-    if (disabled_ || stopped_)
-        return;
+    if (disabled_)
+        return true;
 
     // Do not treat invalid address as an error, just log it.
-    if (is_invalid(host))
-    {
-        LOG("Invalid host address from peer.");
-        return;
-    }
+    if (!is_valid(address))
+        return false;
 
-    if (!exists(host))
+    if (!exists(address))
     {
-        buffer_.push_back(host);
+        buffer_.push_back(address);
         count_.store(buffer_.size(), std::memory_order_relaxed);
     }
+
+    return true;
 }
 
-void hosts::store(const address_items& hosts) NOEXCEPT
+size_t hosts::store(const messages::address::ptr& addresses) NOEXCEPT
 {
     // If enabled then minimum capacity is one and buffer is at capacity.
-    if (disabled_ || stopped_ || hosts.empty())
-        return;
+    if (disabled_ || !addresses || addresses->addresses.empty())
+        return zero;
 
     // Accept between 1 and all of this peer's addresses up to capacity.
+    const auto& hosts = addresses->addresses;
     const auto usable = std::min(hosts.size(), capacity_);
     const auto random = pseudo_random::next(one, usable);
 
@@ -178,63 +163,36 @@ void hosts::store(const address_items& hosts) NOEXCEPT
     const auto step = std::max(usable / accept, one);
     auto accepted = zero;
 
+    // Push valid addresses into the buffer.
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
         const auto& host = hosts.at(index);
-
-        if (is_invalid(host))
+        if (is_valid(host) && !exists(host))
         {
-            LOG("Invalid host address in peer set.");
-            continue;
+            ++accepted;
+            buffer_.push_back(host);
+            count_.store(buffer_.size(), std::memory_order_relaxed);
         }
-
-        if (exists(host))
-            continue;
-
-        ++accepted;
-        buffer_.push_back(host);
-        count_.store(buffer_.size(), std::memory_order_relaxed);
     }
 
-    LOG("Accepted (" << accepted << " of " << hosts.size() << ") "
-        "host addresses from peer.");
-}
-
-void hosts::remove(const address_item& host) NOEXCEPT
-{
-    if (stopped_ || buffer_.empty())
-        return;
-
-    const auto it = find(host);
-    if (it != buffer_.end())
-    {
-        buffer_.erase(it);
-        count_.store(buffer_.size(), std::memory_order_relaxed);
-        return;
-    }
-
-    LOG("Address to remove not found.");
+    return accepted;
 }
 
 void hosts::take(const address_item_handler& handler) NOEXCEPT
 {
-    if (stopped_)
-    {
-        handler(error::service_stopped, {});
-        return;
-    }
-
     if (buffer_.empty())
     {
         handler(error::address_not_found, {});
         return;
     }
 
-    // Randomly select an address from the buffer.
+    // Select address from random buffer position.
     const auto limit = sub1(buffer_.size());
     const auto index = pseudo_random::next(zero, limit);
     const auto it = std::next(buffer_.begin(), index);
     const auto host = *it;
+
+    // Remove from the buffer.
     buffer_.erase(it);
     count_.store(buffer_.size(), std::memory_order_relaxed);
     handler(error::success, host);
@@ -242,36 +200,29 @@ void hosts::take(const address_item_handler& handler) NOEXCEPT
 
 void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
 {
-    if (stopped_)
-    {
-        handler(error::service_stopped, {});
-        return;
-    }
-
     if (buffer_.empty())
     {
         handler(error::address_not_found, {});
         return;
     }
 
-    const auto size = pseudo_random_count();
+    // Vary the return count (quantity fingerprinting).
+    const auto divide = pseudo_random::next<size_t>(minimum_, maximum_);
+    const auto size = std::min(messages::max_address, buffer_.size() / divide);
+
+    // Vary the start position (value fingerprinting).
     const auto limit = sub1(buffer_.size());
     auto index = pseudo_random::next(zero, limit);
 
-    address_items out{};
-    out.reserve(size);
+    // Collect the messages.
+    const auto out = to_shared<messages::address>();
+    out->addresses.reserve(size);
     for (size_t count = 0; count < size; ++count)
-        out.push_back(buffer_.at(index++ % limit));
+        out->addresses.push_back(buffer_.at(index++ % limit));
 
-    pseudo_random::shuffle(out);
+    // Shuffle the message (order fingerprinting).
+    pseudo_random::shuffle(out->addresses);
     handler(error::success, out);
-}
-
-size_t hosts::pseudo_random_count() const NOEXCEPT
-{
-    using namespace system;
-    const auto divide = pseudo_random::next<size_t>(minimum_, maximum_);
-    return std::min(messages::max_address, buffer_.size() / divide);
 }
 
 BC_POP_WARNING()

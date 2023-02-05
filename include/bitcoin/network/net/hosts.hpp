@@ -35,40 +35,43 @@
 namespace libbitcoin {
 namespace network {
 
+typedef std::function<void(const code&, const messages::address_item&)>
+    address_item_handler;
+typedef std::function<void(const code&, const messages::address::ptr&)>
+    address_items_handler;
+
 /// Virtual, not thread safe.
-/// The store can be loaded and saved from/to the specified file path.
-/// The file is a line-oriented set of config::authority serializations.
-/// Duplicate addresses and those with zero-valued ports are disacarded.
+/// Duplicate and invalid addresses are disacarded.
+/// The file is loaded and saved from/to the settings-specified path.
+/// The file is a line-oriented textual serialization (config::authority+).
 class BCT_API hosts
-  : public reporter
 {
 public:
-    DELETE_COPY_MOVE(hosts);
-
-    ////typedef std::shared_ptr<hosts> ptr;
-    typedef std::function<void(const code&, const messages::address_item&)>
-        address_item_handler;
-    typedef std::function<void(const code&, const messages::address_items&)>
-        address_items_handler;
+    DELETE_COPY_MOVE_DESTRUCT(hosts);
 
     /// Construct an instance.
-    hosts(const logger& log, const settings& settings) NOEXCEPT;
-    virtual ~hosts() NOEXCEPT;
+    hosts(const settings& settings) NOEXCEPT;
 
     /// Load hosts file.
     virtual code start() NOEXCEPT;
 
-    // Save hosts to file.
+    /// Save hosts to file.
     virtual code stop() NOEXCEPT;
 
-    // Thread safe, inexact (ok).
+    /// Thread safe, inexact (ok).
     virtual size_t count() const NOEXCEPT;
 
-    virtual void store(const messages::address_item& host) NOEXCEPT;
-    virtual void store(const messages::address_items& hosts) NOEXCEPT;
-    virtual void remove(const messages::address_item& host) NOEXCEPT;
+    /// Take one random host from the table.
     virtual void take(const address_item_handler& handler) NOEXCEPT;
+
+    /// Store the host in the table (e.g. after use), false if invalid.
+    virtual bool restore(const messages::address_item& address) NOEXCEPT;
+
+    /// Obtain a random set of hosts (e.g for relay to peer).
     virtual void fetch(const address_items_handler& handler) const NOEXCEPT;
+
+    /// Obtain a random set of hosts (e.g obtained from peer), count of accept.
+    virtual size_t store(const messages::address::ptr& addresses) NOEXCEPT;
 
 private:
     typedef boost::circular_buffer<messages::address_item> buffer;
@@ -87,23 +90,19 @@ private:
         BC_POP_WARNING()
     }
 
-    size_t pseudo_random_count() const NOEXCEPT;
-
     // These are thread safe.
     const std::filesystem::path file_path_;
     std::atomic<size_t> count_;
     const size_t minimum_;
     const size_t maximum_;
     const size_t capacity_;
-    const bool disabled_;
 
     // These are not thread safe.
+    bool disabled_;
     buffer buffer_;
-    bool stopped_;
 };
 
 } // namespace network
 } // namespace libbitcoin
 
 #endif
-

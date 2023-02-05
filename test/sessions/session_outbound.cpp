@@ -113,8 +113,8 @@ public:
     }
 
     // Handle connect, capture first connected hostname and port.
-    void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) NOEXCEPT override
+    void start_connect(const std::string& hostname, uint16_t port,
+        const config::authority&, channel_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
         {
@@ -152,8 +152,8 @@ public:
 
     using connector::connector;
 
-    void connect(const std::string&, uint16_t,
-        connect_handler&& handler) NOEXCEPT override
+    void start_connect(const std::string&, uint16_t,
+        const config::authority&, channel_handler&& handler) NOEXCEPT override
     {
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
@@ -187,7 +187,7 @@ public:
     void start_connect(const connectors_ptr& connectors,
         size_t peer) NOEXCEPT override
     {
-        // Must be first to ensure connector::connect() preceeds promise release.
+        // Must be first to ensure connector::start_connect() preceeds promise release.
         session_outbound::start_connect(connectors, peer);
 
         if (is_one(connects_))
@@ -267,7 +267,7 @@ public:
     using mock_session_outbound_one_address_count::
         mock_session_outbound_one_address_count;
 
-    void take(hosts::address_item_handler&& handler) const NOEXCEPT override
+    void take(address_item_handler&& handler) const NOEXCEPT override
     {
         handler(error::success, address_item{});
     }
@@ -383,16 +383,16 @@ public:
     {
     }
 
-    void connect(const std::string& hostname, uint16_t port,
-        connect_handler&& handler) NOEXCEPT override
+    void start_connect(const std::string& hostname, uint16_t port,
+        const config::authority&, channel_handler&& handler) NOEXCEPT override
     {
         BC_ASSERT_MSG(session_, "call set_session");
 
-        // This connector.connect is invoked from network stranded method.
+        // This connector.start_connect is invoked from network stranded method.
         session_->stop();
 
-        mock_connector_connect_success<error::service_stopped>::connect(hostname,
-            port, std::move(handler));
+        mock_connector_connect_success<error::service_stopped>::start_connect(
+            hostname, port, {}, std::move(handler));
     }
 
 private:
@@ -795,7 +795,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
     set.outbound_connections = 2;
     set.connect_timeout_seconds = 10000;
 
-    // This invokes session.stop from within connect and then continues.
+    // This invokes session.stop from within start_connect and then continues.
     // First channel is stopped for service_stopped and others for channel_dropped.
     mock_p2p_stop_connect net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address>(net);

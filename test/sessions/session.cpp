@@ -235,33 +235,33 @@ public:
         return connectors_;
     }
 
-    void take(hosts::address_item_handler&& handler) NOEXCEPT override
+    void take(address_item_handler&& handler) NOEXCEPT override
     {
         handler(error::invalid_magic, {});
     }
 
-    void fetches(hosts::address_items_handler&& handler) const NOEXCEPT override
+    void fetch(address_items_handler&& handler) const NOEXCEPT override
     {
         handler(error::bad_stream, {});
     }
 
-    void save(const messages::address_item& address,
+    void restore(const messages::address_item& address,
         result_handler&& complete) NOEXCEPT override
     {
-        saved_ = address;
+        restored_ = address;
         complete(error::invalid_magic);
     }
 
-    const messages::address_item& saved() const NOEXCEPT
+    const messages::address_item& restored() const NOEXCEPT
     {
-        return saved_;
+        return restored_;
     }
 
-    void saves(const messages::address_items& addresses,
-        result_handler&& complete) NOEXCEPT override
+    void save(const messages::address::ptr& message,
+        count_handler&& complete) NOEXCEPT override
     {
-        saveds_ = addresses;
-        complete(error::bad_stream);
+        saveds_ = message->addresses;
+        complete(error::bad_stream, zero);
     }
 
     const messages::address_items& saveds() const NOEXCEPT
@@ -355,7 +355,7 @@ protected:
 private:
     size_t acceptors_{ 0 };
     size_t connectors_{ 0 };
-    messages::address_item saved_{};
+    messages::address_item restored_{};
     messages::address_items saveds_{};
 
     uint64_t pend_{ 0 };
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(session__take__always__calls_network)
     BOOST_REQUIRE_EQUAL(taken.get_future().get(), error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(session__fetches__always__calls_network)
+BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
 {
     const logger log{};
     settings set(selection::mainnet);
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(session__fetches__always__calls_network)
     mock_session session(net);
 
     std::promise<code> fetched;
-    session.fetches([&](const code& ec, messages::address_items)
+    session.fetch([&](const code& ec, const messages::address::ptr&)
     {
         fetched.set_value(ec);
     });
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(session__fetches__always__calls_network)
     BOOST_REQUIRE_EQUAL(fetched.get_future().get(), error::bad_stream);
 }
 
-BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_address)
+BOOST_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_address)
 {
     const logger log{};
     settings set(selection::mainnet);
@@ -494,34 +494,35 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_address)
     mock_session session(net);
 
     std::promise<code> save;
-    session.save({ 42, 24, unspecified_ip_address, 4224u }, [&](const code& ec)
+    session.restore({ 42, 24, unspecified_ip_address, 4224u }, [&](const code& ec)
     {
         save.set_value(ec);
     });
 
     BOOST_REQUIRE_EQUAL(save.get_future().get(), error::invalid_magic);
 
-    const auto& saved = net.saved();
+    const auto& saved = net.restored();
     BOOST_REQUIRE_EQUAL(saved.timestamp, 42u);
     BOOST_REQUIRE_EQUAL(saved.services, 24u);
     BOOST_REQUIRE_EQUAL(saved.ip, unspecified_ip_address);
     BOOST_REQUIRE_EQUAL(saved.port, 4224u);
 }
 
-BOOST_AUTO_TEST_CASE(session__saves__always__calls_network_with_expected_addresses)
+BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresses)
 {
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
     mock_session session(net);
 
-    std::promise<code> saves;
-    session.saves({ {}, { 42, 24, unspecified_ip_address, 4224u } }, [&](const code& ec)
+    std::promise<code> save;
+    const messages::address_items items{ {}, { 42, 24, unspecified_ip_address, 4224u } };
+    session.save(system::to_shared(messages::address{ items }), [&](const code& ec, size_t)
     {
-        saves.set_value(ec);
+        save.set_value(ec);
     });
 
-    BOOST_REQUIRE_EQUAL(saves.get_future().get(), error::bad_stream);
+    BOOST_REQUIRE_EQUAL(save.get_future().get(), error::bad_stream);
 
     const auto& saveds = net.saveds();
     BOOST_REQUIRE_EQUAL(saveds.size(), 2u);

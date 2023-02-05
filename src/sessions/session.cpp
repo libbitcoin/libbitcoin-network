@@ -408,26 +408,26 @@ const network::settings& session::settings() const NOEXCEPT
 // stackoverflow.com/questions/57411283/
 // calling-non-const-function-of-another-class-by-reference-from-const-function
 
-void session::take(hosts::address_item_handler&& handler) const NOEXCEPT
+void session::take(address_item_handler&& handler) const NOEXCEPT
 {
     network_.take(std::move(handler));
 }
 
-void session::fetches(hosts::address_items_handler&& handler) const NOEXCEPT
+void session::fetch(address_items_handler&& handler) const NOEXCEPT
 {
-    network_.fetches(std::move(handler));
+    network_.fetch(std::move(handler));
 }
 
-void session::save(const messages::address_item& address,
+void session::restore(const messages::address_item& address,
     result_handler&& handler) const NOEXCEPT
 {
-    network_.save(address, std::move(handler));
+    network_.restore(address, std::move(handler));
 }
 
-void session::saves(const messages::address_items& addresses,
-    result_handler&& handler) const NOEXCEPT
+void session::save(const messages::address::ptr& message,
+    count_handler&& handler) const NOEXCEPT
 {
-    network_.saves(addresses, std::move(handler));
+    network_.save(message, std::move(handler));
 }
 
 BC_POP_WARNING()

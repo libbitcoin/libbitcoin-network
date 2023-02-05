@@ -16,11 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_CONFIG_CONFIG_HPP
-#define LIBBITCOIN_NETWORK_CONFIG_CONFIG_HPP
+#include "../test.hpp"
 
-#include <bitcoin/network/config/address.hpp>
-#include <bitcoin/network/config/authority.hpp>
-#include <bitcoin/network/config/endpoint.hpp>
+BOOST_AUTO_TEST_SUITE(address_tests)
 
-#endif
+using namespace network::config;
+
+BOOST_AUTO_TEST_CASE(address_test)
+{
+    BOOST_REQUIRE(true);
+}
+
+// construct 1/2/3
+// bool
+// item
+// item
+// to_string
+// ==/!=
+// <</>>
+
+BOOST_AUTO_TEST_SUITE_END()

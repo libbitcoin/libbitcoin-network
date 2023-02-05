@@ -22,6 +22,7 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
+#include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/thread.hpp>
@@ -43,7 +44,6 @@ public:
     DELETE_COPY_MOVE(deadline);
 
     typedef std::shared_ptr<deadline> ptr;
-    typedef std::function<void(const code&)> handler;
     
     /// Timer notification handler is posted to the service.
     deadline(const logger& log, asio::strand& strand,
@@ -54,20 +54,20 @@ public:
 
     /// Start or restart the timer.
     /// Use expired(ec) in handler to test for expiration.
-    void start(handler&& handle) NOEXCEPT;
+    void start(result_handler&& handle) NOEXCEPT;
 
     /// Start or restart the timer.
     /// Use expired(ec) in handler to test for expiration.
-    void start(handler&& handle, const duration& timeout) NOEXCEPT;
+    void start(result_handler&& handle, const duration& timeout) NOEXCEPT;
 
     /// Cancel the timer. The handler will be invoked.
     void stop() NOEXCEPT;
 
 private:
     void handle_timer(const error::boost_code& ec,
-        const handler& handle) NOEXCEPT;
+        const result_handler& handle) NOEXCEPT;
 
-    // This is thread safe (const).
+    // This is thread safe.
     const duration duration_;
 
     // This is not thread safe.

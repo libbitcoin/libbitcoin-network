@@ -58,7 +58,7 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void connect(const endpoint& peer,
-        connect_handler&& handler) NOEXCEPT override
+        channel_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
             peer_ = peer;
@@ -92,7 +92,7 @@ public:
 
     // Handle connect with service_stopped error.
     void connect(const endpoint& peer,
-        connect_handler&& handler) NOEXCEPT override
+        channel_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
             peer_ = peer;
@@ -137,7 +137,7 @@ public:
     void start_connect(const endpoint& peer, const connector::ptr& connector,
         const channel_handler& handler) NOEXCEPT override
     {
-        // Must be first to ensure connector::connect() preceeds promise release.
+        // Must be first to ensure connector::start_connect() preceeds promise release.
         session_manual::start_connect(peer, connector, handler);
 
         if (is_one(connects_))

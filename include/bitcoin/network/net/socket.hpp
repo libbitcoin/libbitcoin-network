@@ -41,8 +41,6 @@ public:
     DELETE_COPY_MOVE(socket);
 
     typedef std::shared_ptr<socket> ptr;
-    typedef std::function<void(const code&)> result_handler;
-    typedef std::function<void(const code&, size_t)> io_handler;
 
     socket(const logger& log, asio::io_context& service) NOEXCEPT;
     virtual ~socket() NOEXCEPT;
@@ -72,12 +70,11 @@ public:
 
     /// Read from the socket, handler posted to socket strand.
     virtual void read(const system::data_slab& out,
-        io_handler&& handler) NOEXCEPT;
-    ////virtual void dynamic_read(system::data_chunk& out, io_handler&& handler);
+        count_handler&& handler) NOEXCEPT;
 
     /// Write to the socket, handler posted to socket strand.
     virtual void write(const system::data_slice& in,
-        io_handler&& handler) NOEXCEPT;
+        count_handler&& handler) NOEXCEPT;
 
     // Properties.
     // ------------------------------------------------------------------------
@@ -105,16 +102,16 @@ private:
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
     void do_read(const boost::asio::mutable_buffer& out,
-        const io_handler& handler) NOEXCEPT;
+        const count_handler& handler) NOEXCEPT;
     void do_write(const boost::asio::const_buffer& in,
-        const io_handler& handler) NOEXCEPT;
+        const count_handler& handler) NOEXCEPT;
 
     void handle_accept(const error::boost_code& ec,
         const result_handler& handler) NOEXCEPT;
     void handle_connect(const error::boost_code& ec,
         const asio::endpoint& peer, const result_handler& handler) NOEXCEPT;
     void handle_io(const error::boost_code& ec, size_t size,
-        const io_handler& handler) NOEXCEPT;
+        const count_handler& handler) NOEXCEPT;
 };
 
 } // namespace network

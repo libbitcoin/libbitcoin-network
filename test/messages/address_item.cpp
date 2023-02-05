@@ -22,18 +22,18 @@ BOOST_AUTO_TEST_SUITE(address_item_tests)
 
 using namespace bc::network::messages;
 
-BOOST_AUTO_TEST_CASE(address_item__null_ip_address__always__expected)
+BOOST_AUTO_TEST_CASE(address_item__loopback_ip_address__always__expected)
 {
     constexpr ip_address expected
     {
         {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
         }
     };
 
 
-    BOOST_REQUIRE_EQUAL(null_ip_address, expected);
+    BOOST_REQUIRE_EQUAL(loopback_ip_address, expected);
 }
 
 BOOST_AUTO_TEST_CASE(address_item__unspecified_timestamp__always__expected)
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(address_item__unspecified_ip_address__always__expected)
     {
         {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
         }
     };
 
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(address_item__equality__distinct_port__false)
 
 BOOST_AUTO_TEST_CASE(address_item__equality__distinct_ip__false)
 {
-    constexpr address_item item1{ 1, 2, null_ip_address, 3 };
+    constexpr address_item item1{ 1, 2, loopback_ip_address, 3 };
     constexpr address_item item2{ 1, 2, unspecified_ip_address, 3 };
     BOOST_REQUIRE(!(item1 == item2));
 }
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(address_item__inequality__distinct_port__true)
 
 BOOST_AUTO_TEST_CASE(address_item__inequality__distinct_ip__true)
 {
-    constexpr address_item item1{ 1, 2, null_ip_address, 3 };
+    constexpr address_item item1{ 1, 2, loopback_ip_address, 3 };
     constexpr address_item item2{ 1, 2, unspecified_ip_address, 3 };
     BOOST_REQUIRE(item1 != item2);
 }

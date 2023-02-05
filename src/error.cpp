@@ -33,6 +33,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { bypassed, "start bypassed without failure" },
 
     // addresses
+    { address_invalid, "address invalid" },
     { address_not_found, "address not found" },
     { seeding_unsuccessful, "seeding unsuccessful" },
         

@@ -127,7 +127,7 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return;
 
-    saves(message->addresses, BIND1(handle_save_addresses, _1));
+    save(message, BIND1(handle_save_addresses, _1));
 }
 
 void protocol_seed_31402::handle_save_addresses(const code& ec) NOEXCEPT
