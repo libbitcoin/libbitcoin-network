@@ -22,11 +22,17 @@ BOOST_AUTO_TEST_SUITE(address_tests)
 
 using namespace network::config;
 
-// construct
-
 BOOST_AUTO_TEST_CASE(address_test)
 {
     BOOST_REQUIRE(true);
 }
+
+// construct 1/2/3
+// bool
+// item
+// item
+// to_string
+// ==/!=
+// <</>>
 
 BOOST_AUTO_TEST_SUITE_END()
