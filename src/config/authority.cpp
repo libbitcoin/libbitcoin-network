@@ -81,7 +81,6 @@ static asio::ipv6 to_ipv6(const asio::address& ip_address) NOEXCEPT
 static std::string to_ipv4_hostname(const asio::address& ip_address) NOEXCEPT
 {
     // C++11: use std::regex.
-    // std::regex requires gcc 4.9, so we are using boost::regex for now.
     static const boost::regex regular("^::ffff:([0-9\\.]+)$");
 
     const auto address = ip_address.to_string();
@@ -221,7 +220,6 @@ std::istream& operator>>(std::istream& input,
     input >> value;
 
     // C++11: use std::regex.
-    // std::regex requires gcc 4.9, so we are using boost::regex for now.
     static const boost::regex regular(
         "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])(:([0-9]{1,5}))?$");
 
