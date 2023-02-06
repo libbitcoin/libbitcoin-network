@@ -57,7 +57,7 @@ address::address(const messages::address_item& item) NOEXCEPT
 }
 
 address::address(const messages::address_item::cptr& item) NOEXCEPT
-  : address_(item)
+  : address_(item ? item : system::to_shared<messages::address_item>())
 {
 }
 
@@ -148,7 +148,7 @@ std::istream& operator>>(std::istream& input,
 std::ostream& operator<<(std::ostream& output,
     const address& argument) NOEXCEPT
 {
-    const authority host{ argument.address_ };
+    const authority host{ argument };
 
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     output << host
