@@ -156,24 +156,28 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 
     if (ec)
     {
+        LOG("verbose [" << peer << "]" << ec.message());
         handler(ec, nullptr);
         return;
     }
 
     if (insufficient(peer))
     {
+        LOG("insufficient [" << peer << "]");
         handler(error::address_insufficient, nullptr);
         return;
     }
 
     if (unsupported(peer))
     {
+        LOG("unsupported [" << peer << "]");
         handler(error::address_unsupported, nullptr);
         return;
     }
 
     if (blacklisted(peer))
     {
+        LOG("blacklisted [" << peer << "]");
         handler(error::address_blocked, nullptr);
         return;
     }
@@ -181,6 +185,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     // Guard restartable connector (shutdown delay).
     if (stopped())
     {
+        // Can't call untake without a channel object, so restore.
         handler(error::service_stopped, nullptr);
         restore(peer.item_ptr(), BIND1(handle_untake, _1));
         return;
@@ -201,6 +206,7 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
     {
         if (channel)
         {
+            // Preceeds handsjake and can untake with success or other code.
             channel->stop(error::channel_dropped);
             untake(ec, channel);
         }
@@ -322,7 +328,10 @@ void session_outbound::untake(const code& ec,
     if (ec && ec != error::service_stopped)
         return;
 
-    ////LOG("Address update [" << channel->updated_address() << "] ");
+    const auto foo = channel->updated_address();
+
+    // Handshake may , in which case peer services may remain default (0).
+    LOG("Update [" << config::address(foo) << "] " << ec.message());
 
     // Update timestamp and set peer services before placing back to host pool.
     restore(channel->updated_address(), BIND1(handle_untake, _1));

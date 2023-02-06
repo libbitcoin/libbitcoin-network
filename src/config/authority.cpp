@@ -54,11 +54,6 @@ authority::authority(const std::string& host, uint16_t port) NOEXCEPT(false)
 
 // message conversion
 
-////authority::authority(const messages::address_item& address) NOEXCEPT
-////  : authority(address.ip, address.port)
-////{
-////}
-
 authority::authority(const messages::ip_address& ip, uint16_t port) NOEXCEPT
   : ip_(to_address(ip)), port_(port)
 {

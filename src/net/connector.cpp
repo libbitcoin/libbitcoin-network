@@ -85,7 +85,7 @@ void connector::connect(const authority& host,
     channel_handler&& handler) NOEXCEPT
 {
     // Forward outbound connection address (default service/time).
-    start(host.to_host(), host.port(), host.to_address_item(0, 0),
+    start(host.to_host(), host.port(), host.to_address_item(),
         std::move(handler));
 }
 

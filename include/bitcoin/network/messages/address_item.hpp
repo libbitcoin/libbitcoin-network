@@ -49,6 +49,7 @@ struct BCT_API address_item
     uint16_t port;
 };
 
+// Equality ignores timestamp and services.
 bool operator==(const address_item& left, const address_item& right) NOEXCEPT;
 bool operator!=(const address_item& left, const address_item& right) NOEXCEPT;
 

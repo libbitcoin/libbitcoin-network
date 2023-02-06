@@ -35,8 +35,8 @@
 namespace libbitcoin {
 namespace network {
 
-/// config wrappers are used for serialization/deserialization.
-/// hosts passes message and message item pointers, not config items.
+/// Config wrappers are used for serialization/deserialization.
+/// Hosts passes message and message item pointers, not config items.
 typedef std::function<void(const code&, const address_cptr&)> address_handler;
 typedef std::function<void(const code&, const address_item_cptr&)>
     address_item_handler;
@@ -77,6 +77,7 @@ public:
 private:
     typedef boost::circular_buffer<messages::address_item> buffer;
 
+    // Equality ignores timestamp and services.
     inline buffer::iterator find(const messages::address_item& host) NOEXCEPT
     {
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -84,6 +85,7 @@ private:
         BC_POP_WARNING()
     }
 
+    // Equality ignores timestamp and services.
     inline bool exists(const messages::address_item& host) NOEXCEPT
     {
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
