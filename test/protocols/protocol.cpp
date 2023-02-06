@@ -153,8 +153,8 @@ public:
     }
 
     // Inject mock channel.
-    void connect(const std::string&, uint16_t,
-        channel_handler&& handler) NOEXCEPT override
+    void start(const std::string&, uint16_t,
+        const address_ptr&, channel_handler&& handler) NOEXCEPT override
     {
         const auto socket = std::make_shared<network::socket>(log(), service_);
         const auto created = std::make_shared<mock_channel>(log(), socket, settings_);

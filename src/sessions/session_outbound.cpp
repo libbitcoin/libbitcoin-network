@@ -32,8 +32,9 @@ namespace network {
 
 #define CLASS session_outbound
 
-using namespace bc::system;
+using namespace system;
 using namespace config;
+using namespace messages;
 using namespace std::placeholders;
 
 // Bind throws (ok).
@@ -146,7 +147,7 @@ void session_outbound::start_connect(const connectors_ptr& connectors,
 }
 
 // Attempt to connect the given peer and invoke handle_one.
-void session_outbound::do_one(const code& ec, const authority& peer,
+void session_outbound::do_one(const code& ec, const address_item& peer,
     const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -169,11 +170,11 @@ void session_outbound::do_one(const code& ec, const authority& peer,
     if (stopped())
     {
         handler(error::service_stopped, nullptr);
-        session::restore(peer.to_address_item(), BIND1(handle_untake, _1));
+        session::restore(peer, BIND1(handle_untake, _1));
         return;
     }
 
-    connector->connect(peer, move_copy(handler));
+    connector->connect(to_shared(peer), move_copy(handler));
 }
 
 // Handle each do_one connection attempt, stopping on first success.
@@ -312,6 +313,8 @@ void session_outbound::untake(const code& ec,
         return;
 
     // TODO: change origination to address_item everywhere.
+    // TODO: add unix_time() and channel->peer_version().services to item.
+    // TODO: save restored hosts to independent buffer to take from first.
     session::restore(channel->origination().to_address_item(),
         BIND1(handle_untake, _1));
 }

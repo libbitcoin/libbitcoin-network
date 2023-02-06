@@ -52,8 +52,6 @@ public:
     }
 };
 
-// TODO: increase test coverage.
-
 BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
 {
     const logger log{};
@@ -133,7 +131,7 @@ BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
 
     boost::asio::post(strand, [&]()
     {
-        instance->connect("bogus.xxx", 42,
+        instance->connect(config::endpoint{ "bogus.xxx", 42 },
             [](const code& ec, const channel::ptr& channel)
             {
                 BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
