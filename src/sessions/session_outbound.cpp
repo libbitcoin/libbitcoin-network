@@ -156,28 +156,29 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 
     if (ec)
     {
-        LOG("verbose [" << peer << "]" << ec.message());
+        // This can only be address_not_found (empty, no peer).
+        //// LOG("verbose " << ec.message());
         handler(ec, nullptr);
         return;
     }
 
     if (insufficient(peer))
     {
-        LOG("insufficient [" << peer << "]");
+        LOG("Dropping insufficient address [" << peer << "]");
         handler(error::address_insufficient, nullptr);
         return;
     }
 
     if (unsupported(peer))
     {
-        LOG("unsupported [" << peer << "]");
+        LOG("Dropping unsupported address [" << peer << "]");
         handler(error::address_unsupported, nullptr);
         return;
     }
 
     if (blacklisted(peer))
     {
-        LOG("blacklisted [" << peer << "]");
+        LOG("Dropping blacklisted address [" << peer << "]");
         handler(error::address_blocked, nullptr);
         return;
     }
@@ -275,8 +276,10 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        start_timer(BIND2(start_connect, connectors, id),
-            settings().connect_timeout());
+        const auto timeout = settings().connect_timeout();
+
+        // Provides a timeout delay in case of empty address pool, etc.
+        start_timer(BIND2(start_connect, connectors, id), timeout);
         return;
     }
 
