@@ -38,9 +38,9 @@ class BCT_API socket
     protected tracker<socket>
 {
 public:
-    DELETE_COPY_MOVE(socket);
-
     typedef std::shared_ptr<socket> ptr;
+
+    DELETE_COPY_MOVE(socket);
 
     socket(const logger& log, asio::io_context& service) NOEXCEPT;
     virtual ~socket() NOEXCEPT;

@@ -41,9 +41,9 @@ class BCT_API channel
   : public proxy, protected tracker<channel>
 {
 public:
-    DELETE_COPY_MOVE(channel);
-
     typedef std::shared_ptr<channel> ptr;
+
+    DELETE_COPY_MOVE(channel);
 
     /// Attach protocol to channel, caller must start (requires strand).
     template <class Protocol, typename... Args>

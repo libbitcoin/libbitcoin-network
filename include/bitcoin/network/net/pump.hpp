@@ -51,12 +51,12 @@ void do_subscribe(pump::handler<messages::name>&& handler) NOEXCEPT \
 class BCT_API pump
 {
 public:
-    DELETE_COPY_MOVE_DESTRUCT(pump);
-
     /// Helper for external declarations.
     template <class Message>
     using handler = std::function<void(const code&,
         const std::shared_ptr<const Message>&)>;
+
+    DELETE_COPY_MOVE_DESTRUCT(pump);
 
     DEFINE_SUBSCRIBER(address);
     DEFINE_SUBSCRIBER(alert);

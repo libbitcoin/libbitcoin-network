@@ -38,9 +38,9 @@ class BCT_API acceptor
     protected tracker<acceptor>
 {
 public:
-    DELETE_COPY_MOVE(acceptor);
-
     typedef std::shared_ptr<acceptor> ptr;
+
+    DELETE_COPY_MOVE(acceptor);
 
     // Construct.
     // ------------------------------------------------------------------------

@@ -43,11 +43,11 @@ class BCT_API proxy
   : public enable_shared_from_base<proxy>, public reporter
 {
 public:
-    DELETE_COPY_MOVE(proxy);
-    virtual ~proxy() NOEXCEPT;
-
     typedef std::shared_ptr<proxy> ptr;
     typedef subscriber<const code&> stop_subscriber;
+
+    DELETE_COPY_MOVE(proxy);
+    virtual ~proxy() NOEXCEPT;
 
     /// Serialize and send a message to the peer (requires strand).
     template <class Message>
