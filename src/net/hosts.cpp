@@ -20,6 +20,7 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/config/utilities.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -32,12 +33,6 @@ using namespace config;
 using namespace messages;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-inline bool is_valid(const address_item& host) NOEXCEPT
-{
-    return host.port != unspecified_ip_port
-        && host.ip != unspecified_ip_address;
-}
 
 hosts::hosts(const settings& settings) NOEXCEPT
   : file_path_(settings.path),

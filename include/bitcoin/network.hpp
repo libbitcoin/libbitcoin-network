@@ -38,6 +38,7 @@
 #include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
+#include <bitcoin/network/config/utilities.hpp>
 #include <bitcoin/network/messages/address.hpp>
 #include <bitcoin/network/messages/address_item.hpp>
 #include <bitcoin/network/messages/alert.hpp>

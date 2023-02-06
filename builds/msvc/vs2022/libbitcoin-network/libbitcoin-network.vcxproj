@@ -84,6 +84,7 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\config\authority.cpp" />
     <ClCompile Include="..\..\..\..\src\config\endpoint.cpp" />
+    <ClCompile Include="..\..\..\..\src\config\utilities.cpp" />
     <ClCompile Include="..\..\..\..\src\error.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\address.cpp">
       <ObjectFileName>$(IntDir)src_messages_address.obj</ObjectFileName>
@@ -171,6 +172,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\config.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\endpoint.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\config\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\address.hpp" />

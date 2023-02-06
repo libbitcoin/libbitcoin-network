@@ -22,38 +22,54 @@
 #include <iostream>
 #include <memory>
 #include <bitcoin/network/define.hpp>
+////#include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace config {
 
-// Always serializes to three tokens.
-// Deserialization formats (ipv4/ipv6).
-// 188.240.57.122:8333
-// 188.240.57.122:8333/1675574490
-// 188.240.57.122:8333/1675574490/1033
-
 /// This is a container for messages::address_item.
 class BCT_API address
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(address);
-
     typedef std::shared_ptr<address> ptr;
 
-    address() NOEXCEPT;
-    address(const std::string& host) NOEXCEPT(false);
-    address(const messages::address_item& host) NOEXCEPT;
+    DEFAULT_COPY_MOVE_DESTRUCT(address);
 
-    /// True if the port is non-zero.
-    operator bool() const NOEXCEPT;
+    address() NOEXCEPT;
+
+    /// 188.240.57.122[:8333][/1675574490[/1033]]
+    address(const std::string& host) NOEXCEPT(false);
+
+    /// message conversion.
+    address(messages::address_item&& item) NOEXCEPT;
+    address(const messages::address_item& item) NOEXCEPT;
+    address(const messages::address_item::ptr& item) NOEXCEPT;
+    address(const messages::ip_address& ip, uint16_t port) NOEXCEPT;
+
+    ////// config conversion.
+    ////address(const authority& authority) NOEXCEPT;
+
+    /// Properties.
+    /// -----------------------------------------------------------------------
 
     /// The address item.
     const messages::address_item& item() const NOEXCEPT;
+    const messages::address_item::ptr& item_ptr() const NOEXCEPT;
 
-    /// The address as a string.
+    /// The address/host as a string.
     std::string to_string() const NOEXCEPT;
+    std::string to_host() const NOEXCEPT;
+
+    /// The address port.
+    uint16_t port() const NOEXCEPT;
+
+    /// Operators.
+    /// -----------------------------------------------------------------------
+
+    /// True if the port is non-zero.
+    operator bool() const NOEXCEPT;
 
     bool operator==(const address& other) const NOEXCEPT;
     bool operator!=(const address& other) const NOEXCEPT;
@@ -65,7 +81,7 @@ public:
 
 private:
     // This is not thread safe.
-    messages::address_item address_{};
+    messages::address_item::ptr address_{};
 };
 
 typedef std::vector<address> addresses;

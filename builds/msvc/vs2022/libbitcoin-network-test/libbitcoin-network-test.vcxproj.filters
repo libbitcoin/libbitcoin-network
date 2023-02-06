@@ -63,6 +63,9 @@
     <ClCompile Include="..\..\..\..\test\config\endpoint.cpp">
       <Filter>src\config</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\config\utilities.cpp">
+      <Filter>src\config</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\error.cpp">
       <Filter>src</Filter>
     </ClCompile>

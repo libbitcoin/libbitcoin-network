@@ -31,23 +31,23 @@ namespace config {
 
 using namespace bc::system;
 
+// Contructors.
+// ----------------------------------------------------------------------------
+
 endpoint::endpoint() NOEXCEPT
-  : endpoint("localhost")
+  : host_("localhost")
 {
 }
+
+// string conversion.
 
 endpoint::endpoint(const std::string& uri) NOEXCEPT(false)
 {
     std::stringstream(uri) >> *this;
 }
 
-endpoint::endpoint(const authority& authority) NOEXCEPT
-  : endpoint(authority.to_string())
-{
-}
-
 endpoint::endpoint(const std::string& host, uint16_t port) NOEXCEPT
-  : host_(host), port_(port)
+  : scheme_(), host_(host), port_(port)
 {
 }
 
@@ -56,6 +56,8 @@ endpoint::endpoint(const std::string& scheme, const std::string& host,
   : scheme_(scheme), host_(host), port_(port)
 {
 }
+
+// asio conversion.
 
 endpoint::endpoint(const asio::endpoint& uri) NOEXCEPT
   : endpoint(uri.address(), uri.port())
@@ -68,6 +70,16 @@ endpoint::endpoint(const asio::address& ip, uint16_t port) NOEXCEPT
 {
 }
 BC_POP_WARNING()
+
+// config conversion.
+
+endpoint::endpoint(const config::authority& authority) NOEXCEPT
+  : endpoint(authority.to_string())
+{
+}
+
+// Properties.
+// ----------------------------------------------------------------------------
 
 const std::string& endpoint::scheme() const NOEXCEPT
 {
@@ -84,11 +96,13 @@ uint16_t endpoint::port() const NOEXCEPT
     return port_;
 }
 
+// Methods.
+// ----------------------------------------------------------------------------
+
 std::string endpoint::to_string() const NOEXCEPT
 {
     std::stringstream value{};
     value << *this;
-
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return value.str();
     BC_POP_WARNING()
@@ -99,6 +113,9 @@ endpoint endpoint::to_local() const NOEXCEPT
     const auto host = (host_ == "*" ? "localhost" : host_);
     return endpoint(scheme_, host, port_);
 }
+
+// Operators.
+// ----------------------------------------------------------------------------
 
 endpoint::operator bool() const NOEXCEPT
 {
@@ -154,6 +171,7 @@ std::istream& operator>>(std::istream& input,
 std::ostream& operator<<(std::ostream& output,
     const endpoint& argument) NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     if (!argument.scheme().empty())
         output << argument.scheme() << "://";
 
@@ -161,7 +179,7 @@ std::ostream& operator<<(std::ostream& output,
 
     if (argument.port() != messages::unspecified_ip_port)
         output << ":" << argument.port();
-
+    BC_POP_WARNING()
     return output;
 }
 

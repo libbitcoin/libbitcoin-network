@@ -22,6 +22,7 @@
 #include <iostream>
 #include <memory>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/address.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
@@ -29,33 +30,34 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// This is a container for a {ip address, port} tuple.
+/// This is a container for an {ip address, port} tuple.
 class BCT_API authority
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(authority);
-
     typedef std::shared_ptr<authority> ptr;
+
+    DEFAULT_COPY_MOVE_DESTRUCT(authority);
 
     authority() NOEXCEPT;
 
-    /// Deserialize a IPv4 or IPv6 address-based hostname[:port].
-    /// The port is optional and will be set to zero if not provided.
-    /// The host can be in one of two forms:
-    /// [2001:db8::2]:port or 1.2.240.1:port.
+    /// Deserialize an IPv4 or IPv6 address-based hostname[:port].
+    /// Host can be either [2001:db8::2]:port or 1.2.240.1:port.
     authority(const std::string& authority) NOEXCEPT(false);
+    authority(const std::string& ip, uint16_t port) NOEXCEPT(false);
 
-    authority(const messages::address_item& address) NOEXCEPT;
+    /// message conversion.
+    authority(const messages::address_item& item) NOEXCEPT;
     authority(const messages::ip_address& ip, uint16_t port) NOEXCEPT;
 
-    /// The host can be in one of three forms:
-    /// [2001:db8::2] or 2001:db8::2 or 1.2.240.1
-    authority(const std::string& host, uint16_t port) NOEXCEPT(false);
+    /// asio conversion.
     authority(const asio::address& ip, uint16_t port) NOEXCEPT;
     authority(const asio::endpoint& endpoint) NOEXCEPT;
 
-    /// True if the port is non-zero.
-    operator bool() const NOEXCEPT;
+    /// config conversion.
+    authority(const config::address& address) NOEXCEPT;
+
+    /// Properties.
+    /// -----------------------------------------------------------------------
 
     /// The ip address of the authority.
     const asio::ipv6& ip() const NOEXCEPT;
@@ -63,10 +65,13 @@ public:
     /// The tcp port of the authority.
     uint16_t port() const NOEXCEPT;
 
-    /// The hostname of the authority as a string.
+    /// Methods.
+    /// -----------------------------------------------------------------------
+
+    /// The host of the authority as a string.
     /// The form of the return is determined by the type of address, either:
     /// 2001:db8::2 or 1.2.240.1
-    std::string to_hostname() const NOEXCEPT;
+    std::string to_host() const NOEXCEPT;
 
     /// The authority as a string.
     /// The form of the return is determined by the type of address.
@@ -79,6 +84,12 @@ public:
     messages::address_item to_address_item() const NOEXCEPT;
     messages::address_item to_address_item(uint32_t timestamp,
         uint64_t services) const NOEXCEPT;
+
+    /// Operators.
+    /// -----------------------------------------------------------------------
+
+    /// True if the port is non-zero.
+    operator bool() const NOEXCEPT;
 
     bool operator==(const authority& other) const NOEXCEPT;
     bool operator!=(const authority& other) const NOEXCEPT;
