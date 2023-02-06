@@ -378,44 +378,44 @@ void p2p::do_take(const address_item_handler& handler) NOEXCEPT
     hosts_.take(handler);
 }
 
-void p2p::restore(const messages::address_item& host,
+void p2p::restore(const address_item_cptr& host,
     result_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_restore, this, host, std::move(handler)));
 }
 
-void p2p::do_restore(const messages::address_item& host,
+void p2p::do_restore(const address_item_cptr& host,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    handler(hosts_.restore(host) ? error::success : error::address_invalid);
+    handler(hosts_.restore(*host) ? error::success : error::address_invalid);
 }
 
-void p2p::fetch(address_items_handler&& handler) const NOEXCEPT
+void p2p::fetch(address_handler&& handler) const NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_fetch, this, std::move(handler)));
 }
 
-void p2p::do_fetch(const address_items_handler& handler) const NOEXCEPT
+void p2p::do_fetch(const address_handler& handler) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     hosts_.fetch(handler);
 }
 
-void p2p::save(const messages::address::ptr& message,
+void p2p::save(const address_cptr& message,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_save, this, message, std::move(handler)));
 }
 
-void p2p::do_save(const messages::address::ptr& message,
+void p2p::do_save(const messages::address::cptr& message,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    handler(error::success, hosts_.store(message));
+    handler(error::success, hosts_.save(*message));
 }
 
 // Connection management.

@@ -154,7 +154,7 @@ public:
 
     // Inject mock channel.
     void start(const std::string&, uint16_t,
-        const address_ptr&, channel_handler&& handler) NOEXCEPT override
+        const address_item_cptr&, channel_handler&& handler) NOEXCEPT override
     {
         const auto socket = std::make_shared<network::socket>(log(), service_);
         const auto created = std::make_shared<mock_channel>(log(), socket, settings_);
@@ -279,12 +279,12 @@ public:
         return protocol::nonce();
     }
 
-    version::ptr peer_version() const NOEXCEPT override
+    version::cptr peer_version() const NOEXCEPT override
     {
         return protocol::peer_version();
     }
 
-    void set_peer_version(const version::ptr& value) NOEXCEPT override
+    void set_peer_version(const version::cptr& value) NOEXCEPT override
     {
         protocol::set_peer_version(value);
     }
@@ -302,12 +302,12 @@ public:
     /// Addresses.
     /// -----------------------------------------------------------------------
 
-    void fetch(address_items_handler&& handler) NOEXCEPT override
+    void fetch(address_handler&& handler) NOEXCEPT override
     {
         return protocol::fetch(std::move(handler));
     }
 
-    void save(const messages::address::ptr& message,
+    void save(const messages::address::cptr& message,
         count_handler&& handler) NOEXCEPT override
     {
         return protocol::save(message, std::move(handler));

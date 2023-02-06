@@ -55,7 +55,7 @@ address::address(const messages::address_item& host) NOEXCEPT
 {
 }
 
-address::address(const messages::address_item::ptr& host) NOEXCEPT
+address::address(const messages::address_item::cptr& host) NOEXCEPT
   : address_(host)
 {
 }
@@ -74,7 +74,7 @@ const messages::address_item& address::item() const NOEXCEPT
     return *address_;
 }
 
-const messages::address_item::ptr& address::item_ptr() const NOEXCEPT
+const messages::address_item::cptr& address::item_ptr() const NOEXCEPT
 {
     return address_;
 }

@@ -96,8 +96,8 @@ public:
     void set_negotiated_version(uint32_t value) NOEXCEPT;
 
     /// Peer version should be written only in handshake.
-    messages::version::ptr peer_version() const NOEXCEPT;
-    void set_peer_version(const messages::version::ptr& value) NOEXCEPT;
+    messages::version::cptr peer_version() const NOEXCEPT;
+    void set_peer_version(const messages::version::cptr& value) NOEXCEPT;
 
 protected:
     /// Property values provided to the proxy.
@@ -130,7 +130,7 @@ private:
 
     // These are not thread safe.
     uint32_t negotiated_version_;
-    messages::version::ptr peer_version_;
+    messages::version::cptr peer_version_;
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
 };

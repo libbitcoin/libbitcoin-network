@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_message__subscribed__expected)
     boost::asio::post(proxy_ptr->strand(), [&]()
     {
         proxy_ptr->subscribe_message<messages::ping>(
-            [&](code ec, messages::ping::ptr ping)
+            [&](code ec, messages::ping::cptr ping)
             {
                 BOOST_REQUIRE(!ping);
                 message_stopped.set_value(ec);
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
         });
 
         proxy_ptr->subscribe_message<messages::ping>(
-            [&](code ec, messages::ping::ptr ping)
+            [&](code ec, messages::ping::cptr ping)
             {
                 BOOST_REQUIRE(!ping);
                 message_stopped.set_value(ec);

@@ -33,7 +33,7 @@ namespace messages {
 
 struct BCT_API pong
 {
-    typedef std::shared_ptr<const pong> ptr;
+    typedef std::shared_ptr<const pong> cptr;
 
     static const identifier id;
     static const std::string command;

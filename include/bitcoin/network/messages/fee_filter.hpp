@@ -33,7 +33,7 @@ namespace messages {
 
 struct BCT_API fee_filter
 {
-    typedef std::shared_ptr<const fee_filter> ptr;
+    typedef std::shared_ptr<const fee_filter> cptr;
 
     static const identifier id;
     static const std::string command;

@@ -67,11 +67,11 @@ protected:
 
     virtual void handle_send_version(const code& ec) NOEXCEPT;
     virtual void handle_receive_version(const code& ec,
-        const messages::version::ptr& message) NOEXCEPT;
+        const messages::version::cptr& message) NOEXCEPT;
 
     virtual void handle_send_acknowledge(const code& ec) NOEXCEPT;
     virtual void handle_receive_acknowledge(const code& ec,
-        const messages::version_acknowledge::ptr& message) NOEXCEPT;
+        const messages::version_acknowledge::cptr& message) NOEXCEPT;
 
     // These are thread safe (const).
     const uint32_t minimum_version_;

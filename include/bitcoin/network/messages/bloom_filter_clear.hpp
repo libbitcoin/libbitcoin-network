@@ -33,7 +33,7 @@ namespace messages {
 
 struct BCT_API bloom_filter_clear
 {
-    typedef std::shared_ptr<const bloom_filter_clear> ptr;
+    typedef std::shared_ptr<const bloom_filter_clear> cptr;
 
     static const identifier id;
     static const std::string command;

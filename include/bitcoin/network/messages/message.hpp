@@ -85,7 +85,7 @@ system::chunk_ptr serialize(const Message& instance, uint32_t magic,
 }
 
 template <typename Message>
-typename Message::ptr deserialize(system::reader& source,
+typename Message::cptr deserialize(system::reader& source,
     uint32_t version) NOEXCEPT
 {
     return system::to_shared(Message::deserialize(version, source));

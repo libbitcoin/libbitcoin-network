@@ -33,7 +33,7 @@ namespace messages {
 
 struct BCT_API heading
 {
-    typedef std::shared_ptr<const heading> ptr;
+    typedef std::shared_ptr<const heading> cptr;
 
     static constexpr size_t command_size = 12;
 

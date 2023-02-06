@@ -48,7 +48,7 @@ protected:
     const std::string& name() const NOEXCEPT override;
 
     virtual void handle_receive_reject(const code& ec,
-        const messages::reject::ptr& message) NOEXCEPT;
+        const messages::reject::cptr& message) NOEXCEPT;
 
 private:
     std::string get_hash(const messages::reject& message) const NOEXCEPT;

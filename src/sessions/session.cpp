@@ -413,18 +413,18 @@ void session::take(address_item_handler&& handler) const NOEXCEPT
     network_.take(std::move(handler));
 }
 
-void session::fetch(address_items_handler&& handler) const NOEXCEPT
+void session::fetch(address_handler&& handler) const NOEXCEPT
 {
     network_.fetch(std::move(handler));
 }
 
-void session::restore(const messages::address_item& address,
+void session::restore(const address_item_cptr& address,
     result_handler&& handler) const NOEXCEPT
 {
     network_.restore(address, std::move(handler));
 }
 
-void session::save(const messages::address::ptr& message,
+void session::save(const address_cptr& message,
     count_handler&& handler) const NOEXCEPT
 {
     network_.save(message, std::move(handler));

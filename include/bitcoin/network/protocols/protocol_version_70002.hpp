@@ -58,7 +58,7 @@ protected:
     void rejection(const code& ec) NOEXCEPT override;
 
     virtual void handle_receive_reject(const code& ec,
-        const messages::reject::ptr& message) NOEXCEPT;
+        const messages::reject::cptr& message) NOEXCEPT;
 };
 
 } // namespace network

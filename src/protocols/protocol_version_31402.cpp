@@ -256,7 +256,7 @@ void protocol_version_31402::handle_send_version(const code& ec) NOEXCEPT
 }
 
 void protocol_version_31402::handle_receive_acknowledge(const code& ec,
-    const version_acknowledge::ptr&) NOEXCEPT
+    const version_acknowledge::cptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 
@@ -285,7 +285,7 @@ void protocol_version_31402::handle_receive_acknowledge(const code& ec,
 // ----------------------------------------------------------------------------
 
 void protocol_version_31402::handle_receive_version(const code& ec,
-    const version::ptr& message) NOEXCEPT
+    const version::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 

@@ -35,7 +35,7 @@ namespace messages {
 // The checksum is ignored by the version command.
 struct BCT_API version
 {
-    typedef std::shared_ptr<const version> ptr;
+    typedef std::shared_ptr<const version> cptr;
 
     static const identifier id;
     static const std::string command;

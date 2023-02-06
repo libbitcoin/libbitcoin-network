@@ -48,7 +48,7 @@ protected:
     const std::string& name() const NOEXCEPT override;
 
     virtual void handle_receive_alert(const code& ec,
-        const messages::alert::ptr& alert) NOEXCEPT;
+        const messages::alert::cptr& alert) NOEXCEPT;
 };
 
 } // namespace network

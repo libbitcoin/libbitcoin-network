@@ -34,7 +34,7 @@ namespace messages {
 struct BCT_API compact_block_item
 {
 public:
-    typedef std::shared_ptr<const compact_block_item> ptr;
+    typedef std::shared_ptr<const compact_block_item> cptr;
 
     static compact_block_item deserialize(uint32_t version,
         system::reader& source, bool witness) NOEXCEPT;

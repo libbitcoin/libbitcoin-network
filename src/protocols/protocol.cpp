@@ -131,13 +131,13 @@ uint64_t protocol::nonce() const NOEXCEPT
     return channel_->nonce();
 }
 
-version::ptr protocol::peer_version() const NOEXCEPT
+version::cptr protocol::peer_version() const NOEXCEPT
 {
     return channel_->peer_version();
 }
 
 // Call only from handshake (version protocol), for thread safety.
-void protocol::set_peer_version(const version::ptr& value) NOEXCEPT
+void protocol::set_peer_version(const version::cptr& value) NOEXCEPT
 {
     channel_->set_peer_version(value);
 }
@@ -157,30 +157,27 @@ void protocol::set_negotiated_version(uint32_t value) NOEXCEPT
 // ----------------------------------------------------------------------------
 // Address completion handlers are invoked on the channel strand.
 
-void protocol::fetch(address_items_handler&& handler) NOEXCEPT
+void protocol::fetch(address_handler&& handler) NOEXCEPT
 {
     session_.fetch(BIND3(do_fetch, _1, _2, std::move(handler)));
 }
 
 // Return to channel strand.
-void protocol::do_fetch(const code& ec,
-    const messages::address::ptr& message,
-    const address_items_handler& handler) NOEXCEPT
+void protocol::do_fetch(const code& ec, const address_cptr& message,
+    const address_handler& handler) NOEXCEPT
 {
-    // TODO: use addresses pointer (copies addresses).
     boost::asio::post(channel_->strand(),
         BIND3(handle_fetch, ec, message, handler));
 }
 
-void protocol::handle_fetch(const code& ec,
-    const messages::address::ptr& message,
-    const address_items_handler& handler) NOEXCEPT
+void protocol::handle_fetch(const code& ec, const address_cptr& message,
+    const address_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol");
     handler(ec, message);
 }
 
-void protocol::save(const address::ptr& message,
+void protocol::save(const address_cptr& message,
     count_handler&& handler) NOEXCEPT
 {
     session_.save(message, BIND3(do_save, _1, _2, std::move(handler)));

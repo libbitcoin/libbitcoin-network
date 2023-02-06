@@ -101,7 +101,7 @@ void connector::connect(const endpoint& host,
 
 // protected
 void connector::start(const std::string& hostname, uint16_t port,
-    const address_ptr& peer, channel_handler&& handler) NOEXCEPT
+    const address_item_cptr& peer, channel_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -125,7 +125,7 @@ void connector::start(const std::string& hostname, uint16_t port,
 // private
 void connector::handle_resolve(const error::boost_code& ec,
     const asio::endpoints& range, socket::ptr socket,
-    const address_ptr& peer, const channel_handler& handler) NOEXCEPT
+    const address_item_cptr& peer, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -157,7 +157,7 @@ void connector::handle_resolve(const error::boost_code& ec,
 
 // private
 void connector::handle_connect(const code& ec, socket::ptr socket,
-    const address_ptr& peer, const channel_handler& handler) NOEXCEPT
+    const address_item_cptr& peer, const channel_handler& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&connector::do_handle_connect,
@@ -166,7 +166,7 @@ void connector::handle_connect(const code& ec, socket::ptr socket,
 
 // private
 void connector::do_handle_connect(const code& ec, socket::ptr socket,
-    const address_ptr& peer, const channel_handler& handler) NOEXCEPT
+    const address_item_cptr& peer, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

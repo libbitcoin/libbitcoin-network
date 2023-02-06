@@ -45,7 +45,7 @@ public:
     /// message conversion.
     address(messages::address_item&& item) NOEXCEPT;
     address(const messages::address_item& item) NOEXCEPT;
-    address(const messages::address_item::ptr& item) NOEXCEPT;
+    address(const messages::address_item::cptr& item) NOEXCEPT;
     address(const messages::ip_address& ip, uint16_t port) NOEXCEPT;
 
     ////// config conversion.
@@ -56,7 +56,7 @@ public:
 
     /// The address item.
     const messages::address_item& item() const NOEXCEPT;
-    const messages::address_item::ptr& item_ptr() const NOEXCEPT;
+    const messages::address_item::cptr& item_ptr() const NOEXCEPT;
 
     /// The address/host as a string.
     std::string to_string() const NOEXCEPT;
@@ -81,7 +81,7 @@ public:
 
 private:
     // This is not thread safe.
-    messages::address_item::ptr address_{};
+    messages::address_item::cptr address_{};
 };
 
 typedef std::vector<address> addresses;

@@ -33,7 +33,7 @@ namespace messages {
 
 struct BCT_API reject
 {
-    typedef std::shared_ptr<const reject> ptr;
+    typedef std::shared_ptr<const reject> cptr;
 
     enum class reason_code: uint8_t
     {

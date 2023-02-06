@@ -107,7 +107,7 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void start(const std::string& hostname, uint16_t port,
-        const address_ptr&, channel_handler&& handler) NOEXCEPT override
+        const address_item_cptr&, channel_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
         {
@@ -145,7 +145,7 @@ public:
 
     using mock_connector_connect_success<error::success>::mock_connector_connect_success;
 
-    void start(const std::string&, uint16_t, const address_ptr&,
+    void start(const std::string&, uint16_t, const address_item_cptr&,
         channel_handler&& handler) NOEXCEPT override
     {
         boost::asio::post(strand_, [=]() NOEXCEPT
@@ -310,7 +310,7 @@ public:
         return error::success;
     }
 
-    void save(const messages::address::ptr& message,
+    void save(const messages::address::cptr& message,
         count_handler&& complete) NOEXCEPT override
     {
         hosts_ += message->addresses.size();
@@ -387,8 +387,8 @@ public:
     {
     }
 
-    void start(const std::string& hostname, uint16_t port, const address_ptr&,
-        channel_handler&& handler) NOEXCEPT override
+    void start(const std::string& hostname, uint16_t port,
+        const address_item_cptr&, channel_handler&& handler) NOEXCEPT override
     {
         BC_ASSERT_MSG(session_, "call set_session");
 

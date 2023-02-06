@@ -35,7 +35,7 @@ namespace messages {
 struct BCT_API get_blocks
 {
     typedef std::vector<size_t> indexes;
-    typedef std::shared_ptr<const get_blocks> ptr;
+    typedef std::shared_ptr<const get_blocks> cptr;
 
     static const identifier id;
     static const std::string command;

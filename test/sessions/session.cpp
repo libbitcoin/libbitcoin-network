@@ -240,31 +240,31 @@ public:
         handler(error::invalid_magic, {});
     }
 
-    void fetch(address_items_handler&& handler) const NOEXCEPT override
+    void fetch(address_handler&& handler) const NOEXCEPT override
     {
         handler(error::bad_stream, {});
     }
 
-    void restore(const messages::address_item& address,
+    void restore(const address_item_cptr& address,
         result_handler&& complete) NOEXCEPT override
     {
-        restored_ = address;
+        restored_ = *address;
         complete(error::invalid_magic);
     }
 
-    const messages::address_item& restored() const NOEXCEPT
+    const address_item& restored() const NOEXCEPT
     {
         return restored_;
     }
 
-    void save(const messages::address::ptr& message,
+    void save(const address_cptr& message,
         count_handler&& complete) NOEXCEPT override
     {
         saveds_ = message->addresses;
         complete(error::bad_stream, zero);
     }
 
-    const messages::address_items& saveds() const NOEXCEPT
+    const address_items& saveds() const NOEXCEPT
     {
         return saveds_;
     }
@@ -355,8 +355,8 @@ protected:
 private:
     size_t acceptors_{ 0 };
     size_t connectors_{ 0 };
-    messages::address_item restored_{};
-    messages::address_items saveds_{};
+    address_item restored_{};
+    address_items saveds_{};
 
     uint64_t pend_{ 0 };
     uint64_t unpend_{ 0 };
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(session__take__always__calls_network)
     mock_session session(net);
 
     std::promise<code> taken;
-    session.take([&](const code& ec, messages::address_item)
+    session.take([&](const code& ec, const address_item_cptr&)
     {
         taken.set_value(ec);
     });
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
     mock_session session(net);
 
     std::promise<code> fetched;
-    session.fetch([&](const code& ec, const messages::address::ptr&)
+    session.fetch([&](const code& ec, const address_cptr&)
     {
         fetched.set_value(ec);
     });
@@ -494,7 +494,8 @@ BOOST_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_addre
     mock_session session(net);
 
     std::promise<code> save;
-    session.restore({ 42, 24, unspecified_ip_address, 4224u }, [&](const code& ec)
+    const address_item item{ 42, 24, unspecified_ip_address, 4224u };
+    session.restore(system::to_shared(item), [&](const code& ec)
     {
         save.set_value(ec);
     });
@@ -516,8 +517,8 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
     mock_session session(net);
 
     std::promise<code> save;
-    const messages::address_items items{ {}, { 42, 24, unspecified_ip_address, 4224u } };
-    session.save(system::to_shared(messages::address{ items }), [&](const code& ec, size_t)
+    const address_items items{ {}, { 42, 24, unspecified_ip_address, 4224u } };
+    session.save(system::to_shared(address{ items }), [&](const code& ec, size_t)
     {
         save.set_value(ec);
     });

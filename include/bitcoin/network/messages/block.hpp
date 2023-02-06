@@ -33,7 +33,7 @@ namespace messages {
 
 struct BCT_API block
 {
-    typedef std::shared_ptr<const block> ptr;
+    typedef std::shared_ptr<const block> cptr;
 
     static const identifier id;
     static const std::string command;

@@ -33,7 +33,7 @@ namespace messages {
 
 struct BCT_API get_address
 {
-    typedef std::shared_ptr<const get_address> ptr;
+    typedef std::shared_ptr<const get_address> cptr;
 
     static const identifier id;
     static const std::string command;

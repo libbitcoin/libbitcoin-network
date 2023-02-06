@@ -33,7 +33,7 @@ namespace messages {
 
 struct BCT_API memory_pool
 {
-    typedef std::shared_ptr<const memory_pool> ptr;
+    typedef std::shared_ptr<const memory_pool> cptr;
 
     static const identifier id;
     static const std::string command;

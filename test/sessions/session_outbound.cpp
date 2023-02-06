@@ -114,7 +114,7 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void start(const std::string& hostname, uint16_t port,
-        const address_ptr&, channel_handler&& handler) NOEXCEPT override
+        const address_item_cptr&, channel_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
         {
@@ -153,7 +153,7 @@ public:
     using connector::connector;
 
     void start(const std::string&, uint16_t,
-        const address_ptr&, channel_handler&& handler) NOEXCEPT override
+        const address_item_cptr&, channel_handler&& handler) NOEXCEPT override
     {
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
@@ -269,7 +269,7 @@ public:
 
     void take(address_item_handler&& handler) const NOEXCEPT override
     {
-        handler(error::success, address_item{});
+        handler(error::success, system::to_shared<const address_item>());
     }
 };
 
@@ -384,7 +384,7 @@ public:
     }
 
     void start(const std::string& hostname, uint16_t port,
-        const address_ptr&, channel_handler&& handler) NOEXCEPT override
+        const address_item_cptr&, channel_handler&& handler) NOEXCEPT override
     {
         BC_ASSERT_MSG(session_, "call set_session");
 

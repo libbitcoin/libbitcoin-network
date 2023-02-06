@@ -101,7 +101,7 @@ void protocol_ping_60001::send_ping() NOEXCEPT
 ////}
 
 void protocol_ping_60001::handle_receive_pong(const code& ec,
-    const pong::ptr& message) NOEXCEPT
+    const pong::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 
@@ -151,7 +151,7 @@ void protocol_ping_60001::handle_timer(const code& ec) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_ping_60001::handle_receive_ping(const code& ec,
-    const ping::ptr& message) NOEXCEPT
+    const ping::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 

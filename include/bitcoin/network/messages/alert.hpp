@@ -34,7 +34,7 @@ namespace messages {
 
 struct BCT_API alert
 {
-    typedef std::shared_ptr<const alert> ptr;
+    typedef std::shared_ptr<const alert> cptr;
 
     static const identifier id;
     static const std::string command;

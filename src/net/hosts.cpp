@@ -126,7 +126,6 @@ bool hosts::restore(const address_item& address) NOEXCEPT
     if (disabled_)
         return true;
 
-    // Do not treat invalid address as an error, just log it.
     if (!is_valid(address))
         return false;
 
@@ -139,14 +138,35 @@ bool hosts::restore(const address_item& address) NOEXCEPT
     return true;
 }
 
-size_t hosts::store(const messages::address::ptr& addresses) NOEXCEPT
+void hosts::take(const address_item_handler& handler) NOEXCEPT
+{
+    if (buffer_.empty())
+    {
+        handler(error::address_not_found, {});
+        return;
+    }
+
+    // Select address from random buffer position.
+    const auto limit = sub1(buffer_.size());
+    const auto index = pseudo_random::next(zero, limit);
+    const auto it = std::next(buffer_.begin(), index);
+
+    // Remove from the buffer (copy and erase).
+    const auto host = std::make_shared<address_item>(*it);
+    buffer_.erase(it);
+
+    count_.store(buffer_.size(), std::memory_order_relaxed);
+    handler(error::success, host);
+}
+
+size_t hosts::save(const messages::address& addresses) NOEXCEPT
 {
     // If enabled then minimum capacity is one and buffer is at capacity.
-    if (disabled_ || !addresses || addresses->addresses.empty())
+    if (disabled_ || addresses.addresses.empty())
         return zero;
 
     // Accept between 1 and all of this peer's addresses up to capacity.
-    const auto& hosts = addresses->addresses;
+    const auto& hosts = addresses.addresses;
     const auto usable = std::min(hosts.size(), capacity_);
     const auto random = pseudo_random::next(one, usable);
 
@@ -173,27 +193,7 @@ size_t hosts::store(const messages::address::ptr& addresses) NOEXCEPT
     return accepted;
 }
 
-void hosts::take(const address_item_handler& handler) NOEXCEPT
-{
-    if (buffer_.empty())
-    {
-        handler(error::address_not_found, {});
-        return;
-    }
-
-    // Select address from random buffer position.
-    const auto limit = sub1(buffer_.size());
-    const auto index = pseudo_random::next(zero, limit);
-    const auto it = std::next(buffer_.begin(), index);
-    const auto host = *it;
-
-    // Remove from the buffer.
-    buffer_.erase(it);
-    count_.store(buffer_.size(), std::memory_order_relaxed);
-    handler(error::success, host);
-}
-
-void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
+void hosts::fetch(const address_handler& handler) const NOEXCEPT
 {
     if (buffer_.empty())
     {
@@ -209,7 +209,7 @@ void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
     const auto limit = sub1(buffer_.size());
     auto index = pseudo_random::next(zero, limit);
 
-    // Collect the messages.
+    // Copy addresses into non-const message (converted to const by return).
     const auto out = to_shared<messages::address>();
     out->addresses.reserve(size);
     for (size_t count = 0; count < size; ++count)

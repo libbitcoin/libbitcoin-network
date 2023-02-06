@@ -126,7 +126,7 @@ protected:
     void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
 private:
-    typedef messages::heading::ptr heading_ptr;
+    typedef messages::heading::cptr heading_ptr;
     typedef std::deque<std::pair<system::chunk_ptr, result_handler>> queue;
 
     void do_stop(const code& ec) NOEXCEPT;

@@ -36,7 +36,7 @@ namespace messages {
 
 struct BCT_API get_client_filters
 {
-    typedef std::shared_ptr<const get_client_filters> ptr;
+    typedef std::shared_ptr<const get_client_filters> cptr;
 
     static const identifier id;
     static const std::string command;

@@ -52,11 +52,11 @@ protected:
     void send_ping() NOEXCEPT override;
     void handle_timer(const code& ec) NOEXCEPT override;
     void handle_receive_ping(const code& ec,
-        const messages::ping::ptr& message) NOEXCEPT override;
+        const messages::ping::cptr& message) NOEXCEPT override;
 
     virtual void handle_send_pong(const code& ec) NOEXCEPT;
     virtual void handle_receive_pong(const code& ec,
-        const messages::pong::ptr& message) NOEXCEPT;
+        const messages::pong::cptr& message) NOEXCEPT;
 
 private:
     // This is protected by strand.

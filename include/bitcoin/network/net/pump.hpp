@@ -34,7 +34,7 @@ namespace network {
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 
 #define DEFINE_SUBSCRIBER(name) \
-    typedef subscriber<const code&, const messages::name::ptr&> \
+    typedef subscriber<const code&, const messages::name::cptr&> \
         SUBSCRIBER_TYPE(name)
 
 #define SUBSCRIBER_OVERLOAD(name) \

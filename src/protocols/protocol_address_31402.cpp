@@ -30,7 +30,7 @@ namespace network {
 
 #define CLASS protocol_address_31402
 
-using namespace bc::system;
+using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
@@ -89,7 +89,7 @@ void protocol_address_31402::start() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_address_31402::handle_receive_address(const code& ec,
-    const address::ptr& message) NOEXCEPT
+    const address::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
@@ -145,7 +145,7 @@ void protocol_address_31402::handle_save_addresses(const code& ec,
 // ----------------------------------------------------------------------------
 
 void protocol_address_31402::handle_receive_get_address(const code& ec,
-    const get_address::ptr&) NOEXCEPT
+    const get_address::cptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
@@ -168,7 +168,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 void protocol_address_31402::handle_fetch_addresses(const code& ec,
-    const address::ptr& message) NOEXCEPT
+    const address::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 

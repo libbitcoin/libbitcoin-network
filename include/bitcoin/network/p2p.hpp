@@ -65,7 +65,7 @@ public:
     }
 
     template <typename Message>
-    void broadcast(const typename Message::ptr& message,
+    void broadcast(const typename Message::cptr& message,
         result_handler&& handler) NOEXCEPT
     {
         boost::asio::post(strand_,
@@ -151,8 +151,10 @@ protected:
         BC_ASSERT_MSG(stranded(), "subscribe_close");
 
         // Sessions are attached after network start.
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         const auto session = std::make_shared<Session>(net,
             std::forward<Args>(args)...);
+        BC_POP_WARNING()
 
         // Session lifetime is ensured by the network stop subscriber.
         subscribe_close([=](const code&) NOEXCEPT
@@ -182,10 +184,10 @@ protected:
 
     /// Maintain address pool.
     virtual void take(address_item_handler&& handler) NOEXCEPT;
-    virtual void restore(const messages::address_item& address,
+    virtual void restore(const address_item_cptr& address,
         result_handler&& complete) NOEXCEPT;
-    virtual void fetch(address_items_handler&& handler) const NOEXCEPT;
-    virtual void save(const messages::address::ptr& message,
+    virtual void fetch(address_handler&& handler) const NOEXCEPT;
+    virtual void save(const address_cptr& message,
         count_handler&& complete) NOEXCEPT;
 
     /// The strand is running in this thread.
@@ -193,7 +195,7 @@ protected:
 
 private:
     template <typename Message>
-    void do_broadcast(const typename Message::ptr& message,
+    void do_broadcast(const typename Message::cptr& message,
         const result_handler& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
@@ -233,10 +235,10 @@ private:
         const channel_handler& handler) NOEXCEPT;
 
     void do_take(const address_item_handler& handler) NOEXCEPT;
-    void do_restore(const messages::address_item& host,
+    void do_restore(const address_item_cptr& host,
         const result_handler& complete) NOEXCEPT;
-    void do_fetch(const address_items_handler& handler) const NOEXCEPT;
-    void do_save(const messages::address::ptr& message,
+    void do_fetch(const address_handler& handler) const NOEXCEPT;
+    void do_save(const address_cptr& message,
         const count_handler& complete) NOEXCEPT;
 
     // These are thread safe.

@@ -34,7 +34,7 @@ namespace messages {
 
 struct BCT_API compact_block
 {
-    typedef std::shared_ptr<const compact_block> ptr;
+    typedef std::shared_ptr<const compact_block> cptr;
     typedef system::mini_hash short_id;
     typedef system::mini_hashes short_id_list;
 

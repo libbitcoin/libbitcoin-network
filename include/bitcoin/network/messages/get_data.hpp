@@ -35,7 +35,7 @@ namespace messages {
 struct BCT_API get_data
   : public inventory
 {
-    typedef std::shared_ptr<const get_data> ptr;
+    typedef std::shared_ptr<const get_data> cptr;
 
     static const identifier id;
     static const std::string command;

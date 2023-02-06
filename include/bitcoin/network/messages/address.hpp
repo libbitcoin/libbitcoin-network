@@ -34,7 +34,7 @@ namespace messages {
 
 struct BCT_API address
 {
-    typedef std::shared_ptr<const address> ptr;
+    typedef std::shared_ptr<const address> cptr;
 
     static const identifier id;
     static const std::string command;
@@ -50,6 +50,9 @@ struct BCT_API address
 };
 
 } // namespace messages
+
+using address_cptr = messages::address::cptr;
+
 } // namespace network
 } // namespace libbitcoin
 

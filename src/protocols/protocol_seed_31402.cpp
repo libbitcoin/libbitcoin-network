@@ -120,7 +120,7 @@ void protocol_seed_31402::handle_send_get_address(const code& ec) NOEXCEPT
 }
 
 void protocol_seed_31402::handle_receive_address(const code& ec,
-    const address::ptr& message) NOEXCEPT
+    const address::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -152,7 +152,7 @@ void protocol_seed_31402::handle_save_addresses(const code& ec) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_seed_31402::handle_receive_get_address(const code& ec,
-    const get_address::ptr&) NOEXCEPT
+    const get_address::cptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 

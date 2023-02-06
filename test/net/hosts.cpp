@@ -173,7 +173,7 @@ const address_item host1{ 0, 0, loopback_ip_address, 1 };
 const address_item host2{ 0, 0, loopback_ip_address, 2 };
 const address_item host3{ 0, 0, loopback_ip_address, 3 };
 
-BOOST_AUTO_TEST_CASE(hosts__store__three_unique__three)
+BOOST_AUTO_TEST_CASE(hosts__save__three_unique__three)
 {
     settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
@@ -182,20 +182,17 @@ BOOST_AUTO_TEST_CASE(hosts__store__three_unique__three)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    // clang doesn't like emplacement (vargs) here.
-    const auto message = system::to_shared<messages::address>
-    (
-        { messages::address_items{ host1, host2, host3 } }
-    );
-
-    instance.store(message);
+    instance.save(
+    {
+        { host1, host2, host3 }
+    });
     BOOST_REQUIRE_EQUAL(instance.count(), 3u);
 
     instance.stop();
     BOOST_REQUIRE(test::exists(TEST_NAME));
 }
 
-BOOST_AUTO_TEST_CASE(hosts__store__redundant__expected)
+BOOST_AUTO_TEST_CASE(hosts__save__redundant__expected)
 {
     settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
@@ -204,13 +201,10 @@ BOOST_AUTO_TEST_CASE(hosts__store__redundant__expected)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    // clang doesn't like emplacement (vargs) here.
-    const auto message = system::to_shared<messages::address>
-    (
-        { messages::address_items{ host1, host2, host3, host3, host2, host1 } }
-    );
-
-    instance.store(message);
+    instance.save(
+    {
+        { host1, host2, host3, host3, host2, host1 }
+    });
     BOOST_REQUIRE_EQUAL(instance.count(), 3u);
 
     instance.stop();
@@ -228,7 +222,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.take([&](const code& ec, const messages::address_item&)
+    instance.take([&](const code& ec, const address_item_cptr&)
     {
         BOOST_REQUIRE_EQUAL(ec, error::address_not_found);
     });
@@ -250,10 +244,10 @@ BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
     instance.restore(loopback42);
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
     
-    instance.take([&](const code& ec, const messages::address_item& item)
+    instance.take([&](const code& ec, const address_item_cptr& item)
     {
         BOOST_REQUIRE_EQUAL(ec, error::success);
-        BOOST_REQUIRE(item == loopback42);
+        BOOST_REQUIRE(*item == loopback42);
     });
 
     instance.stop();
@@ -272,7 +266,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.fetch([&](const code& ec, const messages::address::ptr& message)
+    instance.fetch([&](const code& ec, const messages::address::cptr& message)
     {
         BOOST_REQUIRE_EQUAL(ec, error::address_not_found);
         BOOST_REQUIRE(!message);
@@ -291,16 +285,13 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    // clang doesn't like emplacement (vargs) here.
-    const auto message = system::to_shared<messages::address>
-    (
-        { messages::address_items{ host1, host2, host3 } }
-    );
-
-    instance.store(message);
+    instance.save(
+    {
+        { host1, host2, host3 }
+    });
     BOOST_REQUIRE_EQUAL(instance.count(), 3u);
 
-    instance.fetch([&](const code& ec, const messages::address::ptr& message)
+    instance.fetch([&](const code& ec, const messages::address::cptr& message)
     {
         BOOST_REQUIRE_EQUAL(ec, error::success);
         BOOST_REQUIRE(message->addresses.empty());
@@ -324,13 +315,10 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__populated_file__expected)
     BOOST_REQUIRE_EQUAL(instance1.count(), 0u);
     BOOST_REQUIRE(!test::exists(TEST_NAME));
 
-    // clang doesn't like emplacement (vargs) here.
-    const auto message = system::to_shared<messages::address>
-    (
-        { messages::address_items{ host1, host2, host3 } }
-    );
-
-    instance1.store(message);
+    instance1.save(
+    {
+        { host1, host2, host3 }
+    });
     BOOST_REQUIRE_EQUAL(instance1.count(), 3u);
 
     // File is not created until stop.

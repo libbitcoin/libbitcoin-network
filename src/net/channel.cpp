@@ -140,12 +140,12 @@ void channel::set_negotiated_version(uint32_t value) NOEXCEPT
     negotiated_version_ = value;
 }
 
-version::ptr channel::peer_version() const NOEXCEPT
+version::cptr channel::peer_version() const NOEXCEPT
 {
     return peer_version_;
 }
 
-void channel::set_peer_version(const version::ptr& value) NOEXCEPT
+void channel::set_peer_version(const version::cptr& value) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     peer_version_ = value;
