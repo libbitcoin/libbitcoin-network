@@ -70,6 +70,24 @@ BOOST_AUTO_TEST_CASE(error_t__code__address_not_found__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "address not found");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__address_unsupported__true_exected_message)
+{
+    constexpr auto value = error::address_unsupported;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "advertised services unsupported");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__address_insufficient__true_exected_message)
+{
+    constexpr auto value = error::address_insufficient;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "advertised services insufficient");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__seeding_unsuccessful__true_exected_message)
 {
     constexpr auto value = error::seeding_unsuccessful;
@@ -128,13 +146,22 @@ BOOST_AUTO_TEST_CASE(error_t__code__peer_disconnect__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "peer disconnect");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__insufficient_peer__true_exected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__peer_unsupported__true_exected_message)
 {
-    constexpr auto value = error::insufficient_peer;
+    constexpr auto value = error::peer_unsupported;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "insufficient peer");
+    BOOST_REQUIRE_EQUAL(ec.message(), "peer unsupported");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__peer_insufficient__true_exected_message)
+{
+    constexpr auto value = error::peer_insufficient;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "peer insufficient");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__protocol_violation__true_exected_message)

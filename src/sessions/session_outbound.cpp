@@ -152,14 +152,26 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // This termination prevents a tight loop in the empty address pool case.
+    // These terminations prevent a tight loop in the empty address pool case.
+
     if (ec)
     {
         handler(ec, nullptr);
         return;
     }
 
-    // This termination prevents a tight loop in the small address pool case.
+    if (insufficient(peer))
+    {
+        handler(error::address_insufficient, nullptr);
+        return;
+    }
+
+    if (unsupported(peer))
+    {
+        handler(error::address_unsupported, nullptr);
+        return;
+    }
+
     if (blacklisted(peer))
     {
         handler(error::address_blocked, nullptr);
@@ -292,9 +304,7 @@ void session_outbound::handle_channel_stop(const code& ec,
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Outbound channel stop "
-        "[" << channel->authority() << "] "
-        "[" << channel->address() << "] "
+    LOG("Outbound channel stop [" << channel->authority() << "] "
         "(" << id << ") " << ec.message());
 
     untake(ec, channel);
@@ -311,6 +321,8 @@ void session_outbound::untake(const code& ec,
 
     if (ec && ec != error::service_stopped)
         return;
+
+    ////LOG("Address update [" << channel->updated_address() << "] ");
 
     // Update timestamp and set peer services before placing back to host pool.
     restore(channel->updated_address(), BIND1(handle_untake, _1));

@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_OUTBOUND_HPP
 #define LIBBITCOIN_NETWORK_SESSION_OUTBOUND_HPP
 
-#include <cstddef>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>

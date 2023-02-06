@@ -153,6 +153,12 @@ protected:
     /// The address is blacklisted by configuration.
     virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
 
+    /// The address advertises insufficient services.
+    virtual bool insufficient(const config::address& authority) const NOEXCEPT;
+
+    /// The address advertises disallowed services.
+    virtual bool unsupported(const config::address& authority) const NOEXCEPT;
+
     /// The direction of channel initiation.
     virtual bool inbound() const NOEXCEPT = 0;
 

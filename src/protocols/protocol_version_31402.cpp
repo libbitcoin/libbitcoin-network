@@ -307,7 +307,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         LOG("Invalid peer network services (" << message->services
             << ") for [" << authority() << "]");
 
-        rejection(error::insufficient_peer);
+        rejection(error::peer_unsupported);
         return;
     }
 
@@ -317,7 +317,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         LOG("Insufficient peer network services (" << message->services << ") "
             "for [" << authority() << "]");
 
-        rejection(error::insufficient_peer);
+        rejection(error::peer_insufficient);
         return;
     }
 
@@ -326,7 +326,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         LOG("Insufficient peer protocol version (" << message->value << ") "
             "for [" << authority() << "]");
 
-        rejection(error::insufficient_peer);
+        rejection(error::peer_insufficient);
         return;
     }
 
