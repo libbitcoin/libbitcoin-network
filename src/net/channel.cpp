@@ -158,13 +158,9 @@ const config::address& channel::address() const NOEXCEPT
 
 address_item_cptr channel::updated_address() const NOEXCEPT
 {
-    return to_shared<address_item>
-    (
-        unix_time(),
-        peer_version()->services,
-        address_.item().ip,
-        address_.item().port
-    );
+    // clang doesn't like vargs construct.
+    return to_shared(address_item{ unix_time(), peer_version()->services,
+        address_.item().ip, address_.item().port });
 }
 
 // Proxy overrides (channel maintains state for the proxy).
