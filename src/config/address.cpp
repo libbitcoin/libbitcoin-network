@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2021 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -33,6 +33,7 @@ namespace config {
 // ----------------------------------------------------------------------------
 
 address::address() NOEXCEPT
+  : address(system::to_shared<messages::address_item>())
 {
 }
 
@@ -45,26 +46,20 @@ address::address(const std::string& host) NOEXCEPT(false)
 
 // message conversion.
 
-address::address(messages::address_item&& host) NOEXCEPT
-  : address_(system::to_shared(std::move(host)))
+address::address(messages::address_item&& item) NOEXCEPT
+  : address_(system::to_shared(std::move(item)))
 {
 }
 
-address::address(const messages::address_item& host) NOEXCEPT
-  : address_(system::to_shared(host))
+address::address(const messages::address_item& item) NOEXCEPT
+  : address_(system::to_shared(item))
 {
 }
 
-address::address(const messages::address_item::cptr& host) NOEXCEPT
-  : address_(host)
+address::address(const messages::address_item::cptr& item) NOEXCEPT
+  : address_(item)
 {
 }
-
-////// config conversion.
-////address::address(const authority& authority) NOEXCEPT
-////  : address(authority.to_address_item())
-////{
-////}
 
 // Properties.
 // ----------------------------------------------------------------------------

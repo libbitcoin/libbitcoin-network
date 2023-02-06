@@ -81,7 +81,7 @@ public:
 protected:
     /// Try to connect to host:port, starts timer.
     virtual void start(const std::string& hostname, uint16_t port,
-        const address_item_cptr& host, channel_handler&& handler) NOEXCEPT;
+        const config::address& host, channel_handler&& handler) NOEXCEPT;
 
     // These are thread safe
     const settings& settings_;
@@ -96,14 +96,14 @@ protected:
 private:
     void handle_resolve(const error::boost_code& ec,
         const asio::endpoints& range, socket::ptr socket,
-        const address_item_cptr& host, const channel_handler& handler) NOEXCEPT;
+        const config::address& host, const channel_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, socket::ptr socket,
-        const address_item_cptr& host, const channel_handler& handler) NOEXCEPT;
+        const config::address& host, const channel_handler& handler) NOEXCEPT;
     void handle_timer(const code& ec, const socket::ptr& socket,
         const channel_handler& handler) NOEXCEPT;
 
     void do_handle_connect(const code& ec, socket::ptr socket,
-        const address_item_cptr& host, const channel_handler& handler) NOEXCEPT;
+        const config::address& host, const channel_handler& handler) NOEXCEPT;
 };
 
 typedef std::vector<connector::ptr> connectors;

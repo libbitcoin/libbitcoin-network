@@ -77,31 +77,29 @@ void connector::stop() NOEXCEPT
 void connector::connect(const address& host,
     channel_handler&& handler) NOEXCEPT
 {
-    // Specify outbound connection address.
-    const auto peer = host.item_ptr();
-    start(host.to_host(), host.port(), peer, std::move(handler));
+    // Forward outbound connection address.
+    start(host.to_host(), host.port(), host, std::move(handler));
 }
 
-// TODO: deprecated.
 void connector::connect(const authority& host,
     channel_handler&& handler) NOEXCEPT
 {
-    // Specify outbound connection address (default service/time).
-    const auto peer = to_shared(host.to_address_item(0, 0));
-    start(host.to_host(), host.port(), peer, std::move(handler));
+    // Forward outbound connection address (default service/time).
+    start(host.to_host(), host.port(), host.to_address_item(0, 0),
+        std::move(handler));
 }
 
 void connector::connect(const endpoint& host,
     channel_handler&& handler) NOEXCEPT
 {
     // Default outbound connection address to inbound (manual connections).
-    static const auto peer = to_shared<const messages::address_item>();
-    start(host.host(), host.port(), peer, std::move(handler));
+    // Manual connections are not "restored" to the address pool (isolated).
+    start(host.host(), host.port(), {}, std::move(handler));
 }
 
 // protected
 void connector::start(const std::string& hostname, uint16_t port,
-    const address_item_cptr& peer, channel_handler&& handler) NOEXCEPT
+    const config::address& peer, channel_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -125,7 +123,7 @@ void connector::start(const std::string& hostname, uint16_t port,
 // private
 void connector::handle_resolve(const error::boost_code& ec,
     const asio::endpoints& range, socket::ptr socket,
-    const address_item_cptr& peer, const channel_handler& handler) NOEXCEPT
+    const config::address& peer, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -157,7 +155,7 @@ void connector::handle_resolve(const error::boost_code& ec,
 
 // private
 void connector::handle_connect(const code& ec, socket::ptr socket,
-    const address_item_cptr& peer, const channel_handler& handler) NOEXCEPT
+    const config::address& peer, const channel_handler& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&connector::do_handle_connect,
@@ -166,7 +164,7 @@ void connector::handle_connect(const code& ec, socket::ptr socket,
 
 // private
 void connector::do_handle_connect(const code& ec, socket::ptr socket,
-    const address_item_cptr& peer, const channel_handler& handler) NOEXCEPT
+    const config::address& peer, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -189,9 +187,8 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
         return;
     }
 
-    // TODO: construct channel on address va. authority.
     const auto channel = std::make_shared<network::channel>(log(), socket,
-        settings_, config::authority{ *peer });
+        settings_, peer);
 
     // Successful connect.
     handler(error::success, channel);

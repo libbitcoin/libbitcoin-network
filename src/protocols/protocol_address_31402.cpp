@@ -67,14 +67,14 @@ void protocol_address_31402::start() NOEXCEPT
     if (!is_zero(settings().self.port()) &&
         !is_zero(settings().inbound_connections))
     {
-        SEND1(address{ { settings().self.to_address_item(unix_time(),
-            settings().services_maximum) } }, handle_send, _1);
+        auto foo = settings().self.to_address_item(unix_time(), settings().services_maximum);
+        SEND1(messages::address{ { std::move(foo) } }, handle_send, _1);
     }
 
     // If no address pool, do not ask for them or capture requests for them.
     if (!is_zero(settings().host_pool_capacity))
     {
-        SUBSCRIBE2(address, handle_receive_address, _1, _2);
+        SUBSCRIBE2(messages::address, handle_receive_address, _1, _2);
         SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
 
         // TODO: this could be gated on state of the address pool.
@@ -96,10 +96,10 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return;
 
-    const auto& addresses = message->addresses;
+    const auto& items = message->addresses;
 
     // Disallow multiples or more than one address message if not requested.
-    if ((!is_one(addresses.size()) || received_) &&
+    if ((!is_one(items.size()) || received_) &&
         is_zero(settings().host_pool_capacity))
     {
         LOG("Unsolicited addresses from [" << authority() << "]");
@@ -109,10 +109,10 @@ void protocol_address_31402::handle_receive_address(const code& ec,
 
     received_ = true;
 
-    if (is_one(addresses.size()))
+    if (is_one(items.size()))
     {
         // Do not store redundant adresses, origination is checked out.
-        if (addresses.front() == origination())
+        if (items.front() == address().item())
         {
             LOG("Dropping redundant address from [" << authority() << "]");
             return;
@@ -126,7 +126,7 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     // TODO: filter against p2p.authorities_ and session.pending_.origination.
     // TODO: otherwise we end up storing addresses we are connected to, which
     // TODO: results in redundant connect attempts (these are caught late).
-    save(message, BIND3(handle_save_addresses, _1, _2, addresses.size()));
+    save(message, BIND3(handle_save_addresses, _1, _2, items.size()));
 }
 
 void protocol_address_31402::handle_save_addresses(const code& ec,

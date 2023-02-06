@@ -79,7 +79,7 @@ private:
     void handle_channel_stop(const code& ec, const channel::ptr& channel,
         size_t id, const connectors_ptr& connectors) NOEXCEPT;
 
-    void do_one(const code& ec, const address_item_cptr& peer,
+    void do_one(const code& ec, const config::address& peer,
         const connector::ptr& connector, const channel_handler& handler) NOEXCEPT;
     void handle_one(const code& ec, const channel::ptr& channel,
         const count_ptr& count, const connectors_ptr& connectors,

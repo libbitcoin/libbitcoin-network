@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2021 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -22,7 +22,6 @@
 #include <iostream>
 #include <memory>
 #include <bitcoin/network/define.hpp>
-////#include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {
@@ -30,6 +29,7 @@ namespace network {
 namespace config {
 
 /// This is a container for messages::address_item.
+/// This is provided for connect/session, and serialization to/from hosts file.
 class BCT_API address
 {
 public:
@@ -46,10 +46,6 @@ public:
     address(messages::address_item&& item) NOEXCEPT;
     address(const messages::address_item& item) NOEXCEPT;
     address(const messages::address_item::cptr& item) NOEXCEPT;
-    address(const messages::ip_address& ip, uint16_t port) NOEXCEPT;
-
-    ////// config conversion.
-    ////address(const authority& authority) NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------

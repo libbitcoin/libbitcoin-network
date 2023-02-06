@@ -68,13 +68,13 @@ public:
         return protocol;
     }
 
-    /// Sets origination to socket->authority().
+    /// Sets address to socket->authority().
     channel(const logger& log, const socket::ptr& socket,
         const settings& settings) NOEXCEPT;
 
-    /// Set origination to specified value (pre-resolved outbound address).
+    /// Set address to specified value (pre-resolved outbound address).
     channel(const logger& log, const socket::ptr& socket,
-        const settings& settings, const config::authority& origination) NOEXCEPT;
+        const settings& settings, const config::address& address) NOEXCEPT;
 
     /// Asserts channel stopped.
     virtual ~channel() NOEXCEPT;
@@ -89,7 +89,10 @@ public:
     uint64_t nonce() const NOEXCEPT;
 
     /// Originating address of the connection (if outbound).
-    const config::authority& origination() const NOEXCEPT;
+    const config::address& address() const NOEXCEPT;
+
+    /// Originating address of connection with current time and peer services.
+    address_item_cptr updated_address() const NOEXCEPT;
 
     /// Negotiated version should be written only in handshake.
     uint32_t negotiated_version() const NOEXCEPT;
@@ -126,7 +129,7 @@ private:
     const uint32_t protocol_magic_;
     const uint64_t channel_nonce_;
     const bool validate_checksum_;
-    const config::authority origination_;
+    const config::address address_;
 
     // These are not thread safe.
     uint32_t negotiated_version_;

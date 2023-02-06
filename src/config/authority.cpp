@@ -52,12 +52,12 @@ authority::authority(const std::string& host, uint16_t port) NOEXCEPT(false)
     std::stringstream(to_text(host, port)) >> *this;
 }
 
-authority::authority(const messages::address_item& address) NOEXCEPT
-  : authority(address.ip, address.port)
-{
-}
-
 // message conversion
+
+////authority::authority(const messages::address_item& address) NOEXCEPT
+////  : authority(address.ip, address.port)
+////{
+////}
 
 authority::authority(const messages::ip_address& ip, uint16_t port) NOEXCEPT
   : ip_(to_address(ip)), port_(port)

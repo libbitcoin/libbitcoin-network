@@ -121,9 +121,9 @@ config::authority protocol::authority() const NOEXCEPT
     return channel_->authority();
 }
 
-config::authority protocol::origination() const NOEXCEPT
+const config::address& protocol::address() const NOEXCEPT
 {
-    return channel_->origination();
+    return channel_->address();
 }
 
 uint64_t protocol::nonce() const NOEXCEPT

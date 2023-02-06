@@ -147,7 +147,7 @@ void session_outbound::start_connect(const connectors_ptr& connectors,
 }
 
 // Attempt to connect the given peer and invoke handle_one.
-void session_outbound::do_one(const code& ec, const address_item_cptr& peer,
+void session_outbound::do_one(const code& ec, const config::address& peer,
     const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -160,7 +160,7 @@ void session_outbound::do_one(const code& ec, const address_item_cptr& peer,
     }
 
     // This termination prevents a tight loop in the small address pool case.
-    if (blacklisted(*peer))
+    if (blacklisted(peer))
     {
         handler(error::address_blocked, nullptr);
         return;
@@ -170,7 +170,7 @@ void session_outbound::do_one(const code& ec, const address_item_cptr& peer,
     if (stopped())
     {
         handler(error::service_stopped, nullptr);
-        session::restore(peer, BIND1(handle_untake, _1));
+        restore(peer.item_ptr(), BIND1(handle_untake, _1));
         return;
     }
 
@@ -294,7 +294,7 @@ void session_outbound::handle_channel_stop(const code& ec,
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Outbound channel stop "
         "[" << channel->authority() << "] "
-        "[" << channel->origination() << "] "
+        "[" << channel->address() << "] "
         "(" << id << ") " << ec.message());
 
     untake(ec, channel);
@@ -312,11 +312,8 @@ void session_outbound::untake(const code& ec,
     if (ec && ec != error::service_stopped)
         return;
 
-    // TODO: change origination to address_item everywhere.
-    // TODO: add unix_time() and channel->peer_version().services to item.
-    // TODO: save restored hosts to independent buffer to take from first.
-    session::restore(to_shared(channel->origination().to_address_item()),
-        BIND1(handle_untake, _1));
+    // Update timestamp and set peer services before placing back to host pool.
+    restore(channel->updated_address(), BIND1(handle_untake, _1));
 }
 
 void session_outbound::handle_untake(const code&) const NOEXCEPT

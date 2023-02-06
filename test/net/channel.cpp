@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(channel__properties__default__expected)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto channel_ptr = std::make_shared<channel_accessor>(log, socket_ptr, set);
 
-    BOOST_REQUIRE(!channel_ptr->origination());
+    BOOST_REQUIRE(!channel_ptr->address());
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
     BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
 
@@ -93,9 +93,18 @@ BOOST_AUTO_TEST_CASE(channel__properties__default__expected)
     channel_ptr.reset();
 }
 
-BOOST_AUTO_TEST_CASE(channel__properties__origination__expected)
+BOOST_AUTO_TEST_CASE(channel__properties__address__expected)
 {
-    config::authority expected{ messages::loopback_ip_address, 42 };
+    const config::address expected
+    {
+        messages::address_item
+        {
+            42,
+            messages::service::node_xnetwork_limited,
+            messages::loopback_ip_address,
+            24
+        }
+    };
 
     const logger log{};
     threadpool pool(1);
@@ -104,8 +113,8 @@ BOOST_AUTO_TEST_CASE(channel__properties__origination__expected)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto channel_ptr = std::make_shared<channel_accessor>(log, socket_ptr, set, expected);
 
-    BOOST_REQUIRE(channel_ptr->origination());
-    BOOST_REQUIRE_EQUAL(channel_ptr->origination(), expected);
+    BOOST_REQUIRE(channel_ptr->address());
+    BOOST_REQUIRE_EQUAL(channel_ptr->address(), expected);
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
     BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
 

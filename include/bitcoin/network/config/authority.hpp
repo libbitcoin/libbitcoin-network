@@ -46,7 +46,7 @@ public:
     authority(const std::string& ip, uint16_t port) NOEXCEPT(false);
 
     /// message conversion.
-    authority(const messages::address_item& item) NOEXCEPT;
+    ////authority(const messages::address_item& item) NOEXCEPT;
     authority(const messages::ip_address& ip, uint16_t port) NOEXCEPT;
 
     /// asio conversion.
