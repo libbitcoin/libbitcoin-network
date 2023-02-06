@@ -29,7 +29,6 @@ namespace libbitcoin {
 namespace network {
 
 using namespace system;
-using namespace config;
 using namespace messages;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -126,15 +125,17 @@ bool hosts::restore(const address_item& address) NOEXCEPT
     if (disabled_)
         return true;
 
-    if (!is_valid(address))
+    if (!config::is_valid(address))
         return false;
 
-    if (!exists(address))
-    {
-        buffer_.push_back(address);
-        count_.store(buffer_.size(), std::memory_order_relaxed);
-    }
+    // Erase existing address by authority match.
+    const auto it = find(address);
+    if (it != buffer_.end())
+        buffer_.erase(it);
 
+    // Add address.
+    buffer_.push_back(address);
+    count_.store(buffer_.size(), std::memory_order_relaxed);
     return true;
 }
 
@@ -154,12 +155,11 @@ void hosts::take(const address_item_handler& handler) NOEXCEPT
     // Remove from the buffer (copy and erase).
     const auto host = std::make_shared<address_item>(*it);
     buffer_.erase(it);
-
     count_.store(buffer_.size(), std::memory_order_relaxed);
     handler(error::success, host);
 }
 
-size_t hosts::save(const messages::address& addresses) NOEXCEPT
+size_t hosts::save(const address& addresses) NOEXCEPT
 {
     // If enabled then minimum capacity is one and buffer is at capacity.
     if (disabled_ || addresses.addresses.empty())
@@ -182,7 +182,7 @@ size_t hosts::save(const messages::address& addresses) NOEXCEPT
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
         const auto& host = hosts.at(index);
-        if (is_valid(host) && !exists(host))
+        if (config::is_valid(host) && !exists(host))
         {
             ++accepted;
             buffer_.push_back(host);
