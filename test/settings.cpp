@@ -57,6 +57,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE(instance.path.empty());
     BOOST_REQUIRE(instance.self.to_address_item() == unspecified_address_item);
     BOOST_REQUIRE(instance.blacklists.empty());
+    BOOST_REQUIRE(instance.whitelists.empty());
     BOOST_REQUIRE(instance.peers.empty());
     BOOST_REQUIRE(instance.seeds.empty());
 }
@@ -93,6 +94,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BOOST_REQUIRE(instance.path.empty());
     BOOST_REQUIRE(instance.self.to_address_item() == unspecified_address_item);
     BOOST_REQUIRE(instance.blacklists.empty());
+    BOOST_REQUIRE(instance.whitelists.empty());
     BOOST_REQUIRE(instance.peers.empty());
 
     // changed from default
@@ -142,6 +144,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
     BOOST_REQUIRE(instance.path.empty());
     BOOST_REQUIRE(instance.self.to_address_item() == unspecified_address_item);
     BOOST_REQUIRE(instance.blacklists.empty());
+    BOOST_REQUIRE(instance.whitelists.empty());
     BOOST_REQUIRE(instance.peers.empty());
 
     // changed from default
@@ -190,6 +193,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE(instance.path.empty());
     BOOST_REQUIRE(instance.self.to_address_item() == unspecified_address_item);
     BOOST_REQUIRE(instance.blacklists.empty());
+    BOOST_REQUIRE(instance.whitelists.empty());
     BOOST_REQUIRE(instance.peers.empty());
     BOOST_REQUIRE(instance.seeds.empty());
 

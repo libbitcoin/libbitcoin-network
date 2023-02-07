@@ -63,9 +63,10 @@ struct BCT_API settings
     uint32_t host_pool_capacity;
     uint32_t rate_limit;
     std::string user_agent;
-    std::filesystem::path path;
-    config::authority self;
+    std::filesystem::path path{};
+    config::authority self{};
     config::authorities blacklists{};
+    config::authorities whitelists{};
     config::endpoints peers{};
     config::endpoints seeds{};
 
