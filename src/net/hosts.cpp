@@ -60,7 +60,6 @@ code hosts::start() NOEXCEPT
         if (!file.good())
             return error::success;
 
-        // No guard against invalid address entries in file (ok).
         std::string line;
         while (std::getline(file, line))
             buffer_.push_back(config::address(line).item());
@@ -88,6 +87,9 @@ code hosts::stop() NOEXCEPT
     if (disabled_)
         return error::success;
 
+    // Idempotent stop.
+    disabled_ = true;
+
     if (buffer_.empty())
     {
         code ec;
@@ -111,9 +113,6 @@ code hosts::stop() NOEXCEPT
     {
         return error::file_save;
     }
-
-    // Idempotent stop.
-    disabled_ = true;
 
     buffer_.clear();
     count_.store(zero, std::memory_order_relaxed);
