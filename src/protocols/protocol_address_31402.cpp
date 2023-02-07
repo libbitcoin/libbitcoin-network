@@ -71,16 +71,18 @@ void protocol_address_31402::start() NOEXCEPT
     if (started())
         return;
 
+    // Advertise self if configured for inbound and valid self address.
     if (settings().advertise_enabled())
     {
         SEND1(messages::address{ { self() } }, handle_send, _1);
     }
 
-    // Always capture address and get_address.
+    // Always capture address and get_address (so can accept and/or reject).
     SUBSCRIBE2(messages::address, handle_receive_address, _1, _2);
     SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
 
-    // Do not request from inbound channels, or if outbound not configured.
+    // Do not accept addresses from inbound channels (too injectable).
+    // Do not request addresses if not configured for outbound connections.
     if (request_)
     {
         SEND1(get_address{}, handle_send, _1);
@@ -113,14 +115,14 @@ void protocol_address_31402::handle_receive_address(const code& ec,
 
     received_ = true;
 
-    // Do not store redundant adresses, address() is checked out.
+    // Do not store redundant adresses, address() is own checked out address.
     if (!multivalue && items.front() != address())
     {
         LOG("Dropping redundant address from [" << authority() << "]");
         return;
     }
 
-    // This allows addresses that have been rejected (not retained).
+    // This will accept previously rejected addresses (state not retained).
     save(message, BIND3(handle_save_addresses, _1, _2, items.size()));
 }
 
@@ -147,7 +149,7 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return;
 
-    // Limit requests to one per session (fingerprinting).
+    // Limit get_address requests to one per session.
     if (sent_)
     {
         LOG("Ignoring duplicate address request from [" << authority() << "]");
