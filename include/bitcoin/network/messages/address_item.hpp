@@ -19,10 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_ADDRESS_ITEM_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_ADDRESS_ITEM_HPP
 
-#include <cstdint>
-#include <cstddef>
 #include <memory>
-#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/enums/service.hpp>
@@ -66,10 +63,8 @@ constexpr ip_address loopback_ip_address =
 // tools.ietf.org/html/rfc4291#section-2.5.2
 constexpr ip_address unspecified_ip_address
 {
-    {
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    }
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
 constexpr uint32_t unspecified_timestamp = 0;
