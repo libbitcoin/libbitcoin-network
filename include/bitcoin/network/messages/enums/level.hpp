@@ -81,6 +81,8 @@ namespace messages {
 // getcfcheckpt v4      70015   BIP157  not BIP-associated to p2p version
 // cfheaders    v4      70015   BIP157  not BIP-associated to p2p version
 // getcfheaders v4      70015   BIP157  not BIP-associated to p2p version
+
+// sendaddrv2   --      00000   BIP155  compat break, unversioned, handshake
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 enum level: uint32_t
