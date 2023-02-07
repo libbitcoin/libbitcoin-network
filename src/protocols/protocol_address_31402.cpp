@@ -135,8 +135,11 @@ void protocol_address_31402::handle_save_addresses(const code& ec,
     if (stopped(ec))
         return;
 
-    LOG("Accepted (" << accepted << " of " << count << ") "
-        "addresses from [" << authority() << "].");
+    if (count > 10u)
+    {
+        LOG("Accepted (" << accepted << " of " << count << ") "
+            "addresses from [" << authority() << "].");
+    }
 }
 
 // Outbound (fetch and send addresses).

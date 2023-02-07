@@ -43,6 +43,8 @@ using namespace std::placeholders;
 
 // Dump up to 1k of payload as hex in order to diagnose failure.
 static constexpr size_t invalid_payload_dump_size = 1024;
+static constexpr uint32_t http_magic  = 0x20544547;
+static constexpr uint32_t https_magic = 0x02010316;
 
 // This is created in a started state and must be stopped, as the subscribers
 // assert if not stopped. Subscribers may hold protocols even if the service
@@ -202,9 +204,16 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (head->magic != protocol_magic())
     {
-        // These are common, with magic 542393671 coming from http requests.
-        LOG("Invalid heading magic (" << head->magic << ") from ["
-            << authority() << "]");
+        if (head->magic == http_magic || head->magic == https_magic)
+        {
+            LOG("Http/s request from [" << authority() << "]");
+        }
+        else
+        {
+            LOG("Invalid heading magic (0x"
+                << encode_base16(to_little_endian(head->magic))
+                << ") from [" << authority() << "]");
+        }
 
         stop(error::invalid_magic);
         return;
@@ -268,14 +277,10 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     if (code)
     {
         // /nodes.mom.market:0.2/ sends unversioned sendaddrv2.
-        LOGV("Invalid " << head->command << "payload from ["
-            << authority() << "] ("
-            << encode_base16({
-                payload_buffer_.begin(),
-                std::next(payload_buffer_.begin(),
-                    std::min(payload_size, invalid_payload_dump_size))})
-            << ")"
-            << code.message());
+        LOGV("Invalid " << head->command << " payload from [" << authority()
+            << "] (" << encode_base16({ payload_buffer_.begin(),
+                std::next(payload_buffer_.begin(), std::min(payload_size,
+                invalid_payload_dump_size))}) << ") " << code.message());
 
         stop(code);
         return;

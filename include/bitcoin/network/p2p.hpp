@@ -48,29 +48,31 @@ public:
     typedef subscriber<const code&, const channel::ptr&> channel_subscriber;
 
     template <typename Message>
-    void broadcast(const Message& message, result_handler&& handler) NOEXCEPT
+    void broadcast(const Message& message, result_handler&& handler,
+        uint64_t id=zero) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, system::to_shared(message), std::move(handler)));
+                this, system::to_shared(message), id, std::move(handler)));
     }
 
     template <typename Message>
-    void broadcast(Message&& message, result_handler&& handler) NOEXCEPT
+    void broadcast(Message&& message, result_handler&& handler,
+        uint64_t id=zero) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, system::to_shared(std::move(message)),
+                this, system::to_shared(std::move(message)), id,
                     std::move(handler)));
     }
 
     template <typename Message>
     void broadcast(const typename Message::cptr& message,
-        result_handler&& handler) NOEXCEPT
+        result_handler&& handler, uint64_t id=zero) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, message, std::move(handler)));
+                this, message, id, std::move(handler)));
     }
 
     // Constructors.
@@ -195,10 +197,16 @@ protected:
 
 private:
     template <typename Message>
-    void do_broadcast(const typename Message::cptr& message,
+    void do_broadcast(const typename Message::cptr& message, uint64_t nonce,
         const result_handler& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
+
+        // Exclude the self channel (nonces are non-zero, so zero implies all).
+        const auto self = [nonce](const auto& channel) NOEXCEPT
+        {
+            return channel->nonce() == nonce;
+        };
 
         // TODO: Serialization may not be unique per channel (by version).
         // TODO: Specialize this template for messages unique by version.
@@ -207,7 +215,8 @@ private:
             /*channel->version()*/ messages::level::canonical);
 
         for (const auto& channel: channels_)
-            channel->write(data, move_copy(handler));
+            if (!self(channel))
+                channel->write(data, move_copy(handler));
     }
 
     void subscribe_close(result_handler&& handler) NOEXCEPT;
