@@ -177,14 +177,14 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (ec == error::channel_stopped)
     {
-        LOG("Heading read abort [" << authority() << "]");
+        ////LOG("Heading read abort [" << authority() << "]");
         stop(error::success);
         return;
     }
 
     if (ec)
     {
-        LOG("Heading read failure [" << authority() << "] " << ec.message());
+        ////LOG("Heading read failure [" << authority() << "] " << ec.message());
         stop(ec);
         return;
     }
@@ -244,9 +244,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 
     if (ec)
     {
-        LOG("Payload read failure [" << authority() << "] "
-            << ec.message());
-
+        ////LOG("Payload read failure [" << authority() << "] " << ec.message());
         stop(ec);
         return;
     }
@@ -269,16 +267,15 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 
     if (code)
     {
-        LOGV("Invalid payload from [" << authority() << "] "
-            << encode_base16(
-            {
+        // /nodes.mom.market:0.2/ sends unversioned sendaddrv2.
+        LOGV("Invalid " << head->command << "payload from ["
+            << authority() << "] ("
+            << encode_base16({
                 payload_buffer_.begin(),
                 std::next(payload_buffer_.begin(),
-                    std::min(payload_size, invalid_payload_dump_size))
-            }));
-
-        LOG("Invalid " << head->command << " payload from ["
-            << authority() << "] " << code.message());
+                    std::min(payload_size, invalid_payload_dump_size))})
+            << ")"
+            << code.message());
 
         stop(code);
         return;

@@ -147,6 +147,7 @@ void session_inbound::handle_accept(const code& ec,
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         LOG("Failed to accept inbound channel, " << ec.message());
 
+        // TODO: verify loop delay.
         start_timer(BIND2(start_accept, _1, acceptor),
             settings().connect_timeout());
         return;
