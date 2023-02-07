@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(authority__construct__invalid_port__throws_invalid_option)
 
 BOOST_AUTO_TEST_CASE(authority__port__default__zero)
 {
-    const authority host;
+    const authority host{};
     BOOST_REQUIRE_EQUAL(host.port(), 0u);
 }
 
@@ -126,21 +126,30 @@ BOOST_AUTO_TEST_CASE(authority__port__copy__expected)
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
 
+BOOST_AUTO_TEST_CASE(authority__port__move__expected)
+{
+    constexpr uint16_t expected_port = 42;
+    authority other(test_ipv6_address, expected_port);
+    const authority host(std::move(other));
+    BOOST_REQUIRE_EQUAL(host.port(), expected_port);
+}
+
+
 BOOST_AUTO_TEST_CASE(authority__port__ipv4_authority__expected)
 {
     constexpr uint16_t expected_port = 42;
-    std::stringstream address;
-    address << BC_AUTHORITY_IPV4_ADDRESS ":" << expected_port;
-    const authority host(address.str());
+    std::stringstream stream{};
+    stream << BC_AUTHORITY_IPV4_ADDRESS ":" << expected_port;
+    const authority host(stream.str());
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
 
 BOOST_AUTO_TEST_CASE(authority__port__ipv6_authority__expected)
 {
     constexpr uint16_t expected_port = 42;
-    std::stringstream address;
-    address << "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:" << expected_port;
-    const authority host(address.str());
+    std::stringstream stream{};
+    stream << "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:" << expected_port;
+    const authority host(stream.str());
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
 
@@ -302,7 +311,7 @@ BOOST_AUTO_TEST_CASE(authority__to_ip_address__boost_address__expected)
 BOOST_AUTO_TEST_CASE(authority__to_ip_address__boost_endpoint__expected)
 {
     const auto address = asio::address::from_string(BC_AUTHORITY_IPV4_ADDRESS);
-    asio::endpoint tcp_endpoint(address, 42);
+    const asio::endpoint tcp_endpoint(address, 42);
     const authority host(tcp_endpoint);
     BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_mapped_ip_address));
 }
@@ -311,7 +320,7 @@ BOOST_AUTO_TEST_CASE(authority__to_ip_address__boost_endpoint__expected)
 
 BOOST_AUTO_TEST_CASE(authority__to_host__default__ipv6_unspecified)
 {
-    const authority host;
+    const authority host{};
     BOOST_REQUIRE_EQUAL(host.to_host(), "[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]");
 }
 
