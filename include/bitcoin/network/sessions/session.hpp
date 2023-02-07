@@ -73,6 +73,9 @@ public:
     /// Access network configuration settings.
     const network::settings& settings() const NOEXCEPT;
 
+    /// The direction of channel initiation.
+    virtual bool inbound() const NOEXCEPT = 0;
+
 protected:
     typedef subscriber<code> stop_subscriber;
 
@@ -158,9 +161,6 @@ protected:
 
     /// The address advertises disallowed services.
     virtual bool unsupported(const config::address& authority) const NOEXCEPT;
-
-    /// The direction of channel initiation.
-    virtual bool inbound() const NOEXCEPT = 0;
 
     /// Notify (non-seed) subscribers on channel start.
     virtual bool notify() const NOEXCEPT = 0;

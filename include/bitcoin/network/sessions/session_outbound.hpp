@@ -44,10 +44,10 @@ public:
     /// Start configured number of connections (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;
 
-protected:
     /// The channel is outbound (do not pend the nonce).
     bool inbound() const NOEXCEPT override;
 
+protected:
     /// Notify subscribers on channel start.
     bool notify() const NOEXCEPT override;
 
