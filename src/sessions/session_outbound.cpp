@@ -66,9 +66,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(settings().outbound_connections) || 
-        is_zero(settings().host_pool_capacity) ||
-        is_zero(settings().connect_batch_size))
+    if (!settings().outbound_enabled())
     {
         LOG("Not configured for outbound connections.");
         handler(error::bypassed);
@@ -331,10 +329,9 @@ void session_outbound::untake(const code& ec,
     if (ec && ec != error::service_stopped)
         return;
 
-    const auto foo = channel->updated_address();
-
-    // Handshake may , in which case peer services may remain default (0).
-    LOG("Update [" << config::address(foo) << "] " << ec.message());
+    // Verbose
+    ////LOG("Update [" << config::address(channel->updated_address()) << "] "
+    ////    << ec.message());
 
     // Update timestamp and set peer services before placing back to host pool.
     restore(channel->updated_address(), BIND1(handle_untake, _1));

@@ -59,9 +59,13 @@ protected:
         const messages::address::cptr& message) NOEXCEPT;
 
 private:
+    messages::address_item self() const NOEXCEPT;
+
     // These are protected by strand.
-    bool sent_;
+    const bool inbound_;
+    const bool request_;
     bool received_;
+    bool sent_;
 };
 
 } // namespace network

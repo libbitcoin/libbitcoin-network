@@ -284,7 +284,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
         return;
     }
 
-    LOG("Received " << head->command << " from [" << authority()
+    LOG("Recv " << head->command << " from [" << authority()
         << "] (" << payload_size << " bytes)");
 
     signal_activity();

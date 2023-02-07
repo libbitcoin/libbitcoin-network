@@ -31,6 +31,8 @@ namespace network {
 /// Common database configuration settings, properties not thread safe.
 struct BCT_API settings
 {
+    DEFAULT_COPY_MOVE_DESTRUCT(settings);
+
     settings() NOEXCEPT;
     settings(system::chain::selection context) NOEXCEPT;
 
@@ -68,13 +70,17 @@ struct BCT_API settings
     config::endpoints seeds{};
 
     /// Helpers.
-    duration connect_timeout() const NOEXCEPT;
-    duration channel_handshake() const NOEXCEPT;
-    duration channel_germination() const NOEXCEPT;
-    duration channel_heartbeat() const NOEXCEPT;
-    duration channel_inactivity() const NOEXCEPT;
-    duration channel_expiration() const NOEXCEPT;
-    size_t minimum_address_count() const NOEXCEPT;
+    virtual bool inbound_enabled() const NOEXCEPT;
+    virtual bool outbound_enabled() const NOEXCEPT;
+    virtual bool advertise_enabled() const NOEXCEPT;
+    virtual duration connect_timeout() const NOEXCEPT;
+    virtual duration channel_handshake() const NOEXCEPT;
+    virtual duration channel_germination() const NOEXCEPT;
+    virtual duration channel_heartbeat() const NOEXCEPT;
+    virtual duration channel_inactivity() const NOEXCEPT;
+    virtual duration channel_expiration() const NOEXCEPT;
+    virtual size_t minimum_address_count() const NOEXCEPT;
+    virtual std::filesystem::path file() const NOEXCEPT;
 };
 
 } // namespace network

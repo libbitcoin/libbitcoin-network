@@ -34,7 +34,7 @@ using namespace messages;
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 hosts::hosts(const settings& settings) NOEXCEPT
-  : file_path_(settings.path),
+  : file_path_(settings.file()),
     count_(zero),
     minimum_(settings.address_minimum),
     maximum_(settings.address_maximum),
