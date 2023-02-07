@@ -59,8 +59,10 @@ public:
     std::string to_string() const NOEXCEPT;
     std::string to_host() const NOEXCEPT;
 
-    /// The address port.
+    /// The address properties.
     uint16_t port() const NOEXCEPT;
+    uint32_t timestamp() const NOEXCEPT;
+    uint64_t services() const NOEXCEPT;
 
     /// Operators.
     /// -----------------------------------------------------------------------

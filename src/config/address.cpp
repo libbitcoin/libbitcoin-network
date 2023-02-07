@@ -96,6 +96,16 @@ uint16_t address::port() const NOEXCEPT
     return address_->port;
 }
 
+uint32_t address::timestamp() const NOEXCEPT
+{
+    return address_->timestamp;
+}
+
+uint64_t address::services() const NOEXCEPT
+{
+    return address_->services;
+}
+
 // Operators.
 // ----------------------------------------------------------------------------
 
