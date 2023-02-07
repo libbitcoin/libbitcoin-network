@@ -35,6 +35,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     // addresses
     { address_invalid, "address invalid" },
     { address_not_found, "address not found" },
+    { address_unsupported, "advertised services unsupported" },
+    { address_insufficient, "advertised services insufficient" },
     { seeding_unsuccessful, "seeding unsuccessful" },
         
     // file system
@@ -45,7 +47,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     // general I/O failures
     { bad_stream, "bad data stream" },
     { peer_disconnect, "peer disconnect" },
-    { insufficient_peer, "insufficient peer" },
+    { peer_unsupported, "peer unsupported" },
+    { peer_insufficient, "peer insufficient" },
     { protocol_violation, "protocol violation" },
     { channel_overflow, "channel overflow" },
     { channel_underflow, "channel underflow" },

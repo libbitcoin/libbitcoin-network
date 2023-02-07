@@ -74,27 +74,32 @@ void connector::stop() NOEXCEPT
 // Methods.
 // ---------------------------------------------------------------------------
 
+void connector::connect(const address& host,
+    channel_handler&& handler) NOEXCEPT
+{
+    // Forward outbound connection address.
+    start(host.to_host(), host.port(), host, std::move(handler));
+}
+
 void connector::connect(const authority& host,
     channel_handler&& handler) NOEXCEPT
 {
-    start_connect(host.to_hostname(), host.port(), host, std::move(handler));
+    // Forward outbound connection address (default service/time).
+    start(host.to_host(), host.port(), host.to_address_item(),
+        std::move(handler));
 }
 
-void connector::connect(const endpoint& endpoint,
+void connector::connect(const endpoint& host,
     channel_handler&& handler) NOEXCEPT
 {
-    start_connect(endpoint.host(), endpoint.port(), {}, std::move(handler));
-}
-
-void connector::connect(const std::string& hostname, uint16_t port,
-    channel_handler&& handler) NOEXCEPT
-{
-    start_connect(hostname, port, {}, std::move(handler));
+    // Default outbound connection address to inbound (manual connections).
+    // Manual connections are not "restored" to the address pool (isolated).
+    start(host.host(), host.port(), {}, std::move(handler));
 }
 
 // protected
-void connector::start_connect(const std::string& hostname, uint16_t port,
-    const config::authority& host, channel_handler&& handler) NOEXCEPT
+void connector::start(const std::string& hostname, uint16_t port,
+    const config::address& peer, channel_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -112,13 +117,13 @@ void connector::start_connect(const std::string& hostname, uint16_t port,
     // async_resolve copies string parameters.
     resolver_.async_resolve(hostname, std::to_string(port),
         std::bind(&connector::handle_resolve,
-            shared_from_this(), _1, _2, socket, host, std::move(handler)));
+            shared_from_this(), _1, _2, socket, peer, std::move(handler)));
 }
 
 // private
 void connector::handle_resolve(const error::boost_code& ec,
     const asio::endpoints& range, socket::ptr socket,
-    const config::authority& host, const channel_handler& handler) NOEXCEPT
+    const config::address& peer, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -145,21 +150,21 @@ void connector::handle_resolve(const error::boost_code& ec,
     // Establishes a socket connection by trying each endpoint in sequence.
     socket->connect(range,
         std::bind(&connector::handle_connect,
-            shared_from_this(), _1, socket, host, handler));
+            shared_from_this(), _1, socket, peer, handler));
 }
 
 // private
 void connector::handle_connect(const code& ec, socket::ptr socket,
-    const config::authority& host, const channel_handler& handler) NOEXCEPT
+    const config::address& peer, const channel_handler& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&connector::do_handle_connect,
-            shared_from_this(), ec, socket, host, handler));
+            shared_from_this(), ec, socket, peer, handler));
 }
 
 // private
 void connector::do_handle_connect(const code& ec, socket::ptr socket,
-    const config::authority& host, const channel_handler& handler) NOEXCEPT
+    const config::address& peer, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -182,9 +187,8 @@ void connector::do_handle_connect(const code& ec, socket::ptr socket,
         return;
     }
 
-    // channel.origination set to socket.authority if not parameterized.
     const auto channel = std::make_shared<network::channel>(log(), socket,
-        settings_, host ? host : socket->authority());
+        settings_, peer);
 
     // Successful connect.
     handler(error::success, channel);

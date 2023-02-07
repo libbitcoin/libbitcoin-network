@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2021 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -20,46 +20,88 @@
 
 #include <iostream>
 #include <sstream>
+#include <utility>
 #include <bitcoin/network/config/authority.hpp>
+#include <bitcoin/network/config/utilities.hpp>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace config {
 
+// Constructors.
+// ----------------------------------------------------------------------------
+
 address::address() NOEXCEPT
+  : address(system::to_shared<messages::address_item>())
 {
 }
+
+// string conversion.
 
 address::address(const std::string& host) NOEXCEPT(false)
 {
     std::stringstream(host) >> *this;
 }
 
-address::address(const messages::address_item& host) NOEXCEPT
-  : address_(host)
+// message conversion.
+
+address::address(messages::address_item&& item) NOEXCEPT
+  : address_(system::to_shared(std::move(item)))
 {
 }
 
-address::operator bool() const NOEXCEPT
+address::address(const messages::address_item& item) NOEXCEPT
+  : address_(system::to_shared(item))
 {
-    return !is_zero(address_.port) &&
-        address_.ip != messages::unspecified_ip_address;
 }
+
+address::address(const messages::address_item::cptr& item) NOEXCEPT
+  : address_(item ? item : system::to_shared<messages::address_item>())
+{
+}
+
+// Properties.
+// ----------------------------------------------------------------------------
 
 const messages::address_item& address::item() const NOEXCEPT
 {
+    return *address_;
+}
+
+const messages::address_item::cptr& address::item_ptr() const NOEXCEPT
+{
     return address_;
 }
+
+// Methods.
+// ----------------------------------------------------------------------------
 
 std::string address::to_string() const NOEXCEPT
 {
     std::stringstream value{};
     value << *this;
-
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return value.str();
     BC_POP_WARNING()
+}
+
+std::string address::to_host() const NOEXCEPT
+{
+    return to_ip_host(to_address(address_->ip));
+}
+
+uint16_t address::port() const NOEXCEPT
+{
+    return address_->port;
+}
+
+// Operators.
+// ----------------------------------------------------------------------------
+
+address::operator bool() const NOEXCEPT
+{
+    return is_valid(*address_);
 }
 
 bool address::operator==(const address& other) const NOEXCEPT
@@ -84,35 +126,34 @@ std::istream& operator>>(std::istream& input,
         throw istream_exception(line);
 
     // Throws istream_exception if parse fails.
-    const authority host{ tokens.at(0) };
-
-    // Assign with default timestamp (0) and services (services::node_none).
-    argument.address_ = host.to_address_item();
+    // Sets default timestamp (0) and services (services::node_none).
+    auto item = authority{ tokens.at(0) }.to_address_item();
 
     if (tokens.size() > 1)
     {
-        if (!deserialize(argument.address_.timestamp, tokens.at(1)))
+        if (!deserialize(item.timestamp, tokens.at(1)))
             throw istream_exception(tokens.at(1));
 
         if (tokens.size() > 2)
         {
-            if (!deserialize(argument.address_.services, tokens.at(2)))
+            if (!deserialize(item.services, tokens.at(2)))
                 throw istream_exception(tokens.at(2));
         }
     }
 
+    argument.address_ = to_shared(std::move(item));
     return input;
 }
 
 std::ostream& operator<<(std::ostream& output,
     const address& argument) NOEXCEPT
 {
-    const authority host{ argument.address_ };
+    const authority host{ argument };
 
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     output << host
-        << "/" << argument.address_.timestamp
-        << "/" << argument.address_.services;
+        << "/" << argument.address_->timestamp
+        << "/" << argument.address_->services;
     BC_POP_WARNING()
     return output;
 }

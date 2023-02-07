@@ -67,7 +67,7 @@ void protocol_alert_31402::start() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_alert_31402::handle_receive_alert(const code& ec,
-    const alert::ptr& LOG_ONLY(alert)) NOEXCEPT
+    const alert::cptr& LOG_ONLY(alert)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_alert_31402");
 

@@ -33,7 +33,7 @@ namespace messages {
 
 struct BCT_API compact_transactions
 {
-    typedef std::shared_ptr<const compact_transactions> ptr;
+    typedef std::shared_ptr<const compact_transactions> cptr;
 
     static const identifier id;
     static const std::string command;

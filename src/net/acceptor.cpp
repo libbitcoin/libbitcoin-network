@@ -67,7 +67,7 @@ code acceptor::start(uint16_t port) NOEXCEPT
     static const auto reuse_address = asio::acceptor::reuse_address(true);
     error::boost_code ec;
 
-    // This is hardwired to listen on IPv6.
+    // This is hardwired to listen on IPv6 (which should also include IPv4).
     const asio::endpoint endpoint(asio::tcp::v6(), port);
     acceptor_.open(endpoint.protocol(), ec);
 

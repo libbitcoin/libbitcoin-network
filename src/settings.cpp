@@ -18,8 +18,10 @@
  */
 #include <bitcoin/network/settings.hpp>
 
+#include <filesystem>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -55,7 +57,6 @@ settings::settings() NOEXCEPT
     host_pool_capacity(0),
     rate_limit(1024),
     user_agent(BC_USER_AGENT),
-    path("hosts.cache"),
     self(unspecified_address_item)
 {
 }
@@ -73,10 +74,10 @@ settings::settings(chain::selection context) NOEXCEPT
             identifier = 3652501241;
             inbound_port = 8333;
             seeds.reserve(4);
-            seeds.push_back({ "194.5.152.211", 8333 });
-            seeds.push_back({ "96.126.123.143", 8333 });
-            seeds.push_back({ "165.227.196.254", 8333 });
-            seeds.push_back({ "34.73.164.207", 8333 });
+            seeds.push_back({ "mainnet1.libbitcoin.net", 8333 });
+            seeds.push_back({ "mainnet2.libbitcoin.net", 8333 });
+            seeds.push_back({ "mainnet3.libbitcoin.net", 8333 });
+            seeds.push_back({ "mainnet4.libbitcoin.net", 8333 });
             break;
         }
 
@@ -106,6 +107,25 @@ settings::settings(chain::selection context) NOEXCEPT
         {
         }
     }
+}
+
+bool settings::inbound_enabled() const NOEXCEPT
+{
+    return to_bool(inbound_connections)
+        && to_bool(inbound_port);
+}
+
+bool settings::outbound_enabled() const NOEXCEPT
+{
+    return to_bool(outbound_connections)
+        && to_bool(host_pool_capacity)
+        && to_bool(connect_batch_size);
+}
+
+bool settings::advertise_enabled() const NOEXCEPT
+{
+    // Advertise requires inbound and valid self.
+    return inbound_enabled() && config::is_valid(self.to_address_item());
 }
 
 duration settings::connect_timeout() const NOEXCEPT
@@ -143,6 +163,13 @@ size_t settings::minimum_address_count() const NOEXCEPT
     // Guarded by parameterization (config).
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return system::safe_multiply(connect_batch_size, outbound_connections);
+    BC_POP_WARNING()
+}
+
+std::filesystem::path settings::file() const NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return path / "hosts.cache";
     BC_POP_WARNING()
 }
 

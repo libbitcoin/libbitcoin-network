@@ -35,28 +35,29 @@ namespace config {
 class BCT_API endpoint
 {
 public:
-    DEFAULT_COPY_MOVE_DESTRUCT(endpoint);
-
     typedef std::shared_ptr<endpoint> ptr;
+
+    DEFAULT_COPY_MOVE_DESTRUCT(endpoint);
 
     endpoint() NOEXCEPT;
 
     /// The scheme and port may be undefined, in which case the port is
     /// reported as zero and the scheme is reported as an empty string.
-    /// The value is of the form: [scheme://]host[:port]
+    /// The value is of the form: [scheme://]host[:port] (dns name or ip).
     endpoint(const std::string& uri) NOEXCEPT(false);
-    endpoint(const authority& authority) NOEXCEPT;
-
-    /// host may be host name or ip address.
     endpoint(const std::string& host, uint16_t port) NOEXCEPT;
     endpoint(const std::string& scheme, const std::string& host,
         uint16_t port) NOEXCEPT;
 
+    /// asio conversion.
     endpoint(const asio::endpoint& uri) NOEXCEPT;
     endpoint(const asio::address& ip, uint16_t port) NOEXCEPT;
 
-    /// True if the endpoint is initialized.
-    operator bool() const NOEXCEPT;
+    // config conversion.
+    endpoint(const config::authority& authority) NOEXCEPT;
+
+    /// Properties.
+    /// -----------------------------------------------------------------------
 
     /// The scheme of the endpoint or empty string.
     const std::string& scheme() const NOEXCEPT;
@@ -67,7 +68,10 @@ public:
     /// The tcp port of the endpoint.
     uint16_t port() const NOEXCEPT;
 
-    /// An empty scheme and/or empty port is omitted.
+    /// Methods.
+    /// -----------------------------------------------------------------------
+
+    /// An empty scheme and/or empty (zero) port is omitted.
     /// The endpoint is of the form: [scheme://]host[:port]
     std::string to_string() const NOEXCEPT;
 
@@ -76,6 +80,12 @@ public:
     /// to a service that has been configured to bind to all interfaces.
     /// The endpoint is of the form: [scheme://]host[:port]
     endpoint to_local() const NOEXCEPT;
+
+    /// Operators.
+    /// -----------------------------------------------------------------------
+
+    /// True if the endpoint is initialized.
+    operator bool() const NOEXCEPT;
 
     bool operator==(const endpoint& other) const NOEXCEPT;
     bool operator!=(const endpoint& other) const NOEXCEPT;
@@ -88,9 +98,9 @@ public:
 private:
     // These are not thread safe.
 
-    std::string scheme_;
-    std::string host_;
-    uint16_t port_;
+    std::string scheme_{};
+    std::string host_{};
+    uint16_t port_{};
 };
 
 typedef std::vector<endpoint> endpoints;

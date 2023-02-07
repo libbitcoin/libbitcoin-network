@@ -333,10 +333,23 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_outbound_connections__success)
     BOOST_REQUIRE(promise_run.get_future().get());
 }
 
+class mock_settings final
+  : public settings
+{
+public:
+    using settings::settings;
+
+    // Override derivative name, using directory as file.
+    std::filesystem::path file() const NOEXCEPT override
+    {
+        return path;
+    }
+};
+
 BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_one_batch__success)
 {
     const logger log{};
-    settings set(selection::mainnet);
+    mock_settings set(selection::mainnet);
     BOOST_REQUIRE(set.peers.empty());
 
     // This implies seeding would be required.
@@ -347,7 +360,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_one_batc
 
     // Cache one address to preclude seeding.
     set.path = TEST_NAME;
-    system::ofstream file(set.path);
+    system::ofstream file(set.file());
     file << config::authority{ "1.2.3.4:42" } << std::endl;
 
     // Configure one connection with one batch.

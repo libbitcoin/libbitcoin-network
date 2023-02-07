@@ -26,6 +26,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -41,9 +42,9 @@ class BCT_API connector
     protected tracker<connector>
 {
 public:
-    DELETE_COPY_MOVE(connector);
-
     typedef std::shared_ptr<connector> ptr;
+
+    DELETE_COPY_MOVE(connector);
 
     // Construct.
     // ------------------------------------------------------------------------
@@ -65,6 +66,10 @@ public:
     /// May return operation_canceled, channel_timeout, success or error code.
     /// The channel parameter is nullptr unless success is returned.
 
+    /// Try to connect to the address, starts timer.
+    virtual void connect(const config::address& host,
+        channel_handler&& handler) NOEXCEPT;
+
     /// Try to connect to the authority, starts timer.
     virtual void connect(const config::authority& host,
         channel_handler&& handler) NOEXCEPT;
@@ -73,13 +78,10 @@ public:
     virtual void connect(const config::endpoint& endpoint,
         channel_handler&& handler) NOEXCEPT;
 
-    /// Try to connect to host:port, starts timer.
-    virtual void connect(const std::string& hostname, uint16_t port,
-        channel_handler&& handler) NOEXCEPT;
-
 protected:
-    virtual void start_connect(const std::string& hostname, uint16_t port,
-        const config::authority& host, channel_handler&& handler) NOEXCEPT;
+    /// Try to connect to host:port, starts timer.
+    virtual void start(const std::string& hostname, uint16_t port,
+        const config::address& host, channel_handler&& handler) NOEXCEPT;
 
     // These are thread safe
     const settings& settings_;
@@ -94,14 +96,14 @@ protected:
 private:
     void handle_resolve(const error::boost_code& ec,
         const asio::endpoints& range, socket::ptr socket,
-        const config::authority& host, const channel_handler& handler) NOEXCEPT;
+        const config::address& host, const channel_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, socket::ptr socket,
-        const config::authority& host, const channel_handler& handler) NOEXCEPT;
+        const config::address& host, const channel_handler& handler) NOEXCEPT;
     void handle_timer(const code& ec, const socket::ptr& socket,
         const channel_handler& handler) NOEXCEPT;
 
     void do_handle_connect(const code& ec, socket::ptr socket,
-        const config::authority& host, const channel_handler& handler) NOEXCEPT;
+        const config::address& host, const channel_handler& handler) NOEXCEPT;
 };
 
 typedef std::vector<connector::ptr> connectors;

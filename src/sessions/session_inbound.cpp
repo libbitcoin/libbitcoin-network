@@ -61,8 +61,7 @@ void session_inbound::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(settings().inbound_port) ||
-        is_zero(settings().inbound_connections))
+    if (!settings().inbound_enabled())
     {
         LOG("Not configured for inbound connections.");
         handler(error::bypassed);

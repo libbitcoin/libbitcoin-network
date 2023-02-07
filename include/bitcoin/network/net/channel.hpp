@@ -41,9 +41,9 @@ class BCT_API channel
   : public proxy, protected tracker<channel>
 {
 public:
-    DELETE_COPY_MOVE(channel);
-
     typedef std::shared_ptr<channel> ptr;
+
+    DELETE_COPY_MOVE(channel);
 
     /// Attach protocol to channel, caller must start (requires strand).
     template <class Protocol, typename... Args>
@@ -68,13 +68,13 @@ public:
         return protocol;
     }
 
-    /// Sets origination to socket->authority().
+    /// Sets address to socket->authority().
     channel(const logger& log, const socket::ptr& socket,
         const settings& settings) NOEXCEPT;
 
-    /// Set origination to specified value (pre-resolved outbound address).
+    /// Set address to specified value (pre-resolved outbound address).
     channel(const logger& log, const socket::ptr& socket,
-        const settings& settings, const config::authority& origination) NOEXCEPT;
+        const settings& settings, const config::address& address) NOEXCEPT;
 
     /// Asserts channel stopped.
     virtual ~channel() NOEXCEPT;
@@ -89,15 +89,18 @@ public:
     uint64_t nonce() const NOEXCEPT;
 
     /// Originating address of the connection (if outbound).
-    const config::authority& origination() const NOEXCEPT;
+    const config::address& address() const NOEXCEPT;
+
+    /// Originating address of connection with current time and peer services.
+    address_item_cptr updated_address() const NOEXCEPT;
 
     /// Negotiated version should be written only in handshake.
     uint32_t negotiated_version() const NOEXCEPT;
     void set_negotiated_version(uint32_t value) NOEXCEPT;
 
     /// Peer version should be written only in handshake.
-    messages::version::ptr peer_version() const NOEXCEPT;
-    void set_peer_version(const messages::version::ptr& value) NOEXCEPT;
+    messages::version::cptr peer_version() const NOEXCEPT;
+    void set_peer_version(const messages::version::cptr& value) NOEXCEPT;
 
 protected:
     /// Property values provided to the proxy.
@@ -126,11 +129,11 @@ private:
     const uint32_t protocol_magic_;
     const uint64_t channel_nonce_;
     const bool validate_checksum_;
-    const config::authority origination_;
+    const config::address address_;
 
     // These are not thread safe.
     uint32_t negotiated_version_;
-    messages::version::ptr peer_version_;
+    messages::version::cptr peer_version_;
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
 };

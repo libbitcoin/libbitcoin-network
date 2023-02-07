@@ -35,7 +35,7 @@ namespace messages {
 struct BCT_API get_headers
   : public get_blocks
 {
-    typedef std::shared_ptr<const get_headers> ptr;
+    typedef std::shared_ptr<const get_headers> cptr;
 
     static const identifier id;
     static const std::string command;

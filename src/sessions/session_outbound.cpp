@@ -32,8 +32,9 @@ namespace network {
 
 #define CLASS session_outbound
 
-using namespace bc::system;
+using namespace system;
 using namespace config;
+using namespace messages;
 using namespace std::placeholders;
 
 // Bind throws (ok).
@@ -65,9 +66,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(settings().outbound_connections) || 
-        is_zero(settings().host_pool_capacity) ||
-        is_zero(settings().connect_batch_size))
+    if (!settings().outbound_enabled())
     {
         LOG("Not configured for outbound connections.");
         handler(error::bypassed);
@@ -146,21 +145,38 @@ void session_outbound::start_connect(const connectors_ptr& connectors,
 }
 
 // Attempt to connect the given peer and invoke handle_one.
-void session_outbound::do_one(const code& ec, const authority& peer,
+void session_outbound::do_one(const code& ec, const config::address& peer,
     const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // This termination prevents a tight loop in the empty address pool case.
+    // These terminations prevent a tight loop in the empty address pool case.
+
     if (ec)
     {
+        // This can only be address_not_found (empty, no peer).
+        //// LOG("verbose " << ec.message());
         handler(ec, nullptr);
         return;
     }
 
-    // This termination prevents a tight loop in the small address pool case.
+    if (insufficient(peer))
+    {
+        LOG("Dropping insufficient address [" << peer << "]");
+        handler(error::address_insufficient, nullptr);
+        return;
+    }
+
+    if (unsupported(peer))
+    {
+        LOG("Dropping unsupported address [" << peer << "]");
+        handler(error::address_unsupported, nullptr);
+        return;
+    }
+
     if (blacklisted(peer))
     {
+        LOG("Dropping blacklisted address [" << peer << "]");
         handler(error::address_blocked, nullptr);
         return;
     }
@@ -168,8 +184,9 @@ void session_outbound::do_one(const code& ec, const authority& peer,
     // Guard restartable connector (shutdown delay).
     if (stopped())
     {
+        // Can't call untake without a channel object, so restore.
         handler(error::service_stopped, nullptr);
-        session::restore(peer.to_address_item(), BIND1(handle_untake, _1));
+        restore(peer.item_ptr(), BIND1(handle_untake, _1));
         return;
     }
 
@@ -188,6 +205,7 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
     {
         if (channel)
         {
+            // Preceeds handsjake and can untake with success or other code.
             channel->stop(error::channel_dropped);
             untake(ec, channel);
         }
@@ -256,8 +274,10 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        start_timer(BIND2(start_connect, connectors, id),
-            settings().connect_timeout());
+        const auto timeout = settings().connect_timeout();
+
+        // Provides a timeout delay in case of empty address pool, etc.
+        start_timer(BIND2(start_connect, connectors, id), timeout);
         return;
     }
 
@@ -291,9 +311,7 @@ void session_outbound::handle_channel_stop(const code& ec,
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Outbound channel stop "
-        "[" << channel->authority() << "] "
-        "[" << channel->origination() << "] "
+    LOG("Outbound channel stop [" << channel->authority() << "] "
         "(" << id << ") " << ec.message());
 
     untake(ec, channel);
@@ -311,9 +329,12 @@ void session_outbound::untake(const code& ec,
     if (ec && ec != error::service_stopped)
         return;
 
-    // TODO: change origination to address_item everywhere.
-    session::restore(channel->origination().to_address_item(),
-        BIND1(handle_untake, _1));
+    // Verbose
+    ////LOG("Update [" << config::address(channel->updated_address()) << "] "
+    ////    << ec.message());
+
+    // Update timestamp and set peer services before placing back to host pool.
+    restore(channel->updated_address(), BIND1(handle_untake, _1));
 }
 
 void session_outbound::handle_untake(const code&) const NOEXCEPT

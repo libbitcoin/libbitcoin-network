@@ -34,7 +34,7 @@ namespace network {
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 
 #define DEFINE_SUBSCRIBER(name) \
-    typedef subscriber<const code&, const messages::name::ptr&> \
+    typedef subscriber<const code&, const messages::name::cptr&> \
         SUBSCRIBER_TYPE(name)
 
 #define SUBSCRIBER_OVERLOAD(name) \
@@ -51,12 +51,12 @@ void do_subscribe(pump::handler<messages::name>&& handler) NOEXCEPT \
 class BCT_API pump
 {
 public:
-    DELETE_COPY_MOVE_DESTRUCT(pump);
-
     /// Helper for external declarations.
     template <class Message>
     using handler = std::function<void(const code&,
         const std::shared_ptr<const Message>&)>;
+
+    DELETE_COPY_MOVE_DESTRUCT(pump);
 
     DEFINE_SUBSCRIBER(address);
     DEFINE_SUBSCRIBER(alert);

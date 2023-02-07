@@ -47,6 +47,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/config/address.cpp \
     src/config/authority.cpp \
     src/config/endpoint.cpp \
+    src/config/utilities.cpp \
     src/messages/address.cpp \
     src/messages/address_item.cpp \
     src/messages/alert.cpp \
@@ -136,6 +137,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/config/address.cpp \
     test/config/authority.cpp \
     test/config/endpoint.cpp \
+    test/config/utilities.cpp \
     test/messages/address.cpp \
     test/messages/address_item.cpp \
     test/messages/alert.cpp \
@@ -236,7 +238,8 @@ include_bitcoin_network_config_HEADERS = \
     include/bitcoin/network/config/address.hpp \
     include/bitcoin/network/config/authority.hpp \
     include/bitcoin/network/config/config.hpp \
-    include/bitcoin/network/config/endpoint.hpp
+    include/bitcoin/network/config/endpoint.hpp \
+    include/bitcoin/network/config/utilities.hpp
 
 include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \

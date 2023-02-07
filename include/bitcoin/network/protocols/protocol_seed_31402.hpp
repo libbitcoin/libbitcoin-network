@@ -56,11 +56,11 @@ protected:
 
     virtual void handle_send_get_address(const code& ec) NOEXCEPT;
     virtual void handle_receive_address(const code& ec,
-        const messages::address::ptr& address) NOEXCEPT;
+        const messages::address::cptr& address) NOEXCEPT;
     virtual void handle_save_addresses(const code& ec) NOEXCEPT;
 
     virtual void handle_receive_get_address(const code& ec,
-        const messages::get_address::ptr& message) NOEXCEPT;
+        const messages::get_address::cptr& message) NOEXCEPT;
     virtual void handle_send_address(const code& ec) NOEXCEPT;
 
 private:

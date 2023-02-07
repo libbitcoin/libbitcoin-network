@@ -74,7 +74,7 @@ std::string protocol_reject_70002::get_hash(const reject& message) const NOEXCEP
 }
 
 void protocol_reject_70002::handle_receive_reject(const code& ec,
-    const reject::ptr& message) NOEXCEPT
+    const reject::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_reject_70002");
 

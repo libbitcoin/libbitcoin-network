@@ -57,14 +57,14 @@ public:
     virtual void take(address_item_handler&& handler) const NOEXCEPT;
 
     /// Fetch a subset of entries (count based on config) from address pool.
-    virtual void fetch(address_items_handler&& handler) const NOEXCEPT;
+    virtual void fetch(address_handler&& handler) const NOEXCEPT;
 
     /// Restore an address to the address pool.
-    virtual void restore(const messages::address_item& address,
+    virtual void restore(const address_item_cptr& address,
         result_handler&& handler) const NOEXCEPT;
 
     /// Save a subset of entries (count based on config) from address pool.
-    virtual void save(const messages::address::ptr& message,
+    virtual void save(const address_cptr& message,
         count_handler&& handler) const NOEXCEPT;
 
     /// Properties.
@@ -72,6 +72,9 @@ public:
 
     /// Access network configuration settings.
     const network::settings& settings() const NOEXCEPT;
+
+    /// The direction of channel initiation.
+    virtual bool inbound() const NOEXCEPT = 0;
 
 protected:
     typedef subscriber<code> stop_subscriber;
@@ -153,8 +156,11 @@ protected:
     /// The address is blacklisted by configuration.
     virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
 
-    /// The direction of channel initiation.
-    virtual bool inbound() const NOEXCEPT = 0;
+    /// The address advertises insufficient services.
+    virtual bool insufficient(const config::address& authority) const NOEXCEPT;
+
+    /// The address advertises disallowed services.
+    virtual bool unsupported(const config::address& authority) const NOEXCEPT;
 
     /// Notify (non-seed) subscribers on channel start.
     virtual bool notify() const NOEXCEPT = 0;

@@ -33,7 +33,7 @@ namespace messages {
 
 struct BCT_API ping
 {
-    typedef std::shared_ptr<const ping> ptr;
+    typedef std::shared_ptr<const ping> cptr;
 
     static const identifier id;
     static const std::string command;

@@ -51,11 +51,11 @@ public:
     /// Stop the session timer and subscriber (call from network strand).
     void stop() NOEXCEPT override;
 
-protected:
-    typedef std::shared_ptr<size_t> count_ptr;
-
     /// The channel is outbound (do not pend the nonce).
     bool inbound() const NOEXCEPT override;
+
+protected:
+    typedef std::shared_ptr<size_t> count_ptr;
 
     /// Do not notify subscribers on channel start.
     bool notify() const NOEXCEPT override;

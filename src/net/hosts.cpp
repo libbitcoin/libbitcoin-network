@@ -20,6 +20,7 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/config/utilities.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -28,19 +29,12 @@ namespace libbitcoin {
 namespace network {
 
 using namespace system;
-using namespace config;
 using namespace messages;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-inline bool is_valid(const address_item& host) NOEXCEPT
-{
-    return host.port != unspecified_ip_port
-        && host.ip != unspecified_ip_address;
-}
-
 hosts::hosts(const settings& settings) NOEXCEPT
-  : file_path_(settings.path),
+  : file_path_(settings.file()),
     count_(zero),
     minimum_(settings.address_minimum),
     maximum_(settings.address_maximum),
@@ -66,7 +60,6 @@ code hosts::start() NOEXCEPT
         if (!file.good())
             return error::success;
 
-        // No guard against invalid address entries in file (ok).
         std::string line;
         while (std::getline(file, line))
             buffer_.push_back(config::address(line).item());
@@ -94,6 +87,9 @@ code hosts::stop() NOEXCEPT
     if (disabled_)
         return error::success;
 
+    // Idempotent stop.
+    disabled_ = true;
+
     if (buffer_.empty())
     {
         code ec;
@@ -118,9 +114,6 @@ code hosts::stop() NOEXCEPT
         return error::file_save;
     }
 
-    // Idempotent stop.
-    disabled_ = true;
-
     buffer_.clear();
     count_.store(zero, std::memory_order_relaxed);
     return error::success;
@@ -131,27 +124,48 @@ bool hosts::restore(const address_item& address) NOEXCEPT
     if (disabled_)
         return true;
 
-    // Do not treat invalid address as an error, just log it.
-    if (!is_valid(address))
+    if (!config::is_valid(address))
         return false;
 
-    if (!exists(address))
-    {
-        buffer_.push_back(address);
-        count_.store(buffer_.size(), std::memory_order_relaxed);
-    }
+    // Erase existing address by authority match.
+    const auto it = find(address);
+    if (it != buffer_.end())
+        buffer_.erase(it);
 
+    // Add address.
+    buffer_.push_back(address);
+    count_.store(buffer_.size(), std::memory_order_relaxed);
     return true;
 }
 
-size_t hosts::store(const messages::address::ptr& addresses) NOEXCEPT
+void hosts::take(const address_item_handler& handler) NOEXCEPT
+{
+    if (buffer_.empty())
+    {
+        handler(error::address_not_found, {});
+        return;
+    }
+
+    // Select address from random buffer position.
+    const auto limit = sub1(buffer_.size());
+    const auto index = pseudo_random::next(zero, limit);
+    const auto it = std::next(buffer_.begin(), index);
+
+    // Remove from the buffer (copy and erase).
+    const auto host = std::make_shared<address_item>(*it);
+    buffer_.erase(it);
+    count_.store(buffer_.size(), std::memory_order_relaxed);
+    handler(error::success, host);
+}
+
+size_t hosts::save(const address& addresses) NOEXCEPT
 {
     // If enabled then minimum capacity is one and buffer is at capacity.
-    if (disabled_ || !addresses || addresses->addresses.empty())
+    if (disabled_ || addresses.addresses.empty())
         return zero;
 
     // Accept between 1 and all of this peer's addresses up to capacity.
-    const auto& hosts = addresses->addresses;
+    const auto& hosts = addresses.addresses;
     const auto usable = std::min(hosts.size(), capacity_);
     const auto random = pseudo_random::next(one, usable);
 
@@ -167,7 +181,7 @@ size_t hosts::store(const messages::address::ptr& addresses) NOEXCEPT
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
         const auto& host = hosts.at(index);
-        if (is_valid(host) && !exists(host))
+        if (config::is_valid(host) && !exists(host))
         {
             ++accepted;
             buffer_.push_back(host);
@@ -178,27 +192,7 @@ size_t hosts::store(const messages::address::ptr& addresses) NOEXCEPT
     return accepted;
 }
 
-void hosts::take(const address_item_handler& handler) NOEXCEPT
-{
-    if (buffer_.empty())
-    {
-        handler(error::address_not_found, {});
-        return;
-    }
-
-    // Select address from random buffer position.
-    const auto limit = sub1(buffer_.size());
-    const auto index = pseudo_random::next(zero, limit);
-    const auto it = std::next(buffer_.begin(), index);
-    const auto host = *it;
-
-    // Remove from the buffer.
-    buffer_.erase(it);
-    count_.store(buffer_.size(), std::memory_order_relaxed);
-    handler(error::success, host);
-}
-
-void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
+void hosts::fetch(const address_handler& handler) const NOEXCEPT
 {
     if (buffer_.empty())
     {
@@ -214,7 +208,7 @@ void hosts::fetch(const address_items_handler& handler) const NOEXCEPT
     const auto limit = sub1(buffer_.size());
     auto index = pseudo_random::next(zero, limit);
 
-    // Collect the messages.
+    // Copy addresses into non-const message (converted to const by return).
     const auto out = to_shared<messages::address>();
     out->addresses.reserve(size);
     for (size_t count = 0; count < size; ++count)

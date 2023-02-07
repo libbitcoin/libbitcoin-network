@@ -63,10 +63,10 @@ public:
     virtual void connect(const config::endpoint& endpoint,
         channel_handler&& handler) NOEXCEPT;
 
-protected:
     /// The channel is outbound (do not pend the nonce).
     bool inbound() const NOEXCEPT override;
 
+protected:
     /// Notify subscribers on channel start.
     bool notify() const NOEXCEPT override;
 

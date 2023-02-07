@@ -36,7 +36,7 @@ struct BCT_API not_found
   : public inventory
 {
 public:
-    typedef std::shared_ptr<const not_found> ptr;
+    typedef std::shared_ptr<const not_found> cptr;
 
     static const identifier id;
     static const std::string command;

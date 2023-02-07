@@ -35,10 +35,11 @@
 namespace libbitcoin {
 namespace network {
 
-typedef std::function<void(const code&, const messages::address_item&)>
+/// Config wrappers are used for serialization/deserialization.
+/// Hosts passes message and message item pointers, not config items.
+typedef std::function<void(const code&, const address_cptr&)> address_handler;
+typedef std::function<void(const code&, const address_item_cptr&)>
     address_item_handler;
-typedef std::function<void(const code&, const messages::address::ptr&)>
-    address_items_handler;
 
 /// Virtual, not thread safe.
 /// Duplicate and invalid addresses are disacarded.
@@ -61,21 +62,22 @@ public:
     /// Thread safe, inexact (ok).
     virtual size_t count() const NOEXCEPT;
 
-    /// Take one random host from the table.
-    virtual void take(const address_item_handler& handler) NOEXCEPT;
-
     /// Store the host in the table (e.g. after use), false if invalid.
     virtual bool restore(const messages::address_item& address) NOEXCEPT;
 
-    /// Obtain a random set of hosts (e.g for relay to peer).
-    virtual void fetch(const address_items_handler& handler) const NOEXCEPT;
+    /// Take one random host from the table (non-const).
+    virtual void take(const address_item_handler& handler) NOEXCEPT;
 
-    /// Obtain a random set of hosts (e.g obtained from peer), count of accept.
-    virtual size_t store(const messages::address::ptr& addresses) NOEXCEPT;
+    /// Save a random set of hosts (e.g obtained from peer), count of accept.
+    virtual size_t save(const messages::address& addresses) NOEXCEPT;
+
+    /// Obtain a random set of hosts (e.g for relay to peer).
+    virtual void fetch(const address_handler& handler) const NOEXCEPT;
 
 private:
     typedef boost::circular_buffer<messages::address_item> buffer;
 
+    // Equality ignores timestamp and services.
     inline buffer::iterator find(const messages::address_item& host) NOEXCEPT
     {
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -83,6 +85,7 @@ private:
         BC_POP_WARNING()
     }
 
+    // Equality ignores timestamp and services.
     inline bool exists(const messages::address_item& host) NOEXCEPT
     {
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)

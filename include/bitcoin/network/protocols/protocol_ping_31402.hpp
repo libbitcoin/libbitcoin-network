@@ -55,7 +55,7 @@ protected:
     virtual void handle_timer(const code& ec) NOEXCEPT;
     virtual void handle_send_ping(const code& ec) NOEXCEPT;
     virtual void handle_receive_ping(const code& ec,
-        const messages::ping::ptr& message) NOEXCEPT;
+        const messages::ping::cptr& message) NOEXCEPT;
 
 private:
     // This is protected by strand.

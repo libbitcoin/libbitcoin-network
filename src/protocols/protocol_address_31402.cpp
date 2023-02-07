@@ -30,7 +30,7 @@ namespace network {
 
 #define CLASS protocol_address_31402
 
-using namespace bc::system;
+using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
@@ -40,8 +40,10 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 protocol_address_31402::protocol_address_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    sent_(false),
+    inbound_(session.inbound()),
+    request_(!inbound_ && settings().outbound_enabled()),
     received_(false),
+    sent_(false),
     tracker<protocol_address_31402>(session.log())
 {
 }
@@ -56,6 +58,12 @@ const std::string& protocol_address_31402::name() const NOEXCEPT
 // ----------------------------------------------------------------------------
 // TODO: as peers connect inbound, broadcast new address.
 
+messages::address_item protocol_address_31402::self() const NOEXCEPT
+{
+    return settings().self.to_address_item(unix_time(),
+        settings().services_maximum);
+}
+
 void protocol_address_31402::start() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
@@ -63,22 +71,20 @@ void protocol_address_31402::start() NOEXCEPT
     if (started())
         return;
 
-    // Own address (from config) is sent unsolicited if inbound enabled.
-    if (!is_zero(settings().self.port()) &&
-        !is_zero(settings().inbound_connections))
+    // Advertise self if configured for inbound and valid self address.
+    if (settings().advertise_enabled())
     {
-        SEND1(address{ { settings().self.to_address_item(unix_time(),
-            settings().services_maximum) } }, handle_send, _1);
+        SEND1(messages::address{ { self() } }, handle_send, _1);
     }
 
-    // If no address pool, do not ask for them or capture requests for them.
-    if (!is_zero(settings().host_pool_capacity))
-    {
-        SUBSCRIBE2(address, handle_receive_address, _1, _2);
-        SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
+    // Always capture address and get_address (so can accept and/or reject).
+    SUBSCRIBE2(messages::address, handle_receive_address, _1, _2);
+    SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
 
-        // TODO: this could be gated on state of the address pool.
-        // Satoshi peers send addr anyway, despite getaddr not being sent.
+    // Do not accept addresses from inbound channels (too injectable).
+    // Do not request addresses if not configured for outbound connections.
+    if (request_)
+    {
         SEND1(get_address{}, handle_send, _1);
     }
 
@@ -89,18 +95,18 @@ void protocol_address_31402::start() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_address_31402::handle_receive_address(const code& ec,
-    const address::ptr& message) NOEXCEPT
+    const address::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
     if (stopped(ec))
         return;
 
-    const auto& addresses = message->addresses;
+    const auto& items = message->addresses;
+    const auto multivalue = !is_one(items.size());
 
-    // Disallow multiples or more than one address message if not requested.
-    if ((!is_one(addresses.size()) || received_) &&
-        is_zero(settings().host_pool_capacity))
+    // Disallow multivalue values and multiple messages if not requested.
+    if ((multivalue || received_) && !request_)
     {
         LOG("Unsolicited addresses from [" << authority() << "]");
         stop(error::protocol_violation);
@@ -109,24 +115,15 @@ void protocol_address_31402::handle_receive_address(const code& ec,
 
     received_ = true;
 
-    if (is_one(addresses.size()))
+    // Do not store redundant adresses, address() is own checked out address.
+    if (!multivalue && items.front() != address())
     {
-        // Do not store redundant adresses, origination is checked out.
-        if (addresses.front() == origination())
-        {
-            LOG("Dropping redundant address from [" << authority() << "]");
-            return;
-        }
-        else
-        {
-            LOG("Single unique address from [" << authority() << "]");
-        }
+        LOG("Dropping redundant address from [" << authority() << "]");
+        return;
     }
 
-    // TODO: filter against p2p.authorities_ and session.pending_.origination.
-    // TODO: otherwise we end up storing addresses we are connected to, which
-    // TODO: results in redundant connect attempts (these are caught late).
-    save(message, BIND3(handle_save_addresses, _1, _2, addresses.size()));
+    // This will accept previously rejected addresses (state not retained).
+    save(message, BIND3(handle_save_addresses, _1, _2, items.size()));
 }
 
 void protocol_address_31402::handle_save_addresses(const code& ec,
@@ -145,14 +142,14 @@ void protocol_address_31402::handle_save_addresses(const code& ec,
 // ----------------------------------------------------------------------------
 
 void protocol_address_31402::handle_receive_get_address(const code& ec,
-    const get_address::ptr&) NOEXCEPT
+    const get_address::cptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
     if (stopped(ec))
         return;
 
-    // Limit requests to one per session (fingerprinting).
+    // Limit get_address requests to one per session.
     if (sent_)
     {
         LOG("Ignoring duplicate address request from [" << authority() << "]");
@@ -168,7 +165,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 void protocol_address_31402::handle_fetch_addresses(const code& ec,
-    const address::ptr& message) NOEXCEPT
+    const address::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 

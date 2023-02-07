@@ -85,9 +85,14 @@ void protocol_version_70002::rejection(const code& ec) NOEXCEPT
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
     // Handshake completion may result before completion of this send (okay).
-    if (ec == error::insufficient_peer)
+    if (ec == error::peer_insufficient)
     {
         SEND1((reject{ version::command, reject::reason_code::obsolete }),
+            handle_send, _1);
+    }
+    else if (ec == error::peer_unsupported)
+    {
+        SEND1((reject{ version::command, reject::reason_code::nonstandard }),
             handle_send, _1);
     }
     else if (ec == error::protocol_violation)
@@ -103,7 +108,7 @@ void protocol_version_70002::rejection(const code& ec) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_version_70002::handle_receive_reject(const code& ec,
-    const reject::ptr& LOG_ONLY(message)) NOEXCEPT
+    const reject::cptr& LOG_ONLY(message)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 

@@ -35,7 +35,7 @@ namespace messages {
 struct BCT_API merkle_block
 {
 public:
-    typedef std::shared_ptr<const merkle_block> ptr;
+    typedef std::shared_ptr<const merkle_block> cptr;
 
     static const identifier id;
     static const std::string command;

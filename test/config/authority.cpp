@@ -307,33 +307,33 @@ BOOST_AUTO_TEST_CASE(authority__to_ip_address__boost_endpoint__expected)
     BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_mapped_ip_address));
 }
 
-// to_hostname
+// to_host
 
-BOOST_AUTO_TEST_CASE(authority__to_hostname__default__ipv6_unspecified)
+BOOST_AUTO_TEST_CASE(authority__to_host__default__ipv6_unspecified)
 {
     const authority host;
-    BOOST_REQUIRE_EQUAL(host.to_hostname(), "[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]");
+    BOOST_REQUIRE_EQUAL(host.to_host(), "[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]");
 }
 
-BOOST_AUTO_TEST_CASE(authority__to_hostname__ipv4_mapped_ip_address__ipv4)
+BOOST_AUTO_TEST_CASE(authority__to_host__ipv4_mapped_ip_address__ipv4)
 {
     // A mapped ip address serializes as IPv4.
     const authority host(test_mapped_ip_address, 0);
-    BOOST_REQUIRE_EQUAL(host.to_hostname(), BC_AUTHORITY_IPV4_ADDRESS);
+    BOOST_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV4_ADDRESS);
 }
 
-BOOST_AUTO_TEST_CASE(authority__to_hostname__ipv4_compatible_ip_address__ipv6_alternative)
+BOOST_AUTO_TEST_CASE(authority__to_host__ipv4_compatible_ip_address__ipv6_alternative)
 {
     // A compatible ip address serializes as alternative notation IPv6.
     const authority host(test_compatible_ip_address, 0);
-    BOOST_REQUIRE_EQUAL(host.to_hostname(), "[" BC_AUTHORITY_IPV6_ALTERNATIVE_COMPATIBLE_ADDRESS "]");
+    BOOST_REQUIRE_EQUAL(host.to_host(), "[" BC_AUTHORITY_IPV6_ALTERNATIVE_COMPATIBLE_ADDRESS "]");
 }
 
-BOOST_AUTO_TEST_CASE(authority__to_hostname__ipv6_address__ipv6_compressed)
+BOOST_AUTO_TEST_CASE(authority__to_host__ipv6_address__ipv6_compressed)
 {
     // An ipv6 address serializes using compression.
     const authority host(test_ipv6_address, 0);
-    BOOST_REQUIRE_EQUAL(host.to_hostname(), "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
+    BOOST_REQUIRE_EQUAL(host.to_host(), "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
 }
 
 // to_address_item

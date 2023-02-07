@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_OUTBOUND_HPP
 #define LIBBITCOIN_NETWORK_SESSION_OUTBOUND_HPP
 
-#include <cstddef>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
@@ -45,10 +44,10 @@ public:
     /// Start configured number of connections (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;
 
-protected:
     /// The channel is outbound (do not pend the nonce).
     bool inbound() const NOEXCEPT override;
 
+protected:
     /// Notify subscribers on channel start.
     bool notify() const NOEXCEPT override;
 
@@ -79,7 +78,7 @@ private:
     void handle_channel_stop(const code& ec, const channel::ptr& channel,
         size_t id, const connectors_ptr& connectors) NOEXCEPT;
 
-    void do_one(const code& ec, const config::authority& peer,
+    void do_one(const code& ec, const config::address& peer,
         const connector::ptr& connector, const channel_handler& handler) NOEXCEPT;
     void handle_one(const code& ec, const channel::ptr& channel,
         const count_ptr& count, const connectors_ptr& connectors,

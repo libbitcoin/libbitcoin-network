@@ -56,6 +56,8 @@ enum error_t
     // addresses
     address_invalid,
     address_not_found,
+    address_unsupported,
+    address_insufficient,
     seeding_unsuccessful,
 
     // file system
@@ -66,7 +68,8 @@ enum error_t
     // general I/O failures
     bad_stream,
     peer_disconnect,
-    insufficient_peer,
+    peer_unsupported,
+    peer_insufficient,
     protocol_violation,
     channel_overflow,
     channel_underflow,

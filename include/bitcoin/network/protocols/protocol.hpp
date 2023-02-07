@@ -121,17 +121,18 @@ protected:
     /// The authority of the peer.
     virtual config::authority authority() const NOEXCEPT;
 
-    /// The origination of the peer.
-    virtual config::authority origination() const NOEXCEPT;
+    /// TODO: name conflict with messages.
+    /// The origination address of the peer.
+    virtual const config::address& address() const NOEXCEPT;
 
     /// The nonce of the channel.
     virtual uint64_t nonce() const NOEXCEPT;
 
     /// The protocol version of the peer.
-    virtual messages::version::ptr peer_version() const NOEXCEPT;
+    virtual messages::version::cptr peer_version() const NOEXCEPT;
 
     /// Set protocol version of the peer (set only during handshake).
-    virtual void set_peer_version(const messages::version::ptr& value) NOEXCEPT;
+    virtual void set_peer_version(const messages::version::cptr& value) NOEXCEPT;
 
     /// The negotiated protocol version.
     virtual uint32_t negotiated_version() const NOEXCEPT;
@@ -146,20 +147,20 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Fetch a set of peer addresses from the address pool.
-    virtual void fetch(address_items_handler&& handler) NOEXCEPT;
+    virtual void fetch(address_handler&& handler) NOEXCEPT;
 
     /// Save a set of peer addresses to the address pool.
-    virtual void save(const messages::address::ptr& message,
+    virtual void save(const address_cptr& message,
         count_handler&& handler) NOEXCEPT;
 
     /// Capture send results, use for no-op send handling (logged).
     virtual void handle_send(const code& ec) NOEXCEPT;
 
 private:
-    void do_fetch(const code& ec, const messages::address::ptr& message,
-        const address_items_handler& handler) NOEXCEPT;
-    void handle_fetch(const code& ec, const messages::address::ptr& message,
-        const address_items_handler& handler) NOEXCEPT;
+    void do_fetch(const code& ec, const address_cptr& message,
+        const address_handler& handler) NOEXCEPT;
+    void handle_fetch(const code& ec, const address_cptr& message,
+        const address_handler& handler) NOEXCEPT;
 
     void do_save(const code& ec, size_t accepted,
         const count_handler& handler) NOEXCEPT;

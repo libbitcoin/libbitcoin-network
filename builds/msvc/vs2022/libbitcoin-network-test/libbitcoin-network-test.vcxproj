@@ -83,6 +83,7 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\authority.cpp" />
     <ClCompile Include="..\..\..\..\test\config\endpoint.cpp" />
+    <ClCompile Include="..\..\..\..\test\config\utilities.cpp" />
     <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\address.cpp">

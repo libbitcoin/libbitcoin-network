@@ -32,8 +32,7 @@ namespace network {
 #define CLASS protocol_seed_31402
 static const std::string protocol_name = "seed";
 
-using namespace bc;
-using namespace bc::system;
+using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
@@ -64,8 +63,8 @@ void protocol_seed_31402::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE2(address, handle_receive_address, _1, _2);
-    SUBSCRIBE2(address, handle_receive_get_address, _1, _2);
+    SUBSCRIBE2(messages::address, handle_receive_address, _1, _2);
+    SUBSCRIBE2(messages::address, handle_receive_get_address, _1, _2);
     SEND1(get_address{}, handle_send_get_address, _1);
 
     protocol::start();
@@ -120,7 +119,7 @@ void protocol_seed_31402::handle_send_get_address(const code& ec) NOEXCEPT
 }
 
 void protocol_seed_31402::handle_receive_address(const code& ec,
-    const address::ptr& message) NOEXCEPT
+    const address::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -152,7 +151,7 @@ void protocol_seed_31402::handle_save_addresses(const code& ec) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_seed_31402::handle_receive_get_address(const code& ec,
-    const get_address::ptr&) NOEXCEPT
+    const get_address::cptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -168,7 +167,7 @@ void protocol_seed_31402::handle_receive_get_address(const code& ec,
     }
 
     static const auto item = settings().self.to_address_item();
-    SEND1(address{ { item } }, handle_send_address, _1);
+    SEND1(messages::address{ { item } }, handle_send_address, _1);
 }
 
 void protocol_seed_31402::handle_send_address(const code& ec) NOEXCEPT

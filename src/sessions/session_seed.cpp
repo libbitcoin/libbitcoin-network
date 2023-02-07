@@ -63,9 +63,10 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(settings().outbound_connections))
+    if (is_zero(settings().outbound_connections) ||
+        is_zero(settings().connect_batch_size))
     {
-        LOG("Bypassed seeding because no outbound connections configured.");
+        LOG("Bypassed seeding because outbound connections disbled.");
         handler(error::bypassed);
         return;
     }
@@ -77,9 +78,16 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    if (is_zero(settings().host_pool_capacity) || settings().seeds.empty())
+    if (is_zero(settings().host_pool_capacity))
     {
-        LOG("Bypassed seeding because of no address pool capacity.");
+        LOG("Cannot seed because no address pool capacity configured.");
+        handler(error::seeding_unsuccessful);
+        return;
+    }
+
+    if (settings().seeds.empty())
+    {
+        LOG("Cannot seed because no seeds configured");
         handler(error::seeding_unsuccessful);
         return;
     }

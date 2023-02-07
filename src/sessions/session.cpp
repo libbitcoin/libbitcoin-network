@@ -398,6 +398,17 @@ bool session::blacklisted(const config::authority& authority) const NOEXCEPT
     return contains(settings().blacklists, authority);
 }
 
+bool session::insufficient(const config::address& address) const NOEXCEPT
+{
+    return (address.item().services & settings().services_minimum) !=
+        settings().services_minimum;
+}
+
+bool session::unsupported(const config::address& address) const NOEXCEPT
+{
+    return to_bool(address.item().services & settings().invalid_services);
+}
+
 const network::settings& session::settings() const NOEXCEPT
 {
     return network_.network_settings();
@@ -413,18 +424,18 @@ void session::take(address_item_handler&& handler) const NOEXCEPT
     network_.take(std::move(handler));
 }
 
-void session::fetch(address_items_handler&& handler) const NOEXCEPT
+void session::fetch(address_handler&& handler) const NOEXCEPT
 {
     network_.fetch(std::move(handler));
 }
 
-void session::restore(const messages::address_item& address,
+void session::restore(const address_item_cptr& address,
     result_handler&& handler) const NOEXCEPT
 {
     network_.restore(address, std::move(handler));
 }
 
-void session::save(const messages::address::ptr& message,
+void session::save(const address_cptr& message,
     count_handler&& handler) const NOEXCEPT
 {
     network_.save(message, std::move(handler));

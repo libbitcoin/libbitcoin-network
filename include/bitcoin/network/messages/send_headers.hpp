@@ -33,7 +33,7 @@ namespace messages {
 
 struct BCT_API send_headers
 {
-    typedef std::shared_ptr<const send_headers> ptr;
+    typedef std::shared_ptr<const send_headers> cptr;
 
     static const identifier id;
     static const std::string command;

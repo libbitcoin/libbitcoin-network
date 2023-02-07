@@ -58,19 +58,19 @@ inline deadline::ptr expiration(const logger& log, asio::strand& strand,
 
 channel::channel(const logger& log, const socket::ptr& socket,
     const settings& settings) NOEXCEPT
-  : channel(log, socket, settings, socket->authority())
+  : channel(log, socket, settings, socket->authority().to_address_item())
 {
 }
 
 channel::channel(const logger& log, const socket::ptr& socket,
-    const settings& settings, const config::authority& origination) NOEXCEPT
+    const settings& settings, const config::address& address) NOEXCEPT
   : proxy(socket),
     ////rate_limit_(settings.rate_limit),
     maximum_payload_(payload_maximum(settings)),
     protocol_magic_(settings.identifier),
     channel_nonce_(pseudo_random::next<uint64_t>(one, max_uint64)),
     validate_checksum_(settings.validate_checksum),
-    origination_(origination),
+    address_(address),
     negotiated_version_(settings.protocol_maximum),
     peer_version_(to_shared<messages::version>()),
     expiration_(expiration(log, socket->strand(), settings.channel_expiration())),
@@ -140,20 +140,27 @@ void channel::set_negotiated_version(uint32_t value) NOEXCEPT
     negotiated_version_ = value;
 }
 
-version::ptr channel::peer_version() const NOEXCEPT
+version::cptr channel::peer_version() const NOEXCEPT
 {
     return peer_version_;
 }
 
-void channel::set_peer_version(const version::ptr& value) NOEXCEPT
+void channel::set_peer_version(const version::cptr& value) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     peer_version_ = value;
 }
 
-const config::authority& channel::origination() const NOEXCEPT
+const config::address& channel::address() const NOEXCEPT
 {
-    return origination_;
+    return address_;
+}
+
+address_item_cptr channel::updated_address() const NOEXCEPT
+{
+    // clang doesn't like vargs construct.
+    return to_shared(address_item{ unix_time(), peer_version()->services,
+        address_.item().ip, address_.item().port });
 }
 
 // Proxy overrides (channel maintains state for the proxy).

@@ -35,7 +35,7 @@ typedef system::data_array<16> ip_address;
 
 struct BCT_API address_item
 {
-    typedef std::shared_ptr<const address_item> ptr;
+    typedef std::shared_ptr<const address_item> cptr;
 
     static size_t size(uint32_t version, bool with_timestamp) NOEXCEPT;
     static address_item deserialize(uint32_t version, system::reader& source,
@@ -49,6 +49,7 @@ struct BCT_API address_item
     uint16_t port;
 };
 
+// Equality ignores timestamp and services.
 bool operator==(const address_item& left, const address_item& right) NOEXCEPT;
 bool operator!=(const address_item& left, const address_item& right) NOEXCEPT;
 
@@ -82,6 +83,9 @@ constexpr address_item unspecified_address_item
 };
 
 } // namespace messages
+
+using address_item_cptr = messages::address_item::cptr;
+
 } // namespace network
 } // namespace libbitcoin
 

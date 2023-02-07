@@ -49,19 +49,23 @@ protected:
     const std::string& name() const NOEXCEPT override;
 
     virtual void handle_receive_address(const code& ec,
-        const messages::address::ptr& message) NOEXCEPT;
+        const messages::address::cptr& message) NOEXCEPT;
     virtual void handle_save_addresses(const code& ec,
         size_t accepted, size_t count) NOEXCEPT;
 
     virtual void handle_receive_get_address(const code& ec,
-        const messages::get_address::ptr& message) NOEXCEPT;
+        const messages::get_address::cptr& message) NOEXCEPT;
     virtual void handle_fetch_addresses(const code& ec,
-        const messages::address::ptr& message) NOEXCEPT;
+        const messages::address::cptr& message) NOEXCEPT;
 
 private:
+    messages::address_item self() const NOEXCEPT;
+
     // These are protected by strand.
-    bool sent_;
+    const bool inbound_;
+    const bool request_;
     bool received_;
+    bool sent_;
 };
 
 } // namespace network

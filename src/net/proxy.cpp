@@ -284,8 +284,8 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
         return;
     }
 
-    LOG("Received " << head->command << " from [" << authority()
-        << "] (" << payload_size << " bytes)");
+    ////LOG("Recv " << head->command << " from [" << authority()
+    ////    << "] (" << payload_size << " bytes)");
 
     signal_activity();
     read_heading();
@@ -376,8 +376,8 @@ void proxy::handle_write(const code& ec, size_t,
         return;
     }
 
-    LOG("Sent " << extract_command(*payload) << " to [" << authority()
-        << "] (" << payload->size() << " bytes)");
+    ////LOG("Sent " << extract_command(*payload) << " to [" << authority()
+    ////    << "] (" << payload->size() << " bytes)");
 
     handler(ec);
 }

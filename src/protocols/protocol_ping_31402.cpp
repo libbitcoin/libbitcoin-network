@@ -114,7 +114,7 @@ void protocol_ping_31402::handle_timer(const code& ec) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_ping_31402::handle_receive_ping(const code&,
-    const ping::ptr&) NOEXCEPT
+    const ping::cptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
 }

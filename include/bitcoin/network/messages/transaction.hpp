@@ -19,8 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_TRANSACTION_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_TRANSACTION_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <string>
 #include <bitcoin/system.hpp>
@@ -33,13 +31,7 @@ namespace messages {
 
 struct BCT_API transaction
 {
-    ////typedef std::shared_ptr<transaction> ptr;
-    ////typedef std::shared_ptr<const transaction> const_ptr;
-    ////typedef std::vector<ptr> ptr_list;
-    ////typedef std::vector<const_ptr> const_ptr_list;
-    ////typedef std::shared_ptr<const_ptr_list> const_ptr_list_ptr;
-    ////typedef std::shared_ptr<const const_ptr_list> const_ptr_list::ptr;
-    typedef std::shared_ptr<const transaction> ptr;
+    typedef std::shared_ptr<const transaction> cptr;
 
     static const identifier id;
     static const std::string command;

@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(pump__subscribe__stop__expected_code)
     std::promise<code> promise;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](const code& ec, messages::ping::ptr ping)
+        instance.subscribe([&](const code& ec, messages::ping::cptr ping)
         {
             // Stop notification has nullptr message and specified code.
             BOOST_REQUIRE(!ping);
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
     std::promise<code> promise;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](const code& ec, messages::ping::ptr ping)
+        instance.subscribe([&](const code& ec, messages::ping::cptr ping)
         {
             BOOST_REQUIRE(!ping);
             promise.set_value(ec);
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notificatio
     std::promise<code> promise;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](const code& ec, messages::ping::ptr ping)
+        instance.subscribe([&](const code& ec, messages::ping::cptr ping)
         {
             BOOST_REQUIRE(!ping);
             promise.set_value(ec);
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_nonced_ping__expected_notification)
     std::promise<code> promise;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](const code& ec, messages::ping::ptr ping)
+        instance.subscribe([&](const code& ec, messages::ping::cptr ping)
         {
             // Handle stop notification (unavoidable test condition).
             if (!ping)
