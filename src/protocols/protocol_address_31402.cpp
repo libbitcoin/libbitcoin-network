@@ -108,6 +108,7 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     // Disallow multivalue values and multiple messages if not requested.
     if ((multivalue || received_) && !request_)
     {
+        // /bitnodes.earn.com:0.1/ sends unsolicited addresses.
         LOG("Unsolicited addresses from [" << authority() << "]");
         stop(error::protocol_violation);
         return;
