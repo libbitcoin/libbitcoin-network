@@ -67,6 +67,7 @@ public:
     /// True if the port is non-zero.
     operator bool() const NOEXCEPT;
 
+    /// Equality does not consider timestamp/services but does consider port.
     bool operator==(const address& other) const NOEXCEPT;
     bool operator!=(const address& other) const NOEXCEPT;
 

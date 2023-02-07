@@ -87,6 +87,7 @@ public:
     /// True if the endpoint is initialized.
     operator bool() const NOEXCEPT;
 
+    /// Equality considers all properties (scheme, host, port).
     bool operator==(const endpoint& other) const NOEXCEPT;
     bool operator!=(const endpoint& other) const NOEXCEPT;
 
