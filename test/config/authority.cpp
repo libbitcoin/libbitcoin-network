@@ -40,13 +40,6 @@ constexpr messages::ip_address test_unspecified_ip_address =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-// tools.ietf.org/html/rfc4291#section-2.5.3
-constexpr messages::ip_address test_loopback_ip_address =
-{
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
-};
-
 // tools.ietf.org/html/rfc4291#section-2.5.5.2
 constexpr messages::ip_address test_mapped_ip_address =
 {
@@ -114,39 +107,48 @@ BOOST_AUTO_TEST_CASE(authority__construct__invalid_port__throws_invalid_option)
 
 BOOST_AUTO_TEST_CASE(authority__port__default__zero)
 {
-    const authority host;
+    const authority host{};
     BOOST_REQUIRE_EQUAL(host.port(), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(authority__port__copy__expected)
 {
-    const uint16_t expected_port = 42;
+    constexpr uint16_t expected_port = 42;
     const authority other(test_ipv6_address, expected_port);
     const authority host(other);
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
 
+BOOST_AUTO_TEST_CASE(authority__port__move__expected)
+{
+    constexpr uint16_t expected_port = 42;
+    authority other(test_ipv6_address, expected_port);
+    const authority host(std::move(other));
+    BOOST_REQUIRE_EQUAL(host.port(), expected_port);
+}
+
+
 BOOST_AUTO_TEST_CASE(authority__port__ipv4_authority__expected)
 {
-    const uint16_t expected_port = 42;
-    std::stringstream address;
-    address << BC_AUTHORITY_IPV4_ADDRESS ":" << expected_port;
-    const authority host(address.str());
+    constexpr uint16_t expected_port = 42;
+    std::stringstream stream{};
+    stream << BC_AUTHORITY_IPV4_ADDRESS ":" << expected_port;
+    const authority host(stream.str());
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
 
 BOOST_AUTO_TEST_CASE(authority__port__ipv6_authority__expected)
 {
-    const uint16_t expected_port = 42;
-    std::stringstream address;
-    address << "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:" << expected_port;
-    const authority host(address.str());
+    constexpr uint16_t expected_port = 42;
+    std::stringstream stream{};
+    stream << "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:" << expected_port;
+    const authority host(stream.str());
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
 
 BOOST_AUTO_TEST_CASE(authority__port__address_item__expected)
 {
-    const uint16_t expected_port = 42;
+    constexpr uint16_t expected_port = 42;
     const messages::address_item address
     {
         0, 0, test_ipv6_address, expected_port
@@ -158,21 +160,21 @@ BOOST_AUTO_TEST_CASE(authority__port__address_item__expected)
 
 BOOST_AUTO_TEST_CASE(authority__port__ip_address__expected)
 {
-    const uint16_t expected_port = 42;
+    constexpr uint16_t expected_port = 42;
     const authority host(test_ipv6_address, expected_port);
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
 
 BOOST_AUTO_TEST_CASE(authority__port__hostname__expected)
 {
-    const uint16_t expected_port = 42;
+    constexpr uint16_t expected_port = 42;
     const authority host(BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS, expected_port);
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
 
 BOOST_AUTO_TEST_CASE(authority__port__boost_address__expected)
 {
-    const uint16_t expected_port = 42;
+    constexpr uint16_t expected_port = 42;
     const auto address = asio::address::from_string(BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
     const authority host(address, expected_port);
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
@@ -180,9 +182,9 @@ BOOST_AUTO_TEST_CASE(authority__port__boost_address__expected)
 
 BOOST_AUTO_TEST_CASE(authority__port__boost_endpoint__expected)
 {
-    const uint16_t expected_port = 42;
+    constexpr uint16_t expected_port = 42;
     const auto address = asio::address::from_string(BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
-    asio::endpoint tcp_endpoint(address, expected_port);
+    const asio::endpoint tcp_endpoint(address, expected_port);
     const authority host(tcp_endpoint);
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
 }
@@ -302,7 +304,7 @@ BOOST_AUTO_TEST_CASE(authority__to_ip_address__boost_address__expected)
 BOOST_AUTO_TEST_CASE(authority__to_ip_address__boost_endpoint__expected)
 {
     const auto address = asio::address::from_string(BC_AUTHORITY_IPV4_ADDRESS);
-    asio::endpoint tcp_endpoint(address, 42);
+    const asio::endpoint tcp_endpoint(address, 42);
     const authority host(tcp_endpoint);
     BOOST_REQUIRE(ip_equal(host.to_ip_address(), test_mapped_ip_address));
 }
@@ -311,7 +313,7 @@ BOOST_AUTO_TEST_CASE(authority__to_ip_address__boost_endpoint__expected)
 
 BOOST_AUTO_TEST_CASE(authority__to_host__default__ipv6_unspecified)
 {
-    const authority host;
+    const authority host{};
     BOOST_REQUIRE_EQUAL(host.to_host(), "[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]");
 }
 

@@ -40,6 +40,7 @@ public:
     address() NOEXCEPT;
 
     /// 188.240.57.122[:8333][/1675574490[/1033]]
+    /// Host can be either [2001:db8::2]:port or 1.2.240.1:port.
     address(const std::string& host) NOEXCEPT(false);
 
     /// message conversion.
@@ -67,6 +68,7 @@ public:
     /// True if the port is non-zero.
     operator bool() const NOEXCEPT;
 
+    /// Equality does not consider timestamp/services (same as address_item).
     bool operator==(const address& other) const NOEXCEPT;
     bool operator!=(const address& other) const NOEXCEPT;
 

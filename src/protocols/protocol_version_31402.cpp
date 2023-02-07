@@ -334,13 +334,13 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     set_negotiated_version(version);
     set_peer_version(message);
 
-    LOG("Negotiated protocol version (" << version << ") "
-        << "for [" << authority() << "] ");
+    ////LOG("Negotiated protocol version (" << version << ") "
+    ////    << "for [" << authority() << "] ");
 
-    // TODO: verbose (helpful for identifying own address for config of self).
-    LOG("Peer [" << authority() << "] "
-        << "as {" << config::authority(message->address_sender) << "} "
-        << "us {" << config::authority(message->address_receiver) << "}");
+    ////// TODO: verbose (helpful for identifying own address for config of self).
+    ////LOG("Peer [" << authority() << "] "
+    ////    << "as {" << config::authority(message->address_sender) << "} "
+    ////    << "us {" << config::authority(message->address_receiver) << "}");
 
     SEND1(version_acknowledge{}, handle_send_acknowledge, _1);
 

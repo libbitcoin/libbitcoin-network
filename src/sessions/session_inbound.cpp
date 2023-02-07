@@ -146,9 +146,10 @@ void session_inbound::handle_accept(const code& ec,
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         LOG("Failed to accept inbound channel, " << ec.message());
+        const auto timeout = settings().connect_timeout();
 
-        start_timer(BIND2(start_accept, _1, acceptor),
-            settings().connect_timeout());
+        // BUGBUG: Since connections span sessions, this timer just gets reset.
+        start_timer(BIND2(start_accept, _1, acceptor), timeout);
         return;
     }
 
@@ -163,6 +164,12 @@ void session_inbound::handle_accept(const code& ec,
     }
 
     if (blacklisted(channel->authority()))
+    {
+        channel->stop(error::address_blocked);
+        return;
+    }
+
+    if (!whitelisted(channel->authority()))
     {
         channel->stop(error::address_blocked);
         return;

@@ -147,6 +147,11 @@ public:
         return session::blacklisted(authority);
     }
 
+    bool whitelisted(const config::authority& authority) const NOEXCEPT override
+    {
+        return session::whitelisted(authority);
+    }
+
     bool inbound() const NOEXCEPT override
     {
         return inbound_;
@@ -413,6 +418,7 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE_EQUAL(session.channel_count(), zero);
     BOOST_REQUIRE_EQUAL(session.inbound_channel_count(), zero);;
     BOOST_REQUIRE(!session.blacklisted({ "[2001:db8::2]", 42 }));
+    BOOST_REQUIRE(session.whitelisted({ "[2001:db8::2]", 42 }));
     BOOST_REQUIRE(!session.inbound());
     BOOST_REQUIRE(session.notify());
 }

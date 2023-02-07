@@ -103,11 +103,12 @@ void protocol_address_31402::handle_receive_address(const code& ec,
         return;
 
     const auto& items = message->addresses;
-    const auto multivalue = !is_one(items.size());
+    const auto singleton = is_one(items.size());
 
-    // Disallow multivalue values and multiple messages if not requested.
-    if ((multivalue || received_) && !request_)
+    // If not requested, disallow multiple values and multiple messages.
+    if (!request_ && (!singleton || received_))
     {
+        // /bitnodes.earn.com:0.1/ sends unsolicited addresses.
         LOG("Unsolicited addresses from [" << authority() << "]");
         stop(error::protocol_violation);
         return;
@@ -116,9 +117,9 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     received_ = true;
 
     // Do not store redundant adresses, address() is own checked out address.
-    if (!multivalue && items.front() != address())
+    if (singleton && (items.front() == address()))
     {
-        LOG("Dropping redundant address from [" << authority() << "]");
+        ////LOG("Dropping redundant address from [" << authority() << "]");
         return;
     }
 

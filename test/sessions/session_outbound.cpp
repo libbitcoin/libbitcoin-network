@@ -285,6 +285,18 @@ public:
     }
 };
 
+class mock_session_outbound_one_address_whitelisted
+  : public mock_session_outbound_one_address
+{
+public:
+    using mock_session_outbound_one_address::mock_session_outbound_one_address;
+
+    bool whitelisted(const config::authority&) const NOEXCEPT override
+    {
+        return false;
+    }
+};
+
 template <class Connector = connector>
 class mock_p2p
   : public p2p
@@ -760,6 +772,43 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__blacklisted__expected)
     set.connect_timeout_seconds = 10000;
     mock_p2p<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_blacklisted>(net);
+    BOOST_REQUIRE(session->stopped());
+   
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]()
+    {
+        session->start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(!session->stopped());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    session.reset();
+}
+
+// Whitelisting errors get eaten with all connect failure codes (logging only).
+BOOST_AUTO_TEST_CASE(session_outbound__start__not_whitelisted__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.host_pool_capacity = 1;
+    set.connect_batch_size = 2;
+    set.outbound_connections = 2;
+    set.connect_timeout_seconds = 10000;
+    mock_p2p<> net(set, log);
+    auto session = std::make_shared<mock_session_outbound_one_address_whitelisted>(net);
     BOOST_REQUIRE(session->stopped());
    
     std::promise<code> started;

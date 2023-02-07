@@ -106,7 +106,7 @@ address::operator bool() const NOEXCEPT
 
 bool address::operator==(const address& other) const NOEXCEPT
 {
-    return address_ == other.address_;
+    return *address_ == *other.address_;
 }
 
 bool address::operator!=(const address& other) const NOEXCEPT

@@ -162,14 +162,14 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 
     if (insufficient(peer))
     {
-        LOG("Dropping insufficient address [" << peer << "]");
+        ////LOG("Dropping insufficient address [" << peer << "]");
         handler(error::address_insufficient, nullptr);
         return;
     }
 
     if (unsupported(peer))
     {
-        LOG("Dropping unsupported address [" << peer << "]");
+        ////LOG("Dropping unsupported address [" << peer << "]");
         handler(error::address_unsupported, nullptr);
         return;
     }
@@ -276,7 +276,7 @@ void session_outbound::handle_connect(const code& ec,
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         const auto timeout = settings().connect_timeout();
 
-        // Provides a timeout delay in case of empty address pool, etc.
+        // BUGBUG: Since connections span sessions, this timer just gets reset.
         start_timer(BIND2(start_connect, connectors, id), timeout);
         return;
     }
@@ -292,12 +292,12 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
     session::attach_handshake(channel, std::move(handler));
 }
 
-void session_outbound::handle_channel_start(const code& LOG_ONLY(ec),
-    const channel::ptr& LOG_ONLY(channel), size_t LOG_ONLY(id)) NOEXCEPT
+void session_outbound::handle_channel_start(const code&, const channel::ptr&,
+    size_t) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Outbound channel start [" << channel->authority() << "] "
-        "(" << id << ") " << ec.message());
+    ////LOG("Outbound channel start [" << channel->authority() << "] "
+    ////    "(" << id << ") " << ec.message());
 }
 
 void session_outbound::attach_protocols(
@@ -311,8 +311,8 @@ void session_outbound::handle_channel_stop(const code& ec,
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Outbound channel stop [" << channel->authority() << "] "
-        "(" << id << ") " << ec.message());
+    ////LOG("Outbound channel stop [" << channel->authority() << "] "
+    ////    "(" << id << ") " << ec.message());
 
     untake(ec, channel);
 

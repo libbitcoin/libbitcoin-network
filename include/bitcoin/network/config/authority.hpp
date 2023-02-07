@@ -91,6 +91,7 @@ public:
     /// True if the port is non-zero.
     operator bool() const NOEXCEPT;
 
+    /// Equality does consider port.
     bool operator==(const authority& other) const NOEXCEPT;
     bool operator!=(const authority& other) const NOEXCEPT;
 

@@ -57,9 +57,11 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { listen_failed, "incoming connection failed" },
     { accept_failed, "connection acceptance failed" },
     { oversubscribed, "service oversubscribed" },
+
+    // incoming/outgoing connection failures
+    { address_blocked, "address blocked by policy" },
         
     // outgoing connection failures
-    { address_blocked, "address blocked by policy" },
     { address_in_use, "address already in use" },
     { resolve_failed, "resolving hostname failed" },
     { connect_failed, "unable to reach remote host" },
