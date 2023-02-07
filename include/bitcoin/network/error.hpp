@@ -79,8 +79,10 @@ enum error_t
     accept_failed,
     oversubscribed,
 
-    // outgoing connection failures
+    // incoming/outgoing connection failures
     address_blocked,
+
+    // outgoing connection failures
     address_in_use,
     resolve_failed,
     connect_failed,
