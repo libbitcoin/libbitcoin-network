@@ -304,8 +304,8 @@ void protocol_version_31402::handle_receive_version(const code& ec,
 
     if (to_bool(message->services & invalid_services_))
     {
-        LOG("Invalid peer network services (" << message->services
-            << ") for [" << authority() << "]");
+        LOG("Unsupported services (" << message->services << ") by ["
+            << authority() << "] showing (" << address().services() << ").");
 
         rejection(error::peer_unsupported);
         return;
@@ -314,8 +314,8 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     // Advertised services on many incoming connections are set to zero.
     if ((message->services & minimum_services_) != minimum_services_)
     {
-        LOG("Insufficient peer network services (" << message->services << ") "
-            "for [" << authority() << "]");
+        LOG("Insufficient services (" << message->services << ") by ["
+            << authority() << "] showing (" << address().services() << ").");
 
         rejection(error::peer_insufficient);
         return;
@@ -324,7 +324,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     if (message->value < minimum_version_)
     {
         LOG("Insufficient peer protocol version (" << message->value << ") "
-            "for [" << authority() << "]");
+            "for [" << authority() << "].");
 
         rejection(error::peer_insufficient);
         return;
@@ -335,12 +335,12 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     set_peer_version(message);
 
     ////LOG("Negotiated protocol version (" << version << ") "
-    ////    << "for [" << authority() << "] ");
+    ////    << "for [" << authority() << "].");
 
     ////// TODO: verbose (helpful for identifying own address for config of self).
     ////LOG("Peer [" << authority() << "] "
     ////    << "as {" << config::authority(message->address_sender) << "} "
-    ////    << "us {" << config::authority(message->address_receiver) << "}");
+    ////    << "us {" << config::authority(message->address_receiver) << "}.");
 
     SEND1(version_acknowledge{}, handle_send_acknowledge, _1);
 
