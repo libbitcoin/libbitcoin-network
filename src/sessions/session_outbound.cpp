@@ -276,7 +276,7 @@ void session_outbound::handle_connect(const code& ec,
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         const auto timeout = settings().connect_timeout();
 
-        // Provides a timeout delay in case of empty address pool, etc.
+        // BUGBUG: Since connections span sessions, this timer just gets reset.
         start_timer(BIND2(start_connect, connectors, id), timeout);
         return;
     }

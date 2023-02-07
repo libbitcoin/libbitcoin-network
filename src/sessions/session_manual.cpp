@@ -154,11 +154,11 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        ////LOG("Failed to connect manual channel, " << ec.message());
+        LOG("Failed to connect manual channel, " << ec.message());
+        const auto timeout = settings().connect_timeout();
 
-        // TODO: verify loop delay (once log has timestamps).
-        start_timer(BIND3(start_connect, peer, connector, handler),
-            settings().connect_timeout());
+        // BUGBUG: Since connections span sessions, this timer just gets reset.
+        start_timer(BIND3(start_connect, peer, connector, handler), timeout);
         return;
     }
 
