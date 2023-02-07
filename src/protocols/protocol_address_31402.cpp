@@ -119,7 +119,7 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     // Do not store redundant adresses, address() is own checked out address.
     if (singleton && (items.front() == address()))
     {
-        LOG("Dropping redundant address from [" << authority() << "]");
+        ////LOG("Dropping redundant address from [" << authority() << "]");
         return;
     }
 
