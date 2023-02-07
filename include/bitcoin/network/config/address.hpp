@@ -40,6 +40,7 @@ public:
     address() NOEXCEPT;
 
     /// 188.240.57.122[:8333][/1675574490[/1033]]
+    /// Host can be either [2001:db8::2]:port or 1.2.240.1:port.
     address(const std::string& host) NOEXCEPT(false);
 
     /// message conversion.
