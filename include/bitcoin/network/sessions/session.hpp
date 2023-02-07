@@ -156,6 +156,9 @@ protected:
     /// The address is blacklisted by configuration.
     virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
 
+    /// The address is not whitelisted by configuration (for non-empty list).
+    virtual bool whitelisted(const config::authority& authority) const NOEXCEPT;
+
     /// The address advertises insufficient services.
     virtual bool insufficient(const config::address& authority) const NOEXCEPT;
 

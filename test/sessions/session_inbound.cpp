@@ -320,6 +320,18 @@ public:
     }
 };
 
+class mock_session_inbound_whitelist_fail
+  : public mock_session_inbound
+{
+public:
+    using mock_session_inbound::mock_session_inbound;
+
+    bool whitelisted(const config::authority&) const NOEXCEPT override
+    {
+        return false;
+    }
+};
+
 template <class Acceptor = acceptor>
 class mock_p2p
   : public p2p
@@ -832,6 +844,63 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
 
     // Start the session (with one mocked inbound channel) using the network reference.
     auto session = std::make_shared<mock_session_inbound_blacklist_fail>(net);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> session_started;
+    boost::asio::post(net.strand(), [=, &session_started]()
+    {
+        // Will cause started to be set and acceptor created.
+        session->start([&](const code& ec)
+        {
+            session_started.set_value(ec);
+        });
+    });
+
+    // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
+    BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.inbound_port);
+    BOOST_REQUIRE(!net.get_acceptor()->stopped());
+    BOOST_REQUIRE(!session->stopped());
+
+    // Block until handle_accept sets address_blocked in channel.stop.
+    BOOST_REQUIRE(net.get_acceptor()->require_code());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(net.get_acceptor()->stopped());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+
+    // Not attached because accept never succeeded.
+    BOOST_REQUIRE(!session->attached_handshake());
+    session.reset();
+}
+
+
+BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelisted__not_attached)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.inbound_connections = 1;
+    set.inbound_port = 42;
+    mock_p2p<mock_acceptor_start_success_accept_success<error::address_blocked>> net(set, log);
+
+    std::promise<code> net_started;
+    net.start([&](const code& ec)
+    {
+        net_started.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
+
+    // Start the session (with one mocked inbound channel) using the network reference.
+    auto session = std::make_shared<mock_session_inbound_whitelist_fail>(net);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;

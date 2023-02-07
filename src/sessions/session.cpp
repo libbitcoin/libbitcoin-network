@@ -398,6 +398,12 @@ bool session::blacklisted(const config::authority& authority) const NOEXCEPT
     return contains(settings().blacklists, authority);
 }
 
+bool session::whitelisted(const config::authority& authority) const NOEXCEPT
+{
+    return settings().whitelists.empty() ||
+        contains(settings().whitelists, authority);
+}
+
 bool session::insufficient(const config::address& address) const NOEXCEPT
 {
     return (address.item().services & settings().services_minimum) !=

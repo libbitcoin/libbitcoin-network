@@ -169,6 +169,12 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
+    if (!whitelisted(channel->authority()))
+    {
+        channel->stop(error::address_blocked);
+        return;
+    }
+
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
         BIND2(handle_channel_stop, _1, channel));
