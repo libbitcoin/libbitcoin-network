@@ -76,6 +76,37 @@ BOOST_AUTO_TEST_CASE(utilities__to_literal__bracketed_coloned_nonzero__single_br
 
 // to_host
 
+BOOST_AUTO_TEST_CASE(utilities__to_host__default__unspecified_v4)
+{
+    BOOST_REQUIRE_EQUAL(to_host(asio::address{}), "0.0.0.0");
+}
 
+// from_host
+
+BOOST_AUTO_TEST_CASE(utilities__from_host__default__default)
+{
+    BOOST_REQUIRE_EQUAL(from_host(std::string{}), asio::address{});
+}
+
+// to_address
+
+BOOST_AUTO_TEST_CASE(utilities__to_address__default_ipv6__default)
+{
+    BOOST_REQUIRE_EQUAL(to_address(asio::ipv6{}), messages::ip_address{});
+}
+
+// from_address
+
+BOOST_AUTO_TEST_CASE(utilities__from_address__default__default_ipv6)
+{
+    BOOST_REQUIRE_EQUAL(from_address(messages::ip_address{}), asio::ipv6{});
+}
+
+// is_valid
+
+BOOST_AUTO_TEST_CASE(utilities__is_valid__default__false)
+{
+    BOOST_REQUIRE(!is_valid(messages::address_item{}));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
