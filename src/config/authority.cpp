@@ -41,7 +41,8 @@ authority::authority() NOEXCEPT
 }
 
 authority::authority(const std::string& authority) NOEXCEPT(false)
-  : authority()
+////  : authority() <= clang/gcc error: not a non-static data member of...
+  : ip_{}, port_{}
 {
     std::stringstream(authority) >> *this;
 }
