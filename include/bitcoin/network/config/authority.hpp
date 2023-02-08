@@ -84,7 +84,8 @@ public:
     /// False if ip address is unspecified or port is zero.
     operator bool() const NOEXCEPT;
 
-    /// Equality consider ip and port.
+    /// TODO: add wildcard matching (* for port and class C subnet).
+    /// Equality considers ip:port (not for black/white list matching).
     bool operator==(const authority& other) const NOEXCEPT;
     bool operator!=(const authority& other) const NOEXCEPT;
 

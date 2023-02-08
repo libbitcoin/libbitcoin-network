@@ -138,8 +138,11 @@ std::istream& operator>>(std::istream& input,
     // TODO: boost URI parser?
     // std::regex requires gcc 4.9, so we are using boost::regex for now.
     using namespace boost;
-    static const regex regular{ "^((tcp|udp|http|https|inproc):\\/\\/)?"
-        "(\\[([0-9a-f:\\.]+)]|([^:]+))(:([0-9]{1,5}))?$" };
+    static const regex regular
+    {
+        "^((tcp|udp|http|https|inproc):\\/\\/)?"
+        "(\\[([0-9a-f:\\.]+)]|([^:]+))(:([0-9]{1,5}))?$"
+    };
 
     sregex_iterator it{ value.begin(), value.end(), regular }, end{};
     if (it == end)

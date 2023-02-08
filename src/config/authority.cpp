@@ -139,7 +139,11 @@ std::istream& operator>>(std::istream& input,
 
     // C++11: use std::regex.
     using namespace boost;
-    static const regex regular{ "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])(:([0-9]{1,5}))?$" };
+    static const regex regular
+    {
+        "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])(:([0-9]{1,5}))?$"
+    };
+
     sregex_iterator it{ value.begin(), value.end(), regular }, end{};
     if (it == end)
         throw istream_exception(value);
