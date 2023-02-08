@@ -93,7 +93,7 @@ typedef std::vector<address> addresses;
 } // namespace network
 } // namespace libbitcoin
 
-// TODO: advertise and store proper URI.
+// TODO: define, advertise, and store proper URI, such as:
 // ipv4 uri: [btc://]1.2.3.4[:8333]
 // ipv6 uri: [btc://]\[ab:cd::30:40\][:8333]
 // name uri: [btc://]mainnet.libbitcoin.org[:8333]
