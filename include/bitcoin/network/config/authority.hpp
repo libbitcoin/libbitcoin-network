@@ -30,7 +30,8 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// This is a container for an {ip address, port} tuple.
+/// Container for an [ip-address, port] tuple.
+/// Provided for connection management (not p2p network messaging).
 class BCT_API authority
 {
 public:
@@ -43,43 +44,35 @@ public:
     /// Deserialize an IPv4 or IPv6 address-based hostname[:port].
     /// Host can be either [2001:db8::2]:port or 1.2.240.1:port.
     authority(const std::string& authority) NOEXCEPT(false);
-    authority(const std::string& ip, uint16_t port) NOEXCEPT(false);
-
-    /// message conversion.
-    ////authority(const messages::address_item& item) NOEXCEPT;
-    authority(const messages::ip_address& ip, uint16_t port) NOEXCEPT;
-
-    /// asio conversion.
+    authority(const std::string& ip, uint16_t port) NOEXCEPT;
     authority(const asio::address& ip, uint16_t port) NOEXCEPT;
     authority(const asio::endpoint& endpoint) NOEXCEPT;
-
-    /// config conversion.
     authority(const config::address& address) NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------
 
     /// The ip address of the authority.
-    const asio::ipv6& ip() const NOEXCEPT;
+    const asio::address& ip() const NOEXCEPT;
 
-    /// The tcp port of the authority.
+    /// The ip port of the authority.
     uint16_t port() const NOEXCEPT;
 
     /// Methods.
     /// -----------------------------------------------------------------------
 
     /// The host of the authority as a string.
-    /// The form of the return is determined by the type of address, either:
-    /// 2001:db8::2 or 1.2.240.1
+    /// The port is optional and not included if zero-valued.
+    /// Form determined by type of address, either: 2001:db8::2 or 1.2.240.1
     std::string to_host() const NOEXCEPT;
 
-    /// The authority as a string.
-    /// The form of the return is determined by the type of address.
+    /// The host of the authority as a literal.
     /// The port is optional and not included if zero-valued.
-    /// The authority in one of two forms: [2001:db8::2]:port or 1.2.240.1:port
-    std::string to_string() const NOEXCEPT;
+    /// Form determined by type of address, either: [2001:db8::2] or 1.2.240.1
+    std::string to_literal() const NOEXCEPT;
 
-    /// The authority converted to a network messages address/ip_address.
+    /// Authority converted to messages::ip_address or messages::address_item.
+    /// Message addresses are 16 byte ipv6 encoding with ipv4 addresses mapped.
     messages::ip_address to_ip_address() const NOEXCEPT;
     messages::address_item to_address_item() const NOEXCEPT;
     messages::address_item to_address_item(uint32_t timestamp,
@@ -88,10 +81,10 @@ public:
     /// Operators.
     /// -----------------------------------------------------------------------
 
-    /// True if the port is non-zero.
+    /// False if ip address is unspecified or port is zero.
     operator bool() const NOEXCEPT;
 
-    /// Equality does consider port.
+    /// Equality consider ip and port.
     bool operator==(const authority& other) const NOEXCEPT;
     bool operator!=(const authority& other) const NOEXCEPT;
 
@@ -102,8 +95,8 @@ public:
 
 private:
     // These are not thread safe.
-    asio::ipv6 ip_{};
-    uint16_t port_{};
+    asio::address ip_;
+    uint16_t port_;
 };
 
 typedef std::vector<authority> authorities;
@@ -119,7 +112,7 @@ struct hash<bc::network::config::authority>
 {
     size_t operator()(const bc::network::config::authority& value) const NOEXCEPT
     {
-        return std::hash<std::string>{}(value.to_string());
+        return std::hash<std::string>{}(value.to_literal());
     }
 };
 } // namespace std

@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
     BOOST_REQUIRE(!instance->get_socket().is_open());
     BOOST_REQUIRE(&instance->get_strand() == &instance->strand());
     BOOST_REQUIRE(instance->get_authority() == instance->authority());
-    BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::]");
+    BOOST_REQUIRE(instance->get_authority().ip().is_unspecified());
     instance->stop();
 }
 
@@ -110,9 +110,9 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 
     instance->accept(acceptor, [instance](const code& ec)
     {
-        // Acceptor cancellation sets channel_stopped and default ipv4 authority.
+        // Acceptor cancellation sets channel_stopped and unspecified address.
         BOOST_REQUIRE_EQUAL(ec, error::operation_canceled);
-        BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::]");
+        BOOST_REQUIRE(instance->get_authority().ip().is_unspecified());
     });
 
     // Stopping the socket does not cancel the acceptor but precludes assertion.

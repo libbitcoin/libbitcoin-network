@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
     BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
     BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE(instance.self.to_address_item() == unspecified_address_item);
+    BOOST_REQUIRE(instance.self.ip().is_unspecified());
     BOOST_REQUIRE(instance.blacklists.empty());
     BOOST_REQUIRE(instance.whitelists.empty());
     BOOST_REQUIRE(instance.peers.empty());
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
     BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
     BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE(instance.self.to_address_item() == unspecified_address_item);
+    BOOST_REQUIRE(instance.self.ip().is_unspecified());
     BOOST_REQUIRE(instance.blacklists.empty());
     BOOST_REQUIRE(instance.whitelists.empty());
     BOOST_REQUIRE(instance.peers.empty());
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
     BOOST_REQUIRE_EQUAL(instance.user_agent, BC_USER_AGENT);
     BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE(instance.self.to_address_item() == unspecified_address_item);
+    BOOST_REQUIRE(instance.self.ip().is_unspecified());
     BOOST_REQUIRE(instance.blacklists.empty());
     BOOST_REQUIRE(instance.whitelists.empty());
     BOOST_REQUIRE(instance.peers.empty());
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
     BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE(instance.self.to_address_item() == unspecified_address_item);
+    BOOST_REQUIRE(instance.self.ip().is_unspecified());
     BOOST_REQUIRE(instance.blacklists.empty());
     BOOST_REQUIRE(instance.whitelists.empty());
     BOOST_REQUIRE(instance.peers.empty());

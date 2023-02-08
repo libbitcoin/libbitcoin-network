@@ -43,10 +43,11 @@ BOOST_AUTO_TEST_CASE(endpoint__construct__port_only__throws_invalid_option_value
 
 BOOST_AUTO_TEST_CASE(endpoint__construct__default__localhost)
 {
-    endpoint host;
+    endpoint host{};
     BOOST_REQUIRE_EQUAL(host.scheme(), "");
     BOOST_REQUIRE_EQUAL(host.host(), "localhost");
     BOOST_REQUIRE_EQUAL(host.port(), 0u);
+    BOOST_REQUIRE_EQUAL(host.to_uri(), "localhost");
 }
 
 BOOST_AUTO_TEST_CASE(endpoint__construct__host__expected_values)
@@ -55,6 +56,7 @@ BOOST_AUTO_TEST_CASE(endpoint__construct__host__expected_values)
     BOOST_REQUIRE_EQUAL(host.scheme(), "");
     BOOST_REQUIRE_EQUAL(host.host(), "foo");
     BOOST_REQUIRE_EQUAL(host.port(), 0u);
+    BOOST_REQUIRE_EQUAL(host.to_uri(), "foo");
 }
 
 BOOST_AUTO_TEST_CASE(endpoint__construct__host_port__expected_values)
@@ -63,6 +65,7 @@ BOOST_AUTO_TEST_CASE(endpoint__construct__host_port__expected_values)
     BOOST_REQUIRE_EQUAL(endpoint.scheme(), "");
     BOOST_REQUIRE_EQUAL(endpoint.host(), "foo.bar");
     BOOST_REQUIRE_EQUAL(endpoint.port(), 42u);
+    BOOST_REQUIRE_EQUAL(endpoint.to_uri(), "foo.bar:42");
 }
 
 BOOST_AUTO_TEST_CASE(endpoint__construct__scheme_host_port__expected_values)
@@ -71,6 +74,7 @@ BOOST_AUTO_TEST_CASE(endpoint__construct__scheme_host_port__expected_values)
     BOOST_REQUIRE_EQUAL(host.scheme(), "tcp");
     BOOST_REQUIRE_EQUAL(host.host(), "foo.bar");
     BOOST_REQUIRE_EQUAL(host.port(), 42u);
+    BOOST_REQUIRE_EQUAL(host.to_uri(), "tcp://foo.bar:42");
 }
 
 BOOST_AUTO_TEST_CASE(endpoint__construct__scheme_host__expected_values)
@@ -79,6 +83,7 @@ BOOST_AUTO_TEST_CASE(endpoint__construct__scheme_host__expected_values)
     BOOST_REQUIRE_EQUAL(host.scheme(), "tcp");
     BOOST_REQUIRE_EQUAL(host.host(), "foo.bar");
     BOOST_REQUIRE_EQUAL(host.port(), 0u);
+    BOOST_REQUIRE_EQUAL(host.to_uri(), "tcp://foo.bar");
 }
 
 // to_local
@@ -90,6 +95,8 @@ BOOST_AUTO_TEST_CASE(endpoint__to_local__scheme_host_port__expected_values)
     BOOST_REQUIRE_EQUAL(host.scheme(), "tcp");
     BOOST_REQUIRE_EQUAL(host.host(), "localhost");
     BOOST_REQUIRE_EQUAL(host.port(), 12345u);
+    BOOST_REQUIRE_EQUAL(host.to_uri(), "tcp://localhost:12345");
+    BOOST_REQUIRE_EQUAL(original.to_uri(), "tcp://*:12345");
 }
 
 BOOST_AUTO_TEST_CASE(endpoint__to_local__host_port__expected_values)
@@ -99,6 +106,8 @@ BOOST_AUTO_TEST_CASE(endpoint__to_local__host_port__expected_values)
     BOOST_REQUIRE_EQUAL(host.scheme(), "");
     BOOST_REQUIRE_EQUAL(host.host(), "localhost");
     BOOST_REQUIRE_EQUAL(host.port(), 12345u);
+    BOOST_REQUIRE_EQUAL(host.to_uri(), "localhost:12345");
+    BOOST_REQUIRE_EQUAL(original.to_uri(), "*:12345");
 }
 
 // equality

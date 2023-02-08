@@ -29,9 +29,9 @@
 namespace libbitcoin {
 namespace network {
 namespace config {
-
-/// Serialization helper for a network endpoint in URI format.
-/// This is a container for a {scheme, host, port} tuple.
+    
+/// Container for a [scheme, host, port] tuple.
+/// Provided for serialization of network endpoints in URI format.
 class BCT_API endpoint
 {
 public:
@@ -48,12 +48,8 @@ public:
     endpoint(const std::string& host, uint16_t port) NOEXCEPT;
     endpoint(const std::string& scheme, const std::string& host,
         uint16_t port) NOEXCEPT;
-
-    /// asio conversion.
     endpoint(const asio::endpoint& uri) NOEXCEPT;
     endpoint(const asio::address& ip, uint16_t port) NOEXCEPT;
-
-    // config conversion.
     endpoint(const config::authority& authority) NOEXCEPT;
 
     /// Properties.
@@ -73,18 +69,17 @@ public:
 
     /// An empty scheme and/or empty (zero) port is omitted.
     /// The endpoint is of the form: [scheme://]host[:port]
-    std::string to_string() const NOEXCEPT;
+    std::string to_uri() const NOEXCEPT;
 
     /// Return a new endpoint that replaces host instances of "*" with
     /// "localhost". This is intended for clients that wish to connect
     /// to a service that has been configured to bind to all interfaces.
-    /// The endpoint is of the form: [scheme://]host[:port]
     endpoint to_local() const NOEXCEPT;
 
     /// Operators.
     /// -----------------------------------------------------------------------
 
-    /// True if the endpoint is initialized.
+    /// False if the endpoint is not initialized.
     operator bool() const NOEXCEPT;
 
     /// Equality considers all properties (scheme, host, port).
@@ -99,9 +94,9 @@ public:
 private:
     // These are not thread safe.
 
-    std::string scheme_{};
-    std::string host_{};
-    uint16_t port_{};
+    std::string scheme_;
+    std::string host_;
+    uint16_t port_;
 };
 
 typedef std::vector<endpoint> endpoints;
@@ -117,7 +112,7 @@ struct hash<bc::network::config::endpoint>
 {
     size_t operator()(const bc::network::config::endpoint& value) const NOEXCEPT
     {
-        return std::hash<std::string>{}(value.to_string());
+        return std::hash<std::string>{}(value.to_uri());
     }
 };
 } // namespace std

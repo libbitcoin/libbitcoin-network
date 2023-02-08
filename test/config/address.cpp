@@ -232,7 +232,35 @@ BOOST_AUTO_TEST_CASE(address__port__ip_address__expected)
 BOOST_AUTO_TEST_CASE(address__port__hostname__zero)
 {
     const address host("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
-    BOOST_REQUIRE_EQUAL(host.port(), 0);
+    BOOST_REQUIRE_EQUAL(host.port(), 0u);
+}
+
+// timestamp()
+
+BOOST_AUTO_TEST_CASE(address__timestamp__default__zero)
+{
+    const address host(BC_AUTHORITY_IPV4_ADDRESS);
+    BOOST_REQUIRE_EQUAL(host.timestamp(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(address__timestamp__value__expected)
+{
+    const address host(test_ipv6_address_item);
+    BOOST_REQUIRE_EQUAL(host.timestamp(), test_ipv6_address_item.timestamp);
+}
+
+// services()
+
+BOOST_AUTO_TEST_CASE(address__services__default__zero)
+{
+    const address host("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
+    BOOST_REQUIRE_EQUAL(host.services(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(address__services__value__expected)
+{
+    const address host(test_ipv6_address_item);
+    BOOST_REQUIRE_EQUAL(host.services(), test_ipv6_address_item.services);
 }
 
 // bool
@@ -253,35 +281,6 @@ BOOST_AUTO_TEST_CASE(address__bool__specified__true)
 {
     const address host{ test_ipv6_address_item };
     BOOST_REQUIRE(host);
-}
-
-// to_host
-
-BOOST_AUTO_TEST_CASE(address__to_host__default__ipv6_unspecified)
-{
-    const address host{};
-    BOOST_REQUIRE_EQUAL(host.to_host(), "[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]");
-}
-
-BOOST_AUTO_TEST_CASE(address__to_host__ipv4_mapped_ip_address__ipv4)
-{
-    // A mapped ip address serializes as IPv4.
-    const address host(test_mapped_ip_address_item);
-    BOOST_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV4_ADDRESS);
-}
-
-BOOST_AUTO_TEST_CASE(address__to_host__ipv4_compatible_ip_address__ipv6_alternative)
-{
-    // A compatible ip address serializes as alternative notation IPv6.
-    const address host(test_compatible_ip_address_item);
-    BOOST_REQUIRE_EQUAL(host.to_host(), "[" BC_AUTHORITY_IPV6_ALTERNATIVE_COMPATIBLE_ADDRESS "]");
-}
-
-BOOST_AUTO_TEST_CASE(address__to_host__ipv6_address__ipv6_compressed)
-{
-    // An ipv6 address serializes using compression.
-    const address host(test_ipv6_address_item);
-    BOOST_REQUIRE_EQUAL(host.to_host(), "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
 }
 
 // to_string
@@ -353,6 +352,49 @@ BOOST_AUTO_TEST_CASE(address__to_string__ipv6_compatible_port__expected)
     const std::string line = "[" BC_AUTHORITY_IPV6_ALTERNATIVE_COMPATIBLE_ADDRESS "]:42";
     const address host(line + "/0/0");
     BOOST_REQUIRE_EQUAL(host.to_string(), line + "/0/0");
+}
+
+// to_host
+
+BOOST_AUTO_TEST_CASE(address__to_host__default__ipv6_unspecified)
+{
+    const address host{};
+    BOOST_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS);
+}
+
+BOOST_AUTO_TEST_CASE(address__to_host__ipv4_mapped_ip_address__ipv4)
+{
+    // A mapped ip address serializes as IPv4.
+    const address host(test_mapped_ip_address_item);
+    BOOST_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV4_ADDRESS);
+}
+
+BOOST_AUTO_TEST_CASE(address__to_host__ipv4_compatible_ip_address__ipv6_alternative)
+{
+    // A compatible ip address serializes as alternative notation IPv6.
+    const address host(test_compatible_ip_address_item);
+    BOOST_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV6_ALTERNATIVE_COMPATIBLE_ADDRESS);
+}
+
+BOOST_AUTO_TEST_CASE(address__to_host__ipv6_address__ipv6_compressed)
+{
+    // An ipv6 address serializes using compression.
+    const address host(test_ipv6_address_item);
+    BOOST_REQUIRE_EQUAL(host.to_host(), BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS);
+}
+
+// to_ip
+
+BOOST_AUTO_TEST_CASE(address__to_ip__default__ipv6_unspecified)
+{
+    const address host{};
+    BOOST_REQUIRE(host.to_ip().is_unspecified());
+}
+
+BOOST_AUTO_TEST_CASE(address__to_ip__value__expected)
+{
+    const address host{ test_ipv6_address_item };
+    BOOST_REQUIRE_EQUAL(host.to_ip(), asio::ipv6(test_ipv6_address));
 }
 
 // equality

@@ -186,7 +186,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     {
         // Can't call untake without a channel object, so restore.
         handler(error::service_stopped, nullptr);
-        restore(peer.item_ptr(), BIND1(handle_untake, _1));
+        restore(peer.message(), BIND1(handle_untake, _1));
         return;
     }
 

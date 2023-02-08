@@ -27,37 +27,22 @@
 namespace libbitcoin {
 namespace network {
 namespace config {
-    
-// IPv6 normalizes to bracketed form.
-// IPv6 (read) : [2001:db8::2] or 2001:db8::2
-// IPv4 (read) : 1.2.240.1
-// IPv6 (write): [2001:db8::2]
-// IPv4 (write): 1.2.240.1
-    
-/// string/string conversions.
-std::string to_host_name(const std::string& host) NOEXCEPT;
-std::string to_text(const std::string& host, uint16_t port) NOEXCEPT;
-std::string to_ipv6(const std::string& ipv4_address) NOEXCEPT;
 
-/// asio/asio conversions.
-asio::ipv6 to_ipv6(const asio::ipv4& ipv4_address) NOEXCEPT;
-asio::ipv6 to_ipv6(const asio::address& ip_address) NOEXCEPT;
+/// string/string conversions (ipv6 always bracketed).
+std::string to_literal(const std::string& host, uint16_t port) NOEXCEPT;
 
-/// asio/string conversions.
-std::string to_ipv4_host(const asio::address& ip_address) NOEXCEPT;
-std::string to_ipv6_host(const asio::address& ip_address) NOEXCEPT;
-std::string to_ip_host(const asio::address& ip_address) NOEXCEPT;
+/// asio/string conversions (normalize to ipv4 unmapped).
+std::string to_host(const asio::address& ip) NOEXCEPT;
+asio::address from_host(const std::string& host) NOEXCEPT;
 
 /// asio/messages conversions.
-messages::ip_address to_address(const asio::ipv6& in) NOEXCEPT;
-asio::ipv6 to_address(const messages::ip_address& in) NOEXCEPT;
+messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
+asio::address from_address(const messages::ip_address& address) NOEXCEPT;
 
-/// Conditions.
-inline bool is_valid(const messages::address_item& host) NOEXCEPT
-{
-    return host.port != messages::unspecified_ip_port
-        && host.ip != messages::unspecified_ip_address;
-}
+/// Valid if the host is not unspecified and port is non-zero.
+bool is_valid(const messages::address_item& item) NOEXCEPT;
+
+// test only
 
 } // namespace config
 } // namespace network

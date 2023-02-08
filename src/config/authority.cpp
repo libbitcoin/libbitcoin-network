@@ -18,10 +18,8 @@
  */
 #include <bitcoin/network/config/authority.hpp>
 
-////#include <format>
 #include <iostream>
 #include <sstream>
-#include <boost/format.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/utilities.hpp>
@@ -32,37 +30,29 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
+using namespace system;
+
 // Contructors.
 // ----------------------------------------------------------------------------
 
 authority::authority() NOEXCEPT
-  : authority(messages::unspecified_address_item)
+  : authority(asio::ipv6{}, {})
 {
 }
 
-// string conversion
-
 authority::authority(const std::string& authority) NOEXCEPT(false)
+  : authority()
 {
     std::stringstream(authority) >> *this;
 }
 
-authority::authority(const std::string& host, uint16_t port) NOEXCEPT(false)
-{
-    std::stringstream(to_text(host, port)) >> *this;
-}
-
-// message conversion
-
-authority::authority(const messages::ip_address& ip, uint16_t port) NOEXCEPT
-  : ip_(to_address(ip)), port_(port)
+authority::authority(const std::string& host, uint16_t port) NOEXCEPT
+  : authority(config::from_host(host), port)
 {
 }
-
-// asio conversion
 
 authority::authority(const asio::address& ip, uint16_t port) NOEXCEPT
-  : ip_(to_ipv6(ip)), port_(port)
+  : ip_(ip), port_(port)
 {
 }
 
@@ -71,17 +61,15 @@ authority::authority(const asio::endpoint& endpoint) NOEXCEPT
 {
 }
 
-// config conversion
-
 authority::authority(const config::address& address) NOEXCEPT
-  : ip_(address.item().ip), port_(address.item().port)
+  : authority(address.to_ip(), address.port())
 {
 }
 
 // Properties.
 // ----------------------------------------------------------------------------
 
-const asio::ipv6& authority::ip() const NOEXCEPT
+const asio::address& authority::ip() const NOEXCEPT
 {
     return ip_;
 }
@@ -96,14 +84,13 @@ uint16_t authority::port() const NOEXCEPT
 
 std::string authority::to_host() const NOEXCEPT
 {
-    return to_ip_host(ip_);
+    return config::to_host(ip_);
 }
 
-std::string authority::to_string() const NOEXCEPT
+std::string authority::to_literal() const NOEXCEPT
 {
     std::stringstream value{};
     value << *this;
-
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return value.str();
     BC_POP_WARNING()
@@ -111,24 +98,18 @@ std::string authority::to_string() const NOEXCEPT
 
 messages::address_item authority::to_address_item() const NOEXCEPT
 {
-    // Default timestamp and services.
     return to_address_item({}, messages::service::node_none);
 }
 
 messages::address_item authority::to_address_item(uint32_t timestamp,
     uint64_t services) const NOEXCEPT
 {
-    const messages::address_item address_item
-    {
-        timestamp, services, to_ip_address(), port(),
-    };
-
-    return address_item;
+    return { timestamp, services, to_ip_address(), port() };
 }
 
 messages::ip_address authority::to_ip_address() const NOEXCEPT
 {
-    return to_address(ip_);
+    return config::to_address(ip_);
 }
 
 // Operators.
@@ -136,7 +117,7 @@ messages::ip_address authority::to_ip_address() const NOEXCEPT
 
 authority::operator bool() const NOEXCEPT
 {
-    return port_ != messages::unspecified_ip_port && !ip_.is_unspecified();
+    return !is_zero(port_) && !ip_.is_unspecified();
 }
 
 bool authority::operator==(const authority& other) const NOEXCEPT
@@ -158,24 +139,19 @@ std::istream& operator>>(std::istream& input,
 
     // C++11: use std::regex.
     using namespace boost;
-    static const regex regular(
-        "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])(:([0-9]{1,5}))?$");
-
-    sregex_iterator it(value.begin(), value.end(), regular), end;
+    static const regex regular{ "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])(:([0-9]{1,5}))?$" };
+    sregex_iterator it{ value.begin(), value.end(), regular }, end{};
     if (it == end)
         throw istream_exception(value);
 
-    const auto& match = *it;
-    std::string port(match[5]);
-    std::string ip_address(match[3]);
-    if (ip_address.empty())
-        ip_address = to_ipv6(match[2]);
+    const auto& token = *it;
+    const auto host = is_zero(token[3].length()) ? token[2] : token[3];
+    deserialize(argument.port_, token[5]);
 
     try
     {
-        argument.ip_ = asio::ipv6::from_string(ip_address);
-        argument.port_ = port.empty() ? messages::unspecified_ip_port :
-            lexical_cast<uint16_t>(port);
+        // Avoid config::from_host(host) because this wants to catch errors.
+        argument.ip_ = boost::asio::ip::make_address(host);
     }
     catch (const std::exception&)
     {
@@ -189,7 +165,7 @@ std::ostream& operator<<(std::ostream& output,
     const authority& argument) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    output << to_text(argument.to_host(), argument.port());
+    output << config::to_literal(argument.to_host(), argument.port());
     BC_POP_WARNING()
     return output;
 }

@@ -24,6 +24,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/authority.hpp>
+#include <bitcoin/network/config/utilities.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -35,19 +36,18 @@ using namespace bc::system;
 // ----------------------------------------------------------------------------
 
 endpoint::endpoint() NOEXCEPT
-  : host_("localhost")
+  : endpoint({}, "localhost", {})
 {
 }
 
-// string conversion.
-
 endpoint::endpoint(const std::string& uri) NOEXCEPT(false)
+  : endpoint()
 {
     std::stringstream(uri) >> *this;
 }
 
 endpoint::endpoint(const std::string& host, uint16_t port) NOEXCEPT
-  : scheme_(), host_(host), port_(port)
+  : endpoint({}, host, port)
 {
 }
 
@@ -57,24 +57,18 @@ endpoint::endpoint(const std::string& scheme, const std::string& host,
 {
 }
 
-// asio conversion.
-
 endpoint::endpoint(const asio::endpoint& uri) NOEXCEPT
   : endpoint(uri.address(), uri.port())
 {
 }
 
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 endpoint::endpoint(const asio::address& ip, uint16_t port) NOEXCEPT
-  : host_(ip.to_string()), port_(port)
+  : endpoint(config::to_host(ip), port)
 {
 }
-BC_POP_WARNING()
-
-// config conversion.
 
 endpoint::endpoint(const config::authority& authority) NOEXCEPT
-  : endpoint(authority.to_string())
+  : endpoint(authority.ip(), authority.port())
 {
 }
 
@@ -99,7 +93,7 @@ uint16_t endpoint::port() const NOEXCEPT
 // Methods.
 // ----------------------------------------------------------------------------
 
-std::string endpoint::to_string() const NOEXCEPT
+std::string endpoint::to_uri() const NOEXCEPT
 {
     std::stringstream value{};
     value << *this;
@@ -141,30 +135,20 @@ std::istream& operator>>(std::istream& input,
     input >> value;
 
     // C++11: use std::regex.
+    // TODO: boost URI parser?
     // std::regex requires gcc 4.9, so we are using boost::regex for now.
     using namespace boost;
-    static const regex regular("^((tcp|udp|http|https|inproc):\\/\\/)?"
-        "(\\[([0-9a-f:\\.]+)]|([^:]+))(:([0-9]{1,5}))?$");
+    static const regex regular{ "^((tcp|udp|http|https|inproc):\\/\\/)?"
+        "(\\[([0-9a-f:\\.]+)]|([^:]+))(:([0-9]{1,5}))?$" };
 
-    sregex_iterator it(value.begin(), value.end(), regular), end;
+    sregex_iterator it{ value.begin(), value.end(), regular }, end{};
     if (it == end)
         throw istream_exception(value);
 
-    const auto& match = *it;
-    argument.scheme_ = match[2];
-    argument.host_ = match[3];
-    std::string port(match[7]);
-
-    try
-    {
-        argument.port_ = port.empty() ? messages::unspecified_ip_port :
-            lexical_cast<uint16_t>(port);
-    }
-    catch (const std::exception&)
-    {
-        throw istream_exception(value);
-    }
-
+    const auto& token = *it;
+    argument.scheme_ = token[2];
+    argument.host_ = token[3];
+    deserialize(argument.port_, token[7]);
     return input;
 }
 
@@ -172,13 +156,10 @@ std::ostream& operator<<(std::ostream& output,
     const endpoint& argument) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    if (!argument.scheme().empty())
-        output << argument.scheme() << "://";
-
-    output << argument.host();
-
-    if (argument.port() != messages::unspecified_ip_port)
-        output << ":" << argument.port();
+    output
+        << (argument.scheme().empty() ? "" : argument.scheme() + "://")
+        << (argument.host())
+        << (is_zero(argument.port()) ? "" : ":" + serialize(argument.port()));
     BC_POP_WARNING()
     return output;
 }
