@@ -169,9 +169,8 @@ asio::address from_address(const messages::ip_address& address) NOEXCEPT
 {
     try
     {
-        // This retains the address as ipv6.
-        // Better to unmap to ipv4 here.
-        return asio::ipv6(address);
+        const asio::ipv6 ip6(address);
+        return is_mapped(ip6) ? asio::address(unmap(ip6)) : asio::address(ip6);
     }
     catch (std::exception)
     {
