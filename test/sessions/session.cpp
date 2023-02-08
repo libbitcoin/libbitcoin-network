@@ -414,11 +414,11 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     mock_session session(net);
     BOOST_REQUIRE(session.stopped());
     BOOST_REQUIRE(!session.stranded());
-    BOOST_REQUIRE_EQUAL(session.address_count(), zero);
-    BOOST_REQUIRE_EQUAL(session.channel_count(), zero);
-    BOOST_REQUIRE_EQUAL(session.inbound_channel_count(), zero);;
-    BOOST_REQUIRE(!session.blacklisted({ "[2001:db8::2]", 42 }));
-    BOOST_REQUIRE(session.whitelisted({ "[2001:db8::2]", 42 }));
+    BOOST_REQUIRE(is_zero(session.address_count()));
+    BOOST_REQUIRE(is_zero(session.channel_count()));
+    BOOST_REQUIRE(is_zero(session.inbound_channel_count()));
+    BOOST_REQUIRE(!session.blacklisted({ "[2001:db8::2]:42" }));
+    BOOST_REQUIRE(session.whitelisted({ "[2001:db8::2]:42" }));
     BOOST_REQUIRE(!session.inbound());
     BOOST_REQUIRE(session.notify());
 }

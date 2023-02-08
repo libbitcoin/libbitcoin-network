@@ -28,12 +28,13 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// string/string conversions (ipv6 always bracketed).
-std::string to_literal(const std::string& host, uint16_t port) NOEXCEPT;
-
 /// asio/string conversions (normalize to ipv4 unmapped).
 std::string to_host(const asio::address& ip) NOEXCEPT;
-asio::address from_host(const std::string& host) NOEXCEPT;
+asio::address from_host(const std::string& host) NOEXCEPT(false);
+
+/// string/string conversions (unmapped, ipv6 bracketed).
+std::string to_literal(const asio::address& ip) NOEXCEPT;
+asio::address from_literal(const std::string& host)  NOEXCEPT(false);
 
 /// asio/messages conversions.
 messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
@@ -41,8 +42,6 @@ asio::address from_address(const messages::ip_address& address) NOEXCEPT;
 
 /// Valid if the host is not unspecified and port is non-zero.
 bool is_valid(const messages::address_item& item) NOEXCEPT;
-
-// test only
 
 } // namespace config
 } // namespace network

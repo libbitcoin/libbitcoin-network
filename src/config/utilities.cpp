@@ -30,39 +30,18 @@ namespace config {
 using namespace system;
 using namespace boost::asio;
 
-// string/string conversions.
-// ----------------------------------------------------------------------------
-
-static std::string bracket(const std::string& host6) NOEXCEPT
-{
-    // IPv6 URIs use a bracketed IPv6 address (literal), see rfc2732.
-    return "[" + host6 + "]";
-}
-
-static std::string to_literal(const std::string& host) NOEXCEPT
-{
-    // If already literal or not ipv6 (assume ipv4) then do not bracket.
-    return is_zero(host.find("[")) || host.find(":") == std::string::npos ?
-        host : bracket(host);
-}
-
-std::string to_literal(const std::string& host, uint16_t port) NOEXCEPT
-{
-    return to_literal(host) + (!is_zero(port) ? ":" + serialize(port) : "");
-}
-
-// asio/string conversions.
+// asio/string host conversions.
 // ----------------------------------------------------------------------------
 
 // C++11: use std::regex.
-static const boost::regex regular{ "^::ffff:([0-9\\.]+)$" };
+static const boost::regex mapped{ "^::ffff:([0-9\\.]+)$" };
 
 static bool is_mapped(const asio::ipv6& ip6) NOEXCEPT
 {
     try
     {
         const auto host = ip6.to_string();
-        boost::sregex_iterator it{ host.begin(), host.end(), regular }, end{};
+        boost::sregex_iterator it{ host.begin(), host.end(), mapped }, end{};
         return it != end;
     }
     catch (std::exception)
@@ -76,8 +55,8 @@ static asio::ipv4 unmap(const asio::ipv6& ip6) NOEXCEPT
     try
     {
         const auto host = ip6.to_string();
-        boost::sregex_iterator it{ host.begin(), host.end(), regular }, end{};
-        return it == end ? asio::ipv4{} : ip::make_address((*it)[1]).to_v4();
+        boost::sregex_iterator it{ host.begin(), host.end(), mapped }, end{};
+        return it == end ? asio::ipv4{} : from_host((*it)[1]).to_v4();
     }
     catch (std::exception)
     {
@@ -89,7 +68,7 @@ static asio::ipv6 map(const asio::ipv4& ip4) NOEXCEPT
 {
     try
     {
-        return ip::make_address("::ffff:" + ip4.to_string()).to_v6();
+        return from_host("::ffff:" + ip4.to_string()).to_v6();
     }
     catch (std::exception)
     {
@@ -105,7 +84,7 @@ static std::string to_host(const asio::ipv6& ip6) NOEXCEPT
     }
     catch (std::exception)
     {
-        return "::";
+        return { "::" };
     }
 }
 
@@ -117,22 +96,29 @@ static std::string to_host(const asio::ipv4& ip4) NOEXCEPT
     }
     catch (std::exception)
     {
-        return "0.0.0.0";
+        return { "0.0.0.0" };
     }
 }
 
 // Serialize to host normal form (unmapped).
 std::string to_host(const asio::address& ip) NOEXCEPT
 {
-    if (ip.is_v4())
-        return to_host(ip.to_v4());
+    try
+    {
+        if (ip.is_v4())
+            return to_host(ip.to_v4());
 
-    const auto ip6 = ip.to_v6();
-    return is_mapped(ip6) ? to_host(unmap(ip6)) : to_host(ip6);
+        const auto ip6 = ip.to_v6();
+        return is_mapped(ip6) ? to_host(unmap(ip6)) : to_host(ip6);
+    }
+    catch (std::exception)
+    {
+        return { "0.0.0.0" };
+    }
 }
 
 // Deserialize any host.
-asio::address from_host(const std::string& host) NOEXCEPT
+asio::address from_host(const std::string& host) NOEXCEPT(false)
 {
     try
     {
@@ -140,8 +126,33 @@ asio::address from_host(const std::string& host) NOEXCEPT
     }
     catch (std::exception)
     {
-        return {};
+        throw istream_exception(host);
     }
+}
+
+// asio/string literal conversions.
+// ----------------------------------------------------------------------------
+
+static std::string bracket(const std::string& host6) NOEXCEPT
+{
+    // IPv6 URIs use a bracketed IPv6 address (literal), see rfc2732.
+    return "[" + host6 + "]";
+}
+
+std::string to_literal(const asio::address& ip) NOEXCEPT
+{
+    const auto host = to_host(ip);
+    return is_zero(host.find("[")) || host.find(":") == std::string::npos ?
+        host : bracket(host);
+}
+
+asio::address from_literal(const std::string& host) NOEXCEPT(false)
+{
+    static const boost::regex litter{ "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])$" };
+    boost::sregex_iterator it{ host.begin(), host.end(), litter }, end{};
+    if (it == end) throw istream_exception(host);
+    const auto& token = *it;
+    return from_host(is_zero(token[3].length()) ? token[2] : token[3]);
 }
 
 // asio/messages conversions.

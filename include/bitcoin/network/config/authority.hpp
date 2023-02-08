@@ -42,9 +42,7 @@ public:
     authority() NOEXCEPT;
 
     /// Deserialize an IPv4 or IPv6 address-based hostname[:port].
-    /// Host can be either [2001:db8::2]:port or 1.2.240.1:port.
     authority(const std::string& authority) NOEXCEPT(false);
-    authority(const std::string& ip, uint16_t port) NOEXCEPT;
     authority(const asio::address& ip, uint16_t port) NOEXCEPT;
     authority(const asio::endpoint& endpoint) NOEXCEPT;
     authority(const config::address& address) NOEXCEPT;
@@ -63,13 +61,17 @@ public:
 
     /// The host of the authority as a string.
     /// The port is optional and not included if zero-valued.
-    /// Form determined by type of address, either: 2001:db8::2 or 1.2.240.1
+    /// Form by type of address, either: 2001:db8::2 or 1.2.240.1
     std::string to_host() const NOEXCEPT;
 
     /// The host of the authority as a literal.
     /// The port is optional and not included if zero-valued.
-    /// Form determined by type of address, either: [2001:db8::2] or 1.2.240.1
+    /// Form by type of address, either: [2001:db8::2] or 1.2.240.1
     std::string to_literal() const NOEXCEPT;
+
+    /// The authority as a literal with optional port.
+    /// Form by type, either: [2001:db8::2][:port] or 1.2.240.1[:port].
+    std::string to_string() const NOEXCEPT;
 
     /// Authority converted to messages::ip_address or messages::address_item.
     /// Message addresses are 16 byte ipv6 encoding with ipv4 addresses mapped.

@@ -41,15 +41,9 @@ authority::authority() NOEXCEPT
 }
 
 authority::authority(const std::string& authority) NOEXCEPT(false)
-////  : authority() <= clang/gcc error: not a non-static data member of...
   : ip_{}, port_{}
 {
     std::stringstream(authority) >> *this;
-}
-
-authority::authority(const std::string& host, uint16_t port) NOEXCEPT
-  : authority(config::from_host(host), port)
-{
 }
 
 authority::authority(const asio::address& ip, uint16_t port) NOEXCEPT
@@ -89,6 +83,11 @@ std::string authority::to_host() const NOEXCEPT
 }
 
 std::string authority::to_literal() const NOEXCEPT
+{
+    return config::to_literal(ip_);
+}
+
+std::string authority::to_string() const NOEXCEPT
 {
     std::stringstream value{};
     value << *this;
@@ -152,17 +151,7 @@ std::istream& operator>>(std::istream& input,
     const auto& token = *it;
     const auto host = is_zero(token[3].length()) ? token[2] : token[3];
     deserialize(argument.port_, token[5]);
-
-    try
-    {
-        // Avoid config::from_host(host) because this wants to catch errors.
-        argument.ip_ = boost::asio::ip::make_address(host);
-    }
-    catch (const std::exception&)
-    {
-        throw istream_exception(value);
-    }
-
+    argument.ip_ = from_host(host);
     return input;
 }
 
@@ -170,7 +159,9 @@ std::ostream& operator<<(std::ostream& output,
     const authority& argument) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    output << config::to_literal(argument.to_host(), argument.port());
+    output
+        << argument.to_literal()
+        << (!is_zero(argument.port()) ? ":" + serialize(argument.port()) : "");
     BC_POP_WARNING()
     return output;
 }
