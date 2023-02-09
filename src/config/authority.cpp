@@ -56,6 +56,11 @@ authority::authority(const asio::address& ip, uint16_t port,
 {
 }
 
+authority::authority(const messages::address_item& item) NOEXCEPT
+  : authority(from_address(item.ip), item.port)
+{
+}
+
 authority::authority(const asio::endpoint& endpoint) NOEXCEPT
   : authority(endpoint.address(), endpoint.port())
 {

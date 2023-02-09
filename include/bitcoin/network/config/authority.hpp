@@ -47,6 +47,7 @@ public:
     /// Deserialize [IPv6]|IPv4[:port][/cidr] (IPv6 [literal]).
     authority(const std::string& authority) NOEXCEPT(false);
     authority(const asio::address& ip, uint16_t port, uint8_t cidr=0) NOEXCEPT;
+    authority(const messages::address_item& item) NOEXCEPT;
     authority(const asio::endpoint& endpoint) NOEXCEPT;
     authority(const config::address& address) NOEXCEPT;
 
