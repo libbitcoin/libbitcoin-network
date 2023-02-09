@@ -176,6 +176,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 
     if (blacklisted(peer))
     {
+        // Should not see these unless there is a change to blacklist config.
         LOG("Dropping blacklisted address [" << peer << "]");
         handler(error::address_blocked, nullptr);
         return;
