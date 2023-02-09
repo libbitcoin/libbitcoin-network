@@ -40,6 +40,9 @@ asio::address from_literal(const std::string& host)  NOEXCEPT(false);
 messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
 asio::address from_address(const messages::ip_address& address) NOEXCEPT;
 
+/// unmap IPv6-mapped addresses.
+asio::address normalize(const asio::address& ip) NOEXCEPT;
+
 /// Valid if the host is not unspecified and port is non-zero.
 bool is_valid(const messages::address_item& item) NOEXCEPT;
 

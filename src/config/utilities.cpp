@@ -30,40 +30,45 @@ namespace config {
 using namespace system;
 using namespace boost::asio;
 
+static_assert(array_count<messages::ip_address> == 16);
+static_assert(array_count<ip::address_v4::bytes_type> == 4);
+static_assert(array_count<ip::address_v6::bytes_type> == 16);
+static constexpr data_array<12> mapping_prefix
+{
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff
+};
+
+// asio/asio conversions.
+// ----------------------------------------------------------------------------
+
+static asio::ipv6 to_v6(const asio::ipv4& ip4) NOEXCEPT
+{
+    return asio::ipv6{ splice(mapping_prefix, ip4.to_bytes()) };
+}
+
+// Convert IPv6-mapped to IPV4 (ensures consistent matching).
+asio::address normalize(const asio::address& ip) NOEXCEPT
+{
+    if (ip.is_v6())
+    {
+        try
+        {
+            const auto ip6 = ip.to_v6();
+            if (ip6.is_v4_mapped())
+                return { ip6.to_v4() };
+        }
+        catch (std::exception)
+        {
+        }
+    }
+
+    return ip;
+}
+
 // asio/string host conversions.
 // ----------------------------------------------------------------------------
 // IPv4-Compatible IPv6 address are deprecated, support only IPv4-Mapped.
 // rfc-editor.org/rfc/rfc4291
-
-static asio::ipv4 unmap(const asio::ipv6& ip6) NOEXCEPT
-{
-    try
-    {
-        // regex assumes to_string() always produces compact mapped notation.
-        const auto host = ip6.to_string();
-
-        // C++11: use std::regex.
-        static const boost::regex mapped{ "^::ffff:([0-9\\.]+)$" };
-        boost::sregex_iterator it{ host.begin(), host.end(), mapped }, end{};
-        return it == end ? asio::ipv4{} : from_host((*it)[1]).to_v4();
-    }
-    catch (std::exception)
-    {
-        return {};
-    }
-}
-
-static asio::ipv6 map(const asio::ipv4& ip4) NOEXCEPT
-{
-    try
-    {
-        return from_host("::ffff:" + ip4.to_string()).to_v6();
-    }
-    catch (std::exception)
-    {
-        return {};
-    }
-}
 
 static std::string to_host(const asio::ipv6& ip6) NOEXCEPT
 {
@@ -94,11 +99,8 @@ std::string to_host(const asio::address& ip) NOEXCEPT
 {
     try
     {
-        if (ip.is_v4())
-            return to_host(ip.to_v4());
-
-        const auto ip6 = ip.to_v6();
-        return ip6.is_v4_mapped() ? to_host(unmap(ip6)) : to_host(ip6);
+        const auto norm = normalize(ip);
+        return norm.is_v4() ? to_host(norm.to_v4()) : to_host(norm.to_v6());
     }
     catch (std::exception)
     {
@@ -152,7 +154,7 @@ static asio::ipv6 get_ipv6(const asio::address& ip) NOEXCEPT
 {
     try
     {
-        return ip.is_v6() ? ip.to_v6() : map(ip.to_v4());
+        return ip.is_v6() ? ip.to_v6() : to_v6(ip.to_v4());
     }
     catch (std::exception)
     {
@@ -169,9 +171,7 @@ asio::address from_address(const messages::ip_address& address) NOEXCEPT
 {
     try
     {
-        const asio::ipv6 ip6{ address };
-        if (ip6.is_v4_mapped()) return { unmap(ip6) };
-        return { ip6 };
+        return normalize({ asio::ipv6{ address } });
     }
     catch (std::exception)
     {

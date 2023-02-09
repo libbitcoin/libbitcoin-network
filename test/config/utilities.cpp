@@ -65,6 +65,36 @@ BOOST_AUTO_TEST_CASE(utilities__from_address__default__default_ipv6)
     BOOST_REQUIRE_EQUAL(from_address(messages::ip_address{}), asio::ipv6{});
 }
 
+// normalize
+
+BOOST_AUTO_TEST_CASE(utilities__normalize__defaults__unchanged)
+{
+    BOOST_REQUIRE(normalize({ asio::ipv4{} }).is_v4());
+    BOOST_REQUIRE(normalize({ asio::ipv6{} }).is_v6());
+}
+
+BOOST_AUTO_TEST_CASE(utilities__normalize__mapped__unmapped)
+{
+    static constexpr system::data_array<16> mapped
+    {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 1, 2, 3, 4
+    };
+
+    const asio::address ip{ asio::ipv6{ mapped } };
+    BOOST_REQUIRE(normalize(ip).is_v4());
+}
+
+BOOST_AUTO_TEST_CASE(utilities__normalize__unmapped__unchanged)
+{
+    static constexpr system::data_array<16> unmapped
+    {
+        0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd, 1, 2, 3, 4
+    };
+
+    const asio::address ip{ asio::ipv6{ unmapped } };
+    BOOST_REQUIRE(normalize(ip) == ip);
+}
+
 // is_valid
 
 BOOST_AUTO_TEST_CASE(utilities__is_valid__default__false)
