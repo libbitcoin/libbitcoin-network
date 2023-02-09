@@ -35,11 +35,13 @@ using namespace system;
 // Contructors.
 // ----------------------------------------------------------------------------
 
+// Default authority is IPv6 unspecified (not IPv6-mapped unspecified).
 authority::authority() NOEXCEPT
   : authority(asio::ipv6{}, {})
 {
 }
 
+// Deserialzation does not map IPv4 and does not support mapped encoding.
 authority::authority(const std::string& authority) NOEXCEPT(false)
   : ip_{}, port_{}, cidr_{}
 {
@@ -47,9 +49,10 @@ authority::authority(const std::string& authority) NOEXCEPT(false)
 }
 
 // This allows unusable CIDR values (ok).
+// IPv6-mapped IPv4 are normalized to IPv4.
 authority::authority(const asio::address& ip, uint16_t port,
     uint8_t cidr) NOEXCEPT
-  : ip_(ip), port_(port), cidr_(cidr)
+  : ip_(config::normalize(ip)), port_(port), cidr_(cidr)
 {
 }
 

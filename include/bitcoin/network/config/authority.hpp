@@ -30,10 +30,10 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// Container for an [ip-address, port] tuple.
+/// Container for an [ip-address, port, CIDR] tuple.
 /// Subnet matching is employed when nonzero CIDR suffix is present.
-/// Does not support serialization of ipv4 mapped (to ipv6) addresses.
-/// Instead serialize ipv4 natively (using dotted vs. colon notation).
+/// Internal storage always normalized to native IPv4/IPv6 (no mapped).
+/// Does not support deserialization of IPv6-mapped encoding (use native IPv4).
 /// Provided for connection management (not p2p network messaging).
 class BCT_API authority
 {
@@ -44,8 +44,7 @@ public:
 
     authority() NOEXCEPT;
 
-    /// Deserialize an IPv4 or IPv6 address-based hostname[:port].
-    /// Literal IPv6 required (bracketed with []).
+    /// Deserialize [IPv6]|IPv4[:port][/cidr] (IPv6 [literal]).
     authority(const std::string& authority) NOEXCEPT(false);
     authority(const asio::address& ip, uint16_t port, uint8_t cidr=0) NOEXCEPT;
     authority(const asio::endpoint& endpoint) NOEXCEPT;
@@ -54,7 +53,7 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    /// The ip address of the authority.
+    /// The IPv4 or IPv6 address.
     const asio::address& ip() const NOEXCEPT;
 
     /// The ip port of the authority.
@@ -66,18 +65,13 @@ public:
     /// Methods.
     /// -----------------------------------------------------------------------
 
-    /// The host of the authority as a string.
-    /// The port is optional and not included if zero-valued.
-    /// Form by type of address, either: 2001:db8::2 or 1.2.240.1
+    /// IPv6|IPv4
     std::string to_host() const NOEXCEPT;
 
-    /// The host of the authority as a literal.
-    /// The port is optional and not included if zero-valued.
-    /// Form by type of address, either: [2001:db8::2] or 1.2.240.1
+    /// [IPv6]|IPv4
     std::string to_literal() const NOEXCEPT;
 
-    /// The authority as a literal with optional port.
-    /// Form either: [2001:db8::2][:port][/cidr] or 1.2.240.1[:port][/cidr].
+    /// Serialize [IPv6]|IPv4[:port][/cidr] (IPv6 [literal]).
     std::string to_string() const NOEXCEPT;
 
     /// Authority converted to messages::ip_address or messages::address_item.
@@ -93,11 +87,13 @@ public:
     /// False if ip address is unspecified or port is zero.
     operator bool() const NOEXCEPT;
 
-    /// Subnet matching is employed when a CIDR suffix is present.
-    /// Equality considers ip:port (not for black/white list matching).
+    /// Equality treats zero port as * and non-zero CIDR as subnet identifier.
+    /// Equality is subnet containment when one subnet identifier is present.
+    /// Distinct subnets are usequal even if intersecting, same subnets equal.
     bool operator==(const authority& other) const NOEXCEPT;
     bool operator!=(const authority& other) const NOEXCEPT;
 
+    /// Same format as construct(string) and to_string().
     friend std::istream& operator>>(std::istream& input,
         authority& argument) NOEXCEPT(false);
     friend std::ostream& operator<<(std::ostream& output,
