@@ -121,7 +121,7 @@ config::authority protocol::authority() const NOEXCEPT
     return channel_->authority();
 }
 
-const config::address& protocol::address() const NOEXCEPT
+const config::address& protocol::outbound() const NOEXCEPT
 {
     return channel_->address();
 }

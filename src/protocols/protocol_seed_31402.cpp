@@ -127,9 +127,19 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return;
 
-    // Remove blacklist conflicts.
     const auto& items = message->addresses;
-    const auto to = to_shared<messages::address>(difference(items, blacklist_));
+    const auto singleton = is_one(items.size());
+
+    // Do not store redundant adresses, outbound() is known address.
+    if (singleton && (outbound() == items.front()))
+    {
+        LOG("Dropping redundant address from seed [" << authority() << "]");
+        return;
+    }
+
+    // Remove blacklist conflicts.
+    // Should construct using makes_shared(vargs) overload, but fails on clang.
+    const auto to = to_shared(messages::address{ difference(items, blacklist_) });
     const auto count = to->addresses.size();
     const auto start = items.size();
 
@@ -153,8 +163,9 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
         << accepted << " of " << filtered << " of " << start << ") "
         "addresses from seed [" << authority() << "].");
 
-    // Multiple address messages are allowed, but do not delay stop.
-    received_address_ = true;
+    // Multiple address messages are allowed, but do not delay session.
+    // Ignore a singleton message, conventional to send self upon connect.
+    received_address_ = (start > one);
 
     if (complete())
         stop(error::success);

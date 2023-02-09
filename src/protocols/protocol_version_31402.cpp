@@ -306,7 +306,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     if (to_bool(message->services & invalid_services_))
     {
         LOG("Unsupported services (" << message->services << ") by ["
-            << authority() << "] showing (" << address().services() << ").");
+            << authority() << "] showing (" << outbound().services() << ").");
 
         rejection(error::peer_unsupported);
         return;
@@ -317,7 +317,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     {
         // Verbose (this appears to be common misconfiguration or intentional).
         ////LOG("Insufficient services (" << message->services << ") by ["
-        ////    << authority() << "] showing (" << address().services() << ").");
+        ////    << authority() << "] showing (" << outbound().services() << ").");
 
         rejection(error::peer_insufficient);
         return;

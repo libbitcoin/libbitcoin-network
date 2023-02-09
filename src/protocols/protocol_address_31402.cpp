@@ -120,15 +120,16 @@ void protocol_address_31402::handle_receive_address(const code& ec,
 
     received_ = true;
 
-    // Do not store redundant adresses, address() is own checked out address.
-    if (singleton && (items.front() == address()))
+    // Do not store redundant adresses, outbound() is known address.
+    if (singleton && (outbound() == items.front()))
     {
-        ////LOG("Dropping redundant address from [" << authority() << "]");
+        LOG("Dropping redundant address from [" << authority() << "]");
         return;
     }
 
     // Remove blacklist conflicts.
-    const auto to = to_shared<messages::address>(difference(items, blacklist_));
+    // Should construct using makes_shared(vargs) overload, but fails on clang.
+    const auto to = to_shared(messages::address{ difference(items, blacklist_) });
     const auto count = to->addresses.size();
     const auto start = items.size();
 
