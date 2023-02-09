@@ -36,7 +36,7 @@ asio::address from_host(const std::string& host) NOEXCEPT(false);
 std::string to_literal(const asio::address& ip) NOEXCEPT;
 asio::address from_literal(const std::string& host)  NOEXCEPT(false);
 
-/// asio/messages conversions.
+/// asio/messages conversions (to/from ipv6, non-normalizing).
 messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
 asio::address from_address(const messages::ip_address& address) NOEXCEPT;
 

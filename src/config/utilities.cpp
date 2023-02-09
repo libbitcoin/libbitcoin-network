@@ -171,7 +171,7 @@ asio::address from_address(const messages::ip_address& address) NOEXCEPT
 {
     try
     {
-        return normalize({ asio::ipv6{ address } });
+        return { asio::ipv6{ address } };
     }
     catch (std::exception)
     {
