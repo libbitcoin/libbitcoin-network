@@ -108,6 +108,18 @@ endpoint endpoint::to_local() const NOEXCEPT
     return endpoint(scheme_, host, port_);
 }
 
+address endpoint::to_address() const NOEXCEPT
+{
+    try
+    {
+        return { to_uri() };
+    }
+    catch (std::exception)
+    {
+        return {};
+    }
+}
+
 // Operators.
 // ----------------------------------------------------------------------------
 

@@ -23,6 +23,7 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/address.hpp>
 #include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -75,6 +76,9 @@ public:
     /// "localhost". This is intended for clients that wish to connect
     /// to a service that has been configured to bind to all interfaces.
     endpoint to_local() const NOEXCEPT;
+
+    /// IP address object if host is numeric, otherwise unspecified.
+    address to_address() const NOEXCEPT;
 
     /// Operators.
     /// -----------------------------------------------------------------------
