@@ -133,7 +133,8 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
     // Do not store redundant adresses, outbound() is known address.
     if (singleton && (outbound() == items.front()))
     {
-        LOG("Dropping redundant address from seed [" << authority() << "]");
+        // Verbose.
+        ////LOG("Dropping redundant address from seed [" << authority() << "]");
         return;
     }
 

@@ -34,9 +34,6 @@ using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
-// Verbose (disabled).
-constexpr size_t threshold = 1001;
-
 // Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
@@ -123,7 +120,8 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     // Do not store redundant adresses, outbound() is known address.
     if (singleton && (outbound() == items.front()))
     {
-        LOG("Dropping redundant address from [" << authority() << "]");
+        // Verbose.
+        ////LOG("Dropping redundant address from [" << authority() << "]");
         return;
     }
 
@@ -133,11 +131,12 @@ void protocol_address_31402::handle_receive_address(const code& ec,
     const auto count = to->addresses.size();
     const auto start = items.size();
 
-    if (count < start)
-    {
-        LOG("Dropped (" << (start - count) << ") blacklisted addresses from ["
-            << authority() << "]");
-    }
+    // Redundant with handle_save_address logging.
+    ////if (count < start)
+    ////{
+    ////    LOG("Dropped (" << (start - count) << ") blacklisted addresses from ["
+    ////        << authority() << "]");
+    ////}
 
     // This allows previously-rejected addresses.
     save(to, BIND4(handle_save_address, _1, _2, count, start));
@@ -152,12 +151,9 @@ void protocol_address_31402::handle_save_address(const code& ec,
     if (stopped(ec))
         return;
 
-    if (start > threshold)
-    {
-        LOG("Accepted ("
-            << accepted << " of " << filtered << " of " << start << ") "
-            "addresses from [" << authority() << "].");
-    }
+    LOG("Accepted ("
+        << accepted << " of " << filtered << " of " << start << ") "
+        "addresses from [" << authority() << "].");
 }
 
 // Outbound (fetch and send addresses).
