@@ -406,11 +406,11 @@ BOOST_AUTO_TEST_CASE(address__equality__default_default__true)
     BOOST_REQUIRE(host1 == host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__default_unspecified_port__false)
+BOOST_AUTO_TEST_CASE(address__equality__default_unspecified_port__true)
 {
     const address host1{};
     const address host2("[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]" ":42");
-    BOOST_REQUIRE(!(host1 == host2));
+    BOOST_REQUIRE(host1 == host2);
 }
 
 BOOST_AUTO_TEST_CASE(address__equality__ipv4_ipv4__true)
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(address__equality__ipv4_ipv4_port__true)
 {
     const address host1(BC_AUTHORITY_IPV4_ADDRESS);
     const address host2(BC_AUTHORITY_IPV4_ADDRESS ":42");
-    BOOST_REQUIRE(!(host1 == host2));
+    BOOST_REQUIRE(host1 == host2);
 }
 
 BOOST_AUTO_TEST_CASE(address__equality__ipv4_ipv6__false)
@@ -441,11 +441,11 @@ BOOST_AUTO_TEST_CASE(address__equality__ipv6_ipv6__true)
     BOOST_REQUIRE(host1 == host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__equality__ipv6_ipv6_port__false)
+BOOST_AUTO_TEST_CASE(address__equality__ipv6_ipv6_port__true)
 {
     const address host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
     const address host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:42");
-    BOOST_REQUIRE(!(host1 == host2));
+    BOOST_REQUIRE(host1 == host2);
 }
 
 BOOST_AUTO_TEST_CASE(address__equality__compatible_alternative__true)
@@ -497,15 +497,15 @@ BOOST_AUTO_TEST_CASE(address__inequality__default_default__false)
 
 BOOST_AUTO_TEST_CASE(address__inequality__default_unspecified_port__true)
 {
-    const address host1{};
+    const address host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:42");
     const address host2("[" BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "]:42");
     BOOST_REQUIRE(host1 != host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__inequality__ipv6_ipv6__false)
+BOOST_AUTO_TEST_CASE(address__inequality__ipv6_ipv6_distinct_ports__false)
 {
-    const address host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
-    const address host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
+    const address host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:24");
+    const address host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:42");
     BOOST_REQUIRE(!(host1 != host2));
 }
 

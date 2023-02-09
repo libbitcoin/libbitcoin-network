@@ -78,7 +78,7 @@ public:
     /// False if the port is zero.
     operator bool() const NOEXCEPT;
 
-    /// Equality does not consider timestamp/services (same as address_item).
+    /// Does not compare ports, times or services (used in address protocols).
     bool operator==(const address& other) const NOEXCEPT;
     bool operator!=(const address& other) const NOEXCEPT;
 

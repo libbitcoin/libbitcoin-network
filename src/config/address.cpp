@@ -119,9 +119,10 @@ address::operator bool() const NOEXCEPT
     return is_valid(*address_);
 }
 
+// Does not compare ports, times or services (used in address protocols).
 bool address::operator==(const address& other) const NOEXCEPT
 {
-    return *address_ == *other.address_;
+    return address_->ip == other.address_->ip;
 }
 
 bool address::operator!=(const address& other) const NOEXCEPT
