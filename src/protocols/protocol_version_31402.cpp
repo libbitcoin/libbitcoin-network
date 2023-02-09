@@ -88,7 +88,6 @@ messages::version protocol_version_31402::version_factory(
     constexpr auto top_height = possible_narrow_cast<uint32_t>(zero);
     BC_ASSERT_MSG(top_height <= max_uint32, "Time to upgrade the protocol.");
 
-    // Should construct using makes_shared(vargs) overload, but fails on clang.
     BC_PUSH_WARNING(NO_NEW_OR_DELETE)
     return
     {
