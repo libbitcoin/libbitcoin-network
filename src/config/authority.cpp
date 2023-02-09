@@ -41,13 +41,15 @@ authority::authority() NOEXCEPT
 }
 
 authority::authority(const std::string& authority) NOEXCEPT(false)
-  : ip_{}, port_{}
+  : ip_{}, port_{}, cidr_{}
 {
     std::stringstream(authority) >> *this;
 }
 
-authority::authority(const asio::address& ip, uint16_t port) NOEXCEPT
-  : ip_(ip), port_(port)
+// This allows unusable CIDR values (ok).
+authority::authority(const asio::address& ip, uint16_t port,
+    uint8_t cidr) NOEXCEPT
+  : ip_(ip), port_(port), cidr_(cidr)
 {
 }
 
@@ -72,6 +74,11 @@ const asio::address& authority::ip() const NOEXCEPT
 uint16_t authority::port() const NOEXCEPT
 {
     return port_;
+}
+
+uint8_t authority::cidr() const NOEXCEPT
+{
+    return cidr_;
 }
 
 // Methods.
@@ -141,7 +148,10 @@ std::istream& operator>>(std::istream& input,
     using namespace boost;
     static const regex regular
     {
-        "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])(:([0-9]{1,5}))?$"
+        // This excludes /0, so cidr_(0) implies address (vs. network).
+        "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])"
+        "(:([1-9][0-9]{0,4}))?"
+        "(/([1-9][0-9]{0,2}))?$"
     };
 
     sregex_iterator it{ value.begin(), value.end(), regular }, end{};
@@ -151,17 +161,28 @@ std::istream& operator>>(std::istream& input,
     const auto& token = *it;
     const auto host = is_zero(token[3].length()) ? token[2] : token[3];
     deserialize(argument.port_, token[5]);
+    deserialize(argument.cidr_, token[7]);
     argument.ip_ = from_host(host);
+
+    // This allows /33-64 CIDR values for mapped ipv4 addresses (unusable, ok).
+    if ((argument.ip_.is_v4() && argument.cidr_ > bits<uint32_t>) ||
+        (argument.ip_.is_v6() && argument.cidr_ > bits<uint64_t>))
+    {
+        throw istream_exception(value);
+    }
+
     return input;
 }
 
+// This allows unusable CIDR values (ok).
 std::ostream& operator<<(std::ostream& output,
     const authority& argument) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     output
         << argument.to_literal()
-        << (!is_zero(argument.port()) ? ":" + serialize(argument.port()) : "");
+        << (!is_zero(argument.port()) ? ":" + serialize(argument.port()) : "")
+        << (!is_zero(argument.cidr()) ? "/" + serialize(argument.cidr()) : "");
     BC_POP_WARNING()
     return output;
 }

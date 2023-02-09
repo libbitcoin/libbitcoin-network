@@ -43,6 +43,9 @@ asio::address from_address(const messages::ip_address& address) NOEXCEPT;
 /// Valid if the host is not unspecified and port is non-zero.
 bool is_valid(const messages::address_item& item) NOEXCEPT;
 
+/// Mapped if address ipv4 mapped to ipv6.
+bool is_mapped(const asio::ipv6& ip) NOEXCEPT;
+
 } // namespace config
 } // namespace network
 } // namespace libbitcoin

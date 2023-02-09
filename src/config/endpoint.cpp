@@ -141,7 +141,8 @@ std::istream& operator>>(std::istream& input,
     static const regex regular
     {
         "^((tcp|udp|http|https|inproc):\\/\\/)?"
-        "(\\[([0-9a-f:\\.]+)]|([^:]+))(:([0-9]{1,5}))?$"
+        "(\\[([0-9a-f:\\.]+)]|([^:]+))"
+        "(:([1-9][0-9]{0,4}))?$"
     };
 
     sregex_iterator it{ value.begin(), value.end(), regular }, end{};

@@ -31,6 +31,7 @@ namespace network {
 namespace config {
 
 /// Container for an [ip-address, port] tuple.
+/// Subnet matching is employed when nonzero CIDR suffix is present.
 /// Provided for connection management (not p2p network messaging).
 class BCT_API authority
 {
@@ -43,7 +44,7 @@ public:
 
     /// Deserialize an IPv4 or IPv6 address-based hostname[:port].
     authority(const std::string& authority) NOEXCEPT(false);
-    authority(const asio::address& ip, uint16_t port) NOEXCEPT;
+    authority(const asio::address& ip, uint16_t port, uint8_t cidr=0) NOEXCEPT;
     authority(const asio::endpoint& endpoint) NOEXCEPT;
     authority(const config::address& address) NOEXCEPT;
 
@@ -55,6 +56,9 @@ public:
 
     /// The ip port of the authority.
     uint16_t port() const NOEXCEPT;
+
+    /// The ip subnet mask in cidr format (zero implies none).
+    uint8_t cidr() const NOEXCEPT;
 
     /// Methods.
     /// -----------------------------------------------------------------------
@@ -70,7 +74,7 @@ public:
     std::string to_literal() const NOEXCEPT;
 
     /// The authority as a literal with optional port.
-    /// Form by type, either: [2001:db8::2][:port] or 1.2.240.1[:port].
+    /// Form either: [2001:db8::2][:port][/cidr] or 1.2.240.1[:port][/cidr].
     std::string to_string() const NOEXCEPT;
 
     /// Authority converted to messages::ip_address or messages::address_item.
@@ -86,7 +90,7 @@ public:
     /// False if ip address is unspecified or port is zero.
     operator bool() const NOEXCEPT;
 
-    /// TODO: add wildcard matching (* for port and class C subnet).
+    /// Subnet matching is employed when a CIDR suffix is present.
     /// Equality considers ip:port (not for black/white list matching).
     bool operator==(const authority& other) const NOEXCEPT;
     bool operator!=(const authority& other) const NOEXCEPT;
@@ -100,6 +104,7 @@ private:
     // These are not thread safe.
     asio::address ip_;
     uint16_t port_;
+    uint8_t cidr_;
 };
 
 typedef std::vector<authority> authorities;

@@ -36,7 +36,7 @@ using namespace boost::asio;
 // C++11: use std::regex.
 static const boost::regex mapped{ "^::ffff:([0-9\\.]+)$" };
 
-static bool is_mapped(const asio::ipv6& ip6) NOEXCEPT
+bool is_mapped(const asio::ipv6& ip6) NOEXCEPT
 {
     try
     {
