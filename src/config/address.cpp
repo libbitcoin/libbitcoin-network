@@ -74,13 +74,9 @@ const messages::address_item::cptr& address::message() const NOEXCEPT
 // Methods.
 // ----------------------------------------------------------------------------
 
-std::string address::to_string() const NOEXCEPT
+asio::address address::to_ip() const NOEXCEPT
 {
-    std::stringstream value{};
-    value << *this;
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return value.str();
-    BC_POP_WARNING()
+    return from_address(address_->ip);
 }
 
 std::string address::to_host() const NOEXCEPT
@@ -88,9 +84,13 @@ std::string address::to_host() const NOEXCEPT
     return config::to_host(to_ip());
 }
 
-asio::address address::to_ip() const NOEXCEPT
+std::string address::to_string() const NOEXCEPT
 {
-    return from_address(address_->ip);
+    std::stringstream value{};
+    value << *this;
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    return value.str();
+    BC_POP_WARNING()
 }
 
 // Properties.
@@ -142,6 +142,7 @@ std::istream& operator>>(std::istream& input,
 
     // Throws istream_exception if parse fails.
     // Sets default timestamp (0) and services (services::node_none).
+    // IPv4 addresses are converted to IPv6-mapped for message encoding.
     auto item = authority{ tokens.at(0) }.to_address_item();
 
     if (tokens.size() > 1)

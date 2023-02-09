@@ -29,7 +29,9 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// Container for messages::address_item.
+/// Container for messages::address_item (with timstamp and services).
+/// IPv4 addresses are converted to IPv6-mapped for message encoding.
+/// Does not support deserialization of IPv6-mapped encoding (use native IPv4).
 /// Provided for connect/session, and serialization to/from hosts file.
 class BCT_API address
 {
@@ -40,8 +42,7 @@ public:
 
     address() NOEXCEPT;
 
-    /// 188.240.57.122[:8333][/1675574490[/1033]]
-    /// Host can be either [2001:db8::2]:port or 1.2.240.1:port.
+    /// [IPv6]|IPv4[:8333][/timestamp[/services]] (IPv6 [literal]).
     address(const std::string& host) NOEXCEPT(false);
     address(messages::address_item&& item) NOEXCEPT;
     address(const messages::address_item& item) NOEXCEPT;
@@ -50,10 +51,14 @@ public:
     // Methods.
     // ------------------------------------------------------------------------
 
-    /// Conversions.
-    std::string to_string() const NOEXCEPT;
-    std::string to_host() const NOEXCEPT;
+    /// The IPv4 or IPv6 address.
     asio::address to_ip() const NOEXCEPT;
+
+    /// IPv6|IPv4.
+    std::string to_host() const NOEXCEPT;
+
+    /// [IPv6]|IPv4[:8333]/timestamp/services (IPv6 [literal]).
+    std::string to_string() const NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------
@@ -77,6 +82,7 @@ public:
     bool operator==(const address& other) const NOEXCEPT;
     bool operator!=(const address& other) const NOEXCEPT;
 
+    /// Same format as construct(string) and to_string().
     friend std::istream& operator>>(std::istream& input,
         address& argument) NOEXCEPT(false);
     friend std::ostream& operator<<(std::ostream& output,
