@@ -620,23 +620,31 @@ BOOST_AUTO_TEST_CASE(authority__equality__ipv4_same_port_same_cidr__true)
     BOOST_REQUIRE(authority("42.42.42.42:80/32") == authority("42.42.42.42:80/32"));
 }
 
+BOOST_AUTO_TEST_CASE(authority__equality__ipv4_distinct_default_port_no_cidr__true)
+{
+    BOOST_REQUIRE(authority("42.42.42.42:80") == authority("42.42.42.42"));
+    BOOST_REQUIRE(authority("42.42.42.42") == authority("42.42.42.42:80"));
+}
+
 BOOST_AUTO_TEST_CASE(authority__inequality__ipv4_distinct_port_no_cidr__true)
 {
-    BOOST_REQUIRE(authority("42.42.42.42:80") != authority("42.42.42.42"));
-    BOOST_REQUIRE(authority("42.42.42.42") != authority("42.42.42.42:80"));
     BOOST_REQUIRE(authority("42.42.42.42:88") != authority("42.42.42.42:99"));
+}
+
+BOOST_AUTO_TEST_CASE(authority__equality__ipv4_distinct_default_port_same_cidr__true)
+{
+    BOOST_REQUIRE(authority("42.42.42.42:80/8") == authority("42.42.42.42/8"));
+    BOOST_REQUIRE(authority("42.42.42.42/24") == authority("42.42.42.42:80/24"));
 }
 
 BOOST_AUTO_TEST_CASE(authority__inequality__ipv4_distinct_port_same_cidr__true)
 {
-    BOOST_REQUIRE(authority("42.42.42.42:80/8") != authority("42.42.42.42/8"));
-    BOOST_REQUIRE(authority("42.42.42.42/24") != authority("42.42.42.42:80/24"));
     BOOST_REQUIRE(authority("42.42.42.42:81/32") != authority("42.42.42.42:80/32"));
 }
 
 BOOST_AUTO_TEST_CASE(authority__inequality__ipv4_distinct_port_distinct_cidr__true)
 {
-    BOOST_REQUIRE(authority("42.42.42.42:80/8") != authority("42.42.42.42"));
+    BOOST_REQUIRE(authority("42.42.42.42:80/8") != authority("42.42.42.42/7"));
     BOOST_REQUIRE(authority("42.42.42.42/24") != authority("42.42.42.42:80/12"));
     BOOST_REQUIRE(authority("42.42.42.42:81/25") != authority("42.42.42.42:80/32"));
 }
@@ -651,7 +659,7 @@ BOOST_AUTO_TEST_CASE(authority__equality__contained_by_right_ipv4__true)
 {
     BOOST_REQUIRE(authority("42.42.42.42:80") == authority("42.0.0.0:80/8"));
     BOOST_REQUIRE(authority("42.42.42.42:8333") == authority("42.42.0.0:8333/16"));
-    BOOST_REQUIRE(authority("42.42.42.42") == authority("42.42.42.0/24"));
+    BOOST_REQUIRE(authority("42.42.42.42:42") == authority("42.42.42.0/24"));
     BOOST_REQUIRE(authority("42.42.42.42") == authority("42.42.42.42/32"));
 }
 
@@ -659,7 +667,7 @@ BOOST_AUTO_TEST_CASE(authority__equality__contained_by_left_ipv4__true)
 {
     BOOST_REQUIRE(authority("42.0.0.0:80/8") == authority("42.42.42.42:80"));
     BOOST_REQUIRE(authority("42.42.0.0:8333/16") == authority("42.42.42.42:8333"));
-    BOOST_REQUIRE(authority("42.42.42.0/24") == authority("42.42.42.42"));
+    BOOST_REQUIRE(authority("42.42.42.0/24") == authority("42.42.42.42:42"));
     BOOST_REQUIRE(authority("42.42.42.42/32") == authority("42.42.42.42"));
 }
 
@@ -679,24 +687,36 @@ BOOST_AUTO_TEST_CASE(authority__equality__ipv6_same_port_same_cidr__true)
     BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:80/32") == authority("[abcd:abcd::abcd:abcd]:80/32"));
 }
 
+BOOST_AUTO_TEST_CASE(authority__inequality__ipv6_distinct_default_port_no_cidr__true)
+{
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:80") == authority("[abcd:abcd::abcd:abcd]"));
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]") == authority("[abcd:abcd::abcd:abcd]:80"));
+}
+
 BOOST_AUTO_TEST_CASE(authority__inequality__ipv6_distinct_port_no_cidr__true)
 {
-    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:80") != authority("[abcd:abcd::abcd:abcd]"));
-    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]") != authority("[abcd:abcd::abcd:abcd]:80"));
     BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:88") != authority("[abcd:abcd::abcd:abcd]:99"));
+}
+
+BOOST_AUTO_TEST_CASE(authority__equality__ipv6_distinct_default_port_same_cidr__true)
+{
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:80/8") == authority("[abcd:abcd::abcd:abcd]/8"));
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]/24") == authority("[abcd:abcd::abcd:abcd]:80/24"));
 }
 
 BOOST_AUTO_TEST_CASE(authority__inequality__ipv6_distinct_port_same_cidr__true)
 {
-    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:80/8") != authority("[abcd:abcd::abcd:abcd]/8"));
-    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]/24") != authority("[abcd:abcd::abcd:abcd]:80/24"));
     BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:81/32") != authority("[abcd:abcd::abcd:abcd]:80/32"));
+}
+
+BOOST_AUTO_TEST_CASE(authority__inequality__ipv6_distinct_default_port_distinct_cidr__true)
+{
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:80/8") != authority("[abcd:abcd::abcd:abcd]/7"));
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]/24") != authority("[abcd:abcd::abcd:abcd]:80/12"));
 }
 
 BOOST_AUTO_TEST_CASE(authority__inequality__ipv6_distinct_port_distinct_cidr__true)
 {
-    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:80/8") != authority("[abcd:abcd::abcd:abcd]"));
-    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]/24") != authority("[abcd:abcd::abcd:abcd]:80/12"));
     BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:81/25") != authority("[abcd:abcd::abcd:abcd]:80/32"));
 }
 
@@ -710,7 +730,7 @@ BOOST_AUTO_TEST_CASE(authority__equality__contained_by_right_ipv6__true)
 {
     BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:80") == authority("[abcd::]:80/16"));
     BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:8333") == authority("[abcd:abcd::]:8333/32"));
-    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]") == authority("[abcd:abcd::abcd:0]/48"));
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:42") == authority("[abcd:abcd::abcd:0]/48"));
     BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]") == authority("[abcd:abcd::abcd:abcd]/64"));
 }
 
@@ -718,8 +738,25 @@ BOOST_AUTO_TEST_CASE(authority__equality__contained_by_left_ipv6__true)
 {
     BOOST_REQUIRE(authority("[abcd::]:80/16") == authority("[abcd:abcd::abcd:abcd]:80"));
     BOOST_REQUIRE(authority("[abcd:abcd::]:8333/32") == authority("[abcd:abcd::abcd:abcd]:8333"));
-    BOOST_REQUIRE(authority("[abcd:abcd::abcd:0]/48") == authority("[abcd:abcd::abcd:abcd]"));
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:0]/48") == authority("[abcd:abcd::abcd:abcd]:42"));
     BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]/64") == authority("[abcd:abcd::abcd:abcd]"));
+}
+
+BOOST_AUTO_TEST_CASE(authority__equality__contains__expected)
+{
+    ////blacklist = 209.222.252.0/24
+    ////blacklist = 162.218.65.0/24
+    ////blacklist = 91.198.115.0/24
+    ////Inbound channel start[162.218.65.145:33859] success
+    ////Inbound channel start[209.222.252.190:56614] success
+    ////Inbound channel start[91.198.115.114:16942] success
+    std_vector<authority> authorities{};
+    authorities.emplace_back("209.222.252.0/24");
+    authorities.emplace_back("162.218.65.0/24");
+    authorities.emplace_back("91.198.115.0/24");
+    BOOST_REQUIRE(system::contains(authorities, authority{ "162.218.65.145:33859" }));
+    BOOST_REQUIRE(system::contains(authorities, authority{ "209.222.252.190:56614" }));
+    BOOST_REQUIRE(system::contains(authorities, authority{ "91.198.115.114:16942" }));
 }
 
 // inequality

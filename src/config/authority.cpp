@@ -129,19 +129,19 @@ authority::operator bool() const NOEXCEPT
 
 bool authority::operator==(const authority& other) const NOEXCEPT
 {
-    // both non-zero ports must match.
-    if ((!is_zero(port()) || !is_zero(other.port())) && port() != other.port())
+    // both non-zero ports must match (zero/non-zero or both zero are matched).
+    if ((!is_zero(port()) && !is_zero(other.port())) && port() != other.port())
         return false;
 
     // both non-zero cidrs must match.
     if ((!is_zero(cidr()) && !is_zero(other.cidr())) && cidr() != other.cidr())
         return false;
 
-    // matching cidrs, match ips only.
+    // same cidrs, match ips only.
     if (cidr() == other.cidr())
         return ip() == other.ip();
 
-    // match host to network.
+    // one zero (host) and one non-zero (subnet) cidr, match host to subnet.
     return is_zero(cidr()) ?
         config::is_member(ip(), other.ip(), other.cidr()) :
         config::is_member(other.ip(), ip(), cidr());
