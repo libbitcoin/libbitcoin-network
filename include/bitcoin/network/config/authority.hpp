@@ -32,6 +32,8 @@ namespace config {
 
 /// Container for an [ip-address, port] tuple.
 /// Subnet matching is employed when nonzero CIDR suffix is present.
+/// Does not support serialization of ipv4 mapped (to ipv6) addresses.
+/// Instead serialize ipv4 natively (using dotted vs. colon notation).
 /// Provided for connection management (not p2p network messaging).
 class BCT_API authority
 {
@@ -43,6 +45,7 @@ public:
     authority() NOEXCEPT;
 
     /// Deserialize an IPv4 or IPv6 address-based hostname[:port].
+    /// Literal IPv6 required (bracketed with []).
     authority(const std::string& authority) NOEXCEPT(false);
     authority(const asio::address& ip, uint16_t port, uint8_t cidr=0) NOEXCEPT;
     authority(const asio::endpoint& endpoint) NOEXCEPT;

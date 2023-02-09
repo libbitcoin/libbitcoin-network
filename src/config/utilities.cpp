@@ -32,29 +32,18 @@ using namespace boost::asio;
 
 // asio/string host conversions.
 // ----------------------------------------------------------------------------
-
-// C++11: use std::regex.
-static const boost::regex mapped{ "^::ffff:([0-9\\.]+)$" };
-
-bool is_mapped(const asio::ipv6& ip6) NOEXCEPT
-{
-    try
-    {
-        const auto host = ip6.to_string();
-        boost::sregex_iterator it{ host.begin(), host.end(), mapped }, end{};
-        return it != end;
-    }
-    catch (std::exception)
-    {
-        return false;
-    }
-}
+// IPv4-Compatible IPv6 address are deprecated, support only IPv4-Mapped.
+// rfc-editor.org/rfc/rfc4291
 
 static asio::ipv4 unmap(const asio::ipv6& ip6) NOEXCEPT
 {
     try
     {
+        // regex assumes to_string() always produces compact mapped notation.
         const auto host = ip6.to_string();
+
+        // C++11: use std::regex.
+        static const boost::regex mapped{ "^::ffff:([0-9\\.]+)$" };
         boost::sregex_iterator it{ host.begin(), host.end(), mapped }, end{};
         return it == end ? asio::ipv4{} : from_host((*it)[1]).to_v4();
     }
@@ -109,7 +98,7 @@ std::string to_host(const asio::address& ip) NOEXCEPT
             return to_host(ip.to_v4());
 
         const auto ip6 = ip.to_v6();
-        return is_mapped(ip6) ? to_host(unmap(ip6)) : to_host(ip6);
+        return ip6.is_v4_mapped() ? to_host(unmap(ip6)) : to_host(ip6);
     }
     catch (std::exception)
     {
@@ -126,7 +115,7 @@ asio::address from_host(const std::string& host) NOEXCEPT(false)
     }
     catch (std::exception)
     {
-        throw istream_exception(host);
+        throw istream_exception{ host };
     }
 }
 
@@ -150,7 +139,7 @@ asio::address from_literal(const std::string& host) NOEXCEPT(false)
 {
     static const boost::regex litter{ "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])$" };
     boost::sregex_iterator it{ host.begin(), host.end(), litter }, end{};
-    if (it == end) throw istream_exception(host);
+    if (it == end) throw istream_exception{ host };
     const auto& token = *it;
     return from_host(is_zero(token[3].length()) ? token[2] : token[3]);
 }
@@ -180,13 +169,47 @@ asio::address from_address(const messages::ip_address& address) NOEXCEPT
 {
     try
     {
-        const asio::ipv6 ip6(address);
-        return is_mapped(ip6) ? asio::address(unmap(ip6)) : asio::address(ip6);
+        const asio::ipv6 ip6{ address };
+        if (ip6.is_v4_mapped()) return { unmap(ip6) };
+        return { ip6 };
     }
     catch (std::exception)
     {
-        return {};
+        return { asio::ipv6{} };
     }
+}
+
+inline bool is_member_v4(const asio::ipv4& ip4, const asio::ipv4& net4,
+    uint8_t cidr)  NOEXCEPT(false)
+{
+    const auto hosts = ip::make_network_v4(net4, cidr).hosts();
+    return hosts.find(ip4) != hosts.end();
+}
+
+inline bool is_member_v6(const asio::ipv6& ip6, const asio::ipv6& net6,
+    uint8_t cidr) NOEXCEPT(false)
+{
+    const auto hosts = ip::make_network_v6(net6, cidr).hosts();
+    return hosts.find(ip6) != hosts.end();
+}
+
+// This assumes host and/or subnet v4 address(s) unmapped.
+bool is_member(const asio::address& ip, const asio::address& subnet,
+    uint8_t cidr) NOEXCEPT
+{
+    try
+    {
+        if (ip.is_v4() && subnet.is_v4())
+            return is_member_v4(ip.to_v4(), subnet.to_v4(), cidr);
+
+        if (ip.is_v6() && subnet.is_v6())
+            return is_member_v6(ip.to_v6(), subnet.to_v6(), cidr);
+    }
+    catch (std::exception)
+    {
+    }
+
+    return false;
 }
 
 // Conditions.

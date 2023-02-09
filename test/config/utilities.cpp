@@ -23,74 +23,6 @@ using namespace boost::program_options;
 
 BOOST_AUTO_TEST_SUITE(utilities_tests)
 
-////bool contains4(const boost::asio::ip::address& address) NOEXCEPT
-////{
-////    using namespace system;
-////    using namespace boost::asio;
-////    
-////    // CIDR notation.
-////
-////    try
-////    {
-////        // Throwing.
-////        // Host identifier zero implies subnet.
-////        // Host identifier non-zero implies host and its subnet.
-////        const ip::network_v4 subnet4 = ip::make_network_v4("192.168.0.0/29");
-////
-////        // hosts() excludes the network   address, not a host (eg: /29 excludes .0).
-////        // hosts() excludes the broadcast address, not a host (eg: /29 excludes .7).
-////        const ip::address_v4_range hosts4 = subnet4.hosts();
-////        return hosts4.find(address.to_v4()) != hosts4.end();
-////    }
-////    catch (std::exception)
-////    {
-////        return false;
-////    }
-////}
-////
-////bool contains6(const boost::asio::ip::address& address) NOEXCEPT
-////{
-////    using namespace system;
-////    using namespace boost::asio;
-////
-////    try
-////    {
-////        // Throwing.
-////        const ip::network_v6 subnet6 = ip::make_network_v6("::ffff:192.168.0.0/24");
-////
-////        const ip::address_v6_range hosts6 = subnet6.hosts();
-////        return hosts6.find(address.to_v6()) != hosts6.end();
-////    }
-////    catch (std::exception)
-////    {
-////        return false;
-////    }
-////}
-////
-////BOOST_AUTO_TEST_CASE(contains_test)
-////{
-////    using namespace boost::asio;
-////    ////BOOST_REQUIRE(contains4(ip::make_address("192.168.0.0"))); // only valid at /32
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.1"))); // 31 (0..0=1)
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.2")));
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.3"))); // 30 (0..3=4)
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.4")));
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.5")));
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.6")));
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.7"))); // 29 (0..7=8)
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.8")));
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.9")));
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.10")));
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.11")));
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.12")));
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.13")));
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.14")));
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.15"))); // 28 (0..15=16)
-////    BOOST_REQUIRE(contains4(ip::make_address("192.168.0.16")));
-////
-////    ////BOOST_REQUIRE(contains6(ip::make_address("::ffff:192.168.0.1")));
-////}
-
 // to_host
 
 BOOST_AUTO_TEST_CASE(utilities__to_host__default__unspecified_v4)
@@ -140,11 +72,90 @@ BOOST_AUTO_TEST_CASE(utilities__is_valid__default__false)
     BOOST_REQUIRE(!is_valid(messages::address_item{}));
 }
 
-// is_mapped
+// is_member
 
-BOOST_AUTO_TEST_CASE(utilities__is_mapped__default__false)
+BOOST_AUTO_TEST_CASE(utilities__is_member__defaults_zero__false)
 {
-    BOOST_REQUIRE(!is_mapped(asio::ipv6{}));
+    BOOST_REQUIRE(!is_member(asio::address{}, asio::address{}, 0));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__is_member__defaults_nonzero__false)
+{
+    BOOST_REQUIRE(!is_member(asio::address{}, asio::address{}, 1));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__is_member__ipv4_defaults_nonzero__false)
+{
+    BOOST_REQUIRE(!is_member(asio::ipv4{}, asio::ipv4{}, 24));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__is_member__ipv6_defaults_nonzero__true)
+{
+    BOOST_REQUIRE(is_member(asio::ipv6{}, asio::ipv6{}, 56));
+}
+
+using namespace boost::asio::ip;
+
+BOOST_AUTO_TEST_CASE(utilities__is_member__zero_cidr__expected)
+{
+    // zero CIDR valid for ipv4, invalid for ipv6
+    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("99.99.99.99"), 0));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("9999:9999:9999:9999:9999:9999:9999:9999"), 0));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__is_member__ipv4_member__true)
+{
+    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.99.99.99"), 8));
+    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.99.99"), 16));
+    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.42.99"), 24));
+    BOOST_REQUIRE(is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.42.42"), 32));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__is_member__not_ipv4_member__false)
+{
+    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("99.99.99.99"), 8));
+    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("42.99.99.99"), 16));
+    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.99.99"), 24));
+    BOOST_REQUIRE(!is_member(make_address_v4("42.42.42.42"), make_address_v4("42.42.42.99"), 32));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__is_member__ipv6_non_member__true)
+{
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("ab99:9999:9999:9999:9999:9999:9999:9999"), 8));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:9999:9999:9999:9999:9999:9999:9999"), 16));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:ab99:9999:9999:9999:9999:9999:9999"), 24));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:9999:9999:9999:9999:9999:9999"), 32));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:ab99:9999:9999:9999:9999:9999"), 40));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:9999:9999:9999:9999:9999"), 48));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:ab99:9999:9999:9999:9999"), 56));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:9999:9999:9999:9999"), 64));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:ab99:9999:9999:9999"), 72));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:9999:9999:9999"), 80));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:ab99:9999:9999"), 88));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:9999:9999"), 96));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:ab99:9999"), 104));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:9999"), 112));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:ab99"), 120));
+    BOOST_REQUIRE(is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), 128));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__is_member__ipv6_non_member__false)
+{
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("ab99:9999:9999:9999:9999:9999:9999:9999"), 16));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:9999:9999:9999:9999:9999:9999:9999"), 24));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:ab99:9999:9999:9999:9999:9999:9999"), 32));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:9999:9999:9999:9999:9999:9999"), 40));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:ab99:9999:9999:9999:9999:9999"), 48));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:9999:9999:9999:9999:9999"), 56));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:ab99:9999:9999:9999:9999"), 64));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:9999:9999:9999:9999"), 72));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:ab99:9999:9999:9999"), 80));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:9999:9999:9999"), 88));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:ab99:9999:9999"), 96));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:9999:9999"), 104));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:ab99:9999"), 112));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:9999"), 120));
+    BOOST_REQUIRE(!is_member(make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:abcd"), make_address_v6("abcd:abcd:abcd:abcd:abcd:abcd:abcd:ab99"), 128));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
