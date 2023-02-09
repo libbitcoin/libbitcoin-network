@@ -40,6 +40,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 protocol_address_31402::protocol_address_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
+    blacklist_(settings().blacklists),
     inbound_(session.inbound()),
     request_(!inbound_ && settings().outbound_enabled()),
     received_(false),
@@ -123,12 +124,17 @@ void protocol_address_31402::handle_receive_address(const code& ec,
         return;
     }
 
-    // This will accept previously rejected addresses (state not retained).
-    save(message, BIND3(handle_save_addresses, _1, _2, items.size()));
+    // Remove blacklist conflicts.
+    const auto to = to_shared<messages::address>(difference(items, blacklist_));
+    const auto size = to->addresses.size();
+
+    // This allows previously-rejected addresses.
+    save(to, BIND4(handle_save_address, _1, _2, size, items.size()));
 }
 
-void protocol_address_31402::handle_save_addresses(const code& ec,
-    size_t LOG_ONLY(accepted), size_t LOG_ONLY(count)) NOEXCEPT
+void protocol_address_31402::handle_save_address(const code& ec,
+    size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
+    size_t LOG_ONLY(count)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
@@ -137,7 +143,8 @@ void protocol_address_31402::handle_save_addresses(const code& ec,
 
     if (count > 10u)
     {
-        LOG("Accepted (" << accepted << " of " << count << ") "
+        LOG("Accepted ("
+            << accepted << " of " << filtered << " of " << count << ") "
             "addresses from [" << authority() << "].");
     }
 }
@@ -160,7 +167,7 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
         return;
     }
 
-    fetch(BIND2(handle_fetch_addresses, _1, _2));
+    fetch(BIND2(handle_fetch_address, _1, _2));
     sent_ = true;
 }
 
@@ -168,7 +175,7 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-void protocol_address_31402::handle_fetch_addresses(const code& ec,
+void protocol_address_31402::handle_fetch_address(const code& ec,
     const address::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
