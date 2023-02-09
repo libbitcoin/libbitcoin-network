@@ -66,7 +66,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
     if (is_zero(settings().outbound_connections) ||
         is_zero(settings().connect_batch_size))
     {
-        LOG("Bypassed seeding because outbound connections disbled.");
+        LOG("Bypassed seeding because outbound connections disabled.");
         handler(error::bypassed);
         return;
     }

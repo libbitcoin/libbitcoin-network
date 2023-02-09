@@ -165,12 +165,15 @@ void session_inbound::handle_accept(const code& ec,
 
     if (blacklisted(channel->authority()))
     {
+        // Verbose
+        ////LOG("Dropping blacklisted connection [" << channel->authority() << "]");
         channel->stop(error::address_blocked);
         return;
     }
 
     if (!whitelisted(channel->authority()))
     {
+        LOG("Dropping not whitelisted connection [" << channel->authority() << "]");
         channel->stop(error::address_blocked);
         return;
     }
@@ -216,12 +219,14 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
             maximum_services)->shake(std::move(handler));
 }
 
-void session_inbound::handle_channel_start(const code& LOG_ONLY(ec),
-    const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
+void session_inbound::handle_channel_start(const code&,
+    const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Inbound channel start [" << channel->authority() << "] "
-        << ec.message());
+
+    // Verbose.
+    ////LOG("Inbound channel start [" << channel->authority() << "] "
+    ////    << ec.message());
 }
 
 void session_inbound::attach_protocols(
