@@ -30,7 +30,11 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// This is a container for an {ip address, port} tuple.
+/// Container for an [ip-address, port, CIDR] tuple.
+/// Subnet matching is employed when nonzero CIDR suffix is present.
+/// Internal storage always normalized to native IPv4/IPv6 (no mapped).
+/// Does not support deserialization of IPv6-mapped encoding (use native IPv4).
+/// Provided for connection management (not p2p network messaging).
 class BCT_API authority
 {
 public:
@@ -40,46 +44,39 @@ public:
 
     authority() NOEXCEPT;
 
-    /// Deserialize an IPv4 or IPv6 address-based hostname[:port].
-    /// Host can be either [2001:db8::2]:port or 1.2.240.1:port.
+    /// Deserialize [IPv6]|IPv4[:port][/cidr] (IPv6 [literal]).
     authority(const std::string& authority) NOEXCEPT(false);
-    authority(const std::string& ip, uint16_t port) NOEXCEPT(false);
-
-    /// message conversion.
-    ////authority(const messages::address_item& item) NOEXCEPT;
-    authority(const messages::ip_address& ip, uint16_t port) NOEXCEPT;
-
-    /// asio conversion.
-    authority(const asio::address& ip, uint16_t port) NOEXCEPT;
+    authority(const asio::address& ip, uint16_t port, uint8_t cidr=0) NOEXCEPT;
+    authority(const messages::address_item& item) NOEXCEPT;
     authority(const asio::endpoint& endpoint) NOEXCEPT;
-
-    /// config conversion.
     authority(const config::address& address) NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    /// The ip address of the authority.
-    const asio::ipv6& ip() const NOEXCEPT;
+    /// The IPv4 or IPv6 address.
+    const asio::address& ip() const NOEXCEPT;
 
-    /// The tcp port of the authority.
+    /// The ip port of the authority.
     uint16_t port() const NOEXCEPT;
+
+    /// The ip subnet mask in cidr format (zero implies none).
+    uint8_t cidr() const NOEXCEPT;
 
     /// Methods.
     /// -----------------------------------------------------------------------
 
-    /// The host of the authority as a string.
-    /// The form of the return is determined by the type of address, either:
-    /// 2001:db8::2 or 1.2.240.1
+    /// IPv6|IPv4
     std::string to_host() const NOEXCEPT;
 
-    /// The authority as a string.
-    /// The form of the return is determined by the type of address.
-    /// The port is optional and not included if zero-valued.
-    /// The authority in one of two forms: [2001:db8::2]:port or 1.2.240.1:port
+    /// [IPv6]|IPv4
+    std::string to_literal() const NOEXCEPT;
+
+    /// Serialize [IPv6]|IPv4[:port][/cidr] (IPv6 [literal]).
     std::string to_string() const NOEXCEPT;
 
-    /// The authority converted to a network messages address/ip_address.
+    /// Authority converted to messages::ip_address or messages::address_item.
+    /// Message addresses are 16 byte ipv6 encoding with ipv4 addresses mapped.
     messages::ip_address to_ip_address() const NOEXCEPT;
     messages::address_item to_address_item() const NOEXCEPT;
     messages::address_item to_address_item(uint32_t timestamp,
@@ -88,13 +85,16 @@ public:
     /// Operators.
     /// -----------------------------------------------------------------------
 
-    /// True if the port is non-zero.
+    /// False if ip address is unspecified or port is zero.
     operator bool() const NOEXCEPT;
 
-    /// Equality does consider port.
+    /// Equality treats zero port as * and non-zero CIDR as subnet identifier.
+    /// Equality is subnet containment when one subnet identifier is present.
+    /// Distinct subnets are usequal even if intersecting, same subnets equal.
     bool operator==(const authority& other) const NOEXCEPT;
     bool operator!=(const authority& other) const NOEXCEPT;
 
+    /// Same format as construct(string) and to_string().
     friend std::istream& operator>>(std::istream& input,
         authority& argument) NOEXCEPT(false);
     friend std::ostream& operator<<(std::ostream& output,
@@ -102,8 +102,9 @@ public:
 
 private:
     // These are not thread safe.
-    asio::ipv6 ip_{};
-    uint16_t port_{};
+    asio::address ip_;
+    uint16_t port_;
+    uint8_t cidr_;
 };
 
 typedef std::vector<authority> authorities;
@@ -119,7 +120,7 @@ struct hash<bc::network::config::authority>
 {
     size_t operator()(const bc::network::config::authority& value) const NOEXCEPT
     {
-        return std::hash<std::string>{}(value.to_string());
+        return std::hash<std::string>{}(value.to_literal());
     }
 };
 } // namespace std

@@ -74,6 +74,7 @@ protected:
         const messages::version_acknowledge::cptr& message) NOEXCEPT;
 
     // These are thread safe (const).
+    const bool inbound_;
     const uint32_t minimum_version_;
     const uint32_t maximum_version_;
     const uint64_t minimum_services_;

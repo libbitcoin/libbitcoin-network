@@ -95,7 +95,7 @@ protected:
 
     // These are protected by strand (see also handle_accept).
     asio::socket socket_;
-    config::authority authority_;
+    config::authority authority_{};
 
 private:
     void do_stop() NOEXCEPT;

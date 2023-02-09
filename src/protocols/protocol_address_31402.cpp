@@ -40,6 +40,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 protocol_address_31402::protocol_address_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
+    blacklist_(settings().blacklists),
     inbound_(session.inbound()),
     request_(!inbound_ && settings().outbound_enabled()),
     received_(false),
@@ -116,30 +117,43 @@ void protocol_address_31402::handle_receive_address(const code& ec,
 
     received_ = true;
 
-    // Do not store redundant adresses, address() is own checked out address.
-    if (singleton && (items.front() == address()))
+    // Do not store redundant adresses, outbound() is known address.
+    if (singleton && (outbound() == items.front()))
     {
+        // Verbose.
         ////LOG("Dropping redundant address from [" << authority() << "]");
         return;
     }
 
-    // This will accept previously rejected addresses (state not retained).
-    save(message, BIND3(handle_save_addresses, _1, _2, items.size()));
+    // Remove blacklist conflicts.
+    // Should construct using makes_shared(vargs) overload, but fails on clang.
+    const auto to = to_shared(messages::address{ difference(items, blacklist_) });
+    const auto count = to->addresses.size();
+    const auto start = items.size();
+
+    // Redundant with handle_save_address logging.
+    ////if (count < start)
+    ////{
+    ////    LOG("Dropped (" << (start - count) << ") blacklisted addresses from ["
+    ////        << authority() << "]");
+    ////}
+
+    // This allows previously-rejected addresses.
+    save(to, BIND4(handle_save_address, _1, _2, count, start));
 }
 
-void protocol_address_31402::handle_save_addresses(const code& ec,
-    size_t LOG_ONLY(accepted), size_t LOG_ONLY(count)) NOEXCEPT
+void protocol_address_31402::handle_save_address(const code& ec,
+    size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
+    size_t LOG_ONLY(start)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
     if (stopped(ec))
         return;
 
-    if (count > 10u)
-    {
-        LOG("Accepted (" << accepted << " of " << count << ") "
-            "addresses from [" << authority() << "].");
-    }
+    LOG("Accepted ("
+        << accepted << " of " << filtered << " of " << start << ") "
+        "addresses from [" << authority() << "].");
 }
 
 // Outbound (fetch and send addresses).
@@ -160,7 +174,7 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
         return;
     }
 
-    fetch(BIND2(handle_fetch_addresses, _1, _2));
+    fetch(BIND2(handle_fetch_address, _1, _2));
     sent_ = true;
 }
 
@@ -168,7 +182,7 @@ void protocol_address_31402::handle_receive_get_address(const code& ec,
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-void protocol_address_31402::handle_fetch_addresses(const code& ec,
+void protocol_address_31402::handle_fetch_address(const code& ec,
     const address::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");

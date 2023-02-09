@@ -50,20 +50,23 @@ protected:
 
     virtual void handle_receive_address(const code& ec,
         const messages::address::cptr& message) NOEXCEPT;
-    virtual void handle_save_addresses(const code& ec,
-        size_t accepted, size_t count) NOEXCEPT;
+    virtual void handle_save_address(const code& ec,
+        size_t accepted, size_t filtered, size_t start) NOEXCEPT;
 
     virtual void handle_receive_get_address(const code& ec,
         const messages::get_address::cptr& message) NOEXCEPT;
-    virtual void handle_fetch_addresses(const code& ec,
+    virtual void handle_fetch_address(const code& ec,
         const messages::address::cptr& message) NOEXCEPT;
 
 private:
     messages::address_item self() const NOEXCEPT;
 
-    // These are protected by strand.
+    // These are thread safe (const).
+    const config::authorities& blacklist_;
     const bool inbound_;
     const bool request_;
+
+    // These are protected by strand.
     bool received_;
     bool sent_;
 };

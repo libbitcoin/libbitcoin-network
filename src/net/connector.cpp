@@ -92,9 +92,7 @@ void connector::connect(const authority& host,
 void connector::connect(const endpoint& host,
     channel_handler&& handler) NOEXCEPT
 {
-    // Default outbound connection address to inbound (manual connections).
-    // Manual connections are not "restored" to the address pool (isolated).
-    start(host.host(), host.port(), {}, std::move(handler));
+    start(host.host(), host.port(), host.to_address(), std::move(handler));
 }
 
 // protected

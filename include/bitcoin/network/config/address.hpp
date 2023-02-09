@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <memory>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
@@ -28,8 +29,10 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// This is a container for messages::address_item.
-/// This is provided for connect/session, and serialization to/from hosts file.
+/// Container for messages::address_item (with timstamp and services).
+/// IPv4 addresses are converted to IPv6-mapped for message encoding.
+/// Does not support deserialization of IPv6-mapped encoding (use native IPv4).
+/// Provided for connect/session, and serialization to/from hosts file.
 class BCT_API address
 {
 public:
@@ -39,25 +42,30 @@ public:
 
     address() NOEXCEPT;
 
-    /// 188.240.57.122[:8333][/1675574490[/1033]]
-    /// Host can be either [2001:db8::2]:port or 1.2.240.1:port.
+    /// [IPv6]|IPv4[:8333][/timestamp[/services]] (IPv6 [literal]).
     address(const std::string& host) NOEXCEPT(false);
-
-    /// message conversion.
     address(messages::address_item&& item) NOEXCEPT;
     address(const messages::address_item& item) NOEXCEPT;
-    address(const messages::address_item::cptr& item) NOEXCEPT;
+    address(const messages::address_item::cptr& message) NOEXCEPT;
+
+    // Methods.
+    // ------------------------------------------------------------------------
+
+    /// The IPv4 or IPv6 address.
+    asio::address to_ip() const NOEXCEPT;
+
+    /// IPv6|IPv4.
+    std::string to_host() const NOEXCEPT;
+
+    /// [IPv6]|IPv4[:8333]/timestamp/services (IPv6 [literal]).
+    std::string to_string() const NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------
 
     /// The address item.
     const messages::address_item& item() const NOEXCEPT;
-    const messages::address_item::cptr& item_ptr() const NOEXCEPT;
-
-    /// The address/host as a string.
-    std::string to_string() const NOEXCEPT;
-    std::string to_host() const NOEXCEPT;
+    const messages::address_item::cptr& message() const NOEXCEPT;
 
     /// The address properties.
     uint16_t port() const NOEXCEPT;
@@ -67,13 +75,14 @@ public:
     /// Operators.
     /// -----------------------------------------------------------------------
 
-    /// True if the port is non-zero.
+    /// False if the port is zero.
     operator bool() const NOEXCEPT;
 
-    /// Equality does not consider timestamp/services (same as address_item).
+    /// Does not compare ports, times or services (used in address protocols).
     bool operator==(const address& other) const NOEXCEPT;
     bool operator!=(const address& other) const NOEXCEPT;
 
+    /// Same format as construct(string) and to_string().
     friend std::istream& operator>>(std::istream& input,
         address& argument) NOEXCEPT(false);
     friend std::ostream& operator<<(std::ostream& output,
@@ -81,7 +90,7 @@ public:
 
 private:
     // This is not thread safe.
-    messages::address_item::cptr address_{};
+    messages::address_item::cptr address_;
 };
 
 typedef std::vector<address> addresses;
@@ -89,6 +98,13 @@ typedef std::vector<address> addresses;
 } // namespace config
 } // namespace network
 } // namespace libbitcoin
+
+// TODO: define, advertise, and store proper URI, such as:
+// ipv4 uri: [btc://]1.2.3.4[:8333]
+// ipv6 uri: [btc://]\[ab:cd::30:40\][:8333]
+// name uri: [btc://]mainnet.libbitcoin.org[:8333]
+// [?name[=value][&name[=value]]...]
+// ?time=12345&version=700015&services=1033&sendaddrv2
 
 namespace std
 {

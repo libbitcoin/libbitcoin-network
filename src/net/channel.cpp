@@ -158,7 +158,7 @@ const config::address& channel::address() const NOEXCEPT
 
 address_item_cptr channel::updated_address() const NOEXCEPT
 {
-    // clang doesn't like vargs construct.
+    // Should construct using makes_shared(vargs) overload, but fails on clang.
     return to_shared(address_item{ unix_time(), peer_version()->services,
         address_.item().ip, address_.item().port });
 }

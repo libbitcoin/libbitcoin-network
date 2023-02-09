@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
 
     boost::asio::post(strand, [instance]()
     {
-        instance->connect(config::authority{ "42.42.42.42", 42 },
+        instance->connect(config::authority{ "42.42.42.42:42" },
             [](const code& ec, const channel::ptr& channel)
             {
                 BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);

@@ -18,10 +18,6 @@
  */
 #include <bitcoin/network/config/utilities.hpp>
 
-// C++11: use std::regex.
-////#include <format>
-#include <sstream>
-#include <boost/format.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -31,127 +27,197 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-// string/string conversions.
-// ----------------------------------------------------------------------------
+using namespace system;
+using namespace boost::asio;
 
-// host:    [2001:db8::2] or  2001:db8::2  or 1.2.240.1
-// returns: [2001:db8::2] or [2001:db8::2] or 1.2.240.1
-std::string to_host_name(const std::string& host) NOEXCEPT
+static_assert(array_count<messages::ip_address> == 16);
+static_assert(array_count<ip::address_v4::bytes_type> == 4);
+static_assert(array_count<ip::address_v6::bytes_type> == 16);
+static constexpr data_array<12> mapping_prefix
 {
-    if (host.find(":") == std::string::npos || is_zero(host.find("[")))
-        return host;
-
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return (boost::format("[%1%]") % host).str();
-    BC_POP_WARNING()
-}
-
-// host: [2001:db8::2] or 2001:db8::2 or 1.2.240.1
-std::string to_text(const std::string& host, uint16_t port) NOEXCEPT
-{
-    std::stringstream authority{};
-
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    authority << to_host_name(host);
-    if (port != messages::unspecified_ip_port)
-        authority << ":" << port;
-
-    return authority.str();
-    BC_POP_WARNING()
-}
-
-std::string to_ipv6(const std::string& ipv4_address) NOEXCEPT
-{
-    return std::string("::ffff:") + ipv4_address;
-}
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff
+};
 
 // asio/asio conversions.
 // ----------------------------------------------------------------------------
 
-asio::ipv6 to_ipv6(const asio::ipv4& ipv4_address) NOEXCEPT
+static asio::ipv6 to_v6(const asio::ipv4& ip4) NOEXCEPT
 {
-    boost::system::error_code ignore{};
+    return asio::ipv6{ splice(mapping_prefix, ip4.to_bytes()) };
+}
 
+// Convert IPv6-mapped to IPV4 (ensures consistent matching).
+asio::address normalize(const asio::address& ip) NOEXCEPT
+{
+    if (ip.is_v6())
+    {
+        try
+        {
+            const auto ip6 = ip.to_v6();
+            if (ip6.is_v4_mapped())
+                return { ip6.to_v4() };
+        }
+        catch (std::exception)
+        {
+        }
+    }
+
+    return ip;
+}
+
+// asio/string host conversions.
+// ----------------------------------------------------------------------------
+// IPv4-Compatible IPv6 address are deprecated, support only IPv4-Mapped.
+// rfc-editor.org/rfc/rfc4291
+
+static std::string to_host(const asio::ipv6& ip6) NOEXCEPT
+{
     try
     {
-        // Create an IPv6 mapped IPv4 address via serialization.
-        const auto ipv6 = to_ipv6(ipv4_address.to_string());
-        return asio::ipv6::from_string(ipv6, ignore);
+        return ip6.to_string();
     }
     catch (std::exception)
     {
-        return {};
+        return { "::" };
     }
 }
 
-asio::ipv6 to_ipv6(const asio::address& ip_address) NOEXCEPT
+static std::string to_host(const asio::ipv4& ip4) NOEXCEPT
 {
-    BC_ASSERT_MSG(ip_address.is_v4() || ip_address.is_v6(),
-        "The address must be either IPv4 or IPv6.");
-
     try
     {
-        return ip_address.is_v6() ? ip_address.to_v6() :
-            to_ipv6(ip_address.to_v4());
+        return ip4.to_string();
     }
     catch (std::exception)
     {
-        return {};
+        return { "0.0.0.0" };
     }
 }
 
-// asio/string conversions.
+// Serialize to host normal form (unmapped).
+std::string to_host(const asio::address& ip) NOEXCEPT
+{
+    try
+    {
+        const auto norm = normalize(ip);
+        return norm.is_v4() ? to_host(norm.to_v4()) : to_host(norm.to_v6());
+    }
+    catch (std::exception)
+    {
+        return { "0.0.0.0" };
+    }
+}
+
+// Deserialize any host.
+asio::address from_host(const std::string& host) NOEXCEPT(false)
+{
+    try
+    {
+        return ip::make_address(host);
+    }
+    catch (std::exception)
+    {
+        throw istream_exception{ host };
+    }
+}
+
+// asio/string literal conversions.
 // ----------------------------------------------------------------------------
 
-std::string to_ipv4_host(const asio::address& ip_address) NOEXCEPT
+static std::string bracket(const std::string& host6) NOEXCEPT
 {
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    static const boost::regex regular("^::ffff:([0-9\\.]+)$");
-    const auto address = ip_address.to_string();
-    boost::sregex_iterator it(address.begin(), address.end(), regular), end;
-    if (it == end)
-        return {};
-
-    const auto& match = *it;
-    return match[1];
-    BC_POP_WARNING()
+    // IPv6 URIs use a bracketed IPv6 address (literal), see rfc2732.
+    return "[" + host6 + "]";
 }
 
-std::string to_ipv6_host(const asio::address& ip_address) NOEXCEPT
+std::string to_literal(const asio::address& ip) NOEXCEPT
 {
-    // IPv6 URLs use a bracketed IPv6 address, see rfc2732.
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return (boost::format("[%1%]") % to_ipv6(ip_address)).str();
-    BC_POP_WARNING()
+    const auto host = to_host(ip);
+    return is_zero(host.find("[")) || host.find(":") == std::string::npos ?
+        host : bracket(host);
 }
 
-std::string to_ip_host(const asio::address& ip_address) NOEXCEPT
+asio::address from_literal(const std::string& host) NOEXCEPT(false)
 {
-    auto ipv4_host = to_ipv4_host(ip_address);
-    return ipv4_host.empty() ? to_ipv6_host(ip_address) : ipv4_host;
+    static const boost::regex litter{ "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])$" };
+    boost::sregex_iterator it{ host.begin(), host.end(), litter }, end{};
+    if (it == end) throw istream_exception{ host };
+    const auto& token = *it;
+    return from_host(is_zero(token[3].length()) ? token[2] : token[3]);
 }
 
 // asio/messages conversions.
 // ----------------------------------------------------------------------------
+// messages::ip_address <=> asio::ipv6 (mapped ipv4 as applicable).
 
-messages::ip_address to_address(const asio::ipv6& in) NOEXCEPT
+static asio::ipv6 get_ipv6(const asio::address& ip) NOEXCEPT
 {
-    messages::ip_address out;
-    const auto bytes = in.to_bytes();
-    BC_ASSERT(bytes.size() == out.size());
-    std::copy_n(bytes.begin(), bytes.size(), out.begin());
-    return out;
+    try
+    {
+        return ip.is_v6() ? ip.to_v6() : to_v6(ip.to_v4());
+    }
+    catch (std::exception)
+    {
+        return {};
+    }
 }
 
-asio::ipv6 to_address(const messages::ip_address& in) NOEXCEPT
+messages::ip_address to_address(const asio::address& ip) NOEXCEPT
 {
-    asio::ipv6::bytes_type bytes{};
-    BC_ASSERT(bytes.size() == in.size());
-    std::copy_n(in.begin(), in.size(), bytes.begin());
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    const asio::ipv6 out(bytes);
-    BC_POP_WARNING()
-    return out;
+    return get_ipv6(ip).to_bytes();
+}
+
+asio::address from_address(const messages::ip_address& address) NOEXCEPT
+{
+    try
+    {
+        return { asio::ipv6{ address } };
+    }
+    catch (std::exception)
+    {
+        return { asio::ipv6{} };
+    }
+}
+
+inline bool is_member_v4(const asio::ipv4& ip4, const asio::ipv4& net4,
+    uint8_t cidr)  NOEXCEPT(false)
+{
+    const auto hosts = ip::make_network_v4(net4, cidr).hosts();
+    return hosts.find(ip4) != hosts.end();
+}
+
+inline bool is_member_v6(const asio::ipv6& ip6, const asio::ipv6& net6,
+    uint8_t cidr) NOEXCEPT(false)
+{
+    const auto hosts = ip::make_network_v6(net6, cidr).hosts();
+    return hosts.find(ip6) != hosts.end();
+}
+
+// This assumes host and/or subnet v4 address(s) unmapped.
+bool is_member(const asio::address& ip, const asio::address& subnet,
+    uint8_t cidr) NOEXCEPT
+{
+    try
+    {
+        if (ip.is_v4() && subnet.is_v4())
+            return is_member_v4(ip.to_v4(), subnet.to_v4(), cidr);
+
+        if (ip.is_v6() && subnet.is_v6())
+            return is_member_v6(ip.to_v6(), subnet.to_v6(), cidr);
+    }
+    catch (std::exception)
+    {
+    }
+
+    return false;
+}
+
+// Conditions.
+// ----------------------------------------------------------------------------
+
+bool is_valid(const messages::address_item& item) NOEXCEPT
+{
+    return !is_zero(item.port) && item.ip != messages::unspecified_ip_address;
 }
 
 } // namespace config

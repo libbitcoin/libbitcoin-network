@@ -82,7 +82,7 @@ void address_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
-// Equality ignores timestamp and services.
+// Equality ignores timestamp and services (used in hosts).
 bool operator==(const address_item& left, const address_item& right) NOEXCEPT
 {
     return left.ip == right.ip

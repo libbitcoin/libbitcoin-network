@@ -37,27 +37,24 @@ address::address() NOEXCEPT
 {
 }
 
-// string conversion.
-
 address::address(const std::string& host) NOEXCEPT(false)
+  : address()
 {
     std::stringstream(host) >> *this;
 }
 
-// message conversion.
-
 address::address(messages::address_item&& item) NOEXCEPT
-  : address_(system::to_shared(std::move(item)))
+  : address(system::to_shared(std::move(item)))
 {
 }
 
 address::address(const messages::address_item& item) NOEXCEPT
-  : address_(system::to_shared(item))
+  : address(system::to_shared(item))
 {
 }
 
-address::address(const messages::address_item::cptr& item) NOEXCEPT
-  : address_(item ? item : system::to_shared<messages::address_item>())
+address::address(const messages::address_item::cptr& message) NOEXCEPT
+  : address_(message ? message : system::to_shared<messages::address_item>())
 {
 }
 
@@ -69,13 +66,23 @@ const messages::address_item& address::item() const NOEXCEPT
     return *address_;
 }
 
-const messages::address_item::cptr& address::item_ptr() const NOEXCEPT
+const messages::address_item::cptr& address::message() const NOEXCEPT
 {
     return address_;
 }
 
 // Methods.
 // ----------------------------------------------------------------------------
+
+asio::address address::to_ip() const NOEXCEPT
+{
+    return from_address(address_->ip);
+}
+
+std::string address::to_host() const NOEXCEPT
+{
+    return config::to_host(to_ip());
+}
 
 std::string address::to_string() const NOEXCEPT
 {
@@ -86,10 +93,8 @@ std::string address::to_string() const NOEXCEPT
     BC_POP_WARNING()
 }
 
-std::string address::to_host() const NOEXCEPT
-{
-    return to_ip_host(to_address(address_->ip));
-}
+// Properties.
+// ----------------------------------------------------------------------------
 
 uint16_t address::port() const NOEXCEPT
 {
@@ -114,9 +119,10 @@ address::operator bool() const NOEXCEPT
     return is_valid(*address_);
 }
 
+// Does not compare ports, times or services (used in address protocols).
 bool address::operator==(const address& other) const NOEXCEPT
 {
-    return *address_ == *other.address_;
+    return address_->ip == other.address_->ip;
 }
 
 bool address::operator!=(const address& other) const NOEXCEPT
@@ -137,19 +143,16 @@ std::istream& operator>>(std::istream& input,
 
     // Throws istream_exception if parse fails.
     // Sets default timestamp (0) and services (services::node_none).
+    // IPv4 addresses are converted to IPv6-mapped for message encoding.
     auto item = authority{ tokens.at(0) }.to_address_item();
 
     if (tokens.size() > 1)
-    {
         if (!deserialize(item.timestamp, tokens.at(1)))
             throw istream_exception(tokens.at(1));
 
-        if (tokens.size() > 2)
-        {
-            if (!deserialize(item.services, tokens.at(2)))
-                throw istream_exception(tokens.at(2));
-        }
-    }
+    if (tokens.size() > 2)
+        if (!deserialize(item.services, tokens.at(2)))
+            throw istream_exception(tokens.at(2));
 
     argument.address_ = to_shared(std::move(item));
     return input;
@@ -159,9 +162,9 @@ std::ostream& operator<<(std::ostream& output,
     const address& argument) NOEXCEPT
 {
     const authority host{ argument };
-
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    output << host
+    output
+        << host
         << "/" << argument.address_->timestamp
         << "/" << argument.address_->services;
     BC_POP_WARNING()

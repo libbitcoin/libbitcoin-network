@@ -39,6 +39,7 @@ using namespace std::placeholders;
 protocol_seed_31402::protocol_seed_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
+    blacklist_(settings().blacklists),
     sent_address_(false),
     sent_get_address_(false),
     received_address_(false),
@@ -126,10 +127,29 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return;
 
-    save(message, BIND1(handle_save_addresses, _1));
+    const auto& items = message->addresses;
+    const auto singleton = is_one(items.size());
+
+    // Do not store redundant adresses, outbound() is known address.
+    if (singleton && (outbound() == items.front()))
+    {
+        // Verbose.
+        ////LOG("Dropping redundant address from seed [" << authority() << "]");
+        return;
+    }
+
+    // Remove blacklist conflicts.
+    // Should construct using makes_shared(vargs) overload, but fails on clang.
+    const auto to = to_shared(messages::address{ difference(items, blacklist_) });
+    const auto count = to->addresses.size();
+    const auto start = items.size();
+
+    save(message, BIND4(handle_save_addresses, _1, _2, count, start));
 }
 
-void protocol_seed_31402::handle_save_addresses(const code& ec) NOEXCEPT
+void protocol_seed_31402::handle_save_addresses(const code& ec,
+    size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
+    size_t LOG_ONLY(start)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -140,8 +160,13 @@ void protocol_seed_31402::handle_save_addresses(const code& ec) NOEXCEPT
     if (ec)
         stop(ec);
 
-    // Multiple address messages are allowed, but do not delay stop.
-    received_address_ = true;
+    LOG("Accepted ("
+        << accepted << " of " << filtered << " of " << start << ") "
+        "addresses from seed [" << authority() << "].");
+
+    // Multiple address messages are allowed, but do not delay session.
+    // Ignore a singleton message, conventional to send self upon connect.
+    received_address_ = (start > one);
 
     if (complete())
         stop(error::success);
@@ -149,6 +174,12 @@ void protocol_seed_31402::handle_save_addresses(const code& ec) NOEXCEPT
 
 // Inbound [receive_get_address -> send_address (load_addresses)].
 // ----------------------------------------------------------------------------
+
+messages::address_item protocol_seed_31402::self() const NOEXCEPT
+{
+    return settings().self.to_address_item(unix_time(),
+        settings().services_maximum);
+}
 
 void protocol_seed_31402::handle_receive_get_address(const code& ec,
     const get_address::cptr&) NOEXCEPT
@@ -158,16 +189,15 @@ void protocol_seed_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return;
 
-    // Only send self address when seeding.
-    if (is_zero(settings().self.port()))
+    if (settings().advertise_enabled())
     {
-        // handle_send_address has been bypassed, so invoke here.
-        handle_send_address(error::success);
+        // Only send 0..1 address in response to get_address when seeding.
+        SEND1(messages::address{ { self() } }, handle_send_address, _1);
         return;
     }
 
-    static const auto item = settings().self.to_address_item();
-    SEND1(messages::address{ { item } }, handle_send_address, _1);
+    // handle_send_address has been bypassed, so completion here.
+    handle_send_address(error::success);
 }
 
 void protocol_seed_31402::handle_send_address(const code& ec) NOEXCEPT

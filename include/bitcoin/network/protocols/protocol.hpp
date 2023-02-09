@@ -121,9 +121,8 @@ protected:
     /// The authority of the peer.
     virtual config::authority authority() const NOEXCEPT;
 
-    /// TODO: name conflict with messages.
-    /// The origination address of the peer.
-    virtual const config::address& address() const NOEXCEPT;
+    /// The outbound address of the peer.
+    virtual const config::address& outbound() const NOEXCEPT;
 
     /// The nonce of the channel.
     virtual uint64_t nonce() const NOEXCEPT;

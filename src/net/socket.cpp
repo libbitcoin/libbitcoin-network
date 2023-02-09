@@ -183,8 +183,7 @@ void socket::handle_accept(const error::boost_code& ec,
     // This is running in the acceptor (not socket) execution context.
     // socket_ and authority_ are not guarded here, see comments on accept.
 
-    if (!ec)
-        authority_ = { socket_.remote_endpoint() };
+    if (!ec) authority_ = { socket_.remote_endpoint() };
 
     if (error::asio_is_canceled(ec))
     {

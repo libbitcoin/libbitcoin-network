@@ -57,13 +57,19 @@ protected:
     virtual void handle_send_get_address(const code& ec) NOEXCEPT;
     virtual void handle_receive_address(const code& ec,
         const messages::address::cptr& address) NOEXCEPT;
-    virtual void handle_save_addresses(const code& ec) NOEXCEPT;
+    virtual void handle_save_addresses(const code& ec,
+        size_t accepted, size_t filtered, size_t start) NOEXCEPT;
 
     virtual void handle_receive_get_address(const code& ec,
         const messages::get_address::cptr& message) NOEXCEPT;
     virtual void handle_send_address(const code& ec) NOEXCEPT;
 
 private:
+    messages::address_item self() const NOEXCEPT;
+
+    // This is thread safe (const).
+    const config::authorities& blacklist_;
+
     // These are protected by the strand.
     bool sent_address_;
     bool sent_get_address_;

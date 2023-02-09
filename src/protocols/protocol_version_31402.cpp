@@ -54,6 +54,7 @@ protocol_version_31402::protocol_version_31402(const session& session,
     const channel::ptr& channel, uint64_t minimum_services,
     uint64_t maximum_services) NOEXCEPT
   : protocol(session, channel),
+    inbound_(session.inbound()),
     minimum_version_(session.settings().protocol_minimum),
     maximum_version_(session.settings().protocol_maximum),
     minimum_services_(minimum_services),
@@ -87,7 +88,6 @@ messages::version protocol_version_31402::version_factory(
     constexpr auto top_height = possible_narrow_cast<uint32_t>(zero);
     BC_ASSERT_MSG(top_height <= max_uint32, "Time to upgrade the protocol.");
 
-    // Should construct using makes_shared(vargs) overload, but fails on clang.
     BC_PUSH_WARNING(NO_NEW_OR_DELETE)
     return
     {
@@ -299,13 +299,14 @@ void protocol_version_31402::handle_receive_version(const code& ec,
         return;
     }
 
-    LOG("Peer [" << authority() << "] protocol version ("
+    LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
+    LOG(prefix << " [" << authority() << "] protocol version ("
         << message->value << ") user agent: " << message->user_agent);
 
     if (to_bool(message->services & invalid_services_))
     {
         LOG("Unsupported services (" << message->services << ") by ["
-            << authority() << "] showing (" << address().services() << ").");
+            << authority() << "] showing (" << outbound().services() << ").");
 
         rejection(error::peer_unsupported);
         return;
@@ -314,8 +315,9 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     // Advertised services on many incoming connections are set to zero.
     if ((message->services & minimum_services_) != minimum_services_)
     {
-        LOG("Insufficient services (" << message->services << ") by ["
-            << authority() << "] showing (" << address().services() << ").");
+        // Verbose (this appears to be common misconfiguration or intentional).
+        ////LOG("Insufficient services (" << message->services << ") by ["
+        ////    << authority() << "] showing (" << outbound().services() << ").");
 
         rejection(error::peer_insufficient);
         return;
