@@ -126,10 +126,10 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return;
 
-    save(message, BIND1(handle_save_addresses, _1));
+    save(message, BIND2(handle_save_addresses, _1, _2));
 }
 
-void protocol_seed_31402::handle_save_addresses(const code& ec) NOEXCEPT
+void protocol_seed_31402::handle_save_addresses(const code& ec, size_t) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
