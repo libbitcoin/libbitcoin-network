@@ -415,7 +415,7 @@ void p2p::do_save(const messages::address::cptr& message,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    handler(error::success, hosts_.save(*message));
+    handler(error::success, hosts_.save(message->addresses));
 }
 
 // Connection management.

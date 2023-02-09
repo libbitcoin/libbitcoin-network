@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__three_unique__three)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
     
-    instance.save({ { host1, host2, host3 } });
+    instance.save({ host1, host2, host3 });
     BOOST_REQUIRE_EQUAL(instance.count(), 3u);
 
     instance.stop();
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__redundant__expected)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.save({ { host1, host2, host3, host3, host2, host1 } });
+    instance.save({ host1, host2, host3, host3, host2, host1 });
     BOOST_REQUIRE_EQUAL(instance.count(), 3u);
 
     instance.stop();
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.save({ { host1, host2, host3 } });
+    instance.save({ host1, host2, host3 });
     BOOST_REQUIRE_EQUAL(instance.count(), 3u);
 
     instance.fetch([&](const code& ec, const messages::address::cptr& message)
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__populated_file__expected)
     BOOST_REQUIRE_EQUAL(instance1.count(), 0u);
     BOOST_REQUIRE(!test::exists(TEST_NAME));
 
-    instance1.save({ { host1, host2, host3 } });
+    instance1.save({ host1, host2, host3 });
     BOOST_REQUIRE_EQUAL(instance1.count(), 3u);
 
     // File is not created until stop.

@@ -119,21 +119,21 @@ code hosts::stop() NOEXCEPT
     return error::success;
 }
 
-bool hosts::restore(const address_item& address) NOEXCEPT
+bool hosts::restore(const address_item& host) NOEXCEPT
 {
     if (disabled_)
         return true;
 
-    if (!config::is_valid(address))
+    if (!config::is_valid(host))
         return false;
 
     // Erase existing address by authority match.
-    const auto it = find(address);
+    const auto it = find(host);
     if (it != buffer_.end())
         buffer_.erase(it);
 
     // Add address.
-    buffer_.push_back(address);
+    buffer_.push_back(host);
     count_.store(buffer_.size(), std::memory_order_relaxed);
     return true;
 }
@@ -158,14 +158,13 @@ void hosts::take(const address_item_handler& handler) NOEXCEPT
     handler(error::success, host);
 }
 
-size_t hosts::save(const address& addresses) NOEXCEPT
+size_t hosts::save(const address_items& hosts) NOEXCEPT
 {
     // If enabled then minimum capacity is one and buffer is at capacity.
-    if (disabled_ || addresses.addresses.empty())
+    if (disabled_ || hosts.empty())
         return zero;
 
-    // Accept between 1 and all of this peer's addresses up to capacity.
-    const auto& hosts = addresses.addresses;
+    // Accept between 1 and all of the filtered addresses, up to capacity.
     const auto usable = std::min(hosts.size(), capacity_);
     const auto random = pseudo_random::next(one, usable);
 

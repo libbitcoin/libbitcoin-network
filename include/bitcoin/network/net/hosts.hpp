@@ -63,13 +63,13 @@ public:
     virtual size_t count() const NOEXCEPT;
 
     /// Store the host in the table (e.g. after use), false if invalid.
-    virtual bool restore(const messages::address_item& address) NOEXCEPT;
+    virtual bool restore(const messages::address_item& host) NOEXCEPT;
 
     /// Take one random host from the table (non-const).
     virtual void take(const address_item_handler& handler) NOEXCEPT;
 
     /// Save a random set of hosts (e.g obtained from peer), count of accept.
-    virtual size_t save(const messages::address& addresses) NOEXCEPT;
+    virtual size_t save(const messages::address_items& hosts) NOEXCEPT;
 
     /// Obtain a random set of hosts (e.g for relay to peer).
     virtual void fetch(const address_handler& handler) const NOEXCEPT;
