@@ -51,7 +51,7 @@ protected:
     virtual void handle_receive_address(const code& ec,
         const messages::address::cptr& message) NOEXCEPT;
     virtual void handle_save_address(const code& ec,
-        size_t accepted, size_t filtered, size_t count) NOEXCEPT;
+        size_t accepted, size_t filtered, size_t start) NOEXCEPT;
 
     virtual void handle_receive_get_address(const code& ec,
         const messages::get_address::cptr& message) NOEXCEPT;
@@ -62,7 +62,7 @@ private:
     messages::address_item self() const NOEXCEPT;
 
     // These are thread safe (const).
-    config::authorities blacklist_;
+    const config::authorities& blacklist_;
     const bool inbound_;
     const bool request_;
 

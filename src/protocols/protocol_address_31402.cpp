@@ -34,6 +34,9 @@ using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
+// Verbose (disabled).
+constexpr size_t threshold = 1001;
+
 // Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
@@ -126,25 +129,32 @@ void protocol_address_31402::handle_receive_address(const code& ec,
 
     // Remove blacklist conflicts.
     const auto to = to_shared<messages::address>(difference(items, blacklist_));
-    const auto size = to->addresses.size();
+    const auto count = to->addresses.size();
+    const auto start = items.size();
+
+    if (count < start)
+    {
+        LOG("Dropped (" << (start - count) << ") blacklisted addresses from ["
+            << authority() << "]");
+    }
 
     // This allows previously-rejected addresses.
-    save(to, BIND4(handle_save_address, _1, _2, size, items.size()));
+    save(to, BIND4(handle_save_address, _1, _2, count, start));
 }
 
 void protocol_address_31402::handle_save_address(const code& ec,
     size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
-    size_t LOG_ONLY(count)) NOEXCEPT
+    size_t LOG_ONLY(start)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_31402");
 
     if (stopped(ec))
         return;
 
-    if (count > 10u)
+    if (start > threshold)
     {
         LOG("Accepted ("
-            << accepted << " of " << filtered << " of " << count << ") "
+            << accepted << " of " << filtered << " of " << start << ") "
             "addresses from [" << authority() << "].");
     }
 }
