@@ -159,6 +159,7 @@ void session_inbound::handle_accept(const code& ec,
     // Could instead stop listening when at limit, though this is simpler.
     if (inbound_channel_count() >= settings().inbound_connections)
     {
+        LOG("Dropping oversubscribed connection [" << channel->authority() << "]");
         channel->stop(error::oversubscribed);
         return;
     }
@@ -173,7 +174,8 @@ void session_inbound::handle_accept(const code& ec,
 
     if (!whitelisted(channel->authority()))
     {
-        LOG("Dropping not whitelisted connection [" << channel->authority() << "]");
+        // Verbose
+        ////LOG("Dropping not whitelisted connection [" << channel->authority() << "]");
         channel->stop(error::address_blocked);
         return;
     }
