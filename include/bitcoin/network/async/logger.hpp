@@ -84,7 +84,7 @@ protected:
 private:
     threadpool pool_;
     asio::strand strand_;
-    subscriber<const code&, const std::string&> subscriber_;
+    subscriber<const std::string&> subscriber_;
 
     void do_subscribe(const handler& handler) NOEXCEPT;
     void do_notify(const code& ec, const std::string& message) const NOEXCEPT;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -18,15 +18,15 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(subscriber_tests)
+BOOST_AUTO_TEST_SUITE(resubscriber_tests)
 
-typedef subscriber<size_t> test_subscriber;
+typedef resubscriber<uint64_t, size_t> test_resubscriber;
 
-BOOST_AUTO_TEST_CASE(subscriber__subscribe__subscribed__subscriber_stopped)
+BOOST_AUTO_TEST_CASE(resubscriber__subscribe__subscribed__subscriber_stopped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_resubscriber instance(strand);
     const auto ec = error::address_not_found;
     const auto expected = 42u;
 
@@ -34,16 +34,18 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__subscribed__subscriber_stopped)
     std::pair<code, size_t> resubscribe_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size)
+        instance.subscribe(0, [&](code value, size_t size)
         {
             stop_result = { value, size };
+            return true;
         });
 
         instance.stop(ec, expected);
 
-        instance.subscribe([&](code value, size_t size)
+        instance.subscribe(0, [&](code value, size_t size)
         {
             resubscribe_result = { value, size };
+            return true;
         });
     });
 
@@ -56,20 +58,21 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__subscribed__subscriber_stopped)
     BOOST_REQUIRE_EQUAL(resubscribe_result.second, size_t{});
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
+BOOST_AUTO_TEST_CASE(resubscriber__stop_default__once__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_resubscriber instance(strand);
     const auto ec = error::address_not_found;
     const auto expected = size_t{};
 
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size)
+        instance.subscribe(0, [&](code value, size_t size)
         {
             stop_result = { value, size };
+            return true;
         });
 
         instance.stop_default(ec);
@@ -82,20 +85,21 @@ BOOST_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__stop__once__expected)
+BOOST_AUTO_TEST_CASE(resubscriber__stop__once__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_resubscriber instance(strand);
     const auto ec = error::address_not_found;
     const auto expected = 42u;
 
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size)
+        instance.subscribe(0, [&](code value, size_t size)
         {
             stop_result = { value, size };
+            return true;
         });
 
         instance.stop(ec, expected);
@@ -108,20 +112,21 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__once__expected)
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__stop__twice__second_dropped)
+BOOST_AUTO_TEST_CASE(resubscriber__stop__twice__second_dropped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_resubscriber instance(strand);
     const auto ec = error::address_not_found;
     const auto expected = 42u;
 
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size)
+        instance.subscribe(0, [&](code value, size_t size)
         {
             stop_result = { value, size };
+            return true;
         });
 
         instance.stop(ec, expected);
@@ -136,11 +141,11 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__twice__second_dropped)
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
+BOOST_AUTO_TEST_CASE(resubscriber__notify__stopped__dropped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_resubscriber instance(strand);
     const auto ec = error::address_not_found;
     const auto expected = 42u;
 
@@ -148,11 +153,11 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size)
+        instance.subscribe(0, [&](code value, size_t size)
         {
             // Allow first and possible second notify, ignore stop.
-            if (++count != 2u)
-                notify_result = { value, size };
+            if (++count != two) notify_result = { value, size };
+            return true;
         });
 
         instance.notify(ec, expected);
@@ -167,11 +172,11 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__notify__once__expected)
+BOOST_AUTO_TEST_CASE(resubscriber__notify__once__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_resubscriber instance(strand);
     const auto ec = error::address_not_found;
     const auto expected = 42u;
 
@@ -179,10 +184,10 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__once__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size)
+        instance.subscribe(0, [&](code value, size_t size)
         {
-            if (is_one(++count))
-                notify_result = { value, size };
+            if (is_one(++count)) notify_result = { value, size };
+            return true;
         });
 
         instance.notify(ec, expected);
@@ -198,11 +203,11 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__once__expected)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__notify__twice__expected)
+BOOST_AUTO_TEST_CASE(resubscriber__notify__twice__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_resubscriber instance(strand);
     const auto ec = error::address_not_found;
     const auto expected = 42u;
 
@@ -210,10 +215,10 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__twice__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size)
+        instance.subscribe(0, [&](code value, size_t size)
         {
-            if (++count == 2u)
-                notify_result = { value, size };
+            if (++count == two) notify_result = { value, size };
+            return true;
         });
 
         instance.notify({}, {});

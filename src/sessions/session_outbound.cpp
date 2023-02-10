@@ -277,8 +277,13 @@ void session_outbound::handle_connect(const code& ec,
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         const auto timeout = settings().connect_timeout();
 
-        // BUGBUG: Since connections span sessions, this timer just gets reset.
-        start_timer(BIND2(start_connect, connectors, id), timeout);
+        // This is a unique key per outbound batch (connectors ptr value).
+        ////delay_invoke(BIND2(start_connect, connectors, id), timeout);
+        ////start_connect(connectors, id);
+
+        boost::asio::post(network_.strand(),
+            std::bind(&session_outbound::start_connect,
+                shared_from_base<session_outbound>(), connectors, id));
         return;
     }
 

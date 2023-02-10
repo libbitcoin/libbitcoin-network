@@ -19,10 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_MANUAL_HPP
 #define LIBBITCOIN_NETWORK_SESSION_MANUAL_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>

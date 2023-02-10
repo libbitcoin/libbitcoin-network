@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_SEED_HPP
 #define LIBBITCOIN_NETWORK_SESSION_SEED_HPP
 
-#include <cstddef>
 #include <memory>
 #include <unordered_set>
 #include <bitcoin/system.hpp>

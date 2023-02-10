@@ -16,10 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_HPP
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/error.hpp>
@@ -28,24 +29,25 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe, non-virtual.
-template <typename... Args>
-class subscriber final
+template <typename Key, typename... Args>
+class resubscriber final
 {
 public:
-    DELETE_COPY_MOVE(subscriber);
+    DELETE_COPY_MOVE(resubscriber);
 
-    typedef std::function<void(const code&, Args...)> handler;
+    typedef std::function<bool(const code&, Args...)> handler;
 
     // Strand is only used for assertions.
-    subscriber(asio::strand& strand) NOEXCEPT;
-    ~subscriber() NOEXCEPT;
+    resubscriber(asio::strand& strand) NOEXCEPT;
+    ~resubscriber() NOEXCEPT;
 
     /// If stopped this invokes handler(error::subscriber_stopped, Args{}...),
     /// and the handler is dropped. Otherwise the handler is held until stop.
-    void subscribe(handler&& handler) NOEXCEPT;
+    void subscribe(const Key& key, handler&& handler) NOEXCEPT;
 
     /// Invokes each handler in order, on the strand, with specified arguments.
-    void notify(const code& ec, const Args&... args) const NOEXCEPT;
+    /// Handler returns true to be resubscribed, otherwise it is desubscribed.
+    void notify(const code& ec, const Args&... args) NOEXCEPT;
 
     /// Invokes each handler in order, on the strand, with specified arguments,
     /// and then drops all handlers.
@@ -61,12 +63,12 @@ private:
 
     // These are not thread safe.
     bool stopped_;
-    std::vector<handler> queue_{};
+    std::map<Key, handler> queue_{};
 };
 
 } // namespace network
 } // namespace libbitcoin
 
-#include <bitcoin/network/impl/async/subscriber.ipp>
+#include <bitcoin/network/impl/async/resubscriber.ipp>
 
 #endif

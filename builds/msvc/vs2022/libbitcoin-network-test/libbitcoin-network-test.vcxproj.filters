@@ -264,6 +264,9 @@
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\test\test.hpp">

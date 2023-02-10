@@ -25,6 +25,7 @@
 #include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/async/reporter.hpp>
+#include <bitcoin/network/async/resubscriber.hpp>
 #include <bitcoin/network/async/subscriber.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>

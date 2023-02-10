@@ -148,8 +148,15 @@ void session_inbound::handle_accept(const code& ec,
         LOG("Failed to accept inbound channel, " << ec.message());
         const auto timeout = settings().connect_timeout();
 
-        // BUGBUG: Since connections span sessions, this timer just gets reset.
-        start_timer(BIND2(start_accept, _1, acceptor), timeout);
+        // This is a unique key per the session (acceptor ptr value).
+        // This could be implemented using subscriber, but generalize to base.
+        ////delay_invoke(BIND2(start_accept, _1, acceptor), timeout);
+        ////start_accept(error::success, acceptor);
+
+        boost::asio::post(network_.strand(),
+            std::bind(&session_inbound::start_accept,
+                shared_from_base<session_inbound>(), error::success, acceptor));
+
         return;
     }
 

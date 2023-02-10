@@ -19,9 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_INBOUND_HPP
 #define LIBBITCOIN_NETWORK_SESSION_INBOUND_HPP
 
-#include <cstddef>
-#include <memory>
-#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>

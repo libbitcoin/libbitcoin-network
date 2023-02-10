@@ -157,8 +157,15 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
         LOG("Failed to connect manual peer [" << peer << "] " << ec.message());
         const auto timeout = settings().connect_timeout();
 
-        // BUGBUG: Since connections span sessions, this timer just gets reset.
-        start_timer(BIND3(start_connect, peer, connector, handler), timeout);
+        // This is a unique key per endpoint identity (&peer).
+        // Could instead use const endpoint::ptr& peer here, and use the ptr.
+        ////delay_invoke(BIND3(start_connect, peer, connector, handler), timeout);
+        ////start_connect(peer, connector, handler);
+
+        boost::asio::post(network_.strand(),
+            std::bind(&session_manual::start_connect,
+                shared_from_base<session_manual>(), peer, connector, handler));
+
         return;
     }
 

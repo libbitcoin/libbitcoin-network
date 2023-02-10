@@ -161,6 +161,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\logger.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\reporter.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\resubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\thread.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\threadpool.hpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\impl\async\resubscriber.ipp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\address_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\alert.hpp" />
