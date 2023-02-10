@@ -39,8 +39,8 @@ resubscriber<Key, Args...>::~resubscriber() NOEXCEPT
 }
 
 template <typename Key, typename... Args>
-void resubscriber<Key, Args...>::subscribe(const Key& key,
-    handler&& handler) NOEXCEPT
+void resubscriber<Key, Args...>::subscribe(handler&& handler,
+    const Key& key) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

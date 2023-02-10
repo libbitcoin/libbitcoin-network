@@ -154,9 +154,7 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         LOG("Failed to connect manual peer [" << peer << "] " << ec.message());
-
-        const auto token = reinterpret_cast<uint64_t>(&peer);
-        delay_invoke(BIND4(start_connect, _1, peer, connector, handler), token);
+        defer(BIND4(start_connect, _1, peer, connector, handler), peer);
         return;
     }
 

@@ -49,8 +49,9 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 session::session(p2p& network) NOEXCEPT
   : network_(network),
     stopped_(true),
-    key_subscriber_(network.strand()),
+    timeout_(settings().retry_timeout()),
     stop_subscriber_(network.strand()),
+    defer_subscriber_(network.strand()),
     reporter(network.log())
 {
 }
@@ -79,7 +80,7 @@ void session::stop() NOEXCEPT
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     stopped_.store(true, std::memory_order_relaxed);
-    key_subscriber_.stop(error::service_stopped);
+    defer_subscriber_.stop(error::service_stopped);
     stop_subscriber_.stop(error::service_stopped);
 
     // Stop all pending channels.
@@ -322,20 +323,7 @@ void session::do_handle_channel_stopped(const code& ec,
 // Subscriptions.
 // ----------------------------------------------------------------------------
 
-void session::delay_invoke(result_handler&& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(network_.stranded(), "strand");
-    delay_invoke(std::move(handler), {});
-}
-
-void session::delay_invoke(result_handler&& handler, const key& token) NOEXCEPT
-{
-    BC_ASSERT_MSG(network_.stranded(), "strand");
-    delay_invoke(std::move(handler), token, settings().connect_timeout());
-}
-
-void session::delay_invoke(result_handler&& handler, const key& token,
-    const duration& timeout) NOEXCEPT
+void session::defer(result_handler&& handler, const uintptr_t& id) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -345,35 +333,29 @@ void session::delay_invoke(result_handler&& handler, const key& token,
         return;
     }
 
+    // Subscribe completes before handle_timer can be invoked (timer stranded).
     const auto timer = std::make_shared<deadline>(log(), network_.strand());
+    timer->start(
+        BIND3(handle_timer, _1, id, std::move(handler)), timeout_);
 
-    // Timer posts to strand so subscribe completes before handle_timer invoke.
-    timer->start(BIND3(handle_timer, _1, token, std::move(handler)), timeout);
-
-    // Subscribe for timer self and service stop cancelations.
-    key_subscriber_.subscribe(token, BIND2(handle_subscriber, _1, timer));
+    defer_subscriber_.subscribe(
+        BIND3(handle_subscriber, _1, id, timer), id);
 }
 
-// Expect success (timeout) and canceled (shutdown) here, passed to complete.
-void session::handle_timer(const code& ec, const key& token,
+void session::handle_timer(const code& ec, uintptr_t id,
     const result_handler& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-    LOG("Delay timer unsubscribe and invoke." << ec.message());
-
-    // Remove the stop subscription (if not already), will not return here.
-    key_subscriber_.notify(token, ec);
+    ////LOG("Delay timer (" << id << ") notify: " << ec.message());
+    defer_subscriber_.notify(id, ec);
     complete(ec);
 }
 
-// error::subscriber_exists implies key conflict (should not happen).
-bool session::handle_subscriber(const code& LOG_ONLY(ec),
+bool session::handle_subscriber(const code&, uintptr_t,
     const deadline::ptr& timer) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-    LOG("Delay timer stop." << ec.message());
-
-    // Invoked the completion handler (if not already).
+    ////LOG("Delay timer (" << id << ") stop: " << ec.message());
     timer->stop();
     return false;
 }

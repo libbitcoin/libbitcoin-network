@@ -45,7 +45,7 @@ public:
     /// If stopped, handler is invoked with error::subscriber_stopped/defaults
     /// and handler is dropped. Otherwise it is held until stop/drop.
     /// If key exists, handler is invoked with error::subscriber_exists.
-    void subscribe(const Key& key, handler&& handler) NOEXCEPT;
+    void subscribe(handler&& handler, const Key& key) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.
     /// Handler returns true for resubscription, otherwise it is desubscribed.

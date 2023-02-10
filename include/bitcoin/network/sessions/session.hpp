@@ -77,17 +77,13 @@ public:
     virtual bool inbound() const NOEXCEPT = 0;
 
 protected:
-    using key = uint64_t;
-    typedef resubscriber<key> key_subscriber;
-    typedef subscriber<> stop_subscriber;
-
     /// Construct an instance (network should be started).
     session(p2p& network) NOEXCEPT;
 
     /// Asserts that session is stopped.
     virtual ~session() NOEXCEPT;
 
-    /// Macro helpers.
+    /// Invocation helpers.
     /// -----------------------------------------------------------------------
 
     /// Bind a method in the base or derived class (use BIND#).
@@ -96,6 +92,15 @@ protected:
     {
         return std::bind(std::forward<Handler>(handler),
             shared_from_base<Session>(), std::forward<Args>(args)...);
+    }
+
+    /// Defer invocation by retry timeout, identified by object address.
+    template <typename Identifier = size_t>
+    void defer(result_handler&& handler, const Identifier& unique=zero) NOEXCEPT
+    {
+        BC_PUSH_WARNING(NO_REINTERPRET_CAST)
+        defer(std::move(handler), reinterpret_cast<uintptr_t>(&unique));
+        BC_POP_WARNING()
     }
 
     /// Channel sequence.
@@ -114,17 +119,9 @@ protected:
 
     /// Subscriptions.
     /// -----------------------------------------------------------------------
-    /// Invocation with subscribed token invokes/clears previous subscription.
 
-    /// Delay invocation with zero token and connection timeout.
-    virtual void delay_invoke(result_handler&& handler) NOEXCEPT;
-
-    /// Delay invocation with specified token and connection timeout.
-    virtual void delay_invoke(result_handler&& handler, const key& token) NOEXCEPT;
-
-    /// Delay invocation with specified token and specified timeout.
-    virtual void delay_invoke(result_handler&& handler, const key& token,
-        const duration& timeout) NOEXCEPT;
+    /// Delay invocation with specified unique id and retry timeout.
+    virtual void defer(result_handler&& handler, const uintptr_t& id) NOEXCEPT;
 
     /// Subscribe to stop notification.
     virtual void subscribe_stop(result_handler&& handler) NOEXCEPT;
@@ -200,17 +197,18 @@ private:
     void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,
         const result_handler& stopped) NOEXCEPT;
 
-    void handle_timer(const code& ec, const key& token,
+    void handle_timer(const code& ec, uintptr_t id,
         const result_handler& complete) NOEXCEPT;
-    bool handle_subscriber(const code& ec,
+    bool handle_subscriber(const code& ec, uintptr_t id,
         const deadline::ptr& timer) NOEXCEPT;
 
     // These are thread safe.
     std::atomic<bool> stopped_;
+    const duration timeout_;
 
     // These are not thread safe.
-    key_subscriber key_subscriber_;
-    stop_subscriber stop_subscriber_;
+    subscriber<> stop_subscriber_;
+    resubscriber<uintptr_t> defer_subscriber_;
     std::vector<connector::ptr> connectors_{};
     std::unordered_set<channel::ptr> pending_{};
 };

@@ -34,19 +34,19 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__subscribed__subscriber_stopped)
     std::pair<code, size_t> resubscribe_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe(0, [&](code value, size_t size)
+        instance.subscribe([&](code value, size_t size)
         {
             stop_result = { value, size };
             return true;
-        });
+        }, 0);
 
         instance.stop(ec, expected);
 
-        instance.subscribe(0, [&](code value, size_t size)
+        instance.subscribe([&](code value, size_t size)
         {
             resubscribe_result = { value, size };
             return true;
-        });
+        }, 0);
     });
 
     pool.stop();
@@ -69,11 +69,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop_default__once__expected)
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe(0, [&](code value, size_t size)
+        instance.subscribe([&](code value, size_t size)
         {
             stop_result = { value, size };
             return true;
-        });
+        }, 0);
 
         instance.stop_default(ec);
     });
@@ -96,11 +96,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop__once__expected)
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe(0, [&](code value, size_t size)
+        instance.subscribe([&](code value, size_t size)
         {
             stop_result = { value, size };
             return true;
-        });
+        }, 0);
 
         instance.stop(ec, expected);
     });
@@ -123,11 +123,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop__twice__second_dropped)
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe(0, [&](code value, size_t size)
+        instance.subscribe([&](code value, size_t size)
         {
             stop_result = { value, size };
             return true;
-        });
+        }, 0);
 
         instance.stop(ec, expected);
         instance.stop(error::address_blocked, {});
@@ -153,12 +153,12 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__stopped__dropped)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe(0, [&](code value, size_t size)
+        instance.subscribe([&](code value, size_t size)
         {
             // Allow first and possible second notify, ignore stop.
             if (++count != two) notify_result = { value, size };
             return true;
-        });
+        }, 0);
 
         instance.notify(ec, expected);
         instance.stop_default(error::address_blocked);
@@ -184,11 +184,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__once__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe(0, [&](code value, size_t size)
+        instance.subscribe([&](code value, size_t size)
         {
             if (is_one(++count)) notify_result = { value, size };
             return true;
-        });
+        }, 0);
 
         instance.notify(ec, expected);
 
@@ -215,11 +215,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__twice__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe(0, [&](code value, size_t size)
+        instance.subscribe([&](code value, size_t size)
         {
             if (++count == two) notify_result = { value, size };
             return true;
-        });
+        }, 0);
 
         instance.notify({}, {});
         instance.notify(ec, expected);
