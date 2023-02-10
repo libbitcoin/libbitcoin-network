@@ -151,7 +151,7 @@ void session_seed::start_seed(const code&, const config::endpoint& seed,
     const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Connecting to seed node [" << seed << "]");
+    LOG("Connecting to seed [" << seed << "]");
 
     // Guard restartable connector (shutdown delay).
     if (stopped())
@@ -168,10 +168,10 @@ void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Connect seed [" << seed << "]: " << ec.message());
 
     if (ec)
     {
+        LOG("Failed to connect seed channel [" << seed << "] " << ec.message());
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         stop_seed(counter, handler);
         return;
@@ -217,9 +217,14 @@ void session_seed::handle_channel_start(const code& LOG_ONLY(ec),
     const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Seed channel start [" << channel->authority() << "] " << ec.message());
 
-    // Pend seeding channel.
+    if (ec)
+    {
+        LOG("Failed to start seed channel [" << channel->authority() << "] "
+            << ec.message());
+    }
+
+    // Pend seeding channel, independent of result.
     seeding_.insert(channel);
 }
 
