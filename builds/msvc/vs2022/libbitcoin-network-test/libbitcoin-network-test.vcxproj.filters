@@ -36,6 +36,9 @@
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
@@ -263,9 +266,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp">
-      <Filter>src\async</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

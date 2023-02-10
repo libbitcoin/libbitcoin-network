@@ -176,7 +176,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\impl\async\resubscriber.ipp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\address_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\alert.hpp" />
@@ -251,6 +250,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\resubscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\tracker.ipp" />
     <None Include="packages.config" />

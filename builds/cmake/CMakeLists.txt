@@ -268,6 +268,7 @@ if (with-tests)
         "../../test/test.hpp"
         "../../test/async/deadline.cpp"
         "../../test/async/enable_shared_from_base.cpp"
+        "../../test/async/resubscriber.cpp"
         "../../test/async/subscriber.cpp"
         "../../test/async/thread.cpp"
         "../../test/async/threadpool.cpp"
