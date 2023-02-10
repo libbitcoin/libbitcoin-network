@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(subscriber_tests)
 
 typedef subscriber<size_t> test_subscriber;
 
-BOOST_AUTO_TEST_CASE(subscriber__subscribe__subscribed__subscriber_stopped)
+BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__subscribed__subscriber_stopped)
     constexpr auto expected = 42u;
 
     std::pair<code, size_t> stop_result;
-    std::pair<code, size_t> resubscribe_result;
+    std::pair<code, size_t> retry_result;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe([&](code value, size_t size) NOEXCEPT
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__subscribed__subscriber_stopped)
 
         instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
-            resubscribe_result = { value, size };
+            retry_result = { value, size };
         });
     });
 
@@ -52,8 +52,8 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__subscribed__subscriber_stopped)
 
     BOOST_REQUIRE_EQUAL(stop_result.first, ec);
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
-    BOOST_REQUIRE_EQUAL(resubscribe_result.first, error::subscriber_stopped);
-    BOOST_REQUIRE_EQUAL(resubscribe_result.second, size_t{});
+    BOOST_REQUIRE_EQUAL(retry_result.first, error::subscriber_stopped);
+    BOOST_REQUIRE_EQUAL(retry_result.second, size_t{});
 }
 
 BOOST_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
@@ -144,15 +144,14 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
-    auto count = 0u;
+    auto count = zero;
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Allow first and possible second notify, ignore stop.
-            if (++count != 2u)
-                notify_result = { value, size };
+            if (++count != two) notify_result = { value, size };
         });
 
         instance.notify(ec, expected);
@@ -175,14 +174,13 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__once__expected)
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
-    auto count = 0u;
+    auto count = zero;
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
-            if (is_one(++count))
-                notify_result = { value, size };
+            if (is_one(++count)) notify_result = { value, size };
         });
 
         instance.notify(ec, expected);
@@ -206,14 +204,14 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__twice__expected)
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
-    auto count = 0u;
+    auto count = zero;
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
-            if (++count == 2u)
-                notify_result = { value, size };
+            // Exclude stop_default call.
+            if (++count <= two) notify_result = { value, size };
         });
 
         instance.notify({}, {});

@@ -108,11 +108,14 @@ bool resubscriber<Key, Args...>::notify(const Key& key, const code& ec,
             map_.erase(it);
             return false;
         }
+
+        // resubscribed
+        return true;
     }
     BC_POP_WARNING()
 
-    // resubscribed
-    return true;
+    // not found
+    return false;
 }
 
 template <typename Key, typename... Args>
