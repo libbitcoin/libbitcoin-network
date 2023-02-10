@@ -302,7 +302,8 @@ class mock_session_start_accept_parameter_error
 public:
     using mock_session_inbound::mock_session_inbound;
 
-    void start_accept(const code&, const acceptor::ptr& acceptor) NOEXCEPT override
+    void start_accept(const code&,
+        const acceptor::ptr& acceptor) NOEXCEPT override
     {
         mock_session_inbound::start_accept(error::invalid_checksum, acceptor);
     }

@@ -49,6 +49,7 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 session::session(p2p& network) NOEXCEPT
   : network_(network),
     stopped_(true),
+    key_subscriber_(network.strand()),
     stop_subscriber_(network.strand()),
     reporter(network.log())
 {
@@ -78,6 +79,7 @@ void session::stop() NOEXCEPT
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     stopped_.store(true, std::memory_order_relaxed);
+    key_subscriber_.stop(error::service_stopped);
     stop_subscriber_.stop(error::service_stopped);
 
     // Stop all pending channels.
@@ -320,7 +322,19 @@ void session::do_handle_channel_stopped(const code& ec,
 // Subscriptions.
 // ----------------------------------------------------------------------------
 
-void session::delay_invoke(result_handler&& handler,
+void session::delay_invoke(result_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    delay_invoke(std::move(handler), {});
+}
+
+void session::delay_invoke(result_handler&& handler, const key& token) NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    delay_invoke(std::move(handler), token, settings().connect_timeout());
+}
+
+void session::delay_invoke(result_handler&& handler, const key& token,
     const duration& timeout) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
@@ -330,19 +344,38 @@ void session::delay_invoke(result_handler&& handler,
         handler(error::service_stopped);
         return;
     }
-    
-    // TODO: external stop(), internal delete (unsubscribe()).
-    // TODO: timer handler unsubscribes, resubscriber notifies for stop.
-    // TODO: notification handler can also unsubscribe itself (vs. notifier).
-    // TODO: this can be made easier by resubscribe handler returning bool,
-    // TODO: where false removes the subscription and true leave it in place.
-    // TODO: this is a specialized version of the basic subscriber.
-    // TODO: self-unsubscription requires an identifier be registered with
-    // TODO: the handler, as a search key in a subscriber queue tuple.
-    // TODO: a unique search key implies std::map<key, handler>.
-    // TODO: use a shared pointer value, object address (or nonce const).
+
     const auto timer = std::make_shared<deadline>(log(), network_.strand());
-    timer->start(std::move(handler), timeout);
+
+    // Timer posts to strand so subscribe completes before handle_timer invoke.
+    timer->start(BIND3(handle_timer, _1, token, std::move(handler)), timeout);
+
+    // Subscribe for timer self and service stop cancelations.
+    key_subscriber_.subscribe(token, BIND2(handle_subscriber, _1, timer));
+}
+
+// Expect success (timeout) and canceled (shutdown) here, passed to complete.
+void session::handle_timer(const code& ec, const key& token,
+    const result_handler& complete) NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    LOG("Delay timer unsubscribe and invoke." << ec.message());
+
+    // Remove the stop subscription (if not already), will not return here.
+    key_subscriber_.notify(token, ec);
+    complete(ec);
+}
+
+// error::subscriber_exists implies key conflict (should not happen).
+bool session::handle_subscriber(const code& LOG_ONLY(ec),
+    const deadline::ptr& timer) NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    LOG("Delay timer stop." << ec.message());
+
+    // Invoked the completion handler (if not already).
+    timer->stop();
+    return false;
 }
 
 void session::subscribe_stop(result_handler&& handler) NOEXCEPT

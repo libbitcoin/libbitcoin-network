@@ -59,8 +59,8 @@ protected:
     void attach_protocols(const channel::ptr& channel) const NOEXCEPT override;
 
     /// Start outbound connections based on config (called from start).
-    virtual void start_connect(const connectors_ptr& connectors,
-        size_t id) NOEXCEPT;
+    virtual void start_connect(const code& ec,
+        const connectors_ptr& connectors, size_t id) NOEXCEPT;
 
 private:
     typedef std::shared_ptr<size_t> count_ptr;

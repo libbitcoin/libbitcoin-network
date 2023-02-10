@@ -184,11 +184,11 @@ public:
     }
 
     // Capture first start_connect call.
-    void start_connect(const connectors_ptr& connectors,
+    void start_connect(const code&, const connectors_ptr& connectors,
         size_t peer) NOEXCEPT override
     {
         // Must be first to ensure connector::start_connect() preceeds promise release.
-        session_outbound::start_connect(connectors, peer);
+        session_outbound::start_connect({}, connectors, peer);
 
         if (is_one(connects_))
             reconnect_.set_value(true);

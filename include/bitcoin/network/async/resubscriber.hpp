@@ -29,6 +29,7 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe, non-virtual.
+/// All methods must be invoked on strand, handlers are invoked on strand.
 template <typename Key, typename... Args>
 class resubscriber final
 {
@@ -41,20 +42,23 @@ public:
     resubscriber(asio::strand& strand) NOEXCEPT;
     ~resubscriber() NOEXCEPT;
 
-    /// If stopped this invokes handler(error::subscriber_stopped, Args{}...),
-    /// and the handler is dropped. Otherwise the handler is held until stop.
+    /// If stopped, handler is invoked with error::subscriber_stopped/defaults
+    /// and handler is dropped. Otherwise it is held until stop/drop.
+    /// If key exists, handler is invoked with error::subscriber_exists.
     void subscribe(const Key& key, handler&& handler) NOEXCEPT;
 
-    /// Invokes each handler in order, on the strand, with specified arguments.
-    /// Handler returns true to be resubscribed, otherwise it is desubscribed.
+    /// Invoke each handler in order with specified arguments.
+    /// Handler returns true for resubscription, otherwise it is desubscribed.
     void notify(const code& ec, const Args&... args) NOEXCEPT;
 
-    /// Invokes each handler in order, on the strand, with specified arguments,
-    /// and then drops all handlers.
+    /// Invoke specified handler in order with specified arguments.
+    /// Handler return controls resubscription, and is forwarded to the caller.
+    bool notify(const Key& key, const code& ec, const Args&... args) NOEXCEPT;
+
+    /// Invoke each handler in order, with arguments, then drop all.
     void stop(const code& ec, const Args&... args) NOEXCEPT;
 
-    /// Invokes each handler in order, on the strand, with specified error code
-    /// and default arguments, and then drops all handlers.
+    /// Invoke each handler in order, with default arguments, then drop all.
     void stop_default(const code& ec) NOEXCEPT;
 
 private:
@@ -63,7 +67,7 @@ private:
 
     // These are not thread safe.
     bool stopped_;
-    std::map<Key, handler> queue_{};
+    std::map<Key, handler> map_{};
 };
 
 } // namespace network

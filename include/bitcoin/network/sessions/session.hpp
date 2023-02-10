@@ -77,6 +77,8 @@ public:
     virtual bool inbound() const NOEXCEPT = 0;
 
 protected:
+    using key = uint64_t;
+    typedef resubscriber<key> key_subscriber;
     typedef subscriber<> stop_subscriber;
 
     /// Construct an instance (network should be started).
@@ -112,9 +114,16 @@ protected:
 
     /// Subscriptions.
     /// -----------------------------------------------------------------------
+    /// Invocation with subscribed token invokes/clears previous subscription.
 
-    /// Start timer with completion handler.
-    virtual void delay_invoke(result_handler&& handler,
+    /// Delay invocation with zero token and connection timeout.
+    virtual void delay_invoke(result_handler&& handler) NOEXCEPT;
+
+    /// Delay invocation with specified token and connection timeout.
+    virtual void delay_invoke(result_handler&& handler, const key& token) NOEXCEPT;
+
+    /// Delay invocation with specified token and specified timeout.
+    virtual void delay_invoke(result_handler&& handler, const key& token,
         const duration& timeout) NOEXCEPT;
 
     /// Subscribe to stop notification.
@@ -191,10 +200,16 @@ private:
     void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,
         const result_handler& stopped) NOEXCEPT;
 
+    void handle_timer(const code& ec, const key& token,
+        const result_handler& complete) NOEXCEPT;
+    bool handle_subscriber(const code& ec,
+        const deadline::ptr& timer) NOEXCEPT;
+
     // These are thread safe.
     std::atomic<bool> stopped_;
 
     // These are not thread safe.
+    key_subscriber key_subscriber_;
     stop_subscriber stop_subscriber_;
     std::vector<connector::ptr> connectors_{};
     std::unordered_set<channel::ptr> pending_{};

@@ -111,14 +111,13 @@ void session_manual::connect(const config::endpoint& peer,
     });
 
     LOG("Maintaining manual connection to [" << peer << "]");
-
-    start_connect(peer, connector, std::move(handler));
+    start_connect(error::success, peer, connector, std::move(handler));
 }
 
 // Connect cycle.
 // ----------------------------------------------------------------------------
 
-void session_manual::start_connect(const endpoint& peer,
+void session_manual::start_connect(const code&, const endpoint& peer,
     const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -155,17 +154,9 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         LOG("Failed to connect manual peer [" << peer << "] " << ec.message());
-        const auto timeout = settings().connect_timeout();
 
-        // This is a unique key per endpoint identity (&peer).
-        // Could instead use const endpoint::ptr& peer here, and use the ptr.
-        ////delay_invoke(BIND3(start_connect, peer, connector, handler), timeout);
-        ////start_connect(peer, connector, handler);
-
-        boost::asio::post(network_.strand(),
-            std::bind(&session_manual::start_connect,
-                shared_from_base<session_manual>(), peer, connector, handler));
-
+        const auto token = reinterpret_cast<uint64_t>(&peer);
+        delay_invoke(BIND4(start_connect, _1, peer, connector, handler), token);
         return;
     }
 
@@ -207,7 +198,7 @@ void session_manual::handle_channel_stop(const code& LOG_ONLY(ec),
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).
-    start_connect(peer, connector, move_copy(handler));
+    start_connect(error::success, peer, connector, move_copy(handler));
 }
 
 BC_POP_WARNING()

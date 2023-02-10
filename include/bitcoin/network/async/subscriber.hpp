@@ -28,6 +28,7 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe, non-virtual.
+/// All methods must be invoked on strand, handlers are invoked on strand.
 template <typename... Args>
 class subscriber final
 {
@@ -40,19 +41,17 @@ public:
     subscriber(asio::strand& strand) NOEXCEPT;
     ~subscriber() NOEXCEPT;
 
-    /// If stopped this invokes handler(error::subscriber_stopped, Args{}...),
+    /// If stopped, handler is invoked with error::subscriber_stopped/defaults
     /// and the handler is dropped. Otherwise the handler is held until stop.
     void subscribe(handler&& handler) NOEXCEPT;
 
-    /// Invokes each handler in order, on the strand, with specified arguments.
+    /// Invoke each handler in order with specified arguments.
     void notify(const code& ec, const Args&... args) const NOEXCEPT;
 
-    /// Invokes each handler in order, on the strand, with specified arguments,
-    /// and then drops all handlers.
+    /// Invoke each handler in order, with arguments, then drop all.
     void stop(const code& ec, const Args&... args) NOEXCEPT;
 
-    /// Invokes each handler in order, on the strand, with specified error code
-    /// and default arguments, and then drops all handlers.
+    /// Invoke each handler in order, with default arguments, then drop all.
     void stop_default(const code& ec) NOEXCEPT;
 
 private:

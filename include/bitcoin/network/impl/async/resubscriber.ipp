@@ -35,7 +35,7 @@ template <typename Key, typename... Args>
 resubscriber<Key, Args...>::~resubscriber() NOEXCEPT
 {
     // Destruction may not occur on the strand.
-    BC_ASSERT_MSG(queue_.empty(), "resubscriber is not cleared");
+    BC_ASSERT_MSG(map_.empty(), "resubscriber is not cleared");
 }
 
 template <typename Key, typename... Args>
@@ -45,9 +45,17 @@ void resubscriber<Key, Args...>::subscribe(const Key& key,
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (stopped_)
-        /* bool */ handler(error::subscriber_stopped, Args{}...);
+    {
+        /*bool*/ handler(error::subscriber_stopped, Args{}...);
+    }
+    else if (map_.contains(key))
+    {
+        /*bool*/ handler(error::subscriber_exists, Args{}...);
+    }
     else
-        queue_.emplace(key, std::move(handler));
+    {
+        map_.emplace(key, std::move(handler));
+    }
 }
 
 template <typename Key, typename... Args>
@@ -59,14 +67,14 @@ void resubscriber<Key, Args...>::notify(const code& ec,
     if (stopped_)
         return;
 
-    // Already on the strand to protect queue_, so execute each handler.
-    for (auto it = queue_.begin(); it != queue_.end();)
+    // Already on the strand to protect map_, so execute each handler.
+    for (auto it = map_.begin(); it != map_.end();)
     {
         // Invoke handler and capture return value for directed erase.
         if (!it->second(ec, args...))
         {
             // desubscribed
-            it = queue_.erase(it);
+            it = map_.erase(it);
         }
         else
         {
@@ -74,6 +82,31 @@ void resubscriber<Key, Args...>::notify(const code& ec,
             ++it;
         }
     }
+}
+
+template <typename Key, typename... Args>
+bool resubscriber<Key, Args...>::notify(const Key& key, const code& ec,
+    const Args&... args) NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
+    if (stopped_)
+        return false;
+
+    const auto it = map_.find(key);
+    if (it != map_.end())
+    {
+        // Invoke handler and capture return value for directed erase.
+        if (!it->second(ec, args...))
+        {
+            // desubscribed
+            map_.erase(it);
+            return false;
+        }
+    }
+
+    // resubscribed
+    return true;
 }
 
 template <typename Key, typename... Args>
@@ -88,7 +121,7 @@ void resubscriber<Key, Args...>::stop(const code& ec,
 
     notify(ec, args...);
     stopped_ = true;
-    queue_.clear();
+    map_.clear();
 }
 
 template <typename Key, typename... Args>
