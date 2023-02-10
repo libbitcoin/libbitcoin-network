@@ -25,21 +25,21 @@
 namespace libbitcoin {
 namespace network {
 
-template <typename Code, typename... Args>
-subscriber<Code, Args...>::subscriber(asio::strand& strand) NOEXCEPT
+template <typename... Args>
+subscriber<Args...>::subscriber(asio::strand& strand) NOEXCEPT
   : strand_(strand), stopped_(false)
 {
 }
 
-template <typename Code, typename... Args>
-subscriber<Code, Args...>::~subscriber() NOEXCEPT
+template <typename... Args>
+subscriber<Args...>::~subscriber() NOEXCEPT
 {
     // Destruction may not occur on the strand.
     BC_ASSERT_MSG(queue_.empty(), "subscriber is not cleared");
 }
 
-template <typename Code, typename... Args>
-void subscriber<Code, Args...>::subscribe(handler&& handler) NOEXCEPT
+template <typename... Args>
+void subscriber<Args...>::subscribe(handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -49,8 +49,8 @@ void subscriber<Code, Args...>::subscribe(handler&& handler) NOEXCEPT
         queue_.push_back(std::move(handler));
 }
 
-template <typename Code, typename... Args>
-void subscriber<Code, Args...>::notify(const Code& ec,
+template <typename... Args>
+void subscriber<Args...>::notify(const code& ec,
     const Args&... args) const NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -58,14 +58,13 @@ void subscriber<Code, Args...>::notify(const Code& ec,
     if (stopped_)
         return;
 
-    // We are already on the strand to protect queue_, so execute each handler.
+    // Already on the strand to protect queue_, so execute each handler.
     for (const auto& handler: queue_)
         handler(ec, args...);
 }
 
-template <typename Code, typename... Args>
-void subscriber<Code, Args...>::stop(const Code& ec,
-    const Args&... args) NOEXCEPT
+template <typename... Args>
+void subscriber<Args...>::stop(const code& ec, const Args&... args) NOEXCEPT
 {
     BC_ASSERT_MSG(ec, "subscriber stopped with success code");
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -78,8 +77,8 @@ void subscriber<Code, Args...>::stop(const Code& ec,
     queue_.clear();
 }
 
-template <typename Code, typename... Args>
-void subscriber<Code, Args...>::stop_default(const Code& ec) NOEXCEPT
+template <typename... Args>
+void subscriber<Args...>::stop_default(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 

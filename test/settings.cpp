@@ -45,6 +45,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.outbound_connections, 8u);
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
+    BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_handshake_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_germination_seconds, 30u);
@@ -82,6 +83,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.outbound_connections, 8u);
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
+    BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_handshake_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_germination_seconds, 30u);
@@ -132,6 +134,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
     BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.outbound_connections, 8u);
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
+    BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_handshake_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_germination_seconds, 30u);
@@ -182,6 +185,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.outbound_connections, 8u);
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
+    BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_handshake_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_germination_seconds, 30u);
@@ -200,6 +204,14 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     // changed from default
     BOOST_REQUIRE_EQUAL(instance.identifier, 3669344250u);
     BOOST_REQUIRE_EQUAL(instance.inbound_port, 18444u);
+}
+
+BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__connect_timeout_seconds)
+{
+    settings instance;
+    const auto expected = 42;
+    instance.retry_timeout_seconds = expected;
+    BOOST_REQUIRE(instance.retry_timeout() == seconds(expected));
 }
 
 BOOST_AUTO_TEST_CASE(settings__connect_timeout__always__connect_timeout_seconds)

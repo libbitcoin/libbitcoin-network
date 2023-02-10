@@ -138,7 +138,7 @@ void session_seed::handle_started(const code& ec,
             connector->stop();
         });
 
-        start_seed(seed, connector,
+        start_seed(error::success, seed, connector,
             BIND5(handle_connect, _1, _2, seed, counter, handler));
     }
 }
@@ -147,7 +147,7 @@ void session_seed::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Attempt to connect one seed.
-void session_seed::start_seed(const config::endpoint& seed,
+void session_seed::start_seed(const code&, const config::endpoint& seed,
     const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");

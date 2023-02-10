@@ -107,7 +107,7 @@ void session_outbound::handle_started(const code& ec,
             });
 
         // Start connection attempt with batch of connectors for one peer.
-        start_connect(connectors, id);
+        start_connect(error::success, connectors, id);
     }
 
     LOG("Creating " << settings().outbound_connections << " connections "
@@ -121,8 +121,8 @@ void session_outbound::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Attempt to connect one peer using a batch subset of connectors.
-void session_outbound::start_connect(const connectors_ptr& connectors,
-    size_t id) NOEXCEPT
+void session_outbound::start_connect(const code&,
+    const connectors_ptr& connectors, size_t id) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -275,10 +275,8 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        const auto timeout = settings().connect_timeout();
-
-        // BUGBUG: Since connections span sessions, this timer just gets reset.
-        start_timer(BIND2(start_connect, connectors, id), timeout);
+        LOG("Failed to connect outbound channel, " << ec.message());
+        defer(BIND3(start_connect, _1, connectors, id), connectors);
         return;
     }
 
@@ -319,7 +317,7 @@ void session_outbound::handle_channel_stop(const code& ec,
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).
-    start_connect(connectors, id);
+    start_connect(error::success, connectors, id);
 }
 
 void session_outbound::untake(const code& ec,

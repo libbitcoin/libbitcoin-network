@@ -44,7 +44,7 @@ class BCT_API proxy
 {
 public:
     typedef std::shared_ptr<proxy> ptr;
-    typedef subscriber<const code&> stop_subscriber;
+    typedef subscriber<> stop_subscriber;
 
     DELETE_COPY_MOVE(proxy);
     virtual ~proxy() NOEXCEPT;

@@ -128,17 +128,18 @@ public:
         return session_manual::stopped();
     }
 
-    endpoint start_connect_endpoint() const NOEXCEPT
+    const endpoint& start_connect_endpoint() const NOEXCEPT
     {
         return start_connect_endpoint_;
     }
 
     // Capture first start_connect call.
-    void start_connect(const endpoint& peer, const connector::ptr& connector,
+    void start_connect(const code&, const endpoint& peer,
+        const connector::ptr& connector,
         const channel_handler& handler) NOEXCEPT override
     {
         // Must be first to ensure connector::start_connect() preceeds promise release.
-        session_manual::start_connect(peer, connector, handler);
+        session_manual::start_connect({}, peer, connector, handler);
 
         if (is_one(connects_))
             reconnect_.set_value(true);

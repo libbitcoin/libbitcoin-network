@@ -47,7 +47,7 @@ public:
     /// Start the session (call from network strand).
     virtual void start(result_handler&& handler) NOEXCEPT;
 
-    /// Stop the session timer and subscriber (call from network strand).
+    /// Stop the subscriber (call from network strand).
     virtual void stop() NOEXCEPT;
 
     /// Utilities.
@@ -77,15 +77,13 @@ public:
     virtual bool inbound() const NOEXCEPT = 0;
 
 protected:
-    typedef subscriber<code> stop_subscriber;
-
     /// Construct an instance (network should be started).
     session(p2p& network) NOEXCEPT;
 
     /// Asserts that session is stopped.
     virtual ~session() NOEXCEPT;
 
-    /// Macro helpers.
+    /// Invocation helpers.
     /// -----------------------------------------------------------------------
 
     /// Bind a method in the base or derived class (use BIND#).
@@ -94,6 +92,15 @@ protected:
     {
         return std::bind(std::forward<Handler>(handler),
             shared_from_base<Session>(), std::forward<Args>(args)...);
+    }
+
+    /// Defer invocation by retry timeout, identified by object address.
+    template <typename Identifier = size_t>
+    void defer(result_handler&& handler, const Identifier& unique=zero) NOEXCEPT
+    {
+        BC_PUSH_WARNING(NO_REINTERPRET_CAST)
+        defer(std::move(handler), reinterpret_cast<uintptr_t>(&unique));
+        BC_POP_WARNING()
     }
 
     /// Channel sequence.
@@ -113,9 +120,8 @@ protected:
     /// Subscriptions.
     /// -----------------------------------------------------------------------
 
-    /// Start timer with completion handler.
-    virtual void start_timer(result_handler&& handler,
-        const duration& timeout) NOEXCEPT;
+    /// Delay invocation with specified unique id and retry timeout.
+    virtual void defer(result_handler&& handler, const uintptr_t& id) NOEXCEPT;
 
     /// Subscribe to stop notification.
     virtual void subscribe_stop(result_handler&& handler) NOEXCEPT;
@@ -168,6 +174,8 @@ protected:
     /// Notify (non-seed) subscribers on channel start.
     virtual bool notify() const NOEXCEPT = 0;
 
+    p2p& network_;
+
 private:
     void handle_channel_start(const code& ec, const channel::ptr& channel,
         const result_handler& started, const result_handler& stopped) NOEXCEPT;
@@ -189,13 +197,18 @@ private:
     void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,
         const result_handler& stopped) NOEXCEPT;
 
+    void handle_timer(const code& ec, uintptr_t id,
+        const result_handler& complete) NOEXCEPT;
+    bool handle_subscriber(const code& ec, uintptr_t id,
+        const deadline::ptr& timer) NOEXCEPT;
+
     // These are thread safe.
-    p2p& network_;
     std::atomic<bool> stopped_;
+    const duration timeout_;
 
     // These are not thread safe.
-    deadline::ptr timer_;
-    stop_subscriber stop_subscriber_;
+    subscriber<> stop_subscriber_;
+    resubscriber<uintptr_t> defer_subscriber_;
     std::vector<connector::ptr> connectors_{};
     std::unordered_set<channel::ptr> pending_{};
 };

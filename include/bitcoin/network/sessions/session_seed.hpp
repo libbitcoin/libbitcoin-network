@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_SEED_HPP
 #define LIBBITCOIN_NETWORK_SESSION_SEED_HPP
 
-#include <cstddef>
 #include <memory>
 #include <unordered_set>
 #include <bitcoin/system.hpp>
@@ -68,7 +67,7 @@ protected:
     void attach_protocols(const channel::ptr& channel) const NOEXCEPT override;
 
     /// Start a seed connection (called from start).
-    virtual void start_seed(const config::endpoint& seed,
+    virtual void start_seed(const code& ec, const config::endpoint& seed,
         const connector::ptr& connector,
         const channel_handler& handler) NOEXCEPT;
 

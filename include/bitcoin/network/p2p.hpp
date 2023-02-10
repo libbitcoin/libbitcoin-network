@@ -44,8 +44,8 @@ class BCT_API p2p
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
-    typedef subscriber<const code&> stop_subscriber;
-    typedef subscriber<const code&, const channel::ptr&> channel_subscriber;
+    typedef subscriber<> stop_subscriber;
+    typedef subscriber<const channel::ptr&> channel_subscriber;
 
     template <typename Message>
     void broadcast(const Message& message, result_handler&& handler,

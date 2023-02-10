@@ -19,10 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_MANUAL_HPP
 #define LIBBITCOIN_NETWORK_SESSION_MANUAL_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -78,7 +75,7 @@ protected:
     void attach_protocols(const channel::ptr& channel) const NOEXCEPT override;
 
     /// Start or restart the given connection (called from connect).
-    virtual void start_connect(const config::endpoint& peer,
+    virtual void start_connect(const code& ec, const config::endpoint& peer,
         const connector::ptr& connector, const channel_handler& handler) NOEXCEPT;
 
 private:

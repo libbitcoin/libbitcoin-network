@@ -111,6 +111,7 @@ enum error_t
     channel_inactive,
     channel_stopped,
     service_stopped,
+    subscriber_exists,
     subscriber_stopped
 };
 

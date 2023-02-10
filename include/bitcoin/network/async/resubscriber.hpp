@@ -16,10 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_HPP
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/error.hpp>
@@ -29,24 +30,30 @@ namespace network {
 
 /// Not thread safe, non-virtual.
 /// All methods must be invoked on strand, handlers are invoked on strand.
-template <typename... Args>
-class subscriber final
+template <typename Key, typename... Args>
+class resubscriber final
 {
 public:
-    DELETE_COPY_MOVE(subscriber);
+    DELETE_COPY_MOVE(resubscriber);
 
-    typedef std::function<void(const code&, Args...)> handler;
+    typedef std::function<bool(const code&, Args...)> handler;
 
     // Strand is only used for assertions.
-    subscriber(asio::strand& strand) NOEXCEPT;
-    ~subscriber() NOEXCEPT;
+    resubscriber(asio::strand& strand) NOEXCEPT;
+    ~resubscriber() NOEXCEPT;
 
     /// If stopped, handler is invoked with error::subscriber_stopped/defaults
-    /// and the handler is dropped. Otherwise the handler is held until stop.
-    void subscribe(handler&& handler) NOEXCEPT;
+    /// and handler is dropped. Otherwise it is held until stop/drop.
+    /// If key exists, handler is invoked with error::subscriber_exists.
+    void subscribe(handler&& handler, const Key& key) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.
-    void notify(const code& ec, const Args&... args) const NOEXCEPT;
+    /// Handler returns true for resubscription, otherwise it is desubscribed.
+    void notify(const code& ec, const Args&... args) NOEXCEPT;
+
+    /// Invoke specified handler in order with specified arguments.
+    /// Handler return controls resubscription, and is forwarded to the caller.
+    bool notify(const Key& key, const code& ec, const Args&... args) NOEXCEPT;
 
     /// Invoke each handler in order, with arguments, then drop all.
     void stop(const code& ec, const Args&... args) NOEXCEPT;
@@ -60,12 +67,12 @@ private:
 
     // These are not thread safe.
     bool stopped_;
-    std::vector<handler> queue_{};
+    std::map<Key, handler> map_{};
 };
 
 } // namespace network
 } // namespace libbitcoin
 
-#include <bitcoin/network/impl/async/subscriber.ipp>
+#include <bitcoin/network/impl/async/resubscriber.ipp>
 
 #endif

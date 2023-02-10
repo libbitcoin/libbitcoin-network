@@ -48,6 +48,7 @@ settings::settings() NOEXCEPT
     inbound_connections(0),
     outbound_connections(8),
     connect_batch_size(5),
+    retry_timeout_seconds(1),
     connect_timeout_seconds(5),
     channel_handshake_seconds(30),
     channel_germination_seconds(30),
@@ -125,6 +126,11 @@ bool settings::advertise_enabled() const NOEXCEPT
 {
     // Advertise requires inbound and valid self.
     return inbound_enabled() && config::is_valid(self.to_address_item());
+}
+
+duration settings::retry_timeout() const NOEXCEPT
+{
+    return seconds(retry_timeout_seconds);
 }
 
 duration settings::connect_timeout() const NOEXCEPT
