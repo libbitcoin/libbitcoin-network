@@ -155,7 +155,6 @@ void session_inbound::handle_accept(const code& ec,
 
     if (!whitelisted(channel->authority()))
     {
-        // Verbose
         LOG("Dropping not whitelisted connection [" << channel->authority() << "]");
         channel->stop(error::address_blocked);
         return;
@@ -163,7 +162,6 @@ void session_inbound::handle_accept(const code& ec,
 
     if (blacklisted(channel->authority()))
     {
-        // Verbose
         ////LOG("Dropping blacklisted connection [" << channel->authority() << "]");
         channel->stop(error::address_blocked);
         return;
@@ -223,7 +221,6 @@ void session_inbound::handle_channel_start(const code&,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Verbose.
     ////LOG("Inbound channel start [" << channel->authority() << "] "
     ////    << ec.message());
 }

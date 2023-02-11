@@ -321,7 +321,6 @@ void proxy::do_write(const system::chunk_ptr& payload,
     total_ = ceilinged_add(total_.load(), payload->size());
     backlog_ = ceilinged_add(backlog_.load(), payload->size());
 
-    // Verbose.
     ////LOG("Queue for [" << authority() << "]: " << queue_.size()
     ////    << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
 
@@ -356,7 +355,6 @@ void proxy::handle_write(const code& ec, size_t,
     backlog_ = floored_subtract(backlog_.load(), queue_.front().first->size());
     queue_.pop_front();
 
-    // Verbose.
     ////LOG("Dequeue for [" << authority() << "]: " << queue_.size()
     ////    << " (" << backlog_.load() << " bytes)");
 
