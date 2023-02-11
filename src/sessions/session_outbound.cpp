@@ -175,7 +175,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     if (insufficient(peer))
     {
         // Should not see these unless there is a change to services_minimum.
-        LOG("Dropping insufficient address [" << peer << "]");
+        ////LOG("Dropping insufficient address [" << peer << "]");
         handler(error::address_insufficient, nullptr);
         return;
     }
@@ -184,7 +184,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     if (unsupported(peer))
     {
         // Should not see these unless there is a change to invalid_services.
-        LOG("Dropping invalid services address [" << peer << "]");
+        ////LOG("Dropping unsupported address [" << peer << "]");
         handler(error::address_unsupported, nullptr);
         return;
     }
@@ -193,7 +193,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     if (blacklisted(peer))
     {
         // Should not see these unless there is a change to blacklist config.
-        LOG("Dropping blacklisted address [" << peer << "]");
+        ////LOG("Dropping blacklisted address [" << peer << "]");
         handler(error::address_blocked, nullptr);
         return;
     }
@@ -215,17 +215,17 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 // in its timer cancelation, which cancels its handler. In either case the
 // address has not been validated, so must be restored to pool here.
 void session_outbound::handle_connector(const code& ec,
-    const channel::ptr& channel, const config::address& peer, size_t id,
+    const channel::ptr& channel, const config::address& peer, size_t,
     const channel_handler& handler) NOEXCEPT
 {
     if (stopped() || ec == error::operation_canceled)
     {
-        LOG("Restore [" << peer << "] (" << id << ") " << ec.message());
+        ////LOG("Restore [" << peer << "] (" << id << ") " << ec.message());
         restore(peer.message(), BIND1(handle_untake, _1));
     }
     else if (ec)
     {
-        LOG("Dropping failed address [" << peer << "] " << ec.message());
+        ////LOG("Dropping failed address [" << peer << "] " << ec.message());
     }
 
     handler(ec, channel);
@@ -356,7 +356,7 @@ void session_outbound::handle_channel_stop(const code& ec,
     start_connect(error::success, connectors, id);
 }
 
-void session_outbound::untake(const code& ec, size_t id,
+void session_outbound::untake(const code& ec, size_t,
     const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel, "channel");
@@ -364,8 +364,8 @@ void session_outbound::untake(const code& ec, size_t id,
     if (!ec || stopped())
     {
         const auto peer = channel->updated_address();
-        LOG("Untake [" << config::address(peer) << "] (" << id << ") "
-            << ec.message());
+        ////LOG("Untake [" << config::address(peer) << "] (" << id << ") "
+        ////    << ec.message());
         restore(peer, BIND1(handle_untake, _1));
     }
 }
