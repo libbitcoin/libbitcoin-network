@@ -803,8 +803,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
 
-    // Channel was unpent (handshake completed), not found on unstore returns success.
-    BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
+    // Channel unpend in do_handle_channel_stopped now, wait on network_.unpend().
+    ////BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
     BOOST_REQUIRE(!net.unstored_inbound());
     BOOST_REQUIRE_EQUAL(net.unstore_result(), error::success);
@@ -876,9 +876,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
-    
-    // Channel was unpent (handshake completed), not found on unstore returns success.
-    BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
+
+    // Channel unpend in do_handle_channel_stopped now, wait on network_.unpend().
+    ////BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
     BOOST_REQUIRE(!net.unstored_inbound());
     BOOST_REQUIRE_EQUAL(net.unstore_result(), error::success);
@@ -1049,8 +1049,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     BOOST_REQUIRE(channel->reresumed());
     BOOST_REQUIRE(!channel->stopped());
 
-    // Channel unpent (outbound).
-    BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
+    // Channel unpend in do_handle_channel_stopped now, wait on network_.unpend().
+    ////BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
 
     net.close();
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
