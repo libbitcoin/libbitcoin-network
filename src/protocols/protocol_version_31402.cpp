@@ -315,7 +315,6 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     // Advertised services on many incoming connections are set to zero.
     if ((message->services & minimum_services_) != minimum_services_)
     {
-        // Verbose (this appears to be common misconfiguration or intentional).
         ////LOG("Insufficient services (" << message->services << ") by ["
         ////    << authority() << "] showing (" << outbound().services() << ").");
 

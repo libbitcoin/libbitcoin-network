@@ -159,17 +159,20 @@ protected:
     /// Number of outbound connected channels (including manual).
     virtual size_t outbound_channel_count() const NOEXCEPT;
 
-    /// The address is blacklisted by configuration.
-    virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
-
-    /// The address is not whitelisted by configuration (for non-empty list).
-    virtual bool whitelisted(const config::authority& authority) const NOEXCEPT;
+    /// The address protocol is disabled.
+    virtual bool disabled(const config::address& authority) const NOEXCEPT;
 
     /// The address advertises insufficient services.
     virtual bool insufficient(const config::address& authority) const NOEXCEPT;
 
     /// The address advertises disallowed services.
     virtual bool unsupported(const config::address& authority) const NOEXCEPT;
+
+    /// The address is not whitelisted by configuration (for non-empty list).
+    virtual bool whitelisted(const config::authority& authority) const NOEXCEPT;
+
+    /// The address is blacklisted by configuration.
+    virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
 
     /// Notify (non-seed) subscribers on channel start.
     virtual bool notify() const NOEXCEPT = 0;

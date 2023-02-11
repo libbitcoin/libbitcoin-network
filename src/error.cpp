@@ -35,6 +35,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     // addresses
     { address_invalid, "address invalid" },
     { address_not_found, "address not found" },
+    { address_disabled, "address protocol disabled" },
     { address_unsupported, "advertised services unsupported" },
     { address_insufficient, "advertised services insufficient" },
     { seeding_unsuccessful, "seeding unsuccessful" },
@@ -46,6 +47,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // general I/O failures
     { bad_stream, "bad data stream" },
+    { not_allowed, "not allowed" },
     { peer_disconnect, "peer disconnect" },
     { peer_unsupported, "peer unsupported" },
     { peer_insufficient, "peer insufficient" },
@@ -55,7 +57,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // incoming connection failures
     { listen_failed, "incoming connection failed" },
-    { accept_failed, "connection acceptance failed" },
+    { accept_failed, "connection to self aborted" },
     { oversubscribed, "service oversubscribed" },
 
     // incoming/outgoing connection failures
@@ -127,16 +129,17 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
     if (ec == asio_misc_error_t::eof)
         return error::peer_disconnect;
 
-    // network (no_buffer_space see WSAENOBUFS issue on MSDN) 
-    if (ec == asio_system_error_t::no_buffer_space ||
-        ec == boost_error_t::connection_refused ||
-        ec == boost_error_t::connection_reset ||
-        ec == boost_error_t::not_connected ||
-        ec == boost_error_t::operation_not_permitted ||
+    // learn.microsoft.com/en-us/troubleshoot/windows-client/networking/
+    // connect-tcp-greater-than-5000-error-wsaenobufs-10055
+    if (ec == asio_system_error_t::no_buffer_space)
+        return error::invalid_configuration;
+
+    // network
+    if (ec == boost_error_t::operation_not_permitted ||
         ec == boost_error_t::operation_not_supported ||
         ec == boost_error_t::owner_dead ||
         ec == boost_error_t::permission_denied)
-        return error::operation_failed;
+        return error::not_allowed;
 
     // connect-resolve
     if (ec == boost_error_t::address_family_not_supported ||
@@ -145,8 +148,11 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
         ec == boost_error_t::destination_address_required)
         return error::resolve_failed;
 
-    // connect-resolve
-    if (ec == boost_error_t::broken_pipe ||
+    // connect-connect
+    if (ec == boost_error_t::not_connected ||
+        ec == boost_error_t::connection_refused ||
+        ec == boost_error_t::connection_reset ||
+        ec == boost_error_t::broken_pipe ||
         ec == boost_error_t::host_unreachable ||
         ec == boost_error_t::network_down ||
         ec == boost_error_t::network_reset ||

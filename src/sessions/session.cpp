@@ -108,6 +108,7 @@ void session::start_channel(const channel::ptr& channel,
     }
 
     // Pend shaking outgoing nonce (unless nonce conflict).
+    // Inbound does not check until handshake completes, so no race.
     if (!inbound() && !network_.pend(channel->nonce()))
     {
         channel->stop(error::channel_conflict);
@@ -186,17 +187,19 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    // Unpend shaken channel (intervening stop/clear could clear first).
+    // Unpend channel (intervening stop/clear could clear first).
     if (ec != error::service_stopped && !to_bool(pending_.erase(channel)))
     {
         LOG("Unpend failed to locate channel (ok on stop).");
     }
 
-    // Unpend shaken outgoing nonce (implies bug).
-    if (!inbound() && !network_.unpend(channel->nonce()))
-    {
-        LOG("Unpend failed to locate channel nonce.");
-    }
+    // Loopback race, with inbound and outbound channels on the same strand:
+    // [out:unpend then in:store] (fail) or [in:store then out:unpend] (ok).
+    ////// Unpend outgoing nonce (false implies bug).
+    ////if (!inbound() && !network_.unpend(channel->nonce()))
+    ////{
+    ////    LOG("Unpend failed to locate channel nonce.");
+    ////}
 
     // Handles channel stopped or protocol start code.
     // This retains the channel and allows broadcasts, stored if no code.
@@ -315,6 +318,12 @@ void session::do_handle_channel_stopped(const code& ec,
         LOG("Unstore on channel stop failed: " << error_code.message());
     }
 
+    // Unpend outgoing nonce (false implies bug).
+    if (!inbound() && !network_.unpend(channel->nonce()))
+    {
+        LOG("Unpend failed to locate channel nonce.");
+    }
+
     // Assume stop notification, but may be subscribe failure (idempotent).
     // Handles stop reason code, stop subscribe failure or stop notification.
     stopped(ec);
@@ -417,15 +426,9 @@ size_t session::outbound_channel_count() const NOEXCEPT
     return floored_subtract(channel_count(), inbound_channel_count());
 }
 
-bool session::blacklisted(const config::authority& authority) const NOEXCEPT
+bool session::disabled(const config::address& peer) const NOEXCEPT
 {
-    return contains(settings().blacklists, authority);
-}
-
-bool session::whitelisted(const config::authority& authority) const NOEXCEPT
-{
-    return settings().whitelists.empty() ||
-        contains(settings().whitelists, authority);
+    return !settings().enable_ipv6 && peer.to_ip().is_v6();
 }
 
 bool session::insufficient(const config::address& address) const NOEXCEPT
@@ -437,6 +440,17 @@ bool session::insufficient(const config::address& address) const NOEXCEPT
 bool session::unsupported(const config::address& address) const NOEXCEPT
 {
     return to_bool(address.item().services & settings().invalid_services);
+}
+
+bool session::whitelisted(const config::authority& authority) const NOEXCEPT
+{
+    return settings().whitelists.empty() ||
+        contains(settings().whitelists, authority);
+}
+
+bool session::blacklisted(const config::authority& authority) const NOEXCEPT
+{
+    return contains(settings().blacklists, authority);
 }
 
 const network::settings& session::settings() const NOEXCEPT

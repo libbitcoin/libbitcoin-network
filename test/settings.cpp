@@ -39,7 +39,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
     BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, true);
+    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
     BOOST_REQUIRE_EQUAL(instance.identifier, 0u);
     BOOST_REQUIRE_EQUAL(instance.inbound_port, 0u);
@@ -81,7 +82,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
     BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, true);
+    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
     BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.outbound_connections, 8u);
@@ -134,7 +136,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
     BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, true);
+    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
     BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.outbound_connections, 8u);
@@ -187,7 +190,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
     BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, true);
+    BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
     BOOST_REQUIRE_EQUAL(instance.inbound_connections, 0u);
     BOOST_REQUIRE_EQUAL(instance.outbound_connections, 8u);

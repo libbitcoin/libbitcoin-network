@@ -192,11 +192,10 @@ void session_manual::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Manual channel stop [" << peer << "] " << ec.message());
 
     // The channel stopped following connection, try again without delay.
-    // This is the only opportunity for a tight loop (could use timer).
-    start_connect(error::success, peer, connector, move_copy(handler));
+    LOG("Manual channel stop [" << peer << "] " << ec.message());
+    defer(BIND4(start_connect, _1, peer, connector, handler), peer);
 }
 
 BC_POP_WARNING()

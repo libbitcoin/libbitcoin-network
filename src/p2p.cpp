@@ -425,13 +425,13 @@ void p2p::do_save(const messages::address::cptr& message,
 bool p2p::pend(uint64_t nonce) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return nonces_.insert(nonce).second;
+    return settings_.enable_loopback || nonces_.insert(nonce).second;
 }
 
 bool p2p::unpend(uint64_t nonce) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return to_bool(nonces_.erase(nonce));
+    return settings_.enable_loopback || to_bool(nonces_.erase(nonce));
 }
 
 code p2p::store(const channel::ptr& channel, bool notify,
@@ -444,7 +444,8 @@ code p2p::store(const channel::ptr& channel, bool notify,
         return error::service_stopped;
 
     // Check for incoming connection from outgoing self (loopback).
-    if (inbound && to_bool(nonces_.count(channel->peer_version()->nonce)))
+    if (!settings_.enable_loopback && 
+        inbound && to_bool(nonces_.count(channel->peer_version()->nonce)))
         return error::accept_failed;
 
     // Guard against integer overflow.

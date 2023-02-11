@@ -38,6 +38,7 @@ typedef boost::asio::basic_waitable_timer<steady_clock> wait_timer;
 typedef boost::asio::mutable_buffer mutable_buffer;
 typedef boost::asio::const_buffer const_buffer;
 
+typedef boost::asio::ip::v6_only v6_only;
 typedef boost::asio::ip::address address;
 typedef boost::asio::ip::address_v4 ipv4;
 typedef boost::asio::ip::address_v6 ipv6;
@@ -47,6 +48,7 @@ typedef tcp::acceptor acceptor;
 typedef tcp::resolver resolver;
 typedef tcp::endpoint endpoint;
 typedef resolver::results_type endpoints;
+typedef asio::acceptor::reuse_address reuse_address;
 
 typedef tcp::socket socket;
 typedef std::shared_ptr<socket> socket_ptr;

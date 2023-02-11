@@ -153,27 +153,25 @@ void session_inbound::handle_accept(const code& ec,
     // There was no error, so listen again without delay.
     start_accept(error::success, acceptor);
 
-    // Could instead stop listening when at limit, though this is simpler.
-    if (inbound_channel_count() >= settings().inbound_connections)
+    if (!whitelisted(channel->authority()))
     {
-        LOG("Dropping oversubscribed connection [" << channel->authority() << "]");
-        channel->stop(error::oversubscribed);
+        LOG("Dropping not whitelisted connection [" << channel->authority() << "]");
+        channel->stop(error::address_blocked);
         return;
     }
 
     if (blacklisted(channel->authority()))
     {
-        // Verbose
         ////LOG("Dropping blacklisted connection [" << channel->authority() << "]");
         channel->stop(error::address_blocked);
         return;
     }
 
-    if (!whitelisted(channel->authority()))
+    // Could instead stop listening when at limit, though this is simpler.
+    if (inbound_channel_count() >= settings().inbound_connections)
     {
-        // Verbose
-        ////LOG("Dropping not whitelisted connection [" << channel->authority() << "]");
-        channel->stop(error::address_blocked);
+        LOG("Dropping oversubscribed connection [" << channel->authority() << "]");
+        channel->stop(error::oversubscribed);
         return;
     }
 
@@ -223,7 +221,6 @@ void session_inbound::handle_channel_start(const code&,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Verbose.
     ////LOG("Inbound channel start [" << channel->authority() << "] "
     ////    << ec.message());
 }

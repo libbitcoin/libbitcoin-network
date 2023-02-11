@@ -57,6 +57,7 @@ enum error_t
     // addresses
     address_invalid,
     address_not_found,
+    address_disabled,
     address_unsupported,
     address_insufficient,
     seeding_unsuccessful,
@@ -68,6 +69,7 @@ enum error_t
 
     // general I/O failures
     bad_stream,
+    not_allowed,
     peer_disconnect,
     peer_unsupported,
     peer_insufficient,
