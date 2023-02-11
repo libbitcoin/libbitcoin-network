@@ -46,7 +46,7 @@ settings::settings() NOEXCEPT
     enable_alert(false),
     enable_reject(false),
     enable_relay(false),
-    enable_ipv6(true),
+    enable_ipv6(false),
     validate_checksum(false),
     identifier(0),
     inbound_port(0),
