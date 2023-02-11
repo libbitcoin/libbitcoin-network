@@ -36,6 +36,11 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 using namespace bc::system;
 using namespace std::placeholders;
 
+inline asio::endpoint make_endpoint(bool enable_ipv6, uint16_t port) NOEXCEPT
+{
+    return { enable_ipv6 ? asio::tcp::v6() : asio::tcp::v4(), port };
+}
+
 // Construct.
 // ----------------------------------------------------------------------------
 // Boost: "The io_context object that the acceptor will use to dispatch
@@ -64,15 +69,17 @@ acceptor::~acceptor() NOEXCEPT
 
 code acceptor::start(uint16_t port) NOEXCEPT
 {
-    static const auto reuse_address = asio::acceptor::reuse_address(true);
     error::boost_code ec;
-
-    // This is hardwired to listen on IPv6 (which should also include IPv4).
-    const asio::endpoint endpoint(asio::tcp::v6(), port);
+    const auto ipv6 = settings_.enable_ipv6;
+    const auto endpoint = make_endpoint(ipv6, port);
     acceptor_.open(endpoint.protocol(), ec);
 
+    // if ipv6 is enabled, also enable ipv4.
+    if (!ec && ipv6)
+        acceptor_.set_option(asio::v6_only(false), ec);
+
     if (!ec)
-        acceptor_.set_option(reuse_address, ec);
+        acceptor_.set_option(asio::reuse_address(true), ec);
 
     if (!ec)
         acceptor_.bind(endpoint, ec);
