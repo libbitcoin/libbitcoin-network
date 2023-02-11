@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__accept_failed__true_exected_message)
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "connection acceptance failed");
+    BOOST_REQUIRE_EQUAL(ec.message(), "connection to self aborted");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__oversubscribed__true_exected_message)

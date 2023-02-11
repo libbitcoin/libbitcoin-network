@@ -56,7 +56,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     // incoming connection failures
     { listen_failed, "incoming connection failed" },
-    { accept_failed, "connection acceptance failed" },
+    { accept_failed, "connection to self aborted" },
     { oversubscribed, "service oversubscribed" },
 
     // incoming/outgoing connection failures
