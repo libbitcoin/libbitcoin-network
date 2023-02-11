@@ -58,6 +58,11 @@ public:
         return stopped_.get_future().get();
     }
 
+    size_t minimum_buffer() const NOEXCEPT override
+    {
+        return 0;
+    }
+
     size_t maximum_payload() const NOEXCEPT override
     {
         return 0;

@@ -61,7 +61,7 @@ settings::settings() NOEXCEPT
     channel_expiration_minutes(1440),
     host_pool_capacity(0),
     rate_limit(1024),
-    read_buffer(4'000'000),
+    minimum_buffer(4'000'000),
     user_agent(BC_USER_AGENT)
 {
 }

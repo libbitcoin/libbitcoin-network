@@ -66,6 +66,7 @@ channel::channel(const logger& log, const socket::ptr& socket,
     const settings& settings, const config::address& address) NOEXCEPT
   : proxy(socket),
     ////rate_limit_(settings.rate_limit),
+    minimum_buffer_(settings.minimum_buffer),
     maximum_payload_(payload_maximum(settings)),
     protocol_magic_(settings.identifier),
     channel_nonce_(pseudo_random::next<uint64_t>(one, max_uint64)),
@@ -166,6 +167,11 @@ address_item_cptr channel::updated_address() const NOEXCEPT
 // Proxy overrides (channel maintains state for the proxy).
 // ----------------------------------------------------------------------------
 // These are const except for version (safe) and signal_activity (stranded).
+
+size_t channel::minimum_buffer() const NOEXCEPT
+{
+    return minimum_buffer_;
+}
 
 size_t channel::maximum_payload() const NOEXCEPT
 {

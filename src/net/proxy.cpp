@@ -286,6 +286,10 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
         return;
     }
 
+    // Don't retain larger than configured (time-space tradeoff).
+    payload_buffer_.resize(std::min(payload_buffer_.size(), minimum_buffer()));
+    payload_buffer_.shrink_to_fit();
+
     ////LOG("Recv " << head->command << " from [" << authority()
     ////    << "] (" << payload_size << " bytes)");
 
