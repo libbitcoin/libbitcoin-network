@@ -153,8 +153,6 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // These terminations prevent a tight loop in the empty address pool case.
-
     if (ec)
     {
         // This can only be error::address_not_found (empty, no peer).
@@ -339,7 +337,7 @@ void session_outbound::handle_channel_stop(const code& ec,
     untake(ec, id, channel);
 
     // The channel stopped following connection, try again without delay.
-    // This is the only opportunity for a tight loop (could use timer).
+    // Potentially a tight loop, but a new adress is selected for retry.
     start_connect(error::success, connectors, id);
 }
 
