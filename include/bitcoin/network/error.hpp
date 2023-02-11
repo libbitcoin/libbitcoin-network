@@ -68,6 +68,7 @@ enum error_t
 
     // general I/O failures
     bad_stream,
+    not_allowed,
     peer_disconnect,
     peer_unsupported,
     peer_insufficient,
