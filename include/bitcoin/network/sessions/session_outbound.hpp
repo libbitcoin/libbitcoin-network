@@ -80,6 +80,8 @@ private:
 
     void do_one(const code& ec, const config::address& peer,
         const connector::ptr& connector, const channel_handler& handler) NOEXCEPT;
+    void handle_connector(const code& ec, const channel::ptr& channel,
+        const config::address& peer, const channel_handler& handler) NOEXCEPT;
     void handle_one(const code& ec, const channel::ptr& channel,
         const count_ptr& count, const connectors_ptr& connectors,
         const channel_handler& handler) NOEXCEPT;

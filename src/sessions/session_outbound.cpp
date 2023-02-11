@@ -154,7 +154,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 
     if (ec)
     {
-        // This can only be address_not_found (empty, no peer).
+        // This can only be error::address_not_found (empty, no peer).
         //// LOG("verbose " << ec.message());
         handler(ec, nullptr);
         return;
@@ -185,13 +185,30 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     // Guard restartable connector (shutdown delay).
     if (stopped())
     {
-        // Can't call untake without a channel object, so restore.
-        handler(error::service_stopped, nullptr);
-        restore(peer.message(), BIND1(handle_untake, _1));
+        // Ensure the peer address is restored.
+        handle_connector(error::service_stopped, nullptr, peer, handler);
         return;
     }
 
-    connector->connect(peer, move_copy(handler));
+    // Capture peer for restoration if there is no channel.
+    connector->connect(peer, BIND4(handle_connector, _1, _2, peer, handler));
+}
+
+// Calling connector->stop() either from handle_started or handle_one results
+// in its timer cancelation, which cancels its handler. In either case the
+// address has not been validated, so must be restored to pool here.
+void session_outbound::handle_connector(const code& ec,
+    const channel::ptr& channel, const config::address& peer,
+    const channel_handler& handler) NOEXCEPT
+{
+    if (stopped() || ec == error::operation_canceled)
+    {
+        // Verbose
+        ////LOG("Restore [" << peer << "] " << ec.message());
+        restore(peer.message(), BIND1(handle_untake, _1));
+    }
+
+    handler(ec, channel);
 }
 
 // Handle each do_one connection attempt, stopping on first success.
@@ -201,12 +218,11 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // A successful connection has already occurred, drop this one.
+    // A successful connection previously occurred, drop and untake this one.
     if (is_zero(*count))
     {
         if (channel)
         {
-            // Preceeds handsjake and can untake with success or other code.
             channel->stop(error::channel_dropped);
             untake(ec, channel);
         }
@@ -325,15 +341,12 @@ void session_outbound::untake(const code& ec,
 {
     BC_ASSERT_MSG(channel, "channel");
 
-    if (ec && ec != error::service_stopped)
-        return;
-
-    // Verbose
-    ////LOG("Update [" << config::address(channel->updated_address()) << "] "
-    ////    << ec.message());
-
-    // Update timestamp and set peer services before placing back to host pool.
-    restore(channel->updated_address(), BIND1(handle_untake, _1));
+    if (!ec || stopped())
+    {
+        const auto peer = channel->updated_address();
+        ////LOG("Untake [" << config::address(peer) << "] " << ec.message());
+        restore(peer, BIND1(handle_untake, _1));
+    }
 }
 
 void session_outbound::handle_untake(const code&) const NOEXCEPT
