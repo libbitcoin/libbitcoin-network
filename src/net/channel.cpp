@@ -38,7 +38,7 @@ using namespace std::placeholders;
 // Helper to derive maximum message payload size from settings.
 inline size_t payload_maximum(const settings& settings) NOEXCEPT
 {
-    return heading::maximum_payload_size(settings.protocol_maximum,
+    return heading::maximum_payload(settings.protocol_maximum,
         to_bool(settings.services_maximum & service::node_witness));
 }
 

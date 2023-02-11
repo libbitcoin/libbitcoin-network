@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
 
 inline size_t payload_maximum(const settings& settings)
 {
-    return messages::heading::maximum_payload_size(settings.protocol_maximum,
+    return messages::heading::maximum_payload(settings.protocol_maximum,
         to_bool(settings.services_maximum & messages::service::node_witness));
 }
 

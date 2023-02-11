@@ -60,26 +60,39 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
 
+// maximum_payload:
+//
 // Pre-Witness:
 // A maximal inventory is 50,000 entries, the largest valid message.
 // Inventory with 50,000 entries is 3 + 36 * 50,000 bytes (1,800,003).
 // The variable integer portion is maximum 3 bytes (with a count of 50,000).
 // According to protocol documentation get_blocks is limited only by the
 // general maximum payload size of 0x02000000 (33,554,432). But this is an
-// absurd limit for a message that is properly [10 + log2(height) + 1]. Since
+// absurd limit for message that is properly [10 + log2(height) + 1]. Since
 // protocol limits height to 2^32 this is 43. Even with expansion to 2^64
-// this is limited to 75. So limit payloads to the max inventory payload size.
+// this is limited to 75. So limit payloads to max inventory payload size.
+//
 // Post-Witness:
 // The maximum block size inclusive of witness is greater than 1,800,003, so
 // with witness-enabled block size (4,000,000).
 // This calculation should be revisited given any protocol change.
-size_t heading::maximum_payload_size(uint32_t, bool witness) NOEXCEPT
+
+// static
+// Logging utility only.
+std::string heading::get_command(const data_chunk& payload) NOEXCEPT
 {
-    static constexpr size_t vector = sizeof(uint32_t) + hash_size;
-    static constexpr size_t maximum = 3u + vector * max_inventory;
-    return witness ? chain::max_block_weight : maximum;
+    if (payload.size() < sizeof(uint32_t) + command_size)
+        return "<unknown>";
+
+    std::string out{};
+    auto at = std::next(payload.begin(), sizeof(uint32_t));
+    const auto end = std::next(at, command_size);
+    while (at != end && *at != 0x00)
+        out.push_back(*at++);
+
+    return out;
 }
 
 // static

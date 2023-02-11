@@ -82,6 +82,7 @@
 #include <bitcoin/network/messages/version_acknowledge.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
+#include <bitcoin/network/messages/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/enums/service.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/channel.hpp>

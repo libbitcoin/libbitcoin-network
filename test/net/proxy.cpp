@@ -24,11 +24,6 @@ class mock_proxy
   : public proxy
 {
 public:
-    static std::string extract_command(const system::data_chunk& payload) NOEXCEPT
-    {
-        return proxy::extract_command(payload);
-    }
-
     // Call must be stranded.
     template <class Message, typename Handler = pump::handler<Message>>
     void subscribe_message(Handler&& handler) NOEXCEPT
@@ -91,39 +86,6 @@ private:
     mutable bool stop_{ false };
     mutable std::promise<code> stopped_;
 };
-
-BOOST_AUTO_TEST_CASE(proxy__extract_command__empty_payload__unknown)
-{
-    const system::data_chunk payload{};
-    BOOST_REQUIRE_EQUAL(mock_proxy::extract_command(payload), "<unknown>");
-}
-
-BOOST_AUTO_TEST_CASE(proxy__extract_command__short_payload__unknown)
-{
-    constexpr auto minimum = sizeof(uint32_t) + messages::heading::command_size;
-    const system::data_chunk payload(sub1(minimum), 'a');
-    BOOST_REQUIRE_EQUAL(mock_proxy::extract_command(payload), "<unknown>");
-}
-
-BOOST_AUTO_TEST_CASE(proxy__extract_command__minimal_payload__expected)
-{
-    const system::data_chunk payload(
-    {
-        'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z'
-    });
-
-    BOOST_REQUIRE_EQUAL(mock_proxy::extract_command(payload), "wxyzwxyzwxyz");
-}
-
-BOOST_AUTO_TEST_CASE(proxy__extract_command__extra_payload__expected)
-{
-    const system::data_chunk payload(
-    {
-        'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'A', 'B', 'C'
-    });
-
-    BOOST_REQUIRE_EQUAL(mock_proxy::extract_command(payload), "wxyzwxyzwxyz");
-}
 
 BOOST_AUTO_TEST_CASE(proxy__paused__default__true)
 {

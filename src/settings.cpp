@@ -29,6 +29,10 @@ namespace network {
 using namespace bc::system;
 using namespace messages;
 
+static_assert(heading::maximum_payload(level::canonical, true) == 4'000'000);
+static_assert(heading::maximum_payload(level::canonical, false) == 1'800'003);
+
+// TODO: make witness support configurable.
 // Common default values (no settings context).
 settings::settings() NOEXCEPT
   : threads(1),
@@ -57,6 +61,7 @@ settings::settings() NOEXCEPT
     channel_expiration_minutes(1440),
     host_pool_capacity(0),
     rate_limit(1024),
+    read_buffer(4'000'000),
     user_agent(BC_USER_AGENT)
 {
 }

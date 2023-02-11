@@ -297,6 +297,7 @@ include_bitcoin_network_messages_enumsdir = ${includedir}/bitcoin/network/messag
 include_bitcoin_network_messages_enums_HEADERS = \
     include/bitcoin/network/messages/enums/identifier.hpp \
     include/bitcoin/network/messages/enums/level.hpp \
+    include/bitcoin/network/messages/enums/magic_numbers.hpp \
     include/bitcoin/network/messages/enums/service.hpp
 
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net

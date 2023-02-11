@@ -410,6 +410,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\level.hpp">
       <Filter>include\bitcoin\network\messages\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\magic_numbers.hpp">
+      <Filter>include\bitcoin\network\messages\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\service.hpp">
       <Filter>include\bitcoin\network\messages\enums</Filter>
     </ClInclude>

@@ -105,10 +105,6 @@ public:
     const config::authority& authority() const NOEXCEPT;
 
 protected:
-    /// Extract message command name from a payload.
-    static std::string extract_command(
-        const system::data_chunk& payload) NOEXCEPT;
-
     proxy(const socket::ptr& socket) NOEXCEPT;
 
     /// Property values provided to the proxy.

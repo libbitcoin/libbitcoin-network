@@ -192,6 +192,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\compact_transactions.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\identifier.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\level.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\magic_numbers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\service.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\fee_filter.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\get_address.hpp" />

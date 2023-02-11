@@ -21,9 +21,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/messages/block.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
+#include <bitcoin/network/messages/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/message.hpp>
+#include <bitcoin/network/messages/transaction.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -35,9 +38,6 @@ const std::string reject::command = "reject";
 const identifier reject::id = identifier::reject;
 const uint32_t reject::version_minimum = level::bip61;
 const uint32_t reject::version_maximum = level::maximum_protocol;
-
-// This is just a guess, required as memory guard.
-constexpr size_t max_message = max_uint16;
 
 // static
 bool reject::is_chain(const std::string& message) NOEXCEPT
@@ -80,14 +80,14 @@ reject::reason_code reject::byte_to_reason(uint8_t byte) NOEXCEPT
 // static
 reject reject::deserialize(uint32_t, reader& source) NOEXCEPT
 {
-    auto message = source.read_string(max_message);
+    auto message = source.read_string(max_reject_message);
     const auto chain = is_chain(message);
 
     return
     {
         std::move(message),
         byte_to_reason(source.read_byte()),
-        source.read_string(max_message),
+        source.read_string(max_reject_message),
 
         // Some nodes do not follow the documented convention of supplying hash
         // for tx and block rejects. Use this to prevent error by ensuring only

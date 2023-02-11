@@ -23,7 +23,7 @@ BOOST_AUTO_TEST_SUITE(heading_tests)
 using namespace bc::network::messages;
 
 // factory
-// maximum_payload_size
+// maximum_payload
 // verify_checksum
 // deserialize
 // serialize
@@ -234,6 +234,39 @@ BOOST_AUTO_TEST_CASE(heading__version_acknowledge_id__always__expected)
 {
     const auto instance = heading{ 0u, version_acknowledge::command, 0u, 0u };
     BOOST_REQUIRE(instance.id() == version_acknowledge::id);
+}
+
+BOOST_AUTO_TEST_CASE(heading__get_command__empty_payload__unknown)
+{
+    const system::data_chunk payload{};
+    BOOST_REQUIRE_EQUAL(heading::get_command(payload), "<unknown>");
+}
+
+BOOST_AUTO_TEST_CASE(heading__get_command__short_payload__unknown)
+{
+    constexpr auto minimum = sizeof(uint32_t) + messages::heading::command_size;
+    const system::data_chunk payload(sub1(minimum), 'a');
+    BOOST_REQUIRE_EQUAL(heading::get_command(payload), "<unknown>");
+}
+
+BOOST_AUTO_TEST_CASE(heading__get_command__minimal_payload__expected)
+{
+    const system::data_chunk payload(
+    {
+        'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z'
+    });
+
+    BOOST_REQUIRE_EQUAL(heading::get_command(payload), "wxyzwxyzwxyz");
+}
+
+BOOST_AUTO_TEST_CASE(heading__get_command__extra_payload__expected)
+{
+    const system::data_chunk payload(
+    {
+        'a', 'b', 'c', 'd', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'w', 'x', 'y', 'z', 'A', 'B', 'C'
+    });
+
+    BOOST_REQUIRE_EQUAL(heading::get_command(payload), "wxyzwxyzwxyz");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
