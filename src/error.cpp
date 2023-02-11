@@ -35,6 +35,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     // addresses
     { address_invalid, "address invalid" },
     { address_not_found, "address not found" },
+    { address_disabled, "address protocol disabled" },
     { address_unsupported, "advertised services unsupported" },
     { address_insufficient, "advertised services insufficient" },
     { seeding_unsuccessful, "seeding unsuccessful" },

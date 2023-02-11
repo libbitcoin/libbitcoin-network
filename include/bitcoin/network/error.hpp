@@ -57,6 +57,7 @@ enum error_t
     // addresses
     address_invalid,
     address_not_found,
+    address_disabled,
     address_unsupported,
     address_insufficient,
     seeding_unsuccessful,

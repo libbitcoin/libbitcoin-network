@@ -70,6 +70,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__address_not_found__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "address not found");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__address_disabled__true_exected_message)
+{
+    constexpr auto value = error::address_disabled;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "address protocol disabled");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__address_unsupported__true_exected_message)
 {
     constexpr auto value = error::address_unsupported;
