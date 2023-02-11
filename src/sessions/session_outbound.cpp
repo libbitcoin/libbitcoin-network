@@ -155,21 +155,21 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     if (ec)
     {
         // This can only be error::address_not_found (empty, no peer).
-        //// LOG("verbose " << ec.message());
+        LOG("Getting address: " << ec.message());
         handler(ec, nullptr);
         return;
     }
 
     if (insufficient(peer))
     {
-        ////LOG("Dropping insufficient address [" << peer << "]");
+        LOG("Dropping insufficient address [" << peer << "]");
         handler(error::address_insufficient, nullptr);
         return;
     }
 
     if (unsupported(peer))
     {
-        ////LOG("Dropping unsupported address [" << peer << "]");
+        LOG("Dropping unsupported address [" << peer << "]");
         handler(error::address_unsupported, nullptr);
         return;
     }
@@ -203,9 +203,12 @@ void session_outbound::handle_connector(const code& ec,
 {
     if (stopped() || ec == error::operation_canceled)
     {
-        // Verbose
-        ////LOG("Restore [" << peer << "] " << ec.message());
+        LOG("Restore [" << peer << "] " << ec.message());
         restore(peer.message(), BIND1(handle_untake, _1));
+    }
+    else if (ec)
+    {
+        LOG("Dropping failed address [" << peer << "] " << ec.message());
     }
 
     handler(ec, channel);
@@ -218,7 +221,7 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // A successful connection previously occurred, drop and untake this one.
+    // A successful connection previously occurred, drop and restore this one.
     if (is_zero(*count))
     {
         if (channel)
