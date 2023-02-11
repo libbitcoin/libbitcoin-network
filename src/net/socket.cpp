@@ -192,7 +192,13 @@ void socket::handle_accept(const error::boost_code& ec,
     }
 
     // Translate other boost error code and invoke caller handler.
-    handler(error::asio_to_error_code(ec));
+    const auto code = error::asio_to_error_code(ec);
+    ////if (code == error::unknown)
+    ////{
+    ////    LOG("Raw accept code (" << ec.value() << ") " << ec.category().name()
+    ////        << ":" << ec.message());
+    ////}
+    handler(code);
 }
 
 void socket::handle_connect(const error::boost_code& ec,
@@ -209,7 +215,13 @@ void socket::handle_connect(const error::boost_code& ec,
     }
 
     // Translate other boost error code and invoke caller handler.
-    handler(error::asio_to_error_code(ec));
+    const auto code = error::asio_to_error_code(ec);
+    ////if (code == error::unknown)
+    ////{
+    ////    LOG("Raw connect code (" << ec.value() << ") " << ec.category().name()
+    ////        << ":" << ec.message());
+    ////}
+    handler(code);
 }
 
 void socket::handle_io(const error::boost_code& ec, size_t size,
@@ -224,7 +236,13 @@ void socket::handle_io(const error::boost_code& ec, size_t size,
     }
 
     // Translate other boost error code and invoke caller handler.
-    handler(error::asio_to_error_code(ec), size);
+    const auto code = error::asio_to_error_code(ec);
+    ////if (code == error::unknown)
+    ////{
+    ////    LOG("Raw io code (" << ec.value() << ") " << ec.category().name()
+    ////        << ":" << ec.message());
+    ////}
+    handler(code, size);
 }
 
 // Properties.

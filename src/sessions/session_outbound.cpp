@@ -101,10 +101,12 @@ void session_outbound::handle_started(const code& ec,
         const auto connectors = create_connectors(settings().connect_batch_size);
 
         for (const auto& connector: *connectors)
+        {
             subscribe_stop([=](const code&) NOEXCEPT
             {
                 connector->stop();
             });
+        }
 
         // Start connection attempt with batch of connectors for one peer.
         start_connect(error::success, connectors, id);
@@ -137,16 +139,17 @@ void session_outbound::start_connect(const code&,
         BIND4(handle_connect, _1, _2, connectors, id);
 
     channel_handler one =
-        BIND5(handle_one, _1, _2, counter, connectors, std::move(connect));
+        BIND6(handle_one, _1, _2, counter, connectors, id, std::move(connect));
 
     // Attempt to connect with a unique address for each connector of batch.
     for (const auto& connector: *connectors)
-        take(BIND4(do_one, _1, _2, connector, one));
+        take(BIND5(do_one, _1, _2, id, connector, one));
 }
 
 // Attempt to connect the given peer and invoke handle_one.
 void session_outbound::do_one(const code& ec, const config::address& peer,
-    const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
+    size_t id, const connector::ptr& connector,
+    const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -155,21 +158,21 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     if (ec)
     {
         // This can only be error::address_not_found (empty, no peer).
-        //// LOG("verbose " << ec.message());
+        ////LOG("Getting address: " << ec.message());
         handler(ec, nullptr);
         return;
     }
 
     if (insufficient(peer))
     {
-        ////LOG("Dropping insufficient address [" << peer << "]");
+        LOG("Dropping insufficient address [" << peer << "]");
         handler(error::address_insufficient, nullptr);
         return;
     }
 
     if (unsupported(peer))
     {
-        ////LOG("Dropping unsupported address [" << peer << "]");
+        LOG("Dropping unsupported address [" << peer << "]");
         handler(error::address_unsupported, nullptr);
         return;
     }
@@ -186,26 +189,30 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     if (stopped())
     {
         // Ensure the peer address is restored.
-        handle_connector(error::service_stopped, nullptr, peer, handler);
+        handle_connector(error::service_stopped, nullptr, peer, id, handler);
         return;
     }
 
     // Capture peer for restoration if there is no channel.
-    connector->connect(peer, BIND4(handle_connector, _1, _2, peer, handler));
+    connector->connect(peer,
+        BIND5(handle_connector, _1, _2, peer, id, handler));
 }
 
 // Calling connector->stop() either from handle_started or handle_one results
 // in its timer cancelation, which cancels its handler. In either case the
 // address has not been validated, so must be restored to pool here.
 void session_outbound::handle_connector(const code& ec,
-    const channel::ptr& channel, const config::address& peer,
+    const channel::ptr& channel, const config::address& peer, size_t id,
     const channel_handler& handler) NOEXCEPT
 {
     if (stopped() || ec == error::operation_canceled)
     {
-        // Verbose
-        ////LOG("Restore [" << peer << "] " << ec.message());
+        LOG("Restore [" << peer << "] (" << id << ") " << ec.message());
         restore(peer.message(), BIND1(handle_untake, _1));
+    }
+    else if (ec)
+    {
+        LOG("Dropping failed address [" << peer << "] " << ec.message());
     }
 
     handler(ec, channel);
@@ -213,18 +220,18 @@ void session_outbound::handle_connector(const code& ec,
 
 // Handle each do_one connection attempt, stopping on first success.
 void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
-    const count_ptr& count, const connectors_ptr& connectors,
+    const count_ptr& count, const connectors_ptr& connectors, size_t id,
     const channel_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // A successful connection previously occurred, drop and untake this one.
+    // A successful connection previously occurred, drop and restore this one.
     if (is_zero(*count))
     {
         if (channel)
         {
             channel->stop(error::channel_dropped);
-            untake(ec, channel);
+            untake(ec, id, channel);
         }
 
         return;
@@ -280,7 +287,7 @@ void session_outbound::handle_connect(const code& ec,
         if (channel)
         {
             channel->stop(error::service_stopped);
-            untake(ec, channel);
+            untake(ec, id, channel);
         }
 
         return;
@@ -329,14 +336,14 @@ void session_outbound::handle_channel_stop(const code& ec,
     ////LOG("Outbound channel stop [" << channel->authority() << "] "
     ////    "(" << id << ") " << ec.message());
 
-    untake(ec, channel);
+    untake(ec, id, channel);
 
     // The channel stopped following connection, try again without delay.
     // This is the only opportunity for a tight loop (could use timer).
     start_connect(error::success, connectors, id);
 }
 
-void session_outbound::untake(const code& ec,
+void session_outbound::untake(const code& ec, size_t id,
     const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel, "channel");
@@ -344,7 +351,8 @@ void session_outbound::untake(const code& ec,
     if (!ec || stopped())
     {
         const auto peer = channel->updated_address();
-        ////LOG("Untake [" << config::address(peer) << "] " << ec.message());
+        LOG("Untake [" << config::address(peer) << "] (" << id << ") "
+            << ec.message());
         restore(peer, BIND1(handle_untake, _1));
     }
 }

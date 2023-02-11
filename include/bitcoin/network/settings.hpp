@@ -48,6 +48,7 @@ struct BCT_API settings
     bool enable_alert;
     bool enable_reject;
     bool enable_relay;
+    bool enable_ipv6;
     bool validate_checksum;
     uint32_t identifier;
     uint16_t inbound_port;
