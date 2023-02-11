@@ -72,6 +72,8 @@ code acceptor::start(uint16_t port) NOEXCEPT
     error::boost_code ec;
     const auto ipv6 = settings_.enable_ipv6;
     const auto endpoint = make_endpoint(ipv6, port);
+
+    // Open the socket.
     acceptor_.open(endpoint.protocol(), ec);
 
     // if ipv6 is enabled, also enable ipv4.
