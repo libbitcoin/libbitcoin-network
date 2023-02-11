@@ -153,11 +153,11 @@ void session_inbound::handle_accept(const code& ec,
     // There was no error, so listen again without delay.
     start_accept(error::success, acceptor);
 
-    // Could instead stop listening when at limit, though this is simpler.
-    if (inbound_channel_count() >= settings().inbound_connections)
+    if (!whitelisted(channel->authority()))
     {
-        LOG("Dropping oversubscribed connection [" << channel->authority() << "]");
-        channel->stop(error::oversubscribed);
+        // Verbose
+        LOG("Dropping not whitelisted connection [" << channel->authority() << "]");
+        channel->stop(error::address_blocked);
         return;
     }
 
@@ -169,11 +169,11 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
-    if (!whitelisted(channel->authority()))
+    // Could instead stop listening when at limit, though this is simpler.
+    if (inbound_channel_count() >= settings().inbound_connections)
     {
-        // Verbose
-        ////LOG("Dropping not whitelisted connection [" << channel->authority() << "]");
-        channel->stop(error::address_blocked);
+        LOG("Dropping oversubscribed connection [" << channel->authority() << "]");
+        channel->stop(error::oversubscribed);
         return;
     }
 
