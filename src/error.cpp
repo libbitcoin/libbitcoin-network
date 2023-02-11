@@ -124,11 +124,12 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
         return error::operation_canceled;
 
     // peer termination
-    if (ec == asio_error_t::eof)
+    if (ec == asio_misc_error_t::eof)
         return error::peer_disconnect;
 
-    // network
-    if (ec == boost_error_t::connection_refused ||
+    // network (no_buffer_space see WSAENOBUFS issue on MSDN) 
+    if (ec == asio_system_error_t::no_buffer_space ||
+        ec == boost_error_t::connection_refused ||
         ec == boost_error_t::connection_reset ||
         ec == boost_error_t::not_connected ||
         ec == boost_error_t::operation_not_permitted ||
