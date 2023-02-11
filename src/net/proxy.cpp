@@ -286,6 +286,10 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
         return;
     }
 
+    // Don't retain larger than configured (time-space tradeoff).
+    payload_buffer_.resize(std::min(payload_buffer_.size(), minimum_buffer()));
+    payload_buffer_.shrink_to_fit();
+
     ////LOG("Recv " << head->command << " from [" << authority()
     ////    << "] (" << payload_size << " bytes)");
 
@@ -369,7 +373,7 @@ void proxy::handle_write(const code& ec, size_t,
 
     if (ec)
     {
-        LOG("Failure sending " << extract_command(*payload) << " to ["
+        LOG("Failure sending " << heading::get_command(*payload) << " to ["
             << authority() << "] (" << payload->size() << " bytes) "
             << ec.message());
 
@@ -378,23 +382,10 @@ void proxy::handle_write(const code& ec, size_t,
         return;
     }
 
-    ////LOG("Sent " << extract_command(*payload) << " to [" << authority()
-    ////    << "] (" << payload->size() << " bytes)");
+    ////LOG("Sent " <<  heading::get_command(*payload) << " to ["
+    ////    << authority() << "] (" << payload->size() << " bytes)");
 
     handler(ec);
-}
-
-// static
-std::string proxy::extract_command(const system::data_chunk& payload) NOEXCEPT
-{
-    if (payload.size() < sizeof(uint32_t) + heading::command_size)
-        return "<unknown>";
-
-    std::string out{};
-    auto at = std::next(payload.begin(), sizeof(uint32_t));
-    const auto end = std::next(at, heading::command_size);
-    while (at != end && *at != 0x00) out.push_back(*at++);
-    return out;
 }
 
 // Properties.

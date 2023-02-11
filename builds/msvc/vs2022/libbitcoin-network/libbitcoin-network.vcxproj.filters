@@ -317,6 +317,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\reporter.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\resubscriber.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
@@ -405,6 +408,9 @@
       <Filter>include\bitcoin\network\messages\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\level.hpp">
+      <Filter>include\bitcoin\network\messages\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\magic_numbers.hpp">
       <Filter>include\bitcoin\network\messages\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\service.hpp">
@@ -572,15 +578,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\resubscriber.hpp">
-      <Filter>include\bitcoin\network\async</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\impl\async\resubscriber.ipp">
-      <Filter>include\bitcoin\network\impl\async</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp">
+      <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\resubscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp">

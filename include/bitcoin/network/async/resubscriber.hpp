@@ -53,6 +53,7 @@ public:
 
     /// Invoke specified handler in order with specified arguments.
     /// Handler return controls resubscription, and is forwarded to the caller.
+    /// False if subscription is dropped or was not not found (not subscribed).
     bool notify(const Key& key, const code& ec, const Args&... args) NOEXCEPT;
 
     /// Invoke each handler in order, with arguments, then drop all.

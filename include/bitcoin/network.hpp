@@ -28,6 +28,7 @@
 #include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/async/reporter.hpp>
+#include <bitcoin/network/async/resubscriber.hpp>
 #include <bitcoin/network/async/subscriber.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
@@ -81,6 +82,7 @@
 #include <bitcoin/network/messages/version_acknowledge.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
+#include <bitcoin/network/messages/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/enums/service.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/channel.hpp>

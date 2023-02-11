@@ -19,44 +19,16 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_MESSAGE_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_MESSAGE_HPP
 
-#include <cstdint>
-#include <cstddef>
+#include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/block.hpp>
-#include <bitcoin/network/messages/compact_block.hpp>
 #include <bitcoin/network/messages/heading.hpp>
-#include <bitcoin/network/messages/transaction.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-
-/// Network protocol constants.
-///----------------------------------------------------------------------------
-
-/// Explicit limits.
-constexpr size_t max_address = 1000;
-constexpr size_t max_bloom_filter_add = 520;
-constexpr size_t max_bloom_filter_functions = 50;
-////constexpr size_t max_bloom_filter_hashes = 2000;
-constexpr size_t max_bloom_filter_load = 36000;
-constexpr size_t max_get_blocks = 500;
-constexpr size_t max_get_headers = 2000;
-////constexpr size_t max_get_data = 50000;
-constexpr size_t max_inventory = 50000;
-////constexpr size_t max_get_client_filter_headers = 1999;
-////constexpr size_t max_get_client_filters = 99;
-
-/////// compact filter checkpoint interval
-////constexpr size_t client_filter_checkpoint_interval = 1000;
-
-/////// Effective limit given a 32 bit chain height boundary: 10 + log2(2^32) + 1.
-////constexpr size_t max_locator = 43;
-
-// Serialization templates.
-///----------------------------------------------------------------------------
-
+    
+/// Serialize message object to the wire protocol encoding.
 template <typename Message>
 void serialize(Message& instance, system::writer& sink,
     uint32_t version) NOEXCEPT
@@ -64,13 +36,12 @@ void serialize(Message& instance, system::writer& sink,
     instance.serialize(version, sink);
 }
 
-/// Serialize a message object to the Bitcoin wire protocol encoding.
+/// Serialize message object to the wire protocol encoding.
 template <typename Message>
 system::chunk_ptr serialize(const Message& instance, uint32_t magic,
     uint32_t version) NOEXCEPT
 {
     using namespace system;
-
     const auto buffer = std::make_shared<data_chunk>(heading::size() +
         instance.size(version));
 
@@ -84,6 +55,7 @@ system::chunk_ptr serialize(const Message& instance, uint32_t magic,
     return buffer;
 }
 
+/// Deserialize message object from the wire protocol encoding.
 template <typename Message>
 typename Message::cptr deserialize(system::reader& source,
     uint32_t version) NOEXCEPT

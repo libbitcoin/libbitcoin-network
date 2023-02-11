@@ -62,6 +62,7 @@ struct BCT_API settings
     uint32_t channel_inactivity_minutes;
     uint32_t channel_expiration_minutes;
     uint32_t host_pool_capacity;
+    uint32_t minimum_buffer;
     uint32_t rate_limit;
     std::string user_agent;
     std::filesystem::path path{};

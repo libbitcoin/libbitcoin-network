@@ -128,6 +128,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/test.hpp \
     test/async/deadline.cpp \
     test/async/enable_shared_from_base.cpp \
+    test/async/resubscriber.cpp \
     test/async/subscriber.cpp \
     test/async/thread.cpp \
     test/async/threadpool.cpp \
@@ -226,6 +227,7 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/handlers.hpp \
     include/bitcoin/network/async/logger.hpp \
     include/bitcoin/network/async/reporter.hpp \
+    include/bitcoin/network/async/resubscriber.hpp \
     include/bitcoin/network/async/subscriber.hpp \
     include/bitcoin/network/async/thread.hpp \
     include/bitcoin/network/async/threadpool.hpp \
@@ -244,6 +246,7 @@ include_bitcoin_network_config_HEADERS = \
 include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \
     include/bitcoin/network/impl/async/enable_shared_from_base.ipp \
+    include/bitcoin/network/impl/async/resubscriber.ipp \
     include/bitcoin/network/impl/async/subscriber.ipp \
     include/bitcoin/network/impl/async/tracker.ipp
 
@@ -294,6 +297,7 @@ include_bitcoin_network_messages_enumsdir = ${includedir}/bitcoin/network/messag
 include_bitcoin_network_messages_enums_HEADERS = \
     include/bitcoin/network/messages/enums/identifier.hpp \
     include/bitcoin/network/messages/enums/level.hpp \
+    include/bitcoin/network/messages/enums/magic_numbers.hpp \
     include/bitcoin/network/messages/enums/service.hpp
 
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net

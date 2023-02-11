@@ -104,6 +104,7 @@ public:
 
 protected:
     /// Property values provided to the proxy.
+    size_t minimum_buffer() const NOEXCEPT override;
     size_t maximum_payload() const NOEXCEPT override;
     uint32_t protocol_magic() const NOEXCEPT override;
     bool validate_checksum() const NOEXCEPT override;
@@ -125,6 +126,7 @@ private:
 
     // These are thread safe.
     ////const uint32_t rate_limit_;
+    const uint32_t minimum_buffer_;
     const size_t maximum_payload_;
     const uint32_t protocol_magic_;
     const uint64_t channel_nonce_;

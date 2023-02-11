@@ -25,6 +25,7 @@
 #include <bitcoin/network/messages/address_item.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
+#include <bitcoin/network/messages/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/message.hpp>
 
 namespace libbitcoin {

@@ -44,6 +44,7 @@ void resubscriber<Key, Args...>::subscribe(handler&& handler,
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     if (stopped_)
     {
         /*bool*/ handler(error::subscriber_stopped, Args{}...);
@@ -56,6 +57,7 @@ void resubscriber<Key, Args...>::subscribe(handler&& handler,
     {
         map_.emplace(key, std::move(handler));
     }
+    BC_POP_WARNING()
 }
 
 template <typename Key, typename... Args>
@@ -68,6 +70,7 @@ void resubscriber<Key, Args...>::notify(const code& ec,
         return;
 
     // Already on the strand to protect map_, so execute each handler.
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     for (auto it = map_.begin(); it != map_.end();)
     {
         // Invoke handler and capture return value for directed erase.
@@ -82,6 +85,7 @@ void resubscriber<Key, Args...>::notify(const code& ec,
             ++it;
         }
     }
+    BC_POP_WARNING()
 }
 
 template <typename Key, typename... Args>
@@ -93,6 +97,7 @@ bool resubscriber<Key, Args...>::notify(const Key& key, const code& ec,
     if (stopped_)
         return false;
 
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     const auto it = map_.find(key);
     if (it != map_.end())
     {
@@ -103,10 +108,14 @@ bool resubscriber<Key, Args...>::notify(const Key& key, const code& ec,
             map_.erase(it);
             return false;
         }
-    }
 
-    // resubscribed
-    return true;
+        // resubscribed
+        return true;
+    }
+    BC_POP_WARNING()
+
+    // not found
+    return false;
 }
 
 template <typename Key, typename... Args>

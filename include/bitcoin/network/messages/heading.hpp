@@ -19,13 +19,11 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HEADING_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HEADING_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
+#include <bitcoin/network/messages/enums/magic_numbers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -35,10 +33,16 @@ struct BCT_API heading
 {
     typedef std::shared_ptr<const heading> cptr;
 
-    static constexpr size_t command_size = 12;
+    static constexpr size_t command_size = heading_command_size;
+    static constexpr size_t maximum_payload(uint32_t, bool witness) NOEXCEPT
+    {
+        constexpr size_t vector = sizeof(uint32_t) + system::hash_size;
+        constexpr size_t data_size = vector * max_inventory;
+        constexpr size_t non_witness = variable_size(max_inventory) + data_size;
+        return witness ? system::chain::max_block_weight : non_witness;
+    }
 
-    static size_t maximum_payload_size(uint32_t version,
-        bool witness) NOEXCEPT;
+    static std::string get_command(const system::data_chunk& payload) NOEXCEPT;
     static heading factory(uint32_t magic, const std::string& command,
         const system::data_slice& payload) NOEXCEPT;
 

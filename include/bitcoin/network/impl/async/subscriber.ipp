@@ -43,10 +43,16 @@ void subscriber<Args...>::subscribe(handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     if (stopped_)
+    {
         handler(error::subscriber_stopped, Args{}...);
+    }
     else
+    {
         queue_.push_back(std::move(handler));
+    }
+    BC_POP_WARNING()
 }
 
 template <typename... Args>
@@ -60,7 +66,11 @@ void subscriber<Args...>::notify(const code& ec,
 
     // Already on the strand to protect queue_, so execute each handler.
     for (const auto& handler: queue_)
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         handler(ec, args...);
+        BC_POP_WARNING()
+    }
 }
 
 template <typename... Args>
