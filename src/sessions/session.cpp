@@ -426,15 +426,9 @@ size_t session::outbound_channel_count() const NOEXCEPT
     return floored_subtract(channel_count(), inbound_channel_count());
 }
 
-bool session::blacklisted(const config::authority& authority) const NOEXCEPT
+bool session::disabled(const config::address& peer) const NOEXCEPT
 {
-    return contains(settings().blacklists, authority);
-}
-
-bool session::whitelisted(const config::authority& authority) const NOEXCEPT
-{
-    return settings().whitelists.empty() ||
-        contains(settings().whitelists, authority);
+    return !settings().enable_ipv6 && peer.to_ip().is_v6();
 }
 
 bool session::insufficient(const config::address& address) const NOEXCEPT
@@ -446,6 +440,17 @@ bool session::insufficient(const config::address& address) const NOEXCEPT
 bool session::unsupported(const config::address& address) const NOEXCEPT
 {
     return to_bool(address.item().services & settings().invalid_services);
+}
+
+bool session::whitelisted(const config::authority& authority) const NOEXCEPT
+{
+    return settings().whitelists.empty() ||
+        contains(settings().whitelists, authority);
+}
+
+bool session::blacklisted(const config::authority& authority) const NOEXCEPT
+{
+    return contains(settings().blacklists, authority);
 }
 
 const network::settings& session::settings() const NOEXCEPT
