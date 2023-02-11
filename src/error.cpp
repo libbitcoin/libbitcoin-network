@@ -127,9 +127,13 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
     if (ec == asio_misc_error_t::eof)
         return error::peer_disconnect;
 
+    // learn.microsoft.com/en-us/troubleshoot/windows-client/networking/
+    // connect-tcp-greater-than-5000-error-wsaenobufs-10055
+    if (ec == asio_system_error_t::no_buffer_space)
+        return error::invalid_configuration;
+
     // network (no_buffer_space see WSAENOBUFS issue on MSDN) 
-    if (ec == asio_system_error_t::no_buffer_space ||
-        ec == boost_error_t::connection_refused ||
+    if (ec == boost_error_t::connection_refused ||
         ec == boost_error_t::connection_reset ||
         ec == boost_error_t::not_connected ||
         ec == boost_error_t::operation_not_permitted ||
