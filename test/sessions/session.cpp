@@ -142,14 +142,29 @@ public:
         return session::inbound_channel_count();
     }
 
-    bool blacklisted(const config::authority& authority) const NOEXCEPT override
+    bool disabled(const config::address& address) const NOEXCEPT override
     {
-        return session::blacklisted(authority);
+        return session::disabled(address);
+    }
+
+    bool insufficient(const config::address& address) const NOEXCEPT override
+    {
+        return session::insufficient(address);
+    }
+
+    bool unsupported(const config::address& address) const NOEXCEPT override
+    {
+        return session::unsupported(address);
     }
 
     bool whitelisted(const config::authority& authority) const NOEXCEPT override
     {
         return session::whitelisted(authority);
+    }
+
+    bool blacklisted(const config::authority& authority) const NOEXCEPT override
+    {
+        return session::blacklisted(authority);
     }
 
     bool inbound() const NOEXCEPT override
@@ -423,40 +438,105 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE(session.notify());
 }
 
-BOOST_AUTO_TEST_CASE(session__blacklisted__subnet__expected)
+BOOST_AUTO_TEST_CASE(session__disabled__ipv4__false)
 {
     const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
     const mock_session session(net);
-    BOOST_REQUIRE(!session.blacklisted({ "42.42.42.42" }));
-    set.blacklists.emplace_back("12.12.12.12");
-    set.blacklists.emplace_back("24.24.24.24");
-    BOOST_REQUIRE(!session.blacklisted({ "42.42.42.42" }));
-    set.blacklists.emplace_back("42.42.42.0/24");
-    BOOST_REQUIRE(session.blacklisted({ "42.42.42.42" }));
+    set.enable_ipv6 = false;
+    BOOST_REQUIRE(!session.disabled({ "42.42.42.42" }));
+    BOOST_REQUIRE(!session.disabled({ "42.42.42.42:42" }));
+    set.enable_ipv6 = true;
+    BOOST_REQUIRE(!session.disabled({ "42.42.42.42" }));
+    BOOST_REQUIRE(!session.disabled({ "42.42.42.42:42" }));
 }
 
-BOOST_AUTO_TEST_CASE(session__blacklisted__host__expected)
+BOOST_AUTO_TEST_CASE(session__disabled__ipv6__expected)
 {
     const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
     const mock_session session(net);
-    BOOST_REQUIRE(!session.blacklisted({ "24.24.24.24" }));
-    set.blacklists.emplace_back("12.12.12.12");
-    set.blacklists.emplace_back("42.42.42.0/24");
-    BOOST_REQUIRE(!session.blacklisted({ "24.24.24.24" }));
-    set.blacklists.emplace_back("24.24.24.24");
-    BOOST_REQUIRE(session.blacklisted({ "24.24.24.24" }));
+    set.enable_ipv6 = false;
+    BOOST_REQUIRE(session.disabled({ "[2001:db8::2]" }));
+    BOOST_REQUIRE(session.disabled({ "[2001:db8::2]:42" }));
+    set.enable_ipv6 = true;
+    BOOST_REQUIRE(!session.disabled({ "[2001:db8::2]" }));
+    BOOST_REQUIRE(!session.disabled({ "[2001:db8::2]:42" }));
 }
 
-BOOST_AUTO_TEST_CASE(session__whitelisted__subnet__expected)
+BOOST_AUTO_TEST_CASE(session__insufficient__default__false)
 {
     const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
     const mock_session session(net);
+    constexpr uint64_t services = 0;
+    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    set.services_minimum = 0;
+    BOOST_REQUIRE(!session.insufficient(loop));
+    set.services_minimum = 1;
+    BOOST_REQUIRE(session.insufficient(loop));
+}
+
+BOOST_AUTO_TEST_CASE(session__insufficient__match__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    p2p net(set, log);
+    const mock_session session(net);
+    constexpr uint64_t services = 0b01010101;
+    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    set.services_minimum = services;
+    BOOST_REQUIRE(!session.insufficient(loop));
+    set.services_minimum = services | 0b00000010;
+    BOOST_REQUIRE(session.insufficient(loop));
+    set.services_minimum = services & 0b11111110;
+    BOOST_REQUIRE(!session.insufficient(loop));
+}
+
+BOOST_AUTO_TEST_CASE(session__unsupported__default__false)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    p2p net(set, log);
+    const mock_session session(net);
+    constexpr uint64_t services = 0;
+    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    set.invalid_services = 0;
+    BOOST_REQUIRE(!session.unsupported(loop));
+    set.invalid_services = 1;
+    BOOST_REQUIRE(!session.unsupported(loop));
+}
+
+BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    p2p net(set, log);
+    const mock_session session(net);
+    constexpr uint64_t services = 0b01010101;
+    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    set.invalid_services = services;
+    BOOST_REQUIRE(session.unsupported(loop));
+    set.invalid_services = services | 0b00000010;
+    BOOST_REQUIRE(session.unsupported(loop));
+    set.invalid_services = services & 0b11111110;
+    BOOST_REQUIRE(session.unsupported(loop));
+    set.invalid_services = 0b10101010;
+    BOOST_REQUIRE(!session.unsupported(loop));
+    set.invalid_services = 0;
+    BOOST_REQUIRE(!session.unsupported(loop));
+}
+
+BOOST_AUTO_TEST_CASE(session__whitelisted__ipv4_subnet__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    p2p net(set, log);
+    const mock_session session(net);
+    set.whitelists.clear();
     BOOST_REQUIRE(session.whitelisted({ "42.42.42.42" }));
     set.whitelists.emplace_back("12.12.12.12");
     set.whitelists.emplace_back("24.24.24.24");
@@ -465,18 +545,109 @@ BOOST_AUTO_TEST_CASE(session__whitelisted__subnet__expected)
     BOOST_REQUIRE(session.whitelisted({ "42.42.42.42" }));
 }
 
-BOOST_AUTO_TEST_CASE(session__whitelisted__host__expected)
+BOOST_AUTO_TEST_CASE(session__whitelisted__ipv4_host__expected)
 {
     const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
     const mock_session session(net);
+    set.whitelists.clear();
     BOOST_REQUIRE(session.whitelisted({ "24.24.24.24" }));
     set.whitelists.emplace_back("12.12.12.12");
     set.whitelists.emplace_back("42.42.42.0/24");
     BOOST_REQUIRE(!session.whitelisted({ "24.24.24.24" }));
     set.whitelists.emplace_back("24.24.24.24");
     BOOST_REQUIRE(session.whitelisted({ "24.24.24.24" }));
+}
+
+BOOST_AUTO_TEST_CASE(session__whitelisted__ipv6_subnet__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    p2p net(set, log);
+    const mock_session session(net);
+    set.whitelists.clear();
+    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
+    set.whitelists.emplace_back("[2020:db8::1]");
+    set.whitelists.emplace_back("[2020:db8::2]");
+    BOOST_REQUIRE(!session.whitelisted({ "[2020:db8::3]" }));
+    set.whitelists.emplace_back("[2020:db8::2]/64");
+    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
+}
+
+BOOST_AUTO_TEST_CASE(session__whitelisted__ipv6_host__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    p2p net(set, log);
+    const mock_session session(net);
+    set.whitelists.clear();
+    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
+    set.whitelists.emplace_back("[2020:db8::1]");
+    set.whitelists.emplace_back("[2020:db8::2]");
+    BOOST_REQUIRE(!session.whitelisted({ "[2020:db8::3]" }));
+    set.whitelists.emplace_back("[2020:db8::3]");
+    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
+}
+
+BOOST_AUTO_TEST_CASE(session__blacklisted__ipv4_subnet__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    p2p net(set, log);
+    const mock_session session(net);
+    set.whitelists.clear();
+    BOOST_REQUIRE(!session.blacklisted({ "42.42.42.42" }));
+    set.blacklists.emplace_back("12.12.12.12");
+    set.blacklists.emplace_back("24.24.24.24");
+    BOOST_REQUIRE(!session.blacklisted({ "42.42.42.42" }));
+    set.blacklists.emplace_back("42.42.42.0/24");
+    BOOST_REQUIRE(session.blacklisted({ "42.42.42.42" }));
+}
+
+BOOST_AUTO_TEST_CASE(session__blacklisted__ipv4_host__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    p2p net(set, log);
+    const mock_session session(net);
+    set.whitelists.clear();
+    BOOST_REQUIRE(!session.blacklisted({ "24.24.24.24" }));
+    set.blacklists.emplace_back("12.12.12.12");
+    set.blacklists.emplace_back("42.42.42.0/24");
+    BOOST_REQUIRE(!session.blacklisted({ "24.24.24.24" }));
+    set.blacklists.emplace_back("24.24.24.24");
+    BOOST_REQUIRE(session.blacklisted({ "24.24.24.24" }));
+}
+
+BOOST_AUTO_TEST_CASE(session__blacklisted__ipv6_subnet__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    p2p net(set, log);
+    const mock_session session(net);
+    set.whitelists.clear();
+    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
+    set.blacklists.emplace_back("[2020:db8::1]");
+    set.blacklists.emplace_back("[2020:db8::2]");
+    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
+    set.blacklists.emplace_back("[2020:db8::2]/64");
+    BOOST_REQUIRE(session.blacklisted({ "[2020:db8::3]" }));
+}
+
+BOOST_AUTO_TEST_CASE(session__blacklisted__ipv6_host__expected)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    p2p net(set, log);
+    const mock_session session(net);
+    set.whitelists.clear();
+    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
+    set.blacklists.emplace_back("[2020:db8::1]");
+    set.blacklists.emplace_back("[2020:db8::2]");
+    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
+    set.blacklists.emplace_back("[2020:db8::3]");
+    BOOST_REQUIRE(session.blacklisted({ "[2020:db8::3]" }));
 }
 
 // factories
