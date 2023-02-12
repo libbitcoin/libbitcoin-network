@@ -65,15 +65,15 @@ BOOST_AUTO_TEST_CASE(utilities__from_address__default__default_ipv6)
     BOOST_REQUIRE_EQUAL(from_address(messages::ip_address{}), asio::ipv6{});
 }
 
-// normalize
+// denormalize
 
-BOOST_AUTO_TEST_CASE(utilities__normalize__defaults__unchanged)
+BOOST_AUTO_TEST_CASE(utilities__denormalize__defaults__unchanged)
 {
-    BOOST_REQUIRE(normalize({ asio::ipv4{} }).is_v4());
-    BOOST_REQUIRE(normalize({ asio::ipv6{} }).is_v6());
+    BOOST_REQUIRE(denormalize({ asio::ipv4{} }).is_v4());
+    BOOST_REQUIRE(denormalize({ asio::ipv6{} }).is_v6());
 }
 
-BOOST_AUTO_TEST_CASE(utilities__normalize__mapped__unmapped)
+BOOST_AUTO_TEST_CASE(utilities__denormalize__mapped__unmapped)
 {
     static constexpr system::data_array<16> mapped
     {
@@ -81,10 +81,10 @@ BOOST_AUTO_TEST_CASE(utilities__normalize__mapped__unmapped)
     };
 
     const asio::address ip{ asio::ipv6{ mapped } };
-    BOOST_REQUIRE(normalize(ip).is_v4());
+    BOOST_REQUIRE(denormalize(ip).is_v4());
 }
 
-BOOST_AUTO_TEST_CASE(utilities__normalize__unmapped__unchanged)
+BOOST_AUTO_TEST_CASE(utilities__denormalize__unmapped__unchanged)
 {
     static constexpr system::data_array<16> unmapped
     {
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(utilities__normalize__unmapped__unchanged)
     };
 
     const asio::address ip{ asio::ipv6{ unmapped } };
-    BOOST_REQUIRE(normalize(ip) == ip);
+    BOOST_REQUIRE(denormalize(ip) == ip);
 }
 
 // is_valid

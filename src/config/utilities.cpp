@@ -47,7 +47,7 @@ static asio::ipv6 to_v6(const asio::ipv4& ip4) NOEXCEPT
 }
 
 // Convert IPv6-mapped to IPV4 (ensures consistent matching).
-asio::address normalize(const asio::address& ip) NOEXCEPT
+asio::address denormalize(const asio::address& ip) NOEXCEPT
 {
     if (ip.is_v6())
     {
@@ -94,13 +94,13 @@ static std::string to_host(const asio::ipv4& ip4) NOEXCEPT
     }
 }
 
-// Serialize to host normal form (unmapped).
+// Serialize to host denormal form (unmapped).
 std::string to_host(const asio::address& ip) NOEXCEPT
 {
     try
     {
-        const auto norm = normalize(ip);
-        return norm.is_v4() ? to_host(norm.to_v4()) : to_host(norm.to_v6());
+        const auto host = denormalize(ip);
+        return host.is_v4() ? to_host(host.to_v4()) : to_host(host.to_v6());
     }
     catch (std::exception)
     {
@@ -139,11 +139,18 @@ std::string to_literal(const asio::address& ip) NOEXCEPT
 
 asio::address from_literal(const std::string& host) NOEXCEPT(false)
 {
-    static const boost::regex litter{ "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])$" };
-    boost::sregex_iterator it{ host.begin(), host.end(), litter }, end{};
-    if (it == end) throw istream_exception{ host };
+    static const boost::regex regular
+    {
+        // IPv4       or [IPv6]
+        "^(([0-9.]+)|\\[([0-9a-f:.]+)])$"
+    };
+
+    boost::sregex_iterator it{ host.begin(), host.end(), regular }, end{};
+    if (it == end)
+        throw istream_exception{ host };
+
     const auto& token = *it;
-    return from_host(is_zero(token[3].length()) ? token[2] : token[3]);
+    return from_host(token[1]);
 }
 
 // asio/messages conversions.

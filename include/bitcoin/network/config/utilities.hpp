@@ -28,7 +28,16 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// asio/string conversions (normalize to ipv4 unmapped).
+/// IPv6 normalizes IPv4 addresses as "mapped" addresses, i.e. mapped into the
+/// IPv6 address space. P2P protocol encodes all addresses in this normal form.
+/// For serialization purposes we encode/decode only to/from denormalized form.
+/// IPv6 "host names" are not bracketed, however IPv6 addresses are bracked.
+/// This provides distinction from the port number (otherwise conflating ":").
+/// This form is referred to as "literal" IPv6 encoding (from IPv6 URIs). All
+/// addresses must be literal encodings, all host names are serialized as non-
+/// literal, and deserialized as either literal or non-literal.
+
+/// asio/string conversions (denormalize to ipv4 unmapped).
 std::string to_host(const asio::address& ip) NOEXCEPT;
 asio::address from_host(const std::string& host) NOEXCEPT(false);
 
@@ -36,12 +45,12 @@ asio::address from_host(const std::string& host) NOEXCEPT(false);
 std::string to_literal(const asio::address& ip) NOEXCEPT;
 asio::address from_literal(const std::string& host)  NOEXCEPT(false);
 
-/// asio/messages conversions (to/from ipv6, non-normalizing).
+/// asio/messages conversions (to/from ipv6, non-denormalizing).
 messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
 asio::address from_address(const messages::ip_address& address) NOEXCEPT;
 
-/// unmap IPv6-mapped addresses.
-asio::address normalize(const asio::address& ip) NOEXCEPT;
+/// Unmap IPv6-mapped addresses.
+asio::address denormalize(const asio::address& ip) NOEXCEPT;
 
 /// Valid if the host is not unspecified and port is non-zero.
 bool is_valid(const messages::address_item& item) NOEXCEPT;

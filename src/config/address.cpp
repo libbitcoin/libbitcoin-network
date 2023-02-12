@@ -76,7 +76,7 @@ const messages::address_item::cptr& address::message() const NOEXCEPT
 
 asio::address address::to_ip() const NOEXCEPT
 {
-    return from_address(address_->ip);
+    return config::denormalize(from_address(address_->ip));
 }
 
 std::string address::to_host() const NOEXCEPT
