@@ -434,7 +434,7 @@ size_t session::outbound_channel_count() const NOEXCEPT
 
 bool session::disabled(const config::address& peer) const NOEXCEPT
 {
-    return !settings().enable_ipv6 && peer.to_ip().is_v6();
+    return !settings().enable_ipv6 && peer.is_v6();
 }
 
 bool session::insufficient(const config::address& address) const NOEXCEPT
