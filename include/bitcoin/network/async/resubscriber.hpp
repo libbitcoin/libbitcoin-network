@@ -19,9 +19,11 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_HPP
 
+#include <utility>
 #include <functional>
 #include <map>
 #include <memory>
+#include <utility>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/error.hpp>
 
@@ -36,6 +38,7 @@ class resubscriber final
 public:
     DELETE_COPY_MOVE(resubscriber);
 
+    typedef std::pair<bool, bool> result;
     typedef std::function<bool(const code&, Args...)> handler;
 
     // Strand is only used for assertions.
@@ -54,7 +57,8 @@ public:
     /// Invoke specified handler in order with specified arguments.
     /// Handler return controls resubscription, and is forwarded to the caller.
     /// False if subscription is dropped or was not not found (not subscribed).
-    bool notify(const Key& key, const code& ec, const Args&... args) NOEXCEPT;
+    result notify_one(const Key& key, const code& ec,
+        const Args&... args) NOEXCEPT;
 
     /// Invoke each handler in order, with arguments, then drop all.
     void stop(const code& ec, const Args&... args) NOEXCEPT;

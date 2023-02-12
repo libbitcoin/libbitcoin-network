@@ -209,8 +209,9 @@ void session_seed::handle_channel_start(const code& LOG_ONLY(ec),
             << ec.message());
     }
 
-    // Pend seeding channel, independent of result.
-    pending_.insert(channel);
+    // Pend channel for seed duration (for quick stop).
+    // This immediately follows the handshake unpend of the same channel.
+    pend(channel);
 }
 
 void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
@@ -246,9 +247,9 @@ void session_seed::handle_channel_stop(const code& ec, const count_ptr& counter,
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Seed channel stop [" << channel->authority() << "] " << ec.message());
 
-    if (ec != error::service_stopped && !to_bool(pending_.erase(channel)))
+    if (!unpend(channel))
     {
-        LOG("Unpend failed to locate seed channel (ok on stop).");
+        LOG("Unpend failed to locate seed channel.");
     }
 
     stop_seed(counter, handler);

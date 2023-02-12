@@ -73,15 +73,13 @@ void resubscriber<Key, Args...>::notify(const code& ec,
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     for (auto it = map_.begin(); it != map_.end();)
     {
-        // Invoke handler and capture return value for directed erase.
+        // Invoke handler and handle result.
         if (!it->second(ec, args...))
         {
-            // desubscribed
             it = map_.erase(it);
         }
         else
         {
-            // resubscribed
             ++it;
         }
     }
@@ -89,33 +87,31 @@ void resubscriber<Key, Args...>::notify(const code& ec,
 }
 
 template <typename Key, typename... Args>
-bool resubscriber<Key, Args...>::notify(const Key& key, const code& ec,
+typename resubscriber<Key, Args...>::result
+resubscriber<Key, Args...>::notify_one(const Key& key, const code& ec,
     const Args&... args) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (stopped_)
-        return false;
+        return {};
 
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     const auto it = map_.find(key);
     if (it != map_.end())
     {
-        // Invoke handler and capture return value for directed erase.
+        // Invoke handler and handle result.
         if (!it->second(ec, args...))
         {
-            // desubscribed
             map_.erase(it);
-            return false;
+            return { true, false };
         }
 
-        // resubscribed
-        return true;
+        // { found, renew }
+        return { true, true };
     }
     BC_POP_WARNING()
-
-    // not found
-    return false;
+    return {};
 }
 
 template <typename Key, typename... Args>

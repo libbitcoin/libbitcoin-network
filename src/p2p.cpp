@@ -47,7 +47,7 @@ p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
     threadpool_(settings.threads),
     strand_(threadpool_.service().get_executor()),
     stop_subscriber_(strand_),
-    channel_subscriber_(strand_),
+    connect_subscriber_(strand_),
     reporter(log)
 {
     BC_ASSERT_MSG(!is_zero(settings.threads), "empty threadpool");
@@ -209,7 +209,7 @@ void p2p::do_close() NOEXCEPT
     stop_subscriber_.stop(error::service_stopped);
 
     // Notify and delete subscribers to channel notifications.
-    channel_subscriber_.stop_default(error::service_stopped);
+    connect_subscriber_.stop_default(error::service_stopped);
 
     // Stop all channels.
     for (const auto& channel: channels_)
@@ -238,7 +238,7 @@ void p2p::do_subscribe_connect(const channel_handler& handler,
     const result_handler& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    channel_subscriber_.subscribe(move_copy(handler));
+    connect_subscriber_.subscribe(move_copy(handler));
     complete(error::success);
 }
 
@@ -419,20 +419,19 @@ void p2p::do_save(const messages::address::cptr& message,
 // Connection management.
 // ----------------------------------------------------------------------------
 
-// Preclude pending redundant channel nonces.
-bool p2p::pend(uint64_t nonce) NOEXCEPT
+bool p2p::store_nonce(uint64_t nonce) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return settings_.enable_loopback || nonces_.insert(nonce).second;
 }
 
-bool p2p::unpend(uint64_t nonce) NOEXCEPT
+bool p2p::unstore_nonce(uint64_t nonce) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return settings_.enable_loopback || to_bool(nonces_.erase(nonce));
 }
 
-code p2p::store(const channel::ptr& channel, bool notify,
+code p2p::store_channel(const channel::ptr& channel, bool notify,
     bool inbound) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -460,7 +459,7 @@ code p2p::store(const channel::ptr& channel, bool notify,
 
     // Notify channel subscribers of started channel.
     if (notify)
-        channel_subscriber_.notify(error::success, channel);
+        connect_subscriber_.notify(error::success, channel);
 
     // Increment inbound channel counter.
     if (inbound)
@@ -474,7 +473,7 @@ code p2p::store(const channel::ptr& channel, bool notify,
     return error::success;
 }
 
-code p2p::unstore(const channel::ptr& channel, bool inbound) NOEXCEPT
+code p2p::unstore_channel(const channel::ptr& channel, bool inbound) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
