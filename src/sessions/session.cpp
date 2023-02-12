@@ -36,7 +36,7 @@ namespace network {
 
 #define CLASS session
 
-using namespace bc::system;
+using namespace system;
 using namespace std::placeholders;
 
 // Bind throws (ok).
@@ -49,7 +49,7 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 session::session(p2p& network) NOEXCEPT
   : network_(network),
     stopped_(true),
-    timeout_(settings().retry_timeout()),
+    timeout_(network.network_settings().retry_timeout()),
     stop_subscriber_(network.strand()),
     defer_subscriber_(network.strand()),
     reporter(network.log())

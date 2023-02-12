@@ -31,7 +31,7 @@ namespace network {
 
 #define CLASS protocol_version_70001
 
-using namespace bc::system;
+using namespace system;
 using namespace bc::network::messages;
 
 static const std::string protocol_name = "version";

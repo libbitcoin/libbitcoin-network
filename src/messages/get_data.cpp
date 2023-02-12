@@ -32,7 +32,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
 
 // filtered_block flag allowed by bip37.
 const std::string get_data::command = "getdata";

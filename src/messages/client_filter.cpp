@@ -32,7 +32,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string client_filter::command = "cfilter";
 const identifier client_filter::id = identifier::client_filter;

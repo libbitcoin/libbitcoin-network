@@ -32,7 +32,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
 
 const std::string address::command = "addr";
 const identifier address::id = identifier::address;

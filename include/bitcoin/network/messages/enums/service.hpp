@@ -19,8 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_ENUMS_SERVICE_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_ENUMS_SERVICE_HPP
 
-#include <cstdint>
-#include <bitcoin/system.hpp>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {

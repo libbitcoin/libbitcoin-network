@@ -33,7 +33,7 @@ namespace network {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-using namespace bc::system;
+using namespace system;
 using namespace std::placeholders;
 
 inline asio::endpoint make_endpoint(bool enable_ipv6, uint16_t port) NOEXCEPT
@@ -53,7 +53,6 @@ acceptor::acceptor(const logger& log, asio::strand& strand,
     service_(service),
     strand_(strand),
     acceptor_(strand_),
-    stopped_(true),
     reporter(log),
     tracker<acceptor>(log)
 {

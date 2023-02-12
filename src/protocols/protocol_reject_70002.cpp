@@ -31,7 +31,7 @@ namespace network {
 #define CLASS protocol_reject_70002
 static const std::string protocol_name = "reject";
 
-using namespace bc::system;
+using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 

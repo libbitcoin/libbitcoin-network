@@ -31,7 +31,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
 
 // Unbounded except by network message size.
 constexpr size_t max_message = max_inventory;

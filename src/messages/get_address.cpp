@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string get_address::command = "getaddr";
 const identifier get_address::id = identifier::get_address;

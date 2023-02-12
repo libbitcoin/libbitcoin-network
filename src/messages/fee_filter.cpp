@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string fee_filter::command = "feefilter";
 const identifier fee_filter::id = identifier::fee_filter;

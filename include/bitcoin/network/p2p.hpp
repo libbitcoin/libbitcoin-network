@@ -252,13 +252,13 @@ private:
 
     // These are thread safe.
     const settings& settings_;
-    std::atomic<size_t> channel_count_;
-    std::atomic<size_t> inbound_channel_count_;
+    std::atomic<size_t> channel_count_{};
+    std::atomic<size_t> inbound_channel_count_{};
 
     // These are protected by strand.
     hosts hosts_;
     threadpool threadpool_;
-    session_manual::ptr manual_;
+    session_manual::ptr manual_{};
 
     // This is thread safe.
     asio::strand strand_;

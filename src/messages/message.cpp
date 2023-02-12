@@ -24,7 +24,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
 
 constexpr auto empty_checksum = from_little_endian<uint32_t>(sha256::double_hash(
     sha256::ablocks_t<0>{}));

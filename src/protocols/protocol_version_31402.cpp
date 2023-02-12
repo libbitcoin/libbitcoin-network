@@ -36,7 +36,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #define CLASS protocol_version_31402
 static const std::string protocol_name = "version";
 
-using namespace bc::system;
+using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
@@ -60,9 +60,6 @@ protocol_version_31402::protocol_version_31402(const session& session,
     minimum_services_(minimum_services),
     maximum_services_(maximum_services),
     invalid_services_(session.settings().invalid_services),
-    sent_version_(false),
-    received_version_(false),
-    received_acknowledge_(false),
     timer_(std::make_shared<deadline>(session.log(), channel->strand(),
         session.settings().channel_handshake())),
     tracker<protocol_version_31402>(session.log())

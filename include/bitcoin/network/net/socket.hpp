@@ -90,7 +90,7 @@ public:
 
 protected:
     // These are thread safe.
-    std::atomic<bool> stopped_;
+    std::atomic_bool stopped_{};
     asio::strand strand_;
 
     // These are protected by strand (see also handle_accept).

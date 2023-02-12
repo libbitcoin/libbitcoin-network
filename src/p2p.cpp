@@ -38,15 +38,13 @@ namespace network {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-using namespace bc::system;
+using namespace system;
 using namespace std::placeholders;
 
 p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
   : settings_(settings),
-    channel_count_(zero),
-    inbound_channel_count_(zero),
-    hosts_(settings_),
-    threadpool_(settings_.threads),
+    hosts_(settings),
+    threadpool_(settings.threads),
     strand_(threadpool_.service().get_executor()),
     stop_subscriber_(strand_),
     channel_subscriber_(strand_),

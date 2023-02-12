@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string block::command = "block";
 const identifier block::id = identifier::block;

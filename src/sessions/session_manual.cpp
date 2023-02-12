@@ -31,7 +31,7 @@ namespace network {
 
 #define CLASS session_manual
 
-using namespace bc::system;
+using namespace system;
 using namespace config;
 using namespace std::placeholders;
 

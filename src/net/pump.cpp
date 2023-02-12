@@ -26,7 +26,7 @@
 namespace libbitcoin {
 namespace network {
 
-using namespace bc::system;
+using namespace system;
 
 #define SUBSCRIBER(name) name##_subscriber_
 

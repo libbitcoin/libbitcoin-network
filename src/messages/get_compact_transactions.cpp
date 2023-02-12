@@ -30,7 +30,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string get_compact_transactions::command = "getblocktxn";
 const identifier get_compact_transactions::id = identifier::get_compact_transactions;

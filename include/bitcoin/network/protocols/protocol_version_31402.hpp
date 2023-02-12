@@ -83,10 +83,10 @@ protected:
 
 private:
     // These are protected by strand.
-    bool sent_version_;
-    bool received_version_;
-    bool received_acknowledge_;
-    std::shared_ptr<result_handler> handler_;
+    bool sent_version_{};
+    bool received_version_{};
+    bool received_acknowledge_{};
+    std::shared_ptr<result_handler> handler_{};
     deadline::ptr timer_;
 };
 

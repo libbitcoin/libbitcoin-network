@@ -32,7 +32,7 @@ namespace network {
 
 #define CLASS protocol_ping_60001
 
-using namespace bc::system;
+using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 

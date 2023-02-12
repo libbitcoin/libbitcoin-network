@@ -30,7 +30,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 // version.relay added by bip37.
 const std::string version::command = "version";

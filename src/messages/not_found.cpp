@@ -32,7 +32,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string not_found::command = "notfound";
 const identifier not_found::id = identifier::not_found;

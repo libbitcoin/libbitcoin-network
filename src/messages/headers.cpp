@@ -31,7 +31,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string headers::command = "headers";
 const identifier headers::id = identifier::headers;

@@ -76,7 +76,7 @@ protected:
 
     // These are protected by strand.
     asio::acceptor acceptor_;
-    bool stopped_;
+    bool stopped_{ true };
 
 private:
     void handle_accept(const code& ec, const socket::ptr& socket,

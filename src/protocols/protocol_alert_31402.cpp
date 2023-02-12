@@ -30,7 +30,7 @@ namespace network {
 
 #define CLASS protocol_alert_31402
 
-using namespace bc::system;
+using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 

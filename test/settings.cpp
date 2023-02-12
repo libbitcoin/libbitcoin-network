@@ -25,7 +25,7 @@ using namespace messages;
 
 BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
 {
-    settings instance;
+    settings instance{};
 
     // [network]
     BOOST_REQUIRE_EQUAL(instance.threads, 1u);
@@ -218,9 +218,189 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(instance.inbound_port, 18444u);
 }
 
+BOOST_AUTO_TEST_CASE(settings__inbound_enabled__default__false)
+{
+    settings instance{};
+    BOOST_REQUIRE(!instance.inbound_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__inbound_enabled__true_true__true)
+{
+    settings instance{};
+    instance.inbound_connections = 42;
+    instance.inbound_port = 42;
+    BOOST_REQUIRE(instance.inbound_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__inbound_enabled__true_false__false)
+{
+    settings instance{};
+    instance.inbound_connections = 42;
+    instance.inbound_port = 0;
+    BOOST_REQUIRE(!instance.inbound_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__inbound_enabled__false_true__false)
+{
+    settings instance{};
+    instance.inbound_connections = 0;
+    instance.inbound_port = 42;
+    BOOST_REQUIRE(!instance.inbound_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__inbound_enabled__false_false__false)
+{
+    settings instance{};
+    instance.inbound_connections = 0;
+    instance.inbound_port = 0;
+    BOOST_REQUIRE(!instance.inbound_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__outbound_enabled__default__true)
+{
+    settings instance{};
+
+    // Default host pool capacity is zero.
+    BOOST_REQUIRE(!instance.outbound_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__outbound_enabled__true_true_true__true)
+{
+    settings instance{};
+    instance.outbound_connections = 42;
+    instance.host_pool_capacity = 42;
+    instance.connect_batch_size = 42;
+    BOOST_REQUIRE(instance.outbound_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__outbound_enabled__true_true_false__false)
+{
+    settings instance{};
+    instance.outbound_connections = 42;
+    instance.host_pool_capacity = 42;
+    instance.connect_batch_size = 0;
+    BOOST_REQUIRE(!instance.outbound_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__outbound_enabled__true_false_true__false)
+{
+    settings instance{};
+    instance.outbound_connections = 42;
+    instance.host_pool_capacity = 0;
+    instance.connect_batch_size = 42;
+    BOOST_REQUIRE(!instance.outbound_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__outbound_enabled__false_true_true__false)
+{
+    settings instance{};
+    instance.outbound_connections = 0;
+    instance.host_pool_capacity = 42;
+    instance.connect_batch_size = 42;
+    BOOST_REQUIRE(!instance.outbound_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__outbound_enabled__false_false_false__false)
+{
+    settings instance{};
+    instance.outbound_connections = 0;
+    instance.host_pool_capacity = 0;
+    instance.connect_batch_size = 0;
+    BOOST_REQUIRE(!instance.outbound_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__advertise_enabled__default__false)
+{
+    settings instance{};
+    BOOST_REQUIRE(!instance.advertise_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__advertise_enabled__true_true_true__true)
+{
+    settings instance{};
+    instance.inbound_port = 42;
+    instance.inbound_connections = 42;
+    instance.self = { messages::address_item{ 0, 0, loopback_ip_address, 42 } };
+    BOOST_REQUIRE(instance.advertise_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__advertise_enabled__false_true_true__false)
+{
+    settings instance{};
+    instance.inbound_port = 0;
+    instance.inbound_connections = 42;
+    instance.self = { messages::address_item{ 0, 0, loopback_ip_address, 42 } };
+    BOOST_REQUIRE(!instance.advertise_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__advertise_enabled__true_false_true__false)
+{
+    settings instance{};
+    instance.inbound_port = 42;
+    instance.inbound_connections = 0;
+    instance.self = { messages::address_item{ 0, 0, loopback_ip_address, 42 } };
+    BOOST_REQUIRE(!instance.advertise_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__advertise_enabled__true_true_false__false)
+{
+    settings instance{};
+    instance.inbound_port = 42;
+    instance.inbound_connections = 42;
+    instance.self = { messages::address_item{} };
+    BOOST_REQUIRE(!instance.advertise_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__advertise_enabled__false_false_false__false)
+{
+    settings instance{};
+    instance.inbound_port = 0;
+    instance.inbound_connections = 0;
+    instance.self = { messages::address_item{} };
+    BOOST_REQUIRE(!instance.advertise_enabled());
+}
+
+BOOST_AUTO_TEST_CASE(settings__maximum_payload__default__expected)
+{
+    settings instance{};
+    BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
+}
+
+BOOST_AUTO_TEST_CASE(settings__maximum_payload__zero_node_none__expected)
+{
+    settings instance{};
+    instance.protocol_maximum = 0;
+    instance.services_maximum = service::node_none;
+    BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 1'800'003u);
+}
+
+BOOST_AUTO_TEST_CASE(settings__maximum_payload__zero_node_witness__expected)
+{
+    settings instance{};
+    instance.protocol_maximum = 0;
+    instance.services_maximum = service::node_witness;
+    BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
+}
+
+BOOST_AUTO_TEST_CASE(settings__maximum_payload__maximum_node_witness__expected)
+{
+    settings instance{};
+    instance.protocol_maximum = max_uint32;
+    instance.services_maximum = service::node_witness;
+    BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
+}
+
+BOOST_AUTO_TEST_CASE(settings__maximum_payload__maximum_maximum_services__expected)
+{
+    settings instance{};
+    instance.protocol_maximum = max_uint32;
+    instance.services_maximum = service::maximum_services;
+    BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
+}
+
 BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__connect_timeout_seconds)
 {
-    settings instance;
+    settings instance{};
     const auto expected = 42;
     instance.retry_timeout_seconds = expected;
     BOOST_REQUIRE(instance.retry_timeout() == seconds(expected));
@@ -228,7 +408,7 @@ BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__connect_timeout_seconds)
 
 BOOST_AUTO_TEST_CASE(settings__connect_timeout__always__connect_timeout_seconds)
 {
-    settings instance;
+    settings instance{};
     const auto expected = 42;
     instance.connect_timeout_seconds = expected;
     BOOST_REQUIRE(instance.connect_timeout() == seconds(expected));
@@ -236,7 +416,7 @@ BOOST_AUTO_TEST_CASE(settings__connect_timeout__always__connect_timeout_seconds)
 
 BOOST_AUTO_TEST_CASE(settings__channel_handshake__always__channel_handshake_seconds)
 {
-    settings instance;
+    settings instance{};
     const auto expected = 42u;
     instance.channel_handshake_seconds = expected;
     BOOST_REQUIRE(instance.channel_handshake() == seconds(expected));
@@ -244,7 +424,7 @@ BOOST_AUTO_TEST_CASE(settings__channel_handshake__always__channel_handshake_seco
 
 BOOST_AUTO_TEST_CASE(settings__channel_heartbeat__always__channel_heartbeat_minutes)
 {
-    settings instance;
+    settings instance{};
     const auto expected = 42u;
     instance.channel_heartbeat_minutes = expected;
     BOOST_REQUIRE(instance.channel_heartbeat() == minutes(expected));
@@ -252,7 +432,7 @@ BOOST_AUTO_TEST_CASE(settings__channel_heartbeat__always__channel_heartbeat_minu
 
 BOOST_AUTO_TEST_CASE(settings__channel_inactivity__always__channel_inactivity_minutes)
 {
-    settings instance;
+    settings instance{};
     const auto expected = 42u;
     instance.channel_inactivity_minutes = expected;
     BOOST_REQUIRE(instance.channel_inactivity() == minutes(expected));
@@ -260,7 +440,7 @@ BOOST_AUTO_TEST_CASE(settings__channel_inactivity__always__channel_inactivity_mi
 
 BOOST_AUTO_TEST_CASE(settings__channel_expiration__always__channel_expiration_minutes)
 {
-    settings instance;
+    settings instance{};
     const auto expected = 42u;
     instance.channel_expiration_minutes = expected;
     BOOST_REQUIRE(instance.channel_expiration() == minutes(expected));
@@ -268,7 +448,7 @@ BOOST_AUTO_TEST_CASE(settings__channel_expiration__always__channel_expiration_mi
 
 BOOST_AUTO_TEST_CASE(settings__channel_germination__always__channel_germination_seconds)
 {
-    settings instance;
+    settings instance{};
     const auto expected = 42u;
     instance.channel_germination_seconds = expected;
     BOOST_REQUIRE(instance.channel_germination() == seconds(expected));
@@ -276,7 +456,7 @@ BOOST_AUTO_TEST_CASE(settings__channel_germination__always__channel_germination_
 
 BOOST_AUTO_TEST_CASE(settings__minimum_address_count__always__outbound_product)
 {
-    settings instance;
+    settings instance{};
     instance.connect_batch_size = 24;
     instance.outbound_connections = 42;
     const auto product = instance.connect_batch_size * instance.outbound_connections;

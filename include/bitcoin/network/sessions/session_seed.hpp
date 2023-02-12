@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_SESSION_SEED_HPP
 
 #include <memory>
-#include <unordered_set>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -46,9 +45,6 @@ public:
     /// Perform seeding as configured (call from network strand).
     /// Seeding is complete invocation of the handler.
     void start(result_handler&& handler) NOEXCEPT override;
-
-    /// Stop the session timer and subscriber (call from network strand).
-    void stop() NOEXCEPT override;
 
     /// The channel is outbound (do not pend the nonce).
     bool inbound() const NOEXCEPT override;
@@ -84,8 +80,6 @@ private:
     void handle_channel_start(const code& ec, const channel::ptr& channel) NOEXCEPT;
     void handle_channel_stop(const code& ec, const count_ptr& counter,
         const channel::ptr& channel, const result_handler& handler) NOEXCEPT;
-
-    std::unordered_set<channel::ptr> seeding_{};
 };
 
 } // namespace network

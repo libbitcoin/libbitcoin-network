@@ -27,7 +27,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
 
 // static
 uint32_t inventory_item::to_number(type_id inventory_type) NOEXCEPT

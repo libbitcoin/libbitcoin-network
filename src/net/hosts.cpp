@@ -35,7 +35,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 hosts::hosts(const settings& settings) NOEXCEPT
   : file_path_(settings.file()),
-    count_(zero),
     minimum_(settings.address_minimum),
     maximum_(settings.address_maximum),
     capacity_(possible_narrow_cast<size_t>(settings.host_pool_capacity)),

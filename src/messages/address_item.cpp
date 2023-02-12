@@ -18,9 +18,6 @@
  */
 #include <bitcoin/network/messages/address_item.hpp>
 
-#include <cstddef>
-#include <cstdint>
-#include <string>
 #include <tuple>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
@@ -31,7 +28,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
 
 constexpr auto ip_address_size = std::tuple_size<ip_address>::value;
 

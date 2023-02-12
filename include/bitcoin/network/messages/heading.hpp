@@ -36,8 +36,8 @@ struct BCT_API heading
     static constexpr size_t command_size = heading_command_size;
     static constexpr size_t maximum_payload(uint32_t, bool witness) NOEXCEPT
     {
-        constexpr size_t vector = sizeof(uint32_t) + system::hash_size;
-        constexpr size_t data_size = vector * max_inventory;
+        constexpr size_t inventory = sizeof(uint32_t) + system::hash_size;
+        constexpr size_t data_size = inventory * max_inventory;
         constexpr size_t non_witness = variable_size(max_inventory) + data_size;
         return witness ? system::chain::max_block_weight : non_witness;
     }

@@ -22,11 +22,12 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-using namespace bc::system;
+using namespace system;
 using namespace messages;
 
 static_assert(heading::maximum_payload(level::canonical, true) == 4'000'000);
@@ -133,6 +134,12 @@ bool settings::advertise_enabled() const NOEXCEPT
 {
     // Advertise requires inbound and valid self.
     return inbound_enabled() && config::is_valid(self.to_address_item());
+}
+
+size_t settings::maximum_payload() const NOEXCEPT
+{
+    return heading::maximum_payload(protocol_maximum,
+        to_bool(services_maximum & service::node_witness));
 }
 
 duration settings::retry_timeout() const NOEXCEPT

@@ -30,7 +30,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string get_headers::command = "getheaders";
 const identifier get_headers::id = identifier::get_headers;

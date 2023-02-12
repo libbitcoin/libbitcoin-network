@@ -31,7 +31,7 @@ namespace network {
 #define CLASS protocol_ping_31402
 static const std::string protocol_name = "ping";
 
-using namespace bc::system;
+using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 

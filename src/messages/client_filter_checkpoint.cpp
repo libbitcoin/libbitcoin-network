@@ -32,7 +32,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string client_filter_checkpoint::command = "cfcheckpt";
 const identifier client_filter_checkpoint::id = identifier::client_filter_checkpoint;

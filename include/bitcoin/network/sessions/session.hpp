@@ -177,8 +177,6 @@ protected:
     /// Notify (non-seed) subscribers on channel start.
     virtual bool notify() const NOEXCEPT = 0;
 
-    p2p& network_;
-
 private:
     void handle_channel_start(const code& ec, const channel::ptr& channel,
         const result_handler& started, const result_handler& stopped) NOEXCEPT;
@@ -205,14 +203,18 @@ private:
     bool handle_subscriber(const code& ec, uintptr_t id,
         const deadline::ptr& timer) NOEXCEPT;
 
-    // These are thread safe.
-    std::atomic<bool> stopped_;
+    // These are thread safe (mostly).
+    p2p& network_;
+    std::atomic_bool stopped_;
     const duration timeout_;
 
     // These are not thread safe.
     subscriber<> stop_subscriber_;
     resubscriber<uintptr_t> defer_subscriber_;
     std::vector<connector::ptr> connectors_{};
+
+// TODO: private
+protected:
     std::unordered_set<channel::ptr> pending_{};
 };
 

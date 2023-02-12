@@ -31,7 +31,7 @@ namespace network {
 
 #define CLASS protocol_version_70002
 
-using namespace bc::system;
+using namespace system;
 using namespace bc::network::messages;
 using namespace std::placeholders;
 

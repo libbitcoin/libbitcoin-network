@@ -33,13 +33,13 @@ namespace network {
 
 #define CLASS protocol
 
-using namespace bc::system;
+using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
-protocol::protocol(const session& session,
-    const channel::ptr& channel) NOEXCEPT
-  : channel_(channel), session_(session), started_(false),
+protocol::protocol(const session& session, const channel::ptr& channel) NOEXCEPT
+  : channel_(channel),
+    session_(session),
     reporter(session.log())
 {
 }

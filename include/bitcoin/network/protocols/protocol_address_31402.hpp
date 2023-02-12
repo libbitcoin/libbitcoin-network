@@ -67,8 +67,8 @@ private:
     const bool request_;
 
     // These are protected by strand.
-    bool received_;
-    bool sent_;
+    bool received_{};
+    bool sent_{};
 };
 
 } // namespace network
