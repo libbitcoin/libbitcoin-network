@@ -269,7 +269,44 @@ public:
 
     void take(address_item_handler&& handler) const NOEXCEPT override
     {
+        // Default address is ipv6, will case disabled(address) true.
         handler(error::success, system::to_shared<const address_item>());
+    }
+};
+
+class mock_session_outbound_one_address_disabled
+  : public mock_session_outbound_one_address
+{
+public:
+    using mock_session_outbound_one_address::mock_session_outbound_one_address;
+
+    bool disabled(const config::address&) const NOEXCEPT override
+    {
+        return true;
+    }
+};
+
+class mock_session_outbound_one_address_insufficient
+  : public mock_session_outbound_one_address
+{
+public:
+    using mock_session_outbound_one_address::mock_session_outbound_one_address;
+
+    bool insufficient(const config::address&) const NOEXCEPT override
+    {
+        return true;
+    }
+};
+
+class mock_session_outbound_one_address_unsupported
+  : public mock_session_outbound_one_address
+{
+public:
+    using mock_session_outbound_one_address::mock_session_outbound_one_address;
+
+    bool unsupported(const config::address&) const NOEXCEPT override
+    {
+        return true;
     }
 };
 
@@ -282,18 +319,6 @@ public:
     bool blacklisted(const config::authority&) const NOEXCEPT override
     {
         return true;
-    }
-};
-
-class mock_session_outbound_one_address_whitelisted
-  : public mock_session_outbound_one_address
-{
-public:
-    using mock_session_outbound_one_address::mock_session_outbound_one_address;
-
-    bool whitelisted(const config::authority&) const NOEXCEPT override
-    {
-        return false;
     }
 };
 
@@ -798,43 +823,6 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__blacklisted__expected)
     session.reset();
 }
 
-// Whitelisting errors get eaten with all connect failure codes (logging only).
-BOOST_AUTO_TEST_CASE(session_outbound__start__not_whitelisted__expected)
-{
-    const logger log{};
-    settings set(selection::mainnet);
-    set.host_pool_capacity = 1;
-    set.connect_batch_size = 2;
-    set.outbound_connections = 2;
-    set.connect_timeout_seconds = 10000;
-    mock_p2p<> net(set, log);
-    auto session = std::make_shared<mock_session_outbound_one_address_whitelisted>(net);
-    BOOST_REQUIRE(session->stopped());
-   
-    std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
-    {
-        session->start([&](const code& ec)
-        {
-            started.set_value(ec);
-        });
-    });
-
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE(!session->stopped());
-
-    std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
-    {
-        session->stop();
-        stopped.set_value(true);
-    });
-
-    BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(session->stopped());
-    session.reset();
-}
-
 BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_channel_service_stopped)
 {
     const logger log{};
@@ -843,6 +831,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
     set.connect_batch_size = 2;
     set.outbound_connections = 2;
     set.connect_timeout_seconds = 10000;
+
+    // Prevent default address from being rejected by enable_ipv6 false.
+    set.enable_ipv6 = true;
 
     // This invokes session.stop from within start_connect and then continues.
     // First channel is stopped for service_stopped and others for channel_dropped.
@@ -875,6 +866,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
     set.connect_batch_size = 1;
     set.outbound_connections = 1;
     set.connect_timeout_seconds = 10000;
+
+    // Prevent default address from being rejected by enable_ipv6 false.
+    set.enable_ipv6 = true;
 
     // Started channel results in read failure.
     mock_p2p<mock_connector_connect_success<error::bad_stream>> net(set, log);

@@ -161,15 +161,14 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    // TODO: update tests (hang).
     // TODO: filter in address protocol.
-    ////if (disabled(peer))
-    ////{
-    ////    // Should not see these unless there is a change to enable_ipv6.
-    ////    LOG("Dropping disabled protocol address [" << peer << "]");
-    ////    handler(error::address_disabled, nullptr);
-    ////    return;
-    ////}
+    if (disabled(peer))
+    {
+        // Should not see these unless there is a change to enable_ipv6.
+        LOG("Dropping disabled protocol address [" << peer << "]");
+        handler(error::address_disabled, nullptr);
+        return;
+    }
 
     // TODO: filter in address protocol.
     if (insufficient(peer))
@@ -189,7 +188,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    // DONE: filtered in address protocol.
+    // TODO: filtered in address protocol.
     if (blacklisted(peer))
     {
         // Should not see these unless there is a change to blacklist config.
