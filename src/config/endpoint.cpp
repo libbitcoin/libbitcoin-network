@@ -30,7 +30,7 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-using namespace bc::system;
+using namespace system;
 
 // Contructors.
 // ----------------------------------------------------------------------------

@@ -19,7 +19,6 @@
 #include <bitcoin/network/net/socket.hpp>
 
 #include <atomic>
-#include <cstddef>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -32,7 +31,7 @@
 namespace libbitcoin {
 namespace network {
 
-using namespace bc::system;
+using namespace system;
 using namespace std::placeholders;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -44,8 +43,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // performed on the socket." Calls are stranded to protect the socket member.
 
 socket::socket(const logger& log, asio::io_context& service) NOEXCEPT
-  : stopped_(false),
-    strand_(service.get_executor()),
+  : strand_(service.get_executor()),
     socket_(strand_),
     reporter(log),
     tracker<socket>(log)

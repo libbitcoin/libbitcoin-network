@@ -40,11 +40,9 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 protocol_address_31402::protocol_address_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    blacklist_(settings().blacklists),
+    blacklist_(session.settings().blacklists),
     inbound_(session.inbound()),
-    request_(!inbound_ && settings().outbound_enabled()),
-    received_(false),
-    sent_(false),
+    request_(!inbound_ && session.settings().outbound_enabled()),
     tracker<protocol_address_31402>(session.log())
 {
 }

@@ -30,7 +30,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string merkle_block::command = "merkleblock";
 const identifier merkle_block::id = identifier::merkle_block;

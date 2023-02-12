@@ -24,6 +24,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -124,20 +125,22 @@ private:
 
     // Proxy base class is not fully thread safe.
 
-    // These are thread safe.
-    ////const uint32_t rate_limit_;
-    const uint32_t minimum_buffer_;
-    const size_t maximum_payload_;
-    const uint32_t protocol_magic_;
-    const uint64_t channel_nonce_;
-    const bool validate_checksum_;
+    // These are thread safe (const).
     const config::address address_;
+    const settings& settings_;
+    const uint64_t nonce_
+    {
+        system::pseudo_random::next<uint64_t>(one, max_uint64)
+    };
 
     // These are not thread safe.
-    uint32_t negotiated_version_;
-    messages::version::cptr peer_version_;
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
+    uint32_t negotiated_version_;
+    messages::version::cptr peer_version_
+    {
+        system::to_shared<messages::version>()
+    };
 };
 
 typedef std::function<void(const code&, const channel::ptr&)> channel_handler;

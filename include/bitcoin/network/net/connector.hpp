@@ -89,9 +89,9 @@ protected:
     asio::strand& strand_;
 
     // These are protected by strand.
-    deadline::ptr timer_;
     asio::resolver resolver_;
-    bool stopped_;
+    deadline::ptr timer_;
+    bool stopped_{ true };
 
 private:
     void handle_resolve(const error::boost_code& ec,

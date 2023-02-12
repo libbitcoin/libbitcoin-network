@@ -34,7 +34,7 @@ namespace network {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-using namespace bc::system;
+using namespace system;
 using namespace network::config;
 using namespace std::placeholders;
 
@@ -46,9 +46,8 @@ connector::connector(const logger& log, asio::strand& strand,
   : settings_(settings),
     service_(service),
     strand_(strand),
-    timer_(std::make_shared<deadline>(log, strand_, settings_.connect_timeout())),
-    resolver_(strand_),
-    stopped_(true),
+    resolver_(strand),
+    timer_(std::make_shared<deadline>(log, strand, settings.connect_timeout())),
     reporter(log),
     tracker<connector>(log)
 {

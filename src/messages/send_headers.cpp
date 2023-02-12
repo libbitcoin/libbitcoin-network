@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
 
 const std::string send_headers::command = "sendheaders";
 const identifier send_headers::id = identifier::send_headers;

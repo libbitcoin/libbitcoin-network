@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(version_tests)
 
-using namespace bc::system;
+using namespace system;
 using namespace bc::network::messages;
 
 BOOST_AUTO_TEST_CASE(version__properties__always__expected)

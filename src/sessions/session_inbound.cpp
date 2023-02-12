@@ -29,7 +29,7 @@ namespace network {
 
 #define CLASS session_inbound
 
-using namespace bc::system;
+using namespace system;
 using namespace std::placeholders;
 
 // Bind throws (ok).

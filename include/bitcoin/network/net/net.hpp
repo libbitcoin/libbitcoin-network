@@ -39,5 +39,4 @@
 // should be called on each acceptor, connector, and channel before calling
 // join. Stops are posted, ensuring work remains alive until stop complete.
 
-
 #endif

@@ -33,7 +33,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 // Multiple inv message in reply enabled by bip61.
 const std::string inventory::command = "inv";

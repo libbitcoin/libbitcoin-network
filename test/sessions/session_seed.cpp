@@ -300,12 +300,12 @@ public:
         return attach<mock_seed_session>(*this);
     }
 
-    code store(const channel::ptr&, bool, bool) NOEXCEPT override
+    code store_channel(const channel::ptr&, bool, bool) NOEXCEPT override
     {
         return error::success;
     }
 
-    code unstore(const channel::ptr&, bool) NOEXCEPT override
+    code unstore_channel(const channel::ptr&, bool) NOEXCEPT override
     {
         return error::success;
     }

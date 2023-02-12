@@ -123,6 +123,10 @@ protected:
     /// Delay invocation with specified unique id and retry timeout.
     virtual void defer(result_handler&& handler, const uintptr_t& id) NOEXCEPT;
 
+    /// Pend/unpend a channel, for quick stop (unpend false if not pending).
+    virtual void pend(const channel::ptr& channel) NOEXCEPT;
+    virtual bool unpend(const channel::ptr& channel) NOEXCEPT;
+
     /// Subscribe to stop notification.
     virtual void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
@@ -177,8 +181,6 @@ protected:
     /// Notify (non-seed) subscribers on channel start.
     virtual bool notify() const NOEXCEPT = 0;
 
-    p2p& network_;
-
 private:
     void handle_channel_start(const code& ec, const channel::ptr& channel,
         const result_handler& started, const result_handler& stopped) NOEXCEPT;
@@ -202,18 +204,20 @@ private:
 
     void handle_timer(const code& ec, uintptr_t id,
         const result_handler& complete) NOEXCEPT;
-    bool handle_subscriber(const code& ec, uintptr_t id,
+    bool handle_defer(const code& ec, uintptr_t id,
         const deadline::ptr& timer) NOEXCEPT;
+    bool handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT;
 
-    // These are thread safe.
-    std::atomic<bool> stopped_;
+    // These are thread safe (mostly).
+    p2p& network_;
+    std::atomic_bool stopped_;
     const duration timeout_;
 
     // These are not thread safe.
     subscriber<> stop_subscriber_;
     resubscriber<uintptr_t> defer_subscriber_;
+    resubscriber<channel::ptr> pend_subscriber_;
     std::vector<connector::ptr> connectors_{};
-    std::unordered_set<channel::ptr> pending_{};
 };
 
 } // namespace network

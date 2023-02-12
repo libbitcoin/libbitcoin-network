@@ -35,13 +35,6 @@ using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
-// Helper to derive maximum message payload size from settings.
-inline size_t payload_maximum(const settings& settings) NOEXCEPT
-{
-    return heading::maximum_payload(settings.protocol_maximum,
-        to_bool(settings.services_maximum & service::node_witness));
-}
-
 // Factory for fixed deadline timer pointer construction.
 inline deadline::ptr timeout(const logger& log, asio::strand& strand,
     const duration& span) NOEXCEPT
@@ -65,15 +58,9 @@ channel::channel(const logger& log, const socket::ptr& socket,
 channel::channel(const logger& log, const socket::ptr& socket,
     const settings& settings, const config::address& address) NOEXCEPT
   : proxy(socket),
-    ////rate_limit_(settings.rate_limit),
-    minimum_buffer_(settings.minimum_buffer),
-    maximum_payload_(payload_maximum(settings)),
-    protocol_magic_(settings.identifier),
-    channel_nonce_(pseudo_random::next<uint64_t>(one, max_uint64)),
-    validate_checksum_(settings.validate_checksum),
     address_(address),
+    settings_(settings),
     negotiated_version_(settings.protocol_maximum),
-    peer_version_(to_shared<messages::version>()),
     expiration_(expiration(log, socket->strand(), settings.channel_expiration())),
     inactivity_(timeout(log, socket->strand(), settings.channel_inactivity())),
     tracker<channel>(log)
@@ -127,7 +114,7 @@ void channel::resume() NOEXCEPT
 // Member is const.
 uint64_t channel::nonce() const NOEXCEPT
 {
-    return channel_nonce_;
+    return nonce_;
 }
 
 uint32_t channel::negotiated_version() const NOEXCEPT
@@ -170,22 +157,22 @@ address_item_cptr channel::updated_address() const NOEXCEPT
 
 size_t channel::minimum_buffer() const NOEXCEPT
 {
-    return minimum_buffer_;
+    return settings_.minimum_buffer;
 }
 
 size_t channel::maximum_payload() const NOEXCEPT
 {
-    return maximum_payload_;
+    return settings_.maximum_payload();
 }
 
 uint32_t channel::protocol_magic() const NOEXCEPT
 {
-    return protocol_magic_;
+    return settings_.identifier;
 }
 
 bool channel::validate_checksum() const NOEXCEPT
 {
-    return validate_checksum_;
+    return settings_.validate_checksum;
 }
 
 uint32_t channel::version() const NOEXCEPT

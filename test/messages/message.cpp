@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(message_tests)
 
-using namespace bc::system;
+using namespace system;
 using namespace bc::network::messages;
 
 constexpr auto empty_checksum = 0xe2e0f65d_u32;

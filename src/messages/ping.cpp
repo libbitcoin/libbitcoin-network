@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
 
 // ping.nonce added by bip31.
 const identifier ping::id = identifier::ping;

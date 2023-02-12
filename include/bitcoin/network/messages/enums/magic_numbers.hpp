@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_MAGIC_NUMBERS_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_MAGIC_NUMBERS_HPP
 
-#include <cstdint>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {

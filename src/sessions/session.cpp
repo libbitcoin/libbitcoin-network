@@ -36,7 +36,7 @@ namespace network {
 
 #define CLASS session
 
-using namespace bc::system;
+using namespace system;
 using namespace std::placeholders;
 
 // Bind throws (ok).
@@ -49,9 +49,10 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 session::session(p2p& network) NOEXCEPT
   : network_(network),
     stopped_(true),
-    timeout_(settings().retry_timeout()),
+    timeout_(network.network_settings().retry_timeout()),
     stop_subscriber_(network.strand()),
     defer_subscriber_(network.strand()),
+    pend_subscriber_(network.strand()),
     reporter(network.log())
 {
 }
@@ -81,14 +82,8 @@ void session::stop() NOEXCEPT
 
     stopped_.store(true, std::memory_order_relaxed);
     defer_subscriber_.stop(error::service_stopped);
+    pend_subscriber_.stop(error::service_stopped);
     stop_subscriber_.stop(error::service_stopped);
-
-    // Stop all pending channels.
-    for (const auto& channel: pending_)
-        channel->stop(error::service_stopped);
-
-    // Free all pending channels.
-    pending_.clear();
 }
 
 // Channel sequence.
@@ -107,9 +102,9 @@ void session::start_channel(const channel::ptr& channel,
         return;
     }
 
-    // Pend shaking outgoing nonce (unless nonce conflict).
-    // Inbound does not check until handshake completes, so no race.
-    if (!inbound() && !network_.pend(channel->nonce()))
+    // In case of a loopback, inbound and outbound are on the same strand.
+    // Inbound does not check nonce until handshake completes, so no race.
+    if (!inbound() && !network_.store_nonce(channel->nonce()))
     {
         channel->stop(error::channel_conflict);
         started(error::channel_conflict);
@@ -117,8 +112,8 @@ void session::start_channel(const channel::ptr& channel,
         return;
     }
 
-    // Pend shaking channel.
-    pending_.insert(channel);
+    // Pend channel for handshake duration (for quick stop).
+    pend(channel);
 
     result_handler start =
         BIND4(handle_channel_start, _1, channel, std::move(started),
@@ -187,23 +182,14 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    // Unpend channel (intervening stop/clear could clear first).
-    if (ec != error::service_stopped && !to_bool(pending_.erase(channel)))
+    if (!unpend(channel))
     {
-        LOG("Unpend failed to locate channel (ok on stop).");
+        LOG("Unpend failed to locate channel.");
     }
 
-    // Loopback race, with inbound and outbound channels on the same strand:
-    // [out:unpend then in:store] (fail) or [in:store then out:unpend] (ok).
-    ////// Unpend outgoing nonce (false implies bug).
-    ////if (!inbound() && !network_.unpend(channel->nonce()))
-    ////{
-    ////    LOG("Unpend failed to locate channel nonce.");
-    ////}
-
-    // Handles channel stopped or protocol start code.
+    // Handles channel stopped or protocol start results code.
     // This retains the channel and allows broadcasts, stored if no code.
-    start(ec ? ec : network_.store(channel, notify(), inbound()));
+    start(ec ? ec : network_.store_channel(channel, notify(), inbound()));
 }
 
 // Context free method.
@@ -216,7 +202,7 @@ void session::handle_channel_start(const code& ec, const channel::ptr& channel,
         channel->stop(ec);
 
         // Unstore fails on counter underflows (implies bug).
-        if (const auto error_code = network_.unstore(channel, inbound()))
+        if (const auto error_code = network_.unstore_channel(channel, inbound()))
         {
             LOG("Unstore on channel start failed: " << error_code.message());
         }
@@ -313,13 +299,14 @@ void session::do_handle_channel_stopped(const code& ec,
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     // Unstore fails on counter underflows (implies bug).
-    if (const auto error_code = network_.unstore(channel, inbound()))
+    if (const auto error_code = network_.unstore_channel(channel, inbound()))
     {
         LOG("Unstore on channel stop failed: " << error_code.message());
     }
 
-    // Unpend outgoing nonce (false implies bug).
-    if (!inbound() && !network_.unpend(channel->nonce()))
+    // Unpend outgoing nonce (false implies bug). This in stop vs. handshake
+    // to avoid loopback race, with in/outbound channels on the same strand.
+    if (!inbound() && !network_.unstore_nonce(channel->nonce()))
     {
         LOG("Unpend failed to locate channel nonce.");
     }
@@ -344,11 +331,8 @@ void session::defer(result_handler&& handler, const uintptr_t& id) NOEXCEPT
 
     // Subscribe completes before handle_timer can be invoked (timer stranded).
     const auto timer = std::make_shared<deadline>(log(), network_.strand());
-    timer->start(
-        BIND3(handle_timer, _1, id, std::move(handler)), timeout_);
-
-    defer_subscriber_.subscribe(
-        BIND3(handle_subscriber, _1, id, timer), id);
+    timer->start(BIND3(handle_timer, _1, id, std::move(handler)), timeout_);
+    defer_subscriber_.subscribe(BIND3(handle_defer, _1, id, timer), id);
 }
 
 void session::handle_timer(const code& ec, uintptr_t id,
@@ -356,17 +340,39 @@ void session::handle_timer(const code& ec, uintptr_t id,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
     ////LOG("Delay timer (" << id << ") notify: " << ec.message());
-    defer_subscriber_.notify(id, ec);
+    defer_subscriber_.notify_one(id, ec);
     complete(ec);
 }
 
-bool session::handle_subscriber(const code&, uintptr_t,
+bool session::handle_defer(const code&, uintptr_t,
     const deadline::ptr& timer) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
     ////LOG("Delay timer (" << id << ") stop: " << ec.message());
     timer->stop();
     return false;
+}
+
+void session::pend(const channel::ptr& channel) NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    ////LOG("Pending channel (" << channel->nonce() << ").");
+    pend_subscriber_.subscribe(BIND2(handle_pend, _1, channel), channel);
+}
+
+bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    if (ec) channel->stop(ec);
+    return false;
+}
+
+bool session::unpend(const channel::ptr& channel) NOEXCEPT
+{
+    // Ok to not find after stop, clears before channel stop handlers fire.
+    const auto result = pend_subscriber_.notify_one(channel, error::success);
+    ////LOG("Unpending channel (" << channel->nonce() << ").");
+    return result.first || stopped();
 }
 
 void session::subscribe_stop(result_handler&& handler) NOEXCEPT

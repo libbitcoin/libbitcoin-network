@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string send_compact::command = "sendcmpct";
 const identifier send_compact::id = identifier::send_compact;

@@ -19,6 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_IDENTIFIER_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_IDENTIFIER_HPP
 
+#include <bitcoin/network/define.hpp>
+
 namespace libbitcoin {
 namespace network {
 namespace messages {

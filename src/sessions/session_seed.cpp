@@ -31,7 +31,7 @@ namespace network {
 
 #define CLASS session_seed
 
-using namespace bc::system;
+using namespace system;
 using namespace std::placeholders;
 
 // Bind throws (ok).
@@ -93,21 +93,6 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
     }
 
     session::start(BIND2(handle_started, _1, std::move(handler)));
-}
-
-void session_seed::stop() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // Set stopped state.
-    session::stop();
-
-    // Stop all seeding channels.
-    for (const auto& channel: seeding_)
-        channel->stop(error::service_stopped);
-
-    // Free all seeding channels.
-    seeding_.clear();
 }
 
 void session_seed::handle_started(const code& ec,
@@ -224,8 +209,9 @@ void session_seed::handle_channel_start(const code& LOG_ONLY(ec),
             << ec.message());
     }
 
-    // Pend seeding channel, independent of result.
-    seeding_.insert(channel);
+    // Pend channel for seed duration (for quick stop).
+    // This immediately follows the handshake unpend of the same channel.
+    pend(channel);
 }
 
 void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
@@ -261,9 +247,9 @@ void session_seed::handle_channel_stop(const code& ec, const count_ptr& counter,
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Seed channel stop [" << channel->authority() << "] " << ec.message());
 
-    if (ec != error::service_stopped && !to_bool(seeding_.erase(channel)))
+    if (!unpend(channel))
     {
-        LOG("Unpend failed to locate seed channel (ok on stop).");
+        LOG("Unpend failed to locate seed channel.");
     }
 
     stop_seed(counter, handler);

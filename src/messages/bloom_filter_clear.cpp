@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string bloom_filter_clear::command = "filterclear";
 const identifier bloom_filter_clear::id = identifier::bloom_filter_clear;

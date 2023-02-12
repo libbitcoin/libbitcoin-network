@@ -39,10 +39,7 @@ using namespace std::placeholders;
 protocol_seed_31402::protocol_seed_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    blacklist_(settings().blacklists),
-    sent_address_(false),
-    sent_get_address_(false),
-    received_address_(false),
+    blacklist_(session.settings().blacklists),
     timer_(std::make_shared<deadline>(session.log(), channel->strand(),
         session.settings().channel_germination())),
     tracker<protocol_seed_31402>(session.log())

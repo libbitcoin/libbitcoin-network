@@ -177,11 +177,14 @@ protected:
     virtual acceptor::ptr create_acceptor() NOEXCEPT;
     virtual connector::ptr create_connector() NOEXCEPT;
 
-    /// Maintain channel state.
-    virtual bool pend(uint64_t nonce) NOEXCEPT;
-    virtual bool unpend(uint64_t nonce) NOEXCEPT;
-    virtual code unstore(const channel::ptr& channel, bool inbound) NOEXCEPT;
-    virtual code store(const channel::ptr& channel, bool notify,
+    /// Register nonces for loopback detection (true implies found).
+    virtual bool store_nonce(uint64_t nonce) NOEXCEPT;
+    virtual bool unstore_nonce(uint64_t nonce) NOEXCEPT;
+
+    /// Register channels for broadcast and quick stop.
+    virtual code store_channel(const channel::ptr& channel, bool notify,
+        bool inbound) NOEXCEPT;
+    virtual code unstore_channel(const channel::ptr& channel,
         bool inbound) NOEXCEPT;
 
     /// Maintain address pool.
@@ -252,20 +255,20 @@ private:
 
     // These are thread safe.
     const settings& settings_;
-    std::atomic<size_t> channel_count_;
-    std::atomic<size_t> inbound_channel_count_;
+    std::atomic<size_t> channel_count_{};
+    std::atomic<size_t> inbound_channel_count_{};
 
     // These are protected by strand.
     hosts hosts_;
     threadpool threadpool_;
-    session_manual::ptr manual_;
+    session_manual::ptr manual_{};
 
     // This is thread safe.
     asio::strand strand_;
 
     // These are protected by strand.
     stop_subscriber stop_subscriber_;
-    channel_subscriber channel_subscriber_;
+    channel_subscriber connect_subscriber_;
     std::unordered_set<uint64_t> nonces_{};
     std::unordered_set<channel::ptr> channels_{};
     std::unordered_set<config::authority> authorities_{};

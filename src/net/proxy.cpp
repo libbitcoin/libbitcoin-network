@@ -37,7 +37,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-using namespace bc::system;
+using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
@@ -51,11 +51,8 @@ static constexpr uint32_t https_magic = 0x02010316;
 // is not started.
 proxy::proxy(const socket::ptr& socket) NOEXCEPT
   : socket_(socket),
-    paused_(true),
-    pump_subscriber_(socket->strand()),
     stop_subscriber_(socket->strand()),
-    payload_buffer_(),
-    heading_reader_(heading_buffer_),
+    pump_subscriber_(socket->strand()),
     reporter(socket->log())
 {
 }

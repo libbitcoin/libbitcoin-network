@@ -174,7 +174,7 @@ private:
     const session& session_;
 
     // This is protected by strand.
-    bool started_;
+    bool started_{};
 };
 
 #undef BOUND_PROTOCOL

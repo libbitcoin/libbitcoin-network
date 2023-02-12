@@ -142,25 +142,19 @@ private:
         const system::chunk_ptr& payload,
         const result_handler& handler) NOEXCEPT;
 
-    // This is thread safe.
+    // These are thread safe.
+    std::atomic<uint64_t> backlog_{};
+    std::atomic<uint64_t> total_{};
     socket::ptr socket_;
 
-    // These are protected by the strand.
-    bool paused_;
-    pump pump_subscriber_;
-    stop_subscriber stop_subscriber_;
-
-    // These are protected by read ordering (strand).
-    system::data_chunk payload_buffer_;
-    system::data_array<messages::heading::size()> heading_buffer_;
-    system::read::bytes::copy heading_reader_;
-
-    // These are thread safe.
-    std::atomic<uint64_t> total_{};
-    std::atomic<uint64_t> backlog_{};
-
-    // This is protected by write ordering (strand).
+    // These are protected by strand.
     queue queue_{};
+    bool paused_{ true };
+    system::data_chunk payload_buffer_{};
+    system::data_array<messages::heading::size()> heading_buffer_{};
+    system::read::bytes::copy heading_reader_{ heading_buffer_ };
+    stop_subscriber stop_subscriber_;
+    pump pump_subscriber_;
 };
 
 } // namespace network

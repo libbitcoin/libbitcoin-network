@@ -95,7 +95,7 @@ private:
 
     // These are thread safe.
     const std::filesystem::path file_path_;
-    std::atomic<size_t> count_;
+    std::atomic<size_t> count_{};
     const size_t minimum_;
     const size_t maximum_;
     const size_t capacity_;

@@ -30,7 +30,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string bloom_filter_load::command = "filterload";
 const identifier bloom_filter_load::id = identifier::bloom_filter_load;

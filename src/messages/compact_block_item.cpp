@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
 
 compact_block_item compact_block_item::deserialize(uint32_t, reader& source,
     bool witness) NOEXCEPT

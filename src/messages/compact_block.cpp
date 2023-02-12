@@ -31,7 +31,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string compact_block::command = "cmpctblock";
 const identifier compact_block::id = identifier::compact_block;

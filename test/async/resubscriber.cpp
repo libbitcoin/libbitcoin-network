@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop__twice__second_dropped)
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify1__stopped__dropped)
+BOOST_AUTO_TEST_CASE(resubscriber__notify__stopped__dropped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify1__stopped__dropped)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify1__once__expected)
+BOOST_AUTO_TEST_CASE(resubscriber__notify__once__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify1__once__expected)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify1__twice_true__expected)
+BOOST_AUTO_TEST_CASE(resubscriber__notify__twice_true__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify1__twice_true__expected)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify1__twice_false__expected)
+BOOST_AUTO_TEST_CASE(resubscriber__notify__twice_false__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify1__twice_false__expected)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify2__stopped__dropped)
+BOOST_AUTO_TEST_CASE(resubscriber__notify_one__stopped__dropped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -349,10 +349,18 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify2__stopped__dropped)
             if (++count != two) notify_result = { value, size };
             return true;
         }, key);
+    
+        // Found and true.
+        const auto value1 = instance.notify_one(key, ec, expected);
+        BOOST_REQUIRE(value1.first);
+        BOOST_REQUIRE(value1.second);
 
-        BOOST_REQUIRE(instance.notify(key, ec, expected));
         instance.stop_default(error::address_blocked);
-        BOOST_REQUIRE(!instance.notify(key, error::address_blocked, {}));
+
+        // Not found (and false).
+        const auto value2 = instance.notify_one(key, error::address_blocked, {});
+        BOOST_REQUIRE(!value2.first);
+        BOOST_REQUIRE(!value2.second);
     });
 
     pool.stop();
@@ -361,7 +369,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify2__stopped__dropped)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify2__missing__false)
+BOOST_AUTO_TEST_CASE(resubscriber__notify_one__missing__false)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -379,8 +387,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify2__missing__false)
             if (is_one(++count)) notify_result = { value, size };
             return true;
         }, 99);
-    
-        BOOST_REQUIRE(!instance.notify(100, error::address_blocked, 21));
+
+        // Not found (and false).
+        const auto value = instance.notify_one(100, error::address_blocked, 21);
+        BOOST_REQUIRE(!value.first);
+        BOOST_REQUIRE(!value.second);
 
         // First notification, and clears map.
         instance.stop(ec, expected);
@@ -392,7 +403,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify2__missing__false)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify2__once__expected)
+BOOST_AUTO_TEST_CASE(resubscriber__notify_one__once__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -411,7 +422,10 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify2__once__expected)
             return true;
         }, key);
     
-        BOOST_REQUIRE(instance.notify(key, ec, expected));
+        // Found and true.
+        const auto value = instance.notify_one(key, ec, expected);
+        BOOST_REQUIRE(value.first);
+        BOOST_REQUIRE(value.second);
 
         // Prevents unstopped assertion (uncleared).
         instance.stop_default(error::address_blocked);
@@ -423,7 +437,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify2__once__expected)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify2__twice_true__expected)
+BOOST_AUTO_TEST_CASE(resubscriber__notify_one__twice_true__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -443,8 +457,15 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify2__twice_true__expected)
             return true;
         }, key);
 
-        BOOST_REQUIRE(instance.notify(key, {}, {}));
-        BOOST_REQUIRE(instance.notify(key, ec, expected));
+        // Found and true.
+        const auto value1 = instance.notify_one(key, {}, {});
+        BOOST_REQUIRE(value1.first);
+        BOOST_REQUIRE(value1.second);
+
+        // Found and true.
+        const auto value2 = instance.notify_one(key, ec, expected);
+        BOOST_REQUIRE(value2.first);
+        BOOST_REQUIRE(value2.second);
 
         // Prevents unstopped assertion (uncleared).
         instance.stop_default(error::address_blocked);
@@ -456,7 +477,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify2__twice_true__expected)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify2__twice_false__expected)
+BOOST_AUTO_TEST_CASE(resubscriber__notify_one__twice_false__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
@@ -474,8 +495,15 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify2__twice_false__expected)
             return false;
         }, key);
 
-        BOOST_REQUIRE(!instance.notify(key, ec, expected));
-        BOOST_REQUIRE(!instance.notify(key, {}, {}));
+        // Found and false.
+        const auto value1 = instance.notify_one(key, ec, expected);
+        BOOST_REQUIRE(value1.first);
+        BOOST_REQUIRE(!value1.second);
+
+        // Not found (and false).
+        const auto value2 = instance.notify_one(key, {}, {});
+        BOOST_REQUIRE(!value2.first);
+        BOOST_REQUIRE(!value2.second);
 
         // Cleared by false return.
         ////instance.stop_default(error::address_blocked);

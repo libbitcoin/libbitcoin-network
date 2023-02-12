@@ -30,7 +30,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
 
 const std::string memory_pool::command = "mempool";
 const identifier memory_pool::id = identifier::memory_pool;

@@ -29,7 +29,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace bc::system;
+using namespace system;
     
 const std::string version_acknowledge::command = "verack";
 const identifier version_acknowledge::id = identifier::version_acknowledge;
