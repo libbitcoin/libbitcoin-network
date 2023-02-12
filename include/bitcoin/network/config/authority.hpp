@@ -32,8 +32,7 @@ namespace config {
 
 /// Container for an [ip-address, port, CIDR] tuple.
 /// Subnet matching is employed when nonzero CIDR suffix is present.
-/// Internal storage always normalized to native IPv4/IPv6 (no mapped).
-/// Does not support deserialization of IPv6-mapped encoding (use native IPv4).
+/// Internal storage always denormalized to native IPv4/IPv6 (no mapped IPv6).
 /// Provided for connection management (not p2p network messaging).
 class BCT_API authority
 {
@@ -54,7 +53,7 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    /// The IPv4 or IPv6 address.
+    /// The IPv4 or IPv6 address, denormalized (no mapped IPv6).
     const asio::address& ip() const NOEXCEPT;
 
     /// The ip port of the authority.
@@ -65,6 +64,7 @@ public:
 
     /// Methods.
     /// -----------------------------------------------------------------------
+    /// All serializations are denormalized (IPv6 or IPv4).
 
     /// IPv6|IPv4
     std::string to_host() const NOEXCEPT;

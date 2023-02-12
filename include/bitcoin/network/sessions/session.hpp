@@ -163,7 +163,7 @@ protected:
     /// Number of outbound connected channels (including manual).
     virtual size_t outbound_channel_count() const NOEXCEPT;
 
-    /// The address protocol is disabled.
+    /// The address protocol is disabled (ipv6 address with ipv6 disabled).
     virtual bool disabled(const config::address& authority) const NOEXCEPT;
 
     /// The address advertises insufficient services.
