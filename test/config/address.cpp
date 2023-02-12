@@ -175,6 +175,58 @@ BOOST_AUTO_TEST_CASE(address__construct__no_port__false)
     BOOST_REQUIRE(!address("42.42.42.42"));
 }
 
+// is_v4
+
+BOOST_AUTO_TEST_CASE(address__is_v4__default__true)
+{
+    const address item{};
+    BOOST_REQUIRE(!item.is_v4());
+}
+
+BOOST_AUTO_TEST_CASE(address__is_v4__unspecified_v6__true)
+{
+    const address item{ messages::unspecified_address_item };
+    BOOST_REQUIRE(!item.is_v4());
+}
+
+BOOST_AUTO_TEST_CASE(address__is_v4__loopback_v6__true)
+{
+    const address item{ messages::address_item{ 0, 0, messages::loopback_ip_address, 42 } };
+    BOOST_REQUIRE(!item.is_v4());
+}
+
+BOOST_AUTO_TEST_CASE(address__is_v4__loopback_v4__false)
+{
+    const address item{ "127.0.0.1:8333/42/24" };
+    BOOST_REQUIRE(item.is_v4());
+}
+
+// is_v6
+
+BOOST_AUTO_TEST_CASE(address__is_v6__default__true)
+{
+    const address item{};
+    BOOST_REQUIRE(item.is_v6());
+}
+
+BOOST_AUTO_TEST_CASE(address__is_v6__unspecified_v6__true)
+{
+    const address item{ messages::unspecified_address_item };
+    BOOST_REQUIRE(item.is_v6());
+}
+
+BOOST_AUTO_TEST_CASE(address__is_v6__loopback_v6__true)
+{
+    const address item{ messages::address_item{ 0, 0, messages::loopback_ip_address, 42 } };
+    BOOST_REQUIRE(item.is_v6());
+}
+
+BOOST_AUTO_TEST_CASE(address__is_v6__loopback_v4__false)
+{
+    const address item{ "127.0.0.1:8333/42/24" };
+    BOOST_REQUIRE(!item.is_v6());
+}
+
 // port
 
 BOOST_AUTO_TEST_CASE(address__port__default__zero_false)

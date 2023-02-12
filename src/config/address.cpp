@@ -96,6 +96,16 @@ std::string address::to_string() const NOEXCEPT
 // Properties.
 // ----------------------------------------------------------------------------
 
+bool address::is_v4() const NOEXCEPT
+{
+    return config::is_v4(address_->ip);
+}
+
+bool address::is_v6() const NOEXCEPT
+{
+    return !is_v4();
+}
+
 uint16_t address::port() const NOEXCEPT
 {
     return address_->port;

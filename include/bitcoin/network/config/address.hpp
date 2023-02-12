@@ -68,6 +68,8 @@ public:
     const messages::address_item::cptr& message() const NOEXCEPT;
 
     /// The address properties.
+    bool is_v4() const NOEXCEPT;
+    bool is_v6() const NOEXCEPT;
     uint16_t port() const NOEXCEPT;
     uint32_t timestamp() const NOEXCEPT;
     uint64_t services() const NOEXCEPT;
