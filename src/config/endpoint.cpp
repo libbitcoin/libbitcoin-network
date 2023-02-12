@@ -155,7 +155,7 @@ std::istream& operator>>(std::istream& input,
         "^((tcp|udp|http|https|inproc):\\/\\/)?"
 
         //  IPv4     or [IPv6]           or Host name
-        "(([0-9.]+)|\\[([0-9a-f:.]+)]|([^:?/\\\\]+))"
+        "(([0-9\\.]+)|\\[([0-9a-f:\\.]+)]|([^:\\?\\/\\\\]+))"
 
         // Optional port number.
         "(:([1-9][0-9]{0,4}))?$"

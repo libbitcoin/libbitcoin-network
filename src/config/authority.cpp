@@ -171,7 +171,7 @@ std::istream& operator>>(std::istream& input,
     static const regex regular
     {
         // IPv4       or [IPv6]
-        "^(([0-9.]+)|\\[([0-9a-f:.]+)])"
+        "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])"
 
         // Optional port number.
         "(:([1-9][0-9]{0,4}))?"
