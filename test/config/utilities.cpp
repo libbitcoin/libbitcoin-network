@@ -75,9 +75,10 @@ BOOST_AUTO_TEST_CASE(utilities__denormalize__defaults__unchanged)
 
 BOOST_AUTO_TEST_CASE(utilities__denormalize__mapped__unmapped)
 {
-    static constexpr system::data_array<16> mapped
+    constexpr system::data_array<16> mapped
     {
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 1, 2, 3, 4
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xff, 0xff, 1, 2, 3, 4
     };
 
     const asio::address ip{ asio::ipv6{ mapped } };
@@ -86,9 +87,10 @@ BOOST_AUTO_TEST_CASE(utilities__denormalize__mapped__unmapped)
 
 BOOST_AUTO_TEST_CASE(utilities__denormalize__unmapped__unchanged)
 {
-    static constexpr system::data_array<16> unmapped
+    constexpr system::data_array<16> unmapped
     {
-        0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd, 1, 2, 3, 4
+        0x42, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xab, 0xcd, 1, 2, 3, 4
     };
 
     const asio::address ip{ asio::ipv6{ unmapped } };
@@ -101,6 +103,36 @@ BOOST_AUTO_TEST_CASE(utilities__is_valid__default__false)
 {
     BOOST_REQUIRE(!is_valid(messages::address_item{}));
 }
+
+BOOST_AUTO_TEST_CASE(utilities__is_valid__loopback__true)
+{
+    const messages::address_item item{ 0, 0, messages::loopback_ip_address, 42 };
+    BOOST_REQUIRE(is_valid(item));
+}
+
+// is_v4
+
+BOOST_AUTO_TEST_CASE(utilities__is_v4__default__false)
+{
+    BOOST_REQUIRE(!is_v4(messages::ip_address{}));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__is_v4__loopback_v6__false)
+{
+    BOOST_REQUIRE(!is_v4(messages::loopback_ip_address));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__is_v4__loopback_mapped__true)
+{
+    constexpr system::data_array<16> loopback_mapped
+    {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xff, 0xff, 127, 0, 0, 1
+    };
+
+    BOOST_REQUIRE(is_v4(loopback_mapped));
+}
+
 
 // is_member
 

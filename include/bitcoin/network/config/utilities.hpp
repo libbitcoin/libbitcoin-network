@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_CONFIG_UTILITIES_HPP
 #define LIBBITCOIN_NETWORK_CONFIG_UTILITIES_HPP
 
+#include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -37,6 +38,30 @@ namespace config {
 /// addresses must be literal encodings, all host names are serialized as non-
 /// literal, and deserialized as either literal or non-literal.
 
+/// datatracker.ietf.org/doc/html/rfc4291
+constexpr size_t ipv4_size = 4;
+constexpr size_t ipv6_size = 16;
+static constexpr system::data_array<ipv6_size - ipv4_size> ip_map_prefix
+{
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff
+};
+
+/// Valid if the host is not unspecified and port is non-zero.
+constexpr bool is_valid(const messages::address_item& item) NOEXCEPT
+{
+    return !is_zero(item.port) && item.ip != messages::unspecified_ip_address;
+}
+
+/// True if ip_address starts with the ip map prefix (maps to a v4 address).
+constexpr bool is_v4(const messages::ip_address& ip) NOEXCEPT
+{
+    return std::equal(ip_map_prefix.begin(), ip_map_prefix.end(), ip.begin());
+}
+
+/// Member if subnet addresses contain host.
+bool is_member(const asio::address& ip, const asio::address& subnet,
+    uint8_t cidr) NOEXCEPT;
+
 /// asio/string conversions (denormalize to ipv4 unmapped).
 std::string to_host(const asio::address& ip) NOEXCEPT;
 asio::address from_host(const std::string& host) NOEXCEPT(false);
@@ -51,13 +76,6 @@ asio::address from_address(const messages::ip_address& address) NOEXCEPT;
 
 /// Unmap IPv6-mapped addresses.
 asio::address denormalize(const asio::address& ip) NOEXCEPT;
-
-/// Valid if the host is not unspecified and port is non-zero.
-bool is_valid(const messages::address_item& item) NOEXCEPT;
-
-/// Member if subnet addresses contain host.
-bool is_member(const asio::address& ip, const asio::address& subnet,
-    uint8_t cidr) NOEXCEPT;
 
 } // namespace config
 } // namespace network

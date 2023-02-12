@@ -30,20 +30,17 @@ namespace config {
 using namespace system;
 using namespace boost::asio;
 
-static_assert(array_count<messages::ip_address> == 16);
-static_assert(array_count<ip::address_v4::bytes_type> == 4);
-static_assert(array_count<ip::address_v6::bytes_type> == 16);
-static constexpr data_array<12> mapping_prefix
-{
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff
-};
+static_assert(array_count<messages::ip_address> == ipv6_size);
+static_assert(array_count<ip::address_v4::bytes_type> == ipv4_size);
+static_assert(array_count<ip::address_v6::bytes_type> == ipv6_size);
+static_assert(is_same_type<ip::address_v6::bytes_type, messages::ip_address>);
 
 // asio/asio conversions.
 // ----------------------------------------------------------------------------
 
 static asio::ipv6 to_v6(const asio::ipv4& ip4) NOEXCEPT
 {
-    return asio::ipv6{ splice(mapping_prefix, ip4.to_bytes()) };
+    return asio::ipv6{ splice(ip_map_prefix, ip4.to_bytes()) };
 }
 
 // Convert IPv6-mapped to IPV4 (ensures consistent matching).
@@ -217,14 +214,6 @@ bool is_member(const asio::address& ip, const asio::address& subnet,
     }
 
     return false;
-}
-
-// Conditions.
-// ----------------------------------------------------------------------------
-
-bool is_valid(const messages::address_item& item) NOEXCEPT
-{
-    return !is_zero(item.port) && item.ip != messages::unspecified_ip_address;
 }
 
 } // namespace config
