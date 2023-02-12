@@ -147,13 +147,17 @@ std::istream& operator>>(std::istream& input,
     input >> value;
 
     // C++11: use std::regex.
-    // TODO: boost URI parser?
-    // std::regex requires gcc 4.9, so we are using boost::regex for now.
     using namespace boost;
     static const regex regular
     {
+        // en.wikipedia.org/wiki/List_of_URI_schemes
+        // Optional schemes of p2p network and our zeromq endpoints.
         "^((tcp|udp|http|https|inproc):\\/\\/)?"
-        "(\\[([0-9a-f:\\.]+)]|([^:]+))"
+
+        //  IPv4     or [IPv6]           or Host name
+        "(([0-9.]+)|\\[([0-9a-f:.]+)]|([^:?/\\\\]+))"
+
+        // Optional port number.
         "(:([1-9][0-9]{0,4}))?$"
     };
 
@@ -164,7 +168,7 @@ std::istream& operator>>(std::istream& input,
     const auto& token = *it;
     argument.scheme_ = token[2];
     argument.host_ = token[3];
-    deserialize(argument.port_, token[7]);
+    deserialize(argument.port_, token[8]);
     return input;
 }
 
