@@ -165,17 +165,8 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     if (disabled(peer))
     {
         // Should not see these unless there is a change to enable_ipv6.
-        LOG("Dropping disabled protocol address [" << peer << "]");
+        ////LOG("Dropping disabled protocol address [" << peer << "]");
         handler(error::address_disabled, nullptr);
-        return;
-    }
-
-    // TODO: filter in address protocol.
-    if (insufficient(peer))
-    {
-        // Should not see these unless there is a change to services_minimum.
-        ////LOG("Dropping insufficient address [" << peer << "]");
-        handler(error::address_insufficient, nullptr);
         return;
     }
 
@@ -185,6 +176,15 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         // Should not see these unless there is a change to invalid_services.
         ////LOG("Dropping unsupported address [" << peer << "]");
         handler(error::address_unsupported, nullptr);
+        return;
+    }
+
+    // TODO: filter in address protocol.
+    if (insufficient(peer))
+    {
+        // Should not see these unless there is a change to services_minimum.
+        ////LOG("Dropping insufficient address [" << peer << "]");
+        handler(error::address_insufficient, nullptr);
         return;
     }
 
