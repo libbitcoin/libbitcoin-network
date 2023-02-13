@@ -65,7 +65,7 @@ public:
 
     /// The address item.
     const messages::address_item& item() const NOEXCEPT;
-    const messages::address_item::cptr& message() const NOEXCEPT;
+    operator const messages::address_item::cptr&() const NOEXCEPT;
 
     /// The address properties.
     bool is_v4() const NOEXCEPT;
