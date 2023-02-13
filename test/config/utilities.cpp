@@ -206,25 +206,11 @@ BOOST_AUTO_TEST_CASE(utilities__to_host__v4__expected_v4)
     BOOST_REQUIRE_EQUAL(host, "42.42.42.42");
 }
 
-// Throws "Invalid argument" on gcc/clang, succeeds in win32 (but shouldn't).
-////BOOST_AUTO_TEST_CASE(utilities__to_host__v4_port__expected_v4)
-////{
-////    const auto host = to_host(make_address("42.42.42.42:8333"));
-////    BOOST_REQUIRE_EQUAL(host, "42.42.42.42");
-////}
-
 BOOST_AUTO_TEST_CASE(utilities__to_host__v6__expected_v6)
 {
     const auto host = to_host(make_address("42:42::42:42"));
     BOOST_REQUIRE_EQUAL(host, "42:42::42:42");
 }
-
-// Throws "Invalid argument" on gcc/clang, succeeds in win32 (but shouldn't).
-////BOOST_AUTO_TEST_CASE(utilities__to_host__v6_port__expected_v6)
-////{
-////    const auto host = to_host(make_address("[42:42::42:42]:8333"));
-////    BOOST_REQUIRE_EQUAL(host, "42:42::42:42");
-////}
 
 // from_host
 
@@ -325,25 +311,11 @@ BOOST_AUTO_TEST_CASE(utilities__to_literal__v4__expected_v4)
     BOOST_REQUIRE_EQUAL(host, "42.42.42.42");
 }
 
-// Throws "Invalid argument" on gcc/clang, succeeds in win32 (but shouldn't).
-////BOOST_AUTO_TEST_CASE(utilities__to_literal__v4_port__expected_v4)
-////{
-////    const auto host = to_literal(make_address("42.42.42.42:8333"));
-////    BOOST_REQUIRE_EQUAL(host, "42.42.42.42");
-////}
-
 BOOST_AUTO_TEST_CASE(utilities__to_literal__v6__expected_literal_v6)
 {
     const auto host = to_literal(make_address("42:42::42:42"));
     BOOST_REQUIRE_EQUAL(host, "[42:42::42:42]");
 }
-
-// Throws "Invalid argument" on gcc/clang, succeeds in win32 (but shouldn't).
-////BOOST_AUTO_TEST_CASE(utilities__to_literal__v6_port__expected_literal_v6)
-////{
-////    const auto host = to_literal(make_address("[42:42::42:42]:8333"));
-////    BOOST_REQUIRE_EQUAL(host, "[42:42::42:42]");
-////}
 
 // to_address
 
