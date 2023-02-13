@@ -47,7 +47,7 @@ public:
     typedef resubscriber<size_t> stop_subscriber;
     typedef stop_subscriber::handler stop_handler;
     typedef stop_subscriber::completer stop_completer;
-    typedef stop_subscriber::key stop_key;
+    typedef stop_subscriber::key key_t;
 
     template <typename Message>
     void broadcast(const Message& message, result_handler&& handler,
@@ -232,7 +232,7 @@ private:
                 channel->write(data, move_copy(handler));
     }
 
-    bool subscribe_close(stop_handler&& handler, const stop_key& key) NOEXCEPT;
+    bool subscribe_close(stop_handler&& handler, key_t key) NOEXCEPT;
     connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
     virtual bool closed() const NOEXCEPT;
@@ -278,7 +278,7 @@ private:
 
     // These are protected by strand.
 
-    stop_key stopper_{};
+    key_t stopper_{};
     stop_subscriber stop_subscriber_;
 
     size_t connecter_{};

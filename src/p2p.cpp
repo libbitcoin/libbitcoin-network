@@ -248,7 +248,7 @@ void p2p::do_subscribe_connect(const channel_handler& handler,
 ////}
 
 // private
-bool p2p::subscribe_close(stop_handler&& handler, const stop_key& key) NOEXCEPT
+bool p2p::subscribe_close(stop_handler&& handler, key_t key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return stop_subscriber_.subscribe(std::move(handler), key);
