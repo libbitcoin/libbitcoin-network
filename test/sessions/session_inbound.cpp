@@ -309,18 +309,6 @@ public:
     }
 };
 
-class mock_session_inbound_blacklist_fail
-  : public mock_session_inbound
-{
-public:
-    using mock_session_inbound::mock_session_inbound;
-
-    bool blacklisted(const config::authority&) const NOEXCEPT override
-    {
-        return true;
-    }
-};
-
 class mock_session_inbound_whitelist_fail
   : public mock_session_inbound
 {
@@ -330,6 +318,18 @@ public:
     bool whitelisted(const config::authority&) const NOEXCEPT override
     {
         return false;
+    }
+};
+
+class mock_session_inbound_blacklist_fail
+  : public mock_session_inbound
+{
+public:
+    using mock_session_inbound::mock_session_inbound;
+
+    bool blacklisted(const config::authority&) const NOEXCEPT override
+    {
+        return true;
     }
 };
 
@@ -771,13 +771,13 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
     session.reset();
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscribed__not_attached)
+BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelisted__not_attached)
 {
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 42;
-    mock_p2p<mock_acceptor_start_success_accept_success<error::oversubscribed>> net(set, log);
+    mock_p2p<mock_acceptor_start_success_accept_success<error::address_blocked>> net(set, log);
 
     std::promise<code> net_started;
     net.start([&](const code& ec)
@@ -788,7 +788,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session (with one mocked inbound channel) using the network reference.
-    auto session = std::make_shared<mock_session_inbound_channel_count_fail>(net);
+    auto session = std::make_shared<mock_session_inbound_whitelist_fail>(net);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
@@ -807,7 +807,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
 
-    // Block until handle_accept sets oversubscribed in channel.stop.
+    // Block until handle_accept sets address_blocked in channel.stop.
     BOOST_REQUIRE(net.get_acceptor()->require_code());
 
     std::promise<bool> stopped;
@@ -818,9 +818,9 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     });
 
     BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(net.get_acceptor()->stopped());
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
 
     // Not attached because accept never succeeded.
     BOOST_REQUIRE(!session->attached_handshake());
@@ -883,14 +883,13 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
     session.reset();
 }
 
-
-BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelisted__not_attached)
+BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscribed__not_attached)
 {
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 42;
-    mock_p2p<mock_acceptor_start_success_accept_success<error::address_blocked>> net(set, log);
+    mock_p2p<mock_acceptor_start_success_accept_success<error::oversubscribed>> net(set, log);
 
     std::promise<code> net_started;
     net.start([&](const code& ec)
@@ -901,7 +900,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
     BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session (with one mocked inbound channel) using the network reference.
-    auto session = std::make_shared<mock_session_inbound_whitelist_fail>(net);
+    auto session = std::make_shared<mock_session_inbound_channel_count_fail>(net);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
@@ -920,7 +919,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
 
-    // Block until handle_accept sets address_blocked in channel.stop.
+    // Block until handle_accept sets oversubscribed in channel.stop.
     BOOST_REQUIRE(net.get_acceptor()->require_code());
 
     std::promise<bool> stopped;
@@ -931,9 +930,9 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
     });
 
     BOOST_REQUIRE(stopped.get_future().get());
-    BOOST_REQUIRE(net.get_acceptor()->stopped());
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BOOST_REQUIRE(net.get_acceptor()->stopped());
 
     // Not attached because accept never succeeded.
     BOOST_REQUIRE(!session->attached_handshake());

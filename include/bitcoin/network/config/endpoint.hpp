@@ -32,6 +32,7 @@ namespace network {
 namespace config {
     
 /// Container for a [scheme, host, port] tuple.
+/// IPv6 URIs encoded with literal host (en.wikipedia.org/wiki/IPv6_address).
 /// Provided for serialization of network endpoints in URI format.
 class BCT_API endpoint
 {
@@ -97,7 +98,6 @@ public:
 
 private:
     // These are not thread safe.
-
     std::string scheme_;
     std::string host_;
     uint16_t port_;

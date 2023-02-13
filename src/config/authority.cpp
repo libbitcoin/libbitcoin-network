@@ -52,7 +52,7 @@ authority::authority(const std::string& authority) NOEXCEPT(false)
 // IPv6-mapped IPv4 are normalized to IPv4.
 authority::authority(const asio::address& ip, uint16_t port,
     uint8_t cidr) NOEXCEPT
-  : ip_(config::normalize(ip)), port_(port), cidr_(cidr)
+  : ip_(config::denormalize(ip)), port_(port), cidr_(cidr)
 {
 }
 
@@ -160,38 +160,15 @@ bool authority::operator!=(const authority& other) const NOEXCEPT
     return !(*this == other);
 }
 
+// This allows unusable CIDR values (ok).
 std::istream& operator>>(std::istream& input,
     authority& argument) NOEXCEPT(false)
 {
     std::string value{};
     input >> value;
 
-    // C++11: use std::regex.
-    using namespace boost;
-    static const regex regular
-    {
-        // This excludes /0, so cidr_(0) implies address (vs. network).
-        "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])"
-        "(:([1-9][0-9]{0,4}))?"
-        "(/([1-9][0-9]{0,2}))?$"
-    };
-
-    sregex_iterator it{ value.begin(), value.end(), regular }, end{};
-    if (it == end)
+    if (!parse_authority(argument.ip_, argument.port_, argument.cidr_, value))
         throw istream_exception(value);
-
-    const auto& token = *it;
-    const auto host = is_zero(token[3].length()) ? token[2] : token[3];
-    deserialize(argument.port_, token[5]);
-    deserialize(argument.cidr_, token[7]);
-    argument.ip_ = from_host(host);
-
-    // This allows /33-64 CIDR values for mapped ipv4 addresses (unusable, ok).
-    if ((argument.ip_.is_v4() && argument.cidr_ > bits<uint32_t>) ||
-        (argument.ip_.is_v6() && argument.cidr_ > bits<uint64_t>))
-    {
-        throw istream_exception(value);
-    }
 
     return input;
 }

@@ -31,7 +31,6 @@ namespace config {
 
 /// Container for messages::address_item (with timstamp and services).
 /// IPv4 addresses are converted to IPv6-mapped for message encoding.
-/// Does not support deserialization of IPv6-mapped encoding (use native IPv4).
 /// Provided for connect/session, and serialization to/from hosts file.
 class BCT_API address
 {
@@ -50,6 +49,7 @@ public:
 
     // Methods.
     // ------------------------------------------------------------------------
+    // All values are denormalized (IPv6 or IPv4).
 
     /// The IPv4 or IPv6 address.
     asio::address to_ip() const NOEXCEPT;
@@ -65,9 +65,11 @@ public:
 
     /// The address item.
     const messages::address_item& item() const NOEXCEPT;
-    const messages::address_item::cptr& message() const NOEXCEPT;
+    operator const messages::address_item::cptr&() const NOEXCEPT;
 
     /// The address properties.
+    bool is_v4() const NOEXCEPT;
+    bool is_v6() const NOEXCEPT;
     uint16_t port() const NOEXCEPT;
     uint32_t timestamp() const NOEXCEPT;
     uint64_t services() const NOEXCEPT;

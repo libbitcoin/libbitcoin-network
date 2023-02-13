@@ -132,8 +132,7 @@ bool settings::outbound_enabled() const NOEXCEPT
 
 bool settings::advertise_enabled() const NOEXCEPT
 {
-    // Advertise requires inbound and valid self.
-    return inbound_enabled() && config::is_valid(self.to_address_item());
+    return inbound_enabled() && self;
 }
 
 size_t settings::maximum_payload() const NOEXCEPT

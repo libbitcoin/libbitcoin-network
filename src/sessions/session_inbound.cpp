@@ -155,7 +155,7 @@ void session_inbound::handle_accept(const code& ec,
 
     if (!whitelisted(channel->authority()))
     {
-        LOG("Dropping not whitelisted connection [" << channel->authority() << "]");
+        ////LOG("Dropping not whitelisted connection [" << channel->authority() << "]");
         channel->stop(error::address_blocked);
         return;
     }

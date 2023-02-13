@@ -66,7 +66,7 @@ const messages::address_item& address::item() const NOEXCEPT
     return *address_;
 }
 
-const messages::address_item::cptr& address::message() const NOEXCEPT
+address::operator const messages::address_item::cptr&() const NOEXCEPT
 {
     return address_;
 }
@@ -76,7 +76,7 @@ const messages::address_item::cptr& address::message() const NOEXCEPT
 
 asio::address address::to_ip() const NOEXCEPT
 {
-    return from_address(address_->ip);
+    return config::denormalize(from_address(address_->ip));
 }
 
 std::string address::to_host() const NOEXCEPT
@@ -95,6 +95,16 @@ std::string address::to_string() const NOEXCEPT
 
 // Properties.
 // ----------------------------------------------------------------------------
+
+bool address::is_v4() const NOEXCEPT
+{
+    return config::is_v4(address_->ip);
+}
+
+bool address::is_v6() const NOEXCEPT
+{
+    return !is_v4();
+}
 
 uint16_t address::port() const NOEXCEPT
 {

@@ -41,6 +41,31 @@ BOOST_AUTO_TEST_CASE(endpoint__construct__port_only__throws_invalid_option_value
     BOOST_REQUIRE_THROW(endpoint host(":42"), invalid_option_value);
 }
 
+BOOST_AUTO_TEST_CASE(endpoint__construct__question_mark__throws_invalid_option_value)
+{
+    BOOST_REQUIRE_THROW(endpoint host("tcp://foo.bar?foobar:42"), invalid_option_value);
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__construct__forward_slash__throws_invalid_option_value)
+{
+    BOOST_REQUIRE_THROW(endpoint host("tcp://foo.bar/foobar:42"), invalid_option_value);
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__construct__backslash__throws_invalid_option_value)
+{
+    BOOST_REQUIRE_THROW(endpoint host("tcp://foo.bar\\foobar:42"), invalid_option_value);
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__construct__host_colon__throws_invalid_option_value)
+{
+    BOOST_REQUIRE_THROW(endpoint host("tcp://foo.bar:foobar:42"), invalid_option_value);
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__construct__ipv6_non_literal__throws_invalid_option_value)
+{
+    BOOST_REQUIRE_THROW(endpoint host("tcp://a::bc:def::123:45:6"), invalid_option_value);
+}
+
 BOOST_AUTO_TEST_CASE(endpoint__construct__default__localhost)
 {
     endpoint host{};
@@ -68,6 +93,15 @@ BOOST_AUTO_TEST_CASE(endpoint__construct__host_port__expected_values)
     BOOST_REQUIRE_EQUAL(endpoint.to_uri(), "foo.bar:42");
 }
 
+BOOST_AUTO_TEST_CASE(endpoint__construct__scheme_host__expected_values)
+{
+    endpoint host("tcp://foo.bar");
+    BOOST_REQUIRE_EQUAL(host.scheme(), "tcp");
+    BOOST_REQUIRE_EQUAL(host.host(), "foo.bar");
+    BOOST_REQUIRE_EQUAL(host.port(), 0u);
+    BOOST_REQUIRE_EQUAL(host.to_uri(), "tcp://foo.bar");
+}
+
 BOOST_AUTO_TEST_CASE(endpoint__construct__scheme_host_port__expected_values)
 {
     endpoint host("tcp://foo.bar:42");
@@ -77,13 +111,22 @@ BOOST_AUTO_TEST_CASE(endpoint__construct__scheme_host_port__expected_values)
     BOOST_REQUIRE_EQUAL(host.to_uri(), "tcp://foo.bar:42");
 }
 
-BOOST_AUTO_TEST_CASE(endpoint__construct__scheme_host__expected_values)
+BOOST_AUTO_TEST_CASE(endpoint__construct__scheme_ipv4_port__expected_values)
 {
-    endpoint host("tcp://foo.bar");
+    endpoint host("tcp://127.0.0.1:42");
     BOOST_REQUIRE_EQUAL(host.scheme(), "tcp");
-    BOOST_REQUIRE_EQUAL(host.host(), "foo.bar");
-    BOOST_REQUIRE_EQUAL(host.port(), 0u);
-    BOOST_REQUIRE_EQUAL(host.to_uri(), "tcp://foo.bar");
+    BOOST_REQUIRE_EQUAL(host.host(), "127.0.0.1");
+    BOOST_REQUIRE_EQUAL(host.port(), 42u);
+    BOOST_REQUIRE_EQUAL(host.to_uri(), "tcp://127.0.0.1:42");
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__construct__scheme_ipv6_port__expected_values)
+{
+    endpoint host("tcp://[a::bc:def::123:45:6]:42");
+    BOOST_REQUIRE_EQUAL(host.scheme(), "tcp");
+    BOOST_REQUIRE_EQUAL(host.host(), "[a::bc:def::123:45:6]");
+    BOOST_REQUIRE_EQUAL(host.port(), 42u);
+    BOOST_REQUIRE_EQUAL(host.to_uri(), "tcp://[a::bc:def::123:45:6]:42");
 }
 
 // to_local

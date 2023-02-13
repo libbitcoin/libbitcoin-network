@@ -146,25 +146,9 @@ std::istream& operator>>(std::istream& input,
     std::string value{};
     input >> value;
 
-    // C++11: use std::regex.
-    // TODO: boost URI parser?
-    // std::regex requires gcc 4.9, so we are using boost::regex for now.
-    using namespace boost;
-    static const regex regular
-    {
-        "^((tcp|udp|http|https|inproc):\\/\\/)?"
-        "(\\[([0-9a-f:\\.]+)]|([^:]+))"
-        "(:([1-9][0-9]{0,4}))?$"
-    };
-
-    sregex_iterator it{ value.begin(), value.end(), regular }, end{};
-    if (it == end)
+    if (!parse_endpoint(argument.scheme_, argument.host_, argument.port_, value))
         throw istream_exception(value);
 
-    const auto& token = *it;
-    argument.scheme_ = token[2];
-    argument.host_ = token[3];
-    deserialize(argument.port_, token[7]);
     return input;
 }
 

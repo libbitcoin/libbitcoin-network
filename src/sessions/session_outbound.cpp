@@ -161,22 +161,12 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    // TODO: update tests (hang).
     // TODO: filter in address protocol.
-    ////if (disabled(peer))
-    ////{
-    ////    // Should not see these unless there is a change to enable_ipv6.
-    ////    LOG("Dropping disabled protocol address [" << peer << "]");
-    ////    handler(error::address_disabled, nullptr);
-    ////    return;
-    ////}
-
-    // TODO: filter in address protocol.
-    if (insufficient(peer))
+    if (disabled(peer))
     {
-        // Should not see these unless there is a change to services_minimum.
-        ////LOG("Dropping insufficient address [" << peer << "]");
-        handler(error::address_insufficient, nullptr);
+        // Should not see these unless there is a change to enable_ipv6.
+        ////LOG("Dropping disabled protocol address [" << peer << "]");
+        handler(error::address_disabled, nullptr);
         return;
     }
 
@@ -189,7 +179,16 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    // DONE: filtered in address protocol.
+    // TODO: filter in address protocol.
+    if (insufficient(peer))
+    {
+        // Should not see these unless there is a change to services_minimum.
+        ////LOG("Dropping insufficient address [" << peer << "]");
+        handler(error::address_insufficient, nullptr);
+        return;
+    }
+
+    // TODO: filtered in address protocol.
     if (blacklisted(peer))
     {
         // Should not see these unless there is a change to blacklist config.
@@ -221,7 +220,7 @@ void session_outbound::handle_connector(const code& ec,
     if (stopped() || ec == error::operation_canceled)
     {
         ////LOG("Restore [" << peer << "] (" << id << ") " << ec.message());
-        restore(peer.message(), BIND1(handle_untake, _1));
+        restore(peer, BIND1(handle_untake, _1));
     }
     else if (ec)
     {
