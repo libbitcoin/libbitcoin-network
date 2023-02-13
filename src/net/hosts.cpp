@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/hosts.hpp>
 
-#include <algorithm>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/config/utilities.hpp>
@@ -33,22 +32,6 @@ using namespace system;
 using namespace messages;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-// Equality ignores timestamp and services.
-inline hosts::iterator hosts::deep_find(const address_item_cptr& host) NOEXCEPT
-{
-    return std::find_if(buffer_.begin(), buffer_.end(),
-        [&](const auto& item) NOEXCEPT
-        {
-            return *item == *host;
-        });
-}
-
-// Equality ignores timestamp and services.
-inline bool hosts::exists(const address_item_cptr& host) NOEXCEPT
-{
-    return deep_find(host) != buffer_.end();
-}
 
 hosts::hosts(const settings& settings) NOEXCEPT
   : file_path_(settings.file()),
@@ -78,7 +61,7 @@ code hosts::start() NOEXCEPT
 
         std::string line;
         while (std::getline(file, line))
-            buffer_.push_back(config::address(line));
+            buffer_.push_back(config::address(line).item());
 
         if (file.bad())
             return error::file_load;
@@ -135,16 +118,16 @@ code hosts::stop() NOEXCEPT
     return error::success;
 }
 
-bool hosts::restore(const address_item_cptr& host) NOEXCEPT
+bool hosts::restore(const address_item& host) NOEXCEPT
 {
     if (disabled_)
         return true;
 
-    if (!config::is_valid(*host))
+    if (!config::is_valid(host))
         return false;
 
     // Erase existing address by authority match.
-    const auto it = deep_find(host);
+    const auto it = find(host);
     if (it != buffer_.end())
         buffer_.erase(it);
 
@@ -167,14 +150,14 @@ void hosts::take(const address_item_handler& handler) NOEXCEPT
     const auto index = pseudo_random::next(zero, limit);
     const auto it = std::next(buffer_.begin(), index);
 
-    // Remove from the buffer (copy ponter and erase pointer).
-    const auto host = *it;
+    // Remove from the buffer (copy and erase).
+    const auto host = std::make_shared<address_item>(*it);
     buffer_.erase(it);
     count_.store(buffer_.size(), std::memory_order_relaxed);
     handler(error::success, host);
 }
 
-size_t hosts::save(const address_item_cptrs& hosts) NOEXCEPT
+size_t hosts::save(const address_items& hosts) NOEXCEPT
 {
     // If enabled then minimum capacity is one and buffer is at capacity.
     if (disabled_ || hosts.empty())
@@ -196,7 +179,7 @@ size_t hosts::save(const address_item_cptrs& hosts) NOEXCEPT
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
         const auto& host = hosts.at(index);
-        if (config::is_valid(*host) && !exists(host))
+        if (config::is_valid(host) && !exists(host))
         {
             ++accepted;
             buffer_.push_back(host);

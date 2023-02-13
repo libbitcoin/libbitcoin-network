@@ -57,10 +57,10 @@ const std::string& protocol_address_31402::name() const NOEXCEPT
 // ----------------------------------------------------------------------------
 // TODO: as peers connect inbound, broadcast new address.
 
-messages::address_item::cptr protocol_address_31402::self() const NOEXCEPT
+messages::address_item protocol_address_31402::self() const NOEXCEPT
 {
-    return to_shared(settings().self.to_address_item(unix_time(),
-        settings().services_maximum));
+    return settings().self.to_address_item(unix_time(),
+        settings().services_maximum);
 }
 
 void protocol_address_31402::start() NOEXCEPT
@@ -122,18 +122,25 @@ void protocol_address_31402::handle_receive_address(const code& ec,
         return;
     }
 
-    // TODO: combine with blacklist conflicts.
+    // TODO: combine wtih blacklist conflicts.
     // TODO: remove enable_ipv6 conflicts.
     // TODO: remove services_minimum conflicts.
     // TODO: remove invalid_services conflicts.
 
-    ////// Should construct using makes_shared(vargs) overload, but fails on clang.
-    ////const auto to = to_shared(messages::address{ difference(items, blacklist_) });
-    ////const auto count = to->addresses.size();
-    const auto start = items.size(), count = start;
+    // Should construct using makes_shared(vargs) overload, but fails on clang.
+    const auto to = to_shared(messages::address{ difference(items, blacklist_) });
+    const auto count = to->addresses.size();
+    const auto start = items.size();
+
+    // Redundant with handle_save_address logging.
+    ////if (count < start)
+    ////{
+    ////    LOG("Dropped (" << (start - count) << ") blacklisted addresses from ["
+    ////        << authority() << "]");
+    ////}
 
     // This allows previously-rejected addresses.
-    save(message, BIND4(handle_save_address, _1, _2, count, start));
+    save(to, BIND4(handle_save_address, _1, _2, count, start));
 }
 
 void protocol_address_31402::handle_save_address(const code& ec,

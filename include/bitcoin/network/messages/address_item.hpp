@@ -37,10 +37,6 @@ struct BCT_API address_item
     static size_t size(uint32_t version, bool with_timestamp) NOEXCEPT;
     static address_item deserialize(uint32_t version, system::reader& source,
         bool with_timestamp) NOEXCEPT;
-
-    static address_item::cptr deserialize_cptr(uint32_t version,
-        system::reader& source, bool with_timestamp) NOEXCEPT;
-
     void serialize(uint32_t version, system::writer& sink,
         bool with_timestamp) const NOEXCEPT;
 
@@ -83,8 +79,7 @@ constexpr address_item unspecified_address_item
 
 } // namespace messages
 
-typedef messages::address_item::cptr address_item_cptr;
-typedef std::vector<address_item_cptr> address_item_cptrs;
+using address_item_cptr = messages::address_item::cptr;
 
 } // namespace network
 } // namespace libbitcoin

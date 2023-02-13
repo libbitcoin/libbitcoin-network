@@ -387,7 +387,7 @@ void p2p::do_restore(const address_item_cptr& host,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    handler(hosts_.restore(host) ? error::success : error::address_invalid);
+    handler(hosts_.restore(*host) ? error::success : error::address_invalid);
 }
 
 void p2p::fetch(address_handler&& handler) const NOEXCEPT

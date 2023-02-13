@@ -284,7 +284,7 @@ public:
         complete(error::bad_stream, zero);
     }
 
-    const address_item_cptrs& saveds() const NOEXCEPT
+    const address_items& saveds() const NOEXCEPT
     {
         return saveds_;
     }
@@ -376,7 +376,7 @@ private:
     size_t acceptors_{ 0 };
     size_t connectors_{ 0 };
     address_item restored_{};
-    address_item_cptrs saveds_{};
+    address_items saveds_{};
 
     uint64_t pend_{ 0 };
     uint64_t unpend_{ 0 };
@@ -748,17 +748,10 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
     settings set(selection::mainnet);
     mock_p2p net(set, log);
     mock_session session(net);
+
     std::promise<code> save;
-
-    const auto message = system::to_shared(address
-    {
-        {
-            system::to_shared(address_item{}),
-            system::to_shared(address_item{ 42, 24, unspecified_ip_address, 4224u })
-        }
-    });
-
-    session.save(message, [&](const code& ec, size_t)
+    const address_items items{ {}, { 42, 24, unspecified_ip_address, 4224u } };
+    session.save(system::to_shared(address{ items }), [&](const code& ec, size_t)
     {
         save.set_value(ec);
     });
@@ -767,10 +760,10 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
 
     const auto& saveds = net.saveds();
     BOOST_REQUIRE_EQUAL(saveds.size(), 2u);
-    BOOST_REQUIRE_EQUAL(saveds[1]->timestamp, 42u);
-    BOOST_REQUIRE_EQUAL(saveds[1]->services, 24u);
-    BOOST_REQUIRE_EQUAL(saveds[1]->ip, unspecified_ip_address);
-    BOOST_REQUIRE_EQUAL(saveds[1]->port, 4224u);
+    BOOST_REQUIRE_EQUAL(saveds[1].timestamp, 42u);
+    BOOST_REQUIRE_EQUAL(saveds[1].services, 24u);
+    BOOST_REQUIRE_EQUAL(saveds[1].ip, unspecified_ip_address);
+    BOOST_REQUIRE_EQUAL(saveds[1].port, 4224u);
 }
 
 // stop

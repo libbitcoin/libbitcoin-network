@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_NET_HOSTS_HPP
 #define LIBBITCOIN_NETWORK_NET_HOSTS_HPP
 
+#include <algorithm>
 #include <atomic>
 #include <filesystem>
 #include <functional>
@@ -62,23 +63,35 @@ public:
     virtual size_t count() const NOEXCEPT;
 
     /// Store the host in the table (e.g. after use), false if invalid.
-    virtual bool restore(const address_item_cptr& host) NOEXCEPT;
+    virtual bool restore(const messages::address_item& host) NOEXCEPT;
 
     /// Take one random host from the table (non-const).
     virtual void take(const address_item_handler& handler) NOEXCEPT;
 
     /// Save a random set of hosts (e.g obtained from peer), count of accept.
-    virtual size_t save(const address_item_cptrs& hosts) NOEXCEPT;
+    virtual size_t save(const messages::address_items& hosts) NOEXCEPT;
 
     /// Obtain a random set of hosts (e.g for relay to peer).
     virtual void fetch(const address_handler& handler) const NOEXCEPT;
 
 private:
-    typedef boost::circular_buffer<address_item_cptr> buffer;
-    typedef buffer::iterator iterator;
+    typedef boost::circular_buffer<messages::address_item> buffer;
 
-    inline iterator deep_find(const address_item_cptr& host) NOEXCEPT;
-    inline bool exists(const address_item_cptr& host) NOEXCEPT;
+    // Equality ignores timestamp and services.
+    inline buffer::iterator find(const messages::address_item& host) NOEXCEPT
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        return std::find(buffer_.begin(), buffer_.end(), host);
+        BC_POP_WARNING()
+    }
+
+    // Equality ignores timestamp and services.
+    inline bool exists(const messages::address_item& host) NOEXCEPT
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        return find(host) != buffer_.end();
+        BC_POP_WARNING()
+    }
 
     // These are thread safe.
     const std::filesystem::path file_path_;

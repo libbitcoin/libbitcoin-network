@@ -52,7 +52,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(hosts__start__disabled__success)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(set.host_pool_capacity, 0u);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__disabled__success)
 BOOST_AUTO_TEST_CASE(hosts__start__enabled__success)
 {
     // Non-empty capacity causes file open/load.
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled__success)
 
 BOOST_AUTO_TEST_CASE(hosts__start__disabled_start__success)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__disabled_start__success)
 
 BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__success)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
@@ -96,14 +96,14 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__success)
 
 BOOST_AUTO_TEST_CASE(hosts__stop__disabled__success)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
 }
 
 BOOST_AUTO_TEST_CASE(hosts__stop__enabled_stopped__success)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(hosts__stop__enabled_stopped__success)
 
 BOOST_AUTO_TEST_CASE(hosts__count__empty__zero)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     const hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
@@ -129,19 +129,19 @@ const address_item unspecified42{ 0, 0, unspecified_ip_address, 42 };
 
 BOOST_AUTO_TEST_CASE(hosts__restore__disabled_stopped__empty)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     hosts instance(set);
-    instance.restore(system::to_shared(loopback00));
+    instance.restore(loopback00);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(hosts__restore__stopped__empty)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
-    instance.restore(system::to_shared(unspecified00));
+    instance.restore(unspecified00);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
     instance.stop();
@@ -150,14 +150,14 @@ BOOST_AUTO_TEST_CASE(hosts__restore__stopped__empty)
 
 BOOST_AUTO_TEST_CASE(hosts__restore__invalid__empty)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.restore(system::to_shared(unspecified42));
+    instance.restore(unspecified42);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
     instance.stop();
@@ -166,14 +166,14 @@ BOOST_AUTO_TEST_CASE(hosts__restore__invalid__empty)
 
 BOOST_AUTO_TEST_CASE(hosts__restore__valid__one)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.restore(system::to_shared(loopback42));
+    instance.restore(loopback42);
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
 
     instance.stop();
@@ -182,13 +182,13 @@ BOOST_AUTO_TEST_CASE(hosts__restore__valid__one)
 
 // store
 
-const auto host1 = system::to_shared(address_item{ 0, 0, loopback_ip_address, 1 });
-const auto host2 = system::to_shared(address_item{ 0, 0, loopback_ip_address, 2 });
-const auto host3 = system::to_shared(address_item{ 0, 0, loopback_ip_address, 3 });
+const address_item host1{ 0, 0, loopback_ip_address, 1 };
+const address_item host2{ 0, 0, loopback_ip_address, 2 };
+const address_item host3{ 0, 0, loopback_ip_address, 3 };
 
 BOOST_AUTO_TEST_CASE(hosts__save__three_unique__three)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__three_unique__three)
 
 BOOST_AUTO_TEST_CASE(hosts__save__redundant__expected)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__redundant__expected)
 
 BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
@@ -241,14 +241,14 @@ BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
 
 BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
 
-    instance.restore(system::to_shared(loopback42));
+    instance.restore(loopback42);
     BOOST_REQUIRE_EQUAL(instance.count(), 1u);
     
     instance.take([&](const code& ec, const address_item_cptr& item)
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
 
 BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
 
 BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance(set);
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
 
 BOOST_AUTO_TEST_CASE(hosts__fetch__populated_file__expected)
 {
-    mock_settings set(system::chain::selection::mainnet);
+    mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
     hosts instance1(set);

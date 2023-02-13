@@ -66,7 +66,7 @@ const messages::address_item& address::item() const NOEXCEPT
     return *address_;
 }
 
-address::operator const messages::address_item::cptr&() const NOEXCEPT
+const messages::address_item::cptr& address::message() const NOEXCEPT
 {
     return address_;
 }
