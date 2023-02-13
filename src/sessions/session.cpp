@@ -46,9 +46,9 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session::session(p2p& network) NOEXCEPT
+session::session(p2p& network, size_t key) NOEXCEPT
   : network_(network),
-    stopped_(true),
+    key_(key),
     timeout_(network.network_settings().retry_timeout()),
     stop_subscriber_(network.strand()),
     defer_subscriber_(network.strand()),
@@ -379,6 +379,11 @@ void session::subscribe_stop(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
     stop_subscriber_.subscribe(std::move(handler));
+}
+
+bool session::unsubscribe() NOEXCEPT
+{
+    return network_.unsubscribe_close(key_);
 }
 
 // Factories.

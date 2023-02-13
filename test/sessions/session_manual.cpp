@@ -263,10 +263,7 @@ private:
       : public session_inbound
     {
     public:
-        mock_inbound_session(p2p& network) NOEXCEPT
-          : session_inbound(network)
-        {
-        }
+        using session_inbound::session_inbound;
 
         void start(result_handler&& handler) NOEXCEPT override
         {
@@ -278,10 +275,7 @@ private:
       : public session_outbound
     {
     public:
-        mock_outbound_session(p2p& network) NOEXCEPT
-          : session_outbound(network)
-        {
-        }
+        using session_outbound::session_outbound;
 
         void start(result_handler&& handler) NOEXCEPT override
         {
@@ -293,10 +287,7 @@ private:
       : public session_seed
     {
     public:
-        mock_seed_session(p2p& network) NOEXCEPT
-          : session_seed(network)
-        {
-        }
+        using session_seed::session_seed;
 
         void start(result_handler&& handler) NOEXCEPT override
         {
@@ -312,7 +303,7 @@ BOOST_AUTO_TEST_CASE(session_manual__inbound__always__false)
     const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
-    mock_session_manual session(net);
+    mock_session_manual session(net, 1);
     BOOST_REQUIRE(!session.inbound());
 }
 
@@ -321,7 +312,7 @@ BOOST_AUTO_TEST_CASE(session_manual__notify__always__true)
     const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
-    mock_session_manual session(net);
+    mock_session_manual session(net, 1);
     BOOST_REQUIRE(session.notify());
 }
 
@@ -332,7 +323,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
-    auto session = std::make_shared<mock_session_manual>(net);
+    auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
@@ -365,7 +356,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
-    mock_session_manual session(net);
+    mock_session_manual session(net, 1);
 
     std::promise<bool> promise;
     boost::asio::post(net.strand(), [&]()
@@ -385,7 +376,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
-    auto session = std::make_shared<mock_session_manual>(net);
+    auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
@@ -431,7 +422,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
 ////    const logger log{};
 ////    settings set(selection::mainnet);
 ////    mock_p2p<> net(set, log);
-////    auto session = std::make_shared<mock_session_manual>(net);
+////    auto session = std::make_shared<mock_session_manual>(net, 1);
 ////    BOOST_REQUIRE(session->stopped());
 ////
 ////    const authority peer{ "42.42.42.42", 42 };
@@ -468,7 +459,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
-    auto session = std::make_shared<mock_session_manual>(net);
+    auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     const endpoint peer{ "42.42.42.42", 42 };
@@ -502,7 +493,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
-    auto session = std::make_shared<mock_session_manual>(net);
+    auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     const endpoint peer{ "42.42.42.42", 42 };
@@ -539,7 +530,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p<mock_connector_connect_fail> net(set, log);
-    auto session = std::make_shared<mock_session_manual>(net);
+    auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     const endpoint peer{ "42.42.42.42", 42 };
@@ -593,7 +584,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p<mock_connector_connect_success> net(set, log);
-    auto session = std::make_shared<mock_session_manual>(net);
+    auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     const endpoint expected{ "42.42.42.42", 42 };
@@ -639,7 +630,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__inva
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p<mock_connector_connect_success> net(set, log);
-    auto session = std::make_shared<mock_session_manual_handshake_failure>(net);
+    auto session = std::make_shared<mock_session_manual_handshake_failure>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     const endpoint expected{ "42.42.42.42", 42 };

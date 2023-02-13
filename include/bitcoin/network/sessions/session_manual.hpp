@@ -40,7 +40,7 @@ public:
     typedef std::shared_ptr<session_manual> ptr;
 
     /// Construct an instance (network should be started).
-    session_manual(p2p& network) NOEXCEPT;
+    session_manual(p2p& network, size_t key) NOEXCEPT;
 
     /// Start the session of persistent connections (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;

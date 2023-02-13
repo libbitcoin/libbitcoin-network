@@ -122,7 +122,7 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    attach_seed_session()->start([handler, this](const code& ec)
+    attach_seed_session()->start([handler, this](const code& ec) NOEXCEPT
     {
         BC_ASSERT_MSG(this->stranded(), "handler");
         handler(ec == error::bypassed ? error::success : ec);
@@ -166,9 +166,9 @@ void p2p::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    attach_outbound_session()->start([handler](const code& ec)
+    attach_outbound_session()->start([handler, this](const code& ec)
     {
-        ////BC_ASSERT_MSG(this->stranded(), "handler");
+        BC_ASSERT_MSG(this->stranded(), "handler");
         handler(ec == error::bypassed ? error::success : ec);
     });
 }
@@ -242,28 +242,39 @@ void p2p::do_subscribe_connect(const channel_handler& handler,
     complete(error::success);
 }
 
+////bool p2p::unsubscribe_connect(size_t handle) NOEXCEPT
+////{
+////    return connect_subscriber_.notify_one(handle, error::success);
+////}
+
 // private
-void p2p::subscribe_close(result_handler&& handler) NOEXCEPT
+bool p2p::subscribe_close(stop_handler&& handler, const stop_key& key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    stop_subscriber_.subscribe(std::move(handler));
+    return stop_subscriber_.subscribe(std::move(handler), key);
 }
 
 // public
-void p2p::subscribe_close(result_handler&& handler,
-    result_handler&& complete) NOEXCEPT
+void p2p::subscribe_close(stop_handler&& handler,
+    stop_completer&& complete) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_subscribe_close,
             this, std::move(handler), std::move(complete)));
 }
 
-void p2p::do_subscribe_close(const result_handler& handler,
-    const result_handler& complete) NOEXCEPT
+void p2p::do_subscribe_close(const stop_handler& handler,
+    const stop_completer& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    stop_subscriber_.subscribe(move_copy(handler));
-    complete(error::success);
+    const auto result = subscribe_close(move_copy(handler), ++stopper_);
+    complete(result ? error::success : error::subscriber_stopped,
+        result ? stopper_ : zero);
+}
+
+bool p2p::unsubscribe_close(size_t handle) NOEXCEPT
+{
+    return stop_subscriber_.notify_one(handle, error::success);
 }
 
 // Manual connections.

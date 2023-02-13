@@ -44,8 +44,10 @@ class BCT_API p2p
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
-    typedef subscriber<> stop_subscriber;
-    typedef subscriber<const channel::ptr&> channel_subscriber;
+    typedef resubscriber<size_t> stop_subscriber;
+    typedef stop_subscriber::handler stop_handler;
+    typedef stop_subscriber::completer stop_completer;
+    typedef stop_subscriber::key stop_key;
 
     template <typename Message>
     void broadcast(const Message& message, result_handler&& handler,
@@ -97,20 +99,25 @@ public:
 
     /// Idempotent call to block on work stop, start may be reinvoked after.
     /// Must not call concurrently or from any threadpool thread (see ~).
+    /// Calling any method after close results in deadlock (threadpool joined).
     virtual void close() NOEXCEPT;
 
     // Subscriptions.
     // ------------------------------------------------------------------------
 
-    /// Subscribe to connection creation events (allowed before start).
-    /// A call after close invokes complete with error::subscriber_stopped.
+    /// Subscribe to connection creation (allowed before start).
+    /// A call after close invokes handlers with error::subscriber_stopped.
     virtual void subscribe_connect(channel_handler&& handler,
         result_handler&& complete) NOEXCEPT;
 
-    /// Subscribe to service stop event (allowed before start).
-    /// A call after close invokes complete with error::subscriber_stopped.
-    virtual void subscribe_close(result_handler&& handler,
-        result_handler&& complete) NOEXCEPT;
+    /// Subscribe to service stop (allowed before start).
+    /// A call after close invokes handlers with error::subscriber_stopped.
+    virtual void subscribe_close(stop_handler&& handler,
+        stop_completer&& complete) NOEXCEPT;
+
+    /////// Unsubscribe by passing the completion handle, true if found.
+    ////virtual bool unsubscribe_connect(size_t) NOEXCEPT;
+    virtual bool unsubscribe_close(size_t handle) NOEXCEPT;
 
     // Manual connections.
     // ------------------------------------------------------------------------
@@ -154,7 +161,7 @@ protected:
 
         // Sessions are attached after network start.
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        const auto session = std::make_shared<Session>(net,
+        const auto session = std::make_shared<Session>(net, ++stopper_,
             std::forward<Args>(args)...);
         BC_POP_WARNING()
 
@@ -162,7 +169,8 @@ protected:
         subscribe_close([=](const code&) NOEXCEPT
         {
             session->stop();
-        });
+            return false;
+        }, stopper_);
 
         return session;
     }
@@ -199,6 +207,8 @@ protected:
     bool stranded() const NOEXCEPT;
 
 private:
+    typedef subscriber<const channel::ptr&> channel_subscriber;
+
     template <typename Message>
     void do_broadcast(const typename Message::cptr& message, uint64_t nonce,
         const result_handler& handler) NOEXCEPT
@@ -222,7 +232,7 @@ private:
                 channel->write(data, move_copy(handler));
     }
 
-    void subscribe_close(result_handler&& handler) NOEXCEPT;
+    bool subscribe_close(stop_handler&& handler, const stop_key& key) NOEXCEPT;
     connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
     virtual bool closed() const NOEXCEPT;
@@ -238,8 +248,8 @@ private:
   
     void do_subscribe_connect(const channel_handler& handler,
         const result_handler& complete) NOEXCEPT;
-    void do_subscribe_close(const result_handler& handler,
-        const result_handler& complete) NOEXCEPT;
+    void do_subscribe_close(const stop_handler& handler,
+        const stop_completer& complete) NOEXCEPT;
 
     // Distinct method names required for std::bind.
     void do_connect(const config::endpoint& endpoint) NOEXCEPT;
@@ -267,8 +277,13 @@ private:
     asio::strand strand_;
 
     // These are protected by strand.
+
+    stop_key stopper_{};
     stop_subscriber stop_subscriber_;
+
+    size_t connecter_{};
     channel_subscriber connect_subscriber_;
+
     std::unordered_set<uint64_t> nonces_{};
     std::unordered_set<channel::ptr> channels_{};
     std::unordered_set<config::authority> authorities_{};

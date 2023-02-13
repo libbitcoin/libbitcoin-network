@@ -41,8 +41,8 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session_seed::session_seed(p2p& network) NOEXCEPT
-  : session(network), tracker<session_seed>(network.log())
+session_seed::session_seed(p2p& network, size_t key) NOEXCEPT
+  : session(network, key), tracker<session_seed>(network.log())
 {
 }
 
@@ -284,7 +284,10 @@ void session_seed::stop_seed(const count_ptr& counter,
     if (is_zero(--(*counter)))
     {
         handler(error::seeding_unsuccessful);
-        return;
+
+        ////LOG_ONLY(const auto result =) unsubscribe();
+        ////LOG("Unsubscribe seed session from application close notification: "
+        ////    << (result ? "success." : "not found."));
     }
 }
 

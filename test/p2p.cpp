@@ -74,10 +74,7 @@ private:
       : public session_manual
     {
     public:
-        mock_session_manual(p2p& network) NOEXCEPT
-          : session_manual(network)
-        {
-        }
+        using session_manual::session_manual;
 
         void start(result_handler&& handler) NOEXCEPT override
         {
@@ -89,10 +86,7 @@ private:
       : public session_seed
     {
     public:
-        mock_session_seed(p2p& network) NOEXCEPT
-          : session_seed(network)
-        {
-        }
+        using session_seed::session_seed;
 
         void start(result_handler&& handler) NOEXCEPT override
         {
@@ -135,10 +129,7 @@ private:
       : public session_inbound
     {
     public:
-        mock_session_inbound(p2p& network) NOEXCEPT
-          : session_inbound(network)
-        {
-        }
+        using session_inbound::session_inbound;
 
         void start(result_handler&& handler) NOEXCEPT override
         {
@@ -150,10 +141,7 @@ private:
       : public session_outbound
     {
     public:
-        mock_session_outbound(p2p& network) NOEXCEPT
-          : session_outbound(network)
-        {
-        }
+        using session_outbound::session_outbound;
 
         void start(result_handler&& handler) NOEXCEPT override
         {
@@ -208,7 +196,7 @@ BOOST_AUTO_TEST_CASE(p2p__connect__unstarted__service_stopped)
     BOOST_REQUIRE(promise.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstarted__success)
+BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstopped__success)
 {
     const logger log{};
     const settings set(selection::mainnet);
@@ -237,7 +225,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstarted__success)
     BOOST_REQUIRE(promise_handler.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstarted__service_stopped)
+BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstopped__success)
 {
     const logger log{};
     const settings set(selection::mainnet);
@@ -248,11 +236,14 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstarted__service_stopped)
     {
         BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
         promise_handler.set_value(true);
+        return false;
     };
 
     std::promise<bool> promise_complete;
-    const auto complete = [&](const code& ec)
+    const auto complete = [&](const code& ec, size_t key)
     {
+        // First key is ++0;
+        BOOST_REQUIRE_EQUAL(key, one);
         BOOST_REQUIRE_EQUAL(ec, error::success);
         promise_complete.set_value(true);
     };
