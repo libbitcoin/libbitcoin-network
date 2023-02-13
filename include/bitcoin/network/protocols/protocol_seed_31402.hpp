@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_SEED_31402_HPP
 
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -65,7 +64,7 @@ protected:
     virtual void handle_send_address(const code& ec) NOEXCEPT;
 
 private:
-    messages::address_item self() const NOEXCEPT;
+    messages::address_item::cptr self() const NOEXCEPT;
 
     // This is thread safe (const).
     const config::authorities& blacklist_;

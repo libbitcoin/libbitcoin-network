@@ -134,12 +134,13 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
         return;
     }
 
-    // Remove blacklist conflicts.
-    // Should construct using makes_shared(vargs) overload, but fails on clang.
-    const auto to = to_shared(messages::address{ difference(items, blacklist_) });
-    const auto count = to->addresses.size();
-    const auto start = items.size();
+    ////// Remove blacklist conflicts.
+    ////// Should construct using makes_shared(vargs) overload, but fails on clang.
+    ////const auto to = to_shared(messages::address{ difference(items, blacklist_) });
+    ////const auto count = to->addresses.size();
+    const auto start = items.size(), count = start;
 
+    // This allows previously-rejected addresses.
     save(message, BIND4(handle_save_addresses, _1, _2, count, start));
 }
 
@@ -171,10 +172,10 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
 // Inbound [receive_get_address -> send_address (load_addresses)].
 // ----------------------------------------------------------------------------
 
-messages::address_item protocol_seed_31402::self() const NOEXCEPT
+messages::address_item::cptr protocol_seed_31402::self() const NOEXCEPT
 {
-    return settings().self.to_address_item(unix_time(),
-        settings().services_maximum);
+    return to_shared(settings().self.to_address_item(unix_time(),
+        settings().services_maximum));
 }
 
 void protocol_seed_31402::handle_receive_get_address(const code& ec,

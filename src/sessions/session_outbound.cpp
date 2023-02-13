@@ -220,7 +220,7 @@ void session_outbound::handle_connector(const code& ec,
     if (stopped() || ec == error::operation_canceled)
     {
         ////LOG("Restore [" << peer << "] (" << id << ") " << ec.message());
-        restore(peer.message(), BIND1(handle_untake, _1));
+        restore(peer, BIND1(handle_untake, _1));
     }
     else if (ec)
     {

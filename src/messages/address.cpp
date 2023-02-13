@@ -18,9 +18,6 @@
  */
 #include <bitcoin/network/messages/address.hpp>
 
-#include <cstddef>
-#include <cstdint>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/address_item.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
@@ -48,11 +45,11 @@ address address::deserialize(uint32_t version, system::reader& source) NOEXCEPT
         source.invalidate();
 
     const auto size = source.read_size(max_address);
-    address_items addresses;
+    address_item_cptrs addresses;
     addresses.reserve(size);
 
     for (size_t address = 0; address < size; ++address)
-        addresses.push_back(address_item::deserialize(version, source,
+        addresses.push_back(address_item::deserialize_cptr(version, source,
             with_timestamp));
 
     return { addresses };
@@ -66,7 +63,7 @@ void address::serialize(uint32_t version, writer& sink) const NOEXCEPT
     sink.write_variable(addresses.size());
 
     for (const auto& net: addresses)
-        net.serialize(version, sink, with_timestamp);
+        net->serialize(version, sink, with_timestamp);
 
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }

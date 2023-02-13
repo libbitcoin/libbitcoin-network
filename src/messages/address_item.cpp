@@ -63,6 +63,19 @@ address_item address_item::deserialize(uint32_t, reader& source,
     };
 }
 
+// static
+address_item_cptr address_item::deserialize_cptr(uint32_t,
+    system::reader& source, bool with_timestamp) NOEXCEPT
+{
+    return to_shared<address_item>(new address_item
+    {
+        with_timestamp ? source.read_4_bytes_little_endian() : 0u,
+        source.read_8_bytes_little_endian(),
+        read_forward<ip_address_size>(source),
+        source.read_2_bytes_big_endian()
+    });
+}
+
 void address_item::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     bool with_timestamp) const NOEXCEPT
 {
