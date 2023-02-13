@@ -160,41 +160,15 @@ bool authority::operator!=(const authority& other) const NOEXCEPT
     return !(*this == other);
 }
 
+// This allows unusable CIDR values (ok).
 std::istream& operator>>(std::istream& input,
     authority& argument) NOEXCEPT(false)
 {
     std::string value{};
     input >> value;
 
-    // C++11: use std::regex.
-    using namespace boost;
-    static const regex regular
-    {
-        // IPv4       or [IPv6]
-        "^(([0-9\\.]+)|\\[([0-9a-f:\\.]+)])"
-
-        // Optional port number.
-        "(:([1-9][0-9]{0,4}))?"
-
-        // Optional CIDR, excludes /0 (implies address vs. network).
-        "(/([1-9][0-9]{0,2}))?$"
-    };
-
-    sregex_iterator it{ value.begin(), value.end(), regular }, end{};
-    if (it == end)
+    if (!parse_authority(argument.ip_, argument.port_, argument.cidr_, value))
         throw istream_exception(value);
-
-    const auto& token = *it;
-    argument.ip_ = from_host(token[1]);
-    deserialize(argument.port_, token[5]);
-    deserialize(argument.cidr_, token[7]);
-
-    // This allows /33-64 CIDR values for mapped ipv4 addresses (unusable, ok).
-    if ((argument.ip_.is_v4() && argument.cidr_ > bits<uint32_t>) ||
-        (argument.ip_.is_v6() && argument.cidr_ > bits<uint64_t>))
-    {
-        throw istream_exception(value);
-    }
 
     return input;
 }

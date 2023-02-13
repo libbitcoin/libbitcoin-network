@@ -62,20 +62,23 @@ constexpr bool is_v4(const messages::ip_address& ip) NOEXCEPT
 bool is_member(const asio::address& ip, const asio::address& subnet,
     uint8_t cidr) NOEXCEPT;
 
-/// asio/string conversions (denormalize to ipv4 unmapped).
+/// Unmap IPv6-mapped addresses.
+asio::address denormalize(const asio::address& ip) NOEXCEPT;
+
+/// Denormalizes to IPv4 (unmapped), literal emits unbracketed.
 std::string to_host(const asio::address& ip) NOEXCEPT;
+std::string to_literal(const asio::address& ip) NOEXCEPT;
 asio::address from_host(const std::string& host) NOEXCEPT(false);
 
-/// string/string conversions (unmapped, ipv6 bracketed).
-std::string to_literal(const asio::address& ip) NOEXCEPT;
-asio::address from_literal(const std::string& host)  NOEXCEPT(false);
-
-/// asio/messages conversions (to/from ipv6, non-denormalizing).
+/// Not denormalizing.
 messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
 asio::address from_address(const messages::ip_address& address) NOEXCEPT;
 
-/// Unmap IPv6-mapped addresses.
-asio::address denormalize(const asio::address& ip) NOEXCEPT;
+/// Parsers.
+bool parse_authority(asio::address& ip, uint16_t& port, uint8_t& cidr,
+    const std::string& value) NOEXCEPT;
+bool parse_endpoint(std::string& scheme, std::string& host, uint16_t& port,
+    const std::string& value) NOEXCEPT;
 
 } // namespace config
 } // namespace network
