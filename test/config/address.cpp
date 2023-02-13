@@ -74,14 +74,6 @@ constexpr messages::address_item test_mapped_ip_address_item
     31
 };
 
-constexpr messages::address_item test_compatible_ip_address_item
-{
-    12,
-    22,
-    test_compatible_ip_address,
-    32
-};
-
 constexpr messages::address_item test_ipv6_address_item
 {
     13,
