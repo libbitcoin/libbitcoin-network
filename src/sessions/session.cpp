@@ -372,7 +372,7 @@ bool session::unpend(const channel::ptr& channel) NOEXCEPT
     // Ok to not find after stop, clears before channel stop handlers fire.
     const auto result = pend_subscriber_.notify_one(channel, error::success);
     ////LOG("Unpending channel (" << channel->nonce() << ").");
-    return result.first || stopped();
+    return result || stopped();
 }
 
 void session::subscribe_stop(result_handler&& handler) NOEXCEPT

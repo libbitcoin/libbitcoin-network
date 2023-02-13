@@ -38,26 +38,27 @@ class resubscriber final
 public:
     DELETE_COPY_MOVE(resubscriber);
 
-    typedef std::pair<bool, bool> result;
+    using key = Key;
     typedef std::function<bool(const code&, Args...)> handler;
+    typedef std::function<void(const code&, const Key&)> completer;
 
     // Strand is only used for assertions.
     resubscriber(asio::strand& strand) NOEXCEPT;
     ~resubscriber() NOEXCEPT;
 
-    /// If stopped, handler is invoked with error::subscriber_stopped/defaults
-    /// and handler is dropped. Otherwise it is held until stop/drop.
     /// If key exists, handler is invoked with error::subscriber_exists.
-    void subscribe(handler&& handler, const Key& key) NOEXCEPT;
+    /// If stopped, handler is invoked with error::subscriber_stopped/defaults,
+    /// handler dropped. Otherwise it is held until stop/drop. False if failed.
+    bool subscribe(handler&& handler, const Key& key) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.
-    /// Handler returns true for resubscription, otherwise it is desubscribed.
+    /// Handler return true for resubscription, otherwise it is desubscribed.
     void notify(const code& ec, const Args&... args) NOEXCEPT;
 
     /// Invoke specified handler in order with specified arguments.
     /// Handler return controls resubscription, and is forwarded to the caller.
-    /// False if subscription is dropped or was not not found (not subscribed).
-    result notify_one(const Key& key, const code& ec,
+    /// False if subscription key not not found (not subscribed).
+    bool notify_one(const Key& key, const code& ec,
         const Args&... args) NOEXCEPT;
 
     /// Invoke each handler in order, with arguments, then drop all.
@@ -71,7 +72,7 @@ private:
     asio::strand& strand_;
 
     // These are not thread safe.
-    bool stopped_;
+    bool stopped_{ false };
     std::map<Key, handler> map_{};
 };
 

@@ -27,7 +27,7 @@ namespace network {
 
 template <typename Key, typename... Args>
 resubscriber<Key, Args...>::resubscriber(asio::strand& strand) NOEXCEPT
-  : strand_(strand), stopped_(false)
+  : strand_(strand)
 {
 }
 
@@ -39,7 +39,7 @@ resubscriber<Key, Args...>::~resubscriber() NOEXCEPT
 }
 
 template <typename Key, typename... Args>
-void resubscriber<Key, Args...>::subscribe(handler&& handler,
+bool resubscriber<Key, Args...>::subscribe(handler&& handler,
     const Key& key) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -48,14 +48,17 @@ void resubscriber<Key, Args...>::subscribe(handler&& handler,
     if (stopped_)
     {
         /*bool*/ handler(error::subscriber_stopped, Args{}...);
+        return false;
     }
     else if (map_.contains(key))
     {
         /*bool*/ handler(error::subscriber_exists, Args{}...);
+        return false;
     }
     else
     {
         map_.emplace(key, std::move(handler));
+        return true;
     }
     BC_POP_WARNING()
 }
@@ -87,14 +90,13 @@ void resubscriber<Key, Args...>::notify(const code& ec,
 }
 
 template <typename Key, typename... Args>
-typename resubscriber<Key, Args...>::result
-resubscriber<Key, Args...>::notify_one(const Key& key, const code& ec,
+bool resubscriber<Key, Args...>::notify_one(const Key& key, const code& ec,
     const Args&... args) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (stopped_)
-        return {};
+        return false;
 
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     const auto it = map_.find(key);
@@ -102,16 +104,12 @@ resubscriber<Key, Args...>::notify_one(const Key& key, const code& ec,
     {
         // Invoke handler and handle result.
         if (!it->second(ec, args...))
-        {
             map_.erase(it);
-            return { true, false };
-        }
 
-        // { found, renew }
-        return { true, true };
+        return true;
     }
     BC_POP_WARNING()
-    return {};
+    return false;
 }
 
 template <typename Key, typename... Args>

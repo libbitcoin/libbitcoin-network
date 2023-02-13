@@ -41,9 +41,9 @@ public:
     subscriber(asio::strand& strand) NOEXCEPT;
     ~subscriber() NOEXCEPT;
 
-    /// If stopped, handler is invoked with error::subscriber_stopped/defaults
-    /// and the handler is dropped. Otherwise the handler is held until stop.
-    void subscribe(handler&& handler) NOEXCEPT;
+    /// If stopped, handler is invoked with error::subscriber_stopped/defaults,
+    /// handler dropped. Otherwise handler is held until stop. False if failed.
+    bool subscribe(handler&& handler) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.
     void notify(const code& ec, const Args&... args) const NOEXCEPT;
@@ -59,7 +59,7 @@ private:
     asio::strand& strand_;
 
     // These are not thread safe.
-    bool stopped_;
+    bool stopped_{ false };
     std::vector<handler> queue_{};
 };
 
