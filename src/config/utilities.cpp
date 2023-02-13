@@ -37,12 +37,6 @@ static_assert(array_count<ip::address_v4::bytes_type> == ipv4_size);
 static_assert(array_count<ip::address_v6::bytes_type> == ipv6_size);
 static_assert(is_same_type<ip::address_v6::bytes_type, messages::ip_address>);
 
-inline bool to_string(std::string& to, std::string&& from) NOEXCEPT
-{
-    to = std::move(from);
-    return true;
-}
-
 template <typename Integer>
 inline bool to_integer(Integer& out, const std::string& in) NOEXCEPT
 {
@@ -56,13 +50,20 @@ inline bool to_integer(Integer& out, const std::string& in) NOEXCEPT
     return system::deserialize(out, in);
 }
 
+inline bool to_string(std::string& to, std::string&& from) NOEXCEPT
+{
+    to = std::move(from);
+    return true;
+}
+
+// ASIO make_address allows a port on win32 (which is then lost), so guard in
+// regex. ASIO addresses do not have ports, that's what endpoints are for.
 inline bool make_address(asio::address& ip, const std::string& host) NOEXCEPT
 {
     try
     {
-        // This will allow a port (which is then lost), so guard in regex.
-        // asio addresses do not have ports, that's what endpoints are for.
-        ip = ip::make_address(host);
+        // Regex extracts literal host, non-win32 boost make_address rejects.
+        ip = ip::make_address(system::trim_copy(host, { "[", "]" }));
         return true;
     }
     catch (std::exception)
