@@ -127,7 +127,11 @@ void connector::handle_resolve(const error::boost_code& ec,
 
     // Ensure the handler executes only once, as both may be posted.
     if (stopped_)
+    {
+        // Socket stop here prevents otherwise safe assert in socket destruct.
+        socket->stop();
         return;
+    }
 
     if (ec)
     {

@@ -61,6 +61,9 @@ socket::~socket() NOEXCEPT
 
 void socket::stop() NOEXCEPT
 {
+    if (stopped_.load())
+        return;
+
     // Stop flag can accelerate work stoppage, as it does not wait on strand.
     stopped_.store(true);
 
