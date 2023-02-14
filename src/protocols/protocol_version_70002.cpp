@@ -44,7 +44,7 @@ protocol_version_70002::protocol_version_70002(const session& session,
   : protocol_version_70002(session, channel,
         session.settings().services_minimum,
         session.settings().services_maximum,
-        session.settings().enable_relay)
+        session.settings().enable_transaction)
 {
 }
 

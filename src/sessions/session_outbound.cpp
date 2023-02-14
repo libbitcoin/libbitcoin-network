@@ -80,6 +80,11 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
+    if (!settings().enable_address)
+    {
+        LOG("Address protocol disabled, may cause empty address pool.");
+    }
+
     session::start(BIND2(handle_started, _1, std::move(handler)));
 }
 

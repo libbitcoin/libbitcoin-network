@@ -36,9 +36,10 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
     BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
+    BOOST_REQUIRE_EQUAL(instance.enable_address, false);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_transaction, false);
     BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
     BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
@@ -79,9 +80,10 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
     BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
+    BOOST_REQUIRE_EQUAL(instance.enable_address, false);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_transaction, false);
     BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
     BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
@@ -133,9 +135,10 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
     BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
     BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
+    BOOST_REQUIRE_EQUAL(instance.enable_address, false);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_transaction, false);
     BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
     BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);
@@ -187,9 +190,10 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(instance.services_maximum, service::maximum_services);
     BOOST_REQUIRE_EQUAL(instance.services_minimum, service::minimum_services);
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
+    BOOST_REQUIRE_EQUAL(instance.enable_address, false);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);
-    BOOST_REQUIRE_EQUAL(instance.enable_relay, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_transaction, false);
     BOOST_REQUIRE_EQUAL(instance.enable_ipv6, false);
     BOOST_REQUIRE_EQUAL(instance.enable_loopback, false);
     BOOST_REQUIRE_EQUAL(instance.validate_checksum, false);

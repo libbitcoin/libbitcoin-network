@@ -219,7 +219,10 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_31402.cpp">
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_31402.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_31402.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_31402.cpp">

@@ -63,6 +63,8 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // Seeding is allowed even with !enable_address configured.
+
     if (is_zero(settings().outbound_connections) ||
         is_zero(settings().connect_batch_size))
     {
@@ -73,7 +75,9 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 
     if (address_count() >= settings().minimum_address_count())
     {
-        LOG("Bypassed seeding because of sufficient address quantity.");
+        LOG("Bypassed seeding because of sufficient ("
+            << address_count() << " of " << settings().minimum_address_count()
+            << ") address quantity.");
         handler(error::bypassed);
         return;
     }
@@ -91,6 +95,10 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         handler(error::seeding_unsuccessful);
         return;
     }
+
+    LOG("Seeding because of insufficient ("
+        << address_count() << " of " << settings().minimum_address_count()
+        << ") address quantity.");
 
     session::start(BIND2(handle_started, _1, std::move(handler)));
 }
@@ -174,25 +182,31 @@ void session_seed::attach_handshake(const channel::ptr& channel,
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
 
-    // Weak reference safe as sessions outlive protocols.
-    const auto& self = *this;
-    const auto enable_reject = settings().enable_reject;
-    const auto maximum_version = settings().protocol_maximum;
+    // Tx relay is parsed (by version) but always set to false for seeding.
+    constexpr auto enable_transaction = false;
 
-    // Seeding does not require or provide any node services or allow relay.
+    // Seeding does not require or provide any node services.
+    // Nodes that require inbound connection services/txs will not accept.
     constexpr auto minimum_services = messages::service::node_none;
     constexpr auto maximum_services = messages::service::node_none;
-    constexpr auto enable_relay = false;
 
-    // Reject is supported starting at bip61 (70002) and later deprecated.
-    if (enable_reject && maximum_version >= messages::level::bip61)
+    // Weak reference safe as sessions outlive protocols.
+    const auto& self = *this;
+    const auto maximum_version = settings().protocol_maximum;
+    const auto extended_version = maximum_version >= messages::level::bip37;
+    const auto enable_reject = settings().enable_reject &&
+        maximum_version >= messages::level::bip61;
+
+    // Protocol must pause the channel after receiving version and verack.
+
+    // Reject is deprecated.
+    if (enable_reject)
         channel->attach<protocol_version_70002>(self, minimum_services,
-            maximum_services, enable_relay)->shake(std::move(handler));
+            maximum_services, enable_transaction)->shake(std::move(handler));
 
-    // Relay is supported starting at bip37 (70001).
-    else if (maximum_version >= messages::level::bip37)
+    else if (extended_version)
         channel->attach<protocol_version_70001>(self, minimum_services,
-            maximum_services, enable_relay)->shake(std::move(handler));
+            maximum_services, enable_transaction)->shake(std::move(handler));
 
     else
         channel->attach<protocol_version_31402>(self, minimum_services,
@@ -222,10 +236,12 @@ void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
     const auto enable_alert = settings().enable_alert;
-    const auto enable_reject = settings().enable_reject;
     const auto negotiated_version = channel->negotiated_version();
+    const auto enable_pong = negotiated_version >= messages::level::bip31;
+    const auto enable_reject = settings().enable_reject &&
+        negotiated_version >= messages::level::bip61;
 
-    if (negotiated_version >= messages::level::bip31)
+    if (enable_pong)
         channel->attach<protocol_ping_60001>(self)->start();
     else
         channel->attach<protocol_ping_31402>(self)->start();
@@ -234,11 +250,11 @@ void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
     if (enable_alert)
         channel->attach<protocol_alert_31402>(self)->start();
 
-    // Reject is supported starting at bip61 (70002) and later deprecated.
-    if (enable_reject && negotiated_version >= messages::level::bip61)
+    // Reject is deprecated.
+    if (enable_reject)
         channel->attach<protocol_reject_70002>(self)->start();
 
-    // Seeding takes place of address protocol, stops upon completion/timeout.
+    // Seed protocol stops upon completion, causing session removal.
     channel->attach<protocol_seed_31402>(self)->start();
 }
 
@@ -262,7 +278,7 @@ void session_seed::stop_seed(const result_handler& handler) NOEXCEPT
 
     if (is_zero(--count_))
     {
-        LOG("Seed session unsubscribed from network close.");
+        LOG("Seed session closed.");
         unsubscribe_close();
     }
 
