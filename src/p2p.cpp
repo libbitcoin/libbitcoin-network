@@ -455,6 +455,7 @@ bool p2p::unstore_nonce(uint64_t nonce) NOEXCEPT
     return settings_.enable_loopback || to_bool(nonces_.erase(nonce));
 }
 
+// This must return success if and only if channel is stored.
 code p2p::store_channel(const channel::ptr& channel, bool notify,
     bool inbound) NOEXCEPT
 {
@@ -497,6 +498,7 @@ code p2p::store_channel(const channel::ptr& channel, bool notify,
     return error::success;
 }
 
+// This must remove the channel if it was stored, regardless of return.
 code p2p::unstore_channel(const channel::ptr& channel, bool inbound) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");

@@ -56,6 +56,7 @@ connector::connector(const logger& log, asio::strand& strand,
 connector::~connector() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped_, "connector is not stopped");
+    if (!stopped_) { LOG("~connector is not stopped."); }
 }
 
 void connector::stop() NOEXCEPT

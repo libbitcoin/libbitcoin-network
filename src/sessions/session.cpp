@@ -60,6 +60,7 @@ session::session(p2p& network, size_t key) NOEXCEPT
 session::~session() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "The session was not stopped.");
+    if (!stopped()) { LOG("~session is not stopped."); }
 }
 
 void session::start(result_handler&& handler) NOEXCEPT
@@ -188,7 +189,7 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
     }
 
     // Handles channel stopped or protocol start results code.
-    // This retains the channel and allows broadcasts, stored if no code.
+    // Retains channel and allows broadcasts, guaranteed stored if no code.
     start(ec ? ec : network_.store_channel(channel, notify(), inbound()));
 }
 

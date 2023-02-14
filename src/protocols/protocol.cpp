@@ -47,6 +47,7 @@ protocol::protocol(const session& session, const channel::ptr& channel) NOEXCEPT
 protocol::~protocol() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "protocol destruct before channel stop");
+    if (!stopped()) { LOG("~protocol is not stopped."); }
 }
 
 // Start/Stop.
