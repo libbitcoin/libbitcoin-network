@@ -66,6 +66,7 @@ enum error_t
     file_load,
     file_save,
     file_system,
+    file_payload,
 
     // general I/O failures
     bad_stream,

@@ -68,7 +68,7 @@ code hosts::start() NOEXCEPT
     }
     catch (const std::exception&)
     {
-        return error::file_load;
+        return error::file_payload;
     }
 
     if (buffer_.empty())
