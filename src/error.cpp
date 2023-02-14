@@ -93,7 +93,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { channel_stopped, "channel stopped" },
     { service_stopped, "service stopped" },
     { subscriber_exists, "subscriber exists" },
-    { subscriber_stopped, "subscriber stopped" }
+    { subscriber_stopped, "subscriber stopped" },
+    { unsubscribed, "subscriber unsubscribed" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")

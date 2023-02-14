@@ -115,7 +115,8 @@ enum error_t
     channel_stopped,
     service_stopped,
     subscriber_exists,
-    subscriber_stopped
+    subscriber_stopped,
+    unsubscribed
 };
 
 // No current need for error_code equivalence mapping.
