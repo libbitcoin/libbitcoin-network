@@ -60,6 +60,7 @@ proxy::proxy(const socket::ptr& socket) NOEXCEPT
 proxy::~proxy() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "proxy is not stopped");
+    if (!stopped()) { LOG("~proxy is not stopped."); }
 }
 
 // Pause (proxy is created paused).

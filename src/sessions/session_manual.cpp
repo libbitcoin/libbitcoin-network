@@ -42,8 +42,8 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session_manual::session_manual(p2p& network) NOEXCEPT
-  : session(network), tracker<session_manual>(network.log())
+session_manual::session_manual(p2p& network, size_t key) NOEXCEPT
+  : session(network, key), tracker<session_manual>(network.log())
 {
 }
 
@@ -77,14 +77,6 @@ void session_manual::handle_started(const code& ec,
 // Connect sequence.
 // ----------------------------------------------------------------------------
 
-////void session_manual::connect(const config::authority& peer,
-////    channel_handler&& handler) NOEXCEPT
-////{
-////    BC_ASSERT_MSG(stranded(), "strand");
-////
-////    connect(endpoint{ peer.to_hostname(), peer.port() }, std::move(handler));
-////}
-
 void session_manual::connect(const config::endpoint& peer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -94,17 +86,20 @@ void session_manual::connect(const config::endpoint& peer) NOEXCEPT
     {
         ////LOGP(self, "Connected channel, " << ec.message());
         self->nop();
+        return true;
     });
 }
 
 void session_manual::connect(const config::endpoint& peer,
-    channel_handler&& handler) NOEXCEPT
+    channel_notifier&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Create a connector for each manual connection.
     const auto connector = create_connector();
 
+    // TODO: use resubscriber for session stop (connectors/acceptors only).
+    // TODO: use pointer id of captured connector/acceptor.
     subscribe_stop([=](const code&) NOEXCEPT
     {
         connector->stop();
@@ -118,7 +113,7 @@ void session_manual::connect(const config::endpoint& peer,
 // ----------------------------------------------------------------------------
 
 void session_manual::start_connect(const code&, const endpoint& peer,
-    const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
+    const connector::ptr& connector, const channel_notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -135,7 +130,7 @@ void session_manual::start_connect(const code&, const endpoint& peer,
 
 void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
     const endpoint& peer, const connector::ptr& connector,
-    const channel_handler& handler) NOEXCEPT
+    const channel_notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -154,6 +149,15 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         LOG("Failed to connect manual peer [" << peer << "] " << ec.message());
+
+        // Connect failure notification.
+        if (!handler(ec, nullptr))
+        {
+            // TODO: drop connector subscription.
+            LOG("Manual channel dropped at connect [" << peer << "].");
+            return;
+        }
+
         defer(BIND4(start_connect, _1, peer, connector, handler), peer);
         return;
     }
@@ -171,13 +175,14 @@ void session_manual::attach_handshake(const channel::ptr& channel,
 
 void session_manual::handle_channel_start(const code& ec,
     const endpoint& LOG_ONLY(peer), const channel::ptr& channel,
-    const channel_handler& handler) NOEXCEPT
+    const channel_notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Manual channel start [" << peer << "] " << ec.message());
 
-    // Notify upon each connection attempt.
-    handler(ec, channel);
+    // Connection success notification.
+    if (!ec && !handler(ec, channel))
+        channel->stop(error::channel_dropped);
 }
 
 // Communication will begin after this function returns, freeing the thread.
@@ -189,12 +194,21 @@ void session_manual::attach_protocols(
 
 void session_manual::handle_channel_stop(const code& LOG_ONLY(ec),
     const endpoint& peer, const connector::ptr& connector,
-    const channel_handler& handler) NOEXCEPT
+    const channel_notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // The channel stopped following connection, try again without delay.
+    // The channel stopped following connection, try again with delay.
     LOG("Manual channel stop [" << peer << "] " << ec.message());
+
+    // Handshake failure notification.
+    if (ec == error::channel_dropped || !handler(ec, nullptr))
+    {
+        // TODO: drop connector subscription.
+        LOG("Manual channel dropped [" << peer << "].");
+        return;
+    }
+
     defer(BIND4(start_connect, _1, peer, connector, handler), peer);
 }
 

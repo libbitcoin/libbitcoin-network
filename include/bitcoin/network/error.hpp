@@ -66,6 +66,7 @@ enum error_t
     file_load,
     file_save,
     file_system,
+    file_payload,
 
     // general I/O failures
     bad_stream,
@@ -115,7 +116,8 @@ enum error_t
     channel_stopped,
     service_stopped,
     subscriber_exists,
-    subscriber_stopped
+    subscriber_stopped,
+    unsubscribed
 };
 
 // No current need for error_code equivalence mapping.

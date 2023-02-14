@@ -32,19 +32,19 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
 
     std::pair<code, size_t> stop_result;
     std::pair<code, size_t> retry_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
-        });
+        }));
 
         instance.stop(ec, expected);
 
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             retry_result = { value, size };
-        });
+        }));
     });
 
     pool.stop();
@@ -65,12 +65,12 @@ BOOST_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
     constexpr auto expected = zero;
 
     std::pair<code, size_t> stop_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
-        });
+        }));
 
         instance.stop_default(ec);
     });
@@ -91,12 +91,12 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__once__expected)
     constexpr auto expected = 42u;
 
     std::pair<code, size_t> stop_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
-        });
+        }));
 
         instance.stop(ec, expected);
     });
@@ -117,12 +117,12 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__twice__second_dropped)
     constexpr auto expected = 42u;
 
     std::pair<code, size_t> stop_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
-        });
+        }));
 
         instance.stop(ec, expected);
         instance.stop(error::address_blocked, {});
@@ -146,13 +146,13 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
 
     auto count = zero;
     std::pair<code, size_t> notify_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Allow first and possible second notify, ignore stop.
             if (++count != two) notify_result = { value, size };
-        });
+        }));
 
         instance.notify(ec, expected);
         instance.stop_default(error::address_blocked);
@@ -176,12 +176,12 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__once__expected)
 
     auto count = zero;
     std::pair<code, size_t> notify_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             if (is_one(++count)) notify_result = { value, size };
-        });
+        }));
 
         instance.notify(ec, expected);
 
@@ -206,13 +206,13 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__twice__expected)
 
     auto count = zero;
     std::pair<code, size_t> notify_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Exclude stop_default call.
             if (++count <= two) notify_result = { value, size };
-        });
+        }));
 
         instance.notify({}, {});
         instance.notify(ec, expected);

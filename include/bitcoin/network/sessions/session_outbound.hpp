@@ -39,7 +39,7 @@ public:
     typedef std::shared_ptr<session_outbound> ptr;
 
     /// Construct an instance (network should be started).
-    session_outbound(p2p& network) NOEXCEPT;
+    session_outbound(p2p& network, size_t key) NOEXCEPT;
 
     /// Start configured number of connections (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;

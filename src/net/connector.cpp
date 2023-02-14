@@ -56,6 +56,7 @@ connector::connector(const logger& log, asio::strand& strand,
 connector::~connector() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped_, "connector is not stopped");
+    if (!stopped_) { LOG("~connector is not stopped."); }
 }
 
 void connector::stop() NOEXCEPT
@@ -126,7 +127,11 @@ void connector::handle_resolve(const error::boost_code& ec,
 
     // Ensure the handler executes only once, as both may be posted.
     if (stopped_)
+    {
+        // Socket stop here prevents otherwise safe assert in socket destruct.
+        socket->stop();
         return;
+    }
 
     if (ec)
     {

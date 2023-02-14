@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/socket.hpp>
 
-#include <atomic>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -53,6 +52,7 @@ socket::socket(const logger& log, asio::io_context& service) NOEXCEPT
 socket::~socket() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "socket is not stopped");
+    if (!stopped()) { LOG("~socket is not stopped."); }
 }
 
 // Stop.
@@ -61,8 +61,11 @@ socket::~socket() NOEXCEPT
 
 void socket::stop() NOEXCEPT
 {
+    if (stopped_.load())
+        return;
+
     // Stop flag can accelerate work stoppage, as it does not wait on strand.
-    stopped_.store(true, std::memory_order_relaxed);
+    stopped_.store(true);
 
     // Stop is posted to strand to protect the socket.
     boost::asio::dispatch(strand_,
@@ -253,7 +256,7 @@ const config::authority& socket::authority() const NOEXCEPT
 
 bool socket::stopped() const NOEXCEPT
 {
-    return stopped_.load(std::memory_order_relaxed);
+    return stopped_.load();
 }
 
 bool socket::stranded() const NOEXCEPT

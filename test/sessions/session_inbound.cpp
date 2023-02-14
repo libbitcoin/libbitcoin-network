@@ -374,10 +374,7 @@ private:
       : public session_inbound
     {
     public:
-        mock_inbound_session(p2p& network) NOEXCEPT
-          : session_inbound(network)
-        {
-        }
+        using session_inbound::session_inbound;
 
         void start(result_handler&& handler) NOEXCEPT override
         {
@@ -389,10 +386,7 @@ private:
       : public session_outbound
     {
     public:
-        mock_outbound_session(p2p& network) NOEXCEPT
-          : session_outbound(network)
-        {
-        }
+        using session_outbound::session_outbound;
 
         void start(result_handler&& handler) NOEXCEPT override
         {
@@ -404,10 +398,7 @@ private:
       : public session_seed
     {
     public:
-        mock_seed_session(p2p& network) NOEXCEPT
-          : session_seed(network)
-        {
-        }
+        using session_seed::session_seed;
 
         void start(result_handler&& handler) NOEXCEPT override
         {
@@ -423,7 +414,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__inbound__always__true)
     const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
-    mock_session_inbound session(net);
+    mock_session_inbound session(net, 1);
     BOOST_REQUIRE(session.inbound());
 }
 
@@ -432,7 +423,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__notify__always__true)
     const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
-    mock_session_inbound session(net);
+    mock_session_inbound session(net, 1);
     BOOST_REQUIRE(session.notify());
 }
 
@@ -444,7 +435,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     mock_p2p<> net(set, log);
-    auto session = std::make_shared<mock_session_inbound>(net);
+    auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
@@ -478,7 +469,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
-    mock_session_inbound session(net);
+    mock_session_inbound session(net, 1);
 
     std::promise<bool> promise;
     boost::asio::post(net.strand(), [&]()
@@ -499,7 +490,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__bypassed)
     settings set(selection::mainnet);
     set.inbound_connections = 0;
     mock_p2p<> net(set, log);
-    mock_session_inbound session(net);
+    mock_session_inbound session(net, 1);
     BOOST_REQUIRE(session.stopped());
 
     std::promise<code> started;
@@ -522,7 +513,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__port_zero__bypassed)
     set.inbound_connections = 1;
     set.inbound_port = 0;
     mock_p2p<> net(set, log);
-    mock_session_inbound session(net);
+    mock_session_inbound session(net, 1);
     BOOST_REQUIRE(session.stopped());
 
     std::promise<code> started;
@@ -544,7 +535,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operat
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     mock_p2p<> net(set, log);
-    auto session = std::make_shared<mock_session_inbound>(net);
+    auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
@@ -591,7 +582,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepte
     set.inbound_connections = 1;
     set.inbound_port = 42;
     mock_p2p<mock_acceptor_start_fail> net(set, log);
-    auto session = std::make_shared<mock_session_inbound>(net);
+    auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
@@ -639,7 +630,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
     set.inbound_connections = 1;
     set.inbound_port = 42;
     mock_p2p<mock_acceptor_start_stopped> net(set, log);
-    auto session = std::make_shared<mock_session_inbound>(net);
+    auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
@@ -688,7 +679,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started__timer_failure_cod
     mock_p2p<mock_acceptor_start_success_accept_success<>> net(set, log);
 
     // start_accept is invoked with invalid_checksum.
-    auto session = std::make_shared<mock_session_start_accept_parameter_error>(net);
+    auto session = std::make_shared<mock_session_start_accept_parameter_error>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
@@ -731,7 +722,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
     set.inbound_connections = 1;
     set.inbound_port = 42;
     mock_p2p<mock_acceptor_start_success_accept_fail> net(set, log);
-    auto session = std::make_shared<mock_session_inbound>(net);
+    auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
@@ -788,7 +779,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
     BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session (with one mocked inbound channel) using the network reference.
-    auto session = std::make_shared<mock_session_inbound_whitelist_fail>(net);
+    auto session = std::make_shared<mock_session_inbound_whitelist_fail>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
@@ -844,7 +835,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
     BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session (with one mocked inbound channel) using the network reference.
-    auto session = std::make_shared<mock_session_inbound_blacklist_fail>(net);
+    auto session = std::make_shared<mock_session_inbound_blacklist_fail>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
@@ -900,7 +891,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session (with one mocked inbound channel) using the network reference.
-    auto session = std::make_shared<mock_session_inbound_channel_count_fail>(net);
+    auto session = std::make_shared<mock_session_inbound_channel_count_fail>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
@@ -957,7 +948,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
 
     // Start the session using the network reference.
-    auto session = std::make_shared<mock_session_inbound_handshake_failure>(net);
+    auto session = std::make_shared<mock_session_inbound_handshake_failure>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;

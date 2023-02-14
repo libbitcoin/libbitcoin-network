@@ -78,7 +78,7 @@ public:
 
 protected:
     /// Construct an instance (network should be started).
-    session(p2p& network) NOEXCEPT;
+    session(p2p& network, size_t key) NOEXCEPT;
 
     /// Asserts that session is stopped.
     virtual ~session() NOEXCEPT;
@@ -127,8 +127,11 @@ protected:
     virtual void pend(const channel::ptr& channel) NOEXCEPT;
     virtual bool unpend(const channel::ptr& channel) NOEXCEPT;
 
-    /// Subscribe to stop notification.
+    /// Subscribe to session stop notification.
     virtual void subscribe_stop(result_handler&& handler) NOEXCEPT;
+
+    /// Remove self from network close subscription (for session early stop).
+    virtual void unsubscribe_close() NOEXCEPT;
 
     /// Factories.
     /// -----------------------------------------------------------------------
@@ -210,8 +213,9 @@ private:
 
     // These are thread safe (mostly).
     p2p& network_;
-    std::atomic_bool stopped_;
+    const size_t key_;
     const duration timeout_;
+    std::atomic_bool stopped_{ true };
 
     // These are not thread safe.
     subscriber<> stop_subscriber_;

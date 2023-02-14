@@ -44,8 +44,8 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session_outbound::session_outbound(p2p& network) NOEXCEPT
-  : session(network), tracker<session_outbound>(network.log())
+session_outbound::session_outbound(p2p& network, size_t key) NOEXCEPT
+  : session(network, key), tracker<session_outbound>(network.log())
 {
 }
 

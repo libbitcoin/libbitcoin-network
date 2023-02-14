@@ -191,10 +191,7 @@ class mock_session
   : public session
 {
 public:
-    mock_session(p2p& network) NOEXCEPT
-      : session(network)
-    {
-    }
+    using session::session;
 
     void start(result_handler&& handler) NOEXCEPT override
     {

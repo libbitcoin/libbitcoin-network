@@ -40,7 +40,7 @@ public:
     typedef std::shared_ptr<session_seed> ptr;
 
     /// Construct an instance.
-    session_seed(p2p& network) NOEXCEPT;
+    session_seed(p2p& network, size_t key) NOEXCEPT;
 
     /// Perform seeding as configured (call from network strand).
     /// Seeding is complete invocation of the handler.
@@ -50,8 +50,6 @@ public:
     bool inbound() const NOEXCEPT override;
 
 protected:
-    typedef std::shared_ptr<size_t> count_ptr;
-
     /// Do not notify subscribers on channel start.
     bool notify() const NOEXCEPT override;
 
@@ -68,18 +66,20 @@ protected:
         const channel_handler& handler) NOEXCEPT;
 
     /// Accumulate the result of the seed connection.
-    virtual void stop_seed(const count_ptr& counter,
-        const result_handler& handler) NOEXCEPT;
+    virtual void stop_seed(const result_handler& handler) NOEXCEPT;
 
 private:
     void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, const channel::ptr& channel,
-        const config::endpoint& seed, const count_ptr& counter,
-        const result_handler& handler) NOEXCEPT;
+        const config::endpoint& seed, const result_handler& handler) NOEXCEPT;
 
     void handle_channel_start(const code& ec, const channel::ptr& channel) NOEXCEPT;
-    void handle_channel_stop(const code& ec, const count_ptr& counter,
-        const channel::ptr& channel, const result_handler& handler) NOEXCEPT;
+    void handle_channel_stop(const code& ec, const channel::ptr& channel,
+        const result_handler& handler) NOEXCEPT;
+
+    // These are protected by the strand.
+    bool handled_{ false };
+    size_t count_{};
 };
 
 } // namespace network

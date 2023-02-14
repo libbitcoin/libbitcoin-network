@@ -61,6 +61,7 @@ acceptor::acceptor(const logger& log, asio::strand& strand,
 acceptor::~acceptor() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped_, "acceptor is not stopped");
+    if (!stopped_) { LOG("~acceptor is not stopped."); }
 }
 
 // Start/stop.

@@ -44,6 +44,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { file_load, "failed to load file" },
     { file_save, "failed to save file" },
     { file_system, "file system error" },
+    { file_payload, "file payload error" },
 
     // general I/O failures
     { bad_stream, "bad data stream" },
@@ -93,7 +94,8 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { channel_stopped, "channel stopped" },
     { service_stopped, "service stopped" },
     { subscriber_exists, "subscriber exists" },
-    { subscriber_stopped, "subscriber stopped" }
+    { subscriber_stopped, "subscriber stopped" },
+    { unsubscribed, "subscriber unsubscribed" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")

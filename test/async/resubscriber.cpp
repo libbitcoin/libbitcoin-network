@@ -32,21 +32,21 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__stopped__subscriber_stopped)
 
     std::pair<code, size_t> stop_result;
     std::pair<code, size_t> retry_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
             return true;
-        }, 0);
+        }, 0));
 
         instance.stop(ec, expected);
 
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             retry_result = { value, size };
             return true;
-        }, 0);
+        }, 0));
     });
 
     pool.stop();
@@ -67,19 +67,19 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__exists__subscriber_exists)
 
     std::pair<code, size_t> first_result;
     std::pair<code, size_t> second_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             first_result = { value, size };
             return true;
-        }, 42);
+        }, 42));
 
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             second_result = { value, size };
             return true;
-        }, 42);
+        }, 42));
 
         instance.stop(ec, expected);
     });
@@ -102,19 +102,19 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__unique__expected)
 
     std::pair<code, size_t> first_result;
     std::pair<code, size_t> second_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             first_result = { value, size };
             return true;
-        }, 42);
+        }, 42));
 
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             second_result = { value, size };
             return true;
-        }, 99);
+        }, 99));
 
         instance.stop(ec, expected);
     });
@@ -136,13 +136,13 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop_default__once__expected)
     constexpr auto expected = zero;
 
     std::pair<code, size_t> stop_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
             return true;
-        }, 0);
+        }, 0));
 
         instance.stop_default(ec);
     });
@@ -162,13 +162,13 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop__once__expected)
     constexpr auto expected = 42u;
 
     std::pair<code, size_t> stop_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
             return true;
-        }, 0);
+        }, 0));
 
         instance.stop(ec, expected);
     });
@@ -188,13 +188,13 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop__twice__second_dropped)
     constexpr auto expected = 42u;
 
     std::pair<code, size_t> stop_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
             return true;
-        }, 0);
+        }, 0));
 
         instance.stop(ec, expected);
         instance.stop(error::address_blocked, {});
@@ -218,14 +218,14 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__stopped__dropped)
 
     auto count = zero;
     std::pair<code, size_t> notify_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Allow first and possible second notify, ignore stop.
             if (++count != two) notify_result = { value, size };
             return true;
-        }, 0);
+        }, 0));
 
         instance.notify(ec, expected);
         instance.stop_default(error::address_blocked);
@@ -248,13 +248,13 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__once__expected)
 
     auto count = 0u;
     std::pair<code, size_t> notify_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             if (is_one(++count)) notify_result = { value, size };
             return true;
-        }, 0);
+        }, 0));
 
         instance.notify(ec, expected);
 
@@ -278,14 +278,14 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__twice_true__expected)
 
     auto count = zero;
     std::pair<code, size_t> notify_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Exclude stop_default call.
             if (++count <= two) notify_result = { value, size };
             return true;
-        }, 0);
+        }, 0));
 
         instance.notify({}, {});
         instance.notify(ec, expected);
@@ -309,13 +309,13 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__twice_false__expected)
     constexpr auto expected = 42u;
 
     std::pair<code, size_t> notify_result;
-    boost::asio::post(strand, [&]() NOEXCEPT
+    boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             notify_result = { value, size };
             return false;
-        }, 0);
+        }, 0));
 
         instance.notify(ec, expected);
         instance.notify({}, {});
@@ -343,24 +343,17 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__stopped__dropped)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Allow first and possible second notify, ignore stop.
             if (++count != two) notify_result = { value, size };
             return true;
-        }, key);
+        }, key));
     
-        // Found and true.
-        const auto value1 = instance.notify_one(key, ec, expected);
-        BOOST_REQUIRE(value1.first);
-        BOOST_REQUIRE(value1.second);
-
+        BOOST_REQUIRE(instance.notify_one(key, ec, expected));
         instance.stop_default(error::address_blocked);
 
-        // Not found (and false).
-        const auto value2 = instance.notify_one(key, error::address_blocked, {});
-        BOOST_REQUIRE(!value2.first);
-        BOOST_REQUIRE(!value2.second);
+        BOOST_REQUIRE(!instance.notify_one(key, error::address_blocked, {}));
     });
 
     pool.stop();
@@ -381,17 +374,14 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__missing__false)
     std::pair<code, size_t> notify_result{};
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Record only first notification.
             if (is_one(++count)) notify_result = { value, size };
             return true;
-        }, 99);
+        }, 99));
 
-        // Not found (and false).
-        const auto value = instance.notify_one(100, error::address_blocked, 21);
-        BOOST_REQUIRE(!value.first);
-        BOOST_REQUIRE(!value.second);
+        BOOST_REQUIRE(!instance.notify_one(100, error::address_blocked, 21));
 
         // First notification, and clears map.
         instance.stop(ec, expected);
@@ -416,16 +406,13 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__once__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             if (is_one(++count)) notify_result = { value, size };
             return true;
-        }, key);
+        }, key));
     
-        // Found and true.
-        const auto value = instance.notify_one(key, ec, expected);
-        BOOST_REQUIRE(value.first);
-        BOOST_REQUIRE(value.second);
+        BOOST_REQUIRE(instance.notify_one(key, ec, expected));
 
         // Prevents unstopped assertion (uncleared).
         instance.stop_default(error::address_blocked);
@@ -450,22 +437,15 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__twice_true__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Exclude stop_default call.
             if (++count <= two) notify_result = { value, size };
             return true;
-        }, key);
+        }, key));
 
-        // Found and true.
-        const auto value1 = instance.notify_one(key, {}, {});
-        BOOST_REQUIRE(value1.first);
-        BOOST_REQUIRE(value1.second);
-
-        // Found and true.
-        const auto value2 = instance.notify_one(key, ec, expected);
-        BOOST_REQUIRE(value2.first);
-        BOOST_REQUIRE(value2.second);
+        BOOST_REQUIRE(instance.notify_one(key, {}, {}));
+        BOOST_REQUIRE(instance.notify_one(key, ec, expected));
 
         // Prevents unstopped assertion (uncleared).
         instance.stop_default(error::address_blocked);
@@ -489,21 +469,14 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__twice_false__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             notify_result = { value, size };
             return false;
-        }, key);
+        }, key));
 
-        // Found and false.
-        const auto value1 = instance.notify_one(key, ec, expected);
-        BOOST_REQUIRE(value1.first);
-        BOOST_REQUIRE(!value1.second);
-
-        // Not found (and false).
-        const auto value2 = instance.notify_one(key, {}, {});
-        BOOST_REQUIRE(!value2.first);
-        BOOST_REQUIRE(!value2.second);
+        BOOST_REQUIRE(instance.notify_one(key, ec, expected));
+        BOOST_REQUIRE(!instance.notify_one(key, {}, {}));
 
         // Cleared by false return.
         ////instance.stop_default(error::address_blocked);

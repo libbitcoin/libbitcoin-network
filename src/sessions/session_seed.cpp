@@ -41,8 +41,8 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session_seed::session_seed(p2p& network) NOEXCEPT
-  : session(network), tracker<session_seed>(network.log())
+session_seed::session_seed(p2p& network, size_t key) NOEXCEPT
+  : session(network, key), tracker<session_seed>(network.log())
 {
 }
 
@@ -111,8 +111,9 @@ void session_seed::handle_started(const code& ec,
 
     // Create a connector for each seed connection.
     const auto connectors = create_connectors(settings().seeds.size());
-    const auto counter = std::make_shared<size_t>(connectors->size());
     auto it = settings().seeds.begin();
+    count_ = connectors->size();
+    handled_ = false;
 
     for (const auto& connector: *connectors)
     {
@@ -124,7 +125,7 @@ void session_seed::handle_started(const code& ec,
         });
 
         start_seed(error::success, seed, connector,
-            BIND5(handle_connect, _1, _2, seed, counter, handler));
+            BIND4(handle_connect, _1, _2, seed, handler));
     }
 }
 
@@ -149,7 +150,7 @@ void session_seed::start_seed(const code&, const config::endpoint& seed,
 }
 
 void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
-    const config::endpoint& LOG_ONLY(seed), const count_ptr& counter,
+    const config::endpoint& LOG_ONLY(seed), 
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -158,13 +159,13 @@ void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
     {
         LOG("Failed to connect seed channel [" << seed << "] " << ec.message());
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        stop_seed(counter, handler);
+        stop_seed(handler);
         return;
     }
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
-        BIND4(handle_channel_stop, _1, counter, channel, handler));
+        BIND3(handle_channel_stop, _1, channel, handler));
 }
 
 void session_seed::attach_handshake(const channel::ptr& channel,
@@ -241,7 +242,7 @@ void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
     channel->attach<protocol_seed_31402>(self)->start();
 }
 
-void session_seed::handle_channel_stop(const code& ec, const count_ptr& counter,
+void session_seed::handle_channel_stop(const code& ec,
     const channel::ptr& channel, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -252,39 +253,36 @@ void session_seed::handle_channel_stop(const code& ec, const count_ptr& counter,
         LOG("Unpend failed to locate seed channel.");
     }
 
-    stop_seed(counter, handler);
+    stop_seed(handler);
 }
 
-void session_seed::stop_seed(const count_ptr& counter,
-     const result_handler& handler) NOEXCEPT
+void session_seed::stop_seed(const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Ignore result if previously handled (early termination).
-    if (is_zero(*counter))
-        return;
-
-    // Handle service stopped, ignoring possible success/fail result.
-    if (stopped())
+    if (is_zero(--count_))
     {
-        *counter = zero;
-        handler(error::service_stopped);
-        return;
+        LOG("Seed session unsubscribed from network close.");
+        unsubscribe_close();
     }
 
-    // Handle with success on first positive address count.
-    if (address_count() >= settings().minimum_address_count())
+    if (!handled_)
     {
-        *counter = zero;
-        handler(error::success);
-        return;
-    }
-
-    // Handle failure now that all seeds are processed.
-    if (is_zero(--(*counter)))
-    {
-        handler(error::seeding_unsuccessful);
-        return;
+        if (stopped())
+        {
+            handler(error::service_stopped);
+            handled_ = true;
+        }
+        else if (address_count() >= settings().minimum_address_count())
+        {
+            handler(error::success);
+            handled_ = true;
+        }
+        else if (is_zero(count_))
+        {
+            handler(error::seeding_unsuccessful);
+            handled_ = true;
+        }
     }
 }
 

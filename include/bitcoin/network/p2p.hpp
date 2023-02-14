@@ -44,8 +44,15 @@ class BCT_API p2p
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
-    typedef subscriber<> stop_subscriber;
-    typedef subscriber<const channel::ptr&> channel_subscriber;
+    typedef size_t key_t;
+
+    typedef resubscriber<key_t> stop_subscriber;
+    typedef stop_subscriber::handler stop_handler;
+    typedef stop_subscriber::completer stop_completer;
+
+    typedef resubscriber<key_t, const channel::ptr&> channel_subscriber;
+    typedef channel_subscriber::handler channel_notifier;
+    typedef channel_subscriber::completer channel_completer;
 
     template <typename Message>
     void broadcast(const Message& message, result_handler&& handler,
@@ -97,20 +104,25 @@ public:
 
     /// Idempotent call to block on work stop, start may be reinvoked after.
     /// Must not call concurrently or from any threadpool thread (see ~).
+    /// Calling any method after close results in deadlock (threadpool joined).
     virtual void close() NOEXCEPT;
 
     // Subscriptions.
     // ------------------------------------------------------------------------
 
-    /// Subscribe to connection creation events (allowed before start).
-    /// A call after close invokes complete with error::subscriber_stopped.
-    virtual void subscribe_connect(channel_handler&& handler,
-        result_handler&& complete) NOEXCEPT;
+    /// Subscribe to connection creation (allowed before start).
+    /// A call after close invokes handlers with error::subscriber_stopped.
+    virtual void subscribe_connect(channel_notifier&& handler,
+        channel_completer&& complete) NOEXCEPT;
 
-    /// Subscribe to service stop event (allowed before start).
-    /// A call after close invokes complete with error::subscriber_stopped.
-    virtual void subscribe_close(result_handler&& handler,
-        result_handler&& complete) NOEXCEPT;
+    /// Subscribe to service stop (allowed before start).
+    /// A call after close invokes handlers with error::subscriber_stopped.
+    virtual void subscribe_close(stop_handler&& handler,
+        stop_completer&& complete) NOEXCEPT;
+
+    /// Unsubscribe by subscription key, error::unsubscribed passed to handler.
+    virtual void unsubscribe_connect(size_t key) NOEXCEPT;
+    virtual void unsubscribe_close(size_t key) NOEXCEPT;
 
     // Manual connections.
     // ------------------------------------------------------------------------
@@ -120,7 +132,7 @@ public:
 
     /// Maintain a connection, callback is invoked on each try.
     virtual void connect(const config::endpoint& endpoint,
-        channel_handler&& handler) NOEXCEPT;
+        channel_notifier&& handler) NOEXCEPT;
 
     // Properties.
     // ------------------------------------------------------------------------
@@ -154,7 +166,7 @@ protected:
 
         // Sessions are attached after network start.
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        const auto session = std::make_shared<Session>(net,
+        const auto session = std::make_shared<Session>(net, ++stops_,
             std::forward<Args>(args)...);
         BC_POP_WARNING()
 
@@ -162,7 +174,8 @@ protected:
         subscribe_close([=](const code&) NOEXCEPT
         {
             session->stop();
-        });
+            return false;
+        }, stops_);
 
         return session;
     }
@@ -222,7 +235,7 @@ private:
                 channel->write(data, move_copy(handler));
     }
 
-    void subscribe_close(result_handler&& handler) NOEXCEPT;
+    bool subscribe_close(stop_handler&& handler, key_t key) NOEXCEPT;
     connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
     virtual bool closed() const NOEXCEPT;
@@ -235,20 +248,23 @@ private:
 
     void handle_start(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_run(const code& ec, const result_handler& handler) NOEXCEPT;
-  
-    void do_subscribe_connect(const channel_handler& handler,
-        const result_handler& complete) NOEXCEPT;
-    void do_subscribe_close(const result_handler& handler,
-        const result_handler& complete) NOEXCEPT;
 
-    // Distinct method names required for std::bind.
+    void do_unsubscribe_connect(key_t key) NOEXCEPT;
+    void do_subscribe_connect(const channel_notifier& handler,
+        const channel_completer& complete) NOEXCEPT;
+
+    void do_unsubscribe_close(key_t key) NOEXCEPT;
+    void do_subscribe_close(const stop_handler& handler,
+        const stop_completer& complete) NOEXCEPT;
+
     void do_connect(const config::endpoint& endpoint) NOEXCEPT;
     void do_connect_handled(const config::endpoint& endpoint,
-        const channel_handler& handler) NOEXCEPT;
+        const channel_notifier& handler) NOEXCEPT;
 
     void do_take(const address_item_handler& handler) NOEXCEPT;
     void do_restore(const address_item_cptr& host,
         const result_handler& complete) NOEXCEPT;
+
     void do_fetch(const address_handler& handler) const NOEXCEPT;
     void do_save(const address_cptr& message,
         const count_handler& complete) NOEXCEPT;
@@ -267,8 +283,13 @@ private:
     asio::strand strand_;
 
     // These are protected by strand.
+
+    key_t stops_{};
     stop_subscriber stop_subscriber_;
+
+    key_t connects_{};
     channel_subscriber connect_subscriber_;
+
     std::unordered_set<uint64_t> nonces_{};
     std::unordered_set<channel::ptr> channels_{};
     std::unordered_set<config::authority> authorities_{};

@@ -27,7 +27,7 @@ namespace network {
 
 template <typename... Args>
 subscriber<Args...>::subscriber(asio::strand& strand) NOEXCEPT
-  : strand_(strand), stopped_(false)
+  : strand_(strand)
 {
 }
 
@@ -39,7 +39,7 @@ subscriber<Args...>::~subscriber() NOEXCEPT
 }
 
 template <typename... Args>
-void subscriber<Args...>::subscribe(handler&& handler) NOEXCEPT
+bool subscriber<Args...>::subscribe(handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -47,10 +47,12 @@ void subscriber<Args...>::subscribe(handler&& handler) NOEXCEPT
     if (stopped_)
     {
         handler(error::subscriber_stopped, Args{}...);
+        return false;
     }
     else
     {
         queue_.push_back(std::move(handler));
+        return true;
     }
     BC_POP_WARNING()
 }
