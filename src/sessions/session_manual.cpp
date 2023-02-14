@@ -98,6 +98,8 @@ void session_manual::connect(const config::endpoint& peer,
     // Create a connector for each manual connection.
     const auto connector = create_connector();
 
+    // TODO: use resubscriber for session stop (connectors/acceptors only).
+    // TODO: use pointer id of captured connector/acceptor.
     subscribe_stop([=](const code&) NOEXCEPT
     {
         connector->stop();
@@ -148,9 +150,10 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         LOG("Failed to connect manual peer [" << peer << "] " << ec.message());
 
-        // Notify of failed connections, terminate if false.
+        // Connect failure notification.
         if (!handler(ec, nullptr))
         {
+            // TODO: drop connector subscription.
             LOG("Manual channel dropped at connect [" << peer << "].");
             return;
         }
@@ -177,13 +180,9 @@ void session_manual::handle_channel_start(const code& ec,
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Manual channel start [" << peer << "] " << ec.message());
 
-    // Notify on success and drop if false.
-    // Allows caller to terminate within timeframe no later than the timeout.
+    // Connection success notification.
     if (!ec && !handler(ec, channel))
-    {
-        LOG("Manual channel dropped at start [" << peer << "].");
         channel->stop(error::channel_dropped);
-    }
 }
 
 // Communication will begin after this function returns, freeing the thread.
@@ -202,14 +201,11 @@ void session_manual::handle_channel_stop(const code& LOG_ONLY(ec),
     // The channel stopped following connection, try again with delay.
     LOG("Manual channel stop [" << peer << "] " << ec.message());
 
-    // Terminate subscription (from handle_channel_start).
-    if (ec == error::channel_dropped)
-        return;
-
-    // Notify of failed starts (and all stops), terminate if false.
-    if (!handler(ec, nullptr))
+    // Handshake failure notification.
+    if (ec == error::channel_dropped || !handler(ec, nullptr))
     {
-        LOG("Manual channel dropped at stop [" << peer << "].");
+        // TODO: drop connector subscription.
+        LOG("Manual channel dropped [" << peer << "].");
         return;
     }
 
