@@ -381,7 +381,7 @@ void session::subscribe_stop(result_handler&& handler) NOEXCEPT
     stop_subscriber_.subscribe(std::move(handler));
 }
 
-void session::unsubscribe() NOEXCEPT
+void session::unsubscribe_close() NOEXCEPT
 {
     network_.unsubscribe_close(key_);
 }

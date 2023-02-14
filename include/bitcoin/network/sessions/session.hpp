@@ -131,7 +131,7 @@ protected:
     virtual void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
     /// Remove self from network close subscription (for session early stop).
-    virtual void unsubscribe() NOEXCEPT;
+    virtual void unsubscribe_close() NOEXCEPT;
 
     /// Factories.
     /// -----------------------------------------------------------------------
