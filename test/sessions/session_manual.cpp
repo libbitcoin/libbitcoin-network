@@ -473,9 +473,9 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
     {
         session->connect(peer, [&](const code& ec, const channel::ptr& channel)
         {
-            BOOST_REQUIRE(!channel);
+            BOOST_REQUIRE(ec && !channel);
             connected.set_value(ec);
-            return false;
+            return true;
         });
     });
 
@@ -495,59 +495,69 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
     BOOST_REQUIRE(session->stopped());
 }
 
-////BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopped)
-////{
-////    const logger log{};
-////    settings set(selection::mainnet);
-////    mock_p2p<mock_connector_connect_fail> net(set, log);
-////    auto session = std::make_shared<mock_session_manual>(net, 1);
-////    BOOST_REQUIRE(session->stopped());
-////
-////    const endpoint peer{ "42.42.42.42", 42 };
-////
-////    std::promise<code> started;
-////    boost::asio::post(net.strand(), [=, &started]()
-////    {
-////        session->start([&](const code& ec)
-////        {
-////            started.set_value(ec);
-////        });
-////    });
-////
-////    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-////    BOOST_REQUIRE(!session->stopped());
-////
-////    std::promise<bool> started_connect;
-////    std::promise<code> connected;
-////    boost::asio::post(net.strand(), [=, &connected, &started_connect]()
-////    {
-////        session->connect(peer, [&](const code& ec, const channel::ptr& channel)
-////        {
-////            BOOST_REQUIRE(!channel);
-////            connected.set_value(ec);
-////            return true;
-////        });
-////
-////        // connector.connect has been invoked, though its handler is pending.
-////        started_connect.set_value(true);
-////    });
-////
-////    BOOST_REQUIRE(started_connect.get_future().get());
-////
-////    std::promise<bool> stopped;
-////    boost::asio::post(net.strand(), [=, &stopped]()
-////    {
-////        session->stop();
-////        stopped.set_value(true);
-////    });
-////
-////    // connector.connect sets invalid_magic, causing a timer reconnect.
-////    // session_manual always sets service_stopped, with all other codes eaten.
-////    BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::service_stopped);
-////
-////    BOOST_REQUIRE(stopped.get_future().get());
-////    BOOST_REQUIRE(session->stopped());
-////}
+BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopped)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+
+    // Connect will return invalid_magic when executed.
+    mock_p2p<mock_connector_connect_fail> net(set, log);
+
+    auto session = std::make_shared<mock_session_manual>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    const endpoint peer{ "42.42.42.42", 42 };
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]()
+    {
+        session->start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(!session->stopped());
+
+    auto first = true;
+    std::promise<bool> started_connect;
+    std::promise<code> connected;
+    boost::asio::post(net.strand(), [&]()
+    {
+        session->connect(peer, [&](const code& ec, const channel::ptr& channel)
+        {
+            BOOST_REQUIRE(ec && !channel);
+
+            if (first)
+            {
+                connected.set_value(ec);
+                first = false;
+            }
+
+            // Continue after connect fail, reenters here.
+            return true;
+        });
+
+        // connector.connect has been invoked, though its handler is pending.
+        started_connect.set_value(true);
+    });
+
+    BOOST_REQUIRE(started_connect.get_future().get());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    // connector.connect sets invalid_magic, causing a timer reconnect.
+    BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::invalid_magic);
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+}
 
 BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__service_stopped)
 {
@@ -595,64 +605,68 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
     BOOST_REQUIRE(session->stopped());
 }
 
-////BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__invalid_checksum)
-////{
-////    const logger log{};
-////    settings set(selection::mainnet);
-////    mock_p2p<mock_connector_connect_success> net(set, log);
-////    auto session = std::make_shared<mock_session_manual_handshake_failure>(net, 1);
-////    BOOST_REQUIRE(session->stopped());
-////
-////    const endpoint expected{ "42.42.42.42", 42 };
-////
-////    std::promise<code> started;
-////    boost::asio::post(net.strand(), [=, &started]()
-////    {
-////        session->start([&](const code& ec)
-////        {
-////            started.set_value(ec);
-////        });
-////    });
-////
-////    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-////    BOOST_REQUIRE(!session->stopped());
-////
-////    auto first = true;
-////    std::promise<code> connected;
-////    boost::asio::post(net.strand(), [=, &first, &connected]()
-////    {
-////        session->connect(expected, [&](const code& ec, const channel::ptr& channel)
-////        {
-////            // Connect success/chat fail with delayed stop allows another.
-////            if (first)
-////            {
-////                BOOST_REQUIRE(channel);
-////                connected.set_value(ec);
-////                first = false;
-////            }
-////
-////            return true;
-////        });
-////    });
-////
-////    // mock_session_manual_handshake_failure sets channel.stop(invalid_checksum).
-////    BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::invalid_checksum);
-////    BOOST_REQUIRE(session->require_connected());
-////    BOOST_REQUIRE_EQUAL(session->start_connect_endpoint(), expected);
-////
-////    std::promise<bool> stopped;
-////    boost::asio::post(net.strand(), [=, &stopped]()
-////    {
-////        session->stop();
-////        stopped.set_value(true);
-////    });
-////
-////    BOOST_REQUIRE(stopped.get_future().get());
-////    BOOST_REQUIRE(session->stopped());
-////    BOOST_REQUIRE(session->attached_handshake());
-////}
+BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__invalid_checksum)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+
+    mock_p2p<mock_connector_connect_success> net(set, log);
+
+    auto session = std::make_shared<mock_session_manual_handshake_failure>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    const endpoint expected{ "42.42.42.42", 42 };
+
+    std::promise<code> started;
+    boost::asio::post(net.strand(), [=, &started]()
+    {
+        session->start([&](const code& ec)
+        {
+            started.set_value(ec);
+        });
+    });
+
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    BOOST_REQUIRE(!session->stopped());
+
+    auto first = true;
+    std::promise<code> connected;
+    boost::asio::post(net.strand(), [&]()
+    {
+        session->connect(expected, [&](const code& ec, const channel::ptr& channel)
+        {
+            BOOST_REQUIRE(ec && !channel);
+
+            if (first)
+            {
+                connected.set_value(ec);
+                first = false;
+            }
+
+            // Continue after connect fail, reenters here.
+            return true;
+        });
+    });
+
+    // mock_session_manual_handshake_failure sets channel.stop(invalid_checksum).
+    BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::invalid_checksum);
+    BOOST_REQUIRE(session->require_connected());
+    BOOST_REQUIRE_EQUAL(session->start_connect_endpoint(), expected);
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]()
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE(session->attached_handshake());
+}
 
 // start via network (not required for coverage)
+// ============================================================================
 
 BOOST_AUTO_TEST_CASE(session_manual__start__network_start__success)
 {
@@ -821,49 +835,55 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
     BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
 
-// net.close() join abort.
-////BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
-////{
-////    const logger log{};
-////    settings set(selection::mainnet);
-////    BOOST_REQUIRE(set.peers.empty());
-////
-////    const endpoint expected{ "42.42.42.42", 42 };
-////
-////    // Connect will return invalid_magic when executed.
-////    mock_p2p<mock_connector_connect_fail> net(set, log);
-////
-////    std::promise<code> start;
-////    std::promise<code> run;
-////    std::promise<code> connect;
-////    channel::ptr connected_channel;
-////    net.start([&](const code& ec)
-////    {
-////        start.set_value(ec);
-////        net.run([&](const code& ec)
-////        {
-////            net.connect(expected,
-////                [&](const code& ec, const channel::ptr& channel)
-////                {
-////                    connected_channel = channel;
-////                    connect.set_value(ec);
-////                    return true;
-////                });
-////
-////            run.set_value(ec);
-////        });
-////    });
-////
-////    // Connection failures are logged and suppressed in retry loop.
-////    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
-////    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
-////
-////    // The connection loops on connect failure until service stop.
-////    net.close();
-////    BOOST_REQUIRE(!connected_channel);
-////    BOOST_REQUIRE_EQUAL(connect.get_future().get(), error::service_stopped);
-////    BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
-////}
+BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    BOOST_REQUIRE(set.peers.empty());
+
+    const endpoint expected{ "42.42.42.42", 42 };
+
+    // Connect will return invalid_magic when executed.
+    mock_p2p<mock_connector_connect_fail> net(set, log);
+
+    auto first = true;
+    std::promise<code> start{};
+    std::promise<code> run{};
+    std::promise<code> connect{};
+    net.start([&](const code& ec)
+    {
+        start.set_value(ec);
+        net.run([&](const code& ec)
+        {
+            net.connect(expected, [&](const code& ec, const channel::ptr& channel)
+            {
+                BOOST_REQUIRE(ec && !channel);
+
+                if (first)
+                {
+                    connect.set_value(ec);
+                    first = false;
+                }
+
+                // Continue after connect fail, reenters here.
+                return true;
+            });
+
+            run.set_value(ec);
+        });
+    });
+
+    // Connection failures are logged and suppressed in retry loop.
+    BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+
+    // The connection loops on connect failure until service stop.
+    net.close();
+
+    // connector.connect sets invalid_magic, causing a timer reconnect.
+    BOOST_REQUIRE_EQUAL(connect.get_future().get(), error::invalid_magic);
+    BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
+}
 
 BC_POP_WARNING()
 

@@ -148,18 +148,14 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
         LOG("Failed to connect manual peer [" << peer << "] " << ec.message());
 
-        // Notify (with code/null) upon each failed connection attempt...
-        if (handler(ec, nullptr))
+        // Notify of failed connections, terminate if false.
+        if (!handler(ec, nullptr))
         {
-            // ...loop continues if true.
-            defer(BIND4(start_connect, _1, peer, connector, handler), peer);
-        }
-        else
-        {
-            // ...loop ends if false.
             LOG("Manual channel dropped at connect [" << peer << "].");
+            return;
         }
 
+        defer(BIND4(start_connect, _1, peer, connector, handler), peer);
         return;
     }
 
@@ -181,24 +177,12 @@ void session_manual::handle_channel_start(const code& ec,
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Manual channel start [" << peer << "] " << ec.message());
 
-    // If failed start...
-    if (ec)
+    // Notify on success and drop if false.
+    // Allows caller to terminate within timeframe no later than the timeout.
+    if (!ec && !handler(ec, channel))
     {
-        // ...do nothing, handle_channel_stop(ec) will be invoked.
-    }
-    else
-    {
-        // ...otherwise notify (with success/channel) of start...
-        if (!handler(ec, channel))
-        {
-            // ...close channel if false (race w/channel self-termination).
-            LOG("Manual channel dropped at start [" << peer << "].");
-            channel->stop(error::channel_dropped);
-        }
-        else
-        {
-            // ...running, caller may invoke channel.stop(channel_dropped).
-        }
+        LOG("Manual channel dropped at start [" << peer << "].");
+        channel->stop(error::channel_dropped);
     }
 }
 
@@ -215,28 +199,21 @@ void session_manual::handle_channel_stop(const code& LOG_ONLY(ec),
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // The channel stopped following connection, try again without delay.
+    // The channel stopped following connection, try again with delay.
     LOG("Manual channel stop [" << peer << "] " << ec.message());
 
-    // If already dropped...
+    // Terminate subscription (from handle_channel_start).
     if (ec == error::channel_dropped)
+        return;
+
+    // Notify of failed starts (and all stops), terminate if false.
+    if (!handler(ec, nullptr))
     {
-        // ...loop ends (caller may have invoked channel.stop(channel_dropped).
+        LOG("Manual channel dropped at stop [" << peer << "].");
+        return;
     }
-    else
-    {
-        // ...notify (w/clean code) of stop (covers self-termination race)...
-        if (!handler(error::channel_stopped, nullptr))
-        {
-            // ...loop ends if false.
-            LOG("Manual channel dropped at stop [" << peer << "].");
-        }
-        else
-        {
-            // ...loop continues if true.
-            defer(BIND4(start_connect, _1, peer, connector, handler), peer);
-        }
-    }
+
+    defer(BIND4(start_connect, _1, peer, connector, handler), peer);
 }
 
 BC_POP_WARNING()
