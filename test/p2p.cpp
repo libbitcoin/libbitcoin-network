@@ -188,6 +188,7 @@ BOOST_AUTO_TEST_CASE(p2p__connect__unstarted__service_stopped)
         BOOST_REQUIRE(!channel);
         BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
         promise.set_value(true);
+        return true;
     };
 
     net.connect({ "truckers.ca" });
@@ -208,11 +209,14 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstopped__success)
         BOOST_REQUIRE(!channel);
         BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
         promise_handler.set_value(true);
+        return false;
     };
 
     std::promise<bool> promise_complete;
-    const auto complete = [&](const code& ec)
+    const auto complete = [&](const code& ec, size_t key)
     {
+        // First key is ++0;
+        BOOST_REQUIRE_EQUAL(key, one);
         BOOST_REQUIRE_EQUAL(ec, error::success);
         promise_complete.set_value(true);
     };
@@ -236,7 +240,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstopped__success)
     {
         BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
         promise_handler.set_value(true);
-        return false;
+        return true;
     };
 
     std::promise<bool> promise_complete;

@@ -381,9 +381,9 @@ void session::subscribe_stop(result_handler&& handler) NOEXCEPT
     stop_subscriber_.subscribe(std::move(handler));
 }
 
-bool session::unsubscribe() NOEXCEPT
+void session::unsubscribe() NOEXCEPT
 {
-    return network_.unsubscribe_close(key_);
+    network_.unsubscribe_close(key_);
 }
 
 // Factories.

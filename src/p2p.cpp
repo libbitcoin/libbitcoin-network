@@ -226,26 +226,33 @@ void p2p::do_close() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // public
-void p2p::subscribe_connect(channel_handler&& handler,
-    result_handler&& complete) NOEXCEPT
+void p2p::subscribe_connect(channel_notifier&& handler,
+    channel_completer&& complete) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_subscribe_connect,
             this, std::move(handler), std::move(complete)));
 }
 
-void p2p::do_subscribe_connect(const channel_handler& handler,
-    const result_handler& complete) NOEXCEPT
+void p2p::do_subscribe_connect(const channel_notifier& handler,
+    const channel_completer& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    connect_subscriber_.subscribe(move_copy(handler));
-    complete(error::success);
+    complete(connect_subscriber_.subscribe(move_copy(handler), ++connects_) ?
+        error::success : error::subscriber_stopped, connects_);
 }
 
-////bool p2p::unsubscribe_connect(size_t handle) NOEXCEPT
-////{
-////    return connect_subscriber_.notify_one(handle, error::success);
-////}
+void p2p::unsubscribe_connect(size_t key) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_unsubscribe_connect, this, key));
+}
+
+void p2p::do_unsubscribe_connect(key_t key) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    /*bool*/ connect_subscriber_.notify_one(key, error::unsubscribed, nullptr);
+}
 
 // private
 bool p2p::subscribe_close(stop_handler&& handler, key_t key) NOEXCEPT
@@ -267,14 +274,20 @@ void p2p::do_subscribe_close(const stop_handler& handler,
     const stop_completer& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    const auto result = subscribe_close(move_copy(handler), ++stopper_);
-    complete(result ? error::success : error::subscriber_stopped,
-        result ? stopper_ : zero);
+    complete(subscribe_close(move_copy(handler), ++stops_) ?
+        error::success : error::subscriber_stopped, stops_);
 }
 
-bool p2p::unsubscribe_close(size_t handle) NOEXCEPT
+void p2p::unsubscribe_close(size_t key) NOEXCEPT
 {
-    return stop_subscriber_.notify_one(handle, error::success);
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_unsubscribe_close, this, key));
+}
+
+void p2p::do_unsubscribe_close(key_t key) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    /*bool*/ stop_subscriber_.notify_one(key, error::unsubscribed);
 }
 
 // Manual connections.
@@ -295,7 +308,7 @@ void p2p::do_connect(const config::endpoint& endpoint) NOEXCEPT
 }
 
 void p2p::connect(const config::endpoint& endpoint,
-    channel_handler&& handler) NOEXCEPT
+    channel_notifier&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_connect_handled, this, endpoint,
@@ -303,7 +316,7 @@ void p2p::connect(const config::endpoint& endpoint,
 }
 
 void p2p::do_connect_handled(const config::endpoint& endpoint,
-    const channel_handler& handler) NOEXCEPT
+    const channel_notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
