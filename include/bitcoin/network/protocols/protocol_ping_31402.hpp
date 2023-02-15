@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_PING_31402_HPP
 
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -49,8 +48,6 @@ public:
     void stopping(const code& ec) NOEXCEPT override;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     virtual void send_ping() NOEXCEPT;
     virtual void handle_timer(const code& ec) NOEXCEPT;
     virtual void handle_send_ping(const code& ec) NOEXCEPT;

@@ -29,7 +29,6 @@ namespace libbitcoin {
 namespace network {
 
 #define CLASS protocol_reject_70002
-static const std::string protocol_name = "reject";
 
 using namespace system;
 using namespace messages;
@@ -41,11 +40,6 @@ protocol_reject_70002::protocol_reject_70002(const session& session,
   : protocol(session, channel),
     tracker<protocol_reject_70002>(session.log())
 {
-}
-
-const std::string& protocol_reject_70002::name() const NOEXCEPT
-{
-    return protocol_name;
 }
 
 // Start.

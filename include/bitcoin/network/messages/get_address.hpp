@@ -19,10 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_GET_ADDRESS_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_GET_ADDRESS_HPP
 
-#include <cstdint>
-#include <cstddef>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>

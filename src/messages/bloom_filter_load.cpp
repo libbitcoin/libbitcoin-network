@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/messages/bloom_filter_load.hpp>
 
-#include <cstddef>
-#include <cstdint>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>

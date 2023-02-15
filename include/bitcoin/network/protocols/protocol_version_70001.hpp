@@ -19,9 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_VERSION_70001_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_VERSION_70001_HPP
 
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -50,8 +48,6 @@ public:
         uint64_t maximum_services, bool relay) NOEXCEPT;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     messages::version version_factory(bool relay=false) const NOEXCEPT override;
 
 private:

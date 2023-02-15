@@ -19,10 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_COMPACT_BLOCK_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_COMPACT_BLOCK_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/compact_block_item.hpp>

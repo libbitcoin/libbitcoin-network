@@ -19,9 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_PING_60001_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_PING_60001_HPP
 
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -47,8 +45,6 @@ public:
     void start() NOEXCEPT override;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     void send_ping() NOEXCEPT override;
     void handle_timer(const code& ec) NOEXCEPT override;
     void handle_receive_ping(const code& ec,

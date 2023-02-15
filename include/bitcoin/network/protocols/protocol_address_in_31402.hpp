@@ -45,8 +45,6 @@ public:
     void start() NOEXCEPT override;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     virtual void handle_receive_address(const code& ec,
         const messages::address::cptr& message) NOEXCEPT;
     virtual void handle_save_address(const code& ec,

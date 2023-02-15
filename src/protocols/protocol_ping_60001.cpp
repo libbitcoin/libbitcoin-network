@@ -18,9 +18,7 @@
  */
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 
-#include <cstdint>
 #include <functional>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -38,7 +36,6 @@ using namespace std::placeholders;
 
 constexpr uint64_t received = zero;
 constexpr auto minimum_nonce = add1(received);
-static const std::string protocol_name = "ping";
 
 protocol_ping_60001::protocol_ping_60001(const session& session,
     const channel::ptr& channel) NOEXCEPT
@@ -47,12 +44,6 @@ protocol_ping_60001::protocol_ping_60001(const session& session,
     tracker<protocol_ping_60001>(session.log())
 {
 }
-
-const std::string& protocol_ping_60001::name() const NOEXCEPT
-{
-    return protocol_name;
-}
-
 void protocol_ping_60001::start() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");

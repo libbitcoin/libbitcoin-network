@@ -19,11 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_ALERT_ITEM_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_ALERT_ITEM_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
-#include <string>
-#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 

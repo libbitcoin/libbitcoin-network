@@ -19,10 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_VERSION_31402_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_VERSION_31402_HPP
 
-#include <cstdint>
-#include <cstddef>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -56,8 +53,6 @@ public:
     void stopping(const code& ec) NOEXCEPT override;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     virtual messages::version version_factory(bool relay=false) const NOEXCEPT;
     virtual void rejection(const code& ec) NOEXCEPT;
 

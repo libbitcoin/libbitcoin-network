@@ -35,7 +35,6 @@ using namespace system;
 using namespace bc::network::messages;
 using namespace std::placeholders;
 
-static const std::string protocol_name = "version";
 static const std::string insufficient_version = "insufficient-version";
 static const std::string insufficient_services = "insufficient-services";
 
@@ -55,11 +54,6 @@ protocol_version_70002::protocol_version_70002(const session& session,
       maximum_services, relay),
     tracker<protocol_version_70002>(session.log())
 {
-}
-
-const std::string& protocol_version_70002::name() const NOEXCEPT
-{
-    return protocol_name;
 }
 
 // Start.

@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/pump.hpp>
 
-#include <cstdint>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/messages/messages.hpp>

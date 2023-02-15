@@ -29,7 +29,6 @@ namespace libbitcoin {
 namespace network {
 
 #define CLASS protocol_ping_31402
-static const std::string protocol_name = "ping";
 
 using namespace system;
 using namespace messages;
@@ -42,11 +41,6 @@ protocol_ping_31402::protocol_ping_31402(const session& session,
         session.settings().channel_heartbeat())),
     tracker<protocol_ping_31402>(session.log())
 {
-}
-
-const std::string& protocol_ping_31402::name() const NOEXCEPT
-{
-    return protocol_name;
 }
 
 // Also invoked by protocol_ping_31402.

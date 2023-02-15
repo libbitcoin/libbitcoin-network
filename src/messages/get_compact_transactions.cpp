@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/messages/get_compact_transactions.hpp>
 
-#include <cstddef>
-#include <cstdint>
 #include <numeric>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>

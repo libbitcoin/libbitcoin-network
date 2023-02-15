@@ -42,12 +42,6 @@ protocol_alert_31402::protocol_alert_31402(const session& session,
 {
 }
 
-const std::string& protocol_alert_31402::name() const NOEXCEPT
-{
-    static const std::string protocol_name = "alert";
-    return protocol_name;
-}
-
 // Start.
 // ----------------------------------------------------------------------------
 

@@ -79,6 +79,7 @@ struct BCT_API settings
     virtual bool inbound_enabled() const NOEXCEPT;
     virtual bool outbound_enabled() const NOEXCEPT;
     virtual bool advertise_enabled() const NOEXCEPT;
+
     virtual size_t maximum_payload() const NOEXCEPT;
     virtual duration retry_timeout() const NOEXCEPT;
     virtual duration connect_timeout() const NOEXCEPT;
@@ -89,6 +90,12 @@ struct BCT_API settings
     virtual duration channel_expiration() const NOEXCEPT;
     virtual size_t minimum_address_count() const NOEXCEPT;
     virtual std::filesystem::path file() const NOEXCEPT;
+
+    virtual bool disabled(const config::address& address) const NOEXCEPT;
+    virtual bool insufficient(const config::address& address) const NOEXCEPT;
+    virtual bool unsupported(const config::address& address) const NOEXCEPT;
+    virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
+    virtual bool whitelisted(const config::authority& authority) const NOEXCEPT;
 };
 
 } // namespace network

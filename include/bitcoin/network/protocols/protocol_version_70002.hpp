@@ -19,9 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_VERSION_70002_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_VERSION_70002_HPP
 
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -53,8 +51,6 @@ public:
     void shake(result_handler&& handle_event) NOEXCEPT override;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     void rejection(const code& ec) NOEXCEPT override;
 
     virtual void handle_receive_reject(const code& ec,

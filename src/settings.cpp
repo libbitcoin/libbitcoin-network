@@ -192,5 +192,30 @@ std::filesystem::path settings::file() const NOEXCEPT
     BC_POP_WARNING()
 }
 
+bool settings::disabled(const config::address& address) const NOEXCEPT
+{
+    return !enable_ipv6 && address.is_v6();
+}
+
+bool settings::insufficient(const config::address& address) const NOEXCEPT
+{
+    return (address.item().services & services_minimum) != services_minimum;
+}
+
+bool settings::unsupported(const config::address& address) const NOEXCEPT
+{
+    return to_bool(address.item().services & invalid_services);
+}
+
+bool settings::blacklisted(const config::authority& authority) const NOEXCEPT
+{
+    return contains(blacklists, authority);
+}
+
+bool settings::whitelisted(const config::authority& authority) const NOEXCEPT
+{
+    return whitelists.empty() || contains(whitelists, authority);
+}
+
 } // namespace network
 } // namespace libbitcoin

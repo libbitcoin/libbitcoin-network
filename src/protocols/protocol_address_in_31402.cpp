@@ -45,12 +45,6 @@ protocol_address_in_31402::protocol_address_in_31402(const session& session,
 {
 }
 
-const std::string& protocol_address_in_31402::name() const NOEXCEPT
-{
-    static const std::string protocol_name = "address_in";
-    return protocol_name;
-}
-
 // Start.
 // ----------------------------------------------------------------------------
 

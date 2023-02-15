@@ -19,9 +19,6 @@
 #include <bitcoin/network/async/thread.hpp>
 
 #include <algorithm>
-#include <cstddef>
-#include <cstdint>
-#include <stdexcept>
 #include <thread>
 
 #ifdef _MSC_VER

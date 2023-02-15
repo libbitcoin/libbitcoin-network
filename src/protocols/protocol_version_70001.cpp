@@ -34,8 +34,6 @@ namespace network {
 using namespace system;
 using namespace bc::network::messages;
 
-static const std::string protocol_name = "version";
-
 protocol_version_70001::protocol_version_70001(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70001(session, channel,
@@ -53,11 +51,6 @@ protocol_version_70001::protocol_version_70001(const session& session,
     relay_(relay),
     tracker<protocol_version_70001>(session.log())
 {
-}
-
-const std::string& protocol_version_70001::name() const NOEXCEPT
-{
-    return protocol_name;
 }
 
 // Utilities.

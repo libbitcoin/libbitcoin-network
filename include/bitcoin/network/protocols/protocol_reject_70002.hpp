@@ -45,8 +45,6 @@ public:
     void start() NOEXCEPT override;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     virtual void handle_receive_reject(const code& ec,
         const messages::reject::cptr& message) NOEXCEPT;
 

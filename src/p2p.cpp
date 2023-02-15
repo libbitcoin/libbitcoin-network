@@ -19,7 +19,6 @@
 #include <bitcoin/network/p2p.hpp>
 
 #include <algorithm>
-#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -478,7 +477,8 @@ code p2p::store_channel(const channel::ptr& channel, bool notify,
     if (is_zero(add1(channel_count_.load())))
         return error::channel_overflow;
 
-    // Store peer address, unless channel/authority is non-distinct.
+    // Store peer address, unless address (ip:port) is non-distinct.
+    // This effectively limits only outbound, and only after handshake.
     if (!authorities_.insert(channel->authority()).second)
         return error::address_in_use;
 

@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/messages/reject.hpp>
 
-#include <cstddef>
-#include <cstdint>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/block.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
