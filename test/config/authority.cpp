@@ -434,15 +434,23 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv4_mapped_ip_address__ipv4)
     BOOST_REQUIRE(net_equal(host.to_address_item(), expected));
 }
 
-BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv4_compatible_ip_address__ipv6_alternative)
+// IPv6 compatible addresses are deprecated, use mapped.
+// datatracker.ietf.org/doc/html/rfc4291#section-2.5.5.1
+BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv4_compatible_ip_address__mapped_not_compatible)
 {
-    const messages::address_item expected
+    const messages::address_item compatible
     {
         0, 0, test_compatible_ip_address, 42,
     };
 
-    const authority host(from_address(expected.ip), expected.port);
-    BOOST_REQUIRE(net_equal(host.to_address_item(), expected));
+    const messages::address_item mapped
+    {
+        0, 0, test_mapped_ip_address, 42,
+    };
+
+    const authority host(from_address(compatible.ip), compatible.port);
+    BOOST_REQUIRE(!net_equal(host.to_address_item(), compatible));
+    BOOST_REQUIRE(net_equal(host.to_address_item(), mapped));
 }
 
 BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv6_address__ipv6_compressed)

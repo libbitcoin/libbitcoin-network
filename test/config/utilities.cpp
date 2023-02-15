@@ -284,6 +284,18 @@ BOOST_AUTO_TEST_CASE(utilities__from_host__v6__expected_v6)
     BOOST_REQUIRE_EQUAL(from_host("[4242::4242]"), expected);
 }
 
+////BOOST_AUTO_TEST_CASE(utilities__from_host__compatible__expected_v4)
+////{
+////    const asio::address expected{ asio::ipv4{ asio::ipv4::bytes_type{ 127, 0, 1, 1 } } };
+////    BOOST_REQUIRE_EQUAL(make_address_v6("[::127.0.0.1]:8333"), expected);
+////}
+////
+////BOOST_AUTO_TEST_CASE(utilities__from_host__mapped__expected_v4)
+////{
+////    const asio::address expected{ asio::ipv4{ asio::ipv4::bytes_type{ 127, 0, 1, 1 } } };
+////    BOOST_REQUIRE_EQUAL(make_address_v6("[::ffff.127.0.0.1]:8333"), expected);
+////}
+
 // to_literal
 
 BOOST_AUTO_TEST_CASE(utilities__to_literal__default__unspecified_v4)

@@ -29,14 +29,21 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// IPv6 normalizes IPv4 addresses as "mapped" addresses, i.e. mapped into the
-/// IPv6 address space. P2P protocol encodes all addresses in this normal form.
-/// For serialization purposes we encode/decode only to/from denormalized form.
-/// IPv6 "host names" are not bracketed, however IPv6 addresses are bracked.
+/// IPv6 supports embedding of an IPv4 address (4 bytes) into IPv6 encodings
+/// (16 bytes). The two formats, "compatible" and "mapped" embed the same
+/// address differently, with the distinction being the level of support of the
+/// device. This is problematic for addresses, as they are device independent.
+/// P2P protocol is 16 bytes and allows for either encoding, however the
+/// "compatible" concoding is deprecated, so we produce only mapped encoding
+/// for P2P serialization. However, as both formats are send via P2P we decode
+/// from all three IPv6 encodings (native, compatible, mapped). For human
+/// readability we serialize adresses as text, for both logging and shutdown
+/// persistence. We refer to this format as denormalized, as it supports only
+/// native IPv4 and native IPv6 serialization. IPv6 host names are "bracketed".
 /// This provides distinction from the port number (otherwise conflating ":").
 /// This form is referred to as "literal" IPv6 encoding (from IPv6 URIs). All
-/// addresses must be literal encodings, all host names are serialized as non-
-/// literal, and deserialized as either literal or non-literal.
+/// text addresses are literal encodings, and all host names are serialized as
+/// non-literal, and deserialized as either literal or non-literal.
 
 /// datatracker.ietf.org/doc/html/rfc4291
 constexpr size_t ipv4_size = 4;
