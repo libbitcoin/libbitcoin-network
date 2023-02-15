@@ -18,9 +18,6 @@
  */
 #include <bitcoin/network/messages/not_found.hpp>
 
-#include <cstddef>
-#include <cstdint>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>

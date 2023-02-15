@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_SEED_31402_HPP
 
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>

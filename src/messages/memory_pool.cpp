@@ -18,9 +18,6 @@
  */
 #include <bitcoin/network/messages/memory_pool.hpp>
 
-#include <cstddef>
-#include <cstdint>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>

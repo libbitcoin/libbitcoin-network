@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/messages/alert_item.hpp>
 
-#include <cstddef>
-#include <cstdint>
 #include <numeric>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>

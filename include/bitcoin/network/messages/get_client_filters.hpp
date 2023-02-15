@@ -22,10 +22,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_GET_CLIENT_FILTERS_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_GET_CLIENT_FILTERS_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>

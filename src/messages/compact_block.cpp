@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/messages/compact_block.hpp>
 
-#include <cstddef>
-#include <cstdint>
 #include <numeric>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/compact_block_item.hpp>

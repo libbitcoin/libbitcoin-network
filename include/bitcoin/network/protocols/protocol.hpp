@@ -21,7 +21,6 @@
 
 #include <functional>
 #include <memory>
-#include <string>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>

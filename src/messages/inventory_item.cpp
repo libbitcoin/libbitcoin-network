@@ -18,9 +18,6 @@
  */
 #include <bitcoin/network/messages/inventory_item.hpp>
 
-#include <cstddef>
-#include <cstdint>
-#include <string>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {

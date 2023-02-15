@@ -19,10 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_VERSION_ACKNOWLEDGE_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_VERSION_ACKNOWLEDGE_HPP
 
-#include <cstddef>
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>

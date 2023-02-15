@@ -18,8 +18,6 @@
  */
 #include <bitcoin/network/messages/get_address.hpp>
 
-#include <cstddef>
-#include <cstdint>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>

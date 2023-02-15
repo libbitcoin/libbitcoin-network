@@ -19,9 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_PING_60001_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_PING_60001_HPP
 
-#include <cstdint>
 #include <memory>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>

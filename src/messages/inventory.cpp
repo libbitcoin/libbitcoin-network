@@ -19,8 +19,6 @@
 #include <bitcoin/network/messages/inventory.hpp>
 
 #include <algorithm>
-#include <cstddef>
-#include <cstdint>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>

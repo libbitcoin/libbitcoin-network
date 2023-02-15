@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/acceptor.hpp>
 
-#include <cstdint>
 #include <functional>
 #include <memory>
 #include <utility>

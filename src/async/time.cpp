@@ -18,9 +18,7 @@
  */
 #include <bitcoin/network/async/time.hpp>
 
-#include <cstddef>
 #include <time.h>
-#include <string>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {

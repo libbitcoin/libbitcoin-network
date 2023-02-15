@@ -19,7 +19,6 @@
 #include <bitcoin/network/p2p.hpp>
 
 #include <algorithm>
-#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <utility>

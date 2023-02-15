@@ -18,9 +18,7 @@
  */
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 
-#include <cstdint>
 #include <functional>
-#include <string>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
