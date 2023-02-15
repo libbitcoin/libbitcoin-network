@@ -47,8 +47,6 @@ public:
     void start() NOEXCEPT override;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     void send_ping() NOEXCEPT override;
     void handle_timer(const code& ec) NOEXCEPT override;
     void handle_receive_ping(const code& ec,

@@ -261,11 +261,6 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    const std::string& name() const NOEXCEPT override
-    {
-        return protocol::name();
-    }
-
     config::authority authority() const NOEXCEPT override
     {
         return protocol::authority();

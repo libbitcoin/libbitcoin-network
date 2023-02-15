@@ -56,8 +56,6 @@ public:
     void stopping(const code& ec) NOEXCEPT override;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     virtual messages::version version_factory(bool relay=false) const NOEXCEPT;
     virtual void rejection(const code& ec) NOEXCEPT;
 

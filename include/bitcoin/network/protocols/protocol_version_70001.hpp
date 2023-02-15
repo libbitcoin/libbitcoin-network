@@ -50,8 +50,6 @@ public:
         uint64_t maximum_services, bool relay) NOEXCEPT;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     messages::version version_factory(bool relay=false) const NOEXCEPT override;
 
 private:

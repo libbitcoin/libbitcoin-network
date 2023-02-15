@@ -44,12 +44,6 @@ protocol_address_out_31402::protocol_address_out_31402(const session& session,
 {
 }
 
-const std::string& protocol_address_out_31402::name() const NOEXCEPT
-{
-    static const std::string protocol_name = "address_ou";
-    return protocol_name;
-}
-
 // Start.
 // ----------------------------------------------------------------------------
 // TODO: As peers connect inbound, broadcast their singleton address.

@@ -30,7 +30,6 @@ namespace libbitcoin {
 namespace network {
 
 #define CLASS protocol_seed_31402
-static const std::string protocol_name = "seed";
 
 using namespace system;
 using namespace messages;
@@ -44,11 +43,6 @@ protocol_seed_31402::protocol_seed_31402(const session& session,
         session.settings().channel_germination())),
     tracker<protocol_seed_31402>(session.log())
 {
-}
-
-const std::string& protocol_seed_31402::name() const NOEXCEPT
-{
-    return protocol_name;
 }
 
 // Start/Stop.

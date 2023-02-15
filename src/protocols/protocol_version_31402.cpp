@@ -34,7 +34,6 @@ namespace network {
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 #define CLASS protocol_version_31402
-static const std::string protocol_name = "version";
 
 using namespace system;
 using namespace messages;
@@ -64,11 +63,6 @@ protocol_version_31402::protocol_version_31402(const session& session,
         session.settings().channel_handshake())),
     tracker<protocol_version_31402>(session.log())
 {
-}
-
-const std::string& protocol_version_31402::name() const NOEXCEPT
-{
-    return protocol_name;
 }
 
 // Utilities.

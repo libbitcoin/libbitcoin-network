@@ -49,8 +49,6 @@ public:
     void stopping(const code& ec) NOEXCEPT override;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     virtual void send_ping() NOEXCEPT;
     virtual void handle_timer(const code& ec) NOEXCEPT;
     virtual void handle_send_ping(const code& ec) NOEXCEPT;

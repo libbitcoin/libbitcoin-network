@@ -53,8 +53,6 @@ public:
     void shake(result_handler&& handle_event) NOEXCEPT override;
 
 protected:
-    const std::string& name() const NOEXCEPT override;
-
     void rejection(const code& ec) NOEXCEPT override;
 
     virtual void handle_receive_reject(const code& ec,

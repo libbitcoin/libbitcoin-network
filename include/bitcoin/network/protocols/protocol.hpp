@@ -115,9 +115,6 @@ protected:
     /// The current thread is on the channel strand.
     virtual bool stranded() const NOEXCEPT;
 
-    /// Declare protocol canonical name.
-    virtual const std::string& name() const NOEXCEPT = 0;
-
     /// The authority of the peer.
     virtual config::authority authority() const NOEXCEPT;
 
