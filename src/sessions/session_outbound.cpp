@@ -217,7 +217,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 
 // Calling connector->stop() either from handle_started or handle_one results
 // in its timer cancelation, which cancels its handler. In either case the
-// address has not been validated, so must be restored to pool here.
+// address has not been validated, so restore to pool here - without update.
 void session_outbound::handle_connector(const code& ec,
     const channel::ptr& channel, const config::address& peer, size_t,
     const channel_handler& handler) NOEXCEPT
@@ -315,6 +315,7 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
+
         ////LOG("Failed to connect outbound channel, " << ec.message());
         defer(BIND3(start_connect, _1, connectors, id), connectors);
         return;
@@ -335,6 +336,7 @@ void session_outbound::handle_channel_start(const code&, const channel::ptr&,
     size_t) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
     ////LOG("Outbound channel start [" << channel->authority() << "] "
     ////    "(" << id << ") " << ec.message());
 }
@@ -350,9 +352,9 @@ void session_outbound::handle_channel_stop(const code& ec,
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
     ////LOG("Outbound channel stop [" << channel->authority() << "] "
     ////    "(" << id << ") " << ec.message());
-
     untake(ec, id, channel);
 
     // The channel stopped following connection, try again without delay.
@@ -367,7 +369,9 @@ void session_outbound::untake(const code& ec, size_t,
 
     if (!ec || stopped())
     {
+        // Set address to current time and services from peer version message.
         const auto peer = channel->updated_address();
+
         ////LOG("Untake [" << config::address(peer) << "] (" << id << ") "
         ////    << ec.message());
         restore(peer, BIND1(handle_untake, _1));
