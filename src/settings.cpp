@@ -142,10 +142,10 @@ size_t settings::maximum_payload() const NOEXCEPT
         to_bool(services_maximum & service::node_witness));
 }
 
-// Randomized from 10% to maximum milliseconds (specified in seconds).
+// Randomized from 50% to maximum milliseconds (specified in seconds).
 duration settings::retry_timeout() const NOEXCEPT
 {
-    const auto from = retry_timeout_seconds * 100_u64;
+    const auto from = retry_timeout_seconds * 500_u64;
     const auto to = retry_timeout_seconds * 1'000_u64;
     return milliseconds{ system::pseudo_random::next(from, to) };
 }
