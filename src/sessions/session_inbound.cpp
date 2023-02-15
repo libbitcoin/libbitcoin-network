@@ -189,27 +189,28 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
 
-    // Weak reference safe as sessions outlive protocols.
-    const auto& self = *this;
-    const auto enable_relay = settings().enable_relay;
-    const auto enable_reject = settings().enable_reject;
-    const auto maximum_version = settings().protocol_maximum;
-    const auto maximum_services = settings().services_maximum;
-
     // Inbound does not require any node services (e.g. bitnodes.io is zero).
     constexpr auto minimum_services = messages::service::node_none;
 
+    // Weak reference safe as sessions outlive protocols.
+    const auto& self = *this;
+    const auto maximum_version = settings().protocol_maximum;
+    const auto maximum_services = settings().services_maximum;
+    const auto extended_version = maximum_version >= messages::level::bip37;
+    const auto enable_transaction = settings().enable_transaction;
+    const auto enable_reject = settings().enable_reject &&
+        maximum_version >= messages::level::bip61;
+
     // Protocol must pause the channel after receiving version and verack.
 
-    // Reject is supported starting at bip61 (70002) and later deprecated.
-    if (enable_reject && maximum_version >= messages::level::bip61)
+    // Reject is deprecated.
+    if (enable_reject)
         channel->attach<protocol_version_70002>(self, minimum_services,
-            maximum_services, enable_relay)->shake(std::move(handler));
+            maximum_services, enable_transaction)->shake(std::move(handler));
 
-    // Relay is supported starting at bip37 (70001).
-    else if (maximum_version >= messages::level::bip37)
+    else if (extended_version)
         channel->attach<protocol_version_70001>(self, minimum_services,
-            maximum_services, enable_relay)->shake(std::move(handler));
+            maximum_services, enable_transaction)->shake(std::move(handler));
 
     else
         channel->attach<protocol_version_31402>(self, minimum_services,

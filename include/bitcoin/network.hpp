@@ -93,7 +93,8 @@
 #include <bitcoin/network/net/pump.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
-#include <bitcoin/network/protocols/protocol_address_31402.hpp>
+#include <bitcoin/network/protocols/protocol_address_in_31402.hpp>
+#include <bitcoin/network/protocols/protocol_address_out_31402.hpp>
 #include <bitcoin/network/protocols/protocol_alert_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_31402.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>

@@ -45,9 +45,10 @@ struct BCT_API settings
     uint64_t services_maximum;
     uint64_t services_minimum;
     uint64_t invalid_services;
+    bool enable_address;
     bool enable_alert;
     bool enable_reject;
-    bool enable_relay;
+    bool enable_transaction;
     bool enable_ipv6;
     bool enable_loopback;
     bool validate_checksum;

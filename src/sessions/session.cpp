@@ -148,18 +148,19 @@ void session::attach_handshake(const channel::ptr& channel,
 
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
-    const auto enable_reject = settings().enable_reject;
     const auto maximum_version = settings().protocol_maximum;
+    const auto extended_version = maximum_version >= messages::level::bip37;
+    const auto enable_reject = settings().enable_reject &&
+        maximum_version >= messages::level::bip61;
 
     // Protocol must pause the channel after receiving version and verack.
 
-    // Reject is supported starting at bip61 (70002) and later deprecated.
-    if (enable_reject && maximum_version >= messages::level::bip61)
+    // Reject is deprecated.
+    if (enable_reject)
         channel->attach<protocol_version_70002>(self)
             ->shake(std::move(handler));
 
-    // Relay is supported starting at bip37 (70001).
-    else if (maximum_version >= messages::level::bip37)
+    else if (extended_version)
         channel->attach<protocol_version_70001>(self)
             ->shake(std::move(handler));
 
@@ -267,10 +268,13 @@ void session::attach_protocols(const channel::ptr& channel) const NOEXCEPT
     // Weak reference safe as sessions outlive protocols.
     const auto& self = *this;
     const auto enable_alert = settings().enable_alert;
-    const auto enable_reject = settings().enable_reject;
+    const auto enable_address = settings().enable_address;
     const auto negotiated_version = channel->negotiated_version();
+    const auto enable_pong = negotiated_version >= messages::level::bip31;
+    const auto enable_reject = settings().enable_reject &&
+        negotiated_version >= messages::level::bip61;
 
-    if (negotiated_version >= messages::level::bip31)
+    if (enable_pong)
         channel->attach<protocol_ping_60001>(self)->start();
     else
         channel->attach<protocol_ping_31402>(self)->start();
@@ -279,11 +283,15 @@ void session::attach_protocols(const channel::ptr& channel) const NOEXCEPT
     if (enable_alert)
         channel->attach<protocol_alert_31402>(self)->start();
 
-    // Reject is supported starting at bip61 (70002) and later deprecated.
-    if (enable_reject && negotiated_version >= messages::level::bip61)
+    // Reject is deprecated.
+    if (enable_reject)
         channel->attach<protocol_reject_70002>(self)->start();
 
-    channel->attach<protocol_address_31402>(self)->start();
+    if (enable_address)
+    {
+        channel->attach<protocol_address_in_31402>(self)->start();
+        channel->attach<protocol_address_out_31402>(self)->start();
+    }
 }
 
 void session::handle_channel_stopped(const code& ec,

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2021 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(protocol_tests)
 
-BOOST_AUTO_TEST_CASE(protocol_address_31402_tests)
+BOOST_AUTO_TEST_CASE(protocol_address_in_31402_tests)
 {
     BOOST_REQUIRE(true);
 }
