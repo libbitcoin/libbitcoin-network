@@ -60,7 +60,7 @@ public:
         const auto protocol = std::make_shared<Protocol>(session,
             shared_from_base<channel>(), std::forward<Args>(args)...);
 
-        // Protocol lifetime is ensured by the channel stop subscriber.
+        // Protocol lifetime is ensured by the channel (proxy) stop subscriber.
         subscribe_stop([=](const code& ec) NOEXCEPT
         {
             protocol->stopping(ec);

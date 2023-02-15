@@ -97,7 +97,7 @@ void session_inbound::handle_started(const code& ec,
 
     if (!error_code)
     {
-        subscribe_stop([=](const network::code&) NOEXCEPT
+        subscribe_stop([=](const code&) NOEXCEPT
         {
             acceptor->stop();
         });

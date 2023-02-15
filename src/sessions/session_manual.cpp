@@ -98,8 +98,6 @@ void session_manual::connect(const config::endpoint& peer,
     // Create a connector for each manual connection.
     const auto connector = create_connector();
 
-    // TODO: use resubscriber for session stop (connectors/acceptors only).
-    // TODO: use pointer id of captured connector/acceptor.
     subscribe_stop([=](const code&) NOEXCEPT
     {
         connector->stop();

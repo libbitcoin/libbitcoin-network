@@ -292,7 +292,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
 
     LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
     LOG(prefix << " [" << authority() << "] protocol version ("
-        << message->value << ") user agent: " << message->user_agent);
+        << message->value << ") agent: " << message->user_agent);
 
     if (to_bool(message->services & invalid_services_))
     {

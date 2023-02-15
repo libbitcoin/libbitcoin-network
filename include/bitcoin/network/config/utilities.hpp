@@ -37,7 +37,7 @@ namespace config {
 /// "compatible" concoding is deprecated, so we produce only mapped encoding
 /// for P2P serialization. However, as both formats are send via P2P we decode
 /// from all three IPv6 encodings (native, compatible, mapped). For human
-/// readability we serialize adresses as text, for both logging and shutdown
+/// readability we serialize addresses as text, for both logging and shutdown
 /// persistence. We refer to this format as denormalized, as it supports only
 /// native IPv4 and native IPv6 serialization. IPv6 host names are "bracketed".
 /// This provides distinction from the port number (otherwise conflating ":").

@@ -393,6 +393,7 @@ void session::subscribe_stop(result_handler&& handler) NOEXCEPT
 
 void session::unsubscribe_close() NOEXCEPT
 {
+    // key_ is used for session subscribe, and passed by p2p on construct.
     network_.unsubscribe_close(key_);
 }
 
