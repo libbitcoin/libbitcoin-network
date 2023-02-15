@@ -467,4 +467,182 @@ BOOST_AUTO_TEST_CASE(settings__minimum_address_count__always__outbound_product)
     BOOST_REQUIRE_EQUAL(instance.minimum_address_count(), product);
 }
 
+BOOST_AUTO_TEST_CASE(settings__disabled__enable_ipv6__both_false)
+{
+    settings instance{};
+    instance.enable_ipv6 = true;
+    BOOST_REQUIRE(!instance.disabled(config::address("42.42.42.42:27")));
+    BOOST_REQUIRE(!instance.disabled(config::address("[42:42::42:2]:27")));
+}
+
+BOOST_AUTO_TEST_CASE(settings__disabled__ipv4__false)
+{
+    settings instance{};
+    instance.enable_ipv6 = false;
+    BOOST_REQUIRE(!instance.disabled({ "42.42.42.42" }));
+    BOOST_REQUIRE(!instance.disabled({ "42.42.42.42:42" }));
+    instance.enable_ipv6 = true;
+    BOOST_REQUIRE(!instance.disabled({ "42.42.42.42" }));
+    BOOST_REQUIRE(!instance.disabled({ "42.42.42.42:42" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__disabled__ipv6__expected)
+{
+    settings instance{};
+    instance.enable_ipv6 = false;
+    BOOST_REQUIRE(instance.disabled({ "[2001:db8::2]" }));
+    BOOST_REQUIRE(instance.disabled({ "[2001:db8::2]:42" }));
+    instance.enable_ipv6 = true;
+    BOOST_REQUIRE(!instance.disabled({ "[2001:db8::2]" }));
+    BOOST_REQUIRE(!instance.disabled({ "[2001:db8::2]:42" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__insufficient__default__false)
+{
+    const logger log{};    settings instance{};
+    constexpr uint64_t services = 0;
+    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    instance.services_minimum = 0;
+    BOOST_REQUIRE(!instance.insufficient(loop));
+    instance.services_minimum = 1;
+    BOOST_REQUIRE(instance.insufficient(loop));
+}
+
+BOOST_AUTO_TEST_CASE(settings__insufficient__match__expected)
+{
+    settings instance{};
+    constexpr uint64_t services = 0b01010101;
+    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    instance.services_minimum = services;
+    BOOST_REQUIRE(!instance.insufficient(loop));
+    instance.services_minimum = services | 0b00000010;
+    BOOST_REQUIRE(instance.insufficient(loop));
+    instance.services_minimum = services & 0b11111110;
+    BOOST_REQUIRE(!instance.insufficient(loop));
+}
+
+BOOST_AUTO_TEST_CASE(settings__unsupported__default__false)
+{
+    settings instance{};
+    constexpr uint64_t services = 0;
+    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    instance.invalid_services = 0;
+    BOOST_REQUIRE(!instance.unsupported(loop));
+    instance.invalid_services = 1;
+    BOOST_REQUIRE(!instance.unsupported(loop));
+}
+
+BOOST_AUTO_TEST_CASE(settings__unsupported__match__expected)
+{
+    settings instance{};
+    constexpr uint64_t services = 0b01010101;
+    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    instance.invalid_services = services;
+    BOOST_REQUIRE(instance.unsupported(loop));
+    instance.invalid_services = services | 0b00000010;
+    BOOST_REQUIRE(instance.unsupported(loop));
+    instance.invalid_services = services & 0b11111110;
+    BOOST_REQUIRE(instance.unsupported(loop));
+    instance.invalid_services = 0b10101010;
+    BOOST_REQUIRE(!instance.unsupported(loop));
+    instance.invalid_services = 0;
+    BOOST_REQUIRE(!instance.unsupported(loop));
+}
+
+BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv4_subnet__expected)
+{
+    settings instance{};
+    instance.whitelists.clear();
+    BOOST_REQUIRE(instance.whitelisted({ "42.42.42.42" }));
+    instance.whitelists.emplace_back("12.12.12.12");
+    instance.whitelists.emplace_back("24.24.24.24");
+    BOOST_REQUIRE(!instance.whitelisted({ "42.42.42.42" }));
+    instance.whitelists.emplace_back("42.42.42.0/24");
+    BOOST_REQUIRE(instance.whitelisted({ "42.42.42.42" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv4_host__expected)
+{
+    settings instance{};
+    instance.whitelists.clear();
+    BOOST_REQUIRE(instance.whitelisted({ "24.24.24.24" }));
+    instance.whitelists.emplace_back("12.12.12.12");
+    instance.whitelists.emplace_back("42.42.42.0/24");
+    BOOST_REQUIRE(!instance.whitelisted({ "24.24.24.24" }));
+    instance.whitelists.emplace_back("24.24.24.24");
+    BOOST_REQUIRE(instance.whitelisted({ "24.24.24.24" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv6_subnet__expected)
+{
+    settings instance{};
+    instance.whitelists.clear();
+    BOOST_REQUIRE(instance.whitelisted({ "[2020:db8::3]" }));
+    instance.whitelists.emplace_back("[2020:db8::1]");
+    instance.whitelists.emplace_back("[2020:db8::2]");
+    BOOST_REQUIRE(!instance.whitelisted({ "[2020:db8::3]" }));
+    instance.whitelists.emplace_back("[2020:db8::2]/64");
+    BOOST_REQUIRE(instance.whitelisted({ "[2020:db8::3]" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv6_host__expected)
+{
+    settings instance{};
+    instance.whitelists.clear();
+    BOOST_REQUIRE(instance.whitelisted({ "[2020:db8::3]" }));
+    instance.whitelists.emplace_back("[2020:db8::1]");
+    instance.whitelists.emplace_back("[2020:db8::2]");
+    BOOST_REQUIRE(!instance.whitelisted({ "[2020:db8::3]" }));
+    instance.whitelists.emplace_back("[2020:db8::3]");
+    BOOST_REQUIRE(instance.whitelisted({ "[2020:db8::3]" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv4_subnet__expected)
+{
+    settings instance{};
+    instance.whitelists.clear();
+    BOOST_REQUIRE(!instance.blacklisted({ "42.42.42.42" }));
+    instance.blacklists.emplace_back("12.12.12.12");
+    instance.blacklists.emplace_back("24.24.24.24");
+    BOOST_REQUIRE(!instance.blacklisted({ "42.42.42.42" }));
+    instance.blacklists.emplace_back("42.42.42.0/24");
+    BOOST_REQUIRE(instance.blacklisted({ "42.42.42.42" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv4_host__expected)
+{
+    settings instance{};
+    instance.whitelists.clear();
+    BOOST_REQUIRE(!instance.blacklisted({ "24.24.24.24" }));
+    instance.blacklists.emplace_back("12.12.12.12");
+    instance.blacklists.emplace_back("42.42.42.0/24");
+    BOOST_REQUIRE(!instance.blacklisted({ "24.24.24.24" }));
+    instance.blacklists.emplace_back("24.24.24.24");
+    BOOST_REQUIRE(instance.blacklisted({ "24.24.24.24" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_subnet__expected)
+{
+    settings instance{};
+    instance.whitelists.clear();
+    BOOST_REQUIRE(!instance.blacklisted({ "[2020:db8::3]" }));
+    instance.blacklists.emplace_back("[2020:db8::1]");
+    instance.blacklists.emplace_back("[2020:db8::2]");
+    BOOST_REQUIRE(!instance.blacklisted({ "[2020:db8::3]" }));
+    instance.blacklists.emplace_back("[2020:db8::2]/64");
+    BOOST_REQUIRE(instance.blacklisted({ "[2020:db8::3]" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_host__expected)
+{
+    settings instance{};
+    instance.whitelists.clear();
+    BOOST_REQUIRE(!instance.blacklisted({ "[2020:db8::3]" }));
+    instance.blacklists.emplace_back("[2020:db8::1]");
+    instance.blacklists.emplace_back("[2020:db8::2]");
+    BOOST_REQUIRE(!instance.blacklisted({ "[2020:db8::3]" }));
+    instance.blacklists.emplace_back("[2020:db8::3]");
+    BOOST_REQUIRE(instance.blacklisted({ "[2020:db8::3]" }));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
