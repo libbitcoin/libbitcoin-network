@@ -786,7 +786,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
 ////    const logger log{};
 ////    settings set(selection::mainnet);
 ////    set.seeds.resize(1);
-////    set.channel_germination_seconds = 5;
+////    set.seeding_timeout_seconds = 5;
 ////    set.outbound_connections = 1;
 ////    set.host_pool_capacity = 1;
 ////    mock_p2p<> net(set, log);

@@ -58,8 +58,8 @@ settings::settings() NOEXCEPT
     connect_batch_size(5),
     retry_timeout_seconds(1),
     connect_timeout_seconds(5),
-    channel_handshake_seconds(30),
-    channel_germination_seconds(30),
+    handshake_timeout_seconds(30),
+    seeding_timeout_seconds(30),
     channel_heartbeat_minutes(5),
     channel_inactivity_minutes(10),
     channel_expiration_minutes(1440),
@@ -160,12 +160,12 @@ duration settings::connect_timeout() const NOEXCEPT
 
 duration settings::channel_handshake() const NOEXCEPT
 {
-    return seconds(channel_handshake_seconds);
+    return seconds(handshake_timeout_seconds);
 }
 
 duration settings::channel_germination() const NOEXCEPT
 {
-    return seconds(channel_germination_seconds);
+    return seconds(seeding_timeout_seconds);
 }
 
 duration settings::channel_heartbeat() const NOEXCEPT
