@@ -18,6 +18,8 @@
  */
 #include <bitcoin/network/protocols/protocol_address_in_31402.hpp>
 
+#include <algorithm>
+#include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -73,9 +75,19 @@ void protocol_address_in_31402::start() NOEXCEPT
 address::cptr protocol_address_in_31402::filter(
     const address_items& items) const NOEXCEPT
 {
-    // TODO: disabled, insufficient, unsupported (excludes whitelisted).
-    // TODO: prove the ptr<non-const> copy to ptr<const> avoids copy.
-    return std::make_shared<address>(difference(items, settings().blacklists));
+    const auto message = std::make_shared<address>(address
+    {
+        difference(items, settings().blacklists)
+    });
+
+    std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
+    {
+        return settings().disabled(address)
+            || settings().insufficient(address)
+            || settings().unsupported(address);
+    });
+
+    return message;
 }
 
 void protocol_address_in_31402::handle_receive_address(const code& ec,
@@ -106,7 +118,7 @@ void protocol_address_in_31402::handle_receive_address(const code& ec,
     const auto filtered = filter(message->addresses);
 
     // This allows previously-rejected addresses.
-    save(message,
+    save(filtered,
         BIND4(handle_save_address, _1, _2, filtered->addresses.size(), size));
 }
 

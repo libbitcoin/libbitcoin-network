@@ -45,7 +45,7 @@ public:
     void start() NOEXCEPT override;
 
 protected:
-    messages::address::cptr filter(
+    virtual messages::address::cptr filter(
         const messages::address_items& message) const NOEXCEPT;
 
     virtual void handle_receive_address(const code& ec,
