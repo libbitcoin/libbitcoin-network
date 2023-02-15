@@ -49,7 +49,6 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 session::session(p2p& network, size_t key) NOEXCEPT
   : network_(network),
     key_(key),
-    timeout_(network.network_settings().retry_timeout()),
     stop_subscriber_(network.strand()),
     defer_subscriber_(network.strand()),
     pend_subscriber_(network.strand()),
@@ -338,9 +337,11 @@ void session::defer(result_handler&& handler, const uintptr_t& id) NOEXCEPT
         return;
     }
 
-    // Subscribe completes before handle_timer can be invoked (timer stranded).
     const auto timer = std::make_shared<deadline>(log(), network_.strand());
-    timer->start(BIND3(handle_timer, _1, id, std::move(handler)), timeout_);
+
+    timer->start(BIND3(handle_timer, _1, id, std::move(handler)),
+        settings().retry_timeout());
+
     defer_subscriber_.subscribe(BIND3(handle_defer, _1, id, timer), id);
 }
 
