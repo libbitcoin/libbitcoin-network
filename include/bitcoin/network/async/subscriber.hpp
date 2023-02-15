@@ -41,8 +41,8 @@ public:
     subscriber(asio::strand& strand) NOEXCEPT;
     ~subscriber() NOEXCEPT;
 
-    /// If stopped, handler is invoked with error::subscriber_stopped/defaults,
-    /// handler dropped. Otherwise handler is held until stop. False if failed.
+    /// If stopped, handler is invoked with error::subscriber_stopped/defaults
+    /// and dropped. Otherwise handler is held until stop. False if failed.
     bool subscribe(handler&& handler) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.
