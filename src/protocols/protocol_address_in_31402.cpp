@@ -98,7 +98,8 @@ void protocol_address_in_31402::handle_receive_address(const code& ec,
     received_ = true;
     if (message->addresses.front() == outbound())
     {
-        LOG("Dropping redundant address from [" << authority() << "]");
+        // This is very common.
+        ////LOG("Dropping redundant address from [" << authority() << "]");
         return;
     }
 
