@@ -402,20 +402,20 @@ BOOST_AUTO_TEST_CASE(settings__maximum_payload__maximum_maximum_services__expect
     BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
 }
 
-BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__connect_timeout_seconds)
+BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__between_zero_and_retry_timeout_seconds)
 {
     settings instance{};
-    const auto expected = 42;
-    instance.retry_timeout_seconds = expected;
-    BOOST_REQUIRE(instance.retry_timeout() == seconds(expected));
+    instance.retry_timeout_seconds = 42;
+    BOOST_REQUIRE(instance.retry_timeout() > seconds{ zero });
+    BOOST_REQUIRE(instance.retry_timeout() <= seconds{ instance.retry_timeout_seconds });
 }
 
-BOOST_AUTO_TEST_CASE(settings__connect_timeout__always__connect_timeout_seconds)
+BOOST_AUTO_TEST_CASE(settings__connect_timeout__always__between_zero_and_connect_timeout_seconds)
 {
     settings instance{};
-    const auto expected = 42;
-    instance.connect_timeout_seconds = expected;
-    BOOST_REQUIRE(instance.connect_timeout() == seconds(expected));
+    instance.connect_timeout_seconds = 42;
+    BOOST_REQUIRE(instance.connect_timeout() > seconds{ zero });
+    BOOST_REQUIRE(instance.connect_timeout() <= seconds{ instance.connect_timeout_seconds });
 }
 
 BOOST_AUTO_TEST_CASE(settings__channel_handshake__always__channel_handshake_seconds)
