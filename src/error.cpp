@@ -44,7 +44,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { file_load, "failed to load file" },
     { file_save, "failed to save file" },
     { file_system, "file system error" },
-    { file_payload, "file payload error" },
+    { file_exception, "file exception" },
 
     // general I/O failures
     { bad_stream, "bad data stream" },

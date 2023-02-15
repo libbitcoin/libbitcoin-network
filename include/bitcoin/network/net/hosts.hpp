@@ -93,6 +93,9 @@ private:
         BC_POP_WARNING()
     }
 
+    // Push a buffer entry if the line is valid.
+    void push_valid(const std::string& line) NOEXCEPT;
+
     // These are thread safe.
     const std::filesystem::path file_path_;
     std::atomic<size_t> count_{};

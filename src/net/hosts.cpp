@@ -48,6 +48,18 @@ size_t hosts::count() const NOEXCEPT
     return count_.load(std::memory_order_relaxed);
 }
 
+// private
+inline void hosts::push_valid(const std::string& line) NOEXCEPT
+{
+    try
+    {
+        buffer_.push_back(config::address{ line }.item());
+    }
+    catch (std::exception&)
+    {
+    }
+}
+
 code hosts::start() NOEXCEPT
 {
     if (disabled_)
@@ -55,20 +67,18 @@ code hosts::start() NOEXCEPT
 
     try
     {
-        ifstream file(file_path_, ifstream::in);
+        ifstream file{ file_path_, ifstream::in };
         if (!file.good())
             return error::success;
 
-        std::string line;
-        while (std::getline(file, line))
-            buffer_.push_back(config::address(line).item());
+        for (std::string line{}; std::getline(file, line); push_valid(line));
 
         if (file.bad())
             return error::file_load;
     }
     catch (const std::exception&)
     {
-        return error::file_payload;
+        return error::file_exception;
     }
 
     if (buffer_.empty())
@@ -98,19 +108,19 @@ code hosts::stop() NOEXCEPT
 
     try
     {
-        ofstream file(file_path_, ofstream::out);
+        ofstream file{ file_path_, ofstream::out };
         if (!file.good())
             return error::file_save;
 
         for (const auto& entry: buffer_)
-            file << config::address(entry) << std::endl;
+            file << config::address{ entry } << std::endl;
 
         if (file.bad())
             return error::file_save;
     }
     catch (const std::exception&)
     {
-        return error::file_save;
+        return error::file_exception;
     }
 
     buffer_.clear();
