@@ -169,7 +169,7 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
     if (ec)
         stop(ec);
 
-    LOG("Accepted (" << accepted << " < " << filtered << " < " << start << ") "
+    LOG("Accepted (" << start << ">" << filtered << ">" << accepted << ") "
         "addresses from seed [" << authority() << "].");
 
     // Multiple address messages are allowed, but do not delay session.
