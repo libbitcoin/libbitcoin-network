@@ -102,8 +102,8 @@ void protocol_address_in_31402::handle_receive_address(const code& ec,
     const auto size = message->addresses.size();
     if (inbound_ && (received_ || !is_one(size)))
     {
-        LOG("Unsolicited addresses from [" << authority() << "]");
-        stop(error::protocol_violation);
+        LOG("Ignoring unsolicited addresses from [" << authority() << "]");
+        ////stop(error::protocol_violation);
         return;
     }
 
@@ -131,8 +131,7 @@ void protocol_address_in_31402::handle_save_address(const code& ec,
     if (stopped(ec))
         return;
 
-    LOG("Accepted ("
-        << accepted << " of " << filtered << " of " << start << ") "
+    LOG("Accepted (" << accepted << " < " << filtered << " < " << start << ") "
         "addresses from [" << authority() << "].");
 }
 

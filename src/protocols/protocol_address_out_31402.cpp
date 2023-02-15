@@ -86,6 +86,7 @@ void protocol_address_out_31402::handle_receive_get_address(const code& ec,
     if (sent_)
     {
         LOG("Ignoring duplicate address request from [" << authority() << "]");
+        ////stop(error::protocol_violation);
         return;
     }
 

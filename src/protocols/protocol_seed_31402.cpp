@@ -60,7 +60,7 @@ void protocol_seed_31402::start() NOEXCEPT
         return;
 
     SUBSCRIBE2(address, handle_receive_address, _1, _2);
-    SUBSCRIBE2(address, handle_receive_get_address, _1, _2);
+    SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
     SEND1(get_address{}, handle_send_get_address, _1);
 
     protocol::start();
@@ -132,6 +132,7 @@ address::cptr protocol_seed_31402::filter(
     return message;
 }
 
+// Allow and handle any number of address messages when seeding.
 void protocol_seed_31402::handle_receive_address(const code& ec,
     const address::cptr& message) NOEXCEPT
 {
@@ -142,7 +143,7 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
 
     const auto size = message->addresses.size();
 
-    // Do not store redundant adresses, outbound() is known address.
+    // Do not store redundant addresses, outbound() is known address.
     if (is_one(size) && (message->addresses.front() == outbound()))
     {
         ////LOG("Dropping redundant address from seed [" << authority() << "]");
@@ -168,8 +169,7 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
     if (ec)
         stop(ec);
 
-    LOG("Accepted ("
-        << accepted << " of " << filtered << " of " << start << ") "
+    LOG("Accepted (" << accepted << " < " << filtered << " < " << start << ") "
         "addresses from seed [" << authority() << "].");
 
     // Multiple address messages are allowed, but do not delay session.
@@ -189,6 +189,7 @@ address_item protocol_seed_31402::self() const NOEXCEPT
         settings().services_maximum);
 }
 
+// Only send 0..1 address in response to each get_address when seeding.
 void protocol_seed_31402::handle_receive_get_address(const code& ec,
     const get_address::cptr&) NOEXCEPT
 {
@@ -197,9 +198,9 @@ void protocol_seed_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return;
 
+    // Advertise self if configured for inbound and valid self address.
     if (settings().advertise_enabled())
     {
-        // Only send 0..1 address in response to get_address when seeding.
         SEND1(address{ { self() } }, handle_send_address, _1);
         return;
     }
