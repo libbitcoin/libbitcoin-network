@@ -135,13 +135,13 @@ BOOST_AUTO_TEST_CASE(error_t__code__file_system__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "file system error");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__file_payload__true_exected_message)
+BOOST_AUTO_TEST_CASE(error_t__code__file_exception__true_exected_message)
 {
-    constexpr auto value = error::file_payload;
+    constexpr auto value = error::file_exception;
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "file payload error");
+    BOOST_REQUIRE_EQUAL(ec.message(), "file exception");
 }
 
 // general I/O failures

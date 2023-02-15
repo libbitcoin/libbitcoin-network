@@ -50,8 +50,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
     BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
-    BOOST_REQUIRE_EQUAL(instance.channel_handshake_seconds, 30u);
-    BOOST_REQUIRE_EQUAL(instance.channel_germination_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
     BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
-    BOOST_REQUIRE_EQUAL(instance.channel_handshake_seconds, 30u);
-    BOOST_REQUIRE_EQUAL(instance.channel_germination_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
@@ -147,8 +147,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
     BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
-    BOOST_REQUIRE_EQUAL(instance.channel_handshake_seconds, 30u);
-    BOOST_REQUIRE_EQUAL(instance.channel_germination_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
@@ -202,8 +202,8 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(instance.connect_batch_size, 5u);
     BOOST_REQUIRE_EQUAL(instance.retry_timeout_seconds, 1u);
     BOOST_REQUIRE_EQUAL(instance.connect_timeout_seconds, 5u);
-    BOOST_REQUIRE_EQUAL(instance.channel_handshake_seconds, 30u);
-    BOOST_REQUIRE_EQUAL(instance.channel_germination_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.handshake_timeout_seconds, 30u);
+    BOOST_REQUIRE_EQUAL(instance.seeding_timeout_seconds, 30u);
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
@@ -402,27 +402,27 @@ BOOST_AUTO_TEST_CASE(settings__maximum_payload__maximum_maximum_services__expect
     BOOST_REQUIRE_EQUAL(instance.maximum_payload(), 4'000'000u);
 }
 
-BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__connect_timeout_seconds)
+BOOST_AUTO_TEST_CASE(settings__retry_timeout__always__between_zero_and_retry_timeout_seconds)
 {
     settings instance{};
-    const auto expected = 42;
-    instance.retry_timeout_seconds = expected;
-    BOOST_REQUIRE(instance.retry_timeout() == seconds(expected));
+    instance.retry_timeout_seconds = 42;
+    BOOST_REQUIRE(instance.retry_timeout() > seconds{ zero });
+    BOOST_REQUIRE(instance.retry_timeout() <= seconds{ instance.retry_timeout_seconds });
 }
 
-BOOST_AUTO_TEST_CASE(settings__connect_timeout__always__connect_timeout_seconds)
+BOOST_AUTO_TEST_CASE(settings__connect_timeout__always__between_zero_and_connect_timeout_seconds)
 {
     settings instance{};
-    const auto expected = 42;
-    instance.connect_timeout_seconds = expected;
-    BOOST_REQUIRE(instance.connect_timeout() == seconds(expected));
+    instance.connect_timeout_seconds = 42;
+    BOOST_REQUIRE(instance.connect_timeout() > seconds{ zero });
+    BOOST_REQUIRE(instance.connect_timeout() <= seconds{ instance.connect_timeout_seconds });
 }
 
-BOOST_AUTO_TEST_CASE(settings__channel_handshake__always__channel_handshake_seconds)
+BOOST_AUTO_TEST_CASE(settings__channel_handshake__always__handshake_timeout_seconds)
 {
     settings instance{};
     const auto expected = 42u;
-    instance.channel_handshake_seconds = expected;
+    instance.handshake_timeout_seconds = expected;
     BOOST_REQUIRE(instance.channel_handshake() == seconds(expected));
 }
 
@@ -450,11 +450,11 @@ BOOST_AUTO_TEST_CASE(settings__channel_expiration__always__channel_expiration_mi
     BOOST_REQUIRE(instance.channel_expiration() == minutes(expected));
 }
 
-BOOST_AUTO_TEST_CASE(settings__channel_germination__always__channel_germination_seconds)
+BOOST_AUTO_TEST_CASE(settings__channel_germination__always__seeding_timeout_seconds)
 {
     settings instance{};
     const auto expected = 42u;
-    instance.channel_germination_seconds = expected;
+    instance.seeding_timeout_seconds = expected;
     BOOST_REQUIRE(instance.channel_germination() == seconds(expected));
 }
 

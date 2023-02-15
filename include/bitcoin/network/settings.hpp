@@ -59,8 +59,8 @@ struct BCT_API settings
     uint32_t connect_batch_size;
     uint32_t retry_timeout_seconds;
     uint32_t connect_timeout_seconds;
-    uint32_t channel_handshake_seconds;
-    uint32_t channel_germination_seconds;
+    uint32_t handshake_timeout_seconds;
+    uint32_t seeding_timeout_seconds;
     uint32_t channel_heartbeat_minutes;
     uint32_t channel_inactivity_minutes;
     uint32_t channel_expiration_minutes;
@@ -79,7 +79,6 @@ struct BCT_API settings
     virtual bool inbound_enabled() const NOEXCEPT;
     virtual bool outbound_enabled() const NOEXCEPT;
     virtual bool advertise_enabled() const NOEXCEPT;
-
     virtual size_t maximum_payload() const NOEXCEPT;
     virtual duration retry_timeout() const NOEXCEPT;
     virtual duration connect_timeout() const NOEXCEPT;

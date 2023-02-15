@@ -68,7 +68,7 @@ public:
     /// Take one random host from the table (non-const).
     virtual void take(const address_item_handler& handler) NOEXCEPT;
 
-    /// Save a random set of hosts (e.g obtained from peer), count of accept.
+    /// Save random subset of hosts (e.g obtained from peer), count of accept.
     virtual size_t save(const messages::address_items& hosts) NOEXCEPT;
 
     /// Obtain a random set of hosts (e.g for relay to peer).
@@ -92,6 +92,9 @@ private:
         return find(host) != buffer_.end();
         BC_POP_WARNING()
     }
+
+    // Push a buffer entry if the line is valid.
+    void push_valid(const std::string& line) NOEXCEPT;
 
     // These are thread safe.
     const std::filesystem::path file_path_;

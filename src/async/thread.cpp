@@ -21,7 +21,7 @@
 #include <algorithm>
 #include <thread>
 
-#ifdef _MSC_VER
+#ifdef HAVE_MSC
     #include <windows.h>
 #else
     #include <unistd.h>
@@ -62,7 +62,7 @@ void set_priority(thread_priority priority) NOEXCEPT
 {
     const auto prioritization = get_priority(priority);
 
-#if defined(_MSC_VER)
+#if defined(HAVE_MSC)
     SetThreadPriority(GetCurrentThread(), prioritization);
 #elif defined(PRIO_THREAD)
     setpriority(PRIO_THREAD, pthread_self(), prioritization);

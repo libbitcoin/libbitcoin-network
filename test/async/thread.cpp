@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-#ifdef _MSC_VER
+#if defined(HAVE_MSC)
     #include <windows.h>
 #else
     #include <unistd.h>
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_SUITE(thread_tests)
 
 static int get_thread_priority_test()
 {
-#if defined(_MSC_VER)
+#if defined(HAVE_MSC)
     return GetThreadPriority(GetCurrentThread());
 #elif defined(PRIO_THREAD)
     return getpriority(PRIO_LWP, pthread_self());
@@ -49,7 +49,7 @@ static int get_thread_priority_test()
 
 void set_thread_priority_test(int priority)
 {
-#if defined(_MSC_VER)
+#if defined(HAVE_MSC)
     SetThreadPriority(GetCurrentThread(), priority);
 #elif defined(PRIO_THREAD)
     setpriority(PRIO_THREAD, pthread_self(), priority);
@@ -58,7 +58,7 @@ void set_thread_priority_test(int priority)
 #endif
 }
 
-#ifdef _MSC_VER
+#ifdef HAVE_MSC
 
 BOOST_AUTO_TEST_CASE(thread__set_thread_priorites__all__set_as_expected)
 {

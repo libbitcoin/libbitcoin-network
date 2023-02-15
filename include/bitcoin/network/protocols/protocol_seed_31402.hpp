@@ -51,6 +51,9 @@ protected:
     virtual bool complete() const NOEXCEPT;
     virtual void handle_timer(const code& ec) NOEXCEPT;
 
+    virtual messages::address::cptr filter(
+        const messages::address_items& message) const NOEXCEPT;
+
     virtual void handle_send_get_address(const code& ec) NOEXCEPT;
     virtual void handle_receive_address(const code& ec,
         const messages::address::cptr& address) NOEXCEPT;

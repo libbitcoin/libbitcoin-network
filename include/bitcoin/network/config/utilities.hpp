@@ -29,14 +29,21 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// IPv6 normalizes IPv4 addresses as "mapped" addresses, i.e. mapped into the
-/// IPv6 address space. P2P protocol encodes all addresses in this normal form.
-/// For serialization purposes we encode/decode only to/from denormalized form.
-/// IPv6 "host names" are not bracketed, however IPv6 addresses are bracked.
+/// IPv6 supports embedding of an IPv4 address (4 bytes) into IPv6 encodings
+/// (16 bytes). The two formats, "compatible" and "mapped" embed the same
+/// address differently, with the distinction being the level of support of the
+/// device. This is problematic for addresses, as they are device independent.
+/// P2P protocol is 16 bytes and allows for either encoding, however the
+/// "compatible" concoding is deprecated, so we produce only mapped encoding
+/// for P2P serialization. However, as both formats are send via P2P we decode
+/// from all three IPv6 encodings (native, compatible, mapped). For human
+/// readability we serialize adresses as text, for both logging and shutdown
+/// persistence. We refer to this format as denormalized, as it supports only
+/// native IPv4 and native IPv6 serialization. IPv6 host names are "bracketed".
 /// This provides distinction from the port number (otherwise conflating ":").
 /// This form is referred to as "literal" IPv6 encoding (from IPv6 URIs). All
-/// addresses must be literal encodings, all host names are serialized as non-
-/// literal, and deserialized as either literal or non-literal.
+/// text addresses are literal encodings, and all host names are serialized as
+/// non-literal, and deserialized as either literal or non-literal.
 
 /// datatracker.ietf.org/doc/html/rfc4291
 constexpr size_t ipv4_size = 4;
@@ -59,25 +66,25 @@ constexpr bool is_v4(const messages::ip_address& ip) NOEXCEPT
 }
 
 /// Member if subnet addresses contain host.
-bool is_member(const asio::address& ip, const asio::address& subnet,
+BCT_API bool is_member(const asio::address& ip, const asio::address& subnet,
     uint8_t cidr) NOEXCEPT;
 
 /// Unmap IPv6-mapped addresses.
 asio::address denormalize(const asio::address& ip) NOEXCEPT;
 
 /// Denormalizes to IPv4 (unmapped), literal emits unbracketed.
-std::string to_host(const asio::address& ip) NOEXCEPT;
-std::string to_literal(const asio::address& ip) NOEXCEPT;
-asio::address from_host(const std::string& host) NOEXCEPT(false);
+BCT_API std::string to_host(const asio::address& ip) NOEXCEPT;
+BCT_API std::string to_literal(const asio::address& ip) NOEXCEPT;
+BCT_API asio::address from_host(const std::string& host) NOEXCEPT(false);
 
 /// Not denormalizing.
 messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
 asio::address from_address(const messages::ip_address& address) NOEXCEPT;
 
 /// Parsers.
-bool parse_authority(asio::address& ip, uint16_t& port, uint8_t& cidr,
+BCT_API bool parse_authority(asio::address& ip, uint16_t& port, uint8_t& cidr,
     const std::string& value) NOEXCEPT;
-bool parse_endpoint(std::string& scheme, std::string& host, uint16_t& port,
+BCT_API bool parse_endpoint(std::string& scheme, std::string& host, uint16_t& port,
     const std::string& value) NOEXCEPT;
 
 } // namespace config

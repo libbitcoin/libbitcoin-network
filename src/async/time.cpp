@@ -42,7 +42,7 @@ uint32_t unix_time() NOEXCEPT
 static bool local_time(tm& out_local, time_t zulu) NOEXCEPT
 {
     // localtime not threadsafe due to static buffer return, use localtime_s.
-#ifdef _MSC_VER
+#ifdef HAVE_MSC
     // proprietary msvc implemention, parameters swapped, returns errno_t.
     return localtime_s(&out_local, &zulu) == 0;
 #else
@@ -51,10 +51,11 @@ static bool local_time(tm& out_local, time_t zulu) NOEXCEPT
 #endif
 }
 
-std::string local_time() NOEXCEPT
+// local
+static std::string local_time(time_t zulu) NOEXCEPT
 {
     tm out_local{};
-    if (!local_time(out_local, zulu_time()))
+    if (!local_time(out_local, zulu))
         return "";
 
     // %c writes standard date and time string, e.g.
@@ -65,7 +66,21 @@ std::string local_time() NOEXCEPT
 
     // std::strftime is required because gcc doesn't implement std::put_time.
     // Returns number of characters, zero implies failure and undefined buffer.
+    BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
     return is_zero(std::strftime(buffer, size, format, &out_local)) ? "" : buffer;
+    BC_POP_WARNING()
+}
+
+std::string local_time() NOEXCEPT
+{
+    return local_time(zulu_time());
+}
+
+std::string to_local_time(uint32_t zulu) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_STATIC_CAST)
+    return local_time(static_cast<time_t>(zulu));
+    BC_POP_WARNING()
 }
 
 } // namespace network

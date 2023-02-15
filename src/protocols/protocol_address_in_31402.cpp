@@ -18,6 +18,8 @@
  */
 #include <bitcoin/network/protocols/protocol_address_in_31402.hpp>
 
+#include <algorithm>
+#include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -70,6 +72,24 @@ void protocol_address_in_31402::start() NOEXCEPT
 // Inbound (store addresses).
 // ----------------------------------------------------------------------------
 
+address::cptr protocol_address_in_31402::filter(
+    const address_items& items) const NOEXCEPT
+{
+    const auto message = std::make_shared<address>(address
+    {
+        difference(items, settings().blacklists)
+    });
+
+    std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
+    {
+        return settings().disabled(address)
+            || settings().insufficient(address)
+            || settings().unsupported(address);
+    });
+
+    return message;
+}
+
 void protocol_address_in_31402::handle_receive_address(const code& ec,
     const address::cptr& message) NOEXCEPT
 {
@@ -79,7 +99,8 @@ void protocol_address_in_31402::handle_receive_address(const code& ec,
         return;
 
     // Do not accept multiple addresses from inbound channels.
-    if (inbound_ && (received_ || !is_one(message->addresses.size())))
+    const auto size = message->addresses.size();
+    if (inbound_ && (received_ || !is_one(size)))
     {
         LOG("Unsolicited addresses from [" << authority() << "]");
         stop(error::protocol_violation);
@@ -87,22 +108,18 @@ void protocol_address_in_31402::handle_receive_address(const code& ec,
     }
 
     received_ = true;
-
     if (message->addresses.front() == outbound())
     {
-        LOG("Dropping redundant address from [" << authority() << "]");
+        // This is very common.
+        ////LOG("Dropping redundant address from [" << authority() << "]");
         return;
     }
 
-    // TODO: filter items --> keep.
-    const auto keep = to_shared(new address
-    {
-        difference(message->addresses, settings().blacklists)
-    });
+    const auto filtered = filter(message->addresses);
 
     // This allows previously-rejected addresses.
-    save(keep, BIND4(handle_save_address, _1, _2,
-        keep->addresses.size(), message->addresses.size()));
+    save(filtered,
+        BIND4(handle_save_address, _1, _2, filtered->addresses.size(), size));
 }
 
 void protocol_address_in_31402::handle_save_address(const code& ec,

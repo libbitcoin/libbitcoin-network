@@ -214,7 +214,6 @@ private:
     // These are thread safe (mostly).
     p2p& network_;
     const size_t key_;
-    const duration timeout_;
     std::atomic_bool stopped_{ true };
 
     // These are not thread safe.

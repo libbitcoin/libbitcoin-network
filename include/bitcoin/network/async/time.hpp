@@ -43,14 +43,17 @@ typedef steady_clock::time_point time_point;
 /// C++20: std::chrono::system_clock measures Unix Time.
 typedef std::chrono::system_clock wall_clock;
 
-/// Current zulu (utc) time using the wall clock.
+/// Current zulu (utc) time using the wall clock, as time_t.
 BCT_API time_t zulu_time() NOEXCEPT;
 
 /// Current zulu (utc) time using the wall clock, cast to uint32_t.
 BCT_API uint32_t unix_time() NOEXCEPT;
 
-/// Standard date-time string, e.g. Sun Oct 17 04:41:13 2010, locale dependent.
+/// Current local date-time text, locale dependent (Sun Oct 17 04:41:13 2010).
 BCT_API std::string local_time() NOEXCEPT;
+
+/// Specified zulu (utc) time as, conversion to local date-time text.
+BCT_API std::string BCT_API to_local_time(uint32_t zulu) NOEXCEPT;
 
 } // namespace network
 } // namespace libbitcoin

@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/protocols/protocol_seed_31402.hpp>
 
+#include <algorithm>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
@@ -34,6 +35,9 @@ namespace network {
 using namespace system;
 using namespace messages;
 using namespace std::placeholders;
+
+// Bind throws (ok).
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 protocol_seed_31402::protocol_seed_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
@@ -55,8 +59,8 @@ void protocol_seed_31402::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE2(messages::address, handle_receive_address, _1, _2);
-    SUBSCRIBE2(messages::address, handle_receive_get_address, _1, _2);
+    SUBSCRIBE2(address, handle_receive_address, _1, _2);
+    SUBSCRIBE2(address, handle_receive_get_address, _1, _2);
     SEND1(get_address{}, handle_send_get_address, _1);
 
     protocol::start();
@@ -93,7 +97,7 @@ void protocol_seed_31402::handle_timer(const code& ec) NOEXCEPT
     stop(error::channel_timeout);
 }
 
-// Outbound [send_get_address => receive_address (save_addresses)].
+// Inbound (store addresses).
 // ----------------------------------------------------------------------------
 
 void protocol_seed_31402::handle_send_get_address(const code& ec) NOEXCEPT
@@ -110,6 +114,24 @@ void protocol_seed_31402::handle_send_get_address(const code& ec) NOEXCEPT
         stop(error::success);
 }
 
+address::cptr protocol_seed_31402::filter(
+    const address_items& items) const NOEXCEPT
+{
+    const auto message = std::make_shared<address>(address
+    {
+        difference(items, settings().blacklists)
+    });
+
+    std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
+    {
+        return settings().disabled(address)
+            || settings().insufficient(address)
+            || settings().unsupported(address);
+    });
+
+    return message;
+}
+
 void protocol_seed_31402::handle_receive_address(const code& ec,
     const address::cptr& message) NOEXCEPT
 {
@@ -118,23 +140,19 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return;
 
-    const auto& items = message->addresses;
-    const auto singleton = is_one(items.size());
+    const auto size = message->addresses.size();
 
     // Do not store redundant adresses, outbound() is known address.
-    if (singleton && (outbound() == items.front()))
+    if (is_one(size) && (message->addresses.front() == outbound()))
     {
         ////LOG("Dropping redundant address from seed [" << authority() << "]");
         return;
     }
 
-    // Remove blacklist conflicts.
-    // Should construct using makes_shared(vargs) overload, but fails on clang.
-    const auto to = to_shared(messages::address{ difference(items, blacklist_) });
-    const auto count = to->addresses.size();
-    const auto start = items.size();
+    const auto filtered = filter(message->addresses);
 
-    save(message, BIND4(handle_save_addresses, _1, _2, count, start));
+    save(filtered,
+        BIND4(handle_save_addresses, _1, _2, filtered->addresses.size(), size));
 }
 
 void protocol_seed_31402::handle_save_addresses(const code& ec,
@@ -162,10 +180,10 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
         stop(error::success);
 }
 
-// Inbound [receive_get_address -> send_address (load_addresses)].
+// Outbound (fetch and send addresses).
 // ----------------------------------------------------------------------------
 
-messages::address_item protocol_seed_31402::self() const NOEXCEPT
+address_item protocol_seed_31402::self() const NOEXCEPT
 {
     return settings().self.to_address_item(unix_time(),
         settings().services_maximum);
@@ -182,7 +200,7 @@ void protocol_seed_31402::handle_receive_get_address(const code& ec,
     if (settings().advertise_enabled())
     {
         // Only send 0..1 address in response to get_address when seeding.
-        SEND1(messages::address{ { self() } }, handle_send_address, _1);
+        SEND1(address{ { self() } }, handle_send_address, _1);
         return;
     }
 
@@ -203,6 +221,8 @@ void protocol_seed_31402::handle_send_address(const code& ec) NOEXCEPT
     if (complete())
         stop(error::success);
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
