@@ -44,7 +44,7 @@ class BCT_API p2p
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
-    typedef size_t key_t;
+    typedef uint64_t key_t;
 
     typedef resubscriber<key_t> stop_subscriber;
     typedef stop_subscriber::handler stop_handler;
@@ -284,15 +284,24 @@ private:
 
     // These are protected by strand.
 
+    // Public service, and session stop.
     key_t stops_{};
     stop_subscriber stop_subscriber_;
 
+    // Public service.
     key_t connects_{};
     channel_subscriber connect_subscriber_;
 
+    // Guards loopback.
     std::unordered_set<uint64_t> nonces_{};
-    std::unordered_set<channel::ptr> channels_{};
+
+    // Guards duplicate channels.
     std::unordered_set<config::authority> authorities_{};
+
+    // TODO: change to broadcast message pump by type.
+    // TODO: test in network by broadcasting address messages.
+    // TODO: then no need for stop, just use session pender.
+    std::unordered_set<channel::ptr> channels_{};
 };
 
 } // namespace network

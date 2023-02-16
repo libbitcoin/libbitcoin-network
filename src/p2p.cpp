@@ -237,6 +237,10 @@ void p2p::do_subscribe_connect(const channel_notifier& handler,
     const channel_completer& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // At one obj/nanosecond, overflows in ~585 years (and handled).
+    BC_ASSERT_MSG(!is_zero(add1(stops_)), "overflow");
+
     complete(connect_subscriber_.subscribe(move_copy(handler), ++connects_) ?
         error::success : error::subscriber_stopped, connects_);
 }
@@ -273,6 +277,10 @@ void p2p::do_subscribe_close(const stop_handler& handler,
     const stop_completer& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // At one obj/nanosecond, overflows in ~585 years (and handled).
+    BC_ASSERT_MSG(!is_zero(add1(stops_)), "overflow");
+
     complete(subscribe_close(move_copy(handler), ++stops_) ?
         error::success : error::subscriber_stopped, stops_);
 }
