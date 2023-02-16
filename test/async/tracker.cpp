@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(track_tests)
+BOOST_AUTO_TEST_SUITE(tracker_tests)
 
 class tracked
   : tracker<tracked>
@@ -35,7 +35,7 @@ public:
     };
 };
 
-BOOST_AUTO_TEST_CASE(track__construct__always__compiles)
+BOOST_AUTO_TEST_CASE(tracker__construct__always__compiles)
 {
     const logger log{};
     tracked foo{ log };
