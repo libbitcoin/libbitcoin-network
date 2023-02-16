@@ -49,7 +49,7 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 session::session(p2p& network, size_t key) NOEXCEPT
   : network_(network),
     self_(key),
-    defer_subscriber_(network.strand()),
+    stop_subscriber_(network.strand()),
     pend_subscriber_(network.strand()),
     reporter(network.log())
 {
@@ -80,7 +80,7 @@ void session::stop() NOEXCEPT
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     stopped_.store(true, std::memory_order_relaxed);
-    defer_subscriber_.stop(error::service_stopped);
+    stop_subscriber_.stop(error::service_stopped);
     pend_subscriber_.stop(error::service_stopped);
 }
 
@@ -345,7 +345,7 @@ void session::defer(result_handler&& handler) NOEXCEPT
     timer->start(
         BIND3(handle_timer, _1, key, std::move(handler)), timeout);
 
-    defer_subscriber_.subscribe(
+    stop_subscriber_.subscribe(
         BIND3(handle_defer, _1, key, timer), key);
 }
 
@@ -354,7 +354,7 @@ void session::handle_timer(const code& ec, key_t key,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
     ////LOG("Delay timer (" << key << ") notify: " << ec.message());
-    defer_subscriber_.notify_one(key, ec);
+    stop_subscriber_.notify_one(key, ec);
     complete(ec);
 }
 
@@ -392,7 +392,7 @@ bool session::unpend(const channel::ptr& channel) NOEXCEPT
 void session::subscribe_stop(notifier&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-    defer_subscriber_.subscribe(std::move(handler), ++objects_);
+    stop_subscriber_.subscribe(std::move(handler), ++objects_);
 }
 
 void session::unsubscribe_close() NOEXCEPT

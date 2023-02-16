@@ -213,9 +213,8 @@ private:
 
     // These are not thread safe.
 
-    // TODO: Rename to stop subscriber.
     key_t objects_{};
-    subscriber defer_subscriber_;
+    subscriber stop_subscriber_;
 
     // TODO: Remove and use defer subscriber (renamed).
     resubscriber<channel::ptr> pend_subscriber_;
