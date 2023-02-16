@@ -101,6 +101,7 @@ void session_manual::connect(const config::endpoint& peer,
     subscribe_stop([=](const code&) NOEXCEPT
     {
         connector->stop();
+        return false;
     });
 
     LOG("Maintaining manual connection to [" << peer << "]");
@@ -156,7 +157,7 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
             return;
         }
 
-        defer(BIND4(start_connect, _1, peer, connector, handler), peer);
+        defer(BIND4(start_connect, _1, peer, connector, handler));
         return;
     }
 
@@ -207,7 +208,7 @@ void session_manual::handle_channel_stop(const code& LOG_ONLY(ec),
         return;
     }
 
-    defer(BIND4(start_connect, _1, peer, connector, handler), peer);
+    defer(BIND4(start_connect, _1, peer, connector, handler));
 }
 
 BC_POP_WARNING()

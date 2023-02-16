@@ -110,6 +110,7 @@ void session_outbound::handle_started(const code& ec,
             subscribe_stop([=](const code&) NOEXCEPT
             {
                 connector->stop();
+                return false;
             });
         }
 
@@ -317,7 +318,7 @@ void session_outbound::handle_connect(const code& ec,
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
 
         ////LOG("Failed to connect outbound channel, " << ec.message());
-        defer(BIND3(start_connect, _1, connectors, id), connectors);
+        defer(BIND3(start_connect, _1, connectors, id));
         return;
     }
 

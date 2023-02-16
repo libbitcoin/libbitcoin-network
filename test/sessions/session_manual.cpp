@@ -130,12 +130,9 @@ public:
         return session_manual::stopped();
     }
 
-    void defer(result_handler&& handler, const uintptr_t& id) NOEXCEPT override
+    void defer(result_handler&& handler) NOEXCEPT override
     {
-        // This captures the session, which remains in scope until handler completes.
-        // The timer closure must be released before exit (ensure session stopped).
-        // Anything posted to the network threadpool blocks p2p.close().
-        session_manual::defer(std::move(handler), id);
+        session_manual::defer(std::move(handler));
     }
 
     const endpoint& start_connect_endpoint() const NOEXCEPT

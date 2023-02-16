@@ -48,8 +48,7 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session::session(p2p& network, size_t key) NOEXCEPT
   : network_(network),
-    key_(key),
-    stop_subscriber_(network.strand()),
+    self_(key),
     defer_subscriber_(network.strand()),
     pend_subscriber_(network.strand()),
     reporter(network.log())
@@ -83,7 +82,6 @@ void session::stop() NOEXCEPT
     stopped_.store(true, std::memory_order_relaxed);
     defer_subscriber_.stop(error::service_stopped);
     pend_subscriber_.stop(error::service_stopped);
-    stop_subscriber_.stop(error::service_stopped);
 }
 
 // Channel sequence.
@@ -327,7 +325,7 @@ void session::do_handle_channel_stopped(const code& ec,
 // Subscriptions.
 // ----------------------------------------------------------------------------
 
-void session::defer(result_handler&& handler, const uintptr_t& id) NOEXCEPT
+void session::defer(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -337,28 +335,34 @@ void session::defer(result_handler&& handler, const uintptr_t& id) NOEXCEPT
         return;
     }
 
+    // At one obj/nanosecond, overflows in ~585 years (and handled).
+    BC_ASSERT_MSG(!is_zero(add1(objects_)), "overflow");
+
+    const auto key = ++objects_;
+    const auto timeout = settings().retry_timeout();
     const auto timer = std::make_shared<deadline>(log(), network_.strand());
 
-    timer->start(BIND3(handle_timer, _1, id, std::move(handler)),
-        settings().retry_timeout());
+    timer->start(
+        BIND3(handle_timer, _1, key, std::move(handler)), timeout);
 
-    defer_subscriber_.subscribe(BIND3(handle_defer, _1, id, timer), id);
+    defer_subscriber_.subscribe(
+        BIND3(handle_defer, _1, key, timer), key);
 }
 
-void session::handle_timer(const code& ec, uintptr_t id,
+void session::handle_timer(const code& ec, key_t key,
     const result_handler& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-    ////LOG("Delay timer (" << id << ") notify: " << ec.message());
-    defer_subscriber_.notify_one(id, ec);
+    ////LOG("Delay timer (" << key << ") notify: " << ec.message());
+    defer_subscriber_.notify_one(key, ec);
     complete(ec);
 }
 
-bool session::handle_defer(const code&, uintptr_t,
+bool session::handle_defer(const code&, key_t,
     const deadline::ptr& timer) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-    ////LOG("Delay timer (" << id << ") stop: " << ec.message());
+    ////LOG("Delay timer (" << key << ") stop: " << ec.message());
     timer->stop();
     return false;
 }
@@ -385,16 +389,16 @@ bool session::unpend(const channel::ptr& channel) NOEXCEPT
     return result || stopped();
 }
 
-void session::subscribe_stop(result_handler&& handler) NOEXCEPT
+void session::subscribe_stop(notifier&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-    stop_subscriber_.subscribe(std::move(handler));
+    defer_subscriber_.subscribe(std::move(handler), ++objects_);
 }
 
 void session::unsubscribe_close() NOEXCEPT
 {
-    // key_ is used for session subscribe, and passed by p2p on construct.
-    network_.unsubscribe_close(key_);
+    // self_ is used for session subscribe, and passed by p2p on construct.
+    network_.unsubscribe_close(self_);
 }
 
 // Factories.

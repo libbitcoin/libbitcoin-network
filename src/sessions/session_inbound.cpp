@@ -100,6 +100,7 @@ void session_inbound::handle_started(const code& ec,
         subscribe_stop([=](const code&) NOEXCEPT
         {
             acceptor->stop();
+            return false;
         });
 
         start_accept(error::success, acceptor);

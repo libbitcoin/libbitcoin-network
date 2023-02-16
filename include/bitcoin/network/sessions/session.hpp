@@ -77,6 +77,10 @@ public:
     virtual bool inbound() const NOEXCEPT = 0;
 
 protected:
+    typedef uint64_t key_t;
+    typedef resubscriber<key_t> subscriber;
+    typedef subscriber::handler notifier;
+
     /// Construct an instance (network should be started).
     session(p2p& network, size_t key) NOEXCEPT;
 
@@ -92,15 +96,6 @@ protected:
     {
         return std::bind(std::forward<Handler>(handler),
             shared_from_base<Session>(), std::forward<Args>(args)...);
-    }
-
-    /// Defer invocation by retry timeout, identified by object address.
-    template <typename Identifier = size_t>
-    void defer(result_handler&& handler, const Identifier& unique=zero) NOEXCEPT
-    {
-        BC_PUSH_WARNING(NO_REINTERPRET_CAST)
-        defer(std::move(handler), reinterpret_cast<uintptr_t>(&unique));
-        BC_POP_WARNING()
     }
 
     /// Channel sequence.
@@ -120,15 +115,15 @@ protected:
     /// Subscriptions.
     /// -----------------------------------------------------------------------
 
-    /// Delay invocation with specified unique id and retry timeout.
-    virtual void defer(result_handler&& handler, const uintptr_t& id) NOEXCEPT;
+    /// Delayed invocation, by randomized function retry_timeout_().
+    virtual void defer(result_handler&& handler) NOEXCEPT;
 
     /// Pend/unpend a channel, for quick stop (unpend false if not pending).
     virtual void pend(const channel::ptr& channel) NOEXCEPT;
     virtual bool unpend(const channel::ptr& channel) NOEXCEPT;
 
     /// Subscribe to session stop notification.
-    virtual void subscribe_stop(result_handler&& handler) NOEXCEPT;
+    virtual void subscribe_stop(notifier&& handler) NOEXCEPT;
 
     /// Remove self from network close subscription (for session early stop).
     virtual void unsubscribe_close() NOEXCEPT;
@@ -205,22 +200,25 @@ private:
     void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,
         const result_handler& stopped) NOEXCEPT;
 
-    void handle_timer(const code& ec, uintptr_t id,
+    void handle_timer(const code& ec, key_t key,
         const result_handler& complete) NOEXCEPT;
-    bool handle_defer(const code& ec, uintptr_t id,
+    bool handle_defer(const code& ec, key_t key,
         const deadline::ptr& timer) NOEXCEPT;
     bool handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT;
 
     // These are thread safe (mostly).
     p2p& network_;
-    const size_t key_;
+    const size_t self_;
     std::atomic_bool stopped_{ true };
 
     // These are not thread safe.
-    subscriber<> stop_subscriber_;
-    resubscriber<uintptr_t> defer_subscriber_;
+
+    // TODO: Rename to stop subscriber.
+    key_t objects_{};
+    subscriber defer_subscriber_;
+
+    // TODO: Remove and use defer subscriber (renamed).
     resubscriber<channel::ptr> pend_subscriber_;
-    std::vector<connector::ptr> connectors_{};
 };
 
 } // namespace network

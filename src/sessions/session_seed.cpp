@@ -130,6 +130,7 @@ void session_seed::handle_started(const code& ec,
         subscribe_stop([=](const code&) NOEXCEPT
         {
             connector->stop();
+            return false;
         });
 
         start_seed(error::success, seed, connector,
