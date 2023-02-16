@@ -32,18 +32,12 @@ namespace network {
 
 #define SUBSCRIBER(name) name##_subscriber_
 #define SUBSCRIBER_TYPE(name) name##_subscriber
-
-#define DEFINE_SUBSCRIBER(name) \
-    typedef subscriber<const messages::name::cptr&> SUBSCRIBER_TYPE(name)
-
+#define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
+#define DEFINE_SUBSCRIBER(name) using SUBSCRIBER_TYPE(name) = \
+    subscriber<const messages::name::cptr&>
 #define SUBSCRIBER_OVERLOAD(name) \
 void do_subscribe(pump::handler<messages::name>&& handler) NOEXCEPT \
-{ \
-    SUBSCRIBER(name).subscribe(std::move(handler)); \
-}
-
-#define DECLARE_SUBSCRIBER(name) \
-    SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
+    { SUBSCRIBER(name).subscribe(std::move(handler)); }
 
 /// Not thread safe.
 /// All handlers are posted to the strand.
