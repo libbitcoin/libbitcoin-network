@@ -80,10 +80,10 @@ BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
     boost::asio::post(strand, [instance]()
     {
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
-            [](const code& ec, const channel::ptr& channel)
+            [](const code& ec, const socket::ptr& socket)
             {
                 BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
-                BOOST_REQUIRE(!channel);
+                BOOST_REQUIRE(!socket);
             });
     });
 
@@ -106,10 +106,10 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
     boost::asio::post(strand, [instance]()
     {
         instance->connect(config::authority{ "42.42.42.42:42" },
-            [](const code& ec, const channel::ptr& channel)
+            [](const code& ec, const socket::ptr& socket)
             {
                 BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
-                BOOST_REQUIRE(!channel);
+                BOOST_REQUIRE(!socket);
             });
     });
 
@@ -132,10 +132,10 @@ BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
     boost::asio::post(strand, [&]()
     {
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
-            [](const code& ec, const channel::ptr& channel)
+            [](const code& ec, const socket::ptr& socket)
             {
                 BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
-                BOOST_REQUIRE(!channel);
+                BOOST_REQUIRE(!socket);
             });
     });
 
@@ -158,11 +158,11 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
     boost::asio::post(strand, [instance]()
     {
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
-            [](const code& ec, const channel::ptr& channel)
+            [](const code& ec, const socket::ptr& socket)
             {
                 // TODO: 11001 (HOST_NOT_FOUND) gets mapped to unknown.
                 BOOST_REQUIRE(ec == error::unknown || ec == error::operation_canceled);
-                BOOST_REQUIRE(!channel);
+                BOOST_REQUIRE(!socket);
             });
 
         // Test race.

@@ -110,11 +110,11 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
 
     boost::asio::post(strand, [instance]()
     {
-        instance->accept([](const code&, const channel::ptr& channel)
+        instance->accept([](const code&, const socket::ptr& socket)
         {
             // Result codes inconsistent due to context.
             ////BOOST_REQUIRE_EQUAL(ec, error::channel_stopped);
-            BOOST_REQUIRE(!channel);
+            BOOST_REQUIRE(!socket);
         });
 
         // Test race.

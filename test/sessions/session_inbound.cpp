@@ -30,7 +30,7 @@ public:
 
     mock_channel(const logger& log, bool& set, std::promise<bool>& coded,
         const code& match, socket::ptr socket, const settings& settings) NOEXCEPT
-      : channel(log, socket, settings), match_(match), set_(set), coded_(coded)
+      : channel(log, socket, settings, 42), match_(match), set_(set), coded_(coded)
     {
     }
 
@@ -100,18 +100,19 @@ public:
     }
 
     // Handle accept.
-    void accept(channel_handler&& handler) NOEXCEPT override
+    void accept(socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         const auto socket = std::make_shared<network::socket>(log(), service_);
-        const auto channel = std::make_shared<mock_channel>(log(), set_,
-            coded_, ChannelStopCode, socket, settings_);
+
+        ////const auto channel = std::make_shared<mock_channel>(log(), set_,
+        ////    coded_, ChannelStopCode, socket, settings_);
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
-            handler(error::success, channel);
+            handler(error::success, socket);
         });
     }
 
@@ -133,7 +134,7 @@ public:
         mock_acceptor_start_success_accept_success;
 
     // Handle accept with unknown error.
-    void accept(channel_handler&& handler) NOEXCEPT override
+    void accept(socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]() NOEXCEPT
@@ -153,7 +154,7 @@ public:
         mock_acceptor_start_success_accept_fail;
 
     // Handle accept with service_stopped error.
-    void accept(channel_handler&& handler) NOEXCEPT override
+    void accept(socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]() NOEXCEPT

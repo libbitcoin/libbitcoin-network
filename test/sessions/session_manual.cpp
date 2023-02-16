@@ -60,21 +60,22 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void connect(const endpoint& peer,
-        channel_handler&& handler) NOEXCEPT override
+        socket_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
             peer_ = peer;
 
         const auto socket = std::make_shared<network::socket>(log(), service_);
-        const auto channel = std::make_shared<network::channel>(log(), socket,
-            settings_);
+
+        ////const auto channel = std::make_shared<network::channel>(log(), socket,
+        ////    settings_);
 
         // Must be asynchronous or is an infinite recursion.
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
             // Connect result code is independent of channel stop code.
             // Error code would set re-listener timer, channel pointer ignored.
-            handler(error::success, channel);
+            handler(error::success, socket);
         });
     }
 
@@ -94,7 +95,7 @@ public:
 
     // Handle connect with service_stopped error.
     void connect(const endpoint& peer,
-        channel_handler&& handler) NOEXCEPT override
+        socket_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
             peer_ = peer;

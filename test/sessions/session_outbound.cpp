@@ -44,7 +44,7 @@ public:
 
     mock_channel(const logger& log, bool& set, std::promise<bool>& coded,
         const code& match, socket::ptr socket, const settings& settings) NOEXCEPT
-      : channel(log, socket, settings), match_(match), set_(set), coded_(coded)
+      : channel(log, socket, settings, 42), match_(match), set_(set), coded_(coded)
     {
     }
 
@@ -114,7 +114,7 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void start(const std::string& hostname, uint16_t port,
-        const config::address&, channel_handler&& handler) NOEXCEPT override
+        const config::address&, socket_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
         {
@@ -123,15 +123,16 @@ public:
         }
 
         const auto socket = std::make_shared<network::socket>(log(), service_);
-        const auto channel = std::make_shared<mock_channel>(log(), set_,
-            coded_, ChannelStopCode, socket, settings_);
+
+        ////const auto channel = std::make_shared<mock_channel>(log(), set_,
+        ////    coded_, ChannelStopCode, socket, settings_);
 
         // Must be asynchronous or is an infinite recursion.
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
             // Connect result code is independent of the channel stop code.
             // As error code would set the re-listener timer, channel pointer is ignored.
-            handler(error::success, channel);
+            handler(error::success, socket);
         });
     }
 
@@ -153,7 +154,7 @@ public:
     using connector::connector;
 
     void start(const std::string&, uint16_t,
-        const config::address&, channel_handler&& handler) NOEXCEPT override
+        const config::address&, socket_handler&& handler) NOEXCEPT override
     {
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
@@ -412,7 +413,7 @@ public:
     }
 
     void start(const std::string& hostname, uint16_t port,
-        const config::address& host, channel_handler&& handler) NOEXCEPT override
+        const config::address& host, socket_handler&& handler) NOEXCEPT override
     {
         BC_ASSERT_MSG(session_, "call set_session");
 
