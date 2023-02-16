@@ -144,7 +144,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
     // There was an error connecting the channel, so try again after delay.
     if (ec)
     {
-        BC_ASSERT_MSG(!channel, "unexpected channel instance");
+        BC_ASSERT_MSG(!socket, "unexpected socket instance");
         LOG("Failed to connect manual address [" << peer << "] " << ec.message());
 
         // Connect failure notification.

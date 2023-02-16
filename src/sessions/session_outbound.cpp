@@ -289,7 +289,7 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
     // service_stopped on a pending connect causes non-restore of that address,
     // since a channel is never created if there is a connector error code.
     // This is treated as an acceptable loss of a potentially valid address.
-    BC_ASSERT_MSG(!channel, "unexpected channel instance");
+    BC_ASSERT_MSG(!socket, "unexpected socket instance");
 }
 
 // Handle the singular batch result.
@@ -315,7 +315,7 @@ void session_outbound::handle_connect(const code& ec,
     // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
-        BC_ASSERT_MSG(!channel, "unexpected channel instance");
+        BC_ASSERT_MSG(!socket, "unexpected socket instance");
 
         ////LOG("Failed to connect outbound address, " << ec.message());
         defer(BIND3(start_connect, _1, connectors, id));
