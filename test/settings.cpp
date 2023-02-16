@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(settings__disabled__ipv6__expected)
 
 BOOST_AUTO_TEST_CASE(settings__insufficient__default__false)
 {
-    const logger log{};    settings instance{};
+    settings instance{};
     constexpr uint64_t services = 0;
     constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
     instance.services_minimum = 0;
