@@ -67,9 +67,6 @@ public:
 
         const auto socket = std::make_shared<network::socket>(log(), service_);
 
-        ////const auto channel = std::make_shared<network::channel>(log(), socket,
-        ////    settings_);
-
         // Must be asynchronous or is an infinite recursion.
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
