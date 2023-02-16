@@ -69,15 +69,11 @@ public:
         return protocol;
     }
 
-    /// Sets address to socket->authority().
-    channel(const logger& log, const socket::ptr& socket,
-        const settings& settings) NOEXCEPT;
+    /// Construct a channel to encapsulated and communicate on the socket.
+    channel(const logger& log, const socket::ptr& socket, 
+        const settings& settings, uint64_t identifier) NOEXCEPT;
 
-    /// Set address to specified value (pre-resolved outbound address).
-    channel(const logger& log, const socket::ptr& socket,
-        const settings& settings, const config::address& address) NOEXCEPT;
-
-    /// Asserts channel stopped.
+    /// Asserts/logs stopped.
     virtual ~channel() NOEXCEPT;
 
     /// Idempotent, may be called multiple times.
@@ -89,8 +85,8 @@ public:
     /// Arbitrary nonce of the channel (for loopback guard).
     uint64_t nonce() const NOEXCEPT;
 
-    /// Originating address of the connection (if outbound).
-    const config::address& address() const NOEXCEPT;
+    /// Arbitrary identifier of the channel (for session subscriber).
+    uint64_t identifier() const NOEXCEPT;
 
     /// Originating address of connection with current time and peer services.
     address_item_cptr updated_address() const NOEXCEPT;
@@ -128,6 +124,7 @@ private:
     // These are thread safe (const).
     const config::address address_;
     const settings& settings_;
+    const uint64_t identifier_;
     const uint64_t nonce_
     {
         system::pseudo_random::next<uint64_t>(one, max_uint64)

@@ -129,24 +129,22 @@ void session_inbound::start_accept(const code& ec,
 }
 
 void session_inbound::handle_accept(const code& ec,
-    const channel::ptr& channel, const acceptor::ptr& acceptor) NOEXCEPT
+    const socket::ptr& socket, const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Guard restartable timer (shutdown delay).
     if (stopped())
     {
-        if (channel)
-            channel->stop(error::service_stopped);
-
+        if (socket) socket->stop();
         return;
     }
 
     // There was an error accepting the channel, so try again after delay.
     if (ec)
     {
-        BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        LOG("Failed to accept inbound channel, " << ec.message());
+        BC_ASSERT_MSG(!socket, "unexpected socket instance");
+        LOG("Failed to accept inbound connection, " << ec.message());
         defer(BIND2(start_accept, _1, acceptor));
         return;
     }
@@ -154,27 +152,29 @@ void session_inbound::handle_accept(const code& ec,
     // There was no error, so listen again without delay.
     start_accept(error::success, acceptor);
 
-    if (!whitelisted(channel->authority()))
+    if (!whitelisted(socket->authority()))
     {
-        ////LOG("Dropping not whitelisted connection [" << channel->authority() << "]");
-        channel->stop(error::address_blocked);
+        ////LOG("Dropping not whitelisted connection [" << socket->authority() << "]");
+        socket->stop();
         return;
     }
 
-    if (blacklisted(channel->authority()))
+    if (blacklisted(socket->authority()))
     {
-        ////LOG("Dropping blacklisted connection [" << channel->authority() << "]");
-        channel->stop(error::address_blocked);
+        ////LOG("Dropping blacklisted connection [" << socket->authority() << "]");
+        socket->stop();
         return;
     }
 
     // Could instead stop listening when at limit, though this is simpler.
     if (inbound_channel_count() >= settings().inbound_connections)
     {
-        LOG("Dropping oversubscribed connection [" << channel->authority() << "]");
-        channel->stop(error::oversubscribed);
+        LOG("Dropping oversubscribed connection [" << socket->authority() << "]");
+        socket->stop();
         return;
     }
+
+    const auto channel = create_channel(socket);
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
@@ -221,8 +221,9 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
 void session_inbound::handle_channel_start(const code&,
     const channel::ptr&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
+    // TOOD: nonce check here.
 
+    BC_ASSERT_MSG(stranded(), "strand");
     ////LOG("Inbound channel start [" << channel->authority() << "] "
     ////    << ec.message());
 }

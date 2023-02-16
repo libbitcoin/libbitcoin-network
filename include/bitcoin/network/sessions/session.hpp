@@ -82,7 +82,7 @@ protected:
     typedef subscriber::handler notifier;
 
     /// Construct an instance (network should be started).
-    session(p2p& network, size_t key) NOEXCEPT;
+    session(p2p& network, uint64_t identifier) NOEXCEPT;
 
     /// Asserts that session is stopped.
     virtual ~session() NOEXCEPT;
@@ -139,6 +139,9 @@ protected:
 
     /// Call to create a set of channel connectors, owned by caller.
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
+
+    /// Create a channel from the started socket (requires strand).
+    virtual channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------
@@ -208,11 +211,10 @@ private:
 
     // These are thread safe (mostly).
     p2p& network_;
-    const size_t self_;
+    const uint64_t identifier_;
     std::atomic_bool stopped_{ true };
 
     // These are not thread safe.
-
     key_t objects_{};
     subscriber stop_subscriber_;
 

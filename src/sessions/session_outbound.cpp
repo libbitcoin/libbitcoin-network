@@ -141,10 +141,10 @@ void session_outbound::start_connect(const code&,
     // Count down the number of connection attempts within the batch.
     const auto counter = std::make_shared<size_t>(connectors->size());
 
-    channel_handler connect =
+    socket_handler connect =
         BIND4(handle_connect, _1, _2, connectors, id);
 
-    channel_handler one =
+    socket_handler one =
         BIND6(handle_one, _1, _2, counter, connectors, id, std::move(connect));
 
     // Attempt to connect with a unique address for each connector of batch.
@@ -155,7 +155,7 @@ void session_outbound::start_connect(const code&,
 // Attempt to connect the given peer and invoke handle_one.
 void session_outbound::do_one(const code& ec, const config::address& peer,
     size_t id, const connector::ptr& connector,
-    const channel_handler& handler) NOEXCEPT
+    const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -220,8 +220,8 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 // in its timer cancelation, which cancels its handler. In either case the
 // address has not been validated, so restore to pool here - without update.
 void session_outbound::handle_connector(const code& ec,
-    const channel::ptr& channel, const config::address& peer, size_t,
-    const channel_handler& handler) NOEXCEPT
+    const socket::ptr& socket, const config::address& peer, size_t,
+    const socket_handler& handler) NOEXCEPT
 {
     if (stopped() || ec == error::operation_canceled)
     {
@@ -233,23 +233,23 @@ void session_outbound::handle_connector(const code& ec,
         ////LOG("Dropping failed address [" << peer << "] " << ec.message());
     }
 
-    handler(ec, channel);
+    handler(ec, socket);
 }
 
 // Handle each do_one connection attempt, stopping on first success.
-void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
-    const count_ptr& count, const connectors_ptr& connectors, size_t id,
-    const channel_handler& handler) NOEXCEPT
+void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
+    const count_ptr& count, const connectors_ptr& connectors, size_t,
+    const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // A successful connection previously occurred, drop and restore this one.
     if (is_zero(*count))
     {
-        if (channel)
+        if (socket)
         {
-            channel->stop(error::channel_dropped);
-            untake(ec, id, channel);
+            socket->stop();
+            untake(ec, socket);
         }
 
         return;
@@ -270,7 +270,7 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
     // Got a connection.
     if (!ec)
     {
-        handler(error::success, channel);
+        handler(error::success, socket);
         return;
     }
 
@@ -278,7 +278,7 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
     if (ec && last)
     {
         // Disabled due to verbosity, reenable under verbose logging.
-        ////LOG("Failed to connect outbound channel, " << ec.message());
+        ////LOG("Failed to connect outbound address, " << ec.message());
 
         // Reduce the set of errors from the batch to connect_failed.
         handler(error::connect_failed, nullptr);
@@ -294,7 +294,7 @@ void session_outbound::handle_one(const code& ec, const channel::ptr& channel,
 
 // Handle the singular batch result.
 void session_outbound::handle_connect(const code& ec,
-    const channel::ptr& channel, const connectors_ptr& connectors,
+    const socket::ptr& socket, const connectors_ptr& connectors,
     size_t id) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -302,10 +302,10 @@ void session_outbound::handle_connect(const code& ec,
     // Guard restartable timer (shutdown delay).
     if (stopped())
     {
-        if (channel)
+        if (socket)
         {
-            channel->stop(error::service_stopped);
-            untake(ec, id, channel);
+            socket->stop();
+            untake(ec, socket);
         }
 
         return;
@@ -317,10 +317,12 @@ void session_outbound::handle_connect(const code& ec,
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
 
-        ////LOG("Failed to connect outbound channel, " << ec.message());
+        ////LOG("Failed to connect outbound address, " << ec.message());
         defer(BIND3(start_connect, _1, connectors, id));
         return;
     }
+
+    const auto channel = create_channel(socket);
 
     start_channel(channel,
         BIND3(handle_channel_start, _1, channel, id),
@@ -356,27 +358,32 @@ void session_outbound::handle_channel_stop(const code& ec,
 
     ////LOG("Outbound channel stop [" << channel->authority() << "] "
     ////    "(" << id << ") " << ec.message());
-    untake(ec, id, channel);
+
+    untake(ec, channel);
 
     // The channel stopped following connection, try again without delay.
     // Potentially a tight loop, but a new adress is selected for retry.
     start_connect(error::success, connectors, id);
 }
 
-void session_outbound::untake(const code& ec, size_t,
+void session_outbound::untake(const code& ec,
+    const socket::ptr& socket) NOEXCEPT
+{
+    BC_ASSERT_MSG(socket, "channel");
+
+    // Use initial address, since connection not completed.
+    if (!ec || stopped())
+        restore(socket->address(), BIND1(handle_untake, _1));
+}
+
+void session_outbound::untake(const code& ec,
     const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel, "channel");
 
+    // Set address to current time and services from peer version message.
     if (!ec || stopped())
-    {
-        // Set address to current time and services from peer version message.
-        const auto peer = channel->updated_address();
-
-        ////LOG("Untake [" << config::address(peer) << "] (" << id << ") "
-        ////    << ec.message());
-        restore(peer, BIND1(handle_untake, _1));
-    }
+        restore(channel->updated_address(), BIND1(handle_untake, _1));
 }
 
 void session_outbound::handle_untake(const code&) const NOEXCEPT

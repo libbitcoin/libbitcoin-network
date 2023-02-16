@@ -127,7 +127,7 @@ void session_manual::start_connect(const code&, const endpoint& peer,
         BIND5(handle_connect, _1, _2, peer, connector, handler));
 }
 
-void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
+void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
     const endpoint& peer, const connector::ptr& connector,
     const channel_notifier& handler) NOEXCEPT
 {
@@ -136,9 +136,7 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
     // Guard restartable timer (shutdown delay).
     if (stopped())
     {
-        if (channel)
-            channel->stop(error::service_stopped);
-
+        if (socket) socket->stop();
         handler(error::service_stopped, nullptr);
         return;
     }
@@ -147,7 +145,7 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
     if (ec)
     {
         BC_ASSERT_MSG(!channel, "unexpected channel instance");
-        LOG("Failed to connect manual peer [" << peer << "] " << ec.message());
+        LOG("Failed to connect manual address [" << peer << "] " << ec.message());
 
         // Connect failure notification.
         if (!handler(ec, nullptr))
@@ -161,9 +159,11 @@ void session_manual::handle_connect(const code& ec, const channel::ptr& channel,
         return;
     }
 
+    const auto channel = create_channel(socket);
+
     start_channel(channel,
-        BIND4(handle_channel_start, _1, peer, channel, handler),
-        BIND4(handle_channel_stop, _1, peer, connector, handler));
+        BIND4(handle_channel_start, _1, channel, peer, handler),
+        BIND5(handle_channel_stop, _1, channel, peer, connector, handler));
 }
 
 void session_manual::attach_handshake(const channel::ptr& channel,
@@ -173,7 +173,7 @@ void session_manual::attach_handshake(const channel::ptr& channel,
 }
 
 void session_manual::handle_channel_start(const code& ec,
-    const endpoint& LOG_ONLY(peer), const channel::ptr& channel,
+    const channel::ptr& channel, const endpoint& LOG_ONLY(peer),
     const channel_notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -192,7 +192,7 @@ void session_manual::attach_protocols(
 }
 
 void session_manual::handle_channel_stop(const code& LOG_ONLY(ec),
-    const endpoint& peer, const connector::ptr& connector,
+    const channel::ptr&, const endpoint& peer, const connector::ptr& connector,
     const channel_notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");

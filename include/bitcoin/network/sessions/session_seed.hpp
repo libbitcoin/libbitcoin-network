@@ -63,14 +63,14 @@ protected:
     /// Start a seed connection (called from start).
     virtual void start_seed(const code& ec, const config::endpoint& seed,
         const connector::ptr& connector,
-        const channel_handler& handler) NOEXCEPT;
+        const socket_handler& handler) NOEXCEPT;
 
     /// Accumulate the result of the seed connection.
     virtual void stop_seed(const result_handler& handler) NOEXCEPT;
 
 private:
     void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
-    void handle_connect(const code& ec, const channel::ptr& channel,
+    void handle_connect(const code& ec, const socket::ptr& socket,
         const config::endpoint& seed, const result_handler& handler) NOEXCEPT;
 
     void handle_channel_start(const code& ec, const channel::ptr& channel) NOEXCEPT;

@@ -42,8 +42,15 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // performed on the socket." Calls are stranded to protect the socket member.
 
 socket::socket(const logger& log, asio::io_context& service) NOEXCEPT
+  : socket(log, service, config::address{})
+{
+}
+
+socket::socket(const logger& log, asio::io_context& service,
+    const config::address& address) NOEXCEPT
   : strand_(service.get_executor()),
     socket_(strand_),
+    address_(address),
     reporter(log),
     tracker<socket>(log)
 {
@@ -252,6 +259,11 @@ void socket::handle_io(const error::boost_code& ec, size_t size,
 const config::authority& socket::authority() const NOEXCEPT
 {
     return authority_;
+}
+
+const config::address& socket::address() const NOEXCEPT
+{
+    return address_;
 }
 
 bool socket::stopped() const NOEXCEPT

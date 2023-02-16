@@ -46,9 +46,9 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session::session(p2p& network, size_t key) NOEXCEPT
+session::session(p2p& network, uint64_t identifier) NOEXCEPT
   : network_(network),
-    self_(key),
+    identifier_(identifier),
     stop_subscriber_(network.strand()),
     pend_subscriber_(network.strand()),
     reporter(network.log())
@@ -87,6 +87,7 @@ void session::stop() NOEXCEPT
 // Channel sequence.
 // ----------------------------------------------------------------------------
 
+// TODO: socket could be passed here and channel created internally.
 void session::start_channel(const channel::ptr& channel,
     result_handler&& started, result_handler&& stopped) NOEXCEPT
 {
@@ -100,6 +101,7 @@ void session::start_channel(const channel::ptr& channel,
         return;
     }
 
+    // TODO: move nonce write to session_outbound.
     // In case of a loopback, inbound and outbound are on the same strand.
     // Inbound does not check nonce until handshake completes, so no race.
     if (!inbound() && !network_.store_nonce(channel->nonce()))
@@ -206,6 +208,7 @@ void session::handle_channel_start(const code& ec, const channel::ptr& channel,
             LOG("Unstore on channel start failed: " << error_code.message());
         }
 
+        // TODO: session_inbound handle nonce check in here.
         started(ec);
         stopped(ec);
         return;
@@ -397,8 +400,8 @@ void session::subscribe_stop(notifier&& handler) NOEXCEPT
 
 void session::unsubscribe_close() NOEXCEPT
 {
-    // self_ is used for session subscribe, and passed by p2p on construct.
-    network_.unsubscribe_close(self_);
+    // Identifier is provided on construct, from stop subscription.
+    network_.unsubscribe_close(identifier_);
 }
 
 // Factories.
@@ -417,6 +420,12 @@ connector::ptr session::create_connector() NOEXCEPT
 connectors_ptr session::create_connectors(size_t count) NOEXCEPT
 {
     return network_.create_connectors(count);
+}
+
+channel::ptr session::create_channel(const socket::ptr& socket) NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    return std::make_shared<channel>(log(), socket, settings(), ++objects_);
 }
 
 // Properties.

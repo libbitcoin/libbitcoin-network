@@ -66,13 +66,13 @@ private:
     typedef std::shared_ptr<size_t> count_ptr;
 
     /// Restore an address to the address pool.
-    void untake(const code& ec, size_t id,
-        const channel::ptr& channel) NOEXCEPT;
+    void untake(const code& ec, const socket::ptr& socket) NOEXCEPT;
+    void untake(const code& ec, const channel::ptr& channel) NOEXCEPT;
     void handle_untake(const code& ec) const NOEXCEPT;
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
-    void handle_connect(const code& ec, const channel::ptr& channel,
+    void handle_connect(const code& ec, const socket::ptr& socket,
         const connectors_ptr& connectors, size_t id) NOEXCEPT;
 
     void handle_channel_start(const code& ec, const channel::ptr& channel,
@@ -82,13 +82,13 @@ private:
 
     void do_one(const code& ec, const config::address& peer, size_t id,
         const connector::ptr& connector,
-        const channel_handler& handler) NOEXCEPT;
-    void handle_connector(const code& ec, const channel::ptr& channel,
+        const socket_handler& handler) NOEXCEPT;
+    void handle_connector(const code& ec, const socket::ptr& socket,
         const config::address& peer, size_t id,
-        const channel_handler& handler) NOEXCEPT;
-    void handle_one(const code& ec, const channel::ptr& channel,
+        const socket_handler& handler) NOEXCEPT;
+    void handle_one(const code& ec, const socket::ptr& socket,
         const count_ptr& count, const connectors_ptr& connectors,
-        size_t id, const channel_handler& handler) NOEXCEPT;
+        size_t id, const socket_handler& handler) NOEXCEPT;
 };
 
 } // namespace network

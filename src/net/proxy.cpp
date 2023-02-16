@@ -409,9 +409,15 @@ uint64_t proxy::total() const NOEXCEPT
     return total_.load(std::memory_order_relaxed);
 }
 
+// TODO: test.
 const config::authority& proxy::authority() const NOEXCEPT
 {
     return socket_->authority();
+}
+
+const config::address& proxy::address() const NOEXCEPT
+{
+    return socket_->address();
 }
 
 BC_POP_WARNING()

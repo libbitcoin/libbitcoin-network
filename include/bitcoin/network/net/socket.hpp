@@ -42,7 +42,14 @@ public:
 
     DELETE_COPY_MOVE(socket);
 
+    /// Use for incoming connections (defaults outgoing address).
     socket(const logger& log, asio::io_context& service) NOEXCEPT;
+
+    /// Use for outgoing connections (retains outgoing address).
+    socket(const logger& log, asio::io_context& service,
+        const config::address& address) NOEXCEPT;
+
+    /// Asserts/logs stopped.
     virtual ~socket() NOEXCEPT;
 
     // Stop.
@@ -79,8 +86,11 @@ public:
     // Properties.
     // ------------------------------------------------------------------------
 
-    /// Get the authority of the remote endpoint.
+    /// Get the authority (incoming) of the remote endpoint.
     virtual const config::authority& authority() const NOEXCEPT;
+
+    /// Get the address (outgoing) of the remote endpoint.
+    virtual const config::address& address() const NOEXCEPT;
 
     /// The strand is running in this thread.
     virtual bool stranded() const NOEXCEPT;
@@ -95,6 +105,7 @@ protected:
 
     // These are protected by strand (see also handle_accept).
     asio::socket socket_;
+    config::address address_;
     config::authority authority_{};
 
 private:
@@ -113,6 +124,8 @@ private:
     void handle_io(const error::boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 };
+
+typedef std::function<void(const code&, const socket::ptr&)> socket_handler;
 
 } // namespace network
 } // namespace libbitcoin

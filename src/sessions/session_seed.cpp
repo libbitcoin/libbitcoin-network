@@ -143,7 +143,7 @@ void session_seed::handle_started(const code& ec,
 
 // Attempt to connect one seed.
 void session_seed::start_seed(const code&, const config::endpoint& seed,
-    const connector::ptr& connector, const channel_handler& handler) NOEXCEPT
+    const connector::ptr& connector, const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Connecting to seed [" << seed << "]");
@@ -158,19 +158,21 @@ void session_seed::start_seed(const code&, const config::endpoint& seed,
     connector->connect(seed, move_copy(handler));
 }
 
-void session_seed::handle_connect(const code& ec, const channel::ptr& channel,
-    const config::endpoint& LOG_ONLY(seed), 
+void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
+    const config::endpoint& LOG_ONLY(seed),
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
     {
-        LOG("Failed to connect seed channel [" << seed << "] " << ec.message());
-        BC_ASSERT_MSG(!channel, "unexpected channel instance");
+        LOG("Failed to connect seed address [" << seed << "] " << ec.message());
+        BC_ASSERT_MSG(!socket, "unexpected channel instance");
         stop_seed(handler);
         return;
     }
+
+    const auto channel = create_channel(socket);
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
