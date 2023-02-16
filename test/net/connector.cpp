@@ -54,7 +54,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
 {
-    const logger log{};
+    const logger log{ false };
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
 
 BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
 {
-    const logger log{};
+    const logger log{ false };
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
 
 BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
 {
-    const logger log{};
+    const logger log{ false };
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
 
 BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
 {
-    const logger log{};
+    const logger log{ false };
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
 
 BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
 {
-    const logger log{};
+    const logger log{ false };
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);

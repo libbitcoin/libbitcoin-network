@@ -152,7 +152,7 @@ private:
 
 BOOST_AUTO_TEST_CASE(p2p__network_settings__unstarted__expected)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     BOOST_REQUIRE_EQUAL(set.threads, 1u);
 
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(p2p__network_settings__unstarted__expected)
 
 BOOST_AUTO_TEST_CASE(p2p__address_count__unstarted__zero)
 {
-    const logger log{};
+    const logger log{ false };
     const settings set(selection::mainnet);
     p2p net(set, log);
     BOOST_REQUIRE_EQUAL(net.address_count(), 0u);
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(p2p__address_count__unstarted__zero)
 
 BOOST_AUTO_TEST_CASE(p2p__channel_count__unstarted__zero)
 {
-    const logger log{};
+    const logger log{ false };
     const settings set(selection::mainnet);
     p2p net(set, log);
     BOOST_REQUIRE_EQUAL(net.channel_count(), 0u);
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(p2p__channel_count__unstarted__zero)
 
 BOOST_AUTO_TEST_CASE(p2p__connect__unstarted__service_stopped)
 {
-    const logger log{};
+    const logger log{ false };
     const settings set(selection::mainnet);
     p2p net(set, log);
 
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(p2p__connect__unstarted__service_stopped)
 
 BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstopped__success)
 {
-    const logger log{};
+    const logger log{ false };
     const settings set(selection::mainnet);
     p2p net(set, log);
 
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstopped__success)
 
 BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstopped__success)
 {
-    const logger log{};
+    const logger log{ false };
     const settings set(selection::mainnet);
     p2p net(set, log);
 
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstopped__success)
 
 BOOST_AUTO_TEST_CASE(p2p__start__outbound_connections_but_no_peers_no_seeds__seeding_unsuccessful)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.seeds.clear();
     BOOST_REQUIRE(set.peers.empty());
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__outbound_connections_but_no_peers_no_seeds__see
 
 BOOST_AUTO_TEST_CASE(p2p__run__not_started__service_stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
 
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__not_started__service_stopped)
 
 BOOST_AUTO_TEST_CASE(p2p__run__started_no_outbound_connections__success)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.outbound_connections = 0;
     set.seeds.clear();
@@ -343,7 +343,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_one_batch__success)
 {
-    const logger log{};
+    const logger log{ false };
     mock_settings set(selection::mainnet);
     BOOST_REQUIRE(set.peers.empty());
 
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_one_batc
 
 BOOST_AUTO_TEST_CASE(p2p__start__success_success__success)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::success, error::success> net(set, log);
 
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__success_success__success)
 
 BOOST_AUTO_TEST_CASE(p2p__start__unknown_success__unknown)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::unknown, error::success> net(set, log);
 
@@ -417,7 +417,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__unknown_success__unknown)
 
 BOOST_AUTO_TEST_CASE(p2p__start__success_unknown__unknown)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::success, error::unknown> net(set, log);
 
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__success_unknown__unknown)
 
 BOOST_AUTO_TEST_CASE(p2p__start__unknown_unknown__unknown)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::unknown, error::unknown> net(set, log);
 
@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__unknown_unknown__unknown)
 // manual does not bypass
 BOOST_AUTO_TEST_CASE(p2p__start__bypassed_success__bypassed)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::bypassed, error::success> net(set, log);
 
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__bypassed_success__bypassed)
 
 BOOST_AUTO_TEST_CASE(p2p__start__success_bypassed__success)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::success, error::bypassed> net(set, log);
 
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__success_bypassed__success)
 
 BOOST_AUTO_TEST_CASE(p2p__start__unknown_bypassed__unknown)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::unknown, error::bypassed> net(set, log);
 
@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__unknown_bypassed__unknown)
 // manual does not bypass
 BOOST_AUTO_TEST_CASE(p2p__start__bypassed_bypassed__bypassed)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::bypassed, error::bypassed> net(set, log);
 
@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__bypassed_bypassed__bypassed)
 
 BOOST_AUTO_TEST_CASE(p2p__start__file_load_success_success__file_load)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::success, error::success> net(set, log, error::file_load);
 
@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__file_load_success_success__file_load)
 
 BOOST_AUTO_TEST_CASE(p2p__start__file_load_unknown_success__unknown)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::unknown, error::success> net(set, log, error::file_load);
 
@@ -547,7 +547,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__file_load_unknown_success__unknown)
 
 BOOST_AUTO_TEST_CASE(p2p__start__file_load_success_unknown__file_load)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::success, error::unknown> net(set, log, error::file_load);
 
@@ -563,7 +563,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__file_load_success_unknown__file_load)
 
 BOOST_AUTO_TEST_CASE(p2p__start__file_load_unknown_unknown__unknown)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_start<error::unknown, error::unknown> net(set, log, error::file_load);
 
@@ -581,7 +581,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__file_load_unknown_unknown__unknown)
 
 BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_success__service_stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::success, error::success> net(set, log, false);
 
@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_success__service_stopped)
 
 BOOST_AUTO_TEST_CASE(p2p__run__started_success_success__success)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::success, error::success> net(set, log, true);
 
@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_success_success__success)
 
 BOOST_AUTO_TEST_CASE(p2p__run__stopped_unknown_success__service_stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::unknown, error::success> net(set, log, false);
 
@@ -626,7 +626,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_unknown_success__service_stopped)
 
 BOOST_AUTO_TEST_CASE(p2p__run__started_unknown_success__unknown)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::unknown, error::success> net(set, log, true);
 
@@ -641,7 +641,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_unknown_success__unknown)
 
 BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_unknown__service_stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::success, error::unknown> net(set, log, false);
 
@@ -656,7 +656,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_unknown__service_stopped)
 
 BOOST_AUTO_TEST_CASE(p2p__run__started_success_unknown__unknown)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::success, error::unknown> net(set, log, true);
 
@@ -671,7 +671,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_success_unknown__unknown)
 
 BOOST_AUTO_TEST_CASE(p2p__run__stopped_unknown_unknown__service_stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::unknown, error::unknown> net(set, log, false);
 
@@ -686,7 +686,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_unknown_unknown__service_stopped)
 
 BOOST_AUTO_TEST_CASE(p2p__run__started_unknown_unknown__unknown)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::unknown, error::unknown> net(set, log, true);
 
@@ -701,7 +701,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_unknown_unknown__unknown)
 
 BOOST_AUTO_TEST_CASE(p2p__run__stopped_bypassed_success__service_stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::bypassed, error::success> net(set, log, false);
 
@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_bypassed_success__service_stopped)
 
 BOOST_AUTO_TEST_CASE(p2p__run__started_bypassed_success__success)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::bypassed, error::success> net(set, log, true);
 
@@ -731,7 +731,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_bypassed_success__success)
 
 BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_bypassed__service_stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::success, error::bypassed> net(set, log, false);
 
@@ -746,7 +746,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_bypassed__service_stopped)
 
 BOOST_AUTO_TEST_CASE(p2p__run__started_success_bypassed__success)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::success, error::bypassed> net(set, log, true);
 
@@ -761,7 +761,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_success_bypassed__success)
 
 BOOST_AUTO_TEST_CASE(p2p__run__stopped_bypassed_bypassed__service_stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::bypassed, error::bypassed> net(set, log, false);
 
@@ -776,7 +776,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_bypassed_bypassed__service_stopped)
 
 BOOST_AUTO_TEST_CASE(p2p__run__started_bypassed_bypassed__success)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p_session_run<error::bypassed, error::bypassed> net(set, log, true);
 
