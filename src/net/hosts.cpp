@@ -173,9 +173,9 @@ size_t hosts::save(const address_items& hosts) NOEXCEPT
     if (disabled_ || hosts.empty())
         return zero;
 
-    // Accept between half and all of the filtered addresses, up to capacity.
+    // Accept between 1 and all of the filtered addresses, up to capacity.
     const auto usable = std::min(hosts.size(), capacity_);
-    const auto random = pseudo_random::next(to_half(usable), usable);
+    const auto random = pseudo_random::next(one, usable);
 
     // But always accept at least the amount we are short if available.
     const auto gap = capacity_ - buffer_.size();
