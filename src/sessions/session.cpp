@@ -50,7 +50,6 @@ session::session(p2p& network, uint64_t identifier) NOEXCEPT
   : network_(network),
     identifier_(identifier),
     stop_subscriber_(network.strand()),
-    pend_subscriber_(network.strand()),
     reporter(network.log())
 {
 }
@@ -81,7 +80,6 @@ void session::stop() NOEXCEPT
 
     stopped_.store(true, std::memory_order_relaxed);
     stop_subscriber_.stop(error::service_stopped);
-    pend_subscriber_.stop(error::service_stopped);
 }
 
 // Channel sequence.
@@ -183,7 +181,7 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    if (!unpend(channel))
+    if (!unpend(channel) && !stopped())
     {
         LOG("Unpend failed to locate channel.");
     }
@@ -338,10 +336,7 @@ void session::defer(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    // At one obj/nanosecond, overflows in ~585 years (and handled).
-    BC_ASSERT_MSG(!is_zero(add1(objects_)), "overflow");
-
-    const auto key = ++objects_;
+    const auto key = create_key();
     const auto timeout = settings().retry_timeout();
     const auto timer = std::make_shared<deadline>(log(), network_.strand());
 
@@ -352,55 +347,72 @@ void session::defer(result_handler&& handler) NOEXCEPT
         BIND3(handle_defer, _1, key, timer), key);
 }
 
-void session::handle_timer(const code& ec, key_t key,
+void session::handle_timer(const code& ec, object_key key,
     const result_handler& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
+
     ////LOG("Delay timer (" << key << ") notify: " << ec.message());
+
     stop_subscriber_.notify_one(key, ec);
     complete(ec);
 }
 
-bool session::handle_defer(const code&, key_t,
+bool session::handle_defer(const code&, object_key,
     const deadline::ptr& timer) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
+
     ////LOG("Delay timer (" << key << ") stop: " << ec.message());
+
     timer->stop();
+
+    // Unsubscribe.
     return false;
 }
 
 void session::pend(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-    ////LOG("Pending channel (" << channel->nonce() << ").");
-    pend_subscriber_.subscribe(BIND2(handle_pend, _1, channel), channel);
+
+    stop_subscriber_.subscribe(
+        BIND2(handle_pend, _1, channel), channel->identifier());
 }
 
 bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-    if (ec) channel->stop(ec);
+
+    ////LOG("Pend channel (" << channel->identifier() << ") " << ec.message());
+
+    if (ec)
+        channel->stop(ec);
+
+    // Unsubscribe.
     return false;
 }
 
+// Ok to not find after stop, clears before channel stop handlers fire.
 bool session::unpend(const channel::ptr& channel) NOEXCEPT
 {
-    // Ok to not find after stop, clears before channel stop handlers fire.
-    const auto result = pend_subscriber_.notify_one(channel, error::success);
-    ////LOG("Unpending channel (" << channel->nonce() << ").");
-    return result || stopped();
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    const auto found = stop_subscriber_.notify_one(channel->identifier(),
+        error::success);
+
+    /////LOG("Unpend channel (" << channel->identifier() << ") " << found);
+
+    return found;
 }
 
-void session::subscribe_stop(notifier&& handler) NOEXCEPT
+void session::subscribe_stop(notify_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-    stop_subscriber_.subscribe(std::move(handler), ++objects_);
+    stop_subscriber_.subscribe(std::move(handler), create_key());
 }
 
 void session::unsubscribe_close() NOEXCEPT
 {
-    // Identifier is provided on construct, from stop subscription.
     network_.unsubscribe_close(identifier_);
 }
 
@@ -425,7 +437,23 @@ connectors_ptr session::create_connectors(size_t count) NOEXCEPT
 channel::ptr session::create_channel(const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-    return std::make_shared<channel>(log(), socket, settings(), ++objects_);
+
+    const auto identifier = create_key();
+    return std::make_shared<channel>(log(), socket, settings(), identifier);
+}
+
+// At one object/session/ns, this overflows in ~585 years (and handled).
+session::object_key session::create_key() NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
+    if (is_zero(++keys_))
+    {
+        BC_ASSERT_MSG(false, "overflow");
+        LOG("Session object overflow.");
+    }
+
+    return keys_;
 }
 
 // Properties.

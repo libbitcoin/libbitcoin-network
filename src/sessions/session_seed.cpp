@@ -267,7 +267,7 @@ void session_seed::handle_channel_stop(const code& ec,
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Seed channel stop [" << channel->authority() << "] " << ec.message());
 
-    if (!unpend(channel))
+    if (!unpend(channel) && !stopped())
     {
         LOG("Unpend failed to locate seed channel.");
     }
@@ -279,29 +279,35 @@ void session_seed::stop_seed(const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(--count_))
-    {
-        LOG("Seed session closed.");
-        unsubscribe_close();
-    }
+    // Need to track count even if handled, for session removal. 
+    --count_;
 
+    // Stop is not set once complete, allows more address collection without
+    // delaying full node startup. So "handled" is used to disable summary.
     if (!handled_)
     {
         if (stopped())
         {
-            handler(error::service_stopped);
             handled_ = true;
+            handler(error::service_stopped);
         }
         else if (address_count() >= settings().minimum_address_count())
         {
-            handler(error::success);
             handled_ = true;
+            handler(error::success);
         }
         else if (is_zero(count_))
         {
-            handler(error::seeding_unsuccessful);
             handled_ = true;
+            handler(error::seeding_unsuccessful);
         }
+    }
+
+    // All channels have completed.
+    if (is_zero(count_))
+    {
+        LOG("Seed session closed.");
+        unsubscribe_close();
     }
 }
 

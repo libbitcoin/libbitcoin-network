@@ -35,6 +35,7 @@ Type move_copy(const Type& instance) NOEXCEPT
 }
 
 // Common handlers, used across types.
+typedef std::function<bool(const code&)> notify_handler;
 typedef std::function<void(const code&)> result_handler;
 typedef std::function<void(const code&, size_t)> count_handler;
 

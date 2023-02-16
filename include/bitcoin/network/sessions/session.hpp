@@ -77,8 +77,8 @@ public:
     virtual bool inbound() const NOEXCEPT = 0;
 
 protected:
-    typedef uint64_t key_t;
-    typedef resubscriber<key_t> subscriber;
+    typedef uint64_t object_key;
+    typedef resubscriber<object_key> subscriber;
     typedef subscriber::handler notifier;
 
     /// Construct an instance (network should be started).
@@ -140,7 +140,7 @@ protected:
     /// Call to create a set of channel connectors, owned by caller.
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
-    /// Create a channel from the started socket (requires strand).
+    /// Create a channel from the started socket.
     virtual channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT;
 
     /// Properties.
@@ -183,6 +183,8 @@ protected:
     virtual bool notify() const NOEXCEPT = 0;
 
 private:
+    object_key create_key() NOEXCEPT;
+
     void handle_channel_start(const code& ec, const channel::ptr& channel,
         const result_handler& started, const result_handler& stopped) NOEXCEPT;
 
@@ -203,9 +205,9 @@ private:
     void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,
         const result_handler& stopped) NOEXCEPT;
 
-    void handle_timer(const code& ec, key_t key,
+    void handle_timer(const code& ec, object_key key,
         const result_handler& complete) NOEXCEPT;
-    bool handle_defer(const code& ec, key_t key,
+    bool handle_defer(const code& ec, object_key key,
         const deadline::ptr& timer) NOEXCEPT;
     bool handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT;
 
@@ -215,11 +217,8 @@ private:
     std::atomic_bool stopped_{ true };
 
     // These are not thread safe.
-    key_t objects_{};
+    object_key keys_{};
     subscriber stop_subscriber_;
-
-    // TODO: Remove and use defer subscriber (renamed).
-    resubscriber<channel::ptr> pend_subscriber_;
 };
 
 } // namespace network
