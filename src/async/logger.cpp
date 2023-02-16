@@ -36,6 +36,14 @@ logger::logger() NOEXCEPT
 {
 }
 
+logger::logger(bool) NOEXCEPT
+  : pool_(one, thread_priority::low),
+    strand_(pool_.service().get_executor()),
+    subscriber_(strand_)
+{
+    pool_.stop();
+}
+
 logger::writer logger::write() const NOEXCEPT
 {
     return { *this };

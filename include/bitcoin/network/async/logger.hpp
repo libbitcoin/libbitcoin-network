@@ -82,6 +82,7 @@ public:
     };
 
     logger() NOEXCEPT;
+    logger(bool) NOEXCEPT;
 
     /// Obtain streaming writer (must destruct before this).
     /// The writer could capture refcounted logger reference, but this would
