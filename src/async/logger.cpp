@@ -30,10 +30,18 @@ namespace network {
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 logger::logger() NOEXCEPT
-  : pool_(1, thread_priority::low),
+  : pool_(one, thread_priority::low),
     strand_(pool_.service().get_executor()),
     subscriber_(strand_)
 {
+}
+
+logger::logger(bool) NOEXCEPT
+  : pool_(one, thread_priority::low),
+    strand_(pool_.service().get_executor()),
+    subscriber_(strand_)
+{
+    pool_.stop();
 }
 
 logger::writer logger::write() const NOEXCEPT
@@ -56,22 +64,26 @@ void logger::do_notify(const code& ec,
     subscriber_.notify(ec, message);
 }
 
-void logger::subscribe(handler&& handler) NOEXCEPT
+void logger::subscribe(notifier&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&logger::do_subscribe, this, std::move(handler)));
 }
 
 // private
-void logger::do_subscribe(const handler& handler) NOEXCEPT
+void logger::do_subscribe(const notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-    subscriber_.subscribe(move_copy(handler));
+    subscriber_.subscribe(move_copy(handler), ++loggers_);
+}
+
+void logger::stop() NOEXCEPT
+{
+    stop({});
 }
 
 void logger::stop(const std::string& message) NOEXCEPT
 {
-    // Subscriber asserts if stopped with a success code.
     stop(error::service_stopped, message);
 }
 
@@ -89,6 +101,8 @@ void logger::stop(const code& ec, const std::string& message) NOEXCEPT
 void logger::do_stop(const code& ec, const std::string& message) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
+    // Subscriber asserts if stopped with a success code.
     subscriber_.stop(ec, message);
  }
 

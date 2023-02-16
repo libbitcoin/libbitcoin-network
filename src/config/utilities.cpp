@@ -67,7 +67,7 @@ inline bool make_address(asio::address& ip, const std::string& host) NOEXCEPT
         ip = ip::make_address(system::trim_copy(host, { "[", "]" }));
         return true;
     }
-    catch (std::exception)
+    catch (const std::exception&)
     {
         return false;
     }
@@ -153,7 +153,7 @@ static asio::ipv6 to_v6(const asio::ipv4& ip4) NOEXCEPT
     {
         return asio::ipv6{ splice(ip_map_prefix, ip4.to_bytes()) };
     }
-    catch (std::exception)
+    catch (const std::exception&)
     {
         return {};
     }
@@ -170,7 +170,7 @@ asio::address denormalize(const asio::address& ip) NOEXCEPT
             const auto ip6 = ip.to_v6();
             if (is_embedded_v4(ip6)) return { ip6.to_v4() };
         }
-        catch (std::exception)
+        catch (const std::exception&)
         {
         }
     }
@@ -187,7 +187,7 @@ inline std::string to_host(const asio::ipv6& ip6) NOEXCEPT
     {
         return is_embedded_v4(ip6) ? to_host(ip6.to_v4()) : ip6.to_string();
     }
-    catch (std::exception)
+    catch (const std::exception&)
     {
         return { "::" };
     }
@@ -199,7 +199,7 @@ inline std::string to_host(const asio::ipv4& ip4) NOEXCEPT
     {
         return ip4.to_string();
     }
-    catch (std::exception)
+    catch (const std::exception&)
     {
         return { "0.0.0.0" };
     }
@@ -213,7 +213,7 @@ std::string to_host(const asio::address& ip) NOEXCEPT
         const auto host = denormalize(ip);
         return host.is_v4() ? to_host(host.to_v4()) : to_host(host.to_v6());
     }
-    catch (std::exception)
+    catch (const std::exception&)
     {
         return { "0.0.0.0" };
     }
@@ -246,7 +246,7 @@ static asio::ipv6 get_ipv6(const asio::address& ip) NOEXCEPT
     {
         return ip.is_v6() ? ip.to_v6() : to_v6(ip.to_v4());
     }
-    catch (std::exception)
+    catch (const std::exception&)
     {
         return {};
     }
@@ -263,7 +263,7 @@ asio::address from_address(const messages::ip_address& address) NOEXCEPT
     {
         return { asio::ipv6{ address } };
     }
-    catch (std::exception)
+    catch (const std::exception&)
     {
         return { asio::ipv6{} };
     }
@@ -295,7 +295,7 @@ bool is_member(const asio::address& ip, const asio::address& subnet,
         if (ip.is_v6() && subnet.is_v6())
             return is_member_v6(ip.to_v6(), subnet.to_v6(), cidr);
     }
-    catch (std::exception)
+    catch (const std::exception&)
     {
     }
 

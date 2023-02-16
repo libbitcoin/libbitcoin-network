@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_SUITE(deadline_tests)
 
 BOOST_AUTO_TEST_CASE(deadline__construct1__one_thread_start_zero_delay__success)
 {
-    const logger log{};
+    const logger log{ false };
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(log, strand);
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(deadline__construct1__one_thread_start_zero_delay__success)
 
 BOOST_AUTO_TEST_CASE(deadline__construct1__two_threads_start_delay__success)
 {
-    const logger log{};
+    const logger log{ false };
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(log, strand);
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(deadline__construct1__two_threads_start_delay__success)
 
 BOOST_AUTO_TEST_CASE(deadline__construct2__three_threads_start_zero_delay__success)
 {
-    const logger log{};
+    const logger log{ false };
     threadpool pool(3);
     asio::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(log, strand, seconds(42));
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(deadline__construct2__three_threads_start_zero_delay__succe
 BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
 {
     // Thread starved timer.
-    const logger log{};
+    const logger log{ false };
     threadpool pool(0);
     asio::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(log, strand);
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(deadline__stop__thread_starved__not_invoked)
 BOOST_AUTO_TEST_CASE(deadline__stop__race__success)
 {
     // Slow timer.
-    const logger log{};
+    const logger log{ false };
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const auto timer = std::make_shared<deadline>(log, strand, seconds(10));

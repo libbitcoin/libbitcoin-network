@@ -58,7 +58,7 @@ public:
     }
 
     // Override protected base to notify subscribers.
-    code notify(identifier, uint32_t, system::reader&) NOEXCEPT override
+    code notify(messages::identifier, uint32_t, system::reader&) NOEXCEPT override
     {
         return error::success;
         ////return channel::notify(id, version, source);
@@ -111,16 +111,15 @@ public:
     }
 
     // Inject mock channel.
-    void accept(channel_handler&& handler) NOEXCEPT override
+    void accept(socket_handler&& handler) NOEXCEPT override
     {
         const auto socket = std::make_shared<network::socket>(log(), service_);
-        const auto created = std::make_shared<mock_channel>(log(), socket, settings_);
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
         boost::asio::post(strand_, [=]()
         {
-            handler(error::success, created);
+            handler(error::success, socket);
         });
     }
 
@@ -154,11 +153,10 @@ public:
 
     // Inject mock channel.
     void start(const std::string&, uint16_t, const config::address&,
-        channel_handler&& handler) NOEXCEPT override
+        socket_handler&& handler) NOEXCEPT override
     {
         const auto socket = std::make_shared<network::socket>(log(), service_);
-        const auto created = std::make_shared<mock_channel>(log(), socket, settings_);
-        handler(error::success, created);
+        handler(error::success, socket);
     }
 
 private:

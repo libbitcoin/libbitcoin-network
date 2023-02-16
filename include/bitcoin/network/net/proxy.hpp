@@ -101,8 +101,11 @@ public:
     /// The total number of bytes queued/sent to the peer.
     uint64_t total() const NOEXCEPT;
 
-    /// The authority of the peer.
+    /// Get the authority (incoming) of the remote endpoint.
     const config::authority& authority() const NOEXCEPT;
+
+    /// Get the address (outgoing) of the remote endpoint.
+    const config::address& address() const NOEXCEPT;
 
 protected:
     proxy(const socket::ptr& socket) NOEXCEPT;

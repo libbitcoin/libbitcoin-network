@@ -28,16 +28,10 @@ namespace network {
 using namespace system;
 
 #define SUBSCRIBER(name) name##_subscriber_
-
-#define MAKE_SUBSCRIBER(name) \
-    SUBSCRIBER(name)(strand)
-
-#define CASE_NOTIFY(name) \
-    case messages::identifier::name: \
-        return do_notify<messages::name>(SUBSCRIBER(name), version, source)
-
-#define STOP_SUBSCRIBER(name) \
-    SUBSCRIBER(name).stop_default(ec)
+#define MAKE_SUBSCRIBER(name) SUBSCRIBER(name)(strand)
+#define STOP_SUBSCRIBER(name) SUBSCRIBER(name).stop_default(ec)
+#define CASE_NOTIFY(name) case messages::identifier::name: \
+    return do_notify<messages::name>(SUBSCRIBER(name), version, source)
 
 pump::pump(asio::strand& strand) NOEXCEPT
   : MAKE_SUBSCRIBER(address),

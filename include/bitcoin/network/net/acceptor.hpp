@@ -24,7 +24,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/net/channel.hpp>
+#include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -48,6 +48,8 @@ public:
     /// Construct an instance.
     acceptor(const logger& log, asio::strand& strand,
         asio::io_context& service, const settings& settings) NOEXCEPT;
+
+    /// Asserts/logs stopped.
     virtual ~acceptor() NOEXCEPT;
 
     // Start/stop.
@@ -63,10 +65,10 @@ public:
     // ------------------------------------------------------------------------
     /// Subsequent accepts may only be attempted following handler invocation.
     /// May return operation_canceled, channel_timeout, success or error code.
-    /// The channel paramter is nullptr unless success is returned.
+    /// The socket parameter is nullptr unless success is returned.
 
     /// Accept next connection available until stop or timeout, starts timer.
-    virtual void accept(channel_handler&& handler) NOEXCEPT;
+    virtual void accept(socket_handler&& handler) NOEXCEPT;
 
 protected:
     // These are thread safe.
@@ -80,7 +82,7 @@ protected:
 
 private:
     void handle_accept(const code& ec, const socket::ptr& socket,
-        const channel_handler& handler) NOEXCEPT;
+        const socket_handler& handler) NOEXCEPT;
 };
 
 } // namespace network

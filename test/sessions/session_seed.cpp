@@ -23,37 +23,6 @@ BOOST_AUTO_TEST_SUITE(session_seed_tests)
 using namespace bc::network::messages;
 using namespace bc::system::chain;
 
-class mock_channel
-  : public channel
-{
-public:
-    typedef std::shared_ptr<mock_channel> ptr;
-
-    mock_channel(const logger& log, bool& set, std::promise<bool>& coded,
-        const code& match, socket::ptr socket, const settings& settings) NOEXCEPT
-      : channel(log, socket, settings), match_(match), set_(set), coded_(coded)
-    {
-    }
-
-    void stop(const code& ec) NOEXCEPT override
-    {
-        // Set future on first code match.
-        if (ec == match_ && !set_)
-        {
-            set_ = true;
-            coded_.set_value(true);
-        }
-
-        channel::stop(ec);
-    }
-
-private:
-    const code match_;
-    bool& set_;
-    std::promise<bool>& coded_;
-};
-
-template <error::error_t ChannelStopCode = error::success>
 class mock_connector_connect_success
   : public connector
 {
@@ -61,12 +30,6 @@ public:
     typedef std::shared_ptr<mock_connector_connect_success> ptr;
 
     using connector::connector;
-
-    // Require template parameterized channel stop code (ChannelStopCode).
-    bool require_code() const NOEXCEPT
-    {
-        return coded_.get_future().get();
-    }
 
     // Get captured connected.
     bool connected() const NOEXCEPT
@@ -107,7 +70,7 @@ public:
 
     // Handle connect, capture first connected hostname and port.
     void start(const std::string& hostname, uint16_t port,
-        const config::address&, channel_handler&& handler) NOEXCEPT override
+        const config::address&, socket_handler&& handler) NOEXCEPT override
     {
         if (is_zero(connects_++))
         {
@@ -116,15 +79,13 @@ public:
         }
 
         const auto socket = std::make_shared<network::socket>(log(), service_);
-        const auto channel = std::make_shared<mock_channel>(log(), set_, coded_,
-            ChannelStopCode, socket, settings_);
 
         // Must be asynchronous or is an infinite recursion.
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
             // Connect result code is independent of the channel stop code.
             // As error code would set the re-listener timer, channel pointer is ignored.
-            handler(error::success, channel);
+            handler(error::success, socket);
         });
     }
 
@@ -133,20 +94,18 @@ protected:
     size_t connects_{ zero };
     std::string hostname_;
     uint16_t port_;
-    bool set_{ false };
-    mutable std::promise<bool> coded_;
 };
 
 class mock_connector_connect_fail
-  : public mock_connector_connect_success<error::success>
+  : public mock_connector_connect_success
 {
 public:
     typedef std::shared_ptr<mock_connector_connect_fail> ptr;
 
-    using mock_connector_connect_success<error::success>::mock_connector_connect_success;
+    using mock_connector_connect_success::mock_connector_connect_success;
 
     void start(const std::string&, uint16_t, const config::address&,
-        channel_handler&& handler) NOEXCEPT override
+        socket_handler&& handler) NOEXCEPT override
     {
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
@@ -179,7 +138,7 @@ public:
     // Capture first start_connect call.
     void start_seed(const code&, const config::endpoint& seed,
         const connector::ptr& connector,
-        const channel_handler& handler) NOEXCEPT override
+        const socket_handler& handler) NOEXCEPT override
     {
         // Must be first to ensure connector::start_connect() preceeds promise release.
         session_seed::start_seed({}, seed, connector, handler);
@@ -365,7 +324,7 @@ private:
 };
 
 class mock_connector_stop_connect
-  : public mock_connector_connect_success<error::service_stopped>
+  : public mock_connector_connect_success
 {
 public:
     typedef std::shared_ptr<mock_connector_stop_connect> ptr;
@@ -379,15 +338,15 @@ public:
     }
 
     void start(const std::string& hostname, uint16_t port,
-        const config::address& host, channel_handler&& handler) NOEXCEPT override
+        const config::address& host, socket_handler&& handler) NOEXCEPT override
     {
         BC_ASSERT_MSG(session_, "call set_session");
 
         // This connector.start_connect is invoked from network stranded method.
         session_->stop();
 
-        mock_connector_connect_success<error::service_stopped>::start(
-            hostname, port, host, std::move(handler));
+        mock_connector_connect_success::start(hostname, port, host,
+            std::move(handler));
     }
 
 private:
@@ -482,7 +441,7 @@ private:
 
 BOOST_AUTO_TEST_CASE(session_seed__inbound__always__false)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
     mock_session_seed session(net, 1);
@@ -491,7 +450,7 @@ BOOST_AUTO_TEST_CASE(session_seed__inbound__always__false)
 
 BOOST_AUTO_TEST_CASE(session_seed__notify__always__false)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
     mock_session_seed session(net, 1);
@@ -502,7 +461,7 @@ BOOST_AUTO_TEST_CASE(session_seed__notify__always__false)
 
 BOOST_AUTO_TEST_CASE(session_seed__stop__started__service_stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.host_pool_capacity = 1;
@@ -530,12 +489,11 @@ BOOST_AUTO_TEST_CASE(session_seed__stop__started__service_stopped)
 
     // Block until started connectors/channels complete before clearing session.
     net.close();
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_seed__stop__stopped__stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
     mock_session_seed session(net, 1);
@@ -556,7 +514,7 @@ BOOST_AUTO_TEST_CASE(session_seed__stop__stopped__stopped)
 
 BOOST_AUTO_TEST_CASE(session_seed__start__no_outbound__bypassed)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.outbound_connections = 0;
     mock_p2p<> net(set, log);
@@ -574,12 +532,11 @@ BOOST_AUTO_TEST_CASE(session_seed__start__no_outbound__bypassed)
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
     BOOST_REQUIRE(session->stopped());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_seed__start__outbound_one_address_count__bypassed)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.connect_batch_size = 1;
@@ -601,12 +558,11 @@ BOOST_AUTO_TEST_CASE(session_seed__start__outbound_one_address_count__bypassed)
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
     BOOST_REQUIRE(session->stopped());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_host_pool_capacity__seeding_unsuccessful)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.host_pool_capacity = 0;
@@ -625,12 +581,11 @@ BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_host_pool_capacity__seedin
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
     BOOST_REQUIRE(session->stopped());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_seeds__seeding_unsuccessful)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.host_pool_capacity = 1;
@@ -650,12 +605,11 @@ BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_seeds__seeding_unsuccessfu
 
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::seeding_unsuccessful);
     BOOST_REQUIRE(session->stopped());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_seed__start__restart__operation_failed)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.connect_batch_size = 1;
@@ -700,12 +654,11 @@ BOOST_AUTO_TEST_CASE(session_seed__start__restart__operation_failed)
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_seed__start__seeded__success)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.connect_batch_size = 1;
@@ -713,7 +666,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__seeded__success)
     set.seeds.resize(2);
     BOOST_REQUIRE_EQUAL(set.minimum_address_count(), one);
 
-    mock_p2p<mock_connector_connect_success<error::success>> net(set, log);
+    mock_p2p<mock_connector_connect_success> net(set, log);
     auto session = std::make_shared<mock_session_seed_increasing_address_count>(net, 1);
     BOOST_REQUIRE(session->stopped());
     
@@ -742,16 +695,15 @@ BOOST_AUTO_TEST_CASE(session_seed__start__seeded__success)
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.host_pool_capacity = 1;
-    mock_p2p<mock_connector_connect_success<error::success>> net(set, log);
+    mock_p2p<mock_connector_connect_success> net(set, log);
     auto session = std::make_shared<mock_session_seed>(net, 1);
     BOOST_REQUIRE(session->stopped());
     
@@ -778,12 +730,11 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
-    session.reset();
 }
 
 ////BOOST_AUTO_TEST_CASE(session_seed__live__one_address__expected)
 ////{
-////    const logger log{};
+////    const logger log{ false };
 ////    settings set(selection::mainnet);
 ////    set.seeds.resize(1);
 ////    set.seeding_timeout_seconds = 5;
@@ -812,7 +763,6 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
 ////
 ////    BOOST_REQUIRE(stopped.get_future().get());
 ////    BOOST_REQUIRE_GT(net.address_count(), zero);
-////    session.reset();
 ////}
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -78,7 +78,7 @@
     <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\test\async\time.cpp" />
     <ClCompile Include="..\..\..\..\test\async\timer.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\track.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>
     </ClCompile>

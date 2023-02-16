@@ -210,10 +210,12 @@ void p2p::do_close() NOEXCEPT
     // Notify and delete subscribers to channel notifications.
     connect_subscriber_.stop_default(error::service_stopped);
 
+    // TODO: implement broadcast message subscriber and delete channels_.
     // Stop all channels.
     for (const auto& channel: channels_)
         channel->stop(error::service_stopped);
 
+    // TODO: implement broadcast message subscriber and delete channels_.
     // Free all channels.
     channels_.clear();
 
@@ -237,8 +239,10 @@ void p2p::do_subscribe_connect(const channel_notifier& handler,
     const channel_completer& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    complete(connect_subscriber_.subscribe(move_copy(handler), ++connects_) ?
-        error::success : error::subscriber_stopped, connects_);
+
+    const auto key = create_key();
+    complete(connect_subscriber_.subscribe(move_copy(handler), key) ?
+        error::success : error::subscriber_stopped, key);
 }
 
 void p2p::unsubscribe_connect(size_t key) NOEXCEPT
@@ -247,14 +251,14 @@ void p2p::unsubscribe_connect(size_t key) NOEXCEPT
         std::bind(&p2p::do_unsubscribe_connect, this, key));
 }
 
-void p2p::do_unsubscribe_connect(key_t key) NOEXCEPT
+void p2p::do_unsubscribe_connect(object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     /*bool*/ connect_subscriber_.notify_one(key, error::unsubscribed, nullptr);
 }
 
 // private
-bool p2p::subscribe_close(stop_handler&& handler, key_t key) NOEXCEPT
+bool p2p::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return stop_subscriber_.subscribe(std::move(handler), key);
@@ -273,8 +277,10 @@ void p2p::do_subscribe_close(const stop_handler& handler,
     const stop_completer& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    complete(subscribe_close(move_copy(handler), ++stops_) ?
-        error::success : error::subscriber_stopped, stops_);
+    
+    const auto key = create_key();
+    complete(subscribe_close(move_copy(handler), key) ?
+        error::success : error::subscriber_stopped, key);
 }
 
 void p2p::unsubscribe_close(size_t key) NOEXCEPT
@@ -283,10 +289,24 @@ void p2p::unsubscribe_close(size_t key) NOEXCEPT
         std::bind(&p2p::do_unsubscribe_close, this, key));
 }
 
-void p2p::do_unsubscribe_close(key_t key) NOEXCEPT
+void p2p::do_unsubscribe_close(object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     /*bool*/ stop_subscriber_.notify_one(key, error::unsubscribed);
+}
+
+// At one object/session/ns, this overflows in ~585 years (and handled).
+p2p::object_key p2p::create_key() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    if (is_zero(++keys_))
+    {
+        BC_ASSERT_MSG(false, "overflow");
+        LOG("Session object overflow.");
+    }
+
+    return keys_;
 }
 
 // Manual connections.
@@ -493,6 +513,7 @@ code p2p::store_channel(const channel::ptr& channel, bool notify,
     // Increment total channel counter.
     ++channel_count_;
 
+    // TODO: implement broadcast message subscriber and delete channels_.
     // Store channel for message broadcast and stop notification.
     channels_.insert(channel);
     return error::success;
@@ -503,6 +524,7 @@ code p2p::unstore_channel(const channel::ptr& channel, bool inbound) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // TODO: implement broadcast message subscriber and delete channels_.
     // Ok if not found, as the channel may not have been stored.
     if (is_zero(channels_.erase(channel)))
         return error::success;

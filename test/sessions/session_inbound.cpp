@@ -22,37 +22,6 @@ BOOST_AUTO_TEST_SUITE(session_inbound_tests)
 
 using namespace bc::system::chain;
 
-class mock_channel
-  : public channel
-{
-public:
-    typedef std::shared_ptr<mock_channel> ptr;
-
-    mock_channel(const logger& log, bool& set, std::promise<bool>& coded,
-        const code& match, socket::ptr socket, const settings& settings) NOEXCEPT
-      : channel(log, socket, settings), match_(match), set_(set), coded_(coded)
-    {
-    }
-
-    void stop(const code& ec) NOEXCEPT override
-    {
-        // Set future on first code match.
-        if (ec == match_ && !set_)
-        {
-            set_ = true;
-            coded_.set_value(true);
-        }
-
-        channel::stop(ec);
-    }
-
-private:
-    const code match_;
-    bool& set_;
-    std::promise<bool>& coded_;
-};
-
-template <error::error_t ChannelStopCode = error::success>
 class mock_acceptor_start_success_accept_success
   : public acceptor
 {
@@ -60,12 +29,6 @@ public:
     typedef std::shared_ptr<mock_acceptor_start_success_accept_success> ptr;
 
     using acceptor::acceptor;
-
-    // Require template parameterized channel stop code (ChannelStopCode).
-    bool require_code() const NOEXCEPT
-    {
-        return coded_.get_future().get();
-    }
 
     // Get captured port.
     uint16_t port() const NOEXCEPT
@@ -100,18 +63,16 @@ public:
     }
 
     // Handle accept.
-    void accept(channel_handler&& handler) NOEXCEPT override
+    void accept(socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         const auto socket = std::make_shared<network::socket>(log(), service_);
-        const auto channel = std::make_shared<mock_channel>(log(), set_,
-            coded_, ChannelStopCode, socket, settings_);
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
         boost::asio::post(strand_, [=]() NOEXCEPT
         {
-            handler(error::success, channel);
+            handler(error::success, socket);
         });
     }
 
@@ -119,21 +80,19 @@ protected:
     bool stopped_{ false };
     size_t accepts_{ zero };
     uint16_t port_{ 0 };
-    bool set_{ false };
-    mutable std::promise<bool> coded_;
 };
 
 class mock_acceptor_start_success_accept_fail
-  : public mock_acceptor_start_success_accept_success<error::success>
+  : public mock_acceptor_start_success_accept_success
 {
 public:
     typedef std::shared_ptr<mock_acceptor_start_success_accept_fail> ptr;
 
-    using mock_acceptor_start_success_accept_success<error::success>::
+    using mock_acceptor_start_success_accept_success::
         mock_acceptor_start_success_accept_success;
 
     // Handle accept with unknown error.
-    void accept(channel_handler&& handler) NOEXCEPT override
+    void accept(socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]() NOEXCEPT
@@ -153,7 +112,7 @@ public:
         mock_acceptor_start_success_accept_fail;
 
     // Handle accept with service_stopped error.
-    void accept(channel_handler&& handler) NOEXCEPT override
+    void accept(socket_handler&& handler) NOEXCEPT override
     {
         ++accepts_;
         boost::asio::post(strand_, [=]() NOEXCEPT
@@ -411,7 +370,7 @@ private:
 
 BOOST_AUTO_TEST_CASE(session_inbound__inbound__always__true)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
     mock_session_inbound session(net, 1);
@@ -420,7 +379,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__inbound__always__true)
 
 BOOST_AUTO_TEST_CASE(session_inbound__notify__always__true)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
     mock_session_inbound session(net, 1);
@@ -431,7 +390,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__notify__always__true)
 
 BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     mock_p2p<> net(set, log);
@@ -461,12 +420,11 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
     mock_session_inbound session(net, 1);
@@ -486,7 +444,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
 
 BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__bypassed)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 0;
     mock_p2p<> net(set, log);
@@ -508,7 +466,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__bypassed)
 
 BOOST_AUTO_TEST_CASE(session_inbound__start__port_zero__bypassed)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 0;
@@ -531,7 +489,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__port_zero__bypassed)
 
 BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operation_failed)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     mock_p2p<> net(set, log);
@@ -572,12 +530,11 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operat
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepted)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 42;
@@ -620,12 +577,11 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepte
 
     // Attach is not invoked.
     BOOST_REQUIRE(!session->attached_handshake());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_stopped__not_attached)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 42;
@@ -667,16 +623,15 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 
     // Not attached because accept returned stopped.
     BOOST_REQUIRE(!session->attached_handshake());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started__timer_failure_code__no_accept)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 42;
-    mock_p2p<mock_acceptor_start_success_accept_success<>> net(set, log);
+    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
 
     // start_accept is invoked with invalid_checksum.
     auto session = std::make_shared<mock_session_start_accept_parameter_error>(net, 1);
@@ -712,12 +667,11 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started__timer_failure_cod
 
     // Attach is not invoked.
     BOOST_REQUIRE(!session->attached_handshake());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_attached)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 42;
@@ -759,16 +713,17 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
 
     // Not attached because accept returned error.
     BOOST_REQUIRE(!session->attached_handshake());
-    session.reset();
 }
+
+// Socket termination (sockets have no stop codes).
 
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelisted__not_attached)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 42;
-    mock_p2p<mock_acceptor_start_success_accept_success<error::address_blocked>> net(set, log);
+    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
 
     std::promise<code> net_started;
     net.start([&](const code& ec)
@@ -798,9 +753,6 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
 
-    // Block until handle_accept sets address_blocked in channel.stop.
-    BOOST_REQUIRE(net.get_acceptor()->require_code());
-
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [=, &stopped]()
     {
@@ -815,16 +767,15 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
 
     // Not attached because accept never succeeded.
     BOOST_REQUIRE(!session->attached_handshake());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted__not_attached)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 42;
-    mock_p2p<mock_acceptor_start_success_accept_success<error::address_blocked>> net(set, log);
+    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
 
     std::promise<code> net_started;
     net.start([&](const code& ec)
@@ -854,9 +805,6 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
 
-    // Block until handle_accept sets address_blocked in channel.stop.
-    BOOST_REQUIRE(net.get_acceptor()->require_code());
-
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [=, &stopped]()
     {
@@ -871,16 +819,15 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
 
     // Not attached because accept never succeeded.
     BOOST_REQUIRE(!session->attached_handshake());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscribed__not_attached)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 42;
-    mock_p2p<mock_acceptor_start_success_accept_success<error::oversubscribed>> net(set, log);
+    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
 
     std::promise<code> net_started;
     net.start([&](const code& ec)
@@ -910,9 +857,6 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
 
-    // Block until handle_accept sets oversubscribed in channel.stop.
-    BOOST_REQUIRE(net.get_acceptor()->require_code());
-
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [=, &stopped]()
     {
@@ -927,17 +871,16 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
 
     // Not attached because accept never succeeded.
     BOOST_REQUIRE(!session->attached_handshake());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__attached)
 {
-    const logger log{};
+    const logger log{ false };
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.inbound_port = 42;
     set.connect_timeout_seconds = 10000;
-    mock_p2p<mock_acceptor_start_success_accept_success<error::service_stopped>> net(set, log);
+    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
 
     std::promise<code> net_started;
     net.start([&](const code& ec)
@@ -978,9 +921,6 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
         stopped.set_value(true);
     });
 
-    // Block until handle_accept sets service_stopped in channel.stop.
-    BOOST_REQUIRE(net.get_acceptor()->require_code());
-
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
@@ -988,7 +928,6 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
 
     // Handshake protocols attached.
     BOOST_REQUIRE(session->attached_handshake());
-    session.reset();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -49,12 +49,12 @@ public:
 
 BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
 {
-    const logger log{};
+    const logger log{ false };
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel>(log, socket_ptr, set);
+    auto channel_ptr = std::make_shared<channel>(log, socket_ptr, set, 42);
     BOOST_REQUIRE(!channel_ptr->stopped());
 
     // Stop completion is asynchronous.
@@ -70,51 +70,14 @@ inline size_t payload_maximum(const settings& settings)
 
 BOOST_AUTO_TEST_CASE(channel__properties__default__expected)
 {
-    const logger log{};
+    const logger log{ false };
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_accessor>(log, socket_ptr, set);
+    auto channel_ptr = std::make_shared<channel_accessor>(log, socket_ptr, set, 42);
 
     BOOST_REQUIRE(!channel_ptr->address());
-    BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
-    BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
-
-    // TODO: compare to default instance.
-    BOOST_REQUIRE(channel_ptr->peer_version());
-
-    BOOST_REQUIRE_EQUAL(channel_ptr->maximum_payload(), payload_maximum(set));
-    BOOST_REQUIRE_EQUAL(channel_ptr->protocol_magic(), set.identifier);
-    BOOST_REQUIRE_EQUAL(channel_ptr->validate_checksum(), set.validate_checksum);
-    BOOST_REQUIRE_EQUAL(channel_ptr->version(), set.protocol_maximum);
-
-    channel_ptr->stop(error::invalid_magic);
-    channel_ptr.reset();
-}
-
-BOOST_AUTO_TEST_CASE(channel__properties__address__expected)
-{
-    const config::address expected
-    {
-        messages::address_item
-        {
-            42,
-            messages::service::node_xnetwork_limited,
-            messages::loopback_ip_address,
-            24
-        }
-    };
-
-    const logger log{};
-    threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
-    const settings set(bc::system::chain::selection::mainnet);
-    auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_accessor>(log, socket_ptr, set, expected);
-
-    BOOST_REQUIRE(channel_ptr->address());
-    BOOST_REQUIRE_EQUAL(channel_ptr->address(), expected);
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
     BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
 

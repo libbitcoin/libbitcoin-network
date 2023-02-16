@@ -24,7 +24,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/subscriber.hpp>
+#include <bitcoin/network/async/resubscriber.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
@@ -32,11 +32,19 @@
 namespace libbitcoin {
 namespace network {
 
-class BCT_API logger
+/// Thread safe logging class.
+/// Must be kept in scope until last logger::writer instance is destroyed.
+/// Emits streaming writer that commits message upon destruct.
+/// Provides subscription to std::string message commitments.
+/// Stoppable with optional termination code and message.
+class BCT_API logger final
 {
 public:
-    typedef std::function<void(const code&, const std::string&)> handler;
+    typedef size_t key_t;
+    typedef resubscriber<key_t, const std::string&> subscriber;
+    typedef subscriber::handler notifier;
 
+    /// Streaming log writer (std::ostringstream), not thread safe.
     class writer final
     {
     public:
@@ -49,6 +57,7 @@ public:
 
         inline ~writer() NOEXCEPT
         {
+            // log_.notify() cannot be non-const in destructor.
             BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
             log_.notify(error::success, stream_.str());
             BC_POP_WARNING()
@@ -60,35 +69,54 @@ public:
             BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
             stream_ << message;
             BC_POP_WARNING()
-
             return stream_;
         }
 
     private:
+        // This is thread safe.
+        // This cannot be declared mutable.
         const logger& log_;
+
+        // This is not thread safe.
         std::ostringstream stream_{};
     };
 
     logger() NOEXCEPT;
+    logger(bool) NOEXCEPT;
 
+    /// Obtain streaming writer (must destruct before this).
+    /// The writer could capture refcounted logger reference, but this would
+    /// require shared logger instances, an unnecessary complication/cost.
     writer write() const NOEXCEPT;
-    void subscribe(handler&& handler) NOEXCEPT;
 
-    /// Stop the subscriber/pool with a final message posted to subscribers.
-    void stop(const std::string& message) NOEXCEPT;
+    /// If stopped, handler is invoked with error::subscriber_stopped/defaults
+    /// and dropped. Otherwise it is held until stop/drop. False if failed.
+    void subscribe(notifier&& handler) NOEXCEPT;
+
+    /// Stop subscriber/pool with final message/empty posted to subscribers.
     void stop(const code& ec, const std::string& message) NOEXCEPT;
+    void stop(const std::string& message) NOEXCEPT;
+    void stop() NOEXCEPT;
 
 protected:
+    /// Only writer can access notify, must destruct before logger.
     void notify(const code& ec, std::string&& message) const NOEXCEPT;
 
 private:
-    threadpool pool_;
-    asio::strand strand_;
-    subscriber<const std::string&> subscriber_;
-
-    void do_subscribe(const handler& handler) NOEXCEPT;
+    void do_subscribe(const notifier& handler) NOEXCEPT;
     void do_notify(const code& ec, const std::string& message) const NOEXCEPT;
     void do_stop(const code& ec, const std::string& message) NOEXCEPT;
+
+    // This is protected by strand.
+    threadpool pool_;
+
+    // This is thread safe.
+    asio::strand strand_;
+
+    // These are protected by strand.
+    // notify()/do_notify() can be const because of mutable subscriber.
+    key_t loggers_{};
+    mutable subscriber subscriber_;
 };
 
 } // namespace network

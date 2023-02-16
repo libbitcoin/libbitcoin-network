@@ -114,7 +114,7 @@ address endpoint::to_address() const NOEXCEPT
     {
         return { to_uri() };
     }
-    catch (std::exception)
+    catch (const std::exception&)
     {
         return {};
     }

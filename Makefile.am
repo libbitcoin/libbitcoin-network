@@ -135,7 +135,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/async/threadpool.cpp \
     test/async/time.cpp \
     test/async/timer.cpp \
-    test/async/track.cpp \
+    test/async/tracker.cpp \
     test/config/address.cpp \
     test/config/authority.cpp \
     test/config/endpoint.cpp \

@@ -26,7 +26,7 @@
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/error.hpp>
-#include <bitcoin/network/net/channel.hpp>
+#include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -39,7 +39,7 @@ using namespace network::config;
 using namespace std::placeholders;
 
 // Construct.
-// ---------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 connector::connector(const logger& log, asio::strand& strand,
     asio::io_context& service, const settings& settings) NOEXCEPT
@@ -72,63 +72,59 @@ void connector::stop() NOEXCEPT
 }
 
 // Methods.
-// ---------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 void connector::connect(const address& host,
-    channel_handler&& handler) NOEXCEPT
+    socket_handler&& handler) NOEXCEPT
 {
-    // Forward outbound connection address.
     start(host.to_host(), host.port(), host, std::move(handler));
 }
 
 void connector::connect(const authority& host,
-    channel_handler&& handler) NOEXCEPT
+    socket_handler&& handler) NOEXCEPT
 {
-    // Forward outbound connection address (default service/time).
     start(host.to_host(), host.port(), host.to_address_item(),
         std::move(handler));
 }
 
 void connector::connect(const endpoint& host,
-    channel_handler&& handler) NOEXCEPT
+    socket_handler&& handler) NOEXCEPT
 {
     start(host.host(), host.port(), host.to_address(), std::move(handler));
 }
 
 // protected
 void connector::start(const std::string& hostname, uint16_t port,
-    const config::address& peer, channel_handler&& handler) NOEXCEPT
+    const config::address& host, socket_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     // This allows connect after stop (restartable).
     stopped_ = false;
-    const auto socket = std::make_shared<network::socket>(log(), service_);
 
-    // Posts handle_timer to strand.
-    // The handler is copied by std::bind.
+    // Create the socket.
+    const auto sock = std::make_shared<socket>(log(), service_, host);
+
+    // Posts handle_timer to strand (handler copied).
     timer_->start(
         std::bind(&connector::handle_timer,
-            shared_from_this(), _1, socket, handler));
+            shared_from_this(), _1, sock, handler));
 
-    // Posts handle_resolve to strand.
-    // async_resolve copies string parameters.
+    // Posts handle_resolve to strand (async_resolve copies strings).
     resolver_.async_resolve(hostname, std::to_string(port),
         std::bind(&connector::handle_resolve,
-            shared_from_this(), _1, _2, socket, peer, std::move(handler)));
+            shared_from_this(), _1, _2, sock, std::move(handler)));
 }
 
 // private
 void connector::handle_resolve(const error::boost_code& ec,
     const asio::endpoints& range, socket::ptr socket,
-    const config::address& peer, const channel_handler& handler) NOEXCEPT
+    const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    // Ensure the handler executes only once, as both may be posted.
     if (stopped_)
     {
-        // Socket stop here prevents otherwise safe assert in socket destruct.
         socket->stop();
         return;
     }
@@ -136,15 +132,8 @@ void connector::handle_resolve(const error::boost_code& ec,
     if (ec)
     {
         stopped_ = true;
-
-        // Posts handle_timer to strand (if not already posted).
         timer_->stop();
-
-        // Prevent non-stop assertion (resolve failed but socket is started).
         socket->stop();
-
-        // Resolve result codes return here.
-        // Cancel not handled here because handled first in timer.
         handler(error::asio_to_error_code(ec), nullptr);
         return;
     }
@@ -152,63 +141,51 @@ void connector::handle_resolve(const error::boost_code& ec,
     // Establishes a socket connection by trying each endpoint in sequence.
     socket->connect(range,
         std::bind(&connector::handle_connect,
-            shared_from_this(), _1, socket, peer, handler));
+            shared_from_this(), _1, socket, handler));
 }
 
 // private
 void connector::handle_connect(const code& ec, socket::ptr socket,
-    const config::address& peer, const channel_handler& handler) NOEXCEPT
+    const socket_handler& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&connector::do_handle_connect,
-            shared_from_this(), ec, socket, peer, handler));
+            shared_from_this(), ec, socket, handler));
 }
 
 // private
 void connector::do_handle_connect(const code& ec, socket::ptr socket,
-    const config::address& peer, const channel_handler& handler) NOEXCEPT
+    const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    // Ensure only the handler executes only once, as both may be posted.
     if (stopped_)
         return;
 
     stopped_ = true;
-
-    // Posts handle_timer to strand (if not already posted).
     timer_->stop();
 
     if (ec)
     {
-        // Prevent non-stop assertion (connect failed but socket is started).
         socket->stop();
-
-        // Connect result codes return here.
         handler(ec, nullptr);
         return;
     }
 
-    const auto channel = std::make_shared<network::channel>(log(), socket,
-        settings_, peer);
-
     // Successful connect.
-    handler(error::success, channel);
+    handler(error::success, socket);
 }
 
 // private
 void connector::handle_timer(const code& ec, const socket::ptr& socket,
-    const channel_handler& handler) NOEXCEPT
+    const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    // Ensure only the handler executes only once, as both may be posted.
     if (stopped_)
         return;
 
     stopped_ = true;
-
-    // Posts handle_connect|handle_resolve to strand (if not already posted).
     socket->stop();
     resolver_.cancel();
 

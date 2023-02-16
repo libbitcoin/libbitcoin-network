@@ -83,14 +83,14 @@ protected:
 
 private:
     void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
-    void handle_connect(const code& ec, const channel::ptr& channel,
+    void handle_connect(const code& ec, const socket::ptr& socket,
         const config::endpoint& peer, const connector::ptr& connector,
         const channel_notifier& handler) NOEXCEPT;
 
-    void handle_channel_start(const code& ec, const config::endpoint& peer,
-        const channel::ptr& channel, const channel_notifier& handler) NOEXCEPT;
-    void handle_channel_stop(const code& ec, const config::endpoint& peer,
-        const connector::ptr& connector,
+    void handle_channel_start(const code& ec, const channel::ptr& channel,
+        const config::endpoint& peer, const channel_notifier& handler) NOEXCEPT;
+    void handle_channel_stop(const code& ec, const channel::ptr& channel,
+        const config::endpoint& peer, const connector::ptr& connector,
         const channel_notifier& handler) NOEXCEPT;
 };
 

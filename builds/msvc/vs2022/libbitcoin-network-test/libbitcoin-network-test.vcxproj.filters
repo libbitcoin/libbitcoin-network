@@ -54,7 +54,7 @@
     <ClCompile Include="..\..\..\..\test\async\timer.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\track.cpp">
+    <ClCompile Include="..\..\..\..\test\async\tracker.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\address.cpp">

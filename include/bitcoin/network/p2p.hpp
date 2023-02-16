@@ -44,13 +44,13 @@ class BCT_API p2p
 {
 public:
     typedef std::shared_ptr<p2p> ptr;
-    typedef size_t key_t;
+    typedef uint64_t object_key;
 
-    typedef resubscriber<key_t> stop_subscriber;
+    typedef resubscriber<object_key> stop_subscriber;
     typedef stop_subscriber::handler stop_handler;
     typedef stop_subscriber::completer stop_completer;
 
-    typedef resubscriber<key_t, const channel::ptr&> channel_subscriber;
+    typedef resubscriber<object_key, const channel::ptr&> channel_subscriber;
     typedef channel_subscriber::handler channel_notifier;
     typedef channel_subscriber::completer channel_completer;
 
@@ -164,9 +164,11 @@ protected:
     {
         BC_ASSERT_MSG(stranded(), "subscribe_close");
 
+        const auto identifier = create_key();
+
         // Sessions are attached after network start.
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        const auto session = std::make_shared<Session>(net, ++stops_,
+        const auto session = std::make_shared<Session>(net, identifier,
             std::forward<Args>(args)...);
         BC_POP_WARNING()
 
@@ -175,7 +177,7 @@ protected:
         {
             session->stop();
             return false;
-        }, stops_);
+        }, identifier);
 
         return session;
     }
@@ -235,12 +237,14 @@ private:
                 channel->write(data, move_copy(handler));
     }
 
-    bool subscribe_close(stop_handler&& handler, key_t key) NOEXCEPT;
+    bool subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;
     connectors_ptr create_connectors(size_t count) NOEXCEPT;
+    object_key create_key() NOEXCEPT;
 
     virtual bool closed() const NOEXCEPT;
     virtual code start_hosts() NOEXCEPT;
     virtual code stop_hosts() NOEXCEPT;
+
 
     void do_start(const result_handler& handler) NOEXCEPT;
     void do_run(const result_handler& handler) NOEXCEPT;
@@ -249,11 +253,11 @@ private:
     void handle_start(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_run(const code& ec, const result_handler& handler) NOEXCEPT;
 
-    void do_unsubscribe_connect(key_t key) NOEXCEPT;
+    void do_unsubscribe_connect(object_key key) NOEXCEPT;
     void do_subscribe_connect(const channel_notifier& handler,
         const channel_completer& complete) NOEXCEPT;
 
-    void do_unsubscribe_close(key_t key) NOEXCEPT;
+    void do_unsubscribe_close(object_key key) NOEXCEPT;
     void do_subscribe_close(const stop_handler& handler,
         const stop_completer& complete) NOEXCEPT;
 
@@ -284,15 +288,21 @@ private:
 
     // These are protected by strand.
 
-    key_t stops_{};
+    // Public services (and session stop).
     stop_subscriber stop_subscriber_;
-
-    key_t connects_{};
     channel_subscriber connect_subscriber_;
+    object_key keys_{};
 
+    // Guards loopback.
     std::unordered_set<uint64_t> nonces_{};
-    std::unordered_set<channel::ptr> channels_{};
+
+    // Guards duplicate channels.
     std::unordered_set<config::authority> authorities_{};
+
+    // TODO: change to broadcast message pump by type.
+    // TODO: test in network by broadcasting address messages.
+    // TODO: then no need for stop, just use session pender.
+    std::unordered_set<channel::ptr> channels_{};
 };
 
 } // namespace network

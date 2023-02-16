@@ -47,8 +47,8 @@ public:
     ~resubscriber() NOEXCEPT;
 
     /// If key exists, handler is invoked with error::subscriber_exists.
-    /// If stopped, handler is invoked with error::subscriber_stopped/defaults,
-    /// handler dropped. Otherwise it is held until stop/drop. False if failed.
+    /// If stopped, handler is invoked with error::subscriber_stopped/defaults
+    /// and dropped. Otherwise it is held until stop/drop. False if failed.
     bool subscribe(handler&& handler, const Key& key) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.

@@ -50,19 +50,13 @@ inline deadline::ptr expiration(const logger& log, asio::strand& strand,
 }
 
 channel::channel(const logger& log, const socket::ptr& socket,
-    const settings& settings) NOEXCEPT
-  : channel(log, socket, settings, socket->authority().to_address_item())
-{
-}
-
-channel::channel(const logger& log, const socket::ptr& socket,
-    const settings& settings, const config::address& address) NOEXCEPT
+    const settings& settings, uint64_t identifier) NOEXCEPT
   : proxy(socket),
-    address_(address),
     settings_(settings),
-    negotiated_version_(settings.protocol_maximum),
+    identifier_(identifier),
     expiration_(expiration(log, socket->strand(), settings.channel_expiration())),
     inactivity_(timeout(log, socket->strand(), settings.channel_inactivity())),
+    negotiated_version_(settings.protocol_maximum),
     tracker<channel>(log)
 {
 }
@@ -112,10 +106,14 @@ void channel::resume() NOEXCEPT
 // Version members are protected by the presumption of no reads during writes.
 // Versions should only be set in handshake process, and only read thereafter.
 
-// Member is const.
 uint64_t channel::nonce() const NOEXCEPT
 {
     return nonce_;
+}
+
+uint64_t channel::identifier() const NOEXCEPT
+{
+    return identifier_;
 }
 
 uint32_t channel::negotiated_version() const NOEXCEPT
@@ -140,16 +138,16 @@ void channel::set_peer_version(const version::cptr& value) NOEXCEPT
     peer_version_ = value;
 }
 
-const config::address& channel::address() const NOEXCEPT
-{
-    return address_;
-}
-
 address_item_cptr channel::updated_address() const NOEXCEPT
 {
     // Should construct using makes_shared(vargs) overload, but fails on clang.
-    return to_shared(address_item{ unix_time(), peer_version()->services,
-        address_.item().ip, address_.item().port });
+    return to_shared(address_item
+    {
+        unix_time(),
+        peer_version()->services,
+        address().item().ip,
+        address().item().port
+    });
 }
 
 // Proxy overrides (channel maintains state for the proxy).
