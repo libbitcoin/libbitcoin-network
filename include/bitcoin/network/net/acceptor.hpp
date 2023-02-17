@@ -23,6 +23,7 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -55,8 +56,11 @@ public:
     // Start/stop.
     // ------------------------------------------------------------------------
 
-    /// Start the listener on the specified port (call only once).
+    /// Start the listener on all interfaces on the specified port (call once).
     virtual code start(uint16_t port) NOEXCEPT;
+
+    /// Start the listener on the specified ip address and port (call once).
+    virtual code start(const config::authority& local) NOEXCEPT;
 
     /// Cancel work and close the acceptor (idempotent).
     virtual void stop() NOEXCEPT;
@@ -71,6 +75,8 @@ public:
     virtual void accept(socket_handler&& handler) NOEXCEPT;
 
 protected:
+    virtual code start(const asio::endpoint& point) NOEXCEPT;
+
     // These are thread safe.
     const settings& settings_;
     asio::io_context& service_;
