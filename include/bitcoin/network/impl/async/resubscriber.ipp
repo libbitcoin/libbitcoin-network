@@ -135,6 +135,13 @@ void resubscriber<Key, Args...>::stop_default(const code& ec) NOEXCEPT
     stop(ec, Args{}...);
 }
 
+template <typename Key, typename... Args>
+size_t resubscriber<Key, Args...>::size() const NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    return map_.size();
+}
+
 } // namespace network
 } // namespace libbitcoin
 

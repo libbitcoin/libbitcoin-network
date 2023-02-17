@@ -22,6 +22,14 @@ BOOST_AUTO_TEST_SUITE(subscriber_tests)
 
 typedef subscriber<size_t> test_subscriber;
 
+BOOST_AUTO_TEST_CASE(subscriber__size__default__zero)
+{
+    threadpool pool(1);
+    asio::strand strand(pool.service().get_executor());
+    test_subscriber instance(strand);
+    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+}
+
 BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
 {
     threadpool pool(2);
@@ -34,17 +42,22 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
     std::pair<code, size_t> retry_result;
     boost::asio::post(strand, [&]()
     {
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
         BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
         }));
 
+        BOOST_REQUIRE_EQUAL(instance.size(), 1u);
         instance.stop(ec, expected);
 
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
         BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             retry_result = { value, size };
         }));
+
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
     });
 
     pool.stop();
