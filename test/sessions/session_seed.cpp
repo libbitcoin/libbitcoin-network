@@ -264,7 +264,7 @@ public:
         return error::success;
     }
 
-    code unstore_channel(const channel::ptr&, bool) NOEXCEPT override
+    code unstore_channel(const channel::ptr&, bool, bool) NOEXCEPT override
     {
         return error::success;
     }

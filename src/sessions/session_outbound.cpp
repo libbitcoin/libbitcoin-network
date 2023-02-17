@@ -138,6 +138,8 @@ void session_outbound::start_connect(const code&,
     if (stopped())
         return;
 
+    LOG("Batch group (" << id << ") start connect.");
+
     // Count down the number of connection attempts within the batch.
     const auto counter = std::make_shared<size_t>(connectors->size());
 
@@ -322,7 +324,7 @@ void session_outbound::handle_connect(const code& ec,
         return;
     }
 
-    const auto channel = create_channel(socket);
+    const auto channel = create_channel(socket, false);
 
     start_channel(channel,
         BIND3(handle_channel_start, _1, channel, id),

@@ -109,6 +109,9 @@ public:
 
     // Subscriptions.
     // ------------------------------------------------------------------------
+    /// A channel pointer should only be retained when subscribed to its stop,
+    /// and must be unretained in stop handler invoke, otherwise it will leak.
+    /// To subscribe to disconnections, subscribe to each channel stop.
 
     /// Subscribe to connection creation (allowed before start).
     /// A call after close invokes handlers with error::subscriber_stopped.
@@ -146,6 +149,41 @@ public:
     /// Get the number of channels.
     virtual size_t channel_count() const NOEXCEPT;
 
+    /// TEMP
+    virtual size_t vector_count() const NOEXCEPT
+    {
+        // Not thread safe, read from stranded handler only.
+        return channels_.size();
+    }
+
+    /// TEMP
+    virtual size_t authorities_count() const NOEXCEPT
+    {
+        // Not thread safe, read from stranded handler only.
+        return authorities_.size();
+    }
+
+    /// TEMP
+    virtual size_t nonces_count() const NOEXCEPT
+    {
+        // Not thread safe, read from stranded handler only.
+        return nonces_.size();
+    }
+
+    /// TEMP
+    virtual size_t stop_subscriber_count() const NOEXCEPT
+    {
+        // Not thread safe, read from stranded handler only.
+        return stop_subscriber_.size();
+    }
+
+    /// TEMP
+    virtual size_t connect_subscriber_count() const NOEXCEPT
+    {
+        // Not thread safe, read from stranded handler only.
+        return connect_subscriber_.size();
+    }
+
     /// Network configuration settings.
     const settings& network_settings() const NOEXCEPT;
 
@@ -164,11 +202,11 @@ protected:
     {
         BC_ASSERT_MSG(stranded(), "subscribe_close");
 
-        const auto identifier = create_key();
+        const auto id = create_key();
 
         // Sessions are attached after network start.
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        const auto session = std::make_shared<Session>(net, identifier,
+        const auto session = std::make_shared<Session>(net, id,
             std::forward<Args>(args)...);
         BC_POP_WARNING()
 
@@ -177,7 +215,7 @@ protected:
         {
             session->stop();
             return false;
-        }, identifier);
+        }, id);
 
         return session;
     }
@@ -193,14 +231,13 @@ protected:
     virtual connector::ptr create_connector() NOEXCEPT;
 
     /// Register nonces for loopback detection (true implies found).
-    virtual bool store_nonce(uint64_t nonce) NOEXCEPT;
-    virtual bool unstore_nonce(uint64_t nonce) NOEXCEPT;
+    virtual bool store_nonce(const channel& channel) NOEXCEPT;
+    virtual void unstore_nonce(const channel& channel) NOEXCEPT;
+    virtual bool is_loopback(const channel& channel) const NOEXCEPT;
 
     /// Register channels for broadcast and quick stop.
-    virtual code store_channel(const channel::ptr& channel, bool notify,
-        bool inbound) NOEXCEPT;
-    virtual code unstore_channel(const channel::ptr& channel,
-        bool inbound) NOEXCEPT;
+    virtual code count_channel(const channel::ptr& channel) NOEXCEPT;
+    virtual void uncount_channel(const channel::ptr& channel) NOEXCEPT;
 
     /// Maintain address pool.
     virtual void take(address_item_handler&& handler) NOEXCEPT;
@@ -245,7 +282,6 @@ private:
     virtual code start_hosts() NOEXCEPT;
     virtual code stop_hosts() NOEXCEPT;
 
-
     void do_start(const result_handler& handler) NOEXCEPT;
     void do_run(const result_handler& handler) NOEXCEPT;
     void do_close() NOEXCEPT;
@@ -275,7 +311,7 @@ private:
 
     // These are thread safe.
     const settings& settings_;
-    std::atomic<size_t> channel_count_{};
+    std::atomic<size_t> total_channel_count_{};
     std::atomic<size_t> inbound_channel_count_{};
 
     // These are protected by strand.

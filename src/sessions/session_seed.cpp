@@ -172,7 +172,7 @@ void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    const auto channel = create_channel(socket);
+    const auto channel = create_channel(socket, true);
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),

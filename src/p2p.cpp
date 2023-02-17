@@ -121,10 +121,12 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    attach_seed_session()->start([handler, this](const code& ec) NOEXCEPT
+    const auto seeder = attach_seed_session();
+    seeder->start([handler, seeder, this](const code& ec) NOEXCEPT
     {
-        BC_ASSERT_MSG(this->stranded(), "handler");
+        BC_ASSERT_MSG(stranded(), "handler");
         handler(ec == error::bypassed ? error::success : ec);
+        unsubscribe_close(seeder->identifier());
     });
 }
 
@@ -363,7 +365,7 @@ size_t p2p::address_count() const NOEXCEPT
 
 size_t p2p::channel_count() const NOEXCEPT
 {
-    return channel_count_;
+    return total_channel_count_;
 }
 
 size_t p2p::inbound_channel_count() const NOEXCEPT
@@ -462,91 +464,134 @@ void p2p::do_save(const messages::address::cptr& message,
 // Connection management.
 // ----------------------------------------------------------------------------
 
-bool p2p::store_nonce(uint64_t nonce) NOEXCEPT
+bool p2p::store_nonce(const channel& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return settings_.enable_loopback || nonces_.insert(nonce).second;
+
+    if (settings_.enable_loopback || channel.inbound())
+        return true;
+
+    if (!nonces_.insert(channel.nonce()).second)
+    {
+        LOG("Failed to store nonce for [" << channel.authority() << "].");
+        return false;
+    }
+
+    return true;
 }
 
-bool p2p::unstore_nonce(uint64_t nonce) NOEXCEPT
+void p2p::unstore_nonce(const channel& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return settings_.enable_loopback || to_bool(nonces_.erase(nonce));
+
+    if (settings_.enable_loopback || channel.inbound())
+        return;
+
+    if (!to_bool(nonces_.erase(channel.nonce())))
+    {
+        LOG("Failed to unstore nonce for [" << channel.authority() << "].");
+    }
 }
 
-// This must return success if and only if channel is stored.
-code p2p::store_channel(const channel::ptr& channel, bool notify,
-    bool inbound) NOEXCEPT
+bool p2p::is_loopback(const channel& channel) const NOEXCEPT
+{
+    if (settings_.enable_loopback || !channel.inbound())
+        return false;
+
+    return to_bool(nonces_.count(channel.peer_version()->nonce));
+}
+
+// This must increment the channel count(s) if successful.
+code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Cannot allow any storage once stopped, or do_stop will not free it.
+    // Cannot allow any storage once stopped.
     if (closed())
         return error::service_stopped;
 
-    // Check for incoming connection from outgoing self (loopback).
-    if (!settings_.enable_loopback && 
-        inbound && to_bool(nonces_.count(channel->peer_version()->nonce)))
+    if (is_loopback(*channel))
+    {
+        LOG("Loopback detected from [" << channel->authority() << "].");
         return error::accept_failed;
+    }
 
-    // Guard against integer overflow.
-    if (inbound && is_zero(add1(inbound_channel_count_.load())))
+    if (authorities_.size() == authorities_.max_size())
+    {
+        LOG("Overflow: authorities.");
         return error::channel_overflow;
+    }
 
-    // Guard against integer overflow.
-    if (is_zero(add1(channel_count_.load())))
+    if (channel->inbound() && is_zero(add1(inbound_channel_count_.load())))
+    {
+        LOG("Overflow: inbound channel count.");
         return error::channel_overflow;
+    }
 
-    // Store peer address, unless address (ip:port) is non-distinct.
-    // This effectively limits only outbound, and only after handshake.
+    if (!channel->quiet() && is_zero(add1(total_channel_count_.load())))
+    {
+        LOG("Overflow: total channel count.");
+        return error::channel_overflow;
+    }
+
     if (!authorities_.insert(channel->authority()).second)
+    {
+        LOG("Duplicate connection to [" << channel->authority() << "].");
         return error::address_in_use;
-
-    // Notify channel subscribers of started channel.
-    if (notify)
-        connect_subscriber_.notify(error::success, channel);
-
-    // Increment inbound channel counter.
-    if (inbound)
-        ++inbound_channel_count_;
-
-    // Increment total channel counter.
-    ++channel_count_;
+    }
 
     // TODO: implement broadcast message subscriber and delete channels_.
     // Store channel for message broadcast and stop notification.
     channels_.insert(channel);
+
+    if (channel->inbound())
+    {
+        ++inbound_channel_count_;
+    }
+
+    // Notify channel subscribers of started non-seed channels.
+    if (!channel->quiet())
+    {
+        ++total_channel_count_;
+        connect_subscriber_.notify(error::success, channel);
+    }
+
     return error::success;
 }
 
-// This must remove the channel if it was stored, regardless of return.
-code p2p::unstore_channel(const channel::ptr& channel, bool inbound) NOEXCEPT
+// This must decrement the channel count(s) if successful.
+// This must always remove the channel and/or authority if stored.
+void p2p::uncount_channel(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // TODO: implement broadcast message subscriber and delete channels_.
     // Ok if not found, as the channel may not have been stored.
-    if (is_zero(channels_.erase(channel)))
-        return error::success;
-
-    // Guard against integer underflow.
-    if (inbound && is_zero(inbound_channel_count_.load()))
-        return error::channel_underflow;
-
-    // Guard against integer underflow.
-    if (is_zero(channel_count_.load()))
-        return error::channel_underflow;
-
-    // Decrement inbound channel counter.
-    if (inbound)
-        --inbound_channel_count_;
-
-    // Decrement total channel counter.
-    --channel_count_;
-
-    // Unstore peer address (ok if not found).
+    channels_.erase(channel);
     authorities_.erase(channel->authority());
-    return  error::success;
+
+    if (channel->inbound() && is_zero(inbound_channel_count_.load()))
+    {
+        LOG("Underflow: inbound channel count.");
+        return;
+    }
+
+    if (!channel->quiet() && is_zero(total_channel_count_.load()))
+    {
+        LOG("Underflow: total channel coun.");
+        return;
+    }
+
+    if (channel->inbound())
+    {
+        --inbound_channel_count_;
+    }
+
+    if (!channel->quiet())
+    {
+        // There is no notification for removal (subscribe to channel stop).
+        --total_channel_count_;
+    }
 }
 
 // Specializations (protected).

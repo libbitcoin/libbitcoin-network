@@ -364,12 +364,13 @@ protected:
         return ((store_result_ = p2p::store_channel(channel, notify, inbound)));
     }
 
-    code unstore_channel(const channel::ptr& channel, bool inbound) NOEXCEPT override
+    code unstore_channel(const channel::ptr& channel, bool notify,
+        bool inbound) NOEXCEPT override
     {
         BC_ASSERT(!is_zero(channel->nonce()));
         unstore_nonce_ = channel->nonce();
         unstore_inbound_ = inbound;
-        return ((unstore_result_ = p2p::unstore_channel(channel, inbound)));
+        return ((unstore_result_ = p2p::unstore_channel(channel, notify, inbound)));
     }
 
 private:

@@ -70,6 +70,9 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
+    /// Arbitrary identifier of the session (for p2p subscriber).
+    uint64_t identifier() const NOEXCEPT;
+
     /// Access network configuration settings.
     const network::settings& settings() const NOEXCEPT;
 
@@ -141,7 +144,8 @@ protected:
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
     /// Create a channel from the started socket.
-    virtual channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT;
+    virtual channel::ptr create_channel(const socket::ptr& socket,
+        bool quiet) NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------

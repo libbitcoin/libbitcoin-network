@@ -110,7 +110,7 @@ void session_inbound::handle_started(const code& ec,
 // Accept cycle.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept(const code& ec,
+void session_inbound::start_accept(const code& LOG_ONLY(ec),
     const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -118,6 +118,8 @@ void session_inbound::start_accept(const code& ec,
     // Terminates accept loop (and acceptor is restartable).
     if (stopped())
         return;
+
+    LOG("Reset start accept.");
 
     if (ec)
     {
@@ -174,7 +176,7 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
-    const auto channel = create_channel(socket);
+    const auto channel = create_channel(socket, false);
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),

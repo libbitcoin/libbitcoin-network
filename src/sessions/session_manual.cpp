@@ -123,6 +123,8 @@ void session_manual::start_connect(const code&, const endpoint& peer,
         return;
     }
 
+    LOG("Manual restart [" << peer << "].");
+
     connector->connect(peer,
         BIND5(handle_connect, _1, _2, peer, connector, handler));
 }
@@ -159,7 +161,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    const auto channel = create_channel(socket);
+    const auto channel = create_channel(socket, false);
 
     start_channel(channel,
         BIND4(handle_channel_start, _1, channel, peer, handler),
