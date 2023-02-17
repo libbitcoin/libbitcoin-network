@@ -100,14 +100,13 @@ void session_outbound::handle_started(const code& ec,
         // Create a batch of connectors for each outbound connection.
         const auto connectors = create_connectors(settings().connect_batch_size);
 
-        for (const auto& connector: *connectors)
+        subscribe_stop([=](const code&) NOEXCEPT
         {
-            subscribe_stop([=](const code&) NOEXCEPT
-            {
+            for (const auto& connector: *connectors)
                 connector->stop();
-                return false;
-            });
-        }
+
+            return false;
+        });
 
         // Start connection attempt with batch of connectors for one peer.
         start_connect(error::success, connectors, id);
