@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__unique__expected)
 
         BOOST_REQUIRE_EQUAL(instance.size(), 2u);
         instance.stop(ec, expected);
-        BOOST_REQUIRE_EQUAL(instance.size(), 1u);
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
     });
 
     pool.stop();
