@@ -716,7 +716,7 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
 
     std::promise<code> save;
     const address_items items{ {}, { 42, 24, unspecified_ip_address, 4224u } };
-    session.save(system::to_shared(address{ items }), [&](const code& ec, size_t)
+    session.save(system::to_shared(address{ items }), [&](const code& ec, auto)
     {
         save.set_value(ec);
     });
