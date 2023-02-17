@@ -132,7 +132,7 @@ void session_outbound::start_connect(const code&,
     if (stopped())
         return;
 
-    ////LOG("Batch group (" << id << ") start connect.");
+    ////LOG("Group (" << id << ") head.");
 
     // Count down the number of connection attempts within the batch.
     const auto counter = std::make_shared<size_t>(connectors->size());
@@ -239,7 +239,6 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // A successful connection previously occurred, drop and restore this one.
     if (is_zero(*count))
     {
         if (socket)
@@ -251,41 +250,24 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    // Last indicates that this is the last attempt.
-    const auto last = is_zero(--(*count));
+    const auto last_attempt = is_zero(--(*count));
 
-    // This connection is successful but there may be others outstanding.
-    // Short-circuit subsequent attempts and clear outstanding connectors.
-    if (!ec && !last)
+    if (ec)
+    {
+        if (last_attempt)
+            handler(error::connect_failed, socket);
+
+        return;
+    }
+
+    if (!last_attempt)
     {
         *count = zero;
         for (const auto& connector: *connectors)
             connector->stop();
     }
 
-    // Got a connection.
-    if (!ec)
-    {
-        handler(error::success, socket);
-        return;
-    }
-
-    // No more connectors remaining and no connections.
-    if (ec && last)
-    {
-        // Disabled due to verbosity, reenable under verbose logging.
-        ////LOG("Failed to connect outbound address, " << ec.message());
-
-        // Reduce the set of errors from the batch to connect_failed.
-        handler(error::connect_failed, nullptr);
-        return;
-    }
-
-    // ec && !last/done, drop this connector attempt.
-    // service_stopped on a pending connect causes non-restore of that address,
-    // since a channel is never created if there is a connector error code.
-    // This is treated as an acceptable loss of a potentially valid address.
-    BC_ASSERT_MSG(!socket, "unexpected socket instance");
+    handler(error::success, socket);
 }
 
 // Handle the singular batch result.
@@ -298,22 +280,18 @@ void session_outbound::handle_connect(const code& ec,
     // Guard restartable timer (shutdown delay).
     if (stopped())
     {
-        if (socket)
-        {
-            socket->stop();
-            untake(ec, socket);
-        }
-
+        if (socket) socket->stop();
+        untake(ec, socket);
         return;
     }
 
-    // This is always connect_failed with nullptr, no log.
     // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
-        BC_ASSERT_MSG(!socket, "unexpected socket instance");
-
         ////LOG("Failed to connect outbound address, " << ec.message());
+
+        ////LOG("Group (" << id << ") defer.");
+
         defer(BIND3(start_connect, _1, connectors, id));
         return;
     }
@@ -338,6 +316,8 @@ void session_outbound::handle_channel_start(const code&, const channel::ptr&,
 
     ////LOG("Outbound channel start [" << channel->authority() << "] "
     ////    "(" << id << ") " << ec.message());
+
+    ////LOG("Group (" << id << ") started.");
 }
 
 void session_outbound::attach_protocols(
@@ -352,6 +332,8 @@ void session_outbound::handle_channel_stop(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    ////LOG("Group (" << id << ") loop.");
+
     ////LOG("Outbound channel stop [" << channel->authority() << "] "
     ////    "(" << id << ") " << ec.message());
 
@@ -365,20 +347,16 @@ void session_outbound::handle_channel_stop(const code& ec,
 void session_outbound::untake(const code& ec,
     const socket::ptr& socket) NOEXCEPT
 {
-    BC_ASSERT_MSG(socket, "channel");
-
     // Use initial address, since connection not completed.
-    if (!ec || stopped())
+    if ((!ec || stopped()) && socket)
         restore(socket->address(), BIND1(handle_untake, _1));
 }
 
 void session_outbound::untake(const code& ec,
     const channel::ptr& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(channel, "channel");
-
     // Set address to current time and services from peer version message.
-    if (!ec || stopped())
+    if ((!ec || stopped()) && channel)
         restore(channel->updated_address(), BIND1(handle_untake, _1));
 }
 
