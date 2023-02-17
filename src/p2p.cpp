@@ -121,12 +121,10 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    const auto seeder = attach_seed_session();
-    seeder->start([handler, seeder, this](const code& ec) NOEXCEPT
+    attach_seed_session()->start([handler, this](const code& ec) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "handler");
         handler(ec == error::bypassed ? error::success : ec);
-        unsubscribe_close(seeder->identifier());
     });
 }
 
