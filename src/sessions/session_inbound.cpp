@@ -151,14 +151,14 @@ void session_inbound::handle_accept(const code& ec,
 
     if (!whitelisted(socket->authority()))
     {
-        LOG("Dropping not whitelisted connection [" << socket->authority() << "]");
+        ////LOG("Dropping not whitelisted connection [" << socket->authority() << "]");
         socket->stop();
         return;
     }
 
     if (blacklisted(socket->authority()))
     {
-        LOG("Dropping blacklisted connection [" << socket->authority() << "]");
+        ////LOG("Dropping blacklisted connection [" << socket->authority() << "]");
         socket->stop();
         return;
     }
