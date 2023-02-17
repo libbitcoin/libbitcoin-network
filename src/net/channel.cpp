@@ -39,7 +39,9 @@ using namespace std::placeholders;
 inline deadline::ptr timeout(const logger& log, asio::strand& strand,
     const duration& span) NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return std::make_shared<deadline>(log, strand, span);
+    BC_POP_WARNING()
 }
 
 // Factory for varied deadline timer pointer construction.
@@ -50,8 +52,9 @@ inline deadline::ptr expiration(const logger& log, asio::strand& strand,
 }
 
 channel::channel(const logger& log, const socket::ptr& socket,
-    const settings& settings, uint64_t identifier) NOEXCEPT
+    const settings& settings, uint64_t identifier, bool quiet) NOEXCEPT
   : proxy(socket),
+    quiet_(quiet),
     settings_(settings),
     identifier_(identifier),
     expiration_(expiration(log, socket->strand(), settings.channel_expiration())),
@@ -105,6 +108,11 @@ void channel::resume() NOEXCEPT
 // ----------------------------------------------------------------------------
 // Version members are protected by the presumption of no reads during writes.
 // Versions should only be set in handshake process, and only read thereafter.
+
+bool channel::quiet() const NOEXCEPT
+{
+    return quiet_;
+}
 
 uint64_t channel::nonce() const NOEXCEPT
 {
