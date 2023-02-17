@@ -118,11 +118,6 @@ public:
         return session_manual::inbound();
     }
 
-    bool notify() const NOEXCEPT override
-    {
-        return session_manual::notify();
-    }
-
     bool stopped() const NOEXCEPT override
     {
         return session_manual::stopped();
@@ -310,15 +305,6 @@ BOOST_AUTO_TEST_CASE(session_manual__inbound__always__false)
     p2p net(set, log);
     mock_session_manual session(net, 1);
     BOOST_REQUIRE(!session.inbound());
-}
-
-BOOST_AUTO_TEST_CASE(session_manual__notify__always__true)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    mock_session_manual session(net, 1);
-    BOOST_REQUIRE(session.notify());
 }
 
 // stop

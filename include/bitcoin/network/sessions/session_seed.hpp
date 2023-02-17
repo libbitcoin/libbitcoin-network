@@ -50,9 +50,6 @@ public:
     bool inbound() const NOEXCEPT override;
 
 protected:
-    /// Do not notify subscribers on channel start.
-    bool notify() const NOEXCEPT override;
-
     /// Overridden to set service and version minimums upon session start.
     void attach_handshake(const channel::ptr& channel,
         result_handler&& handler) const NOEXCEPT override;

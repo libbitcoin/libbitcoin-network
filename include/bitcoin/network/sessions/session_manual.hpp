@@ -66,9 +66,6 @@ public:
     bool inbound() const NOEXCEPT override;
 
 protected:
-    /// Notify subscribers on channel start.
-    bool notify() const NOEXCEPT override;
-
     /// Overridden to change version protocol (base calls from channel strand).
     void attach_handshake(const channel::ptr& channel,
         result_handler&& handler) const NOEXCEPT override;

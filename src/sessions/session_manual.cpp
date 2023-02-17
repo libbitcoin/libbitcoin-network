@@ -52,11 +52,6 @@ bool session_manual::inbound() const NOEXCEPT
     return false;
 }
 
-bool session_manual::notify() const NOEXCEPT
-{
-    return true;
-}
-
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 // Manual connections are always enabled.

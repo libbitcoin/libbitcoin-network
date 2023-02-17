@@ -172,11 +172,6 @@ public:
         return inbound_;
     }
 
-    bool notify() const NOEXCEPT override
-    {
-        return notify_;
-    }
-
     void start_channel(const channel::ptr& channel, result_handler&& started,
         result_handler&& stopped) NOEXCEPT override
     {
@@ -289,49 +284,34 @@ public:
         return saveds_;
     }
 
-    uint64_t pent_nonce() const NOEXCEPT
-    {
-        return pend_;
-    }
-
-    uint64_t unpent_nonce() const NOEXCEPT
-    {
-        return unpend_;
-    }
-
     uint64_t stored_nonce() const NOEXCEPT
     {
-        return store_nonce_;
-    }
-
-    bool stored_inbound() const NOEXCEPT
-    {
-        return store_inbound_;
-    }
-
-    bool stored_notify() const NOEXCEPT
-    {
-        return store_notify_;
-    }
-
-    code stored_result() const NOEXCEPT
-    {
-        return store_result_;
+        return stored_;
     }
 
     uint64_t unstored_nonce() const NOEXCEPT
     {
-        return unstore_nonce_;
+        return unstored_;
     }
 
-    bool unstored_inbound() const NOEXCEPT
+    bool stored_nonce_result() const NOEXCEPT
     {
-        return unstore_inbound_;
+        return stored_result_;
     }
 
-    code unstore_result() const NOEXCEPT
+    uint64_t counted_channel() const NOEXCEPT
     {
-        return unstore_result_;
+        return counted_;
+    }
+
+    uint64_t uncounted_channel() const NOEXCEPT
+    {
+        return uncounted_;
+    }
+
+    code counted_channel_result() const NOEXCEPT
+    {
+        return counted_result_;
     }
 
     session_seed::ptr attach_seed_session() NOEXCEPT override
@@ -340,56 +320,44 @@ public:
     }
 
 protected:
-    bool store_nonce(uint64_t nonce) NOEXCEPT override
+    bool store_nonce(const channel& channel) NOEXCEPT override
     {
-        BC_ASSERT(!is_zero(nonce));
-        pend_ = nonce;
-        return p2p::store_nonce(nonce);
+        stored_ = channel.nonce();
+        return ((stored_result_ = p2p::store_nonce(channel)));
     }
 
-    bool unstore_nonce(uint64_t nonce) NOEXCEPT override
+    void unstore_nonce(const channel& channel) NOEXCEPT override
     {
-        BC_ASSERT(!is_zero(nonce));
-        unpend_ = nonce;
-        return p2p::unstore_nonce(nonce);
+        unstored_ = channel.nonce();
+        p2p::unstore_nonce(channel);
     }
 
-    code store_channel(const channel::ptr& channel, bool notify,
-        bool inbound) NOEXCEPT override
+    code count_channel(const channel::ptr& channel) NOEXCEPT override
     {
-        BC_ASSERT(!is_zero(channel->nonce()));
-        store_nonce_ = channel->nonce();
-        store_notify_ = notify;
-        store_inbound_ = inbound;
-        return ((store_result_ = p2p::store_channel(channel, notify, inbound)));
+        counted_ = channel->nonce();
+        return ((counted_result_ = p2p::count_channel(channel)));
     }
 
-    code unstore_channel(const channel::ptr& channel, bool notify,
-        bool inbound) NOEXCEPT override
+    void uncount_channel(const channel::ptr& channel) NOEXCEPT override
     {
-        BC_ASSERT(!is_zero(channel->nonce()));
-        unstore_nonce_ = channel->nonce();
-        unstore_inbound_ = inbound;
-        return ((unstore_result_ = p2p::unstore_channel(channel, notify, inbound)));
+        uncounted_ = channel->nonce();
+        p2p::uncount_channel(channel);
     }
 
 private:
     size_t acceptors_{ 0 };
     size_t connectors_{ 0 };
+
     address_item restored_{};
     address_items saveds_{};
 
-    uint64_t pend_{ 0 };
-    uint64_t unpend_{ 0 };
+    uint64_t stored_{ 0 };
+    uint64_t unstored_{ 0 };
+    bool stored_result_{ false };
 
-    uint64_t store_nonce_{ 0 };
-    bool store_notify_{ false };
-    bool store_inbound_{ false };
-    code store_result_{ error::success };
-
-    uint64_t unstore_nonce_{ 0 };
-    bool unstore_inbound_{ false };
-    code unstore_result_{ error::unknown };
+    uint64_t counted_{ 0 };
+    uint64_t uncounted_{ 0 };
+    code counted_result_{ error::invalid_magic };
 
     class mock_session_seed
       : public session_seed
@@ -433,7 +401,6 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE(!session.blacklisted({ "[2001:db8::2]:42" }));
     BOOST_REQUIRE(session.whitelisted({ "[2001:db8::2]:42" }));
     BOOST_REQUIRE(!session.inbound());
-    BOOST_REQUIRE(session.notify());
 }
 
 BOOST_AUTO_TEST_CASE(session__disabled__ipv4__false)
@@ -893,16 +860,16 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
-    // Channel was not pent or stored.
-    BOOST_REQUIRE_EQUAL(net.pent_nonce(), 0u);
-    BOOST_REQUIRE_EQUAL(net.stored_nonce(), 0u);
+    // Channel was not stored or counted.
+    BOOST_REQUIRE(is_zero(net.stored_nonce()));
+    BOOST_REQUIRE(is_zero(net.counted_channel()));
 
-    // Channel was not unpent or unstored.
-    BOOST_REQUIRE_EQUAL(net.unpent_nonce(), 0u);
-    BOOST_REQUIRE_EQUAL(net.unstored_nonce(), 0u);
+    // Channel was not unstored or uncounted.
+    BOOST_REQUIRE(is_zero(net.unstored_nonce()));
+    BOOST_REQUIRE(is_zero(net.uncounted_channel()));
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_channel_stopped_channel_channel_stopped_pent_not_stored)
+BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_channel_stopped_channel_channel_stopped_stored_and_not_counted)
 {
     const logger log{ false };
     settings set(selection::mainnet);
@@ -958,9 +925,10 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::channel_stopped);
 
-    // Channel was pent (handshake invoked) and not stored.
-    BOOST_REQUIRE_EQUAL(net.pent_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.stored_nonce(), 0u);
+    // stored and not counted
+    BOOST_REQUIRE(net.stored_nonce_result());
+    BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
+    BOOST_REQUIRE(is_zero(net.counted_channel()));
 
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [=, &stopped]()
@@ -972,14 +940,13 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
 
-    // Channel unpend in do_handle_channel_stopped now, wait on network_.unpend().
-    ////BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
+    // unstored and not counted/uncounted
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
-    BOOST_REQUIRE(!net.unstored_inbound());
-    BOOST_REQUIRE_EQUAL(net.unstore_result(), error::success);
+    BOOST_REQUIRE(is_zero(net.counted_channel()));
+    BOOST_REQUIRE(is_zero(net.uncounted_channel()));
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_service_stopped_channel_service_stopped_pent_store_failed)
+BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_service_stopped_channel_service_stopped_stored_and_stop_counted)
 {
     const logger log{ false };
     settings set(selection::mainnet);
@@ -1029,12 +996,11 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
     ////BOOST_REQUIRE_EQUAL(channel->stop_code(), error::bad_stream);
     ////BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
-    // Channel was pent (handshake invoked) and store failed.
-    BOOST_REQUIRE_EQUAL(net.pent_nonce(), channel->nonce());
+    // stored and counted(stopped)
+    BOOST_REQUIRE(net.stored_nonce_result());
     BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.stored_result(), error::service_stopped);
-    BOOST_REQUIRE(!net.stored_inbound());
-    BOOST_REQUIRE(net.stored_notify());
+    BOOST_REQUIRE_EQUAL(net.counted_channel(), channel->nonce());
+    BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::service_stopped);
 
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [&]()
@@ -1046,14 +1012,12 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
 
-    // Channel unpend in do_handle_channel_stopped now, wait on network_.unpend().
-    ////BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
+    // unstored and not uncounted
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
-    BOOST_REQUIRE(!net.unstored_inbound());
-    BOOST_REQUIRE_EQUAL(net.unstore_result(), error::success);
+    BOOST_REQUIRE(is_zero(net.uncounted_channel()));
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_channel_service_stopped_pent_store_succeeded)
+BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_channel_service_stopped_stored_and_counted)
 {
     const logger log{ false };
     settings set(selection::mainnet);
@@ -1117,12 +1081,11 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     // Channel is stopped before handshake completion, due to read failure.
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::bad_stream);
 
-    // Channel pent and store succeeded.
-    BOOST_REQUIRE_EQUAL(net.pent_nonce(), channel->nonce());
+    // stored and counted
+    BOOST_REQUIRE(net.stored_nonce_result());
     BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.stored_result(), error::success);
-    BOOST_REQUIRE(!net.stored_inbound());
-    BOOST_REQUIRE(net.stored_notify());
+    BOOST_REQUIRE_EQUAL(net.counted_channel(), channel->nonce());
+    BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
 
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [=, &stopped]()
@@ -1134,14 +1097,12 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
 
-    // Channel was unpent, found on unstore returns success.
-    BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
+    // unstored and uncounted
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
-    BOOST_REQUIRE(!net.unstored_inbound());
-    BOOST_REQUIRE_EQUAL(net.unstore_result(), error::success);
+    BOOST_REQUIRE_EQUAL(net.uncounted_channel(), channel->nonce());
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expected_channel_success_pent_store_succeeded)
+BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expected_channel_success_stored_and_counted)
 {
     const logger log{ false };
     settings set(selection::mainnet);
@@ -1199,12 +1160,11 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     BOOST_REQUIRE(session->require_attached_protocol());
     BOOST_REQUIRE(!channel->stopped());
 
-    // Channel pent and store succeeded.
-    BOOST_REQUIRE_EQUAL(net.pent_nonce(), channel->nonce());
+    // stored and counted
+    BOOST_REQUIRE(net.stored_nonce_result());
     BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.stored_result(), error::success);
-    BOOST_REQUIRE_EQUAL(net.stored_inbound(), expected_inbound);
-    BOOST_REQUIRE_EQUAL(net.stored_notify(), expected_notify);
+    BOOST_REQUIRE_EQUAL(net.counted_channel(), channel->nonce());
+    BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
 
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [=, &stopped]()
@@ -1218,21 +1178,17 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     BOOST_REQUIRE(channel->reresumed());
     BOOST_REQUIRE(!channel->stopped());
 
-    // Channel unpend in do_handle_channel_stopped now, wait on network_.unpend().
-    ////BOOST_REQUIRE_EQUAL(net.unpent_nonce(), channel->nonce());
-
     net.close();
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
-    // Unstored on close, but may not be found because channels cleared in a race.
-    ////BOOST_REQUIRE(!net.unstore_found());
+    // unstored and uncounted
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.unstored_inbound(), expected_inbound);
+    BOOST_REQUIRE_EQUAL(net.uncounted_channel(), channel->nonce());
 }
 
-BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expected_channel_success_pent_store_succeeded)
+BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expected_channel_success_not_stored_and_counted)
 {
     const logger log{ false };
     settings set(selection::mainnet);
@@ -1290,12 +1246,11 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     BOOST_REQUIRE(session->require_attached_protocol());
     BOOST_REQUIRE(!channel->stopped());
 
-    // Channel not pent (inbound) and store succeeded.
-    BOOST_REQUIRE_EQUAL(net.pent_nonce(), 0u);
+    // stored and counted
+    BOOST_REQUIRE(net.stored_nonce_result());
     BOOST_REQUIRE_EQUAL(net.stored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.stored_result(), error::success);
-    BOOST_REQUIRE_EQUAL(net.stored_inbound(), expected_inbound);
-    BOOST_REQUIRE_EQUAL(net.stored_notify(), expected_notify);
+    BOOST_REQUIRE_EQUAL(net.counted_channel(), channel->nonce());
+    BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
 
     std::promise<bool> stopped;
     boost::asio::post(net.strand(), [=, &stopped]()
@@ -1309,18 +1264,14 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     BOOST_REQUIRE(channel->reresumed());
     BOOST_REQUIRE(!channel->stopped());
 
-    // Channel not unpent (inbound).
-    BOOST_REQUIRE_EQUAL(net.unpent_nonce(), 0u);
-
     net.close();
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
-    // Unstored on close, but may not be found because channels cleared in a race.
-    ////BOOST_REQUIRE(!net.unstore_found());
+    // unstored and uncounted
     BOOST_REQUIRE_EQUAL(net.unstored_nonce(), channel->nonce());
-    BOOST_REQUIRE_EQUAL(net.unstored_inbound(), expected_inbound);
+    BOOST_REQUIRE_EQUAL(net.uncounted_channel(), channel->nonce());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -54,11 +54,6 @@ bool session_outbound::inbound() const NOEXCEPT
     return false;
 }
 
-bool session_outbound::notify() const NOEXCEPT
-{
-    return true;
-}
-
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 

@@ -183,9 +183,6 @@ protected:
     /// The address is blacklisted by configuration.
     virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
 
-    /// Notify (non-seed) subscribers on channel start.
-    virtual bool notify() const NOEXCEPT = 0;
-
 private:
     object_key create_key() NOEXCEPT;
 
