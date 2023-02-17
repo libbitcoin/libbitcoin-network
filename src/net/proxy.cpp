@@ -88,9 +88,9 @@ bool proxy::paused() const NOEXCEPT
 // Stop (socket/proxy is created started).
 // ----------------------------------------------------------------------------
 
-// Socket is not allowed to stop itself.
 bool proxy::stopped() const NOEXCEPT
 {
+    // Socket is not allowed to stop itself.
     return socket_->stopped();
 }
 
@@ -175,10 +175,10 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (ec == error::channel_stopped)
+    if (stopped())
     {
-        ////LOG("Heading read abort [" << authority() << "]");
-        stop(error::success);
+        LOG("Heading read abort [" << authority() << "]");
+        stop(error::channel_stopped);
         return;
     }
 
@@ -242,10 +242,10 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (ec == error::channel_stopped)
+    if (stopped())
     {
         LOG("Payload read abort [" << authority() << "]");
-        stop(error::success);
+        stop(error::channel_stopped);
         return;
     }
 
@@ -360,10 +360,10 @@ void proxy::handle_write(const code& ec, size_t,
     // Handlers are invoked in queued order, after all outstanding complete.
     write();
 
-    if (ec == error::channel_stopped)
+    if (stopped())
     {
         LOG("Send abort [" << authority() << "]");
-        stop(error::success);
+        stop(error::channel_stopped);
         return;
     }
 
