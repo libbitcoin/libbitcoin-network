@@ -22,14 +22,6 @@ BOOST_AUTO_TEST_SUITE(subscriber_tests)
 
 typedef subscriber<size_t> test_subscriber;
 
-BOOST_AUTO_TEST_CASE(subscriber__size__default__zero)
-{
-    threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-}
-
 BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
 {
     threadpool pool(2);

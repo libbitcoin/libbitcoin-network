@@ -22,14 +22,6 @@ BOOST_AUTO_TEST_SUITE(resubscriber_tests)
 
 typedef resubscriber<uint64_t, size_t> test_resubscriber;
 
-BOOST_AUTO_TEST_CASE(resubscriber__size__default__zero)
-{
-    threadpool pool(1);
-    asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
-    BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-}
-
 BOOST_AUTO_TEST_CASE(resubscriber__subscribe__stopped__subscriber_stopped)
 {
     threadpool pool(2);
