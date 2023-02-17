@@ -175,7 +175,7 @@ void p2p::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
 // Shutdown sequence.
 // ----------------------------------------------------------------------------
 
-// Not thread safe (threadpool_, hosts_), call only once.
+// Not thread safe or idempotent, call only once.
 // Results in std::abort if called from a thread within the threadpool.
 void p2p::close() NOEXCEPT
 {

@@ -114,7 +114,7 @@ void session_inbound::start_accept(const code& ec,
     if (stopped())
         return;
 
-    LOG("Reset start accept.");
+    ////LOG("Reset start accept.");
 
     if (ec)
     {

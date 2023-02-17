@@ -118,7 +118,7 @@ void session_manual::start_connect(const code&, const endpoint& peer,
         return;
     }
 
-    LOG("Manual restart [" << peer << "].");
+    ////LOG("Manual restart [" << peer << "].");
 
     connector->connect(peer,
         BIND5(handle_connect, _1, _2, peer, connector, handler));
