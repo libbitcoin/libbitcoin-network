@@ -42,7 +42,7 @@ public:
 BOOST_AUTO_TEST_CASE(tracker__construct1__guarded__safe_expected_messages)
 {
     logger log{};
-    std::promise<code> wait{};
+    std::promise<code> log_stopped{};
     auto count = zero;
     log.subscribe([&](const code& ec, const std::string& message)
     {
@@ -56,18 +56,20 @@ BOOST_AUTO_TEST_CASE(tracker__construct1__guarded__safe_expected_messages)
             const auto expected = std::string{ typeid(tracked).name() } + "(0)~\n";
             BOOST_REQUIRE_EQUAL(message, expected);
 
-            wait.set_value(ec);
+            log_stopped.set_value(ec);
             return false;
         }
 
         return true;
     });
 
-    auto foo = system::to_shared<tracked>(log);
-    BOOST_REQUIRE(foo->method());
+    auto foobar = system::to_shared<tracked>(log);
+    BOOST_REQUIRE(foobar->method());
 
-    foo.reset();
-    BOOST_REQUIRE_EQUAL(wait.get_future().get(), error::success);
+    foobar.reset();
+    BOOST_REQUIRE_EQUAL(log_stopped.get_future().get(), error::success);
+
+    log.stop();
 }
 #endif
 

@@ -44,6 +44,11 @@ logger::logger(bool) NOEXCEPT
     pool_.stop();
 }
 
+logger::~logger() NOEXCEPT
+{
+    pool_.join();
+}
+
 logger::writer logger::write() const NOEXCEPT
 {
     return { *this };
