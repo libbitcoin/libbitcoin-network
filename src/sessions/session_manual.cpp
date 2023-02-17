@@ -193,7 +193,7 @@ void session_manual::attach_protocols(
     session::attach_protocols(channel);
 }
 
-void session_manual::handle_channel_stop(const code& LOG_ONLY(ec),
+void session_manual::handle_channel_stop(const code& ec,
     const channel::ptr&, const endpoint& peer, const connector::ptr& connector,
     const channel_notifier& handler) NOEXCEPT
 {

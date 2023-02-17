@@ -123,7 +123,7 @@ protected:
 
     /// Pend/unpend a channel, for quick stop (unpend false if not pending).
     virtual void pend(const channel::ptr& channel) NOEXCEPT;
-    virtual bool unpend(const channel::ptr& channel) NOEXCEPT;
+    virtual void unpend(const channel::ptr& channel) NOEXCEPT;
 
     /// Subscribe to session stop notification.
     virtual void subscribe_stop(notifier&& handler) NOEXCEPT;

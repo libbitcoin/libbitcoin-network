@@ -110,7 +110,7 @@ void session_inbound::handle_started(const code& ec,
 // Accept cycle.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept(const code& LOG_ONLY(ec),
+void session_inbound::start_accept(const code& ec,
     const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -156,14 +156,14 @@ void session_inbound::handle_accept(const code& ec,
 
     if (!whitelisted(socket->authority()))
     {
-        ////LOG("Dropping not whitelisted connection [" << socket->authority() << "]");
+        LOG("Dropping not whitelisted connection [" << socket->authority() << "]");
         socket->stop();
         return;
     }
 
     if (blacklisted(socket->authority()))
     {
-        ////LOG("Dropping blacklisted connection [" << socket->authority() << "]");
+        LOG("Dropping blacklisted connection [" << socket->authority() << "]");
         socket->stop();
         return;
     }

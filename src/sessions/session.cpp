@@ -379,14 +379,15 @@ void session::pend(const channel::ptr& channel) NOEXCEPT
 }
 
 // Ok to not find after stop, clears before channel stop handlers fire.
-bool session::unpend(const channel::ptr& channel) NOEXCEPT
+void session::unpend(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    /////LOG("Unpend channel (" << channel->identifier() << ") " << found);
-
     // error::success prevents channel stop.
-    return stop_subscriber_.notify_one(channel->identifier(), error::success);
+    /*found*/ stop_subscriber_.notify_one(channel->identifier(),
+        error::success);
+
+    /////LOG("Unpend channel (" << channel->identifier() << ") " << found);
 }
 
 bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
