@@ -78,7 +78,7 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    // Create only one acceptor.
+    // TODO: create one acceptor for each configured local endpoint.
     const auto acceptor = create_acceptor();
     const auto error_code = acceptor->start(settings().inbound_port);
 
