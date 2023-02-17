@@ -133,7 +133,7 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
 
 void p2p::run(result_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_run, this, std::move(handler)));
 }
 
@@ -230,7 +230,7 @@ void p2p::do_close() NOEXCEPT
 void p2p::subscribe_connect(channel_notifier&& handler,
     channel_completer&& complete) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_subscribe_connect,
             this, std::move(handler), std::move(complete)));
 }
@@ -247,7 +247,7 @@ void p2p::do_subscribe_connect(const channel_notifier& handler,
 
 void p2p::unsubscribe_connect(size_t key) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_unsubscribe_connect, this, key));
 }
 
@@ -268,7 +268,7 @@ bool p2p::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
 void p2p::subscribe_close(stop_handler&& handler,
     stop_completer&& complete) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_subscribe_close,
             this, std::move(handler), std::move(complete)));
 }
@@ -285,7 +285,7 @@ void p2p::do_subscribe_close(const stop_handler& handler,
 
 void p2p::unsubscribe_close(size_t key) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_unsubscribe_close, this, key));
 }
 
@@ -314,6 +314,7 @@ p2p::object_key p2p::create_key() NOEXCEPT
 
 void p2p::connect(const config::endpoint& endpoint) NOEXCEPT
 {
+    // TODO: test case(s) depend on dispatch vs. post.
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_connect, this, endpoint));
 }
@@ -329,6 +330,7 @@ void p2p::do_connect(const config::endpoint& endpoint) NOEXCEPT
 void p2p::connect(const config::endpoint& endpoint,
     channel_notifier&& handler) NOEXCEPT
 {
+    // TODO: test case(s) depend on dispatch vs. post.
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_connect_handled, this, endpoint,
             std::move(handler)));
@@ -409,7 +411,7 @@ code p2p::stop_hosts() NOEXCEPT
 
 void p2p::take(address_item_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_take, this, std::move(handler)));
 }
 
@@ -422,7 +424,7 @@ void p2p::do_take(const address_item_handler& handler) NOEXCEPT
 void p2p::restore(const address_item_cptr& host,
     result_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_restore, this, host, std::move(handler)));
 }
 
@@ -435,7 +437,7 @@ void p2p::do_restore(const address_item_cptr& host,
 
 void p2p::fetch(address_handler&& handler) const NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_fetch, this, std::move(handler)));
 }
 
@@ -448,7 +450,7 @@ void p2p::do_fetch(const address_handler& handler) const NOEXCEPT
 void p2p::save(const address_cptr& message,
     count_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_save, this, message, std::move(handler)));
 }
 
