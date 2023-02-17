@@ -397,19 +397,21 @@ bool proxy::stranded() const NOEXCEPT
     return socket_->stranded();
 }
 
-// TODO: test.
 uint64_t proxy::backlog() const NOEXCEPT
 {
     return backlog_.load(std::memory_order_relaxed);
 }
 
-// TODO: test.
 uint64_t proxy::total() const NOEXCEPT
 {
     return total_.load(std::memory_order_relaxed);
 }
 
-// TODO: test.
+bool proxy::inbound() const NOEXCEPT
+{
+    return socket_->inbound();
+}
+
 const config::authority& proxy::authority() const NOEXCEPT
 {
     return socket_->authority();
