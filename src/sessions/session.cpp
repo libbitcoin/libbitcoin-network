@@ -333,7 +333,7 @@ void session::defer(result_handler&& handler) NOEXCEPT
     const auto timeout = settings().retry_timeout();
     const auto timer = std::make_shared<deadline>(log(), network_.strand());
 
-    LOG("Defer (" << key << ").");
+    ////LOG("Defer (" << key << ").");
 
     timer->start(
         BIND3(handle_timer, _1, key, std::move(handler)), timeout);
@@ -352,7 +352,7 @@ void session::handle_timer(const code& ec, object_key key,
 
     const auto found = stop_subscriber_.notify_one(key, ec);
 
-    LOG("Defer (" << key << ") notified [" << found << "] " << ec.message());
+    ////LOG("Defer (" << key << ") notified [" << found << "] " << ec.message());
     complete(ec);
 }
 
