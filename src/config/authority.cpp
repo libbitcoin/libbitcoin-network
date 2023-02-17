@@ -92,14 +92,19 @@ uint8_t authority::cidr() const NOEXCEPT
 // Methods.
 // ----------------------------------------------------------------------------
 
+asio::endpoint authority::to_endpoint() const NOEXCEPT
+{
+    return { ip(), port() };
+}
+
 std::string authority::to_host() const NOEXCEPT
 {
-    return config::to_host(ip_);
+    return config::to_host(ip());
 }
 
 std::string authority::to_literal() const NOEXCEPT
 {
-    return config::to_literal(ip_);
+    return config::to_literal(ip());
 }
 
 std::string authority::to_string() const NOEXCEPT
@@ -124,7 +129,7 @@ messages::address_item authority::to_address_item(uint32_t timestamp,
 
 messages::ip_address authority::to_ip_address() const NOEXCEPT
 {
-    return config::to_address(ip_);
+    return config::to_address(ip());
 }
 
 // Operators.
@@ -132,7 +137,7 @@ messages::ip_address authority::to_ip_address() const NOEXCEPT
 
 authority::operator bool() const NOEXCEPT
 {
-    return !is_zero(port_) && !ip_.is_unspecified();
+    return !is_zero(port_) && !ip().is_unspecified();
 }
 
 bool authority::operator==(const authority& other) const NOEXCEPT

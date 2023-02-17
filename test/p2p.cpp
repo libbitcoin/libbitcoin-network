@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstopped__success)
     };
 
     std::promise<bool> promise_complete;
-    const auto complete = [&](const code& ec, size_t key)
+    const auto complete = [&](const code& ec, p2p::object_key key)
     {
         // First key is ++0;
         BOOST_REQUIRE_EQUAL(key, one);
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstopped__success)
     };
 
     std::promise<bool> promise_complete;
-    const auto complete = [&](const code& ec, size_t key)
+    const auto complete = [&](const code& ec, p2p::object_key key)
     {
         // First key is ++0;
         BOOST_REQUIRE_EQUAL(key, one);

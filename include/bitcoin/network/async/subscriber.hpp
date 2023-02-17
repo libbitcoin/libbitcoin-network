@@ -54,6 +54,9 @@ public:
     /// Invoke each handler in order, with default arguments, then drop all.
     void stop_default(const code& ec) NOEXCEPT;
 
+    /// The queue size.
+    size_t size() const NOEXCEPT;
+
 private:
     // This is thread safe.
     asio::strand& strand_;

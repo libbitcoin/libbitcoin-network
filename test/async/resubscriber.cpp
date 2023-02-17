@@ -34,19 +34,24 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__stopped__subscriber_stopped)
     std::pair<code, size_t> retry_result;
     boost::asio::post(strand, [&]()
     {
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
         BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
             return true;
         }, 0));
-
+    
+        BOOST_REQUIRE_EQUAL(instance.size(), 1u);
         instance.stop(ec, expected);
 
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
         BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             retry_result = { value, size };
             return true;
         }, 0));
+
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
     });
 
     pool.stop();
@@ -104,6 +109,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__unique__expected)
     std::pair<code, size_t> second_result;
     boost::asio::post(strand, [&]()
     {
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
         BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             first_result = { value, size };
@@ -116,7 +122,9 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__unique__expected)
             return true;
         }, 99));
 
+        BOOST_REQUIRE_EQUAL(instance.size(), 2u);
         instance.stop(ec, expected);
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
     });
 
     pool.stop();

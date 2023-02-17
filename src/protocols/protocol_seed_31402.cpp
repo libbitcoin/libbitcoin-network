@@ -158,7 +158,7 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
 
 void protocol_seed_31402::handle_save_addresses(const code& ec,
     size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
-    size_t LOG_ONLY(start)) NOEXCEPT
+    size_t start) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -174,7 +174,7 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
 
     // Multiple address messages are allowed, but do not delay session.
     // Ignore a singleton message, conventional to send self upon connect.
-    received_address_ = (start > one);
+    received_address_ = !is_one(start);
 
     if (complete())
         stop(error::success);

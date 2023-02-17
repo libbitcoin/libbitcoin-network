@@ -49,11 +49,6 @@ bool session_inbound::inbound() const NOEXCEPT
     return true;
 }
 
-bool session_inbound::notify() const NOEXCEPT
-{
-    return true;
-}
-
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
@@ -119,6 +114,8 @@ void session_inbound::start_accept(const code& ec,
     if (stopped())
         return;
 
+    ////LOG("Reset start accept.");
+
     if (ec)
     {
         LOG("Failed to start acceptor, " << ec.message());
@@ -174,7 +171,7 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
-    const auto channel = create_channel(socket);
+    const auto channel = create_channel(socket, false);
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),

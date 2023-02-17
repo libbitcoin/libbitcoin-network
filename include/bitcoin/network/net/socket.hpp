@@ -42,10 +42,10 @@ public:
 
     DELETE_COPY_MOVE(socket);
 
-    /// Use for incoming connections (defaults outgoing address).
+    /// Use only for incoming connections (defaults outgoing address).
     socket(const logger& log, asio::io_context& service) NOEXCEPT;
 
-    /// Use for outgoing connections (retains outgoing address).
+    /// Use only for outgoing connections (retains outgoing address).
     socket(const logger& log, asio::io_context& service,
         const config::address& address) NOEXCEPT;
 
@@ -92,6 +92,9 @@ public:
     /// Get the address (outgoing) of the remote endpoint.
     virtual const config::address& address() const NOEXCEPT;
 
+    /// The socket was accepted (vs. connected).
+    virtual bool inbound() const NOEXCEPT;
+
     /// The strand is running in this thread.
     virtual bool stranded() const NOEXCEPT;
 
@@ -100,12 +103,12 @@ public:
 
 protected:
     // These are thread safe.
+    const config::address address_;
     std::atomic_bool stopped_{};
     asio::strand strand_;
 
     // These are protected by strand (see also handle_accept).
     asio::socket socket_;
-    config::address address_;
     config::authority authority_{};
 
 private:

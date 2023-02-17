@@ -51,11 +51,6 @@ bool session_seed::inbound() const NOEXCEPT
     return false;
 }
 
-bool session_seed::notify() const NOEXCEPT
-{
-    return false;
-}
-
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
@@ -70,6 +65,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
     {
         LOG("Bypassed seeding because outbound connections disabled.");
         handler(error::bypassed);
+        unsubscribe_close();
         return;
     }
 
@@ -79,6 +75,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
             << address_count() << " of " << settings().minimum_address_count()
             << ") address quantity.");
         handler(error::bypassed);
+        unsubscribe_close();
         return;
     }
 
@@ -86,6 +83,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
     {
         LOG("Cannot seed because no address pool capacity configured.");
         handler(error::seeding_unsuccessful);
+        unsubscribe_close();
         return;
     }
 
@@ -93,6 +91,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
     {
         LOG("Cannot seed because no seeds configured");
         handler(error::seeding_unsuccessful);
+        unsubscribe_close();
         return;
     }
 
@@ -166,13 +165,13 @@ void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
 
     if (ec)
     {
-        LOG("Failed to connect seed address [" << seed << "] " << ec.message());
         BC_ASSERT_MSG(!socket, "unexpected channel instance");
+        LOG("Failed to connect seed address [" << seed << "] " << ec.message());
         stop_seed(handler);
         return;
     }
 
-    const auto channel = create_channel(socket);
+    const auto channel = create_channel(socket, true);
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
@@ -216,19 +215,19 @@ void session_seed::attach_handshake(const channel::ptr& channel,
             maximum_services)->shake(std::move(handler));
 }
 
-void session_seed::handle_channel_start(const code& LOG_ONLY(ec),
+void session_seed::handle_channel_start(const code& ec,
     const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
     {
-        LOG("Failed to start seed channel [" << channel->authority() << "] "
-            << ec.message());
+        LOG("Seed start [" << channel->authority() << "] " << ec.message());
     }
 
-    // Pend channel for seed duration (for quick stop).
+    // Pend even on start failure.
     // This immediately follows the handshake unpend of the same channel.
+    // handle_channel_stop always invoked after handle_channel_start complete.
     pend(channel);
 }
 
@@ -265,13 +264,11 @@ void session_seed::handle_channel_stop(const code& ec,
     const channel::ptr& channel, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Seed channel stop [" << channel->authority() << "] " << ec.message());
+    LOG("Seed stop [" << channel->authority() << "] " << ec.message());
 
-    if (!unpend(channel) && !stopped())
-    {
-        LOG("Unpend failed to locate seed channel.");
-    }
-
+    // Pent even on start failure.
+    // handle_channel_stop always invoked after handle_channel_start complete.
+    unpend(channel);
     stop_seed(handler);
 }
 
@@ -306,7 +303,7 @@ void session_seed::stop_seed(const result_handler& handler) NOEXCEPT
     // All channels have completed.
     if (is_zero(count_))
     {
-        LOG("Seed session closed.");
+        LOG("Seed session complete.");
         unsubscribe_close();
     }
 }

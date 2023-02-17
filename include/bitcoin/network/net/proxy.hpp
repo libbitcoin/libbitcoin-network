@@ -101,6 +101,9 @@ public:
     /// The total number of bytes queued/sent to the peer.
     uint64_t total() const NOEXCEPT;
 
+    /// The socket was accepted (vs. connected).
+    bool inbound() const NOEXCEPT;
+
     /// Get the authority (incoming) of the remote endpoint.
     const config::authority& authority() const NOEXCEPT;
 

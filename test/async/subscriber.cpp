@@ -34,17 +34,22 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
     std::pair<code, size_t> retry_result;
     boost::asio::post(strand, [&]()
     {
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
         BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
         }));
 
+        BOOST_REQUIRE_EQUAL(instance.size(), 1u);
         instance.stop(ec, expected);
 
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
         BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             retry_result = { value, size };
         }));
+
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
     });
 
     pool.stop();

@@ -54,11 +54,6 @@ bool session_outbound::inbound() const NOEXCEPT
     return false;
 }
 
-bool session_outbound::notify() const NOEXCEPT
-{
-    return true;
-}
-
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
@@ -105,14 +100,13 @@ void session_outbound::handle_started(const code& ec,
         // Create a batch of connectors for each outbound connection.
         const auto connectors = create_connectors(settings().connect_batch_size);
 
-        for (const auto& connector: *connectors)
+        subscribe_stop([=](const code&) NOEXCEPT
         {
-            subscribe_stop([=](const code&) NOEXCEPT
-            {
+            for (const auto& connector: *connectors)
                 connector->stop();
-                return false;
-            });
-        }
+
+            return false;
+        });
 
         // Start connection attempt with batch of connectors for one peer.
         start_connect(error::success, connectors, id);
@@ -137,6 +131,8 @@ void session_outbound::start_connect(const code&,
     // Terminates retry loops (and connector is restartable).
     if (stopped())
         return;
+
+    ////LOG("Batch group (" << id << ") start connect.");
 
     // Count down the number of connection attempts within the batch.
     const auto counter = std::make_shared<size_t>(connectors->size());
@@ -322,7 +318,7 @@ void session_outbound::handle_connect(const code& ec,
         return;
     }
 
-    const auto channel = create_channel(socket);
+    const auto channel = create_channel(socket, false);
 
     start_channel(channel,
         BIND3(handle_channel_start, _1, channel, id),

@@ -66,6 +66,9 @@ public:
     /// -----------------------------------------------------------------------
     /// All serializations are denormalized (IPv6 or IPv4).
 
+    /// The IPv4 or IPv6 address and port as an asio endpoint.
+    asio::endpoint to_endpoint() const NOEXCEPT;
+
     /// IPv6|IPv4
     std::string to_host() const NOEXCEPT;
 

@@ -81,8 +81,16 @@ public:
         std::ostringstream stream_{};
     };
 
+    DELETE_COPY_MOVE(logger);
+
+    /// Construct a started (live) logger.
     logger() NOEXCEPT;
+
+    /// Construct a stopped (dead) logger.
     logger(bool) NOEXCEPT;
+
+    /// Block on logger threadpool join.
+    ~logger() NOEXCEPT;
 
     /// Obtain streaming writer (must destruct before this).
     /// The writer could capture refcounted logger reference, but this would

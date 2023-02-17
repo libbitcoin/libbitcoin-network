@@ -70,6 +70,9 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
+    /// Arbitrary identifier of the session (for p2p subscriber).
+    uint64_t identifier() const NOEXCEPT;
+
     /// Access network configuration settings.
     const network::settings& settings() const NOEXCEPT;
 
@@ -120,7 +123,7 @@ protected:
 
     /// Pend/unpend a channel, for quick stop (unpend false if not pending).
     virtual void pend(const channel::ptr& channel) NOEXCEPT;
-    virtual bool unpend(const channel::ptr& channel) NOEXCEPT;
+    virtual void unpend(const channel::ptr& channel) NOEXCEPT;
 
     /// Subscribe to session stop notification.
     virtual void subscribe_stop(notifier&& handler) NOEXCEPT;
@@ -141,7 +144,8 @@ protected:
     virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
     /// Create a channel from the started socket.
-    virtual channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT;
+    virtual channel::ptr create_channel(const socket::ptr& socket,
+        bool quiet) NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------
@@ -178,9 +182,6 @@ protected:
 
     /// The address is blacklisted by configuration.
     virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
-
-    /// Notify (non-seed) subscribers on channel start.
-    virtual bool notify() const NOEXCEPT = 0;
 
 private:
     object_key create_key() NOEXCEPT;

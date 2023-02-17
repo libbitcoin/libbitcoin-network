@@ -71,7 +71,8 @@ public:
 
     /// Construct a channel to encapsulated and communicate on the socket.
     channel(const logger& log, const socket::ptr& socket, 
-        const settings& settings, uint64_t identifier) NOEXCEPT;
+        const settings& settings, uint64_t identifier=zero,
+        bool quiet=true) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~channel() NOEXCEPT;
@@ -81,6 +82,9 @@ public:
 
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
+
+    /// The channel does not "speak" to peers (e.g. seed connection).
+    bool quiet() const NOEXCEPT;
 
     /// Arbitrary nonce of the channel (for loopback guard).
     uint64_t nonce() const NOEXCEPT;
@@ -122,7 +126,7 @@ private:
     // Proxy base class is not fully thread safe.
 
     // These are thread safe (const).
-    const config::address address_;
+    const bool quiet_;
     const settings& settings_;
     const uint64_t identifier_;
     const uint64_t nonce_

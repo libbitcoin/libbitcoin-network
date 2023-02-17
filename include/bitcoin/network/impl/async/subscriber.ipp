@@ -97,6 +97,13 @@ void subscriber<Args...>::stop_default(const code& ec) NOEXCEPT
     stop(ec, Args{}...);
 }
 
+template <typename... Args>
+size_t subscriber<Args...>::size() const NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    return queue_.size();
+}
+
 } // namespace network
 } // namespace libbitcoin
 

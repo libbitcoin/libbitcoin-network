@@ -41,16 +41,18 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // use, by default, to dispatch handlers for any asynchronous operations
 // performed on the socket." Calls are stranded to protect the socket member.
 
+// authority_.port() zero implies inbound connection.
 socket::socket(const logger& log, asio::io_context& service) NOEXCEPT
   : socket(log, service, config::address{})
 {
 }
 
+// authority_.port() nonzero implies outbound connection.
 socket::socket(const logger& log, asio::io_context& service,
     const config::address& address) NOEXCEPT
-  : strand_(service.get_executor()),
+  : address_(address),
+    strand_(service.get_executor()),
     socket_(strand_),
-    address_(address),
     reporter(log),
     tracker<socket>(log)
 {
@@ -264,6 +266,12 @@ const config::authority& socket::authority() const NOEXCEPT
 const config::address& socket::address() const NOEXCEPT
 {
     return address_;
+}
+
+bool socket::inbound() const NOEXCEPT
+{
+    // Relies on construction and address default port of zero.
+    return is_zero(address_.port());
 }
 
 bool socket::stopped() const NOEXCEPT

@@ -27,9 +27,9 @@ using namespace boost::program_options;
 #define BC_AUTHORITY_IPV4_ADDRESS "1.2.240.1"
 #define BC_AUTHORITY_IPV6_UNSPECIFIED_ADDRESS "::"
 #define BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "2001:db8::2"
-#define BC_AUTHORITY_IPV6_COMPATIBLE_ADDRESS "::0102:f001"
-#define BC_AUTHORITY_IPV4_BOGUS_ADDRESS "0.0.0.57:256"
-#define BC_AUTHORITY_IPV6_BOGUS_IPV4_ADDRESS "[::ffff:0:39]:256"
+////#define BC_AUTHORITY_IPV6_COMPATIBLE_ADDRESS "::0102:f001"
+////#define BC_AUTHORITY_IPV4_BOGUS_ADDRESS "0.0.0.57:256"
+////#define BC_AUTHORITY_IPV6_BOGUS_IPV4_ADDRESS "[::ffff:0:39]:256"
 
 // tools.ietf.org/html/rfc4291#section-2.5.2
 constexpr messages::ip_address test_unspecified_ip_address =
@@ -45,12 +45,12 @@ constexpr messages::ip_address test_mapped_ip_address =
     0x00, 0x00, 0xff, 0xff, 0x01, 0x02, 0xf0, 0x01
 };
 
-// tools.ietf.org/html/rfc4291#section-2.5.5.1
-constexpr messages::ip_address test_compatible_ip_address =
-{
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0xf0, 0x01
-};
+////// tools.ietf.org/html/rfc4291#section-2.5.5.1
+////constexpr messages::ip_address test_compatible_ip_address =
+////{
+////    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+////    0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0xf0, 0x01
+////};
 
 constexpr messages::ip_address test_ipv6_address =
 {

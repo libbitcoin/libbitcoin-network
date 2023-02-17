@@ -215,11 +215,6 @@ public:
     {
         return false;
     }
-
-    bool notify() const NOEXCEPT override
-    {
-        return true;
-    }
 };
 
 class mock_protocol

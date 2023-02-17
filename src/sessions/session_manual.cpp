@@ -52,11 +52,6 @@ bool session_manual::inbound() const NOEXCEPT
     return false;
 }
 
-bool session_manual::notify() const NOEXCEPT
-{
-    return true;
-}
-
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 // Manual connections are always enabled.
@@ -123,6 +118,8 @@ void session_manual::start_connect(const code&, const endpoint& peer,
         return;
     }
 
+    ////LOG("Manual restart [" << peer << "].");
+
     connector->connect(peer,
         BIND5(handle_connect, _1, _2, peer, connector, handler));
 }
@@ -159,7 +156,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    const auto channel = create_channel(socket);
+    const auto channel = create_channel(socket, false);
 
     start_channel(channel,
         BIND4(handle_channel_start, _1, channel, peer, handler),
@@ -191,7 +188,7 @@ void session_manual::attach_protocols(
     session::attach_protocols(channel);
 }
 
-void session_manual::handle_channel_stop(const code& LOG_ONLY(ec),
+void session_manual::handle_channel_stop(const code& ec,
     const channel::ptr&, const endpoint& peer, const connector::ptr& connector,
     const channel_notifier& handler) NOEXCEPT
 {

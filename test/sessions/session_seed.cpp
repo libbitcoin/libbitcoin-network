@@ -125,11 +125,6 @@ public:
         return session_seed::inbound();
     }
 
-    bool notify() const NOEXCEPT override
-    {
-        return session_seed::notify();
-    }
-
     bool stopped() const NOEXCEPT override
     {
         return session_seed::stopped();
@@ -259,14 +254,13 @@ public:
         return attach<mock_seed_session>(*this);
     }
 
-    code store_channel(const channel::ptr&, bool, bool) NOEXCEPT override
+    code count_channel(const channel::ptr&) NOEXCEPT override
     {
         return error::success;
     }
 
-    code unstore_channel(const channel::ptr&, bool) NOEXCEPT override
+    void uncount_channel(const channel::ptr&) NOEXCEPT override
     {
-        return error::success;
     }
 
     void save(const messages::address::cptr& message,
@@ -446,15 +440,6 @@ BOOST_AUTO_TEST_CASE(session_seed__inbound__always__false)
     p2p net(set, log);
     mock_session_seed session(net, 1);
     BOOST_REQUIRE(!session.inbound());
-}
-
-BOOST_AUTO_TEST_CASE(session_seed__notify__always__false)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    mock_session_seed session(net, 1);
-    BOOST_REQUIRE(!session.notify());
 }
 
 // stop

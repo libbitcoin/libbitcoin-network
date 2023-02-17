@@ -68,14 +68,26 @@ acceptor::~acceptor() NOEXCEPT
 
 code acceptor::start(uint16_t port) NOEXCEPT
 {
+    const auto ipv6 = settings_.enable_ipv6;
+    const auto protocol = ipv6 ? asio::tcp::v6() : asio::tcp::v4();
+    return start({ protocol, port });
+}
+
+code acceptor::start(const config::authority& local) NOEXCEPT
+{
+    return start(local.to_endpoint());
+}
+
+// protected
+code acceptor::start(const asio::endpoint& point) NOEXCEPT
+{
     error::boost_code ec;
     const auto ipv6 = settings_.enable_ipv6;
-    const auto endpoint = make_endpoint(ipv6, port);
 
     // Open the socket.
-    acceptor_.open(endpoint.protocol(), ec);
+    acceptor_.open(point.protocol(), ec);
 
-    // if ipv6 is enabled, also enable ipv4.
+    // When ipv6 is enabled also enable ipv4.
     if (!ec && ipv6)
         acceptor_.set_option(asio::v6_only(false), ec);
 
@@ -83,7 +95,7 @@ code acceptor::start(uint16_t port) NOEXCEPT
         acceptor_.set_option(asio::reuse_address(true), ec);
 
     if (!ec)
-        acceptor_.bind(endpoint, ec);
+        acceptor_.bind(point, ec);
 
     if (!ec)
         acceptor_.listen(asio::max_connections, ec);
@@ -91,6 +103,9 @@ code acceptor::start(uint16_t port) NOEXCEPT
     // This allows accept after stop (restartable).
     if (!ec)
         stopped_ = false;
+
+    LOG_ONLY(const config::authority local{ acceptor_.local_endpoint() };)
+    LOG("Bound to endpoint [" << local << "]");
 
     return error::asio_to_error_code(ec);
 }
