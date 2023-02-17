@@ -339,8 +339,8 @@ void session::defer(result_handler&& handler) NOEXCEPT
     stop_subscriber_.subscribe(
         BIND3(handle_defer, _1, key, timer), key);
 
-    LOG("Session::defer.. (" << stop_subscriber_.size() << ") [" 
-        << identifier_ << "].");
+    LOG("Session[" << identifier_ << "] defer   ("
+        << stop_subscriber_.size() << ").");
 }
 
 void session::handle_timer(const code& ec, object_key key,
@@ -360,8 +360,8 @@ bool session::handle_defer(const code&, object_key,
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     ////LOG("Delay timer (" << key << ") stop: " << ec.message());
-    LOG("Session::undefer (" << sub1(stop_subscriber_.size()) << ") ["
-        << identifier_ << "].");
+    LOG("Session[" << identifier_ << "] undefer ("
+        << stop_subscriber_.size() << ").");
 
     timer->stop();
     return false;
@@ -374,8 +374,8 @@ void session::pend(const channel::ptr& channel) NOEXCEPT
     stop_subscriber_.subscribe(
         BIND2(handle_pend, _1, channel), channel->identifier());
 
-    LOG("Session::pend... (" << stop_subscriber_.size() << ") ["
-        << identifier_ << "].");
+    LOG("Session[" << identifier_ << "] pend    ("
+        << stop_subscriber_.size() << ").");
 }
 
 // Ok to not find after stop, clears before channel stop handlers fire.
@@ -395,8 +395,8 @@ bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     ////LOG("Pend channel (" << channel->identifier() << ") " << ec.message());
-    LOG("Session::unpend. (" << sub1(stop_subscriber_.size()) << ") ["
-        << identifier_ << "].");
+    LOG("Session[" << identifier_ << "] unpend  ("
+        << stop_subscriber_.size() << ").");
 
     // error::success prevents channel stop.
     if (ec) channel->stop(ec);
@@ -408,8 +408,8 @@ void session::subscribe_stop(notify_handler&& handler) NOEXCEPT
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     stop_subscriber_.subscribe(std::move(handler), create_key());
-    LOG("Session::stop... (" << stop_subscriber_.size() << ") ["
-        << identifier_ << "].");
+    LOG("Session[" << identifier_ << "] stop    ("
+        << stop_subscriber_.size() << ").");
 }
 
 void session::unsubscribe_close() NOEXCEPT
