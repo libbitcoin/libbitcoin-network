@@ -102,21 +102,14 @@ DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
 
 bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT
 {
-    // We test against the platform-independent condition (equivalence).
-    // Boost documents that cancellation gives basic_errors::operation_aborted,
-    // however that is the code (equality), not the condition (equivalence):
-    ////operation_aborted = BOOST_ASIO_WIN_OR_POSIX(
-    ////    BOOST_ASIO_NATIVE_ERROR(ERROR_OPERATION_ABORTED),
-    ////    BOOST_ASIO_NATIVE_ERROR(ECANCELED))
-    ////return ec == boost::asio::error::operation_aborted;
-    return ec == boost_error_t::operation_canceled;
+    // self termination
+    return ec == boost_error_t::operation_canceled
+        || ec == boost::asio::error::operation_aborted;
 }
 
-// This method is only invoked when asio returns an error that is not the
-// result of cancellation of the call (boost_error_t::operation_canceled).
-// Equivalence tests require equality operator override. The success and 
-// connection_aborted codes are the only expected in normal operation, so these
-// are first, to optimize the case where asio_is_canceled is not used.
+// The success and operation_canceled codes are the only expected in normal
+// operation, so these are first, to optimize the case where asio_is_canceled
+// is not used.
 code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
 {
     if (ec == boost_error_t::success)
