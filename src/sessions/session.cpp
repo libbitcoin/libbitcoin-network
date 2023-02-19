@@ -92,6 +92,7 @@ void session::start_channel(const channel::ptr& channel,
 
     if (this->stopped())
     {
+        // Direct invoke of handlers.
         channel->stop(error::service_stopped);
         started(error::service_stopped);
         stopped(error::service_stopped);
@@ -102,6 +103,7 @@ void session::start_channel(const channel::ptr& channel,
     // Inbound does not check nonce until handshake completes, so no race.
     if (!network_.store_nonce(*channel))
     {
+        // Direct invoke of handlers (continuing).
         channel->stop(error::channel_conflict);
         started(error::channel_conflict);
         stopped(error::channel_conflict);
