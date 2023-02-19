@@ -53,14 +53,14 @@ public:
     ~deadline() NOEXCEPT;
 
     /// Start or restart the timer.
-    /// Use expired(ec) in handler to test for expiration.
+    /// Sets error::success on expiration, error::operation_canceled on stop.
     void start(result_handler&& handle) NOEXCEPT;
 
     /// Start or restart the timer.
-    /// Use expired(ec) in handler to test for expiration.
+    /// Sets error::success on expiration, error::operation_canceled on stop.
     void start(result_handler&& handle, const duration& timeout) NOEXCEPT;
 
-    /// Cancel the timer. The handler will be invoked.
+    /// Cancel the timer, ok if stopped. The handler will be invoked.
     void stop() NOEXCEPT;
 
 private:
