@@ -207,10 +207,11 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
     start(ec);
 }
 
-// Context free method.
 void session::handle_channel_start(const code& ec, const channel::ptr& channel,
     const result_handler& started, const result_handler& stopped) NOEXCEPT
 {
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
     if (ec)
     {
         started(ec);
