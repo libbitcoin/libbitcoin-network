@@ -128,7 +128,9 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
         return error::operation_canceled;
 
     // peer termination
-    if (ec == asio_misc_error_t::eof)
+    // stackoverflow.com/a/19891985/1172329
+    if (ec == asio_misc_error_t::eof ||
+        ec == boost_error_t::connection_reset)
         return error::peer_disconnect;
 
     // learn.microsoft.com/en-us/troubleshoot/windows-client/networking/
@@ -153,7 +155,6 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
     // connect-connect
     if (ec == boost_error_t::not_connected ||
         ec == boost_error_t::connection_refused ||
-        ec == boost_error_t::connection_reset ||
         ec == boost_error_t::broken_pipe ||
         ec == boost_error_t::host_unreachable ||
         ec == boost_error_t::network_down ||
