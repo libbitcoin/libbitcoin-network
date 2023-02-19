@@ -68,8 +68,8 @@ public:
     // Methods.
     // ------------------------------------------------------------------------
     /// Subsequent accepts may only be attempted following handler invocation.
-    /// May return operation_canceled, channel_timeout, success or error code.
     /// The socket parameter is nullptr unless success is returned.
+    /// May return operation_canceled, success or error code.
 
     /// Accept next connection available until stop or timeout, starts timer.
     virtual void accept(socket_handler&& handler) NOEXCEPT;
