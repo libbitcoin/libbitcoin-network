@@ -64,8 +64,10 @@ public:
 
     // Methods.
     // ------------------------------------------------------------------------
+    /// Must not be reused, due to handlers race. There is no event to indicate
+    /// completion of both handlers, either of which affect completion state.
     /// Returns operation_failed if not stopped. Otherwise may return
-    /// operation_canceled, channel_timeout, success or error code.
+    /// operation_canceled, operation_timeout, success or error code.
     /// The socket parameter is nullptr unless success is returned.
 
     /// Try to connect to the address, starts timer.

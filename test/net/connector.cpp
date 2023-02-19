@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
     instance.reset();
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
+BOOST_AUTO_TEST_CASE(connector__connect1__timeout__operation_timeout)
 {
     const logger log{ false };
     threadpool pool(2);
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
             [](const code& ec, const socket::ptr& socket)
             {
-                BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
+                BOOST_REQUIRE_EQUAL(ec, error::operation_timeout);
                 BOOST_REQUIRE(!socket);
             });
     });
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(connector__connect1__timeout__channel_timeout)
     instance.reset();
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
+BOOST_AUTO_TEST_CASE(connector__connect2__timeout__operation_timeout)
 {
     const logger log{ false };
     threadpool pool(2);
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
         instance->connect(config::authority{ "42.42.42.42:42" },
             [](const code& ec, const socket::ptr& socket)
             {
-                BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
+                BOOST_REQUIRE_EQUAL(ec, error::operation_timeout);
                 BOOST_REQUIRE(!socket);
             });
     });
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__channel_timeout)
     instance.reset();
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
+BOOST_AUTO_TEST_CASE(connector__connect3__timeout__operation_timeout)
 {
     const logger log{ false };
     threadpool pool(2);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(connector__connect3__timeout__channel_timeout)
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
             [](const code& ec, const socket::ptr& socket)
             {
-                BOOST_REQUIRE_EQUAL(ec, error::channel_timeout);
+                BOOST_REQUIRE_EQUAL(ec, error::operation_timeout);
                 BOOST_REQUIRE(!socket);
             });
     });

@@ -202,8 +202,8 @@ void connector::handle_timer(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    // Timeout result code (error::success) translated to channel_timeout here.
-    handler(error::channel_timeout, nullptr);
+    // Timeout result (error::success) translated to operation_timeout here.
+    handler(error::operation_timeout, nullptr);
 }
 
 BC_POP_WARNING()
