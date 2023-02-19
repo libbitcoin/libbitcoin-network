@@ -376,13 +376,13 @@ void session::pend(const channel::ptr& channel) NOEXCEPT
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     const auto key = channel->identifier();
-    BC_DEBUG_ONLY(const auto existed =)
+    BC_DEBUG_ONLY(const auto success =)
         stop_subscriber_.subscribe(BIND2(handle_pend, _1, channel), key);
 
     ////LOG("Session[" << identifier_ << "] pend    ("
     ////    << stop_subscriber_.size() << ").");
 
-    BC_ASSERT_MSG(!existed, "non-unique subscriber key");
+    BC_ASSERT_MSG(success, "non-unique subscriber key");
 }
 
 // Ok to not find after stop, clears before channel stop handlers fire.
@@ -415,13 +415,13 @@ session::subscribe_stop(notify_handler&& handler) NOEXCEPT
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     const auto key = create_key();
-    BC_DEBUG_ONLY(const auto existed =)
+    BC_DEBUG_ONLY(const auto success =)
         stop_subscriber_.subscribe(std::move(handler), key);
 
     ////LOG("Session[" << identifier_ << "] stop    ("
     ////    << stop_subscriber_.size() << ").");
 
-    BC_ASSERT_MSG(!existed, "non-unique subscriber key");
+    BC_ASSERT_MSG(success, "non-unique subscriber key");
     return key;
 }
 
