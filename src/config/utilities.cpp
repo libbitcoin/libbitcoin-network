@@ -227,7 +227,7 @@ std::string to_literal(const asio::address& ip) NOEXCEPT
 }
 
 // Rejects ipv6 mapped/compat to ipv4 and unbracketed ipv6.
-asio::address from_host(const std::string& host) NOEXCEPT(false)
+asio::address from_host(const std::string& host) THROWS
 {
     asio::address out{};
     if (!parse_host(out, host))
@@ -270,14 +270,14 @@ asio::address from_address(const messages::ip_address& address) NOEXCEPT
 }
 
 inline bool is_member_v4(const asio::ipv4& ip4, const asio::ipv4& net4,
-    uint8_t cidr)  NOEXCEPT(false)
+    uint8_t cidr)  THROWS
 {
     const auto hosts = ip::make_network_v4(net4, cidr).hosts();
     return hosts.find(ip4) != hosts.end();
 }
 
 inline bool is_member_v6(const asio::ipv6& ip6, const asio::ipv6& net6,
-    uint8_t cidr) NOEXCEPT(false)
+    uint8_t cidr) THROWS
 {
     const auto hosts = ip::make_network_v6(net6, cidr).hosts();
     return hosts.find(ip6) != hosts.end();

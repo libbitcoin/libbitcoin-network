@@ -42,7 +42,7 @@ authority::authority() NOEXCEPT
 }
 
 // Deserialzation does not map IPv4 and does not support mapped encoding.
-authority::authority(const std::string& authority) NOEXCEPT(false)
+authority::authority(const std::string& authority) THROWS
   : ip_{}, port_{}, cidr_{}
 {
     std::stringstream(authority) >> *this;
@@ -167,7 +167,7 @@ bool authority::operator!=(const authority& other) const NOEXCEPT
 
 // This allows unusable CIDR values (ok).
 std::istream& operator>>(std::istream& input,
-    authority& argument) NOEXCEPT(false)
+    authority& argument) THROWS
 {
     std::string value{};
     input >> value;
