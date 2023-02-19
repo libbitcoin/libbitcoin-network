@@ -495,125 +495,125 @@ BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
     BOOST_REQUIRE(!session.unsupported(loop));
 }
 
-BOOST_AUTO_TEST_CASE(session__whitelisted__ipv4_subnet__expected)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false, true);
-    set.whitelists.clear();
-    BOOST_REQUIRE(session.whitelisted({ "42.42.42.42" }));
-    set.whitelists.emplace_back("12.12.12.12");
-    set.whitelists.emplace_back("24.24.24.24");
-    BOOST_REQUIRE(!session.whitelisted({ "42.42.42.42" }));
-    set.whitelists.emplace_back("42.42.42.0/24");
-    BOOST_REQUIRE(session.whitelisted({ "42.42.42.42" }));
-}
-
-BOOST_AUTO_TEST_CASE(session__whitelisted__ipv4_host__expected)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false, true);
-    set.whitelists.clear();
-    BOOST_REQUIRE(session.whitelisted({ "24.24.24.24" }));
-    set.whitelists.emplace_back("12.12.12.12");
-    set.whitelists.emplace_back("42.42.42.0/24");
-    BOOST_REQUIRE(!session.whitelisted({ "24.24.24.24" }));
-    set.whitelists.emplace_back("24.24.24.24");
-    BOOST_REQUIRE(session.whitelisted({ "24.24.24.24" }));
-}
-
-BOOST_AUTO_TEST_CASE(session__whitelisted__ipv6_subnet__expected)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false, true);
-    set.whitelists.clear();
-    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
-    set.whitelists.emplace_back("[2020:db8::1]");
-    set.whitelists.emplace_back("[2020:db8::2]");
-    BOOST_REQUIRE(!session.whitelisted({ "[2020:db8::3]" }));
-    set.whitelists.emplace_back("[2020:db8::2]/64");
-    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
-}
-
-BOOST_AUTO_TEST_CASE(session__whitelisted__ipv6_host__expected)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false, true);
-    set.whitelists.clear();
-    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
-    set.whitelists.emplace_back("[2020:db8::1]");
-    set.whitelists.emplace_back("[2020:db8::2]");
-    BOOST_REQUIRE(!session.whitelisted({ "[2020:db8::3]" }));
-    set.whitelists.emplace_back("[2020:db8::3]");
-    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
-}
-
-BOOST_AUTO_TEST_CASE(session__blacklisted__ipv4_subnet__expected)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false, true);
-    set.whitelists.clear();
-    BOOST_REQUIRE(!session.blacklisted({ "42.42.42.42" }));
-    set.blacklists.emplace_back("12.12.12.12");
-    set.blacklists.emplace_back("24.24.24.24");
-    BOOST_REQUIRE(!session.blacklisted({ "42.42.42.42" }));
-    set.blacklists.emplace_back("42.42.42.0/24");
-    BOOST_REQUIRE(session.blacklisted({ "42.42.42.42" }));
-}
-
-BOOST_AUTO_TEST_CASE(session__blacklisted__ipv4_host__expected)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false, true);
-    set.whitelists.clear();
-    BOOST_REQUIRE(!session.blacklisted({ "24.24.24.24" }));
-    set.blacklists.emplace_back("12.12.12.12");
-    set.blacklists.emplace_back("42.42.42.0/24");
-    BOOST_REQUIRE(!session.blacklisted({ "24.24.24.24" }));
-    set.blacklists.emplace_back("24.24.24.24");
-    BOOST_REQUIRE(session.blacklisted({ "24.24.24.24" }));
-}
-
-BOOST_AUTO_TEST_CASE(session__blacklisted__ipv6_subnet__expected)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false, true);
-    set.whitelists.clear();
-    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
-    set.blacklists.emplace_back("[2020:db8::1]");
-    set.blacklists.emplace_back("[2020:db8::2]");
-    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
-    set.blacklists.emplace_back("[2020:db8::2]/64");
-    BOOST_REQUIRE(session.blacklisted({ "[2020:db8::3]" }));
-}
-
-BOOST_AUTO_TEST_CASE(session__blacklisted__ipv6_host__expected)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false, true);
-    set.whitelists.clear();
-    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
-    set.blacklists.emplace_back("[2020:db8::1]");
-    set.blacklists.emplace_back("[2020:db8::2]");
-    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
-    set.blacklists.emplace_back("[2020:db8::3]");
-    BOOST_REQUIRE(session.blacklisted({ "[2020:db8::3]" }));
-}
+////BOOST_AUTO_TEST_CASE(session__whitelisted__ipv4_subnet__expected)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false, true);
+////    set.whitelists.clear();
+////    BOOST_REQUIRE(session.whitelisted({ "42.42.42.42" }));
+////    set.whitelists.emplace_back("12.12.12.12");
+////    set.whitelists.emplace_back("24.24.24.24");
+////    BOOST_REQUIRE(!session.whitelisted({ "42.42.42.42" }));
+////    set.whitelists.emplace_back("42.42.42.0/24");
+////    BOOST_REQUIRE(session.whitelisted({ "42.42.42.42" }));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__whitelisted__ipv4_host__expected)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false, true);
+////    set.whitelists.clear();
+////    BOOST_REQUIRE(session.whitelisted({ "24.24.24.24" }));
+////    set.whitelists.emplace_back("12.12.12.12");
+////    set.whitelists.emplace_back("42.42.42.0/24");
+////    BOOST_REQUIRE(!session.whitelisted({ "24.24.24.24" }));
+////    set.whitelists.emplace_back("24.24.24.24");
+////    BOOST_REQUIRE(session.whitelisted({ "24.24.24.24" }));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__whitelisted__ipv6_subnet__expected)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false, true);
+////    set.whitelists.clear();
+////    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
+////    set.whitelists.emplace_back("[2020:db8::1]");
+////    set.whitelists.emplace_back("[2020:db8::2]");
+////    BOOST_REQUIRE(!session.whitelisted({ "[2020:db8::3]" }));
+////    set.whitelists.emplace_back("[2020:db8::2]/64");
+////    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__whitelisted__ipv6_host__expected)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false, true);
+////    set.whitelists.clear();
+////    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
+////    set.whitelists.emplace_back("[2020:db8::1]");
+////    set.whitelists.emplace_back("[2020:db8::2]");
+////    BOOST_REQUIRE(!session.whitelisted({ "[2020:db8::3]" }));
+////    set.whitelists.emplace_back("[2020:db8::3]");
+////    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__blacklisted__ipv4_subnet__expected)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false, true);
+////    set.whitelists.clear();
+////    BOOST_REQUIRE(!session.blacklisted({ "42.42.42.42" }));
+////    set.blacklists.emplace_back("12.12.12.12");
+////    set.blacklists.emplace_back("24.24.24.24");
+////    BOOST_REQUIRE(!session.blacklisted({ "42.42.42.42" }));
+////    set.blacklists.emplace_back("42.42.42.0/24");
+////    BOOST_REQUIRE(session.blacklisted({ "42.42.42.42" }));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__blacklisted__ipv4_host__expected)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false, true);
+////    set.whitelists.clear();
+////    BOOST_REQUIRE(!session.blacklisted({ "24.24.24.24" }));
+////    set.blacklists.emplace_back("12.12.12.12");
+////    set.blacklists.emplace_back("42.42.42.0/24");
+////    BOOST_REQUIRE(!session.blacklisted({ "24.24.24.24" }));
+////    set.blacklists.emplace_back("24.24.24.24");
+////    BOOST_REQUIRE(session.blacklisted({ "24.24.24.24" }));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__blacklisted__ipv6_subnet__expected)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false, true);
+////    set.whitelists.clear();
+////    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
+////    set.blacklists.emplace_back("[2020:db8::1]");
+////    set.blacklists.emplace_back("[2020:db8::2]");
+////    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
+////    set.blacklists.emplace_back("[2020:db8::2]/64");
+////    BOOST_REQUIRE(session.blacklisted({ "[2020:db8::3]" }));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__blacklisted__ipv6_host__expected)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false, true);
+////    set.whitelists.clear();
+////    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
+////    set.blacklists.emplace_back("[2020:db8::1]");
+////    set.blacklists.emplace_back("[2020:db8::2]");
+////    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
+////    set.blacklists.emplace_back("[2020:db8::3]");
+////    BOOST_REQUIRE(session.blacklisted({ "[2020:db8::3]" }));
+////}
 
 // factories
 

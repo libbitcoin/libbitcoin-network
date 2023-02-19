@@ -65,6 +65,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
     {
         LOG("Not configured for outbound connections.");
         handler(error::bypassed);
+        unsubscribe_close();
         return;
     }
 
@@ -72,6 +73,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
     {
         LOG("Configured for outbound but no addresses.");
         handler(error::address_not_found);
+        unsubscribe_close();
         return;
     }
 
@@ -95,25 +97,25 @@ void session_outbound::handle_started(const code& ec,
         return;
     }
 
-    for (size_t id = 0; id < settings().outbound_connections; ++id)
+    const auto batch = settings().connect_batch_size;
+    const auto count = settings().outbound_connections;
+
+    for (size_t index = 0; index < count; ++index)
     {
-        // Create a batch of connectors for each outbound connection.
-        const auto connectors = create_connectors(settings().connect_batch_size);
+        const auto connectors = create_connectors(batch);
 
-        subscribe_stop([=](const code&) NOEXCEPT
-        {
-            for (const auto& connector: *connectors)
-                connector->stop();
+        // TODO: move into start connect and desubscribe.
+        start_connect(error::success, connectors, subscribe_stop(
+            [=](const code&) NOEXCEPT
+            {
+                for (const auto& connector: *connectors)
+                    connector->stop();
 
-            return false;
-        });
-
-        // Start connection attempt with batch of connectors for one peer.
-        start_connect(error::success, connectors, id);
+                return false;
+            }));
     }
 
-    LOG("Creating " << settings().outbound_connections << " connections "
-        << settings().connect_batch_size << " at a time.");
+    LOG("Creating " << count << " connections " << batch << " at a time.");
 
     // This is the end of the start sequence, does not indicate connect status.
     handler(error::success);
@@ -124,7 +126,7 @@ void session_outbound::handle_started(const code& ec,
 
 // Attempt to connect one peer using a batch subset of connectors.
 void session_outbound::start_connect(const code&,
-    const connectors_ptr& connectors, size_t id) NOEXCEPT
+    const connectors_ptr& connectors, object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -132,28 +134,32 @@ void session_outbound::start_connect(const code&,
     if (stopped())
         return;
 
-    ////LOG("Group (" << id << ") head.");
+    ////LOG("Starting connection batch (" << key << ").");
 
     // Count down the number of connection attempts within the batch.
-    const auto counter = std::make_shared<size_t>(connectors->size());
+    const auto counter = integer::create(connectors->size());
+
+    ////LOG("Group (" << key << ") start_connect {batch:" << counter->value() << "}");
 
     socket_handler connect =
-        BIND4(handle_connect, _1, _2, connectors, id);
+        BIND4(handle_connect, _1, _2, connectors, key);
 
     socket_handler one =
-        BIND6(handle_one, _1, _2, counter, connectors, id, std::move(connect));
+        BIND6(handle_one, _1, _2, counter, connectors, key, std::move(connect));
 
     // Attempt to connect with a unique address for each connector of batch.
     for (const auto& connector: *connectors)
-        take(BIND5(do_one, _1, _2, id, connector, one));
+        take(BIND6(do_one, _1, _2, key, connector, counter, one));
 }
 
 // Attempt to connect the given peer and invoke handle_one.
 void session_outbound::do_one(const code& ec, const config::address& peer,
-    size_t id, const connector::ptr& connector,
+    object_key key, const connector::ptr& connector, const count_ptr& counter,
     const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    ////LOG("Group (" << key << ") do_one {batch:" << counter->value() << "}");
 
     if (ec)
     {
@@ -163,7 +169,6 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    // TODO: filter in address protocol.
     if (disabled(peer))
     {
         // Should not see these unless there is a change to enable_ipv6.
@@ -172,7 +177,6 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    // TODO: filter in address protocol.
     if (unsupported(peer))
     {
         // Should not see these unless there is a change to invalid_services.
@@ -181,7 +185,6 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    // TODO: filter in address protocol.
     if (insufficient(peer))
     {
         // Should not see these unless there is a change to services_minimum.
@@ -190,7 +193,6 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    // TODO: filtered in address protocol.
     if (blacklisted(peer))
     {
         // Should not see these unless there is a change to blacklist config.
@@ -199,29 +201,42 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
+    if (connected(peer))
+    {
+        // More common with higher connection count relative to hosts count.
+        LOG("Dropping connected address [" << peer << "]");
+        handler(error::address_in_use, nullptr);
+        return;
+    }
+
     // Guard restartable connector (shutdown delay).
     if (stopped())
     {
         // Ensure the peer address is restored.
-        handle_connector(error::service_stopped, nullptr, peer, id, handler);
+        handle_connector(error::service_stopped, nullptr, peer, key, counter,
+            handler);
         return;
     }
 
     // Capture peer for restoration if there is no channel.
     connector->connect(peer,
-        BIND5(handle_connector, _1, _2, peer, id, handler));
+        BIND6(handle_connector, _1, _2, peer, key, counter, handler));
 }
 
 // Calling connector->stop() either from handle_started or handle_one results
 // in its timer cancelation, which cancels its handler. In either case the
 // address has not been validated, so restore to pool here - without update.
 void session_outbound::handle_connector(const code& ec,
-    const socket::ptr& socket, const config::address& peer, size_t,
-    const socket_handler& handler) NOEXCEPT
+    const socket::ptr& socket, const config::address& peer, object_key,
+    const count_ptr&, const socket_handler& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    ////LOG("Group (" << key << ") handle_connector {batch:" << counter->value() << "}");
+
     if (stopped() || ec == error::operation_canceled)
     {
-        ////LOG("Restore [" << peer << "] (" << id << ") " << ec.message());
+        ////LOG("Restore [" << peer << "] (" << key << ") " << ec.message());
         restore(peer, BIND1(handle_untake, _1));
     }
     else if (ec)
@@ -234,12 +249,14 @@ void session_outbound::handle_connector(const code& ec,
 
 // Handle each do_one connection attempt, stopping on first success.
 void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
-    const count_ptr& count, const connectors_ptr& connectors, size_t,
+    const count_ptr& counter, const connectors_ptr& connectors, object_key,
     const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(*count))
+    ////LOG("Group (" << key << ") handle_one {batch:" << counter->value() << "} " << ec.message());
+
+    if (counter->is_handled())
     {
         if (socket)
         {
@@ -247,35 +264,48 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
             untake(ec, socket);
         }
 
+        ////LOG("Group (" << key << ") handle_one [" << counter->value() << "] {exit 0}");
         return;
     }
 
-    const auto last_attempt = is_zero(--(*count));
+    counter->decrement();
 
     if (ec)
     {
-        if (last_attempt)
-            handler(error::connect_failed, socket);
+        if (counter->is_complete())
+        {
+            counter->set_handled();
 
+            ////LOG("Group (" << key << ") handle_one [" << counter->value() << "] {exit 2}");
+            handler(error::connect_failed, socket);
+        }
+
+        ////LOG("Group (" << key << ") handle_one [" << counter->value() << "] {exit 3}");
         return;
     }
 
-    if (!last_attempt)
-    {
-        *count = zero;
-        for (const auto& connector: *connectors)
-            connector->stop();
-    }
+    ////LOG("Group (" << key << ") handle_one [" << counter->value() << "] {exit 4}");
 
+    counter->set_handled();
     handler(error::success, socket);
+
+    ////LOG("Group (" << key << ") handle_one [" << counter->value() << "] {canceling}");
+
+    // TODO: unsubscribe using object_key, handler invokes stop loop.
+    for (const auto& connector: *connectors)
+        connector->stop();
+
+    ////LOG("Group (" << key << ") handle_one [" << counter->value() << "] {complete}");
 }
 
 // Handle the singular batch result.
 void session_outbound::handle_connect(const code& ec,
     const socket::ptr& socket, const connectors_ptr& connectors,
-    size_t id) NOEXCEPT
+    object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    ////LOG("Group (" << key << ") handle_connect.");
 
     // Guard restartable timer (shutdown delay).
     if (stopped())
@@ -289,18 +319,17 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         ////LOG("Failed to connect outbound address, " << ec.message());
+        ////LOG("Group (" << key << ") defer.");
 
-        ////LOG("Group (" << id << ") defer.");
-
-        defer(BIND3(start_connect, _1, connectors, id));
+        defer(BIND3(start_connect, _1, connectors, key));
         return;
     }
 
     const auto channel = create_channel(socket, false);
 
     start_channel(channel,
-        BIND3(handle_channel_start, _1, channel, id),
-        BIND4(handle_channel_stop, _1, channel, id, connectors));
+        BIND3(handle_channel_start, _1, channel, key),
+        BIND4(handle_channel_stop, _1, channel, key, connectors));
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
@@ -310,14 +339,13 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
 }
 
 void session_outbound::handle_channel_start(const code&, const channel::ptr&,
-    size_t) NOEXCEPT
+    object_key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     ////LOG("Outbound channel start [" << channel->authority() << "] "
-    ////    "(" << id << ") " << ec.message());
-
-    ////LOG("Group (" << id << ") started.");
+    ////    "(" << key << ") " << ec.message());
+    ////LOG("Group (" << key << ") started.");
 }
 
 void session_outbound::attach_protocols(
@@ -327,21 +355,26 @@ void session_outbound::attach_protocols(
 }
 
 void session_outbound::handle_channel_stop(const code& ec,
-    const channel::ptr& channel, size_t id,
+    const channel::ptr& channel, object_key key,
     const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    ////LOG("Group (" << id << ") loop.");
-
+    ////LOG("Group (" << key << ") handle_channel_stop.");
     ////LOG("Outbound channel stop [" << channel->authority() << "] "
-    ////    "(" << id << ") " << ec.message());
+    ////    "(" << key << ") " << ec.message());
 
     untake(ec, channel);
 
+    // This is invoked from the channel::proxy stop subscriber, and is then
+    // reposted to the network strand by session, so there is no recursion.
+    ////boost::asio::post(strand(),
+    ////    BIND3(start_connect, error::success, connectors, key));
+
     // The channel stopped following connection, try again without delay.
-    // Potentially a tight loop, but a new adress is selected for retry.
-    start_connect(error::success, connectors, id);
+    // Potentially a tight loop, but a new address is selected for retry.
+    ////start_connect(error::success, connectors, key);
+    defer(BIND3(start_connect, _1, connectors, key));
 }
 
 void session_outbound::untake(const code& ec,

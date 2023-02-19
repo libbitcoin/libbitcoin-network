@@ -75,16 +75,14 @@ void protocol_address_in_31402::start() NOEXCEPT
 address::cptr protocol_address_in_31402::filter(
     const address_items& items) const NOEXCEPT
 {
-    const auto message = std::make_shared<address>(address
-    {
-        difference(items, settings().blacklists)
-    });
+    const auto message = std::make_shared<address>(items);
 
     std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
     {
         return settings().disabled(address)
             || settings().insufficient(address)
-            || settings().unsupported(address);
+            || settings().unsupported(address)
+            || contains(settings().blacklists, address);
     });
 
     return message;

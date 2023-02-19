@@ -149,41 +149,6 @@ public:
     /// Get the number of channels.
     virtual size_t channel_count() const NOEXCEPT;
 
-    /// TEMP
-    virtual size_t vector_count() const NOEXCEPT
-    {
-        // Not thread safe, read from stranded handler only.
-        return channels_.size();
-    }
-
-    /// TEMP
-    virtual size_t authorities_count() const NOEXCEPT
-    {
-        // Not thread safe, read from stranded handler only.
-        return authorities_.size();
-    }
-
-    /// TEMP
-    virtual size_t nonces_count() const NOEXCEPT
-    {
-        // Not thread safe, read from stranded handler only.
-        return nonces_.size();
-    }
-
-    /// TEMP
-    virtual size_t stop_subscriber_count() const NOEXCEPT
-    {
-        // Not thread safe, read from stranded handler only.
-        return stop_subscriber_.size();
-    }
-
-    /// TEMP
-    virtual size_t connect_subscriber_count() const NOEXCEPT
-    {
-        // Not thread safe, read from stranded handler only.
-        return connect_subscriber_.size();
-    }
-
     /// Network configuration settings.
     const settings& network_settings() const NOEXCEPT;
 
@@ -192,6 +157,35 @@ public:
 
     /// Return a reference to the network strand (thread safe).
     asio::strand& strand() NOEXCEPT;
+
+    // TEMP HACKS.
+    // ------------------------------------------------------------------------
+    // Not thread safe, read from stranded handler only.
+
+    virtual size_t vector_count() const NOEXCEPT
+    {
+        return channels_.size();
+    }
+
+    virtual size_t authorities_count() const NOEXCEPT
+    {
+        return authorities_.size();
+    }
+
+    virtual size_t nonces_count() const NOEXCEPT
+    {
+        return nonces_.size();
+    }
+
+    virtual size_t stop_subscriber_count() const NOEXCEPT
+    {
+        return stop_subscriber_.size();
+    }
+
+    virtual size_t connect_subscriber_count() const NOEXCEPT
+    {
+        return connect_subscriber_.size();
+    }
 
 protected:
     friend class session;
@@ -238,6 +232,9 @@ protected:
     /// Register channels for broadcast and quick stop.
     virtual code count_channel(const channel::ptr& channel) NOEXCEPT;
     virtual void uncount_channel(const channel::ptr& channel) NOEXCEPT;
+
+    /// The authority is duplicated by an existing channel (requires strand).
+    virtual bool is_connected(const config::authority& host) const NOEXCEPT;
 
     /// Maintain address pool.
     virtual void take(address_item_handler&& handler) NOEXCEPT;

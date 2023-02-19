@@ -125,8 +125,9 @@ protected:
     virtual void pend(const channel::ptr& channel) NOEXCEPT;
     virtual void unpend(const channel::ptr& channel) NOEXCEPT;
 
-    /// Subscribe to session stop notification.
-    virtual void subscribe_stop(notifier&& handler) NOEXCEPT;
+    /// Subscribe to session stop notification, obtain unsubscribe key.
+    virtual object_key subscribe_stop(notifier&& handler) NOEXCEPT;
+    virtual bool notify(object_key key) NOEXCEPT;
 
     /// Remove self from network close subscription (for session early stop).
     virtual void unsubscribe_close() NOEXCEPT;
@@ -177,11 +178,17 @@ protected:
     /// The address advertises disallowed services.
     virtual bool unsupported(const config::address& address) const NOEXCEPT;
 
-    /// The address is not whitelisted by configuration (for non-empty list).
+    /// The authority is not whitelisted by configuration (for non-empty list).
     virtual bool whitelisted(const config::authority& authority) const NOEXCEPT;
 
-    /// The address is blacklisted by configuration.
+    /// The authority is blacklisted by configuration.
     virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
+
+    /// The authority identifies an existing channel (requires strand).
+    virtual bool connected(const config::authority& authority) const NOEXCEPT;
+
+    // TEMP
+    asio::strand& strand() NOEXCEPT;
 
 private:
     object_key create_key() NOEXCEPT;

@@ -350,7 +350,7 @@ void session::handle_timer(const code& ec, object_key key,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    const auto found = stop_subscriber_.notify_one(key, ec);
+    /*const auto found =*/ stop_subscriber_.notify_one(key, ec);
 
     ////LOG("Defer (" << key << ") notified [" << found << "] " << ec.message());
     complete(ec);
@@ -373,11 +373,14 @@ void session::pend(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    stop_subscriber_.subscribe(
-        BIND2(handle_pend, _1, channel), channel->identifier());
+    const auto key = channel->identifier();
+    BC_DEBUG_ONLY(const auto existed =)
+        stop_subscriber_.subscribe(BIND2(handle_pend, _1, channel), key);
 
     ////LOG("Session[" << identifier_ << "] pend    ("
     ////    << stop_subscriber_.size() << ").");
+
+    BC_ASSERT_MSG(!existed, "non-unique subscriber key");
 }
 
 // Ok to not find after stop, clears before channel stop handlers fire.
@@ -386,8 +389,7 @@ void session::unpend(const channel::ptr& channel) NOEXCEPT
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     // error::success prevents channel stop.
-    /*found*/ stop_subscriber_.notify_one(channel->identifier(),
-        error::success);
+    notify(channel->identifier());
 
     /////LOG("Unpend channel (" << channel->identifier() << ") " << found);
 }
@@ -405,13 +407,25 @@ bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
     return false;
 }
 
-void session::subscribe_stop(notify_handler&& handler) NOEXCEPT
+typename session::object_key 
+session::subscribe_stop(notify_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    stop_subscriber_.subscribe(std::move(handler), create_key());
+    const auto key = create_key();
+    BC_DEBUG_ONLY(const auto existed =)
+        stop_subscriber_.subscribe(std::move(handler), key);
+
     ////LOG("Session[" << identifier_ << "] stop    ("
     ////    << stop_subscriber_.size() << ").");
+
+    BC_ASSERT_MSG(!existed, "non-unique subscriber key");
+    return key;
+}
+
+bool session::notify(object_key key) NOEXCEPT
+{
+    return stop_subscriber_.notify_one(key, error::success);
 }
 
 void session::unsubscribe_close() NOEXCEPT
@@ -518,6 +532,12 @@ bool session::blacklisted(const config::authority& authority) const NOEXCEPT
     return settings().blacklisted(authority);
 }
 
+bool session::connected(const config::authority& authority) const NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    return network_.is_connected(authority);
+}
+
 const network::settings& session::settings() const NOEXCEPT
 {
     return network_.network_settings();
@@ -553,6 +573,11 @@ void session::save(const address_cptr& message,
     count_handler&& handler) const NOEXCEPT
 {
     network_.save(message, std::move(handler));
+}
+
+asio::strand& session::strand() NOEXCEPT
+{
+    return network_.strand();
 }
 
 BC_POP_WARNING()

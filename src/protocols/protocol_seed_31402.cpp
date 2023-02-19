@@ -117,16 +117,14 @@ void protocol_seed_31402::handle_send_get_address(const code& ec) NOEXCEPT
 address::cptr protocol_seed_31402::filter(
     const address_items& items) const NOEXCEPT
 {
-    const auto message = std::make_shared<address>(address
-    {
-        difference(items, settings().blacklists)
-    });
+    const auto message = std::make_shared<address>(items);
 
     std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
     {
         return settings().disabled(address)
             || settings().insufficient(address)
-            || settings().unsupported(address);
+            || settings().unsupported(address)
+            || contains(settings().blacklists, address);
     });
 
     return message;
