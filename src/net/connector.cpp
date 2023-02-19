@@ -99,6 +99,12 @@ void connector::start(const std::string& hostname, uint16_t port,
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
+    if (!stopped_)
+    {
+        handler(error::operation_failed, nullptr);
+        return;
+    }
+
     // This allows connect after stop (restartable).
     stopped_ = false;
 

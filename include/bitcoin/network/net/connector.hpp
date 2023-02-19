@@ -64,8 +64,8 @@ public:
 
     // Methods.
     // ------------------------------------------------------------------------
-    /// A connection may only be reattempted following handler invocation.
-    /// May return operation_canceled, channel_timeout, success or error code.
+    /// Returns operation_failed if not stopped. Otherwise may return
+    /// operation_canceled, channel_timeout, success or error code.
     /// The socket parameter is nullptr unless success is returned.
 
     /// Try to connect to the address, starts timer.

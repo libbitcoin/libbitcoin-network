@@ -177,4 +177,40 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
     instance.reset();
 }
 
+BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
+{
+    const logger log{ false };
+    threadpool pool(2);
+    asio::strand strand(pool.service().get_executor());
+    settings set(bc::system::chain::selection::mainnet);
+    set.connect_timeout_seconds = 1000;
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
+
+    boost::asio::post(strand, [instance]()
+    {
+        instance->connect(config::endpoint{ "bogus.xxx", 42 },
+            [](const code& ec, const socket::ptr& socket)
+            {
+                // TODO: 11001 (HOST_NOT_FOUND) gets mapped to unknown.
+                BOOST_REQUIRE(ec == error::unknown || ec == error::operation_canceled);
+                BOOST_REQUIRE(!socket);
+            });
+
+        instance->connect(config::endpoint{ "bogus.yyy", 24 },
+            [](const code& ec, const socket::ptr& socket)
+            {
+                BOOST_REQUIRE(ec == error::operation_failed);
+                BOOST_REQUIRE(!socket);
+            });
+
+        instance->stop();
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+
+    BOOST_REQUIRE(instance->get_stopped());
+    instance.reset();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
