@@ -48,7 +48,7 @@ public:
 
     bool get_stopped() const NOEXCEPT
     {
-        return stopped_;
+        return !gate_.locked();
     }
 };
 

@@ -159,6 +159,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\deadline.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\gate.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\logger.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\reporter.hpp" />
@@ -169,6 +170,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\tracker.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp" />
@@ -253,9 +255,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\gate.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\resubscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\tracker.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_NET_CONNECTOR_HPP
 #define LIBBITCOIN_NETWORK_NET_CONNECTOR_HPP
 
-#include <functional>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -59,13 +58,12 @@ public:
     // Stop (no start).
     // ------------------------------------------------------------------------
 
-    /// Cancel work and close the connector (idempotent).
+    /// Cancel work (idempotent), handler signals completion.
     virtual void stop() NOEXCEPT;
 
     // Methods.
     // ------------------------------------------------------------------------
-    /// Must not be reused, due to handlers race. There is no event to indicate
-    /// completion of both handlers, either of which affect completion state.
+    /// Subsequent accepts may only be attempted following handler invocation.
     /// Returns operation_failed if not stopped. Otherwise may return
     /// operation_canceled, operation_timeout, success or error code.
     /// The socket parameter is nullptr unless success is returned.
@@ -83,6 +81,9 @@ public:
         socket_handler&& handler) NOEXCEPT;
 
 protected:
+    using gate_t = gate_first<two, socket_handler, const code&,
+        const socket::ptr&>;
+
     /// Try to connect to host:port, starts timer.
     virtual void start(const std::string& hostname, uint16_t port,
         const config::address& host, socket_handler&& handler) NOEXCEPT;
@@ -95,19 +96,14 @@ protected:
     // These are protected by strand.
     asio::resolver resolver_;
     deadline::ptr timer_;
-    bool stopped_{ true };
+    gate_t gate_{};
 
 private:
     void handle_resolve(const error::boost_code& ec,
-        const asio::endpoints& range, socket::ptr socket,
-        const socket_handler& handler) NOEXCEPT;
-    void handle_connect(const code& ec, socket::ptr socket,
-        const socket_handler& handler) NOEXCEPT;
-    void handle_timer(const code& ec, const socket::ptr& socket,
-        const socket_handler& handler) NOEXCEPT;
-
-    void do_handle_connect(const code& ec, socket::ptr socket,
-        const socket_handler& handler) NOEXCEPT;
+        const asio::endpoints& range, const socket::ptr& socket) NOEXCEPT;
+    void do_handle_connect(const code& ec, const socket::ptr& socket) NOEXCEPT;
+    void handle_connect(const code& ec, const socket::ptr& socket) NOEXCEPT;
+    void handle_timer(const code& ec, const socket::ptr& socket) NOEXCEPT;
 };
 
 typedef std::vector<connector::ptr> connectors;

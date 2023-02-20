@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_IPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_UNSUBSCRIBER_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_UNSUBSCRIBER_IPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/error.hpp>
@@ -25,22 +25,24 @@
 namespace libbitcoin {
 namespace network {
 
-template <typename Key, typename... Args>
-resubscriber<Key, Args...>::resubscriber(asio::strand& strand) NOEXCEPT
+template <typename... Args>
+unsubscriber<Args...>::
+unsubscriber(asio::strand& strand) NOEXCEPT
   : strand_(strand)
 {
 }
 
-template <typename Key, typename... Args>
-resubscriber<Key, Args...>::~resubscriber() NOEXCEPT
+template <typename... Args>
+unsubscriber<Args...>::
+~unsubscriber() NOEXCEPT
 {
     // Destruction may not occur on the strand.
-    BC_ASSERT_MSG(map_.empty(), "resubscriber is not cleared");
+    BC_ASSERT_MSG(queue_.empty(), "unsubscriber is not cleared");
 }
 
-template <typename Key, typename... Args>
-code resubscriber<Key, Args...>::
-subscribe(handler&& handler, const Key& key) NOEXCEPT
+template <typename... Args>
+code unsubscriber<Args...>::
+subscribe(handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -50,21 +52,16 @@ subscribe(handler&& handler, const Key& key) NOEXCEPT
         /*bool*/ handler(error::subscriber_stopped, Args{}...);
         return error::subscriber_stopped;
     }
-    else if (map_.contains(key))
-    {
-        /*bool*/ handler(error::subscriber_exists, Args{}...);
-        return error::subscriber_exists;
-    }
     else
     {
-        map_.emplace(key, std::move(handler));
+        queue_.push_back(std::move(handler));
         return error::success;
     }
     BC_POP_WARNING()
 }
 
-template <typename Key, typename... Args>
-void resubscriber<Key, Args...>::
+template <typename... Args>
+void unsubscriber<Args...>::
 notify(const code& ec, const Args&... args) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -72,14 +69,14 @@ notify(const code& ec, const Args&... args) NOEXCEPT
     if (stopped_)
         return;
 
-    // Already on the strand to protect map_, so execute each handler.
+    // Already on the strand to protect queue_, so execute each handler.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    for (auto it = map_.begin(); it != map_.end();)
+    for (auto it = queue_.begin(); it != queue_.end();)
     {
         // Invoke handler and handle result.
-        if (!it->second(ec, args...))
+        if (!(*it)(ec, args...))
         {
-            it = map_.erase(it);
+            it = queue_.erase(it);
         }
         else
         {
@@ -89,34 +86,11 @@ notify(const code& ec, const Args&... args) NOEXCEPT
     BC_POP_WARNING()
 }
 
-template <typename Key, typename... Args>
-bool resubscriber<Key, Args...>::
-notify_one(const Key& key, const code& ec, const Args&... args) NOEXCEPT
-{
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
-    if (stopped_)
-        return false;
-
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    const auto it = map_.find(key);
-    if (it != map_.end())
-    {
-        // Invoke handler and handle result.
-        if (!it->second(ec, args...))
-            map_.erase(it);
-
-        return true;
-    }
-    BC_POP_WARNING()
-    return false;
-}
-
-template <typename Key, typename... Args>
-void resubscriber<Key, Args...>::
+template <typename... Args>
+void unsubscriber<Args...>::
 stop(const code& ec, const Args&... args) NOEXCEPT
 {
-    BC_ASSERT_MSG(ec, "resubscriber stopped with success code");
+    BC_ASSERT_MSG(ec, "unsubscriber stopped with success code");
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (stopped_)
@@ -124,11 +98,11 @@ stop(const code& ec, const Args&... args) NOEXCEPT
 
     notify(ec, args...);
     stopped_ = true;
-    map_.clear();
+    queue_.clear();
 }
 
-template <typename Key, typename... Args>
-void resubscriber<Key, Args...>::
+template <typename... Args>
+void unsubscriber<Args...>::
 stop_default(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -136,12 +110,12 @@ stop_default(const code& ec) NOEXCEPT
     stop(ec, Args{}...);
 }
 
-template <typename Key, typename... Args>
-size_t resubscriber<Key, Args...>::
+template <typename... Args>
+size_t unsubscriber<Args...>::
 size() const NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-    return map_.size();
+    return queue_.size();
 }
 
 } // namespace network

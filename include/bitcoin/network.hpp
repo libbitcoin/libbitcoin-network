@@ -25,6 +25,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/async/deadline.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
+#include <bitcoin/network/async/gate.hpp>
 #include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/async/logger.hpp>
 #include <bitcoin/network/async/reporter.hpp>
@@ -35,6 +36,7 @@
 #include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/timer.hpp>
 #include <bitcoin/network/async/tracker.hpp>
+#include <bitcoin/network/async/unsubscriber.hpp>
 #include <bitcoin/network/config/address.hpp>
 #include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/config/config.hpp>

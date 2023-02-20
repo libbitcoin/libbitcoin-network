@@ -26,20 +26,23 @@ namespace libbitcoin {
 namespace network {
 
 template <typename... Args>
-subscriber<Args...>::subscriber(asio::strand& strand) NOEXCEPT
+subscriber<Args...>::
+subscriber(asio::strand& strand) NOEXCEPT
   : strand_(strand)
 {
 }
 
 template <typename... Args>
-subscriber<Args...>::~subscriber() NOEXCEPT
+subscriber<Args...>::
+~subscriber() NOEXCEPT
 {
     // Destruction may not occur on the strand.
     BC_ASSERT_MSG(queue_.empty(), "subscriber is not cleared");
 }
 
 template <typename... Args>
-code subscriber<Args...>::subscribe(handler&& handler) NOEXCEPT
+code subscriber<Args...>::
+subscribe(handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -58,8 +61,8 @@ code subscriber<Args...>::subscribe(handler&& handler) NOEXCEPT
 }
 
 template <typename... Args>
-void subscriber<Args...>::notify(const code& ec,
-    const Args&... args) const NOEXCEPT
+void subscriber<Args...>::
+notify(const code& ec, const Args&... args) const NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -76,7 +79,8 @@ void subscriber<Args...>::notify(const code& ec,
 }
 
 template <typename... Args>
-void subscriber<Args...>::stop(const code& ec, const Args&... args) NOEXCEPT
+void subscriber<Args...>::
+stop(const code& ec, const Args&... args) NOEXCEPT
 {
     BC_ASSERT_MSG(ec, "subscriber stopped with success code");
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -90,7 +94,8 @@ void subscriber<Args...>::stop(const code& ec, const Args&... args) NOEXCEPT
 }
 
 template <typename... Args>
-void subscriber<Args...>::stop_default(const code& ec) NOEXCEPT
+void subscriber<Args...>::
+stop_default(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -98,7 +103,8 @@ void subscriber<Args...>::stop_default(const code& ec) NOEXCEPT
 }
 
 template <typename... Args>
-size_t subscriber<Args...>::size() const NOEXCEPT
+size_t subscriber<Args...>::
+size() const NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
     return queue_.size();

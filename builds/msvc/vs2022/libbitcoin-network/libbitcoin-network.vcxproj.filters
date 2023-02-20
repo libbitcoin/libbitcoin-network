@@ -311,6 +311,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\gate.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
@@ -339,6 +342,9 @@
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\tracker.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp">
@@ -589,6 +595,9 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\gate.ipp">
+      <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\resubscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
@@ -596,6 +605,9 @@
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\tracker.ipp">
+      <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="packages.config" />

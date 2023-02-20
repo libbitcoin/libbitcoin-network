@@ -129,6 +129,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/test.hpp \
     test/async/deadline.cpp \
     test/async/enable_shared_from_base.cpp \
+    test/async/gate.cpp \
     test/async/resubscriber.cpp \
     test/async/subscriber.cpp \
     test/async/thread.cpp \
@@ -136,6 +137,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/async/time.cpp \
     test/async/timer.cpp \
     test/async/tracker.cpp \
+    test/async/unsubscriber.cpp \
     test/config/address.cpp \
     test/config/authority.cpp \
     test/config/endpoint.cpp \
@@ -226,6 +228,7 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/async.hpp \
     include/bitcoin/network/async/deadline.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
+    include/bitcoin/network/async/gate.hpp \
     include/bitcoin/network/async/handlers.hpp \
     include/bitcoin/network/async/logger.hpp \
     include/bitcoin/network/async/reporter.hpp \
@@ -235,7 +238,8 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/threadpool.hpp \
     include/bitcoin/network/async/time.hpp \
     include/bitcoin/network/async/timer.hpp \
-    include/bitcoin/network/async/tracker.hpp
+    include/bitcoin/network/async/tracker.hpp \
+    include/bitcoin/network/async/unsubscriber.hpp
 
 include_bitcoin_network_configdir = ${includedir}/bitcoin/network/config
 include_bitcoin_network_config_HEADERS = \
@@ -248,9 +252,11 @@ include_bitcoin_network_config_HEADERS = \
 include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \
     include/bitcoin/network/impl/async/enable_shared_from_base.ipp \
+    include/bitcoin/network/impl/async/gate.ipp \
     include/bitcoin/network/impl/async/resubscriber.ipp \
     include/bitcoin/network/impl/async/subscriber.ipp \
-    include/bitcoin/network/impl/async/tracker.ipp
+    include/bitcoin/network/impl/async/tracker.ipp \
+    include/bitcoin/network/impl/async/unsubscriber.ipp
 
 include_bitcoin_network_messagesdir = ${includedir}/bitcoin/network/messages
 include_bitcoin_network_messages_HEADERS = \
