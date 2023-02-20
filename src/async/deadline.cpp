@@ -58,10 +58,7 @@ void deadline::start(result_handler&& handle) NOEXCEPT
 // Start/stop must not be called concurrently.
 void deadline::start(result_handler&& handle, const duration& timeout) NOEXCEPT
 {
-    // Handling cancel error code creates exception safety.
-    // Explicitly cancel an existing wait operation and reset time.
-    error::boost_code ignore;
-    timer_.cancel(ignore);
+    timer_.cancel();
     timer_.expires_after(timeout);
 
     // Handler posted, cancel sets asio::error::operation_aborted.
@@ -72,9 +69,7 @@ void deadline::start(result_handler&& handle, const duration& timeout) NOEXCEPT
 
 void deadline::stop() NOEXCEPT
 {
-    // Handling cancel error code creates exception safety.
-    error::boost_code ignore;
-    timer_.cancel(ignore);
+    timer_.cancel();
     BC_DEBUG_ONLY(timer_.expires_at(epoch);)
 }
 

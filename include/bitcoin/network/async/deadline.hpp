@@ -71,7 +71,7 @@ private:
     const duration duration_;
 
     // This is not thread safe.
-    asio::wait_timer timer_;
+    asio::steady_timer timer_;
 };
 
 } // namespace network
