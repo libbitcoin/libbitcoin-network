@@ -124,8 +124,8 @@ public:
         stop_completer&& complete) NOEXCEPT;
 
     /// Unsubscribe by subscription key, error::unsubscribed passed to handler.
-    virtual void unsubscribe_connect(size_t key) NOEXCEPT;
-    virtual void unsubscribe_close(size_t key) NOEXCEPT;
+    virtual void unsubscribe_connect(object_key key) NOEXCEPT;
+    virtual void unsubscribe_close(object_key key) NOEXCEPT;
 
     // Manual connections.
     // ------------------------------------------------------------------------

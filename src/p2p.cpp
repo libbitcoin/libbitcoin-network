@@ -244,7 +244,7 @@ void p2p::do_subscribe_connect(const channel_notifier& handler,
     complete(connect_subscriber_.subscribe(move_copy(handler), key), key);
 }
 
-void p2p::unsubscribe_connect(size_t key) NOEXCEPT
+void p2p::unsubscribe_connect(object_key key) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&p2p::do_unsubscribe_connect, this, key));
@@ -281,7 +281,7 @@ void p2p::do_subscribe_close(const stop_handler& handler,
     complete(subscribe_close(move_copy(handler), key), key);
 }
 
-void p2p::unsubscribe_close(size_t key) NOEXCEPT
+void p2p::unsubscribe_close(object_key key) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&p2p::do_unsubscribe_close, this, key));
