@@ -55,6 +55,7 @@ public:
 
     // Start/stop.
     // ------------------------------------------------------------------------
+    /// Starts return operation_failed if not stopped.
 
     /// Start the listener on all interfaces on the specified port (call once).
     virtual code start(uint16_t port) NOEXCEPT;
@@ -62,14 +63,14 @@ public:
     /// Start the listener on the specified ip address and port (call once).
     virtual code start(const config::authority& local) NOEXCEPT;
 
-    /// Cancel work and close the acceptor (idempotent).
+    /// Cancel work (idempotent), handler signals completion.
     virtual void stop() NOEXCEPT;
 
     // Methods.
     // ------------------------------------------------------------------------
     /// Subsequent accepts may only be attempted following handler invocation.
+    /// Returns service_stopped, operation_canceled, success or error code.
     /// The socket parameter is nullptr unless success is returned.
-    /// May return operation_canceled, success or error code.
 
     /// Accept next connection available until stop or timeout, starts timer.
     virtual void accept(socket_handler&& handler) NOEXCEPT;
