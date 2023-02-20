@@ -33,13 +33,13 @@
     <ClCompile Include="..\..\..\..\test\async\deadline.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\gate.cpp">
-      <Filter>src\async</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp">
+    <ClCompile Include="..\..\..\..\test\async\race.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp">

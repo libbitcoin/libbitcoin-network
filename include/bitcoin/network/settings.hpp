@@ -54,9 +54,9 @@ struct BCT_API settings
     bool validate_checksum;
     uint32_t identifier;
     uint16_t inbound_port;
-    uint32_t inbound_connections;
-    uint32_t outbound_connections;
-    uint32_t connect_batch_size;
+    uint16_t inbound_connections;
+    uint16_t outbound_connections;
+    uint16_t connect_batch_size;
     uint32_t retry_timeout_seconds;
     uint32_t connect_timeout_seconds;
     uint32_t handshake_timeout_seconds;

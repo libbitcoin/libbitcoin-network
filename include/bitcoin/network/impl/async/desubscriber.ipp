@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_IPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_DESUBSCRIBER_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_DESUBSCRIBER_IPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/error.hpp>
@@ -26,20 +26,20 @@ namespace libbitcoin {
 namespace network {
 
 template <typename Key, typename... Args>
-resubscriber<Key, Args...>::resubscriber(asio::strand& strand) NOEXCEPT
+desubscriber<Key, Args...>::desubscriber(asio::strand& strand) NOEXCEPT
   : strand_(strand)
 {
 }
 
 template <typename Key, typename... Args>
-resubscriber<Key, Args...>::~resubscriber() NOEXCEPT
+desubscriber<Key, Args...>::~desubscriber() NOEXCEPT
 {
     // Destruction may not occur on the strand.
-    BC_ASSERT_MSG(map_.empty(), "resubscriber is not cleared");
+    BC_ASSERT_MSG(map_.empty(), "desubscriber is not cleared");
 }
 
 template <typename Key, typename... Args>
-code resubscriber<Key, Args...>::
+code desubscriber<Key, Args...>::
 subscribe(handler&& handler, const Key& key) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -64,7 +64,7 @@ subscribe(handler&& handler, const Key& key) NOEXCEPT
 }
 
 template <typename Key, typename... Args>
-void resubscriber<Key, Args...>::
+void desubscriber<Key, Args...>::
 notify(const code& ec, const Args&... args) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -90,7 +90,7 @@ notify(const code& ec, const Args&... args) NOEXCEPT
 }
 
 template <typename Key, typename... Args>
-bool resubscriber<Key, Args...>::
+bool desubscriber<Key, Args...>::
 notify_one(const Key& key, const code& ec, const Args&... args) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -113,10 +113,10 @@ notify_one(const Key& key, const code& ec, const Args&... args) NOEXCEPT
 }
 
 template <typename Key, typename... Args>
-void resubscriber<Key, Args...>::
+void desubscriber<Key, Args...>::
 stop(const code& ec, const Args&... args) NOEXCEPT
 {
-    BC_ASSERT_MSG(ec, "resubscriber stopped with success code");
+    BC_ASSERT_MSG(ec, "desubscriber stopped with success code");
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (stopped_)
@@ -128,7 +128,7 @@ stop(const code& ec, const Args&... args) NOEXCEPT
 }
 
 template <typename Key, typename... Args>
-void resubscriber<Key, Args...>::
+void desubscriber<Key, Args...>::
 stop_default(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -137,7 +137,7 @@ stop_default(const code& ec) NOEXCEPT
 }
 
 template <typename Key, typename... Args>
-size_t resubscriber<Key, Args...>::
+size_t desubscriber<Key, Args...>::
 size() const NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");

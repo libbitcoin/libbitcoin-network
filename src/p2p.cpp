@@ -253,7 +253,7 @@ void p2p::unsubscribe_connect(object_key key) NOEXCEPT
 void p2p::do_unsubscribe_connect(object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    connect_subscriber_.notify_one(key, error::unsubscribed, nullptr);
+    connect_subscriber_.notify_one(key, error::desubscribed, nullptr);
 }
 
 // private
@@ -290,7 +290,7 @@ void p2p::unsubscribe_close(object_key key) NOEXCEPT
 void p2p::do_unsubscribe_close(object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    stop_subscriber_.notify_one(key, error::unsubscribed);
+    stop_subscriber_.notify_one(key, error::desubscribed);
 }
 
 // At one object/session/ns, this overflows in ~585 years (and handled).

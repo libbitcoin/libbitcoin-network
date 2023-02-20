@@ -81,7 +81,7 @@ public:
 
 protected:
     typedef uint64_t object_key;
-    typedef resubscriber<object_key> subscriber;
+    typedef desubscriber<object_key> subscriber;
     typedef subscriber::handler notifier;
 
     /// Construct an instance (network should be started).

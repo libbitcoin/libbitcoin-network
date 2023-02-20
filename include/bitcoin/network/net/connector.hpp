@@ -81,8 +81,7 @@ public:
         socket_handler&& handler) NOEXCEPT;
 
 protected:
-    using gate_t = gate_first<two, socket_handler, const code&,
-        const socket::ptr&>;
+    using race_t = race<two, const code&, const socket::ptr&>;
 
     /// Try to connect to host:port, starts timer.
     virtual void start(const std::string& hostname, uint16_t port,
@@ -96,7 +95,7 @@ protected:
     // These are protected by strand.
     asio::resolver resolver_;
     deadline::ptr timer_;
-    gate_t gate_{};
+    race_t race_{};
 
 private:
     void handle_resolve(const error::boost_code& ec,

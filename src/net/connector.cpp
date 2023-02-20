@@ -55,15 +55,15 @@ connector::connector(const logger& log, asio::strand& strand,
 
 connector::~connector() NOEXCEPT
 {
-    BC_ASSERT_MSG(!gate_.locked(), "connector is not stopped");
-    if (gate_.locked()) { LOG("~connector is not stopped."); }
+    BC_ASSERT_MSG(!race_.running(), "connector is not stopped");
+    if (race_.running()) { LOG("~connector is not stopped."); }
 }
 
 void connector::stop() NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    if (!gate_.locked())
+    if (!race_.running())
         return;
 
     // Posts timer handler to strand.
@@ -99,14 +99,14 @@ void connector::start(const std::string& hostname, uint16_t port,
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    if (gate_.locked())
+    if (race_.running())
     {
         handler(error::operation_failed, nullptr);
         return;
     }
 
     // Capture the handler.
-    gate_.lock(std::move(handler));
+    race_.start(std::move(handler));
 
     // Create a socket.
     const auto sock = std::make_shared<socket>(log(), service_, host);
@@ -130,7 +130,7 @@ void connector::handle_resolve(const error::boost_code& ec,
 
     if (socket->stopped())
     {
-        gate_.knock(error::operation_canceled, nullptr);
+        race_.finish(error::operation_canceled, nullptr);
         return;
     }
 
@@ -138,7 +138,7 @@ void connector::handle_resolve(const error::boost_code& ec,
     {
         timer_->stop();
         socket->stop();
-        gate_.knock(error::asio_to_error_code(ec), nullptr);
+        race_.finish(error::asio_to_error_code(ec), nullptr);
         return;
     }
 
@@ -165,12 +165,12 @@ void connector::handle_connect(const code& ec, const socket::ptr& socket) NOEXCE
     {
         socket->stop();
         timer_->stop();
-        gate_.knock(ec, nullptr);
+        race_.finish(ec, nullptr);
         return;
     }
 
     timer_->stop();
-    gate_.knock(error::success, socket);
+    race_.finish(error::success, socket);
 }
 
 // private
@@ -182,7 +182,7 @@ void connector::handle_timer(const code& ec, const socket::ptr& socket) NOEXCEPT
     socket->stop();
 
     // Translate timer success to operation_timeout.
-    gate_.knock(ec ? ec : error::operation_timeout, nullptr);
+    race_.finish(ec ? ec : error::operation_timeout, nullptr);
 }
 
 BC_POP_WARNING()

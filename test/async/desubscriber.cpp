@@ -18,15 +18,15 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(resubscriber_tests)
+BOOST_AUTO_TEST_SUITE(desubscriber_tests)
 
-typedef resubscriber<uint64_t, size_t> test_resubscriber;
+typedef desubscriber<uint64_t, size_t> test_desubscriber;
 
-BOOST_AUTO_TEST_CASE(resubscriber__subscribe__stopped__subscriber_stopped)
+BOOST_AUTO_TEST_CASE(desubscriber__subscribe__stopped__subscriber_stopped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -62,11 +62,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__stopped__subscriber_stopped)
     BOOST_REQUIRE_EQUAL(retry_result.second, size_t{});
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__subscribe__exists__subscriber_exists)
+BOOST_AUTO_TEST_CASE(desubscriber__subscribe__exists__subscriber_exists)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -97,11 +97,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__exists__subscriber_exists)
     BOOST_REQUIRE_EQUAL(second_result.second, size_t{});
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__subscribe__removed__expected)
+BOOST_AUTO_TEST_CASE(desubscriber__subscribe__removed__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec1 = error::address_not_found;
     const auto ec2 = error::address_in_use;
     constexpr auto expected1 = 42u;
@@ -139,11 +139,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__removed__expected)
     BOOST_REQUIRE_EQUAL(second_result.second, expected2);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__subscribe__unique__expected)
+BOOST_AUTO_TEST_CASE(desubscriber__subscribe__unique__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -177,11 +177,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__unique__expected)
     BOOST_REQUIRE_EQUAL(second_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__stop_default__once__expected)
+BOOST_AUTO_TEST_CASE(desubscriber__stop_default__once__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = zero;
 
@@ -203,11 +203,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop_default__once__expected)
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__stop__once__expected)
+BOOST_AUTO_TEST_CASE(desubscriber__stop__once__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -229,11 +229,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop__once__expected)
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__stop__twice__second_dropped)
+BOOST_AUTO_TEST_CASE(desubscriber__stop__twice__second_dropped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -258,11 +258,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop__twice__second_dropped)
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify__stopped__dropped)
+BOOST_AUTO_TEST_CASE(desubscriber__notify__stopped__dropped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -288,11 +288,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__stopped__dropped)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify__once__expected)
+BOOST_AUTO_TEST_CASE(desubscriber__notify__once__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -318,11 +318,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__once__expected)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify__twice_true__expected)
+BOOST_AUTO_TEST_CASE(desubscriber__notify__twice_true__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -350,11 +350,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__twice_true__expected)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify__twice_false__expected)
+BOOST_AUTO_TEST_CASE(desubscriber__notify__twice_false__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -380,11 +380,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__twice_false__expected)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify_one__stopped__dropped)
+BOOST_AUTO_TEST_CASE(desubscriber__notify_one__stopped__dropped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
     constexpr auto key = 99u;
@@ -412,11 +412,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__stopped__dropped)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify_one__missing__false)
+BOOST_AUTO_TEST_CASE(desubscriber__notify_one__missing__false)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -443,11 +443,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__missing__false)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify_one__once__expected)
+BOOST_AUTO_TEST_CASE(desubscriber__notify_one__once__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
     constexpr auto key = 99u;
@@ -474,11 +474,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__once__expected)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify_one__twice_true__expected)
+BOOST_AUTO_TEST_CASE(desubscriber__notify_one__twice_true__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
     constexpr auto key = 99u;
@@ -507,11 +507,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__twice_true__expected)
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(resubscriber__notify_one__twice_false__expected)
+BOOST_AUTO_TEST_CASE(desubscriber__notify_one__twice_false__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_resubscriber instance(strand);
+    test_desubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
     constexpr auto key = 99u;

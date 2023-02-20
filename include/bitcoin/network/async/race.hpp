@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_GATE_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_GATE_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACE_HPP
 
 #include <memory>
 #include <tuple>
@@ -29,50 +29,51 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe.
-/// Gate is a bind that invokes handler with the first set of arguments
+/// Race is a bind that invokes handler with the first set of arguments
 /// but only after a preconfigured number of invocations. This assists in
-/// Synchronizing the results of a set of racing synchronous operations.
-template <size_t Knocks, typename Handler, typename... Args>
-class gate_first final
+/// synchronizing the results of a set of racing asynchronous operations.
+template <size_t Size, typename... Args>
+class race final
 {
 public:
-    DELETE_COPY_MOVE(gate_first);
+    typedef std::function<void(Args...)> handler;
 
-    /// Create/destroy an unlocked gate.
-    gate_first() NOEXCEPT;
-    ~gate_first() NOEXCEPT;
+    DELETE_COPY_MOVE(race);
 
-    /// True if the gate is locked.
-    bool locked() const NOEXCEPT;
+    race() NOEXCEPT;
+    ~race() NOEXCEPT;
 
-    /// False implies invalid usage.
-    bool lock(Handler&& handler) NOEXCEPT;
+    /// True if the race is running.
+    bool running() const NOEXCEPT;
 
     /// False implies invalid usage.
-    bool knock(Args&&... args) NOEXCEPT;
+    bool start(handler&& complete) NOEXCEPT;
+
+    /// False implies invalid usage.
+    bool finish(const Args&... args) NOEXCEPT;
 
 private:
+    template <size_t... Pack>
+    using unpack = std::index_sequence<Pack...>;
+    using packed = std::tuple<std::decay_t<Args>...>;
     using sequence = std::index_sequence_for<Args...>;
-    using arguments = std::tuple<std::decay_t<Args>...>;
-
-    static_assert(!is_zero(Knocks));
-    constexpr bool first_knock() const NOEXCEPT;
+    static_assert(!is_zero(Size));
 
     template<size_t... Index>
-    void invoker(const Handler& handler, const arguments& args,
-        std::index_sequence<Index...>) NOEXCEPT;
-
-    bool last_knock() NOEXCEPT;
+    void invoker(const handler& complete, const packed& args,
+        unpack<Index...>) NOEXCEPT;
     bool invoke() NOEXCEPT;
+    bool is_loser() NOEXCEPT;
+    bool is_winner() const NOEXCEPT;
 
-    size_t count_{};
-    arguments args_{};
-    std::shared_ptr<Handler> handler_{};
+    packed args_{};
+    size_t runners_{};
+    std::shared_ptr<handler> complete_{};
 };
 
 } // namespace network
 } // namespace libbitcoin
 
-#include <bitcoin/network/impl/async/gate.ipp>
+#include <bitcoin/network/impl/async/race.ipp>
 
 #endif

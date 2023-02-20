@@ -48,7 +48,7 @@ public:
 
     bool get_stopped() const NOEXCEPT
     {
-        return !gate_.locked();
+        return !race_.running();
     }
 };
 

@@ -37,7 +37,7 @@ namespace libbitcoin {
 namespace network {
 
 /// Peer-to-Peer network class, virtual, thread safe with exceptions:
-/// * attach must be called from channel strand.
+/// * attach must be called from network strand.
 /// * close must not be called concurrently or from any threadpool thread.
 class BCT_API p2p
   : public reporter
@@ -46,11 +46,11 @@ public:
     typedef std::shared_ptr<p2p> ptr;
     typedef uint64_t object_key;
 
-    typedef resubscriber<object_key> stop_subscriber;
+    typedef desubscriber<object_key> stop_subscriber;
     typedef stop_subscriber::handler stop_handler;
     typedef stop_subscriber::completer stop_completer;
 
-    typedef resubscriber<object_key, const channel::ptr&> channel_subscriber;
+    typedef desubscriber<object_key, const channel::ptr&> channel_subscriber;
     typedef channel_subscriber::handler channel_notifier;
     typedef channel_subscriber::completer channel_completer;
 
@@ -112,18 +112,19 @@ public:
     /// A channel pointer should only be retained when subscribed to its stop,
     /// and must be unretained in stop handler invoke, otherwise it will leak.
     /// To subscribe to disconnections, subscribe to each channel stop.
+    /// Subscriptions and unsubscriptions are allowed before start.
 
-    /// Subscribe to connection creation (allowed before start).
+    /// Subscribe to connection creation.
     /// A call after close invokes handlers with error::subscriber_stopped.
     virtual void subscribe_connect(channel_notifier&& handler,
         channel_completer&& complete) NOEXCEPT;
 
-    /// Subscribe to service stop (allowed before start).
+    /// Subscribe to service stop.
     /// A call after close invokes handlers with error::subscriber_stopped.
     virtual void subscribe_close(stop_handler&& handler,
         stop_completer&& complete) NOEXCEPT;
 
-    /// Unsubscribe by subscription key, error::unsubscribed passed to handler.
+    /// Unsubscribe by subscription key, error::desubscribed passed to handler.
     virtual void unsubscribe_connect(object_key key) NOEXCEPT;
     virtual void unsubscribe_close(object_key key) NOEXCEPT;
 

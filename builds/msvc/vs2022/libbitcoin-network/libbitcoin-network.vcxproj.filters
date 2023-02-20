@@ -308,10 +308,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\deadline.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\gate.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp">
@@ -320,10 +320,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\logger.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\reporter.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\resubscriber.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\reporter.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp">
@@ -592,13 +592,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\desubscriber.ipp">
+      <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\gate.ipp">
-      <Filter>include\bitcoin\network\impl\async</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\resubscriber.ipp">
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp">

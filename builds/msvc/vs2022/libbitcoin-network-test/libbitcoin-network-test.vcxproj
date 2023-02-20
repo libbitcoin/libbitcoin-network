@@ -71,9 +71,9 @@
   </ImportGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\test\async\deadline.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\gate.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\race.cpp" />
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
