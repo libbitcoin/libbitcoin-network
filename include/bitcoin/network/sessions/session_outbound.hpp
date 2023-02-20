@@ -39,7 +39,7 @@ public:
     typedef std::shared_ptr<session_outbound> ptr;
 
     /// Construct an instance (network should be started).
-    session_outbound(p2p& network, size_t key) NOEXCEPT;
+    session_outbound(p2p& network, uint64_t identifier) NOEXCEPT;
 
     /// Start configured number of connections (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;
@@ -57,7 +57,7 @@ protected:
 
     /// Start outbound connections based on config (called from start).
     virtual void start_connect(const code& ec,
-        const connectors_ptr& connectors, size_t id) NOEXCEPT;
+        const connectors_ptr& connectors, object_key batch) NOEXCEPT;
 
 private:
     class integer final
