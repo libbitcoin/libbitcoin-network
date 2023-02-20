@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
     boost::asio::post(strand, [&]()
     {
         BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
         }));
@@ -44,10 +44,10 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
         instance.stop(ec, expected);
 
         BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE_EQUAL(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             retry_result = { value, size };
-        }));
+        }), error::subscriber_stopped);
 
         BOOST_REQUIRE_EQUAL(instance.size(), 0u);
     });
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
         }));
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__once__expected)
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
         }));
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__twice__second_dropped)
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
         }));
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Allow first and possible second notify, ignore stop.
             if (++count != two) notify_result = { value, size };
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__once__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             if (is_one(++count)) notify_result = { value, size };
         }));
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__twice__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Exclude stop_default call.
             if (++count <= two) notify_result = { value, size };

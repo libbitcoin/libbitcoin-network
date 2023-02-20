@@ -341,23 +341,15 @@ void session::defer(result_handler&& handler) NOEXCEPT
     timer->start(
         BIND3(handle_timer, _1, key, std::move(handler)), timeout);
 
-    BC_DEBUG_ONLY(const auto success =) stop_subscriber_.subscribe(
+    stop_subscriber_.subscribe(
         BIND3(handle_defer, _1, key, timer), key);
-
-    ////LOG("Session[" << identifier_ << "] defer   ("
-    ////    << stop_subscriber_.size() << ").");
-
-    BC_ASSERT_MSG(success, "non-unique subscriber key");
 }
 
 void session::handle_timer(const code& ec, object_key key,
     const result_handler& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-
-    /*const auto found =*/ stop_subscriber_.notify_one(key, ec);
-
-    ////LOG("Defer (" << key << ") notified [" << found << "] " << ec.message());
+    stop_subscriber_.notify_one(key, ec);
     complete(ec);
 }
 
@@ -365,11 +357,6 @@ bool session::handle_defer(const code&, object_key,
     const deadline::ptr& timer) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-
-    ////LOG("Delay timer (" << key << ") stop: " << ec.message());
-    ////LOG("Session[" << identifier_ << "] undefer ("
-    ////    << stop_subscriber_.size() << ").");
-
     timer->stop();
     return false;
 }
@@ -377,35 +364,20 @@ bool session::handle_defer(const code&, object_key,
 void session::pend(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-
-    const auto key = channel->identifier();
-    BC_DEBUG_ONLY(const auto success =)
-        stop_subscriber_.subscribe(BIND2(handle_pend, _1, channel), key);
-
-    ////LOG("Session[" << identifier_ << "] pend    ("
-    ////    << stop_subscriber_.size() << ").");
-
-    BC_ASSERT_MSG(success, "non-unique subscriber key");
+    stop_subscriber_.subscribe(BIND2(handle_pend, _1, channel),
+        channel->identifier());
 }
 
 // Ok to not find after stop, clears before channel stop handlers fire.
 void session::unpend(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-
-    // error::success prevents channel stop.
     notify(channel->identifier());
-
-    /////LOG("Unpend channel (" << channel->identifier() << ") " << found);
 }
 
 bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-
-    ////LOG("Pend channel (" << channel->identifier() << ") " << ec.message());
-    ////LOG("Session[" << identifier_ << "] unpend  ("
-    ////    << stop_subscriber_.size() << ").");
 
     // error::success prevents channel stop.
     if (ec)
@@ -418,15 +390,8 @@ typename session::object_key
 session::subscribe_stop(notify_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-
     const auto key = create_key();
-    BC_DEBUG_ONLY(const auto success =) stop_subscriber_.subscribe(
-        std::move(handler), key);
-
-    ////LOG("Session[" << identifier_ << "] stop    ("
-    ////    << stop_subscriber_.size() << ").");
-
-    BC_ASSERT_MSG(success, "non-unique subscriber key");
+    stop_subscriber_.subscribe(std::move(handler), key);
     return key;
 }
 
@@ -463,6 +428,7 @@ channel::ptr session::create_channel(const socket::ptr& socket,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
+    // Channel id must be created using create_key().
     const auto id = create_key();
     return std::make_shared<channel>(log(), socket, settings(), id, quiet);
 }

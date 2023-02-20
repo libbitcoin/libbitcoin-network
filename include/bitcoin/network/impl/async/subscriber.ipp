@@ -39,7 +39,7 @@ subscriber<Args...>::~subscriber() NOEXCEPT
 }
 
 template <typename... Args>
-bool subscriber<Args...>::subscribe(handler&& handler) NOEXCEPT
+code subscriber<Args...>::subscribe(handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -47,12 +47,12 @@ bool subscriber<Args...>::subscribe(handler&& handler) NOEXCEPT
     if (stopped_)
     {
         handler(error::subscriber_stopped, Args{}...);
-        return false;
+        return error::subscriber_stopped;
     }
     else
     {
         queue_.push_back(std::move(handler));
-        return true;
+        return error::success;
     }
     BC_POP_WARNING()
 }

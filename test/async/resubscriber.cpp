@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__stopped__subscriber_stopped)
     boost::asio::post(strand, [&]()
     {
         BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
             return true;
@@ -45,11 +45,11 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__stopped__subscriber_stopped)
         instance.stop(ec, expected);
 
         BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE_EQUAL(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             retry_result = { value, size };
             return true;
-        }, 0));
+        }, 0), error::subscriber_stopped);
 
         BOOST_REQUIRE_EQUAL(instance.size(), 0u);
     });
@@ -74,17 +74,17 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__exists__subscriber_exists)
     std::pair<code, size_t> second_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             first_result = { value, size };
             return true;
         }, 42));
 
-        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE_EQUAL(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             second_result = { value, size };
             return true;
-        }, 42));
+        }, 42), error::subscriber_exists);
 
         instance.stop(ec, expected);
     });
@@ -95,6 +95,48 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__exists__subscriber_exists)
     BOOST_REQUIRE_EQUAL(first_result.second, expected);
     BOOST_REQUIRE_EQUAL(second_result.first, error::subscriber_exists);
     BOOST_REQUIRE_EQUAL(second_result.second, size_t{});
+}
+
+BOOST_AUTO_TEST_CASE(resubscriber__subscribe__removed__expected)
+{
+    threadpool pool(2);
+    asio::strand strand(pool.service().get_executor());
+    test_resubscriber instance(strand);
+    const auto ec1 = error::address_not_found;
+    const auto ec2 = error::address_in_use;
+    constexpr auto expected1 = 42u;
+    constexpr auto expected2 = 24u;
+
+    std::pair<code, size_t> first_result;
+    std::pair<code, size_t> second_result;
+    boost::asio::post(strand, [&]()
+    {
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        {
+            first_result = { value, size };
+            return false;
+        }, 42));
+
+        instance.notify(ec1, expected1);
+
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        {
+            second_result = { value, size };
+            return true;
+        }, 42));
+
+        BOOST_REQUIRE_EQUAL(instance.size(), 1u);
+        instance.stop(ec2, expected2);
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE_EQUAL(first_result.first, ec1);
+    BOOST_REQUIRE_EQUAL(first_result.second, expected1);
+    BOOST_REQUIRE_EQUAL(second_result.first, ec2);
+    BOOST_REQUIRE_EQUAL(second_result.second, expected2);
 }
 
 BOOST_AUTO_TEST_CASE(resubscriber__subscribe__unique__expected)
@@ -110,13 +152,13 @@ BOOST_AUTO_TEST_CASE(resubscriber__subscribe__unique__expected)
     boost::asio::post(strand, [&]()
     {
         BOOST_REQUIRE_EQUAL(instance.size(), 0u);
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             first_result = { value, size };
             return true;
         }, 42));
 
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             second_result = { value, size };
             return true;
@@ -146,7 +188,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop_default__once__expected)
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
             return true;
@@ -172,7 +214,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop__once__expected)
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
             return true;
@@ -198,7 +240,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__stop__twice__second_dropped)
     std::pair<code, size_t> stop_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
             return true;
@@ -228,7 +270,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__stopped__dropped)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Allow first and possible second notify, ignore stop.
             if (++count != two) notify_result = { value, size };
@@ -258,7 +300,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__once__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             if (is_one(++count)) notify_result = { value, size };
             return true;
@@ -288,7 +330,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__twice_true__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Exclude stop_default call.
             if (++count <= two) notify_result = { value, size };
@@ -319,7 +361,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify__twice_false__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             notify_result = { value, size };
             return false;
@@ -351,7 +393,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__stopped__dropped)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Allow first and possible second notify, ignore stop.
             if (++count != two) notify_result = { value, size };
@@ -382,7 +424,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__missing__false)
     std::pair<code, size_t> notify_result{};
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Record only first notification.
             if (is_one(++count)) notify_result = { value, size };
@@ -414,7 +456,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__once__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             if (is_one(++count)) notify_result = { value, size };
             return true;
@@ -445,7 +487,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__twice_true__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             // Exclude stop_default call.
             if (++count <= two) notify_result = { value, size };
@@ -477,7 +519,7 @@ BOOST_AUTO_TEST_CASE(resubscriber__notify_one__twice_false__expected)
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
-        BOOST_REQUIRE(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             notify_result = { value, size };
             return false;

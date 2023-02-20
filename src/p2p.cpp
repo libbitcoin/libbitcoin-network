@@ -241,8 +241,7 @@ void p2p::do_subscribe_connect(const channel_notifier& handler,
     BC_ASSERT_MSG(stranded(), "strand");
 
     const auto key = create_key();
-    complete(connect_subscriber_.subscribe(move_copy(handler), key) ?
-        error::success : error::subscriber_stopped, key);
+    complete(connect_subscriber_.subscribe(move_copy(handler), key), key);
 }
 
 void p2p::unsubscribe_connect(size_t key) NOEXCEPT
@@ -254,11 +253,11 @@ void p2p::unsubscribe_connect(size_t key) NOEXCEPT
 void p2p::do_unsubscribe_connect(object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    /*bool*/ connect_subscriber_.notify_one(key, error::unsubscribed, nullptr);
+    connect_subscriber_.notify_one(key, error::unsubscribed, nullptr);
 }
 
 // private
-bool p2p::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
+code p2p::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return stop_subscriber_.subscribe(std::move(handler), key);
@@ -279,8 +278,7 @@ void p2p::do_subscribe_close(const stop_handler& handler,
     BC_ASSERT_MSG(stranded(), "strand");
     
     const auto key = create_key();
-    complete(subscribe_close(move_copy(handler), key) ?
-        error::success : error::subscriber_stopped, key);
+    complete(subscribe_close(move_copy(handler), key), key);
 }
 
 void p2p::unsubscribe_close(size_t key) NOEXCEPT
@@ -292,7 +290,7 @@ void p2p::unsubscribe_close(size_t key) NOEXCEPT
 void p2p::do_unsubscribe_close(object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    /*bool*/ stop_subscriber_.notify_one(key, error::unsubscribed);
+    stop_subscriber_.notify_one(key, error::unsubscribed);
 }
 
 // At one object/session/ns, this overflows in ~585 years (and handled).

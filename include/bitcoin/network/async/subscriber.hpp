@@ -41,9 +41,9 @@ public:
     subscriber(asio::strand& strand) NOEXCEPT;
     ~subscriber() NOEXCEPT;
 
-    /// If stopped, handler is invoked with error::subscriber_stopped/defaults
-    /// and dropped. Otherwise handler is held until stop. False if failed.
-    bool subscribe(handler&& handler) NOEXCEPT;
+    /// If stopped, handler is invoked with error::subscriber_stopped.
+    /// Otherwise hanndler retained. Subscription code is also returned here.
+    code subscribe(handler&& handler) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.
     void notify(const code& ec, const Args&... args) const NOEXCEPT;

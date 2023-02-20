@@ -39,7 +39,7 @@ resubscriber<Key, Args...>::~resubscriber() NOEXCEPT
 }
 
 template <typename Key, typename... Args>
-bool resubscriber<Key, Args...>::subscribe(handler&& handler,
+code resubscriber<Key, Args...>::subscribe(handler&& handler,
     const Key& key) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -48,17 +48,17 @@ bool resubscriber<Key, Args...>::subscribe(handler&& handler,
     if (stopped_)
     {
         /*bool*/ handler(error::subscriber_stopped, Args{}...);
-        return false;
+        return error::subscriber_stopped;
     }
     else if (map_.contains(key))
     {
         /*bool*/ handler(error::subscriber_exists, Args{}...);
-        return false;
+        return error::subscriber_exists;
     }
     else
     {
         map_.emplace(key, std::move(handler));
-        return true;
+        return error::success;
     }
     BC_POP_WARNING()
 }

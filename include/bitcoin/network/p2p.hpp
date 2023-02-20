@@ -271,7 +271,7 @@ private:
                 channel->write(data, move_copy(handler));
     }
 
-    bool subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;
+    code subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;
     connectors_ptr create_connectors(size_t count) NOEXCEPT;
     object_key create_key() NOEXCEPT;
 

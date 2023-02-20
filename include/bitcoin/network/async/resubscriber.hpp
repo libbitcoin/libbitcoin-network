@@ -46,10 +46,10 @@ public:
     resubscriber(asio::strand& strand) NOEXCEPT;
     ~resubscriber() NOEXCEPT;
 
+    /// If stopped, handler is invoked with error::subscriber_stopped.
     /// If key exists, handler is invoked with error::subscriber_exists.
-    /// If stopped, handler is invoked with error::subscriber_stopped/defaults
-    /// and dropped. Otherwise it is held until stop/drop. False if failed.
-    bool subscribe(handler&& handler, const Key& key) NOEXCEPT;
+    /// Otherwise hanndler retained. Subscription code is also returned here.
+    code subscribe(handler&& handler, const Key& key) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.
     /// Handler return true for resubscription, otherwise it is desubscribed.
@@ -57,7 +57,7 @@ public:
 
     /// Invoke specified handler in order with specified arguments.
     /// Handler return controls resubscription, and is forwarded to the caller.
-    /// False if subscription key not not found (not subscribed).
+    /// True if subscription key found (subscribed).
     bool notify_one(const Key& key, const code& ec,
         const Args&... args) NOEXCEPT;
 
