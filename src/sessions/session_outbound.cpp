@@ -163,8 +163,8 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 
     if (ec)
     {
-        // This can only be error::address_not_found (empty, no peer).
-        ////LOG("Getting address: " << ec.message());
+        // error::address_not_found is the only hosts.take() error code.
+        LOG("Address pool is empty.");
         handler(ec, nullptr);
         return;
     }
@@ -234,7 +234,11 @@ void session_outbound::handle_connector(const code& ec,
 
     ////LOG("Group (" << key << ") handle_connector {batch:" << counter->value() << "}");
 
-    if (stopped() || ec == error::operation_canceled)
+    // Retain timeout addresses so that the address pool does not drain in the
+    // case of network interruption. This could probably be better optimized.
+    if (stopped() || 
+        ec == error::operation_canceled ||
+        ec == error::operation_timeout)
     {
         ////LOG("Restore [" << peer << "] (" << key << ") " << ec.message());
         restore(peer, BIND1(handle_untake, _1));
