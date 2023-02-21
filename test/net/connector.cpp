@@ -88,11 +88,10 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeou
 
     boost::asio::post(strand, [&]()
     {
-        // DNS resolve failure (race).
+        // DNS resolve failure (race), timeout includes a socket.
         instance->connect(config::address{ config::endpoint{ "42.42.42.42:42" }.to_address() },
             [](const code& ec, const socket::ptr& socket)
             {
-                // Timeout passes stopped socket (for recovery).
                 BOOST_REQUIRE_EQUAL(ec, error::operation_timeout);
                 BOOST_REQUIRE(socket);
                 BOOST_REQUIRE(socket->stopped());
@@ -117,7 +116,7 @@ BOOST_AUTO_TEST_CASE(connector__connect_authority__bogus_authority__operation_ti
 
     boost::asio::post(strand, [instance]()
     {
-        // IP address times out (never a resolve failure).
+        // IP address times out (never a resolve failure), timeout includes a socket.
         instance->connect(config::authority{ "42.42.42.42:42" },
             [](const code& ec, const socket::ptr& socket)
             {
@@ -145,13 +144,11 @@ BOOST_AUTO_TEST_CASE(connector__connect_endpoint__bogus_hostname__resolve_failed
 
     boost::asio::post(strand, [instance]()
     {
-        // DNS resolve failure (race).
+        // DNS resolve failure (race), timeout includes a socket.
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
             [](const code& ec, const socket::ptr& socket)
             {
-                BOOST_REQUIRE(
-                    (ec == error::resolve_failed && !socket) ||
-                    (ec == error::operation_timeout && socket && socket->stopped()));
+                BOOST_REQUIRE((ec == error::resolve_failed && !socket) || (ec == error::operation_timeout && socket && socket->stopped()));
             });
 
         std::this_thread::sleep_for(microseconds(1));
@@ -174,12 +171,11 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_can
 
     boost::asio::post(strand, [instance]()
     {
-        // DNS resolve failure (race).
+        // DNS resolve failure (race), cancel may include a socket.
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
             [](const code& ec, const socket::ptr& socket)
             {
-                BOOST_REQUIRE(ec == error::resolve_failed || ec == error::operation_canceled);
-                BOOST_REQUIRE(!socket);
+                BOOST_REQUIRE(((ec == error::resolve_failed) && !socket) || (ec == error::operation_canceled));
             });
 
         std::this_thread::sleep_for(microseconds(1));
@@ -203,12 +199,11 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
 
     boost::asio::post(strand, [instance]()
     {
-        // DNS resolve failure (race).
+        // DNS resolve failure (race), cancel may include a socket.
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
             [](const code& ec, const socket::ptr& socket)
             {
-                BOOST_REQUIRE(ec == error::resolve_failed || ec == error::operation_canceled);
-                BOOST_REQUIRE(!socket);
+                BOOST_REQUIRE(((ec == error::resolve_failed) && !socket) || (ec == error::operation_canceled));
             });
     
         // Connector is busy.
