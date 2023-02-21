@@ -24,7 +24,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <boost/circular_buffer.hpp>
+#include <unordered_set>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -75,23 +75,7 @@ public:
     virtual void fetch(const address_handler& handler) const NOEXCEPT;
 
 private:
-    typedef boost::circular_buffer<messages::address_item> buffer;
-
-    // Equality ignores timestamp and services.
-    inline buffer::iterator find(const messages::address_item& host) NOEXCEPT
-    {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        return std::find(buffer_.begin(), buffer_.end(), host);
-        BC_POP_WARNING()
-    }
-
-    // Equality ignores timestamp and services.
-    inline bool exists(const messages::address_item& host) NOEXCEPT
-    {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        return find(host) != buffer_.end();
-        BC_POP_WARNING()
-    }
+    typedef std::unordered_set<messages::address_item> buffer;
 
     // Push a buffer entry if the line is valid.
     void push_valid(const std::string& line) NOEXCEPT;
@@ -105,7 +89,7 @@ private:
 
     // These are not thread safe.
     bool disabled_;
-    buffer buffer_;
+    buffer buffer_{};
 };
 
 } // namespace network
