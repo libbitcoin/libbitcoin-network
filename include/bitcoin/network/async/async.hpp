@@ -25,6 +25,7 @@
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/async/logger.hpp>
+#include <bitcoin/network/async/quality_racer.hpp>
 #include <bitcoin/network/async/reporter.hpp>
 #include <bitcoin/network/async/speed_racer.hpp>
 #include <bitcoin/network/async/subscriber.hpp>
@@ -34,5 +35,6 @@
 #include <bitcoin/network/async/timer.hpp>
 #include <bitcoin/network/async/tracker.hpp>
 #include <bitcoin/network/async/unsubscriber.hpp>
+#include <bitcoin/network/async/volume_racer.hpp>
 
 #endif

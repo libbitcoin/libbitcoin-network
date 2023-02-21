@@ -39,6 +39,9 @@
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\quality_racer.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\speed_racer.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
@@ -61,6 +64,9 @@
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\volume_racer.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
