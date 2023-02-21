@@ -159,7 +159,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     if (ec)
     {
         // error::address_not_found is the only hosts.take() error code.
-        LOG("Address pool is empty.");
+        ////LOG("Address pool is empty.");
         handler(ec, nullptr);
         return;
     }
@@ -285,7 +285,7 @@ void session_outbound::handle_connect(const code& ec,
     // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
-        ////LOG("Failed to connect outbound address, " << ec.message());
+        // Avoid tight loop with delay timer.
         defer(BIND3(start_connect, _1, connectors, batch));
         return;
     }
@@ -328,9 +328,8 @@ void session_outbound::handle_channel_stop(const code& ec,
     ////    "(" << batch << ") " << ec.message());
     reclaim(ec, channel);
 
-    // Potentially a tight loop.
-    ////start_connect(error::success, connectors, batch);
-    defer(BIND3(start_connect, _1, connectors, batch));
+    // Cannot be tight loop due to handshake.
+    start_connect(error::success, connectors, batch);
 }
 
 // Address reclaim.
@@ -342,11 +341,11 @@ bool session_outbound::is_reclaim(const code& ec) const NOEXCEPT
     if (stopped() || !ec)
         return true;
 
+    // TODO: Timeout may not be ideal here.
     // Expiry is normal. Cancellation results from service stop.
-    // TODO: Timeout may be a local or configuration issue (may drain pool).
     return ec == error::channel_expired
         || ec == error::operation_canceled;
-        // ec == error::operation_timeout;
+        ////|| ec == error::operation_timeout;
 }
 
 // Use initial address time and services, since connection not completed.

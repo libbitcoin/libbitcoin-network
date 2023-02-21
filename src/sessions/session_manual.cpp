@@ -149,6 +149,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
             return;
         }
 
+        // Avoid tight loop with delay timer.
         defer(BIND4(start_connect, _1, peer, connector, handler));
         return;
     }
@@ -203,8 +204,8 @@ void session_manual::handle_channel_stop(const code& ec,
         return;
     }
 
-    // Guard against direct invocation by start_channel causing recursion.
-    defer(BIND4(start_connect, _1, peer, connector, handler));
+    // Cannot be tight loop due to handshake.
+    start_connect(error::success, peer, connector, handler);
 }
 
 BC_POP_WARNING()
