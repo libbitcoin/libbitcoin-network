@@ -69,10 +69,9 @@ public:
     // Methods.
     // ------------------------------------------------------------------------
     /// Subsequent accepts may only be attempted following handler invocation.
-    /// Returns service_stopped, operation_canceled, success or error code.
     /// The socket parameter is nullptr unless success is returned.
 
-    /// Accept next connection available until stop or timeout, starts timer.
+    /// Accept next connection available until stop.
     virtual void accept(socket_handler&& handler) NOEXCEPT;
 
 protected:
