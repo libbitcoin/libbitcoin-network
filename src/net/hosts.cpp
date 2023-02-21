@@ -38,14 +38,14 @@ hosts::hosts(const settings& settings) NOEXCEPT
     minimum_(settings.address_minimum),
     maximum_(settings.address_maximum),
     capacity_(possible_narrow_cast<size_t>(settings.host_pool_capacity)),
-    disabled_(is_zero(capacity_))
+    disabled_(is_zero(capacity_)),
+    buffer_(capacity_)
 {
-    buffer_.reserve(capacity_);
 }
 
 size_t hosts::count() const NOEXCEPT
 {
-    return count_.load();
+    return count_.load(std::memory_order_relaxed);
 }
 
 // private
@@ -53,8 +53,7 @@ inline void hosts::push_valid(const std::string& line) NOEXCEPT
 {
     try
     {
-        // O(1) average case, position arbitary.
-        buffer_.insert(config::address{ line }.item());
+        buffer_.push_back(config::address{ line }.item());
     }
     catch (std::exception&)
     {
@@ -72,8 +71,7 @@ code hosts::start() NOEXCEPT
         if (!file.good())
             return error::success;
 
-        for (std::string line{}; std::getline(file, line);)
-            push_valid(line);
+        for (std::string line{}; std::getline(file, line); push_valid(line));
 
         if (file.bad())
             return error::file_load;
@@ -89,7 +87,7 @@ code hosts::start() NOEXCEPT
         std::filesystem::remove(file_path_, ec);
     }
 
-    count_.store(buffer_.size());
+    count_.store(buffer_.size(), std::memory_order_relaxed);
     return error::success;
 }
 
@@ -126,11 +124,10 @@ code hosts::stop() NOEXCEPT
     }
 
     buffer_.clear();
-    count_.store(zero);
+    count_.store(zero, std::memory_order_relaxed);
     return error::success;
 }
 
-// push
 bool hosts::restore(const address_item& host) NOEXCEPT
 {
     if (disabled_)
@@ -139,19 +136,17 @@ bool hosts::restore(const address_item& host) NOEXCEPT
     if (!config::is_valid(host))
         return false;
 
-    // Equality ignores timestamp and services.
+    // Erase existing address by authority match.
+    const auto it = find(host);
+    if (it != buffer_.end())
+        buffer_.erase(it);
 
-    // O(1) average case.
-    // Erase existing address (just in case somehow reintroduced).
-    buffer_.erase(host);
-
-    // O(1) average case, position arbitary.
-    buffer_.insert(host);
-    count_.store(buffer_.size());
+    // Add address.
+    buffer_.push_back(host);
+    count_.store(buffer_.size(), std::memory_order_relaxed);
     return true;
 }
 
-// pop
 void hosts::take(const address_item_handler& handler) NOEXCEPT
 {
     if (buffer_.empty())
@@ -163,19 +158,15 @@ void hosts::take(const address_item_handler& handler) NOEXCEPT
     // Select address from random buffer position.
     const auto limit = sub1(buffer_.size());
     const auto index = pseudo_random::next(zero, limit);
-
-    // O(N) walking pointers.
-    // Search is fast but not random indexation.
     const auto it = std::next(buffer_.begin(), index);
-    const auto host = std::make_shared<address_item>(*it);
 
-    // O(1) average case.
+    // Remove from the buffer (copy and erase).
+    const auto host = std::make_shared<address_item>(*it);
     buffer_.erase(it);
-    count_.store(buffer_.size());
+    count_.store(buffer_.size(), std::memory_order_relaxed);
     handler(error::success, host);
 }
 
-// push(N)
 size_t hosts::save(const address_items& hosts) NOEXCEPT
 {
     // If enabled then minimum capacity is one and buffer is at capacity.
@@ -192,21 +183,23 @@ size_t hosts::save(const address_items& hosts) NOEXCEPT
 
     // Convert minimum desired to nonzero step for iteration.
     const auto step = std::max(usable / accept, one);
-    const auto start_size = buffer_.size();
+    auto accepted = zero;
 
-    // Push selected addresses into the buffer, keep public count current.
+    // Push valid addresses into the buffer.
     for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
     {
-        // Rejected if already present, position arbitary.
-        buffer_.insert(hosts.at(index));
-        count_.store(buffer_.size());
+        const auto& host = hosts.at(index);
+        if (config::is_valid(host) && !exists(host))
+        {
+            ++accepted;
+            buffer_.push_back(host);
+            count_.store(buffer_.size(), std::memory_order_relaxed);
+        }
     }
 
-    // Report number accepted.
-    return buffer_.size() - start_size;
+    return accepted;
 }
 
-// pop(N)
 void hosts::fetch(const address_handler& handler) const NOEXCEPT
 {
     if (buffer_.empty())
@@ -217,8 +210,7 @@ void hosts::fetch(const address_handler& handler) const NOEXCEPT
 
     // Vary the return count (quantity fingerprinting).
     const auto divide = pseudo_random::next<size_t>(minimum_, maximum_);
-    const auto size = std::min(messages::max_address, buffer_.size() /
-        std::max(divide, one));
+    const auto size = std::min(messages::max_address, buffer_.size() / divide);
 
     // Vary the start position (value fingerprinting).
     const auto limit = sub1(buffer_.size());
@@ -227,13 +219,11 @@ void hosts::fetch(const address_handler& handler) const NOEXCEPT
     // Copy addresses into non-const message (converted to const by return).
     const auto out = to_shared<messages::address>();
     out->addresses.reserve(size);
-
-    // O(N^2) walking pointers [bounded by 1000 x buffer.size] :O.
     for (size_t count = 0; count < size; ++count)
-        out->addresses.push_back(*std::next(buffer_.begin(), index++ % limit));
+        out->addresses.push_back(buffer_.at(index++ % limit));
 
-    ////// Shuffle the message (order fingerprinting).
-    ////pseudo_random::shuffle(out->addresses);
+    // Shuffle the message (order fingerprinting).
+    pseudo_random::shuffle(out->addresses);
     handler(error::success, out);
 }
 
