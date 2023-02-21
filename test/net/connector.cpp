@@ -65,7 +65,6 @@ BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
     BOOST_REQUIRE(&instance->get_strand() == &strand);
     BOOST_REQUIRE(instance->get_timer());
     BOOST_REQUIRE(instance->get_stopped());
-    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(connector__connect1__timeout__operation_timeout)
@@ -91,7 +90,6 @@ BOOST_AUTO_TEST_CASE(connector__connect1__timeout__operation_timeout)
     BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
-    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(connector__connect2__timeout__operation_timeout)
@@ -117,7 +115,6 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__operation_timeout)
     BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
-    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(connector__connect3__timeout__operation_timeout)
@@ -143,7 +140,6 @@ BOOST_AUTO_TEST_CASE(connector__connect3__timeout__operation_timeout)
     BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
-    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
@@ -174,7 +170,6 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
     BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
-    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
@@ -210,7 +205,6 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
     BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
-    instance.reset();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

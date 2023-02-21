@@ -67,7 +67,6 @@ BOOST_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
     BOOST_REQUIRE(&instance->get_strand() == &strand);
     BOOST_REQUIRE(!instance->get_acceptor().is_open());
     BOOST_REQUIRE(instance->get_stopped());
-    instance.reset();
 }
 
 // TODO: There is no way to fake failures in start.
@@ -92,7 +91,6 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     BOOST_REQUIRE(pool.join());
 
     BOOST_REQUIRE(instance->get_stopped());
-    instance.reset();
 }
 
 BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
@@ -132,7 +130,6 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
     BOOST_REQUIRE(joined);
 
     BOOST_REQUIRE(instance->get_stopped());
-    instance.reset();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
