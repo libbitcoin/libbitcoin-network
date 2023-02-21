@@ -64,8 +64,6 @@ public:
     // Methods.
     // ------------------------------------------------------------------------
     /// Subsequent accepts may only be attempted following handler invocation.
-    /// Returns operation_failed if not stopped. Otherwise may return
-    /// operation_canceled, operation_timeout, success or error code.
     /// The socket parameter is nullptr unless success is returned.
 
     /// Try to connect to the address, starts timer.
@@ -81,7 +79,7 @@ public:
         socket_handler&& handler) NOEXCEPT;
 
 protected:
-    using race_t = race<two, const code&, const socket::ptr&>;
+    typedef race<two, const code&, const socket::ptr&> race_t;
 
     /// Try to connect to host:port, starts timer.
     virtual void start(const std::string& hostname, uint16_t port,
@@ -98,11 +96,17 @@ protected:
     race_t race_{};
 
 private:
+    typedef std::shared_ptr<bool> finish_ptr;
+
     void handle_resolve(const error::boost_code& ec,
-        const asio::endpoints& range, const socket::ptr& socket) NOEXCEPT;
-    void do_handle_connect(const code& ec, const socket::ptr& socket) NOEXCEPT;
-    void handle_connect(const code& ec, const socket::ptr& socket) NOEXCEPT;
-    void handle_timer(const code& ec, const socket::ptr& socket) NOEXCEPT;
+        const asio::endpoints& range, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
+    void do_handle_connect(const code& ec, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
+    void handle_connect(const code& ec, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
+    void handle_timer(const code& ec, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
 };
 
 typedef std::vector<connector::ptr> connectors;

@@ -108,32 +108,37 @@ void connector::start(const std::string& hostname, uint16_t port,
     // Capture the handler.
     race_.start(std::move(handler));
 
-    // Create a socket.
-    const auto sock = std::make_shared<socket>(log(), service_, host);
+    // Create a socket and shared finish context.
+    const auto finish = std::make_shared<bool>(false);
+    const auto socket = std::make_shared<network::socket>(log(), service_,
+        host);
 
     // Posts handle_timer to strand.
     timer_->start(
         std::bind(&connector::handle_timer,
-            shared_from_this(), _1, sock));
+            shared_from_this(), _1, finish, socket));
 
     // Posts handle_resolve to strand (async_resolve copies strings).
     resolver_.async_resolve(hostname, std::to_string(port),
         std::bind(&connector::handle_resolve,
-            shared_from_this(), _1, _2, sock));
+            shared_from_this(), _1, _2, finish, socket));
 }
 
 // private
 void connector::handle_resolve(const error::boost_code& ec,
-    const asio::endpoints& range, const socket::ptr& socket) NOEXCEPT
+    const asio::endpoints& range, const finish_ptr& finish,
+    const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
+    // Timer stopped the socket, it wins (with timeout/failure).
     if (socket->stopped())
     {
         race_.finish(error::operation_canceled, nullptr);
         return;
     }
 
+    // Failure in resolve, it wins (with resolve failure).
     if (ec)
     {
         timer_->stop();
@@ -145,22 +150,32 @@ void connector::handle_resolve(const error::boost_code& ec,
     // Establishes a socket connection by trying each endpoint in sequence.
     socket->connect(range,
         std::bind(&connector::do_handle_connect,
-            shared_from_this(), _1, socket));
+            shared_from_this(), _1, finish, socket));
 }
 
 // private
-void connector::do_handle_connect(const code& ec, const socket::ptr& socket) NOEXCEPT
+void connector::do_handle_connect(const code& ec, const finish_ptr& finish,
+    const socket::ptr& socket) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&connector::handle_connect,
-            shared_from_this(), ec, socket));
+            shared_from_this(), ec, finish, socket));
 }
 
 // private
-void connector::handle_connect(const code& ec, const socket::ptr& socket) NOEXCEPT
+void connector::handle_connect(const code& ec, const finish_ptr& finish,
+    const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
+    // Timer stopped the socket, it wins (with timeout/failure).
+    if (socket->stopped())
+    {
+        race_.finish(error::operation_canceled, nullptr);
+        return;
+    }
+
+    // Failure in connect, connector wins (with connect failure).
     if (ec)
     {
         socket->stop();
@@ -169,20 +184,41 @@ void connector::handle_connect(const code& ec, const socket::ptr& socket) NOEXCE
         return;
     }
 
+    // Successful connect (error::success), inform and cancel timer.
+    *finish = true;
     timer_->stop();
     race_.finish(error::success, socket);
 }
 
 // private
-void connector::handle_timer(const code& ec, const socket::ptr& socket) NOEXCEPT
+void connector::handle_timer(const code& ec, const finish_ptr& finish,
+    const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    resolver_.cancel();
-    socket->stop();
+    // Successful connect, connector wins (error::success).
+    if (*finish)
+    {
+        race_.finish(error::operation_canceled, nullptr);
+        return;
+    }
 
-    // Translate timer success to operation_timeout.
-    race_.finish(ec ? ec : error::operation_timeout, nullptr);
+    // Either cancellation or timer failure (unknown which has won).
+    // Stopped socket returned with failure code for option of host recovery.
+    if (ec)
+    {
+        socket->stop();
+        resolver_.cancel();
+        race_.finish(ec, socket);
+        return;
+    }
+
+    // Timeout before connect, timer wins, cancel resolver/connector.
+    // Timer fires with error::success, change to error::operation_timeout.
+    // Stopped socket returned with failure code for option of host recovery.
+    socket->stop();
+    resolver_.cancel();
+    race_.finish(error::operation_timeout, socket);
 }
 
 BC_POP_WARNING()

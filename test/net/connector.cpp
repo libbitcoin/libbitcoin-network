@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2021 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -67,23 +67,36 @@ BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
     BOOST_REQUIRE(instance->get_stopped());
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect1__timeout__operation_timeout)
+class tiny_timeout
+  : public settings
+{
+    using settings::settings;
+
+    duration connect_timeout() const NOEXCEPT override
+    {
+        return microseconds(1);
+    }
+};
+
+BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeout)
 {
     const logger log{ false };
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    settings set(bc::system::chain::selection::mainnet);
-    set.connect_timeout_seconds = 0;
+    const tiny_timeout set(bc::system::chain::selection::mainnet);
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
 
-    boost::asio::post(strand, [instance]()
+    boost::asio::post(strand, [&]()
     {
-        instance->connect(config::endpoint{ "bogus.xxx", 42 },
+        // DNS resolve failure (race).
+        instance->connect(config::address{ config::endpoint{ "42.42.42.42:42" }.to_address() },
             [](const code& ec, const socket::ptr& socket)
             {
                 BOOST_REQUIRE_EQUAL(ec, error::operation_timeout);
                 BOOST_REQUIRE(!socket);
             });
+
+        std::this_thread::sleep_for(microseconds(1));
     });
 
     pool.stop();
@@ -92,23 +105,25 @@ BOOST_AUTO_TEST_CASE(connector__connect1__timeout__operation_timeout)
     BOOST_REQUIRE(instance->get_stopped());
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect2__timeout__operation_timeout)
+BOOST_AUTO_TEST_CASE(connector__connect_authority__bogus_authority__operation_timeout)
 {
     const logger log{ false };
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    settings set(bc::system::chain::selection::mainnet);
-    set.connect_timeout_seconds = 0;
+    const tiny_timeout set(bc::system::chain::selection::mainnet);
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
 
     boost::asio::post(strand, [instance]()
     {
+        // IP address times out (never a resolve failure).
         instance->connect(config::authority{ "42.42.42.42:42" },
             [](const code& ec, const socket::ptr& socket)
             {
                 BOOST_REQUIRE_EQUAL(ec, error::operation_timeout);
                 BOOST_REQUIRE(!socket);
             });
+
+        std::this_thread::sleep_for(microseconds(1));
     });
 
     pool.stop();
@@ -117,23 +132,25 @@ BOOST_AUTO_TEST_CASE(connector__connect2__timeout__operation_timeout)
     BOOST_REQUIRE(instance->get_stopped());
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect3__timeout__operation_timeout)
+BOOST_AUTO_TEST_CASE(connector__connect_endpoint__bogus_hostname__resolve_failed_race_operation_timeout)
 {
     const logger log{ false };
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    settings set(bc::system::chain::selection::mainnet);
-    set.connect_timeout_seconds = 0;
+    const tiny_timeout set(bc::system::chain::selection::mainnet);
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
 
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [instance]()
     {
+        // DNS resolve failure (race).
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
             [](const code& ec, const socket::ptr& socket)
             {
-                BOOST_REQUIRE_EQUAL(ec, error::operation_timeout);
+                BOOST_REQUIRE(ec == error::resolve_failed || ec == error::operation_timeout);
                 BOOST_REQUIRE(!socket);
             });
+
+        std::this_thread::sleep_for(microseconds(1));
     });
 
     pool.stop();
@@ -142,7 +159,7 @@ BOOST_AUTO_TEST_CASE(connector__connect3__timeout__operation_timeout)
     BOOST_REQUIRE(instance->get_stopped());
 }
 
-BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
+BOOST_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_canceled)
 {
     const logger log{ false };
     threadpool pool(2);
@@ -153,15 +170,14 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__operation_canceled)
 
     boost::asio::post(strand, [instance]()
     {
+        // DNS resolve failure (race).
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
             [](const code& ec, const socket::ptr& socket)
             {
-                // TODO: 11001 (HOST_NOT_FOUND) gets mapped to unknown.
-                BOOST_REQUIRE(ec == error::unknown || ec == error::operation_canceled);
+                BOOST_REQUIRE(ec == error::resolve_failed || ec == error::operation_canceled);
                 BOOST_REQUIRE(!socket);
             });
 
-        // Test race.
         std::this_thread::sleep_for(microseconds(1));
         instance->stop();
     });
@@ -183,14 +199,15 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
 
     boost::asio::post(strand, [instance]()
     {
+        // DNS resolve failure (race).
         instance->connect(config::endpoint{ "bogus.xxx", 42 },
             [](const code& ec, const socket::ptr& socket)
             {
-                // TODO: 11001 (HOST_NOT_FOUND) gets mapped to unknown.
-                BOOST_REQUIRE(ec == error::unknown || ec == error::operation_canceled);
+                BOOST_REQUIRE(ec == error::resolve_failed || ec == error::operation_canceled);
                 BOOST_REQUIRE(!socket);
             });
-
+    
+        // Connector is busy.
         instance->connect(config::endpoint{ "bogus.yyy", 24 },
             [](const code& ec, const socket::ptr& socket)
             {
@@ -198,6 +215,7 @@ BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
                 BOOST_REQUIRE(!socket);
             });
 
+        std::this_thread::sleep_for(microseconds(1));
         instance->stop();
     });
 
