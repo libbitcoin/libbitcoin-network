@@ -34,7 +34,7 @@ public:
     using connector::connector;
 
     // Get captured connected.
-    bool connected() const NOEXCEPT
+    bool connected_() const NOEXCEPT
     {
         return !is_zero(connects_);
     }
@@ -151,7 +151,7 @@ public:
         }
     }
 
-    bool connected() const NOEXCEPT
+    bool connected_() const NOEXCEPT
     {
         return !is_zero(connects_);
     }

@@ -94,7 +94,7 @@ class mock_session
 {
 public:
     mock_session(p2p& network, size_t key, bool inbound, bool notify) NOEXCEPT
-      : session(network, key), inbound_(inbound), notify_(notify)
+      : session(network, key), inbound_(inbound)
     {
     }
 
@@ -216,7 +216,6 @@ public:
 
 private:
     const bool inbound_;
-    const bool notify_;
     mutable bool handshaked_{ false };
     mutable bool protocoled_{ false };
     mutable std::promise<bool> require_protocoled_;
