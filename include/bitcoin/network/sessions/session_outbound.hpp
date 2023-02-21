@@ -117,9 +117,10 @@ private:
     using count_ptr = integer::ptr;
 
     /// Restore an address to the address pool.
-    void untake(const code& ec, const socket::ptr& socket) NOEXCEPT;
-    void untake(const code& ec, const channel::ptr& channel) NOEXCEPT;
-    void handle_untake(const code& ec) const NOEXCEPT;
+    bool is_reclaim(const code& ec) const NOEXCEPT;
+    void reclaim(const code& ec, const socket::ptr& socket) NOEXCEPT;
+    void reclaim(const code& ec, const channel::ptr& channel) NOEXCEPT;
+    void handle_reclaim(const code& ec) const NOEXCEPT;
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
@@ -133,9 +134,6 @@ private:
 
     void do_one(const code& ec, const config::address& peer, object_key key,
         const connector::ptr& connector, const count_ptr& counter,
-        const socket_handler& handler) NOEXCEPT;
-    void handle_connector(const code& ec, const socket::ptr& socket,
-        const config::address& peer, object_key key, const count_ptr& counter,
         const socket_handler& handler) NOEXCEPT;
     void handle_one(const code& ec, const socket::ptr& socket,
         const count_ptr& counter, const connectors_ptr& connectors,
