@@ -43,6 +43,7 @@ typedef boost::system::error_code boost_code;
 /// By comparing against conditions we obtain platform-independent error codes.
 typedef boost::system::errc::errc_t boost_error_t;
 typedef boost::asio::error::misc_errors asio_misc_error_t;
+typedef boost::asio::error::netdb_errors asio_netdb_error_t;
 typedef boost::asio::error::basic_errors asio_system_error_t;
 
 /// Asio failures are normalized to the error codes below.
@@ -117,7 +118,7 @@ enum error_t
     service_stopped,
     subscriber_exists,
     subscriber_stopped,
-    unsubscribed
+    desubscribed
 };
 
 // No current need for error_code equivalence mapping.

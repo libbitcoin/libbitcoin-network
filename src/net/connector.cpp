@@ -55,15 +55,15 @@ connector::connector(const logger& log, asio::strand& strand,
 
 connector::~connector() NOEXCEPT
 {
-    BC_ASSERT_MSG(stopped_, "connector is not stopped");
-    if (!stopped_) { LOG("~connector is not stopped."); }
+    BC_ASSERT_MSG(!racer_.running(), "connector is not stopped");
+    if (racer_.running()) { LOG("~connector is not stopped."); }
 }
 
 void connector::stop() NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    if (stopped_)
+    if (!racer_.running())
         return;
 
     // Posts timer handler to strand.
@@ -99,105 +99,126 @@ void connector::start(const std::string& hostname, uint16_t port,
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    // This allows connect after stop (restartable).
-    stopped_ = false;
+    if (racer_.running())
+    {
+        handler(error::operation_failed, nullptr);
+        return;
+    }
 
-    // Create the socket.
-    const auto sock = std::make_shared<socket>(log(), service_, host);
+    // Capture the handler.
+    racer_.start(std::move(handler));
 
-    // Posts handle_timer to strand (handler copied).
+    // Create a socket and shared finish context.
+    const auto finish = std::make_shared<bool>(false);
+    const auto socket = std::make_shared<network::socket>(log(), service_,
+        host);
+
+    // Posts handle_timer to strand.
     timer_->start(
         std::bind(&connector::handle_timer,
-            shared_from_this(), _1, sock, handler));
+            shared_from_this(), _1, finish, socket));
 
     // Posts handle_resolve to strand (async_resolve copies strings).
     resolver_.async_resolve(hostname, std::to_string(port),
         std::bind(&connector::handle_resolve,
-            shared_from_this(), _1, _2, sock, std::move(handler)));
+            shared_from_this(), _1, _2, finish, socket));
 }
 
 // private
 void connector::handle_resolve(const error::boost_code& ec,
-    const asio::endpoints& range, socket::ptr socket,
-    const socket_handler& handler) NOEXCEPT
+    const asio::endpoints& range, const finish_ptr& finish,
+    const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    if (stopped_)
+    // Timer stopped the socket, it wins (with timeout/failure).
+    if (socket->stopped())
     {
-        socket->stop();
+        racer_.finish(error::operation_canceled, nullptr);
         return;
     }
 
+    // Failure in resolve, it wins (with resolve failure).
     if (ec)
     {
-        stopped_ = true;
         timer_->stop();
         socket->stop();
-        handler(error::asio_to_error_code(ec), nullptr);
+        racer_.finish(error::asio_to_error_code(ec), nullptr);
         return;
     }
 
     // Establishes a socket connection by trying each endpoint in sequence.
     socket->connect(range,
-        std::bind(&connector::handle_connect,
-            shared_from_this(), _1, socket, handler));
+        std::bind(&connector::do_handle_connect,
+            shared_from_this(), _1, finish, socket));
 }
 
 // private
-void connector::handle_connect(const code& ec, socket::ptr socket,
-    const socket_handler& handler) NOEXCEPT
+void connector::do_handle_connect(const code& ec, const finish_ptr& finish,
+    const socket::ptr& socket) NOEXCEPT
 {
     boost::asio::post(strand_,
-        std::bind(&connector::do_handle_connect,
-            shared_from_this(), ec, socket, handler));
+        std::bind(&connector::handle_connect,
+            shared_from_this(), ec, finish, socket));
 }
 
 // private
-void connector::do_handle_connect(const code& ec, socket::ptr socket,
-    const socket_handler& handler) NOEXCEPT
+void connector::handle_connect(const code& ec, const finish_ptr& finish,
+    const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    if (stopped_)
+    // Timer stopped the socket, it wins (with timeout/failure).
+    if (socket->stopped())
+    {
+        racer_.finish(error::operation_canceled, nullptr);
         return;
+    }
 
-    stopped_ = true;
-    timer_->stop();
-
+    // Failure in connect, connector wins (with connect failure).
     if (ec)
     {
         socket->stop();
-        handler(ec, nullptr);
+        timer_->stop();
+        racer_.finish(ec, nullptr);
         return;
     }
 
-    // Successful connect.
-    handler(error::success, socket);
+    // Successful connect (error::success), inform and cancel timer.
+    *finish = true;
+    timer_->stop();
+    racer_.finish(error::success, socket);
 }
 
 // private
-void connector::handle_timer(const code& ec, const socket::ptr& socket,
-    const socket_handler& handler) NOEXCEPT
+void connector::handle_timer(const code& ec, const finish_ptr& finish,
+    const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    if (stopped_)
-        return;
-
-    stopped_ = true;
-    socket->stop();
-    resolver_.cancel();
-
-    if (ec)
+    // Successful connect, connector wins (error::success).
+    if (*finish)
     {
-        // Stop result code (error::operation_canceled) return here.
-        handler(ec, nullptr);
+        racer_.finish(error::operation_canceled, nullptr);
         return;
     }
 
-    // Timeout result code (error::success) translated to channel_timeout here.
-    handler(error::channel_timeout, nullptr);
+    // Either cancellation or timer failure (unknown which has won).
+    // Stopped socket returned with failure code for option of host recovery.
+    if (ec)
+    {
+        socket->stop();
+        resolver_.cancel();
+        racer_.finish(ec, socket);
+        return;
+    }
+
+    // Timeout before connect, timer wins, cancel resolver/connector.
+    // Timer fires with error::success, change to error::operation_timeout.
+    // Stopped socket returned with failure code for option of host recovery.
+    socket->stop();
+    resolver_.cancel();
+    racer_.finish(error::operation_timeout, socket);
 }
 
 BC_POP_WARNING()

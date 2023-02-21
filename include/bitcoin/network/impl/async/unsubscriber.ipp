@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_SUBSCRIBER_IPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_UNSUBSCRIBER_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_UNSUBSCRIBER_IPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/error.hpp>
@@ -26,22 +26,22 @@ namespace libbitcoin {
 namespace network {
 
 template <typename... Args>
-subscriber<Args...>::
-subscriber(asio::strand& strand) NOEXCEPT
+unsubscriber<Args...>::
+unsubscriber(asio::strand& strand) NOEXCEPT
   : strand_(strand)
 {
 }
 
 template <typename... Args>
-subscriber<Args...>::
-~subscriber() NOEXCEPT
+unsubscriber<Args...>::
+~unsubscriber() NOEXCEPT
 {
     // Destruction may not occur on the strand.
-    BC_ASSERT_MSG(queue_.empty(), "subscriber is not cleared");
+    BC_ASSERT_MSG(queue_.empty(), "unsubscriber is not cleared");
 }
 
 template <typename... Args>
-code subscriber<Args...>::
+code unsubscriber<Args...>::
 subscribe(handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -49,7 +49,7 @@ subscribe(handler&& handler) NOEXCEPT
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     if (stopped_)
     {
-        handler(error::subscriber_stopped, Args{}...);
+        /*bool*/ handler(error::subscriber_stopped, Args{}...);
         return error::subscriber_stopped;
     }
     else
@@ -61,8 +61,8 @@ subscribe(handler&& handler) NOEXCEPT
 }
 
 template <typename... Args>
-void subscriber<Args...>::
-notify(const code& ec, const Args&... args) const NOEXCEPT
+void unsubscriber<Args...>::
+notify(const code& ec, const Args&... args) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
@@ -70,19 +70,27 @@ notify(const code& ec, const Args&... args) const NOEXCEPT
         return;
 
     // Already on the strand to protect queue_, so execute each handler.
-    for (const auto& handler: queue_)
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    for (auto it = queue_.begin(); it != queue_.end();)
     {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        handler(ec, args...);
-        BC_POP_WARNING()
+        // Invoke handler and handle result.
+        if (!(*it)(ec, args...))
+        {
+            it = queue_.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
     }
+    BC_POP_WARNING()
 }
 
 template <typename... Args>
-void subscriber<Args...>::
+void unsubscriber<Args...>::
 stop(const code& ec, const Args&... args) NOEXCEPT
 {
-    BC_ASSERT_MSG(ec, "subscriber stopped with success code");
+    BC_ASSERT_MSG(ec, "unsubscriber stopped with success code");
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     if (stopped_)
@@ -94,7 +102,7 @@ stop(const code& ec, const Args&... args) NOEXCEPT
 }
 
 template <typename... Args>
-void subscriber<Args...>::
+void unsubscriber<Args...>::
 stop_default(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
@@ -103,7 +111,7 @@ stop_default(const code& ec) NOEXCEPT
 }
 
 template <typename... Args>
-size_t subscriber<Args...>::
+size_t unsubscriber<Args...>::
 size() const NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");

@@ -36,14 +36,13 @@ using namespace config;
 using namespace std::placeholders;
 
 // Bind throws (ok).
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
 // Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session_manual::session_manual(p2p& network, size_t key) NOEXCEPT
-  : session(network, key), tracker<session_manual>(network.log())
+session_manual::session_manual(p2p& network, uint64_t identifier) NOEXCEPT
+  : session(network, identifier), tracker<session_manual>(network.log())
 {
 }
 
@@ -76,11 +75,9 @@ void session_manual::connect(const config::endpoint& peer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    const auto self = shared_from_base<session_manual>();
-    connect(peer, [=](const code&, channel::ptr) NOEXCEPT
+    connect(peer, [=, this](const code&, channel::ptr) NOEXCEPT
     {
-        ////LOGP(self, "Connected channel, " << ec.message());
-        self->nop();
+        this->nop();
         return true;
     });
 }
@@ -90,7 +87,7 @@ void session_manual::connect(const config::endpoint& peer,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Create a connector for each manual connection.
+    // Create a persistent connector for the manual connection.
     const auto connector = create_connector();
 
     subscribe_stop([=](const code&) NOEXCEPT
@@ -152,12 +149,14 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
             return;
         }
 
+        // Avoid tight loop with delay timer.
         defer(BIND4(start_connect, _1, peer, connector, handler));
         return;
     }
 
     const auto channel = create_channel(socket, false);
 
+    // It is possible for start_channel to directly invoke the handlers.
     start_channel(channel,
         BIND4(handle_channel_start, _1, channel, peer, handler),
         BIND5(handle_channel_stop, _1, channel, peer, connector, handler));
@@ -205,7 +204,8 @@ void session_manual::handle_channel_stop(const code& ec,
         return;
     }
 
-    defer(BIND4(start_connect, _1, peer, connector, handler));
+    // Cannot be tight loop due to handshake.
+    start_connect(error::success, peer, connector, handler);
 }
 
 BC_POP_WARNING()

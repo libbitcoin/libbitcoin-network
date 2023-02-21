@@ -24,7 +24,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/resubscriber.hpp>
+#include <bitcoin/network/async/unsubscriber.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
@@ -40,8 +40,7 @@ namespace network {
 class BCT_API logger final
 {
 public:
-    typedef size_t key_t;
-    typedef resubscriber<key_t, const std::string&> subscriber;
+    typedef unsubscriber<const std::string&> subscriber;
     typedef subscriber::handler notifier;
 
     /// Streaming log writer (std::ostringstream), not thread safe.
@@ -123,7 +122,6 @@ private:
 
     // These are protected by strand.
     // notify()/do_notify() can be const because of mutable subscriber.
-    key_t loggers_{};
     mutable subscriber subscriber_;
 };
 

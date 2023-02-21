@@ -33,14 +33,13 @@ using namespace system;
 using namespace std::placeholders;
 
 // Bind throws (ok).
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
 // Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session_inbound::session_inbound(p2p& network, size_t key) NOEXCEPT
-  : session(network, key), tracker<session_inbound>(network.log())
+session_inbound::session_inbound(p2p& network, uint64_t identifier) NOEXCEPT
+  : session(network, identifier), tracker<session_inbound>(network.log())
 {
 }
 
@@ -60,6 +59,7 @@ void session_inbound::start(result_handler&& handler) NOEXCEPT
     {
         LOG("Not configured for inbound connections.");
         handler(error::bypassed);
+        unsubscribe_close();
         return;
     }
 
@@ -78,7 +78,7 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    // Create only one acceptor.
+    // TODO: create one acceptor for each configured local endpoint.
     const auto acceptor = create_acceptor();
     const auto error_code = acceptor->start(settings().inbound_port);
 

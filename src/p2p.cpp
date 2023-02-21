@@ -241,11 +241,10 @@ void p2p::do_subscribe_connect(const channel_notifier& handler,
     BC_ASSERT_MSG(stranded(), "strand");
 
     const auto key = create_key();
-    complete(connect_subscriber_.subscribe(move_copy(handler), key) ?
-        error::success : error::subscriber_stopped, key);
+    complete(connect_subscriber_.subscribe(move_copy(handler), key), key);
 }
 
-void p2p::unsubscribe_connect(size_t key) NOEXCEPT
+void p2p::unsubscribe_connect(object_key key) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&p2p::do_unsubscribe_connect, this, key));
@@ -254,11 +253,11 @@ void p2p::unsubscribe_connect(size_t key) NOEXCEPT
 void p2p::do_unsubscribe_connect(object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    /*bool*/ connect_subscriber_.notify_one(key, error::unsubscribed, nullptr);
+    connect_subscriber_.notify_one(key, error::desubscribed, nullptr);
 }
 
 // private
-bool p2p::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
+code p2p::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return stop_subscriber_.subscribe(std::move(handler), key);
@@ -279,11 +278,10 @@ void p2p::do_subscribe_close(const stop_handler& handler,
     BC_ASSERT_MSG(stranded(), "strand");
     
     const auto key = create_key();
-    complete(subscribe_close(move_copy(handler), key) ?
-        error::success : error::subscriber_stopped, key);
+    complete(subscribe_close(move_copy(handler), key), key);
 }
 
-void p2p::unsubscribe_close(size_t key) NOEXCEPT
+void p2p::unsubscribe_close(object_key key) NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&p2p::do_unsubscribe_close, this, key));
@@ -292,7 +290,7 @@ void p2p::unsubscribe_close(size_t key) NOEXCEPT
 void p2p::do_unsubscribe_close(object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    /*bool*/ stop_subscriber_.notify_one(key, error::unsubscribed);
+    stop_subscriber_.notify_one(key, error::desubscribed);
 }
 
 // At one object/session/ns, this overflows in ~585 years (and handled).
@@ -411,7 +409,7 @@ code p2p::stop_hosts() NOEXCEPT
 
 void p2p::take(address_item_handler&& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    boost::asio::dispatch(strand_,
         std::bind(&p2p::do_take, this, std::move(handler)));
 }
 
@@ -424,7 +422,7 @@ void p2p::do_take(const address_item_handler& handler) NOEXCEPT
 void p2p::restore(const address_item_cptr& host,
     result_handler&& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
+    boost::asio::dispatch(strand_,
         std::bind(&p2p::do_restore, this, host, std::move(handler)));
 }
 
@@ -458,11 +456,22 @@ void p2p::do_save(const messages::address::cptr& message,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    handler(error::success, hosts_.save(message->addresses));
+
+    // TODO: move authorities_ into hosts pool and filter during insert.
+    const auto filtered = system::difference(message->addresses, authorities_);
+    const auto start = message->addresses.size();
+    const auto size = filtered.size();
+    if (size != start)
+    {
+        LOG("Filtered (" << start << ">" << size << ") connected addresses.");
+    }
+
+    handler(error::success, hosts_.save(filtered));
 }
 
-// Connection management.
+// Loopback detection.
 // ----------------------------------------------------------------------------
+// TODO: move nonce management into class (or hosts).
 
 bool p2p::store_nonce(const channel& channel) NOEXCEPT
 {
@@ -499,6 +508,16 @@ bool p2p::is_loopback(const channel& channel) const NOEXCEPT
         return false;
 
     return to_bool(nonces_.count(channel.peer_version()->nonce));
+}
+
+// Channel counting and deconfliction.
+// ----------------------------------------------------------------------------
+
+// protected
+bool p2p::is_connected(const config::authority& host) const NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    return authorities_.contains(host);
 }
 
 // This must increment the channel count(s) if successful.

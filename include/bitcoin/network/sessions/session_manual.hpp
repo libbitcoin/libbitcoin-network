@@ -42,7 +42,7 @@ public:
         channel_notifier;
 
     /// Construct an instance (network should be started).
-    session_manual(p2p& network, size_t key) NOEXCEPT;
+    session_manual(p2p& network, uint64_t identifier) NOEXCEPT;
 
     /// Start the session of persistent connections (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;

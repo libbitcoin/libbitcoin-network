@@ -39,7 +39,7 @@ public:
     typedef std::shared_ptr<session_outbound> ptr;
 
     /// Construct an instance (network should be started).
-    session_outbound(p2p& network, size_t key) NOEXCEPT;
+    session_outbound(p2p& network, uint64_t identifier) NOEXCEPT;
 
     /// Start configured number of connections (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;
@@ -57,35 +57,87 @@ protected:
 
     /// Start outbound connections based on config (called from start).
     virtual void start_connect(const code& ec,
-        const connectors_ptr& connectors, size_t id) NOEXCEPT;
+        const connectors_ptr& connectors, object_key batch) NOEXCEPT;
 
 private:
-    typedef std::shared_ptr<size_t> count_ptr;
+    class integer final
+    {
+    public:
+        typedef std::shared_ptr<integer> ptr;
+
+        DELETE_COPY_MOVE(integer);
+
+        static ptr create(size_t value) NOEXCEPT
+        {
+            return std::shared_ptr<integer>(new integer{ value });
+        }
+
+        size_t value() const NOEXCEPT
+        {
+            return value_;
+        }
+
+        size_t increment() NOEXCEPT
+        {
+            return ++value_;
+        }
+
+        size_t decrement() NOEXCEPT
+        {
+            return --value_;
+        }
+
+        void set_handled() NOEXCEPT
+        {
+            value_ = sentinel_;
+        }
+
+        bool is_handled() const NOEXCEPT
+        {
+            return value_ == sentinel_;
+        }
+
+        bool is_complete() const NOEXCEPT
+        {
+            return bc::is_zero(value_);
+        }
+        
+    protected:
+        static constexpr auto sentinel_ = max_size_t;
+
+        integer(size_t value) NOEXCEPT
+          : value_(value)
+        {
+        }
+
+    private:
+        size_t value_;
+    };
+
+    using count_ptr = integer::ptr;
 
     /// Restore an address to the address pool.
-    void untake(const code& ec, const socket::ptr& socket) NOEXCEPT;
-    void untake(const code& ec, const channel::ptr& channel) NOEXCEPT;
-    void handle_untake(const code& ec) const NOEXCEPT;
+    bool is_reclaim(const code& ec) const NOEXCEPT;
+    void reclaim(const code& ec, const socket::ptr& socket) NOEXCEPT;
+    void reclaim(const code& ec, const channel::ptr& channel) NOEXCEPT;
+    void handle_reclaim(const code& ec) const NOEXCEPT;
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, const socket::ptr& socket,
-        const connectors_ptr& connectors, size_t id) NOEXCEPT;
+        const connectors_ptr& connectors, object_key key) NOEXCEPT;
 
     void handle_channel_start(const code& ec, const channel::ptr& channel,
-        size_t id) NOEXCEPT;
+        object_key key) NOEXCEPT;
     void handle_channel_stop(const code& ec, const channel::ptr& channel,
-        size_t id, const connectors_ptr& connectors) NOEXCEPT;
+        object_key key, const connectors_ptr& connectors) NOEXCEPT;
 
-    void do_one(const code& ec, const config::address& peer, size_t id,
+    void do_one(const code& ec, const config::address& peer, object_key key,
         const connector::ptr& connector,
         const socket_handler& handler) NOEXCEPT;
-    void handle_connector(const code& ec, const socket::ptr& socket,
-        const config::address& peer, size_t id,
-        const socket_handler& handler) NOEXCEPT;
     void handle_one(const code& ec, const socket::ptr& socket,
-        const count_ptr& count, const connectors_ptr& connectors,
-        size_t id, const socket_handler& handler) NOEXCEPT;
+        const count_ptr& counter, const connectors_ptr& connectors,
+        object_key key, const socket_handler& handler) NOEXCEPT;
 };
 
 } // namespace network

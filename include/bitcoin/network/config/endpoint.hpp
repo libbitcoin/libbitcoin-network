@@ -46,7 +46,7 @@ public:
     /// The scheme and port may be undefined, in which case the port is
     /// reported as zero and the scheme is reported as an empty string.
     /// The value is of the form: [scheme://]host[:port] (dns name or ip).
-    endpoint(const std::string& uri) NOEXCEPT(false);
+    endpoint(const std::string& uri) THROWS;
     endpoint(const std::string& host, uint16_t port) NOEXCEPT;
     endpoint(const std::string& scheme, const std::string& host,
         uint16_t port) NOEXCEPT;
@@ -92,7 +92,7 @@ public:
     bool operator!=(const endpoint& other) const NOEXCEPT;
 
     friend std::istream& operator>>(std::istream& input,
-        endpoint& argument) NOEXCEPT(false);
+        endpoint& argument) THROWS;
     friend std::ostream& operator<<(std::ostream& output,
         const endpoint& argument) NOEXCEPT;
 

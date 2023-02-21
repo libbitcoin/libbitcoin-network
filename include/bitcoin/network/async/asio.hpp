@@ -34,7 +34,7 @@ namespace asio {
 typedef boost::asio::io_context io_context;
 typedef boost::asio::io_context::executor_type executor_type;
 typedef boost::asio::strand<executor_type> strand;
-typedef boost::asio::basic_waitable_timer<steady_clock> wait_timer;
+typedef boost::asio::steady_timer steady_timer;
 typedef boost::asio::mutable_buffer mutable_buffer;
 typedef boost::asio::const_buffer const_buffer;
 

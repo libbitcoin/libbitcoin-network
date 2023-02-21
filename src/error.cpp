@@ -95,28 +95,21 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { service_stopped, "service stopped" },
     { subscriber_exists, "subscriber exists" },
     { subscriber_stopped, "subscriber stopped" },
-    { unsubscribed, "subscriber unsubscribed" }
+    { desubscribed, "subscriber desubscribed" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
 
 bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT
 {
-    // We test against the platform-independent condition (equivalence).
-    // Boost documents that cancellation gives basic_errors::operation_aborted,
-    // however that is the code (equality), not the condition (equivalence):
-    ////operation_aborted = BOOST_ASIO_WIN_OR_POSIX(
-    ////    BOOST_ASIO_NATIVE_ERROR(ERROR_OPERATION_ABORTED),
-    ////    BOOST_ASIO_NATIVE_ERROR(ECANCELED))
-    ////return ec == boost::asio::error::operation_aborted;
-    return ec == boost_error_t::operation_canceled;
+    // self termination
+    return ec == boost_error_t::operation_canceled
+        || ec == boost::asio::error::operation_aborted;
 }
 
-// This method is only invoked when asio returns an error that is not the
-// result of cancellation of the call (boost_error_t::operation_canceled).
-// Equivalence tests require equality operator override. The success and 
-// connection_aborted codes are the only expected in normal operation, so these
-// are first, to optimize the case where asio_is_canceled is not used.
+// The success and operation_canceled codes are the only expected in normal
+// operation, so these are first, to optimize the case where asio_is_canceled
+// is not used.
 code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
 {
     if (ec == boost_error_t::success)
@@ -128,7 +121,9 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
         return error::operation_canceled;
 
     // peer termination
-    if (ec == asio_misc_error_t::eof)
+    // stackoverflow.com/a/19891985/1172329
+    if (ec == asio_misc_error_t::eof ||
+        ec == boost_error_t::connection_reset)
         return error::peer_disconnect;
 
     // learn.microsoft.com/en-us/troubleshoot/windows-client/networking/
@@ -147,13 +142,14 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
     if (ec == boost_error_t::address_family_not_supported ||
         ec == boost_error_t::address_not_available ||
         ec == boost_error_t::bad_address ||
-        ec == boost_error_t::destination_address_required)
+        ec == boost_error_t::destination_address_required ||
+        ec == asio_netdb_error_t::host_not_found ||
+        ec == asio_netdb_error_t::host_not_found_try_again)
         return error::resolve_failed;
 
     // connect-connect
     if (ec == boost_error_t::not_connected ||
         ec == boost_error_t::connection_refused ||
-        ec == boost_error_t::connection_reset ||
         ec == boost_error_t::broken_pipe ||
         ec == boost_error_t::host_unreachable ||
         ec == boost_error_t::network_down ||
@@ -443,6 +439,49 @@ enum boost::system::errc::errc_t
     too_many_symbolic_link_levels = ELOOP,
     value_too_large = EOVERFLOW,
     wrong_protocol_type = EPROTOTYPE
+};
+
+enum netdb_errors
+{
+  /// Host not found (authoritative).
+  host_not_found = BOOST_ASIO_NETDB_ERROR(HOST_NOT_FOUND),
+
+  /// Host not found (non-authoritative).
+  host_not_found_try_again = BOOST_ASIO_NETDB_ERROR(TRY_AGAIN),
+
+  /// The query is valid but does not have associated address data.
+  no_data = BOOST_ASIO_NETDB_ERROR(NO_DATA),
+
+  /// A non-recoverable error occurred.
+  no_recovery = BOOST_ASIO_NETDB_ERROR(NO_RECOVERY)
+};
+
+enum addrinfo_errors
+{
+  /// The service is not supported for the given socket type.
+  service_not_found = BOOST_ASIO_WIN_OR_POSIX(
+      BOOST_ASIO_NATIVE_ERROR(WSATYPE_NOT_FOUND),
+      BOOST_ASIO_GETADDRINFO_ERROR(EAI_SERVICE)),
+
+  /// The socket type is not supported.
+  socket_type_not_supported = BOOST_ASIO_WIN_OR_POSIX(
+      BOOST_ASIO_NATIVE_ERROR(WSAESOCKTNOSUPPORT),
+      BOOST_ASIO_GETADDRINFO_ERROR(EAI_SOCKTYPE))
+};
+
+enum misc_errors
+{
+  /// Already open.
+  already_open = 1,
+
+  /// End of file or stream.
+  eof,
+
+  /// Element not found.
+  not_found,
+
+  /// The descriptor cannot fit into the select system call's fd_set.
+  fd_set_failure
 };
 
 #endif // BOOST_CODES_AND_CONDITIONS

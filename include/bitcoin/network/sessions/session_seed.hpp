@@ -40,7 +40,7 @@ public:
     typedef std::shared_ptr<session_seed> ptr;
 
     /// Construct an instance.
-    session_seed(p2p& network, size_t key) NOEXCEPT;
+    session_seed(p2p& network, uint64_t identifier) NOEXCEPT;
 
     /// Perform seeding as configured (call from network strand).
     /// Seeding is complete invocation of the handler.

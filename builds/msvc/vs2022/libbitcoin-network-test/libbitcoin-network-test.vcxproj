@@ -71,14 +71,18 @@
   </ImportGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\test\async\deadline.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\quality_racer.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\speed_racer.cpp" />
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\test\async\time.cpp" />
     <ClCompile Include="..\..\..\..\test\async\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\async\tracker.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\volume_racer.cpp" />
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>
     </ClCompile>

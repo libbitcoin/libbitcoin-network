@@ -49,32 +49,27 @@ deadline::~deadline() NOEXCEPT
     BC_ASSERT_MSG(timer_.expiry() == epoch, "");
 }
 
-// Start cannot be called concurrently with stop, strand restarts.
+// Start/stop must not be called concurrently.
 void deadline::start(result_handler&& handle) NOEXCEPT
 {
     start(std::move(handle), duration_);
 }
 
-// Start cannot be called concurrently with stop, strand restarts.
+// Start/stop must not be called concurrently.
 void deadline::start(result_handler&& handle, const duration& timeout) NOEXCEPT
 {
-    // Handling cancel error code creates exception safety.
-    error::boost_code ignore;
-    timer_.cancel(ignore);
+    timer_.cancel();
     timer_.expires_after(timeout);
 
-    // Handler posted, invoked once, sets operation_aborted if canceled.
+    // Handler posted, cancel sets asio::error::operation_aborted.
     timer_.async_wait(
         std::bind(&deadline::handle_timer,
             shared_from_this(), _1, std::move(handle)));
 }
 
-// Cancellation calls handle_timer with asio::error::operation_aborted.
 void deadline::stop() NOEXCEPT
 {
-    // Handling cancel error code creates exception safety.
-    error::boost_code ignore;
-    timer_.cancel(ignore);
+    timer_.cancel();
     BC_DEBUG_ONLY(timer_.expires_at(epoch);)
 }
 
@@ -83,6 +78,8 @@ void deadline::handle_timer(const error::boost_code& ec,
     const result_handler& handle) NOEXCEPT
 {
     BC_DEBUG_ONLY(timer_.expires_at(epoch);)
+
+    // asio::error::operation_aborted maps to error::operation_canceled.
     handle(error::asio_to_error_code(ec));
 }
 

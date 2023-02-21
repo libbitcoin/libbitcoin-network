@@ -40,7 +40,7 @@ endpoint::endpoint() NOEXCEPT
 {
 }
 
-endpoint::endpoint(const std::string& uri) NOEXCEPT(false)
+endpoint::endpoint(const std::string& uri) THROWS
   : endpoint()
 {
     std::stringstream(uri) >> *this;
@@ -141,7 +141,7 @@ bool endpoint::operator!=(const endpoint& other) const NOEXCEPT
 }
 
 std::istream& operator>>(std::istream& input,
-    endpoint& argument) NOEXCEPT(false)
+    endpoint& argument) THROWS
 {
     std::string value{};
     input >> value;

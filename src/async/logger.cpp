@@ -21,6 +21,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/handlers.hpp>
+#include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -79,7 +80,7 @@ void logger::subscribe(notifier&& handler) NOEXCEPT
 void logger::do_subscribe(const notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-    subscriber_.subscribe(move_copy(handler), ++loggers_);
+    subscriber_.subscribe(move_copy(handler));
 }
 
 void logger::stop() NOEXCEPT

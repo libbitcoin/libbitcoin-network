@@ -37,7 +37,7 @@ address::address() NOEXCEPT
 {
 }
 
-address::address(const std::string& host) NOEXCEPT(false)
+address::address(const std::string& host) THROWS
   : address()
 {
     std::stringstream(host) >> *this;
@@ -141,7 +141,7 @@ bool address::operator!=(const address& other) const NOEXCEPT
 }
 
 std::istream& operator>>(std::istream& input,
-    address& argument) NOEXCEPT(false)
+    address& argument) THROWS
 {
     std::string line{};
     input >> line;

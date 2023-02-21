@@ -117,16 +117,18 @@ void protocol_seed_31402::handle_send_get_address(const code& ec) NOEXCEPT
 address::cptr protocol_seed_31402::filter(
     const address_items& items) const NOEXCEPT
 {
-    const auto message = std::make_shared<address>(address
-    {
-        difference(items, settings().blacklists)
-    });
+    // CLang doesn't like emplacement with default constructors, so use new.
+    BC_PUSH_WARNING(NO_NEW_OR_DELETE)
+    const auto message = std::shared_ptr<address>(new address{ items });
+    BC_POP_WARNING()
 
     std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
     {
-        return settings().disabled(address)
+        return !config::is_valid(address)
+            || settings().disabled(address)
             || settings().insufficient(address)
-            || settings().unsupported(address);
+            || settings().unsupported(address)
+            || contains(settings().blacklists, address);
     });
 
     return message;

@@ -75,7 +75,7 @@ asio::address denormalize(const asio::address& ip) NOEXCEPT;
 /// Denormalizes to IPv4 (unmapped), literal emits unbracketed.
 BCT_API std::string to_host(const asio::address& ip) NOEXCEPT;
 BCT_API std::string to_literal(const asio::address& ip) NOEXCEPT;
-BCT_API asio::address from_host(const std::string& host) NOEXCEPT(false);
+BCT_API asio::address from_host(const std::string& host) THROWS;
 
 /// Not denormalizing.
 messages::ip_address to_address(const asio::address& ip) NOEXCEPT;

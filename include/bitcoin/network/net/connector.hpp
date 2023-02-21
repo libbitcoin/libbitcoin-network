@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_NET_CONNECTOR_HPP
 #define LIBBITCOIN_NETWORK_NET_CONNECTOR_HPP
 
-#include <functional>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -59,13 +58,12 @@ public:
     // Stop (no start).
     // ------------------------------------------------------------------------
 
-    /// Cancel work and close the connector (idempotent).
+    /// Cancel work (idempotent), handler signals completion.
     virtual void stop() NOEXCEPT;
 
     // Methods.
     // ------------------------------------------------------------------------
-    /// A connection may only be reattempted following handler invocation.
-    /// May return operation_canceled, channel_timeout, success or error code.
+    /// Subsequent accepts may only be attempted following handler invocation.
     /// The socket parameter is nullptr unless success is returned.
 
     /// Try to connect to the address, starts timer.
@@ -81,6 +79,8 @@ public:
         socket_handler&& handler) NOEXCEPT;
 
 protected:
+    typedef speed_racer<two, const code&, const socket::ptr&> racer_t;
+
     /// Try to connect to host:port, starts timer.
     virtual void start(const std::string& hostname, uint16_t port,
         const config::address& host, socket_handler&& handler) NOEXCEPT;
@@ -93,19 +93,20 @@ protected:
     // These are protected by strand.
     asio::resolver resolver_;
     deadline::ptr timer_;
-    bool stopped_{ true };
+    racer_t racer_{};
 
 private:
-    void handle_resolve(const error::boost_code& ec,
-        const asio::endpoints& range, socket::ptr socket,
-        const socket_handler& handler) NOEXCEPT;
-    void handle_connect(const code& ec, socket::ptr socket,
-        const socket_handler& handler) NOEXCEPT;
-    void handle_timer(const code& ec, const socket::ptr& socket,
-        const socket_handler& handler) NOEXCEPT;
+    typedef std::shared_ptr<bool> finish_ptr;
 
-    void do_handle_connect(const code& ec, socket::ptr socket,
-        const socket_handler& handler) NOEXCEPT;
+    void handle_resolve(const error::boost_code& ec,
+        const asio::endpoints& range, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
+    void do_handle_connect(const code& ec, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
+    void handle_connect(const code& ec, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
+    void handle_timer(const code& ec, const finish_ptr& finish,
+        const socket::ptr& socket) NOEXCEPT;
 };
 
 typedef std::vector<connector::ptr> connectors;

@@ -44,11 +44,7 @@
 
 // Include boost in cpp files only from here, so placeholders exclusion works.
 // Avoid use in header includes due to warning repetition (boost/format.hpp).
-#include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
-#include <boost/circular_buffer.hpp>
-#include <boost/iostreams/stream.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/thread.hpp>

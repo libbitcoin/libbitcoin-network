@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,13 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_RESUBSCRIBER_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_DESUBSCRIBER_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_DESUBSCRIBER_HPP
 
-#include <utility>
 #include <functional>
 #include <map>
-#include <memory>
 #include <utility>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/error.hpp>
@@ -33,23 +31,23 @@ namespace network {
 /// Not thread safe, non-virtual.
 /// All methods must be invoked on strand, handlers are invoked on strand.
 template <typename Key, typename... Args>
-class resubscriber final
+class desubscriber final
 {
 public:
-    DELETE_COPY_MOVE(resubscriber);
+    DELETE_COPY_MOVE(desubscriber);
 
     using key = Key;
     typedef std::function<bool(const code&, Args...)> handler;
     typedef std::function<void(const code&, const Key&)> completer;
 
     // Strand is only used for assertions.
-    resubscriber(asio::strand& strand) NOEXCEPT;
-    ~resubscriber() NOEXCEPT;
+    desubscriber(asio::strand& strand) NOEXCEPT;
+    ~desubscriber() NOEXCEPT;
 
+    /// If stopped, handler is invoked with error::subscriber_stopped.
     /// If key exists, handler is invoked with error::subscriber_exists.
-    /// If stopped, handler is invoked with error::subscriber_stopped/defaults
-    /// and dropped. Otherwise it is held until stop/drop. False if failed.
-    bool subscribe(handler&& handler, const Key& key) NOEXCEPT;
+    /// Otherwise handler retained. Subscription code is also returned here.
+    code subscribe(handler&& handler, const Key& key) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.
     /// Handler return true for resubscription, otherwise it is desubscribed.
@@ -57,7 +55,7 @@ public:
 
     /// Invoke specified handler in order with specified arguments.
     /// Handler return controls resubscription, and is forwarded to the caller.
-    /// False if subscription key not not found (not subscribed).
+    /// True if subscription key found (subscribed).
     bool notify_one(const Key& key, const code& ec,
         const Args&... args) NOEXCEPT;
 
@@ -82,6 +80,6 @@ private:
 } // namespace network
 } // namespace libbitcoin
 
-#include <bitcoin/network/impl/async/resubscriber.ipp>
+#include <bitcoin/network/impl/async/desubscriber.ipp>
 
 #endif

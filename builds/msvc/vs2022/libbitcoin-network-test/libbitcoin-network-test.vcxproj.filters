@@ -33,10 +33,16 @@
     <ClCompile Include="..\..\..\..\test\async\deadline.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\resubscriber.cpp">
+    <ClCompile Include="..\..\..\..\test\async\quality_racer.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\speed_racer.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp">
@@ -55,6 +61,12 @@
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\tracker.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\volume_racer.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\address.cpp">

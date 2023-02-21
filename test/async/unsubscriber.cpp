@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -18,15 +18,15 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(subscriber_tests)
+BOOST_AUTO_TEST_SUITE(unsubscriber_tests)
 
-typedef subscriber<size_t> test_subscriber;
+typedef unsubscriber<size_t> test_unsubscriber;
 
-BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
+BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__stopped__subscriber_stopped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_unsubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -38,8 +38,9 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
         BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
+            return true;
         }));
-
+    
         BOOST_REQUIRE_EQUAL(instance.size(), 1u);
         instance.stop(ec, expected);
 
@@ -47,6 +48,7 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
         BOOST_REQUIRE_EQUAL(instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             retry_result = { value, size };
+            return true;
         }), error::subscriber_stopped);
 
         BOOST_REQUIRE_EQUAL(instance.size(), 0u);
@@ -54,18 +56,132 @@ BOOST_AUTO_TEST_CASE(subscriber__subscribe__stopped__subscriber_stopped)
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-
     BOOST_REQUIRE_EQUAL(stop_result.first, ec);
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
     BOOST_REQUIRE_EQUAL(retry_result.first, error::subscriber_stopped);
     BOOST_REQUIRE_EQUAL(retry_result.second, size_t{});
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
+BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__exists__success)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_unsubscriber instance(strand);
+    const auto ec = error::address_not_found;
+    constexpr auto expected = 42u;
+
+    std::pair<code, size_t> first_result;
+    std::pair<code, size_t> second_result;
+    boost::asio::post(strand, [&]()
+    {
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        {
+            first_result = { value, size };
+            return true;
+        }));
+
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        {
+            second_result = { value, size };
+            return true;
+        }));
+
+        instance.stop(ec, expected);
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE_EQUAL(first_result.first, ec);
+    BOOST_REQUIRE_EQUAL(first_result.second, expected);
+    BOOST_REQUIRE_EQUAL(second_result.first, ec);
+    BOOST_REQUIRE_EQUAL(second_result.second, expected);
+}
+
+BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__removed__expected)
+{
+    threadpool pool(2);
+    asio::strand strand(pool.service().get_executor());
+    test_unsubscriber instance(strand);
+    const auto ec1 = error::address_not_found;
+    const auto ec2 = error::address_in_use;
+    constexpr auto expected1 = 42u;
+    constexpr auto expected2 = 24u;
+
+    std::pair<code, size_t> first_result;
+    std::pair<code, size_t> second_result;
+    boost::asio::post(strand, [&]()
+    {
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        {
+            first_result = { value, size };
+            return false;
+        }));
+
+        instance.notify(ec1, expected1);
+
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        {
+            second_result = { value, size };
+            return true;
+        }));
+
+        BOOST_REQUIRE_EQUAL(instance.size(), 1u);
+        instance.stop(ec2, expected2);
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE_EQUAL(first_result.first, ec1);
+    BOOST_REQUIRE_EQUAL(first_result.second, expected1);
+    BOOST_REQUIRE_EQUAL(second_result.first, ec2);
+    BOOST_REQUIRE_EQUAL(second_result.second, expected2);
+}
+
+BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__unique__expected)
+{
+    threadpool pool(2);
+    asio::strand strand(pool.service().get_executor());
+    test_unsubscriber instance(strand);
+    const auto ec = error::address_not_found;
+    constexpr auto expected = 42u;
+
+    std::pair<code, size_t> first_result;
+    std::pair<code, size_t> second_result;
+    boost::asio::post(strand, [&]()
+    {
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        {
+            first_result = { value, size };
+            return true;
+        }));
+
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        {
+            second_result = { value, size };
+            return true;
+        }));
+
+        BOOST_REQUIRE_EQUAL(instance.size(), 2u);
+        instance.stop(ec, expected);
+        BOOST_REQUIRE_EQUAL(instance.size(), 0u);
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE_EQUAL(first_result.first, ec);
+    BOOST_REQUIRE_EQUAL(first_result.second, expected);
+    BOOST_REQUIRE_EQUAL(second_result.first, ec);
+    BOOST_REQUIRE_EQUAL(second_result.second, expected);
+}
+
+BOOST_AUTO_TEST_CASE(unsubscriber__stop_default__once__expected)
+{
+    threadpool pool(2);
+    asio::strand strand(pool.service().get_executor());
+    test_unsubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = zero;
 
@@ -75,6 +191,7 @@ BOOST_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
         BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
+            return true;
         }));
 
         instance.stop_default(ec);
@@ -82,16 +199,15 @@ BOOST_AUTO_TEST_CASE(subscriber__stop_default__once__expected)
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-
     BOOST_REQUIRE_EQUAL(stop_result.first, ec);
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__stop__once__expected)
+BOOST_AUTO_TEST_CASE(unsubscriber__stop__once__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_unsubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -101,6 +217,7 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__once__expected)
         BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
+            return true;
         }));
 
         instance.stop(ec, expected);
@@ -108,16 +225,15 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__once__expected)
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-
     BOOST_REQUIRE_EQUAL(stop_result.first, ec);
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__stop__twice__second_dropped)
+BOOST_AUTO_TEST_CASE(unsubscriber__stop__twice__second_dropped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_unsubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -127,6 +243,7 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__twice__second_dropped)
         BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             stop_result = { value, size };
+            return true;
         }));
 
         instance.stop(ec, expected);
@@ -141,11 +258,11 @@ BOOST_AUTO_TEST_CASE(subscriber__stop__twice__second_dropped)
     BOOST_REQUIRE_EQUAL(stop_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
+BOOST_AUTO_TEST_CASE(unsubscriber__notify__stopped__dropped)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_unsubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -157,6 +274,7 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
         {
             // Allow first and possible second notify, ignore stop.
             if (++count != two) notify_result = { value, size };
+            return true;
         }));
 
         instance.notify(ec, expected);
@@ -166,46 +284,45 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__stopped__dropped)
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-
     BOOST_REQUIRE_EQUAL(notify_result.first, ec);
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__notify__once__expected)
+BOOST_AUTO_TEST_CASE(unsubscriber__notify__once__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_unsubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
-    auto count = zero;
+    auto count = 0u;
     std::pair<code, size_t> notify_result;
     boost::asio::post(strand, [&]()
     {
         BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             if (is_one(++count)) notify_result = { value, size };
+            return true;
         }));
 
         instance.notify(ec, expected);
 
-        // Prevents unstopped assertion.
+        // Prevents unstopped assertion (uncleared).
         instance.stop_default(error::address_blocked);
     });
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-
     BOOST_REQUIRE_EQUAL(notify_result.first, ec);
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }
 
-BOOST_AUTO_TEST_CASE(subscriber__notify__twice__expected)
+BOOST_AUTO_TEST_CASE(unsubscriber__notify__twice_true__expected)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    test_subscriber instance(strand);
+    test_unsubscriber instance(strand);
     const auto ec = error::address_not_found;
     constexpr auto expected = 42u;
 
@@ -217,18 +334,48 @@ BOOST_AUTO_TEST_CASE(subscriber__notify__twice__expected)
         {
             // Exclude stop_default call.
             if (++count <= two) notify_result = { value, size };
+            return true;
         }));
 
         instance.notify({}, {});
         instance.notify(ec, expected);
 
-        // Prevents unstopped assertion.
+        // Prevents unstopped assertion (uncleared).
         instance.stop_default(error::address_blocked);
     });
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE_EQUAL(notify_result.first, ec);
+    BOOST_REQUIRE_EQUAL(notify_result.second, expected);
+}
 
+BOOST_AUTO_TEST_CASE(unsubscriber__notify__twice_false__expected)
+{
+    threadpool pool(2);
+    asio::strand strand(pool.service().get_executor());
+    test_unsubscriber instance(strand);
+    const auto ec = error::address_not_found;
+    constexpr auto expected = 42u;
+
+    std::pair<code, size_t> notify_result;
+    boost::asio::post(strand, [&]()
+    {
+        BOOST_REQUIRE(!instance.subscribe([&](code value, size_t size) NOEXCEPT
+        {
+            notify_result = { value, size };
+            return false;
+        }));
+
+        instance.notify(ec, expected);
+        instance.notify({}, {});
+
+        // Cleared by false return.
+        ////instance.stop_default(error::address_blocked);
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(notify_result.first, ec);
     BOOST_REQUIRE_EQUAL(notify_result.second, expected);
 }

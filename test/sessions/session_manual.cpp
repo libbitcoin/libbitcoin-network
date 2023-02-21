@@ -34,7 +34,7 @@ public:
     using connector::connector;
 
     // Get captured connected.
-    bool connected() const NOEXCEPT
+    bool connected_() const NOEXCEPT
     {
         return !is_zero(connects_);
     }
@@ -151,7 +151,7 @@ public:
         }
     }
 
-    bool connected() const NOEXCEPT
+    bool connected_() const NOEXCEPT
     {
         return !is_zero(connects_);
     }
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
     BOOST_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__invalid_checksum)
+BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expected)
 {
     const logger log{ false };
     settings set(selection::mainnet);

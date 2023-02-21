@@ -81,6 +81,10 @@ code acceptor::start(const config::authority& local) NOEXCEPT
 // protected
 code acceptor::start(const asio::endpoint& point) NOEXCEPT
 {
+    if (!stopped_)
+        return error::operation_failed;
+
+    stopped_ = false;
     error::boost_code ec;
     const auto ipv6 = settings_.enable_ipv6;
 
@@ -99,10 +103,6 @@ code acceptor::start(const asio::endpoint& point) NOEXCEPT
 
     if (!ec)
         acceptor_.listen(asio::max_connections, ec);
-
-    // This allows accept after stop (restartable).
-    if (!ec)
-        stopped_ = false;
 
     LOG_ONLY(const config::authority local{ acceptor_.local_endpoint() };)
     LOG("Bound to endpoint [" << local << "]");

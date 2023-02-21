@@ -45,7 +45,7 @@ public:
     using connector::connector;
 
     // Get captured connected.
-    bool connected() const NOEXCEPT
+    bool connected_() const NOEXCEPT
     {
         return !is_zero(connects_);
     }
@@ -139,10 +139,10 @@ public:
 
     // Capture first start_connect call.
     void start_connect(const code&, const connectors_ptr& connectors,
-        size_t peer) NOEXCEPT override
+        object_key batch) NOEXCEPT override
     {
         // Must be first to ensure connector::start_connect() preceeds promise release.
-        session_outbound::start_connect({}, connectors, peer);
+        session_outbound::start_connect({}, connectors, batch);
 
         if (is_one(connects_))
             reconnect_.set_value(true);
@@ -151,7 +151,7 @@ public:
             connect_.set_value(true);
     }
 
-    bool connected() const NOEXCEPT
+    bool connected_() const NOEXCEPT
     {
         return !is_zero(connects_);
     }

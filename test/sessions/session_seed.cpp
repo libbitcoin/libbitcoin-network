@@ -32,7 +32,7 @@ public:
     using connector::connector;
 
     // Get captured connected.
-    bool connected() const NOEXCEPT
+    bool connected_() const NOEXCEPT
     {
         return !is_zero(connects_);
     }
@@ -668,7 +668,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__seeded__success)
     BOOST_REQUIRE(!session->stopped());
 
     // No need to block since seeding completes at started true.
-    BOOST_REQUIRE(net.get_connector()->connected());
+    BOOST_REQUIRE(net.get_connector()->connected_());
     BOOST_REQUIRE(session->attached_handshake());
 
     std::promise<bool> stopped;
@@ -711,7 +711,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE(net.get_connector()->connected());
+    BOOST_REQUIRE(net.get_connector()->connected_());
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());

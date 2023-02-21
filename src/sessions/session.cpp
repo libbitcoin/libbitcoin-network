@@ -40,9 +40,8 @@ using namespace system;
 using namespace std::placeholders;
 
 // Bind throws (ok).
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
 // Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
@@ -92,6 +91,7 @@ void session::start_channel(const channel::ptr& channel,
 
     if (this->stopped())
     {
+        // Direct invoke of handlers.
         channel->stop(error::service_stopped);
         started(error::service_stopped);
         stopped(error::service_stopped);
@@ -102,6 +102,7 @@ void session::start_channel(const channel::ptr& channel,
     // Inbound does not check nonce until handshake completes, so no race.
     if (!network_.store_nonce(*channel))
     {
+        // Direct invoke of handlers (continuing).
         channel->stop(error::channel_conflict);
         started(error::channel_conflict);
         stopped(error::channel_conflict);
@@ -205,10 +206,11 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
     start(ec);
 }
 
-// Context free method.
 void session::handle_channel_start(const code& ec, const channel::ptr& channel,
     const result_handler& started, const result_handler& stopped) NOEXCEPT
 {
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+
     if (ec)
     {
         started(ec);
@@ -333,24 +335,20 @@ void session::defer(result_handler&& handler) NOEXCEPT
     const auto timeout = settings().retry_timeout();
     const auto timer = std::make_shared<deadline>(log(), network_.strand());
 
+    ////LOG("Defer (" << key << ").");
+
     timer->start(
         BIND3(handle_timer, _1, key, std::move(handler)), timeout);
 
     stop_subscriber_.subscribe(
         BIND3(handle_defer, _1, key, timer), key);
-
-    ////LOG("Session[" << identifier_ << "] defer   ("
-    ////    << stop_subscriber_.size() << ").");
 }
 
 void session::handle_timer(const code& ec, object_key key,
     const result_handler& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-
-    ////LOG("Delay timer (" << key << ") notify: " << ec.message());
     stop_subscriber_.notify_one(key, ec);
-
     complete(ec);
 }
 
@@ -358,11 +356,6 @@ bool session::handle_defer(const code&, object_key,
     const deadline::ptr& timer) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-
-    ////LOG("Delay timer (" << key << ") stop: " << ec.message());
-    ////LOG("Session[" << identifier_ << "] undefer ("
-    ////    << stop_subscriber_.size() << ").");
-
     timer->stop();
     return false;
 }
@@ -370,46 +363,40 @@ bool session::handle_defer(const code&, object_key,
 void session::pend(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-
-    stop_subscriber_.subscribe(
-        BIND2(handle_pend, _1, channel), channel->identifier());
-
-    ////LOG("Session[" << identifier_ << "] pend    ("
-    ////    << stop_subscriber_.size() << ").");
+    stop_subscriber_.subscribe(BIND2(handle_pend, _1, channel),
+        channel->identifier());
 }
 
 // Ok to not find after stop, clears before channel stop handlers fire.
 void session::unpend(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-
-    // error::success prevents channel stop.
-    /*found*/ stop_subscriber_.notify_one(channel->identifier(),
-        error::success);
-
-    /////LOG("Unpend channel (" << channel->identifier() << ") " << found);
+    notify(channel->identifier());
 }
 
 bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    ////LOG("Pend channel (" << channel->identifier() << ") " << ec.message());
-    ////LOG("Session[" << identifier_ << "] unpend  ("
-    ////    << stop_subscriber_.size() << ").");
-
     // error::success prevents channel stop.
-    if (ec) channel->stop(ec);
+    if (ec)
+        channel->stop(ec);
+
     return false;
 }
 
-void session::subscribe_stop(notify_handler&& handler) NOEXCEPT
+typename session::object_key 
+session::subscribe_stop(notify_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
+    const auto key = create_key();
+    stop_subscriber_.subscribe(std::move(handler), key);
+    return key;
+}
 
-    stop_subscriber_.subscribe(std::move(handler), create_key());
-    ////LOG("Session[" << identifier_ << "] stop    ("
-    ////    << stop_subscriber_.size() << ").");
+bool session::notify(object_key key) NOEXCEPT
+{
+    return stop_subscriber_.notify_one(key, error::success);
 }
 
 void session::unsubscribe_close() NOEXCEPT
@@ -440,6 +427,7 @@ channel::ptr session::create_channel(const socket::ptr& socket,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
+    // Channel id must be created using create_key().
     const auto id = create_key();
     return std::make_shared<channel>(log(), socket, settings(), id, quiet);
 }
@@ -516,6 +504,12 @@ bool session::blacklisted(const config::authority& authority) const NOEXCEPT
     return settings().blacklisted(authority);
 }
 
+bool session::connected(const config::authority& authority) const NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    return network_.is_connected(authority);
+}
+
 const network::settings& session::settings() const NOEXCEPT
 {
     return network_.network_settings();
@@ -551,6 +545,11 @@ void session::save(const address_cptr& message,
     count_handler&& handler) const NOEXCEPT
 {
     network_.save(message, std::move(handler));
+}
+
+asio::strand& session::strand() NOEXCEPT
+{
+    return network_.strand();
 }
 
 BC_POP_WARNING()

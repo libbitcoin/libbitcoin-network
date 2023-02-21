@@ -84,4 +84,22 @@ using address_item_cptr = messages::address_item::cptr;
 } // namespace network
 } // namespace libbitcoin
 
+/// std lib hash table support (hosts).
+namespace std
+{
+template<>
+struct hash<bc::network::messages::address_item>
+{
+    size_t operator()(
+        const bc::network::messages::address_item& value) const NOEXCEPT
+    {
+        using namespace bc::network::messages;
+        auto seed = bc::zero;
+        bc::system::hash_combine(seed, std::hash<ip_address>{}(value.ip));
+        bc::system::hash_combine(seed, std::hash<uint16_t>{}(value.port));
+        return seed;
+    }
+};
+} // namespace std
+
 #endif

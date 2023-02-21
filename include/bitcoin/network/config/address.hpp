@@ -42,7 +42,7 @@ public:
     address() NOEXCEPT;
 
     /// [IPv6]|IPv4[:8333][/timestamp[/services]] (IPv6 [literal]).
-    address(const std::string& host) NOEXCEPT(false);
+    address(const std::string& host) THROWS;
     address(messages::address_item&& item) NOEXCEPT;
     address(const messages::address_item& item) NOEXCEPT;
     address(const messages::address_item::cptr& message) NOEXCEPT;
@@ -86,7 +86,7 @@ public:
 
     /// Same format as construct(string) and to_string().
     friend std::istream& operator>>(std::istream& input,
-        address& argument) NOEXCEPT(false);
+        address& argument) THROWS;
     friend std::ostream& operator<<(std::ostream& output,
         const address& argument) NOEXCEPT;
 

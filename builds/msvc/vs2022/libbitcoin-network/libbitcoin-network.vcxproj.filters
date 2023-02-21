@@ -308,6 +308,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\deadline.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
@@ -317,10 +320,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\logger.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\quality_racer.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\reporter.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\resubscriber.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\speed_racer.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp">
@@ -339,6 +345,12 @@
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\tracker.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\volume_racer.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp">
@@ -586,16 +598,28 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\desubscriber.ipp">
+      <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\resubscriber.ipp">
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\quality_racer.ipp">
+      <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\speed_racer.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\tracker.ipp">
+      <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp">
+      <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\volume_racer.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="packages.config" />

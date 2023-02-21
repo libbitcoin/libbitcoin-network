@@ -128,14 +128,18 @@ test_libbitcoin_network_test_SOURCES = \
     test/test.cpp \
     test/test.hpp \
     test/async/deadline.cpp \
+    test/async/desubscriber.cpp \
     test/async/enable_shared_from_base.cpp \
-    test/async/resubscriber.cpp \
+    test/async/quality_racer.cpp \
+    test/async/speed_racer.cpp \
     test/async/subscriber.cpp \
     test/async/thread.cpp \
     test/async/threadpool.cpp \
     test/async/time.cpp \
     test/async/timer.cpp \
     test/async/tracker.cpp \
+    test/async/unsubscriber.cpp \
+    test/async/volume_racer.cpp \
     test/config/address.cpp \
     test/config/authority.cpp \
     test/config/endpoint.cpp \
@@ -225,17 +229,21 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/asio.hpp \
     include/bitcoin/network/async/async.hpp \
     include/bitcoin/network/async/deadline.hpp \
+    include/bitcoin/network/async/desubscriber.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
     include/bitcoin/network/async/handlers.hpp \
     include/bitcoin/network/async/logger.hpp \
+    include/bitcoin/network/async/quality_racer.hpp \
     include/bitcoin/network/async/reporter.hpp \
-    include/bitcoin/network/async/resubscriber.hpp \
+    include/bitcoin/network/async/speed_racer.hpp \
     include/bitcoin/network/async/subscriber.hpp \
     include/bitcoin/network/async/thread.hpp \
     include/bitcoin/network/async/threadpool.hpp \
     include/bitcoin/network/async/time.hpp \
     include/bitcoin/network/async/timer.hpp \
-    include/bitcoin/network/async/tracker.hpp
+    include/bitcoin/network/async/tracker.hpp \
+    include/bitcoin/network/async/unsubscriber.hpp \
+    include/bitcoin/network/async/volume_racer.hpp
 
 include_bitcoin_network_configdir = ${includedir}/bitcoin/network/config
 include_bitcoin_network_config_HEADERS = \
@@ -247,10 +255,14 @@ include_bitcoin_network_config_HEADERS = \
 
 include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \
+    include/bitcoin/network/impl/async/desubscriber.ipp \
     include/bitcoin/network/impl/async/enable_shared_from_base.ipp \
-    include/bitcoin/network/impl/async/resubscriber.ipp \
+    include/bitcoin/network/impl/async/quality_racer.ipp \
+    include/bitcoin/network/impl/async/speed_racer.ipp \
     include/bitcoin/network/impl/async/subscriber.ipp \
-    include/bitcoin/network/impl/async/tracker.ipp
+    include/bitcoin/network/impl/async/tracker.ipp \
+    include/bitcoin/network/impl/async/unsubscriber.ipp \
+    include/bitcoin/network/impl/async/volume_racer.ipp
 
 include_bitcoin_network_messagesdir = ${includedir}/bitcoin/network/messages
 include_bitcoin_network_messages_HEADERS = \

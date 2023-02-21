@@ -31,9 +31,8 @@ namespace libbitcoin {
 namespace network {
 
 // Bind throws (ok).
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
 // Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
@@ -177,7 +176,7 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (stopped())
     {
-        LOG("Heading read abort [" << authority() << "]");
+        ////LOG("Heading read abort [" << authority() << "]");
         stop(error::channel_stopped);
         return;
     }
@@ -244,7 +243,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 
     if (stopped())
     {
-        LOG("Payload read abort [" << authority() << "]");
+        ////LOG("Payload read abort [" << authority() << "]");
         stop(error::channel_stopped);
         return;
     }
@@ -362,7 +361,7 @@ void proxy::handle_write(const code& ec, size_t,
 
     if (stopped())
     {
-        LOG("Send abort [" << authority() << "]");
+        ////LOG("Send abort [" << authority() << "]");
         stop(error::channel_stopped);
         return;
     }
