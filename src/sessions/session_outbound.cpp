@@ -135,22 +135,23 @@ void session_outbound::start_connect(const code&,
 
     // TODO: use race(size) object for this.
     // Count down the number of connection attempts within the batch.
-    const auto counter = integer::create(connectors->size());
+    const auto race = integer::create(connectors->size());
 
     socket_handler connect =
         BIND4(handle_connect, _1, _2, connectors, batch);
 
     socket_handler one =
-        BIND6(handle_one, _1, _2, counter, connectors, batch, std::move(connect));
+        BIND6(handle_one, _1, _2, race, connectors, batch,
+            std::move(connect));
 
     // Attempt to connect with a unique address for each connector of batch.
     for (const auto& connector: *connectors)
-        take(BIND6(do_one, _1, _2, batch, connector, counter, one));
+        take(BIND5(do_one, _1, _2, batch, connector, one));
 }
 
 // Attempt to connect the given peer and invoke handle_one.
 void session_outbound::do_one(const code& ec, const config::address& peer,
-    object_key batch, const connector::ptr& connector, const count_ptr& counter,
+    object_key, const connector::ptr& connector,
     const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -216,13 +217,13 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 
 // Handle each do_one connection attempt, stopping on first success.
 void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
-    const count_ptr& counter, const connectors_ptr& connectors, object_key,
+    const count_ptr& race, const connectors_ptr& connectors, object_key,
     const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Previous success, stop socket and recover address.
-    if (counter->is_handled())
+    if (race->is_handled())
     {
         if (socket)
         {
@@ -233,14 +234,14 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    counter->decrement();
+    race->decrement();
 
     // If error and last, stop socket and recover address.
     if (ec)
     {
-        if (counter->is_complete())
+        if (race->is_complete())
         {
-            counter->set_handled();
+            race->set_handled();
             handler(error::connect_failed, socket);
         }
 
@@ -248,7 +249,7 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
     }
 
     // Unhandled, success, stop all connectors.
-    counter->set_handled();
+    race->set_handled();
     handler(error::success, socket);
 
     // TODO: unsubscribe using object_key, handler invokes stop loop.

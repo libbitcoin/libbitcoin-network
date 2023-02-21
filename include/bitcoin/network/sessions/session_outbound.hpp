@@ -133,7 +133,7 @@ private:
         object_key key, const connectors_ptr& connectors) NOEXCEPT;
 
     void do_one(const code& ec, const config::address& peer, object_key key,
-        const connector::ptr& connector, const count_ptr& counter,
+        const connector::ptr& connector,
         const socket_handler& handler) NOEXCEPT;
     void handle_one(const code& ec, const socket::ptr& socket,
         const count_ptr& counter, const connectors_ptr& connectors,
