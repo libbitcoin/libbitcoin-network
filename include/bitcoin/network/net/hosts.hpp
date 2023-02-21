@@ -93,8 +93,8 @@ private:
         BC_POP_WARNING()
     }
 
-    // Push a buffer entry if the line is valid.
-    void push_valid(const std::string& line) NOEXCEPT;
+    inline messages::address_item::cptr pop() NOEXCEPT;
+    inline void push(const std::string& line) NOEXCEPT;
 
     // These are thread safe.
     const std::filesystem::path file_path_;
