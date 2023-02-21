@@ -222,7 +222,16 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Previous success, stop socket and recover address.
+    // This race is started with a copy of handler.
+    // This race is variably-sized (can't templatize).
+    // This is a quality vs. speed race (first success vs. first finish).
+    // Each call here invokes race.finish(ec, socket).
+    // Each success stops the batch of connectors.
+    // Finish returns true if winner else false.
+    // Losers reclaim address and stop socket (may be connected).
+    // Finishing loser sets error::connect_failed and nullptr.
+
+    // Previous success, stop socket (success or fail) and recover address.
     if (race->is_handled())
     {
         if (socket)
@@ -236,9 +245,10 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
 
     race->decrement();
 
-    // If error and last, stop socket and recover address.
+    // If error, recover address and set finished if last.
     if (ec)
     {
+        reclaim(ec, socket);
         if (race->is_complete())
         {
             race->set_handled();
@@ -250,7 +260,7 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
 
     // Unhandled, success, stop all connectors.
     race->set_handled();
-    handler(error::success, socket);
+    handler(ec, socket);
 
     // TODO: unsubscribe using object_key, handler invokes stop loop.
     for (const auto& connector: *connectors)
