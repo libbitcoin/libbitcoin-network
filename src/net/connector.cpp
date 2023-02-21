@@ -55,15 +55,15 @@ connector::connector(const logger& log, asio::strand& strand,
 
 connector::~connector() NOEXCEPT
 {
-    BC_ASSERT_MSG(!race_.running(), "connector is not stopped");
-    if (race_.running()) { LOG("~connector is not stopped."); }
+    BC_ASSERT_MSG(!racer_.running(), "connector is not stopped");
+    if (racer_.running()) { LOG("~connector is not stopped."); }
 }
 
 void connector::stop() NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    if (!race_.running())
+    if (!racer_.running())
         return;
 
     // Posts timer handler to strand.
@@ -99,14 +99,14 @@ void connector::start(const std::string& hostname, uint16_t port,
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
-    if (race_.running())
+    if (racer_.running())
     {
         handler(error::operation_failed, nullptr);
         return;
     }
 
     // Capture the handler.
-    race_.start(std::move(handler));
+    racer_.start(std::move(handler));
 
     // Create a socket and shared finish context.
     const auto finish = std::make_shared<bool>(false);
@@ -134,7 +134,7 @@ void connector::handle_resolve(const error::boost_code& ec,
     // Timer stopped the socket, it wins (with timeout/failure).
     if (socket->stopped())
     {
-        race_.finish(error::operation_canceled, nullptr);
+        racer_.finish(error::operation_canceled, nullptr);
         return;
     }
 
@@ -143,7 +143,7 @@ void connector::handle_resolve(const error::boost_code& ec,
     {
         timer_->stop();
         socket->stop();
-        race_.finish(error::asio_to_error_code(ec), nullptr);
+        racer_.finish(error::asio_to_error_code(ec), nullptr);
         return;
     }
 
@@ -171,7 +171,7 @@ void connector::handle_connect(const code& ec, const finish_ptr& finish,
     // Timer stopped the socket, it wins (with timeout/failure).
     if (socket->stopped())
     {
-        race_.finish(error::operation_canceled, nullptr);
+        racer_.finish(error::operation_canceled, nullptr);
         return;
     }
 
@@ -180,14 +180,14 @@ void connector::handle_connect(const code& ec, const finish_ptr& finish,
     {
         socket->stop();
         timer_->stop();
-        race_.finish(ec, nullptr);
+        racer_.finish(ec, nullptr);
         return;
     }
 
     // Successful connect (error::success), inform and cancel timer.
     *finish = true;
     timer_->stop();
-    race_.finish(error::success, socket);
+    racer_.finish(error::success, socket);
 }
 
 // private
@@ -199,7 +199,7 @@ void connector::handle_timer(const code& ec, const finish_ptr& finish,
     // Successful connect, connector wins (error::success).
     if (*finish)
     {
-        race_.finish(error::operation_canceled, nullptr);
+        racer_.finish(error::operation_canceled, nullptr);
         return;
     }
 
@@ -209,7 +209,7 @@ void connector::handle_timer(const code& ec, const finish_ptr& finish,
     {
         socket->stop();
         resolver_.cancel();
-        race_.finish(ec, socket);
+        racer_.finish(ec, socket);
         return;
     }
 
@@ -218,7 +218,7 @@ void connector::handle_timer(const code& ec, const finish_ptr& finish,
     // Stopped socket returned with failure code for option of host recovery.
     socket->stop();
     resolver_.cancel();
-    race_.finish(error::operation_timeout, socket);
+    racer_.finish(error::operation_timeout, socket);
 }
 
 BC_POP_WARNING()

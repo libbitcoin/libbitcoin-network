@@ -320,10 +320,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\logger.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\reporter.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\reporter.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\speed_racer.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp">
@@ -598,7 +598,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race.ipp">
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\speed_racer.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp">

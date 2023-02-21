@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_RACE_IPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_SPEED_RACER_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_SPEED_RACER_IPP
 
 #include <memory>
 #include <tuple>
@@ -29,27 +29,27 @@ namespace libbitcoin {
 namespace network {
 
 template <size_t Size, typename... Args>
-race<Size, Args...>::
-race() NOEXCEPT
+speed_racer<Size, Args...>::
+speed_racer() NOEXCEPT
 {
 }
 
 template <size_t Size, typename... Args>
-race<Size, Args...>::
-~race() NOEXCEPT
+speed_racer<Size, Args...>::
+~speed_racer() NOEXCEPT
 {
-    BC_ASSERT_MSG(!running() && !complete_, "deleting open race");
+    BC_ASSERT_MSG(!running() && !complete_, "deleting running speed_racer");
 }
 
 template <size_t Size, typename... Args>
-bool race<Size, Args...>::
+bool speed_racer<Size, Args...>::
 running() const NOEXCEPT
 {
     return to_bool(runners_);
 }
 
 template <size_t Size, typename... Args>
-bool race<Size, Args...>::
+bool speed_racer<Size, Args...>::
 start(handler&& complete) NOEXCEPT
 {
     // bad lock?
@@ -65,7 +65,7 @@ start(handler&& complete) NOEXCEPT
 }
 
 template <size_t Size, typename... Args>
-bool race<Size, Args...>::
+bool speed_racer<Size, Args...>::
 finish(const Args&... args) NOEXCEPT
 {
     // bad knock?
@@ -84,14 +84,14 @@ finish(const Args&... args) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 template <size_t Size, typename... Args>
-bool race<Size, Args...>::
+bool speed_racer<Size, Args...>::
 is_winner() const NOEXCEPT
 {
     return runners_ == Size;
 }
 
 template <size_t Size, typename... Args>
-bool race<Size, Args...>::
+bool speed_racer<Size, Args...>::
 is_loser() NOEXCEPT
 {
     // logic error, too many knocks.
@@ -103,7 +103,7 @@ is_loser() NOEXCEPT
 }
 
 template <size_t Size, typename... Args>
-bool race<Size, Args...>::
+bool speed_racer<Size, Args...>::
 invoke() NOEXCEPT
 {
     // logic error, knock by not running.
@@ -121,7 +121,7 @@ invoke() NOEXCEPT
 
 template <size_t Size, typename... Args>
 template<size_t... Index>
-void race<Size, Args...>::
+void speed_racer<Size, Args...>::
 invoker(const handler& complete, const packed& args, unpack<Index...>) NOEXCEPT
 {
     // Expand tuple into parameter pack.

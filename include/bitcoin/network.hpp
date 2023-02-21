@@ -28,8 +28,8 @@
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/async/logger.hpp>
-#include <bitcoin/network/async/race.hpp>
 #include <bitcoin/network/async/reporter.hpp>
+#include <bitcoin/network/async/speed_racer.hpp>
 #include <bitcoin/network/async/subscriber.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>

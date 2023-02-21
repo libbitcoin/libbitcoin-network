@@ -270,7 +270,7 @@ if (with-tests)
         "../../test/async/deadline.cpp"
         "../../test/async/desubscriber.cpp"
         "../../test/async/enable_shared_from_base.cpp"
-        "../../test/async/race.cpp"
+        "../../test/async/speed_racer.cpp"
         "../../test/async/subscriber.cpp"
         "../../test/async/thread.cpp"
         "../../test/async/threadpool.cpp"

@@ -79,7 +79,7 @@ public:
         socket_handler&& handler) NOEXCEPT;
 
 protected:
-    typedef race<two, const code&, const socket::ptr&> race_t;
+    typedef speed_racer<two, const code&, const socket::ptr&> racer_t;
 
     /// Try to connect to host:port, starts timer.
     virtual void start(const std::string& hostname, uint16_t port,
@@ -93,7 +93,7 @@ protected:
     // These are protected by strand.
     asio::resolver resolver_;
     deadline::ptr timer_;
-    race_t race_{};
+    racer_t racer_{};
 
 private:
     typedef std::shared_ptr<bool> finish_ptr;

@@ -48,7 +48,7 @@ public:
 
     bool get_stopped() const NOEXCEPT
     {
-        return !race_.running();
+        return !racer_.running();
     }
 };
 

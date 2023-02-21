@@ -39,7 +39,7 @@
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\race.cpp">
+    <ClCompile Include="..\..\..\..\test\async\speed_racer.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp">

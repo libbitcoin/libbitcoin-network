@@ -93,7 +93,7 @@ class mock_session
   : public session
 {
 public:
-    mock_session(p2p& network, size_t key, bool inbound, bool notify) NOEXCEPT
+    mock_session(p2p& network, size_t key, bool inbound) NOEXCEPT
       : session(network, key), inbound_(inbound)
     {
     }
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(session__construct__always__expected_settings)
     settings set(selection::mainnet);
     set.threads = expected;
     p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
     BOOST_REQUIRE_EQUAL(session.settings().threads, expected);
 }
 
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
     BOOST_REQUIRE(session.stopped());
     BOOST_REQUIRE(!session.stranded());
     BOOST_REQUIRE(is_zero(session.address_count()));
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(session__disabled__ipv4__false)
     const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
-    const mock_session session(net, 1, false, true);
+    const mock_session session(net, 1, false);
     set.enable_ipv6 = false;
     BOOST_REQUIRE(!session.disabled({ "42.42.42.42" }));
     BOOST_REQUIRE(!session.disabled({ "42.42.42.42:42" }));
@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(session__disabled__ipv6__expected)
     const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
-    const mock_session session(net, 1, false, true);
+    const mock_session session(net, 1, false);
     set.enable_ipv6 = false;
     BOOST_REQUIRE(session.disabled({ "[2001:db8::2]" }));
     BOOST_REQUIRE(session.disabled({ "[2001:db8::2]:42" }));
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(session__insufficient__default__false)
     const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
-    const mock_session session(net, 1, false, true);
+    const mock_session session(net, 1, false);
     constexpr uint64_t services = 0;
     constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
     set.services_minimum = 0;
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(session__insufficient__match__expected)
     const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
-    const mock_session session(net, 1, false, true);
+    const mock_session session(net, 1, false);
     constexpr uint64_t services = 0b01010101;
     constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
     set.services_minimum = services;
@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE(session__unsupported__default__false)
     const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
-    const mock_session session(net, 1, false, true);
+    const mock_session session(net, 1, false);
     constexpr uint64_t services = 0;
     constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
     set.invalid_services = 0;
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
     const logger log{ false };
     settings set(selection::mainnet);
     p2p net(set, log);
-    const mock_session session(net, 1, false, true);
+    const mock_session session(net, 1, false);
     constexpr uint64_t services = 0b01010101;
     constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
     set.invalid_services = services;
@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
 ////    const logger log{ false };
 ////    settings set(selection::mainnet);
 ////    p2p net(set, log);
-////    const mock_session session(net, 1, false, true);
+////    const mock_session session(net, 1, false);
 ////    set.whitelists.clear();
 ////    BOOST_REQUIRE(session.whitelisted({ "42.42.42.42" }));
 ////    set.whitelists.emplace_back("12.12.12.12");
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
 ////    const logger log{ false };
 ////    settings set(selection::mainnet);
 ////    p2p net(set, log);
-////    const mock_session session(net, 1, false, true);
+////    const mock_session session(net, 1, false);
 ////    set.whitelists.clear();
 ////    BOOST_REQUIRE(session.whitelisted({ "24.24.24.24" }));
 ////    set.whitelists.emplace_back("12.12.12.12");
@@ -529,7 +529,7 @@ BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
 ////    const logger log{ false };
 ////    settings set(selection::mainnet);
 ////    p2p net(set, log);
-////    const mock_session session(net, 1, false, true);
+////    const mock_session session(net, 1, false);
 ////    set.whitelists.clear();
 ////    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
 ////    set.whitelists.emplace_back("[2020:db8::1]");
@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
 ////    const logger log{ false };
 ////    settings set(selection::mainnet);
 ////    p2p net(set, log);
-////    const mock_session session(net, 1, false, true);
+////    const mock_session session(net, 1, false);
 ////    set.whitelists.clear();
 ////    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
 ////    set.whitelists.emplace_back("[2020:db8::1]");
@@ -559,7 +559,7 @@ BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
 ////    const logger log{ false };
 ////    settings set(selection::mainnet);
 ////    p2p net(set, log);
-////    const mock_session session(net, 1, false, true);
+////    const mock_session session(net, 1, false);
 ////    set.whitelists.clear();
 ////    BOOST_REQUIRE(!session.blacklisted({ "42.42.42.42" }));
 ////    set.blacklists.emplace_back("12.12.12.12");
@@ -574,7 +574,7 @@ BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
 ////    const logger log{ false };
 ////    settings set(selection::mainnet);
 ////    p2p net(set, log);
-////    const mock_session session(net, 1, false, true);
+////    const mock_session session(net, 1, false);
 ////    set.whitelists.clear();
 ////    BOOST_REQUIRE(!session.blacklisted({ "24.24.24.24" }));
 ////    set.blacklists.emplace_back("12.12.12.12");
@@ -589,7 +589,7 @@ BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
 ////    const logger log{ false };
 ////    settings set(selection::mainnet);
 ////    p2p net(set, log);
-////    const mock_session session(net, 1, false, true);
+////    const mock_session session(net, 1, false);
 ////    set.whitelists.clear();
 ////    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
 ////    set.blacklists.emplace_back("[2020:db8::1]");
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
 ////    const logger log{ false };
 ////    settings set(selection::mainnet);
 ////    p2p net(set, log);
-////    const mock_session session(net, 1, false, true);
+////    const mock_session session(net, 1, false);
 ////    set.whitelists.clear();
 ////    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
 ////    set.blacklists.emplace_back("[2020:db8::1]");
@@ -621,7 +621,7 @@ BOOST_AUTO_TEST_CASE(session__create_acceptor__always__expected)
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
     BOOST_REQUIRE(session.create_acceptor());
     BOOST_REQUIRE_EQUAL(net.acceptors(), 1u);
 }
@@ -631,7 +631,7 @@ BOOST_AUTO_TEST_CASE(session__create_connector__always__expected)
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
     BOOST_REQUIRE(session.create_connector());
     BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
 }
@@ -641,7 +641,7 @@ BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
     constexpr auto expected = 42u;
     const auto connectors = session.create_connectors(expected);
     BOOST_REQUIRE(connectors);
@@ -656,7 +656,7 @@ BOOST_AUTO_TEST_CASE(session__take__always__calls_network)
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
 
     std::promise<code> taken;
     session.take([&](const code& ec, const address_item_cptr&)
@@ -672,7 +672,7 @@ BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
 
     std::promise<code> fetched;
     session.fetch([&](const code& ec, const address_cptr&)
@@ -688,7 +688,7 @@ BOOST_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_addre
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
 
     std::promise<code> save;
     const address_item item{ 42, 24, unspecified_ip_address, 4224u };
@@ -711,7 +711,7 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
 
     std::promise<code> save;
     const address_items items{ {}, { 42, 24, unspecified_ip_address, 4224u } };
@@ -737,7 +737,7 @@ BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
     BOOST_REQUIRE(session.stopped());
 
     std::promise<bool> stopped;
@@ -757,7 +757,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
 
     std::promise<code> started;
     boost::asio::post(net.strand(), [&]()
@@ -797,7 +797,7 @@ BOOST_AUTO_TEST_CASE(session__start__stop__success)
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false, true);
+    mock_session session(net, 1, false);
 
     std::promise<code> started;
     boost::asio::post(net.strand(), [&]()
@@ -828,7 +828,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    auto session = std::make_shared<mock_session>(net, 1, false, true);
+    auto session = std::make_shared<mock_session>(net, 1, false);
     BOOST_REQUIRE(session->stopped());
 
     const auto socket = std::make_shared<network::socket>(net.log(), net.service());
@@ -873,7 +873,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    auto session = std::make_shared<mock_session>(net, 1, false, true);
+    auto session = std::make_shared<mock_session>(net, 1, false);
 
     std::promise<code> started;
     boost::asio::post(net.strand(), [=, &started]()
@@ -950,7 +950,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
     const logger log{ false };
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    auto session = std::make_shared<mock_session>(net, 1, false, true);
+    auto session = std::make_shared<mock_session>(net, 1, false);
 
     std::promise<code> started;
     boost::asio::post(net.strand(), [&]()
@@ -1022,7 +1022,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     settings set(selection::mainnet);
     set.host_pool_capacity = 0;
     mock_p2p net(set, log);
-    auto session = std::make_shared<mock_session>(net, 1, false, true);
+    auto session = std::make_shared<mock_session>(net, 1, false);
 
     std::promise<code> started_net;
     boost::asio::post(net.strand(), [&net, &started_net]()
@@ -1109,8 +1109,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     mock_p2p net(set, log);
 
     constexpr auto expected_inbound = false;
-    constexpr auto expected_notify = true;
-    auto session = std::make_shared<mock_session>(net, 1, expected_inbound, expected_notify);
+    auto session = std::make_shared<mock_session>(net, 1, expected_inbound);
 
     std::promise<code> started_net;
     boost::asio::post(net.strand(), [&net, &started_net]()
@@ -1195,8 +1194,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     mock_p2p net(set, log);
 
     constexpr auto expected_inbound = true;
-    constexpr auto expected_notify = false;
-    auto session = std::make_shared<mock_session>(net, 1, expected_inbound, expected_notify);
+    auto session = std::make_shared<mock_session>(net, 1, expected_inbound);
 
     std::promise<code> started_net;
     boost::asio::post(net.strand(), [&net, &started_net]()
