@@ -38,6 +38,9 @@ class race final
 public:
     typedef std::function<void(Args...)> handler;
 
+    /// A stopped_ member is sufficient for a race of one.
+    static_assert(Size > one);
+
     DELETE_COPY_MOVE(race);
 
     race() NOEXCEPT;
@@ -57,7 +60,6 @@ private:
     using unpack = std::index_sequence<Pack...>;
     using packed = std::tuple<std::decay_t<Args>...>;
     using sequence = std::index_sequence_for<Args...>;
-    static_assert(!is_zero(Size));
 
     template<size_t... Index>
     void invoker(const handler& complete, const packed& args,
