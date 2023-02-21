@@ -82,7 +82,8 @@ address::cptr protocol_address_in_31402::filter(
 
     std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
     {
-        return settings().disabled(address)
+        return !config::is_valid(address)
+            || settings().disabled(address)
             || settings().insufficient(address)
             || settings().unsupported(address)
             || contains(settings().blacklists, address);
