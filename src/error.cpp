@@ -142,7 +142,9 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
     if (ec == boost_error_t::address_family_not_supported ||
         ec == boost_error_t::address_not_available ||
         ec == boost_error_t::bad_address ||
-        ec == boost_error_t::destination_address_required)
+        ec == boost_error_t::destination_address_required ||
+        ec == asio_netdb_error_t::host_not_found ||
+        ec == asio_netdb_error_t::host_not_found_try_again)
         return error::resolve_failed;
 
     // connect-connect
@@ -437,6 +439,49 @@ enum boost::system::errc::errc_t
     too_many_symbolic_link_levels = ELOOP,
     value_too_large = EOVERFLOW,
     wrong_protocol_type = EPROTOTYPE
+};
+
+enum netdb_errors
+{
+  /// Host not found (authoritative).
+  host_not_found = BOOST_ASIO_NETDB_ERROR(HOST_NOT_FOUND),
+
+  /// Host not found (non-authoritative).
+  host_not_found_try_again = BOOST_ASIO_NETDB_ERROR(TRY_AGAIN),
+
+  /// The query is valid but does not have associated address data.
+  no_data = BOOST_ASIO_NETDB_ERROR(NO_DATA),
+
+  /// A non-recoverable error occurred.
+  no_recovery = BOOST_ASIO_NETDB_ERROR(NO_RECOVERY)
+};
+
+enum addrinfo_errors
+{
+  /// The service is not supported for the given socket type.
+  service_not_found = BOOST_ASIO_WIN_OR_POSIX(
+      BOOST_ASIO_NATIVE_ERROR(WSATYPE_NOT_FOUND),
+      BOOST_ASIO_GETADDRINFO_ERROR(EAI_SERVICE)),
+
+  /// The socket type is not supported.
+  socket_type_not_supported = BOOST_ASIO_WIN_OR_POSIX(
+      BOOST_ASIO_NATIVE_ERROR(WSAESOCKTNOSUPPORT),
+      BOOST_ASIO_GETADDRINFO_ERROR(EAI_SOCKTYPE))
+};
+
+enum misc_errors
+{
+  /// Already open.
+  already_open = 1,
+
+  /// End of file or stream.
+  eof,
+
+  /// Element not found.
+  not_found,
+
+  /// The descriptor cannot fit into the select system call's fd_set.
+  fd_set_failure
 };
 
 #endif // BOOST_CODES_AND_CONDITIONS
