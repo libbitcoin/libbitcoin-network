@@ -69,7 +69,7 @@ BCT_API bool is_member(const asio::address& ip, const asio::address& subnet,
     uint8_t cidr) NOEXCEPT;
 
 /// Unmap IPv6-mapped addresses.
-asio::address denormalize(const asio::address& ip) NOEXCEPT;
+BCT_API asio::address denormalize(const asio::address& ip) NOEXCEPT;
 
 /// Denormalizes to IPv4 (unmapped), literal emits unbracketed.
 BCT_API std::string to_host(const asio::address& ip) NOEXCEPT;
@@ -77,14 +77,14 @@ BCT_API std::string to_literal(const asio::address& ip) NOEXCEPT;
 BCT_API asio::address from_host(const std::string& host) THROWS;
 
 /// Not denormalizing.
-messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
-asio::address from_address(const messages::ip_address& address) NOEXCEPT;
+BCT_API messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
+BCT_API asio::address from_address(const messages::ip_address& address) NOEXCEPT;
 
 /// Parsers.
-BCT_API bool parse_authority(asio::address& ip, uint16_t& port, uint8_t& cidr,
-    const std::string& value) NOEXCEPT;
-BCT_API bool parse_endpoint(std::string& scheme, std::string& host, uint16_t& port,
-    const std::string& value) NOEXCEPT;
+BCT_API bool parse_authority(asio::address& ip, uint16_t& port,
+    uint8_t& cidr, const std::string& value) NOEXCEPT;
+BCT_API bool parse_endpoint(std::string& scheme, std::string& host,
+    uint16_t& port, const std::string& value) NOEXCEPT;
 
 } // namespace config
 } // namespace network
