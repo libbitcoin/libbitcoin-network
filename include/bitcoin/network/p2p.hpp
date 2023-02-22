@@ -239,7 +239,7 @@ protected:
     virtual void take(address_item_handler&& handler) NOEXCEPT;
     virtual void restore(const address_item_cptr& address,
         result_handler&& complete) NOEXCEPT;
-    virtual void fetch(address_handler&& handler) const NOEXCEPT;
+    virtual void fetch(address_handler&& handler) NOEXCEPT;
     virtual void save(const address_cptr& message,
         count_handler&& complete) NOEXCEPT;
 
@@ -290,6 +290,15 @@ private:
     void do_connect(const config::endpoint& endpoint) NOEXCEPT;
     void do_connect_handled(const config::endpoint& endpoint,
         const channel_notifier& handler) NOEXCEPT;
+
+    void handle_take(const code& ec, const address_item_cptr& address,
+        const address_item_handler& handler) NOEXCEPT;
+    void handle_restore(const code& ec,
+        const result_handler& handler) NOEXCEPT;
+    void handle_fetch(const code& ec, const address_cptr& message,
+        const address_handler& handler) NOEXCEPT;
+    void handle_save(const code& ec, size_t count,
+        const count_handler& handler) NOEXCEPT;
 
     // These are thread safe.
     const settings& settings_;

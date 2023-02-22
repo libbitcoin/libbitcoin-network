@@ -409,24 +409,64 @@ code p2p::stop_hosts() NOEXCEPT
 
 void p2p::take(address_item_handler&& handler) NOEXCEPT
 {
-    hosts_.take(std::move(handler));
+    // Switch to hosts strand.
+    hosts_.take(
+        std::bind(&p2p::handle_take,
+            this, _1, _2, std::move(handler)));
 }
 
-void p2p::restore(const address_item_cptr& host,
+void p2p::handle_take(const code& ec, const address_item_cptr& address,
+    const address_item_handler& handler) NOEXCEPT
+{
+    // Return to network strand.
+    boost::asio::post(strand_, std::bind(handler, ec, address));
+}
+
+void p2p::restore(const address_item_cptr& address,
     result_handler&& handler) NOEXCEPT
 {
-    hosts_.restore(host, std::move(handler));
+    // Switch to hosts strand.
+    hosts_.restore(address,
+        std::bind(&p2p::handle_restore,
+            this, _1, std::move(handler)));
 }
 
-void p2p::fetch(address_handler&& handler) const NOEXCEPT
+void p2p::handle_restore(const code& ec,
+    const result_handler& handler) NOEXCEPT
 {
-    hosts_.fetch(std::move(handler));
+    // Return to network strand.
+    boost::asio::post(strand_, std::bind(handler, ec));
+}
+
+void p2p::fetch(address_handler&& handler) NOEXCEPT
+{
+    // Switch to hosts strand.
+    hosts_.fetch(
+        std::bind(&p2p::handle_fetch,
+            this, _1, _2, std::move(handler)));
+}
+
+void p2p::handle_fetch(const code& ec, const address_cptr& message,
+    const address_handler& handler) NOEXCEPT
+{
+    // Return to network strand.
+    boost::asio::post(strand_, std::bind(handler, ec, message));
 }
 
 void p2p::save(const address_cptr& message,
     count_handler&& handler) NOEXCEPT
 {
-    hosts_.save(message, std::move(handler));
+    // Switch to hosts strand.
+    hosts_.save(message,
+        std::bind(&p2p::handle_save,
+            this, _1, _2, std::move(handler)));
+}
+
+void p2p::handle_save(const code& ec, size_t count,
+    const count_handler& handler) NOEXCEPT
+{
+    // Return to network strand.
+    boost::asio::post(strand_, std::bind(handler, ec, count));
 }
 
 // Loopback detection.

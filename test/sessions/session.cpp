@@ -254,7 +254,7 @@ public:
         handler(error::invalid_magic, {});
     }
 
-    void fetch(address_handler&& handler) const NOEXCEPT override
+    void fetch(address_handler&& handler) NOEXCEPT override
     {
         handler(error::bad_stream, {});
     }
