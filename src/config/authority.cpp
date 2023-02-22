@@ -165,6 +165,24 @@ bool authority::operator!=(const authority& other) const NOEXCEPT
     return !(*this == other);
 }
 
+bool authority::operator==(const messages::address_item& other) const NOEXCEPT
+{
+    // both non-zero ports must match (zero/non-zero or both zero are matched).
+    if ((!is_zero(port()) && !is_zero(other.port)) && port() != other.port)
+        return false;
+
+    const auto host = denormalize(from_address(other.ip));
+
+    // if both zero cidr, match hosts, otherwise host membership in subnet.
+    return is_zero(cidr()) ? host == ip() :
+        config::is_member(host, ip(), cidr());
+}
+
+bool authority::operator!=(const messages::address_item& other) const NOEXCEPT
+{
+    return !(*this == other);
+}
+
 // This allows unusable CIDR values (ok).
 std::istream& operator>>(std::istream& input,
     authority& argument) THROWS
