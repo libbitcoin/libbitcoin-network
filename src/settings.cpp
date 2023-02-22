@@ -198,29 +198,29 @@ std::filesystem::path settings::file() const NOEXCEPT
     BC_POP_WARNING()
 }
 
-bool settings::disabled(const config::address& address) const NOEXCEPT
+bool settings::disabled(const messages::address_item& item) const NOEXCEPT
 {
-    return !enable_ipv6 && address.is_v6();
+    return !enable_ipv6 && config::is_v6(item.ip);
 }
 
-bool settings::insufficient(const config::address& address) const NOEXCEPT
+bool settings::insufficient(const messages::address_item& item) const NOEXCEPT
 {
-    return (address.item().services & services_minimum) != services_minimum;
+    return (item.services & services_minimum) != services_minimum;
 }
 
-bool settings::unsupported(const config::address& address) const NOEXCEPT
+bool settings::unsupported(const messages::address_item& item) const NOEXCEPT
 {
-    return to_bool(address.item().services & invalid_services);
+    return to_bool(item.services & invalid_services);
 }
 
-bool settings::blacklisted(const config::authority& authority) const NOEXCEPT
+bool settings::blacklisted(const messages::address_item& item) const NOEXCEPT
 {
-    return contains(blacklists, authority);
+    return contains(blacklists, item);
 }
 
-bool settings::whitelisted(const config::authority& authority) const NOEXCEPT
+bool settings::whitelisted(const messages::address_item& item) const NOEXCEPT
 {
-    return whitelists.empty() || contains(whitelists, authority);
+    return whitelists.empty() || contains(whitelists, item);
 }
 
 } // namespace network

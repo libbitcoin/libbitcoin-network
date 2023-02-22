@@ -96,6 +96,8 @@ public:
     /// Distinct subnets are usequal even if intersecting, same subnets equal.
     bool operator==(const authority& other) const NOEXCEPT;
     bool operator!=(const authority& other) const NOEXCEPT;
+    bool operator==(const messages::address_item& other) const NOEXCEPT;
+    bool operator!=(const messages::address_item& other) const NOEXCEPT;
 
     /// Same format as construct(string) and to_string().
     friend std::istream& operator>>(std::istream& input,

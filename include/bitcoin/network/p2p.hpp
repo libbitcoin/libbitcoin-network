@@ -22,7 +22,6 @@
 #include <atomic>
 #include <functional>
 #include <memory>
-#include <unordered_set>
 #include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -46,6 +45,10 @@ public:
     typedef std::shared_ptr<p2p> ptr;
     typedef uint64_t object_key;
 
+    typedef desubscriber<uint64_t, uint64_t, system::chunk_ptr> broadcaster;
+    typedef broadcaster::handler broadcast_notifier;
+    typedef broadcaster::completer broadcast_completer;
+
     typedef desubscriber<object_key> stop_subscriber;
     typedef stop_subscriber::handler stop_handler;
     typedef stop_subscriber::completer stop_completer;
@@ -55,31 +58,28 @@ public:
     typedef channel_subscriber::completer channel_completer;
 
     template <typename Message>
-    void broadcast(const Message& message, result_handler&& handler,
-        uint64_t id=zero) NOEXCEPT
+    void broadcast(const Message& message, uint64_t sender=zero) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, system::to_shared(message), id, std::move(handler)));
+                this, system::to_shared(message), sender));
     }
 
     template <typename Message>
-    void broadcast(Message&& message, result_handler&& handler,
-        uint64_t id=zero) NOEXCEPT
+    void broadcast(Message&& message, uint64_t sender=zero) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, system::to_shared(std::move(message)), id,
-                    std::move(handler)));
+                this, system::to_shared(std::move(message)), sender));
     }
 
     template <typename Message>
     void broadcast(const typename Message::cptr& message,
-        result_handler&& handler, uint64_t id=zero) NOEXCEPT
+        uint64_t sender=zero) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, message, id, std::move(handler)));
+                this, message, sender));
     }
 
     // Constructors.
@@ -144,11 +144,14 @@ public:
     /// Get the number of addresses.
     virtual size_t address_count() const NOEXCEPT;
 
-    /// Get the number of inbound channels.
-    virtual size_t inbound_channel_count() const NOEXCEPT;
+    /// Get the number of address reservations.
+    virtual size_t reserved_count() const NOEXCEPT;
 
     /// Get the number of channels.
     virtual size_t channel_count() const NOEXCEPT;
+
+    /// Get the number of inbound channels.
+    virtual size_t inbound_channel_count() const NOEXCEPT;
 
     /// Network configuration settings.
     const settings& network_settings() const NOEXCEPT;
@@ -163,19 +166,9 @@ public:
     // ------------------------------------------------------------------------
     // Not thread safe, read from stranded handler only.
 
-    virtual size_t vector_count() const NOEXCEPT
+    virtual size_t broadcast_count() const NOEXCEPT
     {
-        return channels_.size();
-    }
-
-    virtual size_t authorities_count() const NOEXCEPT
-    {
-        return authorities_.size();
-    }
-
-    virtual size_t nonces_count() const NOEXCEPT
-    {
-        return nonces_.size();
+        return broadcaster_.size();
     }
 
     virtual size_t stop_subscriber_count() const NOEXCEPT
@@ -186,6 +179,11 @@ public:
     virtual size_t connect_subscriber_count() const NOEXCEPT
     {
         return connect_subscriber_.size();
+    }
+
+    virtual size_t nonces_count() const NOEXCEPT
+    {
+        return nonces_.size();
     }
 
 protected:
@@ -234,14 +232,11 @@ protected:
     virtual code count_channel(const channel::ptr& channel) NOEXCEPT;
     virtual void uncount_channel(const channel::ptr& channel) NOEXCEPT;
 
-    /// The authority is duplicated by an existing channel (requires strand).
-    virtual bool is_connected(const config::authority& host) const NOEXCEPT;
-
     /// Maintain address pool.
     virtual void take(address_item_handler&& handler) NOEXCEPT;
     virtual void restore(const address_item_cptr& address,
         result_handler&& complete) NOEXCEPT;
-    virtual void fetch(address_handler&& handler) const NOEXCEPT;
+    virtual void fetch(address_handler&& handler) NOEXCEPT;
     virtual void save(const address_cptr& message,
         count_handler&& complete) NOEXCEPT;
 
@@ -250,26 +245,20 @@ protected:
 
 private:
     template <typename Message>
-    void do_broadcast(const typename Message::cptr& message, uint64_t nonce,
-        const result_handler& handler) NOEXCEPT
+    void do_broadcast(const typename Message::cptr& message,
+        uint64_t sender_nonce) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
-        // Exclude the self channel (nonces are non-zero, so zero implies all).
-        const auto self = [nonce](const auto& channel) NOEXCEPT
-        {
-            return channel->nonce() == nonce;
-        };
-
+        // TODO: move serialization into broadcaster (like pump).
         // TODO: Serialization may not be unique per channel (by version).
         // TODO: Specialize this template for messages unique by version.
         // Serialization is here to preclude serialization in each channel.
         const auto data = messages::serialize(message, settings_.identifier,
-            /*channel->version()*/ messages::level::canonical);
+            messages::level::canonical);
 
-        for (const auto& channel: channels_)
-            if (!self(channel))
-                channel->write(data, move_copy(handler));
+        // TODO: differentiate broadcast by message type identifier.
+        broadcaster_.notify(error::success, sender_nonce, data);
     }
 
     code subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;
@@ -299,13 +288,14 @@ private:
     void do_connect_handled(const config::endpoint& endpoint,
         const channel_notifier& handler) NOEXCEPT;
 
-    void do_take(const address_item_handler& handler) NOEXCEPT;
-    void do_restore(const address_item_cptr& host,
-        const result_handler& complete) NOEXCEPT;
-
-    void do_fetch(const address_handler& handler) const NOEXCEPT;
-    void do_save(const address_cptr& message,
-        const count_handler& complete) NOEXCEPT;
+    void handle_take(const code& ec, const address_item_cptr& address,
+        const address_item_handler& handler) NOEXCEPT;
+    void handle_restore(const code& ec,
+        const result_handler& handler) NOEXCEPT;
+    void handle_fetch(const code& ec, const address_cptr& message,
+        const address_handler& handler) NOEXCEPT;
+    void handle_save(const code& ec, size_t accepted,
+        const count_handler& handler) NOEXCEPT;
 
     // These are thread safe.
     const settings& settings_;
@@ -313,30 +303,21 @@ private:
     std::atomic<size_t> inbound_channel_count_{};
 
     // These are protected by strand.
-    hosts hosts_;
-    threadpool threadpool_;
     session_manual::ptr manual_{};
+    threadpool threadpool_;
 
     // This is thread safe.
     asio::strand strand_;
 
     // These are protected by strand.
-
-    // Public services (and session stop).
+    hosts hosts_;
+    broadcaster broadcaster_;
     stop_subscriber stop_subscriber_;
     channel_subscriber connect_subscriber_;
     object_key keys_{};
 
     // Guards loopback.
     std::unordered_set<uint64_t> nonces_{};
-
-    // Guards duplicate channels.
-    std::unordered_set<config::authority> authorities_{};
-
-    // TODO: change to broadcast message pump by type.
-    // TODO: test in network by broadcasting address messages.
-    // TODO: then no need for stop, just use session pender.
-    std::unordered_set<channel::ptr> channels_{};
 };
 
 } // namespace network

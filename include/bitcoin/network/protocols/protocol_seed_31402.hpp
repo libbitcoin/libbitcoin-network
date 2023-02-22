@@ -67,9 +67,6 @@ protected:
 private:
     messages::address_item self() const NOEXCEPT;
 
-    // This is thread safe (const).
-    const config::authorities& blacklist_;
-
     // These are protected by the strand.
     bool sent_address_{};
     bool sent_get_address_{};

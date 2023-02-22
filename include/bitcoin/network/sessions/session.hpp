@@ -169,28 +169,8 @@ protected:
     /// Number of outbound connected channels (including manual).
     virtual size_t outbound_channel_count() const NOEXCEPT;
 
-    /// The address protocol is disabled (ipv6 address with ipv6 disabled).
-    virtual bool disabled(const config::address& address) const NOEXCEPT;
-
-    /// The address advertises insufficient services.
-    virtual bool insufficient(const config::address& address) const NOEXCEPT;
-
-    /// The address advertises disallowed services.
-    virtual bool unsupported(const config::address& address) const NOEXCEPT;
-
-    /// The authority is not whitelisted by configuration (for non-empty list).
-    virtual bool whitelisted(const config::authority& authority) const NOEXCEPT;
-
-    /// The authority is blacklisted by configuration.
-    virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
-
-    /// The authority identifies an existing channel (requires strand).
-    virtual bool connected(const config::authority& authority) const NOEXCEPT;
-
-    // TEMP
-    asio::strand& strand() NOEXCEPT;
-
 private:
+    asio::strand& strand() NOEXCEPT;
     object_key create_key() NOEXCEPT;
 
     void handle_channel_start(const code& ec, const channel::ptr& channel,

@@ -24,6 +24,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -70,10 +71,10 @@ struct BCT_API settings
     std::string user_agent;
     std::filesystem::path path{};
     config::authority self{};
-    config::authorities blacklists{};
-    config::authorities whitelists{};
     config::endpoints peers{};
     config::endpoints seeds{};
+    config::authorities blacklists{};
+    config::authorities whitelists{};
 
     /// Helpers.
     virtual bool inbound_enabled() const NOEXCEPT;
@@ -90,11 +91,11 @@ struct BCT_API settings
     virtual size_t minimum_address_count() const NOEXCEPT;
     virtual std::filesystem::path file() const NOEXCEPT;
 
-    virtual bool disabled(const config::address& address) const NOEXCEPT;
-    virtual bool insufficient(const config::address& address) const NOEXCEPT;
-    virtual bool unsupported(const config::address& address) const NOEXCEPT;
-    virtual bool blacklisted(const config::authority& authority) const NOEXCEPT;
-    virtual bool whitelisted(const config::authority& authority) const NOEXCEPT;
+    virtual bool disabled(const messages::address_item& item) const NOEXCEPT;
+    virtual bool insufficient(const messages::address_item& item) const NOEXCEPT;
+    virtual bool unsupported(const messages::address_item& item) const NOEXCEPT;
+    virtual bool blacklisted(const messages::address_item& item) const NOEXCEPT;
+    virtual bool whitelisted(const messages::address_item& item) const NOEXCEPT;
 };
 
 } // namespace network

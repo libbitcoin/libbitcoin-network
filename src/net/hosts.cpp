@@ -18,9 +18,10 @@
  */
 #include <bitcoin/network/net/hosts.hpp>
 
+#include <functional>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
-#include <bitcoin/network/config/utilities.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -33,47 +34,37 @@ using namespace messages;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-hosts::hosts(const settings& settings) NOEXCEPT
-  : file_path_(settings.file()),
-    minimum_(settings.address_minimum),
-    maximum_(settings.address_maximum),
-    capacity_(possible_narrow_cast<size_t>(settings.host_pool_capacity)),
-    disabled_(is_zero(capacity_))
+hosts::hosts(threadpool& pool, const settings& settings) NOEXCEPT
+  : settings_(settings),
+    strand_(pool.service().get_executor()),
+    buffer_(settings.host_pool_capacity)
 {
-    buffer_.reserve(capacity_);
 }
 
-size_t hosts::count() const NOEXCEPT
-{
-    return count_.load();
-}
+// Start/stop.
+// ----------------------------------------------------------------------------
 
-// private
-inline void hosts::push_valid(const std::string& line) NOEXCEPT
-{
-    try
-    {
-        // O(1) average case, position arbitary.
-        buffer_.insert(config::address{ line }.item());
-    }
-    catch (std::exception&)
-    {
-    }
-}
-
+// O(N).
 code hosts::start() NOEXCEPT
 {
-    if (disabled_)
+    // Not idempotent start.
+    if (is_zero(buffer_.capacity()))
         return error::success;
+
+    if (!stopped_)
+        return error::operation_failed;
+
+    // Restartable.
+    stopped_ = false;
 
     try
     {
-        ifstream file{ file_path_, ifstream::in };
+        ifstream file{ settings_.file(), ifstream::in };
         if (!file.good())
             return error::success;
 
         for (std::string line{}; std::getline(file, line);)
-            push_valid(line);
+            push(line);
 
         if (file.bad())
             return error::file_load;
@@ -86,31 +77,32 @@ code hosts::start() NOEXCEPT
     if (buffer_.empty())
     {
         code ec;
-        std::filesystem::remove(file_path_, ec);
+        std::filesystem::remove(settings_.file(), ec);
     }
 
-    count_.store(buffer_.size());
+    hosts_count_.store(buffer_.size());
     return error::success;
 }
 
+// O(N).
 code hosts::stop() NOEXCEPT
 {
-    if (disabled_)
+    // Idempotent stop
+    if (is_zero(buffer_.capacity()) || stopped_)
         return error::success;
 
-    // Idempotent stop.
-    disabled_ = true;
+    stopped_ = true;
 
     if (buffer_.empty())
     {
         code ec;
-        std::filesystem::remove(file_path_, ec);
+        std::filesystem::remove(settings_.file(), ec);
         return ec ? error::file_save : error::success;
     }
 
     try
     {
-        ofstream file{ file_path_, ofstream::out };
+        ofstream file{ settings_.file(), ofstream::out };
         if (!file.good())
             return error::file_save;
 
@@ -126,89 +118,103 @@ code hosts::stop() NOEXCEPT
     }
 
     buffer_.clear();
-    count_.store(zero);
+    hosts_count_.store(zero);
     return error::success;
 }
 
-// push
-bool hosts::restore(const address_item& host) NOEXCEPT
+// Properties.
+// ----------------------------------------------------------------------------
+
+size_t hosts::count() const NOEXCEPT
 {
-    if (disabled_)
-        return true;
-
-    if (!config::is_valid(host))
-        return false;
-
-    // Equality ignores timestamp and services.
-
-    // O(1) average case.
-    // Erase existing address (just in case somehow reintroduced).
-    buffer_.erase(host);
-
-    // O(1) average case, position arbitary.
-    buffer_.insert(host);
-    count_.store(buffer_.size());
-    return true;
+    return hosts_count_.load();
 }
 
-// pop
-void hosts::take(const address_item_handler& handler) NOEXCEPT
+size_t hosts::reserved() const NOEXCEPT
 {
-    if (buffer_.empty())
+    return authorities_count_.load();
+}
+
+// Usage.
+// ----------------------------------------------------------------------------
+
+void hosts::take(address_item_handler&& handler) NOEXCEPT
+{
+    boost::asio::post(strand_,
+        std::bind(&hosts::do_take, this, std::move(handler)));
+}
+
+// O(1).
+void hosts::do_take(const address_item_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
+    // O(1) average, O(N) worst case.
+    while (!buffer_.empty())
     {
-        handler(error::address_not_found, {});
+        const auto host = pop();
+        if (!is_reserved(*host))
+        {
+            hosts_count_.store(buffer_.size());
+            handler(error::success, host);
+            return;
+        }
+    }
+
+    hosts_count_.store(zero);
+    handler(error::address_not_found, {});
+}
+
+void hosts::restore(const address_item_cptr& host,
+    result_handler&& handler) NOEXCEPT
+{
+    boost::asio::post(strand_,
+        std::bind(&hosts::do_restore, this, host, std::move(handler)));
+}
+
+// O(N) <= could be O(1) with O(1) search.
+void hosts::do_restore(const address_item_cptr& host,
+    const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
+    if (stopped_)
+    {
+        handler(error::service_stopped);
         return;
     }
 
-    // Select address from random buffer position.
-    const auto limit = sub1(buffer_.size());
-    const auto index = pseudo_random::next(zero, limit);
+    // O(N) <= could be resolved with O(1) search.
+    const auto it = find(*host);
 
-    // O(N) walking pointers.
-    // Search is fast but not random indexation.
-    const auto it = std::next(buffer_.begin(), index);
-    const auto host = std::make_shared<address_item>(*it);
-
-    // O(1) average case.
-    buffer_.erase(it);
-    count_.store(buffer_.size());
-    handler(error::success, host);
-}
-
-// push(N)
-size_t hosts::save(const address_items& hosts) NOEXCEPT
-{
-    // If enabled then minimum capacity is one and buffer is at capacity.
-    if (disabled_ || hosts.empty())
-        return zero;
-
-    // Accept between 1 and all of the filtered addresses, up to capacity.
-    const auto usable = std::min(hosts.size(), capacity_);
-    const auto random = pseudo_random::next(one, usable);
-
-    // But always accept at least the amount we are short if available.
-    const auto gap = capacity_ - buffer_.size();
-    const auto accept = std::max(gap, random);
-
-    // Convert minimum desired to nonzero step for iteration.
-    const auto step = std::max(usable / accept, one);
-    const auto start_size = buffer_.size();
-
-    // Push selected addresses into the buffer, keep public count current.
-    for (size_t index = 0; index < usable; index = ceilinged_add(index, step))
+    // O(1).
+    if (it != buffer_.end())
     {
-        // Rejected if already present, position arbitary.
-        buffer_.insert(hosts.at(index));
-        count_.store(buffer_.size());
+        *it = *host;
+        handler(error::success);
+        return;
     }
 
-    // Report number accepted.
-    return buffer_.size() - start_size;
+    // O(1).
+    buffer_.push_back(*host);
+    hosts_count_.store(buffer_.size());
+    handler(error::success);
 }
 
-// pop(N)
-void hosts::fetch(const address_handler& handler) const NOEXCEPT
+// Negotiation.
+// ----------------------------------------------------------------------------
+
+void hosts::fetch(address_handler&& handler) const NOEXCEPT
 {
+    boost::asio::post(strand_,
+        std::bind(&hosts::do_fetch, this, std::move(handler)));
+}
+
+// O(N).
+void hosts::do_fetch(const address_handler& handler) const NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
     if (buffer_.empty())
     {
         handler(error::address_not_found, {});
@@ -216,25 +222,155 @@ void hosts::fetch(const address_handler& handler) const NOEXCEPT
     }
 
     // Vary the return count (quantity fingerprinting).
-    const auto divide = pseudo_random::next<size_t>(minimum_, maximum_);
-    const auto size = std::min(messages::max_address, buffer_.size() /
-        std::max(divide, one));
+    const auto divide = pseudo_random::next<size_t>(settings_.address_minimum,
+        settings_.address_maximum);
+    const auto size = std::min(messages::max_address, buffer_.size() / divide);
 
     // Vary the start position (value fingerprinting).
     const auto limit = sub1(buffer_.size());
     auto index = pseudo_random::next(zero, limit);
 
-    // Copy addresses into non-const message (converted to const by return).
+    // Allocate non-const message (converted to const by return).
     const auto out = to_shared<messages::address>();
     out->addresses.reserve(size);
 
-    // O(N^2) walking pointers [bounded by 1000 x buffer.size] :O.
-    for (size_t count = 0; count < size; ++count)
-        out->addresses.push_back(*std::next(buffer_.begin(), index++ % limit));
+    // O(N).
+    for (auto count = zero; count < size; ++count)
+        out->addresses.push_back(buffer_.at(index++ % limit));
 
-    ////// Shuffle the message (order fingerprinting).
-    ////pseudo_random::shuffle(out->addresses);
     handler(error::success, out);
+}
+
+// TODO: message size reduction could be pushed to protocol to save processing.
+void hosts::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
+{
+    boost::asio::post(strand_,
+        std::bind(&hosts::do_save, this, message, std::move(handler)));
+}
+
+// O(N^2) <= could be O(N) with O(1) search.
+void hosts::do_save(const address_cptr& message,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
+    if (stopped_)
+    {
+        handler(error::service_stopped, zero);
+        return;
+    }
+
+    if (message->addresses.empty())
+    {
+        handler(error::address_not_found, zero);
+        return;
+    }
+
+    // Accept between 1 and all of the addresses, up to capacity.
+    // If started/enabled then minimum capacity is one (usable > 0).
+    const auto capacity = buffer_.capacity();
+    const auto usable = std::min(message->addresses.size(), capacity);
+    const auto random = pseudo_random::next(one, usable);
+
+    // But always accept at least the amount we are short if available.
+    const auto gap = capacity - buffer_.size();
+    const auto accept = std::max(gap, random);
+
+    // Convert minimum desired to nonzero step for iteration.
+    const auto step = std::max(usable / accept, one);
+    const auto start_size = buffer_.size();
+
+    // O(N^2).
+    // Push addresses into the buffer.
+    for (auto index = zero; index < usable; index = ceilinged_add(index, step))
+    {
+        // O(1).
+        const auto& host = message->addresses.at(index);
+
+        // O(N) <= could be resolved with O(1) search.
+        if (!is_reserved(host) && !is_pooled(host))
+        {
+            // O(1).
+            buffer_.push_back(host);
+            hosts_count_.store(buffer_.size());
+        }
+    }
+
+    handler(error::success, buffer_.size() - start_size);
+}
+
+// private
+// ----------------------------------------------------------------------------
+
+// O(1).
+inline address_item::cptr hosts::pop() NOEXCEPT
+{
+    BC_ASSERT_MSG(!buffer_.empty(), "pop from empty buffer");
+
+    const auto host = to_shared<address_item>(std::move(buffer_.front()));
+    buffer_.pop_front();
+    return host;
+}
+
+// O(1).
+inline void hosts::push(const std::string& line) NOEXCEPT
+{
+    try
+    {
+        const config::address item{ line };
+
+        if (!messages::is_specified(item)
+            || settings_.disabled(item)
+            || settings_.insufficient(item)
+            || settings_.unsupported(item)
+            || settings_.blacklisted(item)
+            || !settings_.whitelisted(item))
+            return;
+
+        buffer_.push_back(item);
+    }
+    catch (std::exception&)
+    {
+    }
+}
+
+// Reservation.
+// ----------------------------------------------------------------------------
+// atomic unordered set: contains, insert, erase.
+
+// private
+inline bool hosts::is_reserved(const config::authority& host) const NOEXCEPT
+{
+    // O(1).
+    mutex_.lock_shared();
+    const auto result = authorities_.contains(host);
+    mutex_.unlock_shared();
+
+    return result;
+}
+
+// Channel is connected (infrequent).
+bool hosts::reserve(const config::authority& host) NOEXCEPT
+{
+    // O(1).
+    mutex_.lock();
+    const auto result = authorities_.insert(host).second;
+    mutex_.unlock();
+
+    if (result) ++authorities_count_;
+    return result;
+}
+
+// Channel is unconnected (infrequent).
+bool hosts::unreserve(const config::authority& host) NOEXCEPT
+{
+    // O(1).
+    mutex_.lock();
+    const auto result = to_bool(authorities_.erase(host));
+    mutex_.unlock();
+
+    if (result) --authorities_count_;
+    return result;
 }
 
 BC_POP_WARNING()

@@ -82,11 +82,12 @@ address::cptr protocol_address_in_31402::filter(
 
     std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
     {
-        return !config::is_valid(address)
+        return !is_specified(address)
             || settings().disabled(address)
             || settings().insufficient(address)
             || settings().unsupported(address)
-            || contains(settings().blacklists, address);
+            || settings().blacklisted(address)
+            || !settings().whitelisted(address);
     });
 
     return message;

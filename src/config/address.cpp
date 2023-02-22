@@ -58,19 +58,6 @@ address::address(const messages::address_item::cptr& message) NOEXCEPT
 {
 }
 
-// Properties.
-// ----------------------------------------------------------------------------
-
-const messages::address_item& address::item() const NOEXCEPT
-{
-    return *address_;
-}
-
-address::operator const messages::address_item::cptr&() const NOEXCEPT
-{
-    return address_;
-}
-
 // Methods.
 // ----------------------------------------------------------------------------
 
@@ -106,6 +93,11 @@ bool address::is_v6() const NOEXCEPT
     return !is_v4();
 }
 
+const messages::ip_address& address::ip() const NOEXCEPT
+{
+    return address_->ip;
+}
+
 uint16_t address::port() const NOEXCEPT
 {
     return address_->port;
@@ -124,18 +116,41 @@ uint64_t address::services() const NOEXCEPT
 // Operators.
 // ----------------------------------------------------------------------------
 
-address::operator bool() const NOEXCEPT
+address::operator const messages::address_item& () const NOEXCEPT
 {
-    return is_valid(*address_);
+    return *address_;
 }
 
-// Does not compare ports, times or services (used in address protocols).
+address::operator const messages::address_item::cptr& () const NOEXCEPT
+{
+    return address_;
+}
+
+address::operator bool() const NOEXCEPT
+{
+    return messages::is_specified(*address_);
+}
+
 bool address::operator==(const address& other) const NOEXCEPT
 {
-    return address_->ip == other.address_->ip;
+    return (address_->ip == other.address_->ip)
+        && ((address_->port == other.address_->port) ||
+            (is_zero(address_->port) || is_zero(other.address_->port)));
 }
 
 bool address::operator!=(const address& other) const NOEXCEPT
+{
+    return !(*this == other);
+}
+
+bool address::operator==(const messages::address_item& other) const NOEXCEPT
+{
+    return (address_->ip == other.ip)
+        && ((address_->port == other.port) ||
+            (is_zero(address_->port) || is_zero(other.port)));
+}
+
+bool address::operator!=(const messages::address_item& other) const NOEXCEPT
 {
     return !(*this == other);
 }

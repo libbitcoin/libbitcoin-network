@@ -269,7 +269,7 @@ class mock_session_inbound_whitelist_fail
 public:
     using mock_session_inbound::mock_session_inbound;
 
-    bool whitelisted(const config::authority&) const NOEXCEPT override
+    bool whitelisted(const config::address&) const NOEXCEPT override
     {
         return false;
     }
@@ -281,7 +281,7 @@ class mock_session_inbound_blacklist_fail
 public:
     using mock_session_inbound::mock_session_inbound;
 
-    bool blacklisted(const config::authority&) const NOEXCEPT override
+    bool blacklisted(const config::address&) const NOEXCEPT override
     {
         return true;
     }

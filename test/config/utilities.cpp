@@ -23,19 +23,6 @@ using namespace boost::program_options;
 
 BOOST_AUTO_TEST_SUITE(utilities_tests)
 
-// is_valid
-
-BOOST_AUTO_TEST_CASE(utilities__is_valid__default__false)
-{
-    BOOST_REQUIRE(!is_valid(messages::address_item{}));
-}
-
-BOOST_AUTO_TEST_CASE(utilities__is_valid__loopback__true)
-{
-    const messages::address_item item{ 0, 0, messages::loopback_ip_address, 42 };
-    BOOST_REQUIRE(is_valid(item));
-}
-
 // is_v4
 
 BOOST_AUTO_TEST_CASE(utilities__is_v4__default__false)
@@ -57,6 +44,29 @@ BOOST_AUTO_TEST_CASE(utilities__is_v4__loopback_mapped__true)
     };
 
     BOOST_REQUIRE(is_v4(mapped));
+}
+
+// is_v6
+
+BOOST_AUTO_TEST_CASE(utilities__is_v6__default__true)
+{
+    BOOST_REQUIRE(is_v6(messages::ip_address{}));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__is_v6__loopback_v6__true)
+{
+    BOOST_REQUIRE(is_v6(messages::loopback_ip_address));
+}
+
+BOOST_AUTO_TEST_CASE(utilities__is_v6__loopback_mapped__false)
+{
+    constexpr asio::ipv6::bytes_type mapped
+    {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xff, 0xff, 127, 0, 0, 1
+    };
+
+    BOOST_REQUIRE(!is_v6(mapped));
 }
 
 // is_member

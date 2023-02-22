@@ -598,6 +598,29 @@ BOOST_AUTO_TEST_CASE(authority__equality__contained_by_left_ipv4__true)
     BOOST_REQUIRE(authority("42.42.42.42/32") == authority("42.42.42.42"));
 }
 
+// equality _ipv4 address_item
+
+BOOST_AUTO_TEST_CASE(authority__equality__ipv4_same_port_no_cidr_address_item__true)
+{
+    BOOST_REQUIRE(authority("42.42.42.42") == authority("42.42.42.42").to_address_item());
+    BOOST_REQUIRE(authority("42.42.42.42:80") == authority("42.42.42.42:80").to_address_item());
+}
+
+BOOST_AUTO_TEST_CASE(authority__equality__ipv4_same_port_same_cidr_address_item__true)
+{
+    // CIDR is dropped by authority.to_address_item.
+    BOOST_REQUIRE(authority("42.42.42.42/1") == authority("42.42.42.42/1").to_address_item());
+    BOOST_REQUIRE(authority("42.42.42.42/8") == authority("42.42.42.42/8").to_address_item());
+    BOOST_REQUIRE(authority("42.42.42.42/24") == authority("42.42.42.42/24").to_address_item());
+    BOOST_REQUIRE(authority("42.42.42.42:80/32") == authority("42.42.42.42:80/32").to_address_item());
+}
+
+BOOST_AUTO_TEST_CASE(authority__equality__ipv4_distinct_default_port_no_cidr_address_item__true)
+{
+    BOOST_REQUIRE(authority("42.42.42.42:80") == authority("42.42.42.42").to_address_item());
+    BOOST_REQUIRE(authority("42.42.42.42") == authority("42.42.42.42:80").to_address_item());
+}
+
 // equality ipv6
 
 BOOST_AUTO_TEST_CASE(authority__equality__ipv6_same_port_no_cidr__true)
@@ -686,6 +709,28 @@ BOOST_AUTO_TEST_CASE(authority__equality__contains__expected)
     BOOST_REQUIRE(system::contains(authorities, authority{ "91.198.115.114:16942" }));
 }
 
+// equality ipv6 address_item
+
+BOOST_AUTO_TEST_CASE(authority__equality__ipv6_same_port_no_cidr_address_item__true)
+{
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]") == authority("[abcd:abcd::abcd:abcd]").to_address_item());
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:80") == authority("[abcd:abcd::abcd:abcd]:80").to_address_item());
+}
+
+BOOST_AUTO_TEST_CASE(authority__equality__ipv6_same_port_same_cidr_address_item__true)
+{
+    // [abcd:abcd::abcd:abcd] is the same as [abcd:abcd::abcd:abcd] (/1 matches /1).
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]/1") == authority("[abcd:abcd::abcd:abcd]/1"));
+
+    // CIDR is dropped by authority.to_address_item.. [abcd:abcd::abcd:abcd]/1 does not contain [abcd:abcd::abcd:abcd].
+    BOOST_REQUIRE(!(authority("[abcd:abcd::abcd:abcd]/1") == authority("[abcd:abcd::abcd:abcd]/1").to_address_item()));
+
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]/2") == authority("[abcd:abcd::abcd:abcd]/2").to_address_item());
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]/8") == authority("[abcd:abcd::abcd:abcd]/8").to_address_item());
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]/24") == authority("[abcd:abcd::abcd:abcd]/24").to_address_item());
+    BOOST_REQUIRE(authority("[abcd:abcd::abcd:abcd]:80/32") == authority("[abcd:abcd::abcd:abcd]:80/32").to_address_item());
+}
+
 // inequality
 
 BOOST_AUTO_TEST_CASE(authority__inequality__default_default__false)
@@ -700,6 +745,21 @@ BOOST_AUTO_TEST_CASE(authority__inequality__ipv6_ipv6__false)
     const authority host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
     const authority host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
     BOOST_REQUIRE(!(host1 != host2));
+}
+
+// inequality address_item
+
+BOOST_AUTO_TEST_CASE(authority__inequality__default_address_item__false)
+{
+    const authority host1{};
+    const authority host2{};
+    BOOST_REQUIRE(!(host1 != host2.to_address_item()));
+}
+
+BOOST_AUTO_TEST_CASE(authority__inequality__ipv6_ipv6_address_item__false)
+{
+    const authority host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]");
+    BOOST_REQUIRE(!(host1 != host1.to_address_item()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

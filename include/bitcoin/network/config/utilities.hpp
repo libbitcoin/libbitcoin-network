@@ -53,16 +53,15 @@ static constexpr system::data_array<ipv6_size - ipv4_size> ip_map_prefix
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff
 };
 
-/// Valid if the host is not unspecified and port is non-zero.
-constexpr bool is_valid(const messages::address_item& item) NOEXCEPT
-{
-    return !is_zero(item.port) && item.ip != messages::unspecified_ip_address;
-}
-
 /// True if ip_address starts with the ip map prefix (maps to a v4 address).
 constexpr bool is_v4(const messages::ip_address& ip) NOEXCEPT
 {
     return std::equal(ip_map_prefix.begin(), ip_map_prefix.end(), ip.begin());
+}
+
+constexpr bool is_v6(const messages::ip_address& ip) NOEXCEPT
+{
+    return !is_v4(ip);
 }
 
 /// Member if subnet addresses contain host.
@@ -70,7 +69,7 @@ BCT_API bool is_member(const asio::address& ip, const asio::address& subnet,
     uint8_t cidr) NOEXCEPT;
 
 /// Unmap IPv6-mapped addresses.
-asio::address denormalize(const asio::address& ip) NOEXCEPT;
+BCT_API asio::address denormalize(const asio::address& ip) NOEXCEPT;
 
 /// Denormalizes to IPv4 (unmapped), literal emits unbracketed.
 BCT_API std::string to_host(const asio::address& ip) NOEXCEPT;
@@ -78,14 +77,14 @@ BCT_API std::string to_literal(const asio::address& ip) NOEXCEPT;
 BCT_API asio::address from_host(const std::string& host) THROWS;
 
 /// Not denormalizing.
-messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
-asio::address from_address(const messages::ip_address& address) NOEXCEPT;
+BCT_API messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
+BCT_API asio::address from_address(const messages::ip_address& address) NOEXCEPT;
 
 /// Parsers.
-BCT_API bool parse_authority(asio::address& ip, uint16_t& port, uint8_t& cidr,
-    const std::string& value) NOEXCEPT;
-BCT_API bool parse_endpoint(std::string& scheme, std::string& host, uint16_t& port,
-    const std::string& value) NOEXCEPT;
+BCT_API bool parse_authority(asio::address& ip, uint16_t& port,
+    uint8_t& cidr, const std::string& value) NOEXCEPT;
+BCT_API bool parse_endpoint(std::string& scheme, std::string& host,
+    uint16_t& port, const std::string& value) NOEXCEPT;
 
 } // namespace config
 } // namespace network

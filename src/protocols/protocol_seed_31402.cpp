@@ -42,7 +42,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 protocol_seed_31402::protocol_seed_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    blacklist_(session.settings().blacklists),
     timer_(std::make_shared<deadline>(session.log(), channel->strand(),
         session.settings().channel_germination())),
     tracker<protocol_seed_31402>(session.log())
@@ -124,11 +123,12 @@ address::cptr protocol_seed_31402::filter(
 
     std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
     {
-        return !config::is_valid(address)
+        return !is_specified(address)
             || settings().disabled(address)
             || settings().insufficient(address)
             || settings().unsupported(address)
-            || contains(settings().blacklists, address);
+            || settings().blacklisted(address)
+            || !settings().whitelisted(address);
     });
 
     return message;

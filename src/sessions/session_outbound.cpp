@@ -164,46 +164,6 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    if (disabled(peer))
-    {
-        // Should not see these unless there is a change to enable_ipv6.
-        ////LOG("Dropping disabled protocol address [" << peer << "]");
-        handler(error::address_disabled, nullptr);
-        return;
-    }
-
-    if (unsupported(peer))
-    {
-        // Should not see these unless there is a change to invalid_services.
-        ////LOG("Dropping unsupported address [" << peer << "]");
-        handler(error::address_unsupported, nullptr);
-        return;
-    }
-
-    if (insufficient(peer))
-    {
-        // Should not see these unless there is a change to services_minimum.
-        ////LOG("Dropping insufficient address [" << peer << "]");
-        handler(error::address_insufficient, nullptr);
-        return;
-    }
-
-    if (blacklisted(peer))
-    {
-        // Should not see these unless there is a change to blacklist config.
-        ////LOG("Dropping blacklisted address [" << peer << "]");
-        handler(error::address_blocked, nullptr);
-        return;
-    }
-
-    if (connected(peer))
-    {
-        // More common with higher connection count relative to hosts count.
-        LOG("Dropping connected address [" << peer << "]");
-        handler(error::address_in_use, nullptr);
-        return;
-    }
-
     // Guard restartable connector (shutdown delay).
     if (stopped())
     {
