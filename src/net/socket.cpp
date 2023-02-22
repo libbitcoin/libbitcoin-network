@@ -112,9 +112,17 @@ void socket::accept(asio::acceptor& acceptor,
     // acceptor may be guarded from its own strand while preserving hiding of
     // socket internals. This makes concurrent calls unsafe, however only the
     // acceptor (a socket factory) requires access to the socket at this time.
-    acceptor.async_accept(socket_,
-        std::bind(&socket::handle_accept,
-            shared_from_this(), _1, std::move(handler)));
+    try
+    {
+        acceptor.async_accept(socket_,
+            std::bind(&socket::handle_accept,
+                shared_from_this(), _1, move_copy(handler)));
+    }
+    catch (const std::exception& e)
+    {
+        LOG("Exception @ accept: " << e.what());
+        handler(error::accept_failed);
+    }
 }
 
 void socket::connect(const asio::endpoints& range,
@@ -154,10 +162,18 @@ void socket::do_connect(const asio::endpoints& range,
     BC_ASSERT_MSG(stranded(), "strand");
     BC_ASSERT_MSG(!socket_.is_open(), "connect on open socket");
 
-    // Establishes a socket connection by trying each endpoint in sequence.
-    boost::asio::async_connect(socket_, range,
-        std::bind(&socket::handle_connect,
-            shared_from_this(), _1, _2, handler));
+    try
+    {
+        // Establishes a socket connection by trying each endpoint in sequence.
+        boost::asio::async_connect(socket_, range,
+            std::bind(&socket::handle_connect,
+                shared_from_this(), _1, _2, handler));
+    }
+    catch (const std::exception& e)
+    {
+        LOG("Exception @ do_connect: " << e.what());
+        handler(error::connect_failed);
+    }
 }
 
 // Read into pre-allocated buffer (bitcoin).
@@ -166,10 +182,18 @@ void socket::do_read(const boost::asio::mutable_buffer& out,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // This composed operation posts all intermediate handlers to the strand.
-    boost::asio::async_read(socket_, out,
-        std::bind(&socket::handle_io,
-            shared_from_this(), _1, _2, handler));
+    try
+    {
+        // This composed operation posts all intermediate handlers to the strand.
+        boost::asio::async_read(socket_, out,
+            std::bind(&socket::handle_io,
+                shared_from_this(), _1, _2, handler));
+    }
+    catch (const std::exception& e)
+    {
+        LOG("Exception @ do_read: " << e.what());
+        handler(error::operation_failed, zero);
+    }
 }
 
 void socket::do_write(const boost::asio::const_buffer& in,
@@ -177,10 +201,18 @@ void socket::do_write(const boost::asio::const_buffer& in,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // This composed operation posts all intermediate handlers to the strand.
-    boost::asio::async_write(socket_, in,
-        std::bind(&socket::handle_io,
-            shared_from_this(), _1, _2, handler));
+    try
+    {
+        // This composed operation posts all intermediate handlers to the strand.
+        boost::asio::async_write(socket_, in,
+            std::bind(&socket::handle_io,
+                shared_from_this(), _1, _2, handler));
+    }
+    catch (const std::exception& e)
+    {
+        LOG("Exception @ do_write: " << e.what());
+        handler(error::operation_failed, zero);
+    }
 }
 
 // handlers (private).
