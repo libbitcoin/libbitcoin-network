@@ -86,6 +86,19 @@ BOOST_AUTO_TEST_CASE(address_item__size__without_timestamp__expected)
     BOOST_REQUIRE_EQUAL(address_item::size(level::canonical, false), expected);
 }
 
+// is_specified
+
+BOOST_AUTO_TEST_CASE(address_item__is_specified__default__false)
+{
+    BOOST_REQUIRE(!is_specified(messages::address_item{}));
+}
+
+BOOST_AUTO_TEST_CASE(address_item__is_specified__loopback__true)
+{
+    const messages::address_item item{ 0, 0, messages::loopback_ip_address, 42 };
+    BOOST_REQUIRE(is_specified(item));
+}
+
 // equality
 
 BOOST_AUTO_TEST_CASE(address_item__equality__default_default__true)

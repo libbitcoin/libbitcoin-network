@@ -77,6 +77,12 @@ constexpr address_item unspecified_address_item
     unspecified_ip_port
 };
 
+constexpr bool is_specified(const address_item& item) NOEXCEPT
+{
+    // Specified if the host is not unspecified and port is non-zero.
+    return !is_zero(item.port) && item.ip != unspecified_ip_address;
+}
+
 } // namespace messages
 
 using address_item_cptr = messages::address_item::cptr;
@@ -93,11 +99,9 @@ struct hash<bc::network::messages::address_item>
     size_t operator()(
         const bc::network::messages::address_item& value) const NOEXCEPT
     {
-        using namespace bc::network::messages;
-        auto seed = bc::zero;
-        bc::system::hash_combine(seed, std::hash<ip_address>{}(value.ip));
-        bc::system::hash_combine(seed, std::hash<uint16_t>{}(value.port));
-        return seed;
+        return bc::system::hash_combine(
+            std::hash<bc::network::messages::ip_address>{}(value.ip),
+            std::hash<uint16_t>{}(value.port));
     }
 };
 } // namespace std

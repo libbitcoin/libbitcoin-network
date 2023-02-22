@@ -53,16 +53,15 @@ static constexpr system::data_array<ipv6_size - ipv4_size> ip_map_prefix
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff
 };
 
-/// Valid if the host is not unspecified and port is non-zero.
-constexpr bool is_valid(const messages::address_item& item) NOEXCEPT
-{
-    return !is_zero(item.port) && item.ip != messages::unspecified_ip_address;
-}
-
 /// True if ip_address starts with the ip map prefix (maps to a v4 address).
 constexpr bool is_v4(const messages::ip_address& ip) NOEXCEPT
 {
     return std::equal(ip_map_prefix.begin(), ip_map_prefix.end(), ip.begin());
+}
+
+constexpr bool is_v6(const messages::ip_address& ip) NOEXCEPT
+{
+    return !is_v4(ip);
 }
 
 /// Member if subnet addresses contain host.
