@@ -297,7 +297,7 @@ private:
         const result_handler& handler) NOEXCEPT;
     void handle_fetch(const code& ec, const address_cptr& message,
         const address_handler& handler) NOEXCEPT;
-    void handle_save(const code& ec, size_t count,
+    void handle_save(const code& ec, size_t accepted,
         const count_handler& handler) NOEXCEPT;
 
     // These are thread safe.

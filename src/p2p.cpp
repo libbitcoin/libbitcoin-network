@@ -462,11 +462,11 @@ void p2p::save(const address_cptr& message,
             this, _1, _2, std::move(handler)));
 }
 
-void p2p::handle_save(const code& ec, size_t count,
+void p2p::handle_save(const code& ec, size_t accepted,
     const count_handler& handler) NOEXCEPT
 {
     // Return to network strand.
-    boost::asio::post(strand_, std::bind(handler, ec, count));
+    boost::asio::post(strand_, std::bind(handler, ec, accepted));
 }
 
 // Loopback detection.
