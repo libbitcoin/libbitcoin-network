@@ -232,9 +232,6 @@ protected:
     virtual code count_channel(const channel::ptr& channel) NOEXCEPT;
     virtual void uncount_channel(const channel::ptr& channel) NOEXCEPT;
 
-    /////// The authority is duplicated by an existing channel (requires strand).
-    ////virtual bool is_connected(const config::authority& host) const NOEXCEPT;
-
     /// Maintain address pool.
     virtual void take(address_item_handler&& handler) NOEXCEPT;
     virtual void restore(const address_item_cptr& address,

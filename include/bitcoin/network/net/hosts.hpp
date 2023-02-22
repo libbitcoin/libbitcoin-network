@@ -24,6 +24,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <shared_mutex>
 #include <unordered_set>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -42,7 +43,7 @@ typedef std::function<void(const code&, const address_cptr&)> address_handler;
 typedef std::function<void(const code&, const address_item_cptr&)>
     address_item_handler;
 
-/// Virtual, thread safe (except start/stop/reserved).
+/// Virtual, thread safe (except start/stop).
 /// Duplicate and invalid addresses are disacarded.
 /// The file is loaded and saved from/to the settings-specified path.
 /// The file is a line-oriented textual serialization (config::authority+).
@@ -56,7 +57,6 @@ public:
 
     /// Start/stop.
     /// -----------------------------------------------------------------------
-    /// Not thread safe.
 
     /// Load addresses from file.
     virtual code start() NOEXCEPT;
@@ -67,10 +67,10 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    /// Count of pooled addresses, thread safe.
+    /// Count of pooled addresses.
     virtual size_t count() const NOEXCEPT;
 
-    /// The count of reserved addresses (currently connected), thread safe.
+    /// Count of reserved (currently connected) addresses.
     virtual size_t reserved() const NOEXCEPT;
 
     /// Usage.
@@ -95,10 +95,6 @@ public:
 
     /// Reservation.
     /// -----------------------------------------------------------------------
-    /// Not thread safe.
-
-    /// True if the address is reserved (currently connected).
-    virtual bool is_reserved(const config::authority& host) const NOEXCEPT;
 
     /// Reserve the address (currently connected), false if was reserved.
     virtual bool reserve(const config::authority& host) NOEXCEPT;
@@ -127,6 +123,7 @@ private:
 
     inline messages::address_item::cptr pop() NOEXCEPT;
     inline void push(const std::string& line) NOEXCEPT;
+    inline bool is_reserved(const config::authority& host) const NOEXCEPT;
 
     void do_take(const address_item_handler& handler) NOEXCEPT;
     void do_restore(const address_item_cptr& host,
@@ -141,10 +138,13 @@ private:
     std::atomic<size_t> hosts_count_{};
     std::atomic<size_t> authorities_count_{};
 
-    // These are not thread safe.
+    // These are protected by strand.
     buffer buffer_;
     bool stopped_{ true };
+
+    // This is protected by mutex.
     std::unordered_set<config::authority> authorities_{};
+    mutable std::shared_mutex mutex_{};
 };
 
 } // namespace network

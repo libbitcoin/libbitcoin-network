@@ -125,16 +125,14 @@ code hosts::stop() NOEXCEPT
 // Properties.
 // ----------------------------------------------------------------------------
 
-// O(1).
 size_t hosts::count() const NOEXCEPT
 {
     return hosts_count_.load();
 }
 
-// thread safe
 size_t hosts::reserved() const NOEXCEPT
 {
-    return authorities_.size();
+    return authorities_count_.load();
 }
 
 // Usage.
@@ -149,17 +147,22 @@ void hosts::take(address_item_handler&& handler) NOEXCEPT
 
 void hosts::do_take(const address_item_handler& handler) NOEXCEPT
 {
-    if (buffer_.empty())
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
+    // O(1) average, O(N) worst case.
+    while (!buffer_.empty())
     {
-        handler(error::address_not_found, {});
-        return;
+        const auto host = pop();
+        if (!is_reserved(*host))
+        {
+            hosts_count_.store(buffer_.size());
+            handler(error::success, host);
+            return;
+        }
     }
 
-    hosts_count_.store(sub1(buffer_.size()));
-
-    // O(1).
-    // TODO: pop until empty pool or found valid (settings/authorities).
-    handler(error::success, pop());
+    hosts_count_.store(zero);
+    handler(error::address_not_found, {});
 }
 
 // O(N) <= could be O(1) with O(1) search.
@@ -173,6 +176,8 @@ void hosts::restore(const address_item_cptr& host,
 void hosts::do_restore(const address_item_cptr& host,
     const result_handler& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+
     if (stopped_)
     {
         handler(error::service_stopped);
@@ -282,8 +287,6 @@ void hosts::do_save(const address_cptr& message,
         const auto& host = message->addresses.at(index);
 
         // O(N) <= could be resolved with O(1) search.
-
-        // TODO: ***is_reserved is not thread safe.***
         if (!is_reserved(host) && !is_pooled(host))
         {
             // O(1).
@@ -293,38 +296,6 @@ void hosts::do_save(const address_cptr& message,
     }
 
     handler(error::success, buffer_.size() - start_size);
-}
-
-// Reservation.
-// ----------------------------------------------------------------------------
-// requires network strand.
-
-bool hosts::is_reserved(const config::authority& host) const NOEXCEPT
-{
-    return authorities_.contains(host);
-}
-
-bool hosts::reserve(const config::authority& host) NOEXCEPT
-{
-    if (authorities_.size() < authorities_.max_size() &&
-        authorities_.insert(host).second)
-    {
-        authorities_count_.store(authorities_.size());
-        return true;
-    }
-
-    return false;
-}
-
-bool hosts::unreserve(const config::authority& host) NOEXCEPT
-{
-    if (to_bool(authorities_.erase(host)))
-    {
-        authorities_count_.store(authorities_.size());
-        return true;
-    }
-
-    return false;
 }
 
 // private
@@ -360,6 +331,42 @@ inline void hosts::push(const std::string& line) NOEXCEPT
     catch (std::exception&)
     {
     }
+}
+
+// Reservation.
+// ----------------------------------------------------------------------------
+// atomic unordered set: contains, insert, erase.
+
+// private
+inline bool hosts::is_reserved(const config::authority& host) const NOEXCEPT
+{
+    mutex_.lock_shared();
+    const auto result = authorities_.contains(host);
+    mutex_.unlock_shared();
+
+    return result;
+}
+
+// Channel is connected (infrequent).
+bool hosts::reserve(const config::authority& host) NOEXCEPT
+{
+    mutex_.lock();
+    const auto result = authorities_.insert(host).second;
+    mutex_.unlock();
+
+    if (result) ++authorities_count_;
+    return result;
+}
+
+// Channel is unconnected (infrequent).
+bool hosts::unreserve(const config::authority& host) NOEXCEPT
+{
+    mutex_.lock();
+    const auto result = to_bool(authorities_.erase(host));
+    mutex_.unlock();
+
+    if (result) --authorities_count_;
+    return result;
 }
 
 BC_POP_WARNING()

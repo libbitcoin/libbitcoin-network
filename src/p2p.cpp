@@ -521,21 +521,15 @@ bool p2p::is_loopback(const channel& channel) const NOEXCEPT
 // Channel counting and deconfliction.
 // ----------------------------------------------------------------------------
 
-////// protected
-////bool p2p::is_connected(const config::authority& host) const NOEXCEPT
-////{
-////    // NOT THREAD SAFE.
-////    return hosts_.is_reserved(host);
-////}
-
 // This must increment the channel count(s) if successful.
 code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Cannot allow any storage once stopped.
     if (closed())
+    {
         return error::service_stopped;
+    }
 
     if (is_loopback(*channel))
     {
@@ -555,12 +549,12 @@ code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
         return error::channel_overflow;
     }
 
-    ////// NOT THREAD SAFE, make async and bounce to hosts.
-    ////if (!hosts_.reserve(channel->authority()))
-    ////{
-    ////    LOG("Duplicate connection to [" << channel->authority() << "].");
-    ////    return error::address_in_use;
-    ////}
+    // Thread safe.
+    if (!hosts_.reserve(channel->authority()))
+    {
+        LOG("Duplicate connection to [" << channel->authority() << "].");
+        return error::address_in_use;
+    }
 
     if (channel->inbound())
     {
@@ -597,10 +591,11 @@ void p2p::uncount_channel(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    ////// NOT THREAD SAFE, make async and bounce to hosts.
-    ////hosts_.unreserve(channel->authority());
+    // Thread safe.
+    hosts_.unreserve(channel->authority());
 
-    broadcaster_.notify_one(channel->identifier(), error::channel_stopped, {}, {});
+    broadcaster_.notify_one(channel->identifier(), error::channel_stopped,
+        {}, {});
 
     if (channel->inbound() && is_zero(inbound_channel_count_.load()))
     {
