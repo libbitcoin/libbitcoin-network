@@ -156,47 +156,30 @@ void protocol::set_negotiated_version(uint32_t value) NOEXCEPT
 
 // Addresses.
 // ----------------------------------------------------------------------------
-// Address completion handlers are invoked on the channel strand.
 
 void protocol::fetch(address_handler&& handler) NOEXCEPT
 {
-    session_.fetch(BIND3(do_fetch, _1, _2, std::move(handler)));
-}
-
-// Return to channel strand.
-void protocol::do_fetch(const code& ec, const address_cptr& message,
-    const address_handler& handler) NOEXCEPT
-{
-    boost::asio::post(channel_->strand(),
-        BIND3(handle_fetch, ec, message, handler));
+    session_.fetch(BIND3(handle_fetch, _1, _2, std::move(handler)));
 }
 
 void protocol::handle_fetch(const code& ec, const address_cptr& message,
     const address_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol");
-    handler(ec, message);
+    // Return to channel strand.
+    boost::asio::post(channel_->strand(), std::bind(handler, ec, message));
 }
 
 void protocol::save(const address_cptr& message,
     count_handler&& handler) NOEXCEPT
 {
-    session_.save(message, BIND3(do_save, _1, _2, std::move(handler)));
-}
-
-// Return to channel strand.
-void protocol::do_save(const code& ec, size_t accepted,
-    const count_handler& handler) NOEXCEPT
-{
-    boost::asio::post(channel_->strand(),
-        BIND3(handle_save, ec, accepted, std::move(handler)));
+    session_.save(message, BIND3(handle_save, _1, _2, std::move(handler)));
 }
 
 void protocol::handle_save(const code& ec, size_t accepted,
     const count_handler& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol");
-    handler(ec, accepted);
+    // Return to channel strand.
+    boost::asio::post(channel_->strand(), std::bind(handler, ec, accepted));
 }
 
 // Send.

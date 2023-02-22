@@ -152,13 +152,8 @@ protected:
     virtual void handle_send(const code& ec) NOEXCEPT;
 
 private:
-    void do_fetch(const code& ec, const address_cptr& message,
-        const address_handler& handler) NOEXCEPT;
     void handle_fetch(const code& ec, const address_cptr& message,
         const address_handler& handler) NOEXCEPT;
-
-    void do_save(const code& ec, size_t accepted,
-        const count_handler& handler) NOEXCEPT;
     void handle_save(const code& ec, size_t accepted,
         const count_handler& handler) NOEXCEPT;
 

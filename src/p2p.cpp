@@ -394,6 +394,12 @@ bool p2p::stranded() const NOEXCEPT
 
 // Hosts collection.
 // ----------------------------------------------------------------------------
+// These bounce back to network strand from hosts strand. Since these are
+// protected, this could instead be done by session's protected use. This would
+// allow session to pass through hosts context, which would save a context
+// change by protocol back to channel context, which it must do anyway. This
+// just means that session would expose non-network strand context for handler
+// invocation, which is an inconsistency that could be confusing and not ideal.
 
 // private
 code p2p::start_hosts() NOEXCEPT
@@ -504,6 +510,8 @@ void p2p::unstore_nonce(const channel& channel) NOEXCEPT
 
 bool p2p::is_loopback(const channel& channel) const NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
     if (settings_.enable_loopback || !channel.inbound())
         return false;
 
