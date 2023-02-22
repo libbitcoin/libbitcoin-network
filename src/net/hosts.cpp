@@ -36,12 +36,8 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 hosts::hosts(threadpool& pool, const settings& settings) NOEXCEPT
   : settings_(settings),
-    minimum_(settings.address_minimum),
-    maximum_(settings.address_maximum),
-    capacity_(possible_narrow_cast<size_t>(settings.host_pool_capacity)),
-    disabled_(is_zero(capacity_)),
     strand_(pool.service().get_executor()),
-    buffer_(capacity_)
+    buffer_(settings.host_pool_capacity)
 {
 }
 
@@ -52,7 +48,7 @@ hosts::hosts(threadpool& pool, const settings& settings) NOEXCEPT
 code hosts::start() NOEXCEPT
 {
     // Not idempotent start.
-    if (disabled_)
+    if (is_zero(buffer_.capacity()))
         return error::success;
 
     if (!stopped_)
@@ -84,7 +80,7 @@ code hosts::start() NOEXCEPT
         std::filesystem::remove(settings_.file(), ec);
     }
 
-    count_.store(buffer_.size());
+    hosts_count_.store(buffer_.size());
     return error::success;
 }
 
@@ -92,7 +88,7 @@ code hosts::start() NOEXCEPT
 code hosts::stop() NOEXCEPT
 {
     // Idempotent stop
-    if (disabled_ || stopped_)
+    if (is_zero(buffer_.capacity()) || stopped_)
         return error::success;
 
     stopped_ = true;
@@ -122,7 +118,7 @@ code hosts::stop() NOEXCEPT
     }
 
     buffer_.clear();
-    count_.store(zero);
+    hosts_count_.store(zero);
     return error::success;
 }
 
@@ -132,7 +128,7 @@ code hosts::stop() NOEXCEPT
 // O(1).
 size_t hosts::count() const NOEXCEPT
 {
-    return count_.load();
+    return hosts_count_.load();
 }
 
 // thread safe
@@ -159,7 +155,7 @@ void hosts::do_take(const address_item_handler& handler) NOEXCEPT
         return;
     }
 
-    count_.store(sub1(buffer_.size()));
+    hosts_count_.store(sub1(buffer_.size()));
 
     // O(1).
     // TODO: pop until empty pool or found valid (settings/authorities).
@@ -196,7 +192,7 @@ void hosts::do_restore(const address_item_cptr& host,
 
     // O(1).
     buffer_.push_back(*host);
-    count_.store(buffer_.size());
+    hosts_count_.store(buffer_.size());
     handler(error::success);
 }
 
@@ -221,7 +217,8 @@ void hosts::do_fetch(const address_handler& handler) const NOEXCEPT
     }
 
     // Vary the return count (quantity fingerprinting).
-    const auto divide = pseudo_random::next<size_t>(minimum_, maximum_);
+    const auto divide = pseudo_random::next<size_t>(settings_.address_minimum,
+        settings_.address_maximum);
     const auto size = std::min(messages::max_address, buffer_.size() / divide);
 
     // Vary the start position (value fingerprinting).
@@ -265,11 +262,12 @@ void hosts::do_save(const address_cptr& message,
 
     // Accept between 1 and all of the addresses, up to capacity.
     // If started/enabled then minimum capacity is one (usable > 0).
-    const auto usable = std::min(message->addresses.size(), capacity_);
+    const auto capacity = buffer_.capacity();
+    const auto usable = std::min(message->addresses.size(), capacity);
     const auto random = pseudo_random::next(one, usable);
 
     // But always accept at least the amount we are short if available.
-    const auto gap = capacity_ - buffer_.size();
+    const auto gap = capacity - buffer_.size();
     const auto accept = std::max(gap, random);
 
     // Convert minimum desired to nonzero step for iteration.
@@ -290,7 +288,7 @@ void hosts::do_save(const address_cptr& message,
         {
             // O(1).
             buffer_.push_back(host);
-            count_.store(buffer_.size());
+            hosts_count_.store(buffer_.size());
         }
     }
 

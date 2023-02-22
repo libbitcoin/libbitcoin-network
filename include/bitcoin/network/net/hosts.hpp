@@ -42,7 +42,7 @@ typedef std::function<void(const code&, const address_cptr&)> address_handler;
 typedef std::function<void(const code&, const address_item_cptr&)>
     address_item_handler;
 
-/// Virtual, not thread safe.
+/// Virtual, thread safe (except start/stop/reserved).
 /// Duplicate and invalid addresses are disacarded.
 /// The file is loaded and saved from/to the settings-specified path.
 /// The file is a line-oriented textual serialization (config::authority+).
@@ -66,7 +66,6 @@ public:
 
     /// Properties.
     /// -----------------------------------------------------------------------
-    /// Thread safe.
 
     /// Count of pooled addresses, thread safe.
     virtual size_t count() const NOEXCEPT;
@@ -76,7 +75,6 @@ public:
 
     /// Usage.
     /// -----------------------------------------------------------------------
-    /// Thread safe.
 
     /// Take one random address from the table (non-const).
     virtual void take(address_item_handler&& handler) NOEXCEPT;
@@ -87,7 +85,6 @@ public:
 
     /// Negotiation.
     /// -----------------------------------------------------------------------
-    /// Thread safe.
 
     /// Obtain a random set of addresses (for relay to peer).
     virtual void fetch(address_handler&& handler) const NOEXCEPT;
@@ -139,18 +136,14 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     // These are thread safe.
-    std::atomic<size_t> count_{};
     const settings& settings_;
-    const size_t minimum_;
-    const size_t maximum_;
-    const size_t capacity_;
     asio::strand strand_;
+    std::atomic<size_t> hosts_count_{};
+    std::atomic<size_t> authorities_count_{};
 
     // These are not thread safe.
-    bool disabled_;
     buffer buffer_;
     bool stopped_{ true };
-    std::atomic<size_t> authorities_count_{};
     std::unordered_set<config::authority> authorities_{};
 };
 
