@@ -58,31 +58,28 @@ public:
     typedef channel_subscriber::completer channel_completer;
 
     template <typename Message>
-    void broadcast(const Message& message, result_handler&& handler,
-        uint64_t sender=zero) NOEXCEPT
+    void broadcast(const Message& message, uint64_t sender=zero) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, system::to_shared(message), sender, std::move(handler)));
+                this, system::to_shared(message), sender));
     }
 
     template <typename Message>
-    void broadcast(Message&& message, result_handler&& handler,
-        uint64_t sender =zero) NOEXCEPT
+    void broadcast(Message&& message, uint64_t sender=zero) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, system::to_shared(std::move(message)), sender,
-                    std::move(handler)));
+                this, system::to_shared(std::move(message)), sender));
     }
 
     template <typename Message>
     void broadcast(const typename Message::cptr& message,
-        result_handler&& handler, uint64_t sender =zero) NOEXCEPT
+        uint64_t sender=zero) NOEXCEPT
     {
         boost::asio::post(strand_,
             std::bind(&p2p::do_broadcast<Message>,
-                this, message, sender, std::move(handler)));
+                this, message, sender));
     }
 
     // Constructors.
@@ -252,7 +249,7 @@ protected:
 private:
     template <typename Message>
     void do_broadcast(const typename Message::cptr& message,
-        uint64_t sender_nonce, const result_handler& handler) NOEXCEPT
+        uint64_t sender_nonce) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
