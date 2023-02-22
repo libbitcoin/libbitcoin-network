@@ -248,6 +248,7 @@ void hosts::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
         std::bind(&hosts::do_save, this, message, std::move(handler)));
 }
 
+// TODO: message size reduction could be pushed to protocol to save processing.
 void hosts::do_save(const address_cptr& message,
     const count_handler& handler) NOEXCEPT
 {
