@@ -479,37 +479,6 @@ size_t session::outbound_channel_count() const NOEXCEPT
     return floored_subtract(channel_count(), inbound_channel_count());
 }
 
-bool session::disabled(const config::address& address) const NOEXCEPT
-{
-    return settings().disabled(address);
-}
-
-bool session::insufficient(const config::address& address) const NOEXCEPT
-{
-    return settings().insufficient(address);
-}
-
-bool session::unsupported(const config::address& address) const NOEXCEPT
-{
-    return settings().unsupported(address);
-}
-
-bool session::whitelisted(const config::authority& authority) const NOEXCEPT
-{
-    return settings().whitelisted(authority);
-}
-
-bool session::blacklisted(const config::authority& authority) const NOEXCEPT
-{
-    return settings().blacklisted(authority);
-}
-
-bool session::connected(const config::authority& authority) const NOEXCEPT
-{
-    BC_ASSERT_MSG(network_.stranded(), "strand");
-    return network_.is_connected(authority);
-}
-
 const network::settings& session::settings() const NOEXCEPT
 {
     return network_.network_settings();

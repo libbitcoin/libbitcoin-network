@@ -42,9 +42,10 @@ using namespace std::placeholders;
 
 p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
   : settings_(settings),
-    hosts_(settings),
     threadpool_(settings.threads),
     strand_(threadpool_.service().get_executor()),
+    hosts_(threadpool_, settings),
+    broadcaster_(strand_),
     stop_subscriber_(strand_),
     connect_subscriber_(strand_),
     reporter(log)
@@ -210,14 +211,8 @@ void p2p::do_close() NOEXCEPT
     // Notify and delete subscribers to channel notifications.
     connect_subscriber_.stop_default(error::service_stopped);
 
-    // TODO: implement broadcast message subscriber and delete channels_.
-    // Stop all channels.
-    for (const auto& channel: channels_)
-        channel->stop(error::service_stopped);
-
-    // TODO: implement broadcast message subscriber and delete channels_.
-    // Free all channels.
-    channels_.clear();
+    // Notify and delete subscribers to message broadcast notifications.
+    broadcaster_.stop_default(error::service_stopped);
 
     // Stop threadpool keep-alive, all work must self-terminate to affect join.
     threadpool_.stop();
@@ -361,6 +356,11 @@ size_t p2p::address_count() const NOEXCEPT
     return hosts_.count();
 }
 
+size_t p2p::reserved_count() const NOEXCEPT
+{
+    return hosts_.reserved();
+}
+
 size_t p2p::channel_count() const NOEXCEPT
 {
     return total_channel_count_;
@@ -409,64 +409,24 @@ code p2p::stop_hosts() NOEXCEPT
 
 void p2p::take(address_item_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_take, this, std::move(handler)));
-}
-
-void p2p::do_take(const address_item_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    hosts_.take(handler);
+    hosts_.take(std::move(handler));
 }
 
 void p2p::restore(const address_item_cptr& host,
     result_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
-        std::bind(&p2p::do_restore, this, host, std::move(handler)));
-}
-
-void p2p::do_restore(const address_item_cptr& host,
-    const result_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    handler(hosts_.restore(*host) ? error::success : error::address_invalid);
+    hosts_.restore(host, std::move(handler));
 }
 
 void p2p::fetch(address_handler&& handler) const NOEXCEPT
 {
-    boost::asio::post(strand_,
-        std::bind(&p2p::do_fetch, this, std::move(handler)));
-}
-
-void p2p::do_fetch(const address_handler& handler) const NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    hosts_.fetch(handler);
+    hosts_.fetch(std::move(handler));
 }
 
 void p2p::save(const address_cptr& message,
     count_handler&& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
-        std::bind(&p2p::do_save, this, message, std::move(handler)));
-}
-
-void p2p::do_save(const messages::address::cptr& message,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // TODO: move authorities_ into hosts pool and filter during insert.
-    const auto filtered = system::difference(message->addresses, authorities_);
-    const auto start = message->addresses.size();
-    const auto size = filtered.size();
-    if (size != start)
-    {
-        LOG("Filtered (" << start << ">" << size << ") connected addresses.");
-    }
-
-    handler(error::success, hosts_.save(filtered));
+    hosts_.save(message, std::move(handler));
 }
 
 // Loopback detection.
@@ -513,12 +473,12 @@ bool p2p::is_loopback(const channel& channel) const NOEXCEPT
 // Channel counting and deconfliction.
 // ----------------------------------------------------------------------------
 
-// protected
-bool p2p::is_connected(const config::authority& host) const NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    return authorities_.contains(host);
-}
+////// protected
+////bool p2p::is_connected(const config::authority& host) const NOEXCEPT
+////{
+////    // NOT THREAD SAFE.
+////    return hosts_.is_reserved(host);
+////}
 
 // This must increment the channel count(s) if successful.
 code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
@@ -535,12 +495,6 @@ code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
         return error::accept_failed;
     }
 
-    if (authorities_.size() == authorities_.max_size())
-    {
-        LOG("Overflow: authorities.");
-        return error::channel_overflow;
-    }
-
     if (channel->inbound() && is_zero(add1(inbound_channel_count_.load())))
     {
         LOG("Overflow: inbound channel count.");
@@ -553,15 +507,12 @@ code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
         return error::channel_overflow;
     }
 
-    if (!authorities_.insert(channel->authority()).second)
-    {
-        LOG("Duplicate connection to [" << channel->authority() << "].");
-        return error::address_in_use;
-    }
-
-    // TODO: implement broadcast message subscriber and delete channels_.
-    // Store channel for message broadcast and stop notification.
-    channels_.insert(channel);
+    ////// NOT THREAD SAFE, make async and bounce to hosts.
+    ////if (!hosts_.reserve(channel->authority()))
+    ////{
+    ////    LOG("Duplicate connection to [" << channel->authority() << "].");
+    ////    return error::address_in_use;
+    ////}
 
     if (channel->inbound())
     {
@@ -575,6 +526,20 @@ code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
         connect_subscriber_.notify(error::success, channel);
     }
 
+    // Store channel for message broadcast and stop notification.
+    broadcaster_.subscribe(
+        [=](const code& ec, uint64_t, const chunk_ptr&) NOEXCEPT
+        {
+            if (ec)
+            {
+                channel->stop(ec);
+                return false;
+            }
+
+            LOGP(channel, "TODO: broadcast.");
+            return true;
+        }, channel->identifier());
+
     return error::success;
 }
 
@@ -584,10 +549,10 @@ void p2p::uncount_channel(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // TODO: implement broadcast message subscriber and delete channels_.
-    // Ok if not found, as the channel may not have been stored.
-    channels_.erase(channel);
-    authorities_.erase(channel->authority());
+    ////// NOT THREAD SAFE, make async and bounce to hosts.
+    ////hosts_.unreserve(channel->authority());
+
+    broadcaster_.notify_one(channel->identifier(), error::channel_stopped, {}, {});
 
     if (channel->inbound() && is_zero(inbound_channel_count_.load()))
     {
@@ -597,7 +562,7 @@ void p2p::uncount_channel(const channel::ptr& channel) NOEXCEPT
 
     if (!channel->quiet() && is_zero(total_channel_count_.load()))
     {
-        LOG("Underflow: total channel coun.");
+        LOG("Underflow: total channel count.");
         return;
     }
 

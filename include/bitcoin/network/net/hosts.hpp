@@ -24,6 +24,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <unordered_set>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
@@ -51,28 +52,62 @@ public:
     DELETE_COPY_MOVE_DESTRUCT(hosts);
 
     /// Construct an instance.
-    hosts(const settings& settings) NOEXCEPT;
+    hosts(threadpool& pool, const settings& settings) NOEXCEPT;
 
-    /// Load hosts file.
+    /// Start/stop.
+    /// -----------------------------------------------------------------------
+    /// Not thread safe.
+
+    /// Load addresses from file.
     virtual code start() NOEXCEPT;
 
-    /// Save hosts to file.
+    /// Save addresses to file.
     virtual code stop() NOEXCEPT;
 
-    /// Thread safe, inexact (ok).
+    /// Properties.
+    /// -----------------------------------------------------------------------
+    /// Thread safe.
+
+    /// Count of pooled addresses, thread safe.
     virtual size_t count() const NOEXCEPT;
 
-    /// Store the host in the table (e.g. after use), false if invalid.
-    virtual bool restore(const messages::address_item& host) NOEXCEPT;
+    /// The count of reserved addresses (currently connected), thread safe.
+    virtual size_t reserved() const NOEXCEPT;
 
-    /// Take one random host from the table (non-const).
-    virtual void take(const address_item_handler& handler) NOEXCEPT;
+    /// Usage.
+    /// -----------------------------------------------------------------------
+    /// Thread safe.
 
-    /// Save random subset of hosts (e.g obtained from peer), count of accept.
-    virtual size_t save(const messages::address_items& hosts) NOEXCEPT;
+    /// Take one random address from the table (non-const).
+    virtual void take(address_item_handler&& handler) NOEXCEPT;
 
-    /// Obtain a random set of hosts (e.g for relay to peer).
-    virtual void fetch(const address_handler& handler) const NOEXCEPT;
+    /// Store the address in the table (after use).
+    virtual void restore(const address_item_cptr& host,
+        result_handler&& handler) NOEXCEPT;
+
+    /// Negotiation.
+    /// -----------------------------------------------------------------------
+    /// Thread safe.
+
+    /// Obtain a random set of addresses (for relay to peer).
+    virtual void fetch(address_handler&& handler) const NOEXCEPT;
+
+    /// Save random subset of addresses (from peer), count of accept.
+    virtual void save(const address_cptr& message,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Reservation.
+    /// -----------------------------------------------------------------------
+    /// Not thread safe.
+
+    /// True if the address is reserved (currently connected).
+    virtual bool is_reserved(const config::authority& host) const NOEXCEPT;
+
+    /// Reserve the address (currently connected), false if was reserved.
+    virtual bool reserve(const config::authority& host) NOEXCEPT;
+
+    /// Unreserve the address (no longer connected), false if was not reserved.
+    virtual bool unreserve(const config::authority& host) NOEXCEPT;
 
 private:
     typedef boost::circular_buffer<messages::address_item> buffer;
@@ -86,7 +121,7 @@ private:
     }
 
     // Equality ignores timestamp and services.
-    inline bool exists(const messages::address_item& host) NOEXCEPT
+    inline bool is_pooled(const messages::address_item& host) NOEXCEPT
     {
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         return find(host) != buffer_.end();
@@ -96,16 +131,27 @@ private:
     inline messages::address_item::cptr pop() NOEXCEPT;
     inline void push(const std::string& line) NOEXCEPT;
 
+    void do_take(const address_item_handler& handler) NOEXCEPT;
+    void do_restore(const address_item_cptr& host,
+        const result_handler& handler) NOEXCEPT;
+    void do_fetch(const address_handler& handler) const NOEXCEPT;
+    void do_save(const address_cptr& message,
+        const count_handler& handler) NOEXCEPT;
+
     // These are thread safe.
-    const std::filesystem::path file_path_;
     std::atomic<size_t> count_{};
+    const settings& settings_;
     const size_t minimum_;
     const size_t maximum_;
     const size_t capacity_;
+    asio::strand strand_;
 
     // These are not thread safe.
     bool disabled_;
     buffer buffer_;
+    bool stopped_{ true };
+    std::atomic<size_t> authorities_count_{};
+    std::unordered_set<config::authority> authorities_{};
 };
 
 } // namespace network

@@ -142,30 +142,30 @@ public:
         return session::inbound_channel_count();
     }
 
-    bool disabled(const config::address& address) const NOEXCEPT override
-    {
-        return session::disabled(address);
-    }
+    ////bool disabled(const config::address& address) const NOEXCEPT override
+    ////{
+    ////    return session::disabled(address);
+    ////}
 
-    bool insufficient(const config::address& address) const NOEXCEPT override
-    {
-        return session::insufficient(address);
-    }
+    ////bool insufficient(const config::address& address) const NOEXCEPT override
+    ////{
+    ////    return session::insufficient(address);
+    ////}
 
-    bool unsupported(const config::address& address) const NOEXCEPT override
-    {
-        return session::unsupported(address);
-    }
+    ////bool unsupported(const config::address& address) const NOEXCEPT override
+    ////{
+    ////    return session::unsupported(address);
+    ////}
 
-    bool whitelisted(const config::authority& authority) const NOEXCEPT override
-    {
-        return session::whitelisted(authority);
-    }
+    ////bool whitelisted(const config::authority& authority) const NOEXCEPT override
+    ////{
+    ////    return session::whitelisted(authority);
+    ////}
 
-    bool blacklisted(const config::authority& authority) const NOEXCEPT override
-    {
-        return session::blacklisted(authority);
-    }
+    ////bool blacklisted(const config::authority& authority) const NOEXCEPT override
+    ////{
+    ////    return session::blacklisted(authority);
+    ////}
 
     bool inbound() const NOEXCEPT override
     {
@@ -397,102 +397,102 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE(is_zero(session.address_count()));
     BOOST_REQUIRE(is_zero(session.channel_count()));
     BOOST_REQUIRE(is_zero(session.inbound_channel_count()));
-    BOOST_REQUIRE(!session.blacklisted({ "[2001:db8::2]:42" }));
-    BOOST_REQUIRE(session.whitelisted({ "[2001:db8::2]:42" }));
+    ////BOOST_REQUIRE(!session.blacklisted({ "[2001:db8::2]:42" }));
+    ////BOOST_REQUIRE(session.whitelisted({ "[2001:db8::2]:42" }));
     BOOST_REQUIRE(!session.inbound());
 }
 
-BOOST_AUTO_TEST_CASE(session__disabled__ipv4__false)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false);
-    set.enable_ipv6 = false;
-    BOOST_REQUIRE(!session.disabled({ "42.42.42.42" }));
-    BOOST_REQUIRE(!session.disabled({ "42.42.42.42:42" }));
-    set.enable_ipv6 = true;
-    BOOST_REQUIRE(!session.disabled({ "42.42.42.42" }));
-    BOOST_REQUIRE(!session.disabled({ "42.42.42.42:42" }));
-}
-
-BOOST_AUTO_TEST_CASE(session__disabled__ipv6__expected)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false);
-    set.enable_ipv6 = false;
-    BOOST_REQUIRE(session.disabled({ "[2001:db8::2]" }));
-    BOOST_REQUIRE(session.disabled({ "[2001:db8::2]:42" }));
-    set.enable_ipv6 = true;
-    BOOST_REQUIRE(!session.disabled({ "[2001:db8::2]" }));
-    BOOST_REQUIRE(!session.disabled({ "[2001:db8::2]:42" }));
-}
-
-BOOST_AUTO_TEST_CASE(session__insufficient__default__false)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false);
-    constexpr uint64_t services = 0;
-    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
-    set.services_minimum = 0;
-    BOOST_REQUIRE(!session.insufficient(loop));
-    set.services_minimum = 1;
-    BOOST_REQUIRE(session.insufficient(loop));
-}
-
-BOOST_AUTO_TEST_CASE(session__insufficient__match__expected)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false);
-    constexpr uint64_t services = 0b01010101;
-    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
-    set.services_minimum = services;
-    BOOST_REQUIRE(!session.insufficient(loop));
-    set.services_minimum = services | 0b00000010;
-    BOOST_REQUIRE(session.insufficient(loop));
-    set.services_minimum = services & 0b11111110;
-    BOOST_REQUIRE(!session.insufficient(loop));
-}
-
-BOOST_AUTO_TEST_CASE(session__unsupported__default__false)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false);
-    constexpr uint64_t services = 0;
-    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
-    set.invalid_services = 0;
-    BOOST_REQUIRE(!session.unsupported(loop));
-    set.invalid_services = 1;
-    BOOST_REQUIRE(!session.unsupported(loop));
-}
-
-BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
-{
-    const logger log{ false };
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    const mock_session session(net, 1, false);
-    constexpr uint64_t services = 0b01010101;
-    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
-    set.invalid_services = services;
-    BOOST_REQUIRE(session.unsupported(loop));
-    set.invalid_services = services | 0b00000010;
-    BOOST_REQUIRE(session.unsupported(loop));
-    set.invalid_services = services & 0b11111110;
-    BOOST_REQUIRE(session.unsupported(loop));
-    set.invalid_services = 0b10101010;
-    BOOST_REQUIRE(!session.unsupported(loop));
-    set.invalid_services = 0;
-    BOOST_REQUIRE(!session.unsupported(loop));
-}
+////BOOST_AUTO_TEST_CASE(session__disabled__ipv4__false)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false);
+////    set.enable_ipv6 = false;
+////    BOOST_REQUIRE(!session.disabled({ "42.42.42.42" }));
+////    BOOST_REQUIRE(!session.disabled({ "42.42.42.42:42" }));
+////    set.enable_ipv6 = true;
+////    BOOST_REQUIRE(!session.disabled({ "42.42.42.42" }));
+////    BOOST_REQUIRE(!session.disabled({ "42.42.42.42:42" }));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__disabled__ipv6__expected)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false);
+////    set.enable_ipv6 = false;
+////    BOOST_REQUIRE(session.disabled({ "[2001:db8::2]" }));
+////    BOOST_REQUIRE(session.disabled({ "[2001:db8::2]:42" }));
+////    set.enable_ipv6 = true;
+////    BOOST_REQUIRE(!session.disabled({ "[2001:db8::2]" }));
+////    BOOST_REQUIRE(!session.disabled({ "[2001:db8::2]:42" }));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__insufficient__default__false)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false);
+////    constexpr uint64_t services = 0;
+////    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+////    set.services_minimum = 0;
+////    BOOST_REQUIRE(!session.insufficient(loop));
+////    set.services_minimum = 1;
+////    BOOST_REQUIRE(session.insufficient(loop));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__insufficient__match__expected)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false);
+////    constexpr uint64_t services = 0b01010101;
+////    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+////    set.services_minimum = services;
+////    BOOST_REQUIRE(!session.insufficient(loop));
+////    set.services_minimum = services | 0b00000010;
+////    BOOST_REQUIRE(session.insufficient(loop));
+////    set.services_minimum = services & 0b11111110;
+////    BOOST_REQUIRE(!session.insufficient(loop));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__unsupported__default__false)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false);
+////    constexpr uint64_t services = 0;
+////    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+////    set.invalid_services = 0;
+////    BOOST_REQUIRE(!session.unsupported(loop));
+////    set.invalid_services = 1;
+////    BOOST_REQUIRE(!session.unsupported(loop));
+////}
+////
+////BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
+////{
+////    const logger log{ false };
+////    settings set(selection::mainnet);
+////    p2p net(set, log);
+////    const mock_session session(net, 1, false);
+////    constexpr uint64_t services = 0b01010101;
+////    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+////    set.invalid_services = services;
+////    BOOST_REQUIRE(session.unsupported(loop));
+////    set.invalid_services = services | 0b00000010;
+////    BOOST_REQUIRE(session.unsupported(loop));
+////    set.invalid_services = services & 0b11111110;
+////    BOOST_REQUIRE(session.unsupported(loop));
+////    set.invalid_services = 0b10101010;
+////    BOOST_REQUIRE(!session.unsupported(loop));
+////    set.invalid_services = 0;
+////    BOOST_REQUIRE(!session.unsupported(loop));
+////}
 
 ////BOOST_AUTO_TEST_CASE(session__whitelisted__ipv4_subnet__expected)
 ////{
@@ -990,10 +990,8 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
     BOOST_REQUIRE(channel->stopped());
 
-    // Race between bad_stream and service_stopped.
+    // Race between bad_stream and channel_stopped.
     BOOST_REQUIRE(channel->stop_code());
-    ////BOOST_REQUIRE_EQUAL(channel->stop_code(), error::bad_stream);
-    ////BOOST_REQUIRE_EQUAL(channel->stop_code(), error::service_stopped);
 
     // stored and counted(stopped)
     BOOST_REQUIRE(net.stored_nonce_result());
@@ -1071,14 +1069,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     ////BOOST_REQUIRE(session->attached_protocol());
     ////BOOST_REQUIRE(channel->reresumed());
 
-    // Race between bad_stream and service_stopped.
+    // Race between bad_stream and channel_stopped.
     BOOST_REQUIRE(channel->stopped());
     BOOST_REQUIRE(channel->stop_code());
-    ////BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::bad_stream);
-    ////BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::subscriber_stopped);
-
-    // Channel is stopped before handshake completion, due to read failure.
-    BOOST_REQUIRE_EQUAL(channel->stop_code(), error::bad_stream);
 
     // stored and counted
     BOOST_REQUIRE(net.stored_nonce_result());

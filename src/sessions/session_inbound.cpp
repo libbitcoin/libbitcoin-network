@@ -149,14 +149,16 @@ void session_inbound::handle_accept(const code& ec,
     // There was no error, so listen again without delay.
     start_accept(error::success, acceptor);
 
-    if (!whitelisted(socket->authority()))
+    const auto address = socket->authority().to_address_item();
+
+    if (!whitelisted(address))
     {
         ////LOG("Dropping not whitelisted connection [" << socket->authority() << "]");
         socket->stop();
         return;
     }
 
-    if (blacklisted(socket->authority()))
+    if (blacklisted(address))
     {
         ////LOG("Dropping blacklisted connection [" << socket->authority() << "]");
         socket->stop();
@@ -176,6 +178,16 @@ void session_inbound::handle_accept(const code& ec,
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
         BIND2(handle_channel_stop, _1, channel));
+}
+
+bool session_inbound::blacklisted(const config::address& address) const NOEXCEPT
+{
+    return settings().blacklisted(address);
+}
+
+bool session_inbound::whitelisted(const config::address& address) const NOEXCEPT
+{
+    return settings().whitelisted(address);
 }
 
 // Completion sequence.
