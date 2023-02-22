@@ -153,8 +153,8 @@ address_item_cptr channel::updated_address() const NOEXCEPT
     {
         unix_time(),
         peer_version()->services,
-        address().item().ip,
-        address().item().port
+        address().ip(),
+        address().port()
     });
 }
 
