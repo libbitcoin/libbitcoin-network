@@ -223,6 +223,26 @@ BOOST_AUTO_TEST_CASE(address__is_v6__loopback_v4__false)
     BOOST_REQUIRE(!item.is_v6());
 }
 
+// cast/ip/port
+
+BOOST_AUTO_TEST_CASE(address__address_item__default__unspecified)
+{
+    const address host{};
+    const messages::address_item& item = host;
+    BOOST_REQUIRE_EQUAL(item.ip, host.ip());
+    BOOST_REQUIRE_EQUAL(item.port, host.port());
+    BOOST_REQUIRE(!messages::is_specified(item));
+}
+
+BOOST_AUTO_TEST_CASE(address__address_item__default__secified_expected)
+{
+    const address host{ messages::address_item{ 0, 0, messages::loopback_ip_address, 42 } };
+    const messages::address_item& item = host;
+    BOOST_REQUIRE_EQUAL(item.ip, host.ip());
+    BOOST_REQUIRE_EQUAL(item.port, host.port());
+    BOOST_REQUIRE(messages::is_specified(item));
+}
+
 // port
 
 BOOST_AUTO_TEST_CASE(address__port__default__zero_false)
@@ -426,6 +446,13 @@ BOOST_AUTO_TEST_CASE(address__equality__default_unspecified_port__true)
     BOOST_REQUIRE(host1 == host2);
 }
 
+BOOST_AUTO_TEST_CASE(address__equality__ipv6_ipv6_distinct_ports__false)
+{
+    const address host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:24");
+    const address host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:42");
+    BOOST_REQUIRE(!(host1 == host2));
+}
+
 BOOST_AUTO_TEST_CASE(address__equality__ipv4_ipv4__true)
 {
     const address host1(BC_AUTHORITY_IPV4_ADDRESS);
@@ -491,6 +518,39 @@ BOOST_AUTO_TEST_CASE(address__equality__distinct_services__true)
     BOOST_REQUIRE(host1 == host2);
 }
 
+// equality address_item
+
+BOOST_AUTO_TEST_CASE(address__equality__default_address_item__true)
+{
+    const address host1{};
+    const messages::address_item host2{};
+    BOOST_REQUIRE(host1 == host2);
+}
+
+BOOST_AUTO_TEST_CASE(address__equality__same_address_item__true)
+{
+    const address host1(test_ipv6_address_item);
+    BOOST_REQUIRE(host1 == test_ipv6_address_item);
+}
+
+BOOST_AUTO_TEST_CASE(address__equality__distinct_address_item__false)
+{
+    const address host1(test_ipv6_address_item);
+    BOOST_REQUIRE(!(host1 == test_mapped_ip_address_item));
+}
+
+BOOST_AUTO_TEST_CASE(address__equality__distinct_timestamp_address_item__true)
+{
+    const address host1(test_ipv6_address_item);
+    BOOST_REQUIRE(host1 == test_ipv6_address_item_distinct_timestamp);
+}
+
+BOOST_AUTO_TEST_CASE(address__equality__distinct_services_address_item__true)
+{
+    const address host1(test_ipv6_address_item);
+    BOOST_REQUIRE(host1 == test_ipv6_address_item_distinct_service);
+}
+
 // inequality
 
 BOOST_AUTO_TEST_CASE(address__inequality__default_default__false)
@@ -507,11 +567,11 @@ BOOST_AUTO_TEST_CASE(address__inequality__default_unspecified_port__true)
     BOOST_REQUIRE(host1 != host2);
 }
 
-BOOST_AUTO_TEST_CASE(address__inequality__ipv6_ipv6_distinct_ports__false)
+BOOST_AUTO_TEST_CASE(address__inequality__ipv6_ipv6_distinct_ports__true)
 {
     const address host1("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:24");
     const address host2("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:42");
-    BOOST_REQUIRE(!(host1 != host2));
+    BOOST_REQUIRE(host1 != host2);
 }
 
 BOOST_AUTO_TEST_CASE(address__inequality__distinct_timestamp__false)
@@ -526,6 +586,39 @@ BOOST_AUTO_TEST_CASE(address__inequality__distinct_services__false)
     const address host1(test_ipv6_address_item);
     const address host2(test_ipv6_address_item_distinct_service);
     BOOST_REQUIRE(!(host1 != host2));
+}
+
+// inequality address_item
+
+BOOST_AUTO_TEST_CASE(address__inequality__default_address_item__true)
+{
+    const address host1{};
+    const messages::address_item host2{};
+    BOOST_REQUIRE(!(host1 != host2));
+}
+
+BOOST_AUTO_TEST_CASE(address__inequality__same_address_item__true)
+{
+    const address host1(test_ipv6_address_item);
+    BOOST_REQUIRE(!(host1 != test_ipv6_address_item));
+}
+
+BOOST_AUTO_TEST_CASE(address__inequality__distinct_address_item__true)
+{
+    const address host1(test_ipv6_address_item);
+    BOOST_REQUIRE(host1 != test_mapped_ip_address_item);
+}
+
+BOOST_AUTO_TEST_CASE(address__inequality__distinct_timestamp_address_item_false)
+{
+    const address host1(test_ipv6_address_item);
+    BOOST_REQUIRE(!(host1 != test_ipv6_address_item_distinct_timestamp));
+}
+
+BOOST_AUTO_TEST_CASE(address__inequality__distinct_services_address_item__false)
+{
+    const address host1(test_ipv6_address_item);
+    BOOST_REQUIRE(!(host1 != test_ipv6_address_item_distinct_service));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

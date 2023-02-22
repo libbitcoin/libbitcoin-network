@@ -63,13 +63,10 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    /// The address item.
-    const messages::address_item& item() const NOEXCEPT;
-    operator const messages::address_item::cptr&() const NOEXCEPT;
-
     /// The address properties.
     bool is_v4() const NOEXCEPT;
     bool is_v6() const NOEXCEPT;
+    const messages::ip_address& ip() const NOEXCEPT;
     uint16_t port() const NOEXCEPT;
     uint32_t timestamp() const NOEXCEPT;
     uint64_t services() const NOEXCEPT;
@@ -77,12 +74,19 @@ public:
     /// Operators.
     /// -----------------------------------------------------------------------
 
+    /// The address item.
+    operator const messages::address_item& () const NOEXCEPT;
+    operator const messages::address_item::cptr& () const NOEXCEPT;
+
     /// False if the port is zero.
     operator bool() const NOEXCEPT;
 
-    /// Does not compare ports, times or services (used in address protocols).
+    /// Equality treats zero port as *.
+    /// Does not compare times or services (used in address protocols).
     bool operator==(const address& other) const NOEXCEPT;
     bool operator!=(const address& other) const NOEXCEPT;
+    bool operator==(const messages::address_item& other) const NOEXCEPT;
+    bool operator!=(const messages::address_item& other) const NOEXCEPT;
 
     /// Same format as construct(string) and to_string().
     friend std::istream& operator>>(std::istream& input,
