@@ -384,10 +384,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
     mock_session_inbound session(net, 1);
 
     std::promise<bool> promise;
-    boost::asio::post(net.strand(), [&]()
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         promise.set_value(true);
@@ -438,9 +438,9 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__bypassed)
     BOOST_REQUIRE(session.stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [&]()
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
-        session.start([&](const code& ec)
+        session.start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -461,9 +461,9 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__port_zero__bypassed)
     BOOST_REQUIRE(session.stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [&]()
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
-        session.start([&](const code& ec)
+        session.start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -483,9 +483,9 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operat
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -495,9 +495,9 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operat
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<code> restarted;
-    boost::asio::post(net.strand(), [=, &restarted]()
+    boost::asio::post(net.strand(), [=, &restarted]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             restarted.set_value(ec);
         });
@@ -507,7 +507,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operat
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -529,10 +529,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepte
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepte
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -576,10 +576,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
     BOOST_REQUIRE(net.get_acceptor()->accepted());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -624,10 +624,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started__timer_failure_cod
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -640,7 +640,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started__timer_failure_cod
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -666,10 +666,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
-        session->start([=, &started](const code& ec)
+        session->start([=, &started](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -686,7 +686,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
     BOOST_REQUIRE(net.get_acceptor()->accepted());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -712,7 +712,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
     mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
 
     std::promise<code> net_started;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         net_started.set_value(ec);
     });
@@ -724,10 +724,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
-    boost::asio::post(net.strand(), [=, &session_started]()
+    boost::asio::post(net.strand(), [=, &session_started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             session_started.set_value(ec);
         });
@@ -740,7 +740,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -764,7 +764,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
     mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
 
     std::promise<code> net_started;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         net_started.set_value(ec);
     });
@@ -776,10 +776,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
-    boost::asio::post(net.strand(), [=, &session_started]()
+    boost::asio::post(net.strand(), [=, &session_started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             session_started.set_value(ec);
         });
@@ -792,7 +792,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -828,10 +828,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
-    boost::asio::post(net.strand(), [=, &session_started]()
+    boost::asio::post(net.strand(), [=, &session_started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             session_started.set_value(ec);
         });
@@ -844,7 +844,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -869,7 +869,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
 
     std::promise<code> net_started;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         net_started.set_value(ec);
     });
@@ -881,10 +881,10 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;
-    boost::asio::post(net.strand(), [=, &session_started]()
+    boost::asio::post(net.strand(), [=, &session_started]() NOEXCEPT
     {
         // Will cause started to be set and acceptor created.
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             session_started.set_value(ec);
         });

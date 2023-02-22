@@ -442,9 +442,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__stopped__stopped)
     mock_session_outbound session(net, 1);
 
     std::promise<bool> promise;
-    boost::asio::post(net.strand(), [&]()
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         promise.set_value(true);
@@ -497,9 +497,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__bypassed)
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -518,9 +518,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__bypassed)
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -541,9 +541,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__bypassed)
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -563,10 +563,10 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_address_count__address_not_foun
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set (only).
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -588,9 +588,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -600,9 +600,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<code> restarted;
-    boost::asio::post(net.strand(), [=, &restarted]()
+    boost::asio::post(net.strand(), [=, &restarted]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             restarted.set_value(ec);
         });
@@ -612,7 +612,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -636,9 +636,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__succes
     BOOST_REQUIRE(session->stopped());
     
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -648,7 +648,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__succes
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -681,9 +681,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
 
     // Started session calls session.stop upon first connect.
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -711,9 +711,9 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -727,7 +727,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
     BOOST_REQUIRE(session->require_attached_handshake());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);

@@ -142,31 +142,6 @@ public:
         return session::inbound_channel_count();
     }
 
-    ////bool disabled(const config::address& address) const NOEXCEPT override
-    ////{
-    ////    return session::disabled(address);
-    ////}
-
-    ////bool insufficient(const config::address& address) const NOEXCEPT override
-    ////{
-    ////    return session::insufficient(address);
-    ////}
-
-    ////bool unsupported(const config::address& address) const NOEXCEPT override
-    ////{
-    ////    return session::unsupported(address);
-    ////}
-
-    ////bool whitelisted(const config::authority& authority) const NOEXCEPT override
-    ////{
-    ////    return session::whitelisted(authority);
-    ////}
-
-    ////bool blacklisted(const config::authority& authority) const NOEXCEPT override
-    ////{
-    ////    return session::blacklisted(authority);
-    ////}
-
     bool inbound() const NOEXCEPT override
     {
         return inbound_;
@@ -397,222 +372,8 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE(is_zero(session.address_count()));
     BOOST_REQUIRE(is_zero(session.channel_count()));
     BOOST_REQUIRE(is_zero(session.inbound_channel_count()));
-    ////BOOST_REQUIRE(!session.blacklisted({ "[2001:db8::2]:42" }));
-    ////BOOST_REQUIRE(session.whitelisted({ "[2001:db8::2]:42" }));
     BOOST_REQUIRE(!session.inbound());
 }
-
-////BOOST_AUTO_TEST_CASE(session__disabled__ipv4__false)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    set.enable_ipv6 = false;
-////    BOOST_REQUIRE(!session.disabled({ "42.42.42.42" }));
-////    BOOST_REQUIRE(!session.disabled({ "42.42.42.42:42" }));
-////    set.enable_ipv6 = true;
-////    BOOST_REQUIRE(!session.disabled({ "42.42.42.42" }));
-////    BOOST_REQUIRE(!session.disabled({ "42.42.42.42:42" }));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__disabled__ipv6__expected)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    set.enable_ipv6 = false;
-////    BOOST_REQUIRE(session.disabled({ "[2001:db8::2]" }));
-////    BOOST_REQUIRE(session.disabled({ "[2001:db8::2]:42" }));
-////    set.enable_ipv6 = true;
-////    BOOST_REQUIRE(!session.disabled({ "[2001:db8::2]" }));
-////    BOOST_REQUIRE(!session.disabled({ "[2001:db8::2]:42" }));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__insufficient__default__false)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    constexpr uint64_t services = 0;
-////    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
-////    set.services_minimum = 0;
-////    BOOST_REQUIRE(!session.insufficient(loop));
-////    set.services_minimum = 1;
-////    BOOST_REQUIRE(session.insufficient(loop));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__insufficient__match__expected)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    constexpr uint64_t services = 0b01010101;
-////    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
-////    set.services_minimum = services;
-////    BOOST_REQUIRE(!session.insufficient(loop));
-////    set.services_minimum = services | 0b00000010;
-////    BOOST_REQUIRE(session.insufficient(loop));
-////    set.services_minimum = services & 0b11111110;
-////    BOOST_REQUIRE(!session.insufficient(loop));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__unsupported__default__false)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    constexpr uint64_t services = 0;
-////    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
-////    set.invalid_services = 0;
-////    BOOST_REQUIRE(!session.unsupported(loop));
-////    set.invalid_services = 1;
-////    BOOST_REQUIRE(!session.unsupported(loop));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__unsupported__match__expected)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    constexpr uint64_t services = 0b01010101;
-////    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
-////    set.invalid_services = services;
-////    BOOST_REQUIRE(session.unsupported(loop));
-////    set.invalid_services = services | 0b00000010;
-////    BOOST_REQUIRE(session.unsupported(loop));
-////    set.invalid_services = services & 0b11111110;
-////    BOOST_REQUIRE(session.unsupported(loop));
-////    set.invalid_services = 0b10101010;
-////    BOOST_REQUIRE(!session.unsupported(loop));
-////    set.invalid_services = 0;
-////    BOOST_REQUIRE(!session.unsupported(loop));
-////}
-
-////BOOST_AUTO_TEST_CASE(session__whitelisted__ipv4_subnet__expected)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    set.whitelists.clear();
-////    BOOST_REQUIRE(session.whitelisted({ "42.42.42.42" }));
-////    set.whitelists.emplace_back("12.12.12.12");
-////    set.whitelists.emplace_back("24.24.24.24");
-////    BOOST_REQUIRE(!session.whitelisted({ "42.42.42.42" }));
-////    set.whitelists.emplace_back("42.42.42.0/24");
-////    BOOST_REQUIRE(session.whitelisted({ "42.42.42.42" }));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__whitelisted__ipv4_host__expected)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    set.whitelists.clear();
-////    BOOST_REQUIRE(session.whitelisted({ "24.24.24.24" }));
-////    set.whitelists.emplace_back("12.12.12.12");
-////    set.whitelists.emplace_back("42.42.42.0/24");
-////    BOOST_REQUIRE(!session.whitelisted({ "24.24.24.24" }));
-////    set.whitelists.emplace_back("24.24.24.24");
-////    BOOST_REQUIRE(session.whitelisted({ "24.24.24.24" }));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__whitelisted__ipv6_subnet__expected)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    set.whitelists.clear();
-////    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
-////    set.whitelists.emplace_back("[2020:db8::1]");
-////    set.whitelists.emplace_back("[2020:db8::2]");
-////    BOOST_REQUIRE(!session.whitelisted({ "[2020:db8::3]" }));
-////    set.whitelists.emplace_back("[2020:db8::2]/64");
-////    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__whitelisted__ipv6_host__expected)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    set.whitelists.clear();
-////    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
-////    set.whitelists.emplace_back("[2020:db8::1]");
-////    set.whitelists.emplace_back("[2020:db8::2]");
-////    BOOST_REQUIRE(!session.whitelisted({ "[2020:db8::3]" }));
-////    set.whitelists.emplace_back("[2020:db8::3]");
-////    BOOST_REQUIRE(session.whitelisted({ "[2020:db8::3]" }));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__blacklisted__ipv4_subnet__expected)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    set.whitelists.clear();
-////    BOOST_REQUIRE(!session.blacklisted({ "42.42.42.42" }));
-////    set.blacklists.emplace_back("12.12.12.12");
-////    set.blacklists.emplace_back("24.24.24.24");
-////    BOOST_REQUIRE(!session.blacklisted({ "42.42.42.42" }));
-////    set.blacklists.emplace_back("42.42.42.0/24");
-////    BOOST_REQUIRE(session.blacklisted({ "42.42.42.42" }));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__blacklisted__ipv4_host__expected)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    set.whitelists.clear();
-////    BOOST_REQUIRE(!session.blacklisted({ "24.24.24.24" }));
-////    set.blacklists.emplace_back("12.12.12.12");
-////    set.blacklists.emplace_back("42.42.42.0/24");
-////    BOOST_REQUIRE(!session.blacklisted({ "24.24.24.24" }));
-////    set.blacklists.emplace_back("24.24.24.24");
-////    BOOST_REQUIRE(session.blacklisted({ "24.24.24.24" }));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__blacklisted__ipv6_subnet__expected)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    set.whitelists.clear();
-////    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
-////    set.blacklists.emplace_back("[2020:db8::1]");
-////    set.blacklists.emplace_back("[2020:db8::2]");
-////    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
-////    set.blacklists.emplace_back("[2020:db8::2]/64");
-////    BOOST_REQUIRE(session.blacklisted({ "[2020:db8::3]" }));
-////}
-////
-////BOOST_AUTO_TEST_CASE(session__blacklisted__ipv6_host__expected)
-////{
-////    const logger log{ false };
-////    settings set(selection::mainnet);
-////    p2p net(set, log);
-////    const mock_session session(net, 1, false);
-////    set.whitelists.clear();
-////    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
-////    set.blacklists.emplace_back("[2020:db8::1]");
-////    set.blacklists.emplace_back("[2020:db8::2]");
-////    BOOST_REQUIRE(!session.blacklisted({ "[2020:db8::3]" }));
-////    set.blacklists.emplace_back("[2020:db8::3]");
-////    BOOST_REQUIRE(session.blacklisted({ "[2020:db8::3]" }));
-////}
 
 // factories
 
@@ -659,7 +420,7 @@ BOOST_AUTO_TEST_CASE(session__take__always__calls_network)
     mock_session session(net, 1, false);
 
     std::promise<code> taken;
-    session.take([&](const code& ec, const address_item_cptr&)
+    session.take([&](const code& ec, const address_item_cptr&) NOEXCEPT
     {
         taken.set_value(ec);
     });
@@ -675,7 +436,7 @@ BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
     mock_session session(net, 1, false);
 
     std::promise<code> fetched;
-    session.fetch([&](const code& ec, const address_cptr&)
+    session.fetch([&](const code& ec, const address_cptr&) NOEXCEPT
     {
         fetched.set_value(ec);
     });
@@ -692,7 +453,7 @@ BOOST_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_addre
 
     std::promise<code> save;
     const address_item item{ 42, 24, unspecified_ip_address, 4224u };
-    session.restore(system::to_shared(item), [&](const code& ec)
+    session.restore(system::to_shared(item), [&](const code& ec) NOEXCEPT
     {
         save.set_value(ec);
     });
@@ -715,7 +476,7 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
 
     std::promise<code> save;
     const address_items items{ {}, { 42, 24, unspecified_ip_address, 4224u } };
-    session.save(system::to_shared(address{ items }), [&](const code& ec, auto)
+    session.save(system::to_shared(address{ items }), [&](const code& ec, auto) NOEXCEPT
     {
         save.set_value(ec);
     });
@@ -741,7 +502,7 @@ BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
     BOOST_REQUIRE(session.stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [&]()
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         stopped.set_value(true);
@@ -760,7 +521,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
     mock_session session(net, 1, false);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [&]()
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
         session.start([&](const code& ec)
         {
@@ -773,7 +534,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
     std::promise<code> restarted;
     boost::asio::post(net.strand(), [&]()
     {
-        session.start([&](const code& ec)
+        session.start([&](const code& ec) NOEXCEPT
         {
             restarted.set_value(ec);
         });
@@ -782,7 +543,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
     BOOST_REQUIRE_EQUAL(restarted.get_future().get(), error::operation_failed);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [&]()
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         stopped.set_value(true);
@@ -802,7 +563,7 @@ BOOST_AUTO_TEST_CASE(session__start__stop__success)
     std::promise<code> started;
     boost::asio::post(net.strand(), [&]()
     {
-        session.start([&](const code& ec)
+        session.start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -811,7 +572,7 @@ BOOST_AUTO_TEST_CASE(session__start__stop__success)
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [&]()
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         stopped.set_value(true);
@@ -836,14 +597,14 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]()
+    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 started_channel.set_value(ec);
             },
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 stopped_channel.set_value(ec);
             });
@@ -876,9 +637,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     auto session = std::make_shared<mock_session>(net, 1, false);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -891,7 +652,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
 
     // Stop the channel (started by default).
     std::promise<bool> unstarted_channel;
-    boost::asio::post(channel->strand(), [=, &unstarted_channel]()
+    boost::asio::post(channel->strand(), [=, &unstarted_channel]() NOEXCEPT
     {
         channel->stopper(error::invalid_magic);
         unstarted_channel.set_value(true);
@@ -902,14 +663,14 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]()
+    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 started_channel.set_value(ec);
             },
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 stopped_channel.set_value(ec);
             });
@@ -930,7 +691,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     BOOST_REQUIRE(is_zero(net.counted_channel()));
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -968,14 +729,14 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
 
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]()
+    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 started_channel.set_value(ec);
             },
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 stopped_channel.set_value(ec);
             });
@@ -1000,7 +761,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__network_not_started__handlers_servi
     BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::service_stopped);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [&]()
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -1023,9 +784,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     auto session = std::make_shared<mock_session>(net, 1, false);
 
     std::promise<code> started_net;
-    boost::asio::post(net.strand(), [&net, &started_net]()
+    boost::asio::post(net.strand(), [&net, &started_net]() NOEXCEPT
     {
-        net.start([&](const code& ec)
+        net.start([&](const code& ec) NOEXCEPT
         {
             started_net.set_value(ec);
         });
@@ -1034,9 +795,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -1049,14 +810,14 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]()
+    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 started_channel.set_value(ec);
             },
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 stopped_channel.set_value(ec);
             });
@@ -1080,7 +841,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -1105,9 +866,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     auto session = std::make_shared<mock_session>(net, 1, expected_inbound);
 
     std::promise<code> started_net;
-    boost::asio::post(net.strand(), [&net, &started_net]()
+    boost::asio::post(net.strand(), [&net, &started_net]() NOEXCEPT
     {
-        net.start([&](const code& ec)
+        net.start([&](const code& ec) NOEXCEPT
         {
             started_net.set_value(ec);
         });
@@ -1116,9 +877,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -1131,14 +892,14 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]()
+    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 started_channel.set_value(ec);
             },
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 stopped_channel.set_value(ec);
             });
@@ -1190,9 +951,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     auto session = std::make_shared<mock_session>(net, 1, expected_inbound);
 
     std::promise<code> started_net;
-    boost::asio::post(net.strand(), [&net, &started_net]()
+    boost::asio::post(net.strand(), [&net, &started_net]() NOEXCEPT
     {
-        net.start([&](const code& ec)
+        net.start([&](const code& ec) NOEXCEPT
         {
             started_net.set_value(ec);
         });
@@ -1201,9 +962,9 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     BOOST_REQUIRE_EQUAL(started_net.get_future().get(), error::success);
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -1216,14 +977,14 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     
     std::promise<code> started_channel;
     std::promise<code> stopped_channel;
-    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]()
+    boost::asio::post(net.strand(), [=, &started_channel, &stopped_channel]() NOEXCEPT
     {
         session->start_channel(channel,
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 started_channel.set_value(ec);
             },
-            [&](const code& ec)
+            [&](const code& ec) NOEXCEPT
             {
                 stopped_channel.set_value(ec);
             });
@@ -1243,7 +1004,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     BOOST_REQUIRE_EQUAL(net.counted_channel_result(), error::success);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);

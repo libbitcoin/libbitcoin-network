@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     ////BOOST_REQUIRE_EQUAL(instance->start(42), error::success);
     instance->start(42);
 
-    boost::asio::post(strand, [instance]()
+    boost::asio::post(strand, [instance]() NOEXCEPT
     {
         instance->stop();
     });

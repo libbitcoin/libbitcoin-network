@@ -182,19 +182,19 @@ BOOST_AUTO_TEST_CASE(p2p__connect__unstarted__service_stopped)
     const settings set(selection::mainnet);
     p2p net(set, log);
 
-    std::promise<bool> promise;
-    const auto handler = [&](const code& ec, const channel::ptr& channel)
+    std::promise<std::pair<code, channel::ptr>> promise{};
+    const auto handler = [&](const code& ec, const channel::ptr& channel) NOEXCEPT
     {
-        BOOST_REQUIRE(!channel);
-        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
-        promise.set_value(true);
+        promise.set_value({ ec, channel });
         return true;
     };
 
     net.connect({ "truckers.ca" });
     net.connect({ "truckers.ca", 42 });
     net.connect({ "truckers.ca", 42 }, handler);
-    BOOST_REQUIRE(promise.get_future().get());
+    const auto result = promise.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::service_stopped);
+    BOOST_REQUIRE(!result.second);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstopped__success)
@@ -203,30 +203,30 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstopped__success)
     const settings set(selection::mainnet);
     p2p net(set, log);
 
-    std::promise<bool> promise_handler;
-    const auto handler = [&](const code& ec, const channel::ptr& channel)
+    std::promise<std::pair<code, channel::ptr>> promise_handler{};
+    const auto handler = [&](const code& ec, const channel::ptr& channel) NOEXCEPT
     {
-        BOOST_REQUIRE(!channel);
-        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
-        promise_handler.set_value(true);
+        promise_handler.set_value({ ec, channel });
         return false;
     };
 
-    std::promise<bool> promise_complete;
-    const auto complete = [&](const code& ec, p2p::object_key key)
+    std::promise<std::pair<code, p2p::object_key>> promise_complete{};
+    const auto complete = [&](const code& ec, p2p::object_key key) NOEXCEPT
     {
         // First key is ++0;
-        BOOST_REQUIRE_EQUAL(key, one);
-        BOOST_REQUIRE_EQUAL(ec, error::success);
-        promise_complete.set_value(true);
+        promise_complete.set_value({ ec, key });
     };
 
     net.subscribe_connect(handler, complete);
-    BOOST_REQUIRE(promise_complete.get_future().get());
+    const auto result1 = promise_complete.get_future().get();
+    BOOST_REQUIRE_EQUAL(result1.first, error::success);
+    BOOST_REQUIRE_EQUAL(result1.second, one);
 
     // Close (or ~p2p) required to clear subscription.
     net.close();
-    BOOST_REQUIRE(promise_handler.get_future().get());
+    const auto result2 = promise_handler.get_future().get();
+    BOOST_REQUIRE_EQUAL(result2.first, error::service_stopped);
+    BOOST_REQUIRE(!result2.second);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstopped__success)
@@ -235,29 +235,28 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstopped__success)
     const settings set(selection::mainnet);
     p2p net(set, log);
 
-    std::promise<bool> promise_handler;
-    const auto handler = [&](const code& ec)
+    std::promise<code> promise_handler;
+    const auto handler = [&](const code& ec) NOEXCEPT
     {
-        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
-        promise_handler.set_value(true);
+        promise_handler.set_value(ec);
         return true;
     };
 
-    std::promise<bool> promise_complete;
-    const auto complete = [&](const code& ec, p2p::object_key key)
+    std::promise<std::pair<code, p2p::object_key>> promise_complete;
+    const auto complete = [&](const code& ec, p2p::object_key key) NOEXCEPT
     {
         // First key is ++0;
-        BOOST_REQUIRE_EQUAL(key, one);
-        BOOST_REQUIRE_EQUAL(ec, error::success);
-        promise_complete.set_value(true);
+        promise_complete.set_value({ ec, key });
     };
 
     net.subscribe_close(handler, complete);
-    BOOST_REQUIRE(promise_complete.get_future().get());
+    const auto result = promise_complete.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::success);
+    BOOST_REQUIRE_EQUAL(result.second, one);
 
     // Close (or ~p2p) required to clear subscription.
     net.close();
-    BOOST_REQUIRE(promise_handler.get_future().get());
+    BOOST_REQUIRE_EQUAL(promise_handler.get_future().get(), error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__start__outbound_connections_but_no_peers_no_seeds__seeding_unsuccessful)
@@ -271,15 +270,14 @@ BOOST_AUTO_TEST_CASE(p2p__start__outbound_connections_but_no_peers_no_seeds__see
     BOOST_REQUIRE(net.network_settings().peers.empty());
     BOOST_REQUIRE(net.network_settings().seeds.empty());
 
-    std::promise<bool> promise;
-    const auto handler = [&](const code& ec)
+    std::promise<code> promise;
+    const auto handler = [&](const code& ec) NOEXCEPT
     {
-        BOOST_REQUIRE_EQUAL(ec, error::seeding_unsuccessful);
-        promise.set_value(true);
+        promise.set_value(ec);
     };
 
     net.start(handler);
-    BOOST_REQUIRE(promise.get_future().get());
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::seeding_unsuccessful);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__run__not_started__service_stopped)
@@ -288,15 +286,14 @@ BOOST_AUTO_TEST_CASE(p2p__run__not_started__service_stopped)
     settings set(selection::mainnet);
     p2p net(set, log);
 
-    std::promise<bool> promise;
-    const auto handler = [&](const code& ec)
+    std::promise<code> promise;
+    const auto handler = [&](const code& ec) NOEXCEPT
     {
-        BOOST_REQUIRE_EQUAL(ec, error::service_stopped);
-        promise.set_value(true);
+        promise.set_value(ec);
     };
 
     net.run(handler);
-    BOOST_REQUIRE(promise.get_future().get());
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::service_stopped);
 }
 
 BOOST_AUTO_TEST_CASE(p2p__run__started_no_outbound_connections__success)
@@ -311,21 +308,22 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_outbound_connections__success)
     BOOST_REQUIRE(net.network_settings().peers.empty());
     BOOST_REQUIRE(net.network_settings().seeds.empty());
 
-    std::promise<bool> promise_run;
-    const auto run_handler = [&](const code& ec)
+    std::promise<code> promise_run;
+    const auto run_handler = [&](const code& ec) NOEXCEPT
     {
-        BOOST_REQUIRE_EQUAL(ec, error::success);
-        promise_run.set_value(true);
+        promise_run.set_value(ec);
     };
 
-    const auto start_handler = [&](const code& ec)
+    std::promise<code> promise_start;
+    const auto start_handler = [&](const code& ec) NOEXCEPT
     {
-        BOOST_REQUIRE_EQUAL(ec, error::success);
+        promise_start.set_value(ec);
         net.run(run_handler);
     };
 
     net.start(start_handler);
-    BOOST_REQUIRE(promise_run.get_future().get());
+    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
 }
 
 class mock_settings final
@@ -364,21 +362,22 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_no_peers_no_seeds_one_connection_one_batc
 
     p2p net(set, log);
 
-    std::promise<bool> promise_run;
-    const auto run_handler = [&](const code& ec)
+    std::promise<code> promise_run;
+    const auto run_handler = [&](const code& ec) NOEXCEPT
     {
-        BOOST_REQUIRE_EQUAL(ec, error::success);
-        promise_run.set_value(true);
+        promise_run.set_value(ec);
     };
 
-    const auto start_handler = [&](const code& ec)
+    std::promise<code> promise_start;
+    const auto start_handler = [&](const code& ec) NOEXCEPT
     {
-        BOOST_REQUIRE_EQUAL(ec, error::success);
+        promise_start.set_value(ec);
         net.run(run_handler);
     };
 
     net.start(start_handler);
-    BOOST_REQUIRE(promise_run.get_future().get());
+    BOOST_REQUIRE_EQUAL(promise_start.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(promise_run.get_future().get(), error::success);
 }
 
 // start
@@ -391,7 +390,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__success_success__success)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -407,7 +406,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__unknown_success__unknown)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -423,7 +422,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__success_unknown__unknown)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -439,7 +438,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__unknown_unknown__unknown)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -456,7 +455,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__bypassed_success__bypassed)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -472,7 +471,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__success_bypassed__success)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -488,7 +487,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__unknown_bypassed__unknown)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -505,7 +504,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__bypassed_bypassed__bypassed)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -521,7 +520,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__file_load_success_success__file_load)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -537,7 +536,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__file_load_unknown_success__unknown)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -553,7 +552,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__file_load_success_unknown__file_load)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -569,7 +568,7 @@ BOOST_AUTO_TEST_CASE(p2p__start__file_load_unknown_unknown__unknown)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
     });
@@ -586,7 +585,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_success__service_stopped)
     mock_p2p_session_run<error::success, error::success> net(set, log, false);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -601,7 +600,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_success_success__success)
     mock_p2p_session_run<error::success, error::success> net(set, log, true);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -616,7 +615,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_unknown_success__service_stopped)
     mock_p2p_session_run<error::unknown, error::success> net(set, log, false);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -631,7 +630,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_unknown_success__unknown)
     mock_p2p_session_run<error::unknown, error::success> net(set, log, true);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -646,7 +645,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_unknown__service_stopped)
     mock_p2p_session_run<error::success, error::unknown> net(set, log, false);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -661,7 +660,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_success_unknown__unknown)
     mock_p2p_session_run<error::success, error::unknown> net(set, log, true);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -676,7 +675,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_unknown_unknown__service_stopped)
     mock_p2p_session_run<error::unknown, error::unknown> net(set, log, false);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -691,7 +690,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_unknown_unknown__unknown)
     mock_p2p_session_run<error::unknown, error::unknown> net(set, log, true);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -706,7 +705,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_bypassed_success__service_stopped)
     mock_p2p_session_run<error::bypassed, error::success> net(set, log, false);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -721,7 +720,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_bypassed_success__success)
     mock_p2p_session_run<error::bypassed, error::success> net(set, log, true);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -736,7 +735,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_success_bypassed__service_stopped)
     mock_p2p_session_run<error::success, error::bypassed> net(set, log, false);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -751,7 +750,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_success_bypassed__success)
     mock_p2p_session_run<error::success, error::bypassed> net(set, log, true);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -766,7 +765,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__stopped_bypassed_bypassed__service_stopped)
     mock_p2p_session_run<error::bypassed, error::bypassed> net(set, log, false);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
@@ -781,7 +780,7 @@ BOOST_AUTO_TEST_CASE(p2p__run__started_bypassed_bypassed__success)
     mock_p2p_session_run<error::bypassed, error::bypassed> net(set, log, true);
 
     std::promise<code> run;
-    net.run([&](const code& ec)
+    net.run([&](const code& ec) NOEXCEPT
     {
         run.set_value(ec);
     });
