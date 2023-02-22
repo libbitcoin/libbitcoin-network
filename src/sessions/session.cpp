@@ -69,7 +69,7 @@ void session::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    stopped_.store(false, std::memory_order_relaxed);
+    stopped_.store(false);
     handler(error::success);
 }
 
@@ -77,7 +77,7 @@ void session::stop() NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    stopped_.store(true, std::memory_order_relaxed);
+    stopped_.store(true);
     stop_subscriber_.stop(error::service_stopped);
 }
 
@@ -451,7 +451,7 @@ session::object_key session::create_key() NOEXCEPT
 
 bool session::stopped() const NOEXCEPT
 {
-    return stopped_.load(std::memory_order_relaxed);
+    return stopped_.load();
 }
 
 bool session::stranded() const NOEXCEPT
