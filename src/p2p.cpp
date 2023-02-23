@@ -415,6 +415,7 @@ void p2p::take(address_item_handler&& handler) NOEXCEPT
 
 void p2p::do_take(const address_item_handler& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     hosts_.take(move_copy(handler));
 }
 
@@ -428,6 +429,7 @@ void p2p::restore(const address_item_cptr& address,
 void p2p::do_restore(const address_item_cptr& address,
     const result_handler& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     hosts_.restore(address, move_copy(handler));
 }
 
@@ -439,6 +441,7 @@ void p2p::fetch(address_handler&& handler) NOEXCEPT
 
 void p2p::do_fetch(const address_handler& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     hosts_.fetch(move_copy(handler));
 }
 
@@ -451,6 +454,7 @@ void p2p::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 void p2p::do_save(const address_cptr& message,
     const count_handler& handler) NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     hosts_.save(message, move_copy(handler));
 }
 
@@ -474,17 +478,20 @@ bool p2p::store_nonce(const channel& channel) NOEXCEPT
     return true;
 }
 
-void p2p::unstore_nonce(const channel& channel) NOEXCEPT
+bool p2p::unstore_nonce(const channel& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (settings_.enable_loopback || channel.inbound())
-        return;
+        return true;
 
     if (!to_bool(nonces_.erase(channel.nonce())))
     {
         LOG("Failed to unstore nonce for [" << channel.authority() << "].");
+        return false;
     }
+
+    return true;
 }
 
 bool p2p::is_loopback(const channel& channel) const NOEXCEPT
@@ -528,7 +535,6 @@ code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
         return error::channel_overflow;
     }
 
-    // Thread safe.
     if (!hosts_.reserve(channel->authority()))
     {
         LOG("Duplicate connection to [" << channel->authority() << "].");
@@ -570,7 +576,6 @@ void p2p::uncount_channel(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Thread safe.
     hosts_.unreserve(channel->authority());
 
     broadcaster_.notify_one(channel->identifier(), error::channel_stopped,

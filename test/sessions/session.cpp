@@ -300,10 +300,10 @@ protected:
         return ((stored_result_ = p2p::store_nonce(channel)));
     }
 
-    void unstore_nonce(const channel& channel) NOEXCEPT override
+    bool unstore_nonce(const channel& channel) NOEXCEPT override
     {
         unstored_ = channel.nonce();
-        p2p::unstore_nonce(channel);
+        return p2p::unstore_nonce(channel);
     }
 
     code count_channel(const channel::ptr& channel) NOEXCEPT override

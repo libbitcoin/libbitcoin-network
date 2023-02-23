@@ -213,7 +213,7 @@ protected:
         return session;
     }
 
-    /// Override to attach specialized sessions.
+    /// Override to attach specialized sessions, require strand.
     virtual session_seed::ptr attach_seed_session() NOEXCEPT;
     virtual session_manual::ptr attach_manual_session() NOEXCEPT;
     virtual session_inbound::ptr attach_inbound_session() NOEXCEPT;
@@ -223,12 +223,12 @@ protected:
     virtual acceptor::ptr create_acceptor() NOEXCEPT;
     virtual connector::ptr create_connector() NOEXCEPT;
 
-    /// Register nonces for loopback detection (true implies found).
+    /// Register nonces for loopback (true implies found), require strand.
     virtual bool store_nonce(const channel& channel) NOEXCEPT;
-    virtual void unstore_nonce(const channel& channel) NOEXCEPT;
+    virtual bool unstore_nonce(const channel& channel) NOEXCEPT;
     virtual bool is_loopback(const channel& channel) const NOEXCEPT;
 
-    /// Register channels for broadcast and quick stop.
+    /// Register channels for broadcast and quick stop, require strand.
     virtual code count_channel(const channel::ptr& channel) NOEXCEPT;
     virtual void uncount_channel(const channel::ptr& channel) NOEXCEPT;
 
