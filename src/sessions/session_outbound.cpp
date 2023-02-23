@@ -296,32 +296,56 @@ void session_outbound::handle_channel_stop(const code& ec,
 // ----------------------------------------------------------------------------
 // private
 
-bool session_outbound::is_reclaim(const code& ec) const NOEXCEPT
+inline bool always_reclaim(const code& ec) NOEXCEPT
 {
-    if (stopped() || !ec)
-        return true;
-
-    // Timeout allowed below capacity, otherwise net disconnect drains pool.
-    return ec == error::channel_expired
+    // Terminations that worked or might have worked.
+    return ec == error::success
         || ec == error::operation_canceled
-        || (ec == error::operation_timeout &&
-            (address_count() < settings().host_pool_capacity));
+        || ec == error::channel_expired;
+}
+
+inline bool maybe_reclaim(const code& ec) NOEXCEPT
+{
+    // Failures that might work later (timeouts can drain pool).
+    return ec == error::operation_timeout
+        || ec == error::channel_timeout
+        || ec == error::peer_disconnect;
 }
 
 // Use initial address time and services, since connection not completed.
 void session_outbound::reclaim(const code& ec,
     const socket::ptr& socket) NOEXCEPT
 {
-    if (socket && is_reclaim(ec))
+    if (!socket)
+        return;
+
+    if (stopped() || always_reclaim(ec) || (maybe_reclaim(ec) &&
+        (address_count() < settings().host_pool_capacity)))
+    {
         restore(socket->address(), BIND1(handle_reclaim, _1));
+    }
+    ////else
+    ////{
+    ////    LOG("Reclaim socket? " << ec.message());
+    ////}
 }
 
 // Set address to current time and services from peer version message.
 void session_outbound::reclaim(const code& ec,
     const channel::ptr& channel) NOEXCEPT
 {
-    if (channel && is_reclaim(ec))
+    if (!channel)
+        return;
+
+    if (stopped() || always_reclaim(ec) || (maybe_reclaim(ec) &&
+        (address_count() < settings().host_pool_capacity)))
+    {
         restore(channel->updated_address(), BIND1(handle_reclaim, _1));
+    }
+    ////else
+    ////{
+    ////    LOG("Reclaim channel? " << ec.message());
+    ////}
 }
 
 void session_outbound::handle_reclaim(const code&) const NOEXCEPT

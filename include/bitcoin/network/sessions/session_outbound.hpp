@@ -117,7 +117,6 @@ private:
     using count_ptr = integer::ptr;
 
     /// Restore an address to the address pool.
-    bool is_reclaim(const code& ec) const NOEXCEPT;
     void reclaim(const code& ec, const socket::ptr& socket) NOEXCEPT;
     void reclaim(const code& ec, const channel::ptr& channel) NOEXCEPT;
     void handle_reclaim(const code& ec) const NOEXCEPT;
