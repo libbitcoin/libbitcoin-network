@@ -116,7 +116,7 @@ void socket::accept(asio::acceptor& acceptor,
     {
         acceptor.async_accept(socket_,
             std::bind(&socket::handle_accept,
-                shared_from_this(), _1, move_copy(handler)));
+                shared_from_this(), _1, handler));
     }
     catch (const std::exception& e)
     {
