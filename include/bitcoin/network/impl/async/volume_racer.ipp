@@ -42,7 +42,7 @@ volume_racer<Size, Args...>::
 }
 
 template <size_t Size, typename... Args>
-bool volume_racer<Size, Args...>::
+inline bool volume_racer<Size, Args...>::
 running() const NOEXCEPT
 {
     return to_bool(runners_);
@@ -52,7 +52,6 @@ template <size_t Size, typename... Args>
 bool volume_racer<Size, Args...>::
 start(handler&& complete) NOEXCEPT
 {
-    // bad lock?
     if (running())
         return false;
 
@@ -68,16 +67,18 @@ template <size_t Size, typename... Args>
 bool volume_racer<Size, Args...>::
 finish(const Args&... args) NOEXCEPT
 {
-    // bad knock?
     if (!running())
         return false;
 
     // Capture parameter pack as tuple of copied arguments.
-    if (is_winner())
+    const auto winner = is_winner();
+
+    // Save args for winner (first to finish).
+    if (winner)
         args_ = std::tuple<Args...>(args...);
 
-    // bad knock or invoke?
-    return !is_loser() || invoke();
+    // false implies logic error.
+    return invoke() && winner;
 }
 
 // private
@@ -87,26 +88,23 @@ template <size_t Size, typename... Args>
 bool volume_racer<Size, Args...>::
 is_winner() const NOEXCEPT
 {
+    // Return is winner (first to finish).
     return runners_ == Size;
-}
-
-template <size_t Size, typename... Args>
-bool volume_racer<Size, Args...>::
-is_loser() NOEXCEPT
-{
-    // logic error, too many knocks.
-    if (!running())
-        return false;
-
-    runners_ = sub1(runners_);
-    return !running();
 }
 
 template <size_t Size, typename... Args>
 bool volume_racer<Size, Args...>::
 invoke() NOEXCEPT
 {
-    // logic error, knock by not running.
+    // false implies logic error.
+    if (!running())
+        return false;
+
+    --runners_;
+    if (running())
+        return true;
+
+    // false implies logic error.
     if (!complete_)
         return false;
 

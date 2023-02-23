@@ -36,6 +36,7 @@ template <size_t Size, typename... Args>
 class volume_racer final
 {
 public:
+    typedef std::shared_ptr<volume_racer> ptr;
     typedef std::function<void(Args...)> handler;
 
     /// A stopped_ member is sufficient for a volume_racer of one.
@@ -47,12 +48,12 @@ public:
     ~volume_racer() NOEXCEPT;
 
     /// True if the volume_racer is running.
-    bool running() const NOEXCEPT;
+    inline bool running() const NOEXCEPT;
 
     /// False implies invalid usage.
     bool start(handler&& complete) NOEXCEPT;
 
-    /// False implies invalid usage.
+    /// True implies winning finisher.
     bool finish(const Args&... args) NOEXCEPT;
 
 private:
@@ -65,7 +66,7 @@ private:
     void invoker(const handler& complete, const packed& args,
         unpack<Index...>) NOEXCEPT;
     bool invoke() NOEXCEPT;
-    bool is_loser() NOEXCEPT;
+    bool is_final() NOEXCEPT;
     bool is_winner() const NOEXCEPT;
 
     packed args_{};
