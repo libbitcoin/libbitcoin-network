@@ -93,6 +93,7 @@ void session_outbound::handle_started(const code& ec,
     if (ec)
     {
         handler(ec);
+        unsubscribe_close();
         return;
     }
 
@@ -131,7 +132,7 @@ void session_outbound::start_connect(const code&) NOEXCEPT
         return false;
     });
 
-    // Bogus warning, this pointer is copied into std::bind(), batch times.
+    // Bogus warning, this pointer is copied into std::bind().
     BC_PUSH_WARNING(NO_UNUSED_LOCAL_SMART_PTR)
     const auto racer = std::make_shared<race>(connectors->size());
     BC_POP_WARNING()

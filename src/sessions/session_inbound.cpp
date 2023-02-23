@@ -75,6 +75,7 @@ void session_inbound::handle_started(const code& ec,
     if (ec)
     {
         handler(ec);
+        unsubscribe_close();
         return;
     }
 
