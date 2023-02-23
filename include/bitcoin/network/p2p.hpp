@@ -213,7 +213,7 @@ protected:
         return session;
     }
 
-    /// Override to attach specialized sessions.
+    /// Override to attach specialized sessions, require strand.
     virtual session_seed::ptr attach_seed_session() NOEXCEPT;
     virtual session_manual::ptr attach_manual_session() NOEXCEPT;
     virtual session_inbound::ptr attach_inbound_session() NOEXCEPT;
@@ -223,12 +223,12 @@ protected:
     virtual acceptor::ptr create_acceptor() NOEXCEPT;
     virtual connector::ptr create_connector() NOEXCEPT;
 
-    /// Register nonces for loopback detection (true implies found).
+    /// Register nonces for loopback (true implies found), require strand.
     virtual bool store_nonce(const channel& channel) NOEXCEPT;
-    virtual void unstore_nonce(const channel& channel) NOEXCEPT;
+    virtual bool unstore_nonce(const channel& channel) NOEXCEPT;
     virtual bool is_loopback(const channel& channel) const NOEXCEPT;
 
-    /// Register channels for broadcast and quick stop.
+    /// Register channels for broadcast and quick stop, require strand.
     virtual code count_channel(const channel::ptr& channel) NOEXCEPT;
     virtual void uncount_channel(const channel::ptr& channel) NOEXCEPT;
 
@@ -288,13 +288,11 @@ private:
     void do_connect_handled(const config::endpoint& endpoint,
         const channel_notifier& handler) NOEXCEPT;
 
-    void handle_take(const code& ec, const address_item_cptr& address,
-        const address_item_handler& handler) NOEXCEPT;
-    void handle_restore(const code& ec,
+    void do_take(const address_item_handler& handler) NOEXCEPT;
+    void do_restore(const address_item_cptr& address,
         const result_handler& handler) NOEXCEPT;
-    void handle_fetch(const code& ec, const address_cptr& message,
-        const address_handler& handler) NOEXCEPT;
-    void handle_save(const code& ec, size_t accepted,
+    void do_fetch(const address_handler& handler) NOEXCEPT;
+    void do_save(const address_cptr& message,
         const count_handler& handler) NOEXCEPT;
 
     // These are thread safe.

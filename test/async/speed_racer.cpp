@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(speed_racer__start__unstarted__true_running)
 
     // Avoid running at destruct assertion.
     BOOST_REQUIRE(speed_racer.finish({}, {}));
-    BOOST_REQUIRE(speed_racer.finish({}, {}));
-    BOOST_REQUIRE(speed_racer.finish({}, {}));
+    BOOST_REQUIRE(!speed_racer.finish({}, {}));
+    BOOST_REQUIRE(!speed_racer.finish({}, {}));
     BOOST_REQUIRE(!speed_racer.running());
 }
 
@@ -45,13 +45,13 @@ BOOST_AUTO_TEST_CASE(speed_racer__start__started__false_running)
 {
     speed_racer_t speed_racer{};
     BOOST_REQUIRE(speed_racer.start([&](code, size_t) NOEXCEPT {}));
-    BOOST_REQUIRE(!speed_racer.start([&](code, size_t) NOEXCEPT{}));
+    BOOST_REQUIRE(!speed_racer.start([&](code, size_t) NOEXCEPT {}));
     BOOST_REQUIRE(speed_racer.running());
 
     // Avoid running at destruct assertion.
     BOOST_REQUIRE(speed_racer.finish({}, {}));
-    BOOST_REQUIRE(speed_racer.finish({}, {}));
-    BOOST_REQUIRE(speed_racer.finish({}, {}));
+    BOOST_REQUIRE(!speed_racer.finish({}, {}));
+    BOOST_REQUIRE(!speed_racer.finish({}, {}));
     BOOST_REQUIRE(!speed_racer.running());
 }
 
@@ -70,9 +70,9 @@ BOOST_AUTO_TEST_CASE(speed_racer__running__3_of_3__false_expected_invocation)
     BOOST_REQUIRE(speed_racer.running());
     BOOST_REQUIRE(speed_racer.finish(expected.first, expected.second));
     BOOST_REQUIRE(speed_racer.running());
-    BOOST_REQUIRE(speed_racer.finish(error::accept_failed, 2));
+    BOOST_REQUIRE(!speed_racer.finish(error::accept_failed, 2));
     BOOST_REQUIRE(speed_racer.running());
-    BOOST_REQUIRE(speed_racer.finish(error::address_invalid, 3));
+    BOOST_REQUIRE(!speed_racer.finish(error::address_invalid, 3));
     BOOST_REQUIRE(!speed_racer.running());
     BOOST_REQUIRE_EQUAL(complete.first, expected.first);
     BOOST_REQUIRE_EQUAL(complete.second, expected.second);
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(speed_racer__running__4_of_3__false_expected_invocation)
 
     BOOST_REQUIRE(speed_racer.running());
     BOOST_REQUIRE(speed_racer.finish(expected.first, expected.second));
-    BOOST_REQUIRE(speed_racer.finish(error::accept_failed, 2));
-    BOOST_REQUIRE(speed_racer.finish(error::address_invalid, 3));
+    BOOST_REQUIRE(!speed_racer.finish(error::accept_failed, 2));
+    BOOST_REQUIRE(!speed_racer.finish(error::address_invalid, 3));
     BOOST_REQUIRE(!speed_racer.running());
     BOOST_REQUIRE(!speed_racer.finish(error::success, 4));
     BOOST_REQUIRE(!speed_racer.running());
@@ -114,28 +114,32 @@ BOOST_AUTO_TEST_CASE(speed_racer__finish__3_of_3__resources_deleted)
     bool deleted{ false };
     auto foo = std::make_shared<destructor>(deleted);
     speed_racer<3, const code&, const destructor::ptr&> speed_racer{};
+    std::pair<bool, bool> complete{};
 
-    BOOST_REQUIRE(speed_racer.start([=](const code&, const destructor::ptr& bar)
+    // foo/bar captured/passed into handler.
+    BOOST_REQUIRE(speed_racer.start([=, &complete](const code&, const destructor::ptr& bar) NOEXCEPT
     {
-        // foo captured in handler.
-        BOOST_REQUIRE(!foo->deleted_);
-
-        // foo captured in first args and passed as bar.
-        BOOST_REQUIRE(!bar->deleted_);
+        complete = { !foo->deleted_, !bar->deleted_ };
     }));
 
     BOOST_REQUIRE(speed_racer.finish(error::success, foo));
     BOOST_REQUIRE(speed_racer.running());
+    BOOST_REQUIRE(!complete.first);
+    BOOST_REQUIRE(!complete.second);
 
     // speed_racer not finished, resources retained.
     foo.reset();
     BOOST_REQUIRE(!deleted);
 
-    BOOST_REQUIRE(speed_racer.finish(error::success, {}));
+    BOOST_REQUIRE(!speed_racer.finish(error::success, {}));
     BOOST_REQUIRE(speed_racer.running());
+    BOOST_REQUIRE(!complete.first);
+    BOOST_REQUIRE(!complete.second);
 
-    BOOST_REQUIRE(speed_racer.finish(error::success, {}));
+    BOOST_REQUIRE(!speed_racer.finish(error::success, {}));
     BOOST_REQUIRE(!speed_racer.running());
+    BOOST_REQUIRE(complete.first);
+    BOOST_REQUIRE(complete.second);
 
     // speed_racer finished, resourced cleared.
     BOOST_REQUIRE(deleted);

@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__default__true)
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
-    boost::asio::post(proxy_ptr->strand(), [=, &paused]()
+    boost::asio::post(proxy_ptr->strand(), [=, &paused]() NOEXCEPT
     {
         paused.set_value(proxy_ptr->paused());
     });
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__pause__true)
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
-    boost::asio::post(proxy_ptr->strand(), [=, &paused]()
+    boost::asio::post(proxy_ptr->strand(), [=, &paused]() NOEXCEPT
     {
         proxy_ptr->pause();
         paused.set_value(proxy_ptr->paused());
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume__false)
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
-    boost::asio::post(proxy_ptr->strand(), [=, &paused]()
+    boost::asio::post(proxy_ptr->strand(), [=, &paused]() NOEXCEPT
     {
         // Resume queues up a (failing) read that will not execute until after this.
         proxy_ptr->resume();
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume__false)
 
     // Ensures stop is not executed concurrenty due to resume, guarding promise.
     std::promise<bool> stopped;
-    boost::asio::post(proxy_ptr->strand(), [=, &stopped]()
+    boost::asio::post(proxy_ptr->strand(), [=, &stopped]() NOEXCEPT
     {
         proxy_ptr->stop(error::invalid_magic);
         stopped.set_value(true);
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_pause__true)
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused;
-    boost::asio::post(proxy_ptr->strand(), [=, &paused]()
+    boost::asio::post(proxy_ptr->strand(), [=, &paused]() NOEXCEPT
     {
         // Resume queues up a (failing) read that will not execute until after this. 
         proxy_ptr->resume();
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_pause__true)
 
     // Ensures stop is not executed concurrenty due to resume, guarding promise.
     std::promise<bool> stopped;
-    boost::asio::post(proxy_ptr->strand(), [=, &stopped]()
+    boost::asio::post(proxy_ptr->strand(), [=, &stopped]() NOEXCEPT
     {
         proxy_ptr->stop(error::invalid_magic);
         stopped.set_value(true);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_after_read_fail__true)
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
     std::promise<bool> paused_after_resume;
-    boost::asio::post(proxy_ptr->strand(), [=, &paused_after_resume]()
+    boost::asio::post(proxy_ptr->strand(), [=, &paused_after_resume]() NOEXCEPT
     {
         // Resume queues up a (failing) read that will invoke stopped.
         proxy_ptr->resume();
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_after_read_fail__true)
     BOOST_REQUIRE(proxy_ptr->require_stopped());
 
     std::promise<bool> paused_after_read_fail;
-    boost::asio::post(proxy_ptr->strand(), [=, &paused_after_read_fail]()
+    boost::asio::post(proxy_ptr->strand(), [=, &paused_after_read_fail]() NOEXCEPT
     {
         paused_after_read_fail.set_value(proxy_ptr->paused());
     });
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_after_read_fail__true)
 
     // Ensures stop is not executed concurrenty due to resume, guarding promise.
     std::promise<bool> stopped;
-    boost::asio::post(proxy_ptr->strand(), [=, &stopped]()
+    boost::asio::post(proxy_ptr->strand(), [=, &stopped]() NOEXCEPT
     {
         proxy_ptr->stop(error::invalid_magic);
         stopped.set_value(true);
@@ -274,11 +274,11 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_stop__subscribed__expected)
     std::promise<code> stop2_stopped;
     std::promise<code> stop_subscribed;
     proxy_ptr->subscribe_stop(
-        [=, &stop2_stopped](code ec)
+        [=, &stop2_stopped](code ec) NOEXCEPT
         {
             stop2_stopped.set_value(ec);
         },
-        [=, &stop_subscribed](code ec)
+        [=, &stop_subscribed](code ec) NOEXCEPT
         {
             stop_subscribed.set_value(ec);
         });
@@ -302,9 +302,9 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
     constexpr auto expected_ec = error::invalid_magic;
 
     std::promise<code> stop1_stopped;
-    boost::asio::post(proxy_ptr->strand(), [&]()
+    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
     {
-        proxy_ptr->subscribe_stop1([=, &stop1_stopped](code ec)
+        proxy_ptr->subscribe_stop1([=, &stop1_stopped](code ec) NOEXCEPT
         {
             stop1_stopped.set_value(ec);
         });
@@ -358,11 +358,11 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
     std::promise<code> stop2_stopped;
     std::promise<code> stop_subscribed;
     proxy_ptr->subscribe_stop(
-        [=, &stop2_stopped](code ec)
+        [=, &stop2_stopped](code ec) NOEXCEPT
         {
             stop2_stopped.set_value(ec);
         },
-        [=, &stop_subscribed](code ec)
+        [=, &stop_subscribed](code ec) NOEXCEPT
         {
             stop_subscribed.set_value(ec);
         });
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
     std::promise<code> message_stopped;
     boost::asio::post(proxy_ptr->strand(), [&]()
     {
-        proxy_ptr->subscribe_stop1([=, &stop1_stopped](code ec)
+        proxy_ptr->subscribe_stop1([=, &stop1_stopped](code ec) NOEXCEPT
         {
             stop1_stopped.set_value(ec);
         });

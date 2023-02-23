@@ -36,6 +36,7 @@ template <size_t Size, typename... Args>
 class speed_racer final
 {
 public:
+    typedef std::shared_ptr<speed_racer> ptr;
     typedef std::function<void(Args...)> handler;
 
     /// A stopped_ member is sufficient for a speed_racer of one.
@@ -47,12 +48,12 @@ public:
     ~speed_racer() NOEXCEPT;
 
     /// True if the speed_racer is running.
-    bool running() const NOEXCEPT;
+    inline bool running() const NOEXCEPT;
 
     /// False implies invalid usage.
     bool start(handler&& complete) NOEXCEPT;
 
-    /// False implies invalid usage.
+    /// True implies winning finisher.
     bool finish(const Args&... args) NOEXCEPT;
 
 private:
@@ -65,7 +66,7 @@ private:
     void invoker(const handler& complete, const packed& args,
         unpack<Index...>) NOEXCEPT;
     bool invoke() NOEXCEPT;
-    bool is_loser() NOEXCEPT;
+    bool set_final() NOEXCEPT;
     bool is_winner() const NOEXCEPT;
 
     packed args_{};

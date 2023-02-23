@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(pump__construct__stop__stops)
     pump instance(strand);
 
     std::promise<bool> promise;
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.stop(error::service_stopped);
         promise.set_value(true);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
         BOOST_REQUIRE_EQUAL(ec, error::invalid_message);
     });
 
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.stop(expected_ec);
     });
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notificatio
         BOOST_REQUIRE_EQUAL(ec, error::invalid_message);
     });
 
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.stop(expected_ec);
     });
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_nonced_ping__expected_notification)
         BOOST_REQUIRE_EQUAL(ec, error::success);
     });
 
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.stop(expected_ec);
     });

@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
@@ -55,89 +56,30 @@ protected:
     /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) const NOEXCEPT override;
 
-    /// Start outbound connections based on config (called from start).
-    virtual void start_connect(const code& ec,
-        const connectors_ptr& connectors, object_key batch) NOEXCEPT;
+    /// Start outbound connection loop.
+    virtual void start_connect(const code& ec) NOEXCEPT;
 
 private:
-    class integer final
-    {
-    public:
-        typedef std::shared_ptr<integer> ptr;
-
-        DELETE_COPY_MOVE(integer);
-
-        static ptr create(size_t value) NOEXCEPT
-        {
-            return std::shared_ptr<integer>(new integer{ value });
-        }
-
-        size_t value() const NOEXCEPT
-        {
-            return value_;
-        }
-
-        size_t increment() NOEXCEPT
-        {
-            return ++value_;
-        }
-
-        size_t decrement() NOEXCEPT
-        {
-            return --value_;
-        }
-
-        void set_handled() NOEXCEPT
-        {
-            value_ = sentinel_;
-        }
-
-        bool is_handled() const NOEXCEPT
-        {
-            return value_ == sentinel_;
-        }
-
-        bool is_complete() const NOEXCEPT
-        {
-            return bc::is_zero(value_);
-        }
-        
-    protected:
-        static constexpr auto sentinel_ = max_size_t;
-
-        integer(size_t value) NOEXCEPT
-          : value_(value)
-        {
-        }
-
-    private:
-        size_t value_;
-    };
-
-    using count_ptr = integer::ptr;
-
-    /// Restore an address to the address pool.
-    bool is_reclaim(const code& ec) const NOEXCEPT;
-    void reclaim(const code& ec, const socket::ptr& socket) NOEXCEPT;
-    void reclaim(const code& ec, const channel::ptr& channel) NOEXCEPT;
-    void handle_reclaim(const code& ec) const NOEXCEPT;
+    typedef quality_racer<const code&, const socket::ptr&> race;
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
-    void handle_connect(const code& ec, const socket::ptr& socket,
-        const connectors_ptr& connectors, object_key key) NOEXCEPT;
-
-    void handle_channel_start(const code& ec, const channel::ptr& channel,
-        object_key key) NOEXCEPT;
-    void handle_channel_stop(const code& ec, const channel::ptr& channel,
-        object_key key, const connectors_ptr& connectors) NOEXCEPT;
-
     void do_one(const code& ec, const config::address& peer, object_key key,
-        const connector::ptr& connector,
-        const socket_handler& handler) NOEXCEPT;
+        const race::ptr& racer, const connector::ptr& connector) NOEXCEPT;
     void handle_one(const code& ec, const socket::ptr& socket,
-        const count_ptr& counter, const connectors_ptr& connectors,
-        object_key key, const socket_handler& handler) NOEXCEPT;
+        object_key key, const race::ptr& racer) NOEXCEPT;
+    void handle_connect(const code& ec, const socket::ptr& socket,
+        object_key key) NOEXCEPT;
+
+    void handle_channel_start(const code& ec,
+        const channel::ptr& channel) NOEXCEPT;
+    void handle_channel_stop(const code& ec,
+        const channel::ptr& channel) NOEXCEPT;
+
+    /// Restore an address to the address pool.
+    void reclaim(const code& ec, const socket::ptr& socket) NOEXCEPT;
+    void reclaim(const code& ec, const channel::ptr& channel) NOEXCEPT;
+    void handle_reclaim(const code& ec) const NOEXCEPT;
 };
 
 } // namespace network

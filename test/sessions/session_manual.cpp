@@ -318,10 +318,10 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
         // Will cause started to be set (only).
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
     mock_session_manual session(net, 1);
 
     std::promise<bool> promise;
-    boost::asio::post(net.strand(), [&]()
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
         session.stop();
         promise.set_value(true);
@@ -370,9 +370,9 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -382,9 +382,9 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<code> restart;
-    boost::asio::post(net.strand(), [=, &restart]()
+    boost::asio::post(net.strand(), [=, &restart]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             restart.set_value(ec);
         });
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -416,7 +416,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped
 
     const endpoint peer{ "42.42.42.42", 42 };
 
-    boost::asio::post(net.strand(), [=]()
+    boost::asio::post(net.strand(), [=]() NOEXCEPT
     {
         // This synchronous overload has no handler, so cannot capture values.
         session->connect(peer);
@@ -429,7 +429,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped
     BOOST_REQUIRE(net.get_connector());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -449,24 +449,25 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
 
     const endpoint peer{ "42.42.42.42", 42 };
 
-    std::promise<code> connected;
-    boost::asio::post(net.strand(), [=, &connected]()
+    std::promise<std::pair<code, channel::ptr>> connected;
+    boost::asio::post(net.strand(), [=, &connected]() NOEXCEPT
     {
         session->connect(peer, [&](const code& ec, const channel::ptr& channel)
         {
-            BOOST_REQUIRE(ec && !channel);
-            connected.set_value(ec);
+            connected.set_value({ ec, channel });
             return true;
         });
     });
 
-    BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::service_stopped);
+    const auto result = connected.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::service_stopped);
+    BOOST_REQUIRE(!result.second);
 
     // A connector was created/subscribed, which requires unstarted service stop.
     BOOST_REQUIRE(net.get_connector());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
@@ -490,9 +491,9 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
     const endpoint peer{ "42.42.42.42", 42 };
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -503,16 +504,14 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
 
     auto first = true;
     std::promise<bool> started_connect;
-    std::promise<code> connected;
-    boost::asio::post(net.strand(), [&]()
+    std::promise<std::pair<code, channel::ptr>> connected;
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
-        session->connect(peer, [&](const code& ec, const channel::ptr& channel)
+        session->connect(peer, [&](const code& ec, const channel::ptr& channel) NOEXCEPT
         {
-            BOOST_REQUIRE(ec && !channel);
-
             if (first)
             {
-                connected.set_value(ec);
+                connected.set_value({ ec, channel });
                 first = false;
             }
 
@@ -527,14 +526,16 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
     BOOST_REQUIRE(started_connect.get_future().get());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
     });
 
     // connector.connect sets invalid_magic, causing a timer reconnect.
-    BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::invalid_magic);
+    const auto result = connected.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::invalid_magic);
+    BOOST_REQUIRE(!result.second);
 
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
@@ -551,9 +552,9 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
     const endpoint expected{ "42.42.42.42", 42 };
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -563,13 +564,12 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
     BOOST_REQUIRE(!session->stopped());
 
     std::promise<bool> stopped;
-    std::promise<code> connected;
-    boost::asio::post(net.strand(), [=, &stopped, &connected]()
+    std::promise<std::pair<code, channel::ptr>> connected;
+    boost::asio::post(net.strand(), [=, &stopped, &connected]() NOEXCEPT
     {
-        session->connect(expected, [&](const code& ec, const channel::ptr& channel)
+        session->connect(expected, [&](const code& ec, const channel::ptr& channel) NOEXCEPT
         {
-            BOOST_REQUIRE(!channel);
-            connected.set_value(ec);
+            connected.set_value({ ec, channel });
             return true;
         });
 
@@ -579,7 +579,10 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
         stopped.set_value(true);
     });
 
-    BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::service_stopped);
+    const auto result = connected.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::service_stopped);
+    BOOST_REQUIRE(!result.second);
+
     BOOST_REQUIRE(session->require_connected());
     BOOST_REQUIRE_EQUAL(session->start_connect_endpoint(), expected);
     BOOST_REQUIRE(stopped.get_future().get());
@@ -599,9 +602,9 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
     const endpoint expected{ "42.42.42.42", 42 };
 
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
-        session->start([&](const code& ec)
+        session->start([&](const code& ec) NOEXCEPT
         {
             started.set_value(ec);
         });
@@ -611,16 +614,14 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
     BOOST_REQUIRE(!session->stopped());
 
     auto first = true;
-    std::promise<code> connected;
-    boost::asio::post(net.strand(), [&]()
+    std::promise<std::pair<code, channel::ptr>> connected;
+    boost::asio::post(net.strand(), [&]() NOEXCEPT
     {
-        session->connect(expected, [&](const code& ec, const channel::ptr& channel)
+        session->connect(expected, [&](const code& ec, const channel::ptr& channel) NOEXCEPT
         {
-            BOOST_REQUIRE(ec && !channel);
-
             if (first)
             {
-                connected.set_value(ec);
+                connected.set_value({ ec, channel });
                 first = false;
             }
 
@@ -630,7 +631,10 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
     });
 
     // mock_session_manual_handshake_failure sets channel.stop(invalid_checksum).
-    BOOST_REQUIRE_EQUAL(connected.get_future().get(), error::invalid_checksum);
+    const auto result = connected.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::invalid_checksum);
+    BOOST_REQUIRE(!result.second);
+
     BOOST_REQUIRE(session->require_connected());
     BOOST_REQUIRE_EQUAL(session->start_connect_endpoint(), expected);
 
@@ -656,7 +660,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_start__success)
     mock_p2p<> net(set, log);
 
     std::promise<code> started;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         started.set_value(ec);
     });
@@ -675,10 +679,10 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
-        net.run([&](const code& ec)
+        net.run([&](const code& ec) NOEXCEPT
         {
             run.set_value(ec);
         });
@@ -702,10 +706,10 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__s
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
-        net.run([&](const code& ec)
+        net.run([&](const code& ec) NOEXCEPT
         {
             run.set_value(ec);
         });
@@ -738,10 +742,10 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
-        net.run([&](const code& ec)
+        net.run([&](const code& ec) NOEXCEPT
         {
             run.set_value(ec);
         });
@@ -771,10 +775,10 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
-        net.run([&](const code& ec)
+        net.run([&](const code& ec) NOEXCEPT
         {
             net.connect(expected);
             run.set_value(ec);
@@ -800,10 +804,10 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
 
     std::promise<code> start;
     std::promise<code> run;
-    net.start([&](const code& ec)
+    net.start([&](const code& ec) NOEXCEPT
     {
         start.set_value(ec);
-        net.run([&](const code& ec)
+        net.run([&](const code& ec) NOEXCEPT
         {
             net.connect(expected);
             run.set_value(ec);
@@ -830,19 +834,17 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
     auto first = true;
     std::promise<code> start{};
     std::promise<code> run{};
-    std::promise<code> connect{};
+    std::promise<std::pair<code, channel::ptr>> connect{};
     net.start([&](const code& ec)
     {
         start.set_value(ec);
-        net.run([&](const code& ec)
+        net.run([&](const code& ec) NOEXCEPT
         {
-            net.connect(expected, [&](const code& ec, const channel::ptr& channel)
+            net.connect(expected, [&](const code& ec, const channel::ptr& channel) NOEXCEPT
             {
-                BOOST_REQUIRE(ec && !channel);
-
                 if (first)
                 {
-                    connect.set_value(ec);
+                    connect.set_value({ ec, channel });
                     first = false;
                 }
 
@@ -862,7 +864,10 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
     net.close();
 
     // connector.connect sets invalid_magic, causing a timer reconnect.
-    BOOST_REQUIRE_EQUAL(connect.get_future().get(), error::invalid_magic);
+    const auto result = connect.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::invalid_magic);
+    BOOST_REQUIRE(!result.second);
+
     BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
 

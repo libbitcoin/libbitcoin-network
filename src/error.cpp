@@ -86,7 +86,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { operation_failed, "operation failed" },
 
     // termination
-    { channel_timeout, "connection timed out" },
+    { channel_timeout, "channel timed out" },
     { channel_conflict, "channel conflict" },
     { channel_dropped, "channel dropped" },
     { channel_expired, "channel expired" },

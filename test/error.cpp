@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(error_t__code__channel_timeout__true_exected_message)
     const auto ec = code(value);
     BOOST_REQUIRE(ec);
     BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "connection timed out");
+    BOOST_REQUIRE_EQUAL(ec.message(), "channel timed out");
 }
 
 BOOST_AUTO_TEST_CASE(error_t__code__channel_conflict__true_exected_message)

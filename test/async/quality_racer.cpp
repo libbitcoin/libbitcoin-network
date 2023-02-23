@@ -20,46 +20,52 @@
 
 BOOST_AUTO_TEST_SUITE(quality_racer_tests)
 
-using quality_racer_t = quality_racer<3, const code&, size_t>;
+using quality_racer_t = quality_racer<const code&, size_t>;
+
+BOOST_AUTO_TEST_CASE(quality_racer__running__empty__false)
+{
+    quality_racer_t quality_racer{ 0 };
+    BOOST_REQUIRE(!quality_racer.running());
+}
 
 BOOST_AUTO_TEST_CASE(quality_racer__running__unstarted__false)
 {
-    quality_racer_t quality_racer{};
+    quality_racer_t quality_racer{ 2 };
     BOOST_REQUIRE(!quality_racer.running());
 }
 
 BOOST_AUTO_TEST_CASE(quality_racer__start__unstarted__true_running)
 {
-    quality_racer_t quality_racer{};
+    quality_racer_t quality_racer{ 3 };
     BOOST_REQUIRE(quality_racer.start([&](code, size_t) NOEXCEPT {}));
     BOOST_REQUIRE(quality_racer.running());
 
     // Avoid running at destruct assertion.
     BOOST_REQUIRE(quality_racer.finish({}, {}));
-    BOOST_REQUIRE(quality_racer.finish({}, {}));
-    BOOST_REQUIRE(quality_racer.finish({}, {}));
+    BOOST_REQUIRE(!quality_racer.finish({}, {}));
+    BOOST_REQUIRE(!quality_racer.finish({}, {}));
     BOOST_REQUIRE(!quality_racer.running());
 }
 
 BOOST_AUTO_TEST_CASE(quality_racer__start__started__false_running)
 {
-    quality_racer_t quality_racer{};
+    quality_racer_t quality_racer{ 3 };
     BOOST_REQUIRE(quality_racer.start([&](code, size_t) NOEXCEPT {}));
-    BOOST_REQUIRE(!quality_racer.start([&](code, size_t) NOEXCEPT{}));
+    BOOST_REQUIRE(!quality_racer.start([&](code, size_t) NOEXCEPT {}));
     BOOST_REQUIRE(quality_racer.running());
 
     // Avoid running at destruct assertion.
     BOOST_REQUIRE(quality_racer.finish({}, {}));
-    BOOST_REQUIRE(quality_racer.finish({}, {}));
-    BOOST_REQUIRE(quality_racer.finish({}, {}));
+    BOOST_REQUIRE(!quality_racer.finish({}, {}));
+    BOOST_REQUIRE(!quality_racer.finish({}, {}));
     BOOST_REQUIRE(!quality_racer.running());
 }
 
 BOOST_AUTO_TEST_CASE(quality_racer__running__3_of_3__false_expected_invocation)
 {
-    const std::pair<code, size_t> expected{ error::invalid_magic, 1 };
+    const std::pair<code, size_t> expected{ error::invalid_magic, 3 };
     std::pair<code, size_t> complete{};
-    quality_racer_t quality_racer{};
+    quality_racer_t quality_racer{ 3 };
 
     BOOST_REQUIRE(!quality_racer.running());
     BOOST_REQUIRE(quality_racer.start([&](code ec, size_t size) NOEXCEPT
@@ -68,11 +74,11 @@ BOOST_AUTO_TEST_CASE(quality_racer__running__3_of_3__false_expected_invocation)
     }));
 
     BOOST_REQUIRE(quality_racer.running());
-    BOOST_REQUIRE(quality_racer.finish(expected.first, expected.second));
+    BOOST_REQUIRE(!quality_racer.finish(error::address_invalid, 1));
     BOOST_REQUIRE(quality_racer.running());
-    BOOST_REQUIRE(quality_racer.finish(error::accept_failed, 2));
+    BOOST_REQUIRE(!quality_racer.finish(error::accept_failed, 2));
     BOOST_REQUIRE(quality_racer.running());
-    BOOST_REQUIRE(quality_racer.finish(error::address_invalid, 3));
+    BOOST_REQUIRE(!quality_racer.finish(expected.first, expected.second));
     BOOST_REQUIRE(!quality_racer.running());
     BOOST_REQUIRE_EQUAL(complete.first, expected.first);
     BOOST_REQUIRE_EQUAL(complete.second, expected.second);
@@ -80,9 +86,9 @@ BOOST_AUTO_TEST_CASE(quality_racer__running__3_of_3__false_expected_invocation)
 
 BOOST_AUTO_TEST_CASE(quality_racer__running__4_of_3__false_expected_invocation)
 {
-    const std::pair<code, size_t> expected{ error::invalid_magic, 1 };
+    const std::pair<code, size_t> expected{ error::invalid_magic, 3 };
     std::pair<code, size_t> complete{};
-    quality_racer_t quality_racer{};
+    quality_racer_t quality_racer{ 3 };
 
     BOOST_REQUIRE(!quality_racer.running());
     BOOST_REQUIRE(quality_racer.start([&](code ec, size_t size) NOEXCEPT
@@ -91,9 +97,9 @@ BOOST_AUTO_TEST_CASE(quality_racer__running__4_of_3__false_expected_invocation)
     }));
 
     BOOST_REQUIRE(quality_racer.running());
-    BOOST_REQUIRE(quality_racer.finish(expected.first, expected.second));
-    BOOST_REQUIRE(quality_racer.finish(error::accept_failed, 2));
-    BOOST_REQUIRE(quality_racer.finish(error::address_invalid, 3));
+    BOOST_REQUIRE(!quality_racer.finish(error::accept_failed, 1));
+    BOOST_REQUIRE(!quality_racer.finish(error::address_invalid, 2));
+    BOOST_REQUIRE(!quality_racer.finish(expected.first, expected.second));
     BOOST_REQUIRE(!quality_racer.running());
     BOOST_REQUIRE(!quality_racer.finish(error::success, 4));
     BOOST_REQUIRE(!quality_racer.running());
@@ -113,31 +119,37 @@ BOOST_AUTO_TEST_CASE(quality_racer__finish__3_of_3__resources_deleted)
 
     bool deleted{ false };
     auto foo = std::make_shared<destructor>(deleted);
-    quality_racer<3, const code&, const destructor::ptr&> quality_racer{};
+    quality_racer<const code&, const destructor::ptr&> quality_racer{ 3 };
+    std::pair<bool, bool> complete{};
 
-    BOOST_REQUIRE(quality_racer.start([=](const code&, const destructor::ptr& bar)
+    // foo/bar captured/passed into handler.
+    BOOST_REQUIRE(quality_racer.start([=, &complete](const code&, const destructor::ptr& bar) NOEXCEPT
     {
-        // foo captured in handler.
-        BOOST_REQUIRE(!foo->deleted_);
-
-        // foo captured in first args and passed as bar.
-        BOOST_REQUIRE(!bar->deleted_);
+        complete = { !foo->deleted_, !bar->deleted_ };
     }));
 
+    // First finish is winner, captures foo.
     BOOST_REQUIRE(quality_racer.finish(error::success, foo));
     BOOST_REQUIRE(quality_racer.running());
+    BOOST_REQUIRE(!complete.first);
+    BOOST_REQUIRE(!complete.second);
 
     // quality_racer not finished, resources retained.
     foo.reset();
     BOOST_REQUIRE(!deleted);
 
-    BOOST_REQUIRE(quality_racer.finish(error::success, {}));
+    // quality_racer not finished, resources retained.
+    BOOST_REQUIRE(!quality_racer.finish(error::success, {}));
     BOOST_REQUIRE(quality_racer.running());
+    BOOST_REQUIRE(!complete.first);
+    BOOST_REQUIRE(!complete.second);
+    BOOST_REQUIRE(!deleted);
 
-    BOOST_REQUIRE(quality_racer.finish(error::success, {}));
+    // quality_racer finished (invoked with no winner), resourced cleared.
+    BOOST_REQUIRE(!quality_racer.finish(error::success, {}));
     BOOST_REQUIRE(!quality_racer.running());
-
-    // quality_racer finished, resourced cleared.
+    BOOST_REQUIRE(complete.first);
+    BOOST_REQUIRE(complete.second);
     BOOST_REQUIRE(deleted);
 }
 
