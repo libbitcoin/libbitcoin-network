@@ -28,31 +28,32 @@
 namespace libbitcoin {
 namespace network {
 
-template <size_t Size, typename... Args>
-quality_racer<Size, Args...>::
-quality_racer() NOEXCEPT
+template <typename... Args>
+quality_racer<Args...>::
+quality_racer(size_t size) NOEXCEPT
+  : size_(size)
 {
 }
 
-template <size_t Size, typename... Args>
-quality_racer<Size, Args...>::
+template <typename... Args>
+quality_racer<Args...>::
 ~quality_racer() NOEXCEPT
 {
     BC_ASSERT_MSG(!running() && !complete_, "deleting running quality_racer");
 }
 
-template <size_t Size, typename... Args>
-bool quality_racer<Size, Args...>::
+template <typename... Args>
+inline bool quality_racer<Args...>::
 running() const NOEXCEPT
 {
     return to_bool(runners_);
 }
 
-template <size_t Size, typename... Args>
-bool quality_racer<Size, Args...>::
+template <typename... Args>
+bool quality_racer<Args...>::
 start(handler&& complete) NOEXCEPT
 {
-    // bad lock?
+    // false implies logic error.
     if (running())
         return false;
 
@@ -60,53 +61,59 @@ start(handler&& complete) NOEXCEPT
     complete_ = std::make_shared<handler>(std::forward<handler>(complete));
     BC_POP_WARNING()
 
-    runners_ = Size;
+    success_ = false;
+    runners_ = size_;
     return true;
 }
 
-template <size_t Size, typename... Args>
-bool quality_racer<Size, Args...>::
+template <typename... Args>
+bool quality_racer<Args...>::
 finish(const Args&... args) NOEXCEPT
 {
-    // bad knock?
+    // false implies logic error.
     if (!running())
         return false;
 
+    // First argument (by convention) determines success.
     // Capture parameter pack as tuple of copied arguments.
-    if (is_winner())
-        args_ = std::tuple<Args...>(args...);
+    auto values = std::tuple<Args...>(args...);
+    const auto& ec = std::get<0>(values);
+    const auto winner = set_winner(!ec);
 
-    // bad knock or invoke?
-    return !is_loser() || invoke();
+    // Save args for winner (first success) or last failure.
+    if (winner || (!success_ && (runners_ == one)))
+        args_ = std::move(values);
+
+    // false invoke implies logic error.
+    return invoke() && winner;
 }
 
 // private
 // ----------------------------------------------------------------------------
 
-template <size_t Size, typename... Args>
-bool quality_racer<Size, Args...>::
-is_winner() const NOEXCEPT
+template <typename... Args>
+bool quality_racer<Args...>::
+set_winner(bool success) NOEXCEPT
 {
-    return runners_ == Size;
+    // Return is winner (first to succeed) and set succeeded.
+    success &= !success_;
+    success_ |= success;
+    return success;
 }
 
-template <size_t Size, typename... Args>
-bool quality_racer<Size, Args...>::
-is_loser() NOEXCEPT
+template <typename... Args>
+bool quality_racer<Args...>::
+invoke() NOEXCEPT
 {
-    // logic error, too many knocks.
+    // false implies logic error.
     if (!running())
         return false;
 
-    runners_ = sub1(runners_);
-    return !running();
-}
+    --runners_;
+    if (running())
+        return true;
 
-template <size_t Size, typename... Args>
-bool quality_racer<Size, Args...>::
-invoke() NOEXCEPT
-{
-    // logic error, knock by not running.
+    // false implies logic error.
     if (!complete_)
         return false;
 
@@ -119,9 +126,9 @@ invoke() NOEXCEPT
     return true;
 }
 
-template <size_t Size, typename... Args>
+template <typename... Args>
 template<size_t... Index>
-void quality_racer<Size, Args...>::
+void quality_racer<Args...>::
 invoker(const handler& complete, const packed& args, unpack<Index...>) NOEXCEPT
 {
     // Expand tuple into parameter pack.
