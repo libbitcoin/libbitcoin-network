@@ -67,7 +67,10 @@ private:
     bool invoke() NOEXCEPT;
     bool set_winner(bool success) NOEXCEPT;
 
+    // This is thread safe.
     const size_t size_;
+
+    // These are not thread safe.
     packed args_{};
     bool success_{};
     size_t runners_{};

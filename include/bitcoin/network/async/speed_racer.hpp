@@ -69,6 +69,7 @@ private:
     bool set_final() NOEXCEPT;
     bool is_winner() const NOEXCEPT;
 
+    // These are not thread safe.
     packed args_{};
     size_t runners_{};
     std::shared_ptr<handler> complete_{};
