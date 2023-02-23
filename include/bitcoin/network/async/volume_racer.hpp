@@ -20,8 +20,6 @@
 #define LIBBITCOIN_NETWORK_ASYNC_VOLUME_RACER_HPP
 
 #include <memory>
-#include <tuple>
-#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -32,45 +30,37 @@ namespace network {
 /// Race is a bind that invokes handler with the first set of arguments
 /// but only after a preconfigured number of invocations. This assists in
 /// synchronizing the results of a set of racing asynchronous operations.
-template <size_t Size, typename... Args>
+template <error::error_t Success, error::error_t Fail>
 class volume_racer final
 {
 public:
     typedef std::shared_ptr<volume_racer> ptr;
-    typedef std::function<void(Args...)> handler;
-
-    /// A stopped_ member is sufficient for a volume_racer of one.
-    static_assert(Size > one);
+    typedef std::function<void(const code&)> handler;
 
     DELETE_COPY_MOVE(volume_racer);
 
-    volume_racer() NOEXCEPT;
+    volume_racer(size_t size, size_t required) NOEXCEPT;
     ~volume_racer() NOEXCEPT;
 
     /// True if the volume_racer is running.
     inline bool running() const NOEXCEPT;
 
     /// False implies invalid usage.
-    bool start(handler&& complete) NOEXCEPT;
+    bool start(handler&& sufficient, handler&& complete) NOEXCEPT;
 
-    /// True implies winning finisher.
-    bool finish(const Args&... args) NOEXCEPT;
+    /// Signal finisher and pass total count.
+    bool finish(size_t count) NOEXCEPT;
 
 private:
-    template <size_t... Pack>
-    using unpack = std::index_sequence<Pack...>;
-    using packed = std::tuple<std::decay_t<Args>...>;
-    using sequence = std::index_sequence_for<Args...>;
-
-    template<size_t... Index>
-    void invoker(const handler& complete, const packed& args,
-        unpack<Index...>) NOEXCEPT;
     bool invoke() NOEXCEPT;
-    bool is_final() NOEXCEPT;
-    bool is_winner() const NOEXCEPT;
 
-    packed args_{};
+    // These are thread safe.
+    const size_t size_;
+    const size_t required_;
+
+    // These are not thread safe.
     size_t runners_{};
+    std::shared_ptr<handler> sufficient_{};
     std::shared_ptr<handler> complete_{};
 };
 

@@ -19,6 +19,7 @@
 #include <bitcoin/network/sessions/session_seed.hpp>
 
 #include <functional>
+#include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -94,10 +95,6 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    LOG("Seeding because of insufficient ("
-        << address_count() << " of " << settings().minimum_address_count()
-        << ") address quantity.");
-
     session::start(BIND2(handle_started, _1, std::move(handler)));
 }
 
@@ -106,9 +103,6 @@ void session_seed::handle_started(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Seeding runs entirely in start and is possible to stop.
-    ////BC_ASSERT_MSG(!stopped(), "session stopped in start");
-
     if (ec)
     {
         handler(ec);
@@ -116,16 +110,23 @@ void session_seed::handle_started(const code& ec,
         return;
     }
 
-    // Create a connector for each seed connection.
-    const auto connectors = create_connectors(settings().seeds.size());
-    auto it = settings().seeds.begin();
-    count_ = connectors->size();
-    handled_ = false;
+    const auto seeds = settings().seeds.size();
+    const auto required = settings().minimum_address_count();
 
-    for (const auto& connector: *connectors)
+    LOG("Seeding because of insufficient ("
+        << address_count() << " of " << required << ") address quantity.");
+
+    // Bogus warning, this pointer is copied into std::bind().
+    BC_PUSH_WARNING(NO_UNUSED_LOCAL_SMART_PTR)
+    const auto racer = std::make_shared<race>(seeds, required);
+    BC_POP_WARNING()
+
+    // Invoke sufficient on count, invoke complete with all seeds stopped.
+    racer->start(move_copy(handler), BIND1(stop_seed, _1));
+
+    for (const auto& seed: settings().seeds)
     {
-        const auto& seed = *(it++);
-
+        const auto connector = create_connector();
         subscribe_stop([=](const code&) NOEXCEPT
         {
             connector->stop();
@@ -133,7 +134,7 @@ void session_seed::handle_started(const code& ec,
         });
 
         start_seed(error::success, seed, connector,
-            BIND4(handle_connect, _1, _2, seed, handler));
+            BIND4(handle_connect, _1, _2, seed, racer));
     }
 }
 
@@ -158,8 +159,7 @@ void session_seed::start_seed(const code&, const config::endpoint& seed,
 }
 
 void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
-    const config::endpoint& LOG_ONLY(seed),
-    const result_handler& handler) NOEXCEPT
+    const config::endpoint& LOG_ONLY(seed), const race::ptr& racer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -167,7 +167,7 @@ void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
     {
         BC_ASSERT_MSG(!socket, "unexpected channel instance");
         LOG("Failed to connect seed address [" << seed << "] " << ec.message());
-        stop_seed(handler);
+        racer->finish(address_count());
         return;
     }
 
@@ -175,7 +175,7 @@ void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
-        BIND3(handle_channel_stop, _1, channel, handler));
+        BIND3(handle_channel_stop, _1, channel, racer));
 }
 
 void session_seed::attach_handshake(const channel::ptr& channel,
@@ -226,8 +226,7 @@ void session_seed::handle_channel_start(const code& ec,
     }
 
     // Pend even on start failure.
-    // This immediately follows the handshake unpend of the same channel.
-    // handle_channel_stop always invoked after handle_channel_start complete.
+    // This immediately follows session handshake unpend of the same channel.
     pend(channel);
 }
 
@@ -261,51 +260,22 @@ void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
 }
 
 void session_seed::handle_channel_stop(const code& ec,
-    const channel::ptr& channel, const result_handler& handler) NOEXCEPT
+    const channel::ptr& channel, const race::ptr& racer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     LOG("Seed stop [" << channel->authority() << "] " << ec.message());
 
     // Pent even on start failure.
-    // handle_channel_stop always invoked after handle_channel_start complete.
     unpend(channel);
-    stop_seed(handler);
+    racer->finish(address_count());
 }
 
-void session_seed::stop_seed(const result_handler& handler) NOEXCEPT
+void session_seed::stop_seed(const code&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Need to track count even if handled, for session removal. 
-    --count_;
-
-    // Stop is not set once complete, allows more address collection without
-    // delaying full node startup. So "handled" is used to disable summary.
-    if (!handled_)
-    {
-        if (stopped())
-        {
-            handled_ = true;
-            handler(error::service_stopped);
-        }
-        else if (address_count() >= settings().minimum_address_count())
-        {
-            handled_ = true;
-            handler(error::success);
-        }
-        else if (is_zero(count_))
-        {
-            handled_ = true;
-            handler(error::seeding_unsuccessful);
-        }
-    }
-
-    // All channels have completed.
-    if (is_zero(count_))
-    {
-        LOG("Seed session complete.");
-        unsubscribe_close();
-    }
+    LOG("Seed session complete.");
+    unsubscribe_close();
 }
 
 BC_POP_WARNING()

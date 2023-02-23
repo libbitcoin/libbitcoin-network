@@ -28,72 +28,77 @@
 namespace libbitcoin {
 namespace network {
 
-template <size_t Size, typename... Args>
-volume_racer<Size, Args...>::
-volume_racer() NOEXCEPT
+template <error::error_t Success, error::error_t Fail>
+volume_racer<Success, Fail>::
+volume_racer(size_t size, size_t required) NOEXCEPT
+  : size_(size), required_(required)
 {
 }
 
-template <size_t Size, typename... Args>
-volume_racer<Size, Args...>::
+template <error::error_t Success, error::error_t Fail>
+volume_racer<Success, Fail>::
 ~volume_racer() NOEXCEPT
 {
     BC_ASSERT_MSG(!running() && !complete_, "deleting running volume_racer");
 }
 
-template <size_t Size, typename... Args>
-inline bool volume_racer<Size, Args...>::
+template <error::error_t Success, error::error_t Fail>
+inline bool volume_racer<Success, Fail>::
 running() const NOEXCEPT
 {
     return to_bool(runners_);
 }
 
-template <size_t Size, typename... Args>
-bool volume_racer<Size, Args...>::
-start(handler&& complete) NOEXCEPT
+template <error::error_t Success, error::error_t Fail>
+bool volume_racer<Success, Fail>::
+start(handler&& sufficient, handler&& complete) NOEXCEPT
 {
+    // false implies logic error.
     if (running())
         return false;
 
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    sufficient_ = std::make_shared<handler>(std::forward<handler>(sufficient));
     complete_ = std::make_shared<handler>(std::forward<handler>(complete));
     BC_POP_WARNING()
 
-    runners_ = Size;
+    runners_ = size_;
     return true;
 }
 
-template <size_t Size, typename... Args>
-bool volume_racer<Size, Args...>::
-finish(const Args&... args) NOEXCEPT
+template <error::error_t Success, error::error_t Fail>
+bool volume_racer<Success, Fail>::
+finish(size_t count) NOEXCEPT
 {
+    // false implies logic error.
     if (!running())
         return false;
 
-    // Capture parameter pack as tuple of copied arguments.
-    const auto winner = is_winner();
+    // Determine sufficiency, since not yet reached.
+    if (sufficient_)
+    {
+        // Invoke sufficient and clear resources before race is finished.
+        if (count >= required_)
+        {
+            (*sufficient_)(Success);
+            sufficient_.reset();
+        }
+        else if (runners_ == one)
+        {
+            (*sufficient_)(Fail);
+            sufficient_.reset();
+        }
+    }
 
-    // Save args for winner (first to finish).
-    if (winner)
-        args_ = std::tuple<Args...>(args...);
-
-    // false implies logic error.
-    return invoke() && winner;
+    // false invoke implies logic error.
+    return invoke();
 }
 
 // private
 // ----------------------------------------------------------------------------
 
-template <size_t Size, typename... Args>
-bool volume_racer<Size, Args...>::
-is_winner() const NOEXCEPT
-{
-    // Return is winner (first to finish).
-    return runners_ == Size;
-}
-
-template <size_t Size, typename... Args>
-bool volume_racer<Size, Args...>::
+template <error::error_t Success, error::error_t Fail>
+bool volume_racer<Success, Fail>::
 invoke() NOEXCEPT
 {
     // false implies logic error.
@@ -108,22 +113,12 @@ invoke() NOEXCEPT
     if (!complete_)
         return false;
 
-    // Invoke completion handler.
-    invoker(*complete_, args_, sequence{});
+    // Invoke completion handler, always success.
+    (*complete_)(Success);
 
-    // Clear all resources.
+    // Clear resources.
     complete_.reset();
-    args_ = {};
     return true;
-}
-
-template <size_t Size, typename... Args>
-template<size_t... Index>
-void volume_racer<Size, Args...>::
-invoker(const handler& complete, const packed& args, unpack<Index...>) NOEXCEPT
-{
-    // Expand tuple into parameter pack.
-    complete(std::get<Index>(args)...);
 }
 
 } // namespace network

@@ -20,88 +20,105 @@
 
 BOOST_AUTO_TEST_SUITE(volume_racer_tests)
 
-using volume_racer_t = volume_racer<3, const code&, size_t>;
+using volume_racer_t = volume_racer<error::success, error::invalid_magic>;
+
+BOOST_AUTO_TEST_CASE(volume_racer__running__empty__false)
+{
+    volume_racer_t volume_racer{ 0, 0 };
+    BOOST_REQUIRE(!volume_racer.running());
+}
 
 BOOST_AUTO_TEST_CASE(volume_racer__running__unstarted__false)
 {
-    volume_racer_t volume_racer{};
+    volume_racer_t volume_racer{ 2, 10 };
     BOOST_REQUIRE(!volume_racer.running());
 }
 
 BOOST_AUTO_TEST_CASE(volume_racer__start__unstarted__true_running)
 {
-    volume_racer_t volume_racer{};
-    BOOST_REQUIRE(volume_racer.start([&](code, size_t) NOEXCEPT {}));
+    volume_racer_t volume_racer{ 2, 10 };
+    BOOST_REQUIRE(volume_racer.start([](code) NOEXCEPT {}, [](code) NOEXCEPT{}));
     BOOST_REQUIRE(volume_racer.running());
 
     // Avoid running at destruct assertion.
-    BOOST_REQUIRE(volume_racer.finish({}, {}));
-    BOOST_REQUIRE(!volume_racer.finish({}, {}));
-    BOOST_REQUIRE(!volume_racer.finish({}, {}));
+    BOOST_REQUIRE(volume_racer.finish(2));
+    BOOST_REQUIRE(volume_racer.running());
+    BOOST_REQUIRE(volume_racer.finish(4));
     BOOST_REQUIRE(!volume_racer.running());
 }
 
 BOOST_AUTO_TEST_CASE(volume_racer__start__started__false_running)
 {
-    volume_racer_t volume_racer{};
-    BOOST_REQUIRE(volume_racer.start([&](code, size_t) NOEXCEPT {}));
-    BOOST_REQUIRE(!volume_racer.start([&](code, size_t) NOEXCEPT {}));
+    volume_racer_t volume_racer{ 1, 10 };
+    BOOST_REQUIRE(volume_racer.start([](code) NOEXCEPT{}, [](code) NOEXCEPT{}));
+    BOOST_REQUIRE(!volume_racer.start([](code) NOEXCEPT{}, [](code) NOEXCEPT{}));
     BOOST_REQUIRE(volume_racer.running());
 
     // Avoid running at destruct assertion.
-    BOOST_REQUIRE(volume_racer.finish({}, {}));
-    BOOST_REQUIRE(!volume_racer.finish({}, {}));
-    BOOST_REQUIRE(!volume_racer.finish({}, {}));
+    BOOST_REQUIRE(volume_racer.finish(1));
     BOOST_REQUIRE(!volume_racer.running());
 }
 
-BOOST_AUTO_TEST_CASE(volume_racer__running__3_of_3__false_expected_invocation)
+BOOST_AUTO_TEST_CASE(volume_racer__running__3_of_3__failed_sufficient_complete)
 {
-    const std::pair<code, size_t> expected{ error::invalid_magic, 1 };
-    std::pair<code, size_t> complete{};
-    volume_racer_t volume_racer{};
-
+    volume_racer_t volume_racer{ 3, 10 };
     BOOST_REQUIRE(!volume_racer.running());
-    BOOST_REQUIRE(volume_racer.start([&](code ec, size_t size) NOEXCEPT
-    {
-        complete = { ec, size };
-    }));
 
+    code complete{ error::unknown };
+    code sufficient{ error::unknown };
+    BOOST_REQUIRE(volume_racer.start(
+        [&](code ec) NOEXCEPT
+        {
+            sufficient = ec;
+        },
+        [&](code ec) NOEXCEPT
+        {
+            complete = ec;
+        }));
     BOOST_REQUIRE(volume_racer.running());
-    BOOST_REQUIRE(volume_racer.finish(expected.first, expected.second));
+    BOOST_REQUIRE_EQUAL(sufficient, error::unknown);
+    BOOST_REQUIRE_EQUAL(complete, error::unknown);
+
+    BOOST_REQUIRE(volume_racer.finish(1));
     BOOST_REQUIRE(volume_racer.running());
-    BOOST_REQUIRE(!volume_racer.finish(error::accept_failed, 2));
+    BOOST_REQUIRE_EQUAL(sufficient, error::unknown);
+    BOOST_REQUIRE_EQUAL(complete, error::unknown);
+
+    BOOST_REQUIRE(volume_racer.finish(1));
     BOOST_REQUIRE(volume_racer.running());
-    BOOST_REQUIRE(!volume_racer.finish(error::address_invalid, 3));
+    BOOST_REQUIRE_EQUAL(sufficient, error::unknown);
+    BOOST_REQUIRE_EQUAL(complete, error::unknown);
+
+    BOOST_REQUIRE(volume_racer.finish(1));
     BOOST_REQUIRE(!volume_racer.running());
-    BOOST_REQUIRE_EQUAL(complete.first, expected.first);
-    BOOST_REQUIRE_EQUAL(complete.second, expected.second);
+    BOOST_REQUIRE_EQUAL(sufficient, error::invalid_magic);
+    BOOST_REQUIRE_EQUAL(complete, error::success);
 }
 
-BOOST_AUTO_TEST_CASE(volume_racer__running__4_of_3__false_expected_invocation)
+BOOST_AUTO_TEST_CASE(volume_racer__running__4_of_3__false_finish)
 {
-    const std::pair<code, size_t> expected{ error::invalid_magic, 1 };
-    std::pair<code, size_t> complete{};
-    volume_racer_t volume_racer{};
-
+    volume_racer_t volume_racer{ 3, 10 };
     BOOST_REQUIRE(!volume_racer.running());
-    BOOST_REQUIRE(volume_racer.start([&](code ec, size_t size) NOEXCEPT
-    {
-        complete = { ec, size };
-    }));
 
+    code complete{ error::unknown };
+    code sufficient{ error::unknown };
+    BOOST_REQUIRE(volume_racer.start(
+        [&](code ec) NOEXCEPT
+        {
+            sufficient = ec;
+        },
+        [&](code ec) NOEXCEPT
+        {
+            complete = ec;
+        }));
     BOOST_REQUIRE(volume_racer.running());
-    BOOST_REQUIRE(volume_racer.finish(expected.first, expected.second));
-    BOOST_REQUIRE(!volume_racer.finish(error::accept_failed, 2));
-    BOOST_REQUIRE(!volume_racer.finish(error::address_invalid, 3));
-    BOOST_REQUIRE(!volume_racer.running());
-    BOOST_REQUIRE(!volume_racer.finish(error::success, 4));
-    BOOST_REQUIRE(!volume_racer.running());
-    BOOST_REQUIRE_EQUAL(complete.first, expected.first);
-    BOOST_REQUIRE_EQUAL(complete.second, expected.second);
+    BOOST_REQUIRE(volume_racer.finish(1));
+    BOOST_REQUIRE(volume_racer.finish(1));
+    BOOST_REQUIRE(volume_racer.finish(1));
+    BOOST_REQUIRE(!volume_racer.finish(1));
 }
 
-BOOST_AUTO_TEST_CASE(volume_racer__finish__3_of_3__resources_deleted)
+BOOST_AUTO_TEST_CASE(volume_racer__finish__early_sufficiency__resources_deleted_as_expected)
 {
     struct destructor
     {
@@ -111,38 +128,198 @@ BOOST_AUTO_TEST_CASE(volume_racer__finish__3_of_3__resources_deleted)
         bool& deleted_;
     };
 
-    bool deleted{ false };
-    auto foo = std::make_shared<destructor>(deleted);
-    volume_racer<3, const code&, const destructor::ptr&> volume_racer{};
-    std::pair<bool, bool> complete{};
-
-    // foo/bar captured/passed into handler.
-    BOOST_REQUIRE(volume_racer.start([=, &complete](const code&, const destructor::ptr& bar) NOEXCEPT
-    {
-        complete = { !foo->deleted_, !bar->deleted_ };
-    }));
-
-    BOOST_REQUIRE(volume_racer.finish(error::success, foo));
-    BOOST_REQUIRE(volume_racer.running());
-    BOOST_REQUIRE(!complete.first);
-    BOOST_REQUIRE(!complete.second);
-
-    // volume_racer not finished, resources retained.
-    foo.reset();
-    BOOST_REQUIRE(!deleted);
-
-    BOOST_REQUIRE(!volume_racer.finish(error::success, {}));
-    BOOST_REQUIRE(volume_racer.running());
-    BOOST_REQUIRE(!complete.first);
-    BOOST_REQUIRE(!complete.second);
-
-    BOOST_REQUIRE(!volume_racer.finish(error::success, {}));
+    volume_racer_t volume_racer{ 3, 10 };
     BOOST_REQUIRE(!volume_racer.running());
-    BOOST_REQUIRE(complete.first);
-    BOOST_REQUIRE(complete.second);
 
-    // volume_racer finished, resourced cleared.
-    BOOST_REQUIRE(deleted);
+    bool foo_deleted{ false };
+    bool bar_deleted{ false };
+    auto foo = std::make_shared<destructor>(foo_deleted);
+    auto bar = std::make_shared<destructor>(bar_deleted);
+    std::pair<code, bool> sufficient{ error::unknown, false };
+    std::pair<code, bool> complete{ error::unknown, false };
+
+    // foo/bar captured into handlers.
+    BOOST_REQUIRE(volume_racer.start(
+        [=, &sufficient](code ec) NOEXCEPT
+        {
+            sufficient = { ec, !foo->deleted_ };
+        },
+        [=, &complete](code ec) NOEXCEPT
+        {
+            complete = { ec, !bar->deleted_ };
+        }));
+
+    // volume_racer not sufficient/complete, resources retained.
+    foo.reset();
+    bar.reset();
+    BOOST_REQUIRE(!foo_deleted);
+    BOOST_REQUIRE(!bar_deleted);
+
+    // First finish is neither sufficient nor complete.
+    BOOST_REQUIRE(volume_racer.finish(5));
+    BOOST_REQUIRE(volume_racer.running());
+    BOOST_REQUIRE_EQUAL(sufficient.first, error::unknown);
+    BOOST_REQUIRE_EQUAL(complete.first, error::unknown);
+    BOOST_REQUIRE(!sufficient.second);
+    BOOST_REQUIRE(!complete.second);
+    BOOST_REQUIRE(!foo_deleted);
+    BOOST_REQUIRE(!bar_deleted);
+
+    // Second finish is sufficient but not complete.
+    BOOST_REQUIRE(volume_racer.finish(10));
+    BOOST_REQUIRE(volume_racer.running());
+    BOOST_REQUIRE_EQUAL(sufficient.first, error::success);
+    BOOST_REQUIRE_EQUAL(complete.first, error::unknown);
+    BOOST_REQUIRE(sufficient.second);
+    BOOST_REQUIRE(!complete.second);
+    BOOST_REQUIRE(foo_deleted);
+    BOOST_REQUIRE(!bar_deleted);
+
+    // Third finish is complete.
+    BOOST_REQUIRE(volume_racer.finish(42));
+    BOOST_REQUIRE(!volume_racer.running());
+    BOOST_REQUIRE_EQUAL(sufficient.first, error::success);
+    BOOST_REQUIRE_EQUAL(complete.first, error::success);
+    BOOST_REQUIRE(sufficient.second);
+    BOOST_REQUIRE(complete.second);
+    BOOST_REQUIRE(foo_deleted);
+    BOOST_REQUIRE(bar_deleted);
+}
+
+BOOST_AUTO_TEST_CASE(volume_racer__finish__late_insufficiency__resources_deleted_as_expected)
+{
+    struct destructor
+    {
+        using ptr = std::shared_ptr<destructor>;
+        destructor(bool& deleted) NOEXCEPT : deleted_(deleted) {}
+        ~destructor() NOEXCEPT { deleted_ = true; }
+        bool& deleted_;
+    };
+
+    volume_racer_t volume_racer{ 3, 10 };
+    BOOST_REQUIRE(!volume_racer.running());
+
+    bool foo_deleted{ false };
+    bool bar_deleted{ false };
+    auto foo = std::make_shared<destructor>(foo_deleted);
+    auto bar = std::make_shared<destructor>(bar_deleted);
+    std::pair<code, bool> sufficient{ error::unknown, false };
+    std::pair<code, bool> complete{ error::unknown, false };
+
+    // foo/bar captured into handlers.
+    BOOST_REQUIRE(volume_racer.start(
+        [=, &sufficient](code ec) NOEXCEPT
+        {
+            sufficient = { ec, !foo->deleted_ };
+        },
+        [=, &complete](code ec) NOEXCEPT
+        {
+            complete = { ec, !bar->deleted_ };
+        }));
+
+    // volume_racer not sufficient/complete, resources retained.
+    foo.reset();
+    bar.reset();
+    BOOST_REQUIRE(!foo_deleted);
+    BOOST_REQUIRE(!bar_deleted);
+
+    // First finish is neither sufficient nor complete.
+    BOOST_REQUIRE(volume_racer.finish(5));
+    BOOST_REQUIRE(volume_racer.running());
+    BOOST_REQUIRE_EQUAL(sufficient.first, error::unknown);
+    BOOST_REQUIRE_EQUAL(complete.first, error::unknown);
+    BOOST_REQUIRE(!sufficient.second);
+    BOOST_REQUIRE(!complete.second);
+    BOOST_REQUIRE(!foo_deleted);
+    BOOST_REQUIRE(!bar_deleted);
+
+    // Second finish is neither sufficient nor complete.
+    BOOST_REQUIRE(volume_racer.finish(9));
+    BOOST_REQUIRE(volume_racer.running());
+    BOOST_REQUIRE_EQUAL(sufficient.first, error::unknown);
+    BOOST_REQUIRE_EQUAL(complete.first, error::unknown);
+    BOOST_REQUIRE(!sufficient.second);
+    BOOST_REQUIRE(!complete.second);
+    BOOST_REQUIRE(!foo_deleted);
+    BOOST_REQUIRE(!bar_deleted);
+
+    // Third finish is insufficient and complete.
+    BOOST_REQUIRE(volume_racer.finish(9));
+    BOOST_REQUIRE(!volume_racer.running());
+    BOOST_REQUIRE_EQUAL(sufficient.first, error::invalid_magic);
+    BOOST_REQUIRE_EQUAL(complete.first, error::success);
+    BOOST_REQUIRE(sufficient.second);
+    BOOST_REQUIRE(complete.second);
+    BOOST_REQUIRE(foo_deleted);
+    BOOST_REQUIRE(bar_deleted);
+}
+
+BOOST_AUTO_TEST_CASE(volume_racer__finish__late_sufficiency__resources_deleted_as_expected)
+{
+    struct destructor
+    {
+        using ptr = std::shared_ptr<destructor>;
+        destructor(bool& deleted) NOEXCEPT : deleted_(deleted) {}
+        ~destructor() NOEXCEPT { deleted_ = true; }
+        bool& deleted_;
+    };
+
+    volume_racer_t volume_racer{ 3, 10 };
+    BOOST_REQUIRE(!volume_racer.running());
+
+    bool foo_deleted{ false };
+    bool bar_deleted{ false };
+    auto foo = std::make_shared<destructor>(foo_deleted);
+    auto bar = std::make_shared<destructor>(bar_deleted);
+    std::pair<code, bool> sufficient{ error::unknown, false };
+    std::pair<code, bool> complete{ error::unknown, false };
+
+    // foo/bar captured into handlers.
+    BOOST_REQUIRE(volume_racer.start(
+        [=, &sufficient](code ec) NOEXCEPT
+        {
+            sufficient = { ec, !foo->deleted_ };
+        },
+        [=, &complete](code ec) NOEXCEPT
+        {
+            complete = { ec, !bar->deleted_ };
+        }));
+
+    // volume_racer not sufficient/complete, resources retained.
+    foo.reset();
+    bar.reset();
+    BOOST_REQUIRE(!foo_deleted);
+    BOOST_REQUIRE(!bar_deleted);
+
+    // First finish is neither sufficient nor complete.
+    BOOST_REQUIRE(volume_racer.finish(5));
+    BOOST_REQUIRE(volume_racer.running());
+    BOOST_REQUIRE_EQUAL(sufficient.first, error::unknown);
+    BOOST_REQUIRE_EQUAL(complete.first, error::unknown);
+    BOOST_REQUIRE(!sufficient.second);
+    BOOST_REQUIRE(!complete.second);
+    BOOST_REQUIRE(!foo_deleted);
+    BOOST_REQUIRE(!bar_deleted);
+
+    // Second finish is neither sufficient nor complete.
+    BOOST_REQUIRE(volume_racer.finish(9));
+    BOOST_REQUIRE(volume_racer.running());
+    BOOST_REQUIRE_EQUAL(sufficient.first, error::unknown);
+    BOOST_REQUIRE_EQUAL(complete.first, error::unknown);
+    BOOST_REQUIRE(!sufficient.second);
+    BOOST_REQUIRE(!complete.second);
+    BOOST_REQUIRE(!foo_deleted);
+    BOOST_REQUIRE(!bar_deleted);
+
+    // Third finish is sufficient and complete.
+    BOOST_REQUIRE(volume_racer.finish(10));
+    BOOST_REQUIRE(!volume_racer.running());
+    BOOST_REQUIRE_EQUAL(sufficient.first, error::success);
+    BOOST_REQUIRE_EQUAL(complete.first, error::success);
+    BOOST_REQUIRE(sufficient.second);
+    BOOST_REQUIRE(complete.second);
+    BOOST_REQUIRE(foo_deleted);
+    BOOST_REQUIRE(bar_deleted);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
