@@ -138,11 +138,10 @@ public:
     }
 
     // Capture first start_connect call.
-    void start_connect(const code&, const connectors_ptr& connectors,
-        object_key batch) NOEXCEPT override
+    void start_connect(const code&) NOEXCEPT override
     {
         // Must be first to ensure connector::start_connect() preceeds promise release.
-        session_outbound::start_connect({}, connectors, batch);
+        session_outbound::start_connect({});
 
         if (is_one(connects_))
             reconnect_.set_value(true);

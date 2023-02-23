@@ -96,54 +96,58 @@ void session_outbound::handle_started(const code& ec,
         return;
     }
 
-    // TODO: move into start connect.
     const auto batch = settings().connect_batch_size;
     const auto count = settings().outbound_connections;
-    for (size_t index = 0; index < count; ++index)
-    {
-        const auto connectors = create_connectors(batch);
-        start_connect(error::success, connectors, subscribe_stop(
-            [=](const code&) NOEXCEPT
-            {
-                for (const auto& connector: *connectors)
-                    connector->stop();
-
-                return false;
-            }));
-    }
 
     LOG("Creating " << count << " connections " << batch << " at a time.");
 
-    // This is the end of the start sequence, does not indicate connect status.
+    for (size_t index = 0; index < count; ++index)
+        start_connect(error::success);
+
+    // This is the end of the start sequence (actually at connector->connect).
     handler(error::success);
 }
 
 // Connnect cycle.
 // ----------------------------------------------------------------------------
 
-// Attempt to connect one peer using a batch subset of connectors.
-void session_outbound::start_connect(const code&,
-    const connectors_ptr& connectors, object_key batch) NOEXCEPT
+// Attempt to connect one peer using a batch of connectors.
+void session_outbound::start_connect(const code&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Terminates retry loops (and connector is restartable).
+    // Terminates retry loops.
     if (stopped())
         return;
 
-    // Race to first success or last failure.
-    const auto racer = std::make_shared<race>(connectors->size());
-    racer->start(BIND4(handle_connect, _1, _2, batch, connectors));
+    // Create a set of connectors for batched stop.
+    const auto connectors = create_connectors(settings().connect_batch_size);
 
-    // Attempt to connect with a unique address for each connector of batch.
+    // Subscribe connector set to stop desubscriber.
+    const auto key = subscribe_stop([=](const code&) NOEXCEPT
+    {
+        for (const auto& connector: *connectors)
+            connector->stop();
+        return false;
+    });
+
+    // Bogus warning, this pointer is copied into std::bind(), batch times.
+    BC_PUSH_WARNING(NO_UNUSED_LOCAL_SMART_PTR)
+    const auto racer = std::make_shared<race>(connectors->size());
+    BC_POP_WARNING()
+            
+    // Race to first success or last failure.
+    racer->start(BIND3(handle_connect, _1, _2, key));
+
+    // Attempt to connect with unique address for each connector of batch.
     for (const auto& connector: *connectors)
-        take(BIND6(do_one, _1, _2, batch, racer, connector, connectors));
+        take(BIND5(do_one, _1, _2, key, racer, connector));
 }
 
 // Attempt to connect the given peer and invoke handle_one.
 void session_outbound::do_one(const code& ec, const config::address& peer,
-    object_key batch, const race::ptr& racer, const connector::ptr& connector,
-    const connectors_ptr& connectors) NOEXCEPT
+    object_key key, const race::ptr& racer,
+    const connector::ptr& connector) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -162,28 +166,20 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    connector->connect(peer,
-        BIND5(handle_one, _1, _2, batch, racer, connectors));
+    connector->connect(peer, BIND4(handle_one, _1, _2, key, racer));
 }
 
 // Handle each do_one connection attempt, stopping on first success.
 void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
-    object_key, const race::ptr& racer,
-    const connectors_ptr& connectors) NOEXCEPT
+    object_key key, const race::ptr& racer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Winner in quality race is first to pass success.
-    // Starting handler will be invoked following last finish.
-    const auto winner = racer->finish(ec, socket);
-
-    // If there is a winner, stop all connectors.
-    if (winner)
+    if (racer->finish(ec, socket))
     {
-        // TODO: deregister batch (no need for connectors here).
-        for (const auto& connector: *connectors)
-            connector->stop();
-
+        // Since there is a winner, accelerate connector stop.
+        notify(key);
         return;
     }
 
@@ -193,10 +189,12 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
 
 // Handle the singular batch result.
 void session_outbound::handle_connect(const code& ec,
-    const socket::ptr& socket, object_key batch,
-    const connectors_ptr& connectors) NOEXCEPT
+    const socket::ptr& socket, object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // Unregister connectors, in case there was no winner.
+    notify(key);
 
     // Guard restartable timer (shutdown delay).
     if (stopped())
@@ -209,15 +207,15 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         // Avoid tight loop with delay timer.
-        defer(BIND3(start_connect, _1, connectors, batch));
+        defer(BIND1(start_connect, _1));
         return;
     }
 
     const auto channel = create_channel(socket, false);
 
     start_channel(channel,
-        BIND3(handle_channel_start, _1, channel, batch),
-        BIND4(handle_channel_stop, _1, channel, batch, connectors));
+        BIND2(handle_channel_start, _1, channel),
+        BIND2(handle_channel_stop, _1, channel));
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
@@ -226,13 +224,13 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
     session::attach_handshake(channel, std::move(handler));
 }
 
-void session_outbound::handle_channel_start(const code&, const channel::ptr&,
-    object_key) NOEXCEPT
+void session_outbound::handle_channel_start(const code&,
+    const channel::ptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     ////LOG("Outbound channel start [" << channel->authority() << "] "
-    ////    "(" << batch << ") " << ec.message());
+    ////    "(" << key << ") " << ec.message());
 }
 
 void session_outbound::attach_protocols(
@@ -242,17 +240,17 @@ void session_outbound::attach_protocols(
 }
 
 void session_outbound::handle_channel_stop(const code& ec,
-    const channel::ptr& channel, object_key batch,
-    const connectors_ptr& connectors) NOEXCEPT
+    const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     ////LOG("Outbound channel stop [" << channel->authority() << "] "
-    ////    "(" << batch << ") " << ec.message());
+    ////    "(" << key << ") " << ec.message());
+
     reclaim(ec, channel);
 
     // Cannot be tight loop due to handshake.
-    start_connect(error::success, connectors, batch);
+    start_connect(ec);
 }
 
 // Address reclaim and socket/channel stop.
@@ -290,10 +288,6 @@ void session_outbound::reclaim(const code& ec,
     {
         restore(socket->address(), BIND1(handle_reclaim, _1));
     }
-    ////else
-    ////{
-    ////    LOG("Reclaim socket? " << ec.message());
-    ////}
 }
 
 // Set address to current time and services from peer version message.
@@ -311,10 +305,6 @@ void session_outbound::reclaim(const code& ec,
     {
         restore(channel->updated_address(), BIND1(handle_reclaim, _1));
     }
-    ////else
-    ////{
-    ////    LOG("Reclaim channel? " << ec.message());
-    ////}
 }
 
 void session_outbound::handle_reclaim(const code&) const NOEXCEPT

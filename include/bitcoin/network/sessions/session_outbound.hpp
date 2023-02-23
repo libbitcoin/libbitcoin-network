@@ -56,91 +56,30 @@ protected:
     /// Overridden to change channel protocols (base calls from channel strand).
     void attach_protocols(const channel::ptr& channel) const NOEXCEPT override;
 
-    /// Start outbound connections based on config (called from start).
-    virtual void start_connect(const code& ec,
-        const connectors_ptr& connectors, object_key batch) NOEXCEPT;
+    /// Start outbound connection loop.
+    virtual void start_connect(const code& ec) NOEXCEPT;
 
 private:
-    class integer final
-    {
-    public:
-        typedef std::shared_ptr<integer> ptr;
-
-        DELETE_COPY_MOVE(integer);
-
-        static ptr create(size_t value) NOEXCEPT
-        {
-            return std::shared_ptr<integer>(new integer{ value });
-        }
-
-        size_t value() const NOEXCEPT
-        {
-            return value_;
-        }
-
-        size_t increment() NOEXCEPT
-        {
-            return ++value_;
-        }
-
-        size_t decrement() NOEXCEPT
-        {
-            return --value_;
-        }
-
-        void set_handled() NOEXCEPT
-        {
-            value_ = sentinel_;
-        }
-
-        bool is_handled() const NOEXCEPT
-        {
-            return value_ == sentinel_;
-        }
-
-        bool is_complete() const NOEXCEPT
-        {
-            return bc::is_zero(value_);
-        }
-        
-    protected:
-        static constexpr auto sentinel_ = max_size_t;
-
-        integer(size_t value) NOEXCEPT
-          : value_(value)
-        {
-        }
-
-    private:
-        size_t value_;
-    };
-
     typedef quality_racer<const code&, const socket::ptr&> race;
+
+    void handle_started(const code& ec,
+        const result_handler& handler) NOEXCEPT;
+    void do_one(const code& ec, const config::address& peer, object_key key,
+        const race::ptr& racer, const connector::ptr& connector) NOEXCEPT;
+    void handle_one(const code& ec, const socket::ptr& socket,
+        object_key key, const race::ptr& racer) NOEXCEPT;
+    void handle_connect(const code& ec, const socket::ptr& socket,
+        object_key key) NOEXCEPT;
+
+    void handle_channel_start(const code& ec,
+        const channel::ptr& channel) NOEXCEPT;
+    void handle_channel_stop(const code& ec,
+        const channel::ptr& channel) NOEXCEPT;
 
     /// Restore an address to the address pool.
     void reclaim(const code& ec, const socket::ptr& socket) NOEXCEPT;
     void reclaim(const code& ec, const channel::ptr& channel) NOEXCEPT;
     void handle_reclaim(const code& ec) const NOEXCEPT;
-
-    void handle_started(const code& ec,
-        const result_handler& handler) NOEXCEPT;
-
-    void handle_connect(const code& ec, const socket::ptr& socket,
-        object_key batch, const connectors_ptr& connectors) NOEXCEPT;
-
-    void handle_channel_start(const code& ec, const channel::ptr& channel,
-        object_key batch) NOEXCEPT;
-
-    void handle_channel_stop(const code& ec, const channel::ptr& channel,
-        object_key batch, const connectors_ptr& connectors) NOEXCEPT;
-
-    void do_one(const code& ec, const config::address& peer, object_key batch,
-        const race::ptr& racer, const connector::ptr& connector,
-        const connectors_ptr& connectors) NOEXCEPT;
-
-    void handle_one(const code& ec, const socket::ptr& socket,
-        object_key batch, const race::ptr& racer,
-        const connectors_ptr& connectors) NOEXCEPT;
 };
 
 } // namespace network
