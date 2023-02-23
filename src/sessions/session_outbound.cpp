@@ -301,11 +301,11 @@ bool session_outbound::is_reclaim(const code& ec) const NOEXCEPT
     if (stopped() || !ec)
         return true;
 
-    // TODO: Timeout may not be ideal here.
-    // Expiry is normal. Cancellation results from service stop.
+    // Timeout allowed below capacity, otherwise net disconnect drains pool.
     return ec == error::channel_expired
-        || ec == error::operation_canceled;
-        ////|| ec == error::operation_timeout;
+        || ec == error::operation_canceled
+        || (ec == error::operation_timeout &&
+            (address_count() < settings().host_pool_capacity));
 }
 
 // Use initial address time and services, since connection not completed.
