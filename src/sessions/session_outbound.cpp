@@ -96,14 +96,12 @@ void session_outbound::handle_started(const code& ec,
         return;
     }
 
+    // TODO: move into start connect.
     const auto batch = settings().connect_batch_size;
     const auto count = settings().outbound_connections;
-
     for (size_t index = 0; index < count; ++index)
     {
         const auto connectors = create_connectors(batch);
-
-        // TODO: move into start connect and desubscribe.
         start_connect(error::success, connectors, subscribe_stop(
             [=](const code&) NOEXCEPT
             {
@@ -133,111 +131,76 @@ void session_outbound::start_connect(const code&,
     if (stopped())
         return;
 
-    // TODO: use race(size) object for this.
-    // Count down the number of connection attempts within the batch.
-    const auto race = integer::create(connectors->size());
-
-    socket_handler connect =
-        BIND4(handle_connect, _1, _2, connectors, batch);
-
-    socket_handler one =
-        BIND6(handle_one, _1, _2, race, connectors, batch,
-            std::move(connect));
+    // Race to first success or last failure.
+    const auto racer = std::make_shared<race>(connectors->size());
+    racer->start(BIND4(handle_connect, _1, _2, batch, connectors));
 
     // Attempt to connect with a unique address for each connector of batch.
     for (const auto& connector: *connectors)
-        take(BIND5(do_one, _1, _2, batch, connector, one));
+        take(BIND6(do_one, _1, _2, batch, racer, connector, connectors));
 }
 
 // Attempt to connect the given peer and invoke handle_one.
 void session_outbound::do_one(const code& ec, const config::address& peer,
-    object_key, const connector::ptr& connector,
-    const socket_handler& handler) NOEXCEPT
+    object_key batch, const race::ptr& racer, const connector::ptr& connector,
+    const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
     {
-        // error::address_not_found is the only hosts.take() error code.
         ////LOG("Address pool is empty.");
-        handler(ec, nullptr);
+        racer->finish(ec, nullptr);
         return;
     }
 
     // Guard restartable connector (shutdown delay).
     if (stopped())
     {
-        // Ensure the peer address is restored.
-        handler(error::service_stopped, nullptr);
+        restore(peer, BIND1(handle_reclaim, _1));
+        racer->finish(error::service_stopped, nullptr);
         return;
     }
 
-    connector->connect(peer, move_copy(handler));
+    connector->connect(peer,
+        BIND5(handle_one, _1, _2, batch, racer, connectors));
 }
 
 // Handle each do_one connection attempt, stopping on first success.
 void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
-    const count_ptr& race, const connectors_ptr& connectors, object_key,
-    const socket_handler& handler) NOEXCEPT
+    object_key, const race::ptr& racer,
+    const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // This race is started with a copy of handler.
-    // This race is variably-sized (can't templatize).
-    // This is a quality vs. speed race (first success vs. first finish).
-    // Each call here invokes race.finish(ec, socket).
-    // Each success stops the batch of connectors.
-    // Finish returns true if winner else false.
-    // Losers reclaim address and stop socket (may be connected).
-    // Finishing loser sets error::connect_failed and nullptr.
+    // Winner in quality race is first to pass success.
+    // Starting handler will be invoked following last finish.
+    const auto winner = racer->finish(ec, socket);
 
-    // Previous success, stop socket (success or fail) and recover address.
-    if (race->is_handled())
+    // If there is a winner, stop all connectors.
+    if (winner)
     {
-        if (socket)
-        {
-            socket->stop();
-            reclaim(ec, socket);
-        }
+        // TODO: deregister batch (no need for connectors here).
+        for (const auto& connector: *connectors)
+            connector->stop();
 
         return;
     }
 
-    race->decrement();
-
-    // If error, recover address and set finished if last.
-    if (ec)
-    {
-        reclaim(ec, socket);
-        if (race->is_complete())
-        {
-            race->set_handled();
-            handler(error::connect_failed, socket);
-        }
-
-        return;
-    }
-
-    // Unhandled, success, stop all connectors.
-    race->set_handled();
-    handler(ec, socket);
-
-    // TODO: unsubscribe using object_key, handler invokes stop loop.
-    for (const auto& connector: *connectors)
-        connector->stop();
+    // Stop socket and reclaim address if not the winning finisher.
+    reclaim(ec, socket);
 }
 
 // Handle the singular batch result.
 void session_outbound::handle_connect(const code& ec,
-    const socket::ptr& socket, const connectors_ptr& connectors,
-    object_key batch) NOEXCEPT
+    const socket::ptr& socket, object_key batch,
+    const connectors_ptr& connectors) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Guard restartable timer (shutdown delay).
     if (stopped())
     {
-        if (socket) socket->stop();
         reclaim(ec, socket);
         return;
     }
@@ -292,7 +255,7 @@ void session_outbound::handle_channel_stop(const code& ec,
     start_connect(error::success, connectors, batch);
 }
 
-// Address reclaim.
+// Address reclaim and socket/channel stop.
 // ----------------------------------------------------------------------------
 // private
 
@@ -319,6 +282,9 @@ void session_outbound::reclaim(const code& ec,
     if (!socket)
         return;
 
+    // Reclaiming address implies socket must be stopped.
+    socket->stop();
+
     if (stopped() || always_reclaim(ec) || (maybe_reclaim(ec) &&
         (address_count() < settings().host_pool_capacity)))
     {
@@ -336,6 +302,9 @@ void session_outbound::reclaim(const code& ec,
 {
     if (!channel)
         return;
+
+    // Reclaiming address implies channel must be stopped.
+    channel->stop(error::operation_canceled);
 
     if (stopped() || always_reclaim(ec) || (maybe_reclaim(ec) &&
         (address_count() < settings().host_pool_capacity)))

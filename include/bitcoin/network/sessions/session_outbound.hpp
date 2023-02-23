@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
@@ -114,7 +115,7 @@ private:
         size_t value_;
     };
 
-    using count_ptr = integer::ptr;
+    typedef quality_racer<const code&, const socket::ptr&> race;
 
     /// Restore an address to the address pool.
     void reclaim(const code& ec, const socket::ptr& socket) NOEXCEPT;
@@ -123,20 +124,23 @@ private:
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
+
     void handle_connect(const code& ec, const socket::ptr& socket,
-        const connectors_ptr& connectors, object_key key) NOEXCEPT;
+        object_key batch, const connectors_ptr& connectors) NOEXCEPT;
 
     void handle_channel_start(const code& ec, const channel::ptr& channel,
-        object_key key) NOEXCEPT;
-    void handle_channel_stop(const code& ec, const channel::ptr& channel,
-        object_key key, const connectors_ptr& connectors) NOEXCEPT;
+        object_key batch) NOEXCEPT;
 
-    void do_one(const code& ec, const config::address& peer, object_key key,
-        const connector::ptr& connector,
-        const socket_handler& handler) NOEXCEPT;
+    void handle_channel_stop(const code& ec, const channel::ptr& channel,
+        object_key batch, const connectors_ptr& connectors) NOEXCEPT;
+
+    void do_one(const code& ec, const config::address& peer, object_key batch,
+        const race::ptr& racer, const connector::ptr& connector,
+        const connectors_ptr& connectors) NOEXCEPT;
+
     void handle_one(const code& ec, const socket::ptr& socket,
-        const count_ptr& counter, const connectors_ptr& connectors,
-        object_key key, const socket_handler& handler) NOEXCEPT;
+        object_key batch, const race::ptr& racer,
+        const connectors_ptr& connectors) NOEXCEPT;
 };
 
 } // namespace network
