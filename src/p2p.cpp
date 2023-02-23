@@ -44,7 +44,7 @@ p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
   : settings_(settings),
     threadpool_(settings.threads),
     strand_(threadpool_.service().get_executor()),
-    hosts_(threadpool_, settings),
+    hosts_(settings),
     broadcaster_(strand_),
     stop_subscriber_(strand_),
     connect_subscriber_(strand_),
@@ -394,12 +394,6 @@ bool p2p::stranded() const NOEXCEPT
 
 // Hosts collection.
 // ----------------------------------------------------------------------------
-// These bounce back to network strand from hosts strand. Since these are
-// protected, this could instead be done by session's protected use. This would
-// allow session to pass through hosts context, which would save a context
-// change by protocol back to channel context, which it must do anyway. This
-// just means that session would expose non-network strand context for handler
-// invocation, which is an inconsistency that could be confusing and not ideal.
 
 // private
 code p2p::start_hosts() NOEXCEPT
@@ -415,64 +409,49 @@ code p2p::stop_hosts() NOEXCEPT
 
 void p2p::take(address_item_handler&& handler) NOEXCEPT
 {
-    // Switch to hosts strand.
-    hosts_.take(
-        std::bind(&p2p::handle_take,
-            this, _1, _2, std::move(handler)));
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_take, this, std::move(handler)));
 }
 
-void p2p::handle_take(const code& ec, const address_item_cptr& address,
-    const address_item_handler& handler) NOEXCEPT
+void p2p::do_take(const address_item_handler& handler) NOEXCEPT
 {
-    // Return to network strand.
-    boost::asio::post(strand_, std::bind(handler, ec, address));
+    hosts_.take(move_copy(handler));
 }
 
 void p2p::restore(const address_item_cptr& address,
     result_handler&& handler) NOEXCEPT
 {
-    // Switch to hosts strand.
-    hosts_.restore(address,
-        std::bind(&p2p::handle_restore,
-            this, _1, std::move(handler)));
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_restore, this, address, std::move(handler)));
 }
 
-void p2p::handle_restore(const code& ec,
+void p2p::do_restore(const address_item_cptr& address,
     const result_handler& handler) NOEXCEPT
 {
-    // Return to network strand.
-    boost::asio::post(strand_, std::bind(handler, ec));
+    hosts_.restore(address, move_copy(handler));
 }
 
 void p2p::fetch(address_handler&& handler) NOEXCEPT
 {
-    // Switch to hosts strand.
-    hosts_.fetch(
-        std::bind(&p2p::handle_fetch,
-            this, _1, _2, std::move(handler)));
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_fetch, this, std::move(handler)));
 }
 
-void p2p::handle_fetch(const code& ec, const address_cptr& message,
-    const address_handler& handler) NOEXCEPT
+void p2p::do_fetch(const address_handler& handler) NOEXCEPT
 {
-    // Return to network strand.
-    boost::asio::post(strand_, std::bind(handler, ec, message));
+    hosts_.fetch(move_copy(handler));
 }
 
-void p2p::save(const address_cptr& message,
-    count_handler&& handler) NOEXCEPT
+void p2p::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 {
-    // Switch to hosts strand.
-    hosts_.save(message,
-        std::bind(&p2p::handle_save,
-            this, _1, _2, std::move(handler)));
+    boost::asio::dispatch(strand_,
+        std::bind(&p2p::do_save, this, message, std::move(handler)));
 }
 
-void p2p::handle_save(const code& ec, size_t accepted,
+void p2p::do_save(const address_cptr& message,
     const count_handler& handler) NOEXCEPT
 {
-    // Return to network strand.
-    boost::asio::post(strand_, std::bind(handler, ec, accepted));
+    hosts_.save(message, move_copy(handler));
 }
 
 // Loopback detection.

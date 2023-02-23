@@ -34,9 +34,8 @@ using namespace messages;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-hosts::hosts(threadpool& pool, const settings& settings) NOEXCEPT
+hosts::hosts(const settings& settings) NOEXCEPT
   : settings_(settings),
-    strand_(pool.service().get_executor()),
     buffer_(settings.host_pool_capacity)
 {
 }
@@ -138,17 +137,9 @@ size_t hosts::reserved() const NOEXCEPT
 // Usage.
 // ----------------------------------------------------------------------------
 
+// O(1).
 void hosts::take(address_item_handler&& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
-        std::bind(&hosts::do_take, this, std::move(handler)));
-}
-
-// O(1).
-void hosts::do_take(const address_item_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     // O(1) average, O(N) worst case.
     while (!buffer_.empty())
     {
@@ -165,19 +156,10 @@ void hosts::do_take(const address_item_handler& handler) NOEXCEPT
     handler(error::address_not_found, {});
 }
 
+// O(N) <= could be O(1) with O(1) search.
 void hosts::restore(const address_item_cptr& host,
     result_handler&& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
-        std::bind(&hosts::do_restore, this, host, std::move(handler)));
-}
-
-// O(N) <= could be O(1) with O(1) search.
-void hosts::do_restore(const address_item_cptr& host,
-    const result_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     if (stopped_)
     {
         handler(error::service_stopped);
@@ -204,17 +186,9 @@ void hosts::do_restore(const address_item_cptr& host,
 // Negotiation.
 // ----------------------------------------------------------------------------
 
+// O(N).
 void hosts::fetch(address_handler&& handler) const NOEXCEPT
 {
-    boost::asio::post(strand_,
-        std::bind(&hosts::do_fetch, this, std::move(handler)));
-}
-
-// O(N).
-void hosts::do_fetch(const address_handler& handler) const NOEXCEPT
-{
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     if (buffer_.empty())
     {
         handler(error::address_not_found, {});
@@ -241,19 +215,10 @@ void hosts::do_fetch(const address_handler& handler) const NOEXCEPT
     handler(error::success, out);
 }
 
+// O(N^2) <= could be O(N) with O(1) search.
 // TODO: message size reduction could be pushed to protocol to save processing.
 void hosts::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 {
-    boost::asio::post(strand_,
-        std::bind(&hosts::do_save, this, message, std::move(handler)));
-}
-
-// O(N^2) <= could be O(N) with O(1) search.
-void hosts::do_save(const address_cptr& message,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     if (stopped_)
     {
         handler(error::service_stopped, zero);
@@ -338,37 +303,27 @@ inline void hosts::push(const std::string& line) NOEXCEPT
 // ----------------------------------------------------------------------------
 // atomic unordered set: contains, insert, erase.
 
+// O(1).
 // private
 inline bool hosts::is_reserved(const config::authority& host) const NOEXCEPT
 {
-    // O(1).
-    mutex_.lock_shared();
-    const auto result = authorities_.contains(host);
-    mutex_.unlock_shared();
-
-    return result;
+    return authorities_.contains(host);
 }
 
+// O(1).
 // Channel is connected (infrequent).
 bool hosts::reserve(const config::authority& host) NOEXCEPT
 {
-    // O(1).
-    mutex_.lock();
     const auto result = authorities_.insert(host).second;
-    mutex_.unlock();
-
     if (result) ++authorities_count_;
     return result;
 }
 
+// O(1).
 // Channel is unconnected (infrequent).
 bool hosts::unreserve(const config::authority& host) NOEXCEPT
 {
-    // O(1).
-    mutex_.lock();
     const auto result = to_bool(authorities_.erase(host));
-    mutex_.unlock();
-
     if (result) --authorities_count_;
     return result;
 }

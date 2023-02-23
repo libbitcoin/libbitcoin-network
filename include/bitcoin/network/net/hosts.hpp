@@ -24,7 +24,6 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <shared_mutex>
 #include <unordered_set>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -53,7 +52,7 @@ public:
     DELETE_COPY_MOVE_DESTRUCT(hosts);
 
     /// Construct an instance.
-    hosts(threadpool& pool, const settings& settings) NOEXCEPT;
+    hosts(const settings& settings) NOEXCEPT;
 
     /// Start/stop.
     /// -----------------------------------------------------------------------
@@ -134,17 +133,13 @@ private:
 
     // These are thread safe.
     const settings& settings_;
-    asio::strand strand_;
     std::atomic<size_t> hosts_count_{};
     std::atomic<size_t> authorities_count_{};
 
-    // These are protected by strand.
+    // These are not thread safe.
     buffer buffer_;
     bool stopped_{ true };
-
-    // This is protected by mutex.
     std::unordered_set<config::authority> authorities_{};
-    mutable std::shared_mutex mutex_{};
 };
 
 } // namespace network
