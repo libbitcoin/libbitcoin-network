@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,34 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_TRACKER_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_TRACKER_HPP
+#ifndef LIBBITCOIN_NETWORK_LOG_LOG_HPP
+#define LIBBITCOIN_NETWORK_LOG_LOG_HPP
 
-#include <atomic>
-#include <bitcoin/network/async/logger.hpp>
-#include <bitcoin/network/define.hpp>
-
-namespace libbitcoin {
-namespace network {
-
-template <class Class>
-class tracker
-{
-protected:
-    DEFAULT_COPY_MOVE(tracker);
-
-    tracker(const logger& log) NOEXCEPT;
-    ~tracker() NOEXCEPT;
-
-private:
-    // These are thread safe.
-    static std::atomic<size_t> instances_;
-    const logger& log_;
-};
-
-} // namespace network
-} // namespace libbitcoin
-
-#include <bitcoin/network/impl/async/tracker.ipp>
+#include <bitcoin/network/log/event.hpp>
+#include <bitcoin/network/log/logger.hpp>
+#include <bitcoin/network/log/reporter.hpp>
+#include <bitcoin/network/log/timer.hpp>
+#include <bitcoin/network/log/tracker.hpp>
 
 #endif

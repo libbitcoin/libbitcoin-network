@@ -40,9 +40,13 @@
 /// WITH_ indicates build symbol.
 /// ---------------------------------------------------------------------------
 
+/// TODO: Build configuration.
+#define WITH_EVENTS
 #define WITH_LOGGING
 
-/// Build configured.
+#if defined(WITH_EVENTS)
+    #define HAVE_EVENTS
+#endif
 #if defined(WITH_LOGGING)
     #define HAVE_LOGGING
 #endif

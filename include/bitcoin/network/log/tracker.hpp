@@ -16,45 +16,52 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_TRACKER_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_TRACKER_IPP
+#ifndef LIBBITCOIN_NETWORK_LOG_TRACKER_HPP
+#define LIBBITCOIN_NETWORK_LOG_TRACKER_HPP
 
 #include <atomic>
 #include <typeinfo>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/logger.hpp>
+#include <bitcoin/network/log/logger.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 template <class Class>
-std::atomic<size_t> tracker<Class>::instances_(zero);
-
-template <class Class>
-tracker<Class>::tracker(const logger& log) NOEXCEPT
-  : log_(log)
+class tracker
 {
-    if constexpr (build_checked)
-    {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        log_.write() << typeid(Class).name() << "(" << ++instances_ << ")"
-            << std::endl;
-        BC_POP_WARNING()
-    }
-}
+protected:
+    DEFAULT_COPY_MOVE(tracker);
 
-template <class Class>
-tracker<Class>::~tracker() NOEXCEPT
-{
-    if constexpr (build_checked)
+    tracker(const logger& log) NOEXCEPT
+      : log_(log)
     {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        log_.write() << typeid(Class).name() << "(" << --instances_ << ")~"
-            << std::endl;
-        BC_POP_WARNING()
+        if constexpr (build_checked)
+        {
+            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+            log_.write() << typeid(Class).name() << "(" << ++instances_ << ")"
+                << std::endl;
+            BC_POP_WARNING()
+        }
     }
-}
+
+    ~tracker() NOEXCEPT
+    {
+        if constexpr (build_checked)
+        {
+            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+            log_.write() << typeid(Class).name() << "(" << --instances_ << ")~"
+                << std::endl;
+            BC_POP_WARNING()
+        }
+    }
+
+private:
+    // These are thread safe.
+    static inline std::atomic<size_t> instances_{};
+    const logger& log_;
+};
 
 } // namespace network
 } // namespace libbitcoin

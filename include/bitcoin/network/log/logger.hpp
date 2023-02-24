@@ -16,16 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_LOGGER_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_LOGGER_HPP
+#ifndef LIBBITCOIN_NETWORK_LOG_LOGGER_HPP
+#define LIBBITCOIN_NETWORK_LOG_LOGGER_HPP
 
 #include <ostream>
 #include <sstream>
 #include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/unsubscriber.hpp>
-#include <bitcoin/network/async/threadpool.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
 
@@ -40,8 +38,12 @@ namespace network {
 class BCT_API logger final
 {
 public:
-    typedef unsubscriber<const std::string&> subscriber;
-    typedef subscriber::handler notifier;
+    typedef unsubscriber<time_t, const std::string&> message_subscriber;
+    typedef message_subscriber::handler message_notifier;
+
+    using time_point = fine_clock::time_point;
+    typedef unsubscriber<uint8_t, size_t, const time_point&> event_subscriber;
+    typedef event_subscriber::handler event_notifier;
 
     /// Streaming log writer (std::ostringstream), not thread safe.
     class writer final
@@ -96,23 +98,35 @@ public:
     /// require shared logger instances, an unnecessary complication/cost.
     writer write() const NOEXCEPT;
 
+    /// Fire event with optional counter, recorded with current time.
+    void fire(uint8_t identifier, size_t count=zero) const NOEXCEPT;
+
     /// If stopped, handler is invoked with error::subscriber_stopped/defaults
     /// and dropped. Otherwise it is held until stop/drop. False if failed.
-    void subscribe(notifier&& handler) NOEXCEPT;
+    void subscribe_messages(message_notifier&& handler) NOEXCEPT;
+    void subscribe_events(event_notifier&& handler) NOEXCEPT;
 
-    /// Stop subscriber/pool with final message/empty posted to subscribers.
+    /// Stop subscribers/pool with final message/empty posted to subscribers.
     void stop(const code& ec, const std::string& message) NOEXCEPT;
     void stop(const std::string& message) NOEXCEPT;
     void stop() NOEXCEPT;
 
 protected:
-    /// Only writer can access notify, must destruct before logger.
+    /// Only writer can access, must destruct before logger, captures time.
     void notify(const code& ec, std::string&& message) const NOEXCEPT;
 
 private:
-    void do_subscribe(const notifier& handler) NOEXCEPT;
-    void do_notify(const code& ec, const std::string& message) const NOEXCEPT;
-    void do_stop(const code& ec, const std::string& message) NOEXCEPT;
+    bool stranded() const NOEXCEPT;
+    void do_subscribe_messages(const message_notifier& handler) NOEXCEPT;
+    void do_notify_message(const code& ec, time_t zulu,
+        const std::string& message) const NOEXCEPT;
+
+    void do_subscribe_events(const event_notifier& handler) NOEXCEPT;
+    void do_notify_event(uint8_t identifier, size_t count,
+        const time_point& span) const NOEXCEPT;
+
+    void do_stop(const code& ec, time_t zulu,
+        const std::string& message) NOEXCEPT;
 
     // This is protected by strand.
     threadpool pool_;
@@ -122,7 +136,8 @@ private:
 
     // These are protected by strand.
     // notify()/do_notify() can be const because of mutable subscriber.
-    mutable subscriber subscriber_;
+    mutable message_subscriber message_subscriber_;
+    mutable event_subscriber event_subscriber_;
 };
 
 } // namespace network

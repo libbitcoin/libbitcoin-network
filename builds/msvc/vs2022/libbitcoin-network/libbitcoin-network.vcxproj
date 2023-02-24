@@ -73,9 +73,6 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\async\deadline.cpp" />
-    <ClCompile Include="..\..\..\..\src\async\logger.cpp" />
-    <ClCompile Include="..\..\..\..\src\async\reporter.cpp" />
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
@@ -86,6 +83,8 @@
     <ClCompile Include="..\..\..\..\src\config\endpoint.cpp" />
     <ClCompile Include="..\..\..\..\src\config\utilities.cpp" />
     <ClCompile Include="..\..\..\..\src\error.cpp" />
+    <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
+    <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\address.cpp">
       <ObjectFileName>$(IntDir)src_messages_address.obj</ObjectFileName>
     </ClCompile>
@@ -130,6 +129,7 @@
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\channel.cpp" />
     <ClCompile Include="..\..\..\..\src\net\connector.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\deadline.cpp" />
     <ClCompile Include="..\..\..\..\src\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\src\net\pump.cpp" />
@@ -157,22 +157,17 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\asio.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\deadline.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\logger.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\quality_racer.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\reporter.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\speed_racer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_quality.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_speed.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_volume.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\thread.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\threadpool.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\timer.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\tracker.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\volume_racer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp" />
@@ -181,6 +176,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\utilities.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\event.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\log.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\logger.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\reporter.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\timer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\tracker.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\address_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\alert.hpp" />
@@ -228,6 +229,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\hosts.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\proxy.hpp" />
@@ -258,12 +260,11 @@
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\desubscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\quality_racer.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\speed_racer.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_quality.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_speed.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_volume.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\tracker.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\volume_racer.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

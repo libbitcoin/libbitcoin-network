@@ -23,6 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -60,7 +61,7 @@ protected:
     virtual void start_connect(const code& ec) NOEXCEPT;
 
 private:
-    typedef quality_racer<const code&, const socket::ptr&> race;
+    typedef race_quality<const code&, const socket::ptr&> race;
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;

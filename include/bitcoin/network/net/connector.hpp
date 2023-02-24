@@ -25,7 +25,9 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -79,7 +81,7 @@ public:
         socket_handler&& handler) NOEXCEPT;
 
 protected:
-    typedef speed_racer<two, const code&, const socket::ptr&> racer_t;
+    typedef race_speed<two, const code&, const socket::ptr&> racer_t;
 
     /// Try to connect to host:port, starts timer.
     virtual void start(const std::string& hostname, uint16_t port,

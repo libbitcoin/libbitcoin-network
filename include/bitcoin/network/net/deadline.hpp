@@ -16,19 +16,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_DEADLINE_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_DEADLINE_HPP
+#ifndef LIBBITCOIN_NETWORK_NET_DEADLINE_HPP
+#define LIBBITCOIN_NETWORK_NET_DEADLINE_HPP
 
 #include <memory>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/handlers.hpp>
-#include <bitcoin/network/async/logger.hpp>
-#include <bitcoin/network/async/time.hpp>
-#include <bitcoin/network/async/thread.hpp>
-#include <bitcoin/network/async/tracker.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/log/log.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -43,6 +39,7 @@ class BCT_API deadline final
 public:
     DELETE_COPY_MOVE(deadline);
 
+    typedef steady_clock::duration duration;
     typedef std::shared_ptr<deadline> ptr;
     
     /// Timer notification handler is posted to the service.

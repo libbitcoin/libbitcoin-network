@@ -21,6 +21,7 @@
 #include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
 
@@ -75,6 +76,7 @@ void session_inbound::handle_started(const code& ec,
     if (ec)
     {
         handler(ec);
+        unsubscribe_close();
         return;
     }
 
@@ -140,7 +142,8 @@ void session_inbound::handle_accept(const code& ec,
     // There was an error accepting the channel, so try again after delay.
     if (ec)
     {
-        BC_ASSERT_MSG(!socket, "unexpected socket instance");
+
+        BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
         LOG("Failed to accept inbound connection, " << ec.message());
         defer(BIND2(start_accept, _1, acceptor));
         return;

@@ -24,62 +24,82 @@
 namespace libbitcoin {
 namespace network {
 
+// local utilities
+// ----------------------------------------------------------------------------
+// These are complicated by lack of std::localtime/std::gmtime thread safety,
+// and by the fact that msvc reverses the parameters and inverts the result.
+
+inline bool local_time(tm& out_local, time_t time) NOEXCEPT
+{
+    // std::localtime not threadsafe due to static buffer, use localtime_s.
+#ifdef HAVE_MSC
+    // proprietary msvc implemention, parameters swapped, returns errno_t.
+    return is_zero(localtime_s(&out_local, &time));
+#else
+    // C++11 implemention returns parameter pointer, nullptr implies failure.
+    return !is_null(localtime_r(&time, &out_local));
+#endif
+}
+
+inline bool zulu_time(tm& out_zulu, time_t time) NOEXCEPT
+{
+    // std::gmtime is not threadsafe due to static buffer, use gmtime_s.
+#ifdef HAVE_MSC
+    // proprietary msvc implemention, parameters swapped, returns errno_t.
+    return is_zero(gmtime_s(&out_zulu, &time));
+#else
+    // C++11 implemention returns parameter pointer, nullptr implies failure.
+    return !is_null(gmtime_r(&time , &out_zulu));
+#endif
+}
+
+// published
+// ----------------------------------------------------------------------------
+// BUGBUG: en.wikipedia.org/wiki/Year_2038_problem
+
 time_t zulu_time() NOEXCEPT
 {
     const auto now = wall_clock::now();
     return wall_clock::to_time_t(now);
 }
 
-// BUGBUG: en.wikipedia.org/wiki/Year_2038_problem
 uint32_t unix_time() NOEXCEPT
 {
-    BC_PUSH_WARNING(NO_STATIC_CAST)
+    BC_PUSH_WARNING(NO_CASTS_FOR_ARITHMETIC_CONVERSION)
     return static_cast<uint32_t>(zulu_time());
     BC_POP_WARNING()
 }
 
-// local
-static bool local_time(tm& out_local, time_t zulu) NOEXCEPT
+std::string format_local_time(time_t time) NOEXCEPT
 {
-    // localtime not threadsafe due to static buffer return, use localtime_s.
-#ifdef HAVE_MSC
-    // proprietary msvc implemention, parameters swapped, returns errno_t.
-    return localtime_s(&out_local, &zulu) == 0;
-#else
-    // C++11 implemention returns parameter pointer, nullptr implies failure.
-    return localtime_r(&zulu, &out_local) != nullptr;
-#endif
-}
-
-// local
-static std::string local_time(time_t zulu) NOEXCEPT
-{
-    tm out_local{};
-    if (!local_time(out_local, zulu))
+    tm out{};
+    if (!local_time(out, time))
         return "";
 
-    // %c writes standard date and time string, e.g.
-    // Sun Oct 17 04:41:13 2010 (locale dependent)
-    static constexpr auto format = "%c";
-    static constexpr size_t size = 25;
+    constexpr auto format = "%FT%T";
+    constexpr size_t size = std::size("yyyy-mm-dd hh:mm:ss");
     char buffer[size];
 
-    // std::strftime is required because gcc doesn't implement std::put_time.
     // Returns number of characters, zero implies failure and undefined buffer.
     BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
-    return is_zero(std::strftime(buffer, size, format, &out_local)) ? "" : buffer;
+    return is_zero(std::strftime(buffer, size, format, &out)) ? "" : buffer;
     BC_POP_WARNING()
 }
 
-std::string local_time() NOEXCEPT
+std::string format_zulu_time(time_t time) NOEXCEPT
 {
-    return local_time(zulu_time());
-}
+    tm out{};
+    if (!zulu_time(out, time))
+        return "";
 
-std::string to_local_time(uint32_t zulu) NOEXCEPT
-{
-    BC_PUSH_WARNING(NO_STATIC_CAST)
-    return local_time(static_cast<time_t>(zulu));
+    // %FT%TZ writes RFC 3339 formatted utc time.
+    constexpr auto format = "%FT%TZ";
+    constexpr size_t size = std::size("yyyy-mm-ddThh:mm:ssZ");
+    char buffer[size];
+
+    // Returns number of characters, zero implies failure and undefined buffer.
+    BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
+    return is_zero(std::strftime(buffer, size, format, &out)) ? "" : buffer;
     BC_POP_WARNING()
 }
 

@@ -467,6 +467,8 @@ BOOST_AUTO_TEST_CASE(settings__minimum_address_count__always__outbound_product)
     BOOST_REQUIRE_EQUAL(instance.minimum_address_count(), product);
 }
 
+// disabled
+
 BOOST_AUTO_TEST_CASE(settings__disabled__enable_ipv6__both_false)
 {
     settings instance{};
@@ -497,6 +499,8 @@ BOOST_AUTO_TEST_CASE(settings__disabled__ipv6__expected)
     BOOST_REQUIRE(!instance.disabled(config::address{ "[2001:db8::2]:42" }));
 }
 
+// insufficient
+
 BOOST_AUTO_TEST_CASE(settings__insufficient__default__false)
 {
     settings instance{};
@@ -520,6 +524,8 @@ BOOST_AUTO_TEST_CASE(settings__insufficient__match__expected)
     instance.services_minimum = services & 0b11111110;
     BOOST_REQUIRE(!instance.insufficient(loop));
 }
+
+// unsupported
 
 BOOST_AUTO_TEST_CASE(settings__unsupported__default__false)
 {
@@ -548,6 +554,8 @@ BOOST_AUTO_TEST_CASE(settings__unsupported__match__expected)
     instance.invalid_services = 0;
     BOOST_REQUIRE(!instance.unsupported(loop));
 }
+
+// whitelisted
 
 BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv4_subnet__expected)
 {
@@ -603,10 +611,12 @@ BOOST_AUTO_TEST_CASE(settings__whitelisted__ipv6_host__expected)
     BOOST_REQUIRE(instance.whitelisted(config::address{ "[2020:db8::3]" }));
 }
 
+// blacklisted
+
 BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv4_subnet__expected)
 {
     settings instance{};
-    instance.whitelists.clear();
+    instance.blacklists.clear();
     BOOST_REQUIRE(!instance.blacklisted(config::address{ "42.42.42.42" }));
 
     instance.blacklists.emplace_back("12.12.12.12");
@@ -620,7 +630,7 @@ BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv4_subnet__expected)
 BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv4_host__expected)
 {
     settings instance{};
-    instance.whitelists.clear();
+    instance.blacklists.clear();
     BOOST_REQUIRE(!instance.blacklisted(config::address{ "24.24.24.24" }));
 
     instance.blacklists.emplace_back("12.12.12.12");
@@ -634,7 +644,7 @@ BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv4_host__expected)
 BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_subnet__expected)
 {
     settings instance{};
-    instance.whitelists.clear();
+    instance.blacklists.clear();
     BOOST_REQUIRE(!instance.blacklisted(config::address{ "[2020:db8::3]" }));
 
     instance.blacklists.emplace_back("[2020:db8::1]");
@@ -648,7 +658,7 @@ BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_subnet__expected)
 BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_host__expected)
 {
     settings instance{};
-    instance.whitelists.clear();
+    instance.blacklists.clear();
     BOOST_REQUIRE(!instance.blacklisted(config::address{ "[2020:db8::3]" }));
 
     instance.blacklists.emplace_back("[2020:db8::1]");
@@ -657,6 +667,64 @@ BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_host__expected)
 
     instance.blacklists.emplace_back("[2020:db8::3]");
     BOOST_REQUIRE(instance.blacklisted(config::address{ "[2020:db8::3]" }));
+}
+
+// peered
+
+BOOST_AUTO_TEST_CASE(settings__peered__configured__expected_port_matching)
+{
+    settings instance{};
+    instance.peers.clear();
+    BOOST_REQUIRE(!instance.peered(config::address{ "34.222.125.43:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "51.79.80.166:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "65.109.113.126:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "77.21.60.152:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "86.104.228.11:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "5.14.19.0:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "89.35.142.168:8333" }));
+
+    instance.peers.emplace_back("34.222.125.43:8333");
+    instance.peers.emplace_back("51.79.80.166:8333");
+    instance.peers.emplace_back("65.109.113.126:8333");
+    ////instance.peers.emplace_back("77.21.60.152:8333");
+    instance.peers.emplace_back("86.104.228.11:8333");
+    instance.peers.emplace_back("5.14.19.0");
+    instance.peers.emplace_back("89.35.142.168");
+
+    BOOST_REQUIRE(instance.peered(config::address{ "34.222.125.43:8333" }));
+    BOOST_REQUIRE(instance.peered(config::address{ "51.79.80.166:8333" }));
+    BOOST_REQUIRE(instance.peered(config::address{ "65.109.113.126:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "77.21.60.152:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "86.104.228.11" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "5.14.19.0:8333" }));
+    BOOST_REQUIRE(instance.peered(config::address{ "89.35.142.168" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__peered__ipv4_host__expected)
+{
+    settings instance{};
+    instance.peers.clear();
+    BOOST_REQUIRE(!instance.peered(config::address{ "24.24.24.24" }));
+
+    instance.peers.emplace_back("12.12.12.12");
+    BOOST_REQUIRE(!instance.peered(config::address{ "24.24.24.24" }));
+
+    instance.peers.emplace_back("24.24.24.24");
+    BOOST_REQUIRE(instance.peered(config::address{ "24.24.24.24" }));
+}
+
+BOOST_AUTO_TEST_CASE(settings__peered__ipv6_host__expected)
+{
+    settings instance{};
+    instance.peers.clear();
+    BOOST_REQUIRE(!instance.peered(config::address{ "[2020:db8::3]" }));
+
+    instance.peers.emplace_back("[2020:db8::1]");
+    instance.peers.emplace_back("[2020:db8::2]");
+    BOOST_REQUIRE(!instance.peered(config::address{ "[2020:db8::3]" }));
+
+    instance.peers.emplace_back("[2020:db8::3]");
+    BOOST_REQUIRE(instance.peered(config::address{ "[2020:db8::3]" }));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

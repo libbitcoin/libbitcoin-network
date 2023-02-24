@@ -27,4 +27,26 @@ BOOST_AUTO_TEST_CASE(timer__execution__always__non_empty)
     BOOST_REQUIRE_GT(result, 0);
 }
 
+BOOST_AUTO_TEST_CASE(timer__zulu_time__always__non_default)
+{
+    BOOST_REQUIRE_NE(zulu_time(), time_t{});
+}
+
+BOOST_AUTO_TEST_CASE(timer__unix_time__always__non_default)
+{
+    BOOST_REQUIRE_NE(unix_time(), uint32_t{});
+}
+
+BOOST_AUTO_TEST_CASE(timer__format_local_time__always__non_empty)
+{
+    // This only works in one time zone.
+    ////BOOST_REQUIRE_EQUAL(format_local_time(0x12345678_u32), "1979-09-05T15:51:36");
+    BOOST_REQUIRE(!format_local_time(0x12345678_u32).empty());
+}
+
+BOOST_AUTO_TEST_CASE(timer__format_zulu_time__always__expected)
+{
+    BOOST_REQUIRE_EQUAL(format_zulu_time(0x12345678_u32), "1979-09-05T22:51:36Z");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

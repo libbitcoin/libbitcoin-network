@@ -23,6 +23,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/sessions/session.hpp>
@@ -93,6 +94,7 @@ void session_outbound::handle_started(const code& ec,
     if (ec)
     {
         handler(ec);
+        unsubscribe_close();
         return;
     }
 
@@ -131,7 +133,7 @@ void session_outbound::start_connect(const code&) NOEXCEPT
         return false;
     });
 
-    // Bogus warning, this pointer is copied into std::bind(), batch times.
+    // Bogus warning, this pointer is copied into std::bind().
     BC_PUSH_WARNING(NO_UNUSED_LOCAL_SMART_PTR)
     const auto racer = std::make_shared<race>(connectors->size());
     BC_POP_WARNING()
@@ -150,6 +152,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     const connector::ptr& connector) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    ////COUNT(event_t::outbound1, key);
 
     if (ec)
     {
@@ -174,6 +177,7 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
     object_key key, const race::ptr& racer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    ////COUNT(event_t::outbound2, key);
 
     // Winner in quality race is first to pass success.
     if (racer->finish(ec, socket))
@@ -192,6 +196,7 @@ void session_outbound::handle_connect(const code& ec,
     const socket::ptr& socket, object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    ////COUNT(event_t::outbound3, key);
 
     // Unregister connectors, in case there was no winner.
     notify(key);

@@ -26,6 +26,7 @@
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/log/log.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -274,7 +275,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     if (code)
     {
         // /nodes.mom.market:0.2/ sends unversioned sendaddrv2.
-        LOGV("Invalid " << head->command << " payload from [" << authority()
+        LOG("Invalid " << head->command << " payload from [" << authority()
             << "] (" << encode_base16({ payload_buffer_.begin(),
                 std::next(payload_buffer_.begin(), std::min(payload_size,
                 invalid_payload_dump_size))}) << ") " << code.message());

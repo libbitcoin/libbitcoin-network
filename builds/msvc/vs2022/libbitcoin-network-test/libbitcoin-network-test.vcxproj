@@ -70,19 +70,15 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\async\deadline.cpp" />
     <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\quality_racer.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\speed_racer.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\race_quality.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\race_speed.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\race_volume.cpp" />
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\time.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\timer.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\volume_racer.cpp" />
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>
     </ClCompile>
@@ -90,6 +86,8 @@
     <ClCompile Include="..\..\..\..\test\config\endpoint.cpp" />
     <ClCompile Include="..\..\..\..\test\config\utilities.cpp" />
     <ClCompile Include="..\..\..\..\test\error.cpp" />
+    <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
+    <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_address.obj</ObjectFileName>
@@ -135,6 +133,7 @@
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\channel.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\test\net\pump.cpp" />

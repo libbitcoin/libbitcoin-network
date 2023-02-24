@@ -16,12 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_QUALITY_RACER_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_QUALITY_RACER_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_VOLUME_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACE_VOLUME_HPP
 
 #include <memory>
-#include <tuple>
-#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -32,51 +30,43 @@ namespace network {
 /// Race is a bind that invokes handler with the first set of arguments
 /// but only after a preconfigured number of invocations. This assists in
 /// synchronizing the results of a set of racing asynchronous operations.
-template <typename... Args>
-class quality_racer final
+template <error::error_t Success, error::error_t Fail>
+class race_volume final
 {
 public:
-    typedef std::shared_ptr<quality_racer> ptr;
-    typedef std::function<void(Args...)> handler;
+    typedef std::shared_ptr<race_volume> ptr;
+    typedef std::function<void(const code&)> handler;
 
-    DELETE_COPY_MOVE(quality_racer);
+    DELETE_COPY_MOVE(race_volume);
 
-    quality_racer(size_t size) NOEXCEPT;
-    ~quality_racer() NOEXCEPT;
+    race_volume(size_t size, size_t required) NOEXCEPT;
+    ~race_volume() NOEXCEPT;
 
-    /// True if the quality_racer is running.
+    /// True if the race_volume is running.
     inline bool running() const NOEXCEPT;
 
     /// False implies invalid usage.
-    bool start(handler&& complete) NOEXCEPT;
+    bool start(handler&& sufficient, handler&& complete) NOEXCEPT;
 
-    /// True implies winning finisher (first not failed).
-    /// First arg is an 'error code', cast to bool (failed if true).
-    /// There may be no winner, in which case last finish is invoked.
-    bool finish(const Args&... args) NOEXCEPT;
+    /// Signal finisher and pass total count.
+    bool finish(size_t count) NOEXCEPT;
 
 private:
-    template <size_t... Pack>
-    using unpack = std::index_sequence<Pack...>;
-    using packed = std::tuple<std::decay_t<Args>...>;
-    using sequence = std::index_sequence_for<Args...>;
-
-    template<size_t... Index>
-    void invoker(const handler& complete, const packed& args,
-        unpack<Index...>) NOEXCEPT;
     bool invoke() NOEXCEPT;
-    bool set_winner(bool success) NOEXCEPT;
 
+    // These are thread safe.
     const size_t size_;
-    packed args_{};
-    bool success_{};
+    const size_t required_;
+
+    // These are not thread safe.
     size_t runners_{};
+    std::shared_ptr<handler> sufficient_{};
     std::shared_ptr<handler> complete_{};
 };
 
 } // namespace network
 } // namespace libbitcoin
 
-#include <bitcoin/network/impl/async/quality_racer.ipp>
+#include <bitcoin/network/impl/async/race_volume.ipp>
 
 #endif

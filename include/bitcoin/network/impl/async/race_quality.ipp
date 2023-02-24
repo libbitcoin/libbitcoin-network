@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_VOLUME_RACER_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_VOLUME_RACER_IPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_QUALITY_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACE_QUALITY_IPP
 
 #include <memory>
 #include <tuple>
@@ -28,30 +28,32 @@
 namespace libbitcoin {
 namespace network {
 
-template <size_t Size, typename... Args>
-volume_racer<Size, Args...>::
-volume_racer() NOEXCEPT
+template <typename... Args>
+race_quality<Args...>::
+race_quality(size_t size) NOEXCEPT
+  : size_(size)
 {
 }
 
-template <size_t Size, typename... Args>
-volume_racer<Size, Args...>::
-~volume_racer() NOEXCEPT
+template <typename... Args>
+race_quality<Args...>::
+~race_quality() NOEXCEPT
 {
-    BC_ASSERT_MSG(!running() && !complete_, "deleting running volume_racer");
+    BC_ASSERT_MSG(!running() && !complete_, "deleting running race_quality");
 }
 
-template <size_t Size, typename... Args>
-inline bool volume_racer<Size, Args...>::
+template <typename... Args>
+inline bool race_quality<Args...>::
 running() const NOEXCEPT
 {
     return to_bool(runners_);
 }
 
-template <size_t Size, typename... Args>
-bool volume_racer<Size, Args...>::
+template <typename... Args>
+bool race_quality<Args...>::
 start(handler&& complete) NOEXCEPT
 {
+    // false implies logic error.
     if (running())
         return false;
 
@@ -59,41 +61,48 @@ start(handler&& complete) NOEXCEPT
     complete_ = std::make_shared<handler>(std::forward<handler>(complete));
     BC_POP_WARNING()
 
-    runners_ = Size;
+    success_ = false;
+    runners_ = size_;
     return true;
 }
 
-template <size_t Size, typename... Args>
-bool volume_racer<Size, Args...>::
+template <typename... Args>
+bool race_quality<Args...>::
 finish(const Args&... args) NOEXCEPT
 {
+    // false implies logic error.
     if (!running())
         return false;
 
+    // First argument (by convention) determines success.
     // Capture parameter pack as tuple of copied arguments.
-    const auto winner = is_winner();
+    auto values = std::tuple<Args...>(args...);
+    const auto& ec = std::get<0>(values);
+    const auto winner = set_winner(!ec);
 
-    // Save args for winner (first to finish).
-    if (winner)
-        args_ = std::tuple<Args...>(args...);
+    // Save args for winner (first success) or last failure.
+    if (winner || (!success_ && (runners_ == one)))
+        args_ = std::move(values);
 
-    // false implies logic error.
+    // false invoke implies logic error.
     return invoke() && winner;
 }
 
 // private
 // ----------------------------------------------------------------------------
 
-template <size_t Size, typename... Args>
-bool volume_racer<Size, Args...>::
-is_winner() const NOEXCEPT
+template <typename... Args>
+bool race_quality<Args...>::
+set_winner(bool success) NOEXCEPT
 {
-    // Return is winner (first to finish).
-    return runners_ == Size;
+    // Return is winner (first to succeed) and set succeeded.
+    success &= !success_;
+    success_ |= success;
+    return success;
 }
 
-template <size_t Size, typename... Args>
-bool volume_racer<Size, Args...>::
+template <typename... Args>
+bool race_quality<Args...>::
 invoke() NOEXCEPT
 {
     // false implies logic error.
@@ -117,9 +126,9 @@ invoke() NOEXCEPT
     return true;
 }
 
-template <size_t Size, typename... Args>
+template <typename... Args>
 template<size_t... Index>
-void volume_racer<Size, Args...>::
+void race_quality<Args...>::
 invoker(const handler& complete, const packed& args, unpack<Index...>) NOEXCEPT
 {
     // Expand tuple into parameter pack.

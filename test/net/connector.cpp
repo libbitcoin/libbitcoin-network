@@ -72,7 +72,7 @@ class tiny_timeout
 {
     using settings::settings;
 
-    duration connect_timeout() const NOEXCEPT override
+    steady_clock::duration connect_timeout() const NOEXCEPT override
     {
         return microseconds(1);
     }

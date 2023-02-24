@@ -444,15 +444,13 @@ BOOST_AUTO_TEST_CASE(session_seed__inbound__always__false)
 
 // stop
 
-BOOST_AUTO_TEST_CASE(session_seed__stop__started__service_stopped)
+BOOST_AUTO_TEST_CASE(session_seed__stop__started_sufficient__success)
 {
     const logger log{ false };
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.host_pool_capacity = 1;
     mock_p2p_stop_connect net(set, log);
-
-    // Stop is invoked just before first connector.connect, one seed processed.
     auto session = std::make_shared<mock_session_seed_increasing_address_count>(net, 1);
     net.set_session(session);
     BOOST_REQUIRE(session->stopped());
@@ -466,8 +464,8 @@ BOOST_AUTO_TEST_CASE(session_seed__stop__started__service_stopped)
         });
     });
 
-    // mock_p2p_stop_connect will set stop before started completes.
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::service_stopped);
+    // seeding_unsuccessful is the only failure code once started.
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(net.get_connector()->connects(), 1u);
     BOOST_REQUIRE(!session->attached_handshake());
     BOOST_REQUIRE(session->stopped());

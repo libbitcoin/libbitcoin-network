@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_VOLUME_RACER_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_VOLUME_RACER_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_SPEED_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACE_SPEED_HPP
 
 #include <memory>
 #include <tuple>
@@ -33,21 +33,21 @@ namespace network {
 /// but only after a preconfigured number of invocations. This assists in
 /// synchronizing the results of a set of racing asynchronous operations.
 template <size_t Size, typename... Args>
-class volume_racer final
+class race_speed final
 {
 public:
-    typedef std::shared_ptr<volume_racer> ptr;
+    typedef std::shared_ptr<race_speed> ptr;
     typedef std::function<void(Args...)> handler;
 
-    /// A stopped_ member is sufficient for a volume_racer of one.
+    /// A stopped_ member is sufficient for a race_speed of one.
     static_assert(Size > one);
 
-    DELETE_COPY_MOVE(volume_racer);
+    DELETE_COPY_MOVE(race_speed);
 
-    volume_racer() NOEXCEPT;
-    ~volume_racer() NOEXCEPT;
+    race_speed() NOEXCEPT;
+    ~race_speed() NOEXCEPT;
 
-    /// True if the volume_racer is running.
+    /// True if the race_speed is running.
     inline bool running() const NOEXCEPT;
 
     /// False implies invalid usage.
@@ -66,9 +66,10 @@ private:
     void invoker(const handler& complete, const packed& args,
         unpack<Index...>) NOEXCEPT;
     bool invoke() NOEXCEPT;
-    bool is_final() NOEXCEPT;
+    bool set_final() NOEXCEPT;
     bool is_winner() const NOEXCEPT;
 
+    // These are not thread safe.
     packed args_{};
     size_t runners_{};
     std::shared_ptr<handler> complete_{};
@@ -77,6 +78,6 @@ private:
 } // namespace network
 } // namespace libbitcoin
 
-#include <bitcoin/network/impl/async/volume_racer.ipp>
+#include <bitcoin/network/impl/async/race_speed.ipp>
 
 #endif

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_SPEED_RACER_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_SPEED_RACER_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_QUALITY_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACE_QUALITY_HPP
 
 #include <memory>
 #include <tuple>
@@ -32,28 +32,27 @@ namespace network {
 /// Race is a bind that invokes handler with the first set of arguments
 /// but only after a preconfigured number of invocations. This assists in
 /// synchronizing the results of a set of racing asynchronous operations.
-template <size_t Size, typename... Args>
-class speed_racer final
+template <typename... Args>
+class race_quality final
 {
 public:
-    typedef std::shared_ptr<speed_racer> ptr;
+    typedef std::shared_ptr<race_quality> ptr;
     typedef std::function<void(Args...)> handler;
 
-    /// A stopped_ member is sufficient for a speed_racer of one.
-    static_assert(Size > one);
+    DELETE_COPY_MOVE(race_quality);
 
-    DELETE_COPY_MOVE(speed_racer);
+    race_quality(size_t size) NOEXCEPT;
+    ~race_quality() NOEXCEPT;
 
-    speed_racer() NOEXCEPT;
-    ~speed_racer() NOEXCEPT;
-
-    /// True if the speed_racer is running.
+    /// True if the race_quality is running.
     inline bool running() const NOEXCEPT;
 
     /// False implies invalid usage.
     bool start(handler&& complete) NOEXCEPT;
 
-    /// True implies winning finisher.
+    /// True implies winning finisher (first not failed).
+    /// First arg is an 'error code', cast to bool (failed if true).
+    /// There may be no winner, in which case last finish is invoked.
     bool finish(const Args&... args) NOEXCEPT;
 
 private:
@@ -66,10 +65,14 @@ private:
     void invoker(const handler& complete, const packed& args,
         unpack<Index...>) NOEXCEPT;
     bool invoke() NOEXCEPT;
-    bool set_final() NOEXCEPT;
-    bool is_winner() const NOEXCEPT;
+    bool set_winner(bool success) NOEXCEPT;
 
+    // This is thread safe.
+    const size_t size_;
+
+    // These are not thread safe.
     packed args_{};
+    bool success_{};
     size_t runners_{};
     std::shared_ptr<handler> complete_{};
 };
@@ -77,6 +80,6 @@ private:
 } // namespace network
 } // namespace libbitcoin
 
-#include <bitcoin/network/impl/async/speed_racer.ipp>
+#include <bitcoin/network/impl/async/race_quality.ipp>
 
 #endif

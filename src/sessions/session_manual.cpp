@@ -23,6 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
 
@@ -138,7 +139,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
     // There was an error connecting the channel, so try again after delay.
     if (ec)
     {
-        BC_ASSERT_MSG(!socket, "unexpected socket instance");
+        BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
         LOG("Failed to connect manual address [" << peer << "] " << ec.message());
 
         // Connect failure notification.

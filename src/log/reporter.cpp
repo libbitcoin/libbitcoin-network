@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2022 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,23 +16,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
+#include <bitcoin/network/log/reporter.hpp>
 
-BOOST_AUTO_TEST_SUITE(time_tests)
+#include <bitcoin/system.hpp>
+#include <bitcoin/network/define.hpp>
 
-BOOST_AUTO_TEST_CASE(time__zulu_time__always__non_default)
+namespace libbitcoin {
+namespace network {
+
+reporter::reporter(const logger& log) NOEXCEPT
+  : log_(log)
 {
-    BOOST_REQUIRE_NE(zulu_time(), time_t{});
 }
 
-BOOST_AUTO_TEST_CASE(time__unix_time__always__non_zero)
+const logger& reporter::log() const NOEXCEPT
 {
-    BOOST_REQUIRE_NE(unix_time(), 0_u32);
+    return log_;
 }
 
-BOOST_AUTO_TEST_CASE(time__local_time__always__non_empty)
+const void reporter::fire(uint8_t identifier, size_t count) const NOEXCEPT
 {
-    BOOST_REQUIRE(!local_time().empty());
+    log_.fire(identifier, count);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+} // namespace network
+} // namespace libbitcoin

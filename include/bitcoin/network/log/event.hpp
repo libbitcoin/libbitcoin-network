@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2021 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,23 +16,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/async/reporter.hpp>
+#ifndef LIBBITCOIN_NETWORK_LOG_EVENT_HPP
+#define LIBBITCOIN_NETWORK_LOG_EVENT_HPP
 
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
+namespace event_t {
 
-reporter::reporter(const logger& log) NOEXCEPT
-  : log_(log)
+// Use event_t namespace to prevent pollution of network namesapce.
+// Could use class enum, but we want simple conversion to uint8_t.
+enum events : uint8_t
 {
-}
+    stop,
+    outbound1,
+    outbound2,
+    outbound3
+};
 
-const logger& reporter::log() const NOEXCEPT
-{
-    return log_;
-}
-
+} // namespace event_t
 } // namespace network
 } // namespace libbitcoin
+
+#endif

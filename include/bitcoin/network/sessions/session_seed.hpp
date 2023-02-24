@@ -21,8 +21,10 @@
 
 #include <memory>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -59,24 +61,22 @@ protected:
 
     /// Start a seed connection (called from start).
     virtual void start_seed(const code& ec, const config::endpoint& seed,
-        const connector::ptr& connector,
-        const socket_handler& handler) NOEXCEPT;
+        const connector::ptr& connector, const socket_handler& handler) NOEXCEPT;
 
-    /// Accumulate the result of the seed connection.
-    virtual void stop_seed(const result_handler& handler) NOEXCEPT;
+    /// All seed connections are stopped.
+    virtual void stop_seed(const code& ec) NOEXCEPT;
 
 private:
-    void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
-    void handle_connect(const code& ec, const socket::ptr& socket,
-        const config::endpoint& seed, const result_handler& handler) NOEXCEPT;
+    typedef race_volume<error::success, error::seeding_unsuccessful> race;
 
-    void handle_channel_start(const code& ec, const channel::ptr& channel) NOEXCEPT;
-    void handle_channel_stop(const code& ec, const channel::ptr& channel,
+    void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;
-
-    // These are protected by the strand.
-    bool handled_{ false };
-    size_t count_{};
+    void handle_connect(const code& ec, const socket::ptr& socket,
+        const config::endpoint& seed, const race::ptr& racer) NOEXCEPT;
+    void handle_channel_start(const code& ec,
+        const channel::ptr& channel) NOEXCEPT;
+    void handle_channel_stop(const code& ec,
+        const channel::ptr& channel, const race::ptr& racer) NOEXCEPT;
 };
 
 } // namespace network

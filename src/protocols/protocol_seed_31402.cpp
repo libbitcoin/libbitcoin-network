@@ -22,6 +22,7 @@
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
@@ -127,6 +128,7 @@ address::cptr protocol_seed_31402::filter(
             || settings().disabled(address)
             || settings().insufficient(address)
             || settings().unsupported(address)
+            || settings().peered(address)
             || settings().blacklisted(address)
             || !settings().whitelisted(address);
     });

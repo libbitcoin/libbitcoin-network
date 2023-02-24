@@ -23,6 +23,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -288,6 +289,7 @@ inline void hosts::push(const std::string& line) NOEXCEPT
             || settings_.disabled(item)
             || settings_.insufficient(item)
             || settings_.unsupported(item)
+            || settings_.peered(item)
             || settings_.blacklisted(item)
             || !settings_.whitelisted(item))
             return;

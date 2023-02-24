@@ -23,6 +23,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
@@ -291,8 +292,8 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     }
 
     LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
-    LOG(prefix << " [" << authority() << "] protocol version ("
-        << message->value << ") agent: " << message->user_agent);
+    LOG(prefix << " [" << authority() << "] version (" << message->value << ") "
+        << message->user_agent);
 
     if (to_bool(message->services & invalid_services_))
     {

@@ -16,25 +16,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/async/deadline.hpp>
+#include <bitcoin/network/net/deadline.hpp>
 
 #include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/handlers.hpp>
-#include <bitcoin/network/async/logger.hpp>
-#include <bitcoin/network/async/thread.hpp>
-#include <bitcoin/network/async/threadpool.hpp>
-#include <bitcoin/network/async/time.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/log/log.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 using namespace std::placeholders;
 
-BC_DEBUG_ONLY(static const time_point epoch{};)
+BC_DEBUG_ONLY(static const steady_clock::time_point epoch{};)
 
 deadline::deadline(const logger& log, asio::strand& strand,
     const duration& timeout) NOEXCEPT

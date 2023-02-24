@@ -20,8 +20,6 @@
 #define LIBBITCOIN_NETWORK_ASYNC_TIME_HPP
 
 #include <chrono>
-#include <time.h>
-#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -34,26 +32,15 @@ typedef std::chrono::milliseconds milliseconds;
 typedef std::chrono::microseconds microseconds;
 typedef std::chrono::nanoseconds nanoseconds;
 
-/// Use steady_clock for continuity.
+/// Use steady_clock for continuity, not time.
 typedef std::chrono::steady_clock steady_clock;
-typedef steady_clock::duration duration;
-typedef steady_clock::time_point time_point;
+
+/// Use fine_clock for high resolution, not time.
+typedef std::chrono::high_resolution_clock fine_clock;
 
 /// Use wall_clock for time of day.
 /// C++20: std::chrono::system_clock measures Unix Time.
 typedef std::chrono::system_clock wall_clock;
-
-/// Current zulu (utc) time using the wall clock, as time_t.
-BCT_API time_t zulu_time() NOEXCEPT;
-
-/// Current zulu (utc) time using the wall clock, cast to uint32_t.
-BCT_API uint32_t unix_time() NOEXCEPT;
-
-/// Current local date-time text, locale dependent (Sun Oct 17 04:41:13 2010).
-BCT_API std::string local_time() NOEXCEPT;
-
-/// Specified zulu (utc) time as, conversion to local date-time text.
-BCT_API std::string BCT_API to_local_time(uint32_t zulu) NOEXCEPT;
 
 } // namespace network
 } // namespace libbitcoin

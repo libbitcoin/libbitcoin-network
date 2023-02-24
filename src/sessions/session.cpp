@@ -26,6 +26,7 @@
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/p2p.hpp>
@@ -85,16 +86,16 @@ void session::stop() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void session::start_channel(const channel::ptr& channel,
-    result_handler&& started, result_handler&& stopped) NOEXCEPT
+    result_handler&& starter, result_handler&& stopper) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    if (this->stopped())
+    if (stopped())
     {
         // Direct invoke of handlers.
         channel->stop(error::service_stopped);
-        started(error::service_stopped);
-        stopped(error::service_stopped);
+        starter(error::service_stopped);
+        stopper(error::service_stopped);
         return;
     }
 
@@ -104,8 +105,8 @@ void session::start_channel(const channel::ptr& channel,
     {
         // Direct invoke of handlers (continuing).
         channel->stop(error::channel_conflict);
-        started(error::channel_conflict);
-        stopped(error::channel_conflict);
+        starter(error::channel_conflict);
+        stopper(error::channel_conflict);
         return;
     }
 
@@ -113,8 +114,8 @@ void session::start_channel(const channel::ptr& channel,
     pend(channel);
 
     result_handler start =
-        BIND4(handle_channel_start, _1, channel, std::move(started),
-            std::move(stopped));
+        BIND4(handle_channel_start, _1, channel, std::move(starter),
+            std::move(stopper));
 
     result_handler shake =
         BIND3(handle_handshake, _1, channel, std::move(start));

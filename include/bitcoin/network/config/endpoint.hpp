@@ -88,13 +88,20 @@ public:
     operator bool() const NOEXCEPT;
 
     /// Equality considers all properties (scheme, host, port).
+    /// Non-numeric and invalid endpoints will match the default address_item.
     bool operator==(const endpoint& other) const NOEXCEPT;
     bool operator!=(const endpoint& other) const NOEXCEPT;
+    bool operator==(const messages::address_item& other) const NOEXCEPT;
+    bool operator!=(const messages::address_item& other) const NOEXCEPT;
 
     friend std::istream& operator>>(std::istream& input,
         endpoint& argument) THROWS;
     friend std::ostream& operator<<(std::ostream& output,
         const endpoint& argument) NOEXCEPT;
+
+protected:
+    std::string to_authority() const NOEXCEPT;
+    messages::address_item to_address_item() const NOEXCEPT;
 
 private:
     // These are not thread safe.
