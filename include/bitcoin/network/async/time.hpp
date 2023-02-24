@@ -49,11 +49,11 @@ BCT_API time_t zulu_time() NOEXCEPT;
 /// Current zulu (utc) time using the wall clock, cast to uint32_t.
 BCT_API uint32_t unix_time() NOEXCEPT;
 
-/// Current local date-time text, locale dependent (Sun Oct 17 04:41:13 2010).
-BCT_API std::string local_time() NOEXCEPT;
+/// Specified zulu (utc) time as local time: "yyyy-mm-ddThh:mm:ssL".
+BCT_API std::string BCT_API format_local_time(time_t zulu) NOEXCEPT;
 
-/// Specified zulu (utc) time as, conversion to local date-time text.
-BCT_API std::string BCT_API to_local_time(uint32_t zulu) NOEXCEPT;
+/// Specified zulu (utc) time as RFC 3339 utc time:  "yyyy-mm-ddThh:mm:ssZ".
+BCT_API std::string BCT_API format_zulu_time(time_t zulu) NOEXCEPT;
 
 } // namespace network
 } // namespace libbitcoin
