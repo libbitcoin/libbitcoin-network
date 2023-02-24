@@ -143,7 +143,7 @@ size_t settings::maximum_payload() const NOEXCEPT
 }
 
 // Randomized from 50% to maximum milliseconds (specified in seconds).
-duration settings::retry_timeout() const NOEXCEPT
+steady_clock::duration settings::retry_timeout() const NOEXCEPT
 {
     const auto from = retry_timeout_seconds * 500_u64;
     const auto to = retry_timeout_seconds * 1'000_u64;
@@ -151,34 +151,34 @@ duration settings::retry_timeout() const NOEXCEPT
 }
 
 // Randomized from 50% to maximum milliseconds (specified in seconds).
-duration settings::connect_timeout() const NOEXCEPT
+steady_clock::duration settings::connect_timeout() const NOEXCEPT
 {
     const auto from = connect_timeout_seconds * 500_u64;
     const auto to = connect_timeout_seconds * 1'000_u64;
     return milliseconds{ system::pseudo_random::next(from, to) };
 }
 
-duration settings::channel_handshake() const NOEXCEPT
+steady_clock::duration settings::channel_handshake() const NOEXCEPT
 {
     return seconds(handshake_timeout_seconds);
 }
 
-duration settings::channel_germination() const NOEXCEPT
+steady_clock::duration settings::channel_germination() const NOEXCEPT
 {
     return seconds(seeding_timeout_seconds);
 }
 
-duration settings::channel_heartbeat() const NOEXCEPT
+steady_clock::duration settings::channel_heartbeat() const NOEXCEPT
 {
     return minutes(channel_heartbeat_minutes);
 }
 
-duration settings::channel_inactivity() const NOEXCEPT
+steady_clock::duration settings::channel_inactivity() const NOEXCEPT
 {
     return minutes(channel_inactivity_minutes);
 }
 
-duration settings::channel_expiration() const NOEXCEPT
+steady_clock::duration settings::channel_expiration() const NOEXCEPT
 {
     return minutes(channel_expiration_minutes);
 }

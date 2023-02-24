@@ -43,6 +43,7 @@ class BCT_API deadline final
 public:
     DELETE_COPY_MOVE(deadline);
 
+    typedef steady_clock::duration duration;
     typedef std::shared_ptr<deadline> ptr;
     
     /// Timer notification handler is posted to the service.

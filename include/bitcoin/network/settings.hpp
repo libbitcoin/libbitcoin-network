@@ -81,13 +81,13 @@ struct BCT_API settings
     virtual bool outbound_enabled() const NOEXCEPT;
     virtual bool advertise_enabled() const NOEXCEPT;
     virtual size_t maximum_payload() const NOEXCEPT;
-    virtual duration retry_timeout() const NOEXCEPT;
-    virtual duration connect_timeout() const NOEXCEPT;
-    virtual duration channel_handshake() const NOEXCEPT;
-    virtual duration channel_germination() const NOEXCEPT;
-    virtual duration channel_heartbeat() const NOEXCEPT;
-    virtual duration channel_inactivity() const NOEXCEPT;
-    virtual duration channel_expiration() const NOEXCEPT;
+    virtual steady_clock::duration retry_timeout() const NOEXCEPT;
+    virtual steady_clock::duration connect_timeout() const NOEXCEPT;
+    virtual steady_clock::duration channel_handshake() const NOEXCEPT;
+    virtual steady_clock::duration channel_germination() const NOEXCEPT;
+    virtual steady_clock::duration channel_heartbeat() const NOEXCEPT;
+    virtual steady_clock::duration channel_inactivity() const NOEXCEPT;
+    virtual steady_clock::duration channel_expiration() const NOEXCEPT;
     virtual size_t minimum_address_count() const NOEXCEPT;
     virtual std::filesystem::path file() const NOEXCEPT;
 

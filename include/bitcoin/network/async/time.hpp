@@ -34,10 +34,11 @@ typedef std::chrono::milliseconds milliseconds;
 typedef std::chrono::microseconds microseconds;
 typedef std::chrono::nanoseconds nanoseconds;
 
-/// Use steady_clock for continuity.
+/// Use steady_clock for continuity, not time.
 typedef std::chrono::steady_clock steady_clock;
-typedef steady_clock::duration duration;
-typedef steady_clock::time_point time_point;
+
+/// Use fine_clock for high resolution, not time.
+typedef std::chrono::high_resolution_clock fine_clock;
 
 /// Use wall_clock for time of day.
 /// C++20: std::chrono::system_clock measures Unix Time.
