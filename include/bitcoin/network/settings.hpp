@@ -96,6 +96,7 @@ struct BCT_API settings
     virtual bool unsupported(const messages::address_item& item) const NOEXCEPT;
     virtual bool blacklisted(const messages::address_item& item) const NOEXCEPT;
     virtual bool whitelisted(const messages::address_item& item) const NOEXCEPT;
+    virtual bool peered(const messages::address_item& item) const NOEXCEPT;
 };
 
 } // namespace network

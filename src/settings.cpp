@@ -223,5 +223,10 @@ bool settings::whitelisted(const messages::address_item& item) const NOEXCEPT
     return whitelists.empty() || contains(whitelists, item);
 }
 
+bool settings::peered(const messages::address_item& item) const NOEXCEPT
+{
+    return contains(peers, item);
+}
+
 } // namespace network
 } // namespace libbitcoin

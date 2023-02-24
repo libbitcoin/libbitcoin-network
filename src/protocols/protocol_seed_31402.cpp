@@ -127,6 +127,7 @@ address::cptr protocol_seed_31402::filter(
             || settings().disabled(address)
             || settings().insufficient(address)
             || settings().unsupported(address)
+            || settings().peered(address)
             || settings().blacklisted(address)
             || !settings().whitelisted(address);
     });
