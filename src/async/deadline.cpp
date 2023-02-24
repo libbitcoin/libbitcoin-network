@@ -24,9 +24,8 @@
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/async/logger.hpp>
-#include <bitcoin/network/async/thread.hpp>
-#include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/async/time.hpp>
+#include <bitcoin/network/async/tracker.hpp>
 #include <bitcoin/network/error.hpp>
 
 namespace libbitcoin {

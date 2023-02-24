@@ -563,7 +563,6 @@ code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
                 return false;
             }
 
-            LOGP(channel, "TODO: broadcast.");
             return true;
         }, channel->identifier());
 
