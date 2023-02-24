@@ -16,30 +16,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
+#ifndef LIBBITCOIN_NETWORK_LOG_TRACKER_HPP
+#define LIBBITCOIN_NETWORK_LOG_TRACKER_HPP
 
-BOOST_AUTO_TEST_SUITE(time_tests)
+#include <atomic>
+#include <bitcoin/network/log/logger.hpp>
+#include <bitcoin/network/define.hpp>
 
-BOOST_AUTO_TEST_CASE(time__zulu_time__always__non_default)
+namespace libbitcoin {
+namespace network {
+
+template <class Class>
+class tracker
 {
-    BOOST_REQUIRE_NE(zulu_time(), time_t{});
-}
+protected:
+    DEFAULT_COPY_MOVE(tracker);
 
-BOOST_AUTO_TEST_CASE(time__unix_time__always__non_default)
-{
-    BOOST_REQUIRE_NE(unix_time(), uint32_t{});
-}
+    tracker(const logger& log) NOEXCEPT;
+    ~tracker() NOEXCEPT;
 
-BOOST_AUTO_TEST_CASE(time__format_local_time__always__non_empty)
-{
-    // This only works in one time zone.
-    ////BOOST_REQUIRE_EQUAL(format_local_time(0x12345678_u32), "1979-09-05T15:51:36");
-    BOOST_REQUIRE(!format_local_time(0x12345678_u32).empty());
-}
+private:
+    // These are thread safe.
+    static std::atomic<size_t> instances_;
+    const logger& log_;
+};
 
-BOOST_AUTO_TEST_CASE(time__format_zulu_time__always__expected)
-{
-    BOOST_REQUIRE_EQUAL(format_zulu_time(0x12345678_u32), "1979-09-05T22:51:36Z");
-}
+} // namespace network
+} // namespace libbitcoin
 
-BOOST_AUTO_TEST_SUITE_END()
+#include <bitcoin/network/impl/log/tracker.ipp>
+
+#endif

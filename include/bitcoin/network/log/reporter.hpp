@@ -16,45 +16,50 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_TRACKER_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_TRACKER_IPP
+#ifndef LIBBITCOIN_NETWORK_LOG_REPORTER_HPP
+#define LIBBITCOIN_NETWORK_LOG_REPORTER_HPP
 
-#include <atomic>
-#include <typeinfo>
-#include <bitcoin/system.hpp>
-#include <bitcoin/network/async/logger.hpp>
+#include <iostream>
+#include <bitcoin/network/log/logger.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-template <class Class>
-std::atomic<size_t> tracker<Class>::instances_(zero);
-
-template <class Class>
-tracker<Class>::tracker(const logger& log) NOEXCEPT
-  : log_(log)
+class BCT_API reporter
 {
-    if constexpr (build_checked)
-    {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        log_.write() << typeid(Class).name() << "(" << ++instances_ << ")"
-            << std::endl;
-        BC_POP_WARNING()
-    }
-}
+protected:
+    reporter(const logger& log) NOEXCEPT;
 
-template <class Class>
-tracker<Class>::~tracker() NOEXCEPT
-{
-    if constexpr (build_checked)
-    {
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        log_.write() << typeid(Class).name() << "(" << --instances_ << ")~"
-            << std::endl;
+public:
+    const logger& log() const NOEXCEPT;
+    const void fire(uint8_t identifier, size_t count=zero) const NOEXCEPT;
+
+private:
+    // This is thread safe.
+    const logger& log_;
+};
+
+#if defined(HAVE_EVENTS)
+    #define FIRE_ONLY(name) name
+    #define FIRE(type) fire(type)
+    #define COUNT(type, count) fire(type, count)
+#else
+    #define FIRE_ONLY(name)
+    #define FIRE(type)
+    #define COUNT(type, count)
+#endif
+
+#if defined(HAVE_LOGGING)
+    #define LOG_ONLY(name) name
+    #define LOG(message) \
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
+        log().write() << message << std::endl; \
         BC_POP_WARNING()
-    }
-}
+#else
+    #define LOG_ONLY(name)
+    #define LOG(message)
+#endif
 
 } // namespace network
 } // namespace libbitcoin

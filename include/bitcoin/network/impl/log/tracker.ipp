@@ -16,50 +16,45 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_REPORTER_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_REPORTER_HPP
+#ifndef LIBBITCOIN_NETWORK_LOG_TRACKER_IPP
+#define LIBBITCOIN_NETWORK_LOG_TRACKER_IPP
 
-#include <iostream>
-#include <bitcoin/network/async/logger.hpp>
+#include <atomic>
+#include <typeinfo>
+#include <bitcoin/system.hpp>
+#include <bitcoin/network/log/logger.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class BCT_API reporter
+template <class Class>
+std::atomic<size_t> tracker<Class>::instances_(zero);
+
+template <class Class>
+tracker<Class>::tracker(const logger& log) NOEXCEPT
+  : log_(log)
 {
-protected:
-    reporter(const logger& log) NOEXCEPT;
-
-public:
-    const logger& log() const NOEXCEPT;
-    const void fire(uint8_t identifier, size_t count=zero) const NOEXCEPT;
-
-private:
-    // This is thread safe.
-    const logger& log_;
-};
-
-#if defined(HAVE_EVENTS)
-    #define FIRE_ONLY(name) name
-    #define FIRE(type) fire(type)
-    #define COUNT(type, count) fire(type, count)
-#else
-    #define FIRE_ONLY(name)
-    #define FIRE(type)
-    #define COUNT(type, count)
-#endif
-
-#if defined(HAVE_LOGGING)
-    #define LOG_ONLY(name) name
-    #define LOG(message) \
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
-        log().write() << message << std::endl; \
+    if constexpr (build_checked)
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        log_.write() << typeid(Class).name() << "(" << ++instances_ << ")"
+            << std::endl;
         BC_POP_WARNING()
-#else
-    #define LOG_ONLY(name)
-    #define LOG(message)
-#endif
+    }
+}
+
+template <class Class>
+tracker<Class>::~tracker() NOEXCEPT
+{
+    if constexpr (build_checked)
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        log_.write() << typeid(Class).name() << "(" << --instances_ << ")~"
+            << std::endl;
+        BC_POP_WARNING()
+    }
+}
 
 } // namespace network
 } // namespace libbitcoin

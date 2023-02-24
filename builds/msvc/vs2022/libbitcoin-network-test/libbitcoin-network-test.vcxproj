@@ -77,9 +77,6 @@
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\time.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\timer.cpp" />
-    <ClCompile Include="..\..\..\..\test\async\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\volume_racer.cpp" />
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
@@ -89,6 +86,8 @@
     <ClCompile Include="..\..\..\..\test\config\endpoint.cpp" />
     <ClCompile Include="..\..\..\..\test\config\utilities.cpp" />
     <ClCompile Include="..\..\..\..\test\error.cpp" />
+    <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
+    <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_address.obj</ObjectFileName>

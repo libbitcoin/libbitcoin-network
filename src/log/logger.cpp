@@ -16,13 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/async/logger.hpp>
+#include <bitcoin/network/log/logger.hpp>
 
 #include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/handlers.hpp>
-#include <bitcoin/network/async/thread.hpp>
-#include <bitcoin/network/async/time.hpp>
+#include <bitcoin/network/log/timer.hpp>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 

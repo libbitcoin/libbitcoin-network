@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,29 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/async/reporter.hpp>
+#ifndef LIBBITCOIN_NETWORK_LOG_LOG_HPP
+#define LIBBITCOIN_NETWORK_LOG_LOG_HPP
 
-#include <bitcoin/system.hpp>
-#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/event.hpp>
+#include <bitcoin/network/log/logger.hpp>
+#include <bitcoin/network/log/reporter.hpp>
+#include <bitcoin/network/log/timer.hpp>
+#include <bitcoin/network/log/tracker.hpp>
 
-namespace libbitcoin {
-namespace network {
-
-reporter::reporter(const logger& log) NOEXCEPT
-  : log_(log)
-{
-}
-
-const logger& reporter::log() const NOEXCEPT
-{
-    return log_;
-}
-
-
-const void reporter::fire(uint8_t identifier, size_t count) const NOEXCEPT
-{
-    log_.fire(identifier, count);
-}
-
-} // namespace network
-} // namespace libbitcoin
+#endif

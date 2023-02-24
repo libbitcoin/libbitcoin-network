@@ -26,6 +26,7 @@
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
