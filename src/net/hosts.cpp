@@ -268,18 +268,8 @@ inline void hosts::push(const std::string& line) NOEXCEPT
     try
     {
         const config::address item{ line };
-
-        // TODO: expose full filter on settings.
-        if (!messages::is_specified(item)
-            || settings_.disabled(item)
-            || settings_.insufficient(item)
-            || settings_.unsupported(item)
-            ////|| settings_.peered(item)
-            || settings_.blacklisted(item)
-            || !settings_.whitelisted(item))
-            return;
-
-        buffer_.push_back(item);
+        if (!settings_.excluded(item))
+            buffer_.push_back(item);
     }
     catch (std::exception&)
     {

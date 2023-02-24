@@ -118,6 +118,14 @@ settings::settings(chain::selection context) NOEXCEPT
     }
 }
 
+void settings::initialize() NOEXCEPT
+{
+    BC_ASSERT_MSG(friends.empty(), "friends not empty");
+
+    // Dynamic conversion of peers is O(N^2), so set on initialize.
+    friends = system::projection<config::authorities>(peers);
+}
+
 bool settings::inbound_enabled() const NOEXCEPT
 {
     return to_bool(inbound_connections)
@@ -225,9 +233,19 @@ bool settings::whitelisted(const messages::address_item& item) const NOEXCEPT
 
 bool settings::peered(const messages::address_item& item) const NOEXCEPT
 {
-    // This dynamic conversion of peers is O(N^2), a very significant CPU cost.
-    const auto hosts = system::projection<config::authorities>(peers);
-    return contains(hosts, item);
+    // Friends should be mapped from peers by initialize().
+    return contains(friends, item);
+}
+
+bool settings::excluded(const messages::address_item& item) const NOEXCEPT
+{
+    return !messages::is_specified(item)
+        || disabled(item)
+        || insufficient(item)
+        || unsupported(item)
+        || peered(item)
+        || blacklisted(item)
+        || !whitelisted(item);
 }
 
 } // namespace network

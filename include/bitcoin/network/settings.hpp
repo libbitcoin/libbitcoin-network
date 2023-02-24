@@ -75,6 +75,10 @@ struct BCT_API settings
     config::endpoints seeds{};
     config::authorities blacklists{};
     config::authorities whitelists{};
+    config::authorities friends{};
+
+    /// Set friends.
+    virtual void initialize() NOEXCEPT;
 
     /// Helpers.
     virtual bool inbound_enabled() const NOEXCEPT;
@@ -91,12 +95,14 @@ struct BCT_API settings
     virtual size_t minimum_address_count() const NOEXCEPT;
     virtual std::filesystem::path file() const NOEXCEPT;
 
+    /// Filters.
     virtual bool disabled(const messages::address_item& item) const NOEXCEPT;
     virtual bool insufficient(const messages::address_item& item) const NOEXCEPT;
     virtual bool unsupported(const messages::address_item& item) const NOEXCEPT;
     virtual bool blacklisted(const messages::address_item& item) const NOEXCEPT;
     virtual bool whitelisted(const messages::address_item& item) const NOEXCEPT;
     virtual bool peered(const messages::address_item& item) const NOEXCEPT;
+    virtual bool excluded(const messages::address_item& item) const NOEXCEPT;
 };
 
 } // namespace network
