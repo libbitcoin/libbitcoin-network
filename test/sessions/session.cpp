@@ -127,10 +127,10 @@ public:
         return session::create_connectors(count);
     }
 
-    size_t address_count() const NOEXCEPT override
-    {
-        return session::address_count();
-    }
+    ////size_t address_count() const NOEXCEPT override
+    ////{
+    ////    return session::address_count();
+    ////}
 
     size_t channel_count() const NOEXCEPT override
     {

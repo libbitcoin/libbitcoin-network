@@ -77,6 +77,9 @@ public:
     /// Access network configuration settings.
     const network::settings& settings() const NOEXCEPT;
 
+    /// Number of entries in the address pool.
+    virtual size_t address_count() const NOEXCEPT;
+
     /// The direction of channel initiation.
     virtual bool inbound() const NOEXCEPT = 0;
 
@@ -157,9 +160,6 @@ protected:
 
     /// The current thread is on the network strand.
     virtual bool stranded() const NOEXCEPT;
-
-    /// Number of entries in the address pool.
-    virtual size_t address_count() const NOEXCEPT;
 
     /// Number of all connected channels.
     virtual size_t channel_count() const NOEXCEPT;
