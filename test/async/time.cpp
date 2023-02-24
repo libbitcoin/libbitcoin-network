@@ -30,9 +30,11 @@ BOOST_AUTO_TEST_CASE(time__unix_time__always__non_default)
     BOOST_REQUIRE_NE(unix_time(), uint32_t{});
 }
 
-BOOST_AUTO_TEST_CASE(time__format_local_time__always__expected)
+BOOST_AUTO_TEST_CASE(time__format_local_time__always__non_empty)
 {
-    BOOST_REQUIRE_EQUAL(format_local_time(0x12345678_u32), "1979-09-05T15:51:36");
+    // This only works in one time zone.
+    ////BOOST_REQUIRE_EQUAL(format_local_time(0x12345678_u32), "1979-09-05T15:51:36");
+    BOOST_REQUIRE(!format_local_time(0x12345678_u32).empty());
 }
 
 BOOST_AUTO_TEST_CASE(time__format_zulu_time__always__expected)
