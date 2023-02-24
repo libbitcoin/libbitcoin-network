@@ -671,6 +671,35 @@ BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_host__expected)
 
 // peered
 
+BOOST_AUTO_TEST_CASE(settings__peered__configured__expected_port_matching)
+{
+    settings instance{};
+    instance.peers.clear();
+    BOOST_REQUIRE(!instance.peered(config::address{ "34.222.125.43:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "51.79.80.166:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "65.109.113.126:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "77.21.60.152:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "86.104.228.11:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "5.14.19.0:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "89.35.142.168:8333" }));
+
+    instance.peers.emplace_back("34.222.125.43:8333");
+    instance.peers.emplace_back("51.79.80.166:8333");
+    instance.peers.emplace_back("65.109.113.126:8333");
+    ////instance.peers.emplace_back("77.21.60.152:8333");
+    instance.peers.emplace_back("86.104.228.11:8333");
+    instance.peers.emplace_back("5.14.19.0");
+    instance.peers.emplace_back("89.35.142.168");
+
+    BOOST_REQUIRE(instance.peered(config::address{ "34.222.125.43:8333" }));
+    BOOST_REQUIRE(instance.peered(config::address{ "51.79.80.166:8333" }));
+    BOOST_REQUIRE(instance.peered(config::address{ "65.109.113.126:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "77.21.60.152:8333" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "86.104.228.11" }));
+    BOOST_REQUIRE(!instance.peered(config::address{ "5.14.19.0:8333" }));
+    BOOST_REQUIRE(instance.peered(config::address{ "89.35.142.168" }));
+}
+
 BOOST_AUTO_TEST_CASE(settings__peered__ipv4_host__expected)
 {
     settings instance{};
