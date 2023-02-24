@@ -22,6 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/handlers.hpp>
 #include <bitcoin/network/async/thread.hpp>
+#include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -59,15 +60,16 @@ logger::writer logger::write() const NOEXCEPT
 void logger::notify(const code& ec, std::string&& message) const NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&logger::do_notify, this, ec, std::move(message)));
+        std::bind(&logger::do_notify, this, ec, zulu_time(),
+            std::move(message)));
 }
 
 // private
-void logger::do_notify(const code& ec,
+void logger::do_notify(const code& ec, time_t zulu,
     const std::string& message) const NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-    subscriber_.notify(ec, message);
+    subscriber_.notify(ec, zulu, message);
 }
 
 void logger::subscribe(notifier&& handler) NOEXCEPT
@@ -96,7 +98,7 @@ void logger::stop(const std::string& message) NOEXCEPT
 void logger::stop(const code& ec, const std::string& message) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&logger::do_stop, this, ec, message));
+        std::bind(&logger::do_stop, this, ec, zulu_time(), message));
 
     pool_.stop();
     BC_DEBUG_ONLY(const auto result =) pool_.join();
@@ -104,12 +106,13 @@ void logger::stop(const code& ec, const std::string& message) NOEXCEPT
 }
 
 // private
-void logger::do_stop(const code& ec, const std::string& message) NOEXCEPT
+void logger::do_stop(const code& ec, time_t zulu,
+    const std::string& message) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
 
     // Subscriber asserts if stopped with a success code.
-    subscriber_.stop(ec, message);
+    subscriber_.stop(ec, zulu, message);
  }
 
 BC_POP_WARNING()

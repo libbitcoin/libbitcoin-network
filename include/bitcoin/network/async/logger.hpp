@@ -24,8 +24,9 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/unsubscriber.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
+#include <bitcoin/network/async/time.hpp>
+#include <bitcoin/network/async/unsubscriber.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
 
@@ -40,7 +41,7 @@ namespace network {
 class BCT_API logger final
 {
 public:
-    typedef unsubscriber<const std::string&> subscriber;
+    typedef unsubscriber<time_t, const std::string&> subscriber;
     typedef subscriber::handler notifier;
 
     /// Streaming log writer (std::ostringstream), not thread safe.
@@ -111,8 +112,10 @@ protected:
 
 private:
     void do_subscribe(const notifier& handler) NOEXCEPT;
-    void do_notify(const code& ec, const std::string& message) const NOEXCEPT;
-    void do_stop(const code& ec, const std::string& message) NOEXCEPT;
+    void do_notify(const code& ec, time_t zulu,
+        const std::string& message) const NOEXCEPT;
+    void do_stop(const code& ec, time_t zulu,
+        const std::string& message) NOEXCEPT;
 
     // This is protected by strand.
     threadpool pool_;
