@@ -122,8 +122,23 @@ address::cptr protocol_seed_31402::filter(
     const auto message = std::shared_ptr<address>(new address{ items });
     BC_POP_WARNING()
 
+    // Accept between 1 and all of the addresses, up to capacity.
+    // If started/enabled then minimum capacity is one (usable > 0).
+    const size_t capacity = settings().host_pool_capacity;
+    const auto usable = std::min(message->addresses.size(), capacity);
+    const auto random = pseudo_random::next(one, usable);
+
+    // But always accept at least the amount we are short if available.
+    const auto gap = capacity - address_count();
+    const auto accept = std::max(gap, random);
+
+    // Shuffle and reduce the set to the target amount.
+    pseudo_random::shuffle(message->addresses);
+    message->addresses.resize(accept);
+
     std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
     {
+        // TODO: expose full filter on settings.
         return !is_specified(address)
             || settings().disabled(address)
             || settings().insufficient(address)

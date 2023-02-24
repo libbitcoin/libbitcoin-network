@@ -217,7 +217,6 @@ void hosts::fetch(address_handler&& handler) const NOEXCEPT
 }
 
 // O(N^2) <= could be O(N) with O(1) search.
-// TODO: message size reduction could be pushed to protocol to save processing.
 void hosts::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 {
     if (stopped_)
@@ -232,27 +231,12 @@ void hosts::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
         return;
     }
 
-    // Accept between 1 and all of the addresses, up to capacity.
-    // If started/enabled then minimum capacity is one (usable > 0).
-    const auto capacity = buffer_.capacity();
-    const auto usable = std::min(message->addresses.size(), capacity);
-    const auto random = pseudo_random::next(one, usable);
-
-    // But always accept at least the amount we are short if available.
-    const auto gap = capacity - buffer_.size();
-    const auto accept = std::max(gap, random);
-
-    // Convert minimum desired to nonzero step for iteration.
-    const auto step = std::max(usable / accept, one);
     const auto start_size = buffer_.size();
 
     // O(N^2).
     // Push addresses into the buffer.
-    for (auto index = zero; index < usable; index = ceilinged_add(index, step))
+    for (const auto& host: message->addresses)
     {
-        // O(1).
-        const auto& host = message->addresses.at(index);
-
         // O(N) <= could be resolved with O(1) search.
         if (!is_reserved(host) && !is_pooled(host))
         {
@@ -285,6 +269,7 @@ inline void hosts::push(const std::string& line) NOEXCEPT
     {
         const config::address item{ line };
 
+        // TODO: expose full filter on settings.
         if (!messages::is_specified(item)
             || settings_.disabled(item)
             || settings_.insufficient(item)
