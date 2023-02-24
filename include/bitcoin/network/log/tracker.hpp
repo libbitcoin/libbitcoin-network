@@ -20,6 +20,8 @@
 #define LIBBITCOIN_NETWORK_LOG_TRACKER_HPP
 
 #include <atomic>
+#include <typeinfo>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/log/logger.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -32,18 +34,36 @@ class tracker
 protected:
     DEFAULT_COPY_MOVE(tracker);
 
-    tracker(const logger& log) NOEXCEPT;
-    ~tracker() NOEXCEPT;
+    tracker(const logger& log) NOEXCEPT
+      : log_(log)
+    {
+        if constexpr (build_checked)
+        {
+            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+            log_.write() << typeid(Class).name() << "(" << ++instances_ << ")"
+                << std::endl;
+            BC_POP_WARNING()
+        }
+    }
+
+    ~tracker() NOEXCEPT
+    {
+        if constexpr (build_checked)
+        {
+            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+            log_.write() << typeid(Class).name() << "(" << --instances_ << ")~"
+                << std::endl;
+            BC_POP_WARNING()
+        }
+    }
 
 private:
     // These are thread safe.
-    static std::atomic<size_t> instances_;
+    static inline std::atomic<size_t> instances_{};
     const logger& log_;
 };
 
 } // namespace network
 } // namespace libbitcoin
-
-#include <bitcoin/network/impl/log/tracker.ipp>
 
 #endif

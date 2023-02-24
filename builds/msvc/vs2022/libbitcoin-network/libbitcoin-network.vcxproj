@@ -160,14 +160,14 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\quality_racer.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\speed_racer.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_quality.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_speed.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_volume.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\thread.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\threadpool.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\volume_racer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp" />
@@ -260,12 +260,11 @@
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\desubscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\quality_racer.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\speed_racer.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_quality.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_speed.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_volume.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\volume_racer.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\log\tracker.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

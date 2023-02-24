@@ -67,7 +67,7 @@ protected:
     virtual void stop_seed(const code& ec) NOEXCEPT;
 
 private:
-    typedef volume_racer<error::success, error::seeding_unsuccessful> race;
+    typedef race_volume<error::success, error::seeding_unsuccessful> race;
 
     void handle_started(const code& ec,
         const result_handler& handler) NOEXCEPT;

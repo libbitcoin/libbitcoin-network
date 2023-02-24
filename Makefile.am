@@ -129,13 +129,13 @@ test_libbitcoin_network_test_SOURCES = \
     test/test.hpp \
     test/async/desubscriber.cpp \
     test/async/enable_shared_from_base.cpp \
-    test/async/quality_racer.cpp \
-    test/async/speed_racer.cpp \
+    test/async/race_quality.cpp \
+    test/async/race_speed.cpp \
+    test/async/race_volume.cpp \
     test/async/subscriber.cpp \
     test/async/thread.cpp \
     test/async/threadpool.cpp \
     test/async/unsubscriber.cpp \
-    test/async/volume_racer.cpp \
     test/config/address.cpp \
     test/config/authority.cpp \
     test/config/endpoint.cpp \
@@ -230,14 +230,14 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/desubscriber.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
     include/bitcoin/network/async/handlers.hpp \
-    include/bitcoin/network/async/quality_racer.hpp \
-    include/bitcoin/network/async/speed_racer.hpp \
+    include/bitcoin/network/async/race_quality.hpp \
+    include/bitcoin/network/async/race_speed.hpp \
+    include/bitcoin/network/async/race_volume.hpp \
     include/bitcoin/network/async/subscriber.hpp \
     include/bitcoin/network/async/thread.hpp \
     include/bitcoin/network/async/threadpool.hpp \
     include/bitcoin/network/async/time.hpp \
-    include/bitcoin/network/async/unsubscriber.hpp \
-    include/bitcoin/network/async/volume_racer.hpp
+    include/bitcoin/network/async/unsubscriber.hpp
 
 include_bitcoin_network_configdir = ${includedir}/bitcoin/network/config
 include_bitcoin_network_config_HEADERS = \
@@ -251,15 +251,11 @@ include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \
     include/bitcoin/network/impl/async/desubscriber.ipp \
     include/bitcoin/network/impl/async/enable_shared_from_base.ipp \
-    include/bitcoin/network/impl/async/quality_racer.ipp \
-    include/bitcoin/network/impl/async/speed_racer.ipp \
+    include/bitcoin/network/impl/async/race_quality.ipp \
+    include/bitcoin/network/impl/async/race_speed.ipp \
+    include/bitcoin/network/impl/async/race_volume.ipp \
     include/bitcoin/network/impl/async/subscriber.ipp \
-    include/bitcoin/network/impl/async/unsubscriber.ipp \
-    include/bitcoin/network/impl/async/volume_racer.ipp
-
-include_bitcoin_network_impl_logdir = ${includedir}/bitcoin/network/impl/log
-include_bitcoin_network_impl_log_HEADERS = \
-    include/bitcoin/network/impl/log/tracker.ipp
+    include/bitcoin/network/impl/async/unsubscriber.ipp
 
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \

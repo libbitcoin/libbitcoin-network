@@ -23,13 +23,13 @@
 #include <bitcoin/network/async/desubscriber.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/handlers.hpp>
-#include <bitcoin/network/async/quality_racer.hpp>
-#include <bitcoin/network/async/speed_racer.hpp>
+#include <bitcoin/network/async/race_quality.hpp>
+#include <bitcoin/network/async/race_speed.hpp>
+#include <bitcoin/network/async/race_volume.hpp>
 #include <bitcoin/network/async/subscriber.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/async/threadpool.hpp>
 #include <bitcoin/network/async/time.hpp>
 #include <bitcoin/network/async/unsubscriber.hpp>
-#include <bitcoin/network/async/volume_racer.hpp>
 
 #endif

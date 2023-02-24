@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_QUALITY_RACER_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_QUALITY_RACER_IPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_VOLUME_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACE_VOLUME_IPP
 
 #include <memory>
 #include <tuple>
@@ -28,81 +28,77 @@
 namespace libbitcoin {
 namespace network {
 
-template <typename... Args>
-quality_racer<Args...>::
-quality_racer(size_t size) NOEXCEPT
-  : size_(size)
+template <error::error_t Success, error::error_t Fail>
+race_volume<Success, Fail>::
+race_volume(size_t size, size_t required) NOEXCEPT
+  : size_(size), required_(required)
 {
 }
 
-template <typename... Args>
-quality_racer<Args...>::
-~quality_racer() NOEXCEPT
+template <error::error_t Success, error::error_t Fail>
+race_volume<Success, Fail>::
+~race_volume() NOEXCEPT
 {
-    BC_ASSERT_MSG(!running() && !complete_, "deleting running quality_racer");
+    BC_ASSERT_MSG(!running() && !complete_, "deleting running race_volume");
 }
 
-template <typename... Args>
-inline bool quality_racer<Args...>::
+template <error::error_t Success, error::error_t Fail>
+inline bool race_volume<Success, Fail>::
 running() const NOEXCEPT
 {
     return to_bool(runners_);
 }
 
-template <typename... Args>
-bool quality_racer<Args...>::
-start(handler&& complete) NOEXCEPT
+template <error::error_t Success, error::error_t Fail>
+bool race_volume<Success, Fail>::
+start(handler&& sufficient, handler&& complete) NOEXCEPT
 {
     // false implies logic error.
     if (running())
         return false;
 
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    sufficient_ = std::make_shared<handler>(std::forward<handler>(sufficient));
     complete_ = std::make_shared<handler>(std::forward<handler>(complete));
     BC_POP_WARNING()
 
-    success_ = false;
     runners_ = size_;
     return true;
 }
 
-template <typename... Args>
-bool quality_racer<Args...>::
-finish(const Args&... args) NOEXCEPT
+template <error::error_t Success, error::error_t Fail>
+bool race_volume<Success, Fail>::
+finish(size_t count) NOEXCEPT
 {
     // false implies logic error.
     if (!running())
         return false;
 
-    // First argument (by convention) determines success.
-    // Capture parameter pack as tuple of copied arguments.
-    auto values = std::tuple<Args...>(args...);
-    const auto& ec = std::get<0>(values);
-    const auto winner = set_winner(!ec);
-
-    // Save args for winner (first success) or last failure.
-    if (winner || (!success_ && (runners_ == one)))
-        args_ = std::move(values);
+    // Determine sufficiency, since not yet reached.
+    if (sufficient_)
+    {
+        // Invoke sufficient and clear resources before race is finished.
+        if (count >= required_)
+        {
+            (*sufficient_)(Success);
+            sufficient_.reset();
+        }
+        else if (runners_ == one)
+        {
+            (*sufficient_)(Fail);
+            sufficient_.reset();
+        }
+    }
 
     // false invoke implies logic error.
-    return invoke() && winner;
+    return invoke();
 }
 
 // private
 // ----------------------------------------------------------------------------
 
-template <typename... Args>
-bool quality_racer<Args...>::
-set_winner(bool success) NOEXCEPT
-{
-    // Return is winner (first to succeed) and set succeeded.
-    success &= !success_;
-    success_ |= success;
-    return success;
-}
-
-template <typename... Args>
-bool quality_racer<Args...>::
+template <error::error_t Success, error::error_t Fail>
+bool race_volume<Success, Fail>::
 invoke() NOEXCEPT
 {
     // false implies logic error.
@@ -117,22 +113,12 @@ invoke() NOEXCEPT
     if (!complete_)
         return false;
 
-    // Invoke completion handler.
-    invoker(*complete_, args_, sequence{});
+    // Invoke completion handler, always success.
+    (*complete_)(Success);
 
-    // Clear all resources.
+    // Clear resources.
     complete_.reset();
-    args_ = {};
     return true;
-}
-
-template <typename... Args>
-template<size_t... Index>
-void quality_racer<Args...>::
-invoker(const handler& complete, const packed& args, unpack<Index...>) NOEXCEPT
-{
-    // Expand tuple into parameter pack.
-    complete(std::get<Index>(args)...);
 }
 
 } // namespace network

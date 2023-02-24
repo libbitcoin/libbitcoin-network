@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_SPEED_RACER_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_SPEED_RACER_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_SPEED_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACE_SPEED_HPP
 
 #include <memory>
 #include <tuple>
@@ -33,21 +33,21 @@ namespace network {
 /// but only after a preconfigured number of invocations. This assists in
 /// synchronizing the results of a set of racing asynchronous operations.
 template <size_t Size, typename... Args>
-class speed_racer final
+class race_speed final
 {
 public:
-    typedef std::shared_ptr<speed_racer> ptr;
+    typedef std::shared_ptr<race_speed> ptr;
     typedef std::function<void(Args...)> handler;
 
-    /// A stopped_ member is sufficient for a speed_racer of one.
+    /// A stopped_ member is sufficient for a race_speed of one.
     static_assert(Size > one);
 
-    DELETE_COPY_MOVE(speed_racer);
+    DELETE_COPY_MOVE(race_speed);
 
-    speed_racer() NOEXCEPT;
-    ~speed_racer() NOEXCEPT;
+    race_speed() NOEXCEPT;
+    ~race_speed() NOEXCEPT;
 
-    /// True if the speed_racer is running.
+    /// True if the race_speed is running.
     inline bool running() const NOEXCEPT;
 
     /// False implies invalid usage.
@@ -78,6 +78,6 @@ private:
 } // namespace network
 } // namespace libbitcoin
 
-#include <bitcoin/network/impl/async/speed_racer.ipp>
+#include <bitcoin/network/impl/async/race_speed.ipp>
 
 #endif

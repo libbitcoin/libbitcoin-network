@@ -81,7 +81,7 @@ public:
         socket_handler&& handler) NOEXCEPT;
 
 protected:
-    typedef speed_racer<two, const code&, const socket::ptr&> racer_t;
+    typedef race_speed<two, const code&, const socket::ptr&> racer_t;
 
     /// Try to connect to host:port, starts timer.
     virtual void start(const std::string& hostname, uint16_t port,
