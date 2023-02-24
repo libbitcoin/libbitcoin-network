@@ -289,7 +289,7 @@ inline void hosts::push(const std::string& line) NOEXCEPT
             || settings_.disabled(item)
             || settings_.insufficient(item)
             || settings_.unsupported(item)
-            || settings_.peered(item)
+            ////|| settings_.peered(item)
             || settings_.blacklisted(item)
             || !settings_.whitelisted(item))
             return;

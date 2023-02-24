@@ -87,7 +87,7 @@ address::cptr protocol_address_in_31402::filter(
             || settings().disabled(address)
             || settings().insufficient(address)
             || settings().unsupported(address)
-            || settings().peered(address)
+            ////|| settings().peered(address)
             || settings().blacklisted(address)
             || !settings().whitelisted(address);
     });
