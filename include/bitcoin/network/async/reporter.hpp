@@ -33,11 +33,22 @@ protected:
 
 public:
     const logger& log() const NOEXCEPT;
+    const void fire(uint8_t identifier, size_t count=zero) const NOEXCEPT;
 
 private:
     // This is thread safe.
     const logger& log_;
 };
+
+#if defined(HAVE_EVENTS)
+    #define FIRE_ONLY(name) name
+    #define FIRE(type) fire(type)
+    #define COUNT(type, count) fire(type, count)
+#else
+    #define FIRE_ONLY(name)
+    #define FIRE(type)
+    #define COUNT(type, count)
+#endif
 
 #if defined(HAVE_LOGGING)
     #define LOG_ONLY(name) name
@@ -45,16 +56,9 @@ private:
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
         log().write() << message << std::endl; \
         BC_POP_WARNING()
-    #define LOGV(message) LOG(message)
-    #define LOGP(self, message) \
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
-        self->log().write() << message << std::endl; \
-        BC_POP_WARNING()
 #else
     #define LOG_ONLY(name)
     #define LOG(message)
-    #define LOGP(message)
-    #define LOGV(message)
 #endif
 
 } // namespace network

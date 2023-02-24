@@ -34,5 +34,11 @@ const logger& reporter::log() const NOEXCEPT
     return log_;
 }
 
+
+const void reporter::fire(uint8_t identifier, size_t count) const NOEXCEPT
+{
+    log_.fire(identifier, count);
+}
+
 } // namespace network
 } // namespace libbitcoin

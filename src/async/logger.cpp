@@ -82,7 +82,8 @@ void logger::do_notify_message(const code& ec, time_t zulu,
 void logger::subscribe_messages(message_notifier&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&logger::do_subscribe_messages, this, std::move(handler)));
+        std::bind(&logger::do_subscribe_messages,
+            this, std::move(handler)));
 }
 
 // private
@@ -95,27 +96,26 @@ void logger::do_subscribe_messages(const message_notifier& handler) NOEXCEPT
 // events
 // ----------------------------------------------------------------------------
 
-void logger::fire(event_t identifier, size_t count) const NOEXCEPT
+void logger::fire(uint8_t identifier, size_t count) const NOEXCEPT
 {
-    // TODO: member counter.
-    static const duration span{};
-
     boost::asio::dispatch(strand_,
-        std::bind(&logger::do_notify_event, this, identifier, count, span));
+        std::bind(&logger::do_notify_event,
+            this, identifier, count, fine_clock::now()));
 }
 
 // private
-void logger::do_notify_event(event_t identifier, size_t count,
-    const duration& span) const NOEXCEPT
+void logger::do_notify_event(uint8_t identifier, size_t count,
+    const time_point& point) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    event_subscriber_.notify(error::success, identifier, count, span);
+    event_subscriber_.notify(error::success, identifier, count, point);
 }
 
 void logger::subscribe_events(event_notifier&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&logger::do_subscribe_events, this, std::move(handler)));
+        std::bind(&logger::do_subscribe_events,
+            this, std::move(handler)));
 }
 
 // private
@@ -141,7 +141,8 @@ void logger::stop(const std::string& message) NOEXCEPT
 void logger::stop(const code& ec, const std::string& message) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&logger::do_stop, this, ec, zulu_time(), message));
+        std::bind(&logger::do_stop,
+            this, ec, zulu_time(), message));
 
     pool_.stop();
     BC_DEBUG_ONLY(const auto result =) pool_.join();
