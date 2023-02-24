@@ -142,6 +142,9 @@ protected:
     /// Addresses.
     /// -----------------------------------------------------------------------
 
+    /// Number of entries in the address pool.
+    virtual size_t address_count() const NOEXCEPT;
+
     /// Fetch a set of peer addresses from the address pool.
     virtual void fetch(address_handler&& handler) NOEXCEPT;
 
