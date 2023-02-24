@@ -34,7 +34,7 @@ namespace network {
 
 using namespace std::placeholders;
 
-BC_DEBUG_ONLY(static const time_point epoch{};)
+BC_DEBUG_ONLY(static const steady_clock::time_point epoch{};)
 
 deadline::deadline(const logger& log, asio::strand& strand,
     const duration& timeout) NOEXCEPT

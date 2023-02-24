@@ -37,7 +37,7 @@ using namespace std::placeholders;
 
 // Factory for fixed deadline timer pointer construction.
 inline deadline::ptr timeout(const logger& log, asio::strand& strand,
-    const duration& span) NOEXCEPT
+    const deadline::duration& span) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return std::make_shared<deadline>(log, strand, span);
@@ -46,7 +46,7 @@ inline deadline::ptr timeout(const logger& log, asio::strand& strand,
 
 // Factory for varied deadline timer pointer construction.
 inline deadline::ptr expiration(const logger& log, asio::strand& strand,
-    const duration& span) NOEXCEPT
+    const deadline::duration& span) NOEXCEPT
 {
     return timeout(log, strand, pseudo_random::duration(span));
 }
