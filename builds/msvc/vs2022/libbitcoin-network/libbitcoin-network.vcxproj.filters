@@ -314,6 +314,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\event.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>

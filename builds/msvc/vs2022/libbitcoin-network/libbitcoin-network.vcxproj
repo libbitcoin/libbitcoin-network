@@ -160,6 +160,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\deadline.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\event.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\logger.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\quality_racer.hpp" />
