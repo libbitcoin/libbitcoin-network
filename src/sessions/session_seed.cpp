@@ -166,7 +166,7 @@ void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
 
     if (ec)
     {
-        BC_ASSERT_MSG(!socket, "unexpected channel instance");
+        BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
         LOG("Failed to connect seed address [" << seed << "] " << ec.message());
         racer->finish(address_count());
         return;
