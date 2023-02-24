@@ -106,7 +106,7 @@ protected:
 
     /// Perform handshake and attach protocols (call from network strand).
     virtual void start_channel(const channel::ptr& channel,
-        result_handler&& started, result_handler&& stopped) NOEXCEPT;
+        result_handler&& starter, result_handler&& stopper) NOEXCEPT;
 
     /// Override to change version protocol (base calls from channel strand).
     virtual void attach_handshake(const channel::ptr& channel,
