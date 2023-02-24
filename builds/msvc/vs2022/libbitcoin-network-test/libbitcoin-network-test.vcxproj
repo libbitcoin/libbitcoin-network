@@ -70,7 +70,6 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\async\deadline.cpp" />
     <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
     <ClCompile Include="..\..\..\..\test\async\quality_racer.cpp" />
@@ -135,6 +134,7 @@
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\channel.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\test\net\pump.cpp" />

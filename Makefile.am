@@ -38,7 +38,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/error.cpp \
     src/p2p.cpp \
     src/settings.cpp \
-    src/async/deadline.cpp \
     src/async/logger.cpp \
     src/async/reporter.cpp \
     src/async/thread.cpp \
@@ -90,6 +89,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/net/acceptor.cpp \
     src/net/channel.cpp \
     src/net/connector.cpp \
+    src/net/deadline.cpp \
     src/net/hosts.cpp \
     src/net/proxy.cpp \
     src/net/pump.cpp \
@@ -127,7 +127,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/settings.cpp \
     test/test.cpp \
     test/test.hpp \
-    test/async/deadline.cpp \
     test/async/desubscriber.cpp \
     test/async/enable_shared_from_base.cpp \
     test/async/quality_racer.cpp \
@@ -186,6 +185,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/net/acceptor.cpp \
     test/net/channel.cpp \
     test/net/connector.cpp \
+    test/net/deadline.cpp \
     test/net/hosts.cpp \
     test/net/proxy.cpp \
     test/net/pump.cpp \
@@ -228,7 +228,6 @@ include_bitcoin_network_asyncdir = ${includedir}/bitcoin/network/async
 include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/asio.hpp \
     include/bitcoin/network/async/async.hpp \
-    include/bitcoin/network/async/deadline.hpp \
     include/bitcoin/network/async/desubscriber.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
     include/bitcoin/network/async/event.hpp \
@@ -320,6 +319,7 @@ include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/acceptor.hpp \
     include/bitcoin/network/net/channel.hpp \
     include/bitcoin/network/net/connector.hpp \
+    include/bitcoin/network/net/deadline.hpp \
     include/bitcoin/network/net/hosts.hpp \
     include/bitcoin/network/net/net.hpp \
     include/bitcoin/network/net/proxy.hpp \

@@ -73,7 +73,6 @@
     <Import Project="$(ProjectDir)$(ProjectName).props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\async\deadline.cpp" />
     <ClCompile Include="..\..\..\..\src\async\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\async\reporter.cpp" />
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
@@ -130,6 +129,7 @@
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\channel.cpp" />
     <ClCompile Include="..\..\..\..\src\net\connector.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\deadline.cpp" />
     <ClCompile Include="..\..\..\..\src\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\src\net\pump.cpp" />
@@ -157,7 +157,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\asio.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\deadline.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\event.hpp" />
@@ -229,6 +228,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\hosts.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\proxy.hpp" />

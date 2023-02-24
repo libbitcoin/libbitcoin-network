@@ -30,9 +30,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\test\async\deadline.cpp">
-      <Filter>src\async</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\desubscriber.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
@@ -211,6 +208,9 @@
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\connector.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\deadline.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp">

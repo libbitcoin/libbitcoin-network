@@ -22,6 +22,7 @@
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/connector.hpp>
+#include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/hosts.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/net/pump.hpp>

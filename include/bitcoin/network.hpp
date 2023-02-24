@@ -23,7 +23,6 @@
 #include <bitcoin/network/version.hpp>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/async/deadline.hpp>
 #include <bitcoin/network/async/desubscriber.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/event.hpp>
@@ -92,6 +91,7 @@
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/connector.hpp>
+#include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/hosts.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/net/proxy.hpp>

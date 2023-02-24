@@ -26,6 +26,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
