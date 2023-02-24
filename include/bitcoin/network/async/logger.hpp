@@ -41,8 +41,13 @@ namespace network {
 class BCT_API logger final
 {
 public:
-    typedef unsubscriber<time_t, const std::string&> subscriber;
-    typedef subscriber::handler notifier;
+    typedef unsubscriber<time_t, const std::string&> message_subscriber;
+    typedef message_subscriber::handler message_notifier;
+
+    using event_t = uint8_t;
+    using duration = fine_clock::duration;
+    typedef unsubscriber<event_t, size_t, const duration&> event_subscriber;
+    typedef event_subscriber::handler event_notifier;
 
     /// Streaming log writer (std::ostringstream), not thread safe.
     class writer final
@@ -97,23 +102,33 @@ public:
     /// require shared logger instances, an unnecessary complication/cost.
     writer write() const NOEXCEPT;
 
+    /// Fire event with optional counter, recorded with current time.
+    void fire(event_t identifier, size_t count=zero) const NOEXCEPT;
+
     /// If stopped, handler is invoked with error::subscriber_stopped/defaults
     /// and dropped. Otherwise it is held until stop/drop. False if failed.
-    void subscribe(notifier&& handler) NOEXCEPT;
+    void subscribe(message_notifier&& handler) NOEXCEPT;
+    void subscribe(event_notifier&& handler) NOEXCEPT;
 
-    /// Stop subscriber/pool with final message/empty posted to subscribers.
+    /// Stop subscribers/pool with final message/empty posted to subscribers.
     void stop(const code& ec, const std::string& message) NOEXCEPT;
     void stop(const std::string& message) NOEXCEPT;
     void stop() NOEXCEPT;
 
 protected:
-    /// Only writer can access notify, must destruct before logger.
+    /// Only writer can access, must destruct before logger, captures time.
     void notify(const code& ec, std::string&& message) const NOEXCEPT;
 
 private:
-    void do_subscribe(const notifier& handler) NOEXCEPT;
-    void do_notify(const code& ec, time_t zulu,
+    bool stranded() const NOEXCEPT;
+    void do_subscribe_message(const message_notifier& handler) NOEXCEPT;
+    void do_notify_message(const code& ec, time_t zulu,
         const std::string& message) const NOEXCEPT;
+
+    void do_subscribe_event(const event_notifier& handler) NOEXCEPT;
+    void do_notify_event(event_t identifier, size_t count,
+        const duration& span) const NOEXCEPT;
+
     void do_stop(const code& ec, time_t zulu,
         const std::string& message) NOEXCEPT;
 
@@ -125,7 +140,8 @@ private:
 
     // These are protected by strand.
     // notify()/do_notify() can be const because of mutable subscriber.
-    mutable subscriber subscriber_;
+    mutable message_subscriber message_subscriber_;
+    mutable event_subscriber event_subscriber_;
 };
 
 } // namespace network

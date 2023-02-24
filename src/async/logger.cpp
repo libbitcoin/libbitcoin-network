@@ -34,14 +34,13 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 logger::logger() NOEXCEPT
   : pool_(one, thread_priority::low),
     strand_(pool_.service().get_executor()),
-    subscriber_(strand_)
+    message_subscriber_(strand_),
+    event_subscriber_(strand_)
 {
 }
 
 logger::logger(bool) NOEXCEPT
-  : pool_(one, thread_priority::low),
-    strand_(pool_.service().get_executor()),
-    subscriber_(strand_)
+  : logger()
 {
     pool_.stop();
 }
@@ -56,34 +55,78 @@ logger::writer logger::write() const NOEXCEPT
     return { *this };
 }
 
+bool logger::stranded() const NOEXCEPT
+{
+    return strand_.running_in_this_thread();
+}
+
+// messages
+// ----------------------------------------------------------------------------
+
 // protected
 void logger::notify(const code& ec, std::string&& message) const NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&logger::do_notify, this, ec, zulu_time(),
+        std::bind(&logger::do_notify_message, this, ec, zulu_time(),
             std::move(message)));
 }
 
 // private
-void logger::do_notify(const code& ec, time_t zulu,
+void logger::do_notify_message(const code& ec, time_t zulu,
     const std::string& message) const NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-    subscriber_.notify(ec, zulu, message);
+    BC_ASSERT_MSG(stranded(), "strand");
+    message_subscriber_.notify(ec, zulu, message);
 }
 
-void logger::subscribe(notifier&& handler) NOEXCEPT
+void logger::subscribe(message_notifier&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&logger::do_subscribe, this, std::move(handler)));
+        std::bind(&logger::do_subscribe_message, this, std::move(handler)));
 }
 
 // private
-void logger::do_subscribe(const notifier& handler) NOEXCEPT
+void logger::do_subscribe_message(const message_notifier& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-    subscriber_.subscribe(move_copy(handler));
+    BC_ASSERT_MSG(stranded(), "strand");
+    message_subscriber_.subscribe(move_copy(handler));
 }
+
+// events
+// ----------------------------------------------------------------------------
+
+void logger::fire(event_t identifier, size_t count) const NOEXCEPT
+{
+    // TODO: member counter.
+    static const duration span{};
+
+    boost::asio::dispatch(strand_,
+        std::bind(&logger::do_notify_event, this, identifier, count, span));
+}
+
+// private
+void logger::do_notify_event(event_t identifier, size_t count,
+    const duration& span) const NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    event_subscriber_.notify(error::success, identifier, count, span);
+}
+
+void logger::subscribe(event_notifier&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&logger::do_subscribe_event, this, std::move(handler)));
+}
+
+// private
+void logger::do_subscribe_event(const event_notifier& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    event_subscriber_.subscribe(move_copy(handler));
+}
+
+// stop
+// ----------------------------------------------------------------------------
 
 void logger::stop() NOEXCEPT
 {
@@ -109,10 +152,11 @@ void logger::stop(const code& ec, const std::string& message) NOEXCEPT
 void logger::do_stop(const code& ec, time_t zulu,
     const std::string& message) NOEXCEPT
 {
-    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // Subscriber asserts if stopped with a success code.
-    subscriber_.stop(ec, zulu, message);
+    message_subscriber_.stop(ec, zulu, message);
+    event_subscriber_.stop(ec, {}, {}, {});
  }
 
 BC_POP_WARNING()
