@@ -49,7 +49,7 @@ inline bool zulu_time(tm& out_zulu, time_t time) NOEXCEPT
     return is_zero(gmtime_s(&out_zulu, &time));
 #else
     // C++11 implemention returns parameter pointer, nullptr implies failure.
-    return !is_null(gmtime_s(&time , &out_zulu));
+    return !is_null(gmtime_r(&time , &out_zulu));
 #endif
 }
 
