@@ -107,8 +107,8 @@ public:
 
     /// If stopped, handler is invoked with error::subscriber_stopped/defaults
     /// and dropped. Otherwise it is held until stop/drop. False if failed.
-    void subscribe(message_notifier&& handler) NOEXCEPT;
-    void subscribe(event_notifier&& handler) NOEXCEPT;
+    void subscribe_messages(message_notifier&& handler) NOEXCEPT;
+    void subscribe_events(event_notifier&& handler) NOEXCEPT;
 
     /// Stop subscribers/pool with final message/empty posted to subscribers.
     void stop(const code& ec, const std::string& message) NOEXCEPT;
@@ -121,11 +121,11 @@ protected:
 
 private:
     bool stranded() const NOEXCEPT;
-    void do_subscribe_message(const message_notifier& handler) NOEXCEPT;
+    void do_subscribe_messages(const message_notifier& handler) NOEXCEPT;
     void do_notify_message(const code& ec, time_t zulu,
         const std::string& message) const NOEXCEPT;
 
-    void do_subscribe_event(const event_notifier& handler) NOEXCEPT;
+    void do_subscribe_events(const event_notifier& handler) NOEXCEPT;
     void do_notify_event(event_t identifier, size_t count,
         const duration& span) const NOEXCEPT;
 

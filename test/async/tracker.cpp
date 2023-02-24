@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(tracker__construct1__guarded__safe_expected_messages)
     logger log{};
     std::promise<code> log_stopped{};
     auto count = zero;
-    log.subscribe([&](const code& ec, const std::string& message)
+    log.subscribe_messages([&](const code& ec, time_t, const std::string& message)
     {
         if (is_zero(count++))
         {

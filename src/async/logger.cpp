@@ -79,14 +79,14 @@ void logger::do_notify_message(const code& ec, time_t zulu,
     message_subscriber_.notify(ec, zulu, message);
 }
 
-void logger::subscribe(message_notifier&& handler) NOEXCEPT
+void logger::subscribe_messages(message_notifier&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&logger::do_subscribe_message, this, std::move(handler)));
+        std::bind(&logger::do_subscribe_messages, this, std::move(handler)));
 }
 
 // private
-void logger::do_subscribe_message(const message_notifier& handler) NOEXCEPT
+void logger::do_subscribe_messages(const message_notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     message_subscriber_.subscribe(move_copy(handler));
@@ -112,14 +112,14 @@ void logger::do_notify_event(event_t identifier, size_t count,
     event_subscriber_.notify(error::success, identifier, count, span);
 }
 
-void logger::subscribe(event_notifier&& handler) NOEXCEPT
+void logger::subscribe_events(event_notifier&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&logger::do_subscribe_event, this, std::move(handler)));
+        std::bind(&logger::do_subscribe_events, this, std::move(handler)));
 }
 
 // private
-void logger::do_subscribe_event(const event_notifier& handler) NOEXCEPT
+void logger::do_subscribe_events(const event_notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     event_subscriber_.subscribe(move_copy(handler));
