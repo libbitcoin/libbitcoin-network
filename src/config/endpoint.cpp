@@ -112,12 +112,24 @@ address endpoint::to_address() const NOEXCEPT
 {
     try
     {
-        return { to_uri() };
+        return { to_authority() };
     }
     catch (const std::exception&)
     {
         return {};
     }
+}
+
+// protected
+std::string endpoint::to_authority() const NOEXCEPT
+{
+    return is_zero(port()) ? host() : host() + ":" + serialize(port());
+}
+
+// protected
+messages::address_item endpoint::to_address_item() const NOEXCEPT
+{
+    return to_address();
 }
 
 // Operators.
@@ -136,6 +148,17 @@ bool endpoint::operator==(const endpoint& other) const NOEXCEPT
 }
 
 bool endpoint::operator!=(const endpoint& other) const NOEXCEPT
+{
+    return !(*this == other);
+}
+
+bool endpoint::operator==(const messages::address_item& other) const NOEXCEPT
+{
+    // Will match default address_item if to_address_item() returns default.
+    return to_address_item() == other;
+}
+
+bool endpoint::operator!=(const messages::address_item& other) const NOEXCEPT
 {
     return !(*this == other);
 }

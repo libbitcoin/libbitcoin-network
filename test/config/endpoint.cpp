@@ -206,4 +206,82 @@ BOOST_AUTO_TEST_CASE(endpoint__inequality__same__false)
     BOOST_REQUIRE(!(host1 != host2));
 }
 
+class accessor
+    : public endpoint
+{
+public:
+    using endpoint::endpoint;
+    messages::address_item get_address_item() const NOEXCEPT
+    {
+        return to_address_item();
+    }
+};
+
+// equality/address_item
+
+BOOST_AUTO_TEST_CASE(endpoint__equality_address_item__default_default__true)
+{
+    const endpoint host1{};
+    const accessor host2{};
+    BOOST_REQUIRE(host1 == host2.get_address_item());
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__equality_address_item__default_invalid_address__true)
+{
+    const endpoint host1{};
+    const accessor host2("tcp://foo.bar:12345");
+    BOOST_REQUIRE(host1 == host2.get_address_item());
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__equality_address_item__distinct_port__false)
+{
+    const endpoint host1("tcp://42.42.42.42:12345");
+    const accessor host2("tcp://42.42.42.42:1234");
+    BOOST_REQUIRE(!(host1 == host2.get_address_item()));
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__equality_address_item__same__true)
+{
+    const endpoint host1("tcp://127.0.0.1:12345");
+    const accessor host2("tcp://127.0.0.1:12345");
+    BOOST_REQUIRE(host1 == host2.get_address_item());
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__equality_address_item__same_v6__true)
+{
+    const endpoint host1("tcp://[abcd:abcd::abcd:abcd]:12345");
+    const accessor host2("tcp://[abcd:abcd::abcd:abcd]:12345");
+    BOOST_REQUIRE(host1 == host2.get_address_item());
+}
+
+// inequality/address_item
+
+BOOST_AUTO_TEST_CASE(endpoint__inequality_address_item__default_invalid_address__false)
+{
+    const endpoint host1{};
+    const accessor host2("tcp://*:12345");
+    BOOST_REQUIRE(!(host1 != host2.get_address_item()));
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__inequality_address_item__distinct_port__true)
+{
+    const endpoint host1("tcp://42.42.42.42:12345");
+    const accessor host2("tcp://42.42.42.42:1234");
+    BOOST_REQUIRE(host1 != host2.get_address_item());
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__inequality_address_item__same__false)
+{
+    const endpoint host1("tcp://127.0.0.1:12345");
+    const accessor host2("tcp://127.0.0.1:12345");
+    BOOST_REQUIRE(!(host1 != host2.get_address_item()));
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__inequality_address_item__same_v6__false)
+{
+    const endpoint host1("tcp://[abcd:abcd::abcd:abcd]:12345");
+    const accessor host2("tcp://[abcd:abcd::abcd:abcd]:12345");
+    BOOST_REQUIRE(!(host1 != host2.get_address_item()));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
