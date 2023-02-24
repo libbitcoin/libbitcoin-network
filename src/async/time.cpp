@@ -24,7 +24,6 @@
 namespace libbitcoin {
 namespace network {
 
-    
 // local utilities
 // ----------------------------------------------------------------------------
 // These are complicated by lack of std::localtime/std::gmtime thread safety,
