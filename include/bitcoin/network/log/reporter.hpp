@@ -33,7 +33,7 @@ protected:
 
 public:
     const logger& log() const NOEXCEPT;
-    const void fire(uint8_t identifier, size_t count=zero) const NOEXCEPT;
+    void fire(uint8_t identifier, size_t count=zero) const NOEXCEPT;
 
 private:
     // This is thread safe.
