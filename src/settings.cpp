@@ -225,9 +225,9 @@ bool settings::whitelisted(const messages::address_item& item) const NOEXCEPT
 
 bool settings::peered(const messages::address_item& item) const NOEXCEPT
 {
-    // TODO: causes attempted conversion of all configured peers to address
-    // items on each evaluation, which could be optimized by static init. 
-    return contains(peers, item);
+    // This dynamic conversion of peers is O(N^2), a very significant CPU cost.
+    const auto hosts = system::projection<config::authorities>(peers);
+    return contains(hosts, item);
 }
 
 } // namespace network

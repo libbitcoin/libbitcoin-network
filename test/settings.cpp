@@ -695,8 +695,8 @@ BOOST_AUTO_TEST_CASE(settings__peered__configured__expected_port_matching)
     BOOST_REQUIRE(instance.peered(config::address{ "51.79.80.166:8333" }));
     BOOST_REQUIRE(instance.peered(config::address{ "65.109.113.126:8333" }));
     BOOST_REQUIRE(!instance.peered(config::address{ "77.21.60.152:8333" }));
-    BOOST_REQUIRE(!instance.peered(config::address{ "86.104.228.11" }));
-    BOOST_REQUIRE(!instance.peered(config::address{ "5.14.19.0:8333" }));
+    BOOST_REQUIRE(instance.peered(config::address{ "86.104.228.11" }));
+    BOOST_REQUIRE(instance.peered(config::address{ "5.14.19.0:8333" }));
     BOOST_REQUIRE(instance.peered(config::address{ "89.35.142.168" }));
 }
 
