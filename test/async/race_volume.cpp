@@ -122,7 +122,6 @@ BOOST_AUTO_TEST_CASE(race_volume__finish__early_sufficiency__resources_deleted_a
 {
     struct destructor
     {
-        using ptr = std::shared_ptr<destructor>;
         destructor(bool& deleted) NOEXCEPT : deleted_(deleted) {}
         ~destructor() NOEXCEPT { deleted_ = true; }
         bool& deleted_;
@@ -190,7 +189,6 @@ BOOST_AUTO_TEST_CASE(race_volume__finish__late_insufficiency__resources_deleted_
 {
     struct destructor
     {
-        using ptr = std::shared_ptr<destructor>;
         destructor(bool& deleted) NOEXCEPT : deleted_(deleted) {}
         ~destructor() NOEXCEPT { deleted_ = true; }
         bool& deleted_;
@@ -258,7 +256,6 @@ BOOST_AUTO_TEST_CASE(race_volume__finish__late_sufficiency__resources_deleted_as
 {
     struct destructor
     {
-        using ptr = std::shared_ptr<destructor>;
         destructor(bool& deleted) NOEXCEPT : deleted_(deleted) {}
         ~destructor() NOEXCEPT { deleted_ = true; }
         bool& deleted_;

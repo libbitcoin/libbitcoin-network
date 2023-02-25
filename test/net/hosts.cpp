@@ -54,7 +54,7 @@ constexpr address_item host3{ 0, 0, loopback_ip_address, 3 };
 constexpr address_item loopback00{ 0, 0, loopback_ip_address, 0 };
 constexpr address_item loopback42{ 0, 0, loopback_ip_address, 42 };
 constexpr address_item unspecified00{ 0, 0, unspecified_ip_address, 0 };
-constexpr address_item unspecified42{ 0, 0, unspecified_ip_address, 42 };
+////constexpr address_item unspecified42{ 0, 0, unspecified_ip_address, 42 };
 
 // start
 

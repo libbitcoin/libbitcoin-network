@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notificatio
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, messages::ping::cptr ping) NOEXCEPT NOEXCEPT
+        instance.subscribe([&](const code& ec, messages::ping::cptr ping) NOEXCEPT
         {
             result |= is_null(ping);
             promise.set_value(ec);
