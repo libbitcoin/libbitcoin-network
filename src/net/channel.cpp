@@ -137,9 +137,16 @@ void channel::set_negotiated_version(uint32_t value) NOEXCEPT
     negotiated_version_ = value;
 }
 
+// private
+bool channel::is_handshaked() const NOEXCEPT
+{
+    return !is_null(peer_version_);
+}
+
 version::cptr channel::peer_version() const NOEXCEPT
 {
-    return peer_version_;
+    // peer_version_ defaults to nullptr, which implies not handshaked.
+    return is_handshaked() ? peer_version_ : system::to_shared<messages::version>();
 }
 
 void channel::set_peer_version(const version::cptr& value) NOEXCEPT
@@ -148,16 +155,17 @@ void channel::set_peer_version(const version::cptr& value) NOEXCEPT
     peer_version_ = value;
 }
 
-address_item_cptr channel::updated_address() const NOEXCEPT
+address_item_cptr channel::get_updated_address() const NOEXCEPT
 {
-    // Should construct using makes_shared(vargs) overload, but fails on clang.
-    return to_shared(address_item
-    {
-        unix_time(),
-        peer_version()->services,
-        address().ip(),
-        address().port()
-    });
+    // Copy peer address.
+    const auto peer = std::make_shared<address_item>(address());
+
+    // Update timestamp, and services if handshaked.
+    peer->timestamp = unix_time();
+    if (is_handshaked())
+        peer->services = peer_version_->services;
+
+    return peer;
 }
 
 // Proxy overrides (channel maintains state for the proxy).
