@@ -130,21 +130,22 @@ void logger::do_subscribe_events(const event_notifier& handler) NOEXCEPT
 // stop
 // ----------------------------------------------------------------------------
 
-void logger::stop() NOEXCEPT
+void logger::stop(uint8_t level) NOEXCEPT
 {
-    stop({});
+    stop({}, level);
 }
 
-void logger::stop(const std::string& message) NOEXCEPT
+void logger::stop(const std::string& message, uint8_t level) NOEXCEPT
 {
-    stop(error::service_stopped, message);
+    stop(error::service_stopped, message, level);
 }
 
-void logger::stop(const code& ec, const std::string& message) NOEXCEPT
+void logger::stop(const code& ec, const std::string& message,
+    uint8_t level) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&logger::do_stop,
-            this, ec, zulu_time(), message));
+            this, ec, zulu_time(), message, level));
 
     pool_.stop();
     BC_DEBUG_ONLY(const auto result =) pool_.join();
@@ -152,13 +153,13 @@ void logger::stop(const code& ec, const std::string& message) NOEXCEPT
 }
 
 // private
-void logger::do_stop(const code& ec, time_t zulu,
-    const std::string& message) NOEXCEPT
+void logger::do_stop(const code& ec, time_t zulu, const std::string& message,
+    uint8_t level) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Subscriber asserts if stopped with a success code.
-    message_subscriber_.stop(ec, level_t::news, zulu, message);
+    message_subscriber_.stop(ec, level, zulu, message);
     event_subscriber_.stop(ec, event_t::stop, zero, {});
  }
 
