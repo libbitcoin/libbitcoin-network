@@ -61,10 +61,10 @@ private:
     static inline work_guard keep_alive(asio::io_context& service) NOEXCEPT;
 
     // This is thread safe.
-    asio::io_context service_;
+    asio::io_context service_{};
 
     // These are not thread safe.
-    std::vector<thread> threads_;
+    std::vector<thread> threads_{};
     work_guard work_;
 };
 
