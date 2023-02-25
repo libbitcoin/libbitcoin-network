@@ -30,6 +30,7 @@
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -47,12 +48,13 @@ typedef std::function<void(const code&, const address_item_cptr&)>
 /// The file is loaded and saved from/to the settings-specified path.
 /// The file is a line-oriented textual serialization (config::authority+).
 class BCT_API hosts
+  : public reporter
 {
 public:
     DELETE_COPY_MOVE_DESTRUCT(hosts);
 
     /// Construct an instance.
-    hosts(const settings& settings) NOEXCEPT;
+    hosts(const settings& settings, const logger& log) NOEXCEPT;
 
     /// Start/stop.
     /// -----------------------------------------------------------------------

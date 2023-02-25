@@ -117,7 +117,7 @@ public:
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
-        boost::asio::post(strand_, [=]()
+        boost::asio::post(strand_, [=]() NOEXCEPT
         {
             handler(error::success, socket);
         });

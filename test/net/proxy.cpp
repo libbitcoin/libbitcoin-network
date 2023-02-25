@@ -107,7 +107,6 @@ BOOST_AUTO_TEST_CASE(proxy__paused__default__true)
 
     BOOST_REQUIRE(paused.get_future().get());
     proxy_ptr->stop(error::invalid_magic);
-    proxy_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(proxy__paused__pause__true)
@@ -126,7 +125,6 @@ BOOST_AUTO_TEST_CASE(proxy__paused__pause__true)
 
     BOOST_REQUIRE(paused.get_future().get());
     proxy_ptr->stop(error::invalid_magic);
-    proxy_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(proxy__paused__resume__false)
@@ -155,7 +153,6 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume__false)
     });
 
     BOOST_REQUIRE(stopped.get_future().get());
-    proxy_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(proxy__paused__resume_pause__true)
@@ -185,7 +182,6 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_pause__true)
     });
 
     BOOST_REQUIRE(stopped.get_future().get());
-    proxy_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(proxy__paused__resume_after_read_fail__true)
@@ -223,7 +219,6 @@ BOOST_AUTO_TEST_CASE(proxy__paused__resume_after_read_fail__true)
     });
 
     BOOST_REQUIRE(stopped.get_future().get());
-    proxy_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(proxy__stopped__default__false)
@@ -235,7 +230,6 @@ BOOST_AUTO_TEST_CASE(proxy__stopped__default__false)
     BOOST_REQUIRE(!proxy_ptr->stopped());
 
     proxy_ptr->stop(error::invalid_magic);
-    proxy_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(proxy__stranded__default__false)
@@ -247,7 +241,6 @@ BOOST_AUTO_TEST_CASE(proxy__stranded__default__false)
     BOOST_REQUIRE(!proxy_ptr->stranded());
 
     proxy_ptr->stop(error::invalid_magic);
-    proxy_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(proxy__authority__default__expected)
@@ -260,7 +253,6 @@ BOOST_AUTO_TEST_CASE(proxy__authority__default__expected)
     BOOST_REQUIRE(proxy_ptr->authority() == default_authority);
 
     proxy_ptr->stop(error::invalid_magic);
-    proxy_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(proxy__subscribe_stop__subscribed__expected)
@@ -289,8 +281,6 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_stop__subscribed__expected)
     proxy_ptr->stop(expected_ec);
     BOOST_REQUIRE_EQUAL(stop2_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE(proxy_ptr->stopped());
-
-    proxy_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
@@ -315,8 +305,6 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
     proxy_ptr->stop(expected_ec);
     BOOST_REQUIRE_EQUAL(stop1_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE(proxy_ptr->stopped());
-
-    proxy_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(proxy__subscribe_message__subscribed__expected)
@@ -327,13 +315,14 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_message__subscribed__expected)
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
     constexpr auto expected_ec = error::invalid_magic;
 
+    auto result = true;
     std::promise<code> message_stopped;
-    boost::asio::post(proxy_ptr->strand(), [&]()
+    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
     {
         proxy_ptr->subscribe_message<messages::ping>(
-            [&](code ec, messages::ping::cptr ping)
+            [&](code ec, messages::ping::cptr ping) NOEXCEPT
             {
-                BOOST_REQUIRE(!ping);
+                result |= is_null(ping);
                 message_stopped.set_value(ec);
             });
     });
@@ -343,8 +332,7 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_message__subscribed__expected)
     proxy_ptr->stop(expected_ec);
     BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE(proxy_ptr->stopped());
-
-    proxy_ptr.reset();
+    BOOST_REQUIRE(result);
 }
 
 BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
@@ -367,9 +355,10 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
             stop_subscribed.set_value(ec);
         });
 
+    auto result = true;
     std::promise<code> stop1_stopped;
     std::promise<code> message_stopped;
-    boost::asio::post(proxy_ptr->strand(), [&]()
+    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
     {
         proxy_ptr->subscribe_stop1([=, &stop1_stopped](code ec) NOEXCEPT
         {
@@ -377,9 +366,9 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
         });
 
         proxy_ptr->subscribe_message<messages::ping>(
-            [&](code ec, messages::ping::cptr ping)
+            [&](code ec, messages::ping::cptr ping) NOEXCEPT
             {
-                BOOST_REQUIRE(!ping);
+                result |= is_null(ping);
                 message_stopped.set_value(ec);
             });
     });
@@ -392,8 +381,7 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
     BOOST_REQUIRE_EQUAL(stop1_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE_EQUAL(stop2_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE(proxy_ptr->stopped());
-
-    proxy_ptr.reset();
+    BOOST_REQUIRE(result);
 }
 
 BOOST_AUTO_TEST_CASE(proxy__send__not_connected__expected)
@@ -403,23 +391,23 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected__expected)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
+    auto result = true;
     std::promise<code> promise;
-    const auto handler = [&](code ec)
+    const auto handler = [&](code ec) NOEXCEPT
     {
         // Send failure causes stop before handler invoked.
-        BOOST_REQUIRE(proxy_ptr->stopped());
+        result |= proxy_ptr->stopped();
         promise.set_value(ec);
     };
 
-    boost::asio::post(proxy_ptr->strand(), [&]()
+    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
     {
         proxy_ptr->send<messages::ping>(messages::ping{ 42 }, handler);
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
-
-    proxy_ptr.reset();
+    BOOST_REQUIRE(result);
 }
 
 BOOST_AUTO_TEST_CASE(proxy__send__not_connected_move__expected)
@@ -429,21 +417,21 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected_move__expected)
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto proxy_ptr = std::make_shared<mock_proxy>(socket_ptr);
 
+    auto result = true;
     std::promise<code> promise;
-    boost::asio::post(proxy_ptr->strand(), [&]()
+    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
     {
         proxy_ptr->send<messages::ping>(messages::ping{ 42 }, [&](code ec)
         {
             // Send failure causes stop before handler invoked.
-            BOOST_REQUIRE(proxy_ptr->stopped());
+            result |= proxy_ptr->stopped();
             promise.set_value(ec);
         });
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
-
-    proxy_ptr.reset();
+    BOOST_REQUIRE(result);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

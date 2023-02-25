@@ -95,7 +95,7 @@ public:
     uint64_t identifier() const NOEXCEPT;
 
     /// Originating address of connection with current time and peer services.
-    address_item_cptr updated_address() const NOEXCEPT;
+    address_item_cptr get_updated_address() const NOEXCEPT;
 
     /// Negotiated version should be written only in handshake.
     uint32_t negotiated_version() const NOEXCEPT;
@@ -117,6 +117,7 @@ protected:
     void signal_activity() NOEXCEPT override;
 
 private:
+    bool is_handshaked() const NOEXCEPT;
     void do_stop(const code& ec) NOEXCEPT;
 
     void start_expiration() NOEXCEPT;
@@ -140,10 +141,7 @@ private:
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
     uint32_t negotiated_version_;
-    messages::version::cptr peer_version_
-    {
-        system::to_shared<messages::version>()
-    };
+    messages::version::cptr peer_version_{};
 };
 
 typedef std::function<void(const code&, const channel::ptr&)> channel_handler;

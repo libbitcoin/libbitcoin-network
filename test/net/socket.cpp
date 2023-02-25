@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 
     // Acceptor must be canceled to release/invoke the accept handler.
     // This has the same effect as network::acceptor::stop.
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
         error::boost_code ignore;
         acceptor.cancel(ignore);

@@ -901,7 +901,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     BOOST_REQUIRE(session->require_attached_handshake());
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);

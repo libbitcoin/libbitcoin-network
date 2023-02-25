@@ -45,7 +45,7 @@ p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
   : settings_(settings),
     threadpool_(settings.threads),
     strand_(threadpool_.service().get_executor()),
-    hosts_(settings),
+    hosts_(settings, log),
     broadcaster_(strand_),
     stop_subscriber_(strand_),
     connect_subscriber_(strand_),

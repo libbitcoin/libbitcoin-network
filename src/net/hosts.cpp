@@ -35,9 +35,10 @@ using namespace messages;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-hosts::hosts(const settings& settings) NOEXCEPT
+hosts::hosts(const settings& settings, const logger& log) NOEXCEPT
   : settings_(settings),
-    buffer_(settings.host_pool_capacity)
+    buffer_(settings.host_pool_capacity),
+    reporter(log)
 {
 }
 
@@ -80,6 +81,7 @@ code hosts::start() NOEXCEPT
         std::filesystem::remove(settings_.file(), ec);
     }
 
+    LOG("Loaded (" << buffer_.size() << ") addresses.");
     hosts_count_.store(buffer_.size());
     return error::success;
 }
@@ -117,6 +119,7 @@ code hosts::stop() NOEXCEPT
         return error::file_exception;
     }
 
+    LOG("Saved (" << buffer_.size() << ") addresses.");
     buffer_.clear();
     hosts_count_.store(zero);
     return error::success;
@@ -268,11 +271,44 @@ inline void hosts::push(const std::string& line) NOEXCEPT
     try
     {
         const config::address item{ line };
-        if (!settings_.excluded(item))
+
+        if (!messages::is_specified(item))
+        {
+            LOG("Address unspecified upon load [" << line << "].");
+        }
+        else if (settings_.disabled(item))
+        {
+            LOG("Address disabled upon load [" << line << "].");
+        }
+        else if (settings_.insufficient(item))
+        {
+            LOG("Address insufficient upon load [" << line << "].");
+        }
+        else if (settings_.unsupported(item))
+        {
+            LOG("Address unsupported upon load [" << line << "].");
+        }
+        else if (settings_.peered(item))
+        {
+            LOG("Address peered upon load [" << line << "].");
+        }
+        else if (settings_.blacklisted(item))
+        {
+            LOG("Address blacklisted upon load [" << line << "].");
+        }
+        else if (!settings_.whitelisted(item))
+        {
+            LOG("Address not whitelisted upon load [" << line << "].");
+        }
+        else
+        {
             buffer_.push_back(item);
+            ////LOG("Address excluded upon load [" << line << "].");
+        }
     }
     catch (std::exception&)
     {
+        LOG("Address failed to deserialize [" << line << "].");
     }
 }
 

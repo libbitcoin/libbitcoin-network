@@ -262,20 +262,24 @@ void session_outbound::handle_channel_stop(const code& ec,
 // ----------------------------------------------------------------------------
 // private
 
-inline bool always_reclaim(const code& ec) NOEXCEPT
+inline bool session_outbound::maybe_reclaim(const code& ec) const NOEXCEPT
+{
+    // Bypass if host pool is full (don't allow these to evict others).
+    if (address_count() >= settings().host_pool_capacity)
+        return false;
+
+    // Failures that might work later (timeouts can drain pool).
+    return ec == error::operation_timeout
+        || ec == error::channel_timeout
+        || ec == error::peer_disconnect;
+}
+
+inline bool session_outbound::always_reclaim(const code& ec) const NOEXCEPT
 {
     // Terminations that worked or might have worked.
     return ec == error::success
         || ec == error::operation_canceled
         || ec == error::channel_expired;
-}
-
-inline bool maybe_reclaim(const code& ec) NOEXCEPT
-{
-    // Failures that might work later (timeouts can drain pool).
-    return ec == error::operation_timeout
-        || ec == error::channel_timeout
-        || ec == error::peer_disconnect;
 }
 
 // Use initial address time and services, since connection not completed.
@@ -288,8 +292,7 @@ void session_outbound::reclaim(const code& ec,
     // Reclaiming address implies socket must be stopped.
     socket->stop();
 
-    if (stopped() || always_reclaim(ec) || (maybe_reclaim(ec) &&
-        (address_count() < settings().host_pool_capacity)))
+    if (stopped() || always_reclaim(ec) || maybe_reclaim(ec))
     {
         restore(socket->address(), BIND1(handle_reclaim, _1));
     }
@@ -305,10 +308,9 @@ void session_outbound::reclaim(const code& ec,
     // Reclaiming address implies channel must be stopped.
     channel->stop(error::operation_canceled);
 
-    if (stopped() || always_reclaim(ec) || (maybe_reclaim(ec) &&
-        (address_count() < settings().host_pool_capacity)))
+    if (stopped() || always_reclaim(ec) || maybe_reclaim(ec))
     {
-        restore(channel->updated_address(), BIND1(handle_reclaim, _1));
+        restore(channel->get_updated_address(), BIND1(handle_reclaim, _1));
     }
 }
 

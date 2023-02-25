@@ -78,6 +78,8 @@ private:
         const channel::ptr& channel) NOEXCEPT;
 
     /// Restore an address to the address pool.
+    inline bool maybe_reclaim(const code& ec) const NOEXCEPT;
+    inline bool always_reclaim(const code& ec) const NOEXCEPT;
     void reclaim(const code& ec, const socket::ptr& socket) NOEXCEPT;
     void reclaim(const code& ec, const channel::ptr& channel) NOEXCEPT;
     void handle_reclaim(const code& ec) const NOEXCEPT;

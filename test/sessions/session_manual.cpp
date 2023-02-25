@@ -639,7 +639,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
     BOOST_REQUIRE_EQUAL(session->start_connect_endpoint(), expected);
 
     std::promise<bool> stopped;
-    boost::asio::post(net.strand(), [=, &stopped]()
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
     {
         session->stop();
         stopped.set_value(true);
