@@ -148,7 +148,7 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (minimum_version_ < level::minimum_protocol)
     {
-        LOG("Invalid protocol version configuration, minimum below ("
+        LOGF("Invalid protocol version configuration, minimum below ("
             << level::minimum_protocol << ").");
 
         callback(error::invalid_configuration);
@@ -157,7 +157,7 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (maximum_version_ > level::maximum_protocol)
     {
-        LOG("Invalid protocol version configuration, maximum above ("
+        LOGF("Invalid protocol version configuration, maximum above ("
             << level::maximum_protocol << ").");
 
         callback(error::invalid_configuration);
@@ -166,7 +166,7 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 
     if (minimum_version_ > maximum_version_)
     {
-        LOG("Invalid protocol version configuration, minimum above maximum.");
+        LOGF("Invalid protocol version configuration, minimum above maximum.");
         callback(error::invalid_configuration);
         return;
     }
@@ -292,12 +292,12 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     }
 
     LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
-    LOG(prefix << " [" << authority() << "] version (" << message->value << ") "
+    LOGN(prefix << " [" << authority() << "] version (" << message->value << ") "
         << message->user_agent);
 
     if (to_bool(message->services & invalid_services_))
     {
-        LOG("Unsupported services (" << message->services << ") by ["
+        LOGR("Unsupported services (" << message->services << ") by ["
             << authority() << "] showing (" << outbound().services() << ").");
 
         rejection(error::peer_unsupported);
@@ -307,8 +307,8 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     // Advertised services on many incoming connections are set to zero.
     if ((message->services & minimum_services_) != minimum_services_)
     {
-        ////LOG("Insufficient services (" << message->services << ") by ["
-        ////    << authority() << "] showing (" << outbound().services() << ").");
+        LOGR("Insufficient services (" << message->services << ") by ["
+            << authority() << "] showing (" << outbound().services() << ").");
 
         rejection(error::peer_insufficient);
         return;
@@ -316,7 +316,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
 
     if (message->value < minimum_version_)
     {
-        LOG("Insufficient peer protocol version (" << message->value << ") "
+        LOGP("Insufficient peer protocol version (" << message->value << ") "
             "for [" << authority() << "].");
 
         rejection(error::peer_insufficient);
@@ -327,11 +327,11 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     set_negotiated_version(version);
     set_peer_version(message);
 
-    ////LOG("Negotiated protocol version (" << version << ") "
+    ////LOGP("Negotiated protocol version (" << version << ") "
     ////    << "for [" << authority() << "].");
 
     ////// TODO: verbose (helpful for identifying own address for config of self).
-    ////LOG("Peer [" << authority() << "] "
+    ////LOGP("Peer [" << authority() << "] "
     ////    << "as {" << config::authority(message->address_sender) << "} "
     ////    << "us {" << config::authority(message->address_receiver) << "}.");
 

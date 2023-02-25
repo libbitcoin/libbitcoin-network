@@ -119,7 +119,7 @@ void protocol_address_in_31402::handle_receive_address(const code& ec,
     const auto start = message->addresses.size();
     if (inbound_ && (received_ || !is_one(start)))
     {
-        LOG("Ignoring unsolicited addresses from [" << authority() << "]");
+        LOGP("Ignoring unsolicited addresses from [" << authority() << "]");
         ////stop(error::protocol_violation);
         return;
     }
@@ -127,7 +127,7 @@ void protocol_address_in_31402::handle_receive_address(const code& ec,
     received_ = true;
     if (is_one(start) && message->addresses.front() == outbound())
     {
-        ////LOG("Dropping redundant address from [" << authority() << "]");
+        ////LOGP("Dropping redundant address from [" << authority() << "]");
         return;
     }
 
@@ -148,7 +148,7 @@ void protocol_address_in_31402::handle_save_address(const code& ec,
     if (stopped(ec))
         return;
 
-    LOG("Accepted (" << start << ">" << filtered << ">" << accepted << ") "
+    LOGN("Accepted (" << start << ">" << filtered << ">" << accepted << ") "
         "addresses from [" << authority() << "].");
 }
 

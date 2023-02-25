@@ -118,7 +118,7 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
     // Host population always required.
     if (const auto error_code = start_hosts())
     {
-        LOG("Hosts file failed to deserialize, " << error_code.message());
+        LOGF("Hosts file failed to deserialize, " << error_code.message());
         handler(error_code);
         return;
     }
@@ -193,7 +193,7 @@ void p2p::close() NOEXCEPT
     // Serialize hosts to file.
     if (const auto error_code = stop_hosts())
     {
-        LOG("Hosts file failed to serialize, " << error_code.message());
+        LOGF("Hosts file failed to serialize, " << error_code.message());
     }
 }
 
@@ -297,7 +297,7 @@ p2p::object_key p2p::create_key() NOEXCEPT
     if (is_zero(++keys_))
     {
         BC_ASSERT_MSG(false, "overflow");
-        LOG("Session object overflow.");
+        LOGF("Session object overflow.");
     }
 
     return keys_;
@@ -472,7 +472,7 @@ bool p2p::store_nonce(const channel& channel) NOEXCEPT
 
     if (!nonces_.insert(channel.nonce()).second)
     {
-        LOG("Failed to store nonce for [" << channel.authority() << "].");
+        LOGF("Failed to store nonce for [" << channel.authority() << "].");
         return false;
     }
 
@@ -488,7 +488,7 @@ bool p2p::unstore_nonce(const channel& channel) NOEXCEPT
 
     if (!to_bool(nonces_.erase(channel.nonce())))
     {
-        LOG("Failed to unstore nonce for [" << channel.authority() << "].");
+        LOGF("Failed to unstore nonce for [" << channel.authority() << "].");
         return false;
     }
 
@@ -520,26 +520,26 @@ code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
 
     if (is_loopback(*channel))
     {
-        LOG("Loopback detected from [" << channel->authority() << "].");
+        LOGS("Loopback detected from [" << channel->authority() << "].");
         return error::accept_failed;
+    }
+
+    if (!hosts_.reserve(channel->authority()))
+    {
+        LOGS("Duplicate connection to [" << channel->authority() << "].");
+        return error::address_in_use;
     }
 
     if (channel->inbound() && is_zero(add1(inbound_channel_count_.load())))
     {
-        LOG("Overflow: inbound channel count.");
+        LOGF("Overflow: inbound channel count.");
         return error::channel_overflow;
     }
 
     if (!channel->quiet() && is_zero(add1(total_channel_count_.load())))
     {
-        LOG("Overflow: total channel count.");
+        LOGF("Overflow: total channel count.");
         return error::channel_overflow;
-    }
-
-    if (!hosts_.reserve(channel->authority()))
-    {
-        LOG("Duplicate connection to [" << channel->authority() << "].");
-        return error::address_in_use;
     }
 
     if (channel->inbound())
@@ -583,13 +583,13 @@ void p2p::uncount_channel(const channel::ptr& channel) NOEXCEPT
 
     if (channel->inbound() && is_zero(inbound_channel_count_.load()))
     {
-        LOG("Underflow: inbound channel count.");
+        LOGF("Underflow: inbound channel count.");
         return;
     }
 
     if (!channel->quiet() && is_zero(total_channel_count_.load()))
     {
-        LOG("Underflow: total channel count.");
+        LOGF("Underflow: total channel count.");
         return;
     }
 

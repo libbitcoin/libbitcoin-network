@@ -110,7 +110,7 @@ void protocol_version_70002::handle_receive_reject(const code& ec,
     if (stopped(ec))
         return;
 
-    LOG("Reject message '" << message->message << "' ("
+    LOGP("Reject message '" << message->message << "' ("
         << static_cast<uint16_t>(message->code) << ") from [" << authority()
         << "] with reason: " << message->reason);
 }

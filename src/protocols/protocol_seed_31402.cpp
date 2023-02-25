@@ -160,7 +160,7 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
     const auto start = message->addresses.size();
     if (is_one(start) && (message->addresses.front() == outbound()))
     {
-        ////LOG("Dropping redundant address from seed [" << authority() << "]");
+        ////LOGP("Dropping redundant address from seed [" << authority() << "]");
         return;
     }
 
@@ -184,7 +184,7 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
     if (ec)
         stop(ec);
 
-    LOG("Accepted (" << start << ">" << filtered << ">" << accepted << ") "
+    LOGN("Accepted (" << start << ">" << filtered << ">" << accepted << ") "
         "addresses from seed [" << authority() << "].");
 
     // Multiple address messages are allowed, but do not delay session.

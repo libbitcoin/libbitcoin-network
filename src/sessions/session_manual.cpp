@@ -97,7 +97,7 @@ void session_manual::connect(const config::endpoint& peer,
         return false;
     });
 
-    LOG("Maintaining manual connection to [" << peer << "]");
+    LOGN("Maintaining manual connection to [" << peer << "]");
     start_connect(error::success, peer, connector, std::move(handler));
 }
 
@@ -115,8 +115,6 @@ void session_manual::start_connect(const code&, const endpoint& peer,
         handler(error::service_stopped, nullptr);
         return;
     }
-
-    ////LOG("Manual restart [" << peer << "].");
 
     connector->connect(peer,
         BIND5(handle_connect, _1, _2, peer, connector, handler));
@@ -140,13 +138,13 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
     if (ec)
     {
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
-        LOG("Failed to connect manual address [" << peer << "] " << ec.message());
+        LOGS("Failed to connect manual address [" << peer << "] " << ec.message());
 
         // Connect failure notification.
         if (!handler(ec, nullptr))
         {
             // TODO: drop connector subscription.
-            LOG("Manual channel dropped at connect [" << peer << "].");
+            LOGS("Manual channel dropped at connect [" << peer << "].");
             return;
         }
 
@@ -174,7 +172,7 @@ void session_manual::handle_channel_start(const code& ec,
     const channel_notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Manual channel start [" << peer << "] " << ec.message());
+    LOGS("Manual channel start [" << peer << "] " << ec.message());
 
     // Connection success notification.
     if (!ec && !handler(ec, channel))
@@ -195,13 +193,13 @@ void session_manual::handle_channel_stop(const code& ec,
     BC_ASSERT_MSG(stranded(), "strand");
 
     // The channel stopped following connection, try again with delay.
-    LOG("Manual channel stop [" << peer << "] " << ec.message());
+    LOGS("Manual channel stop [" << peer << "] " << ec.message());
 
     // Handshake failure notification.
     if (ec == error::channel_dropped || !handler(ec, nullptr))
     {
         // TODO: drop connector subscription.
-        LOG("Manual channel dropped [" << peer << "].");
+        LOGS("Manual channel dropped [" << peer << "].");
         return;
     }
 

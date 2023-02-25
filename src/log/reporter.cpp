@@ -34,9 +34,9 @@ const logger& reporter::log() const NOEXCEPT
     return log_;
 }
 
-void reporter::fire(uint8_t identifier, size_t count) const NOEXCEPT
+void reporter::fire(uint8_t event, size_t count) const NOEXCEPT
 {
-    log_.fire(identifier, count);
+    log_.fire(event, count);
 }
 
 } // namespace network

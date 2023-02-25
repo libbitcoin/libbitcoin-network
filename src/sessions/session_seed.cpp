@@ -64,7 +64,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
     if (is_zero(settings().outbound_connections) ||
         is_zero(settings().connect_batch_size))
     {
-        LOG("Bypassed seeding because outbound connections disabled.");
+        LOGN("Bypassed seeding because outbound connections disabled.");
         handler(error::bypassed);
         unsubscribe_close();
         return;
@@ -72,7 +72,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 
     if (address_count() >= settings().minimum_address_count())
     {
-        LOG("Bypassed seeding because of sufficient ("
+        LOGN("Bypassed seeding because of sufficient ("
             << address_count() << " of " << settings().minimum_address_count()
             << ") address quantity.");
         handler(error::bypassed);
@@ -82,7 +82,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 
     if (is_zero(settings().host_pool_capacity))
     {
-        LOG("Cannot seed because no address pool capacity configured.");
+        LOGN("Cannot seed because no address pool capacity configured.");
         handler(error::seeding_unsuccessful);
         unsubscribe_close();
         return;
@@ -90,7 +90,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
 
     if (settings().seeds.empty())
     {
-        LOG("Cannot seed because no seeds configured");
+        LOGN("Cannot seed because no seeds configured");
         handler(error::seeding_unsuccessful);
         unsubscribe_close();
         return;
@@ -114,7 +114,7 @@ void session_seed::handle_started(const code& ec,
     const auto seeds = settings().seeds.size();
     const auto required = settings().minimum_address_count();
 
-    LOG("Seeding because of insufficient ("
+    LOGN("Seeding because of insufficient ("
         << address_count() << " of " << required << ") address quantity.");
 
     // Bogus warning, this pointer is copied into std::bind().
@@ -147,7 +147,7 @@ void session_seed::start_seed(const code&, const config::endpoint& seed,
     const connector::ptr& connector, const socket_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Connecting to seed [" << seed << "]");
+    LOGN("Connecting to seed [" << seed << "]");
 
     // Guard restartable connector (shutdown delay).
     if (stopped())
@@ -167,7 +167,7 @@ void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
     if (ec)
     {
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
-        LOG("Failed to connect seed address [" << seed << "] " << ec.message());
+        LOGN("Failed to connect seed address [" << seed << "] " << ec.message());
         racer->finish(address_count());
         return;
     }
@@ -223,7 +223,7 @@ void session_seed::handle_channel_start(const code& ec,
 
     if (ec)
     {
-        LOG("Seed start [" << channel->authority() << "] " << ec.message());
+        LOGN("Seed start [" << channel->authority() << "] " << ec.message());
     }
 
     // Pend even on start failure.
@@ -264,7 +264,7 @@ void session_seed::handle_channel_stop(const code& ec,
     const channel::ptr& channel, const race::ptr& racer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Seed stop [" << channel->authority() << "] " << ec.message());
+    LOGN("Seed stop [" << channel->authority() << "] " << ec.message());
 
     // Pent even on start failure.
     unpend(channel);
@@ -275,7 +275,7 @@ void session_seed::stop_seed(const code&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    LOG("Seed session complete.");
+    LOGN("Seed session complete.");
     unsubscribe_close();
 }
 

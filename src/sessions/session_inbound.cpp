@@ -58,7 +58,7 @@ void session_inbound::start(result_handler&& handler) NOEXCEPT
 
     if (!settings().inbound_enabled())
     {
-        LOG("Not configured for inbound connections.");
+        LOGN("Not configured for inbound connections.");
         handler(error::bypassed);
         unsubscribe_close();
         return;
@@ -86,7 +86,7 @@ void session_inbound::handle_started(const code& ec,
 
     if (!error_code)
     {
-        LOG("Accepting up to " << settings().inbound_connections
+        LOGN("Accepting up to " << settings().inbound_connections
             << " connections on port " << settings().inbound_port << ".");
     }
 
@@ -116,11 +116,9 @@ void session_inbound::start_accept(const code& ec,
     if (stopped())
         return;
 
-    ////LOG("Reset start accept.");
-
     if (ec)
     {
-        LOG("Failed to start acceptor, " << ec.message());
+        LOGF("Failed to start acceptor, " << ec.message());
         return;
     }
 
@@ -144,7 +142,7 @@ void session_inbound::handle_accept(const code& ec,
     {
 
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
-        LOG("Failed to accept inbound connection, " << ec.message());
+        LOGF("Failed to accept inbound connection, " << ec.message());
         defer(BIND2(start_accept, _1, acceptor));
         return;
     }
@@ -156,14 +154,14 @@ void session_inbound::handle_accept(const code& ec,
 
     if (!whitelisted(address))
     {
-        ////LOG("Dropping not whitelisted connection [" << socket->authority() << "]");
+        ////LOGS("Dropping not whitelisted connection [" << socket->authority() << "]");
         socket->stop();
         return;
     }
 
     if (blacklisted(address))
     {
-        ////LOG("Dropping blacklisted connection [" << socket->authority() << "]");
+        ////LOGS("Dropping blacklisted connection [" << socket->authority() << "]");
         socket->stop();
         return;
     }
@@ -171,7 +169,7 @@ void session_inbound::handle_accept(const code& ec,
     // Could instead stop listening when at limit, though this is simpler.
     if (inbound_channel_count() >= settings().inbound_connections)
     {
-        LOG("Dropping oversubscribed connection [" << socket->authority() << "]");
+        LOGS("Dropping oversubscribed connection [" << socket->authority() << "]");
         socket->stop();
         return;
     }
@@ -233,10 +231,10 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
 void session_inbound::handle_channel_start(const code&,
     const channel::ptr&) NOEXCEPT
 {
-    // TOOD: nonce check here.
+    // TODO: nonce check here.
 
     BC_ASSERT_MSG(stranded(), "strand");
-    ////LOG("Inbound channel start [" << channel->authority() << "] "
+    ////LOGS("Inbound channel start [" << channel->authority() << "] "
     ////    << ec.message());
 }
 
@@ -250,7 +248,7 @@ void session_inbound::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOG("Inbound channel stop [" << channel->authority() << "] "
+    LOGS("Inbound channel stop [" << channel->authority() << "] "
         << ec.message());
 }
 

@@ -20,6 +20,8 @@
 
 #include <utility>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/log/event.hpp>
+#include <bitcoin/network/log/level.hpp>
 #include <bitcoin/network/log/timer.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/boost.hpp>
@@ -49,9 +51,9 @@ logger::~logger() NOEXCEPT
     pool_.join();
 }
 
-logger::writer logger::write() const NOEXCEPT
+logger::writer logger::write(uint8_t level) const NOEXCEPT
 {
-    return { *this };
+    return { *this, level };
 }
 
 bool logger::stranded() const NOEXCEPT
@@ -63,19 +65,20 @@ bool logger::stranded() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // protected
-void logger::notify(const code& ec, std::string&& message) const NOEXCEPT
+void logger::notify(const code& ec, uint8_t level,
+    std::string&& message) const NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&logger::do_notify_message, this, ec, zulu_time(),
+        std::bind(&logger::do_notify_message, this, ec, level, zulu_time(),
             std::move(message)));
 }
 
 // private
-void logger::do_notify_message(const code& ec, time_t zulu,
+void logger::do_notify_message(const code& ec, uint8_t level, time_t zulu,
     const std::string& message) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    message_subscriber_.notify(ec, zulu, message);
+    message_subscriber_.notify(ec, level, zulu, message);
 }
 
 void logger::subscribe_messages(message_notifier&& handler) NOEXCEPT
@@ -95,19 +98,19 @@ void logger::do_subscribe_messages(const message_notifier& handler) NOEXCEPT
 // events
 // ----------------------------------------------------------------------------
 
-void logger::fire(uint8_t identifier, size_t count) const NOEXCEPT
+void logger::fire(uint8_t event, size_t count) const NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&logger::do_notify_event,
-            this, identifier, count, fine_clock::now()));
+            this, event, count, fine_clock::now()));
 }
 
 // private
-void logger::do_notify_event(uint8_t identifier, size_t count,
+void logger::do_notify_event(uint8_t event, size_t count,
     const time_point& point) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    event_subscriber_.notify(error::success, identifier, count, point);
+    event_subscriber_.notify(error::success, event, count, point);
 }
 
 void logger::subscribe_events(event_notifier&& handler) NOEXCEPT
@@ -155,8 +158,8 @@ void logger::do_stop(const code& ec, time_t zulu,
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Subscriber asserts if stopped with a success code.
-    message_subscriber_.stop(ec, zulu, message);
-    event_subscriber_.stop(ec, {}, {}, {});
+    message_subscriber_.stop(ec, level_t::quit, zulu, message);
+    event_subscriber_.stop(ec, event_t::stop, zero, {});
  }
 
 BC_POP_WARNING()
