@@ -158,7 +158,7 @@ void logger::do_stop(const code& ec, time_t zulu,
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Subscriber asserts if stopped with a success code.
-    message_subscriber_.stop(ec, level_t::quit, zulu, message);
+    message_subscriber_.stop(ec, level_t::news, zulu, message);
     event_subscriber_.stop(ec, event_t::stop, zero, {});
  }
 
