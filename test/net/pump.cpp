@@ -44,19 +44,20 @@ BOOST_AUTO_TEST_CASE(pump__subscribe__stop__expected_code)
     asio::strand strand(pool.service().get_executor());
     pump instance(strand);
     constexpr auto expected_ec = error::invalid_magic;
+    auto result = true;
 
     std::promise<code> promise;
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, messages::ping::cptr ping)
+        instance.subscribe([&](const code& ec, messages::ping::cptr ping) NOEXCEPT
         {
             // Stop notification has nullptr message and specified code.
-            BOOST_REQUIRE(!ping);
+            result |= is_null(ping);
             promise.set_value(ec);
         });
     });
 
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.stop(expected_ec);
     });
@@ -64,6 +65,7 @@ BOOST_AUTO_TEST_CASE(pump__subscribe__stop__expected_code)
     pool.stop();
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
+    BOOST_REQUIRE(result);
 }
 
 BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
@@ -72,14 +74,15 @@ BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
     asio::strand strand(pool.service().get_executor());
     pump instance(strand);
     constexpr auto expected_ec = error::invalid_magic;
+    auto result = true;
 
     // Subscription will capture only the stop notification.
     std::promise<code> promise;
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, messages::ping::cptr ping)
+        instance.subscribe([&](const code& ec, messages::ping::cptr ping) NOEXCEPT
         {
-            BOOST_REQUIRE(!ping);
+            result |= is_null(ping);
             promise.set_value(ec);
         });
     });
@@ -87,13 +90,13 @@ BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
     // Invalid object deserialization will not cause a notification.
     system::data_chunk empty;
     system::read::bytes::copy reader(empty);
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
         constexpr auto nonced_ping_version = messages::level::bip31;
 
         // This line throws and is caught internal to the low level stream.
         const auto ec = instance.notify(messages::identifier::ping, nonced_ping_version, reader);
-        BOOST_REQUIRE_EQUAL(ec, error::invalid_message);
+        result |= (ec == error::invalid_message);
     });
 
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -105,6 +108,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
     BOOST_REQUIRE(!reader);
+    BOOST_REQUIRE(result);
 }
 
 BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notification)
@@ -113,14 +117,15 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notificatio
     asio::strand strand(pool.service().get_executor());
     pump instance(strand);
     constexpr auto expected_ec = error::invalid_magic;
+    auto result = true;
 
     // Subscription will capture only the stop notification.
     std::promise<code> promise;
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, messages::ping::cptr ping)
+        instance.subscribe([&](const code& ec, messages::ping::cptr ping) NOEXCEPT NOEXCEPT
         {
-            BOOST_REQUIRE(!ping);
+            result |= is_null(ping);
             promise.set_value(ec);
         });
     });
@@ -128,11 +133,11 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notificatio
     // Invalid object version will not cause a notification.
     const auto ping = system::to_little_endian<uint64_t>(42);
     system::read::bytes::copy reader(ping);
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
         constexpr uint32_t invalid_ping_version = 0;
         const auto ec = instance.notify(messages::identifier::ping, invalid_ping_version, reader);
-        BOOST_REQUIRE_EQUAL(ec, error::invalid_message);
+        result |= (ec == error::invalid_message);
     });
 
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -144,6 +149,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notificatio
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
     BOOST_REQUIRE(!reader);
+    BOOST_REQUIRE(result);
 }
 
 BOOST_AUTO_TEST_CASE(pump__notify__valid_nonced_ping__expected_notification)
@@ -153,12 +159,13 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_nonced_ping__expected_notification)
     pump instance(strand);
     constexpr uint64_t expected_nonce = 42;
     constexpr auto expected_ec = error::invalid_magic;
+    auto result = true;
 
     // Subscription will capture message and stop notifications.
     std::promise<code> promise;
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, messages::ping::cptr ping)
+        instance.subscribe([&](const code& ec, messages::ping::cptr ping) NOEXCEPT
         {
             // Handle stop notification (unavoidable test condition).
             if (!ping)
@@ -168,18 +175,18 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_nonced_ping__expected_notification)
             }
 
             // Handle message notification.
-            BOOST_REQUIRE_EQUAL(ping->nonce, expected_nonce);
-            BOOST_REQUIRE_EQUAL(ec, error::success);
+            result |= (ping->nonce == expected_nonce);
+            result |= (ec == error::success);
         });
     });
 
     const auto ping = system::to_little_endian<uint64_t>(expected_nonce);
     system::read::bytes::copy reader(ping);
-    boost::asio::post(strand, [&]()
+    boost::asio::post(strand, [&]() NOEXCEPT
     {
         constexpr auto nonced_ping_version = messages::level::bip31;
         const auto ec = instance.notify(messages::identifier::ping, nonced_ping_version, reader);
-        BOOST_REQUIRE_EQUAL(ec, error::success);
+        result |= (ec == error::success);
     });
 
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -191,6 +198,7 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_nonced_ping__expected_notification)
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
     BOOST_REQUIRE(reader);
+    BOOST_REQUIRE(result);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -654,7 +654,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__seeded__success)
     BOOST_REQUIRE(session->stopped());
     
     std::promise<code> started;
-    boost::asio::post(net.strand(), [=, &started]()
+    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
     {
         session->start([&](const code& ec)
         {

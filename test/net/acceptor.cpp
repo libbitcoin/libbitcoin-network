@@ -79,7 +79,6 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
 
     // Result codes inconsistent due to context.
-    ////BOOST_REQUIRE_EQUAL(instance->start(42), error::success);
     instance->start(42);
 
     boost::asio::post(strand, [instance]() NOEXCEPT
@@ -89,7 +88,6 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-
     BOOST_REQUIRE(instance->get_stopped());
 }
 
@@ -103,33 +101,26 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
     auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
 
     // Result codes inconsistent due to context.
-    ////BOOST_REQUIRE_EQUAL(instance->start(42), error::success);
     instance->start(42);
 
-    boost::asio::post(strand, [instance]()
+    std::pair<code, socket::ptr>  result{};
+    boost::asio::post(strand, [&, instance]() NOEXCEPT
     {
-        instance->accept([](const code&, const socket::ptr& socket)
+        instance->accept([&](const code& ec, const socket::ptr& socket) NOEXCEPT
         {
-            // Result codes inconsistent due to context.
-            ////BOOST_REQUIRE_EQUAL(ec, error::channel_stopped);
-            BOOST_REQUIRE(!socket);
+            result.first = ec;
+            result.second = socket;
         });
 
-        // Test race.
         std::this_thread::sleep_for(microseconds(1));
         instance->stop();
     });
 
     pool.stop();
-
-    // This seems to imply that an assertion was hit.
-    // terminate called after throwing an instance of 'std::length_error',  what():  basic_string::_M_create
-    // unknown location(0): fatal error: in "acceptor_tests/acceptor__accept__stop__channel_stopped": signal: SIGABRT (application abort requested)
-    // home/runner/work/libbitcoin-network/libbitcoin-network/test/net/acceptor.cpp(126): last checkpoint
-    const auto joined = pool.join();
-    BOOST_REQUIRE(joined);
-
+    BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE(instance->get_stopped());
+    BOOST_REQUIRE(result.first);
+    BOOST_REQUIRE(!result.second);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
