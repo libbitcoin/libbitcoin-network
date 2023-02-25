@@ -158,6 +158,11 @@ void protocol::set_negotiated_version(uint32_t value) NOEXCEPT
 // Addresses.
 // ----------------------------------------------------------------------------
 
+size_t protocol::address_count() const NOEXCEPT
+{
+    return session_.address_count();
+}
+
 void protocol::fetch(address_handler&& handler) NOEXCEPT
 {
     session_.fetch(BIND3(handle_fetch, _1, _2, std::move(handler)));

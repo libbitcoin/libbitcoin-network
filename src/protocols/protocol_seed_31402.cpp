@@ -117,20 +117,32 @@ void protocol_seed_31402::handle_send_get_address(const code& ec) NOEXCEPT
 address::cptr protocol_seed_31402::filter(
     const address_items& items) const NOEXCEPT
 {
+    const size_t cap = settings().host_pool_capacity;
+    const size_t gap = cap - address_count();
+
+    // Take at least the gap or what we can get.
+    const size_t minimum = std::min(gap, items.size());
+
+    // Take up to the cap but no more.
+    const size_t maximum = std::min(cap, items.size());
+
+    // Returns zero if minimum > maximum.
+    const size_t select = pseudo_random::next(minimum, maximum);
+
+    if (is_zero(select))
+        return to_shared<address>();
+
     // CLang doesn't like emplacement with default constructors, so use new.
     BC_PUSH_WARNING(NO_NEW_OR_DELETE)
     const auto message = std::shared_ptr<address>(new address{ items });
     BC_POP_WARNING()
 
+    // Shuffle, reduce, and filter to the target amount.
+    pseudo_random::shuffle(message->addresses);
+    message->addresses.resize(select);
     std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
     {
-        return !is_specified(address)
-            || settings().disabled(address)
-            || settings().insufficient(address)
-            || settings().unsupported(address)
-            || settings().peered(address)
-            || settings().blacklisted(address)
-            || !settings().whitelisted(address);
+        return settings().excluded(address);
     });
 
     return message;
@@ -145,19 +157,18 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return;
 
-    const auto size = message->addresses.size();
-
-    // Do not store redundant addresses, outbound() is known address.
-    if (is_one(size) && (message->addresses.front() == outbound()))
+    const auto start = message->addresses.size();
+    if (is_one(start) && (message->addresses.front() == outbound()))
     {
         ////LOG("Dropping redundant address from seed [" << authority() << "]");
         return;
     }
 
     const auto filtered = filter(message->addresses);
+    const auto end = filtered->addresses.size();
 
     save(filtered,
-        BIND4(handle_save_addresses, _1, _2, filtered->addresses.size(), size));
+        BIND4(handle_save_addresses, _1, _2, end, start));
 }
 
 void protocol_seed_31402::handle_save_addresses(const code& ec,

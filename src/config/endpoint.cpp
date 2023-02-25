@@ -135,6 +135,11 @@ messages::address_item endpoint::to_address_item() const NOEXCEPT
 // Operators.
 // ----------------------------------------------------------------------------
 
+endpoint::operator const address() const NOEXCEPT
+{
+    return to_address();
+}
+
 endpoint::operator bool() const NOEXCEPT
 {
     return !scheme_.empty();

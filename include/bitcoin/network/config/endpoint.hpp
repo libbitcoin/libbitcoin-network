@@ -84,6 +84,9 @@ public:
     /// Operators.
     /// -----------------------------------------------------------------------
 
+    /// Cast to IP address object if host is numeric, otherwise unspecified.
+    operator const address() const NOEXCEPT;
+
     /// False if the endpoint is not initialized.
     operator bool() const NOEXCEPT;
 

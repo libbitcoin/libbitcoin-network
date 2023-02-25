@@ -669,9 +669,9 @@ BOOST_AUTO_TEST_CASE(settings__blacklisted__ipv6_host__expected)
     BOOST_REQUIRE(instance.blacklisted(config::address{ "[2020:db8::3]" }));
 }
 
-// peered
+// peered/initialize
 
-BOOST_AUTO_TEST_CASE(settings__peered__configured__expected_port_matching)
+BOOST_AUTO_TEST_CASE(settings__initialize__configured__expected_port_matching)
 {
     settings instance{};
     instance.peers.clear();
@@ -691,12 +691,13 @@ BOOST_AUTO_TEST_CASE(settings__peered__configured__expected_port_matching)
     instance.peers.emplace_back("5.14.19.0");
     instance.peers.emplace_back("89.35.142.168");
 
+    instance.initialize();
     BOOST_REQUIRE(instance.peered(config::address{ "34.222.125.43:8333" }));
     BOOST_REQUIRE(instance.peered(config::address{ "51.79.80.166:8333" }));
     BOOST_REQUIRE(instance.peered(config::address{ "65.109.113.126:8333" }));
     BOOST_REQUIRE(!instance.peered(config::address{ "77.21.60.152:8333" }));
-    BOOST_REQUIRE(!instance.peered(config::address{ "86.104.228.11" }));
-    BOOST_REQUIRE(!instance.peered(config::address{ "5.14.19.0:8333" }));
+    BOOST_REQUIRE(instance.peered(config::address{ "86.104.228.11" }));
+    BOOST_REQUIRE(instance.peered(config::address{ "5.14.19.0:8333" }));
     BOOST_REQUIRE(instance.peered(config::address{ "89.35.142.168" }));
 }
 
@@ -710,6 +711,9 @@ BOOST_AUTO_TEST_CASE(settings__peered__ipv4_host__expected)
     BOOST_REQUIRE(!instance.peered(config::address{ "24.24.24.24" }));
 
     instance.peers.emplace_back("24.24.24.24");
+    BOOST_REQUIRE(!instance.peered(config::address{ "24.24.24.24" }));
+
+    instance.initialize();
     BOOST_REQUIRE(instance.peered(config::address{ "24.24.24.24" }));
 }
 
@@ -724,7 +728,19 @@ BOOST_AUTO_TEST_CASE(settings__peered__ipv6_host__expected)
     BOOST_REQUIRE(!instance.peered(config::address{ "[2020:db8::3]" }));
 
     instance.peers.emplace_back("[2020:db8::3]");
+    BOOST_REQUIRE(!instance.peered(config::address{ "[2020:db8::3]" }));
+
+    instance.initialize();
     BOOST_REQUIRE(instance.peered(config::address{ "[2020:db8::3]" }));
+}
+
+// excluded
+
+BOOST_AUTO_TEST_CASE(settings__excluded__default__true)
+{
+    settings instance{};
+    instance.initialize();
+    BOOST_REQUIRE(instance.excluded({}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
