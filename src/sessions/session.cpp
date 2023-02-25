@@ -57,7 +57,7 @@ session::session(p2p& network, uint64_t identifier) NOEXCEPT
 session::~session() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "The session was not stopped.");
-    if (!stopped()) { LOG("~session is not stopped."); }
+    if (!stopped()) { LOGF("~session is not stopped."); }
 }
 
 void session::start(result_handler&& handler) NOEXCEPT
@@ -336,8 +336,6 @@ void session::defer(result_handler&& handler) NOEXCEPT
     const auto timeout = settings().retry_timeout();
     const auto timer = std::make_shared<deadline>(log(), network_.strand());
 
-    ////LOG("Defer (" << key << ").");
-
     timer->start(
         BIND3(handle_timer, _1, key, std::move(handler)), timeout);
 
@@ -441,7 +439,7 @@ session::object_key session::create_key() NOEXCEPT
     if (is_zero(++keys_))
     {
         BC_ASSERT_MSG(false, "overflow");
-        LOG("Session object overflow.");
+        LOGF("Session object overflow.");
     }
 
     return keys_;

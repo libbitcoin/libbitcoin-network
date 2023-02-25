@@ -40,6 +40,7 @@
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>
 #include <bitcoin/network/log/event.hpp>
+#include <bitcoin/network/log/level.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/log/logger.hpp>
 #include <bitcoin/network/log/reporter.hpp>

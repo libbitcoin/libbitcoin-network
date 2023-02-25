@@ -177,6 +177,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\define.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\event.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\level.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\log.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\logger.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\reporter.hpp" />

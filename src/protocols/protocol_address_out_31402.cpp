@@ -86,7 +86,7 @@ void protocol_address_out_31402::handle_receive_get_address(const code& ec,
     // Limit get_address requests to one per session.
     if (sent_)
     {
-        LOG("Ignoring duplicate address request from [" << authority() << "]");
+        LOGP("Ignoring duplicate address request from [" << authority() << "]");
         ////stop(error::protocol_violation);
         return;
     }
@@ -107,7 +107,7 @@ void protocol_address_out_31402::handle_fetch_address(const code& ec,
     if (stopped(ec))
         return;
 
-    LOG("Sending (" << message->addresses.size() << ") addresses to "
+    LOGP("Sending (" << message->addresses.size() << ") addresses to "
         "[" << authority() << "]");
 
     SEND1(*message, handle_send, _1);

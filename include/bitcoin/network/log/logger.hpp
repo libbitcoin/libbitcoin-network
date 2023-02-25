@@ -38,7 +38,7 @@ namespace network {
 class BCT_API logger final
 {
 public:
-    typedef unsubscriber<time_t, const std::string&> message_subscriber;
+    typedef unsubscriber<uint8_t, time_t, const std::string&> message_subscriber;
     typedef message_subscriber::handler message_notifier;
 
     using time_point = fine_clock::time_point;
@@ -51,8 +51,8 @@ public:
     public:
         DELETE_COPY_MOVE(writer);
 
-        inline writer(const logger& log) NOEXCEPT
-          : log_(log)
+        inline writer(const logger& log, uint8_t level) NOEXCEPT
+          : log_(log), level_(level)
         {
         }
 
@@ -60,7 +60,7 @@ public:
         {
             // log_.notify() cannot be non-const in destructor.
             BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-            log_.notify(error::success, stream_.str());
+            log_.notify(error::success, level_, stream_.str());
             BC_POP_WARNING()
         }
 
@@ -77,6 +77,7 @@ public:
         // This is thread safe.
         // This cannot be declared mutable.
         const logger& log_;
+        const uint8_t level_;
 
         // This is not thread safe.
         std::ostringstream stream_{};
@@ -96,10 +97,10 @@ public:
     /// Obtain streaming writer (must destruct before this).
     /// The writer could capture refcounted logger reference, but this would
     /// require shared logger instances, an unnecessary complication/cost.
-    writer write() const NOEXCEPT;
+    writer write(uint8_t level) const NOEXCEPT;
 
     /// Fire event with optional counter, recorded with current time.
-    void fire(uint8_t identifier, size_t count=zero) const NOEXCEPT;
+    void fire(uint8_t event, size_t count=zero) const NOEXCEPT;
 
     /// If stopped, handler is invoked with error::subscriber_stopped/defaults
     /// and dropped. Otherwise it is held until stop/drop. False if failed.
@@ -113,16 +114,17 @@ public:
 
 protected:
     /// Only writer can access, must destruct before logger, captures time.
-    void notify(const code& ec, std::string&& message) const NOEXCEPT;
+    void notify(const code& ec, uint8_t level,
+        std::string&& message) const NOEXCEPT;
 
 private:
     bool stranded() const NOEXCEPT;
     void do_subscribe_messages(const message_notifier& handler) NOEXCEPT;
-    void do_notify_message(const code& ec, time_t zulu,
+    void do_notify_message(const code& ec, uint8_t level, time_t zulu,
         const std::string& message) const NOEXCEPT;
 
     void do_subscribe_events(const event_notifier& handler) NOEXCEPT;
-    void do_notify_event(uint8_t identifier, size_t count,
+    void do_notify_event(uint8_t event, size_t count,
         const time_point& span) const NOEXCEPT;
 
     void do_stop(const code& ec, time_t zulu,

@@ -22,8 +22,9 @@
 #include <atomic>
 #include <typeinfo>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/log/logger.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/level.hpp>
+#include <bitcoin/network/log/logger.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -34,14 +35,16 @@ class tracker
 protected:
     DEFAULT_COPY_MOVE(tracker);
 
+#if defined(HAVE_LOGO)
+
     tracker(const logger& log) NOEXCEPT
       : log_(log)
     {
         if constexpr (build_checked)
         {
             BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-            log_.write() << typeid(Class).name() << "(" << ++instances_ << ")"
-                << std::endl;
+            log_.write(level_t::objects) << typeid(Class).name()
+                << "(" << ++instances_ << ")" << std::endl;
             BC_POP_WARNING()
         }
     }
@@ -51,8 +54,8 @@ protected:
         if constexpr (build_checked)
         {
             BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-            log_.write() << typeid(Class).name() << "(" << --instances_ << ")~"
-                << std::endl;
+            log_.write(level_t::objects) << typeid(Class).name()
+                << "(" << --instances_ << ")~" << std::endl;
             BC_POP_WARNING()
         }
     }
@@ -61,6 +64,18 @@ private:
     // These are thread safe.
     static inline std::atomic<size_t> instances_{};
     const logger& log_;
+
+#else // HAVE_LOGO
+
+    tracker(const logger&) NOEXCEPT
+    {
+    }
+
+    ~tracker() NOEXCEPT
+    {
+    }
+
+#endif // HAVE_LOGO
 };
 
 } // namespace network

@@ -63,7 +63,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
 
     if (!settings().outbound_enabled())
     {
-        LOG("Not configured for outbound connections.");
+        LOGN("Not configured for outbound connections.");
         handler(error::bypassed);
         unsubscribe_close();
         return;
@@ -71,7 +71,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
 
     if (is_zero(address_count()))
     {
-        LOG("Configured for outbound but no addresses.");
+        LOGN("Configured for outbound but no addresses.");
         handler(error::address_not_found);
         unsubscribe_close();
         return;
@@ -79,7 +79,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
 
     if (!settings().enable_address)
     {
-        LOG("Address protocol disabled, may cause empty address pool.");
+        LOGN("Address protocol disabled, may cause empty address pool.");
     }
 
     session::start(BIND2(handle_started, _1, std::move(handler)));
@@ -101,7 +101,7 @@ void session_outbound::handle_started(const code& ec,
     const auto batch = settings().connect_batch_size;
     const auto count = settings().outbound_connections;
 
-    LOG("Creating " << count << " connections " << batch << " at a time.");
+    LOGN("Creating " << count << " connections " << batch << " at a time.");
 
     for (size_t index = 0; index < count; ++index)
         start_connect(error::success);
@@ -156,7 +156,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 
     if (ec)
     {
-        ////LOG("Address pool is empty.");
+        LOGS("Address pool is empty.");
         racer->finish(ec, nullptr);
         return;
     }
@@ -234,7 +234,7 @@ void session_outbound::handle_channel_start(const code&,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    ////LOG("Outbound channel start [" << channel->authority() << "] "
+    ////LOGS("Outbound channel start [" << channel->authority() << "] "
     ////    "(" << key << ") " << ec.message());
 }
 
@@ -249,7 +249,7 @@ void session_outbound::handle_channel_stop(const code& ec,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    ////LOG("Outbound channel stop [" << channel->authority() << "] "
+    ////LOGS("Outbound channel stop [" << channel->authority() << "] "
     ////    "(" << key << ") " << ec.message());
 
     reclaim(ec, channel);

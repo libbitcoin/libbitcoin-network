@@ -44,32 +44,34 @@ BOOST_AUTO_TEST_CASE(tracker__construct1__guarded__safe_expected_messages)
     logger log{};
     std::promise<code> log_stopped{};
     auto count = zero;
-    log.subscribe_messages([&](const code& ec, time_t, const std::string& message)
-    {
-        if (is_zero(count++))
+    auto result = true;
+
+    log.subscribe_messages(
+        [&](const code& ec, uint8_t, time_t, const std::string& message) NOEXCEPT
         {
-            const auto expected = std::string{ typeid(tracked).name() } + "(1)\n";
-            BOOST_REQUIRE_EQUAL(message, expected);
-        }
-        else
-        {
-            const auto expected = std::string{ typeid(tracked).name() } + "(0)~\n";
-            BOOST_REQUIRE_EQUAL(message, expected);
+            if (is_zero(count++))
+            {
+                const auto expected = std::string{ typeid(tracked).name() } + "(1)\n";
+                result |= (message == expected);
+                return true;
+            }
+            else
+            {
+                const auto expected = std::string{ typeid(tracked).name() } + "(0)~\n";
+                result |= (message == expected);
+                log_stopped.set_value(ec);
+                return false;
+            }
+        });
 
-            log_stopped.set_value(ec);
-            return false;
-        }
+    auto instance = system::to_shared<tracked>(log);
+    BOOST_REQUIRE(instance->method());
 
-        return true;
-    });
-
-    auto foobar = system::to_shared<tracked>(log);
-    BOOST_REQUIRE(foobar->method());
-
-    foobar.reset();
+    instance.reset();
     BOOST_REQUIRE_EQUAL(log_stopped.get_future().get(), error::success);
 
     log.stop();
+    BOOST_REQUIRE(result);
 }
 #endif
 
@@ -85,16 +87,16 @@ BOOST_AUTO_TEST_CASE(tracker__construct2__false__stopped)
 {
     // The parameter value is unused.
     const logger log{ false };
-    tracked foo{ log };
-    BOOST_REQUIRE(foo.method());
+    tracked instance{ log };
+    BOOST_REQUIRE(instance.method());
 }
 
 BOOST_AUTO_TEST_CASE(tracker__stop__always__safe)
 {
     logger log{};
     log.stop();
-    tracked foo{ log };
-    BOOST_REQUIRE(foo.method());
+    tracked instance{ log };
+    BOOST_REQUIRE(instance.method());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

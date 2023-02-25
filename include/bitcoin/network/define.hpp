@@ -43,12 +43,44 @@
 /// TODO: Build configuration.
 #define WITH_EVENTS
 #define WITH_LOGGING
+#define WITH_LOGQ
+#define WITH_LOGN
+#define WITH_LOGX
+#define WITH_LOGS
+#define WITH_LOGP
+#define WITH_LOGF
+#define WITH_LOGR
+#define WITH_LOGO
 
 #if defined(WITH_EVENTS)
     #define HAVE_EVENTS
 #endif
 #if defined(WITH_LOGGING)
     #define HAVE_LOGGING
+    #if defined(WITH_LOGQ)
+        #define HAVE_LOGQ
+    #endif
+    #if defined(WITH_LOGN)
+        #define HAVE_LOGN
+    #endif
+    #if defined(WITH_LOGX)
+        #define HAVE_LOGX
+    #endif
+    #if defined(WITH_LOGS)
+        #define HAVE_LOGS
+    #endif
+    #if defined(WITH_LOGP)
+        #define HAVE_LOGP
+    #endif
+    #if defined(WITH_LOGF)
+        #define HAVE_LOGF
+    #endif
+    #if defined(WITH_LOGR)
+        #define HAVE_LOGR
+    #endif
+    #if defined(WITH_LOGO)
+        #define HAVE_LOGO
+    #endif
 #endif
 
 namespace libbitcoin {

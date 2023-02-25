@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_LOG_LOG_HPP
 
 #include <bitcoin/network/log/event.hpp>
+#include <bitcoin/network/log/level.hpp>
 #include <bitcoin/network/log/logger.hpp>
 #include <bitcoin/network/log/reporter.hpp>
 #include <bitcoin/network/log/timer.hpp>

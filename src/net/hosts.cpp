@@ -81,7 +81,7 @@ code hosts::start() NOEXCEPT
         std::filesystem::remove(settings_.file(), ec);
     }
 
-    LOG("Loaded (" << buffer_.size() << ") addresses.");
+    LOGN("Loaded (" << buffer_.size() << ") addresses.");
     hosts_count_.store(buffer_.size());
     return error::success;
 }
@@ -119,7 +119,7 @@ code hosts::stop() NOEXCEPT
         return error::file_exception;
     }
 
-    LOG("Saved (" << buffer_.size() << ") addresses.");
+    LOGN("Saved (" << buffer_.size() << ") addresses.");
     buffer_.clear();
     hosts_count_.store(zero);
     return error::success;
@@ -274,41 +274,41 @@ inline void hosts::push(const std::string& line) NOEXCEPT
 
         if (!messages::is_specified(item))
         {
-            LOG("Address unspecified upon load [" << line << "].");
+            LOGF("Address unspecified upon load [" << line << "].");
         }
         else if (settings_.disabled(item))
         {
-            LOG("Address disabled upon load [" << line << "].");
+            LOGF("Address disabled upon load [" << line << "].");
         }
         else if (settings_.insufficient(item))
         {
-            LOG("Address insufficient upon load [" << line << "].");
+            LOGF("Address insufficient upon load [" << line << "].");
         }
         else if (settings_.unsupported(item))
         {
-            LOG("Address unsupported upon load [" << line << "].");
+            LOGF("Address unsupported upon load [" << line << "].");
         }
         else if (settings_.peered(item))
         {
-            LOG("Address peered upon load [" << line << "].");
+            LOGF("Address peered upon load [" << line << "].");
         }
         else if (settings_.blacklisted(item))
         {
-            LOG("Address blacklisted upon load [" << line << "].");
+            LOGF("Address blacklisted upon load [" << line << "].");
         }
         else if (!settings_.whitelisted(item))
         {
-            LOG("Address not whitelisted upon load [" << line << "].");
+            LOGF("Address not whitelisted upon load [" << line << "].");
         }
         else
         {
             buffer_.push_back(item);
-            ////LOG("Address excluded upon load [" << line << "].");
+            ////LOGF("Address excluded upon load [" << line << "].");
         }
     }
     catch (std::exception&)
     {
-        LOG("Address failed to deserialize [" << line << "].");
+        LOGF("Address failed to deserialize [" << line << "].");
     }
 }
 

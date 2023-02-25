@@ -69,7 +69,7 @@ channel::channel(const logger& log, const socket::ptr& socket,
 channel::~channel() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "channel is not stopped");
-    if (!stopped()) { LOG("~channel is not stopped."); }
+    if (!stopped()) { LOGF("~channel is not stopped."); }
 }
 
 // Stop (started upon create).
@@ -233,7 +233,7 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        LOG("Lifetime timer fail [" << authority() << "] " << ec.message());
+        LOGF("Lifetime timer fail [" << authority() << "] " << ec.message());
         stop(ec);
         return;
     }
@@ -266,7 +266,7 @@ void channel::handle_inactivity(const code& ec) NOEXCEPT
 
     if (ec)
     {
-        LOG("Inactivity timer fail [" << authority() << "] " << ec.message());
+        LOGF("Inactivity timer fail [" << authority() << "] " << ec.message());
         stop(ec);
         return;
     }

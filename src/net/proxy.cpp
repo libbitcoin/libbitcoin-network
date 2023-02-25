@@ -60,7 +60,7 @@ proxy::proxy(const socket::ptr& socket) NOEXCEPT
 proxy::~proxy() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "proxy is not stopped");
-    if (!stopped()) { LOG("~proxy is not stopped."); }
+    if (!stopped()) { LOGF("~proxy is not stopped."); }
 }
 
 // Pause (proxy is created paused).
@@ -177,14 +177,19 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (stopped())
     {
-        ////LOG("Heading read abort [" << authority() << "]");
+        LOGQ("Heading read abort [" << authority() << "]");
         stop(error::channel_stopped);
         return;
     }
 
     if (ec)
     {
-        ////LOG("Heading read failure [" << authority() << "] " << ec.message());
+        if (ec != error::peer_disconnect && ec != error::operation_canceled)
+        {
+            LOGF("Heading read failure [" << authority() << "] "
+                << ec.message());
+        }
+
         stop(ec);
         return;
     }
@@ -194,8 +199,7 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (!heading_reader_)
     {
-        LOG("Invalid heading from [" << authority() << "]");
-
+        LOGR("Invalid heading from [" << authority() << "]");
         stop(error::invalid_heading);
         return;
     }
@@ -204,11 +208,11 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
     {
         if (head->magic == http_magic || head->magic == https_magic)
         {
-            LOG("Http/s request from [" << authority() << "]");
+            LOGR("Http/s request from [" << authority() << "]");
         }
         else
         {
-            LOG("Invalid heading magic (0x"
+            LOGR("Invalid heading magic (0x"
                 << encode_base16(to_little_endian(head->magic))
                 << ") from [" << authority() << "]");
         }
@@ -219,7 +223,7 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (head->payload_size > maximum_payload())
     {
-        LOG("Oversized payload indicated by " << head->command
+        LOGR("Oversized payload indicated by " << head->command
             << " heading from [" << authority() << "] ("
             << head->payload_size << " bytes)");
 
@@ -244,14 +248,19 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 
     if (stopped())
     {
-        ////LOG("Payload read abort [" << authority() << "]");
+        LOGQ("Payload read abort [" << authority() << "]");
         stop(error::channel_stopped);
         return;
     }
 
     if (ec)
     {
-        ////LOG("Payload read failure [" << authority() << "] " << ec.message());
+        if (ec != error::peer_disconnect && ec != error::operation_canceled)
+        {
+            LOGF("Payload read failure [" << authority() << "] "
+                << ec.message());
+        }
+
         stop(ec);
         return;
     }
@@ -259,7 +268,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     // This is a pointless test but we allow it as an option for completeness.
     if (validate_checksum() && !head->verify_checksum(payload_buffer_))
     {
-        LOG("Invalid " << head->command << " payload from ["
+        LOGR("Invalid " << head->command << " payload from ["
             << authority() << "] bad checksum.");
 
         stop(error::invalid_checksum);
@@ -275,7 +284,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     if (code)
     {
         // /nodes.mom.market:0.2/ sends unversioned sendaddrv2.
-        LOG("Invalid " << head->command << " payload from [" << authority()
+        LOGR("Invalid " << head->command << " payload from [" << authority()
             << "] (" << encode_base16({ payload_buffer_.begin(),
                 std::next(payload_buffer_.begin(), std::min(payload_size,
                 invalid_payload_dump_size))}) << ") " << code.message());
@@ -288,8 +297,8 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     payload_buffer_.resize(std::min(payload_buffer_.size(), minimum_buffer()));
     payload_buffer_.shrink_to_fit();
 
-    ////LOG("Recv " << head->command << " from [" << authority()
-    ////    << "] (" << payload_size << " bytes)");
+    LOGX("Recv " << head->command << " from [" << authority()
+        << "] (" << payload_size << " bytes)");
 
     signal_activity();
     read_heading();
@@ -319,8 +328,8 @@ void proxy::do_write(const system::chunk_ptr& payload,
     total_ = ceilinged_add(total_.load(), payload->size());
     backlog_ = ceilinged_add(backlog_.load(), payload->size());
 
-    ////LOG("Queue for [" << authority() << "]: " << queue_.size()
-    ////    << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
+    LOGX("Queue for [" << authority() << "]: " << queue_.size()
+        << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
 
     // Start the loop if it wasn't already started.
     if (!started)
@@ -353,8 +362,8 @@ void proxy::handle_write(const code& ec, size_t,
     backlog_ = floored_subtract(backlog_.load(), queue_.front().first->size());
     queue_.pop_front();
 
-    ////LOG("Dequeue for [" << authority() << "]: " << queue_.size()
-    ////    << " (" << backlog_.load() << " bytes)");
+    LOGX("Dequeue for [" << authority() << "]: " << queue_.size()
+        << " (" << backlog_.load() << " bytes)");
 
     // All handlers must be invoked, so continue regardless of error state.
     // Handlers are invoked in queued order, after all outstanding complete.
@@ -362,24 +371,27 @@ void proxy::handle_write(const code& ec, size_t,
 
     if (stopped())
     {
-        ////LOG("Send abort [" << authority() << "]");
+        LOGQ("Send abort [" << authority() << "]");
         stop(error::channel_stopped);
         return;
     }
 
     if (ec)
     {
-        LOG("Failure sending " << heading::get_command(*payload) << " to ["
-            << authority() << "] (" << payload->size() << " bytes) "
-            << ec.message());
+        if (ec != error::peer_disconnect && ec != error::operation_canceled)
+        {
+            LOGF("Seng failure " << heading::get_command(*payload) << " to ["
+                << authority() << "] (" << payload->size() << " bytes) "
+                << ec.message());
+        }
 
         stop(ec);
         handler(ec);
         return;
     }
 
-    ////LOG("Sent " <<  heading::get_command(*payload) << " to ["
-    ////    << authority() << "] (" << payload->size() << " bytes)");
+    LOGX("Sent " <<  heading::get_command(*payload) << " to ["
+        << authority() << "] (" << payload->size() << " bytes)");
 
     handler(ec);
 }
