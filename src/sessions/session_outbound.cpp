@@ -98,7 +98,7 @@ void session_outbound::handle_started(const code& ec,
         return;
     }
 
-    const auto batch = settings().connect_batch_size;
+    LOG_ONLY(const auto batch = settings().connect_batch_size;)
     const auto count = settings().outbound_connections;
 
     LOGN("Creating " << count << " connections " << batch << " at a time.");

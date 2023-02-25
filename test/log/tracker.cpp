@@ -38,7 +38,7 @@ public:
     };
 };
 
-#if !defined(NDEBUG)
+#if defined(HAVE_LOGO) && !defined(NDEBUG)
 BOOST_AUTO_TEST_CASE(tracker__construct1__guarded__safe_expected_messages)
 {
     logger log{};

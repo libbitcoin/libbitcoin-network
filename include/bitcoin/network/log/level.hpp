@@ -36,7 +36,8 @@ enum level : uint8_t
     protocol,   // Protocols
     proxy,      // proXy/socket/channel
     remote,     // Remote behavior
-    fault       // Fault
+    fault,      // Fault
+    reserved    // Unused by network lib.
 };
 
 #if defined(HAVE_EVENTS)

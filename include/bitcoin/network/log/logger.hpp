@@ -26,6 +26,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/log/level.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -108,9 +109,9 @@ public:
     void subscribe_events(event_notifier&& handler) NOEXCEPT;
 
     /// Stop subscribers/pool with final message/empty posted to subscribers.
-    void stop(const code& ec, const std::string& message) NOEXCEPT;
-    void stop(const std::string& message) NOEXCEPT;
-    void stop() NOEXCEPT;
+    void stop(const code& ec, const std::string& message, uint8_t level) NOEXCEPT;
+    void stop(const std::string& message, uint8_t level=level_t::quit) NOEXCEPT;
+    void stop(uint8_t level=level_t::quit) NOEXCEPT;
 
 protected:
     /// Only writer can access, must destruct before logger, captures time.
@@ -127,8 +128,8 @@ private:
     void do_notify_event(uint8_t event, size_t count,
         const time_point& span) const NOEXCEPT;
 
-    void do_stop(const code& ec, time_t zulu,
-        const std::string& message) NOEXCEPT;
+    void do_stop(const code& ec, time_t zulu, const std::string& message,
+        uint8_t level) NOEXCEPT;
 
     // This is protected by strand.
     threadpool pool_;

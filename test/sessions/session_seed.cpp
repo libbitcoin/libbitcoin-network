@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(session_seed__inbound__always__false)
 
 // stop
 
-BOOST_AUTO_TEST_CASE(session_seed__stop__started_sufficient__success)
+BOOST_AUTO_TEST_CASE(session_seed__stop__started_sufficient__expected)
 {
     const logger log{ false };
     settings set(selection::mainnet);
@@ -462,10 +462,14 @@ BOOST_AUTO_TEST_CASE(session_seed__stop__started_sufficient__success)
         {
             started.set_value(ec);
         });
+
+        session->stop();
     });
 
-    // seeding_unsuccessful is the only failure code once started.
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
+    // This is a reace between success and seeding_unsuccessful.
+    // This tends toward success with HAVE_LOGGING and otherwise without.
+    const auto ec = started.get_future().get();
+    BOOST_REQUIRE(ec == error::success || ec == error::seeding_unsuccessful);
     BOOST_REQUIRE_EQUAL(net.get_connector()->connects(), 1u);
     BOOST_REQUIRE(!session->attached_handshake());
     BOOST_REQUIRE(session->stopped());
