@@ -119,7 +119,7 @@ void socket::accept(asio::acceptor& acceptor,
             std::bind(&socket::handle_accept,
                 shared_from_this(), _1, handler));
     }
-    catch (const std::exception& e)
+    catch (const std::exception& LOG_ONLY(e))
     {
         LOGF("Exception @ accept: " << e.what());
         handler(error::accept_failed);
@@ -170,7 +170,7 @@ void socket::do_connect(const asio::endpoints& range,
             std::bind(&socket::handle_connect,
                 shared_from_this(), _1, _2, handler));
     }
-    catch (const std::exception& e)
+    catch (const std::exception& LOG_ONLY(e))
     {
         LOGF("Exception @ do_connect: " << e.what());
         handler(error::connect_failed);
@@ -190,7 +190,7 @@ void socket::do_read(const boost::asio::mutable_buffer& out,
             std::bind(&socket::handle_io,
                 shared_from_this(), _1, _2, handler));
     }
-    catch (const std::exception& e)
+    catch (const std::exception& LOG_ONLY(e))
     {
         LOGF("Exception @ do_read: " << e.what());
         handler(error::operation_failed, zero);
@@ -209,7 +209,7 @@ void socket::do_write(const boost::asio::const_buffer& in,
             std::bind(&socket::handle_io,
                 shared_from_this(), _1, _2, handler));
     }
-    catch (const std::exception& e)
+    catch (const std::exception& LOG_ONLY(e))
     {
         LOGF("Exception @ do_write: " << e.what());
         handler(error::operation_failed, zero);

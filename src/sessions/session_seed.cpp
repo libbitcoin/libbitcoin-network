@@ -260,7 +260,7 @@ void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
     channel->attach<protocol_seed_31402>(self)->start();
 }
 
-void session_seed::handle_channel_stop(const code& ec,
+void session_seed::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& channel, const race::ptr& racer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
