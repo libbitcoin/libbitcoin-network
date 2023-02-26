@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_LOG_CAPTURE_HPP
 #define LIBBITCOIN_NETWORK_LOG_CAPTURE_HPP
 
+#include <atomic>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -27,7 +28,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Thread safe console input class.
+/// Thread safe (except for start) console input class.
 class BCT_API capture final
 {
 public:
@@ -36,29 +37,37 @@ public:
 
     DELETE_COPY_MOVE(capture);
 
-    capture() NOEXCEPT;
-    capture(bool) NOEXCEPT;
+    capture(std::istream& input) NOEXCEPT;
     ~capture() NOEXCEPT;
 
-    void start() const NOEXCEPT;
-    void subscribe(notifier&& handler) NOEXCEPT;
-    void stop(const code& ec, const std::string& message) NOEXCEPT;
-    void stop(const std::string& message) NOEXCEPT;
+    /// Start only once, neither thread safe nor idempotent.
+    void start() NOEXCEPT;
+
+    /// Avoid initial loss from istream by completing subscribe before start.
+    void subscribe(notifier&& handler, result_handler&& complete) NOEXCEPT;
+
+    /// Signal stop any time before or after calling start.
     void stop() NOEXCEPT;
 
 protected:
-    void notify(const code& ec, std::string&& message) const NOEXCEPT;
+    bool stranded() const NOEXCEPT;
+    void notify(const code& ec, std::string&& line) const NOEXCEPT;
 
 private:
-    bool stranded() const NOEXCEPT;
-    void do_subscribe(const notifier& handler) NOEXCEPT;
-    void do_notify(const code& ec, const std::string& message) const NOEXCEPT;
-    void do_stop(const code& ec, const std::string& message) NOEXCEPT;
+    // start/subscribe race because istream external, use subscribe completion.
+    void do_start() NOEXCEPT;
+    void do_subscribe(const notifier& handler,
+        const result_handler& complete) NOEXCEPT;
 
-    // This is protected by strand.
-    threadpool pool_{ one, thread_priority::low };
+    void do_notify(const code& ec, const std::string& line) const NOEXCEPT;
+    void do_stop() NOEXCEPT;
 
-    // This is thread safe.
+    // These are protected by strand.
+    std::istream& input_;
+    threadpool pool_{ two, thread_priority::low };
+
+    // These are thread safe.
+    std::atomic_bool stopped_{ true };
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     asio::strand strand_{ pool_.service().get_executor() };
     BC_POP_WARNING()
