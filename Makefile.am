@@ -45,6 +45,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/config/authority.cpp \
     src/config/endpoint.cpp \
     src/config/utilities.cpp \
+    src/log/capture.cpp \
     src/log/logger.cpp \
     src/log/reporter.cpp \
     src/messages/address.cpp \
@@ -259,6 +260,7 @@ include_bitcoin_network_impl_async_HEADERS = \
 
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \
+    include/bitcoin/network/log/capture.hpp \
     include/bitcoin/network/log/event.hpp \
     include/bitcoin/network/log/level.hpp \
     include/bitcoin/network/log/log.hpp \

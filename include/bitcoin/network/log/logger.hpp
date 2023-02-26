@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -89,6 +89,7 @@ public:
     /// Construct a started (live) logger.
     logger() NOEXCEPT;
 
+    // TODO: create a test wrapper that does this.
     /// Construct a stopped (dead) logger.
     logger(bool) NOEXCEPT;
 
@@ -114,12 +115,11 @@ public:
     void stop(uint8_t level=level_t::quit) NOEXCEPT;
 
 protected:
-    /// Only writer can access, must destruct before logger, captures time.
+    bool stranded() const NOEXCEPT;
     void notify(const code& ec, uint8_t level,
         std::string&& message) const NOEXCEPT;
 
 private:
-    bool stranded() const NOEXCEPT;
     void do_subscribe_messages(const message_notifier& handler) NOEXCEPT;
     void do_notify_message(const code& ec, uint8_t level, time_t zulu,
         const std::string& message) const NOEXCEPT;
@@ -132,15 +132,17 @@ private:
         uint8_t level) NOEXCEPT;
 
     // This is protected by strand.
-    threadpool pool_;
+    threadpool pool_{ one, thread_priority::low };
 
     // This is thread safe.
-    asio::strand strand_;
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    asio::strand strand_{ pool_.service().get_executor() };
+    BC_POP_WARNING()
 
     // These are protected by strand.
     // notify()/do_notify() can be const because of mutable subscriber.
-    mutable message_subscriber message_subscriber_;
-    mutable event_subscriber event_subscriber_;
+    mutable message_subscriber message_subscriber_{ strand_ };
+    mutable event_subscriber event_subscriber_{ strand_ };
 };
 
 } // namespace network
