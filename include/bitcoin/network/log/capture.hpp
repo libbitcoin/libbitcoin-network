@@ -71,7 +71,7 @@ private:
 
     // These are protected by strand.
     std::istream& input_;
-    threadpool pool_{ two, thread_priority::low };
+    threadpool pool_{ two, thread_priority::high };
 
     // These are thread safe.
     const std::optional<std::string> halt_;
