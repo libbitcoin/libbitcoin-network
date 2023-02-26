@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -30,13 +30,7 @@
 namespace libbitcoin {
 namespace network {
 
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
 logger::logger() NOEXCEPT
-  : pool_(one, thread_priority::low),
-    strand_(pool_.service().get_executor()),
-    message_subscriber_(strand_),
-    event_subscriber_(strand_)
 {
 }
 
@@ -68,9 +62,11 @@ bool logger::stranded() const NOEXCEPT
 void logger::notify(const code& ec, uint8_t level,
     std::string&& message) const NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     boost::asio::dispatch(strand_,
         std::bind(&logger::do_notify_message, this, ec, level, zulu_time(),
             std::move(message)));
+    BC_POP_WARNING()
 }
 
 // private
@@ -83,9 +79,11 @@ void logger::do_notify_message(const code& ec, uint8_t level, time_t zulu,
 
 void logger::subscribe_messages(message_notifier&& handler) NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     boost::asio::dispatch(strand_,
         std::bind(&logger::do_subscribe_messages,
             this, std::move(handler)));
+    BC_POP_WARNING()
 }
 
 // private
@@ -100,9 +98,11 @@ void logger::do_subscribe_messages(const message_notifier& handler) NOEXCEPT
 
 void logger::fire(uint8_t event, size_t count) const NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     boost::asio::dispatch(strand_,
         std::bind(&logger::do_notify_event,
             this, event, count, fine_clock::now()));
+    BC_POP_WARNING()
 }
 
 // private
@@ -115,9 +115,11 @@ void logger::do_notify_event(uint8_t event, size_t count,
 
 void logger::subscribe_events(event_notifier&& handler) NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     boost::asio::dispatch(strand_,
         std::bind(&logger::do_subscribe_events,
             this, std::move(handler)));
+    BC_POP_WARNING()
 }
 
 // private
@@ -143,9 +145,11 @@ void logger::stop(const std::string& message, uint8_t level) NOEXCEPT
 void logger::stop(const code& ec, const std::string& message,
     uint8_t level) NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     boost::asio::dispatch(strand_,
         std::bind(&logger::do_stop,
             this, ec, zulu_time(), message, level));
+    BC_POP_WARNING()
 
     pool_.stop();
     BC_DEBUG_ONLY(const auto result =) pool_.join();
@@ -162,8 +166,6 @@ void logger::do_stop(const code& ec, time_t zulu, const std::string& message,
     message_subscriber_.stop(ec, level, zulu, message);
     event_subscriber_.stop(ec, event_t::stop, zero, {});
  }
-
-BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
