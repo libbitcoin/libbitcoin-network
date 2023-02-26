@@ -89,6 +89,7 @@ public:
     /// Construct a started (live) logger.
     logger() NOEXCEPT;
 
+    // TODO: create a test wrapper that does this.
     /// Construct a stopped (dead) logger.
     logger(bool) NOEXCEPT;
 
@@ -114,12 +115,11 @@ public:
     void stop(uint8_t level=level_t::quit) NOEXCEPT;
 
 protected:
-    /// Only writer can access, must destruct before logger, captures time.
+    bool stranded() const NOEXCEPT;
     void notify(const code& ec, uint8_t level,
         std::string&& message) const NOEXCEPT;
 
 private:
-    bool stranded() const NOEXCEPT;
     void do_subscribe_messages(const message_notifier& handler) NOEXCEPT;
     void do_notify_message(const code& ec, uint8_t level, time_t zulu,
         const std::string& message) const NOEXCEPT;
