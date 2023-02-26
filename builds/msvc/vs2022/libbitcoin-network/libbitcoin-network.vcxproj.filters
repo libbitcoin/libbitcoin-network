@@ -99,6 +99,9 @@
     <ClCompile Include="..\..\..\..\src\error.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\log\capture.cpp">
+      <Filter>src\log</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\log\logger.cpp">
       <Filter>src\log</Filter>
     </ClCompile>
@@ -367,6 +370,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\error.hpp">
       <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp">
+      <Filter>include\bitcoin\network\log</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\event.hpp">
       <Filter>include\bitcoin\network\log</Filter>

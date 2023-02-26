@@ -164,6 +164,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/config/authority.cpp"
     "../../src/config/endpoint.cpp"
     "../../src/config/utilities.cpp"
+    "../../src/log/capture.cpp"
     "../../src/log/logger.cpp"
     "../../src/log/reporter.cpp"
     "../../src/messages/address.cpp"
