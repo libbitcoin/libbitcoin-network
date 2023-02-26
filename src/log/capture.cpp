@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/log/capture.hpp>
 
+#include <optional>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/boost.hpp>
@@ -29,7 +30,12 @@ namespace network {
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 capture::capture(std::istream& input) NOEXCEPT
-  : input_(input)
+  : input_(input), halt_(std::nullopt)
+{
+}
+
+capture::capture(std::istream& input, const std::string& halt) NOEXCEPT
+  : input_(input), halt_(halt)
 {
 }
 
@@ -65,7 +71,12 @@ void capture::do_start() NOEXCEPT
     // getline blocks (if input is valid) until receiving a "line" of input.
     // External input stream invalidation does not unblock getline.
     while (!stopped_ && std::getline(input_, line))
-        notify(error::success, move_copy(line));
+    {
+        system::trim(line);
+        notify(error::success, line);
+        if (line == halt_)
+            break;
+    }
 
     // In case input was invalidated.
     stop();
@@ -104,10 +115,10 @@ void capture::do_stop() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // protected
-void capture::notify(const code& ec, std::string&& line) const NOEXCEPT
+void capture::notify(const code& ec, const std::string& line) const NOEXCEPT
 {
     boost::asio::post(strand_,
-        std::bind(&capture::do_notify, this, ec, std::move(line)));
+        std::bind(&capture::do_notify, this, ec, line));
 }
 
 // private

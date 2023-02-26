@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_LOG_CAPTURE_HPP
 
 #include <atomic>
+#include <optional>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -37,7 +38,13 @@ public:
 
     DELETE_COPY_MOVE(capture);
 
+    /// Input stream to capture.
     capture(std::istream& input) NOEXCEPT;
+
+    /// Input stream to capture and halt text (trimmed).
+    capture(std::istream& input, const std::string& halt) NOEXCEPT;
+
+    /// Stops and joins on destruct.
     ~capture() NOEXCEPT;
 
     /// Start only once, neither thread safe nor idempotent.
@@ -51,7 +58,7 @@ public:
 
 protected:
     bool stranded() const NOEXCEPT;
-    void notify(const code& ec, std::string&& line) const NOEXCEPT;
+    void notify(const code& ec, const std::string& line) const NOEXCEPT;
 
 private:
     // start/subscribe race because istream external, use subscribe completion.
@@ -64,9 +71,10 @@ private:
 
     // These are protected by strand.
     std::istream& input_;
-    threadpool pool_{ two, thread_priority::low };
+    threadpool pool_{ two, thread_priority::high };
 
     // These are thread safe.
+    const std::optional<std::string> halt_;
     std::atomic_bool stopped_{ true };
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     asio::strand strand_{ pool_.service().get_executor() };
