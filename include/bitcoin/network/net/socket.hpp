@@ -116,9 +116,9 @@ private:
     void do_stop() NOEXCEPT;
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
-    void do_read(const boost::asio::mutable_buffer& out,
+    void do_read(const asio::mutable_buffer& out,
         const count_handler& handler) NOEXCEPT;
-    void do_write(const boost::asio::const_buffer& in,
+    void do_write(const asio::const_buffer& in,
         const count_handler& handler) NOEXCEPT;
 
     void handle_accept(const error::boost_code& ec,

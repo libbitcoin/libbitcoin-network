@@ -140,7 +140,7 @@ void socket::read(const data_slab& out, count_handler&& handler) NOEXCEPT
     // asio::mutable_buffer is essentially a data_slab.
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_read, shared_from_this(),
-            boost::asio::mutable_buffer{ out.data(), out.size() },
+            asio::mutable_buffer{ out.data(), out.size() },
                 std::move(handler)));
 }
 
@@ -149,7 +149,7 @@ void socket::write(const data_slice& in, count_handler&& handler) NOEXCEPT
     // asio::const_buffer is essentially a data_slice.
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_write, shared_from_this(),
-            boost::asio::const_buffer{ in.data(), in.size() },
+            asio::const_buffer{ in.data(), in.size() },
                 std::move(handler)));
 }
 
@@ -178,7 +178,7 @@ void socket::do_connect(const asio::endpoints& range,
 }
 
 // Read into pre-allocated buffer (bitcoin).
-void socket::do_read(const boost::asio::mutable_buffer& out,
+void socket::do_read(const asio::mutable_buffer& out,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -197,7 +197,7 @@ void socket::do_read(const boost::asio::mutable_buffer& out,
     }
 }
 
-void socket::do_write(const boost::asio::const_buffer& in,
+void socket::do_write(const asio::const_buffer& in,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
