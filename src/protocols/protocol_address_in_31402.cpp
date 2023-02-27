@@ -113,7 +113,7 @@ bool protocol_address_in_31402::handle_receive_address(const code& ec,
     BC_ASSERT_MSG(stranded(), "protocol_address_in_31402");
 
     if (stopped(ec))
-        return true;
+        return false;
 
     // Do not accept multiple addresses from inbound channels.
     const auto start = message->addresses.size();

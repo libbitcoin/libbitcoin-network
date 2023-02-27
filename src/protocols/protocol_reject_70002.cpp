@@ -74,7 +74,7 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
     BC_ASSERT_MSG(stranded(), "protocol_reject_70002");
 
     if (stopped(ec))
-        return true;
+        return false;
 
     // vesion message rejection is handled in protocol_version_70002, however
     // if received here (outside of handshake), a protocol error is implied.
@@ -82,7 +82,7 @@ bool protocol_reject_70002::handle_receive_reject(const code& ec,
     {
         LOGR("Version reject after handshake [" << authority() << "]");
         stop(error::protocol_violation);
-        return true;
+        return false;
     }
 
     // system::serialize require for uint8_t serialization.

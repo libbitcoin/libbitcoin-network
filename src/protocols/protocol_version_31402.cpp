@@ -253,13 +253,13 @@ bool protocol_version_31402::handle_receive_acknowledge(const code& ec,
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 
     if (stopped(ec))
-        return true;
+        return false;
 
     // Premature or multiple verack disallowed (persists for channel life).
     if (!sent_version_ || received_acknowledge_)
     {
         rejection(error::protocol_violation);
-        return true;
+        return false;
     }
 
     received_acknowledge_ = true;
@@ -290,7 +290,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     if (received_version_)
     {
         rejection(error::protocol_violation);
-        return true;
+        return false;
     }
 
     LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
@@ -303,7 +303,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
             << authority() << "] showing (" << outbound().services() << ").");
 
         rejection(error::peer_unsupported);
-        return true;
+        return false;
     }
 
     // Advertised services on many incoming connections are set to zero.
@@ -313,7 +313,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
             << authority() << "] showing (" << outbound().services() << ").");
 
         rejection(error::peer_insufficient);
-        return true;
+        return false;
     }
 
     if (message->value < minimum_version_)
@@ -322,7 +322,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
             "for [" << authority() << "].");
 
         rejection(error::peer_insufficient);
-        return true;
+        return false;
     }
 
     const auto version = std::min(message->value, maximum_version_);

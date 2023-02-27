@@ -155,7 +155,7 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
     if (stopped(ec))
-        return true;
+        return false;
 
     const auto start = message->addresses.size();
     if (is_one(start) && (message->addresses.front() == outbound()))
@@ -213,7 +213,7 @@ bool protocol_seed_31402::handle_receive_get_address(const code& ec,
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
     if (stopped(ec))
-        return true;
+        return false;
 
     // Advertise self if configured for inbound and valid self address.
     if (settings().advertise_enabled())

@@ -108,7 +108,7 @@ bool protocol_version_70002::handle_receive_reject(const code& ec,
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
     if (stopped(ec))
-        return true;
+        return false;
 
     LOGP("Reject message '" << message->message << "' ("
         << static_cast<uint16_t>(message->code) << ") from [" << authority()

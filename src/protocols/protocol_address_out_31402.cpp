@@ -81,7 +81,7 @@ bool protocol_address_out_31402::handle_receive_get_address(const code& ec,
     BC_ASSERT_MSG(stranded(), "protocol_address_out_31402");
 
     if (stopped(ec))
-        return true;
+        return false;
 
     // Limit get_address requests to one per session.
     if (sent_)

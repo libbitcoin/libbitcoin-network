@@ -67,7 +67,7 @@ bool protocol_alert_31402::handle_receive_alert(const code& ec,
     BC_ASSERT_MSG(stranded(), "protocol_alert_31402");
 
     if (stopped(ec))
-        return true;
+        return false;
 
     // TODO: serialize cancels and sub_versions.
     // Signature not validated because is not relevant (private key published).

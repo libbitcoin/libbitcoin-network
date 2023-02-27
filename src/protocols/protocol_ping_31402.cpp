@@ -112,7 +112,7 @@ bool protocol_ping_31402::handle_receive_ping(const code&,
     const ping::cptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
-    return true;
+    return !stopped();
 }
 
 } // namespace network
