@@ -208,16 +208,16 @@ void session_outbound::handle_connect(const code& ec,
         return;
     }
 
+    if (ec == error::address_not_found)
+    {
+        LOGS("Address pool is empty.");
+        defer(settings().connect_timeout(), BIND1(start_connect, _1));
+        return;
+    }
+
     // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
-        if (ec == error::address_not_found)
-        {
-            LOGS("Address pool is empty.");
-            defer_address_starvation(BIND1(start_connect, _1));
-            return;
-        }
-
         // Avoid tight loop with delay timer.
         defer(BIND1(start_connect, _1));
         return;

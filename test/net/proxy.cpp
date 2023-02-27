@@ -319,11 +319,12 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_message__subscribed__expected)
     std::promise<code> message_stopped;
     boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
     {
-        proxy_ptr->subscribe_message<messages::ping>(
+        proxy_ptr->subscribe_message<const messages::ping>(
             [&](code ec, messages::ping::cptr ping) NOEXCEPT
             {
                 result |= is_null(ping);
                 message_stopped.set_value(ec);
+                return true;
             });
     });
 
@@ -370,6 +371,7 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
             {
                 result |= is_null(ping);
                 message_stopped.set_value(ec);
+                return true;
             });
     });
 

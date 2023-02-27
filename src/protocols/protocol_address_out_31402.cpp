@@ -75,24 +75,25 @@ void protocol_address_out_31402::start() NOEXCEPT
 // Outbound (fetch and send addresses).
 // ----------------------------------------------------------------------------
 
-void protocol_address_out_31402::handle_receive_get_address(const code& ec,
+bool protocol_address_out_31402::handle_receive_get_address(const code& ec,
     const get_address::cptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_out_31402");
 
     if (stopped(ec))
-        return;
+        return false;
 
     // Limit get_address requests to one per session.
     if (sent_)
     {
         LOGP("Ignoring duplicate address request from [" << authority() << "]");
         ////stop(error::protocol_violation);
-        return;
+        return true;
     }
 
     fetch(BIND2(handle_fetch_address, _1, _2));
     sent_ = true;
+    return true;
 }
 
 // Shared pointers required in handler parameters so closures control lifetime.

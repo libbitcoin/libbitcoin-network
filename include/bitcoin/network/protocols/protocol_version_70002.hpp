@@ -54,7 +54,7 @@ public:
 protected:
     void rejection(const code& ec) NOEXCEPT override;
 
-    virtual void handle_receive_reject(const code& ec,
+    virtual bool handle_receive_reject(const code& ec,
         const messages::reject::cptr& message) NOEXCEPT;
 };
 

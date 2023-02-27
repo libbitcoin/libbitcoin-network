@@ -45,6 +45,7 @@ protocol_ping_60001::protocol_ping_60001(const session& session,
     tracker<protocol_ping_60001>(session.log())
 {
 }
+
 void protocol_ping_60001::start() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
@@ -92,24 +93,25 @@ void protocol_ping_60001::send_ping() NOEXCEPT
 ////    protocol::handle_send(ec);
 ////}
 
-void protocol_ping_60001::handle_receive_pong(const code& ec,
+bool protocol_ping_60001::handle_receive_pong(const code& ec,
     const pong::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 
     if (stopped(ec))
-        return;
+        return false;
 
     // Both nonce incorrect and already received are protocol violations.
     if (message->nonce != nonce_)
     {
         LOGR("Incorrect pong nonce from [" << authority() << "]");
         stop(error::protocol_violation);
-        return;
+        return false;
     }
 
     // Correct pong nonce, set sentinel.
     nonce_ = received;
+    return true;
 }
 
 void protocol_ping_60001::handle_timer(const code& ec) NOEXCEPT
@@ -142,15 +144,16 @@ void protocol_ping_60001::handle_timer(const code& ec) NOEXCEPT
 // Incoming (receive_ping => send_pong).
 // ----------------------------------------------------------------------------
 
-void protocol_ping_60001::handle_receive_ping(const code& ec,
+bool protocol_ping_60001::handle_receive_ping(const code& ec,
     const ping::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_ping_60001");
 
     if (stopped(ec))
-        return;
+        return false;
 
     SEND1(pong{ message->nonce }, handle_send_pong, _1);
+    return true;
 }
 
 void protocol_ping_60001::handle_send_pong(const code&) NOEXCEPT

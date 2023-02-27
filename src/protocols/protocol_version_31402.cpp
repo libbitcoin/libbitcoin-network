@@ -247,19 +247,19 @@ void protocol_version_31402::handle_send_version(const code& ec) NOEXCEPT
         callback(error::success);
 }
 
-void protocol_version_31402::handle_receive_acknowledge(const code& ec,
+bool protocol_version_31402::handle_receive_acknowledge(const code& ec,
     const version_acknowledge::cptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 
     if (stopped(ec))
-        return;
+        return false;
 
     // Premature or multiple verack disallowed (persists for channel life).
     if (!sent_version_ || received_acknowledge_)
     {
         rejection(error::protocol_violation);
-        return;
+        return false;
     }
 
     received_acknowledge_ = true;
@@ -271,24 +271,26 @@ void protocol_version_31402::handle_receive_acknowledge(const code& ec,
 
     if (complete())
         callback(error::success);
+
+    return true;
 }
 
 // Incoming [receive_version => send_acknowledge].
 // ----------------------------------------------------------------------------
 
-void protocol_version_31402::handle_receive_version(const code& ec,
+bool protocol_version_31402::handle_receive_version(const code& ec,
     const version::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_31402");
 
     if (stopped(ec))
-        return;
+        return true;
 
     // Multiple version messages not allowed (persists for channel life).
     if (received_version_)
     {
         rejection(error::protocol_violation);
-        return;
+        return false;
     }
 
     LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
@@ -301,7 +303,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
             << authority() << "] showing (" << outbound().services() << ").");
 
         rejection(error::peer_unsupported);
-        return;
+        return false;
     }
 
     // Advertised services on many incoming connections are set to zero.
@@ -311,7 +313,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
             << authority() << "] showing (" << outbound().services() << ").");
 
         rejection(error::peer_insufficient);
-        return;
+        return false;
     }
 
     if (message->value < minimum_version_)
@@ -320,7 +322,7 @@ void protocol_version_31402::handle_receive_version(const code& ec,
             "for [" << authority() << "].");
 
         rejection(error::peer_insufficient);
-        return;
+        return false;
     }
 
     const auto version = std::min(message->value, maximum_version_);
@@ -344,6 +346,8 @@ void protocol_version_31402::handle_receive_version(const code& ec,
     // The reader is suspended within this handler by the strand.
     if (received_acknowledge_)
         pause();
+
+    return true;
 }
 
 void protocol_version_31402::handle_send_acknowledge(const code& ec) NOEXCEPT

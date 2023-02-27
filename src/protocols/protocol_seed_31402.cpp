@@ -149,19 +149,19 @@ address::cptr protocol_seed_31402::filter(
 }
 
 // Allow and handle any number of address messages when seeding.
-void protocol_seed_31402::handle_receive_address(const code& ec,
+bool protocol_seed_31402::handle_receive_address(const code& ec,
     const address::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
     if (stopped(ec))
-        return;
+        return false;
 
     const auto start = message->addresses.size();
     if (is_one(start) && (message->addresses.front() == outbound()))
     {
         ////LOGP("Dropping redundant address from seed [" << authority() << "]");
-        return;
+        return true;
     }
 
     const auto filtered = filter(message->addresses);
@@ -169,6 +169,8 @@ void protocol_seed_31402::handle_receive_address(const code& ec,
 
     save(filtered,
         BIND4(handle_save_addresses, _1, _2, end, start));
+
+    return true;
 }
 
 void protocol_seed_31402::handle_save_addresses(const code& ec,
@@ -205,23 +207,24 @@ address_item protocol_seed_31402::self() const NOEXCEPT
 }
 
 // Only send 0..1 address in response to each get_address when seeding.
-void protocol_seed_31402::handle_receive_get_address(const code& ec,
+bool protocol_seed_31402::handle_receive_get_address(const code& ec,
     const get_address::cptr&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
     if (stopped(ec))
-        return;
+        return false;
 
     // Advertise self if configured for inbound and valid self address.
     if (settings().advertise_enabled())
     {
         SEND1(address{ { self() } }, handle_send_address, _1);
-        return;
+        return true;
     }
 
     // handle_send_address has been bypassed, so completion here.
     handle_send_address(error::success);
+    return true;
 }
 
 void protocol_seed_31402::handle_send_address(const code& ec) NOEXCEPT
