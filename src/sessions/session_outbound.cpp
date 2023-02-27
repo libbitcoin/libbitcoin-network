@@ -156,7 +156,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
 
     if (ec)
     {
-        LOGS("Address pool is empty.");
+        ////LOGS("Address pool is empty.");
         racer->finish(ec, nullptr);
         return;
     }
@@ -211,6 +211,13 @@ void session_outbound::handle_connect(const code& ec,
     // There was an error connecting a channel, so try again after delay.
     if (ec)
     {
+        if (ec == error::address_not_found)
+        {
+            LOGS("Address pool is empty.");
+            defer_address_starvation(BIND1(start_connect, _1));
+            return;
+        }
+
         // Avoid tight loop with delay timer.
         defer(BIND1(start_connect, _1));
         return;

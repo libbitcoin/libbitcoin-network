@@ -124,6 +124,7 @@ protected:
 
     /// Delayed invocation, by randomized function retry_timeout_().
     virtual void defer(result_handler&& handler) NOEXCEPT;
+    virtual void defer_address_starvation(result_handler&& handler) NOEXCEPT;
 
     /// Pend/unpend a channel, for quick stop (unpend false if not pending).
     virtual void pend(const channel::ptr& channel) NOEXCEPT;
@@ -173,6 +174,9 @@ protected:
 private:
     asio::strand& strand() NOEXCEPT;
     object_key create_key() NOEXCEPT;
+
+    void defer(const steady_clock::duration& delay,
+        result_handler&& handler) NOEXCEPT;
 
     void handle_channel_start(const code& ec, const channel::ptr& channel,
         const result_handler& started, const result_handler& stopped) NOEXCEPT;
