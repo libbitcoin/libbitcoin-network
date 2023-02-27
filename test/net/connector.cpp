@@ -54,7 +54,8 @@ public:
 
 BOOST_AUTO_TEST_CASE(connector__construct__default__stopped_expected)
 {
-    const logger log{ false };
+    logger log{};
+    log.stop();
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
@@ -80,7 +81,8 @@ class tiny_timeout
 
 BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeout)
 {
-    const logger log{ false };
+    logger log{};
+    log.stop();
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const tiny_timeout set(bc::system::chain::selection::mainnet);
@@ -109,7 +111,8 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeou
 
 BOOST_AUTO_TEST_CASE(connector__connect_authority__bogus_authority__operation_timeout)
 {
-    const logger log{ false };
+    logger log{};
+    log.stop();
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const tiny_timeout set(bc::system::chain::selection::mainnet);
@@ -138,7 +141,8 @@ BOOST_AUTO_TEST_CASE(connector__connect_authority__bogus_authority__operation_ti
 
 BOOST_AUTO_TEST_CASE(connector__connect_endpoint__bogus_hostname__resolve_failed_race_operation_timeout)
 {
-    const logger log{ false };
+    logger log{};
+    log.stop();
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const tiny_timeout set(bc::system::chain::selection::mainnet);
@@ -165,7 +169,8 @@ BOOST_AUTO_TEST_CASE(connector__connect_endpoint__bogus_hostname__resolve_failed
 
 BOOST_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_canceled)
 {
-    const logger log{ false };
+    logger log{};
+    log.stop();
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
@@ -194,7 +199,8 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_can
 
 BOOST_AUTO_TEST_CASE(connector__connect__started_start__operation_failed)
 {
-    const logger log{ false };
+    logger log{};
+    log.stop();
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);

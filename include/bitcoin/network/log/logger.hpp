@@ -89,10 +89,6 @@ public:
     /// Construct a started (live) logger.
     logger() NOEXCEPT;
 
-    // TODO: create a test wrapper that does this.
-    /// Construct a stopped (dead) logger.
-    logger(bool) NOEXCEPT;
-
     /// Block on logger threadpool join.
     ~logger() NOEXCEPT;
 

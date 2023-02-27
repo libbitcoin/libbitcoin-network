@@ -300,7 +300,7 @@ private:
 
 BOOST_AUTO_TEST_CASE(session_manual__inbound__always__false)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
     mock_session_manual session(net, 1);
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(session_manual__inbound__always__false)
 
 BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
 
 BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
     mock_session_manual session(net, 1);
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
 
 BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
 
 BOOST_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
@@ -441,7 +441,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped
 
 BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
 
 BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopped)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
 
     // Connect will return invalid_magic when executed.
@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
 
 BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__service_stopped)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     mock_p2p<mock_connector_connect_success> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
@@ -591,7 +591,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
 
 BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expected)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
 
     mock_p2p<mock_connector_connect_success> net(set, log);
@@ -655,7 +655,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
 
 BOOST_AUTO_TEST_CASE(session_manual__start__network_start__success)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
 
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_start__success)
 
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     BOOST_REQUIRE(set.peers.empty());
 
@@ -694,7 +694,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
 
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__success)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     BOOST_REQUIRE(set.peers.empty());
 
@@ -727,7 +727,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__s
 
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__success)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     BOOST_REQUIRE(set.peers.empty());
 
@@ -764,7 +764,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__
 
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     BOOST_REQUIRE(set.peers.empty());
 
@@ -793,7 +793,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
 
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     BOOST_REQUIRE(set.peers.empty());
 
@@ -822,7 +822,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
 
 BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     BOOST_REQUIRE(set.peers.empty());
 

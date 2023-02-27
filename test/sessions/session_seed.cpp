@@ -435,7 +435,7 @@ private:
 
 BOOST_AUTO_TEST_CASE(session_seed__inbound__always__false)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
     mock_session_seed session(net, 1);
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(session_seed__inbound__always__false)
 
 BOOST_AUTO_TEST_CASE(session_seed__stop__started_sufficient__expected)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.host_pool_capacity = 1;
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(session_seed__stop__started_sufficient__expected)
 
 BOOST_AUTO_TEST_CASE(session_seed__stop__stopped__stopped)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
     mock_session_seed session(net, 1);
@@ -501,7 +501,7 @@ BOOST_AUTO_TEST_CASE(session_seed__stop__stopped__stopped)
 
 BOOST_AUTO_TEST_CASE(session_seed__start__no_outbound__bypassed)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.outbound_connections = 0;
     mock_p2p<> net(set, log);
@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__no_outbound__bypassed)
 
 BOOST_AUTO_TEST_CASE(session_seed__start__outbound_one_address_count__bypassed)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.connect_batch_size = 1;
@@ -549,7 +549,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__outbound_one_address_count__bypassed)
 
 BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_host_pool_capacity__seeding_unsuccessful)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.host_pool_capacity = 0;
@@ -572,7 +572,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_host_pool_capacity__seedin
 
 BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_seeds__seeding_unsuccessful)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.host_pool_capacity = 1;
@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__outbound_no_seeds__seeding_unsuccessfu
 
 BOOST_AUTO_TEST_CASE(session_seed__start__restart__operation_failed)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.connect_batch_size = 1;
@@ -645,7 +645,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__restart__operation_failed)
 
 BOOST_AUTO_TEST_CASE(session_seed__start__seeded__success)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.connect_batch_size = 1;
@@ -686,7 +686,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__seeded__success)
 
 BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.outbound_connections = 1;
     set.host_pool_capacity = 1;
@@ -721,7 +721,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__not_seeded__seeding_unsuccessful)
 
 ////BOOST_AUTO_TEST_CASE(session_seed__live__one_address__expected)
 ////{
-////    const logger log{ false };
+////    const logger log{};
 ////    settings set(selection::mainnet);
 ////    set.seeds.resize(1);
 ////    set.seeding_timeout_seconds = 5;

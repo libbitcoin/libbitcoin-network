@@ -420,7 +420,7 @@ private:
 
 BOOST_AUTO_TEST_CASE(session_outbound__inbound__always__false)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
     mock_session_outbound session(net, 1);
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__inbound__always__false)
 
 BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.host_pool_capacity = 1;
     set.connect_batch_size = 1;
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
 
 BOOST_AUTO_TEST_CASE(session_outbound__stop__stopped__stopped)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
     mock_session_outbound session(net, 1);
@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__stopped__stopped)
 
 BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__bypassed)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.outbound_connections = 0;
     set.host_pool_capacity = 1;
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__bypassed)
 
 BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__bypassed)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     mock_p2p<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__bypassed)
 
 BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__bypassed)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.host_pool_capacity = 1;
     set.connect_batch_size = 0;
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__bypassed)
 
 BOOST_AUTO_TEST_CASE(session_outbound__start__no_address_count__address_not_found)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.host_pool_capacity = 1;
     mock_p2p<> net(set, log);
@@ -577,7 +577,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_address_count__address_not_foun
 
 BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.host_pool_capacity = 1;
     set.connect_batch_size = 1;
@@ -624,7 +624,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
 // Connection errors get eaten with all connect failure codes (logging only).
 BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__success)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.host_pool_capacity = 1;
     set.connect_batch_size = 3;
@@ -661,7 +661,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__succes
 
 BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_channel_service_stopped)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.host_pool_capacity = 1;
     set.connect_batch_size = 2;
@@ -694,7 +694,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
 
 BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
 {
-    const logger log{ false };
+    const logger log{};
     settings set(selection::mainnet);
     set.host_pool_capacity = 1;
     set.connect_batch_size = 1;
