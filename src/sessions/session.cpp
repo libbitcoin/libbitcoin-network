@@ -322,7 +322,9 @@ void session::do_handle_channel_stopped(const code& ec,
 // Subscriptions.
 // ----------------------------------------------------------------------------
 
-void session::defer(result_handler&& handler) NOEXCEPT
+// private
+void session::defer(const steady_clock::duration& timeout,
+    result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
@@ -333,7 +335,6 @@ void session::defer(result_handler&& handler) NOEXCEPT
     }
 
     const auto key = create_key();
-    const auto timeout = settings().retry_timeout();
     const auto timer = std::make_shared<deadline>(log(), network_.strand());
 
     timer->start(
@@ -341,6 +342,18 @@ void session::defer(result_handler&& handler) NOEXCEPT
 
     stop_subscriber_.subscribe(
         BIND3(handle_defer, _1, key, timer), key);
+}
+
+void session::defer(result_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    defer(settings().retry_timeout(), std::move(handler));
+}
+
+void session::defer_address_starvation(result_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    defer(settings().connect_timeout(), std::move(handler));
 }
 
 void session::handle_timer(const code& ec, object_key key,
