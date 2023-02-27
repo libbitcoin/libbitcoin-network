@@ -481,7 +481,6 @@ void p2p::do_fetch(const address_handler& handler) NOEXCEPT
 
 void p2p::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 {
-    // Channel/network strands share same pool.
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_save, this, message, std::move(handler)));
 }
