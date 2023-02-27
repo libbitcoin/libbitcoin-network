@@ -157,6 +157,9 @@ void protocol::set_negotiated_version(uint32_t value) NOEXCEPT
 
 // Addresses.
 // ----------------------------------------------------------------------------
+// Channel and network strands share same pool, and as long as a job is
+// running in the pool, it will continue to accept work. Therefore handlers
+// will not be orphaned during a stop as long as they remain in the pool.
 
 size_t protocol::address_count() const NOEXCEPT
 {
