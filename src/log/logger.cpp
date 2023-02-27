@@ -36,16 +36,15 @@ logger::logger() NOEXCEPT
 {
 }
 
-logger::logger(bool) NOEXCEPT
-  : logger()
-{
-    pool_.stop();
-}
-
 logger::~logger() NOEXCEPT
 {
-    BC_DEBUG_ONLY(const auto result =) pool_.join();
-    BC_ASSERT_MSG(result, "logger::join");
+    stop();
+
+    if (!pool_.join())
+    {
+        BC_ASSERT_MSG(false, "failed to join logger threadpool");
+        std::abort();
+    }
 }
 
 logger::writer logger::write(uint8_t level) const NOEXCEPT
@@ -86,12 +85,12 @@ void logger::do_stop(const code& ec, time_t zulu, const std::string& message,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Stop accepting work.
-    pool_.stop();
-
     // Subscriber asserts if stopped with a success code.
     message_subscriber_.stop(ec, level, zulu, message);
     event_subscriber_.stop(ec, event_t::stop, zero, {});
+
+    // Stop threadpool keep-alive, all work must self-terminate to affect join.
+    pool_.stop();
  }
 
 // messages

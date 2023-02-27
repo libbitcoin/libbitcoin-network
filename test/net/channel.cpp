@@ -49,7 +49,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
 {
-    const logger log{ false };
+    const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
@@ -70,7 +70,7 @@ inline size_t payload_maximum(const settings& settings)
 
 BOOST_AUTO_TEST_CASE(channel__properties__default__expected)
 {
-    const logger log{ false };
+    const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);

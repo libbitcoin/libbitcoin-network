@@ -60,7 +60,7 @@ constexpr address_item unspecified00{ 0, 0, unspecified_ip_address, 0 };
 
 BOOST_AUTO_TEST_CASE(hosts__start__disabled__success)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(set.host_pool_capacity, 0u);
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__disabled__success)
 BOOST_AUTO_TEST_CASE(hosts__start__enabled__success)
 {
     // Non-empty capacity causes file open/load.
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled__success)
 
 BOOST_AUTO_TEST_CASE(hosts__start__disabled_start__success)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__disabled_start__success)
 
 BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__success)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__enabled_started__success)
 
 BOOST_AUTO_TEST_CASE(hosts__start__populated_file__expected)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(hosts__start__populated_file__expected)
 
 BOOST_AUTO_TEST_CASE(hosts__stop__disabled__success)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.start(), error::success);
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(hosts__stop__disabled__success)
 
 BOOST_AUTO_TEST_CASE(hosts__stop__enabled_stopped__success)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(hosts__stop__enabled_stopped__success)
 
 BOOST_AUTO_TEST_CASE(hosts__stop__enabled_started__success)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(hosts__stop__enabled_started__success)
 
 BOOST_AUTO_TEST_CASE(hosts__count__empty__zero)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     const hosts instance(set, log);
     BOOST_REQUIRE_EQUAL(instance.count(), 0u);
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(hosts__count__empty__zero)
 
 BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__empty__address_not_found)
 
 BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(hosts__take__only__expected)
 
 BOOST_AUTO_TEST_CASE(hosts__restore__disabled_stopped__service_stopped_empty)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     hosts instance(set, log);
     std::promise<code> promise{};
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__disabled_stopped__service_stopped_empty)
 
 BOOST_AUTO_TEST_CASE(hosts__restore__stopped__service_stopped_empty)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__stopped__service_stopped_empty)
 
 BOOST_AUTO_TEST_CASE(hosts__restore__unique__accepted)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__unique__accepted)
 
 BOOST_AUTO_TEST_CASE(hosts__restore__duplicate_authority__updated)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(hosts__restore__duplicate_authority__updated)
 
 BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__empty__address_not_found)
 
 BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(hosts__fetch__three__success_empty)
 
 BOOST_AUTO_TEST_CASE(hosts__save__three_unique__three)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(hosts__save__three_unique__three)
 
 BOOST_AUTO_TEST_CASE(hosts__save__redundant__expected)
 {
-    const logger log{ false };
+    const logger log{};
     mock_settings set(bc::system::chain::selection::mainnet);
     set.path = TEST_NAME;
     set.host_pool_capacity = 42;

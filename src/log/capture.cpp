@@ -41,10 +41,13 @@ capture::capture(std::istream& input, const std::string& halt) NOEXCEPT
 
 capture::~capture() NOEXCEPT
 {
-    BC_ASSERT_MSG(stopped_, "~capture not stopped");
-    pool_.stop();
-    BC_DEBUG_ONLY(const auto result =) pool_.join();
-    BC_ASSERT_MSG(result, "capture::join");
+    stop();
+
+    if (!pool_.join())
+    {
+        BC_ASSERT_MSG(false, "failed to join capture threadpool");
+        std::abort();
+    }
 }
 
 bool capture::stranded() const NOEXCEPT
@@ -62,13 +65,13 @@ void capture::start() NOEXCEPT
         std::bind(&capture::do_start, this));
 }
 
-// Unstranded, owns one of the two capture threads.
+// Unstranded, owns one of the two threads.
 void capture::do_start() NOEXCEPT
 {
     std::string line{};
 
-    // <ctrl-c> invalidates input, causing normal termination.
-    // getline blocks (if input is valid) until receiving a "line" of input.
+    // If input is valid, getline blocks until receiving a "line" of input.
+    // <ctrl-c> may cause getline invocation and input invalidation.
     // External input stream invalidation does not unblock getline.
     while (!stopped_ && std::getline(input_, line))
     {
@@ -87,14 +90,13 @@ void capture::do_start() NOEXCEPT
 
 void capture::stop() NOEXCEPT
 {
-    // Signal listener stop (must also receive input to terminate).
+    // Signal listener stop (must also receive input).
     stopped_ = true;
 
     // Protect pool and subscriber (idempotent but not thread safe).
     // This buffers the handler if getline is still blocking and there is only
     // one thread in the pool. Providing a second thread allows stop to proceed
-    // and the buffer to clear immediately, despite shutdown remaining blocked
-    // on getline completion.
+    // and the buffer to clear immediately, despite shutdown remaining blocked.
     boost::asio::post(strand_,
         std::bind(&capture::do_stop, this));
 }
@@ -104,11 +106,11 @@ void capture::do_stop() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Stop accepting work.
-    pool_.stop();
-
     // Subscriber asserts if stopped with a success code.
     subscriber_.stop_default(error::service_stopped);
+
+    // Stop threadpool keep-alive, all work must self-terminate to affect join.
+    pool_.stop();
 }
 
 // lines

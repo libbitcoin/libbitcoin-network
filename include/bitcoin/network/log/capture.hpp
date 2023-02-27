@@ -61,13 +61,11 @@ protected:
     void notify(const code& ec, const std::string& line) const NOEXCEPT;
 
 private:
-    // start/subscribe race because istream external, use subscribe completion.
+    void do_stop() NOEXCEPT;
     void do_start() NOEXCEPT;
+    void do_notify(const code& ec, const std::string& line) const NOEXCEPT;
     void do_subscribe(const notifier& handler,
         const result_handler& complete) NOEXCEPT;
-
-    void do_notify(const code& ec, const std::string& line) const NOEXCEPT;
-    void do_stop() NOEXCEPT;
 
     // These are protected by strand.
     std::istream& input_;

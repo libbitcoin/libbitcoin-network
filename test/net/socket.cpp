@@ -71,7 +71,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
 {
-    const logger log{ false };
+    const logger log{};
     threadpool pool(1);
     const auto instance = std::make_shared<socket_accessor>(log, pool.service());
 
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(socket__construct__default__closed_not_stopped_expected)
 
 BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 {
-    const logger log{ false };
+    const logger log{};
     threadpool pool(2);
     const auto instance = std::make_shared<socket_accessor>(log, pool.service());
     asio::strand strand(pool.service().get_executor());
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
 
 BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
 {
-    const logger log{ false };
+    const logger log{};
     threadpool pool(2);
     const auto instance = std::make_shared<socket_accessor>(log, pool.service());
     asio::strand strand(pool.service().get_executor());
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
 
 BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
 {
-    const logger log{ false };
+    const logger log{};
     threadpool pool(2);
     const auto instance = std::make_shared<socket_accessor>(log, pool.service());
 
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
 
 BOOST_AUTO_TEST_CASE(socket__write__disconnected__bad_stream)
 {
-    const logger log{ false };
+    const logger log{};
     threadpool pool(2);
     const auto instance = std::make_shared<socket_accessor>(log, pool.service());
 

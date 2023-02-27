@@ -56,7 +56,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
 {
-    const logger log{ false };
+    const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
 // TODO: There is no way to fake failures in start.
 BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
 {
-    const logger log{ false };
+    const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
 BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
 {
     // TODO: There is no way to fake successful acceptance.
-    const logger log{ false };
+    const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);

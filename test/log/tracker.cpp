@@ -39,7 +39,7 @@ public:
 };
 
 #if defined(HAVE_LOGO) && !defined(NDEBUG)
-BOOST_AUTO_TEST_CASE(tracker__construct1__guarded__safe_expected_messages)
+BOOST_AUTO_TEST_CASE(tracker__construct__guarded__safe_expected_messages)
 {
     logger log{};
     std::promise<code> log_stopped{};
@@ -75,23 +75,7 @@ BOOST_AUTO_TEST_CASE(tracker__construct1__guarded__safe_expected_messages)
 }
 #endif
 
-BOOST_AUTO_TEST_CASE(tracker__construct2__true__stopped)
-{
-    // The parameter value is unused.
-    const logger log{ true };
-    tracked foo{ log };
-    BOOST_REQUIRE(foo.method());
-}
-
-BOOST_AUTO_TEST_CASE(tracker__construct2__false__stopped)
-{
-    // The parameter value is unused.
-    const logger log{ false };
-    tracked instance{ log };
-    BOOST_REQUIRE(instance.method());
-}
-
-BOOST_AUTO_TEST_CASE(tracker__stop__always__safe)
+BOOST_AUTO_TEST_CASE(tracker__construct__stopped_log__safe)
 {
     logger log{};
     log.stop();
