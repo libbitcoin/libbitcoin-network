@@ -73,7 +73,7 @@ private:
 
     // These are thread safe.
     const std::optional<std::string> halt_;
-    std::atomic_bool stopped_{ true };
+    std::atomic_bool stopped_{ false };
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     asio::strand strand_{ pool_.service().get_executor() };
     BC_POP_WARNING()

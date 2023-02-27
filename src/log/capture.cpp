@@ -60,7 +60,7 @@ bool capture::stranded() const NOEXCEPT
 
 void capture::start() NOEXCEPT
 {
-    stopped_ = false;
+    // Threadpool is started on construct, can only be stopped.
     boost::asio::post(pool_.service(),
         std::bind(&capture::do_start, this));
 }
@@ -73,7 +73,7 @@ void capture::do_start() NOEXCEPT
     // If input is valid, getline blocks until receiving a "line" of input.
     // <ctrl-c> may cause getline invocation and input invalidation.
     // External input stream invalidation does not unblock getline.
-    while (!stopped_ && std::getline(input_, line))
+    while (!stopped_.load() && std::getline(input_, line))
     {
         system::trim(line);
         notify(error::success, line);
@@ -90,8 +90,8 @@ void capture::do_start() NOEXCEPT
 
 void capture::stop() NOEXCEPT
 {
-    // Signal listener stop (must also receive input).
-    stopped_ = true;
+    // Signal listener stop (must also receive input) and guard subscriber.
+    stopped_.store(true);
 
     // Protect pool and subscriber (idempotent but not thread safe).
     // This buffers the handler if getline is still blocking and there is only
@@ -133,6 +133,13 @@ void capture::do_notify(const code& ec,
 
 void capture::subscribe(notifier&& handler, result_handler&& complete) NOEXCEPT
 {
+    if (stopped_.load())
+    {
+        complete(error::service_stopped);
+        handler(error::service_stopped, {});
+        return;
+    }
+
     boost::asio::post(strand_,
         std::bind(&capture::do_subscribe,
             this, std::move(handler), std::move(complete)));
