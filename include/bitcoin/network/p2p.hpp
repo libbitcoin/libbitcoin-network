@@ -97,15 +97,14 @@ public:
     // Sequences.
     // ------------------------------------------------------------------------
 
-    /// Invoke startup and seeding sequence.
+    /// Invoke startup and seeding sequence, not thread safe or restartable.
     virtual void start(result_handler&& handler) NOEXCEPT;
 
     /// Run inbound and outbound sessions, call from start result handler.
     virtual void run(result_handler&& handler) NOEXCEPT;
 
-    /// Idempotent call to block on work stop, start may be reinvoked after.
+    /// Idempotent call to block on work stop.
     /// Must not call concurrently or from any threadpool thread (see ~).
-    /// Calling any method after close results in deadlock (threadpool joined).
     virtual void close() NOEXCEPT;
 
     // Subscriptions.
@@ -298,6 +297,7 @@ private:
 
     // These are thread safe.
     const settings& settings_;
+    std::atomic_bool closed_{ false };
     std::atomic<size_t> total_channel_count_{};
     std::atomic<size_t> inbound_channel_count_{};
 
