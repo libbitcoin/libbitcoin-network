@@ -91,6 +91,7 @@ connectors_ptr p2p::create_connectors(size_t count) NOEXCEPT
 
 void p2p::start(result_handler&& handler) NOEXCEPT
 {
+    // Threadpool is started on construct, can only be stopped.
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_start, this, std::move(handler)));
 }
@@ -98,8 +99,6 @@ void p2p::start(result_handler&& handler) NOEXCEPT
 void p2p::do_start(const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    // manual_ doubles as the closed indicator.
     manual_ = attach_manual_session();
     manual_->start(std::bind(&p2p::handle_start, this, _1, handler));
 }
@@ -135,6 +134,12 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
 
 void p2p::run(result_handler&& handler) NOEXCEPT
 {
+    if (closed())
+    {
+        handler(error::service_stopped);
+        return;
+    }
+
     boost::asio::post(strand_,
         std::bind(&p2p::do_run, this, std::move(handler)));
 }
@@ -177,10 +182,10 @@ void p2p::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
 // Shutdown sequence.
 // ----------------------------------------------------------------------------
 
-// Not thread safe or idempotent, call only once.
 // Results in std::abort if called from a thread within the threadpool.
 void p2p::close() NOEXCEPT
 {
+    closed_.store(true);
     boost::asio::dispatch(strand_, std::bind(&p2p::do_close, this));
 
     // Blocks on join of all threadpool threads.
@@ -201,10 +206,8 @@ void p2p::do_close() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // manual_ is also the closed indicator.
     // Release reference to manual session (also held by stop subscriber).
-    if (manual_)
-        manual_.reset();
+    if (manual_) manual_.reset();
 
     // Notify and delete all stop subscribers (all sessions).
     stop_subscriber_.stop(error::service_stopped);
@@ -221,11 +224,23 @@ void p2p::do_close() NOEXCEPT
 
 // Subscriptions.
 // ----------------------------------------------------------------------------
+// Channel and network strands share same pool, and as long as a job is
+// running in the pool, it will continue to accept work. Therefore handlers
+// will not be orphaned during a stop as long as they remain in the pool.
+// But when entering from outside the pool (such as subscribe) handler must be
+// invoked when stopped as the handler will go uninvoked if the pool empties.
 
 // public
 void p2p::subscribe_connect(channel_notifier&& handler,
     channel_completer&& complete) NOEXCEPT
 {
+    if (closed())
+    {
+        complete(error::service_stopped, {});
+        handler(error::service_stopped, {});
+        return;
+    }
+
     boost::asio::post(strand_,
         std::bind(&p2p::do_subscribe_connect,
             this, std::move(handler), std::move(complete)));
@@ -263,6 +278,13 @@ code p2p::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
 void p2p::subscribe_close(stop_handler&& handler,
     stop_completer&& complete) NOEXCEPT
 {
+    if (closed())
+    {
+        complete(error::service_stopped, {});
+        handler(error::service_stopped);
+        return;
+    }
+
     boost::asio::post(strand_,
         std::bind(&p2p::do_subscribe_close,
             this, std::move(handler), std::move(complete)));
@@ -316,14 +338,18 @@ void p2p::connect(const config::endpoint& endpoint) NOEXCEPT
 void p2p::do_connect(const config::endpoint& endpoint) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    if (manual_)
-        manual_->connect(endpoint);
+    if (manual_) manual_->connect(endpoint);
 }
 
 void p2p::connect(const config::endpoint& endpoint,
     channel_notifier&& handler) NOEXCEPT
 {
+    if (closed())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
     // TODO: test case(s) depend on dispatch vs. post.
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_connect_handled, this, endpoint,
@@ -347,9 +373,7 @@ void p2p::do_connect_handled(const config::endpoint& endpoint,
 // private
 bool p2p::closed() const NOEXCEPT
 {
-    // manual_ doubles as the closed indicator.
-    BC_ASSERT_MSG(stranded(), "strand");
-    return !manual_;
+    return closed_.load();
 }
 
 size_t p2p::address_count() const NOEXCEPT
@@ -395,6 +419,7 @@ bool p2p::stranded() const NOEXCEPT
 
 // Hosts collection.
 // ----------------------------------------------------------------------------
+// Protected, called from session (network strand) and channel (network pool).
 
 // private
 code p2p::start_hosts() NOEXCEPT
@@ -443,11 +468,20 @@ void p2p::fetch(address_handler&& handler) NOEXCEPT
 void p2p::do_fetch(const address_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // Accelerate stop, since hosts keeps running until all threads closed.
+    if (closed())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
     hosts_.fetch(move_copy(handler));
 }
 
 void p2p::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 {
+    // Channel/network strands share same pool.
     boost::asio::dispatch(strand_,
         std::bind(&p2p::do_save, this, message, std::move(handler)));
 }
@@ -456,6 +490,14 @@ void p2p::do_save(const address_cptr& message,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // Accelerate stop, since hosts keeps running until all threads closed.
+    if (closed())
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
     hosts_.save(message, move_copy(handler));
 }
 

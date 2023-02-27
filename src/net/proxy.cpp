@@ -133,6 +133,13 @@ void proxy::subscribe_stop(result_handler&& handler) NOEXCEPT
 void proxy::subscribe_stop(result_handler&& handler,
     result_handler&& complete) NOEXCEPT
 {
+    if (stopped())
+    {
+        complete(error::channel_stopped);
+        handler(error::channel_stopped);
+        return;
+    }
+
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_subscribe_stop,
             shared_from_this(), std::move(handler), std::move(complete)));
@@ -312,6 +319,12 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 void proxy::write(const system::chunk_ptr& payload,
     result_handler&& handler) NOEXCEPT
 {
+    if (stopped())
+    {
+        handler(error::channel_stopped);
+        return;
+    }
+
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write,
             shared_from_this(), payload, std::move(handler)));

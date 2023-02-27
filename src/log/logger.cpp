@@ -59,6 +59,7 @@ bool logger::stranded() const NOEXCEPT
 
 // stop
 // ----------------------------------------------------------------------------
+// Threadpool is started on construct, can only be stopped.
 
 void logger::stop(uint8_t level) NOEXCEPT
 {
@@ -73,6 +74,9 @@ void logger::stop(const std::string& message, uint8_t level) NOEXCEPT
 void logger::stop(const code& ec, const std::string& message,
     uint8_t level) NOEXCEPT
 {
+    // Guard subscribers.
+    stopped_.store(true);
+
     // Protect pool and subscribers (idempotent but not thread safe).
     boost::asio::post(strand_,
         std::bind(&logger::do_stop,
@@ -115,6 +119,12 @@ void logger::do_notify_message(const code& ec, uint8_t level, time_t zulu,
 
 void logger::subscribe_messages(message_notifier&& handler) NOEXCEPT
 {
+    if (stopped_.load())
+    {
+        handler(error::service_stopped, {}, {}, {});
+        return;
+    }
+
     boost::asio::post(strand_,
         std::bind(&logger::do_subscribe_messages,
             this, std::move(handler)));
@@ -147,6 +157,12 @@ void logger::do_notify_event(uint8_t event, size_t count,
 
 void logger::subscribe_events(event_notifier&& handler) NOEXCEPT
 {
+    if (stopped_.load())
+    {
+        handler(error::service_stopped, {}, {}, {});
+        return;
+    }
+
     boost::asio::post(strand_,
         std::bind(&logger::do_subscribe_events,
             this, std::move(handler)));

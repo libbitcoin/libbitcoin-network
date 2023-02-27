@@ -84,6 +84,9 @@ void session::stop() NOEXCEPT
 
 // Channel sequence.
 // ----------------------------------------------------------------------------
+// Channel and network strands share same pool, and as long as a job is
+// running in the pool, it will continue to accept work. Therefore handlers
+// will not be orphaned during a stop as long as they remain in the pool.
 
 void session::start_channel(const channel::ptr& channel,
     result_handler&& starter, result_handler&& stopper) NOEXCEPT
@@ -121,6 +124,7 @@ void session::start_channel(const channel::ptr& channel,
         BIND3(handle_handshake, _1, channel, std::move(start));
 
     // Switch to channel context.
+    // Channel/network strands share same pool.
     boost::asio::post(channel->strand(),
         BIND2(do_attach_handshake, channel, std::move(shake)));
 }
@@ -193,8 +197,6 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
         return;
     }
 
-    // TODO: Store currently "re-pends" the channel on a vector.
-    // This should be replaced by p2p broadcast/stop subscription.
     if (const auto code = network_.count_channel(channel))
     {
         network_.unstore_nonce(*channel);
@@ -227,7 +229,7 @@ void session::handle_channel_start(const code& ec, const channel::ptr& channel,
 void session::handle_channel_started(const code& ec,
     const channel::ptr& channel, const result_handler& started) NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded(), "channel strand");
+    BC_ASSERT_MSG(channel->stranded() || network_.stranded(), "strand");
 
     // Return to network context.
     boost::asio::post(network_.strand(),
@@ -300,6 +302,8 @@ void session::attach_protocols(const channel::ptr& channel) const NOEXCEPT
 void session::handle_channel_stopped(const code& ec,
     const channel::ptr& channel, const result_handler& stopped) NOEXCEPT
 {
+    BC_ASSERT_MSG(channel->stranded() || network_.stranded(), "strand");
+
     // Return to network context.
     boost::asio::post(network_.strand(),
         BIND3(do_handle_channel_stopped, ec, channel, stopped));
@@ -382,11 +386,7 @@ void session::unpend(const channel::ptr& channel) NOEXCEPT
 bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
-
-    // error::success prevents channel stop.
-    if (ec)
-        channel->stop(ec);
-
+    if (ec) channel->stop(ec);
     return false;
 }
 

@@ -197,7 +197,38 @@ BOOST_AUTO_TEST_CASE(p2p__connect__unstarted__service_stopped)
     BOOST_REQUIRE(!result.second);
 }
 
-BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstopped__success)
+BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__closed___service_stopped)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    p2p net(set, log);
+    net.close();
+
+    std::promise<std::pair<code, channel::ptr>> promise_handler{};
+    const auto handler = [&](const code& ec, const channel::ptr& channel) NOEXCEPT
+    {
+        promise_handler.set_value({ ec, channel });
+        return false;
+    };
+
+    std::promise<std::pair<code, p2p::object_key>> promise_complete{};
+    const auto complete = [&](const code& ec, p2p::object_key key) NOEXCEPT
+    {
+        // First key is ++0;
+        promise_complete.set_value({ ec, key });
+    };
+
+    net.subscribe_connect(handler, complete);
+    const auto result1 = promise_complete.get_future().get();
+    BOOST_REQUIRE_EQUAL(result1.first, error::service_stopped);
+    BOOST_REQUIRE_EQUAL(result1.second, zero);
+
+    const auto result2 = promise_handler.get_future().get();
+    BOOST_REQUIRE_EQUAL(result2.first, error::service_stopped);
+    BOOST_REQUIRE(!result2.second);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unclosed___success)
 {
     const logger log{};
     const settings set(selection::mainnet);
@@ -229,7 +260,35 @@ BOOST_AUTO_TEST_CASE(p2p__subscribe_connect__unstopped__success)
     BOOST_REQUIRE(!result2.second);
 }
 
-BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unstopped__success)
+BOOST_AUTO_TEST_CASE(p2p__subscribe_close__closed__service_stopped)
+{
+    const logger log{};
+    const settings set(selection::mainnet);
+    p2p net(set, log);
+    net.close();
+
+    std::promise<code> promise_handler;
+    const auto handler = [&](const code& ec) NOEXCEPT
+    {
+        promise_handler.set_value(ec);
+        return true;
+    };
+
+    std::promise<std::pair<code, p2p::object_key>> promise_complete;
+    const auto complete = [&](const code& ec, p2p::object_key key) NOEXCEPT
+    {
+        // First key is ++0;
+        promise_complete.set_value({ ec, key });
+    };
+
+    net.subscribe_close(handler, complete);
+    const auto result = promise_complete.get_future().get();
+    BOOST_REQUIRE_EQUAL(result.first, error::service_stopped);
+    BOOST_REQUIRE_EQUAL(result.second, zero);
+    BOOST_REQUIRE_EQUAL(promise_handler.get_future().get(), error::service_stopped);
+}
+
+BOOST_AUTO_TEST_CASE(p2p__subscribe_close__unclosed___success)
 {
     const logger log{};
     const settings set(selection::mainnet);
@@ -280,11 +339,12 @@ BOOST_AUTO_TEST_CASE(p2p__start__outbound_connections_but_no_peers_no_seeds__see
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::seeding_unsuccessful);
 }
 
-BOOST_AUTO_TEST_CASE(p2p__run__not_started__service_stopped)
+BOOST_AUTO_TEST_CASE(p2p__run__closed__service_stopped)
 {
     const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
+    net.close();
 
     std::promise<code> promise;
     const auto handler = [&](const code& ec) NOEXCEPT

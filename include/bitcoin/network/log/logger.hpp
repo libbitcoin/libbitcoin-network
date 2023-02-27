@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_LOG_LOGGER_HPP
 #define LIBBITCOIN_NETWORK_LOG_LOGGER_HPP
 
+#include <atomic>
 #include <ostream>
 #include <sstream>
 #include <utility>
@@ -130,7 +131,8 @@ private:
     // This is protected by strand.
     threadpool pool_{ one, thread_priority::low };
 
-    // This is thread safe.
+    // These are thread safe.
+    std::atomic_bool stopped_{ false };
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     asio::strand strand_{ pool_.service().get_executor() };
     BC_POP_WARNING()
