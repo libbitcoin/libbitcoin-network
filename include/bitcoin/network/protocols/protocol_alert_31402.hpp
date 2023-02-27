@@ -46,7 +46,7 @@ public:
     void start() NOEXCEPT override;
 
 protected:
-    virtual void handle_receive_alert(const code& ec,
+    virtual bool handle_receive_alert(const code& ec,
         const messages::alert::cptr& alert) NOEXCEPT;
 };
 

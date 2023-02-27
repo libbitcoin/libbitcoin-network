@@ -68,13 +68,13 @@ std::string protocol_reject_70002::get_hash(const reject& message) const NOEXCEP
         system::encode_hash(message.hash) : std::string{ "n/a" };
 }
 
-void protocol_reject_70002::handle_receive_reject(const code& ec,
+bool protocol_reject_70002::handle_receive_reject(const code& ec,
     const reject::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_reject_70002");
 
     if (stopped(ec))
-        return;
+        return true;
 
     // vesion message rejection is handled in protocol_version_70002, however
     // if received here (outside of handshake), a protocol error is implied.
@@ -82,7 +82,7 @@ void protocol_reject_70002::handle_receive_reject(const code& ec,
     {
         LOGR("Version reject after handshake [" << authority() << "]");
         stop(error::protocol_violation);
-        return;
+        return true;
     }
 
     // system::serialize require for uint8_t serialization.
@@ -92,6 +92,8 @@ void protocol_reject_70002::handle_receive_reject(const code& ec,
         << "\nmessage: " << message->message
         << "\nreason : " << message->reason
         << "\nhash   : " << get_hash(*message));
+
+    return true;
 }
 
 } // namespace network

@@ -71,7 +71,7 @@ pump::pump(asio::strand& strand) NOEXCEPT
 }
 
 code pump::notify(messages::identifier id, uint32_t version,
-    reader& source) const NOEXCEPT
+    reader& source) NOEXCEPT
 {
     switch (id)
     {

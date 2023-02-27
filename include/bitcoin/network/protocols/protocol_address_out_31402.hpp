@@ -46,7 +46,7 @@ public:
     void start() NOEXCEPT override;
 
 protected:
-    virtual void handle_receive_get_address(const code& ec,
+    virtual bool handle_receive_get_address(const code& ec,
         const messages::get_address::cptr& message) NOEXCEPT;
     virtual void handle_fetch_address(const code& ec,
         const messages::address::cptr& message) NOEXCEPT;

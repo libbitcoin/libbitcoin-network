@@ -61,13 +61,13 @@ void protocol_alert_31402::start() NOEXCEPT
 // Inbound (log alert).
 // ----------------------------------------------------------------------------
 
-void protocol_alert_31402::handle_receive_alert(const code& ec,
+bool protocol_alert_31402::handle_receive_alert(const code& ec,
     const alert::cptr& LOG_ONLY(alert)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_alert_31402");
 
     if (stopped(ec))
-        return;
+        return true;
 
     // TODO: serialize cancels and sub_versions.
     // Signature not validated because is not relevant (private key published).
@@ -85,6 +85,8 @@ void protocol_alert_31402::handle_receive_alert(const code& ec,
         << "\ncomments    : " << alert->payload.comment.size()
         << "\nstatus_bar  : " << alert->payload.status_bar
         << "\nsignature   : " << system::serialize(alert->signature));
+
+    return true;
 }
 
 } // namespace network

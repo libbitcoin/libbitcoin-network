@@ -102,17 +102,19 @@ void protocol_version_70002::rejection(const code& ec) NOEXCEPT
 // Incoming [receive_reject => log].
 // ----------------------------------------------------------------------------
 
-void protocol_version_70002::handle_receive_reject(const code& ec,
+bool protocol_version_70002::handle_receive_reject(const code& ec,
     const reject::cptr& LOG_ONLY(message)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70002");
 
     if (stopped(ec))
-        return;
+        return true;
 
     LOGP("Reject message '" << message->message << "' ("
         << static_cast<uint16_t>(message->code) << ") from [" << authority()
         << "] with reason: " << message->reason);
+
+    return true;
 }
 
 } // namespace network

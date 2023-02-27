@@ -107,13 +107,13 @@ address::cptr protocol_address_in_31402::filter(
     return message;
 }
 
-void protocol_address_in_31402::handle_receive_address(const code& ec,
+bool protocol_address_in_31402::handle_receive_address(const code& ec,
     const address::cptr& message) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_in_31402");
 
     if (stopped(ec))
-        return;
+        return true;
 
     // Do not accept multiple addresses from inbound channels.
     const auto start = message->addresses.size();
@@ -121,14 +121,14 @@ void protocol_address_in_31402::handle_receive_address(const code& ec,
     {
         LOGP("Ignoring unsolicited addresses from [" << authority() << "]");
         ////stop(error::protocol_violation);
-        return;
+        return true;
     }
 
     received_ = true;
     if (is_one(start) && message->addresses.front() == outbound())
     {
         ////LOGP("Dropping redundant address from [" << authority() << "]");
-        return;
+        return true;
     }
 
     const auto filtered = filter(message->addresses);
@@ -137,6 +137,8 @@ void protocol_address_in_31402::handle_receive_address(const code& ec,
     // This allows previously-rejected addresses.
     save(filtered,
         BIND4(handle_save_address, _1, _2, end, start));
+
+    return true;
 }
 
 void protocol_address_in_31402::handle_save_address(const code& ec,

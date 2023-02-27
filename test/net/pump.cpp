@@ -49,11 +49,12 @@ BOOST_AUTO_TEST_CASE(pump__subscribe__stop__expected_code)
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, messages::ping::cptr ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::ping::cptr& ping) NOEXCEPT
         {
             // Stop notification has nullptr message and specified code.
             result |= is_null(ping);
             promise.set_value(ec);
+            return true;
         });
     });
 
@@ -80,10 +81,11 @@ BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, messages::ping::cptr ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::ping::cptr& ping) NOEXCEPT
         {
             result |= is_null(ping);
             promise.set_value(ec);
+            return true;
         });
     });
 
@@ -123,10 +125,11 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notificatio
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, messages::ping::cptr ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::ping::cptr& ping) NOEXCEPT
         {
             result |= is_null(ping);
             promise.set_value(ec);
+            return true;
         });
     });
     
@@ -165,18 +168,19 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_nonced_ping__expected_notification)
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, messages::ping::cptr ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::ping::cptr& ping) NOEXCEPT
         {
             // Handle stop notification (unavoidable test condition).
             if (!ping)
             {
                 promise.set_value(ec);
-                return;
+                return true;
             }
 
             // Handle message notification.
             result |= (ping->nonce == expected_nonce);
             result |= (ec == error::success);
+            return true;
         });
     });
 

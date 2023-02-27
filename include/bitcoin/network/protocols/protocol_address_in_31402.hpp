@@ -49,7 +49,7 @@ protected:
     virtual messages::address::cptr filter(
         const messages::address_items& message) const NOEXCEPT;
 
-    virtual void handle_receive_address(const code& ec,
+    virtual bool handle_receive_address(const code& ec,
         const messages::address::cptr& message) NOEXCEPT;
     virtual void handle_save_address(const code& ec,
         size_t accepted, size_t filtered, size_t start) NOEXCEPT;
