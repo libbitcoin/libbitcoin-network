@@ -322,7 +322,12 @@ void session::do_handle_channel_stopped(const code& ec,
 // Subscriptions.
 // ----------------------------------------------------------------------------
 
-// private
+void session::defer(result_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(network_.stranded(), "strand");
+    defer(settings().retry_timeout(), std::move(handler));
+}
+
 void session::defer(const steady_clock::duration& timeout,
     result_handler&& handler) NOEXCEPT
 {
@@ -342,18 +347,6 @@ void session::defer(const steady_clock::duration& timeout,
 
     stop_subscriber_.subscribe(
         BIND3(handle_defer, _1, key, timer), key);
-}
-
-void session::defer(result_handler&& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(network_.stranded(), "strand");
-    defer(settings().retry_timeout(), std::move(handler));
-}
-
-void session::defer_address_starvation(result_handler&& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(network_.stranded(), "strand");
-    defer(settings().connect_timeout(), std::move(handler));
 }
 
 void session::handle_timer(const code& ec, object_key key,
