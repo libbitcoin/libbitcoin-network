@@ -97,7 +97,8 @@ std::string heading::get_command(const data_chunk& payload) NOEXCEPT
 
 // static
 heading heading::factory(uint32_t magic, const std::string& command,
-    const data_slice& payload) NOEXCEPT
+    const data_slice& payload
+/*, const std::optional<uint32_t>& checksum*/) NOEXCEPT
 {
     // Payload is constrained to uint32_t by protocol.
     const auto size = payload.size();
@@ -109,7 +110,9 @@ heading heading::factory(uint32_t magic, const std::string& command,
         magic,
         command,
         possible_narrow_cast<uint32_t>(size),
-        network_checksum(payload)
+
+        // TODO: use checksum if provided.
+        network_checksum(network_hash(payload))
     };
 }
 
@@ -182,11 +185,6 @@ identifier heading::id() const NOEXCEPT
 BC_POP_WARNING()
 
 #undef COMMAND_ID
-
-bool heading::verify_checksum(const data_slice& body) const NOEXCEPT
-{
-    return network_checksum(body) == checksum;
-}
 
 } // namespace messages
 } // namespace network

@@ -29,14 +29,25 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
+constexpr auto empty_hash = system::sha256::double_hash(
+    system::sha256::ablocks_t<zero>{});
+constexpr auto empty_checksum = system::from_little_endian<uint32_t>(
+    empty_hash);
+
 /// Deserialize message object from the wire protocol encoding.
 template <typename Message>
 typename Message::cptr deserialize(const system::data_chunk& data,
-    uint32_t version) NOEXCEPT
+    uint32_t version /*, const system::hash_cptr& hash*/) NOEXCEPT
 {
     using namespace system;
     read::bytes::copy reader(data);
-    const auto message = to_shared(Message::deserialize(version, reader));
+
+    // TODO: each Message type determines support for hash/checksum caching.
+    // TODO: hash may have been computed for checksum validation, but if not
+    // TODO: data is provided for computation on the message. Checksum is cheap
+    // TODO: drivation from the hash, if there is no need to retain the hash.
+    const auto message = to_shared(Message::deserialize(version, reader /*, data, hash*/));
+
     return reader ? message : nullptr;
 }
 
@@ -54,15 +65,33 @@ system::chunk_ptr serialize(const Message& instance, uint32_t magic,
     write::bytes::copy body_writer(body);
     instance.serialize(version, body_writer);
 
+    // TODO: each Message type determines support for hash/checksum caching.
+    // TODO: the value must be optional such as via std::optional<uint32_t>.
+    // TODO: if hash is presered, checksum may be a computed property.
+    ////const std::optional<uint32_t> checksum = instance.checksum();
+
     write::bytes::copy head_writer(*buffer);
-    heading::factory(magic, Message::command, body).serialize(head_writer);
+    heading::factory(magic, Message::command, body /*, checksum*/)
+        .serialize(head_writer);
 
     BC_ASSERT(body_writer && head_writer);
     return buffer;
 }
 
-/// Compute an internal representation of the message checksum.
-BCT_API uint32_t network_checksum(const system::data_slice& data) NOEXCEPT;
+inline uint32_t network_checksum(
+    const system::hash_digest& hash) NOEXCEPT
+{
+    // TODO: verify this is just a cast.
+    return system::from_little_endian<uint32_t>(hash);
+}
+
+inline system::hash_digest network_hash(
+    const system::data_slice& data) NOEXCEPT
+{
+    // TODO: const should be baked into all hash(empty).
+    return data.empty() ? empty_hash :
+        system::bitcoin_hash(data.size(), data.begin());
+}
 
 } // namespace messages
 } // namespace network

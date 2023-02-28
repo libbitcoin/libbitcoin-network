@@ -127,7 +127,8 @@ protected:
 
     /// Notify subscribers of a new message (requires strand).
     virtual code notify(messages::identifier id, uint32_t version,
-        const system::data_chunk& source) NOEXCEPT;
+        const system::data_chunk& source,
+        const system::hash_cptr& hash) NOEXCEPT;
 
     /// Subscribe to stop notification (requires strand).
     void subscribe_stop(result_handler&& handler) NOEXCEPT;

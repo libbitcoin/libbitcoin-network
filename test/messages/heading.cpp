@@ -24,7 +24,6 @@ using namespace bc::network::messages;
 
 // factory
 // maximum_payload
-// verify_checksum
 // deserialize
 // serialize
 

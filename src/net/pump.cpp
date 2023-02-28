@@ -31,7 +31,7 @@ using namespace system;
 #define MAKE_SUBSCRIBER(name) SUBSCRIBER(name)(strand)
 #define STOP_SUBSCRIBER(name) SUBSCRIBER(name).stop_default(ec)
 #define CASE_NOTIFY(name) case messages::identifier::name: \
-    return do_notify<messages::name>(SUBSCRIBER(name), version, data)
+    return do_notify<messages::name>(SUBSCRIBER(name), version, data /*, hash*/)
 
 pump::pump(asio::strand& strand) NOEXCEPT
   : MAKE_SUBSCRIBER(address),

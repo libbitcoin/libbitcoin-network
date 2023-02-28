@@ -98,7 +98,7 @@ public:
     /// Relay a message instance to each subscriber of the type.
     /// Returns error code if fails to deserialize, otherwise success.
     virtual code notify(messages::identifier id, uint32_t version,
-        const system::data_chunk& data) NOEXCEPT;
+        const system::data_chunk& data /*, const system::hash_cptr& hash*/) NOEXCEPT;
 
     /// Stop all subscribers, prevents subsequent subscription (idempotent).
     /// The subscriber is stopped regardless of the error code, however by
@@ -109,15 +109,17 @@ private:
     // Deserialize a stream into a message instance and notify subscribers.
     template <typename Message, typename Subscriber>
     code do_notify(Subscriber& subscriber, uint32_t version,
-        const system::data_chunk& data) NOEXCEPT
+        const system::data_chunk& data /*, const system::hash_cptr& hash*/) NOEXCEPT
     {
         // Avoid deserialization if there are no subscribers for the type.
         if (!is_zero(subscriber.size()))
         {
+            // TODO: attach the hash to the message as applicable.
             // TODO: account for witness parameter in active() structure.
-            // Subscribers are notified only with stop code or error::success.
-            const auto message = messages::deserialize<Message>(data, version);
+            const auto message = messages::deserialize<Message>(data, version /*, hash*/);
             if (!message) return error::invalid_message;
+
+            // Subscribers are notified only with stop code or error::success.
             subscriber.notify(error::success, message);
         }
 

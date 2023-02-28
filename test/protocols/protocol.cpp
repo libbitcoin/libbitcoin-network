@@ -59,7 +59,7 @@ public:
 
     // Override protected base to notify subscribers.
     code notify(messages::identifier, uint32_t,
-        const system::data_chunk&) NOEXCEPT override
+        const system::data_chunk&, const system::hash_cptr&) NOEXCEPT override
     {
         return error::success;
         ////return channel::notify(id, version, source);

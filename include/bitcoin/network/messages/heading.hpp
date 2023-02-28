@@ -44,7 +44,8 @@ struct BCT_API heading
 
     static std::string get_command(const system::data_chunk& payload) NOEXCEPT;
     static heading factory(uint32_t magic, const std::string& command,
-        const system::data_slice& payload) NOEXCEPT;
+        const system::data_slice& payload
+    /*, const std::optional<uint32_t>& checksum*/) NOEXCEPT;
 
     // Heading does not use version.
     static constexpr size_t size() NOEXCEPT
@@ -59,7 +60,6 @@ struct BCT_API heading
     void serialize(system::writer& sink) const NOEXCEPT;
 
     identifier id() const NOEXCEPT;
-    bool verify_checksum(const system::data_slice& body) const NOEXCEPT;
 
     uint32_t magic;
     std::string command;
