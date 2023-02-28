@@ -111,11 +111,16 @@ private:
     code do_notify(Subscriber& subscriber, uint32_t version,
         const system::data_chunk& data) NOEXCEPT
     {
-        // TODO: account for witness parameter in active() structure.
-        // Subscribers are notified only with stop code or error::success.
-        const auto message = messages::deserialize<Message>(data, version);
-        if (!message) return error::invalid_message;
-        subscriber.notify(error::success, message);
+        // Avoid deserialization if there are no subscribers for the type.
+        if (!is_zero(subscriber.size()))
+        {
+            // TODO: account for witness parameter in active() structure.
+            // Subscribers are notified only with stop code or error::success.
+            const auto message = messages::deserialize<Message>(data, version);
+            if (!message) return error::invalid_message;
+            subscriber.notify(error::success, message);
+        }
+
         return error::success;
     }
 
