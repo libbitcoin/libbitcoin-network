@@ -619,8 +619,8 @@ void p2p::uncount_channel(const channel::ptr& channel) NOEXCEPT
 
     hosts_.unreserve(channel->authority());
 
-    broadcaster_.notify_one(channel->identifier(), error::channel_stopped,
-        {}, {});
+    broadcaster_.notify_one(channel->identifier(),
+        error::channel_stopped, {}, {});
 
     if (channel->inbound() && is_zero(inbound_channel_count_.load()))
     {
