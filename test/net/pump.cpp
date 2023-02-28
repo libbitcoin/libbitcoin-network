@@ -90,14 +90,13 @@ BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
     });
 
     // Invalid object deserialization will not cause a notification.
-    system::data_chunk empty;
-    system::read::bytes::copy reader(empty);
+    system::data_chunk empty{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         constexpr auto nonced_ping_version = messages::level::bip31;
 
         // This line throws and is caught internal to the low level stream.
-        const auto ec = instance.notify(messages::identifier::ping, nonced_ping_version, reader);
+        const auto ec = instance.notify(messages::identifier::ping, nonced_ping_version, empty);
         result |= (ec == error::invalid_message);
     });
 
@@ -109,7 +108,6 @@ BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
     pool.stop();
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
-    BOOST_REQUIRE(!reader);
     BOOST_REQUIRE(result);
 }
 
@@ -134,12 +132,11 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notificatio
     });
     
     // Invalid object version will not cause a notification.
-    const auto ping = system::to_little_endian<uint64_t>(42);
-    system::read::bytes::copy reader(ping);
+    const auto ping = system::to_little_endian_size(42, sizeof(uint64_t));
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         constexpr uint32_t invalid_ping_version = 0;
-        const auto ec = instance.notify(messages::identifier::ping, invalid_ping_version, reader);
+        const auto ec = instance.notify(messages::identifier::ping, invalid_ping_version, ping);
         result |= (ec == error::invalid_message);
     });
 
@@ -151,7 +148,6 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notificatio
     pool.stop();
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
-    BOOST_REQUIRE(!reader);
     BOOST_REQUIRE(result);
 }
 
@@ -184,12 +180,11 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_nonced_ping__expected_notification)
         });
     });
 
-    const auto ping = system::to_little_endian<uint64_t>(expected_nonce);
-    system::read::bytes::copy reader(ping);
+    const auto ping = system::to_little_endian_size(expected_nonce, sizeof(uint64_t));
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         constexpr auto nonced_ping_version = messages::level::bip31;
-        const auto ec = instance.notify(messages::identifier::ping, nonced_ping_version, reader);
+        const auto ec = instance.notify(messages::identifier::ping, nonced_ping_version, ping);
         result |= (ec == error::success);
     });
 
@@ -201,7 +196,6 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_nonced_ping__expected_notification)
     pool.stop();
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
-    BOOST_REQUIRE(reader);
     BOOST_REQUIRE(result);
 }
 

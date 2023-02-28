@@ -119,11 +119,15 @@ protected:
     virtual uint32_t protocol_magic() const NOEXCEPT = 0;
     virtual bool validate_checksum() const NOEXCEPT = 0;
     virtual uint32_t version() const NOEXCEPT = 0;
+
+    /// Events provided by the proxy.
+
+    /// A message has been received from the peer.
     virtual void signal_activity() NOEXCEPT = 0;
 
     /// Notify subscribers of a new message (requires strand).
     virtual code notify(messages::identifier id, uint32_t version,
-        system::reader& source) NOEXCEPT;
+        const system::data_chunk& source) NOEXCEPT;
 
     /// Subscribe to stop notification (requires strand).
     void subscribe_stop(result_handler&& handler) NOEXCEPT;

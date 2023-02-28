@@ -157,7 +157,7 @@ void proxy::do_subscribe_stop(const result_handler& handler,
 // ----------------------------------------------------------------------------
 
 code proxy::notify(identifier id, uint32_t version,
-    system::reader& source) NOEXCEPT
+    const data_chunk& source) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return pump_subscriber_.notify(id, version, source);
@@ -282,15 +282,11 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
         return;
     }
 
-    // Resizable payload buffer precludes reuse of the payload reader.
-    system::read::bytes::copy payload_reader(payload_buffer_);
-
     // Notify subscribers of the new message.
-    const auto code = notify(head->id(), version(), payload_reader);
+    const auto code = notify(head->id(), version(), payload_buffer_);
 
     if (code)
     {
-        // /nodes.mom.market:0.2/ sends unversioned sendaddrv2.
         LOGR("Invalid " << head->command << " payload from [" << authority()
             << "] (" << encode_base16({ payload_buffer_.begin(),
                 std::next(payload_buffer_.begin(), std::min(payload_size,

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_MESSAGE_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_MESSAGE_HPP
 
+#include <iterator>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
@@ -27,13 +28,16 @@
 namespace libbitcoin {
 namespace network {
 namespace messages {
-    
-/// Serialize message object to the wire protocol encoding.
+
+/// Deserialize message object from the wire protocol encoding.
 template <typename Message>
-void serialize(Message& instance, system::writer& sink,
+typename Message::cptr deserialize(const system::data_chunk& data,
     uint32_t version) NOEXCEPT
 {
-    instance.serialize(version, sink);
+    using namespace system;
+    read::bytes::copy reader(data);
+    const auto message = to_shared(Message::deserialize(version, reader));
+    return reader ? message : nullptr;
 }
 
 /// Serialize message object to the wire protocol encoding.
@@ -42,25 +46,19 @@ system::chunk_ptr serialize(const Message& instance, uint32_t magic,
     uint32_t version) NOEXCEPT
 {
     using namespace system;
-    const auto buffer = std::make_shared<data_chunk>(heading::size() +
-        instance.size(version));
+    const auto buffer_size = heading::size() + instance.size(version);
+    const auto buffer = std::make_shared<data_chunk>(buffer_size);
+    const auto body_start = std::next(buffer->begin(), heading::size());
+    data_slab body(body_start, buffer->end());
 
-    data_slab body(std::next(buffer->begin(), heading::size()), buffer->end());
     write::bytes::copy body_writer(body);
-    serialize(instance, body_writer, version);
+    instance.serialize(version, body_writer);
 
     write::bytes::copy head_writer(*buffer);
     heading::factory(magic, Message::command, body).serialize(head_writer);
 
+    BC_ASSERT(body_writer && head_writer);
     return buffer;
-}
-
-/// Deserialize message object from the wire protocol encoding.
-template <typename Message>
-typename Message::cptr deserialize(system::reader& source,
-    uint32_t version) NOEXCEPT
-{
-    return system::to_shared(Message::deserialize(version, source));
 }
 
 /// Compute an internal representation of the message checksum.

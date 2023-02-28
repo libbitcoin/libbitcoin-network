@@ -58,7 +58,8 @@ public:
     }
 
     // Override protected base to notify subscribers.
-    code notify(messages::identifier, uint32_t, system::reader&) NOEXCEPT override
+    code notify(messages::identifier, uint32_t,
+        const system::data_chunk&) NOEXCEPT override
     {
         return error::success;
         ////return channel::notify(id, version, source);
