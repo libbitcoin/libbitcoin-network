@@ -359,11 +359,9 @@ void proxy::write() NOEXCEPT
         return;
 
     auto& job = queue_.front();
-
-    // chunk_ptr is copied into std::bind closure to keep data alive. 
     socket_->write(*job.first,
         std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, job.first, std::move(job.second)));
+            shared_from_this(), _1, _2, job.first, job.second));
 }
 
 void proxy::handle_write(const code& ec, size_t,
