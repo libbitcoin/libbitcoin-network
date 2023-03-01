@@ -97,8 +97,7 @@ std::string heading::get_command(const data_chunk& payload) NOEXCEPT
 
 // static
 heading heading::factory(uint32_t magic, const std::string& command,
-    const data_slice& payload
-/*, const std::optional<uint32_t>& checksum*/) NOEXCEPT
+    const data_slice& payload, const checksum_t& check) NOEXCEPT
 {
     // Payload is constrained to uint32_t by protocol.
     const auto size = payload.size();
@@ -110,9 +109,7 @@ heading heading::factory(uint32_t magic, const std::string& command,
         magic,
         command,
         possible_narrow_cast<uint32_t>(size),
-
-        // TODO: use checksum if provided.
-        network_checksum(network_hash(payload))
+        check ? check.value() : network_checksum(network_hash(payload))
     };
 }
 

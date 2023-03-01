@@ -69,10 +69,10 @@ system::chunk_ptr serialize(const Message& instance, uint32_t magic,
     // TODO: the value must be optional such as via std::optional<uint32_t>.
     // TODO: if hash is presered, checksum may be a computed property.
     ////const std::optional<uint32_t> checksum = instance.checksum();
+    const heading::checksum_t checksum{};
 
     write::bytes::copy head_writer(*buffer);
-    heading::factory(magic, Message::command, body /*, checksum*/)
-        .serialize(head_writer);
+    heading::factory(magic, Message::command, body, checksum).serialize(head_writer);
 
     BC_ASSERT(body_writer && head_writer);
     return buffer;
