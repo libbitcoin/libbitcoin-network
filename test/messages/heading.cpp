@@ -286,12 +286,12 @@ BOOST_AUTO_TEST_CASE(heading__factory1__empty__expected)
     BOOST_REQUIRE(instance.id() == identifier::ping);
 }
 
-BOOST_AUTO_TEST_CASE(heading__factory2__default_checksum__expected)
+BOOST_AUTO_TEST_CASE(heading__factory2__default_hash__expected)
 {
     constexpr uint32_t magic = 42;
     constexpr auto command = "pong";
     const system::data_chunk payload{};
-    const auto instance = heading::factory(magic, command, payload, heading::checksum_t{});
+    const auto instance = heading::factory(magic, command, payload, {});
 
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
@@ -299,17 +299,17 @@ BOOST_AUTO_TEST_CASE(heading__factory2__default_checksum__expected)
     BOOST_REQUIRE(instance.id() == identifier::pong);
 }
 
-BOOST_AUTO_TEST_CASE(heading__factory2__non_default_checksum__expected)
+BOOST_AUTO_TEST_CASE(heading__factory2__non_default_hash__expected)
 {
     constexpr uint32_t magic = 42;
-    constexpr uint32_t checksum = 24;
     constexpr auto command = "pong";
     const system::data_chunk payload{};
-    const auto instance = heading::factory(magic, command, payload, checksum);
+    const auto hash = system::to_shared(messages::empty_hash);
+    const auto instance = heading::factory(magic, command, payload, hash);
 
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
-    BOOST_REQUIRE_EQUAL(instance.checksum, checksum);
+    BOOST_REQUIRE_EQUAL(instance.checksum, messages::empty_checksum);
     BOOST_REQUIRE(instance.id() == identifier::pong);
 }
 

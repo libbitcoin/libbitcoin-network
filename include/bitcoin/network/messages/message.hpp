@@ -21,6 +21,7 @@
 
 #include <iterator>
 #include <memory>
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/heading.hpp>
@@ -33,50 +34,6 @@ constexpr auto empty_hash = system::sha256::double_hash(
     system::sha256::ablocks_t<zero>{});
 constexpr auto empty_checksum = system::from_little_endian<uint32_t>(
     empty_hash);
-
-/// Deserialize message object from the wire protocol encoding.
-template <typename Message>
-typename Message::cptr deserialize(const system::data_chunk& data,
-    uint32_t version /*, const system::hash_cptr& hash*/) NOEXCEPT
-{
-    using namespace system;
-    read::bytes::copy reader(data);
-
-    // TODO: each Message type determines support for hash/checksum caching.
-    // TODO: hash may have been computed for checksum validation, but if not
-    // TODO: data is provided for computation on the message. Checksum is cheap
-    // TODO: drivation from the hash, if there is no need to retain the hash.
-    const auto message = to_shared(Message::deserialize(version, reader /*, data, hash*/));
-
-    return reader ? message : nullptr;
-}
-
-/// Serialize message object to the wire protocol encoding.
-template <typename Message>
-system::chunk_ptr serialize(const Message& instance, uint32_t magic,
-    uint32_t version) NOEXCEPT
-{
-    using namespace system;
-    const auto buffer_size = heading::size() + instance.size(version);
-    const auto buffer = std::make_shared<data_chunk>(buffer_size);
-    const auto body_start = std::next(buffer->begin(), heading::size());
-    data_slab body(body_start, buffer->end());
-
-    write::bytes::copy body_writer(body);
-    instance.serialize(version, body_writer);
-
-    // TODO: each Message type determines support for hash/checksum caching.
-    // TODO: the value must be optional such as via std::optional<uint32_t>.
-    // TODO: if hash is presered, checksum may be a computed property.
-    ////const std::optional<uint32_t> checksum = instance.checksum();
-    const heading::checksum_t checksum{};
-
-    write::bytes::copy head_writer(*buffer);
-    heading::factory(magic, Message::command, body, checksum).serialize(head_writer);
-
-    BC_ASSERT(body_writer && head_writer);
-    return buffer;
-}
 
 inline uint32_t network_checksum(
     const system::hash_digest& hash) NOEXCEPT
@@ -91,6 +48,60 @@ inline system::hash_digest network_hash(
     // TODO: const should be baked into all hash(empty).
     return data.empty() ? empty_hash :
         system::bitcoin_hash(data.size(), data.begin());
+}
+
+/// Deserialize message object from the wire protocol encoding.
+template <typename Message>
+typename Message::cptr deserialize(const system::data_chunk& data,
+    uint32_t version, const system::hash_cptr&) NOEXCEPT
+{
+    using namespace system;
+    read::bytes::copy reader(data);
+
+    auto message = Message::deserialize(version, reader);
+
+    // TODO: 
+    // Transaction is the only object that can use the wire hash.
+    // Block can use the wire data to compute transaction and header hashes.
+    // Header is fixed size and txs can be iterated using tx[*].size().
+    // Set .hash property on header/tx and .header_hash/.tx_hashes on block.
+    // These can be set here using a constexpr on Message type, passing
+    // Message::deserialize(version, reader, data) to isolate parse. 
+    // Transaction is the only message that could benefit from checksum relay,
+    // however as txs relay hash there is no need for a checksum property.
+    // The hash parameter is only available when hash has been generated just
+    // to validate the incoming checksum, which is optional. This facilitates
+    // block merkle tree validation, header identity, and each tx identity.
+
+    return reader ? to_shared(std::move(message)) : nullptr;
+}
+
+/// Serialize message object to the wire protocol encoding.
+template <typename Message>
+system::chunk_ptr serialize(const Message& message, uint32_t magic,
+    uint32_t version) NOEXCEPT
+{
+    using namespace system;
+    const auto buffer_size = heading::size() + message.size(version);
+    const auto buffer = std::make_shared<data_chunk>(buffer_size);
+    const auto body_start = std::next(buffer->begin(), heading::size());
+    const data_slab body(body_start, buffer->end());
+
+    write::bytes::copy body_writer(body);
+    message.serialize(version, body_writer);
+
+    // TODO:
+    // Obtain hash ptr from tx message (only), via constexpr isolation.
+    // heading::factory otherwise generates the hash from body. The tx hash
+    // cache can be populated from store or by transaction relay.
+
+    const auto head = heading::factory(magic, Message::command, body, {});
+
+    write::bytes::copy head_writer(*buffer);
+    head.serialize(head_writer);
+
+    BC_ASSERT(body_writer && head_writer);
+    return buffer;
 }
 
 } // namespace messages

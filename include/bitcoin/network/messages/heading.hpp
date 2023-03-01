@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_HEADING_HPP
 
 #include <memory>
-#include <optional>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
@@ -32,7 +31,6 @@ namespace messages {
 
 struct BCT_API heading
 {
-    typedef std::optional<uint32_t> checksum_t;
     typedef std::shared_ptr<const heading> cptr;
 
     static constexpr size_t command_size = heading_command_size;
@@ -46,7 +44,8 @@ struct BCT_API heading
 
     static std::string get_command(const system::data_chunk& payload) NOEXCEPT;
     static heading factory(uint32_t magic, const std::string& command,
-        const system::data_slice& payload, const checksum_t& check={}) NOEXCEPT;
+        const system::data_slice& payload,
+        const system::hash_cptr& hash={}) NOEXCEPT;
 
     // Heading does not use version.
     static constexpr size_t size() NOEXCEPT

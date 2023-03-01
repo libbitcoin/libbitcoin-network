@@ -157,10 +157,10 @@ void proxy::do_subscribe_stop(const result_handler& handler,
 // ----------------------------------------------------------------------------
 
 code proxy::notify(identifier id, uint32_t version,
-    const data_chunk& source, const hash_cptr&) NOEXCEPT
+    const data_chunk& source, const hash_cptr& hash) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return pump_subscriber_.notify(id, version, source /*, hash*/);
+    return pump_subscriber_.notify(id, version, source, hash);
 }
 
 void proxy::read_heading() NOEXCEPT
