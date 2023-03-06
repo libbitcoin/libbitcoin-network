@@ -50,6 +50,7 @@ public:
     virtual ~proxy() NOEXCEPT;
 
     /// Serialize and write a message to the peer (requires strand).
+    /// Completion handler is always invoked on the channel strand.
     template <class Message>
     void send(const Message& message, result_handler&& complete) NOEXCEPT
     {
@@ -72,6 +73,7 @@ public:
     }
 
     /// Subscribe to messages from peer (requires strand).
+    /// Event handler is always invoked on the channel strand.
     template <class Message, typename Handler = pump::handler<Message>>
         void subscribe(Handler&& handler) NOEXCEPT
     {
@@ -92,6 +94,7 @@ public:
     virtual void stop(const code& ec) NOEXCEPT;
 
     /// Subscribe to stop notification with completion handler.
+    /// Completion and event handlers are always invoked on the channel strand.
     void subscribe_stop(result_handler&& handler,
         result_handler&& complete) NOEXCEPT;
 
