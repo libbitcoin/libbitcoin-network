@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_NET_PUMP_HPP
-#define LIBBITCOIN_NETWORK_NET_PUMP_HPP
+#ifndef LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_HPP
+#define LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_HPP
 
 #include <functional>
 #include <utility>
@@ -35,12 +35,12 @@ namespace network {
 #define DEFINE_SUBSCRIBER(name) \
     using SUBSCRIBER_TYPE(name) = unsubscriber<const messages::name::cptr&>
 #define SUBSCRIBER_OVERLOAD(name) \
-    void do_subscribe(pump::handler<messages::name>&& handler) NOEXCEPT \
+    void do_subscribe(distributor::handler<messages::name>&& handler) NOEXCEPT \
     { SUBSCRIBER(name).subscribe(std::move(handler)); }
 
 /// Not thread safe.
 /// All handlers are posted to the strand.
-class BCT_API pump
+class BCT_API distributor
 {
 public:
     /// Helper for external declarations.
@@ -48,7 +48,7 @@ public:
     using handler = std::function<bool(const code&,
         const typename Message::cptr&)>;
 
-    DELETE_COPY_MOVE_DESTRUCT(pump);
+    DELETE_COPY_MOVE_DESTRUCT(distributor);
 
     DEFINE_SUBSCRIBER(address);
     DEFINE_SUBSCRIBER(alert);
@@ -85,7 +85,7 @@ public:
     DEFINE_SUBSCRIBER(version_acknowledge);
 
     /// Create an instance of this class.
-    pump(asio::strand& strand) NOEXCEPT;
+    distributor(asio::strand& strand) NOEXCEPT;
 
     /// Subscription handlers are retained in the queue until stop.
     /// No invocation occurs if the subscriber is stopped at time of subscribe.

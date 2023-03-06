@@ -91,9 +91,9 @@ src_libbitcoin_network_la_SOURCES = \
     src/net/channel.cpp \
     src/net/connector.cpp \
     src/net/deadline.cpp \
+    src/net/distributor.cpp \
     src/net/hosts.cpp \
     src/net/proxy.cpp \
-    src/net/pump.cpp \
     src/net/socket.cpp \
     src/protocols/protocol.cpp \
     src/protocols/protocol_address_in_31402.cpp \
@@ -325,10 +325,10 @@ include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/channel.hpp \
     include/bitcoin/network/net/connector.hpp \
     include/bitcoin/network/net/deadline.hpp \
+    include/bitcoin/network/net/distributor.hpp \
     include/bitcoin/network/net/hosts.hpp \
     include/bitcoin/network/net/net.hpp \
     include/bitcoin/network/net/proxy.hpp \
-    include/bitcoin/network/net/pump.hpp \
     include/bitcoin/network/net/socket.hpp
 
 include_bitcoin_network_protocolsdir = ${includedir}/bitcoin/network/protocols

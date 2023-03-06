@@ -52,7 +52,7 @@ static constexpr uint32_t https_magic = 0x02010316;
 proxy::proxy(const socket::ptr& socket) NOEXCEPT
   : socket_(socket),
     stop_subscriber_(socket->strand()),
-    pump_subscriber_(socket->strand()),
+    distributor_(socket->strand()),
     reporter(socket->log())
 {
 }
@@ -117,7 +117,7 @@ void proxy::do_stop(const code& ec) NOEXCEPT
 
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
-    pump_subscriber_.stop(ec);
+    distributor_.stop(ec);
 
     // Post stop handlers to strand and clear/stop accepting subscriptions.
     // The code provides information on the reason that the channel stopped.
@@ -163,7 +163,7 @@ code proxy::notify(identifier id, uint32_t version,
 
     // TODO: build witness into feature w/magic and negotiated version.
     // TODO: if self and peer services show witness, set feature true.
-    return pump_subscriber_.notify(id, version, source);
+    return distributor_.notify(id, version, source);
 }
 
 void proxy::read_heading() NOEXCEPT

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/net/pump.hpp>
+#include <bitcoin/network/net/distributor.hpp>
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -33,7 +33,7 @@ using namespace system;
 #define CASE_NOTIFY(name) case messages::identifier::name: \
     return do_notify<messages::name>(SUBSCRIBER(name), version, data)
 
-pump::pump(asio::strand& strand) NOEXCEPT
+distributor::distributor(asio::strand& strand) NOEXCEPT
   : MAKE_SUBSCRIBER(address),
     MAKE_SUBSCRIBER(alert),
     MAKE_SUBSCRIBER(block),
@@ -70,7 +70,7 @@ pump::pump(asio::strand& strand) NOEXCEPT
 {
 }
 
-code pump::notify(messages::identifier id, uint32_t version,
+code distributor::notify(messages::identifier id, uint32_t version,
     const data_chunk& data) NOEXCEPT
 {
     switch (id)
@@ -114,7 +114,7 @@ code pump::notify(messages::identifier id, uint32_t version,
     }
 }
 
-void pump::stop(const code& ec) NOEXCEPT
+void distributor::stop(const code& ec) NOEXCEPT
 {
     STOP_SUBSCRIBER(address);
     STOP_SUBSCRIBER(address);

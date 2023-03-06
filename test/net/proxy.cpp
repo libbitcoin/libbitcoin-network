@@ -25,7 +25,7 @@ class mock_proxy
 {
 public:
     // Call must be stranded.
-    template <class Message, typename Handler = pump::handler<Message>>
+    template <class Message, typename Handler = distributor::handler<Message>>
     void subscribe_message(Handler&& handler) NOEXCEPT
     {
         proxy::subscribe<Message>(std::forward<Handler>(handler));

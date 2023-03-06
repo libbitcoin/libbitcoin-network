@@ -250,7 +250,7 @@ private:
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
-        // TODO: move serialization into broadcaster (like pump).
+        // TODO: move serialization into broadcaster (like distributor).
         // TODO: Serialization may not be unique per channel (by version).
         // TODO: Specialize this template for messages unique by version.
         // Serialization is here to preclude serialization in each channel.

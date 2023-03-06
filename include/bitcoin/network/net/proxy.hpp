@@ -28,7 +28,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/net/pump.hpp>
+#include <bitcoin/network/net/distributor.hpp>
 #include <bitcoin/network/net/socket.hpp>
 
 namespace libbitcoin {
@@ -74,11 +74,11 @@ public:
 
     /// Subscribe to messages from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
-    template <class Message, typename Handler = pump::handler<Message>>
+    template <class Message, typename Handler = distributor::handler<Message>>
         void subscribe(Handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        pump_subscriber_.subscribe(std::forward<Handler>(handler));
+        distributor_.subscribe(std::forward<Handler>(handler));
     }
 
     /// Pause reading from the socket (requires strand).
@@ -178,7 +178,7 @@ private:
     system::data_array<messages::heading::size()> heading_buffer_{};
     system::read::bytes::copy heading_reader_{ heading_buffer_ };
     stop_subscriber stop_subscriber_;
-    pump pump_subscriber_;
+    distributor distributor_;
 };
 
 } // namespace network

@@ -18,13 +18,13 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(pump_tests)
+BOOST_AUTO_TEST_SUITE(distributor_tests)
 
-BOOST_AUTO_TEST_CASE(pump__construct__stop__stops)
+BOOST_AUTO_TEST_CASE(distributor__construct__stop__stops)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    pump instance(strand);
+    distributor instance(strand);
 
     std::promise<bool> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -38,11 +38,11 @@ BOOST_AUTO_TEST_CASE(pump__construct__stop__stops)
     BOOST_REQUIRE(promise.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(pump__subscribe__stop__expected_code)
+BOOST_AUTO_TEST_CASE(distributor__subscribe__stop__expected_code)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    pump instance(strand);
+    distributor instance(strand);
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
@@ -69,11 +69,11 @@ BOOST_AUTO_TEST_CASE(pump__subscribe__stop__expected_code)
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
+BOOST_AUTO_TEST_CASE(distributor__notify__invalid_message__no_notification)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    pump instance(strand);
+    distributor instance(strand);
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
@@ -111,11 +111,11 @@ BOOST_AUTO_TEST_CASE(pump__notify__invalid_message__no_notification)
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notification)
+BOOST_AUTO_TEST_CASE(distributor__notify__valid_message_invalid_version__no_notification)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    pump instance(strand);
+    distributor instance(strand);
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
@@ -151,11 +151,11 @@ BOOST_AUTO_TEST_CASE(pump__notify__valid_message_invalid_version__no_notificatio
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(pump__notify__valid_nonced_ping__expected_notification)
+BOOST_AUTO_TEST_CASE(distributor__notify__valid_nonced_ping__expected_notification)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    pump instance(strand);
+    distributor instance(strand);
     constexpr uint64_t expected_nonce = 42;
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;

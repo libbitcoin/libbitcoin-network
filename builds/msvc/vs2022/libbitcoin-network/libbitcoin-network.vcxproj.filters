@@ -237,13 +237,13 @@
     <ClCompile Include="..\..\..\..\src\net\deadline.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\distributor.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\hosts.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\net\pump.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket.cpp">
@@ -539,6 +539,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor.hpp">
+      <Filter>include\bitcoin\network\net</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\hosts.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
@@ -546,9 +549,6 @@
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\proxy.hpp">
-      <Filter>include\bitcoin\network\net</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\pump.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp">
