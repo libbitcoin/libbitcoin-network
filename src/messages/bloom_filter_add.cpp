@@ -55,9 +55,9 @@ bloom_filter_add bloom_filter_add::deserialize(uint32_t version,
 }
 
 void bloom_filter_add::serialize(uint32_t version,
-    const system::data_slab& data) const NOEXCEPT
+    const system::data_slab& data_) const NOEXCEPT
 {
-    write::bytes::copy writer(data);
+    write::bytes::copy writer(data_);
     serialize(version, writer);
 }
 
