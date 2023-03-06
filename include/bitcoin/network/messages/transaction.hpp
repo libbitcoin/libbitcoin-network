@@ -28,6 +28,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
+// TODO: build witness into feature w/magic and negotiated version.
 struct BCT_API transaction
 {
     typedef std::shared_ptr<const transaction> cptr;
