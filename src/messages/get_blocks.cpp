@@ -49,6 +49,15 @@ constexpr size_t get_blocks::locator_size(size_t top) NOEXCEPT
 }
 
 // static
+typename get_blocks::cptr get_blocks::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 // This algorithm is a p2p best practice, not a consensus or p2p rule.
 get_blocks::indexes get_blocks::locator_heights(size_t top) NOEXCEPT
 {

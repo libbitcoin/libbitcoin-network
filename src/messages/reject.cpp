@@ -76,6 +76,15 @@ reject::reason_code reject::byte_to_reason(uint8_t byte) NOEXCEPT
 }
 
 // static
+typename reject::cptr reject::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 reject reject::deserialize(uint32_t, reader& source) NOEXCEPT
 {
     auto message = source.read_string(max_reject_message);

@@ -40,6 +40,15 @@ const uint32_t inventory::version_minimum = level::minimum_protocol;
 const uint32_t inventory::version_maximum = level::maximum_protocol;
 
 // static
+typename inventory::cptr inventory::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 inventory inventory::factory(hashes&& hashes, type_id type) NOEXCEPT
 {
     inventory_items items{};

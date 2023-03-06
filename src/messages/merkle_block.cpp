@@ -34,6 +34,16 @@ const identifier merkle_block::id = identifier::merkle_block;
 const uint32_t merkle_block::version_minimum = level::bip37;
 const uint32_t merkle_block::version_maximum = level::maximum_protocol;
 
+// static
+typename merkle_block::cptr merkle_block::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 merkle_block merkle_block::deserialize(uint32_t, reader& source) NOEXCEPT
 {
     const auto read_hashes = [](reader& source) NOEXCEPT

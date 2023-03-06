@@ -37,6 +37,15 @@ const uint32_t not_found::version_minimum = level::bip37;
 const uint32_t not_found::version_maximum = level::maximum_protocol;
 
 // static
+typename not_found::cptr not_found::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 // Reimplements base class read to prevent a list move operation as well
 // as the need to implement default, base move, and base copy constructors.
 not_found not_found::deserialize(uint32_t version, reader& source) NOEXCEPT

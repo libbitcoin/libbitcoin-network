@@ -37,6 +37,15 @@ const uint32_t alert::version_minimum = level::minimum_protocol;
 const uint32_t alert::version_maximum = level::maximum_protocol;
 
 // static
+typename alert::cptr alert::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 alert alert::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)

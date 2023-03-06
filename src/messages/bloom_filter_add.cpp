@@ -35,6 +35,16 @@ const identifier bloom_filter_add::id = identifier::bloom_filter_add;
 const uint32_t bloom_filter_add::version_minimum = level::bip37;
 const uint32_t bloom_filter_add::version_maximum = level::maximum_protocol;
 
+// static
+typename bloom_filter_add::cptr bloom_filter_add::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 bloom_filter_add bloom_filter_add::deserialize(uint32_t version,
     reader& source) NOEXCEPT
 {

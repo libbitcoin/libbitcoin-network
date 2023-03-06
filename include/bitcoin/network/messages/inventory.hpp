@@ -45,6 +45,8 @@ struct BCT_API inventory
     static inventory factory(const system::hashes& hashes,
         type_id type) NOEXCEPT;
 
+    static cptr deserialize(uint32_t version,
+        const system::data_chunk& data) NOEXCEPT;
     static inventory deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
     void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;

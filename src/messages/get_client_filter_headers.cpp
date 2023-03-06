@@ -46,6 +46,16 @@ size_t get_client_filter_headers::size(uint32_t) NOEXCEPT
 }
 
 // static
+typename get_client_filter_headers::cptr
+get_client_filter_headers::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 get_client_filter_headers get_client_filter_headers::deserialize(
     uint32_t version, reader& source) NOEXCEPT
 {

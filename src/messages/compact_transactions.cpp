@@ -36,6 +36,15 @@ const uint32_t compact_transactions::version_minimum = level::bip152;
 const uint32_t compact_transactions::version_maximum = level::maximum_protocol;
 
 // static
+typename compact_transactions::cptr compact_transactions::deserialize(
+    uint32_t version, const system::data_chunk& data, bool witness) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader, witness));
+    return reader ? message : nullptr;
+}
+
+// static
 compact_transactions compact_transactions::deserialize(uint32_t version,
     reader& source, bool witness) NOEXCEPT
 {

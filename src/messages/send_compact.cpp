@@ -42,6 +42,15 @@ size_t send_compact::size(uint32_t) NOEXCEPT
 }
 
 // static
+typename send_compact::cptr send_compact::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 send_compact send_compact::deserialize(uint32_t version,
     reader& source) NOEXCEPT
 {

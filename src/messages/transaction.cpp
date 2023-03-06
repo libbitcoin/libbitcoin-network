@@ -35,6 +35,15 @@ const uint32_t transaction::version_minimum = level::minimum_protocol;
 const uint32_t transaction::version_maximum = level::maximum_protocol;
 
 // static
+typename transaction::cptr transaction::deserialize(uint32_t version,
+    const system::data_chunk& data, bool witness) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader, witness));
+    return reader ? message : nullptr;
+}
+
+// static
 transaction transaction::deserialize(uint32_t version, reader& source,
     bool witness) NOEXCEPT
 {

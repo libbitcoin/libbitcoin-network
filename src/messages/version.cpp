@@ -43,6 +43,15 @@ constexpr auto with_timestamp = false;
 constexpr size_t max_user_agent = max_uint8;
 
 // static
+typename version::cptr version::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 version version::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     const auto value = source.read_4_bytes_little_endian();

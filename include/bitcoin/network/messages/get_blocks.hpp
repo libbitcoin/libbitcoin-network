@@ -41,6 +41,8 @@ struct BCT_API get_blocks
     static constexpr size_t locator_size(size_t top) NOEXCEPT;
     static indexes locator_heights(size_t top) NOEXCEPT;
 
+    static cptr deserialize(uint32_t version,
+        const system::data_chunk& data) NOEXCEPT;
     static get_blocks deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
     void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;

@@ -39,6 +39,15 @@ const uint32_t get_data::version_minimum = level::minimum_protocol;
 const uint32_t get_data::version_maximum = level::maximum_protocol;
 
 // static
+typename get_data::cptr get_data::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 // Reimplements base class read to prevent a list move operation as well
 // as the need to implement default, base move, and base copy constructors.
 get_data get_data::deserialize(uint32_t version, reader& source) NOEXCEPT

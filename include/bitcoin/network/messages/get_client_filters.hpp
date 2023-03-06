@@ -41,6 +41,8 @@ struct BCT_API get_client_filters
     static const uint32_t version_maximum;
 
     static size_t size(uint32_t version) NOEXCEPT;
+    static cptr deserialize(uint32_t version,
+        const system::data_chunk& data) NOEXCEPT;
     static get_client_filters deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
     void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;

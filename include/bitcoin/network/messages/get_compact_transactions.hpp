@@ -37,6 +37,8 @@ struct BCT_API get_compact_transactions
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
+    static cptr deserialize(uint32_t version,
+        const system::data_chunk& data) NOEXCEPT;
     static get_compact_transactions deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
     void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
