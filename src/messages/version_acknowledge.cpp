@@ -59,6 +59,13 @@ version_acknowledge version_acknowledge::deserialize(uint32_t version,
     return {};
 }
 
+void version_acknowledge::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+}
+
 void version_acknowledge::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& BC_DEBUG_ONLY(sink)) const NOEXCEPT
 {

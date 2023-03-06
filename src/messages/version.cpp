@@ -102,6 +102,13 @@ version version::deserialize(uint32_t version, reader& source) NOEXCEPT
     };
 }
 
+void version::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+}
+
 void version::serialize(uint32_t version, writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)

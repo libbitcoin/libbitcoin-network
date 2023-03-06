@@ -49,7 +49,12 @@ struct BCT_API inventory
         const system::data_chunk& data) NOEXCEPT;
     static inventory deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
-    void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
+
+    void serialize(uint32_t version,
+        const system::data_slab& data) const NOEXCEPT;
+    void serialize(uint32_t version,
+        system::writer& sink) const NOEXCEPT;
+
     size_t size(uint32_t version) const NOEXCEPT;
 
     inventory_items filter(type_id type) const NOEXCEPT;

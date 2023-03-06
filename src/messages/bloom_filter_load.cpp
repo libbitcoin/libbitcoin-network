@@ -70,6 +70,13 @@ bloom_filter_load bloom_filter_load::deserialize(uint32_t version,
     };
 }
 
+void bloom_filter_load::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+}
+
 void bloom_filter_load::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {

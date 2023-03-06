@@ -53,6 +53,13 @@ transaction transaction::deserialize(uint32_t version, reader& source,
     return { to_shared<chain::transaction>(source, witness) };
 }
 
+void transaction::serialize(uint32_t version,
+    const system::data_slab& data, bool witness) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer, witness);
+}
+
 void transaction::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     bool witness) const NOEXCEPT
 {

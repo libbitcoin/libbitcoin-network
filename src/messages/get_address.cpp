@@ -58,6 +58,13 @@ get_address get_address::deserialize(uint32_t version, reader& source) NOEXCEPT
     return {};
 }
 
+void get_address::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+}
+
 void get_address::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& BC_DEBUG_ONLY(sink)) const NOEXCEPT
 {

@@ -44,6 +44,7 @@ typename get_compact_transactions::cptr get_compact_transactions::deserialize(
     return reader ? message : nullptr;
 }
 
+// static
 get_compact_transactions get_compact_transactions::deserialize(uint32_t version,
     reader& source) NOEXCEPT
 {
@@ -67,6 +68,13 @@ get_compact_transactions get_compact_transactions::deserialize(uint32_t version,
         source.read_hash(),
         read_indexes(source)
     };
+}
+
+void get_compact_transactions::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
 }
 
 void get_compact_transactions::serialize(uint32_t BC_DEBUG_ONLY(version),

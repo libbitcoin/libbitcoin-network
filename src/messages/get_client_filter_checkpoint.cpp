@@ -68,6 +68,13 @@ get_client_filter_checkpoint get_client_filter_checkpoint::deserialize(
     };
 }
 
+void get_client_filter_checkpoint::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+}
+
 void get_client_filter_checkpoint::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {

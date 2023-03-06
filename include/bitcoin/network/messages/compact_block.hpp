@@ -44,8 +44,12 @@ struct BCT_API compact_block
         bool witness=true) NOEXCEPT;
     static compact_block deserialize(uint32_t version, system::reader& source,
         bool witness=true) NOEXCEPT;
+
+    void serialize(uint32_t version,
+        const system::data_slab& data, bool witness=true) const NOEXCEPT;
     void serialize(uint32_t version, system::writer& sink,
         bool witness=true) const NOEXCEPT;
+
     size_t size(uint32_t version, bool witness) const NOEXCEPT;
 
     system::chain::header::cptr header_ptr;

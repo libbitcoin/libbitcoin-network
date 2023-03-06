@@ -69,6 +69,13 @@ get_client_filters get_client_filters::deserialize(uint32_t version,
     };
 }
 
+void get_client_filters::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+}
+
 void get_client_filters::serialize(uint32_t BC_DEBUG_ONLY(version),
     writer& sink) const NOEXCEPT
 {

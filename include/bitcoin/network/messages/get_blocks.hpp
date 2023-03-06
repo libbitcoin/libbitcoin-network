@@ -45,7 +45,12 @@ struct BCT_API get_blocks
         const system::data_chunk& data) NOEXCEPT;
     static get_blocks deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
-    void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
+
+    void serialize(uint32_t version,
+        const system::data_slab& data) const NOEXCEPT;
+    void serialize(uint32_t version,
+        system::writer& sink) const NOEXCEPT;
+
     size_t size(uint32_t version) const NOEXCEPT;
 
     ////uint32_t protocol_version;

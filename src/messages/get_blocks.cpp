@@ -80,6 +80,13 @@ get_blocks::indexes get_blocks::locator_heights(size_t top) NOEXCEPT
     return heights;
 }
 
+void get_blocks::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+}
+
 get_blocks get_blocks::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)

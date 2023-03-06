@@ -42,7 +42,12 @@ public:
         const system::data_chunk& data) NOEXCEPT;
     static merkle_block deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
-    void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
+
+    void serialize(uint32_t version,
+        const system::data_slab& data) const NOEXCEPT;
+    void serialize(uint32_t version,
+        system::writer& sink) const NOEXCEPT;
+
     size_t size(uint32_t version) const NOEXCEPT;
 
     // TODO: could use size_t for transactions.
