@@ -51,11 +51,12 @@ inline system::hash_digest network_hash(
 }
 
 /// Deserialize message payload from the wire protocol encoding.
+/// Returns nullptr if serialization fails for any reason (expected).
 template <typename Message>
 typename Message::cptr deserialize(const system::data_chunk& body,
     uint32_t version) NOEXCEPT
 {
-    // BUGBUG: witness parameter is defaulted.
+    // TODO: build witness into feature w/magic and negotiated version.
     // TODO: have deserialize use data for hash pregeneration as applicable.
     return Message::deserialize(version, body);
 }
@@ -71,19 +72,14 @@ system::chunk_ptr serialize(const Message& message, uint32_t magic,
     const auto body_start = std::next(data->begin(), heading::size());
     const system::data_slab body(body_start, data->end());
 
-    // BUGBUG: witness parameter is defaulted.
-    if (!message.serialize(version, body))
-        return {};
+    ////// Transaction is the only message that can use the identity hash.
+    ////// TODO: Hash must match witness serialization of the transaction object.
+    ////system::hash_cptr hash{};
+    ////if constexpr (is_same_type<Message, transaction>) { hash = message.hash; }
 
-    // Transaction is the only message that can use the identity hash.
-    // Hash must match witness serialization of the transaction object.
-    system::hash_cptr hash{};
-    if constexpr (is_same_type<Message, transaction>)
-    {
-        hash = message.hash;
-    }
-
-    if (!heading::factory(magic, Message::command, body, hash).serialize(*data))
+    // TODO: build witness into feature w/magic and negotiated version.
+    if (!message.serialize(version, body) ||
+        !heading::factory(magic, Message::command, body /*, hash*/).serialize(*data))
         return {};
 
     return data;

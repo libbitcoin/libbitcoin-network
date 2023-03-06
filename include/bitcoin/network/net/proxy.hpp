@@ -55,7 +55,8 @@ public:
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
-        // TODO: incorporate witness into a version object.
+        // TODO: build witness into feature w/magic and negotiated version.
+        // TODO: if self and peer services show witness, set feature true.
         const auto data = messages::serialize(message, protocol_magic(),
             version());
 

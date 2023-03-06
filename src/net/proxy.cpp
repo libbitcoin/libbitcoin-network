@@ -160,6 +160,9 @@ code proxy::notify(identifier id, uint32_t version,
     const data_chunk& source) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+
+    // TODO: build witness into feature w/magic and negotiated version.
+    // TODO: if self and peer services show witness, set feature true.
     return pump_subscriber_.notify(id, version, source);
 }
 

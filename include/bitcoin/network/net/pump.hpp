@@ -114,11 +114,9 @@ private:
         // Avoid deserialization if there are no subscribers for the type.
         if (!is_zero(subscriber.size()))
         {
-            // TODO: incorporate witness into a version object.
+            // Subscribers are notified only with stop code or error::success.
             const auto message = messages::deserialize<Message>(data, version);
             if (!message) return error::invalid_message;
-
-            // Subscribers are notified only with stop code or error::success.
             subscriber.notify(error::success, message);
         }
 
