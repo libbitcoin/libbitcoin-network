@@ -157,10 +157,10 @@ void proxy::do_subscribe_stop(const result_handler& handler,
 // ----------------------------------------------------------------------------
 
 code proxy::notify(identifier id, uint32_t version,
-    const data_chunk& source, const hash_cptr& hash) NOEXCEPT
+    const data_chunk& source) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return pump_subscriber_.notify(id, version, source, hash);
+    return pump_subscriber_.notify(id, version, source);
 }
 
 void proxy::read_heading() NOEXCEPT
@@ -272,13 +272,9 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
         return;
     }
 
-    // If validating the checksum, pass hash to notify for identity caching.
-    std::shared_ptr<const hash_digest> hash{};
-
     if (validate_checksum())
     {
-        hash = to_shared(network_hash(payload_buffer_));
-        if (head->checksum != network_checksum(*hash))
+        if (head->checksum != network_checksum(network_hash(payload_buffer_)))
         {
             LOGR("Invalid " << head->command << " payload from ["
                 << authority() << "] bad checksum.");
@@ -289,7 +285,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     }
 
     // Notify subscribers of the new message, with optional precomputed hash.
-    const auto code = notify(head->id(), version(), payload_buffer_, hash);
+    const auto code = notify(head->id(), version(), payload_buffer_);
 
     if (code)
     {

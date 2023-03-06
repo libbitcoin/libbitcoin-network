@@ -54,6 +54,8 @@ public:
     void send(const Message& message, result_handler&& complete) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
+
+        // TODO: incorporate witness into a version object.
         do_write(messages::serialize(message, protocol_magic(), version()),
             std::move(complete));
     }
@@ -127,8 +129,7 @@ protected:
 
     /// Notify subscribers of a new message (requires strand).
     virtual code notify(messages::identifier id, uint32_t version,
-        const system::data_chunk& source,
-        const system::hash_cptr& hash) NOEXCEPT;
+        const system::data_chunk& source) NOEXCEPT;
 
     /// Subscribe to stop notification (requires strand).
     void subscribe_stop(result_handler&& handler) NOEXCEPT;

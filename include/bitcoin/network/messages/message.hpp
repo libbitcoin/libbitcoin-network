@@ -21,10 +21,10 @@
 
 #include <iterator>
 #include <memory>
-#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/heading.hpp>
+#include <bitcoin/network/messages/transaction.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -53,27 +53,11 @@ inline system::hash_digest network_hash(
 /// Deserialize message object from the wire protocol encoding.
 template <typename Message>
 typename Message::cptr deserialize(const system::data_chunk& data,
-    uint32_t version, const system::hash_cptr&) NOEXCEPT
+    uint32_t version) NOEXCEPT
 {
-    using namespace system;
-    read::bytes::copy reader(data);
-
-    auto message = Message::deserialize(version, reader);
-
-    // TODO: 
-    // Transaction is the only object that can use the wire hash.
-    // Block can use the wire data to compute transaction and header hashes.
-    // Header is fixed size and txs can be iterated using tx[*].size().
-    // Set .hash property on header/tx and .header_hash/.tx_hashes on block.
-    // These can be set here using a constexpr on Message type, passing
-    // Message::deserialize(version, reader, data) to isolate parse. 
-    // Transaction is the only message that could benefit from checksum relay,
-    // however as txs relay hash there is no need for a checksum property.
-    // The hash parameter is only available when hash has been generated just
-    // to validate the incoming checksum, which is optional. This facilitates
-    // block merkle tree validation, header identity, and each tx identity.
-
-    return reader ? to_shared(std::move(message)) : nullptr;
+    // BUGBUG: witness parameter is defaulted.
+    // TODO: have deserialize use data for hash pregeneration as applicable.
+    return Message::deserialize(version, data);
 }
 
 /// Serialize message object to the wire protocol encoding.
@@ -87,16 +71,21 @@ system::chunk_ptr serialize(const Message& message, uint32_t magic,
     const auto body_start = std::next(buffer->begin(), heading::size());
     const data_slab body(body_start, buffer->end());
 
+    // TODO: move writer into serialize, just for symmetry with deserialize.
     write::bytes::copy body_writer(body);
+
+    // BUGBUG: witness parameter is defaulted.
     message.serialize(version, body_writer);
 
-    // TODO:
-    // Obtain hash ptr from tx message (only), via constexpr isolation.
-    // heading::factory otherwise generates the hash from body. The tx hash
-    // cache can be populated from store or by transaction relay.
+    // Transaction is the only message that can use the identity hash.
+    // Hash must match witness serialization of the transaction object.
+    system::hash_cptr hash{};
+    if constexpr (is_same_type<Message, transaction>)
+    {
+        hash = message.hash;
+    }
 
-    const auto head = heading::factory(magic, Message::command, body, {});
-
+    const auto head = heading::factory(magic, Message::command, body, hash);
     write::bytes::copy head_writer(*buffer);
     head.serialize(head_writer);
 
