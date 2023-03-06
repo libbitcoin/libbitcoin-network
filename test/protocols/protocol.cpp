@@ -52,7 +52,7 @@ public:
 
     // Capture last sent payload.
     void write(const system::chunk_ptr& payload,
-        result_handler&&) NOEXCEPT override
+        const result_handler&) NOEXCEPT override
     {
         payload_ = payload;
     }

@@ -316,23 +316,11 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 // interleaving-async-write-calls
 
 void proxy::write(const system::chunk_ptr& payload,
-    result_handler&& handler) NOEXCEPT
-{
-    if (stopped())
-    {
-        handler(error::channel_stopped);
-        return;
-    }
-
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), payload, std::move(handler)));
-}
-
-void proxy::do_write(const system::chunk_ptr& payload,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(payload, "payload");
+
     const auto started = !queue_.empty();
 
     // Clang does not like emplace here.
