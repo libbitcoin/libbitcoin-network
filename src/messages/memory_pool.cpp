@@ -49,11 +49,12 @@ typename memory_pool::cptr memory_pool::deserialize(uint32_t version,
     return reader ? message : nullptr;
 }
 
-void memory_pool::serialize(uint32_t version,
+bool memory_pool::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer);
+    return writer;
 }
 
 memory_pool memory_pool::deserialize(uint32_t version, reader& source) NOEXCEPT

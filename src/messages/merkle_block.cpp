@@ -67,11 +67,12 @@ merkle_block merkle_block::deserialize(uint32_t, reader& source) NOEXCEPT
     };
 }
 
-void merkle_block::serialize(uint32_t version,
+bool merkle_block::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer);
+    return writer;
 }
 
 void merkle_block::serialize(uint32_t BC_DEBUG_ONLY(version),

@@ -42,7 +42,7 @@ struct BCT_API block
     static block deserialize(uint32_t version, system::reader& source,
         bool witness=true) NOEXCEPT;
 
-    void serialize(uint32_t version,
+    bool serialize(uint32_t version,
         const system::data_slab& data, bool witness=true) const NOEXCEPT;
     void serialize(uint32_t version, system::writer& sink,
         bool witness=true) const NOEXCEPT;

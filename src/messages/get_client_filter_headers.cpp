@@ -70,11 +70,12 @@ get_client_filter_headers get_client_filter_headers::deserialize(
     };
 }
 
-void get_client_filter_headers::serialize(uint32_t version,
+bool get_client_filter_headers::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer);
+    return writer;
 }
 
 void get_client_filter_headers::serialize(uint32_t BC_DEBUG_ONLY(version),

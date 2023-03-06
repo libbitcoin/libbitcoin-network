@@ -86,11 +86,12 @@ compact_block compact_block::deserialize(uint32_t version, reader& source,
     };
 }
 
-void compact_block::serialize(uint32_t version,
+bool compact_block::serialize(uint32_t version,
     const system::data_slab& data, bool witness) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer, witness);
+    return writer;
 }
 
 void compact_block::serialize(uint32_t version, writer& sink,

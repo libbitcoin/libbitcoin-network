@@ -58,11 +58,12 @@ pong pong::deserialize(uint32_t version, reader& source) NOEXCEPT
     return { source.read_8_bytes_little_endian() };
 }
 
-void pong::serialize(uint32_t version,
+bool pong::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer);
+    return writer;
 }
 
 void pong::serialize(uint32_t BC_DEBUG_ONLY(version),

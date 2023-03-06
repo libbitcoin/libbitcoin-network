@@ -63,11 +63,12 @@ ping ping::deserialize(uint32_t version, reader& source) NOEXCEPT
     return { nonce };
 }
 
-void ping::serialize(uint32_t version,
+bool ping::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer);
+    return writer;
 }
 
 void ping::serialize(uint32_t version, writer& sink) const NOEXCEPT

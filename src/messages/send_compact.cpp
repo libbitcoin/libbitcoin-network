@@ -72,11 +72,12 @@ send_compact send_compact::deserialize(uint32_t version,
     return { to_bool(mode), protocol };
 }
 
-void send_compact::serialize(uint32_t version,
+bool send_compact::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer);
+    return writer;
 }
 
 void send_compact::serialize(uint32_t BC_DEBUG_ONLY(version),

@@ -50,32 +50,30 @@ inline system::hash_digest network_hash(
         system::bitcoin_hash(data.size(), data.begin());
 }
 
-/// Deserialize message object from the wire protocol encoding.
+/// Deserialize message payload from the wire protocol encoding.
 template <typename Message>
-typename Message::cptr deserialize(const system::data_chunk& data,
+typename Message::cptr deserialize(const system::data_chunk& body,
     uint32_t version) NOEXCEPT
 {
     // BUGBUG: witness parameter is defaulted.
     // TODO: have deserialize use data for hash pregeneration as applicable.
-    return Message::deserialize(version, data);
+    return Message::deserialize(version, body);
 }
 
 /// Serialize message object to the wire protocol encoding.
+/// Returns nullptr if serialization fails for any reason (unexpected).
 template <typename Message>
 system::chunk_ptr serialize(const Message& message, uint32_t magic,
     uint32_t version) NOEXCEPT
 {
-    using namespace system;
-    const auto buffer_size = heading::size() + message.size(version);
-    const auto buffer = std::make_shared<data_chunk>(buffer_size);
-    const auto body_start = std::next(buffer->begin(), heading::size());
-    const data_slab body(body_start, buffer->end());
-
-    // TODO: move writer into serialize, just for symmetry with deserialize.
-    write::bytes::copy body_writer(body);
+    const auto size = heading::size() + message.size(version);
+    const auto data = std::make_shared<system::data_chunk>(size);
+    const auto body_start = std::next(data->begin(), heading::size());
+    const system::data_slab body(body_start, data->end());
 
     // BUGBUG: witness parameter is defaulted.
-    message.serialize(version, body_writer);
+    if (!message.serialize(version, body))
+        return {};
 
     // Transaction is the only message that can use the identity hash.
     // Hash must match witness serialization of the transaction object.
@@ -85,12 +83,10 @@ system::chunk_ptr serialize(const Message& message, uint32_t magic,
         hash = message.hash;
     }
 
-    const auto head = heading::factory(magic, Message::command, body, hash);
-    write::bytes::copy head_writer(*buffer);
-    head.serialize(head_writer);
+    if (!heading::factory(magic, Message::command, body, hash).serialize(*data))
+        return {};
 
-    BC_ASSERT(body_writer && head_writer);
-    return buffer;
+    return data;
 }
 
 } // namespace messages

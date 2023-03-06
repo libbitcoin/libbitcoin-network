@@ -93,11 +93,12 @@ inventory inventory::deserialize(uint32_t version, reader& source) NOEXCEPT
     return { items };
 }
 
-void inventory::serialize(uint32_t version,
+bool inventory::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer);
+    return writer;
 }
 
 void inventory::serialize(uint32_t version, writer& sink) const NOEXCEPT

@@ -65,11 +65,12 @@ address address::deserialize(uint32_t version, system::reader& source) NOEXCEPT
     return { addresses };
 }
 
-void address::serialize(uint32_t version,
+bool address::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer);
+    return writer;
 }
 
 void address::serialize(uint32_t version, writer& sink) const NOEXCEPT

@@ -58,11 +58,12 @@ fee_filter fee_filter::deserialize(uint32_t version, reader& source) NOEXCEPT
     return { source.read_8_bytes_little_endian() };
 }
 
-void fee_filter::serialize(uint32_t version,
+bool fee_filter::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer);
+    return writer;
 }
 
 void fee_filter::serialize(uint32_t, writer& sink) const NOEXCEPT
