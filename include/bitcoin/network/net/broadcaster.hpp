@@ -148,6 +148,9 @@ public:
         }
     }
 
+    /// Unsubscribe the channel identifier from all subscribers.
+    void unsubscribe(channel_id subscriber) NOEXCEPT;
+
     /// Stop all subscribers, prevents subsequent subscription (idempotent).
     /// The subscriber is stopped regardless of the error code, however by
     /// convention handlers rely on the error code to avoid message processing.

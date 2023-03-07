@@ -30,6 +30,8 @@ using namespace system;
 #define SUBSCRIBER(name) name##_subscriber_
 #define MAKE_SUBSCRIBER(name) SUBSCRIBER(name)(strand)
 #define STOP_SUBSCRIBER(name) SUBSCRIBER(name).stop_default(ec)
+#define UNSUBSCRIBER(name) SUBSCRIBER(name) \
+    .notify_one(subscriber, error::desubscribed, nullptr, subscriber)
 
 broadcaster::broadcaster(asio::strand& strand) NOEXCEPT
   : MAKE_SUBSCRIBER(address),
@@ -68,9 +70,45 @@ broadcaster::broadcaster(asio::strand& strand) NOEXCEPT
 {
 }
 
+void broadcaster::unsubscribe(channel_id subscriber) NOEXCEPT
+{
+    UNSUBSCRIBER(address);
+    UNSUBSCRIBER(alert);
+    UNSUBSCRIBER(block);
+    UNSUBSCRIBER(bloom_filter_add);
+    UNSUBSCRIBER(bloom_filter_clear);
+    UNSUBSCRIBER(bloom_filter_load);
+    UNSUBSCRIBER(client_filter);
+    UNSUBSCRIBER(client_filter_checkpoint);
+    UNSUBSCRIBER(client_filter_headers);
+    UNSUBSCRIBER(compact_block);
+    UNSUBSCRIBER(compact_transactions);
+    UNSUBSCRIBER(fee_filter);
+    UNSUBSCRIBER(get_address);
+    UNSUBSCRIBER(get_blocks);
+    UNSUBSCRIBER(get_client_filter_checkpoint);
+    UNSUBSCRIBER(get_client_filter_headers);
+    UNSUBSCRIBER(get_client_filters);
+    UNSUBSCRIBER(get_compact_transactions);
+    UNSUBSCRIBER(get_data);
+    UNSUBSCRIBER(get_headers);
+    UNSUBSCRIBER(headers);
+    UNSUBSCRIBER(inventory);
+    UNSUBSCRIBER(memory_pool);
+    UNSUBSCRIBER(merkle_block);
+    UNSUBSCRIBER(not_found);
+    UNSUBSCRIBER(ping);
+    UNSUBSCRIBER(pong);
+    UNSUBSCRIBER(reject);
+    UNSUBSCRIBER(send_compact);
+    UNSUBSCRIBER(send_headers);
+    UNSUBSCRIBER(transaction);
+    UNSUBSCRIBER(version);
+    UNSUBSCRIBER(version_acknowledge);
+}
+
 void broadcaster::stop(const code& ec) NOEXCEPT
 {
-    STOP_SUBSCRIBER(address);
     STOP_SUBSCRIBER(address);
     STOP_SUBSCRIBER(alert);
     STOP_SUBSCRIBER(block);
