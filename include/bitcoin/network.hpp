@@ -92,6 +92,7 @@
 #include <bitcoin/network/messages/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/enums/service.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
+#include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/deadline.hpp>

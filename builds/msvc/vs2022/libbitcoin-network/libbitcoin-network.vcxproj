@@ -128,6 +128,7 @@
     <ClCompile Include="..\..\..\..\src\messages\version.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\broadcaster.cpp" />
     <ClCompile Include="..\..\..\..\src\net\channel.cpp" />
     <ClCompile Include="..\..\..\..\src\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\src\net\deadline.cpp" />
@@ -230,6 +231,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\version_acknowledge.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\broadcaster.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp" />

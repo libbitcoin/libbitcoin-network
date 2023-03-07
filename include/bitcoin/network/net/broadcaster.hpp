@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2019 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_HPP
-#define LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_HPP
+#ifndef LIBBITCOIN_NETWORK_NET_BROADCASTER_HPP
+#define LIBBITCOIN_NETWORK_NET_BROADCASTER_HPP
 
 #include <functional>
 #include <utility>
@@ -32,23 +32,28 @@ namespace network {
 #define SUBSCRIBER(name) name##_subscriber_
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 #define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
-#define DEFINE_SUBSCRIBER(name) \
-    using SUBSCRIBER_TYPE(name) = unsubscriber<const messages::name::cptr&>
-#define SUBSCRIBER_OVERLOAD(name) \
-    void do_subscribe(distributor::handler<messages::name>&& handler) NOEXCEPT \
-    { SUBSCRIBER(name).subscribe(std::move(handler)); }
+#define DEFINE_SUBSCRIBER(name) using SUBSCRIBER_TYPE(name) = \
+    desubscriber<key_t, const messages::name::cptr&, uint64_t>
+#define SUBSCRIBER_OVERLOAD(name) code do_subscribe( \
+    broadcaster::handler<messages::name>&& handler, key_t key) NOEXCEPT \
+    { return SUBSCRIBER(name).subscribe(std::move(handler), key); }
+#define CASE_NOTIFY(name) case messages::identifier::name: \
+    return SUBSCRIBER(name).notify(error::success, message, sender)
 
 /// Not thread safe.
-class BCT_API distributor
+class BCT_API broadcaster
 {
 public:
+    using key_t = uint64_t;
+
     /// Helper for external declarations.
     template <class Message>
     using handler = std::function<bool(const code&,
-        const typename Message::cptr&)>;
+        const typename Message::cptr&, uint64_t)>;
 
-    DELETE_COPY_MOVE_DESTRUCT(distributor);
+    DELETE_COPY_MOVE_DESTRUCT(broadcaster);
 
+    ////using address_subscriber = desubscriber<key_t, const messages::address::cptr&, const uint64_t&>;
     DEFINE_SUBSCRIBER(address);
     DEFINE_SUBSCRIBER(alert);
     DEFINE_SUBSCRIBER(block);
@@ -84,20 +89,63 @@ public:
     DEFINE_SUBSCRIBER(version_acknowledge);
 
     /// Create an instance of this class.
-    distributor(asio::strand& strand) NOEXCEPT;
+    broadcaster(asio::strand& strand) NOEXCEPT;
 
     /// Subscription handlers are retained in the queue until stop.
     /// No invocation occurs if the subscriber is stopped at time of subscribe.
     template <typename Handler>
-    void subscribe(Handler&& handler) NOEXCEPT
+    code subscribe(Handler&& handler, uint64_t key) NOEXCEPT
     {
-        do_subscribe(std::forward<Handler>(handler));
+        return do_subscribe(std::forward<Handler>(handler), key);
     }
 
     /// Relay a message instance to each subscriber of the type.
-    /// Returns error code if fails to deserialize, otherwise success.
-    virtual code notify(messages::identifier id, uint32_t version,
-        const system::data_chunk& data) NOEXCEPT;
+    template <typename Message>
+    code notify(const typename Message::cptr& message,
+        uint64_t sender) NOEXCEPT
+    {
+        switch (Message::id)
+        {
+            ////case messages::identifier::address:
+            ////    return address_subscriber_.notify(error::success, message, sender);
+            CASE_NOTIFY(address);
+            CASE_NOTIFY(alert);
+            CASE_NOTIFY(block);
+            CASE_NOTIFY(bloom_filter_add);
+            CASE_NOTIFY(bloom_filter_clear);
+            CASE_NOTIFY(bloom_filter_load);
+            CASE_NOTIFY(client_filter);
+            CASE_NOTIFY(client_filter_checkpoint);
+            CASE_NOTIFY(client_filter_headers);
+            CASE_NOTIFY(compact_block);
+            CASE_NOTIFY(compact_transactions);
+            CASE_NOTIFY(fee_filter);
+            CASE_NOTIFY(get_address);
+            CASE_NOTIFY(get_blocks);
+            CASE_NOTIFY(get_client_filter_checkpoint);
+            CASE_NOTIFY(get_client_filter_headers);
+            CASE_NOTIFY(get_client_filters);
+            CASE_NOTIFY(get_compact_transactions);
+            CASE_NOTIFY(get_data);
+            CASE_NOTIFY(get_headers);
+            CASE_NOTIFY(headers);
+            CASE_NOTIFY(inventory);
+            CASE_NOTIFY(memory_pool);
+            CASE_NOTIFY(merkle_block);
+            CASE_NOTIFY(not_found);
+            CASE_NOTIFY(ping);
+            CASE_NOTIFY(pong);
+            CASE_NOTIFY(reject);
+            CASE_NOTIFY(send_compact);
+            CASE_NOTIFY(send_headers);
+            CASE_NOTIFY(transaction);
+            CASE_NOTIFY(version);
+            CASE_NOTIFY(version_acknowledge);
+            case messages::identifier::unknown:
+            default:
+                return error::unknown_message;
+        }
+    }
 
     /// Stop all subscribers, prevents subsequent subscription (idempotent).
     /// The subscriber is stopped regardless of the error code, however by
@@ -105,23 +153,10 @@ public:
     virtual void stop(const code& ec) NOEXCEPT;
 
 private:
-    // Deserialize a stream into a message instance and notify subscribers.
-    template <typename Message, typename Subscriber>
-    code do_notify(Subscriber& subscriber, uint32_t version,
-        const system::data_chunk& data) NOEXCEPT
-    {
-        // Avoid deserialization if there are no subscribers for the type.
-        if (!is_zero(subscriber.size()))
-        {
-            // Subscribers are notified only with stop code or error::success.
-            const auto message = messages::deserialize<Message>(data, version);
-            if (!message) return error::invalid_message;
-            subscriber.notify(error::success, message);
-        }
-
-        return error::success;
-    }
-
+    ////code do_subscribe(broadcaster::handler<messages::address>&& handler, key_t key) NOEXCEPT
+    ////{
+    ////    return address_subscriber_.subscribe(std::move(handler), key);
+    ////}
     SUBSCRIBER_OVERLOAD(address);
     SUBSCRIBER_OVERLOAD(alert);
     SUBSCRIBER_OVERLOAD(block);
@@ -157,6 +192,7 @@ private:
     SUBSCRIBER_OVERLOAD(version_acknowledge);
 
     // These are thread safe.
+    ////address_subscriber address_subscriber_;
     DECLARE_SUBSCRIBER(address);
     DECLARE_SUBSCRIBER(alert);
     DECLARE_SUBSCRIBER(block);
@@ -194,9 +230,10 @@ private:
 
 #undef SUBSCRIBER
 #undef SUBSCRIBER_TYPE
+#undef DECLARE_SUBSCRIBER
 #undef DEFINE_SUBSCRIBER
 #undef SUBSCRIBER_OVERLOAD
-#undef DECLARE_SUBSCRIBER
+#undef CASE_NOTIFY
 
 } // namespace network
 } // namespace libbitcoin

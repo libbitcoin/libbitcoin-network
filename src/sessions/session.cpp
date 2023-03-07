@@ -113,7 +113,7 @@ void session::start_channel(const channel::ptr& channel,
         return;
     }
 
-    // Pend channel for handshake duration (for quick stop).
+    // Pend channel for connection duration (for quick stop).
     pend(channel);
 
     result_handler start =
@@ -185,12 +185,10 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    // Unpend channel from handshake.
-    unpend(channel);
-
     // Handles channel and protocol start failures.
     if (ec)
     {
+        unpend(channel);
         network_.unstore_nonce(*channel);
         channel->stop(ec);
         start(ec);
@@ -199,6 +197,7 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 
     if (const auto code = network_.count_channel(channel))
     {
+        unpend(channel);
         network_.unstore_nonce(*channel);
         channel->stop(code);
         start(code);
@@ -315,6 +314,7 @@ void session::do_handle_channel_stopped(const code& ec,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
+    unpend(channel);
     network_.uncount_channel(channel);
     network_.unstore_nonce(*channel);
 

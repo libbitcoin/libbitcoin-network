@@ -204,6 +204,9 @@
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\channel.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
@@ -213,13 +216,13 @@
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\distributor.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\pump.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\socket.cpp">

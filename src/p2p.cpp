@@ -216,7 +216,7 @@ void p2p::do_close() NOEXCEPT
     connect_subscriber_.stop_default(error::service_stopped);
 
     // Notify and delete subscribers to message broadcast notifications.
-    broadcaster_.stop_default(error::service_stopped);
+    broadcaster_.stop(error::service_stopped);
 
     // Stop threadpool keep-alive, all work must self-terminate to affect join.
     threadpool_.stop();
@@ -549,7 +549,7 @@ bool p2p::is_loopback(const channel& channel) const NOEXCEPT
 // Channel counting and deconfliction.
 // ----------------------------------------------------------------------------
 
-// This must increment the channel count(s) if successful.
+// This must increment the channel count(s) and add authority if successful.
 code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -565,12 +565,6 @@ code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
         return error::accept_failed;
     }
 
-    if (!hosts_.reserve(channel->authority()))
-    {
-        LOGS("Duplicate connection to [" << channel->authority() << "].");
-        return error::address_in_use;
-    }
-
     if (channel->inbound() && is_zero(add1(inbound_channel_count_.load())))
     {
         LOGF("Overflow: inbound channel count.");
@@ -581,6 +575,12 @@ code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
     {
         LOGF("Overflow: total channel count.");
         return error::channel_overflow;
+    }
+
+    if (!hosts_.reserve(channel->authority()))
+    {
+        LOGS("Duplicate connection to [" << channel->authority() << "].");
+        return error::address_in_use;
     }
 
     if (channel->inbound())
@@ -595,32 +595,15 @@ code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
         connect_subscriber_.notify(error::success, channel);
     }
 
-    // Store channel for message broadcast and stop notification.
-    broadcaster_.subscribe(
-        [=](const code& ec, uint64_t, const chunk_ptr&) NOEXCEPT
-        {
-            if (ec)
-            {
-                channel->stop(ec);
-                return false;
-            }
-
-            return true;
-        }, channel->identifier());
-
     return error::success;
 }
 
-// This must decrement the channel count(s) if successful.
-// This must always remove the channel and/or authority if stored.
+// This must decrement the channel count(s) and remove authority if successful.
 void p2p::uncount_channel(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     hosts_.unreserve(channel->authority());
-
-    broadcaster_.notify_one(channel->identifier(),
-        error::channel_stopped, {}, {});
 
     if (channel->inbound() && is_zero(inbound_channel_count_.load()))
     {
@@ -639,9 +622,9 @@ void p2p::uncount_channel(const channel::ptr& channel) NOEXCEPT
         --inbound_channel_count_;
     }
 
+    // There is no notification for removal (subscribe to channel stop).
     if (!channel->quiet())
     {
-        // There is no notification for removal (subscribe to channel stop).
         --total_channel_count_;
     }
 }

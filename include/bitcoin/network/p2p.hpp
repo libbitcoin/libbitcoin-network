@@ -46,10 +46,6 @@ public:
     typedef std::shared_ptr<p2p> ptr;
     typedef uint64_t object_key;
 
-    typedef desubscriber<uint64_t, uint64_t, system::chunk_ptr> broadcaster;
-    typedef broadcaster::handler broadcast_notifier;
-    typedef broadcaster::completer broadcast_completer;
-
     typedef desubscriber<object_key> stop_subscriber;
     typedef stop_subscriber::handler stop_handler;
     typedef stop_subscriber::completer stop_completer;
@@ -166,10 +162,10 @@ public:
     // ------------------------------------------------------------------------
     // Not thread safe, read from stranded handler only.
 
-    virtual size_t broadcast_count() const NOEXCEPT
-    {
-        return broadcaster_.size();
-    }
+    ////virtual size_t broadcast_count() const NOEXCEPT
+    ////{
+    ////    return broadcaster_.size();
+    ////}
 
     virtual size_t stop_subscriber_count() const NOEXCEPT
     {
@@ -194,7 +190,6 @@ protected:
     typename Session::ptr attach(p2p& net, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "subscribe_close");
-
         const auto id = create_key();
 
         // Sessions are attached after network start.
@@ -211,6 +206,14 @@ protected:
         }, id);
 
         return session;
+    }
+
+    template <typename Message>
+    void do_broadcast(const typename Message::cptr& message,
+        uint64_t sender) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        broadcaster_.notify(message, sender);
     }
 
     /// Override to attach specialized sessions, require strand.
@@ -244,23 +247,6 @@ protected:
     bool stranded() const NOEXCEPT;
 
 private:
-    template <typename Message>
-    void do_broadcast(const typename Message::cptr& message,
-        uint64_t sender_nonce) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-
-        // TODO: move serialization into broadcaster (like distributor).
-        // TODO: Serialization may not be unique per channel (by version).
-        // TODO: Specialize this template for messages unique by version.
-        // Serialization is here to preclude serialization in each channel.
-        const auto data = messages::serialize(message, settings_.identifier,
-            messages::level::canonical);
-
-        // TODO: differentiate broadcast by message type identifier.
-        broadcaster_.notify(error::success, sender_nonce, data);
-    }
-
     code subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;
     connectors_ptr create_connectors(size_t count) NOEXCEPT;
     object_key create_key() NOEXCEPT;

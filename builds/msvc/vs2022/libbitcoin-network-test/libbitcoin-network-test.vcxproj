@@ -131,12 +131,13 @@
     <ClCompile Include="..\..\..\..\test\messages\version.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />
     <ClCompile Include="..\..\..\..\test\net\channel.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\distributor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\pump.cpp" />
     <ClCompile Include="..\..\..\..\test\net\socket.cpp" />
     <ClCompile Include="..\..\..\..\test\p2p.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp" />
