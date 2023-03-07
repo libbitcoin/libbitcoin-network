@@ -43,6 +43,7 @@ class BCT_API p2p
   : public reporter
 {
 public:
+    typedef broadcaster::channel_id channel_id;
     typedef std::shared_ptr<p2p> ptr;
     typedef uint64_t object_key;
 
@@ -54,39 +55,47 @@ public:
     typedef channel_subscriber::handler channel_notifier;
     typedef channel_subscriber::completer channel_completer;
 
+    /// Broadcast.
+    /// -----------------------------------------------------------------------
+    /// Broadcast offers no completion feedback, and subscription exists in a
+    /// race with channel establishment. Broadcasts are designed for internal
+    /// best-efforts propagation. Use individual channel.send calls otherwise.
+
     template <typename Message>
-    void broadcast(const Message& message, uint64_t sender=zero) NOEXCEPT
+    void broadcast(const Message& message, channel_id sender=zero) NOEXCEPT
     {
-        boost::asio::post(strand_,
+        boost::asio::dispatch(strand_,
             std::bind(&p2p::do_broadcast<Message>,
                 this, system::to_shared(message), sender));
     }
 
     template <typename Message>
-    void broadcast(Message&& message, uint64_t sender=zero) NOEXCEPT
+    void broadcast(Message&& message, channel_id sender=zero) NOEXCEPT
     {
-        boost::asio::post(strand_,
+        boost::asio::dispatch(strand_,
             std::bind(&p2p::do_broadcast<Message>,
                 this, system::to_shared(std::move(message)), sender));
     }
 
     template <typename Message>
     void broadcast(const typename Message::cptr& message,
-        uint64_t sender=zero) NOEXCEPT
+        channel_id sender=zero) NOEXCEPT
     {
-        boost::asio::post(strand_,
+        boost::asio::dispatch(strand_,
             std::bind(&p2p::do_broadcast<Message>,
                 this, message, sender));
     }
 
-    /////// Subscribe to message broadcast.
-    /////// A call after close invokes handlers with error::subscriber_stopped.
-    ////template <typename Message>
-    ////void subscribe_broadcast(const channel& channel, Notifier&& handler,
-    ////    Completer&& complete) NOEXCEPT;
+    template <typename Message, typename Handler = broadcaster::handler<Message>>
+    void subscribe_broadcast(Handler&& handler, channel_id subscriber) NOEXCEPT
+    {
+        boost::asio::dispatch(strand_,
+            std::bind(&p2p::do_subscribe_broadcast<Message>,
+                this, system::to_shared(std::move(handler)), subscriber));
+    }
 
-    // Constructors.
-    // ------------------------------------------------------------------------
+    /// Constructors.
+    /// -----------------------------------------------------------------------
 
     DELETE_COPY_MOVE(p2p);
 
@@ -96,8 +105,8 @@ public:
     /// Calls close().
     virtual ~p2p() NOEXCEPT;
 
-    // Sequences.
-    // ------------------------------------------------------------------------
+    /// Sequences.
+    /// -----------------------------------------------------------------------
 
     /// Invoke startup and seeding sequence, not thread safe or restartable.
     virtual void start(result_handler&& handler) NOEXCEPT;
@@ -109,8 +118,8 @@ public:
     /// Must not call concurrently or from any threadpool thread (see ~).
     virtual void close() NOEXCEPT;
 
-    // Subscriptions.
-    // ------------------------------------------------------------------------
+    /// Subscriptions.
+    /// -----------------------------------------------------------------------
     /// A channel pointer should only be retained when subscribed to its stop,
     /// and must be unretained in stop handler invoke, otherwise it will leak.
     /// To subscribe to disconnections, subscribe to each channel stop.
@@ -131,8 +140,8 @@ public:
     virtual void unsubscribe_connect(object_key key) NOEXCEPT;
     virtual void unsubscribe_close(object_key key) NOEXCEPT;
 
-    // Manual connections.
-    // ------------------------------------------------------------------------
+    /// Manual connections.
+    /// -----------------------------------------------------------------------
 
     /// Maintain a connection.
     virtual void connect(const config::endpoint& endpoint) NOEXCEPT;
@@ -141,8 +150,8 @@ public:
     virtual void connect(const config::endpoint& endpoint,
         channel_notifier&& handler) NOEXCEPT;
 
-    // Properties.
-    // ------------------------------------------------------------------------
+    /// Properties.
+    /// -----------------------------------------------------------------------
 
     /// Get the number of addresses.
     virtual size_t address_count() const NOEXCEPT;
@@ -165,9 +174,9 @@ public:
     /// Return a reference to the network strand (thread safe).
     asio::strand& strand() NOEXCEPT;
 
-    // TEMP HACKS.
-    // ------------------------------------------------------------------------
-    // Not thread safe, read from stranded handler only.
+    /// TEMP HACKS.
+    /// -----------------------------------------------------------------------
+    /// Not thread safe, read from stranded handler only.
 
     virtual size_t stop_subscriber_count() const NOEXCEPT
     {
@@ -210,14 +219,6 @@ protected:
         return session;
     }
 
-    template <typename Message>
-    void do_broadcast(const typename Message::cptr& message,
-        uint64_t sender) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        broadcaster_.notify(message, sender);
-    }
-
     /// Override to attach specialized sessions, require strand.
     virtual session_seed::ptr attach_seed_session() NOEXCEPT;
     virtual session_manual::ptr attach_manual_session() NOEXCEPT;
@@ -252,6 +253,22 @@ protected:
     bool stranded() const NOEXCEPT;
 
 private:
+    template <typename Message>
+    void do_broadcast(const typename Message::cptr& message,
+        channel_id sender) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        broadcaster_.notify(message, sender);
+    }
+
+    template <typename Message, typename Handler = broadcaster::handler<Message>>
+    void do_subscribe_broadcast(const Handler& handler,
+        channel_id subscriber) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        broadcaster_.subscribe(move_copy(handler), subscriber);
+    }
+
     code subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;
     connectors_ptr create_connectors(size_t count) NOEXCEPT;
     object_key create_key() NOEXCEPT;
