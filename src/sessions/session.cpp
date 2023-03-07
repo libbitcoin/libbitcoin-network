@@ -204,9 +204,9 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
         return;
     }
 
-    // Notify channel subscribers of started non-seed channel.
-    if (!channel->quiet())
-        network_.notify_connect(channel);
+    ////// Notify channel subscribers of handshaked non-seed channel.
+    ////if (!channel->quiet())
+    ////    network_.notify_connect(channel);
 
     // Requires uncount_channel/unstore_nonce on stop if and only if success.
     start(ec);
@@ -261,7 +261,12 @@ void session::do_attach_protocols(const channel::ptr& channel) const NOEXCEPT
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
+    // Protocol attach is always synchronous, complete here.
     attach_protocols(channel);
+
+    // Notify channel subscribers of fully-attached non-seed channel.
+    if (!channel->quiet())
+        network_.notify_connect(channel);
 
     // Resume accepting messages on the channel, timers restarted.
     channel->resume();
