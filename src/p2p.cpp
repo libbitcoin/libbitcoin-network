@@ -255,6 +255,13 @@ void p2p::do_subscribe_connect(const channel_notifier& handler,
     complete(connect_subscriber_.subscribe(move_copy(handler), key), key);
 }
 
+// protected
+void p2p::notify_connect(const channel::ptr& channel) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    connect_subscriber_.notify(error::success, channel);
+}
+
 void p2p::unsubscribe_connect(object_key key) NOEXCEPT
 {
     boost::asio::post(strand_,
@@ -546,11 +553,11 @@ bool p2p::is_loopback(const channel& channel) const NOEXCEPT
     return to_bool(nonces_.count(channel.peer_version()->nonce));
 }
 
-// Channel counting and deconfliction.
+// Channel counting with address deconfliction.
 // ----------------------------------------------------------------------------
+// These must maintain consistency between channel count(s) and authority.
 
-// This must increment the channel count(s) and add authority if successful.
-code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
+code p2p::count_channel(const channel& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -559,74 +566,62 @@ code p2p::count_channel(const channel::ptr& channel) NOEXCEPT
         return error::service_stopped;
     }
 
-    if (is_loopback(*channel))
+    if (is_loopback(channel))
     {
-        LOGS("Loopback detected from [" << channel->authority() << "].");
+        LOGS("Loopback detected from [" << channel.authority() << "].");
         return error::accept_failed;
     }
 
-    if (channel->inbound() && is_zero(add1(inbound_channel_count_.load())))
+    if (channel.inbound() && is_zero(add1(inbound_channel_count_.load())))
     {
         LOGF("Overflow: inbound channel count.");
         return error::channel_overflow;
     }
 
-    if (!channel->quiet() && is_zero(add1(total_channel_count_.load())))
+    if (!channel.quiet() && is_zero(add1(total_channel_count_.load())))
     {
         LOGF("Overflow: total channel count.");
         return error::channel_overflow;
     }
 
-    if (!hosts_.reserve(channel->authority()))
+    if (!hosts_.reserve(channel.authority()))
     {
-        LOGS("Duplicate connection to [" << channel->authority() << "].");
+        LOGS("Duplicate connection to [" << channel.authority() << "].");
         return error::address_in_use;
     }
 
-    if (channel->inbound())
-    {
+    if (channel.inbound())
         ++inbound_channel_count_;
-    }
 
-    // Notify channel subscribers of started non-seed channels.
-    if (!channel->quiet())
-    {
+    if (!channel.quiet())
         ++total_channel_count_;
-        connect_subscriber_.notify(error::success, channel);
-    }
 
     return error::success;
 }
 
-// This must decrement the channel count(s) and remove authority if successful.
-void p2p::uncount_channel(const channel::ptr& channel) NOEXCEPT
+void p2p::uncount_channel(const channel& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    hosts_.unreserve(channel->authority());
+    hosts_.unreserve(channel.authority());
 
-    if (channel->inbound() && is_zero(inbound_channel_count_.load()))
+    if (channel.inbound() && is_zero(inbound_channel_count_.load()))
     {
         LOGF("Underflow: inbound channel count.");
         return;
     }
 
-    if (!channel->quiet() && is_zero(total_channel_count_.load()))
+    if (!channel.quiet() && is_zero(total_channel_count_.load()))
     {
         LOGF("Underflow: total channel count.");
         return;
     }
 
-    if (channel->inbound())
-    {
+    if (channel.inbound())
         --inbound_channel_count_;
-    }
 
-    // There is no notification for removal (subscribe to channel stop).
-    if (!channel->quiet())
-    {
+    if (!channel.quiet())
         --total_channel_count_;
-    }
 }
 
 // Specializations (protected).

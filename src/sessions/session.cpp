@@ -195,7 +195,7 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
         return;
     }
 
-    if (const auto code = network_.count_channel(channel))
+    if (const auto code = network_.count_channel(*channel))
     {
         unpend(channel);
         network_.unstore_nonce(*channel);
@@ -203,6 +203,10 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
         start(code);
         return;
     }
+
+    // Notify channel subscribers of started non-seed channel.
+    if (!channel->quiet())
+        network_.notify_connect(channel);
 
     // Requires uncount_channel/unstore_nonce on stop if and only if success.
     start(ec);
@@ -315,7 +319,7 @@ void session::do_handle_channel_stopped(const code& ec,
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     unpend(channel);
-    network_.uncount_channel(channel);
+    network_.uncount_channel(*channel);
     network_.unstore_nonce(*channel);
 
     // Assume stop notification, but may be subscribe failure (idempotent).

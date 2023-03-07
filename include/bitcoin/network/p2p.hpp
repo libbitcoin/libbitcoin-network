@@ -79,6 +79,12 @@ public:
                 this, message, sender));
     }
 
+    /////// Subscribe to message broadcast.
+    /////// A call after close invokes handlers with error::subscriber_stopped.
+    ////template <typename Message>
+    ////void subscribe_broadcast(const channel& channel, Notifier&& handler,
+    ////    Completer&& complete) NOEXCEPT;
+
     // Constructors.
     // ------------------------------------------------------------------------
 
@@ -121,6 +127,7 @@ public:
         stop_completer&& complete) NOEXCEPT;
 
     /// Unsubscribe by subscription key, error::desubscribed passed to handler.
+    ////virtual void unsubscribe_broadcast(uint64_t key) NOEXCEPT;
     virtual void unsubscribe_connect(object_key key) NOEXCEPT;
     virtual void unsubscribe_close(object_key key) NOEXCEPT;
 
@@ -161,11 +168,6 @@ public:
     // TEMP HACKS.
     // ------------------------------------------------------------------------
     // Not thread safe, read from stranded handler only.
-
-    ////virtual size_t broadcast_count() const NOEXCEPT
-    ////{
-    ////    return broadcaster_.size();
-    ////}
 
     virtual size_t stop_subscriber_count() const NOEXCEPT
     {
@@ -232,8 +234,11 @@ protected:
     virtual bool is_loopback(const channel& channel) const NOEXCEPT;
 
     /// Register channels for broadcast and quick stop, require strand.
-    virtual code count_channel(const channel::ptr& channel) NOEXCEPT;
-    virtual void uncount_channel(const channel::ptr& channel) NOEXCEPT;
+    virtual code count_channel(const channel& channel) NOEXCEPT;
+    virtual void uncount_channel(const channel& channel) NOEXCEPT;
+
+    /// Notify subscribers of new non-seed connection, require strand.
+    virtual void notify_connect(const channel::ptr& channel) NOEXCEPT;
 
     /// Maintain address pool.
     virtual void take(address_item_handler&& handler) NOEXCEPT;
