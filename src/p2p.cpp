@@ -258,6 +258,12 @@ void p2p::do_subscribe_connect(const channel_notifier& handler,
 // protected
 void p2p::notify_connect(const channel::ptr& channel) NOEXCEPT
 {
+    boost::asio::post(strand_,
+        std::bind(&p2p::do_notify_connect, this, channel));
+}
+
+void p2p::do_notify_connect(const channel::ptr& channel) NOEXCEPT
+{
     BC_ASSERT_MSG(stranded(), "strand");
     connect_subscriber_.notify(error::success, channel);
 }

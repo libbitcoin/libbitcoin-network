@@ -268,6 +268,7 @@ private:
     void handle_run(const code& ec, const result_handler& handler) NOEXCEPT;
 
     void do_unsubscribe_connect(object_key key) NOEXCEPT;
+    void do_notify_connect(const channel::ptr& channel) NOEXCEPT;
     void do_subscribe_connect(const channel_notifier& handler,
         const channel_completer& complete) NOEXCEPT;
 
