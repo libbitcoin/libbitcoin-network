@@ -95,7 +95,6 @@ void session::start_channel(const channel::ptr& channel,
 
     if (stopped())
     {
-        // Direct invoke of handlers.
         channel->stop(error::service_stopped);
         starter(error::service_stopped);
         stopper(error::service_stopped);
@@ -106,7 +105,6 @@ void session::start_channel(const channel::ptr& channel,
     // Inbound does not check nonce until handshake completes, so no race.
     if (!network_.store_nonce(*channel))
     {
-        // Direct invoke of handlers (continuing).
         channel->stop(error::channel_conflict);
         starter(error::channel_conflict);
         stopper(error::channel_conflict);
@@ -271,7 +269,10 @@ void session::do_attach_protocols(const channel::ptr& channel,
 
     // Resume accepting messages on the channel, timers restarted.
     channel->resume();
-    started(error::success);
+
+    // Complete on network strand.
+    boost::asio::post(network_.strand(),
+        std::bind(started, error::success));
 }
 
 // Override in derived sessions to attach protocols.
