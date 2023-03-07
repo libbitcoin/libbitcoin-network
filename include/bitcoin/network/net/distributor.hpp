@@ -32,11 +32,11 @@ namespace network {
 #define SUBSCRIBER(name) name##_subscriber_
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 #define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
-#define DEFINE_SUBSCRIBER(name) \
-    using SUBSCRIBER_TYPE(name) = unsubscriber<const messages::name::cptr&>
-#define SUBSCRIBER_OVERLOAD(name) \
-    void do_subscribe(distributor::handler<messages::name>&& handler) NOEXCEPT \
-    { SUBSCRIBER(name).subscribe(std::move(handler)); }
+#define DEFINE_SUBSCRIBER(name) using SUBSCRIBER_TYPE(name) = \
+    unsubscriber<const messages::name::cptr&>
+#define SUBSCRIBER_OVERLOAD(name) code do_subscribe( \
+    distributor::handler<messages::name>&& handler) NOEXCEPT \
+    { return SUBSCRIBER(name).subscribe(std::move(handler)); }
 
 /// Not thread safe.
 class BCT_API distributor
@@ -86,12 +86,13 @@ public:
     /// Create an instance of this class.
     distributor(asio::strand& strand) NOEXCEPT;
 
-    /// Subscription handlers are retained in the queue until stop.
-    /// No invocation occurs if the subscriber is stopped at time of subscribe.
+    /// If stopped, handler is invoked with error::subscriber_stopped.
+    /// If key exists, handler is invoked with error::subscriber_exists.
+    /// Otherwise handler retained. Subscription code is also returned here.
     template <typename Handler>
-    void subscribe(Handler&& handler) NOEXCEPT
+    code subscribe(Handler&& handler) NOEXCEPT
     {
-        do_subscribe(std::forward<Handler>(handler));
+        return do_subscribe(std::forward<Handler>(handler));
     }
 
     /// Relay a message instance to each subscriber of the type.
