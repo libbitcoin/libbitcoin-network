@@ -83,8 +83,7 @@ public:
         channel_id sender) NOEXCEPT
     {
         boost::asio::dispatch(strand_,
-            std::bind(&p2p::do_broadcast<Message>,
-                this, message, sender));
+            std::bind(&p2p::do_broadcast<Message>, this, message, sender));
     }
 
     template <typename Message, typename Handler = broadcaster::handler<Message>>
@@ -92,7 +91,13 @@ public:
     {
         boost::asio::dispatch(strand_,
             std::bind(&p2p::do_subscribe_broadcast<Message>,
-                this, system::to_shared(std::move(handler)), subscriber));
+                this, std::move(handler), subscriber));
+    }
+
+    virtual void unsubscribe_broadcast(channel_id subscriber) NOEXCEPT
+    {
+        boost::asio::dispatch(strand_,
+            std::bind(&p2p::do_unsubscribe_broadcast, this, subscriber));
     }
 
     /// Constructors.
@@ -268,6 +273,12 @@ private:
     {
         BC_ASSERT_MSG(stranded(), "strand");
         broadcaster_.subscribe(move_copy(handler), subscriber);
+    }
+
+    void do_unsubscribe_broadcast(channel_id subscriber) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        broadcaster_.unsubscribe(subscriber);
     }
 
     code subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;

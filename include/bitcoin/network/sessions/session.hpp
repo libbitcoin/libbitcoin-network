@@ -228,7 +228,8 @@ private:
         const result_handler& handshake) const NOEXCEPT;
     void do_handle_handshake(const code& ec, const channel::ptr& channel,
         const result_handler& start) NOEXCEPT;
-    void do_attach_protocols(const channel::ptr& channel) const NOEXCEPT;
+    void do_attach_protocols(const channel::ptr& channel,
+        const result_handler& started) const NOEXCEPT;
     void do_handle_channel_started(const code& ec, const channel::ptr& channel,
         const result_handler& started) NOEXCEPT;
     void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,

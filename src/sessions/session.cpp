@@ -245,18 +245,19 @@ void session::do_handle_channel_started(const code& ec,
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     // Handles channel subscribe_stop code.
-    started(ec);
-
-    // Do not attach protocols if failed.
     if (ec)
+    {
+        started(ec);
         return;
+    }
 
     // Switch to channel context.
     boost::asio::post(channel->strand(),
-        BIND1(do_attach_protocols, channel));
+        BIND2(do_attach_protocols, channel, started));
 }
 
-void session::do_attach_protocols(const channel::ptr& channel) const NOEXCEPT
+void session::do_attach_protocols(const channel::ptr& channel,
+    const result_handler& started) const NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
@@ -270,6 +271,7 @@ void session::do_attach_protocols(const channel::ptr& channel) const NOEXCEPT
 
     // Resume accepting messages on the channel, timers restarted.
     channel->resume();
+    started(error::success);
 }
 
 // Override in derived sessions to attach protocols.
@@ -324,8 +326,9 @@ void session::do_handle_channel_stopped(const code& ec,
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     unpend(channel);
-    network_.uncount_channel(*channel);
     network_.unstore_nonce(*channel);
+    network_.uncount_channel(*channel);
+    network_.unsubscribe_broadcast(channel->identifier());
 
     // Assume stop notification, but may be subscribe failure (idempotent).
     // Handles stop reason code, stop subscribe failure or stop notification.
