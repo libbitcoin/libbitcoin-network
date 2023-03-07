@@ -88,35 +88,35 @@ protected:
         channel_->subscribe<Message>(BOUND_PROTOCOL(handler, args));
     }
 
-    /// Broadcast a message instance to peers (use BROADCAST#).
-    template <class Message>
-    void broadcast(const Message& message) NOEXCEPT
-    {
-        session_->broadcast(message, channel_->identifier());
-    }
+    /////// Broadcast a message instance to peers (use BROADCAST).
+    ////template <class Message>
+    ////void broadcast(const Message& message) NOEXCEPT
+    ////{
+    ////    session_->broadcast(message, channel_->identifier());
+    ////}
 
-    /// Broadcast a message instance to peers (use BROADCAST#).
-    template <class Message>
-    void broadcast(Message&& message) NOEXCEPT
-    {
-        session_->broadcast(std::forward<Message>(message),
-            channel_->identifier());
-    }
+    /////// Broadcast a message instance to peers (use BROADCAST).
+    ////template <class Message>
+    ////void broadcast(Message&& message) NOEXCEPT
+    ////{
+    ////    session_->broadcast(std::forward<Message>(message),
+    ////        channel_->identifier());
+    ////}
 
-    /// Broadcast a message instance to peers (use BROADCAST).
-    template <class Message>
-    void broadcast(const typename Message::cptr& message) NOEXCEPT
-    {
-        session_->broadcast(message, channel_->identifier());
-    }
+    /////// Broadcast a message instance to peers (use BROADCAST).
+    ////template <class Message>
+    ////void broadcast(const typename Message::cptr& message) NOEXCEPT
+    ////{
+    ////    session_->broadcast(message, channel_->identifier());
+    ////}
 
-    /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST#).
-    /// Handler is invoked with error::subscriber_stopped if already stopped.
-    template <class Protocol, class Message, typename Handler, typename... Args>
-    void subscribe_broadcast(Handler&& handler, Args&&... args) NOEXCEPT
-    {
-        session_->subscribe_broadcast<Message>(BOUND_PROTOCOL(handler, args));
-    }
+    /////// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST#).
+    /////// Handler is invoked with error::subscriber_stopped if already stopped.
+    ////template <class Protocol, class Message, typename Handler, typename... Args>
+    ////void subscribe_broadcast(Handler&& handler, Args&&... args) NOEXCEPT
+    ////{
+    ////    session_->subscribe_broadcast<Message>(BOUND_PROTOCOL(handler, args));
+    ////}
 
     /// Start/Stop.
     /// -----------------------------------------------------------------------
