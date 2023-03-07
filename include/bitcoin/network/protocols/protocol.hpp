@@ -136,9 +136,6 @@ protected:
     /// Pause the channel (strand required).
     virtual void pause() NOEXCEPT;
 
-    /////// Resume the channel (strand required).
-    ////virtual void resume() NOEXCEPT;
-
     /// Properties.
     /// -----------------------------------------------------------------------
 

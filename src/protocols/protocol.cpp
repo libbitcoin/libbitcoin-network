@@ -95,13 +95,6 @@ void protocol::pause() NOEXCEPT
     channel_->pause();
 }
 
-////// Resume reads from the socket until pause or stop.
-////void protocol::resume() NOEXCEPT
-////{
-////    BC_ASSERT_MSG(stranded(), "stranded");
-////    channel_->resume();
-////}
-
 // Properties.
 // ----------------------------------------------------------------------------
 // The two public properties may be accessed outside the strand, but are never
