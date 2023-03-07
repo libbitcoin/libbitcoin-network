@@ -60,9 +60,10 @@ public:
     /// Broadcast offers no completion feedback, and subscription exists in a
     /// race with channel establishment. Broadcasts are designed for internal
     /// best-efforts propagation. Use individual channel.send calls otherwise.
+    /// Sender identifies the channel to its own handler, for option to bypass.
 
     template <typename Message>
-    void broadcast(const Message& message, channel_id sender=zero) NOEXCEPT
+    void broadcast(const Message& message, channel_id sender) NOEXCEPT
     {
         boost::asio::dispatch(strand_,
             std::bind(&p2p::do_broadcast<Message>,
@@ -70,7 +71,7 @@ public:
     }
 
     template <typename Message>
-    void broadcast(Message&& message, channel_id sender=zero) NOEXCEPT
+    void broadcast(Message&& message, channel_id sender) NOEXCEPT
     {
         boost::asio::dispatch(strand_,
             std::bind(&p2p::do_broadcast<Message>,
@@ -79,7 +80,7 @@ public:
 
     template <typename Message>
     void broadcast(const typename Message::cptr& message,
-        channel_id sender=zero) NOEXCEPT
+        channel_id sender) NOEXCEPT
     {
         boost::asio::dispatch(strand_,
             std::bind(&p2p::do_broadcast<Message>,
