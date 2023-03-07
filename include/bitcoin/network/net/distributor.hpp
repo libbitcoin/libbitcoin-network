@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_NET_PUMP_HPP
-#define LIBBITCOIN_NETWORK_NET_PUMP_HPP
+#ifndef LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_HPP
+#define LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_HPP
 
 #include <functional>
 #include <utility>
@@ -32,15 +32,14 @@ namespace network {
 #define SUBSCRIBER(name) name##_subscriber_
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 #define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
-#define DEFINE_SUBSCRIBER(name) \
-    using SUBSCRIBER_TYPE(name) = unsubscriber<const messages::name::cptr&>
-#define SUBSCRIBER_OVERLOAD(name) \
-    void do_subscribe(pump::handler<messages::name>&& handler) NOEXCEPT \
-    { SUBSCRIBER(name).subscribe(std::move(handler)); }
+#define DEFINE_SUBSCRIBER(name) using SUBSCRIBER_TYPE(name) = \
+    unsubscriber<const messages::name::cptr&>
+#define SUBSCRIBER_OVERLOAD(name) code do_subscribe( \
+    distributor::handler<messages::name>&& handler) NOEXCEPT \
+    { return SUBSCRIBER(name).subscribe(std::move(handler)); }
 
 /// Not thread safe.
-/// All handlers are posted to the strand.
-class BCT_API pump
+class BCT_API distributor
 {
 public:
     /// Helper for external declarations.
@@ -48,7 +47,7 @@ public:
     using handler = std::function<bool(const code&,
         const typename Message::cptr&)>;
 
-    DELETE_COPY_MOVE_DESTRUCT(pump);
+    DELETE_COPY_MOVE_DESTRUCT(distributor);
 
     DEFINE_SUBSCRIBER(address);
     DEFINE_SUBSCRIBER(alert);
@@ -85,20 +84,21 @@ public:
     DEFINE_SUBSCRIBER(version_acknowledge);
 
     /// Create an instance of this class.
-    pump(asio::strand& strand) NOEXCEPT;
+    distributor(asio::strand& strand) NOEXCEPT;
 
-    /// Subscription handlers are retained in the queue until stop.
-    /// No invocation occurs if the subscriber is stopped at time of subscribe.
+    /// If stopped, handler is invoked with error::subscriber_stopped.
+    /// If key exists, handler is invoked with error::subscriber_exists.
+    /// Otherwise handler retained. Subscription code is also returned here.
     template <typename Handler>
-    void subscribe(Handler&& handler) NOEXCEPT
+    code subscribe(Handler&& handler) NOEXCEPT
     {
-        do_subscribe(std::forward<Handler>(handler));
+        return do_subscribe(std::forward<Handler>(handler));
     }
 
     /// Relay a message instance to each subscriber of the type.
     /// Returns error code if fails to deserialize, otherwise success.
     virtual code notify(messages::identifier id, uint32_t version,
-        system::reader& source) NOEXCEPT;
+        const system::data_chunk& data) NOEXCEPT;
 
     /// Stop all subscribers, prevents subsequent subscription (idempotent).
     /// The subscriber is stopped regardless of the error code, however by
@@ -109,16 +109,17 @@ private:
     // Deserialize a stream into a message instance and notify subscribers.
     template <typename Message, typename Subscriber>
     code do_notify(Subscriber& subscriber, uint32_t version,
-        system::reader& source) NOEXCEPT
+        const system::data_chunk& data) NOEXCEPT
     {
-        // TODO: account for witness parameter in active() structure.
-        const auto message = messages::deserialize<Message>(source, version);
+        // Avoid deserialization if there are no subscribers for the type.
+        if (!is_zero(subscriber.size()))
+        {
+            // Subscribers are notified only with stop code or error::success.
+            const auto message = messages::deserialize<Message>(data, version);
+            if (!message) return error::invalid_message;
+            subscriber.notify(error::success, message);
+        }
 
-        if (!source)
-            return error::invalid_message;
-
-        // Subscribers are notified only with stop code or error::success.
-        subscriber.notify(error::success, message);
         return error::success;
     }
 

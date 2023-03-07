@@ -24,17 +24,6 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-using namespace system;
-
-constexpr auto empty_checksum = from_little_endian<uint32_t>(sha256::double_hash(
-    sha256::ablocks_t<0>{}));
-
-uint32_t network_checksum(const data_slice& data) NOEXCEPT
-{
-    return data.empty() ? empty_checksum :
-        from_little_endian<uint32_t>(bitcoin_hash(data.size(), data.data()));
-}
-
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

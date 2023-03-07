@@ -95,7 +95,6 @@ void session::start_channel(const channel::ptr& channel,
 
     if (stopped())
     {
-        // Direct invoke of handlers.
         channel->stop(error::service_stopped);
         starter(error::service_stopped);
         stopper(error::service_stopped);
@@ -106,14 +105,13 @@ void session::start_channel(const channel::ptr& channel,
     // Inbound does not check nonce until handshake completes, so no race.
     if (!network_.store_nonce(*channel))
     {
-        // Direct invoke of handlers (continuing).
         channel->stop(error::channel_conflict);
         starter(error::channel_conflict);
         stopper(error::channel_conflict);
         return;
     }
 
-    // Pend channel for handshake duration (for quick stop).
+    // Pend channel for connection duration (for quick stop).
     pend(channel);
 
     result_handler start =
@@ -185,25 +183,28 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    // Unpend channel from handshake.
-    unpend(channel);
-
     // Handles channel and protocol start failures.
     if (ec)
     {
+        unpend(channel);
         network_.unstore_nonce(*channel);
         channel->stop(ec);
         start(ec);
         return;
     }
 
-    if (const auto code = network_.count_channel(channel))
+    if (const auto code = network_.count_channel(*channel))
     {
+        unpend(channel);
         network_.unstore_nonce(*channel);
         channel->stop(code);
         start(code);
         return;
     }
+
+    ////// Notify channel subscribers of handshaked non-seed channel.
+    ////if (!channel->quiet())
+    ////    network_.notify_connect(channel);
 
     // Requires uncount_channel/unstore_nonce on stop if and only if success.
     start(ec);
@@ -242,26 +243,36 @@ void session::do_handle_channel_started(const code& ec,
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
     // Handles channel subscribe_stop code.
-    started(ec);
-
-    // Do not attach protocols if failed.
     if (ec)
+    {
+        started(ec);
         return;
+    }
 
     // Switch to channel context.
     boost::asio::post(channel->strand(),
-        BIND1(do_attach_protocols, channel));
+        BIND2(do_attach_protocols, channel, started));
 }
 
-void session::do_attach_protocols(const channel::ptr& channel) const NOEXCEPT
+void session::do_attach_protocols(const channel::ptr& channel,
+    const result_handler& started) const NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
+    // Protocol attach is always synchronous, complete here.
     attach_protocols(channel);
+
+    // Notify channel subscribers of fully-attached non-seed channel.
+    if (!channel->quiet())
+        network_.notify_connect(channel);
 
     // Resume accepting messages on the channel, timers restarted.
     channel->resume();
+
+    // Complete on network strand.
+    boost::asio::post(network_.strand(),
+        std::bind(started, error::success));
 }
 
 // Override in derived sessions to attach protocols.
@@ -315,8 +326,10 @@ void session::do_handle_channel_stopped(const code& ec,
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
-    network_.uncount_channel(channel);
+    unpend(channel);
     network_.unstore_nonce(*channel);
+    network_.uncount_channel(*channel);
+    network_.unsubscribe_broadcast(channel->identifier());
 
     // Assume stop notification, but may be subscribe failure (idempotent).
     // Handles stop reason code, stop subscribe failure or stop notification.

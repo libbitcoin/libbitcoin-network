@@ -39,6 +39,16 @@ const uint32_t address::version_maximum = level::maximum_protocol;
 // Time stamps are always used in address messages.
 constexpr auto with_timestamp = true;
 
+// static
+typename address::cptr address::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 address address::deserialize(uint32_t version, system::reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
@@ -53,6 +63,14 @@ address address::deserialize(uint32_t version, system::reader& source) NOEXCEPT
             with_timestamp));
 
     return { addresses };
+}
+
+bool address::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
 }
 
 void address::serialize(uint32_t version, writer& sink) const NOEXCEPT

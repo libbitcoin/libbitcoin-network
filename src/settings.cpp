@@ -193,9 +193,9 @@ steady_clock::duration settings::channel_expiration() const NOEXCEPT
 
 size_t settings::minimum_address_count() const NOEXCEPT
 {
-    // Guarded by parameterization (config).
+    // Cannot overflow as long as both are uint16_t.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return system::safe_multiply(connect_batch_size, outbound_connections);
+    return safe_multiply<size_t>(connect_batch_size, outbound_connections);
     BC_POP_WARNING()
 }
 

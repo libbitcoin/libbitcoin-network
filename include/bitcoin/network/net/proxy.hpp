@@ -28,7 +28,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/net/pump.hpp>
+#include <bitcoin/network/net/distributor.hpp>
 #include <bitcoin/network/net/socket.hpp>
 
 namespace libbitcoin {
@@ -49,21 +49,36 @@ public:
     DELETE_COPY_MOVE(proxy);
     virtual ~proxy() NOEXCEPT;
 
-    /// Serialize and send a message to the peer (requires strand).
+    /// Serialize and write a message to the peer (requires strand).
+    /// Completion handler is always invoked on the channel strand.
     template <class Message>
     void send(const Message& message, result_handler&& complete) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        do_write(messages::serialize(message, protocol_magic(), version()),
-            std::move(complete));
+
+        // TODO: build witness into feature w/magic and negotiated version.
+        // TODO: if self and peer services show witness, set feature true.
+        const auto data = messages::serialize(message, protocol_magic(),
+            version());
+
+        if (!data)
+        {
+            // This is an internal error, should never happen.
+            LOGF("Serialization failure (" << Message::command << ").");
+            complete(error::unknown);
+            return;
+        }
+
+        write(data, std::move(complete));
     }
 
     /// Subscribe to messages from peer (requires strand).
-    template <class Message, typename Handler = pump::handler<Message>>
+    /// Event handler is always invoked on the channel strand.
+    template <class Message, typename Handler = distributor::handler<Message>>
         void subscribe(Handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        pump_subscriber_.subscribe(std::forward<Handler>(handler));
+        distributor_.subscribe(std::forward<Handler>(handler));
     }
 
     /// Pause reading from the socket (requires strand).
@@ -78,11 +93,8 @@ public:
     /// Idempotent, may be called multiple times.
     virtual void stop(const code& ec) NOEXCEPT;
 
-    /// Send a serialized message to the peer (use messages::serialize).
-    virtual void write(const system::chunk_ptr& payload,
-        result_handler&& handler) NOEXCEPT;
-
     /// Subscribe to stop notification with completion handler.
+    /// Completion and event handlers are always invoked on the channel strand.
     void subscribe_stop(result_handler&& handler,
         result_handler&& complete) NOEXCEPT;
 
@@ -119,11 +131,19 @@ protected:
     virtual uint32_t protocol_magic() const NOEXCEPT = 0;
     virtual bool validate_checksum() const NOEXCEPT = 0;
     virtual uint32_t version() const NOEXCEPT = 0;
+
+    /// Events provided by the proxy.
+
+    /// A message has been received from the peer.
     virtual void signal_activity() NOEXCEPT = 0;
 
     /// Notify subscribers of a new message (requires strand).
     virtual code notify(messages::identifier id, uint32_t version,
-        system::reader& source) NOEXCEPT;
+        const system::data_chunk& source) NOEXCEPT;
+
+    /// Send a serialized message to the peer.
+    virtual void write(const system::chunk_ptr& payload,
+        const result_handler& handler) NOEXCEPT;
 
     /// Subscribe to stop notification (requires strand).
     void subscribe_stop(result_handler&& handler) NOEXCEPT;
@@ -142,8 +162,6 @@ private:
         const heading_ptr& head) NOEXCEPT;
 
     void write() NOEXCEPT;
-    void do_write(const system::chunk_ptr& payload,
-        const result_handler& handler) NOEXCEPT;
     void handle_write(const code& ec, size_t bytes,
         const system::chunk_ptr& payload,
         const result_handler& handler) NOEXCEPT;
@@ -160,7 +178,7 @@ private:
     system::data_array<messages::heading::size()> heading_buffer_{};
     system::read::bytes::copy heading_reader_{ heading_buffer_ };
     stop_subscriber stop_subscriber_;
-    pump pump_subscriber_;
+    distributor distributor_;
 };
 
 } // namespace network

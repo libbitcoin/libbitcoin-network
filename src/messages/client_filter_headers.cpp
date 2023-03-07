@@ -38,6 +38,15 @@ const uint32_t client_filter_headers::version_minimum = level::bip157;
 const uint32_t client_filter_headers::version_maximum = level::maximum_protocol;
 
 // static
+typename client_filter_headers::cptr client_filter_headers::deserialize(
+    uint32_t version, const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 client_filter_headers client_filter_headers::deserialize(uint32_t version,
     reader& source) NOEXCEPT
 {
@@ -63,6 +72,14 @@ client_filter_headers client_filter_headers::deserialize(uint32_t version,
         source.read_hash(),
         read_filter_hashes(source)
     };
+}
+
+bool client_filter_headers::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
 }
 
 void client_filter_headers::serialize(uint32_t BC_DEBUG_ONLY(version),

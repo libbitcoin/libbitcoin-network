@@ -254,12 +254,12 @@ public:
         return attach<mock_seed_session>(*this);
     }
 
-    code count_channel(const channel::ptr&) NOEXCEPT override
+    code count_channel(const channel&) NOEXCEPT override
     {
         return error::success;
     }
 
-    void uncount_channel(const channel::ptr&) NOEXCEPT override
+    void uncount_channel(const channel&) NOEXCEPT override
     {
     }
 

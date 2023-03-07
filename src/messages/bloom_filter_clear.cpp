@@ -41,6 +41,15 @@ size_t bloom_filter_clear::size(uint32_t) NOEXCEPT
 }
 
 // static
+typename bloom_filter_clear::cptr bloom_filter_clear::deserialize(
+    uint32_t version, const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 bloom_filter_clear bloom_filter_clear::deserialize(uint32_t version,
     reader& source) NOEXCEPT
 {
@@ -48,6 +57,14 @@ bloom_filter_clear bloom_filter_clear::deserialize(uint32_t version,
         source.invalidate();
 
     return {};
+}
+
+bool bloom_filter_clear::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
 }
 
 void bloom_filter_clear::serialize(uint32_t BC_DEBUG_ONLY(version),

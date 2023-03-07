@@ -35,6 +35,16 @@ const identifier get_compact_transactions::id = identifier::get_compact_transact
 const uint32_t get_compact_transactions::version_minimum = level::bip152;
 const uint32_t get_compact_transactions::version_maximum = level::maximum_protocol;
 
+// static
+typename get_compact_transactions::cptr get_compact_transactions::deserialize(
+    uint32_t version, const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 get_compact_transactions get_compact_transactions::deserialize(uint32_t version,
     reader& source) NOEXCEPT
 {
@@ -58,6 +68,14 @@ get_compact_transactions get_compact_transactions::deserialize(uint32_t version,
         source.read_hash(),
         read_indexes(source)
     };
+}
+
+bool get_compact_transactions::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
 }
 
 void get_compact_transactions::serialize(uint32_t BC_DEBUG_ONLY(version),

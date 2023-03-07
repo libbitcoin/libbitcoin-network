@@ -52,7 +52,7 @@ static constexpr uint32_t https_magic = 0x02010316;
 proxy::proxy(const socket::ptr& socket) NOEXCEPT
   : socket_(socket),
     stop_subscriber_(socket->strand()),
-    pump_subscriber_(socket->strand()),
+    distributor_(socket->strand()),
     reporter(socket->log())
 {
 }
@@ -117,7 +117,7 @@ void proxy::do_stop(const code& ec) NOEXCEPT
 
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
-    pump_subscriber_.stop(ec);
+    distributor_.stop(ec);
 
     // Post stop handlers to strand and clear/stop accepting subscriptions.
     // The code provides information on the reason that the channel stopped.
@@ -157,10 +157,13 @@ void proxy::do_subscribe_stop(const result_handler& handler,
 // ----------------------------------------------------------------------------
 
 code proxy::notify(identifier id, uint32_t version,
-    system::reader& source) NOEXCEPT
+    const data_chunk& source) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return pump_subscriber_.notify(id, version, source);
+
+    // TODO: build witness into feature w/magic and negotiated version.
+    // TODO: if self and peer services show witness, set feature true.
+    return distributor_.notify(id, version, source);
 }
 
 void proxy::read_heading() NOEXCEPT
@@ -272,25 +275,24 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
         return;
     }
 
-    // This is a pointless test but we allow it as an option for completeness.
-    if (validate_checksum() && !head->verify_checksum(payload_buffer_))
+    if (validate_checksum())
     {
-        LOGR("Invalid " << head->command << " payload from ["
-            << authority() << "] bad checksum.");
+        // This hash could be reused as w/txid, but simpler to disable check.
+        if (head->checksum != network_checksum(network_hash(payload_buffer_)))
+        {
+            LOGR("Invalid " << head->command << " payload from ["
+                << authority() << "] bad checksum.");
 
-        stop(error::invalid_checksum);
-        return;
+            stop(error::invalid_checksum);
+            return;
+        }
     }
 
-    // Resizable payload buffer precludes reuse of the payload reader.
-    system::read::bytes::copy payload_reader(payload_buffer_);
-
     // Notify subscribers of the new message.
-    const auto code = notify(head->id(), version(), payload_reader);
+    const auto code = notify(head->id(), version(), payload_buffer_);
 
     if (code)
     {
-        // /nodes.mom.market:0.2/ sends unversioned sendaddrv2.
         LOGR("Invalid " << head->command << " payload from [" << authority()
             << "] (" << encode_base16({ payload_buffer_.begin(),
                 std::next(payload_buffer_.begin(), std::min(payload_size,
@@ -317,23 +319,11 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 // interleaving-async-write-calls
 
 void proxy::write(const system::chunk_ptr& payload,
-    result_handler&& handler) NOEXCEPT
-{
-    if (stopped())
-    {
-        handler(error::channel_stopped);
-        return;
-    }
-
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), payload, std::move(handler)));
-}
-
-void proxy::do_write(const system::chunk_ptr& payload,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(payload, "payload");
+
     const auto started = !queue_.empty();
 
     // Clang does not like emplace here.
@@ -357,11 +347,9 @@ void proxy::write() NOEXCEPT
         return;
 
     auto& job = queue_.front();
-
-    // chunk_ptr is copied into std::bind closure to keep data alive. 
     socket_->write(*job.first,
         std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, job.first, std::move(job.second)));
+            shared_from_this(), _1, _2, job.first, job.second));
 }
 
 void proxy::handle_write(const code& ec, size_t,
@@ -393,7 +381,7 @@ void proxy::handle_write(const code& ec, size_t,
     {
         if (ec != error::peer_disconnect && ec != error::operation_canceled)
         {
-            LOGF("Seng failure " << heading::get_command(*payload) << " to ["
+            LOGF("Send failure " << heading::get_command(*payload) << " to ["
                 << authority() << "] (" << payload->size() << " bytes) "
                 << ec.message());
         }

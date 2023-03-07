@@ -43,7 +43,42 @@ class BCT_API session
   : public enable_shared_from_base<session>, public reporter
 {
 public:
+    typedef broadcaster::channel_id channel_id;
+
     DELETE_COPY_MOVE(session);
+
+    /// Broadcast.
+    /// -----------------------------------------------------------------------
+    /// Sender identifies the channel to its own handler, for option to bypass.
+
+    ////template <typename Message>
+    ////inline void broadcast(const Message& message, channel_id sender) NOEXCEPT
+    ////{
+    ////    network_.broadcast(message, sender);
+    ////}
+
+    ////template <typename Message>
+    ////inline void broadcast(Message&& message, channel_id sender) NOEXCEPT
+    ////{
+    ////    network_.broadcast(std::forward<Message>(message), sender);
+    ////}
+
+    ////template <typename Message>
+    ////inline void broadcast(const typename Message::cptr& message,
+    ////    channel_id sender) NOEXCEPT
+    ////{
+    ////    network_.broadcast(message, sender);
+    ////}
+
+    ////template <typename Message, typename Handler = broadcaster::handler<Message>>
+    ////inline void subscribe_broadcast(Handler&& handler,
+    ////    channel_id subscriber) NOEXCEPT
+    ////{
+    ////    network_.subscribe_broadcast(std::forward<Handler>(handler), subscriber);
+    ////}
+
+    /// Start/stop.
+    /// -----------------------------------------------------------------------
 
     /// Start the session (call from network strand).
     virtual void start(result_handler&& handler) NOEXCEPT;
@@ -88,13 +123,7 @@ protected:
     typedef desubscriber<object_key> subscriber;
     typedef subscriber::handler notifier;
 
-    /// Construct an instance (network should be started).
-    session(p2p& network, uint64_t identifier) NOEXCEPT;
-
-    /// Asserts that session is stopped.
-    virtual ~session() NOEXCEPT;
-
-    /// Invocation helpers.
+    /// Invocation.
     /// -----------------------------------------------------------------------
 
     /// Bind a method in the base or derived class (use BIND#).
@@ -104,6 +133,15 @@ protected:
         return std::bind(std::forward<Handler>(handler),
             shared_from_base<Session>(), std::forward<Args>(args)...);
     }
+
+    /// Constructors.
+    /// -----------------------------------------------------------------------
+
+    /// Construct an instance (network should be started).
+    session(p2p& network, uint64_t identifier) NOEXCEPT;
+
+    /// Asserts that session is stopped.
+    virtual ~session() NOEXCEPT;
 
     /// Channel sequence.
     /// -----------------------------------------------------------------------
@@ -127,7 +165,7 @@ protected:
     virtual void defer(const steady_clock::duration& delay,
         result_handler&& handler) NOEXCEPT;
 
-    /// Pend/unpend a channel, for quick stop (unpend false if not pending).
+    /// Pend/unpend channel, for stop notification (unpend false if not pent).
     virtual void pend(const channel::ptr& channel) NOEXCEPT;
     virtual void unpend(const channel::ptr& channel) NOEXCEPT;
 
@@ -190,7 +228,8 @@ private:
         const result_handler& handshake) const NOEXCEPT;
     void do_handle_handshake(const code& ec, const channel::ptr& channel,
         const result_handler& start) NOEXCEPT;
-    void do_attach_protocols(const channel::ptr& channel) const NOEXCEPT;
+    void do_attach_protocols(const channel::ptr& channel,
+        const result_handler& started) const NOEXCEPT;
     void do_handle_channel_started(const code& ec, const channel::ptr& channel,
         const result_handler& started) NOEXCEPT;
     void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,

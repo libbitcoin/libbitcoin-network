@@ -36,6 +36,15 @@ const uint32_t bloom_filter_load::version_minimum = level::bip37;
 const uint32_t bloom_filter_load::version_maximum = level::maximum_protocol;
 
 // static
+typename bloom_filter_load::cptr bloom_filter_load::deserialize(
+    uint32_t version, const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 bloom_filter_load bloom_filter_load::deserialize(uint32_t version,
     reader& source) NOEXCEPT
 {
@@ -59,6 +68,14 @@ bloom_filter_load bloom_filter_load::deserialize(uint32_t version,
         source.read_4_bytes_little_endian(),
         source.read_byte()
     };
+}
+
+bool bloom_filter_load::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
 }
 
 void bloom_filter_load::serialize(uint32_t BC_DEBUG_ONLY(version),

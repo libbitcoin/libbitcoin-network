@@ -52,13 +52,14 @@ public:
 
     // Capture last sent payload.
     void write(const system::chunk_ptr& payload,
-        result_handler&&) NOEXCEPT override
+        const result_handler&) NOEXCEPT override
     {
         payload_ = payload;
     }
 
     // Override protected base to notify subscribers.
-    code notify(messages::identifier, uint32_t, system::reader&) NOEXCEPT override
+    code notify(messages::identifier, uint32_t,
+        const system::data_chunk&) NOEXCEPT override
     {
         return error::success;
         ////return channel::notify(id, version, source);

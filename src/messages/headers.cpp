@@ -40,6 +40,15 @@ const uint32_t headers::version_maximum = level::maximum_protocol;
 constexpr uint8_t trail = 0x00;
 
 // static
+typename headers::cptr headers::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 headers headers::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
@@ -62,6 +71,14 @@ headers headers::deserialize(uint32_t version, reader& source) NOEXCEPT
     }
 
     return { header_ptrs };
+}
+
+bool headers::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
 }
 
 void headers::serialize(uint32_t BC_DEBUG_ONLY(version),

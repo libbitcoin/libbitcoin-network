@@ -92,13 +92,14 @@
 #include <bitcoin/network/messages/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/enums/service.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
+#include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/deadline.hpp>
+#include <bitcoin/network/net/distributor.hpp>
 #include <bitcoin/network/net/hosts.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/net/proxy.hpp>
-#include <bitcoin/network/net/pump.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/protocols/protocol_address_in_31402.hpp>

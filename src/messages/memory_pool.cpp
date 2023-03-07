@@ -40,6 +40,23 @@ size_t memory_pool::size(uint32_t) NOEXCEPT
     return zero;
 }
 
+// static
+typename memory_pool::cptr memory_pool::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+bool memory_pool::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
+}
+
 memory_pool memory_pool::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)

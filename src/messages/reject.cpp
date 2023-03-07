@@ -76,6 +76,15 @@ reject::reason_code reject::byte_to_reason(uint8_t byte) NOEXCEPT
 }
 
 // static
+typename reject::cptr reject::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 reject reject::deserialize(uint32_t, reader& source) NOEXCEPT
 {
     auto message = source.read_string(max_reject_message);
@@ -92,6 +101,14 @@ reject reject::deserialize(uint32_t, reader& source) NOEXCEPT
         // and all provided bytes are read. to_array will pad/truncate.
         chain ? to_array<hash_size>(source.read_bytes()) : null_hash
     };
+}
+
+bool reject::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
 }
 
 void reject::serialize(uint32_t BC_DEBUG_ONLY(version),

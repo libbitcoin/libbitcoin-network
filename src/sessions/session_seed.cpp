@@ -225,10 +225,6 @@ void session_seed::handle_channel_start(const code& ec,
     {
         LOGN("Seed start [" << channel->authority() << "] " << ec.message());
     }
-
-    // Pend even on start failure.
-    // This immediately follows session handshake unpend of the same channel.
-    pend(channel);
 }
 
 void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
@@ -265,9 +261,6 @@ void session_seed::handle_channel_stop(const code& LOG_ONLY(ec),
 {
     BC_ASSERT_MSG(stranded(), "strand");
     LOGN("Seed stop [" << channel->authority() << "] " << ec.message());
-
-    // Pent even on start failure.
-    unpend(channel);
     racer->finish(address_count());
 }
 

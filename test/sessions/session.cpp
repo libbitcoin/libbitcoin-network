@@ -306,15 +306,15 @@ protected:
         return p2p::unstore_nonce(channel);
     }
 
-    code count_channel(const channel::ptr& channel) NOEXCEPT override
+    code count_channel(const channel& channel) NOEXCEPT override
     {
-        counted_ = channel->nonce();
+        counted_ = channel.nonce();
         return ((counted_result_ = p2p::count_channel(channel)));
     }
 
-    void uncount_channel(const channel::ptr& channel) NOEXCEPT override
+    void uncount_channel(const channel& channel) NOEXCEPT override
     {
-        uncounted_ = channel->nonce();
+        uncounted_ = channel.nonce();
         p2p::uncount_channel(channel);
     }
 
@@ -836,7 +836,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
             });
     });
 
-    // Channel stopped by heading read fail, stop method called by session.
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(channel->resumed());
@@ -859,7 +858,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE(channel->reresumed());
-    BOOST_REQUIRE(!channel->stopped());
+    BOOST_REQUIRE(channel->stopped());
 
     net.close();
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);
@@ -921,7 +920,6 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
             });
     });
 
-    // Channel stopped by heading read fail, stop method called by session.
     BOOST_REQUIRE_EQUAL(started_channel.get_future().get(), error::success);
     BOOST_REQUIRE(session->attached_handshake());
     BOOST_REQUIRE(channel->resumed());
@@ -944,7 +942,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     BOOST_REQUIRE(stopped.get_future().get());
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE(channel->reresumed());
-    BOOST_REQUIRE(!channel->stopped());
+    BOOST_REQUIRE(channel->stopped());
 
     net.close();
     BOOST_REQUIRE_EQUAL(stopped_channel.get_future().get(), error::service_stopped);

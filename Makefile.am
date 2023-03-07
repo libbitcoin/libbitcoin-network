@@ -88,12 +88,13 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/version.cpp \
     src/messages/version_acknowledge.cpp \
     src/net/acceptor.cpp \
+    src/net/broadcaster.cpp \
     src/net/channel.cpp \
     src/net/connector.cpp \
     src/net/deadline.cpp \
+    src/net/distributor.cpp \
     src/net/hosts.cpp \
     src/net/proxy.cpp \
-    src/net/pump.cpp \
     src/net/socket.cpp \
     src/protocols/protocol.cpp \
     src/protocols/protocol_address_in_31402.cpp \
@@ -183,12 +184,13 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/version.cpp \
     test/messages/version_acknowledge.cpp \
     test/net/acceptor.cpp \
+    test/net/broadcaster.cpp \
     test/net/channel.cpp \
     test/net/connector.cpp \
     test/net/deadline.cpp \
+    test/net/distributor.cpp \
     test/net/hosts.cpp \
     test/net/proxy.cpp \
-    test/net/pump.cpp \
     test/net/socket.cpp \
     test/protocols/protocol.cpp \
     test/protocols/protocol_address_in_31402.cpp \
@@ -322,13 +324,14 @@ include_bitcoin_network_messages_enums_HEADERS = \
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/acceptor.hpp \
+    include/bitcoin/network/net/broadcaster.hpp \
     include/bitcoin/network/net/channel.hpp \
     include/bitcoin/network/net/connector.hpp \
     include/bitcoin/network/net/deadline.hpp \
+    include/bitcoin/network/net/distributor.hpp \
     include/bitcoin/network/net/hosts.hpp \
     include/bitcoin/network/net/net.hpp \
     include/bitcoin/network/net/proxy.hpp \
-    include/bitcoin/network/net/pump.hpp \
     include/bitcoin/network/net/socket.hpp
 
 include_bitcoin_network_protocolsdir = ${includedir}/bitcoin/network/protocols

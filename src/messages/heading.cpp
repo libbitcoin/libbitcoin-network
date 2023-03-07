@@ -99,6 +99,13 @@ std::string heading::get_command(const data_chunk& payload) NOEXCEPT
 heading heading::factory(uint32_t magic, const std::string& command,
     const data_slice& payload) NOEXCEPT
 {
+    return factory(magic, command, payload, {});
+}
+
+// static
+heading heading::factory(uint32_t magic, const std::string& command,
+    const data_slice& payload, const system::hash_cptr& payload_hash) NOEXCEPT
+{
     // Payload is constrained to uint32_t by protocol.
     const auto size = payload.size();
     if (is_limited<uint32_t>(size))
@@ -109,8 +116,16 @@ heading heading::factory(uint32_t magic, const std::string& command,
         magic,
         command,
         possible_narrow_cast<uint32_t>(size),
-        network_checksum(payload)
+        network_checksum(payload_hash ? *payload_hash : network_hash(payload))
     };
+}
+
+// static
+heading::cptr heading::deserialize(const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(reader));
+    return reader ? message : nullptr;
 }
 
 // static
@@ -123,6 +138,13 @@ heading heading::deserialize(reader& source) NOEXCEPT
         source.read_4_bytes_little_endian(),
         source.read_4_bytes_little_endian()
     };
+}
+
+bool heading::serialize(const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(writer);
+    return writer;
 }
 
 void heading::serialize(writer& sink) const NOEXCEPT
@@ -182,11 +204,6 @@ identifier heading::id() const NOEXCEPT
 BC_POP_WARNING()
 
 #undef COMMAND_ID
-
-bool heading::verify_checksum(const data_slice& body) const NOEXCEPT
-{
-    return network_checksum(body) == checksum;
-}
 
 } // namespace messages
 } // namespace network

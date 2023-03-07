@@ -19,52 +19,71 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_MESSAGE_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_MESSAGE_HPP
 
+#include <iterator>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/heading.hpp>
+#include <bitcoin/network/messages/transaction.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-    
-/// Serialize message object to the wire protocol encoding.
+
+constexpr auto empty_hash = system::sha256::double_hash(
+    system::sha256::ablocks_t<zero>{});
+constexpr auto empty_checksum = system::from_little_endian<uint32_t>(
+    empty_hash);
+
+inline uint32_t network_checksum(
+    const system::hash_digest& hash) NOEXCEPT
+{
+    // TODO: verify this is just a cast.
+    return system::from_little_endian<uint32_t>(hash);
+}
+
+inline system::hash_digest network_hash(
+    const system::data_slice& data) NOEXCEPT
+{
+    // TODO: const should be baked into all hash(empty).
+    return data.empty() ? empty_hash :
+        system::bitcoin_hash(data.size(), data.begin());
+}
+
+/// Deserialize message payload from the wire protocol encoding.
+/// Returns nullptr if serialization fails for any reason (expected).
 template <typename Message>
-void serialize(Message& instance, system::writer& sink,
+typename Message::cptr deserialize(const system::data_chunk& body,
     uint32_t version) NOEXCEPT
 {
-    instance.serialize(version, sink);
+    // TODO: build witness into feature w/magic and negotiated version.
+    // TODO: have deserialize use data for hash pregeneration as applicable.
+    return Message::deserialize(version, body);
 }
 
 /// Serialize message object to the wire protocol encoding.
+/// Returns nullptr if serialization fails for any reason (unexpected).
 template <typename Message>
-system::chunk_ptr serialize(const Message& instance, uint32_t magic,
+system::chunk_ptr serialize(const Message& message, uint32_t magic,
     uint32_t version) NOEXCEPT
 {
-    using namespace system;
-    const auto buffer = std::make_shared<data_chunk>(heading::size() +
-        instance.size(version));
+    const auto size = heading::size() + message.size(version);
+    const auto data = std::make_shared<system::data_chunk>(size);
+    const auto body_start = std::next(data->begin(), heading::size());
+    const system::data_slab body(body_start, data->end());
 
-    data_slab body(std::next(buffer->begin(), heading::size()), buffer->end());
-    write::bytes::copy body_writer(body);
-    serialize(instance, body_writer, version);
+    ////// Transaction is the only message that can use the identity hash.
+    ////// TODO: Hash must match witness serialization of the transaction object.
+    ////system::hash_cptr hash{};
+    ////if constexpr (is_same_type<Message, transaction>) { hash = message.hash; }
 
-    write::bytes::copy head_writer(*buffer);
-    heading::factory(magic, Message::command, body).serialize(head_writer);
+    // TODO: build witness into feature w/magic and negotiated version.
+    if (!message.serialize(version, body) ||
+        !heading::factory(magic, Message::command, body /*, hash*/).serialize(*data))
+        return {};
 
-    return buffer;
+    return data;
 }
-
-/// Deserialize message object from the wire protocol encoding.
-template <typename Message>
-typename Message::cptr deserialize(system::reader& source,
-    uint32_t version) NOEXCEPT
-{
-    return system::to_shared(Message::deserialize(version, source));
-}
-
-/// Compute an internal representation of the message checksum.
-BCT_API uint32_t network_checksum(const system::data_slice& data) NOEXCEPT;
 
 } // namespace messages
 } // namespace network

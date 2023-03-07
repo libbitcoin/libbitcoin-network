@@ -22,11 +22,13 @@ BOOST_AUTO_TEST_SUITE(heading_tests)
 
 using namespace bc::network::messages;
 
-// factory
-// maximum_payload
-// verify_checksum
 // deserialize
 // serialize
+
+static_assert(heading::maximum_payload(0, true) == 4'000'000_size);
+static_assert(heading::maximum_payload(0, false) == 1'800'003_size);
+static_assert(heading::maximum_payload(max_uint32, true) == 4'000'000_size);
+static_assert(heading::maximum_payload(max_uint32, false) == 1'800'003_size);
 
 BOOST_AUTO_TEST_CASE(heading__size__always__expected)
 {
@@ -267,6 +269,48 @@ BOOST_AUTO_TEST_CASE(heading__get_command__extra_payload__expected)
     });
 
     BOOST_REQUIRE_EQUAL(heading::get_command(payload), "wxyzwxyzwxyz");
+}
+
+// factory
+
+BOOST_AUTO_TEST_CASE(heading__factory1__empty__expected)
+{
+    constexpr uint32_t magic = 42;
+    constexpr auto command = "ping";
+    const system::data_chunk payload{};
+    const auto instance = heading::factory(magic, command, payload);
+
+    BOOST_REQUIRE_EQUAL(instance.magic, magic);
+    BOOST_REQUIRE_EQUAL(instance.command, command);
+    BOOST_REQUIRE_EQUAL(instance.checksum, messages::empty_checksum);
+    BOOST_REQUIRE(instance.id() == identifier::ping);
+}
+
+BOOST_AUTO_TEST_CASE(heading__factory2__default_hash__expected)
+{
+    constexpr uint32_t magic = 42;
+    constexpr auto command = "pong";
+    const system::data_chunk payload{};
+    const auto instance = heading::factory(magic, command, payload, {});
+
+    BOOST_REQUIRE_EQUAL(instance.magic, magic);
+    BOOST_REQUIRE_EQUAL(instance.command, command);
+    BOOST_REQUIRE_EQUAL(instance.checksum, messages::empty_checksum);
+    BOOST_REQUIRE(instance.id() == identifier::pong);
+}
+
+BOOST_AUTO_TEST_CASE(heading__factory2__non_default_hash__expected)
+{
+    constexpr uint32_t magic = 42;
+    constexpr auto command = "pong";
+    const system::data_chunk payload{};
+    const auto hash = system::to_shared(messages::empty_hash);
+    const auto instance = heading::factory(magic, command, payload, hash);
+
+    BOOST_REQUIRE_EQUAL(instance.magic, magic);
+    BOOST_REQUIRE_EQUAL(instance.command, command);
+    BOOST_REQUIRE_EQUAL(instance.checksum, messages::empty_checksum);
+    BOOST_REQUIRE(instance.id() == identifier::pong);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

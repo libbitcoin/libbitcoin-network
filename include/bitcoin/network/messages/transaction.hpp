@@ -28,6 +28,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
+// TODO: build witness into feature w/magic and negotiated version.
 struct BCT_API transaction
 {
     typedef std::shared_ptr<const transaction> cptr;
@@ -37,13 +38,22 @@ struct BCT_API transaction
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
+    static cptr deserialize(uint32_t version, const system::data_chunk& data,
+        bool witness=true) NOEXCEPT;
     static transaction deserialize(uint32_t version, system::reader& source,
         bool witness=true) NOEXCEPT;
+
+    bool serialize(uint32_t version,
+        const system::data_slab& data, bool witness=true) const NOEXCEPT;
     void serialize(uint32_t version, system::writer& sink,
         bool witness=true) const NOEXCEPT;
+
     size_t size(uint32_t version, bool witness) const NOEXCEPT;
 
     system::chain::transaction::cptr transaction_ptr;
+
+    /// Hash of message, optimization.
+    mutable system::hash_ptr hash{};
 };
 
 } // namespace messages

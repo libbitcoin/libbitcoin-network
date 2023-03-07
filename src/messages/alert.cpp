@@ -37,6 +37,15 @@ const uint32_t alert::version_minimum = level::minimum_protocol;
 const uint32_t alert::version_maximum = level::maximum_protocol;
 
 // static
+typename alert::cptr alert::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
+}
+
+// static
 alert alert::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
@@ -52,6 +61,14 @@ alert alert::deserialize(uint32_t version, reader& source) NOEXCEPT
         std::move(item),
         source.read_bytes(source.read_size(chain::max_block_size))
     };
+}
+
+bool alert::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
 }
 
 void alert::serialize(uint32_t version, writer& sink) const NOEXCEPT

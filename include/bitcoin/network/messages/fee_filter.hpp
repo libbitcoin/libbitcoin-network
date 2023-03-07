@@ -38,9 +38,16 @@ struct BCT_API fee_filter
     static const uint32_t version_maximum;
 
     static size_t size(uint32_t version) NOEXCEPT;
+
+    static cptr deserialize(uint32_t version,
+        const system::data_chunk& data) NOEXCEPT;
     static fee_filter deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
-    void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
+
+    bool serialize(uint32_t version,
+        const system::data_slab& data) const NOEXCEPT;
+    void serialize(uint32_t version,
+        system::writer& sink) const NOEXCEPT;
 
     uint64_t minimum_fee;
 };
