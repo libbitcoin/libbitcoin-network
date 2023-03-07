@@ -381,7 +381,7 @@ void proxy::handle_write(const code& ec, size_t,
     {
         if (ec != error::peer_disconnect && ec != error::operation_canceled)
         {
-            LOGF("Seng failure " << heading::get_command(*payload) << " to ["
+            LOGF("Send failure " << heading::get_command(*payload) << " to ["
                 << authority() << "] (" << payload->size() << " bytes) "
                 << ec.message());
         }
