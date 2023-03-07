@@ -33,10 +33,10 @@ namespace network {
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 #define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
 #define DEFINE_SUBSCRIBER(name) using SUBSCRIBER_TYPE(name) = \
-    desubscriber<key_t, const messages::name::cptr&, uint64_t>
+    desubscriber<channel_id, const messages::name::cptr&, channel_id>
 #define SUBSCRIBER_OVERLOAD(name) code do_subscribe( \
-    broadcaster::handler<messages::name>&& handler, key_t key) NOEXCEPT \
-    { return SUBSCRIBER(name).subscribe(std::move(handler), key); }
+    broadcaster::handler<messages::name>&& handler, channel_id id) NOEXCEPT \
+    { return SUBSCRIBER(name).subscribe(std::move(handler), id); }
 #define CASE_NOTIFY(name) case messages::identifier::name: \
     return SUBSCRIBER(name).notify(error::success, message, sender)
 
@@ -44,16 +44,16 @@ namespace network {
 class BCT_API broadcaster
 {
 public:
-    using key_t = uint64_t;
+    using channel_id = uint64_t;
 
     /// Helper for external declarations.
     template <class Message>
     using handler = std::function<bool(const code&,
-        const typename Message::cptr&, uint64_t)>;
+        const typename Message::cptr&, channel_id)>;
 
     DELETE_COPY_MOVE_DESTRUCT(broadcaster);
 
-    ////using address_subscriber = desubscriber<key_t, const messages::address::cptr&, const uint64_t&>;
+    ////using address_subscriber = desubscriber<channel_id, const messages::address::cptr&, channel_id>;
     DEFINE_SUBSCRIBER(address);
     DEFINE_SUBSCRIBER(alert);
     DEFINE_SUBSCRIBER(block);
@@ -91,18 +91,19 @@ public:
     /// Create an instance of this class.
     broadcaster(asio::strand& strand) NOEXCEPT;
 
-    /// Subscription handlers are retained in the queue until stop.
-    /// No invocation occurs if the subscriber is stopped at time of subscribe.
+    /// If stopped, handler is invoked with error::subscriber_stopped.
+    /// If key exists, handler is invoked with error::subscriber_exists.
+    /// Otherwise handler retained. Subscription code is also returned here.
     template <typename Handler>
-    code subscribe(Handler&& handler, uint64_t key) NOEXCEPT
+    code subscribe(Handler&& handler, channel_id subscriber) NOEXCEPT
     {
-        return do_subscribe(std::forward<Handler>(handler), key);
+        return do_subscribe(std::forward<Handler>(handler), subscriber);
     }
 
     /// Relay a message instance to each subscriber of the type.
     template <typename Message>
     code notify(const typename Message::cptr& message,
-        uint64_t sender) NOEXCEPT
+        channel_id sender) NOEXCEPT
     {
         switch (Message::id)
         {
@@ -153,9 +154,9 @@ public:
     virtual void stop(const code& ec) NOEXCEPT;
 
 private:
-    ////code do_subscribe(broadcaster::handler<messages::address>&& handler, key_t key) NOEXCEPT
+    ////code do_subscribe(broadcaster::handler<messages::address>&& handler, channel_id id) NOEXCEPT
     ////{
-    ////    return address_subscriber_.subscribe(std::move(handler), key);
+    ////    return address_subscriber_.subscribe(std::move(handler), id);
     ////}
     SUBSCRIBER_OVERLOAD(address);
     SUBSCRIBER_OVERLOAD(alert);
