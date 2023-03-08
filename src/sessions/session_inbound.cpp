@@ -231,8 +231,6 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
 void session_inbound::handle_channel_start(const code&,
     const channel::ptr&) NOEXCEPT
 {
-    // TODO: nonce check here.
-
     BC_ASSERT_MSG(stranded(), "strand");
     ////LOGS("Inbound channel start [" << channel->authority() << "] "
     ////    << ec.message());
