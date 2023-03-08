@@ -30,7 +30,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-constexpr uint32_t network_checksum(const system::hash_digest& hash) NOEXCEPT
+inline uint32_t network_checksum(const system::hash_digest& hash) NOEXCEPT
 {
     using namespace system;
     return from_little_endian(array_cast<uint8_t, sizeof(uint32_t)>(hash));
