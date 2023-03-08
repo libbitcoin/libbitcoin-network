@@ -124,7 +124,7 @@ namespace network {
 // /log           : define /async
 // /config        : define /messages /async
 // /net           : define settings /config /log
-// /sessions      : define settings /net
+// /sessions      : define settings /net [forward: p2p]
 // /protocols     : define settings /sessions
 
 // Root directory singletons.
