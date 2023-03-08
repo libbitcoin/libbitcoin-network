@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_ASYNC_UNSUBSCRIBER_IPP
 
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/error.hpp>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {

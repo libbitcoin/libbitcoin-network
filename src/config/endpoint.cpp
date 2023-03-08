@@ -22,9 +22,9 @@
 #include <sstream>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/config/utilities.hpp>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {

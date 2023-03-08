@@ -28,7 +28,6 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -51,31 +50,31 @@ public:
     /// -----------------------------------------------------------------------
     /// Sender identifies the channel to its own handler, for option to bypass.
 
-    ////template <typename Message>
-    ////inline void broadcast(const Message& message, channel_id sender) NOEXCEPT
-    ////{
-    ////    network_.broadcast(message, sender);
-    ////}
+    template <typename Message>
+    void broadcast(const Message& message, channel_id sender) NOEXCEPT
+    {
+        ////network_.broadcast(message, sender);
+    }
 
-    ////template <typename Message>
-    ////inline void broadcast(Message&& message, channel_id sender) NOEXCEPT
-    ////{
-    ////    network_.broadcast(std::forward<Message>(message), sender);
-    ////}
+    template <typename Message>
+    void broadcast(Message&& message, channel_id sender) NOEXCEPT
+    {
+        ////network_.broadcast(std::forward<Message>(message), sender);
+    }
 
-    ////template <typename Message>
-    ////inline void broadcast(const typename Message::cptr& message,
-    ////    channel_id sender) NOEXCEPT
-    ////{
-    ////    network_.broadcast(message, sender);
-    ////}
+    template <typename Message>
+    void broadcast(const typename Message::cptr& message,
+        channel_id sender) NOEXCEPT
+    {
+        ////network_.broadcast(message, sender);
+    }
 
-    ////template <typename Message, typename Handler = broadcaster::handler<Message>>
-    ////inline void subscribe_broadcast(Handler&& handler,
-    ////    channel_id subscriber) NOEXCEPT
-    ////{
-    ////    network_.subscribe_broadcast(std::forward<Handler>(handler), subscriber);
-    ////}
+    template <typename Message, typename Handler = broadcaster::handler<Message>>
+    void subscribe_broadcast(Handler&& handler,
+        channel_id subscriber) NOEXCEPT
+    {
+        ////network_.subscribe_broadcast(std::forward<Handler>(handler), subscriber);
+    }
 
     /// Start/stop.
     /// -----------------------------------------------------------------------

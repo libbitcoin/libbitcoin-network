@@ -83,6 +83,8 @@
     #endif
 #endif
 
+#include <bitcoin/network/error.hpp>
+
 namespace libbitcoin {
 namespace network {
 
@@ -104,5 +106,30 @@ namespace network {
 
 } // namespace network
 } // namespace libbitcoin
+
+// define.hpp is the common include for /network (except p2p and settings).
+// All non-network headers include define.hpp.
+// Network inclusions are chained as follows.
+
+// version        : <generated>
+// boost          : version
+// error          : boost
+// define         : error
+
+// Other directory common includes are not internally chained.
+// Each header includes only its required common headers.
+
+// /async         : define
+// /messages      : define
+// /log           : define /async
+// /config        : define /messages /async
+// /net           : define settings /config /log
+// /sessions      : define settings /net
+// /protocols     : define settings /sessions
+
+// Root directory singletons.
+
+// settings       : define /messages /config
+// p2p            : define settings /sessions
 
 #endif

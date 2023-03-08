@@ -21,7 +21,7 @@
 
 #include <memory>
 #include <bitcoin/network/async/time.hpp>
-#include <bitcoin/network/boost.hpp>
+#include <bitcoin/network/define.hpp>
 
 /// Convenience namespace for commonly used boost async i/o aliases.
 

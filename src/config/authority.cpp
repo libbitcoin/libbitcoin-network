@@ -21,8 +21,8 @@
 #include <iostream>
 #include <sstream>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/utilities.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/system.hpp>
 
