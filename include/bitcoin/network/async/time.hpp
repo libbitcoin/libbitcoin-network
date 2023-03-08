@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_ASYNC_TIME_HPP
 
 #include <chrono>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {

@@ -23,7 +23,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/error.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/settings.hpp>

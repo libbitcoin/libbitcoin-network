@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/error.hpp>
+////#include <bitcoin/network/error.hpp>
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/boost.hpp>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {

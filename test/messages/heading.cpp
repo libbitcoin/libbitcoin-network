@@ -30,6 +30,9 @@ static_assert(heading::maximum_payload(0, false) == 1'800'003_size);
 static_assert(heading::maximum_payload(max_uint32, true) == 4'000'000_size);
 static_assert(heading::maximum_payload(max_uint32, false) == 1'800'003_size);
 
+constexpr auto empty_hash = system::sha256::double_hash(system::sha256::ablocks_t<zero>{});
+constexpr auto empty_checksum = system::from_little_endian<uint32_t>(empty_hash);
+
 BOOST_AUTO_TEST_CASE(heading__size__always__expected)
 {
     constexpr auto expected = sizeof(uint32_t)
@@ -282,7 +285,7 @@ BOOST_AUTO_TEST_CASE(heading__factory1__empty__expected)
 
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
-    BOOST_REQUIRE_EQUAL(instance.checksum, messages::empty_checksum);
+    BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
     BOOST_REQUIRE(instance.id() == identifier::ping);
 }
 
@@ -295,7 +298,7 @@ BOOST_AUTO_TEST_CASE(heading__factory2__default_hash__expected)
 
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
-    BOOST_REQUIRE_EQUAL(instance.checksum, messages::empty_checksum);
+    BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
     BOOST_REQUIRE(instance.id() == identifier::pong);
 }
 
@@ -304,12 +307,12 @@ BOOST_AUTO_TEST_CASE(heading__factory2__non_default_hash__expected)
     constexpr uint32_t magic = 42;
     constexpr auto command = "pong";
     const system::data_chunk payload{};
-    const auto hash = system::to_shared(messages::empty_hash);
+    const auto hash = system::to_shared(empty_hash);
     const auto instance = heading::factory(magic, command, payload, hash);
 
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
-    BOOST_REQUIRE_EQUAL(instance.checksum, messages::empty_checksum);
+    BOOST_REQUIRE_EQUAL(instance.checksum, empty_checksum);
     BOOST_REQUIRE(instance.id() == identifier::pong);
 }
 

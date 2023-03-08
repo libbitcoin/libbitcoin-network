@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_LOG_EVENT_HPP
 
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {

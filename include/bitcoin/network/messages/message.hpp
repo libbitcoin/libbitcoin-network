@@ -30,24 +30,10 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-constexpr auto empty_hash = system::sha256::double_hash(
-    system::sha256::ablocks_t<zero>{});
-constexpr auto empty_checksum = system::from_little_endian<uint32_t>(
-    empty_hash);
-
-inline uint32_t network_checksum(
-    const system::hash_digest& hash) NOEXCEPT
+inline uint32_t network_checksum(const system::hash_digest& hash) NOEXCEPT
 {
-    // TODO: verify this is just a cast.
-    return system::from_little_endian<uint32_t>(hash);
-}
-
-inline system::hash_digest network_hash(
-    const system::data_slice& data) NOEXCEPT
-{
-    // TODO: const should be baked into all hash(empty).
-    return data.empty() ? empty_hash :
-        system::bitcoin_hash(data.size(), data.begin());
+    using namespace system;
+    return from_little_endian(array_cast<uint8_t, sizeof(uint32_t)>(hash));
 }
 
 /// Deserialize message payload from the wire protocol encoding.

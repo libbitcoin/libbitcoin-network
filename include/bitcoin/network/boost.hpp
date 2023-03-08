@@ -19,6 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_BOOST_HPP
 #define LIBBITCOIN_NETWORK_BOOST_HPP
 
+#include <bitcoin/network/version.hpp>
+
 // "By default, enable_current_exception and enable_error_info are integrated
 // directly in the throw_exception function. Defining BOOST_EXCEPTION_DISABLE
 // disables this integration."
@@ -36,11 +38,6 @@
 // This arises when including <functional>, which declares std::placeholders.
 // www.boost.org/doc/libs/1_78_0/boost/bind.hpp
 #define BOOST_BIND_NO_PLACEHOLDERS
-
-// Apply any warning suppressions to boost.
-// Any boost includes within headers will not benefit from suppression, as the
-// warnings are included by define.hpp which follows boost includes.
-#include <bitcoin/network/define.hpp>
 
 // Include boost in cpp files only from here, so placeholders exclusion works.
 // Avoid use in header includes due to warning repetition (boost/format.hpp).

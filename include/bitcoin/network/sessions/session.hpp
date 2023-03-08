@@ -28,7 +28,6 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -49,33 +48,50 @@ public:
 
     /// Broadcast.
     /// -----------------------------------------------------------------------
+    /// Broadcast offers no completion handling, and subscription exists in a
+    /// race with channel establishment. Broadcasts are designed for internal
+    /// best-efforts propagation. Use individual channel.send calls otherwise.
     /// Sender identifies the channel to its own handler, for option to bypass.
 
-    ////template <typename Message>
-    ////inline void broadcast(const Message& message, channel_id sender) NOEXCEPT
-    ////{
-    ////    network_.broadcast(message, sender);
-    ////}
+    template <typename Message>
+    void broadcast(const Message& message, channel_id sender) NOEXCEPT
+    {
+        boost::asio::dispatch(strand(),
+            std::bind(&session::do_broadcast<Message>,
+                this, system::to_shared(message), sender));
+    }
 
-    ////template <typename Message>
-    ////inline void broadcast(Message&& message, channel_id sender) NOEXCEPT
-    ////{
-    ////    network_.broadcast(std::forward<Message>(message), sender);
-    ////}
+    template <typename Message>
+    void broadcast(Message&& message, channel_id sender) NOEXCEPT
+    {
+        boost::asio::dispatch(strand(),
+            std::bind(&session::do_broadcast<Message>,
+                this, system::to_shared(std::move(message)), sender));
+    }
 
-    ////template <typename Message>
-    ////inline void broadcast(const typename Message::cptr& message,
-    ////    channel_id sender) NOEXCEPT
-    ////{
-    ////    network_.broadcast(message, sender);
-    ////}
+    template <typename Message>
+    void broadcast(const typename Message::cptr& message,
+        channel_id sender) NOEXCEPT
+    {
+        boost::asio::dispatch(strand(),
+            std::bind(&session::do_broadcast<Message>,
+                this, message, sender));
+    }
 
-    ////template <typename Message, typename Handler = broadcaster::handler<Message>>
-    ////inline void subscribe_broadcast(Handler&& handler,
-    ////    channel_id subscriber) NOEXCEPT
-    ////{
-    ////    network_.subscribe_broadcast(std::forward<Handler>(handler), subscriber);
-    ////}
+    template <typename Message, typename Handler = broadcaster::handler<Message>>
+    void subscribe_broadcast(Handler&& handler, channel_id subscriber) NOEXCEPT
+    {
+        boost::asio::dispatch(strand(),
+            std::bind(&session::do_subscribe_broadcast<Message>,
+                this, std::move(handler), subscriber));
+    }
+
+    virtual void unsubscribe_broadcast(channel_id subscriber) NOEXCEPT
+    {
+        boost::asio::dispatch(strand(),
+            std::bind(&session::do_unsubscribe_broadcast,
+                this, subscriber));
+    }
 
     /// Start/stop.
     /// -----------------------------------------------------------------------
@@ -211,6 +227,28 @@ protected:
     virtual size_t outbound_channel_count() const NOEXCEPT;
 
 private:
+    template <typename Message>
+    void do_broadcast(const typename Message::cptr& message,
+        channel_id sender) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        broadcaster_.notify(message, sender);
+    }
+
+    template <typename Message, typename Handler = broadcaster::handler<Message>>
+    void do_subscribe_broadcast(const Handler& handler,
+        channel_id subscriber) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        broadcaster_.subscribe(move_copy(handler), subscriber);
+    }
+
+    void do_unsubscribe_broadcast(channel_id subscriber) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        broadcaster_.unsubscribe(subscriber);
+    }
+
     asio::strand& strand() NOEXCEPT;
     object_key create_key() NOEXCEPT;
 
@@ -243,6 +281,7 @@ private:
 
     // These are thread safe (mostly).
     p2p& network_;
+    broadcaster& broadcaster_;
     const uint64_t identifier_;
     std::atomic_bool stopped_{ true };
 

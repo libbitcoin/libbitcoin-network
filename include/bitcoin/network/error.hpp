@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_ERROR_HPP
 #define LIBBITCOIN_NETWORK_ERROR_HPP
 
+#include <system_error>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/boost.hpp>
 
@@ -135,7 +136,7 @@ DECLARE_ERROR_T_CODE_CATEGORY(error);
 /// despite being effectively identical. So we provide this explicit mapping.
 BCT_API code asio_to_error_code(const error::boost_code& ec) NOEXCEPT;
 
-/// Shortcurcuit common code mapping.
+/// Shortcircuit common code mapping.
 BCT_API bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT;
 
 } // namespace error

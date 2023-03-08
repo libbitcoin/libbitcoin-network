@@ -43,7 +43,6 @@ class BCT_API p2p
   : public reporter
 {
 public:
-    typedef broadcaster::channel_id channel_id;
     typedef std::shared_ptr<p2p> ptr;
     typedef uint64_t object_key;
 
@@ -54,51 +53,6 @@ public:
     typedef desubscriber<object_key, const channel::ptr&> channel_subscriber;
     typedef channel_subscriber::handler channel_notifier;
     typedef channel_subscriber::completer channel_completer;
-
-    /// Broadcast.
-    /// -----------------------------------------------------------------------
-    /// Broadcast offers no completion handling, and subscription exists in a
-    /// race with channel establishment. Broadcasts are designed for internal
-    /// best-efforts propagation. Use individual channel.send calls otherwise.
-    /// Sender identifies the channel to its own handler, for option to bypass.
-
-    template <typename Message>
-    void broadcast(const Message& message, channel_id sender) NOEXCEPT
-    {
-        boost::asio::dispatch(strand_,
-            std::bind(&p2p::do_broadcast<Message>,
-                this, system::to_shared(message), sender));
-    }
-
-    template <typename Message>
-    void broadcast(Message&& message, channel_id sender) NOEXCEPT
-    {
-        boost::asio::dispatch(strand_,
-            std::bind(&p2p::do_broadcast<Message>,
-                this, system::to_shared(std::move(message)), sender));
-    }
-
-    template <typename Message>
-    void broadcast(const typename Message::cptr& message,
-        channel_id sender) NOEXCEPT
-    {
-        boost::asio::dispatch(strand_,
-            std::bind(&p2p::do_broadcast<Message>, this, message, sender));
-    }
-
-    template <typename Message, typename Handler = broadcaster::handler<Message>>
-    void subscribe_broadcast(Handler&& handler, channel_id subscriber) NOEXCEPT
-    {
-        boost::asio::dispatch(strand_,
-            std::bind(&p2p::do_subscribe_broadcast<Message>,
-                this, std::move(handler), subscriber));
-    }
-
-    virtual void unsubscribe_broadcast(channel_id subscriber) NOEXCEPT
-    {
-        boost::asio::dispatch(strand_,
-            std::bind(&p2p::do_unsubscribe_broadcast, this, subscriber));
-    }
 
     /// Constructors.
     /// -----------------------------------------------------------------------
@@ -259,28 +213,6 @@ protected:
     bool stranded() const NOEXCEPT;
 
 private:
-    template <typename Message>
-    void do_broadcast(const typename Message::cptr& message,
-        channel_id sender) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        broadcaster_.notify(message, sender);
-    }
-
-    template <typename Message, typename Handler = broadcaster::handler<Message>>
-    void do_subscribe_broadcast(const Handler& handler,
-        channel_id subscriber) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        broadcaster_.subscribe(move_copy(handler), subscriber);
-    }
-
-    void do_unsubscribe_broadcast(channel_id subscriber) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        broadcaster_.unsubscribe(subscriber);
-    }
-
     code subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;
     connectors_ptr create_connectors(size_t count) NOEXCEPT;
     object_key create_key() NOEXCEPT;

@@ -23,9 +23,8 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/config/config.hpp>
-#include <bitcoin/network/error.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -48,6 +47,7 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session::session(p2p& network, uint64_t identifier) NOEXCEPT
   : network_(network),
+    broadcaster_(network.broadcaster_),
     identifier_(identifier),
     stop_subscriber_(network.strand()),
     reporter(network.log())
@@ -329,7 +329,7 @@ void session::do_handle_channel_stopped(const code& ec,
     unpend(channel);
     network_.unstore_nonce(*channel);
     network_.uncount_channel(*channel);
-    network_.unsubscribe_broadcast(channel->identifier());
+    unsubscribe_broadcast(channel->identifier());
 
     // Assume stop notification, but may be subscribe failure (idempotent).
     // Handles stop reason code, stop subscribe failure or stop notification.
