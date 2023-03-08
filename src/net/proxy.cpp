@@ -276,7 +276,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     if (validate_checksum())
     {
         // This hash could be reused as w/txid, but simpler to disable check.
-        if (head->checksum != network_checksum(network_hash(payload_buffer_)))
+        if (head->checksum != network_checksum(bitcoin_hash(payload_buffer_)))
         {
             LOGR("Invalid " << head->command << " payload from ["
                 << authority() << "] bad checksum.");

@@ -27,11 +27,6 @@ constexpr auto empty_checksum = 0xe2e0f65d_u32;
 constexpr auto empty_hash = sha256::double_hash(sha256::ablocks_t<0>{});
 static_assert(from_little_endian<uint32_t>(empty_hash) == empty_checksum);
 
-BOOST_AUTO_TEST_CASE(message__network_hash__empty_message__empty_hash)
-{
-    BOOST_REQUIRE_EQUAL(network_hash(data_array<0>{}), empty_hash);
-}
-
 BOOST_AUTO_TEST_CASE(message__network_checksum__empty_hash__empty_checksum)
 {
     BOOST_REQUIRE_EQUAL(network_checksum(empty_hash), empty_checksum);
