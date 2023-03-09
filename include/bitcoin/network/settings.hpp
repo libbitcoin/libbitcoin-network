@@ -72,7 +72,7 @@ struct BCT_API settings
     config::endpoints peers{};
     config::endpoints seeds{};
     config::authorities selfs{};
-    config::authorities interfaces{};
+    config::authorities binds{};
     config::authorities blacklists{};
     config::authorities whitelists{};
     config::authorities friends{};

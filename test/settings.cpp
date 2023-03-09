@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE(instance.path.empty());
     BOOST_REQUIRE(instance.peers.empty());
     BOOST_REQUIRE(instance.selfs.empty());
-    BOOST_REQUIRE(instance.interfaces.empty());
+    BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE(instance.blacklists.empty());
     BOOST_REQUIRE(instance.whitelists.empty());
     BOOST_REQUIRE(instance.friends.empty());
@@ -110,11 +110,11 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
 
     // changed from default
     BOOST_REQUIRE_EQUAL(instance.identifier, 3652501241u);
-    BOOST_REQUIRE_EQUAL(instance.interfaces.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.binds.size(), 1u);
     BOOST_REQUIRE_EQUAL(instance.seeds.size(), 4u);
 
-    const auto interface0 = config::authority{ asio::address{}, 8333 };
-    BOOST_REQUIRE_EQUAL(instance.interfaces[0], interface0);
+    const auto bind0 = config::authority{ asio::address{}, 8333 };
+    BOOST_REQUIRE_EQUAL(instance.binds[0], bind0);
 
     const auto seed0 = config::endpoint{ "mainnet1.libbitcoin.net", 8333 };
     const auto seed1 = config::endpoint{ "mainnet2.libbitcoin.net", 8333 };
@@ -169,11 +169,11 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
 
     // changed from default
     BOOST_REQUIRE_EQUAL(instance.identifier, 118034699u);
-    BOOST_REQUIRE_EQUAL(instance.interfaces.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.binds.size(), 1u);
     BOOST_REQUIRE_EQUAL(instance.seeds.size(), 4u);
 
-    const auto interface0 = config::authority{ asio::address{}, 18333 };
-    BOOST_REQUIRE_EQUAL(instance.interfaces[0], interface0);
+    const auto bind0 = config::authority{ asio::address{}, 18333 };
+    BOOST_REQUIRE_EQUAL(instance.binds[0], bind0);
 
     const auto seed0 = config::endpoint{ "testnet1.libbitcoin.net", 18333 };
     const auto seed1 = config::endpoint{ "testnet2.libbitcoin.net", 18333 };
@@ -230,10 +230,10 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
 
     // changed from default
     BOOST_REQUIRE_EQUAL(instance.identifier, 3669344250u);
-    BOOST_REQUIRE_EQUAL(instance.interfaces.size(), 1u);
+    BOOST_REQUIRE_EQUAL(instance.binds.size(), 1u);
 
-    const auto interface0 = config::authority{ asio::address{}, 18444 };
-    BOOST_REQUIRE_EQUAL(instance.interfaces[0], interface0);
+    const auto bind0 = config::authority{ asio::address{}, 18444 };
+    BOOST_REQUIRE_EQUAL(instance.binds[0], bind0);
 }
 
 BOOST_AUTO_TEST_CASE(settings__inbound_enabled__default__false)
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(settings__inbound_enabled__zero_empty__false)
 {
     settings instance{};
     instance.inbound_connections = 0;
-    instance.interfaces.clear();
+    instance.binds.clear();
     BOOST_REQUIRE(!instance.inbound_enabled());
 }
 
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(settings__inbound_enabled__nonzero_empty__false)
 {
     settings instance{};
     instance.inbound_connections = 42;
-    instance.interfaces.clear();
+    instance.binds.clear();
     BOOST_REQUIRE(!instance.inbound_enabled());
 }
 
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(settings__inbound_enabled__zero_nonempty__false)
 {
     settings instance{};
     instance.inbound_connections = 0;
-    instance.interfaces.emplace_back();
+    instance.binds.emplace_back();
     BOOST_REQUIRE(!instance.inbound_enabled());
 }
 
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(settings__inbound_enabled__nonzero_nonempty__true)
 {
     settings instance{};
     instance.inbound_connections = 42;
-    instance.interfaces.emplace_back();
+    instance.binds.emplace_back();
     BOOST_REQUIRE(instance.inbound_enabled());
 }
 
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(settings__advertise_enabled__zero_empty_empty__false)
 {
     settings instance{};
     instance.inbound_connections = 0;
-    instance.interfaces.clear();
+    instance.binds.clear();
     instance.selfs.clear();
     BOOST_REQUIRE(!instance.advertise_enabled());
 }
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE(settings__advertise_enabled__zero_empty_nonempty__false)
 {
     settings instance{};
     instance.inbound_connections = 0;
-    instance.interfaces.clear();
+    instance.binds.clear();
     instance.selfs.emplace_back();
     BOOST_REQUIRE(!instance.advertise_enabled());
 }
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(settings__advertise_enabled__zero_nonempty_empty__false)
 {
     settings instance{};
     instance.inbound_connections = 0;
-    instance.interfaces.emplace_back();
+    instance.binds.emplace_back();
     instance.selfs.clear();
     BOOST_REQUIRE(!instance.advertise_enabled());
 }
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(settings__advertise_enabled__zero_nonempty_nonempty__false)
 {
     settings instance{};
     instance.inbound_connections = 0;
-    instance.interfaces.emplace_back();
+    instance.binds.emplace_back();
     instance.selfs.emplace_back();
     BOOST_REQUIRE(!instance.advertise_enabled());
 }
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(settings__advertise_enabled__nonzero_empty_empty__false)
 {
     settings instance{};
     instance.inbound_connections = 42;
-    instance.interfaces.clear();
+    instance.binds.clear();
     instance.selfs.clear();
     BOOST_REQUIRE(!instance.advertise_enabled());
 }
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(settings__advertise_enabled__nonzero_nonempty_empty__false)
 {
     settings instance{};
     instance.inbound_connections = 42;
-    instance.interfaces.emplace_back();
+    instance.binds.emplace_back();
     instance.selfs.clear();
     BOOST_REQUIRE(!instance.advertise_enabled());
 }
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE(settings__advertise_enabled__nonzero_empty_nonempty__false)
 {
     settings instance{};
     instance.inbound_connections = 42;
-    instance.interfaces.clear();
+    instance.binds.clear();
     instance.selfs.emplace_back();
     BOOST_REQUIRE(!instance.advertise_enabled());
 }
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(settings__advertise_enabled__nonzero_nonempty_nonempty__tru
 {
     settings instance{};
     instance.inbound_connections = 42;
-    instance.interfaces.emplace_back();
+    instance.binds.emplace_back();
     instance.selfs.emplace_back();
     BOOST_REQUIRE(instance.advertise_enabled());
 }

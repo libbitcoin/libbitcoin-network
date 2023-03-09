@@ -464,12 +464,12 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__bypassed)
     BOOST_REQUIRE(session.stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__start__empty_interfaces__bypassed)
+BOOST_AUTO_TEST_CASE(session_inbound__start__empty_binds__bypassed)
 {
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    set.interfaces.clear();
+    set.binds.clear();
     mock_p2p<> net(set, log);
     mock_session_inbound session(net, 1);
     BOOST_REQUIRE(session.stopped());
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepte
     mock_p2p<mock_acceptor_start_fail> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(set.interfaces.size(), one);
+    BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> started;
     boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepte
 
     // mock_acceptor_start_fail.start returns invalid_magic, so start_accept aborts.
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::invalid_magic);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.interfaces.front().port());
+    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.binds.front().port());
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!net.get_acceptor()->accepted());
     BOOST_REQUIRE(!session->stopped());
@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
     mock_p2p<mock_acceptor_start_stopped> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(set.interfaces.size(), one);
+    BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> started;
     boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.interfaces.front().port());
+    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.binds.front().port());
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
 
@@ -636,7 +636,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 ////    // start_accept is invoked with invalid_checksum.
 ////    auto session = std::make_shared<mock_session_start_accept_parameter_error>(net, 1);
 ////    BOOST_REQUIRE(session->stopped());
-////    BOOST_REQUIRE_EQUAL(set.interfaces.size(), one);
+////    BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 ////
 ////    std::promise<code> started;
 ////    boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
@@ -649,7 +649,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 ////    });
 ////
 ////    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-////    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.interfaces.front().port());
+////    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.binds.front().port());
 ////    BOOST_REQUIRE(!net.get_acceptor()->stopped());
 ////    BOOST_REQUIRE(!net.get_acceptor()->accepted());
 ////    BOOST_REQUIRE(!session->stopped());
@@ -678,7 +678,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
     mock_p2p<mock_acceptor_start_success_accept_fail> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
-    BOOST_REQUIRE_EQUAL(set.interfaces.size(), one);
+    BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> started;
     boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
@@ -692,7 +692,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.interfaces.front().port());
+    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.binds.front().port());
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
 
@@ -724,7 +724,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
-    BOOST_REQUIRE_EQUAL(set.interfaces.size(), one);
+    BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> net_started;
     net.start([&](const code& ec) NOEXCEPT
@@ -750,7 +750,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
     BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.interfaces.front().port());
+    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.binds.front().port());
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
 
@@ -776,7 +776,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
-    BOOST_REQUIRE_EQUAL(set.interfaces.size(), one);
+    BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> net_started;
     net.start([&](const code& ec) NOEXCEPT
@@ -802,7 +802,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
     BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.interfaces.front().port());
+    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.binds.front().port());
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
 
@@ -828,7 +828,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
-    BOOST_REQUIRE_EQUAL(set.interfaces.size(), one);
+    BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> net_started;
     net.start([&](const code& ec)
@@ -854,7 +854,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
     BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.interfaces.front().port());
+    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.binds.front().port());
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
 
@@ -881,7 +881,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     set.inbound_connections = 1;
     set.connect_timeout_seconds = 10000;
     mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
-    BOOST_REQUIRE_EQUAL(set.interfaces.size(), one);
+    BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> net_started;
     net.start([&](const code& ec) NOEXCEPT
@@ -907,7 +907,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
 
     // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
     BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
-    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.interfaces.front().port());
+    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.binds.front().port());
     BOOST_REQUIRE(!net.get_acceptor()->stopped());
     BOOST_REQUIRE(!session->stopped());
 

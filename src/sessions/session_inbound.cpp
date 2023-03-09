@@ -80,21 +80,24 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    const auto faces = settings().interfaces.size();
-    const auto peers = settings().outbound_connections;
+    const auto binds = settings().binds.size();
+    const auto peers = settings().inbound_connections;
 
-    LOGN("Accept " << peers << " connections on " << faces << " interfaces.");
+    LOGN("Accepting " << peers << " connections on " << binds
+        << " bindings.");
 
-    for (const auto& interface: settings().interfaces)
+    for (const auto& bind: settings().binds)
     {
         const auto acceptor = create_acceptor();
 
         // Require that all acceptors at least start.
-        if (const auto error_code = acceptor->start(interface))
+        if (const auto error_code = acceptor->start(bind))
         {
             handler(error_code);
             return;
         }
+
+        LOGN("Bound to endpoint [" << acceptor->local() << "].");
 
         // Subscribe acceptor to stop desubscriber.
         subscribe_stop([=](const code&) NOEXCEPT
@@ -153,14 +156,14 @@ void session_inbound::handle_accept(const code& ec,
 
     if (!whitelisted(address))
     {
-        ////LOGS("Dropping not whitelisted connection [" << socket->authority() << "]");
+        ////LOGS("Dropping not whitelisted connection [" << socket->authority() << "].");
         socket->stop();
         return;
     }
 
     if (blacklisted(address))
     {
-        ////LOGS("Dropping blacklisted connection [" << socket->authority() << "]");
+        ////LOGS("Dropping blacklisted connection [" << socket->authority() << "].");
         socket->stop();
         return;
     }
@@ -168,12 +171,15 @@ void session_inbound::handle_accept(const code& ec,
     // Could instead stop listening when at limit, though this is simpler.
     if (inbound_channel_count() >= settings().inbound_connections)
     {
-        LOGS("Dropping oversubscribed connection [" << socket->authority() << "]");
+        LOGS("Dropping oversubscribed connection [" << socket->authority() << "].");
         socket->stop();
         return;
     }
 
     const auto channel = create_channel(socket, false);
+
+    LOGS("Accepted inbound connection [" << channel->authority() << "] on binding ["
+        << acceptor->local() << "].");
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),

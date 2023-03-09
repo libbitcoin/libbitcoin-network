@@ -85,7 +85,7 @@ settings::settings(chain::selection context) NOEXCEPT
             seeds.push_back({ "mainnet2.libbitcoin.net", 8333 });
             seeds.push_back({ "mainnet3.libbitcoin.net", 8333 });
             seeds.push_back({ "mainnet4.libbitcoin.net", 8333 });
-            interfaces.push_back({ asio::address{}, 8333 });
+            binds.push_back({ asio::address{}, 8333 });
             break;
         }
 
@@ -97,14 +97,14 @@ settings::settings(chain::selection context) NOEXCEPT
             seeds.push_back({ "testnet2.libbitcoin.net", 18333 });
             seeds.push_back({ "testnet3.libbitcoin.net", 18333 });
             seeds.push_back({ "testnet4.libbitcoin.net", 18333 });
-            interfaces.push_back({ asio::address{}, 18333 });
+            binds.push_back({ asio::address{}, 18333 });
             break;
         }
 
         case chain::selection::regtest:
         {
             identifier = 3669344250;
-            interfaces.push_back({ asio::address{}, 18444 });
+            binds.push_back({ asio::address{}, 18444 });
 
             // Regtest is private network only, so there is no seeding.
             break;
@@ -127,7 +127,7 @@ void settings::initialize() NOEXCEPT
 
 bool settings::inbound_enabled() const NOEXCEPT
 {
-    return to_bool(inbound_connections) && !interfaces.empty();
+    return to_bool(inbound_connections) && !binds.empty();
 }
 
 bool settings::outbound_enabled() const NOEXCEPT
