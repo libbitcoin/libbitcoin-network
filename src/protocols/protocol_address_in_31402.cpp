@@ -115,11 +115,13 @@ bool protocol_address_in_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return false;
 
+    // TODO: deal with multiple selfs.
     // Do not accept multiple addresses from inbound channels.
     const auto start = message->addresses.size();
     if (inbound_ && (received_ || !is_one(start)))
     {
-        LOGP("Ignoring unsolicited addresses from [" << authority() << "]");
+        LOGP("Ignoring (" << start << ") unsolicited addresses from ["
+            << authority() << "]");
         ////stop(error::protocol_violation);
         return true;
     }

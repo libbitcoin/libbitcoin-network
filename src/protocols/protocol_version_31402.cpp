@@ -111,8 +111,8 @@ messages::version protocol_version_31402::version_factory(
         {
             timestamp,
             maximum_services_,
-            settings().self.to_ip_address(),
-            settings().self.port(),
+            settings().first_self().to_ip_address(),
+            settings().first_self().port(),
         },
 
         nonce(),

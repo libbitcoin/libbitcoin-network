@@ -66,7 +66,7 @@ protected:
     virtual void handle_send_address(const code& ec) NOEXCEPT;
 
 private:
-    messages::address_item self() const NOEXCEPT;
+    void send_self() NOEXCEPT;
 
     // These are protected by the strand.
     bool sent_address_{};
