@@ -80,20 +80,23 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    // TODO: create one acceptor for each configured local endpoint.
-    const auto acceptor = create_acceptor();
-    const auto error_code = acceptor->start(settings().inbound_port);
+    const auto faces = settings().interfaces.size();
+    const auto peers = settings().outbound_connections;
 
-    if (!error_code)
+    LOGN("Accept " << peers << " connections on " << faces << " interfaces.");
+
+    for (const auto& interface: settings().interfaces)
     {
-        LOGN("Accepting up to " << settings().inbound_connections
-            << " connections on port " << settings().inbound_port << ".");
-    }
+        const auto acceptor = create_acceptor();
 
-    handler(error_code);
+        // Require that all acceptors at least start.
+        if (const auto error_code = acceptor->start(interface))
+        {
+            handler(error_code);
+            return;
+        }
 
-    if (!error_code)
-    {
+        // Subscribe acceptor to stop desubscriber.
         subscribe_stop([=](const code&) NOEXCEPT
         {
             acceptor->stop();
@@ -102,12 +105,15 @@ void session_inbound::handle_started(const code& ec,
 
         start_accept(error::success, acceptor);
     }
+
+    handler(error::success);
 }
 
 // Accept cycle.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept(const code& ec,
+// Attempt to accept peers on each configured endpoint.
+void session_inbound::start_accept(const code&,
     const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -115,12 +121,6 @@ void session_inbound::start_accept(const code& ec,
     // Terminates accept loop (and acceptor is restartable).
     if (stopped())
         return;
-
-    if (ec)
-    {
-        LOGF("Failed to start acceptor, " << ec.message());
-        return;
-    }
 
     acceptor->accept(BIND3(handle_accept, _1, _2, acceptor));
 }
@@ -140,7 +140,6 @@ void session_inbound::handle_accept(const code& ec,
     // There was an error accepting the channel, so try again after delay.
     if (ec)
     {
-
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
         LOGF("Failed to accept inbound connection, " << ec.message());
         defer(BIND2(start_accept, _1, acceptor));
