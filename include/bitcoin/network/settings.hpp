@@ -54,7 +54,6 @@ struct BCT_API settings
     bool enable_loopback;
     bool validate_checksum;
     uint32_t identifier;
-    uint16_t inbound_port;
     uint16_t inbound_connections;
     uint16_t outbound_connections;
     uint16_t connect_batch_size;
@@ -70,9 +69,10 @@ struct BCT_API settings
     uint32_t rate_limit;
     std::string user_agent;
     std::filesystem::path path{};
-    config::authority self{};
     config::endpoints peers{};
     config::endpoints seeds{};
+    config::authorities selfs{};
+    config::authorities interfaces{};
     config::authorities blacklists{};
     config::authorities whitelists{};
     config::authorities friends{};

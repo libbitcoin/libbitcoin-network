@@ -52,7 +52,6 @@ settings::settings() NOEXCEPT
     enable_loopback(false),
     validate_checksum(false),
     identifier(0),
-    inbound_port(0),
     inbound_connections(0),
     outbound_connections(8),
     connect_batch_size(5),
@@ -75,37 +74,37 @@ settings::settings() NOEXCEPT
 settings::settings(chain::selection context) NOEXCEPT
   : settings()
 {
-    // Handle deviations from common defaults.
+    // Configure common deviations from defaults.
     switch (context)
     {
         case chain::selection::mainnet:
         {
             identifier = 3652501241;
-            inbound_port = 8333;
             seeds.reserve(4);
             seeds.push_back({ "mainnet1.libbitcoin.net", 8333 });
             seeds.push_back({ "mainnet2.libbitcoin.net", 8333 });
             seeds.push_back({ "mainnet3.libbitcoin.net", 8333 });
             seeds.push_back({ "mainnet4.libbitcoin.net", 8333 });
+            interfaces.push_back({ asio::address{}, 8333 });
             break;
         }
 
         case chain::selection::testnet:
         {
             identifier = 118034699;
-            inbound_port = 18333;
             seeds.reserve(4);
             seeds.push_back({ "testnet1.libbitcoin.net", 18333 });
             seeds.push_back({ "testnet2.libbitcoin.net", 18333 });
             seeds.push_back({ "testnet3.libbitcoin.net", 18333 });
             seeds.push_back({ "testnet4.libbitcoin.net", 18333 });
+            interfaces.push_back({ asio::address{}, 18333 });
             break;
         }
 
         case chain::selection::regtest:
         {
             identifier = 3669344250;
-            inbound_port = 18444;
+            interfaces.push_back({ asio::address{}, 18444 });
 
             // Regtest is private network only, so there is no seeding.
             break;
@@ -128,8 +127,7 @@ void settings::initialize() NOEXCEPT
 
 bool settings::inbound_enabled() const NOEXCEPT
 {
-    return to_bool(inbound_connections)
-        && to_bool(inbound_port);
+    return to_bool(inbound_connections) && !interfaces.empty();
 }
 
 bool settings::outbound_enabled() const NOEXCEPT
@@ -141,7 +139,7 @@ bool settings::outbound_enabled() const NOEXCEPT
 
 bool settings::advertise_enabled() const NOEXCEPT
 {
-    return inbound_enabled() && self;
+    return inbound_enabled() && !selfs.empty();
 }
 
 size_t settings::maximum_payload() const NOEXCEPT
@@ -206,40 +204,40 @@ std::filesystem::path settings::file() const NOEXCEPT
     BC_POP_WARNING()
 }
 
-bool settings::disabled(const messages::address_item& item) const NOEXCEPT
+bool settings::disabled(const address_item& item) const NOEXCEPT
 {
     return !enable_ipv6 && config::is_v6(item.ip);
 }
 
-bool settings::insufficient(const messages::address_item& item) const NOEXCEPT
+bool settings::insufficient(const address_item& item) const NOEXCEPT
 {
     return (item.services & services_minimum) != services_minimum;
 }
 
-bool settings::unsupported(const messages::address_item& item) const NOEXCEPT
+bool settings::unsupported(const address_item& item) const NOEXCEPT
 {
     return to_bool(item.services & invalid_services);
 }
 
-bool settings::blacklisted(const messages::address_item& item) const NOEXCEPT
+bool settings::blacklisted(const address_item& item) const NOEXCEPT
 {
     return contains(blacklists, item);
 }
 
-bool settings::whitelisted(const messages::address_item& item) const NOEXCEPT
+bool settings::whitelisted(const address_item& item) const NOEXCEPT
 {
     return whitelists.empty() || contains(whitelists, item);
 }
 
-bool settings::peered(const messages::address_item& item) const NOEXCEPT
+bool settings::peered(const address_item& item) const NOEXCEPT
 {
     // Friends should be mapped from peers by initialize().
     return contains(friends, item);
 }
 
-bool settings::excluded(const messages::address_item& item) const NOEXCEPT
+bool settings::excluded(const address_item& item) const NOEXCEPT
 {
-    return !messages::is_specified(item)
+    return !is_specified(item)
         || disabled(item)
         || insufficient(item)
         || unsupported(item)
