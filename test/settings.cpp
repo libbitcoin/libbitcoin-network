@@ -405,6 +405,22 @@ BOOST_AUTO_TEST_CASE(settings__advertise_enabled__nonzero_nonempty_nonempty__tru
     BOOST_REQUIRE(instance.advertise_enabled());
 }
 
+BOOST_AUTO_TEST_CASE(settings__first_self__empty_selfs__default)
+{
+    settings instance{};
+    instance.selfs.clear();
+    BOOST_REQUIRE(!instance.first_self());
+}
+
+BOOST_AUTO_TEST_CASE(settings__first_self__multiple_selfs__front)
+{
+    settings instance{};
+    instance.selfs.clear();
+    instance.selfs.push_back({ asio::address{}, 18333 });
+    instance.selfs.emplace_back();
+    BOOST_REQUIRE_EQUAL(instance.first_self(), instance.selfs.front());
+}
+
 BOOST_AUTO_TEST_CASE(settings__maximum_payload__default__expected)
 {
     settings instance{};

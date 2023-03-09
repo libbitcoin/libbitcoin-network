@@ -85,6 +85,7 @@ struct BCT_API settings
     virtual bool outbound_enabled() const NOEXCEPT;
     virtual bool advertise_enabled() const NOEXCEPT;
     virtual size_t maximum_payload() const NOEXCEPT;
+    virtual config::authority first_self() const NOEXCEPT;
     virtual steady_clock::duration retry_timeout() const NOEXCEPT;
     virtual steady_clock::duration connect_timeout() const NOEXCEPT;
     virtual steady_clock::duration channel_handshake() const NOEXCEPT;

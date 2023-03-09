@@ -148,6 +148,11 @@ size_t settings::maximum_payload() const NOEXCEPT
         to_bool(services_maximum & service::node_witness));
 }
 
+config::authority settings::first_self() const NOEXCEPT
+{
+    return selfs.empty() ? config::authority{} : selfs.front();
+}
+
 // Randomized from 50% to maximum milliseconds (specified in seconds).
 steady_clock::duration settings::retry_timeout() const NOEXCEPT
 {
