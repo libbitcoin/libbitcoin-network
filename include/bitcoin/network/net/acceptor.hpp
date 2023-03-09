@@ -67,6 +67,12 @@ public:
     /// Cancel work (idempotent), handler signals completion.
     virtual void stop() NOEXCEPT;
 
+    // Properties.
+    // ------------------------------------------------------------------------
+
+    /// The local endpoint to which this acceptor is bound (requires strand).
+    virtual config::authority local() const NOEXCEPT;
+
     // Methods.
     // ------------------------------------------------------------------------
     /// Subsequent accepts may only be attempted following handler invocation.

@@ -80,20 +80,26 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    // TODO: create one acceptor for each configured local endpoint.
-    const auto acceptor = create_acceptor();
-    const auto error_code = acceptor->start(settings().inbound_port);
+    const auto binds = settings().binds.size();
+    const auto peers = settings().inbound_connections;
 
-    if (!error_code)
+    LOGN("Accepting " << peers << " connections on " << binds
+        << " bindings.");
+
+    for (const auto& bind: settings().binds)
     {
-        LOGN("Accepting up to " << settings().inbound_connections
-            << " connections on port " << settings().inbound_port << ".");
-    }
+        const auto acceptor = create_acceptor();
 
-    handler(error_code);
+        // Require that all acceptors at least start.
+        if (const auto error_code = acceptor->start(bind))
+        {
+            handler(error_code);
+            return;
+        }
 
-    if (!error_code)
-    {
+        LOGN("Bound to endpoint [" << acceptor->local() << "].");
+
+        // Subscribe acceptor to stop desubscriber.
         subscribe_stop([=](const code&) NOEXCEPT
         {
             acceptor->stop();
@@ -102,12 +108,15 @@ void session_inbound::handle_started(const code& ec,
 
         start_accept(error::success, acceptor);
     }
+
+    handler(error::success);
 }
 
 // Accept cycle.
 // ----------------------------------------------------------------------------
 
-void session_inbound::start_accept(const code& ec,
+// Attempt to accept peers on each configured endpoint.
+void session_inbound::start_accept(const code&,
     const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -115,12 +124,6 @@ void session_inbound::start_accept(const code& ec,
     // Terminates accept loop (and acceptor is restartable).
     if (stopped())
         return;
-
-    if (ec)
-    {
-        LOGF("Failed to start acceptor, " << ec.message());
-        return;
-    }
 
     acceptor->accept(BIND3(handle_accept, _1, _2, acceptor));
 }
@@ -140,7 +143,6 @@ void session_inbound::handle_accept(const code& ec,
     // There was an error accepting the channel, so try again after delay.
     if (ec)
     {
-
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
         LOGF("Failed to accept inbound connection, " << ec.message());
         defer(BIND2(start_accept, _1, acceptor));
@@ -154,14 +156,14 @@ void session_inbound::handle_accept(const code& ec,
 
     if (!whitelisted(address))
     {
-        ////LOGS("Dropping not whitelisted connection [" << socket->authority() << "]");
+        ////LOGS("Dropping not whitelisted connection [" << socket->authority() << "].");
         socket->stop();
         return;
     }
 
     if (blacklisted(address))
     {
-        ////LOGS("Dropping blacklisted connection [" << socket->authority() << "]");
+        ////LOGS("Dropping blacklisted connection [" << socket->authority() << "].");
         socket->stop();
         return;
     }
@@ -169,12 +171,15 @@ void session_inbound::handle_accept(const code& ec,
     // Could instead stop listening when at limit, though this is simpler.
     if (inbound_channel_count() >= settings().inbound_connections)
     {
-        LOGS("Dropping oversubscribed connection [" << socket->authority() << "]");
+        LOGS("Dropping oversubscribed connection [" << socket->authority() << "].");
         socket->stop();
         return;
     }
 
     const auto channel = create_channel(socket, false);
+
+    LOGS("Accepted inbound connection [" << channel->authority() << "] on binding ["
+        << acceptor->local() << "].");
 
     start_channel(channel,
         BIND2(handle_channel_start, _1, channel),
@@ -231,8 +236,6 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
 void session_inbound::handle_channel_start(const code&,
     const channel::ptr&) NOEXCEPT
 {
-    // TODO: nonce check here.
-
     BC_ASSERT_MSG(stranded(), "strand");
     ////LOGS("Inbound channel start [" << channel->authority() << "] "
     ////    << ec.message());

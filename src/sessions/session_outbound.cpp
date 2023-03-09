@@ -98,12 +98,12 @@ void session_outbound::handle_started(const code& ec,
         return;
     }
 
+    const auto peers = settings().outbound_connections;
+
     LOG_ONLY(const auto batch = settings().connect_batch_size;)
-    const auto count = settings().outbound_connections;
+    LOGN("Create " << peers << " connections " << batch << " at a time.");
 
-    LOGN("Creating " << count << " connections " << batch << " at a time.");
-
-    for (size_t index = 0; index < count; ++index)
+    for (size_t peer = 0; peer < peers; ++peer)
         start_connect(error::success);
 
     // This is the end of the start sequence (actually at connector->connect).

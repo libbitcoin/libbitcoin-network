@@ -49,10 +49,19 @@ protocol_address_out_31402::protocol_address_out_31402(const session& session,
 // ----------------------------------------------------------------------------
 // TODO: As peers connect inbound, broadcast their singleton address.
 
-address_item protocol_address_out_31402::self() const NOEXCEPT
+void protocol_address_out_31402::send_self() NOEXCEPT
 {
-    return settings().self.to_address_item(unix_time(),
-        settings().services_maximum);
+    // TODO: deal with multiple selfs.
+    if (settings().advertise_enabled())
+    {
+        SEND1(address
+        {
+            {
+                settings().selfs.front().to_address_item(
+                    unix_time(), settings().services_maximum)
+            }
+        }, handle_send, _1);
+    }
 }
 
 void protocol_address_out_31402::start() NOEXCEPT
@@ -63,10 +72,7 @@ void protocol_address_out_31402::start() NOEXCEPT
         return;
 
     // Advertise self if configured for inbound and valid self address.
-    if (settings().advertise_enabled())
-    {
-        SEND1(address{ { self() } }, handle_send, _1);
-    }
+    send_self();
 
     SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
     protocol::start();

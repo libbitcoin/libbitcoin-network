@@ -23,6 +23,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/channel.hpp>
@@ -85,7 +86,6 @@ code acceptor::start(const asio::endpoint& point) NOEXCEPT
     if (!stopped_)
         return error::operation_failed;
 
-    stopped_ = false;
     error::boost_code ec;
     const auto ipv6 = settings_.enable_ipv6;
 
@@ -105,8 +105,15 @@ code acceptor::start(const asio::endpoint& point) NOEXCEPT
     if (!ec)
         acceptor_.listen(asio::max_connections, ec);
 
-    LOG_ONLY(const config::authority local{ acceptor_.local_endpoint() };)
-    LOGN("Bound to endpoint [" << local << "]");
+    if (!ec)
+    {
+        stopped_ = false;
+    }
+    else
+    {
+        error::boost_code ignore;
+        acceptor_.cancel(ignore);
+    }
 
     return error::asio_to_error_code(ec);
 }
@@ -119,6 +126,15 @@ void acceptor::stop() NOEXCEPT
     error::boost_code ignore;
     acceptor_.cancel(ignore);
     stopped_ = true;
+}
+
+// Properties.
+// ----------------------------------------------------------------------------
+
+config::authority acceptor::local() const NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    return { stopped_ ? asio::endpoint{} : acceptor_.local_endpoint() };
 }
 
 // Methods.

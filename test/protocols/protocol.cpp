@@ -105,6 +105,13 @@ public:
         return error::success;
     }
 
+    // Capture port.
+    code start(const config::authority& local) NOEXCEPT override
+    {
+        port_ = local.port();
+        return error::success;
+    }
+
     // Capture stopped.
     void stop() NOEXCEPT override
     {
