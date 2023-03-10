@@ -52,8 +52,6 @@ protected:
         const messages::address::cptr& message) NOEXCEPT;
 
 private:
-    void send_self() NOEXCEPT;
-
     // This is protected by strand.
     bool sent_{};
 };

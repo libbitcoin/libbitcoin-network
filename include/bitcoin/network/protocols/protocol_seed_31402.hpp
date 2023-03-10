@@ -66,8 +66,6 @@ protected:
     virtual void handle_send_address(const code& ec) NOEXCEPT;
 
 private:
-    void send_self() NOEXCEPT;
-
     // These are protected by the strand.
     bool sent_address_{};
     bool sent_get_address_{};

@@ -200,21 +200,6 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
 // Outbound (fetch and send addresses).
 // ----------------------------------------------------------------------------
 
-void protocol_seed_31402::send_self() NOEXCEPT
-{
-    // TODO: deal with multiple selfs.
-    if (settings().advertise_enabled())
-    {
-        SEND1(address
-        {
-            {
-                settings().selfs.front().to_address_item(
-                    unix_time(), settings().services_maximum)
-            }
-        }, handle_send_address, _1);
-    }
-}
-
 // Only send 0..1 address in response to each get_address when seeding.
 bool protocol_seed_31402::handle_receive_get_address(const code& ec,
     const get_address::cptr&) NOEXCEPT
@@ -224,8 +209,11 @@ bool protocol_seed_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return false;
 
-    // Advertise self if configured for inbound and valid self address.
-    send_self();
+    // Advertise self if configured for inbound and with self address(es).
+    if (settings().advertise_enabled())
+    {
+        SEND1(selfs(), handle_send_address, _1);
+    }
 
     // handle_send_address has been bypassed, so completion here.
     handle_send_address(error::success);
