@@ -88,7 +88,7 @@ bool protocol_address_out_31402::handle_receive_get_address(const code& ec,
     fetch(BIND2(handle_fetch_address, _1, _2));
     sent_ = true;
 
-    // Relay broadcasts as well.
+    LOGP("Relay start [" << authority() << "].");
     SUBSCRIBE_BROADCAST3(address, handle_broadcast_address, _1, _2, _3);
     return true;
 }
