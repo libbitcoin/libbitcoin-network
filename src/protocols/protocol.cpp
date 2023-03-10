@@ -114,11 +114,8 @@ address protocol::selfs() const NOEXCEPT
 
     address message{};
     message.addresses.reserve(selfs.size());
-    std::transform(selfs.begin(), selfs.end(), message.addresses.begin(),
-        [&](const auto& self) NOEXCEPT
-        {
-            return self.to_address_item(time_now, services);
-        });
+    for (auto& self: selfs)
+        message.addresses.push_back(self.to_address_item(time_now, services));
 
     return message;
 }
