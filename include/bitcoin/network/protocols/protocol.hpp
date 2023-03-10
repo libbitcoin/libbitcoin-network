@@ -88,22 +88,22 @@ protected:
         channel_->subscribe<Message>(BOUND_PROTOCOL(handler, args));
     }
 
-    /////// Broadcast a message instance to peers (use BROADCAST).
-    ////template <class Message>
-    ////void broadcast(const Message& message) NOEXCEPT
-    ////{
-    ////    session_.broadcast(message, channel_->identifier());
-    ////}
+    /// Broadcast a message instance to peers.
+    template <class Message>
+    void broadcast(const Message& message) NOEXCEPT
+    {
+        session_.broadcast(message, channel_->identifier());
+    }
 
-    /////// Broadcast a message instance to peers (use BROADCAST).
-    ////template <class Message>
-    ////void broadcast(Message&& message) NOEXCEPT
-    ////{
-    ////    session_.broadcast(std::forward<Message>(message),
-    ////        channel_->identifier());
-    ////}
+    /// Broadcast a message instance to peers.
+    template <class Message>
+    void broadcast(Message&& message) NOEXCEPT
+    {
+        session_.broadcast(std::forward<Message>(message),
+            channel_->identifier());
+    }
 
-    /// Broadcast a message instance to peers (use BROADCAST).
+    /// Broadcast a message instance to peers.
     template <class Message>
     void broadcast(const typename Message::cptr& message) NOEXCEPT
     {
@@ -226,8 +226,6 @@ private:
     subscribe<CLASS, message>(&CLASS::method, p1, p2)
 #define SUBSCRIBE_BROADCAST3(message, method, p1, p2, p3) \
     subscribe<CLASS, message>(&CLASS::method, p1, p2, p3)
-
-#define BROADCAST(message) broadcast(message)
 
 } // namespace network
 } // namespace libbitcoin

@@ -53,21 +53,21 @@ public:
     /// best-efforts propagation. Use individual channel.send calls otherwise.
     /// Sender identifies the channel to its own handler, for option to bypass.
 
-    ////template <class Message>
-    ////void broadcast(const Message& message, channel_id sender) NOEXCEPT
-    ////{
-    ////    boost::asio::dispatch(strand(),
-    ////        std::bind(&session::do_broadcast<Message>,
-    ////            this, system::to_shared(message), sender));
-    ////}
+    template <class Message>
+    void broadcast(const Message& message, channel_id sender) NOEXCEPT
+    {
+        boost::asio::dispatch(strand(),
+            std::bind(&session::do_broadcast<Message>,
+                this, system::to_shared(message), sender));
+    }
 
-    ////template <class Message>
-    ////void broadcast(Message&& message, channel_id sender) NOEXCEPT
-    ////{
-    ////    boost::asio::dispatch(strand(),
-    ////        std::bind(&session::do_broadcast<Message>,
-    ////            this, system::to_shared(std::move(message)), sender));
-    ////}
+    template <class Message>
+    void broadcast(Message&& message, channel_id sender) NOEXCEPT
+    {
+        boost::asio::dispatch(strand(),
+            std::bind(&session::do_broadcast<Message>,
+                this, system::to_shared(std::move(message)), sender));
+    }
 
     template <class Message>
     void broadcast(const typename Message::cptr& message,
