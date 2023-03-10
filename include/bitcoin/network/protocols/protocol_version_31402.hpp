@@ -40,11 +40,11 @@ public:
     typedef std::shared_ptr<protocol_version_31402> ptr;
 
     /// Construct a version protocol instance using configured values.
-    protocol_version_31402(const session& session,
+    protocol_version_31402(session& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Construct a version protocol instance using parameterized services.
-    protocol_version_31402(const session& session, const channel::ptr& channel,
+    protocol_version_31402(session& session, const channel::ptr& channel,
         uint64_t minimum_services, uint64_t maximum_services) NOEXCEPT;
 
     /// Perform the handshake (strand required), handler invoked on completion.

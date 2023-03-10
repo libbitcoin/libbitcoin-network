@@ -50,8 +50,7 @@ public:
 
     /// Attach protocol to channel, caller must start (requires strand).
     template <class Protocol, typename... Args>
-    typename Protocol::ptr attach(const session& session,
-        Args&&... args) NOEXCEPT
+    typename Protocol::ptr attach(session& session, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "subscribe_stop");
 

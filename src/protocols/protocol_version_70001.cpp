@@ -35,7 +35,7 @@ namespace network {
 using namespace system;
 using namespace bc::network::messages;
 
-protocol_version_70001::protocol_version_70001(const session& session,
+protocol_version_70001::protocol_version_70001(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70001(session, channel,
         session.settings().services_minimum,
@@ -44,7 +44,7 @@ protocol_version_70001::protocol_version_70001(const session& session,
 {
 }
 
-protocol_version_70001::protocol_version_70001(const session& session,
+protocol_version_70001::protocol_version_70001(session& session,
     const channel::ptr& channel, uint64_t minimum_services,
     uint64_t maximum_services, bool relay) NOEXCEPT
   : protocol_version_31402(session, channel, minimum_services,

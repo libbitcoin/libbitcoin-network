@@ -37,8 +37,9 @@ namespace network {
 #define SUBSCRIBER_OVERLOAD(name) code do_subscribe( \
     broadcaster::handler<messages::name>&& handler, channel_id id) NOEXCEPT \
     { return SUBSCRIBER(name).subscribe(std::move(handler), id); }
-#define CASE_NOTIFY(name) case messages::identifier::name: \
-    return SUBSCRIBER(name).notify(error::success, message, sender)
+#define NOTIFY_OVERLOAD(name) inline void notify( \
+    const messages::name::cptr& message, channel_id sender) NOEXCEPT \
+    { SUBSCRIBER(name).notify(error::success, message, sender); }
 
 /// Not thread safe.
 class BCT_API broadcaster
@@ -101,52 +102,43 @@ public:
     }
 
     /// Relay a message instance to each subscriber of the type.
-    template <typename Message>
-    code notify(const typename Message::cptr& message,
-        channel_id sender) NOEXCEPT
+    void notify(const messages::address::cptr& message, channel_id sender) NOEXCEPT
     {
-        switch (Message::id)
-        {
-            ////case messages::identifier::address:
-            ////    return address_subscriber_.notify(error::success, message, sender);
-            CASE_NOTIFY(address);
-            CASE_NOTIFY(alert);
-            CASE_NOTIFY(block);
-            CASE_NOTIFY(bloom_filter_add);
-            CASE_NOTIFY(bloom_filter_clear);
-            CASE_NOTIFY(bloom_filter_load);
-            CASE_NOTIFY(client_filter);
-            CASE_NOTIFY(client_filter_checkpoint);
-            CASE_NOTIFY(client_filter_headers);
-            CASE_NOTIFY(compact_block);
-            CASE_NOTIFY(compact_transactions);
-            CASE_NOTIFY(fee_filter);
-            CASE_NOTIFY(get_address);
-            CASE_NOTIFY(get_blocks);
-            CASE_NOTIFY(get_client_filter_checkpoint);
-            CASE_NOTIFY(get_client_filter_headers);
-            CASE_NOTIFY(get_client_filters);
-            CASE_NOTIFY(get_compact_transactions);
-            CASE_NOTIFY(get_data);
-            CASE_NOTIFY(get_headers);
-            CASE_NOTIFY(headers);
-            CASE_NOTIFY(inventory);
-            CASE_NOTIFY(memory_pool);
-            CASE_NOTIFY(merkle_block);
-            CASE_NOTIFY(not_found);
-            CASE_NOTIFY(ping);
-            CASE_NOTIFY(pong);
-            CASE_NOTIFY(reject);
-            CASE_NOTIFY(send_compact);
-            CASE_NOTIFY(send_headers);
-            CASE_NOTIFY(transaction);
-            CASE_NOTIFY(version);
-            CASE_NOTIFY(version_acknowledge);
-            case messages::identifier::unknown:
-            default:
-                return error::unknown_message;
-        }
+        address_subscriber_.notify(error::success, message, sender);
     }
+    ////DEFINE_SUBSCRIBER(address);
+    NOTIFY_OVERLOAD(alert);
+    NOTIFY_OVERLOAD(block);
+    NOTIFY_OVERLOAD(bloom_filter_add);
+    NOTIFY_OVERLOAD(bloom_filter_clear);
+    NOTIFY_OVERLOAD(bloom_filter_load);
+    NOTIFY_OVERLOAD(client_filter);
+    NOTIFY_OVERLOAD(client_filter_checkpoint);
+    NOTIFY_OVERLOAD(client_filter_headers);
+    NOTIFY_OVERLOAD(compact_block);
+    NOTIFY_OVERLOAD(compact_transactions);
+    NOTIFY_OVERLOAD(fee_filter);
+    NOTIFY_OVERLOAD(get_address);
+    NOTIFY_OVERLOAD(get_blocks);
+    NOTIFY_OVERLOAD(get_client_filter_checkpoint);
+    NOTIFY_OVERLOAD(get_client_filter_headers);
+    NOTIFY_OVERLOAD(get_client_filters);
+    NOTIFY_OVERLOAD(get_compact_transactions);
+    NOTIFY_OVERLOAD(get_data);
+    NOTIFY_OVERLOAD(get_headers);
+    NOTIFY_OVERLOAD(headers);
+    NOTIFY_OVERLOAD(inventory);
+    NOTIFY_OVERLOAD(memory_pool);
+    NOTIFY_OVERLOAD(merkle_block);
+    NOTIFY_OVERLOAD(not_found);
+    NOTIFY_OVERLOAD(ping);
+    NOTIFY_OVERLOAD(pong);
+    NOTIFY_OVERLOAD(reject);
+    NOTIFY_OVERLOAD(send_compact);
+    NOTIFY_OVERLOAD(send_headers);
+    NOTIFY_OVERLOAD(transaction);
+    NOTIFY_OVERLOAD(version);
+    NOTIFY_OVERLOAD(version_acknowledge);
 
     /// Unsubscribe the channel identifier from all subscribers.
     void unsubscribe(channel_id subscriber) NOEXCEPT;

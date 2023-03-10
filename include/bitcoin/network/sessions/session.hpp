@@ -53,23 +53,23 @@ public:
     /// best-efforts propagation. Use individual channel.send calls otherwise.
     /// Sender identifies the channel to its own handler, for option to bypass.
 
-    template <typename Message>
-    void broadcast(const Message& message, channel_id sender) NOEXCEPT
-    {
-        boost::asio::dispatch(strand(),
-            std::bind(&session::do_broadcast<Message>,
-                this, system::to_shared(message), sender));
-    }
+    ////template <class Message>
+    ////void broadcast(const Message& message, channel_id sender) NOEXCEPT
+    ////{
+    ////    boost::asio::dispatch(strand(),
+    ////        std::bind(&session::do_broadcast<Message>,
+    ////            this, system::to_shared(message), sender));
+    ////}
 
-    template <typename Message>
-    void broadcast(Message&& message, channel_id sender) NOEXCEPT
-    {
-        boost::asio::dispatch(strand(),
-            std::bind(&session::do_broadcast<Message>,
-                this, system::to_shared(std::move(message)), sender));
-    }
+    ////template <class Message>
+    ////void broadcast(Message&& message, channel_id sender) NOEXCEPT
+    ////{
+    ////    boost::asio::dispatch(strand(),
+    ////        std::bind(&session::do_broadcast<Message>,
+    ////            this, system::to_shared(std::move(message)), sender));
+    ////}
 
-    template <typename Message>
+    template <class Message>
     void broadcast(const typename Message::cptr& message,
         channel_id sender) NOEXCEPT
     {
@@ -78,7 +78,7 @@ public:
                 this, message, sender));
     }
 
-    template <typename Message, typename Handler = broadcaster::handler<Message>>
+    template <class Message, typename Handler = broadcaster::handler<Message>>
     void subscribe_broadcast(Handler&& handler, channel_id subscriber) NOEXCEPT
     {
         boost::asio::dispatch(strand(),
@@ -168,10 +168,10 @@ protected:
 
     /// Override to change version protocol (base calls from channel strand).
     virtual void attach_handshake(const channel::ptr& channel,
-        result_handler&& handler) const NOEXCEPT;
+        result_handler&& handler) NOEXCEPT;
 
     /// Override to change channel protocols (base calls from channel strand).
-    virtual void attach_protocols(const channel::ptr& channel) const NOEXCEPT;
+    virtual void attach_protocols(const channel::ptr& channel) NOEXCEPT;
 
     /// Subscriptions.
     /// -----------------------------------------------------------------------
@@ -263,11 +263,11 @@ private:
         const result_handler& stopped) NOEXCEPT;
 
     void do_attach_handshake(const channel::ptr& channel,
-        const result_handler& handshake) const NOEXCEPT;
+        const result_handler& handshake) NOEXCEPT;
     void do_handle_handshake(const code& ec, const channel::ptr& channel,
         const result_handler& start) NOEXCEPT;
     void do_attach_protocols(const channel::ptr& channel,
-        const result_handler& started) const NOEXCEPT;
+        const result_handler& started) NOEXCEPT;
     void do_handle_channel_started(const code& ec, const channel::ptr& channel,
         const result_handler& started) NOEXCEPT;
     void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,

@@ -231,7 +231,7 @@ void session_outbound::handle_connect(const code& ec,
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
-    result_handler&& handler) const NOEXCEPT
+    result_handler&& handler) NOEXCEPT
 {
     session::attach_handshake(channel, std::move(handler));
 }
@@ -246,7 +246,7 @@ void session_outbound::handle_channel_start(const code&,
 }
 
 void session_outbound::attach_protocols(
-    const channel::ptr& channel) const NOEXCEPT
+    const channel::ptr& channel) NOEXCEPT
 {
     session::attach_protocols(channel);
 }

@@ -56,7 +56,7 @@ public:
 
 protected:
     /// Construct an instance.
-    protocol(const session& session, const channel::ptr& channel) NOEXCEPT;
+    protocol(session& session, const channel::ptr& channel) NOEXCEPT;
 
     /// Asserts that protocol is stopped.
     virtual ~protocol() NOEXCEPT;
@@ -88,26 +88,26 @@ protected:
         channel_->subscribe<Message>(BOUND_PROTOCOL(handler, args));
     }
 
-    /// Broadcast a message instance to peers (use BROADCAST).
-    template <class Message>
-    void broadcast(const Message& message) NOEXCEPT
-    {
-        session_.broadcast(message, channel_->identifier());
-    }
+    /////// Broadcast a message instance to peers (use BROADCAST).
+    ////template <class Message>
+    ////void broadcast(const Message& message) NOEXCEPT
+    ////{
+    ////    session_.broadcast(message, channel_->identifier());
+    ////}
 
-    /// Broadcast a message instance to peers (use BROADCAST).
-    template <class Message>
-    void broadcast(Message&& message) NOEXCEPT
-    {
-        session_.broadcast(std::forward<Message>(message),
-            channel_->identifier());
-    }
+    /////// Broadcast a message instance to peers (use BROADCAST).
+    ////template <class Message>
+    ////void broadcast(Message&& message) NOEXCEPT
+    ////{
+    ////    session_.broadcast(std::forward<Message>(message),
+    ////        channel_->identifier());
+    ////}
 
     /// Broadcast a message instance to peers (use BROADCAST).
     template <class Message>
     void broadcast(const typename Message::cptr& message) NOEXCEPT
     {
-        session_.broadcast(message, channel_->identifier());
+        session_.broadcast<Message>(message, channel_->identifier());
     }
 
     /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST#).
@@ -196,7 +196,7 @@ private:
     channel::ptr channel_;
 
     // This is thread safe.
-    const session& session_;
+    session& session_;
 
     // This is protected by strand.
     bool started_{};

@@ -41,7 +41,7 @@ using namespace messages;
 using namespace std::placeholders;
 
 // Require the configured minimum protocol and services by default.
-protocol_version_31402::protocol_version_31402(const session& session,
+protocol_version_31402::protocol_version_31402(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_31402(session, channel,
       session.settings().services_minimum,
@@ -50,7 +50,7 @@ protocol_version_31402::protocol_version_31402(const session& session,
 }
 
 // Used for seeding (should probably not override these).
-protocol_version_31402::protocol_version_31402(const session& session,
+protocol_version_31402::protocol_version_31402(session& session,
     const channel::ptr& channel, uint64_t minimum_services,
     uint64_t maximum_services) NOEXCEPT
   : protocol(session, channel),

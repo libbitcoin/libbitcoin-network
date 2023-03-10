@@ -40,7 +40,7 @@ using namespace std::placeholders;
 // Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-protocol_seed_31402::protocol_seed_31402(const session& session,
+protocol_seed_31402::protocol_seed_31402(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     timer_(std::make_shared<deadline>(session.log(), channel->strand(),

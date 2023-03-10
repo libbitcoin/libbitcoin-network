@@ -41,6 +41,9 @@ constexpr size_t heading_command_size = 12;
 // This is just a guess, required as memory guard.
 constexpr size_t max_reject_message = max_uint16;
 
+// This is arbitrary, useful as an address pool guard.
+constexpr size_t maximum_advertisement = 10;
+
 ////constexpr size_t max_bloom_filter_hashes = 2'000;
 ////constexpr size_t max_get_data = 50'000;
 ////constexpr size_t max_get_client_filter_headers = 1'999;

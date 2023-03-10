@@ -215,7 +215,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler&&) const NOEXCEPT override
+        result_handler&&) NOEXCEPT override
     {
     }
 
@@ -231,7 +231,7 @@ class mock_protocol
 public:
     typedef std::shared_ptr<mock_protocol> ptr;
 
-    mock_protocol(const session& session, const channel::ptr& channel) NOEXCEPT
+    mock_protocol(session& session, const channel::ptr& channel) NOEXCEPT
       : protocol(session, channel)
     {
     }

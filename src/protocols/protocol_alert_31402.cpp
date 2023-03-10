@@ -36,7 +36,7 @@ using namespace messages;
 using namespace std::placeholders;
 
 // This captures alert messages. Outp
-protocol_alert_31402::protocol_alert_31402(const session& session,
+protocol_alert_31402::protocol_alert_31402(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     tracker<protocol_alert_31402>(session.log())

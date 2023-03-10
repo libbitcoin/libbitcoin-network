@@ -200,7 +200,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr&,
-        result_handler&& handshake) const NOEXCEPT override
+        result_handler&& handshake) NOEXCEPT override
     {
         if (!handshaked_)
         {
@@ -239,7 +239,7 @@ public:
     using mock_session_inbound::mock_session_inbound;
 
     void attach_handshake(const channel::ptr&,
-        result_handler&& handshake) const NOEXCEPT override
+        result_handler&& handshake) NOEXCEPT override
     {
         if (!handshaked_)
         {

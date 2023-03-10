@@ -54,10 +54,10 @@ public:
 protected:
     /// Overridden to set service and version minimums upon session start.
     void attach_handshake(const channel::ptr& channel,
-        result_handler&& handler) const NOEXCEPT override;
+        result_handler&& handler) NOEXCEPT override;
 
     /// Overridden to attach only seeding protocols upon channel start.
-    void attach_protocols(const channel::ptr& channel) const NOEXCEPT override;
+    void attach_protocols(const channel::ptr& channel) NOEXCEPT override;
 
     /// Start a seed connection (called from start).
     virtual void start_seed(const code& ec, const config::endpoint& seed,

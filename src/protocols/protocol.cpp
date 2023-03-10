@@ -38,7 +38,7 @@ using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
-protocol::protocol(const session& session, const channel::ptr& channel) NOEXCEPT
+protocol::protocol(session& session, const channel::ptr& channel) NOEXCEPT
   : channel_(channel),
     session_(session),
     reporter(session.log())

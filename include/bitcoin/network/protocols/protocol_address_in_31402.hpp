@@ -39,7 +39,7 @@ class BCT_API protocol_address_in_31402
 public:
     typedef std::shared_ptr<protocol_address_in_31402> ptr;
 
-    protocol_address_in_31402(const session& session,
+    protocol_address_in_31402(session& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Start protocol (strand required).

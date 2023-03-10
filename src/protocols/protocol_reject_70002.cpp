@@ -36,7 +36,7 @@ using namespace messages;
 using namespace std::placeholders;
 
 // This protocol creates log overflow DOS vector, and is not in widespread use.
-protocol_reject_70002::protocol_reject_70002(const session& session,
+protocol_reject_70002::protocol_reject_70002(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     tracker<protocol_reject_70002>(session.log())

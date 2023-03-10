@@ -200,7 +200,7 @@ bool session_inbound::whitelisted(const config::address& address) const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void session_inbound::attach_handshake(const channel::ptr& channel,
-    result_handler&& handler) const NOEXCEPT
+    result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
@@ -209,7 +209,7 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
     constexpr auto minimum_services = messages::service::node_none;
 
     // Weak reference safe as sessions outlive protocols.
-    const auto& self = *this;
+    auto& self = *this;
     const auto maximum_version = settings().protocol_maximum;
     const auto maximum_services = settings().services_maximum;
     const auto extended_version = maximum_version >= messages::level::bip37;
@@ -242,7 +242,7 @@ void session_inbound::handle_channel_start(const code&,
 }
 
 void session_inbound::attach_protocols(
-    const channel::ptr& channel) const NOEXCEPT
+    const channel::ptr& channel) NOEXCEPT
 {
     session::attach_protocols(channel);
 }
