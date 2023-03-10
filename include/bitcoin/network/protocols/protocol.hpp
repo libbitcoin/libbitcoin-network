@@ -164,7 +164,10 @@ protected:
     virtual void set_negotiated_version(uint32_t value) NOEXCEPT;
 
     /// Network settings.
-    const network::settings& settings() const NOEXCEPT;
+    virtual const network::settings& settings() const NOEXCEPT;
+
+    /// Advertised addresses with own services and current timestamp.
+    virtual messages::address selfs() const NOEXCEPT;
 
     /// Addresses.
     /// -----------------------------------------------------------------------

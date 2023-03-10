@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/protocols/protocol.hpp>
 
+#include <algorithm>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -96,13 +97,30 @@ void protocol::pause() NOEXCEPT
 
 // Properties.
 // ----------------------------------------------------------------------------
-// The two public properties may be accessed outside the strand, but are never
-// during handshake protocol operation. Thread safety requires that setters are
-// never invoked outside of the handshake protocol (start handler).
+// The public properties may be accessed outside the strand, except during
+// handshake protocol operation. Thread safety requires that setters are never
+// invoked outside of the handshake protocol (start handler).
 
 const network::settings& protocol::settings() const NOEXCEPT
 {
     return session_.settings();
+}
+
+address protocol::selfs() const NOEXCEPT
+{
+    const auto time_now = unix_time();
+    const auto services = settings().services_maximum;
+    const auto& selfs = settings().selfs;
+
+    address message{};
+    message.addresses.reserve(selfs.size());
+    std::transform(selfs.begin(), selfs.end(), message.addresses.begin(),
+        [&](const auto& self) NOEXCEPT
+        {
+            return self.to_address_item(time_now, services);
+        });
+
+    return message;
 }
 
 bool protocol::stranded() const NOEXCEPT
