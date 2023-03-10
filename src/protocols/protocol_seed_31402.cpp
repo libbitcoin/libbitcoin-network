@@ -157,25 +157,25 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return false;
 
-    const auto start = message->addresses.size();
-    if (is_one(start) && (message->addresses.front() == outbound()))
+    const auto start_size = message->addresses.size();
+    if (is_one(start_size) && (message->addresses.front() == outbound()))
     {
         ////LOGP("Dropping redundant address from seed [" << authority() << "]");
         return true;
     }
 
     const auto filtered = filter(message->addresses);
-    const auto end = filtered->addresses.size();
+    const auto end_size = filtered->addresses.size();
 
     save(filtered,
-        BIND4(handle_save_addresses, _1, _2, end, start));
+        BIND4(handle_save_addresses, _1, _2, end_size, start_size));
 
     return true;
 }
 
 void protocol_seed_31402::handle_save_addresses(const code& ec,
     size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
-    size_t start) NOEXCEPT
+    size_t start_size) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -186,12 +186,12 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
     if (ec)
         stop(ec);
 
-    LOGN("Accepted (" << start << ">" << filtered << ">" << accepted << ") "
-        "addresses from seed [" << authority() << "].");
+    LOGN("Accepted (" << start_size << ">" << filtered << ">" << accepted
+        << ") addresses from seed [" << authority() << "].");
 
     // Multiple address messages are allowed, but do not delay session.
     // Ignore a singleton message, conventional to send self upon connect.
-    received_address_ = !is_one(start);
+    received_address_ = !is_one(start_size);
 
     if (complete())
         stop(error::success);

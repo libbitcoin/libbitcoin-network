@@ -59,7 +59,7 @@ protected:
     virtual bool handle_receive_address(const code& ec,
         const messages::address::cptr& address) NOEXCEPT;
     virtual void handle_save_addresses(const code& ec,
-        size_t accepted, size_t filtered, size_t start) NOEXCEPT;
+        size_t accepted, size_t filtered, size_t start_size) NOEXCEPT;
 
     virtual bool handle_receive_get_address(const code& ec,
         const messages::get_address::cptr& message) NOEXCEPT;

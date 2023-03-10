@@ -43,7 +43,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 protocol_address_in_31402::protocol_address_in_31402(const session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    inbound_(session.inbound()),
+    request_(!session.inbound()),
     tracker<protocol_address_in_31402>(session.log())
 {
 }
@@ -62,7 +62,7 @@ void protocol_address_in_31402::start() NOEXCEPT
     SUBSCRIBE2(address, handle_receive_address, _1, _2);
 
     // Do not request addresses from inbound channels.
-    if (!inbound_)
+    if (request_)
     {
         SEND1(get_address{}, handle_send, _1);
     }
@@ -115,44 +115,45 @@ bool protocol_address_in_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return false;
 
-    // TODO: deal with multiple selfs.
-    // Do not accept multiple addresses from inbound channels.
-    const auto start = message->addresses.size();
-    if (inbound_ && (received_ || !is_one(start)))
+    // Accept only one advertisement message unless messages requested.
+    const auto start_size = message->addresses.size();
+    const auto advertisement = first_ && (start_size < maximum_advertisement);
+
+    if (!request_ && !advertisement)
     {
-        LOGP("Ignoring (" << start << ") unsolicited addresses from ["
+        LOGP("Ignoring (" << start_size << ") unsolicited addresses from ["
             << authority() << "]");
         ////stop(error::protocol_violation);
         return true;
     }
 
-    received_ = true;
-    if (is_one(start) && message->addresses.front() == outbound())
+    first_ = false;
+    if (is_one(start_size) && message->addresses.front() == outbound())
     {
         ////LOGP("Dropping redundant address from [" << authority() << "]");
         return true;
     }
 
     const auto filtered = filter(message->addresses);
-    const auto end = filtered->addresses.size();
+    const auto end_size = filtered->addresses.size();
 
     // This allows previously-rejected addresses.
     save(filtered,
-        BIND4(handle_save_address, _1, _2, end, start));
+        BIND4(handle_save_address, _1, _2, end_size, start_size));
 
     return true;
 }
 
 void protocol_address_in_31402::handle_save_address(const code& ec,
     size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
-    size_t LOG_ONLY(start)) NOEXCEPT
+    size_t LOG_ONLY(start_size)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_in_31402");
 
     if (stopped(ec))
         return;
 
-    LOGN("Accepted (" << start << ">" << filtered << ">" << accepted << ") "
+    LOGN("Accepted (" << start_size << ">" << filtered << ">" << accepted << ") "
         "addresses from [" << authority() << "].");
 }
 
