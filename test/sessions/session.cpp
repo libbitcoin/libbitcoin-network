@@ -154,7 +154,7 @@ public:
     }
 
     void attach_handshake(const channel::ptr& channel,
-        result_handler&& handshake) const NOEXCEPT override
+        result_handler&& handshake) NOEXCEPT override
     {
         if (!handshaked_)
         {
@@ -170,7 +170,7 @@ public:
         return handshaked_;
     }
 
-    void attach_protocols(const channel::ptr&) const NOEXCEPT override
+    void attach_protocols(const channel::ptr&) NOEXCEPT override
     {
         if (!protocoled_)
         {

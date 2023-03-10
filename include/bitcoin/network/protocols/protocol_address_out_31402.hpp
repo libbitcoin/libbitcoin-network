@@ -39,7 +39,7 @@ class BCT_API protocol_address_out_31402
 public:
     typedef std::shared_ptr<protocol_address_out_31402> ptr;
 
-    protocol_address_out_31402(const session& session,
+    protocol_address_out_31402(session& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Start protocol (strand required).
@@ -50,9 +50,12 @@ protected:
         const messages::get_address::cptr& message) NOEXCEPT;
     virtual void handle_fetch_address(const code& ec,
         const messages::address::cptr& message) NOEXCEPT;
+    virtual bool handle_broadcast_address(const code& ec,
+        const messages::address::cptr& message, uint64_t sender) NOEXCEPT;
 
 private:
-    void send_self() NOEXCEPT;
+    void do_handle_broadcast_address(
+        const messages::address::cptr& message) NOEXCEPT;
 
     // This is protected by strand.
     bool sent_{};

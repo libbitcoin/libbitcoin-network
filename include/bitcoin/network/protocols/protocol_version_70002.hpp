@@ -40,13 +40,13 @@ public:
     typedef std::shared_ptr<protocol_version_70002> ptr;
 
     /// Construct a version protocol instance using configured values.
-    protocol_version_70002(const session& session,
+    protocol_version_70002(session& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Construct a version protocol instance using parameterized services.
-    protocol_version_70002(const session& session,
-        const channel::ptr& channel, uint64_t minimum_services,
-        uint64_t maximum_services, bool relay) NOEXCEPT;
+    protocol_version_70002(session& session, const channel::ptr& channel,
+        uint64_t minimum_services, uint64_t maximum_services,
+        bool relay) NOEXCEPT;
 
     /// Perform the handshake (strand required), handler invoked on completion.
     void shake(result_handler&& handle_event) NOEXCEPT override;

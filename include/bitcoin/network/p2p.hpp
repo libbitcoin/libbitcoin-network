@@ -96,7 +96,6 @@ public:
         stop_completer&& complete) NOEXCEPT;
 
     /// Unsubscribe by subscription key, error::desubscribed passed to handler.
-    ////virtual void unsubscribe_broadcast(uint64_t key) NOEXCEPT;
     virtual void unsubscribe_connect(object_key key) NOEXCEPT;
     virtual void unsubscribe_close(object_key key) NOEXCEPT;
 
@@ -194,7 +193,7 @@ protected:
     virtual bool unstore_nonce(const channel& channel) NOEXCEPT;
     virtual bool is_loopback(const channel& channel) const NOEXCEPT;
 
-    /// Register channels for broadcast and quick stop, require strand.
+    /// Count channel, guard loopback, reserve address.
     virtual code count_channel(const channel& channel) NOEXCEPT;
     virtual void uncount_channel(const channel& channel) NOEXCEPT;
 

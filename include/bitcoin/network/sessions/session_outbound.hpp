@@ -52,10 +52,10 @@ public:
 protected:
     /// Overridden to change version protocol (base calls from channel strand).
     void attach_handshake(const channel::ptr& channel,
-        result_handler&& handle_started) const NOEXCEPT override;
+        result_handler&& handle_started) NOEXCEPT override;
 
     /// Overridden to change channel protocols (base calls from channel strand).
-    void attach_protocols(const channel::ptr& channel) const NOEXCEPT override;
+    void attach_protocols(const channel::ptr& channel) NOEXCEPT override;
 
     /// Start outbound connection loop.
     virtual void start_connect(const code& ec) NOEXCEPT;

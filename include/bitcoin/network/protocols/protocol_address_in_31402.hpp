@@ -39,7 +39,7 @@ class BCT_API protocol_address_in_31402
 public:
     typedef std::shared_ptr<protocol_address_in_31402> ptr;
 
-    protocol_address_in_31402(const session& session,
+    protocol_address_in_31402(session& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Start protocol (strand required).
@@ -52,16 +52,14 @@ protected:
     virtual bool handle_receive_address(const code& ec,
         const messages::address::cptr& message) NOEXCEPT;
     virtual void handle_save_address(const code& ec,
-        size_t accepted, size_t filtered, size_t start) NOEXCEPT;
+        size_t accepted, size_t filtered, size_t start_size) NOEXCEPT;
 
 private:
-    messages::address_item self() const NOEXCEPT;
-
     // This is thread safe (const).
-    const bool inbound_;
+    const bool request_;
 
     // This is protected by strand.
-    bool received_{};
+    bool first_{};
 };
 
 } // namespace network

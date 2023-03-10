@@ -39,7 +39,7 @@ class BCT_API protocol_ping_60001
 public:
     typedef std::shared_ptr<protocol_ping_60001> ptr;
 
-    protocol_ping_60001(const session& session,
+    protocol_ping_60001(session& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Start protocol (strand required).

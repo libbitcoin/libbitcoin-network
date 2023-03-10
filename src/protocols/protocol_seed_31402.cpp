@@ -40,7 +40,7 @@ using namespace std::placeholders;
 // Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-protocol_seed_31402::protocol_seed_31402(const session& session,
+protocol_seed_31402::protocol_seed_31402(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     timer_(std::make_shared<deadline>(session.log(), channel->strand(),
@@ -59,8 +59,8 @@ void protocol_seed_31402::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE2(address, handle_receive_address, _1, _2);
-    SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
+    SUBSCRIBE_CHANNEL2(address, handle_receive_address, _1, _2);
+    SUBSCRIBE_CHANNEL2(get_address, handle_receive_get_address, _1, _2);
     SEND1(get_address{}, handle_send_get_address, _1);
 
     protocol::start();
@@ -157,25 +157,25 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
     if (stopped(ec))
         return false;
 
-    const auto start = message->addresses.size();
-    if (is_one(start) && (message->addresses.front() == outbound()))
+    const auto start_size = message->addresses.size();
+    if (is_one(start_size) && (message->addresses.front() == outbound()))
     {
         ////LOGP("Dropping redundant address from seed [" << authority() << "]");
         return true;
     }
 
     const auto filtered = filter(message->addresses);
-    const auto end = filtered->addresses.size();
+    const auto end_size = filtered->addresses.size();
 
     save(filtered,
-        BIND4(handle_save_addresses, _1, _2, end, start));
+        BIND4(handle_save_addresses, _1, _2, end_size, start_size));
 
     return true;
 }
 
 void protocol_seed_31402::handle_save_addresses(const code& ec,
     size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
-    size_t start) NOEXCEPT
+    size_t start_size) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
 
@@ -186,12 +186,12 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
     if (ec)
         stop(ec);
 
-    LOGN("Accepted (" << start << ">" << filtered << ">" << accepted << ") "
-        "addresses from seed [" << authority() << "].");
+    LOGN("Accepted (" << start_size << ">" << filtered << ">" << accepted
+        << ") addresses from seed [" << authority() << "].");
 
     // Multiple address messages are allowed, but do not delay session.
     // Ignore a singleton message, conventional to send self upon connect.
-    received_address_ = !is_one(start);
+    received_address_ = !is_one(start_size);
 
     if (complete())
         stop(error::success);
@@ -199,21 +199,6 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
 
 // Outbound (fetch and send addresses).
 // ----------------------------------------------------------------------------
-
-void protocol_seed_31402::send_self() NOEXCEPT
-{
-    // TODO: deal with multiple selfs.
-    if (settings().advertise_enabled())
-    {
-        SEND1(address
-        {
-            {
-                settings().selfs.front().to_address_item(
-                    unix_time(), settings().services_maximum)
-            }
-        }, handle_send_address, _1);
-    }
-}
 
 // Only send 0..1 address in response to each get_address when seeding.
 bool protocol_seed_31402::handle_receive_get_address(const code& ec,
@@ -224,8 +209,11 @@ bool protocol_seed_31402::handle_receive_get_address(const code& ec,
     if (stopped(ec))
         return false;
 
-    // Advertise self if configured for inbound and valid self address.
-    send_self();
+    // Advertise self if configured for inbound and with self address(es).
+    if (settings().advertise_enabled())
+    {
+        SEND1(selfs(), handle_send_address, _1);
+    }
 
     // handle_send_address has been bypassed, so completion here.
     handle_send_address(error::success);

@@ -50,8 +50,7 @@ public:
 
     /// Attach protocol to channel, caller must start (requires strand).
     template <class Protocol, typename... Args>
-    typename Protocol::ptr attach(const session& session,
-        Args&&... args) NOEXCEPT
+    typename Protocol::ptr attach(session& session, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "subscribe_stop");
 
@@ -91,7 +90,7 @@ public:
     /// Arbitrary nonce of the channel (for loopback guard).
     uint64_t nonce() const NOEXCEPT;
 
-    /// Arbitrary identifier of the channel (for session subscriber).
+    /// Arbitrary identifier of the channel (for session subscribers).
     uint64_t identifier() const NOEXCEPT;
 
     /// Originating address of connection with current time and peer services.

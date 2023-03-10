@@ -180,7 +180,7 @@ void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
 }
 
 void session_seed::attach_handshake(const channel::ptr& channel,
-    result_handler&& handler) const NOEXCEPT
+    result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
@@ -194,7 +194,7 @@ void session_seed::attach_handshake(const channel::ptr& channel,
     constexpr auto maximum_services = messages::service::node_none;
 
     // Weak reference safe as sessions outlive protocols.
-    const auto& self = *this;
+    auto& self = *this;
     const auto maximum_version = settings().protocol_maximum;
     const auto extended_version = maximum_version >= messages::level::bip37;
     const auto enable_reject = settings().enable_reject &&
@@ -227,12 +227,12 @@ void session_seed::handle_channel_start(const code& ec,
     }
 }
 
-void session_seed::attach_protocols(const channel::ptr& channel) const NOEXCEPT
+void session_seed::attach_protocols(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
 
     // Weak reference safe as sessions outlive protocols.
-    const auto& self = *this;
+    auto& self = *this;
     const auto enable_alert = settings().enable_alert;
     const auto negotiated_version = channel->negotiated_version();
     const auto enable_pong = negotiated_version >= messages::level::bip31;

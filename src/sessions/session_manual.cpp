@@ -162,7 +162,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
 }
 
 void session_manual::attach_handshake(const channel::ptr& channel,
-    result_handler&& handler) const NOEXCEPT
+    result_handler&& handler) NOEXCEPT
 {
     session::attach_handshake(channel, std::move(handler));
 }
@@ -181,7 +181,7 @@ void session_manual::handle_channel_start(const code& ec,
 
 // Communication will begin after this function returns, freeing the thread.
 void session_manual::attach_protocols(
-    const channel::ptr& channel) const NOEXCEPT
+    const channel::ptr& channel) NOEXCEPT
 {
     session::attach_protocols(channel);
 }

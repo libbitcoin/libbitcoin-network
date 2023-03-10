@@ -38,7 +38,7 @@ using namespace std::placeholders;
 constexpr uint64_t received = zero;
 constexpr auto minimum_nonce = add1(received);
 
-protocol_ping_60001::protocol_ping_60001(const session& session,
+protocol_ping_60001::protocol_ping_60001(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_ping_31402(session, channel),
     nonce_(received),
@@ -53,8 +53,8 @@ void protocol_ping_60001::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE2(pong, handle_receive_pong, _1, _2);
-    ////SUBSCRIBE2(ping, handle_receive_ping, _1, _2);
+    SUBSCRIBE_CHANNEL2(pong, handle_receive_pong, _1, _2);
+    ////SUBSCRIBE_CHANNEL2(ping, handle_receive_ping, _1, _2);
     ////send_ping();
 
     protocol_ping_31402::start();

@@ -39,7 +39,7 @@ class BCT_API protocol_reject_70002
 public:
     typedef std::shared_ptr<protocol_reject_70002> ptr;
 
-    protocol_reject_70002(const session& session,
+    protocol_reject_70002(session& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Start protocol (strand required).

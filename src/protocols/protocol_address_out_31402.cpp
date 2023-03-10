@@ -38,7 +38,7 @@ using namespace std::placeholders;
 // Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-protocol_address_out_31402::protocol_address_out_31402(const session& session,
+protocol_address_out_31402::protocol_address_out_31402(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     tracker<protocol_address_out_31402>(session.log())
@@ -49,21 +49,6 @@ protocol_address_out_31402::protocol_address_out_31402(const session& session,
 // ----------------------------------------------------------------------------
 // TODO: As peers connect inbound, broadcast their singleton address.
 
-void protocol_address_out_31402::send_self() NOEXCEPT
-{
-    // TODO: deal with multiple selfs.
-    if (settings().advertise_enabled())
-    {
-        SEND1(address
-        {
-            {
-                settings().selfs.front().to_address_item(
-                    unix_time(), settings().services_maximum)
-            }
-        }, handle_send, _1);
-    }
-}
-
 void protocol_address_out_31402::start() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_out_31402");
@@ -71,10 +56,13 @@ void protocol_address_out_31402::start() NOEXCEPT
     if (started())
         return;
 
-    // Advertise self if configured for inbound and valid self address.
-    send_self();
+    // Advertise self if configured for inbound and with self address(es).
+    if (settings().advertise_enabled())
+    {
+        SEND1(selfs(), handle_send, _1);
+    }
 
-    SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
+    SUBSCRIBE_CHANNEL2(get_address, handle_receive_get_address, _1, _2);
     protocol::start();
 }
 
@@ -99,6 +87,9 @@ bool protocol_address_out_31402::handle_receive_get_address(const code& ec,
 
     fetch(BIND2(handle_fetch_address, _1, _2));
     sent_ = true;
+
+    // Relay broadcasts as well.
+    SUBSCRIBE_BROADCAST3(address, handle_broadcast_address, _1, _2, _3);
     return true;
 }
 
@@ -118,6 +109,43 @@ void protocol_address_out_31402::handle_fetch_address(const code& ec,
         "[" << authority() << "]");
 
     SEND1(*message, handle_send, _1);
+}
+
+// ----------------------------------------------------------------------------
+
+bool protocol_address_out_31402::handle_broadcast_address(const code& ec,
+    const address::cptr& message, uint64_t sender) NOEXCEPT
+{
+    if (stopped(ec))
+    {
+        LOGP("Relay stop [" << authority() << "].");
+        return false;
+    }
+
+    if (sender == identifier())
+    {
+        LOGP("Relay self [" << authority() << "].");
+        return true;
+    }
+
+    // TODO: not thread safe, bounce to protocol.
+    // TODO: move implementation to channel, make protocol.session const.
+    ////boost::asio::post(channel_->strand(),
+    ////    BIND1(do_handle_broadcast_address, message));
+    do_handle_broadcast_address(message);
+    return true;
+}
+
+void protocol_address_out_31402::do_handle_broadcast_address(
+    const address::cptr& message) NOEXCEPT
+{
+    ////BC_ASSERT_MSG(stranded(), "protocol_address_in_31402");
+
+    LOGP("Relay (" << message->addresses.size() << ") addresses to ["
+        << authority() << "].");
+
+    // TODO: not thread safe, bounce to protocol.
+    ////SEND1(*message, handle_send, _1);
 }
 
 BC_POP_WARNING()

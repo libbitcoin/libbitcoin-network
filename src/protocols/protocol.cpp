@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/protocols/protocol.hpp>
 
+#include <algorithm>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -37,7 +38,7 @@ using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
-protocol::protocol(const session& session, const channel::ptr& channel) NOEXCEPT
+protocol::protocol(session& session, const channel::ptr& channel) NOEXCEPT
   : channel_(channel),
     session_(session),
     reporter(session.log())
@@ -96,14 +97,9 @@ void protocol::pause() NOEXCEPT
 
 // Properties.
 // ----------------------------------------------------------------------------
-// The two public properties may be accessed outside the strand, but are never
-// during handshake protocol operation. Thread safety requires that setters are
-// never invoked outside of the handshake protocol (start handler).
-
-const network::settings& protocol::settings() const NOEXCEPT
-{
-    return session_.settings();
-}
+// The public properties may be accessed outside the strand, except during
+// handshake protocol operation. Thread safety requires that setters are never
+// invoked outside of the handshake protocol (start handler).
 
 bool protocol::stranded() const NOEXCEPT
 {
@@ -145,6 +141,30 @@ uint32_t protocol::negotiated_version() const NOEXCEPT
 void protocol::set_negotiated_version(uint32_t value) NOEXCEPT
 {
     channel_->set_negotiated_version(value);
+}
+
+const network::settings& protocol::settings() const NOEXCEPT
+{
+    return session_.settings();
+}
+
+address protocol::selfs() const NOEXCEPT
+{
+    const auto time_now = unix_time();
+    const auto services = settings().services_maximum;
+    const auto& selfs = settings().selfs;
+
+    address message{};
+    message.addresses.reserve(selfs.size());
+    for (auto& self: selfs)
+        message.addresses.push_back(self.to_address_item(time_now, services));
+
+    return message;
+}
+
+uint64_t protocol::identifier() const NOEXCEPT
+{
+    return channel_->identifier();
 }
 
 // Addresses.

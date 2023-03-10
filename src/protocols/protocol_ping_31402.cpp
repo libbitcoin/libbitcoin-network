@@ -35,7 +35,7 @@ using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
-protocol_ping_31402::protocol_ping_31402(const session& session,
+protocol_ping_31402::protocol_ping_31402(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     timer_(std::make_shared<deadline>(session.log(), channel->strand(),
@@ -52,7 +52,7 @@ void protocol_ping_31402::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE2(ping, handle_receive_ping, _1, _2);
+    SUBSCRIBE_CHANNEL2(ping, handle_receive_ping, _1, _2);
     send_ping();
 
     protocol::start();

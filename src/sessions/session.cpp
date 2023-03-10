@@ -128,7 +128,7 @@ void session::start_channel(const channel::ptr& channel,
 }
 
 void session::do_attach_handshake(const channel::ptr& channel,
-    const result_handler& handshake) const NOEXCEPT
+    const result_handler& handshake) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
@@ -140,13 +140,13 @@ void session::do_attach_handshake(const channel::ptr& channel,
 }
 
 void session::attach_handshake(const channel::ptr& channel,
-    result_handler&& handler) const NOEXCEPT
+    result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
 
     // Weak reference safe as sessions outlive protocols.
-    const auto& self = *this;
+    auto& self = *this;
     const auto maximum_version = settings().protocol_maximum;
     const auto extended_version = maximum_version >= messages::level::bip37;
     const auto enable_reject = settings().enable_reject &&
@@ -255,7 +255,7 @@ void session::do_handle_channel_started(const code& ec,
 }
 
 void session::do_attach_protocols(const channel::ptr& channel,
-    const result_handler& started) const NOEXCEPT
+    const result_handler& started) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
@@ -276,13 +276,13 @@ void session::do_attach_protocols(const channel::ptr& channel,
 }
 
 // Override in derived sessions to attach protocols.
-void session::attach_protocols(const channel::ptr& channel) const NOEXCEPT
+void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
     // Weak reference safe as sessions outlive protocols.
-    const auto& self = *this;
+    auto& self = *this;
     const auto enable_alert = settings().enable_alert;
     const auto enable_address = settings().enable_address;
     const auto negotiated_version = channel->negotiated_version();
@@ -329,7 +329,7 @@ void session::do_handle_channel_stopped(const code& ec,
     unpend(channel);
     network_.unstore_nonce(*channel);
     network_.uncount_channel(*channel);
-    unsubscribe_broadcast(channel->identifier());
+    unsubscribe(channel->identifier());
 
     // Assume stop notification, but may be subscribe failure (idempotent).
     // Handles stop reason code, stop subscribe failure or stop notification.

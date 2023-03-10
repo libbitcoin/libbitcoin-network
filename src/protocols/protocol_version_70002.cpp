@@ -39,7 +39,7 @@ using namespace std::placeholders;
 static const std::string insufficient_version = "insufficient-version";
 static const std::string insufficient_services = "insufficient-services";
 
-protocol_version_70002::protocol_version_70002(const session& session,
+protocol_version_70002::protocol_version_70002(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70002(session, channel,
         session.settings().services_minimum,
@@ -48,7 +48,7 @@ protocol_version_70002::protocol_version_70002(const session& session,
 {
 }
 
-protocol_version_70002::protocol_version_70002(const session& session,
+protocol_version_70002::protocol_version_70002(session& session,
     const channel::ptr& channel, uint64_t minimum_services,
     uint64_t maximum_services, bool relay) NOEXCEPT
   : protocol_version_70001(session, channel, minimum_services,
@@ -67,7 +67,7 @@ void protocol_version_70002::shake(result_handler&& handle_event) NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
+    SUBSCRIBE_CHANNEL2(reject, handle_receive_reject, _1, _2);
 
     protocol_version_70001::shake(std::move(handle_event));
 }
