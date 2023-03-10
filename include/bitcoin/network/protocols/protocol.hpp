@@ -227,7 +227,7 @@ private:
 #define SUBSCRIBE_BROADCAST3(message, method, p1, p2, p3) \
     subscribe<CLASS, message>(&CLASS::method, p1, p2, p3)
 
-#define BROADCAST(message) broadcast()
+#define BROADCAST(message) broadcast(message)
 
 } // namespace network
 } // namespace libbitcoin
