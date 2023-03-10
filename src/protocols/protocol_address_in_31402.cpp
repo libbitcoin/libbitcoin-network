@@ -59,7 +59,7 @@ void protocol_address_in_31402::start() NOEXCEPT
         return;
 
     // Always allow a singleton unrequested address (advertisement).
-    SUBSCRIBE2(address, handle_receive_address, _1, _2);
+    SUBSCRIBE_CHANNEL2(address, handle_receive_address, _1, _2);
 
     // Do not request addresses from inbound channels.
     if (request_)
@@ -117,25 +117,29 @@ bool protocol_address_in_31402::handle_receive_address(const code& ec,
 
     // Accept only one advertisement message unless messages requested.
     const auto start_size = message->addresses.size();
-    const auto advertisement = first_ && (start_size < maximum_advertisement);
+    const auto trickle = start_size < maximum_advertisement;
+    const auto advertisement = first_ && trickle;
 
     if (!request_ && !advertisement)
     {
         LOGP("Ignoring (" << start_size << ") unsolicited addresses from ["
-            << authority() << "]");
+            << authority() << "].");
         ////stop(error::protocol_violation);
         return true;
     }
 
-    if (advertisement)
+    if (trickle)
     {
+        LOGP("Broad (" << start_size << ") addresses from ["
+            << authority() << "].");
+
         broadcast<address>(message);
     }
 
     first_ = false;
     if (is_one(start_size) && message->addresses.front() == outbound())
     {
-        ////LOGP("Dropping redundant address from [" << authority() << "]");
+        ////LOGP("Dropping redundant address from [" << authority() << "].");
         return true;
     }
 

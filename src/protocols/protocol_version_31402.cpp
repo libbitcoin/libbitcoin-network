@@ -171,8 +171,8 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    SUBSCRIBE2(version, handle_receive_version, _1, _2);
-    SUBSCRIBE2(version_acknowledge, handle_receive_acknowledge, _1, _2);
+    SUBSCRIBE_CHANNEL2(version, handle_receive_version, _1, _2);
+    SUBSCRIBE_CHANNEL2(version_acknowledge, handle_receive_acknowledge, _1, _2);
     SEND1(version_factory(), handle_send_version, _1);
 
     protocol::start();

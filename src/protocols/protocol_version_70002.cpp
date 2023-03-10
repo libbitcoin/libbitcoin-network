@@ -67,7 +67,7 @@ void protocol_version_70002::shake(result_handler&& handle_event) NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
+    SUBSCRIBE_CHANNEL2(reject, handle_receive_reject, _1, _2);
 
     protocol_version_70001::shake(std::move(handle_event));
 }

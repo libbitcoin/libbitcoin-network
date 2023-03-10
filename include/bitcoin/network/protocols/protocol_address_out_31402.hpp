@@ -50,8 +50,13 @@ protected:
         const messages::get_address::cptr& message) NOEXCEPT;
     virtual void handle_fetch_address(const code& ec,
         const messages::address::cptr& message) NOEXCEPT;
+    virtual bool handle_broadcast_address(const code& ec,
+        const messages::address::cptr& message, uint64_t sender) NOEXCEPT;
 
 private:
+    void do_handle_broadcast_address(
+        const messages::address::cptr& message) NOEXCEPT;
+
     // This is protected by strand.
     bool sent_{};
 };

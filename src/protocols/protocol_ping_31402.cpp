@@ -52,7 +52,7 @@ void protocol_ping_31402::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE2(ping, handle_receive_ping, _1, _2);
+    SUBSCRIBE_CHANNEL2(ping, handle_receive_ping, _1, _2);
     send_ping();
 
     protocol::start();

@@ -35,8 +35,8 @@
 namespace libbitcoin {
 namespace network {
 
-#define BOUND_PROTOCOL(handler, args) \
-    std::bind(std::forward<Handler>(handler), shared_from_base<Protocol>(), \
+#define BOUND_PROTOCOL(method, args) \
+    std::bind(std::forward<Method>(method), shared_from_base<Protocol>(), \
         std::forward<Args>(args)...)
 
 /// This class is thread safe, except for:
@@ -65,27 +65,36 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Bind a method in the base or derived class (use BIND#).
-    template <class Protocol, typename Handler, typename... Args>
-    auto bind(Handler&& handler, Args&&... args) NOEXCEPT
+    template <class Protocol, typename Method, typename... Args>
+    auto bind(Method&& method, Args&&... args) NOEXCEPT
     {
-        return BOUND_PROTOCOL(handler, args);
+        return BOUND_PROTOCOL(method, args);
     }
 
     /// Send a message instance to peer (use SEND#).
-    template <class Protocol, class Message, typename Handler, typename... Args>
-    void send(const Message& message, Handler&& handler, Args&&... args) NOEXCEPT
+    template <class Protocol, class Message, typename Method, typename... Args>
+    void send(const Message& message, Method&& method, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        channel_->send<Message>(message, BOUND_PROTOCOL(handler, args));
+        channel_->send<Message>(message, BOUND_PROTOCOL(method, args));
     }
 
-    /// Subscribe to channel messages by type (use SUBSCRIBE#).
-    /// Handler is invoked with error::subscriber_stopped if already stopped.
-    template <class Protocol, class Message, typename Handler, typename... Args>
-    void subscribe(Handler&& handler, Args&&... args) NOEXCEPT
+    /// Subscribe to channel messages by type (use SUBSCRIBE_CHANNEL#).
+    /// Method is invoked with error::subscriber_stopped if already stopped.
+    template <class Protocol, class Message, typename Method, typename... Args>
+    void subscribe_channel(Method&& method, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        channel_->subscribe<Message>(BOUND_PROTOCOL(handler, args));
+        channel_->subscribe<Message>(BOUND_PROTOCOL(method, args));
+    }
+
+    /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST#).
+    /// Method is invoked with error::subscriber_stopped if already stopped.
+    template <class Protocol, class Message, typename Method, typename... Args>
+    void subscribe_broadcast(Method&& method, Args&&... args) NOEXCEPT
+    {
+        session_.subscribe<Message>(BOUND_PROTOCOL(method, args),
+            channel_->identifier());
     }
 
     /// Broadcast a message instance to peers.
@@ -108,14 +117,6 @@ protected:
     void broadcast(const typename Message::cptr& message) NOEXCEPT
     {
         session_.broadcast<Message>(message, channel_->identifier());
-    }
-
-    /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST#).
-    /// Handler is invoked with error::subscriber_stopped if already stopped.
-    template <class Protocol, class Message, typename Handler, typename... Args>
-    void subscribe_broadcast(Handler&& handler, Args&&... args) NOEXCEPT
-    {
-        session_.subscribe_broadcast<Message>(BOUND_PROTOCOL(handler, args));
     }
 
     /// Start/Stop.
@@ -169,6 +170,9 @@ protected:
     /// Advertised addresses with own services and current timestamp.
     virtual messages::address selfs() const NOEXCEPT;
 
+    /// Channel identifier (for broadcast identification).
+    virtual uint64_t identifier() const NOEXCEPT;
+
     /// Addresses.
     /// -----------------------------------------------------------------------
 
@@ -185,7 +189,7 @@ protected:
     /// Capture send results, use for no-op send handling (logged).
     virtual void handle_send(const code& ec) NOEXCEPT;
 
-private:
+protected:
     void handle_fetch(const code& ec, const address_cptr& message,
         const address_handler& handler) NOEXCEPT;
     void handle_save(const code& ec, size_t accepted,
@@ -213,19 +217,21 @@ private:
 #define SEND3(message, method, p1, p2, p3) \
     send<CLASS>(message, &CLASS::method, p1, p2, p3)
 
-#define SUBSCRIBE1(message, method, p1) \
-    subscribe<CLASS, message>(&CLASS::method, p1)
-#define SUBSCRIBE2(message, method, p1, p2) \
-    subscribe<CLASS, message>(&CLASS::method, p1, p2)
-#define SUBSCRIBE3(message, method, p1, p2, p3) \
-    subscribe<CLASS, message>(&CLASS::method, p1, p2, p3)
+#define SUBSCRIBE_CHANNEL1(message, method, p1) \
+    subscribe_channel<CLASS, message>(&CLASS::method, p1)
+#define SUBSCRIBE_CHANNEL2(message, method, p1, p2) \
+    subscribe_channel<CLASS, message>(&CLASS::method, p1, p2)
+#define SUBSCRIBE_CHANNEL3(message, method, p1, p2, p3) \
+    subscribe_channel<CLASS, message>(&CLASS::method, p1, p2, p3)
 
-#define SUBSCRIBE_BROADCAST1(message, method, p1) \
-    subscribe<CLASS, message>(&CLASS::method, p1)
-#define SUBSCRIBE_BROADCAST2(message, method, p1, p2) \
-    subscribe<CLASS, message>(&CLASS::method, p1, p2)
+////#define SUBSCRIBE_BROADCAST1(message, method, p1) \
+////    subscribe_broadcast<CLASS, message>(&CLASS::method, p1)
+////#define SUBSCRIBE_BROADCAST2(message, method, p1, p2) \
+////    subscribe_broadcast<CLASS, message>(&CLASS::method, p1, p2)
 #define SUBSCRIBE_BROADCAST3(message, method, p1, p2, p3) \
-    subscribe<CLASS, message>(&CLASS::method, p1, p2, p3)
+    subscribe_broadcast<CLASS, message>(&CLASS::method, p1, p2, p3)
+#define SUBSCRIBE_BROADCAST4(message, method, p1, p2, p3, p4) \
+    subscribe_broadcast<CLASS, message>(&CLASS::method, p1, p2, p3, p4)
 
 } // namespace network
 } // namespace libbitcoin

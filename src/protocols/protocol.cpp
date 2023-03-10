@@ -101,25 +101,6 @@ void protocol::pause() NOEXCEPT
 // handshake protocol operation. Thread safety requires that setters are never
 // invoked outside of the handshake protocol (start handler).
 
-const network::settings& protocol::settings() const NOEXCEPT
-{
-    return session_.settings();
-}
-
-address protocol::selfs() const NOEXCEPT
-{
-    const auto time_now = unix_time();
-    const auto services = settings().services_maximum;
-    const auto& selfs = settings().selfs;
-
-    address message{};
-    message.addresses.reserve(selfs.size());
-    for (auto& self: selfs)
-        message.addresses.push_back(self.to_address_item(time_now, services));
-
-    return message;
-}
-
 bool protocol::stranded() const NOEXCEPT
 {
     return channel_->stranded();
@@ -160,6 +141,30 @@ uint32_t protocol::negotiated_version() const NOEXCEPT
 void protocol::set_negotiated_version(uint32_t value) NOEXCEPT
 {
     channel_->set_negotiated_version(value);
+}
+
+const network::settings& protocol::settings() const NOEXCEPT
+{
+    return session_.settings();
+}
+
+address protocol::selfs() const NOEXCEPT
+{
+    const auto time_now = unix_time();
+    const auto services = settings().services_maximum;
+    const auto& selfs = settings().selfs;
+
+    address message{};
+    message.addresses.reserve(selfs.size());
+    for (auto& self: selfs)
+        message.addresses.push_back(self.to_address_item(time_now, services));
+
+    return message;
+}
+
+uint64_t protocol::identifier() const NOEXCEPT
+{
+    return channel_->identifier();
 }
 
 // Addresses.

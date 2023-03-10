@@ -22,7 +22,6 @@
 #include <atomic>
 #include <functional>
 #include <memory>
-#include <unordered_set>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -53,11 +52,31 @@ public:
     /// best-efforts propagation. Use individual channel.send calls otherwise.
     /// Sender identifies the channel to its own handler, for option to bypass.
 
+    template <class Message, typename Handler = broadcaster::handler<Message>>
+    void subscribe(Handler&& handler, channel_id subscriber) NOEXCEPT
+    {
+        // Fails to compile, so use lambda below.
+        ////boost::asio::dispatch(strand(),
+        ////    std::bind(&session::template do_subscribe<Handler>,
+        ////        this, std::move(handler), subscriber));
+
+        boost::asio::dispatch(strand(), [this, handler, subscriber]() NOEXCEPT
+        {
+            this->do_subscribe<Handler>(std::move(handler), subscriber);
+        });
+    }
+
+    virtual void unsubscribe(channel_id subscriber) NOEXCEPT
+    {
+        boost::asio::dispatch(strand(),
+            std::bind(&session::do_unsubscribe, this, subscriber));
+    }
+
     template <class Message>
     void broadcast(const Message& message, channel_id sender) NOEXCEPT
     {
         boost::asio::dispatch(strand(),
-            std::bind(&session::do_broadcast<Message>,
+            std::bind(&session::template do_broadcast<Message>,
                 this, system::to_shared(message), sender));
     }
 
@@ -65,8 +84,9 @@ public:
     void broadcast(Message&& message, channel_id sender) NOEXCEPT
     {
         boost::asio::dispatch(strand(),
-            std::bind(&session::do_broadcast<Message>,
-                this, system::to_shared(std::move(message)), sender));
+            std::bind(&session::template do_broadcast<Message>,
+                this, system::to_shared(std::forward<Message>(message)),
+                sender));
     }
 
     template <class Message>
@@ -74,23 +94,8 @@ public:
         channel_id sender) NOEXCEPT
     {
         boost::asio::dispatch(strand(),
-            std::bind(&session::do_broadcast<Message>,
+            std::bind(&session::template do_broadcast<Message>,
                 this, message, sender));
-    }
-
-    template <class Message, typename Handler = broadcaster::handler<Message>>
-    void subscribe_broadcast(Handler&& handler, channel_id subscriber) NOEXCEPT
-    {
-        boost::asio::dispatch(strand(),
-            std::bind(&session::do_subscribe_broadcast<Message>,
-                this, std::move(handler), subscriber));
-    }
-
-    virtual void unsubscribe_broadcast(channel_id subscriber) NOEXCEPT
-    {
-        boost::asio::dispatch(strand(),
-            std::bind(&session::do_unsubscribe_broadcast,
-                this, subscriber));
     }
 
     /// Start/stop.
@@ -143,10 +148,10 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Bind a method in the base or derived class (use BIND#).
-    template <class Session, typename Handler, typename... Args>
-    auto bind(Handler&& handler, Args&&... args) NOEXCEPT
+    template <class Session, typename Method, typename... Args>
+    auto bind(Method&& method, Args&&... args) NOEXCEPT
     {
-        return std::bind(std::forward<Handler>(handler),
+        return std::bind(std::forward<Method>(method),
             shared_from_base<Session>(), std::forward<Args>(args)...);
     }
 
@@ -235,15 +240,14 @@ private:
         broadcaster_.notify(message, sender);
     }
 
-    template <typename Message, typename Handler = broadcaster::handler<Message>>
-    void do_subscribe_broadcast(const Handler& handler,
-        channel_id subscriber) NOEXCEPT
+    template <typename Handler>
+    void do_subscribe(const Handler& handler, channel_id subscriber) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
         broadcaster_.subscribe(move_copy(handler), subscriber);
     }
 
-    void do_unsubscribe_broadcast(channel_id subscriber) NOEXCEPT
+    void do_unsubscribe(channel_id subscriber) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
         broadcaster_.unsubscribe(subscriber);

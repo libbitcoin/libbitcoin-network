@@ -53,8 +53,8 @@ void protocol_ping_60001::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE2(pong, handle_receive_pong, _1, _2);
-    ////SUBSCRIBE2(ping, handle_receive_ping, _1, _2);
+    SUBSCRIBE_CHANNEL2(pong, handle_receive_pong, _1, _2);
+    ////SUBSCRIBE_CHANNEL2(ping, handle_receive_ping, _1, _2);
     ////send_ping();
 
     protocol_ping_31402::start();

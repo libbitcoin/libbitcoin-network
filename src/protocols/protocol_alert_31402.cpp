@@ -53,7 +53,7 @@ void protocol_alert_31402::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE2(alert, handle_receive_alert, _1, _2);
+    SUBSCRIBE_CHANNEL2(alert, handle_receive_alert, _1, _2);
 
     protocol::start();
 }

@@ -62,7 +62,7 @@ void protocol_address_out_31402::start() NOEXCEPT
         SEND1(selfs(), handle_send, _1);
     }
 
-    SUBSCRIBE2(get_address, handle_receive_get_address, _1, _2);
+    SUBSCRIBE_CHANNEL2(get_address, handle_receive_get_address, _1, _2);
     protocol::start();
 }
 
@@ -87,6 +87,9 @@ bool protocol_address_out_31402::handle_receive_get_address(const code& ec,
 
     fetch(BIND2(handle_fetch_address, _1, _2));
     sent_ = true;
+
+    // Relay broadcasts as well.
+    SUBSCRIBE_BROADCAST3(address, handle_broadcast_address, _1, _2, _3);
     return true;
 }
 
@@ -106,6 +109,43 @@ void protocol_address_out_31402::handle_fetch_address(const code& ec,
         "[" << authority() << "]");
 
     SEND1(*message, handle_send, _1);
+}
+
+// ----------------------------------------------------------------------------
+
+bool protocol_address_out_31402::handle_broadcast_address(const code& ec,
+    const address::cptr& message, uint64_t sender) NOEXCEPT
+{
+    if (stopped(ec))
+    {
+        LOGP("Relay stop [" << authority() << "].");
+        return false;
+    }
+
+    if (sender == identifier())
+    {
+        LOGP("Relay self [" << authority() << "].");
+        return true;
+    }
+
+    // TODO: not thread safe, bounce to protocol.
+    // TODO: move implementation to channel, make protocol.session const.
+    ////boost::asio::post(channel_->strand(),
+    ////    BIND1(do_handle_broadcast_address, message));
+    do_handle_broadcast_address(message);
+    return true;
+}
+
+void protocol_address_out_31402::do_handle_broadcast_address(
+    const address::cptr& message) NOEXCEPT
+{
+    ////BC_ASSERT_MSG(stranded(), "protocol_address_in_31402");
+
+    LOGP("Relay (" << message->addresses.size() << ") addresses to ["
+        << authority() << "].");
+
+    // TODO: not thread safe, bounce to protocol.
+    ////SEND1(*message, handle_send, _1);
 }
 
 BC_POP_WARNING()

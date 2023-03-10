@@ -55,8 +55,6 @@ protected:
         size_t accepted, size_t filtered, size_t start_size) NOEXCEPT;
 
 private:
-    messages::address_item self() const NOEXCEPT;
-
     // This is thread safe (const).
     const bool request_;
 

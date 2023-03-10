@@ -53,7 +53,7 @@ void protocol_reject_70002::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE2(reject, handle_receive_reject, _1, _2);
+    SUBSCRIBE_CHANNEL2(reject, handle_receive_reject, _1, _2);
 
     protocol::start();
 }

@@ -329,7 +329,7 @@ void session::do_handle_channel_stopped(const code& ec,
     unpend(channel);
     network_.unstore_nonce(*channel);
     network_.uncount_channel(*channel);
-    unsubscribe_broadcast(channel->identifier());
+    unsubscribe(channel->identifier());
 
     // Assume stop notification, but may be subscribe failure (idempotent).
     // Handles stop reason code, stop subscribe failure or stop notification.
