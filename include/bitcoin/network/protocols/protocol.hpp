@@ -55,13 +55,7 @@ public:
     virtual void stopping(const code& ec) NOEXCEPT;
 
 protected:
-    /// Construct an instance.
-    protocol(session& session, const channel::ptr& channel) NOEXCEPT;
-
-    /// Asserts that protocol is stopped.
-    virtual ~protocol() NOEXCEPT;
-
-    /// Macro helpers (use macros).
+    /// Messaging.
     /// -----------------------------------------------------------------------
 
     /// Bind a method in the base or derived class (use BIND#).
@@ -93,34 +87,27 @@ protected:
     template <class Protocol, class Message, typename Method, typename... Args>
     void subscribe_broadcast(Method&& method, Args&&... args) NOEXCEPT
     {
+        BC_ASSERT_MSG(stranded(), "strand");
         session_.subscribe<Message>(BOUND_PROTOCOL(method, args),
             channel_->identifier());
     }
 
-    /// Broadcast a message instance to peers.
-    template <class Message>
-    void broadcast(const Message& message) NOEXCEPT
-    {
-        session_.broadcast(message, channel_->identifier());
-    }
-
-    /// Broadcast a message instance to peers.
-    template <class Message>
-    void broadcast(Message&& message) NOEXCEPT
-    {
-        session_.broadcast(std::forward<Message>(message),
-            channel_->identifier());
-    }
-
-    /// Broadcast a message instance to peers.
+    /// Broadcast a message instance to peers (use BROADCAST).
     template <class Message>
     void broadcast(const typename Message::cptr& message) NOEXCEPT
     {
+        BC_ASSERT_MSG(stranded(), "strand");
         session_.broadcast<Message>(message, channel_->identifier());
     }
 
     /// Start/Stop.
     /// -----------------------------------------------------------------------
+
+    /// Construct an instance.
+    protocol(session& session, const channel::ptr& channel) NOEXCEPT;
+
+    /// Asserts that protocol is stopped.
+    virtual ~protocol() NOEXCEPT;
 
     /// Set protocol started state (strand required).
     virtual void start() NOEXCEPT;
@@ -189,7 +176,7 @@ protected:
     /// Capture send results, use for no-op send handling (logged).
     virtual void handle_send(const code& ec) NOEXCEPT;
 
-protected:
+private:
     void handle_fetch(const code& ec, const address_cptr& message,
         const address_handler& handler) NOEXCEPT;
     void handle_save(const code& ec, size_t accepted,
@@ -232,6 +219,8 @@ protected:
     subscribe_broadcast<CLASS, message>(&CLASS::method, p1, p2, p3)
 #define SUBSCRIBE_BROADCAST4(message, method, p1, p2, p3, p4) \
     subscribe_broadcast<CLASS, message>(&CLASS::method, p1, p2, p3, p4)
+
+#define BROADCAST(message, ptr) broadcast<message>(ptr)
 
 } // namespace network
 } // namespace libbitcoin

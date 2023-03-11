@@ -26,6 +26,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -52,7 +53,7 @@ public:
     template <class Protocol, typename... Args>
     typename Protocol::ptr attach(session& session, Args&&... args) NOEXCEPT
     {
-        BC_ASSERT_MSG(stranded(), "subscribe_stop");
+        BC_ASSERT_MSG(stranded(), "strand");
 
         if (!stranded())
             return nullptr;

@@ -78,7 +78,15 @@ void session::stop() NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
+    // Break out of sesson loop as handlers execute. 
     stopped_.store(true);
+
+    // Post message handlers to strand and clear/stop accepting subscriptions.
+    // On service_stopped message subscribers should ignore and perform no work.
+    broadcaster_.stop(error::service_stopped);
+
+    // Post stop handlers to strand and clear/stop accepting subscriptions.
+    // The code provides information on the reason that the channel stopped.
     stop_subscriber_.stop(error::service_stopped);
 }
 
@@ -121,6 +129,7 @@ void session::start_channel(const channel::ptr& channel,
     result_handler shake =
         BIND3(handle_handshake, _1, channel, std::move(start));
 
+    // TODO: guard against channel io context stopped?
     // Switch to channel context.
     // Channel/network strands share same pool.
     boost::asio::post(channel->strand(),
@@ -173,6 +182,7 @@ void session::handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
 
+    // TODO: guard against network io context stopped?
     // Return to network context.
     boost::asio::post(network_.strand(),
         BIND3(do_handle_handshake, ec, channel, start));
@@ -232,6 +242,7 @@ void session::handle_channel_started(const code& ec,
 {
     BC_ASSERT_MSG(channel->stranded() || network_.stranded(), "strand");
 
+    // TODO: guard against network io context stopped?
     // Return to network context.
     boost::asio::post(network_.strand(),
         BIND3(do_handle_channel_started, ec, channel, started));
@@ -249,6 +260,7 @@ void session::do_handle_channel_started(const code& ec,
         return;
     }
 
+    // TODO: guard against channel io context stopped?
     // Switch to channel context.
     boost::asio::post(channel->strand(),
         BIND2(do_attach_protocols, channel, started));
@@ -270,6 +282,7 @@ void session::do_attach_protocols(const channel::ptr& channel,
     // Resume accepting messages on the channel, timers restarted.
     channel->resume();
 
+    // TODO: guard against network io context stopped?
     // Complete on network strand.
     boost::asio::post(network_.strand(),
         std::bind(started, error::success));
@@ -315,6 +328,7 @@ void session::handle_channel_stopped(const code& ec,
 {
     BC_ASSERT_MSG(channel->stranded() || network_.stranded(), "strand");
 
+    // TODO: guard against network io context stopped?
     // Return to network context.
     boost::asio::post(network_.strand(),
         BIND3(do_handle_channel_stopped, ec, channel, stopped));

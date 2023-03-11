@@ -34,10 +34,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Abstract, thread safe except for:
-/// * send/pause/resume/paused must be called from channel strand.
-/// * subscribe/subscribe_stop must be called from channel strand.
-/// notify/write are protected/virtual for test access only.
+/// Abstract, thread safe except some methods requiring strand.
 /// Handles all channel communication, error handling, and logging.
 class BCT_API proxy
   : public enable_shared_from_base<proxy>, public reporter
@@ -47,7 +44,6 @@ public:
     typedef subscriber<> stop_subscriber;
 
     DELETE_COPY_MOVE(proxy);
-    virtual ~proxy() NOEXCEPT;
 
     /// Serialize and write a message to the peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
@@ -80,6 +76,9 @@ public:
         BC_ASSERT_MSG(stranded(), "strand");
         distributor_.subscribe(std::forward<Handler>(handler));
     }
+
+    /// Asserts/logs stopped.
+    virtual ~proxy() NOEXCEPT;
 
     /// Pause reading from the socket (requires strand).
     virtual void pause() NOEXCEPT;

@@ -35,11 +35,13 @@ using namespace std::placeholders;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// Construction.
-// ----------------------------------------------------------------------------
 // Boost: "The execution context provides the I/O executor that the socket will
 // use, by default, to dispatch handlers for any asynchronous operations
 // performed on the socket." Calls are stranded to protect the socket member.
+// Handlers may not be invoked if the socket_ or io context is closed.
+
+// Construction.
+// ----------------------------------------------------------------------------
 
 // authority_.port() zero implies inbound connection.
 socket::socket(const logger& log, asio::io_context& service) NOEXCEPT
@@ -235,11 +237,13 @@ void socket::handle_accept(const error::boost_code& ec,
 
     // Translate other boost error code and invoke caller handler.
     const auto code = error::asio_to_error_code(ec);
+
     if (code == error::unknown)
     {
         LOGX("Raw accept code (" << ec.value() << ") " << ec.category().name()
             << ":" << ec.message());
     }
+
     handler(code);
 }
 
@@ -258,11 +262,13 @@ void socket::handle_connect(const error::boost_code& ec,
 
     // Translate other boost error code and invoke caller handler.
     const auto code = error::asio_to_error_code(ec);
+
     if (code == error::unknown)
     {
         LOGX("Raw connect code (" << ec.value() << ") " << ec.category().name()
             << ":" << ec.message());
     }
+
     handler(code);
 }
 
@@ -279,11 +285,13 @@ void socket::handle_io(const error::boost_code& ec, size_t size,
 
     // Translate other boost error code and invoke caller handler.
     const auto code = error::asio_to_error_code(ec);
+
     if (code == error::unknown)
     {
         LOGX("Raw io code (" << ec.value() << ") " << ec.category().name()
             << ":" << ec.message());
     }
+
     handler(code, size);
 }
 
