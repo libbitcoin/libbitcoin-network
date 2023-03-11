@@ -90,7 +90,7 @@ connectors_ptr p2p::create_connectors(size_t count) NOEXCEPT
 
 void p2p::start(result_handler&& handler) NOEXCEPT
 {
-    // Threadpool is started on construct, can only be stopped.
+    // Threadpool is started on construct, stopped only by work starvation.
     boost::asio::post(strand_,
         std::bind(&p2p::do_start, this, std::move(handler)));
 }

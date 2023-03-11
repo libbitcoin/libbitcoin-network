@@ -153,8 +153,8 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
     // Create the socket.
     const auto socket = std::make_shared<network::socket>(log(), service_);
 
-    // Posts handle_accept to strand.
-    // This does not post to the socket strand, unlike other socket calls.
+    // Posts handle_accept to the acceptor's strand.
+    // Establishes a socket connection by waiting on the socket.
     socket->accept(acceptor_,
         std::bind(&acceptor::handle_accept,
             shared_from_this(), _1, socket, std::move(handler)));

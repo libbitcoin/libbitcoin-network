@@ -38,7 +38,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // Boost: "The execution context provides the I/O executor that the socket will
 // use, by default, to dispatch handlers for any asynchronous operations
 // performed on the socket." Calls are stranded to protect the socket member.
-// Handlers may not be invoked if the socket_ or io context is closed.
 
 // Construction.
 // ----------------------------------------------------------------------------
@@ -114,8 +113,12 @@ void socket::accept(asio::acceptor& acceptor,
     // acceptor may be guarded from its own strand while preserving hiding of
     // socket internals. This makes concurrent calls unsafe, however only the
     // acceptor (a socket factory) requires access to the socket at this time.
+    // network::acceptor both invokes this call in the network strand and
+    // initializes the asio::acceptor with the network strand. So the call to
+    // acceptor.async_accept invokes its handler on that strand as well.
     try
     {
+        // Dispatches on the acceptor's strand (which should be network).
         acceptor.async_accept(socket_,
             std::bind(&socket::handle_accept,
                 shared_from_this(), _1, handler));
