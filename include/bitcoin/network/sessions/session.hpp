@@ -43,9 +43,40 @@ class BCT_API session
 {
 public:
     typedef broadcaster::channel_id channel_id;
-
     DELETE_COPY_MOVE(session);
 
+protected:
+    /// Bind a method in the base or derived class (use BIND#).
+    template <class Session, typename Method, typename... Args>
+    auto bind(Method&& method, Args&&... args) NOEXCEPT
+    {
+        return std::bind(std::forward<Method>(method),
+            shared_from_base<Session>(), std::forward<Args>(args)...);
+    }
+
+private:
+    template <typename Message>
+    void do_broadcast(const typename Message::cptr& message,
+        channel_id sender) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        broadcaster_.notify(message, sender);
+    }
+
+    template <typename Handler>
+    void do_subscribe(const Handler& handler, channel_id subscriber) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        broadcaster_.subscribe(move_copy(handler), subscriber);
+    }
+
+    void do_unsubscribe(channel_id subscriber) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        broadcaster_.unsubscribe(subscriber);
+    }
+
+public:
     /// Broadcast.
     /// -----------------------------------------------------------------------
     /// Broadcast offers no completion handling, and subscription exists in a
@@ -62,7 +93,6 @@ public:
             return;
         }
 
-        // TODO: This fails to compile, so using lambda below.
         ////boost::asio::dispatch(strand(),
         ////    BIND2(template do_subscribe<Handler>,
         ////        std::move(handler), subscriber));
@@ -134,17 +164,6 @@ protected:
     typedef uint64_t object_key;
     typedef desubscriber<object_key> subscriber;
     typedef subscriber::handler notifier;
-
-    /// Invocation.
-    /// -----------------------------------------------------------------------
-
-    /// Bind a method in the base or derived class (use BIND#).
-    template <class Session, typename Method, typename... Args>
-    auto bind(Method&& method, Args&&... args) NOEXCEPT
-    {
-        return std::bind(std::forward<Method>(method),
-            shared_from_base<Session>(), std::forward<Args>(args)...);
-    }
 
     /// Constructors.
     /// -----------------------------------------------------------------------
@@ -223,27 +242,6 @@ protected:
     virtual size_t outbound_channel_count() const NOEXCEPT;
 
 private:
-    template <typename Message>
-    void do_broadcast(const typename Message::cptr& message,
-        channel_id sender) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        broadcaster_.notify(message, sender);
-    }
-
-    template <typename Handler>
-    void do_subscribe(const Handler& handler, channel_id subscriber) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        broadcaster_.subscribe(move_copy(handler), subscriber);
-    }
-
-    void do_unsubscribe(channel_id subscriber) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        broadcaster_.unsubscribe(subscriber);
-    }
-
     asio::strand& strand() NOEXCEPT;
     object_key create_key() NOEXCEPT;
 

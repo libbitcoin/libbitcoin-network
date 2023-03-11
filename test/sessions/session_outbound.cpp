@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__stopped__stopped)
 
 // start
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__bypassed)
+BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__success)
 {
     const logger log{};
     settings set(selection::mainnet);
@@ -504,11 +504,11 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__bypassed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
     BOOST_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__bypassed)
+BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__success)
 {
     const logger log{};
     settings set(selection::mainnet);
@@ -525,11 +525,11 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__bypassed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
     BOOST_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__bypassed)
+BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__success)
 {
     const logger log{};
     settings set(selection::mainnet);
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__bypassed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
     BOOST_REQUIRE(session->stopped());
 }
 

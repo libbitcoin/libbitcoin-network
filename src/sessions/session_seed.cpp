@@ -65,7 +65,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         is_zero(settings().connect_batch_size))
     {
         LOGN("Bypassed seeding because outbound connections disabled.");
-        handler(error::bypassed);
+        handler(error::success);
         unsubscribe_close();
         return;
     }
@@ -75,7 +75,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         LOGN("Bypassed seeding because of sufficient ("
             << address_count() << " of " << settings().minimum_address_count()
             << ") address quantity.");
-        handler(error::bypassed);
+        handler(error::success);
         unsubscribe_close();
         return;
     }

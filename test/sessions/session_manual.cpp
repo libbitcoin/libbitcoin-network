@@ -788,6 +788,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
     // Connection failures are logged and suppressed in retry loop.
     BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+    net.close();
     BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
 
@@ -817,6 +818,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
     // Connection failures are logged and suppressed in retry loop.
     BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
+    net.close();
     BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
 
@@ -828,7 +830,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
 
     const endpoint expected{ "42.42.42.42", 42 };
 
-    // Connect will return invalid_magic when executed.
+    // Connect will return invalid_magic when executed, unless service is stopped.
     mock_p2p<mock_connector_connect_fail> net(set, log);
 
     auto first = true;
@@ -860,15 +862,15 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
     BOOST_REQUIRE_EQUAL(start.get_future().get(), error::success);
     BOOST_REQUIRE_EQUAL(run.get_future().get(), error::success);
 
+    // connector.connect sets invalid_magic, causing a timer reconnect.
+    const auto result = connect.get_future().get();
+
     // The connection loops on connect failure until service stop.
     net.close();
 
-    // connector.connect sets invalid_magic, causing a timer reconnect.
-    const auto result = connect.get_future().get();
+    BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
     BOOST_REQUIRE_EQUAL(result.first, error::invalid_magic);
     BOOST_REQUIRE(!result.second);
-
-    BOOST_REQUIRE_EQUAL(net.get_connector()->peer(), expected);
 }
 
 BC_POP_WARNING()

@@ -30,7 +30,6 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 {
     { success, "success" },
     { unknown, "unknown error" },
-    { bypassed, "start bypassed without failure" },
 
     // addresses
     { address_invalid, "address invalid" },

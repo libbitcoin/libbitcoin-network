@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
 
 // start
 
-BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__bypassed)
+BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__success)
 {
     const logger log{};
     settings set(selection::mainnet);
@@ -460,11 +460,11 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__bypassed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
     BOOST_REQUIRE(session.stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_inbound__start__empty_binds__bypassed)
+BOOST_AUTO_TEST_CASE(session_inbound__start__empty_binds__success)
 {
     const logger log{};
     settings set(selection::mainnet);
@@ -483,7 +483,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__empty_binds__bypassed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
     BOOST_REQUIRE(session.stopped());
 }
 

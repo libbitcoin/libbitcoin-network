@@ -106,14 +106,13 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Manual sessions cannot be bypassed.
     if (ec)
     {
         handler(ec);
         return;
     }
 
-    // Host population always required.
+    // Deserialize hosts from file.
     if (const auto error_code = start_hosts())
     {
         LOGF("Hosts file failed to deserialize, " << error_code.message());
@@ -121,11 +120,7 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    attach_seed_session()->start([handler, this](const code& ec) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "handler");
-        handler(ec == error::bypassed ? error::success : ec);
-    });
+    attach_seed_session()->start(move_copy(handler));
 }
 
 // Run sequence (seeding may be ongoing after its handler is invoked).
@@ -164,18 +159,13 @@ void p2p::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // A bypass code allows continuation.
-    if (ec && ec != error::bypassed)
+    if (ec)
     {
         handler(ec);
         return;
     }
 
-    attach_outbound_session()->start([handler, this](const code& ec)
-    {
-        BC_ASSERT_MSG(this->stranded(), "handler");
-        handler(ec == error::bypassed ? error::success : ec);
-    });
+    attach_outbound_session()->start(move_copy(handler));
 }
 
 // Shutdown sequence.
@@ -185,7 +175,7 @@ void p2p::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
 void p2p::close() NOEXCEPT
 {
     closed_.store(true);
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_close, this));
 
     // Blocks on join of all threadpool threads.
@@ -343,8 +333,7 @@ p2p::object_key p2p::create_key() NOEXCEPT
 
 void p2p::connect(const config::endpoint& endpoint) NOEXCEPT
 {
-    // TODO: test case(s) depend on dispatch vs. post.
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_connect, this, endpoint));
 }
 
@@ -363,8 +352,7 @@ void p2p::connect(const config::endpoint& endpoint,
         return;
     }
 
-    // TODO: test case(s) depend on dispatch vs. post.
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_connect_handled, this, endpoint,
             std::move(handler)));
 }
@@ -454,7 +442,7 @@ void p2p::take(address_item_handler&& handler) NOEXCEPT
         return;
     }
 
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_take, this, std::move(handler)));
 }
 
@@ -473,7 +461,7 @@ void p2p::restore(const address_item_cptr& address,
         return;
     }
 
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_restore, this, address, std::move(handler)));
 }
 
@@ -492,7 +480,7 @@ void p2p::fetch(address_handler&& handler) NOEXCEPT
         return;
     }
 
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_fetch, this, std::move(handler)));
 }
 
@@ -519,7 +507,7 @@ void p2p::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
         return;
     }
 
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&p2p::do_save, this, message, std::move(handler)));
 }
 
