@@ -54,7 +54,6 @@ public:
 
     DELETE_COPY_MOVE_DESTRUCT(broadcaster);
 
-    ////using address_subscriber = desubscriber<channel_id, const messages::address::cptr&, channel_id>;
     DEFINE_SUBSCRIBER(address);
     DEFINE_SUBSCRIBER(alert);
     DEFINE_SUBSCRIBER(block);
@@ -102,11 +101,7 @@ public:
     }
 
     /// Relay a message instance to each subscriber of the type.
-    void notify(const messages::address::cptr& message, channel_id sender) NOEXCEPT
-    {
-        address_subscriber_.notify(error::success, message, sender);
-    }
-    ////DEFINE_SUBSCRIBER(address);
+    NOTIFY_OVERLOAD(address);
     NOTIFY_OVERLOAD(alert);
     NOTIFY_OVERLOAD(block);
     NOTIFY_OVERLOAD(bloom_filter_add);
@@ -149,10 +144,6 @@ public:
     virtual void stop(const code& ec) NOEXCEPT;
 
 private:
-    ////code do_subscribe(broadcaster::handler<messages::address>&& handler, channel_id id) NOEXCEPT
-    ////{
-    ////    return address_subscriber_.subscribe(std::move(handler), id);
-    ////}
     SUBSCRIBER_OVERLOAD(address);
     SUBSCRIBER_OVERLOAD(alert);
     SUBSCRIBER_OVERLOAD(block);
@@ -188,7 +179,6 @@ private:
     SUBSCRIBER_OVERLOAD(version_acknowledge);
 
     // These are thread safe.
-    ////address_subscriber address_subscriber_;
     DECLARE_SUBSCRIBER(address);
     DECLARE_SUBSCRIBER(alert);
     DECLARE_SUBSCRIBER(block);
