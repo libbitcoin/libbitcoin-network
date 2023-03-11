@@ -106,12 +106,14 @@ void proxy::do_stop(const code& ec) NOEXCEPT
     if (stopped())
         return;
 
-    // Stops the read loop.
-    // Signals socket to stop accepting new work, cancels pending work.
+    // Stop the read loop, stop accepting new work, cancel pending work.
     socket_->stop();
 
     // Overruled by stop, set only for consistency.
     paused_ = true;
+    
+    // Clear the write buffer, which holds handlers.
+    queue_.clear();
 
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
@@ -320,11 +322,15 @@ void proxy::write(const system::chunk_ptr& payload,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    BC_ASSERT_MSG(payload, "payload");
+
+    if (stopped())
+    {
+        LOGQ("Payload write abort [" << authority() << "]");
+        handler(error::channel_stopped);
+        return;
+    }
 
     const auto started = !queue_.empty();
-
-    // Clang does not like emplace here.
     queue_.push_back(std::make_pair(payload, handler));
     total_ = ceilinged_add(total_.load(), payload->size());
     backlog_ = ceilinged_add(backlog_.load(), payload->size());
@@ -355,7 +361,13 @@ void proxy::handle_write(const code& ec, size_t,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    BC_ASSERT_MSG(!queue_.empty(), "queue");
+
+    if (stopped())
+    {
+        LOGQ("Send abort [" << authority() << "]");
+        stop(error::channel_stopped);
+        return;
+    }
 
     // guarded by write().
     backlog_ = floored_subtract(backlog_.load(), queue_.front().first->size());
@@ -367,13 +379,6 @@ void proxy::handle_write(const code& ec, size_t,
     // All handlers must be invoked, so continue regardless of error state.
     // Handlers are invoked in queued order, after all outstanding complete.
     write();
-
-    if (stopped())
-    {
-        LOGQ("Send abort [" << authority() << "]");
-        stop(error::channel_stopped);
-        return;
-    }
 
     if (ec)
     {
