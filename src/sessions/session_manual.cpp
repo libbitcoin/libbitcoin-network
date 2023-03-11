@@ -76,9 +76,10 @@ void session_manual::connect(const config::endpoint& peer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    connect(peer, [=, this](const code&, channel::ptr) NOEXCEPT
+    const auto self = shared_from_base<session_manual>();
+    connect(peer, [=](const code&, channel::ptr) NOEXCEPT
     {
-        this->nop();
+        self->nop();
         return true;
     });
 }

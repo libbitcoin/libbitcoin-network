@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(session_seed__stop__stopped__stopped)
 
 //start
 
-BOOST_AUTO_TEST_CASE(session_seed__start__no_outbound__bypassed)
+BOOST_AUTO_TEST_CASE(session_seed__start__no_outbound__success)
 {
     const logger log{};
     settings set(selection::mainnet);
@@ -517,11 +517,11 @@ BOOST_AUTO_TEST_CASE(session_seed__start__no_outbound__bypassed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
     BOOST_REQUIRE(session->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(session_seed__start__outbound_one_address_count__bypassed)
+BOOST_AUTO_TEST_CASE(session_seed__start__outbound_one_address_count__success)
 {
     const logger log{};
     settings set(selection::mainnet);
@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(session_seed__start__outbound_one_address_count__bypassed)
         });
     });
 
-    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::bypassed);
+    BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
     BOOST_REQUIRE(session->stopped());
 }
 

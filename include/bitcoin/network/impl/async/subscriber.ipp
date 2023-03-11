@@ -98,7 +98,6 @@ void subscriber<Args...>::
 stop_default(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
-
     stop(ec, Args{}...);
 }
 

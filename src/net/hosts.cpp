@@ -144,6 +144,12 @@ size_t hosts::reserved() const NOEXCEPT
 // O(1).
 void hosts::take(address_item_handler&& handler) NOEXCEPT
 {
+    if (stopped_)
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
     // O(1) average, O(N) worst case.
     while (!buffer_.empty())
     {
@@ -193,6 +199,12 @@ void hosts::restore(const address_item_cptr& host,
 // O(N).
 void hosts::fetch(address_handler&& handler) const NOEXCEPT
 {
+    if (stopped_)
+    {
+        handler(error::service_stopped, {});
+        return;
+    }
+
     if (buffer_.empty())
     {
         handler(error::address_not_found, {});

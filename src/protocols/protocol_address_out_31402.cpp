@@ -88,7 +88,7 @@ bool protocol_address_out_31402::handle_receive_get_address(const code& ec,
     fetch(BIND2(handle_fetch_address, _1, _2));
     sent_ = true;
 
-    // Relay broadcasts as well.
+    ////LOGP("Relay start [" << authority() << "].");
     SUBSCRIBE_BROADCAST3(address, handle_broadcast_address, _1, _2, _3);
     return true;
 }
@@ -118,13 +118,13 @@ bool protocol_address_out_31402::handle_broadcast_address(const code& ec,
 {
     if (stopped(ec))
     {
-        LOGP("Relay stop [" << authority() << "].");
+        ////LOGP("Relay stop [" << authority() << "].");
         return false;
     }
 
     if (sender == identifier())
     {
-        LOGP("Relay self [" << authority() << "].");
+        ////LOGP("Relay self [" << authority() << "].");
         return true;
     }
 
@@ -137,12 +137,13 @@ bool protocol_address_out_31402::handle_broadcast_address(const code& ec,
 }
 
 void protocol_address_out_31402::do_handle_broadcast_address(
-    const address::cptr& message) NOEXCEPT
+    const address::cptr&) NOEXCEPT
 {
+    // TODO: strand.
     ////BC_ASSERT_MSG(stranded(), "protocol_address_in_31402");
 
-    LOGP("Relay (" << message->addresses.size() << ") addresses to ["
-        << authority() << "].");
+    ////LOGP("Relay (" << message->addresses.size() << ") addresses to ["
+    ////    << authority() << "].");
 
     // TODO: not thread safe, bounce to protocol.
     ////SEND1(*message, handle_send, _1);

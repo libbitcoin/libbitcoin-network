@@ -59,7 +59,7 @@ void session_inbound::start(result_handler&& handler) NOEXCEPT
     if (!settings().inbound_enabled())
     {
         LOGN("Not configured for inbound connections.");
-        handler(error::bypassed);
+        handler(error::success);
         unsubscribe_close();
         return;
     }

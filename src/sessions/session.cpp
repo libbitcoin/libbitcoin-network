@@ -78,7 +78,15 @@ void session::stop() NOEXCEPT
 {
     BC_ASSERT_MSG(network_.stranded(), "strand");
 
+    // Break out of sesson loop as handlers execute. 
     stopped_.store(true);
+
+    // Post message handlers to strand and clear/stop accepting subscriptions.
+    // On service_stopped message subscribers should ignore and perform no work.
+    broadcaster_.stop(error::service_stopped);
+
+    // Post stop handlers to strand and clear/stop accepting subscriptions.
+    // The code provides information on the reason that the channel stopped.
     stop_subscriber_.stop(error::service_stopped);
 }
 
@@ -201,10 +209,6 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
         start(code);
         return;
     }
-
-    ////// Notify channel subscribers of handshaked non-seed channel.
-    ////if (!channel->quiet())
-    ////    network_.notify_connect(channel);
 
     // Requires uncount_channel/unstore_nonce on stop if and only if success.
     start(ec);

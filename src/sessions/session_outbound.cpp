@@ -64,7 +64,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
     if (!settings().outbound_enabled())
     {
         LOGN("Not configured for outbound connections.");
-        handler(error::bypassed);
+        handler(error::success);
         unsubscribe_close();
         return;
     }

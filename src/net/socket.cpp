@@ -35,11 +35,12 @@ using namespace std::placeholders;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// Construction.
-// ----------------------------------------------------------------------------
 // Boost: "The execution context provides the I/O executor that the socket will
 // use, by default, to dispatch handlers for any asynchronous operations
 // performed on the socket." Calls are stranded to protect the socket member.
+
+// Construction.
+// ----------------------------------------------------------------------------
 
 // authority_.port() zero implies inbound connection.
 socket::socket(const logger& log, asio::io_context& service) NOEXCEPT
@@ -112,8 +113,12 @@ void socket::accept(asio::acceptor& acceptor,
     // acceptor may be guarded from its own strand while preserving hiding of
     // socket internals. This makes concurrent calls unsafe, however only the
     // acceptor (a socket factory) requires access to the socket at this time.
+    // network::acceptor both invokes this call in the network strand and
+    // initializes the asio::acceptor with the network strand. So the call to
+    // acceptor.async_accept invokes its handler on that strand as well.
     try
     {
+        // Dispatches on the acceptor's strand (which should be network).
         acceptor.async_accept(socket_,
             std::bind(&socket::handle_accept,
                 shared_from_this(), _1, handler));
@@ -235,11 +240,13 @@ void socket::handle_accept(const error::boost_code& ec,
 
     // Translate other boost error code and invoke caller handler.
     const auto code = error::asio_to_error_code(ec);
+
     if (code == error::unknown)
     {
         LOGX("Raw accept code (" << ec.value() << ") " << ec.category().name()
             << ":" << ec.message());
     }
+
     handler(code);
 }
 
@@ -258,11 +265,13 @@ void socket::handle_connect(const error::boost_code& ec,
 
     // Translate other boost error code and invoke caller handler.
     const auto code = error::asio_to_error_code(ec);
+
     if (code == error::unknown)
     {
         LOGX("Raw connect code (" << ec.value() << ") " << ec.category().name()
             << ":" << ec.message());
     }
+
     handler(code);
 }
 
@@ -279,11 +288,13 @@ void socket::handle_io(const error::boost_code& ec, size_t size,
 
     // Translate other boost error code and invoke caller handler.
     const auto code = error::asio_to_error_code(ec);
+
     if (code == error::unknown)
     {
         LOGX("Raw io code (" << ec.value() << ") " << ec.category().name()
             << ":" << ec.message());
     }
+
     handler(code, size);
 }
 

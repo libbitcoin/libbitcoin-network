@@ -148,6 +148,7 @@ void connector::handle_resolve(const error::boost_code& ec,
         return;
     }
 
+    // Posts do_handle_connect to the socket's strand.
     // Establishes a socket connection by trying each endpoint in sequence.
     socket->connect(range,
         std::bind(&connector::do_handle_connect,
@@ -158,6 +159,8 @@ void connector::handle_resolve(const error::boost_code& ec,
 void connector::do_handle_connect(const code& ec, const finish_ptr& finish,
     const socket::ptr& socket) NOEXCEPT
 {
+    BC_ASSERT_MSG(socket->stranded(), "strand");
+
     boost::asio::post(strand_,
         std::bind(&connector::handle_connect,
             shared_from_this(), ec, finish, socket));

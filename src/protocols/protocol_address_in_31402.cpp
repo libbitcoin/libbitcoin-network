@@ -130,10 +130,9 @@ bool protocol_address_in_31402::handle_receive_address(const code& ec,
 
     if (trickle)
     {
-        LOGP("Broad (" << start_size << ") addresses from ["
-            << authority() << "].");
-
-        broadcast<address>(message);
+        BROADCAST(address, message);
+        ////LOGP("Broad (" << start_size << ") addresses by ["
+        ////    << authority() << "].");
     }
 
     first_ = false;
