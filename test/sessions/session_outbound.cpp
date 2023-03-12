@@ -127,11 +127,6 @@ class mock_session_outbound
 public:
     using session_outbound::session_outbound;
 
-    bool inbound() const NOEXCEPT override
-    {
-        return session_outbound::inbound();
-    }
-
     bool stopped() const NOEXCEPT override
     {
         return session_outbound::stopped();
@@ -415,17 +410,6 @@ private:
         }
     };
 };
-
-// properties
-
-BOOST_AUTO_TEST_CASE(session_outbound__inbound__always__false)
-{
-    const logger log{};
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    mock_session_outbound session(net, 1);
-    BOOST_REQUIRE(!session.inbound());
-}
 
 // stop
 

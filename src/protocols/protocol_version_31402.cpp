@@ -54,7 +54,7 @@ protocol_version_31402::protocol_version_31402(session& session,
     const channel::ptr& channel, uint64_t minimum_services,
     uint64_t maximum_services) NOEXCEPT
   : protocol(session, channel),
-    inbound_(session.inbound()),
+    inbound_(channel->inbound()),
     minimum_version_(session.settings().protocol_minimum),
     maximum_version_(session.settings().protocol_maximum),
     minimum_services_(minimum_services),

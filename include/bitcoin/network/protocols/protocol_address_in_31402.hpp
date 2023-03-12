@@ -56,7 +56,7 @@ protected:
 
 private:
     // This is thread safe (const).
-    const bool request_;
+    const bool outbound_;
 
     // This is protected by strand.
     bool first_{};

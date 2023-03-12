@@ -63,9 +63,6 @@ public:
     virtual void connect(const config::endpoint& endpoint,
         channel_notifier&& handler) NOEXCEPT;
 
-    /// The channel is outbound (do not pend the nonce).
-    bool inbound() const NOEXCEPT override;
-
 protected:
     /// Overridden to change version protocol (base calls from channel strand).
     void attach_handshake(const channel::ptr& channel,

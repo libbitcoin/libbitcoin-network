@@ -218,11 +218,6 @@ public:
         result_handler&&) NOEXCEPT override
     {
     }
-
-    bool inbound() const NOEXCEPT override
-    {
-        return false;
-    }
 };
 
 class mock_protocol

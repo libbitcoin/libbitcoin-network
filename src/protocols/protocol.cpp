@@ -187,12 +187,6 @@ void protocol::fetch(address_handler&& handler) NOEXCEPT
 void protocol::handle_fetch(const code& ec, const address_cptr& message,
     const address_handler& handler) NOEXCEPT
 {
-    if (stopped())
-    {
-        handler(error::service_stopped, {});
-        return;
-    }
-
     // Return to channel strand.
     boost::asio::post(channel_->strand(),
         std::bind(handler, ec, message));
@@ -208,12 +202,6 @@ void protocol::save(const address_cptr& message,
 void protocol::handle_save(const code& ec, size_t accepted,
     const count_handler& handler) NOEXCEPT
 {
-    if (stopped())
-    {
-        handler(error::service_stopped, {});
-        return;
-    }
-
     // Return to channel strand.
     boost::asio::post(channel_->strand(),
         std::bind(handler, ec, accepted));

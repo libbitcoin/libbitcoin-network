@@ -44,11 +44,6 @@ session_inbound::session_inbound(p2p& network, uint64_t identifier) NOEXCEPT
 {
 }
 
-bool session_inbound::inbound() const NOEXCEPT
-{
-    return true;
-}
-
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 

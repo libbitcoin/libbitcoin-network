@@ -43,7 +43,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 protocol_address_in_31402::protocol_address_in_31402(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    request_(!session.inbound()),
+    outbound_(!channel->inbound()),
     tracker<protocol_address_in_31402>(session.log())
 {
 }
@@ -62,7 +62,7 @@ void protocol_address_in_31402::start() NOEXCEPT
     SUBSCRIBE_CHANNEL2(address, handle_receive_address, _1, _2);
 
     // Do not request addresses from inbound channels.
-    if (request_)
+    if (outbound_)
     {
         SEND1(get_address{}, handle_send, _1);
     }
@@ -120,7 +120,7 @@ bool protocol_address_in_31402::handle_receive_address(const code& ec,
     const auto trickle = start_size < maximum_advertisement;
     const auto advertisement = first_ && trickle;
 
-    if (!request_ && !advertisement)
+    if (!outbound_ && !advertisement)
     {
         LOGP("Ignoring (" << start_size << ") unsolicited addresses from ["
             << authority() << "].");
