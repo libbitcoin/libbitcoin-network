@@ -97,12 +97,12 @@ public:
         ////    BIND2(template do_subscribe<Handler>,
         ////        std::move(handler), subscriber));
 
-        const auto self = shared_from_this();
         boost::asio::dispatch(strand(),
-        [self, handler = std::move(handler), id = subscriber]() NOEXCEPT
-        {
-            self->template do_subscribe<Handler>(std::move(handler), id);
-        });
+            [self = shared_from_this(), handler = std::move(handler),
+            id = subscriber]() NOEXCEPT
+            {
+                self->template do_subscribe<Handler>(std::move(handler), id);
+            });
     }
 
     template <class Message>
