@@ -87,21 +87,15 @@ public:
     template <class Message, typename Handler = broadcaster::handler<Message>>
     void subscribe(Handler&& handler, channel_id id) NOEXCEPT
     {
-        if (stopped())
+        // Handler is a bool function, causes problem with std::bind.
+        const auto bouncer =
+        [self = shared_from_this(), handler = std::move(handler), id]()
         {
-            handler(error::service_stopped, nullptr, channel_id{});
-            return;
-        }
+            self->do_subscribe<Handler>(handler, id);
+        };
 
-        ////boost::asio::dispatch(strand(),
-        ////    BIND2(template do_subscribe<Handler>,
-        ////        std::move(handler), id));
-
-        boost::asio::dispatch(strand(),
-            [self = shared_from_this(), handler = std::move(handler), id]()
-            {
-                self->template do_subscribe<Handler>(handler, id);
-            });
+        // Subscribe on network strand (protects broadcaster).
+        boost::asio::dispatch(strand(), bouncer);
     }
 
     template <class Message>
@@ -109,7 +103,7 @@ public:
         channel_id sender) NOEXCEPT
     {
         boost::asio::dispatch(strand(),
-            BIND2(template do_broadcast<Message>, message, sender));
+            BIND2(do_broadcast<Message>, message, sender));
     }
 
     virtual void unsubscribe(channel_id subscriber) NOEXCEPT

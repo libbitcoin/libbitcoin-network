@@ -253,7 +253,7 @@ void session::do_handle_channel_started(const code& ec,
         return;
     }
 
-    // Switch to channel context.
+    // Switch to channel context (started is invoked on network strand).
     boost::asio::post(channel->strand(),
         BIND2(do_attach_protocols, channel, started));
 }

@@ -128,6 +128,7 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
 
 void p2p::run(result_handler&& handler) NOEXCEPT
 {
+    // Public methods can complete on caller thread.
     if (closed())
     {
         handler(error::service_stopped);
@@ -224,6 +225,7 @@ void p2p::do_close() NOEXCEPT
 void p2p::subscribe_connect(channel_notifier&& handler,
     channel_completer&& complete) NOEXCEPT
 {
+    // Public methods can complete on caller thread.
     if (closed())
     {
         complete(error::service_stopped, {});
@@ -281,6 +283,7 @@ code p2p::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
 void p2p::subscribe_close(stop_handler&& handler,
     stop_completer&& complete) NOEXCEPT
 {
+    // Public methods can complete on caller thread.
     if (closed())
     {
         complete(error::service_stopped, {});
@@ -346,6 +349,7 @@ void p2p::do_connect(const config::endpoint& endpoint) NOEXCEPT
 void p2p::connect(const config::endpoint& endpoint,
     channel_notifier&& handler) NOEXCEPT
 {
+    // Public methods can complete on caller thread.
     if (closed())
     {
         handler(error::service_stopped, {});
@@ -436,12 +440,6 @@ code p2p::stop_hosts() NOEXCEPT
 
 void p2p::take(address_item_handler&& handler) NOEXCEPT
 {
-    if (closed())
-    {
-        handler(error::service_stopped, {});
-        return;
-    }
-
     boost::asio::post(strand_,
         std::bind(&p2p::do_take, this, std::move(handler)));
 }
@@ -455,12 +453,6 @@ void p2p::do_take(const address_item_handler& handler) NOEXCEPT
 void p2p::restore(const address_item_cptr& address,
     result_handler&& handler) NOEXCEPT
 {
-    if (closed())
-    {
-        handler(error::service_stopped);
-        return;
-    }
-
     boost::asio::post(strand_,
         std::bind(&p2p::do_restore, this, address, std::move(handler)));
 }
@@ -474,12 +466,6 @@ void p2p::do_restore(const address_item_cptr& address,
 
 void p2p::fetch(address_handler&& handler) NOEXCEPT
 {
-    if (closed())
-    {
-        handler(error::service_stopped, {});
-        return;
-    }
-
     boost::asio::post(strand_,
         std::bind(&p2p::do_fetch, this, std::move(handler)));
 }
@@ -500,13 +486,6 @@ void p2p::do_fetch(const address_handler& handler) NOEXCEPT
 
 void p2p::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 {
-
-    if (closed())
-    {
-        handler(error::service_stopped, {});
-        return;
-    }
-
     boost::asio::post(strand_,
         std::bind(&p2p::do_save, this, message, std::move(handler)));
 }
@@ -528,7 +507,6 @@ void p2p::do_save(const address_cptr& message,
 
 // Loopback detection.
 // ----------------------------------------------------------------------------
-// TODO: move nonce management into class (or hosts).
 
 bool p2p::store_nonce(const channel& channel) NOEXCEPT
 {
@@ -574,16 +552,13 @@ bool p2p::is_loopback(const channel& channel) const NOEXCEPT
 
 // Channel counting with address deconfliction.
 // ----------------------------------------------------------------------------
-// These must maintain consistency between channel count(s) and authority.
 
 code p2p::count_channel(const channel& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (closed())
-    {
         return error::service_stopped;
-    }
 
     if (is_loopback(channel))
     {

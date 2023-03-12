@@ -54,6 +54,21 @@ public:
     /// This must be called only from the channel strand (not thread safe).
     virtual void stopping(const code& ec) NOEXCEPT;
 
+private:
+    template <class Message, typename Handler>
+    bool handle_broadcast(const code& ec, const typename Message::cptr& message,
+        uint64_t sender, const Handler& handler) NOEXCEPT
+    {
+        if (stopped(ec))
+            return false;
+
+        // Invoke subscriber on channel strand with given parameters.
+        boost::asio::dispatch(channel_->strand(),
+            std::bind(handler, ec, message, sender));
+
+        return true;
+    }
+
 protected:
     /// Messaging.
     /// -----------------------------------------------------------------------
@@ -88,8 +103,16 @@ protected:
     void subscribe_broadcast(Method&& method, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        session_.subscribe<Message>(BOUND_PROTOCOL(method, args),
-            channel_->identifier());
+
+        // handler is a bool function, causes problem with std::bind.
+        const auto bouncer =
+        [self = shared_from_this(), handler = BOUND_PROTOCOL(method, args)]
+        (const auto& ec, const typename Message::cptr& message, auto id)
+        {
+            return self->handle_broadcast<Message>(ec, message, id, handler);
+        };
+
+        session_.subscribe<Message>(bouncer, channel_->identifier());
     }
 
     /// Broadcast a message instance to peers (use BROADCAST).

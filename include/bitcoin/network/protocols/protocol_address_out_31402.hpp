@@ -54,9 +54,6 @@ protected:
         const messages::address::cptr& message, uint64_t sender) NOEXCEPT;
 
 private:
-    void do_handle_broadcast_address(
-        const messages::address::cptr& message) NOEXCEPT;
-
     // This is protected by strand.
     bool sent_{};
 };
