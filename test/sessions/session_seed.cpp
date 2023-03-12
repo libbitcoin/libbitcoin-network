@@ -120,11 +120,6 @@ class mock_session_seed
 public:
     using session_seed::session_seed;
 
-    bool inbound() const NOEXCEPT override
-    {
-        return session_seed::inbound();
-    }
-
     bool stopped() const NOEXCEPT override
     {
         return session_seed::stopped();
@@ -430,17 +425,6 @@ private:
         }
     };
 };
-
-// properties
-
-BOOST_AUTO_TEST_CASE(session_seed__inbound__always__false)
-{
-    const logger log{};
-    settings set(selection::mainnet);
-    p2p net(set, log);
-    mock_session_seed session(net, 1);
-    BOOST_REQUIRE(!session.inbound());
-}
 
 // stop
 

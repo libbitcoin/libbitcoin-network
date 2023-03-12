@@ -45,9 +45,6 @@ public:
     /// Start accepting inbound connections as configured (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;
 
-    /// The channel is inbound (pend the nonce).
-    bool inbound() const NOEXCEPT override;
-
 protected:
     /// Overridden to change version protocol (base calls from channel strand).
     void attach_handshake(const channel::ptr& channel,

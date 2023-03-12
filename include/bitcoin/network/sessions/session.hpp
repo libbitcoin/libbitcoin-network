@@ -98,10 +98,10 @@ public:
         ////        std::move(handler), subscriber));
 
         const auto self = shared_from_this();
-        boost::asio::dispatch(strand(), [self, handler, subscriber]() NOEXCEPT
+        boost::asio::dispatch(strand(),
+        [self, handler = std::move(handler), id = subscriber]() NOEXCEPT
         {
-            self->template do_subscribe<Handler>(std::move(handler),
-            subscriber);
+            self->template do_subscribe<Handler>(std::move(handler), id);
         });
     }
 
@@ -156,9 +156,6 @@ public:
 
     /// Number of entries in the address pool.
     virtual size_t address_count() const NOEXCEPT;
-
-    /// The direction of channel initiation.
-    virtual bool inbound() const NOEXCEPT = 0;
 
 protected:
     typedef uint64_t object_key;

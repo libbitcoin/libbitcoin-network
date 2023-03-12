@@ -47,11 +47,6 @@ session_manual::session_manual(p2p& network, uint64_t identifier) NOEXCEPT
 {
 }
 
-bool session_manual::inbound() const NOEXCEPT
-{
-    return false;
-}
-
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 // Manual connections are always enabled.

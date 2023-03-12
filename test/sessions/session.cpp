@@ -142,11 +142,6 @@ public:
         return session::inbound_channel_count();
     }
 
-    bool inbound() const NOEXCEPT override
-    {
-        return inbound_;
-    }
-
     void start_channel(const channel::ptr& channel, result_handler&& started,
         result_handler&& stopped) NOEXCEPT override
     {
@@ -372,7 +367,6 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE(is_zero(session.address_count()));
     BOOST_REQUIRE(is_zero(session.channel_count()));
     BOOST_REQUIRE(is_zero(session.inbound_channel_count()));
-    BOOST_REQUIRE(!session.inbound());
 }
 
 // factories

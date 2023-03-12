@@ -48,9 +48,6 @@ public:
     /// Seeding is complete invocation of the handler.
     void start(result_handler&& handler) NOEXCEPT override;
 
-    /// The channel is outbound (do not pend the nonce).
-    bool inbound() const NOEXCEPT override;
-
 protected:
     /// Overridden to set service and version minimums upon session start.
     void attach_handshake(const channel::ptr& channel,
