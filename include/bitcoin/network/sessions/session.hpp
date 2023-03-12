@@ -85,7 +85,7 @@ public:
     /// Sender identifies the channel to its own handler, for option to bypass.
 
     template <class Message, typename Handler = broadcaster::handler<Message>>
-    void subscribe(Handler&& handler, channel_id subscriber) NOEXCEPT
+    void subscribe(Handler&& handler, channel_id id) NOEXCEPT
     {
         if (stopped())
         {
@@ -95,13 +95,12 @@ public:
 
         ////boost::asio::dispatch(strand(),
         ////    BIND2(template do_subscribe<Handler>,
-        ////        std::move(handler), subscriber));
+        ////        std::move(handler), id));
 
         boost::asio::dispatch(strand(),
-            [self = shared_from_this(), handler = std::move(handler),
-            id = subscriber]() NOEXCEPT
+            [self = shared_from_this(), handler = std::move(handler), id]()
             {
-                self->template do_subscribe<Handler>(std::move(handler), id);
+                self->template do_subscribe<Handler>(handler, id);
             });
     }
 
