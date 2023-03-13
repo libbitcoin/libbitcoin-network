@@ -129,7 +129,8 @@ bool protocol_address_in_31402::handle_receive_address(const code& ec,
         return true;
     }
 
-    if (trickle)
+    // Relay only advertisement of a new peer (trickle creates cycle).
+    if (advertisement)
     {
         BROADCAST(address, message);
         LOGP("Relay (" << start_size << ") addresses by ["
