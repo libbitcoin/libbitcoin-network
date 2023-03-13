@@ -59,7 +59,7 @@ private:
     const bool outbound_;
 
     // This is protected by strand.
-    bool first_{};
+    bool first_{ true };
 };
 
 } // namespace network

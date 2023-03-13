@@ -37,8 +37,8 @@ static_assert(heading::maximum_payload(level::canonical, false) == 1'800'003);
 // Common default values (no settings context).
 settings::settings() NOEXCEPT
   : threads(1),
-    address_maximum(10),
-    address_minimum(5),
+    address_upper(10),
+    address_lower(5),
     protocol_maximum(level::maximum_protocol),
     protocol_minimum(level::minimum_protocol),
     services_maximum(service::maximum_services),
@@ -53,7 +53,7 @@ settings::settings() NOEXCEPT
     validate_checksum(false),
     identifier(0),
     inbound_connections(0),
-    outbound_connections(8),
+    outbound_connections(10),
     connect_batch_size(5),
     retry_timeout_seconds(1),
     connect_timeout_seconds(5),

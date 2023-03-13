@@ -81,10 +81,6 @@ void session::stop() NOEXCEPT
     // Break out of sesson loop as handlers execute. 
     stopped_.store(true);
 
-    // Post message handlers to strand and clear/stop accepting subscriptions.
-    // On service_stopped message subscribers should ignore and perform no work.
-    broadcaster_.stop(error::service_stopped);
-
     // Post stop handlers to strand and clear/stop accepting subscriptions.
     // The code provides information on the reason that the channel stopped.
     stop_subscriber_.stop(error::service_stopped);

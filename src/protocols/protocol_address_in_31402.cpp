@@ -119,6 +119,7 @@ bool protocol_address_in_31402::handle_receive_address(const code& ec,
     const auto start_size = message->addresses.size();
     const auto trickle = start_size < maximum_advertisement;
     const auto advertisement = first_ && trickle;
+    first_ = false;
 
     if (!outbound_ && !advertisement)
     {
@@ -128,14 +129,14 @@ bool protocol_address_in_31402::handle_receive_address(const code& ec,
         return true;
     }
 
-    if (trickle)
+    // Relay only advertisement of a new peer (trickle creates cycle).
+    if (advertisement)
     {
         BROADCAST(address, message);
-        ////LOGP("Broad (" << start_size << ") addresses by ["
-        ////    << authority() << "].");
+        LOGP("Relay (" << start_size << ") addresses by ["
+            << authority() << "].");
     }
 
-    first_ = false;
     if (is_one(start_size) && message->addresses.front() == outbound())
     {
         ////LOGP("Dropping redundant address from [" << authority() << "].");
