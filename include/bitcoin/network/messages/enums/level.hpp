@@ -87,52 +87,67 @@ namespace messages {
 
 enum level: uint32_t
 {
-    // Used to generate canonical size required by consensus checks.
+    /// Used to generate canonical size required by consensus checks.
     canonical = 0,
 
-    // We require at least this of peers, address.time fields.
-    minimum_protocol = 31402,
+    /// Added version.address_sender, version.nonce, and version.user_agent.
+    version_updates = 106,
 
-    // This preceded the BIP system.
+    /// Added verack message, also heading.checksum and version.start_height.
+    verack_message = 209,
+
+    /// Added alert message.
+    alert_message = 311,
+
+    /// Added address.timestamp field to addresses.
+    address_time = 31402,
+
+    /// This preceded the BIP system.
     headers_protocol = 31800,
 
-    // Don't request blocks from nodes of versions 32000-32400.
+    /// Don't request blocks from nodes of versions 32000-32400 (bitcoind hack).
     no_blocks_start = 32000,
 
-    // Don't request blocks from nodes of versions 32000-32400.
+    /// Don't request blocks from nodes of versions 32000-32400 (bitcoind hack).
     no_blocks_end = 32400,
 
-    // ping.nonce, pong
+    /// Isolate protocol version from implementation version.
+    bip14 = 60000,
+
+    /// ping.nonce, pong
     bip31 = 60001,
 
-    // memory_pool
+    /// memory_pool
     bip35 = 60002,
 
-    // bloom filters, merkle_block, not_found, version.relay
+    /// bloom filters, merkle_block, not_found, version.relay
     bip37 = 70001,
 
-    // reject (satoshi node writes version.relay starting here)
+    /// reject (satoshi node writes version.relay starting here)
     bip61 = 70002,
 
-    // node_utxo service bit (draft)
+    /// node_utxo service bit (draft)
     bip64 = 70004,
 
-    // node_bloom service bit
+    /// node_bloom service bit
     bip111 = 70011,
 
-    // send_headers
+    /// send_headers
     bip130 = 70012,
 
-    // fee_filter
+    /// fee_filter
     bip133 = 70013,
 
-    // compact blocks protocol
+    /// compact blocks protocol
     bip152 = 70014,
 
-    // client filters protocol
+    /// client filters protocol
     bip157 = 70015,
 
-    // We support at most this internally (bound to settings default).
+    /// We require at least this of peers (for current address structure).
+    minimum_protocol = address_time,
+
+    /// We support at most this internally (bound to settings default).
     maximum_protocol = bip157
 };
 
