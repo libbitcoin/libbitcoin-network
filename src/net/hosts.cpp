@@ -212,8 +212,8 @@ void hosts::fetch(address_handler&& handler) const NOEXCEPT
     }
 
     // Vary the return count (quantity fingerprinting).
-    const auto divide = pseudo_random::next<size_t>(settings_.address_minimum,
-        settings_.address_maximum);
+    const auto divide = pseudo_random::next<size_t>(
+        settings_.address_lower, settings_.address_upper);
     const auto size = std::min(messages::max_address, buffer_.size() / divide);
 
     // Vary the start position (value fingerprinting).
