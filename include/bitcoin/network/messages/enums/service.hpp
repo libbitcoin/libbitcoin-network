@@ -27,37 +27,37 @@ namespace messages {
 
 enum service: uint64_t
 {
-    // The node exposes no defined services.
-    // At least version, address, ping/pong, and reject protocols.
+    /// The node exposes no defined services.
+    /// At least version, address, ping/pong, and reject protocols.
     node_none = 0,
 
-    // The node is capable of serving the block chain (full node).
+    /// The node is capable of serving the block chain (full node).
     node_network = system::bit_right<uint32_t>(0),
 
-    // Requires version.value >= level::bip64 (BIP64 is obsolete).
-    // The node is capable of responding to the getutxo protocol request.
+    /// Requires version.value >= level::bip64 (BIP64 is obsolete).
+    /// The node is capable of responding to the getutxo protocol request.
     node_utxo = system::bit_right<uint32_t>(1),
 
-    // Requires version.value >= level::bip111
-    // The node is capable and willing to handle bloom-filtered connections.
+    /// Requires version.value >= level::bip111
+    /// The node is capable and willing to handle bloom-filtered connections.
     node_bloom = system::bit_right<uint32_t>(2),
 
-    // Independent of network protocol level.
-    // The node is capable of responding to witness inventory requests.
+    /// Independent of network protocol level.
+    /// The node is capable of responding to witness inventory requests.
     node_witness = system::bit_right<uint32_t>(3),
 
-    // Independent of network protocol level.
-    // The node is capable of responding to getcfilters, getcfheaders,
-    // and getcfcheckpt protocol requests.
+    /// Independent of network protocol level.
+    /// The node is capable of responding to getcfilters, getcfheaders,
+    /// and getcfcheckpt protocol requests.
     node_client_filters = system::bit_right<uint32_t>(6),
 
-    // Serves only the last 288 (2 day) blocks.
+    /// Serves only the last 288 (2 day) blocks.
     node_xnetwork_limited = system::bit_right<uint32_t>(10),
 
-    // The minimum supported capability.
+    /// The minimum supported capability.
     minimum_services = node_none,
 
-    // The maximum supported capability.
+    /// The maximum supported capability.
     maximum_services = node_network | node_witness | node_client_filters
 };
 
