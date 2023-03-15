@@ -161,7 +161,7 @@ void protocol_address_in_31402::handle_save_address(const code& ec,
     if (stopped(ec))
         return;
 
-    LOGN("Accepted (" << start_size << ">" << filtered << ">" << accepted << ") "
+    LOGP("Accepted (" << start_size << ">" << filtered << ">" << accepted << ") "
         "addresses from [" << authority() << "].");
 }
 
