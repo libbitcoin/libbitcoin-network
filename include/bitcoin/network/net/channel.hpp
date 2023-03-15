@@ -50,8 +50,8 @@ public:
     DELETE_COPY_MOVE(channel);
 
     /// Attach protocol to channel, caller must start (requires strand).
-    template <class Protocol, typename... Args>
-    typename Protocol::ptr attach(session& session, Args&&... args) NOEXCEPT
+    template <class Protocol, class Session, typename... Args>
+    typename Protocol::ptr attach(Session& session, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
 

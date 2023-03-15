@@ -117,8 +117,7 @@ bool protocol_address_in_31402::handle_receive_address(const code& ec,
 
     // Accept only one advertisement message unless messages requested.
     const auto start_size = message->addresses.size();
-    const auto trickle = start_size < maximum_advertisement;
-    const auto advertisement = first_ && trickle;
+    const auto advertisement = first_ && (start_size < maximum_advertisement);
     first_ = false;
 
     if (!outbound_ && !advertisement)
