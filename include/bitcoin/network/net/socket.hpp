@@ -59,7 +59,7 @@ public:
     /// Stop has been signaled, work is stopping.
     virtual bool stopped() const NOEXCEPT;
 
-    /// Cancel work and close the socket (idempotent).
+    /// Cancel work and close the socket (idempotent, thread safe).
     /// This action is deferred to the strand, not immediately affected.
     /// Block on threadpool.join() to ensure termination of the connection.
     virtual void stop() NOEXCEPT;
