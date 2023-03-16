@@ -36,7 +36,7 @@ const uint32_t transaction::version_minimum = level::minimum_protocol;
 const uint32_t transaction::version_maximum = level::maximum_protocol;
 
 // Optimized non-witness hash derivation using witness-serialized tx.
-inline hash_digest desegregated_hash(const data_chunk& data,
+hash_digest transaction::desegregated_hash(const data_chunk& data,
     size_t size) NOEXCEPT
 {
     constexpr auto version = zero;
