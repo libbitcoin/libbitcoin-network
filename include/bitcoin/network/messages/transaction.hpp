@@ -38,6 +38,9 @@ struct BCT_API transaction
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
+    static system::hash_digest desegregated_hash(
+        const system::data_chunk& data, size_t size) NOEXCEPT;
+
     static cptr deserialize(uint32_t version, const system::data_chunk& data,
         bool witness=true) NOEXCEPT;
     static transaction deserialize(uint32_t version, system::reader& source,
@@ -51,9 +54,6 @@ struct BCT_API transaction
     size_t size(uint32_t version, bool witness) const NOEXCEPT;
 
     system::chain::transaction::cptr transaction_ptr;
-
-    /// Hash of message, optimization.
-    mutable system::hash_ptr hash{};
 };
 
 } // namespace messages
