@@ -51,9 +51,6 @@ struct BCT_API transaction
     size_t size(uint32_t version, bool witness) const NOEXCEPT;
 
     system::chain::transaction::cptr transaction_ptr;
-
-    /// Hash of message, optimization.
-    mutable system::hash_ptr hash{};
 };
 
 } // namespace messages
