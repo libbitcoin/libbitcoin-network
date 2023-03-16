@@ -34,13 +34,45 @@ const identifier transaction::id = identifier::transaction;
 const uint32_t transaction::version_minimum = level::minimum_protocol;
 const uint32_t transaction::version_maximum = level::maximum_protocol;
 
+// Optimized non-witness hash derivation using witness-serialized tx.
+inline hash_digest desegregated_hash(const data_chunk& data,
+    size_t size) NOEXCEPT
+{
+    constexpr auto version = zero;
+    constexpr auto preamble = sizeof(uint32_t) + two * sizeof(uint8_t);
+    const auto locktime = data.size() - sizeof(uint32_t);
+    const auto start = data.data();
+
+    hash_digest digest{};
+    hash::sha256x2::copy sink(digest);
+    sink.write_bytes(std::next(start, version), sizeof(uint32_t));
+    sink.write_bytes(std::next(start, preamble), size - sizeof(uint32_t));
+    sink.write_bytes(std::next(start, locktime), sizeof(uint32_t));
+    sink.flush();
+    return digest;
+}
+
 // static
 typename transaction::cptr transaction::deserialize(uint32_t version,
-    const system::data_chunk& data, bool witness) NOEXCEPT
+    const data_chunk& data, bool witness) NOEXCEPT
 {
     read::bytes::copy reader(data);
     const auto message = to_shared(deserialize(version, reader, witness));
-    return reader ? message : nullptr;
+    if (!reader)
+        return nullptr;
+
+    auto& tx = *message->transaction_ptr;
+
+    // Optimized witness hash derivation using witness-serialized tx.
+    // This will be non-witness if witness encoding is not enabled.
+    tx.set_witness_hash(bitcoin_hash(data));
+
+    // Wintess hash is cached above, can be copied if not segregated.
+    tx.set_hash(tx.is_segregated() ? desegregated_hash(data,
+        tx.serialized_size(false)) : tx.hash(true));
+
+    // TODO: may not want to cache both hashes.
+    return message;
 }
 
 // static
@@ -54,7 +86,7 @@ transaction transaction::deserialize(uint32_t version, reader& source,
 }
 
 bool transaction::serialize(uint32_t version,
-    const system::data_slab& data, bool witness) const NOEXCEPT
+    const data_slab& data, bool witness) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer, witness);
