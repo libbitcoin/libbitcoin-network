@@ -22,6 +22,7 @@
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
 #include <bitcoin/network/messages/message.hpp>
+#include <bitcoin/network/messages/transaction.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -40,7 +41,15 @@ typename block::cptr block::deserialize(uint32_t version,
 {
     read::bytes::copy reader(data);
     const auto message = to_shared(deserialize(version, reader, witness));
-    return reader ? message : nullptr;
+    if (!reader)
+        return nullptr;
+
+    // TODO: cache hashes for all transactions as well,
+    // TODO: using transaction::desegregated_hash(data, size).
+    constexpr auto size = chain::header::serialized_size();
+    const auto& header = message->block_ptr->header();
+    header.set_hash(bitcoin_hash(size, data.data()));
+    return message;
 }
 
 // static
@@ -77,18 +86,6 @@ size_t block::size(uint32_t, bool witness) const NOEXCEPT
 {
     return block_ptr ? block_ptr->serialized_size(witness) : zero;
 }
-
-////static void foo()
-////{
-////    system::chain::block::cptr alpha;
-////    auto beta = std::move(alpha);
-////}
-
-////static void bar()
-////{
-////    block alpha;
-////    auto beta = std::move(alpha);
-////}
 
 } // namespace messages
 } // namespace network
