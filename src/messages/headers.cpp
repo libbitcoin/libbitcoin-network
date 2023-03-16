@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/messages/headers.hpp>
 
+#include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
@@ -41,11 +42,23 @@ constexpr uint8_t trail = 0x00;
 
 // static
 typename headers::cptr headers::deserialize(uint32_t version,
-    const system::data_chunk& data) NOEXCEPT
+    const data_chunk& data) NOEXCEPT
 {
     read::bytes::copy reader(data);
     const auto message = to_shared(deserialize(version, reader));
-    return reader ? message : nullptr;
+    if (!reader)
+        return nullptr;
+
+    constexpr auto size = chain::header::serialized_size();
+    auto hash = std::next(data.data(), size_variable(data.front()));
+
+    for (const auto& header: message->header_ptrs)
+    {
+        header->set_hash(bitcoin_hash(size, hash));
+        std::advance(hash, add1(size));
+    }
+
+    return message;
 }
 
 // static
@@ -55,7 +68,7 @@ headers headers::deserialize(uint32_t version, reader& source) NOEXCEPT
         source.invalidate();
 
     const auto size = source.read_size(max_get_headers);
-    chain::header_cptrs header_ptrs;
+    chain::header_cptrs header_ptrs{};
     header_ptrs.reserve(size);
 
     for (size_t header = 0; header < size; ++header)
@@ -74,7 +87,7 @@ headers headers::deserialize(uint32_t version, reader& source) NOEXCEPT
 }
 
 bool headers::serialize(uint32_t version,
-    const system::data_slab& data) const NOEXCEPT
+    const data_slab& data) const NOEXCEPT
 {
     write::bytes::copy writer(data);
     serialize(version, writer);
