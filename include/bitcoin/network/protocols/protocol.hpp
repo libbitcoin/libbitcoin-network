@@ -63,7 +63,7 @@ private:
             return false;
 
         // Invoke subscriber on channel strand with given parameters.
-        boost::asio::dispatch(channel_->strand(),
+        boost::asio::post(channel_->strand(),
             std::bind(handler, ec, message, sender));
 
         return true;

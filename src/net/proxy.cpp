@@ -94,7 +94,7 @@ bool proxy::stopped() const NOEXCEPT
 
 void proxy::stop(const code& ec) NOEXCEPT
 {
-    boost::asio::dispatch(strand(),
+    boost::asio::post(strand(),
         std::bind(&proxy::do_stop, shared_from_this(), ec));
 }
 
@@ -140,7 +140,7 @@ void proxy::subscribe_stop(result_handler&& handler,
         return;
     }
 
-    boost::asio::dispatch(strand(),
+    boost::asio::post(strand(),
         std::bind(&proxy::do_subscribe_stop,
             shared_from_this(), std::move(handler), std::move(complete)));
 }

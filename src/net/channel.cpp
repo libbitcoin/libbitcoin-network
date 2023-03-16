@@ -78,7 +78,7 @@ channel::~channel() NOEXCEPT
 void channel::stop(const code& ec) NOEXCEPT
 {
     // Stop is dispatched to strand to protect timers.
-    boost::asio::dispatch(strand(),
+    boost::asio::post(strand(),
         std::bind(&channel::do_stop,
             shared_from_base<channel>(), ec));
 }

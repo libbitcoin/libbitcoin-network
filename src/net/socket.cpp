@@ -78,7 +78,7 @@ void socket::stop() NOEXCEPT
     stopped_.store(true);
 
     // Stop is posted to strand to protect the socket.
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&socket::do_stop, shared_from_this()));
 }
 
@@ -133,7 +133,7 @@ void socket::accept(asio::acceptor& acceptor,
 void socket::connect(const asio::endpoints& range,
     result_handler&& handler) NOEXCEPT
 {
-    boost::asio::dispatch(strand_,
+    boost::asio::post(strand_,
         std::bind(&socket::do_connect,
             shared_from_this(), range, std::move(handler)));
 }
