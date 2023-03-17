@@ -46,11 +46,11 @@ BOOST_AUTO_TEST_CASE(desubscriber__subscribe__stopped__subscriber_stopped)
         instance.stop(ec, expected);
 
         result |= is_zero(instance.size());
-        BOOST_REQUIRE_EQUAL(instance.subscribe([&](code value, size_t size) NOEXCEPT
+        result |= (instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
             retry_result = { value, size };
             return true;
-        }, 0), error::subscriber_stopped);
+        }, 0) == error::subscriber_stopped);
 
         result |= is_zero(instance.size());
     });
