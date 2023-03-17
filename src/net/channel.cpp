@@ -134,7 +134,7 @@ size_t channel::start_height() const NOEXCEPT
 
 void channel::set_start_height(size_t height) NOEXCEPT
 {
-    BC_ASSERT_MSG(is_limited<uint32_t>(height), "Time to upgrade protocol.");
+    BC_ASSERT_MSG(!is_limited<uint32_t>(height), "Time to upgrade protocol.");
     start_height_ = height;
 }
 
