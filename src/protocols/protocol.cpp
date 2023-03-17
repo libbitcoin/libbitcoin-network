@@ -121,6 +121,11 @@ uint64_t protocol::nonce() const NOEXCEPT
     return channel_->nonce();
 }
 
+size_t protocol::start_height() const NOEXCEPT
+{
+    return channel_->start_height();
+}
+
 version::cptr protocol::peer_version() const NOEXCEPT
 {
     return channel_->peer_version();

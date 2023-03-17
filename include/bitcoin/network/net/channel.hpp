@@ -38,7 +38,7 @@ class session;
 
 /// Virtual, thread safe except for:
 /// * See proxy for its thread safety constraints.
-/// * Versions should only be written in handshake.
+/// * Version into should only be written before/during handshake.
 /// * attach/resume/signal_activity must be called from the strand.
 /// A channel is a proxy with timers and connection state.
 class BCT_API channel
@@ -94,8 +94,9 @@ public:
     /// Arbitrary identifier of the channel (for session subscribers).
     uint64_t identifier() const NOEXCEPT;
 
-    /// Originating address of connection with current time and peer services.
-    address_item_cptr get_updated_address() const NOEXCEPT;
+    /// Start height for version message (set only before handshake).
+    size_t start_height() const NOEXCEPT;
+    void set_start_height(size_t height) NOEXCEPT;
 
     /// Negotiated version should be written only in handshake.
     uint32_t negotiated_version() const NOEXCEPT;
@@ -104,6 +105,9 @@ public:
     /// Peer version should be written only in handshake.
     messages::version::cptr peer_version() const NOEXCEPT;
     void set_peer_version(const messages::version::cptr& value) NOEXCEPT;
+
+    /// Originating address of connection with current time and peer services.
+    address_item_cptr get_updated_address() const NOEXCEPT;
 
 protected:
     /// Property values provided to the proxy.
@@ -142,6 +146,7 @@ private:
     deadline::ptr inactivity_;
     uint32_t negotiated_version_;
     messages::version::cptr peer_version_{};
+    size_t start_height_{};
 };
 
 typedef std::function<void(const code&, const channel::ptr&)> channel_handler;

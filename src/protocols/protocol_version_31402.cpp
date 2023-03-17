@@ -75,12 +75,8 @@ protocol_version_31402::protocol_version_31402(session& session,
 messages::version protocol_version_31402::version_factory(
     bool relay) const NOEXCEPT
 {
-    // TODO: allow for node to inject top height.
     const auto timestamp = unix_time();
-    constexpr auto top_height = possible_narrow_cast<uint32_t>(zero);
-    BC_ASSERT_MSG(top_height <= max_uint32, "Time to upgrade the protocol.");
 
-    BC_PUSH_WARNING(NO_NEW_OR_DELETE)
     return
     {
         maximum_version_,
@@ -117,10 +113,9 @@ messages::version protocol_version_31402::version_factory(
 
         nonce(),
         settings().user_agent,
-        top_height,
+        possible_narrow_cast<uint32_t>(start_height()),
         relay
     };
-    BC_POP_WARNING()
 }
 
 // Allow derived classes to handle message rejection.
