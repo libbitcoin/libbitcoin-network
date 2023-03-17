@@ -166,13 +166,13 @@ private:
         const result_handler& handler) NOEXCEPT;
 
     // These are thread safe.
+    std::atomic_bool paused_{ true };
     std::atomic<uint64_t> backlog_{};
     std::atomic<uint64_t> total_{};
     socket::ptr socket_;
 
     // These are protected by strand.
     queue queue_{};
-    bool paused_{ true };
     system::data_chunk payload_buffer_{};
     system::data_array<messages::heading::size()> heading_buffer_{};
     system::read::bytes::copy heading_reader_{ heading_buffer_ };

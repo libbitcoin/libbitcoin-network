@@ -83,17 +83,25 @@ bool proxy::paused() const NOEXCEPT
     return paused_;
 }
 
-// Stop (socket/proxy is created started).
+// Stop (socket/proxy started upon create).
 // ----------------------------------------------------------------------------
 
 bool proxy::stopped() const NOEXCEPT
 {
-    // Socket is not allowed to stop itself.
     return socket_->stopped();
 }
 
 void proxy::stop(const code& ec) NOEXCEPT
 {
+    if (stopped())
+        return;
+
+    // Stop the read loop, stop accepting new work, cancel pending work.
+    socket_->stop();
+
+    // Overruled by stop, set only for consistency.
+    paused_.store(true);
+
     boost::asio::post(strand(),
         std::bind(&proxy::do_stop, shared_from_this(), ec));
 }
@@ -102,15 +110,6 @@ void proxy::stop(const code& ec) NOEXCEPT
 void proxy::do_stop(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    if (stopped())
-        return;
-
-    // Stop the read loop, stop accepting new work, cancel pending work.
-    socket_->stop();
-
-    // Overruled by stop, set only for consistency.
-    paused_ = true;
     
     // Clear the write buffer, which holds handlers.
     queue_.clear();
@@ -140,7 +139,7 @@ void proxy::subscribe_stop(result_handler&& handler,
         return;
     }
 
-    boost::asio::post(strand(),
+    boost::asio::dispatch(strand(),
         std::bind(&proxy::do_subscribe_stop,
             shared_from_this(), std::move(handler), std::move(complete)));
 }
