@@ -75,11 +75,8 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    const auto binds = settings().binds.size();
-    const auto peers = settings().inbound_connections;
-
-    LOGN("Accepting " << peers << " connections on " << binds
-        << " bindings.");
+    LOGN("Accepting " << settings().inbound_connections << " connections on "
+        << settings().binds.size() << " bindings.");
 
     for (const auto& bind: settings().binds)
     {

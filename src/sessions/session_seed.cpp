@@ -212,7 +212,7 @@ void session_seed::attach_handshake(const channel::ptr& channel,
 }
 
 void session_seed::handle_channel_start(const code& ec,
-    const channel::ptr& channel) NOEXCEPT
+    const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -252,7 +252,7 @@ void session_seed::attach_protocols(const channel::ptr& channel) NOEXCEPT
 }
 
 void session_seed::handle_channel_stop(const code& LOG_ONLY(ec),
-    const channel::ptr& channel, const race::ptr& racer) NOEXCEPT
+    const channel::ptr& LOG_ONLY(channel), const race::ptr& racer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     LOGN("Seed stop [" << channel->authority() << "] " << ec.message());
