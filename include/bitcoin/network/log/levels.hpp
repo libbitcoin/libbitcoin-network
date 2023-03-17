@@ -16,29 +16,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_LOG_LEVEL_HPP
-#define LIBBITCOIN_NETWORK_LOG_LEVEL_HPP
+#ifndef LIBBITCOIN_NETWORK_LOG_LEVELS_HPP
+#define LIBBITCOIN_NETWORK_LOG_LEVELS_HPP
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
-namespace level_t {
+namespace levels {
 
-// Use level_t namespace to prevent pollution of network namesapce.
 // Could use class enum, but we want simple conversion to uint8_t.
-enum level : uint8_t
+enum : uint8_t
 {
-    quit,       // Quitting
-    objects,    // Objects
-    news,       // News
-    session,    // Sessions/connect/accept
-    protocol,   // Protocols
-    proxy,      // proXy/socket/channel
-    remote,     // Remote behavior
-    fault,      // Fault
-    reserved    // Unused by network lib.
+    application, // Unused by network lib
+    news,        // News
+    objects,     // Objects
+    session,     // Sessions/connect/accept
+    protocol,    // Protocols
+    proxy,       // proXy/socket/channel
+    wire,        // Wire sharking
+    remote,      // Remote behavior
+    fault,       // Fault
+    quit         // Quitting
 };
 
 #if defined(HAVE_EVENTS)
@@ -56,59 +56,86 @@ enum level : uint8_t
     #define LOG_ONLY(name) name
     #define LOG(level, message) \
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
-        log().write(level_t::level) << message << std::endl; \
+        log().write(levels::level) << message << std::endl; \
         BC_POP_WARNING()
 #else
     #define LOG_ONLY(name)
     #define LOG(level, message)
 #endif
 
-#if defined(HAVE_LOGQ)
-    #define LOGQ(message) LOG(quit, message)
+#if defined(HAVE_LOGO)
+    constexpr auto objects_defined = true;
+    #define LOGO(message) \
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
+        log_.write(levels::objects) << message << std::endl; \
+        BC_POP_WARNING()
 #else
-    #define LOGQ(message)
+    constexpr auto objects_defined = false;
+    #define LOGO(message)
 #endif
 
 #if defined(HAVE_LOGN)
+    constexpr auto news_defined = true;
     #define LOGN(message) LOG(news, message)
 #else
     #define LOGN(message)
-#endif
-
-#if defined(HAVE_LOGX)
-    #define LOGX(message) LOG(proxy, message)
-#else
-    #define LOGX(message)
+    constexpr auto news_defined = false;
 #endif
 
 #if defined(HAVE_LOGS)
+    constexpr auto session_defined = true;
     #define LOGS(message) LOG(session, message)
 #else
+    constexpr auto session_defined = false;
     #define LOGS(message)
 #endif
 
 #if defined(HAVE_LOGP)
+    constexpr auto protocol_defined = true;
     #define LOGP(message) LOG(protocol, message)
 #else
+    constexpr auto protocol_defined = false;
     #define LOGP(message)
 #endif
 
-#if defined(HAVE_LOGF)
-    #define LOGF(message) LOG(fault, message)
+#if defined(HAVE_LOGX)
+    constexpr auto proxy_defined = true;
+    #define LOGX(message) LOG(proxy, message)
 #else
-    #define LOGF(message)
+    constexpr auto proxy_defined = false;
+    #define LOGX(message)
+#endif
+
+#if defined(HAVE_LOGW)
+    constexpr auto wire_defined = true;
+    #define LOGW(message) LOG(wire, message)
+#else
+    constexpr auto wire_defined = false;
+    #define LOGW(message)
 #endif
 
 #if defined(HAVE_LOGR)
+    constexpr auto remote_defined = true;
     #define LOGR(message) LOG(remote, message)
 #else
+    constexpr auto remote_defined = false;
     #define LOGR(message)
 #endif
 
-#if defined(HAVE_LOGO)
-    #define LOGO(message) LOG(objects, message)
+#if defined(HAVE_LOGF)
+    constexpr auto fault_defined = true;
+    #define LOGF(message) LOG(fault, message)
 #else
-    #define LOGO(message)
+    constexpr auto fault_defined = false;
+    #define LOGF(message)
+#endif
+
+#if defined(HAVE_LOGQ)
+    constexpr auto quit_defined = true;
+    #define LOGQ(message) LOG(quit, message)
+#else
+    constexpr auto quit_defined = false;
+    #define LOGQ(message)
 #endif
 
 

@@ -23,7 +23,7 @@
 #include <typeinfo>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/log/level.hpp>
+#include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/logger.hpp>
 
 namespace libbitcoin {
@@ -40,24 +40,12 @@ protected:
     tracker(const logger& log) NOEXCEPT
       : log_(log)
     {
-        if constexpr (build_checked)
-        {
-            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-            log_.write(level_t::objects) << typeid(Class).name()
-                << "(" << ++instances_ << ")" << std::endl;
-            BC_POP_WARNING()
-        }
+        LOGO(typeid(Class).name() << "(" << ++instances_ << ")");
     }
 
     ~tracker() NOEXCEPT
     {
-        if constexpr (build_checked)
-        {
-            BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-            log_.write(level_t::objects) << typeid(Class).name()
-                << "(" << --instances_ << ")~" << std::endl;
-            BC_POP_WARNING()
-        }
+        LOGO(typeid(Class).name() << "(" << --instances_ << ")~");
     }
 
 private:
