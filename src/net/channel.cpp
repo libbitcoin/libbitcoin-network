@@ -77,17 +77,18 @@ channel::~channel() NOEXCEPT
 
 void channel::stop(const code& ec) NOEXCEPT
 {
-    // Stop is dispatched to strand to protect timers.
-    boost::asio::dispatch(strand(),
-        std::bind(&channel::do_stop,
-            shared_from_base<channel>(), ec));
+    // Stop the read loop, stop accepting new work, cancel pending work.
+    proxy::stop(ec);
+
+    // Stop is posted to strand to protect timers.
+    boost::asio::post(strand(),
+        std::bind(&channel::do_stop, shared_from_base<channel>(), ec));
 }
 
 // This should not be called internally, as derived rely on stop() override.
-void channel::do_stop(const code& ec) NOEXCEPT
+void channel::do_stop(const code&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    proxy::stop(ec);
     inactivity_->stop();
     expiration_->stop();
 }

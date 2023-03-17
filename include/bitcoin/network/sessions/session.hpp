@@ -95,20 +95,20 @@ public:
         };
 
         // Subscribe on network strand (protects broadcaster).
-        boost::asio::dispatch(strand(), bouncer);
+        boost::asio::post(strand(), bouncer);
     }
 
     template <class Message>
     void broadcast(const typename Message::cptr& message,
         channel_id sender) NOEXCEPT
     {
-        boost::asio::dispatch(strand(),
+        boost::asio::post(strand(),
             BIND2(do_broadcast<Message>, message, sender));
     }
 
     virtual void unsubscribe(channel_id subscriber) NOEXCEPT
     {
-        boost::asio::dispatch(strand(),
+        boost::asio::post(strand(),
             BIND1(do_unsubscribe, subscriber));
     }
 

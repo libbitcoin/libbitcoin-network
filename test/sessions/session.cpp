@@ -93,8 +93,8 @@ class mock_session
   : public session
 {
 public:
-    mock_session(p2p& network, size_t key, bool inbound) NOEXCEPT
-      : session(network, key), inbound_(inbound)
+    mock_session(p2p& network, size_t key) NOEXCEPT
+      : session(network, key)
     {
     }
 
@@ -185,7 +185,6 @@ public:
     }
 
 private:
-    const bool inbound_;
     mutable bool handshaked_{ false };
     mutable bool protocoled_{ false };
     mutable std::promise<bool> require_protocoled_;
@@ -350,7 +349,7 @@ BOOST_AUTO_TEST_CASE(session__construct__always__expected_settings)
     settings set(selection::mainnet);
     set.threads = expected;
     p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
     BOOST_REQUIRE_EQUAL(session.settings().threads, expected);
 }
 
@@ -361,7 +360,7 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     const logger log{};
     settings set(selection::mainnet);
     p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
     BOOST_REQUIRE(session.stopped());
     BOOST_REQUIRE(!session.stranded());
     BOOST_REQUIRE(is_zero(session.address_count()));
@@ -376,7 +375,7 @@ BOOST_AUTO_TEST_CASE(session__create_acceptor__always__expected)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
     BOOST_REQUIRE(session.create_acceptor());
     BOOST_REQUIRE_EQUAL(net.acceptors(), 1u);
 }
@@ -386,7 +385,7 @@ BOOST_AUTO_TEST_CASE(session__create_connector__always__expected)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
     BOOST_REQUIRE(session.create_connector());
     BOOST_REQUIRE_EQUAL(net.connectors(), 1u);
 }
@@ -396,7 +395,7 @@ BOOST_AUTO_TEST_CASE(session__create_connectors__always__expected)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
     constexpr auto expected = 42u;
     const auto connectors = session.create_connectors(expected);
     BOOST_REQUIRE(connectors);
@@ -411,7 +410,7 @@ BOOST_AUTO_TEST_CASE(session__take__always__calls_network)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
 
     std::promise<code> taken;
     session.take([&](const code& ec, const address_item_cptr&) NOEXCEPT
@@ -427,7 +426,7 @@ BOOST_AUTO_TEST_CASE(session__fetch__always__calls_network)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
 
     std::promise<code> fetched;
     session.fetch([&](const code& ec, const address_cptr&) NOEXCEPT
@@ -443,7 +442,7 @@ BOOST_AUTO_TEST_CASE(session__restore__always__calls_network_with_expected_addre
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
 
     std::promise<code> save;
     const address_item item{ 42, 24, unspecified_ip_address, 4224u };
@@ -466,7 +465,7 @@ BOOST_AUTO_TEST_CASE(session__save__always__calls_network_with_expected_addresse
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
 
     std::promise<code> save;
     const address_items items{ {}, { 42, 24, unspecified_ip_address, 4224u } };
@@ -492,7 +491,7 @@ BOOST_AUTO_TEST_CASE(session__stop__stopped__true)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
     BOOST_REQUIRE(session.stopped());
 
     std::promise<bool> stopped;
@@ -512,7 +511,7 @@ BOOST_AUTO_TEST_CASE(session__start__restart__operation_failed)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
 
     std::promise<code> started;
     boost::asio::post(net.strand(), [&]() NOEXCEPT
@@ -552,7 +551,7 @@ BOOST_AUTO_TEST_CASE(session__start__stop__success)
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    mock_session session(net, 1, false);
+    mock_session session(net, 1);
 
     std::promise<code> started;
     boost::asio::post(net.strand(), [&]() NOEXCEPT
@@ -583,7 +582,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__session_not_started__handlers_servi
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    auto session = std::make_shared<mock_session>(net, 1, false);
+    auto session = std::make_shared<mock_session>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     const auto socket = std::make_shared<network::socket>(net.log(), net.service());
@@ -628,7 +627,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__channel_not_started__handlers_chann
     const logger log{};
     settings set(selection::mainnet);
     mock_p2p net(set, log);
-    auto session = std::make_shared<mock_session>(net, 1, false);
+    auto session = std::make_shared<mock_session>(net, 1);
 
     std::promise<code> started;
     boost::asio::post(net.strand(), [=, &started]() NOEXCEPT
@@ -706,7 +705,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__all_started__handlers_expected_chan
     settings set(selection::mainnet);
     set.host_pool_capacity = 0;
     mock_p2p net(set, log);
-    auto session = std::make_shared<mock_session>(net, 1, false);
+    auto session = std::make_shared<mock_session>(net, 1);
 
     std::promise<code> started_net;
     boost::asio::post(net.strand(), [&net, &started_net]() NOEXCEPT
@@ -787,8 +786,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__outbound_all_started__handlers_expe
     set.host_pool_capacity = 0;
     mock_p2p net(set, log);
 
-    constexpr auto expected_inbound = false;
-    auto session = std::make_shared<mock_session>(net, 1, expected_inbound);
+    auto session = std::make_shared<mock_session>(net, 1);
 
     std::promise<code> started_net;
     boost::asio::post(net.strand(), [&net, &started_net]() NOEXCEPT
@@ -871,8 +869,7 @@ BOOST_AUTO_TEST_CASE(session__start_channel__inbound_all_started__handlers_expec
     set.host_pool_capacity = 0;
     mock_p2p net(set, log);
 
-    constexpr auto expected_inbound = true;
-    auto session = std::make_shared<mock_session>(net, 1, expected_inbound);
+    auto session = std::make_shared<mock_session>(net, 1);
 
     std::promise<code> started_net;
     boost::asio::post(net.strand(), [&net, &started_net]() NOEXCEPT
