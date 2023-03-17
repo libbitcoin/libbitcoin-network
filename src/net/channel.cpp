@@ -127,6 +127,17 @@ uint64_t channel::identifier() const NOEXCEPT
     return identifier_;
 }
 
+size_t channel::start_height() const NOEXCEPT
+{
+    return start_height_;
+}
+
+void channel::set_start_height(size_t height) NOEXCEPT
+{
+    BC_ASSERT_MSG(is_limited<uint32_t>(height), "Time to upgrade protocol.");
+    start_height_ = height;
+}
+
 uint32_t channel::negotiated_version() const NOEXCEPT
 {
     return negotiated_version_;

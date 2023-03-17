@@ -162,6 +162,9 @@ protected:
     /// The nonce of the channel.
     virtual uint64_t nonce() const NOEXCEPT;
 
+    /// The start height (for version message).
+    virtual size_t start_height() const NOEXCEPT;
+
     /// The protocol version of the peer.
     virtual messages::version::cptr peer_version() const NOEXCEPT;
 
