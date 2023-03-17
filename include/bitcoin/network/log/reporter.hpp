@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_LOG_REPORTER_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/log/level.hpp>
+#include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/logger.hpp>
 
 namespace libbitcoin {

@@ -26,7 +26,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/log/level.hpp>
+#include <bitcoin/network/log/levels.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -107,8 +107,8 @@ public:
 
     /// Stop subscribers/pool with final message/empty posted to subscribers.
     void stop(const code& ec, const std::string& message, uint8_t level) NOEXCEPT;
-    void stop(const std::string& message, uint8_t level=level_t::quit) NOEXCEPT;
-    void stop(uint8_t level=level_t::quit) NOEXCEPT;
+    void stop(const std::string& message, uint8_t level=levels::quit) NOEXCEPT;
+    void stop(uint8_t level=levels::quit) NOEXCEPT;
 
 protected:
     bool stranded() const NOEXCEPT;

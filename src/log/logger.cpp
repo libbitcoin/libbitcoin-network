@@ -21,7 +21,7 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/log/event.hpp>
-#include <bitcoin/network/log/level.hpp>
+#include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/timer.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
