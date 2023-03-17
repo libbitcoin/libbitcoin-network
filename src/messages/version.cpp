@@ -79,7 +79,7 @@ version version::deserialize(uint32_t version, reader& source) NOEXCEPT
         // version, since the specified version is not yet negotiated. A true
         // relay value may then be ignored when negotiated version is < bip37.
         // If value >= bip37 with no relay byte, the source is invalidated.
-        return (value >= bip37) && (source.is_exhausted() ||
+        return (value >= level::bip37) && (source.is_exhausted() ||
             to_bool(source.read_byte()));
     };
 
@@ -122,7 +122,7 @@ void version::serialize(uint32_t version, writer& sink) const NOEXCEPT
     // This is a bug in the BIP37 design as it forces older peers to adapt to
     // the expansion of the version message, which is a clear compat break.
     // ************************************************************************
-    const auto write_relay = [=](writer& sink) NOEXCEPT
+    const auto write_relay = [this](writer& sink) NOEXCEPT
     {
         // Write 'relay' if and only if the 'value' field supports bip37.
         // This ignores the specified version, as it is not yet negotiated.
