@@ -43,10 +43,10 @@
 /// TODO: Move to build configuration.
 #define WITH_EVENTS
 #define WITH_LOGGING
-#define WITH_LOGN
 #if !defined(NDEBUG)
     #define WITH_LOGO
 #endif
+#define WITH_LOGN
 #define WITH_LOGS
 #define WITH_LOGP
 #define WITH_LOGX
@@ -59,12 +59,12 @@
     #define HAVE_EVENTS
 #endif
 #if defined(WITH_LOGGING)
-    #if defined(WITH_LOGN)
-        #define HAVE_LOGN
-    #endif
     #define HAVE_LOGGING
     #if defined(WITH_LOGO)
         #define HAVE_LOGO
+    #endif
+    #if defined(WITH_LOGN)
+        #define HAVE_LOGN
     #endif
     #if defined(WITH_LOGS)
         #define HAVE_LOGS
