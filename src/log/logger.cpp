@@ -20,7 +20,6 @@
 
 #include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/log/event.hpp>
 #include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/timer.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -90,7 +89,7 @@ void logger::do_stop(const code& ec, time_t zulu, const std::string& message,
 
     // Subscriber asserts if stopped with a success code.
     message_subscriber_.stop(ec, level, zulu, message);
-    event_subscriber_.stop(ec, event_t::stop, zero, {});
+    event_subscriber_.stop(ec, {}, {}, {});
 
     // Stop threadpool keep-alive, all work must self-terminate to affect join.
     pool_.stop();
@@ -139,19 +138,25 @@ void logger::do_subscribe_messages(const message_notifier& handler) NOEXCEPT
 // events
 // ----------------------------------------------------------------------------
 
-void logger::fire(uint8_t event, size_t count) const NOEXCEPT
+void logger::span(uint8_t event, const time& started) const NOEXCEPT
+{
+    // value parameter is time span in nanoseconds.
+    fire(event, (now() - started).count());
+}
+
+void logger::fire(uint8_t event, uint64_t value) const NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&logger::do_notify_event,
-            this, event, count, fine_clock::now()));
+            this, event, value, fine_clock::now()));
 }
 
 // private
-void logger::do_notify_event(uint8_t event, size_t count,
-    const time_point& point) const NOEXCEPT
+void logger::do_notify_event(uint8_t event, uint64_t value,
+    const time& point) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    event_subscriber_.notify(error::success, event, count, point);
+    event_subscriber_.notify(error::success, event, value, point);
 }
 
 void logger::subscribe_events(event_notifier&& handler) NOEXCEPT

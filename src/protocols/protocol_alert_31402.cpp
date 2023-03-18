@@ -39,7 +39,7 @@ using namespace std::placeholders;
 protocol_alert_31402::protocol_alert_31402(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    tracker<protocol_alert_31402>(session.log())
+    tracker<protocol_alert_31402>(session.log)
 {
 }
 

@@ -43,7 +43,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_seed::session_seed(p2p& network, uint64_t identifier) NOEXCEPT
-  : session(network, identifier), tracker<session_seed>(network.log())
+  : session(network, identifier), tracker<session_seed>(network.log)
 {
 }
 
@@ -212,7 +212,7 @@ void session_seed::attach_handshake(const channel::ptr& channel,
 }
 
 void session_seed::handle_channel_start(const code& ec,
-    const channel::ptr& channel) NOEXCEPT
+    const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -252,7 +252,7 @@ void session_seed::attach_protocols(const channel::ptr& channel) NOEXCEPT
 }
 
 void session_seed::handle_channel_stop(const code& LOG_ONLY(ec),
-    const channel::ptr& channel, const race::ptr& racer) NOEXCEPT
+    const channel::ptr& LOG_ONLY(channel), const race::ptr& racer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     LOGN("Seed stop [" << channel->authority() << "] " << ec.message());

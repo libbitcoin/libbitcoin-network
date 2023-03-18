@@ -44,7 +44,7 @@ protocol_address_in_31402::protocol_address_in_31402(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     outbound_(!channel->inbound()),
-    tracker<protocol_address_in_31402>(session.log())
+    tracker<protocol_address_in_31402>(session.log)
 {
 }
 

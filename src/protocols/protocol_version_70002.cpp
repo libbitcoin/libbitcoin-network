@@ -53,7 +53,7 @@ protocol_version_70002::protocol_version_70002(session& session,
     uint64_t maximum_services, bool relay) NOEXCEPT
   : protocol_version_70001(session, channel, minimum_services,
       maximum_services, relay),
-    tracker<protocol_version_70002>(session.log())
+    tracker<protocol_version_70002>(session.log)
 {
 }
 

@@ -40,7 +40,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_inbound::session_inbound(p2p& network, uint64_t identifier) NOEXCEPT
-  : session(network, identifier), tracker<session_inbound>(network.log())
+  : session(network, identifier), tracker<session_inbound>(network.log)
 {
 }
 
@@ -75,11 +75,8 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    const auto binds = settings().binds.size();
-    const auto peers = settings().inbound_connections;
-
-    LOGN("Accepting " << peers << " connections on " << binds
-        << " bindings.");
+    LOGN("Accepting " << settings().inbound_connections << " connections on "
+        << settings().binds.size() << " bindings.");
 
     for (const auto& bind: settings().binds)
     {

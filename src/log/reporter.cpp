@@ -24,19 +24,19 @@
 namespace libbitcoin {
 namespace network {
 
-reporter::reporter(const logger& log) NOEXCEPT
-  : log_(log)
+reporter::reporter(const logger& logger) NOEXCEPT
+  : log(logger)
 {
-}
-
-const logger& reporter::log() const NOEXCEPT
-{
-    return log_;
 }
 
 void reporter::fire(uint8_t event, size_t count) const NOEXCEPT
 {
-    log_.fire(event, count);
+    log.fire(event, count);
+}
+
+void reporter::span(uint8_t event, const logger::time& started) const NOEXCEPT
+{
+    log.span(event, started);
 }
 
 } // namespace network

@@ -60,9 +60,9 @@ protocol_version_31402::protocol_version_31402(session& session,
     minimum_services_(minimum_services),
     maximum_services_(maximum_services),
     invalid_services_(session.settings().invalid_services),
-    timer_(std::make_shared<deadline>(session.log(), channel->strand(),
+    timer_(std::make_shared<deadline>(session.log, channel->strand(),
         session.settings().channel_handshake())),
-    tracker<protocol_version_31402>(session.log())
+    tracker<protocol_version_31402>(session.log)
 {
 }
 
