@@ -41,7 +41,7 @@ using namespace std::placeholders;
 protocol::protocol(session& session, const channel::ptr& channel) NOEXCEPT
   : channel_(channel),
     session_(session),
-    reporter(session.log())
+    reporter(session.log)
 {
 }
 

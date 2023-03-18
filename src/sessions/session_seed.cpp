@@ -43,7 +43,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_seed::session_seed(p2p& network, uint64_t identifier) NOEXCEPT
-  : session(network, identifier), tracker<session_seed>(network.log())
+  : session(network, identifier), tracker<session_seed>(network.log)
 {
 }
 

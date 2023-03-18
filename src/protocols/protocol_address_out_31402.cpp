@@ -41,7 +41,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 protocol_address_out_31402::protocol_address_out_31402(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    tracker<protocol_address_out_31402>(session.log())
+    tracker<protocol_address_out_31402>(session.log)
 {
 }
 

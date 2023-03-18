@@ -103,6 +103,9 @@ public:
     /// Fire event with optional value, recorded with current time.
     void fire(uint8_t event, uint64_t value=zero) const NOEXCEPT;
 
+    /// Fire event with nanosecond duration value, recorded with current time.
+    void span(uint8_t event, const time& started) const NOEXCEPT;
+
     /// If stopped, handler is invoked with error::subscriber_stopped/defaults
     /// and dropped. Otherwise it is held until stop/drop. False if failed.
     void subscribe_messages(message_notifier&& handler) NOEXCEPT;

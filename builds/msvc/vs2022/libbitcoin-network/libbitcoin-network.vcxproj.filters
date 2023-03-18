@@ -377,9 +377,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\capture.hpp">
       <Filter>include\bitcoin\network\log</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\log\event.hpp">
-      <Filter>include\bitcoin\network\log</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\levels.hpp">
       <Filter>include\bitcoin\network\log</Filter>
     </ClInclude>

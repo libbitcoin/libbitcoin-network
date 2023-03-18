@@ -263,7 +263,6 @@ include_bitcoin_network_impl_async_HEADERS = \
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \
     include/bitcoin/network/log/capture.hpp \
-    include/bitcoin/network/log/event.hpp \
     include/bitcoin/network/log/levels.hpp \
     include/bitcoin/network/log/log.hpp \
     include/bitcoin/network/log/logger.hpp \

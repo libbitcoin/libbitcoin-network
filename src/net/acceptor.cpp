@@ -151,7 +151,7 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
     }
 
     // Create the socket.
-    const auto socket = std::make_shared<network::socket>(log(), service_);
+    const auto socket = std::make_shared<network::socket>(log, service_);
 
     // Posts handle_accept to the acceptor's strand.
     // Establishes a socket connection by waiting on the socket.

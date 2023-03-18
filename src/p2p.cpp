@@ -64,13 +64,13 @@ p2p::~p2p() NOEXCEPT
 
 acceptor::ptr p2p::create_acceptor() NOEXCEPT
 {
-    return std::make_shared<acceptor>(log(), strand(), service(),
+    return std::make_shared<acceptor>(log, strand(), service(),
         network_settings());
 }
 
 connector::ptr p2p::create_connector() NOEXCEPT
 {
-    return std::make_shared<connector>(log(), strand(), service(),
+    return std::make_shared<connector>(log, strand(), service(),
         network_settings());
 }
 

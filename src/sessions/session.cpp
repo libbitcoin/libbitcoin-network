@@ -50,7 +50,7 @@ session::session(p2p& network, uint64_t identifier) NOEXCEPT
     broadcaster_(network.broadcaster_),
     identifier_(identifier),
     stop_subscriber_(network.strand()),
-    reporter(network.log())
+    reporter(network.log)
 {
 }
 
@@ -357,7 +357,7 @@ void session::defer(const steady_clock::duration& timeout,
     }
 
     const auto key = create_key();
-    const auto timer = std::make_shared<deadline>(log(), network_.strand());
+    const auto timer = std::make_shared<deadline>(log, network_.strand());
 
     timer->start(
         BIND3(handle_timer, _1, key, std::move(handler)), timeout);
@@ -447,7 +447,7 @@ channel::ptr session::create_channel(const socket::ptr& socket,
 
     // Channel id must be created using create_key().
     const auto id = create_key();
-    return std::make_shared<channel>(log(), socket, settings(), id, quiet);
+    return std::make_shared<channel>(log, socket, settings(), id, quiet);
 }
 
 // At one object/session/ns, this overflows in ~585 years (and handled).

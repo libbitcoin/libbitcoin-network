@@ -51,7 +51,7 @@ proxy::proxy(const socket::ptr& socket) NOEXCEPT
   : socket_(socket),
     stop_subscriber_(socket->strand()),
     distributor_(socket->strand()),
-    reporter(socket->log())
+    reporter(socket->log)
 {
 }
 

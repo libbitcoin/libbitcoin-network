@@ -42,7 +42,7 @@ protocol_ping_60001::protocol_ping_60001(session& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_ping_31402(session, channel),
     nonce_(received),
-    tracker<protocol_ping_60001>(session.log())
+    tracker<protocol_ping_60001>(session.log)
 {
 }
 

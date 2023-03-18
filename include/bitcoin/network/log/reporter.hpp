@@ -25,19 +25,17 @@
 
 namespace libbitcoin {
 namespace network {
-
+    
+/// Thread safe loggable base class.
 class BCT_API reporter
 {
 protected:
-    reporter(const logger& log) NOEXCEPT;
+    reporter(const logger& logger) NOEXCEPT;
 
 public:
-    const logger& log() const NOEXCEPT;
+    const logger& log;
     void fire(uint8_t event, size_t count=zero) const NOEXCEPT;
-
-private:
-    // This is thread safe.
-    const logger& log_;
+    void span(uint8_t event, const logger::time& started) const NOEXCEPT;
 };
 
 } // namespace network

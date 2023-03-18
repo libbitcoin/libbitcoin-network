@@ -20,7 +20,6 @@
 
 #include <utility>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/log/event.hpp>
 #include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/timer.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -90,7 +89,7 @@ void logger::do_stop(const code& ec, time_t zulu, const std::string& message,
 
     // Subscriber asserts if stopped with a success code.
     message_subscriber_.stop(ec, level, zulu, message);
-    event_subscriber_.stop(ec, events::stop, zero, {});
+    event_subscriber_.stop(ec, {}, {}, {});
 
     // Stop threadpool keep-alive, all work must self-terminate to affect join.
     pool_.stop();
@@ -138,6 +137,12 @@ void logger::do_subscribe_messages(const message_notifier& handler) NOEXCEPT
 
 // events
 // ----------------------------------------------------------------------------
+
+void logger::span(uint8_t event, const time& started) const NOEXCEPT
+{
+    // value parameter is time span in nanoseconds.
+    fire(event, (now() - started).count());
+}
 
 void logger::fire(uint8_t event, uint64_t value) const NOEXCEPT
 {

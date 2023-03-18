@@ -121,7 +121,7 @@ public:
     // Inject mock channel.
     void accept(socket_handler&& handler) NOEXCEPT override
     {
-        const auto socket = std::make_shared<network::socket>(log(), service_);
+        const auto socket = std::make_shared<network::socket>(log, service_);
 
         // Must be asynchronous or is an infinite recursion.
         // This error code will set the re-listener timer and channel pointer is ignored.
@@ -163,7 +163,7 @@ public:
     void start(const std::string&, uint16_t, const config::address&,
         socket_handler&& handler) NOEXCEPT override
     {
-        const auto socket = std::make_shared<network::socket>(log(), service_);
+        const auto socket = std::make_shared<network::socket>(log, service_);
         handler(error::success, socket);
     }
 
@@ -181,14 +181,14 @@ public:
     // Create mock acceptor to inject mock channel.
     acceptor::ptr create_acceptor() NOEXCEPT override
     {
-        return std::make_shared<mock_acceptor>(log(), strand(), service(),
+        return std::make_shared<mock_acceptor>(log, strand(), service(),
             network_settings());
     }
 
     // Create mock connector to inject mock channel.
     connector::ptr create_connector() NOEXCEPT override
     {
-        return std::make_shared<mock_connector>(log(), strand(), service(),
+        return std::make_shared<mock_connector>(log, strand(), service(),
             network_settings());
     }
 };

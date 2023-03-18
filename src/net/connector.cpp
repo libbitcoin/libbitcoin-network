@@ -111,7 +111,7 @@ void connector::start(const std::string& hostname, uint16_t port,
 
     // Create a socket and shared finish context.
     const auto finish = std::make_shared<bool>(false);
-    const auto socket = std::make_shared<network::socket>(log(), service_,
+    const auto socket = std::make_shared<network::socket>(log, service_,
         host);
 
     // Posts handle_timer to strand.

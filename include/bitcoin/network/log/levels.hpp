@@ -41,22 +41,12 @@ enum : uint8_t
     quit         // Quitting
 };
 
-#if defined(HAVE_EVENTS)
-    #define FIRE_ONLY(name) name
-    #define FIRE(type) fire(type)
-    #define COUNT(type, count) fire(type, count)
-#else
-    #define FIRE_ONLY(name)
-    #define FIRE(type)
-    #define COUNT(type, count)
-#endif
-
 // LOG_ONLY() is insufficient for individual disablement.
 #if defined(HAVE_LOGGING)
     #define LOG_ONLY(name) name
-    #define LOG(level, message) \
+    #define LOG(level_, message) \
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
-        log().write(levels::level) << message << std::endl; \
+        log.write(levels::level_) << message << std::endl; \
         BC_POP_WARNING()
 #else
     #define LOG_ONLY(name)

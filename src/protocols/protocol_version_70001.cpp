@@ -50,7 +50,7 @@ protocol_version_70001::protocol_version_70001(session& session,
   : protocol_version_31402(session, channel, minimum_services,
       maximum_services),
     relay_(relay),
-    tracker<protocol_version_70001>(session.log())
+    tracker<protocol_version_70001>(session.log)
 {
 }
 
