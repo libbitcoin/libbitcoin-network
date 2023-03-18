@@ -42,9 +42,12 @@ public:
     typedef unsubscriber<uint8_t, time_t, const std::string&> message_subscriber;
     typedef message_subscriber::handler message_notifier;
 
-    using time_point = fine_clock::time_point;
-    typedef unsubscriber<uint8_t, uint64_t, const time_point&> event_subscriber;
+    using time = fine_clock::time_point;
+    typedef unsubscriber<uint8_t, uint64_t, const time&> event_subscriber;
     typedef event_subscriber::handler event_notifier;
+
+    /// Use to initialize timer events.
+    static time now() NOEXCEPT { return fine_clock::now(); }
 
     /// Streaming log writer (std::ostringstream), not thread safe.
     class writer final
@@ -122,7 +125,7 @@ private:
 
     void do_subscribe_events(const event_notifier& handler) NOEXCEPT;
     void do_notify_event(uint8_t event, uint64_t value,
-        const time_point& span) const NOEXCEPT;
+        const time& point) const NOEXCEPT;
 
     void do_stop(const code& ec, time_t zulu, const std::string& message,
         uint8_t level) NOEXCEPT;

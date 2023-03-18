@@ -148,7 +148,7 @@ void logger::fire(uint8_t event, uint64_t value) const NOEXCEPT
 
 // private
 void logger::do_notify_event(uint8_t event, uint64_t value,
-    const time_point& point) const NOEXCEPT
+    const time& point) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     event_subscriber_.notify(error::success, event, value, point);
