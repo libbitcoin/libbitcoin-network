@@ -139,7 +139,7 @@ enum : uint8_t
 #endif
 
 
-} // namespace event_t
+} // namespace levels
 } // namespace network
 } // namespace libbitcoin
 

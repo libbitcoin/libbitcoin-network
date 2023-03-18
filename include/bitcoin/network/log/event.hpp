@@ -24,11 +24,10 @@
 
 namespace libbitcoin {
 namespace network {
-namespace event_t {
-
-// Use event_t namespace to prevent pollution of network namesapce.
+namespace events {
+    
 // Could use class enum, but we want simple conversion to uint8_t.
-enum events : uint8_t
+enum : uint8_t
 {
     stop,
     outbound1,
@@ -36,7 +35,7 @@ enum events : uint8_t
     outbound3
 };
 
-} // namespace event_t
+} // namespace events
 } // namespace network
 } // namespace libbitcoin
 

@@ -147,7 +147,7 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     const connector::ptr& connector) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    ////COUNT(event_t::outbound1, key);
+    ////COUNT(events::outbound1, key);
 
     if (ec)
     {
@@ -172,7 +172,7 @@ void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
     object_key key, const race::ptr& racer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    ////COUNT(event_t::outbound2, key);
+    ////COUNT(events::outbound2, key);
 
     // Winner in quality race is first to pass success.
     if (racer->finish(ec, socket))
@@ -191,7 +191,7 @@ void session_outbound::handle_connect(const code& ec,
     const socket::ptr& socket, object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    ////COUNT(event_t::outbound3, key);
+    ////COUNT(events::outbound3, key);
 
     // Unregister connectors, in case there was no winner.
     notify(key);
