@@ -39,8 +39,8 @@ using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
-// Dump up to 1k of payload as hex in order to diagnose failure.
-static constexpr size_t invalid_payload_dump_size = 1024;
+// Dump up to this size of payload as hex in order to diagnose failure.
+static constexpr size_t invalid_payload_dump_size = chain::max_block_size;
 static constexpr uint32_t http_magic  = 0x20544547;
 static constexpr uint32_t https_magic = 0x02010316;
 
