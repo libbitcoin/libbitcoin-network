@@ -95,11 +95,13 @@ get_blocks get_blocks::deserialize(uint32_t version, reader& source) NOEXCEPT
 
     const auto read_start_hashes = [](reader& source) NOEXCEPT
     {
-        const auto size = source.read_size(max_get_blocks);
-        hashes start_hashes;
-        start_hashes.reserve(size);
+        // Count of hashes is redundant with the message size.
+        const auto count = source.read_size(max_get_blocks);
 
-        for (size_t hash = 0; hash < size; ++hash)
+        hashes start_hashes;
+        start_hashes.reserve(count);
+
+        for (size_t hash = 0; hash < count; ++hash)
             start_hashes.push_back(source.read_hash());
 
         return start_hashes;
@@ -124,6 +126,8 @@ void get_blocks::serialize(uint32_t version, writer& sink) const NOEXCEPT
     // Write version vs. member protocol_version.
     ////sink.write_4_bytes_little_endian(protocol_version);
     sink.write_4_bytes_little_endian(version);
+
+    // Count of hashes is redundant with the message size.
     sink.write_variable(start_hashes.size());
 
     for (const auto& start_hash: start_hashes)

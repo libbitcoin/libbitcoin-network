@@ -55,11 +55,13 @@ get_headers get_headers::deserialize(uint32_t version, reader& source) NOEXCEPT
     // Protocol version is stoopid (and unused).
     source.skip_bytes(sizeof(uint32_t));
 
-    const auto size = source.read_size(max_get_blocks);
-    get_headers get;
-    get.start_hashes.reserve(size);
+    // Count of hashes is redundant with the message size.
+    const auto count = source.read_size(max_get_headers);
 
-    for (size_t hash = 0; hash < size; ++hash)
+    get_headers get;
+    get.start_hashes.reserve(count);
+
+    for (size_t hash = 0; hash < count; ++hash)
         get.start_hashes.push_back(source.read_hash());
 
     get.stop_hash = source.read_hash();
