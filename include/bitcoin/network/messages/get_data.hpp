@@ -23,14 +23,14 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
-#include <bitcoin/network/messages/inventory.hpp>
+#include <bitcoin/network/messages/inventory_item.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
 
+/// see also inventory.
 struct BCT_API get_data
-  : public inventory
 {
     typedef std::shared_ptr<const get_data> cptr;
 
@@ -44,15 +44,17 @@ struct BCT_API get_data
     static get_data deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
 
-    ////bool serialize(uint32_t version,
-    ////    const system::data_slab& data) const NOEXCEPT;
-    ////void serialize(uint32_t version,
-    ////    system::writer& sink) const NOEXCEPT;
+    bool serialize(uint32_t version,
+        const system::data_slab& data) const NOEXCEPT;
+    void serialize(uint32_t version,
+        system::writer& sink) const NOEXCEPT;
 
-    ////size_t size(uint32_t version) const NOEXCEPT;
+    size_t size(uint32_t version) const NOEXCEPT;
 
     /// Convert message types to witness types.
     void to_witness() NOEXCEPT;
+
+    inventory_items items;
 };
 
 } // namespace messages

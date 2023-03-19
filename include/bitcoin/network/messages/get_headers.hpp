@@ -23,15 +23,15 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
-#include <bitcoin/network/messages/get_blocks.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
 
+/// see also get_blocks.
 struct BCT_API get_headers
-  : public get_blocks
 {
+    typedef std::vector<size_t> indexes;
     typedef std::shared_ptr<const get_headers> cptr;
 
     static const identifier id;
@@ -39,17 +39,24 @@ struct BCT_API get_headers
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
+    static size_t locator_size(size_t top) NOEXCEPT;
+    static indexes heights(size_t top) NOEXCEPT;
+
     static cptr deserialize(uint32_t version,
         const system::data_chunk& data) NOEXCEPT;
     static get_headers deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
 
-    ////bool serialize(uint32_t version,
-    ////    const system::data_slab& data) const NOEXCEPT;
-    ////void serialize(uint32_t version,
-    ////    system::writer& sink) const NOEXCEPT;
+    bool serialize(uint32_t version,
+        const system::data_slab& data) const NOEXCEPT;
+    void serialize(uint32_t version,
+        system::writer& sink) const NOEXCEPT;
 
-    ////size_t size(uint32_t version) const NOEXCEPT;
+    size_t size(uint32_t version) const NOEXCEPT;
+
+    ////uint32_t protocol_version;
+    system::hashes start_hashes{};
+    system::hash_digest stop_hash{};
 };
 
 } // namespace messages

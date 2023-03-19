@@ -37,7 +37,7 @@ const uint32_t get_blocks::version_maximum = level::maximum_protocol;
 
 // static
 // Predict the size of heights output.
-constexpr size_t get_blocks::locator_size(size_t top) NOEXCEPT
+size_t get_blocks::locator_size(size_t top) NOEXCEPT
 {
     auto size = zero, step = one;
 
@@ -46,15 +46,6 @@ constexpr size_t get_blocks::locator_size(size_t top) NOEXCEPT
             step = shift_left(step, one);
 
     return ++size;
-}
-
-// static
-typename get_blocks::cptr get_blocks::deserialize(uint32_t version,
-    const system::data_chunk& data) NOEXCEPT
-{
-    read::bytes::copy reader(data);
-    const auto message = to_shared(deserialize(version, reader));
-    return reader ? message : nullptr;
 }
 
 // static
@@ -80,14 +71,16 @@ get_blocks::indexes get_blocks::heights(size_t top) NOEXCEPT
     return heights;
 }
 
-bool get_blocks::serialize(uint32_t version,
-    const system::data_slab& data) const NOEXCEPT
+// static
+typename get_blocks::cptr get_blocks::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
 {
-    write::bytes::copy writer(data);
-    serialize(version, writer);
-    return writer;
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
 }
 
+// static
 get_blocks get_blocks::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
@@ -95,11 +88,13 @@ get_blocks get_blocks::deserialize(uint32_t version, reader& source) NOEXCEPT
 
     const auto read_start_hashes = [](reader& source) NOEXCEPT
     {
-        const auto size = source.read_size(max_get_blocks);
-        hashes start_hashes;
-        start_hashes.reserve(size);
+        // Count of hashes is redundant with the message size.
+        const auto count = source.read_size(max_get_blocks);
 
-        for (size_t hash = 0; hash < size; ++hash)
+        hashes start_hashes;
+        start_hashes.reserve(count);
+
+        for (size_t hash = 0; hash < count; ++hash)
             start_hashes.push_back(source.read_hash());
 
         return start_hashes;
@@ -116,6 +111,14 @@ get_blocks get_blocks::deserialize(uint32_t version, reader& source) NOEXCEPT
     };
 }
 
+bool get_blocks::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
+}
+
 void get_blocks::serialize(uint32_t version, writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
@@ -124,6 +127,8 @@ void get_blocks::serialize(uint32_t version, writer& sink) const NOEXCEPT
     // Write version vs. member protocol_version.
     ////sink.write_4_bytes_little_endian(protocol_version);
     sink.write_4_bytes_little_endian(version);
+
+    // Count of hashes is redundant with the message size.
     sink.write_variable(start_hashes.size());
 
     for (const auto& start_hash: start_hashes)

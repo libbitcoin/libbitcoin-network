@@ -63,6 +63,33 @@ not_found not_found::deserialize(uint32_t version, reader& source) NOEXCEPT
     return lost;
 }
 
+bool not_found::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
+}
+
+void not_found::serialize(uint32_t version, writer& sink) const NOEXCEPT
+{
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
+
+    sink.write_variable(items.size());
+
+    for (const auto& item: items)
+        item.serialize(version, sink);
+
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
+}
+
+size_t not_found::size(uint32_t version) const NOEXCEPT
+{
+    return variable_size(items.size()) +
+        (items.size() * inventory_item::size(version));
+}
+
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin
