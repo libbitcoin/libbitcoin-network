@@ -68,6 +68,9 @@ struct BCT_API inventory_item
     system::hash_digest hash;
 };
 
+bool operator==(const inventory_item& left, const inventory_item& right) NOEXCEPT;
+bool operator!=(const inventory_item& left, const inventory_item& right) NOEXCEPT;
+
 typedef std::vector<inventory_item> inventory_items;
 
 } // namespace messages

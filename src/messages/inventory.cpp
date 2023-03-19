@@ -85,7 +85,7 @@ inventory inventory::deserialize(uint32_t version, reader& source) NOEXCEPT
 
     const auto size = source.read_size(max_inventory);
     inventory_items items;
-    items.resize(size);
+    items.reserve(size);
 
     for (size_t item = 0; item < size; ++item)
         items.push_back(inventory_item::deserialize(version, source));

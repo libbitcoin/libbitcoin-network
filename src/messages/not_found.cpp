@@ -55,7 +55,7 @@ not_found not_found::deserialize(uint32_t version, reader& source) NOEXCEPT
 
     const auto size = source.read_size(max_inventory);
     not_found lost;
-    lost.items.resize(size);
+    lost.items.reserve(size);
 
     for (size_t item = 0; item < size; ++item)
         lost.items.push_back(inventory_item::deserialize(version, source));

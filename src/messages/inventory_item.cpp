@@ -120,6 +120,17 @@ void inventory_item::to_witness() NOEXCEPT
             to_number(type_id::witness)));
 }
 
+bool operator==(const inventory_item& left, const inventory_item& right) NOEXCEPT
+{
+    return left.type == right.type
+        && left.hash == right.hash;
+}
+
+bool operator!=(const inventory_item& left, const inventory_item& right) NOEXCEPT
+{
+    return !(left == right);
+}
+
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin
