@@ -22,6 +22,7 @@
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
 #include <bitcoin/network/messages/enums/magic_numbers.hpp>
+#include <bitcoin/network/messages/get_blocks.hpp>
 #include <bitcoin/network/messages/message.hpp>
 
 namespace libbitcoin {
@@ -36,6 +37,18 @@ const uint32_t get_headers::version_minimum = level::headers_protocol;
 const uint32_t get_headers::version_maximum = level::maximum_protocol;
 
 // static
+size_t get_headers::locator_size(size_t top) NOEXCEPT
+{
+    return get_blocks::locator_size(top);
+}
+
+// static
+get_headers::indexes get_headers::heights(size_t top) NOEXCEPT
+{
+    return get_blocks::heights(top);
+}
+
+// static
 typename get_headers::cptr get_headers::deserialize(uint32_t version,
     const system::data_chunk& data) NOEXCEPT
 {
@@ -45,8 +58,6 @@ typename get_headers::cptr get_headers::deserialize(uint32_t version,
 }
 
 // static
-// Reimplements base class read to prevent a list move operation as well
-// as the need to implement default, base move, and base copy constructors.
 get_headers get_headers::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
@@ -66,6 +77,42 @@ get_headers get_headers::deserialize(uint32_t version, reader& source) NOEXCEPT
 
     get.stop_hash = source.read_hash();
     return get;
+}
+
+bool get_headers::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
+}
+
+void get_headers::serialize(uint32_t version, writer& sink) const NOEXCEPT
+{
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
+
+    // Write version vs. member protocol_version.
+    ////sink.write_4_bytes_little_endian(protocol_version);
+    sink.write_4_bytes_little_endian(version);
+
+    // Count of hashes is redundant with the message size.
+    sink.write_variable(start_hashes.size());
+
+    for (const auto& start_hash : start_hashes)
+        sink.write_bytes(start_hash);
+
+    sink.write_bytes(stop_hash);
+
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
+}
+
+size_t get_headers::size(uint32_t) const NOEXCEPT
+{
+    return sizeof(uint32_t) +
+        hash_size +
+        variable_size(start_hashes.size()) +
+            (hash_size * start_hashes.size());
 }
 
 } // namespace messages

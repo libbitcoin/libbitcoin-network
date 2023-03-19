@@ -37,7 +37,7 @@ const uint32_t get_blocks::version_maximum = level::maximum_protocol;
 
 // static
 // Predict the size of heights output.
-constexpr size_t get_blocks::locator_size(size_t top) NOEXCEPT
+size_t get_blocks::locator_size(size_t top) NOEXCEPT
 {
     auto size = zero, step = one;
 
@@ -46,15 +46,6 @@ constexpr size_t get_blocks::locator_size(size_t top) NOEXCEPT
             step = shift_left(step, one);
 
     return ++size;
-}
-
-// static
-typename get_blocks::cptr get_blocks::deserialize(uint32_t version,
-    const system::data_chunk& data) NOEXCEPT
-{
-    read::bytes::copy reader(data);
-    const auto message = to_shared(deserialize(version, reader));
-    return reader ? message : nullptr;
 }
 
 // static
@@ -80,14 +71,16 @@ get_blocks::indexes get_blocks::heights(size_t top) NOEXCEPT
     return heights;
 }
 
-bool get_blocks::serialize(uint32_t version,
-    const system::data_slab& data) const NOEXCEPT
+// static
+typename get_blocks::cptr get_blocks::deserialize(uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
 {
-    write::bytes::copy writer(data);
-    serialize(version, writer);
-    return writer;
+    read::bytes::copy reader(data);
+    const auto message = to_shared(deserialize(version, reader));
+    return reader ? message : nullptr;
 }
 
+// static
 get_blocks get_blocks::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
@@ -116,6 +109,14 @@ get_blocks get_blocks::deserialize(uint32_t version, reader& source) NOEXCEPT
         read_start_hashes(source),
         source.read_hash()
     };
+}
+
+bool get_blocks::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
 }
 
 void get_blocks::serialize(uint32_t version, writer& sink) const NOEXCEPT

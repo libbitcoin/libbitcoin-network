@@ -48,8 +48,6 @@ typename get_data::cptr get_data::deserialize(uint32_t version,
 }
 
 // static
-// Reimplements base class read to prevent a list move operation as well
-// as the need to implement default, base move, and base copy constructors.
 get_data get_data::deserialize(uint32_t version, reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
@@ -63,6 +61,33 @@ get_data get_data::deserialize(uint32_t version, reader& source) NOEXCEPT
         get.items.push_back(inventory_item::deserialize(version, source));
 
     return get;
+}
+
+bool get_data::serialize(uint32_t version,
+    const system::data_slab& data) const NOEXCEPT
+{
+    write::bytes::copy writer(data);
+    serialize(version, writer);
+    return writer;
+}
+
+void get_data::serialize(uint32_t version, writer& sink) const NOEXCEPT
+{
+    BC_DEBUG_ONLY(const auto bytes = size(version);)
+        BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
+
+        sink.write_variable(items.size());
+
+    for (const auto& item : items)
+        item.serialize(version, sink);
+
+    BC_ASSERT(sink && sink.get_write_position() - start == bytes);
+}
+
+size_t get_data::size(uint32_t version) const NOEXCEPT
+{
+    return variable_size(items.size()) +
+        (items.size() * inventory_item::size(version));
 }
 
 // TODO: add inventory factory witness parameter (once node is ready).
