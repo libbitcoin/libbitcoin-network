@@ -44,11 +44,31 @@ typename block::cptr block::deserialize(uint32_t version,
     if (!reader)
         return nullptr;
 
-    // TODO: cache hashes for all transactions as well,
-    // TODO: using transaction::desegregated_hash(data, size).
-    constexpr auto size = chain::header::serialized_size();
+    constexpr auto header_size = chain::header::serialized_size();
     const auto& header = message->block_ptr->header();
-    header.set_hash(bitcoin_hash(size, data.data()));
+    header.set_hash(bitcoin_hash(header_size, data.data()));
+    auto begin = std::next(data.data(), header_size);
+
+    for (const auto& tx: *message->block_ptr->transactions_ptr())
+    {
+        const auto true_size = tx->serialized_size(true);
+        ////tx->set_witness_hash(bitcoin_hash(true_size, begin));
+
+        // If segregated the hashes are distinct, cache both.
+        if (tx->is_segregated())
+        {
+            const auto end = std::next(begin, tx->serialized_size(false));
+            tx->set_hash(transaction::desegregated_hash({ begin, end }));
+        }
+        else
+        {
+            // Avoiding witness hash caching for now.
+            tx->set_hash(bitcoin_hash(true_size, begin));
+        }
+
+        std::advance(begin, true_size);
+    }
+
     return message;
 }
 

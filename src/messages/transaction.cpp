@@ -36,18 +36,18 @@ const uint32_t transaction::version_minimum = level::minimum_protocol;
 const uint32_t transaction::version_maximum = level::maximum_protocol;
 
 // Optimized non-witness hash derivation using witness-serialized tx.
-hash_digest transaction::desegregated_hash(const data_chunk& data,
-    size_t size) NOEXCEPT
+hash_digest transaction::desegregated_hash(const data_slice& data) NOEXCEPT
 {
     constexpr auto version = zero;
     constexpr auto preamble = sizeof(uint32_t) + two * sizeof(uint8_t);
     const auto locktime = data.size() - sizeof(uint32_t);
+    const auto puts = data.size() - sizeof(uint32_t);
     const auto start = data.data();
 
     hash_digest digest{};
     hash::sha256x2::copy sink(digest);
     sink.write_bytes(std::next(start, version), sizeof(uint32_t));
-    sink.write_bytes(std::next(start, preamble), size - sizeof(uint32_t));
+    sink.write_bytes(std::next(start, preamble), puts);
     sink.write_bytes(std::next(start, locktime), sizeof(uint32_t));
     sink.flush();
     return digest;
@@ -62,17 +62,22 @@ typename transaction::cptr transaction::deserialize(uint32_t version,
     if (!reader)
         return nullptr;
 
-    auto& tx = *message->transaction_ptr;
+    const auto& tx = *message->transaction_ptr;
+    ////tx.set_witness_hash(bitcoin_hash(data));
 
-    // Optimized witness hash derivation using witness-serialized tx.
-    // This will be non-witness if witness encoding is not enabled.
-    tx.set_witness_hash(bitcoin_hash(data));
+    // If segregated the hashes are distinct, cache both.
+    if (tx.is_segregated())
+    {
+        const auto begin = data.begin();
+        const auto end = std::next(begin, tx.serialized_size(false));
+        tx.set_hash(transaction::desegregated_hash({ begin, end }));
+    }
+    else
+    {
+        // Avoiding witness hash caching for now.
+        tx.set_hash(bitcoin_hash(data));
+    }
 
-    // Wintess hash is cached above, can be copied if not segregated.
-    tx.set_hash(tx.is_segregated() ? desegregated_hash(data,
-        tx.serialized_size(false)) : tx.hash(true));
-
-    // TODO: may not want to cache both hashes.
     return message;
 }
 

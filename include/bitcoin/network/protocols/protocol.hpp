@@ -236,6 +236,8 @@ private:
     subscribe_channel<CLASS, message>(&CLASS::method, p1, p2)
 #define SUBSCRIBE_CHANNEL3(message, method, p1, p2, p3) \
     subscribe_channel<CLASS, message>(&CLASS::method, p1, p2, p3)
+#define SUBSCRIBE_CHANNEL4(message, method, p1, p2, p3, p4) \
+    subscribe_channel<CLASS, message>(&CLASS::method, p1, p2, p3, p4)
 
 ////#define SUBSCRIBE_BROADCAST1(message, method, p1) \
 ////    subscribe_broadcast<CLASS, message>(&CLASS::method, p1)

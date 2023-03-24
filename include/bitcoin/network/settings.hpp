@@ -81,6 +81,7 @@ struct BCT_API settings
     virtual void initialize() NOEXCEPT;
 
     /// Helpers.
+    virtual bool witness_node() const NOEXCEPT;
     virtual bool inbound_enabled() const NOEXCEPT;
     virtual bool outbound_enabled() const NOEXCEPT;
     virtual bool advertise_enabled() const NOEXCEPT;

@@ -236,6 +236,19 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(instance.binds[0], bind0);
 }
 
+BOOST_AUTO_TEST_CASE(settings__witness_node__default__false)
+{
+    settings instance{};
+    BOOST_REQUIRE(!instance.witness_node());
+}
+
+BOOST_AUTO_TEST_CASE(settings__witness_node__node_witness__true)
+{
+    settings instance{};
+    instance.services_minimum = service::node_witness;
+    BOOST_REQUIRE(instance.witness_node());
+}
+
 BOOST_AUTO_TEST_CASE(settings__inbound_enabled__default__false)
 {
     settings instance{};

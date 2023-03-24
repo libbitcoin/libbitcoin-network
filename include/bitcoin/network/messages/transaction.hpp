@@ -39,7 +39,7 @@ struct BCT_API transaction
     static const uint32_t version_maximum;
 
     static system::hash_digest desegregated_hash(
-        const system::data_chunk& data, size_t size) NOEXCEPT;
+        const system::data_slice& data) NOEXCEPT;
 
     static cptr deserialize(uint32_t version, const system::data_chunk& data,
         bool witness=true) NOEXCEPT;
