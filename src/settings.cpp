@@ -125,6 +125,11 @@ void settings::initialize() NOEXCEPT
     friends = system::projection<config::authorities>(peers);
 }
 
+bool settings::witness_node() const NOEXCEPT
+{
+    return to_bool(services_minimum & service::node_witness);
+}
+
 bool settings::inbound_enabled() const NOEXCEPT
 {
     return to_bool(inbound_connections) && !binds.empty();
