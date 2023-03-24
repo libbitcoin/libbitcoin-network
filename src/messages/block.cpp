@@ -52,6 +52,7 @@ typename block::cptr block::deserialize(uint32_t version,
     auto coinbase = true;
     for (const auto& tx: *message->block_ptr->transactions_ptr())
     {
+        // TODO: consider having tx cache serialized sizes.
         const auto true_size = tx->serialized_size(true);
         ////tx->set_witness_hash(bitcoin_hash(true_size, begin));
 
