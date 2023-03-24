@@ -49,6 +49,7 @@ typename block::cptr block::deserialize(uint32_t version,
     header.set_hash(bitcoin_hash(header_size, data.data()));
     auto begin = std::next(data.data(), header_size);
 
+    auto coinbase = true;
     for (const auto& tx: *message->block_ptr->transactions_ptr())
     {
         const auto true_size = tx->serialized_size(true);
@@ -57,8 +58,12 @@ typename block::cptr block::deserialize(uint32_t version,
         // If segregated the hashes are distinct, cache both.
         if (tx->is_segregated())
         {
-            const auto end = std::next(begin, tx->serialized_size(false));
-            tx->set_hash(transaction::desegregated_hash({ begin, end }));
+            // Coinbase witness hash is null_hash, do not cache.
+            if (!coinbase)
+            {
+                const auto end = std::next(begin, tx->serialized_size(false));
+                tx->set_hash(transaction::desegregated_hash({ begin, end }));
+            }
         }
         else
         {
@@ -66,6 +71,7 @@ typename block::cptr block::deserialize(uint32_t version,
             tx->set_hash(bitcoin_hash(true_size, begin));
         }
 
+        coinbase = false;
         std::advance(begin, true_size);
     }
 
