@@ -52,7 +52,7 @@ struct BCT_API get_data
     size_t size(uint32_t version) const NOEXCEPT;
 
     /// Convert message types to witness types.
-    void to_witness() NOEXCEPT;
+    ////void to_witness() NOEXCEPT;
 
     inventory_items items;
 };

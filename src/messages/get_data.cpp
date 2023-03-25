@@ -90,17 +90,17 @@ size_t get_data::size(uint32_t version) const NOEXCEPT
         (items.size() * inventory_item::size(version));
 }
 
-// TODO: add inventory factory witness parameter (once node is ready).
-// Requires a non-const instance for this in-place efficiency.
-void get_data::to_witness() NOEXCEPT
-{
-    const auto convert = [](inventory_item& item) NOEXCEPT
-    {
-        item.to_witness();
-    };
-
-    std::for_each(items.begin(), items.end(), convert);
-}
+////// TODO: add inventory factory witness parameter (once node is ready).
+////// Requires a non-const instance for this in-place efficiency.
+////void get_data::to_witness() NOEXCEPT
+////{
+////    const auto convert = [](inventory_item& item) NOEXCEPT
+////    {
+////        item.to_witness();
+////    };
+////
+////    std::for_each(items.begin(), items.end(), convert);
+////}
 
 } // namespace messages
 } // namespace network
