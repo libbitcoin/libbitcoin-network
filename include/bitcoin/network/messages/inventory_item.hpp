@@ -36,16 +36,15 @@ struct BCT_API inventory_item
     {
         error = 0,
 
-        // Presumably not intended as flags at this time.
-        transaction = system::bit_right<uint32_t>(0),
-        block = system::bit_right<uint32_t>(1),
+        transaction    = system::bit_right<uint32_t>(0),
+        block          = system::bit_right<uint32_t>(1),
         filtered_block = block | transaction,
-        compact_block = system::bit_right<uint32_t>(2),
+        compact_block  = system::bit_right<uint32_t>(2),
 
-        witness = system::bit_right<uint32_t>(30),
-        witness_transaction = witness | transaction,
-        witness_block = witness | block,
-        reserved = witness | filtered_block
+        witness        = system::bit_right<uint32_t>(30),
+        witness_tx     = witness | transaction,
+        witness_block  = witness | block,
+        reserved       = witness | filtered_block
     };
 
     static type_id to_type(uint32_t value) NOEXCEPT;
@@ -62,7 +61,7 @@ struct BCT_API inventory_item
     bool is_witnessable_type() const NOEXCEPT;
 
     /// Convert message types to witness types.
-    void to_witness() NOEXCEPT;
+    ////void to_witness() NOEXCEPT;
 
     type_id type;
     system::hash_digest hash;

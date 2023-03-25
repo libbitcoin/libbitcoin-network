@@ -94,12 +94,8 @@ bool headers::serialize(uint32_t version,
     return writer;
 }
 
-void headers::serialize(uint32_t BC_DEBUG_ONLY(version),
-    writer& sink) const NOEXCEPT
+void headers::serialize(uint32_t, writer& sink) const NOEXCEPT
 {
-    BC_DEBUG_ONLY(const auto bytes = size(version);)
-    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
-
     sink.write_variable(header_ptrs.size());
 
     for (const auto& header: header_ptrs)
@@ -107,17 +103,14 @@ void headers::serialize(uint32_t BC_DEBUG_ONLY(version),
         header->to_data(sink);
         sink.write_byte(trail);
     }
-
-    BC_ASSERT(sink&& sink.get_write_position() - start == bytes);
 }
 
 size_t headers::size(uint32_t) const NOEXCEPT
 {
     return variable_size(header_ptrs.size()) +
-        (header_ptrs.size() * chain::header::serialized_size() + sizeof(trail));
+        (header_ptrs.size() * (chain::header::serialized_size() + sizeof(trail)));
 }
 
-// TODO: This would benefit from block hash store/return as pointer.
 bool headers::is_sequential() const NOEXCEPT
 {
     if (header_ptrs.empty())
@@ -136,7 +129,6 @@ bool headers::is_sequential() const NOEXCEPT
     return true;
 }
 
-// TODO: This would benefit from hashes as list of pointers.
 hashes headers::to_hashes() const NOEXCEPT
 {
     hashes out;
@@ -148,7 +140,6 @@ hashes headers::to_hashes() const NOEXCEPT
     return out;
 }
 
-// TODO: This would benefit from inventory_item hash pointers.
 inventory_items headers::to_inventory(inventory::type_id type) const NOEXCEPT
 {
     inventory_items out;
