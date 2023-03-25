@@ -78,7 +78,7 @@ void get_data::serialize(uint32_t version, writer& sink) const NOEXCEPT
 
         sink.write_variable(items.size());
 
-    for (const auto& item : items)
+    for (const auto& item: items)
         item.serialize(version, sink);
 
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);

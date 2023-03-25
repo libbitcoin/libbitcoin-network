@@ -51,8 +51,8 @@ std::string inventory_item::to_string(type_id inventory_type) NOEXCEPT
             return "filtered_block";
         case type_id::compact_block:
             return "compact_block";
-        case type_id::witness_transaction:
-            return "witness_transaction";
+        case type_id::witness_tx:
+            return "witness_tx";
         case type_id::witness_block:
             return "witness_block";
         case type_id::reserved:
@@ -101,7 +101,7 @@ bool inventory_item::is_block_type() const NOEXCEPT
 
 bool inventory_item::is_transaction_type() const NOEXCEPT
 {
-    return type == type_id::witness_transaction
+    return type == type_id::witness_tx
         || type == type_id::transaction;
 }
 
@@ -111,14 +111,13 @@ bool inventory_item::is_witnessable_type() const NOEXCEPT
         || type == type_id::transaction;
 }
 
-// Requires a non-const instance for this in-place efficiency.
-void inventory_item::to_witness() NOEXCEPT
-{
-    // TODO: allow class enumerations in bitwise functions.
-    if (is_witnessable_type())
-        type = to_type(bit_or(to_number(type),
-            to_number(type_id::witness)));
-}
+////// Requires a non-const instance.
+////void inventory_item::to_witness() NOEXCEPT
+////{
+////    // TODO: allow class enumerations in bitwise functions.
+////    if (is_witnessable_type())
+////        type = to_type(bit_or(to_number(type), to_number(type_id::witness)));
+////}
 
 bool operator==(const inventory_item& left, const inventory_item& right) NOEXCEPT
 {
