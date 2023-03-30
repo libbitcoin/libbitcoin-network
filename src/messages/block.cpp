@@ -48,6 +48,7 @@ typename block::cptr block::deserialize(uint32_t version,
     const auto& header = message->block_ptr->header();
     header.set_hash(bitcoin_hash(header_size, data.data()));
     auto begin = std::next(data.data(), header_size);
+    begin += size_variable(*begin);
 
     auto coinbase = true;
     for (const auto& tx: *message->block_ptr->transactions_ptr())
