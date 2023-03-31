@@ -55,12 +55,11 @@ typename block::cptr block::deserialize(uint32_t version,
     {
         // TODO: consider having tx cache serialized sizes.
         const auto true_size = tx->serialized_size(true);
-        ////tx->set_witness_hash(bitcoin_hash(true_size, begin));
+        tx->set_witness_hash(bitcoin_hash(true_size, begin));
 
         // If segregated the hashes are distinct, cache both.
         if (tx->is_segregated())
         {
-            // Coinbase witness hash is null_hash, do not cache.
             if (!coinbase)
             {
                 const auto end = std::next(begin, tx->serialized_size(false));
@@ -69,7 +68,6 @@ typename block::cptr block::deserialize(uint32_t version,
         }
         else
         {
-            // Avoiding witness hash caching for now.
             tx->set_hash(bitcoin_hash(true_size, begin));
         }
 

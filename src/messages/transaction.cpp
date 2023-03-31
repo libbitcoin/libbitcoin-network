@@ -63,7 +63,7 @@ typename transaction::cptr transaction::deserialize(uint32_t version,
         return nullptr;
 
     const auto& tx = *message->transaction_ptr;
-    ////tx.set_witness_hash(bitcoin_hash(data));
+    tx.set_witness_hash(bitcoin_hash(data));
 
     // If segregated the hashes are distinct, cache both.
     if (tx.is_segregated())
@@ -74,7 +74,6 @@ typename transaction::cptr transaction::deserialize(uint32_t version,
     }
     else
     {
-        // Avoiding witness hash caching for now.
         tx.set_hash(bitcoin_hash(data));
     }
 
