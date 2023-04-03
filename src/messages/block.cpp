@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/messages/block.hpp>
 
+#include <iterator>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
@@ -44,35 +45,39 @@ typename block::cptr block::deserialize(uint32_t version,
     if (!reader)
         return nullptr;
 
+    // Cache header hash.
     constexpr auto header_size = chain::header::serialized_size();
     const auto& header = message->block_ptr->header();
     header.set_hash(bitcoin_hash(header_size, data.data()));
-    auto begin = std::next(data.data(), header_size);
-    begin += size_variable(*begin);
 
+    // Skip transaction count, guarded by read above.
+    BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
+    auto start = std::next(data.data(), header_size);
+    std::advance(start, size_variable(*start));
+    BC_POP_WARNING()
+
+    // Cache transaction hashes.
     auto coinbase = true;
     for (const auto& tx: *message->block_ptr->transactions_ptr())
     {
-        // TODO: consider having tx cache serialized sizes.
-        const auto true_size = tx->serialized_size(true);
-        tx->set_witness_hash(bitcoin_hash(true_size, begin));
+        const auto full = tx->serialized_size(true);
 
-        // If segregated the hashes are distinct, cache both.
+        // If !witness then wire txs cannot have been segregated.
         if (tx->is_segregated())
         {
+            tx->set_hash(transaction::desegregated_hash(full,
+                tx->serialized_size(false), start));
+
             if (!coinbase)
-            {
-                const auto end = std::next(begin, tx->serialized_size(false));
-                tx->set_hash(transaction::desegregated_hash({ begin, end }));
-            }
+                tx->set_witness_hash(bitcoin_hash(full, start));
         }
         else
         {
-            tx->set_hash(bitcoin_hash(true_size, begin));
+            tx->set_hash(bitcoin_hash(full, start));
         }
 
         coinbase = false;
-        std::advance(begin, true_size);
+        std::advance(start, full);
     }
 
     return message;
