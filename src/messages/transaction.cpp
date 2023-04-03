@@ -36,19 +36,21 @@ const uint32_t transaction::version_minimum = level::minimum_protocol;
 const uint32_t transaction::version_maximum = level::maximum_protocol;
 
 // Optimized non-witness hash derivation using witness-serialized tx.
-hash_digest transaction::desegregated_hash(const data_slice& data) NOEXCEPT
+hash_digest transaction::desegregated_hash(size_t witnessed,
+    size_t unwitnessed, const uint8_t* data) NOEXCEPT
 {
-    constexpr auto version = zero;
+    BC_ASSERT_MSG(!is_null(data), "nullptr");
+
+    using namespace system;
     constexpr auto preamble = sizeof(uint32_t) + two * sizeof(uint8_t);
-    const auto locktime = data.size() - sizeof(uint32_t);
-    const auto puts = data.size() - sizeof(uint32_t);
-    const auto start = data.data();
+    const auto puts = floored_subtract(unwitnessed, two * sizeof(uint32_t));
+    const auto locktime = floored_subtract(witnessed, sizeof(uint32_t));
 
     hash_digest digest{};
     hash::sha256x2::copy sink(digest);
-    sink.write_bytes(std::next(start, version), sizeof(uint32_t));
-    sink.write_bytes(std::next(start, preamble), puts);
-    sink.write_bytes(std::next(start, locktime), sizeof(uint32_t));
+    sink.write_bytes(data, sizeof(uint32_t));
+    sink.write_bytes(std::next(data, preamble), puts);
+    sink.write_bytes(std::next(data, locktime), sizeof(uint32_t));
     sink.flush();
     return digest;
 }
@@ -63,18 +65,20 @@ typename transaction::cptr transaction::deserialize(uint32_t version,
         return nullptr;
 
     const auto& tx = *message->transaction_ptr;
-    tx.set_witness_hash(bitcoin_hash(data));
 
-    // If segregated the hashes are distinct, cache both.
+    // Cache transaction hashes.
+    // If !witness then wire txs cannot have been segregated.
     if (tx.is_segregated())
     {
-        const auto begin = data.begin();
-        const auto end = std::next(begin, tx.serialized_size(false));
-        tx.set_hash(transaction::desegregated_hash({ begin, end }));
+        const auto true_size = tx.serialized_size(true);
+        const auto false_size = tx.serialized_size(false);
+        tx.set_hash(desegregated_hash(true_size, false_size, data.data()));
+        tx.set_witness_hash(bitcoin_hash(true_size, data.data()));
     }
     else
     {
-        tx.set_hash(bitcoin_hash(data));
+        const auto false_size = tx.serialized_size(false);
+        tx.set_hash(bitcoin_hash(false_size, data.data()));
     }
 
     return message;
