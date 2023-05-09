@@ -44,7 +44,8 @@ size_t bloom_filter_clear::size(uint32_t) NOEXCEPT
 typename bloom_filter_clear::cptr bloom_filter_clear::deserialize(
     uint32_t version, const system::data_chunk& data) NOEXCEPT
 {
-    read::bytes::copy reader(data);
+    system::istream source{ data };
+    system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader));
     return reader ? message : nullptr;
 }
@@ -62,7 +63,8 @@ bloom_filter_clear bloom_filter_clear::deserialize(uint32_t version,
 bool bloom_filter_clear::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
-    write::bytes::copy writer(data);
+    system::ostream sink{ data };
+    system::byte_writer writer{ sink };
     serialize(version, writer);
     return writer;
 }

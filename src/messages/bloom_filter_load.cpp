@@ -39,7 +39,8 @@ const uint32_t bloom_filter_load::version_maximum = level::maximum_protocol;
 typename bloom_filter_load::cptr bloom_filter_load::deserialize(
     uint32_t version, const system::data_chunk& data) NOEXCEPT
 {
-    read::bytes::copy reader(data);
+    system::istream source{ data };
+    system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader));
     return reader ? message : nullptr;
 }
@@ -73,7 +74,8 @@ bloom_filter_load bloom_filter_load::deserialize(uint32_t version,
 bool bloom_filter_load::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
-    write::bytes::copy writer(data);
+    system::ostream sink{ data };
+    system::byte_writer writer{ sink };
     serialize(version, writer);
     return writer;
 }

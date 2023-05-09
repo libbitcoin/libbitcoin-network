@@ -59,7 +59,8 @@ hash_digest transaction::desegregated_hash(size_t witnessed,
 typename transaction::cptr transaction::deserialize(uint32_t version,
     const data_chunk& data, bool witness) NOEXCEPT
 {
-    read::bytes::copy reader(data);
+    system::istream source{ data };
+    system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader, witness));
     if (!reader)
         return nullptr;
@@ -97,7 +98,8 @@ transaction transaction::deserialize(uint32_t version, reader& source,
 bool transaction::serialize(uint32_t version,
     const data_slab& data, bool witness) const NOEXCEPT
 {
-    write::bytes::copy writer(data);
+    system::ostream sink{ data };
+    system::byte_writer writer{ sink };
     serialize(version, writer, witness);
     return writer;
 }

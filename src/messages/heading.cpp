@@ -124,7 +124,8 @@ heading heading::factory(uint32_t magic, const std::string& command,
 // static
 heading::cptr heading::deserialize(const data_chunk& data) NOEXCEPT
 {
-    read::bytes::copy reader(data);
+    system::istream source{ data };
+    system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(reader));
     return reader ? message : nullptr;
 }
@@ -143,7 +144,8 @@ heading heading::deserialize(reader& source) NOEXCEPT
 
 bool heading::serialize(const data_slab& data) const NOEXCEPT
 {
-    write::bytes::copy writer(data);
+    system::ostream sink{ data };
+    system::byte_writer writer{ sink };
     serialize(writer);
     return writer;
 }

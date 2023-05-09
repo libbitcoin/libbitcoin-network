@@ -41,7 +41,8 @@ const uint32_t client_filter_checkpoint::version_maximum = level::maximum_protoc
 typename client_filter_checkpoint::cptr client_filter_checkpoint::deserialize(
     uint32_t version, const system::data_chunk& data) NOEXCEPT
 {
-    read::bytes::copy reader(data);
+    system::istream source{ data };
+    system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader));
     return reader ? message : nullptr;
 }
@@ -76,7 +77,8 @@ client_filter_checkpoint client_filter_checkpoint::deserialize(
 bool client_filter_checkpoint::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
-    write::bytes::copy writer(data);
+    system::ostream sink{ data };
+    system::byte_writer writer{ sink };
     serialize(version, writer);
     return writer;
 }

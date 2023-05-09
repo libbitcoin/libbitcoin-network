@@ -45,7 +45,8 @@ size_t send_compact::size(uint32_t) NOEXCEPT
 typename send_compact::cptr send_compact::deserialize(uint32_t version,
     const system::data_chunk& data) NOEXCEPT
 {
-    read::bytes::copy reader(data);
+    system::istream source{ data };
+    system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader));
     return reader ? message : nullptr;
 }
@@ -75,7 +76,8 @@ send_compact send_compact::deserialize(uint32_t version,
 bool send_compact::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
-    write::bytes::copy writer(data);
+    system::ostream sink{ data };
+    system::byte_writer writer{ sink };
     serialize(version, writer);
     return writer;
 }
