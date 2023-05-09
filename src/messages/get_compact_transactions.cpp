@@ -39,7 +39,8 @@ const uint32_t get_compact_transactions::version_maximum = level::maximum_protoc
 typename get_compact_transactions::cptr get_compact_transactions::deserialize(
     uint32_t version, const system::data_chunk& data) NOEXCEPT
 {
-    read::bytes::copy reader(data);
+    system::istream source{ data };
+    system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader));
     return reader ? message : nullptr;
 }
@@ -73,7 +74,8 @@ get_compact_transactions get_compact_transactions::deserialize(uint32_t version,
 bool get_compact_transactions::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
-    write::bytes::copy writer(data);
+    system::ostream sink{ data };
+    system::byte_writer writer{ sink };
     serialize(version, writer);
     return writer;
 }

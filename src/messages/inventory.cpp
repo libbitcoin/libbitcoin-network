@@ -72,7 +72,8 @@ inventory inventory::factory(const hashes& hashes, type_id type) NOEXCEPT
 typename inventory::cptr inventory::deserialize(uint32_t version,
     const system::data_chunk& data) NOEXCEPT
 {
-    read::bytes::copy reader(data);
+    system::istream source{ data };
+    system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader));
     return reader ? message : nullptr;
 }
@@ -96,7 +97,8 @@ inventory inventory::deserialize(uint32_t version, reader& source) NOEXCEPT
 bool inventory::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
-    write::bytes::copy writer(data);
+    system::ostream sink{ data };
+    system::byte_writer writer{ sink };
     serialize(version, writer);
     return writer;
 }

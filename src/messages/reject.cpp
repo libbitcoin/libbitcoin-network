@@ -79,7 +79,8 @@ reject::reason_code reject::byte_to_reason(uint8_t byte) NOEXCEPT
 typename reject::cptr reject::deserialize(uint32_t version,
     const system::data_chunk& data) NOEXCEPT
 {
-    read::bytes::copy reader(data);
+    system::istream source{ data };
+    system::byte_reader reader{ source };
     const auto message = to_shared(deserialize(version, reader));
     return reader ? message : nullptr;
 }
@@ -106,7 +107,8 @@ reject reject::deserialize(uint32_t, reader& source) NOEXCEPT
 bool reject::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
-    write::bytes::copy writer(data);
+    system::ostream sink{ data };
+    system::byte_writer writer{ sink };
     serialize(version, writer);
     return writer;
 }
