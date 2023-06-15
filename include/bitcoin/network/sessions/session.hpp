@@ -118,7 +118,7 @@ public:
     /// Start the session (call from network strand).
     virtual void start(result_handler&& handler) NOEXCEPT;
 
-    /// Stop the subscriber (call from network strand).
+    /// Stop the session (call from network strand).
     virtual void stop() NOEXCEPT;
 
     /// Utilities.
