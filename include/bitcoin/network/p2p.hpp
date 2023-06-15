@@ -178,6 +178,11 @@ protected:
         return session;
     }
 
+    virtual void do_start(const result_handler& handler) NOEXCEPT;
+    virtual void do_run(const result_handler& handler) NOEXCEPT;
+    virtual void do_close() NOEXCEPT;
+    virtual bool closed() const NOEXCEPT;
+
     /// Override to attach specialized sessions, require strand.
     virtual session_seed::ptr attach_seed_session() NOEXCEPT;
     virtual session_manual::ptr attach_manual_session() NOEXCEPT;
@@ -216,13 +221,8 @@ private:
     connectors_ptr create_connectors(size_t count) NOEXCEPT;
     object_key create_key() NOEXCEPT;
 
-    virtual bool closed() const NOEXCEPT;
     virtual code start_hosts() NOEXCEPT;
     virtual code stop_hosts() NOEXCEPT;
-
-    void do_start(const result_handler& handler) NOEXCEPT;
-    void do_run(const result_handler& handler) NOEXCEPT;
-    void do_close() NOEXCEPT;
 
     void handle_start(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_run(const code& ec, const result_handler& handler) NOEXCEPT;

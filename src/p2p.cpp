@@ -375,7 +375,7 @@ void p2p::do_connect_handled(const config::endpoint& endpoint,
 // Properties.
 // ----------------------------------------------------------------------------
 
-// private
+// protected
 bool p2p::closed() const NOEXCEPT
 {
     return closed_.load();
