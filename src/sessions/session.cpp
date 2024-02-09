@@ -534,6 +534,7 @@ void session::save(const address_cptr& message,
     network_.save(message, std::move(handler));
 }
 
+// protected
 asio::strand& session::strand() NOEXCEPT
 {
     return network_.strand();
