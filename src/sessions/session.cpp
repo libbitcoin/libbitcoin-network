@@ -62,7 +62,7 @@ session::~session() NOEXCEPT
 
 void session::start(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (!stopped())
     {
@@ -76,7 +76,7 @@ void session::start(result_handler&& handler) NOEXCEPT
 
 void session::stop() NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // Break out of sesson loop as handlers execute. 
     stopped_.store(true);
@@ -95,7 +95,7 @@ void session::stop() NOEXCEPT
 void session::start_channel(const channel::ptr& channel,
     result_handler&& starter, result_handler&& stopper) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped())
     {
@@ -185,7 +185,7 @@ void session::handle_handshake(const code& ec, const channel::ptr& channel,
 void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
     const result_handler& start) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // Handles channel and protocol start failures.
     if (ec)
@@ -213,7 +213,7 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 void session::handle_channel_start(const code& ec, const channel::ptr& channel,
     const result_handler& started, const result_handler& stopped) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (ec)
     {
@@ -230,7 +230,7 @@ void session::handle_channel_start(const code& ec, const channel::ptr& channel,
 void session::handle_channel_started(const code& ec,
     const channel::ptr& channel, const result_handler& started) NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded() || network_.stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded() || stranded(), "strand");
 
     // Return to network context.
     boost::asio::post(network_.strand(),
@@ -240,7 +240,7 @@ void session::handle_channel_started(const code& ec,
 void session::do_handle_channel_started(const code& ec,
     const channel::ptr& channel, const result_handler& started) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // Handles channel subscribe_stop code.
     if (ec)
@@ -313,7 +313,7 @@ void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
 void session::handle_channel_stopped(const code& ec,
     const channel::ptr& channel, const result_handler& stopped) NOEXCEPT
 {
-    BC_ASSERT_MSG(channel->stranded() || network_.stranded(), "strand");
+    BC_ASSERT_MSG(channel->stranded() || stranded(), "strand");
 
     // Return to network context.
     boost::asio::post(network_.strand(),
@@ -324,7 +324,7 @@ void session::handle_channel_stopped(const code& ec,
 void session::do_handle_channel_stopped(const code& ec,
     const channel::ptr& channel, const result_handler& stopped) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     unpend(channel);
     network_.unstore_nonce(*channel);
@@ -341,14 +341,14 @@ void session::do_handle_channel_stopped(const code& ec,
 
 void session::defer(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     defer(settings().retry_timeout(), std::move(handler));
 }
 
 void session::defer(const steady_clock::duration& timeout,
     result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped())
     {
@@ -369,7 +369,7 @@ void session::defer(const steady_clock::duration& timeout,
 void session::handle_timer(const code& ec, object_key key,
     const result_handler& complete) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     stop_subscriber_.notify_one(key, ec);
     complete(ec);
 }
@@ -377,14 +377,14 @@ void session::handle_timer(const code& ec, object_key key,
 bool session::handle_defer(const code&, object_key,
     const deadline::ptr& timer) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     timer->stop();
     return false;
 }
 
 void session::pend(const channel::ptr& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     stop_subscriber_.subscribe(BIND2(handle_pend, _1, channel),
         channel->identifier());
 }
@@ -392,13 +392,13 @@ void session::pend(const channel::ptr& channel) NOEXCEPT
 // Ok to not find after stop, clears before channel stop handlers fire.
 void session::unpend(const channel::ptr& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     notify(channel->identifier());
 }
 
 bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     if (ec) channel->stop(ec);
     return false;
 }
@@ -406,7 +406,7 @@ bool session::handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT
 typename session::object_key 
 session::subscribe_stop(notify_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
     const auto key = create_key();
     stop_subscriber_.subscribe(std::move(handler), key);
     return key;
@@ -443,7 +443,7 @@ connectors_ptr session::create_connectors(size_t count) NOEXCEPT
 channel::ptr session::create_channel(const socket::ptr& socket,
     bool quiet) NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     // Channel id must be created using create_key().
     const auto id = create_key();
@@ -453,7 +453,7 @@ channel::ptr session::create_channel(const socket::ptr& socket,
 // At one object/session/ns, this overflows in ~585 years (and handled).
 session::object_key session::create_key() NOEXCEPT
 {
-    BC_ASSERT_MSG(network_.stranded(), "strand");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (is_zero(++keys_))
     {
@@ -534,6 +534,7 @@ void session::save(const address_cptr& message,
     network_.save(message, std::move(handler));
 }
 
+// protected
 asio::strand& session::strand() NOEXCEPT
 {
     return network_.strand();

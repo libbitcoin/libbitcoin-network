@@ -28,6 +28,8 @@
 namespace libbitcoin {
 namespace network {
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 using namespace std::placeholders;
 
 BC_DEBUG_ONLY(static const steady_clock::time_point epoch{};)
@@ -78,6 +80,8 @@ void deadline::handle_timer(const error::boost_code& ec,
     // asio::error::operation_aborted maps to error::operation_canceled.
     handle(error::asio_to_error_code(ec));
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

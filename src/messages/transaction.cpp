@@ -47,7 +47,8 @@ hash_digest transaction::desegregated_hash(size_t witnessed,
     const auto locktime = floored_subtract(witnessed, sizeof(uint32_t));
 
     hash_digest digest{};
-    hash::sha256x2::copy sink(digest);
+    stream::out::fast stream{ digest };
+    hash::sha256x2::fast sink{ stream };
     sink.write_bytes(data, sizeof(uint32_t));
     sink.write_bytes(std::next(data, preamble), puts);
     sink.write_bytes(std::next(data, locktime), sizeof(uint32_t));

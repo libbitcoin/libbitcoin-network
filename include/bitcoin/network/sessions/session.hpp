@@ -118,7 +118,7 @@ public:
     /// Start the session (call from network strand).
     virtual void start(result_handler&& handler) NOEXCEPT;
 
-    /// Stop the subscriber (call from network strand).
+    /// Stop the session (call from network strand).
     virtual void stop() NOEXCEPT;
 
     /// Utilities.
@@ -231,8 +231,10 @@ protected:
     /// Number of outbound connected channels (including manual).
     virtual size_t outbound_channel_count() const NOEXCEPT;
 
-private:
+    /// The network strand.
     asio::strand& strand() NOEXCEPT;
+
+private:
     object_key create_key() NOEXCEPT;
 
     void handle_channel_start(const code& ec, const channel::ptr& channel,
