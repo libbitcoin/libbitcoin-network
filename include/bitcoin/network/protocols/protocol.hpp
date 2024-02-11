@@ -73,11 +73,19 @@ protected:
     /// Messaging.
     /// -----------------------------------------------------------------------
 
-    /// Bind a method in the base or derived class (use BIND#).
+    /// Bind a method in base or derived class (use BIND#).
     template <class Protocol, typename Method, typename... Args>
     auto bind(Method&& method, Args&&... args) NOEXCEPT
     {
         return BOUND_PROTOCOL(method, args);
+    }
+
+    /// Post a method in base or derived class to channel strand (use POST#).
+    template <class Protocol, typename Method, typename... Args>
+    auto post(Method&& method, Args&&... args) NOEXCEPT
+    {
+        return boost::asio::post(channel_->strand(),
+            BOUND_PROTOCOL(method, args));
     }
 
     /// Send a message instance to peer (use SEND#).
@@ -222,6 +230,13 @@ private:
 #undef BOUND_PROTOCOL
 
 // See define.hpp for BIND# macros.
+
+#define POST1(method, p1) \
+    post<CLASS>(&CLASS::method, p1)
+#define POST2(method, p1, p2) \
+    post<CLASS>(&CLASS::method, p1, p2)
+#define POST3(method, p1, p2, p3) \
+    post<CLASS>(&CLASS::method, p1, p2, p3)
 
 #define SEND1(message, method, p1) \
     send<CLASS>(message, &CLASS::method, p1)
