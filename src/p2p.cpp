@@ -416,7 +416,6 @@ asio::strand& p2p::strand() NOEXCEPT
     return strand_;
 }
 
-// protected
 bool p2p::stranded() const NOEXCEPT
 {
     return strand_.running_in_this_thread();
