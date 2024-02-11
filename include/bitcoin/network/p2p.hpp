@@ -133,6 +133,9 @@ public:
     /// Return a reference to the network strand (thread safe).
     asio::strand& strand() NOEXCEPT;
 
+    /// The strand is running in this thread.
+    bool stranded() const NOEXCEPT;
+
     /// TEMP HACKS.
     /// -----------------------------------------------------------------------
     /// Not thread safe, read from stranded handler only.
@@ -212,9 +215,6 @@ protected:
     virtual void fetch(address_handler&& handler) NOEXCEPT;
     virtual void save(const address_cptr& message,
         count_handler&& complete) NOEXCEPT;
-
-    /// The strand is running in this thread.
-    bool stranded() const NOEXCEPT;
 
 private:
     code subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;
