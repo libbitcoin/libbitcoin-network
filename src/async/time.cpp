@@ -81,9 +81,7 @@ std::string format_local_time(time_t time) NOEXCEPT
     char buffer[size];
 
     // Returns number of characters, zero implies failure and undefined buffer.
-    BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
     return is_zero(std::strftime(buffer, size, format, &out)) ? "" : buffer;
-    BC_POP_WARNING()
 }
 
 std::string format_zulu_time(time_t time) NOEXCEPT
@@ -98,9 +96,7 @@ std::string format_zulu_time(time_t time) NOEXCEPT
     char buffer[size];
 
     // Returns number of characters, zero implies failure and undefined buffer.
-    BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
     return is_zero(std::strftime(buffer, size, format, &out)) ? "" : buffer;
-    BC_POP_WARNING()
 }
 
 } // namespace network
