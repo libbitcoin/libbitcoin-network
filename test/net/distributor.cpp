@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(distributor__subscribe__stop__expected_code)
         instance.subscribe([&](const code& ec, const messages::ping::cptr& ping) NOEXCEPT
         {
             // Stop notification has nullptr message and specified code.
-            result |= is_null(ping);
+            result &= is_null(ping);
             promise.set_value(ec);
             return true;
         });
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__invalid_message__no_notification)
     {
         instance.subscribe([&](const code& ec, const messages::ping::cptr& ping) NOEXCEPT
         {
-            result |= is_null(ping);
+            result &= is_null(ping);
             promise.set_value(ec);
             return true;
         });
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__invalid_message__no_notification)
 
         // This line throws and is caught internal to the low level stream.
         const auto ec = instance.notify(messages::identifier::ping, nonced_ping_version, empty);
-        result |= (ec == error::invalid_message);
+        result &= (ec == error::invalid_message);
     });
 
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -125,19 +125,19 @@ BOOST_AUTO_TEST_CASE(distributor__notify__valid_message_invalid_version__no_noti
     {
         instance.subscribe([&](const code& ec, const messages::ping::cptr& ping) NOEXCEPT
         {
-            result |= is_null(ping);
+            result &= is_null(ping);
             promise.set_value(ec);
             return true;
         });
     });
     
     // Invalid object version will not cause a notification.
-    const auto ping = system::to_little_endian_size(42, sizeof(uint64_t));
+    const auto ping = system::to_chunk(system::to_little_endian(42));
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         constexpr uint32_t invalid_ping_version = 0;
         const auto ec = instance.notify(messages::identifier::ping, invalid_ping_version, ping);
-        result |= (ec == error::invalid_message);
+        result &= (ec == error::invalid_message);
     });
 
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -174,18 +174,18 @@ BOOST_AUTO_TEST_CASE(distributor__notify__valid_nonced_ping__expected_notificati
             }
 
             // Handle message notification.
-            result |= (ping->nonce == expected_nonce);
-            result |= (ec == error::success);
+            result &= (ping->nonce == expected_nonce);
+            result &= (ec == error::success);
             return true;
         });
     });
 
-    const auto ping = system::to_little_endian_size(expected_nonce, sizeof(uint64_t));
+    const auto ping = system::to_chunk(system::to_little_endian(expected_nonce));
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         constexpr auto nonced_ping_version = messages::level::bip31;
         const auto ec = instance.notify(messages::identifier::ping, nonced_ping_version, ping);
-        result |= (ec == error::success);
+        result &= (ec == error::success);
     });
 
     boost::asio::post(strand, [&]() NOEXCEPT

@@ -52,13 +52,13 @@ BOOST_AUTO_TEST_CASE(tracker__construct__guarded__safe_expected_messages)
             if (is_zero(count++))
             {
                 const auto expected = std::string{ typeid(tracked).name() } + "(1)\n";
-                result |= (message == expected);
+                result &= (message == expected);
                 return true;
             }
             else
             {
                 const auto expected = std::string{ typeid(tracked).name() } + "(0)~\n";
-                result |= (message == expected);
+                result &= (message == expected);
                 log_stopped.set_value(ec);
                 return false;
             }
