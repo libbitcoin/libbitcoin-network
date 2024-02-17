@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE(proxy__subscribe_message__subscribed__expected)
         proxy_ptr->subscribe_message<const messages::ping>(
             [&](code ec, messages::ping::cptr ping) NOEXCEPT
             {
-                result |= is_null(ping);
+                result &= is_null(ping);
                 message_stopped.set_value(ec);
                 return true;
             });
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE(proxy__stop__all_subscribed__expected)
         proxy_ptr->subscribe_message<messages::ping>(
             [&](code ec, messages::ping::cptr ping) NOEXCEPT
             {
-                result |= is_null(ping);
+                result &= is_null(ping);
                 message_stopped.set_value(ec);
                 return true;
             });
@@ -398,7 +398,7 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected__expected)
     const auto handler = [&](code ec) NOEXCEPT
     {
         // Send failure causes stop before handler invoked.
-        result |= proxy_ptr->stopped();
+        result &= proxy_ptr->stopped();
         promise.set_value(ec);
     };
 
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(proxy__send__not_connected_move__expected)
         proxy_ptr->send<messages::ping>(messages::ping{ 42 }, [&](code ec)
         {
             // Send failure causes stop before handler invoked.
-            result |= proxy_ptr->stopped();
+            result &= proxy_ptr->stopped();
             promise.set_value(ec);
         });
     });
