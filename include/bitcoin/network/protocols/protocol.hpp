@@ -44,6 +44,8 @@ namespace network {
 /// * setters should only be invoked during handshake.
 /// Abstract base class for protocols.
 /// handle_ methods are always invoked on the strand.
+/// Protocol start has no failure condition.
+/// A protocol can only stop its channel, not the session/network.
 class BCT_API protocol
   : public enable_shared_from_base<protocol>, public reporter
 {
