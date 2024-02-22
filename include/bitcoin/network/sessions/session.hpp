@@ -216,7 +216,7 @@ protected:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    /// The service is stopped.
+    /// The session is stopped.
     virtual bool stopped() const NOEXCEPT;
 
     /// The current thread is on the network strand.
