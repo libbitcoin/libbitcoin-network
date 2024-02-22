@@ -112,6 +112,9 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
+    /// The node threadpool is stopped and may still be joining.
+    virtual bool closed() const NOEXCEPT;
+
     /// Get the number of addresses.
     virtual size_t address_count() const NOEXCEPT;
 
@@ -184,7 +187,6 @@ protected:
     virtual void do_start(const result_handler& handler) NOEXCEPT;
     virtual void do_run(const result_handler& handler) NOEXCEPT;
     virtual void do_close() NOEXCEPT;
-    virtual bool closed() const NOEXCEPT;
 
     /// Override to attach specialized sessions, require strand.
     virtual session_seed::ptr attach_seed_session() NOEXCEPT;

@@ -375,12 +375,6 @@ void p2p::do_connect_handled(const config::endpoint& endpoint,
 // Properties.
 // ----------------------------------------------------------------------------
 
-// protected
-bool p2p::closed() const NOEXCEPT
-{
-    return closed_.load();
-}
-
 size_t p2p::address_count() const NOEXCEPT
 {
     return hosts_.count();
@@ -419,6 +413,11 @@ asio::strand& p2p::strand() NOEXCEPT
 bool p2p::stranded() const NOEXCEPT
 {
     return strand_.running_in_this_thread();
+}
+
+bool p2p::closed() const NOEXCEPT
+{
+    return closed_.load();
 }
 
 // Hosts collection.
