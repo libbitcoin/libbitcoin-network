@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(settings__minimum_address_count__always__outbound_product)
     settings instance{};
     instance.connect_batch_size = 24;
     instance.outbound_connections = 42;
-    const auto product = instance.connect_batch_size * instance.outbound_connections;
+    const size_t product = instance.connect_batch_size * instance.outbound_connections;
     BOOST_REQUIRE_EQUAL(instance.minimum_address_count(), product);
 }
 
