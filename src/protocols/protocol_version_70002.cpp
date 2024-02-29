@@ -67,7 +67,7 @@ void protocol_version_70002::shake(result_handler&& handle_event) NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE_CHANNEL2(reject, handle_receive_reject, _1, _2);
+    SUBSCRIBE_CHANNEL(reject, handle_receive_reject, _1, _2);
 
     protocol_version_70001::shake(std::move(handle_event));
 }
@@ -82,17 +82,17 @@ void protocol_version_70002::rejection(const code& ec) NOEXCEPT
     // Handshake completion may result before completion of this send (okay).
     if (ec == error::peer_insufficient)
     {
-        SEND1((reject{ version::command, reject::reason_code::obsolete }),
+        SEND((reject{ version::command, reject::reason_code::obsolete }),
             handle_send, _1);
     }
     else if (ec == error::peer_unsupported)
     {
-        SEND1((reject{ version::command, reject::reason_code::nonstandard }),
+        SEND((reject{ version::command, reject::reason_code::nonstandard }),
             handle_send, _1);
     }
     else if (ec == error::protocol_violation)
     {
-        SEND1((reject{ version::command, reject::reason_code::duplicate }),
+        SEND((reject{ version::command, reject::reason_code::duplicate }),
             handle_send, _1);
     }
 

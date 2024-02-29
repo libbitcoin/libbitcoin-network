@@ -166,9 +166,9 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    SUBSCRIBE_CHANNEL2(version, handle_receive_version, _1, _2);
-    SUBSCRIBE_CHANNEL2(version_acknowledge, handle_receive_acknowledge, _1, _2);
-    SEND1(version_factory(), handle_send_version, _1);
+    SUBSCRIBE_CHANNEL(version, handle_receive_version, _1, _2);
+    SUBSCRIBE_CHANNEL(version_acknowledge, handle_receive_acknowledge, _1, _2);
+    SEND(version_factory(), handle_send_version, _1);
 
     protocol::start();
 }
@@ -235,7 +235,7 @@ void protocol_version_31402::handle_send_version(const code& ec) NOEXCEPT
     if (stopped(ec))
         return;
 
-    timer_->start(BIND1(handle_timer, _1));
+    timer_->start(BIND(handle_timer, _1));
     sent_version_ = true;
 
     if (complete())
@@ -332,7 +332,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     ////    << "as {" << config::authority(message->address_sender) << "} "
     ////    << "us {" << config::authority(message->address_receiver) << "}.");
 
-    SEND1(version_acknowledge{}, handle_send_acknowledge, _1);
+    SEND(version_acknowledge{}, handle_send_acknowledge, _1);
 
     // Handle in handle_send_acknowledge.
     received_version_ = true;

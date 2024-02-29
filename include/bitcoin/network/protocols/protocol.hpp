@@ -35,10 +35,6 @@
 namespace libbitcoin {
 namespace network {
 
-#define BOUND_PROTOCOL(method, args) \
-    std::bind(std::forward<Method>(method), shared_from_base<Protocol>(), \
-        std::forward<Args>(args)...)
-
 /// This class is thread safe, except for:
 /// * start/started must be called on strand.
 /// * setters should only be invoked during handshake.
@@ -76,47 +72,46 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Bind a method in base or derived class (use BIND#).
-    template <class Protocol, typename Method, typename... Args>
+    template <class Derived, typename Method, typename... Args>
     auto bind(Method&& method, Args&&... args) NOEXCEPT
     {
-        return BOUND_PROTOCOL(method, args);
+        return BIND_SHARED(method, args);
     }
 
     /// Post a method in base or derived class to channel strand (use POST#).
-    template <class Protocol, typename Method, typename... Args>
+    template <class Derived, typename Method, typename... Args>
     auto post(Method&& method, Args&&... args) NOEXCEPT
     {
         return boost::asio::post(channel_->strand(),
-            BOUND_PROTOCOL(method, args));
+            BIND_SHARED(method, args));
     }
 
     /// Send a message instance to peer (use SEND#).
-    template <class Protocol, class Message, typename Method, typename... Args>
+    template <class Derived, class Message, typename Method, typename... Args>
     void send(const Message& message, Method&& method, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        channel_->send<Message>(message, BOUND_PROTOCOL(method, args));
+        channel_->send<Message>(message, BIND_SHARED(method, args));
     }
 
     /// Subscribe to channel messages by type (use SUBSCRIBE_CHANNEL#).
     /// Method is invoked with error::subscriber_stopped if already stopped.
-    template <class Protocol, class Message, typename Method, typename... Args>
+    template <class Derived, class Message, typename Method, typename... Args>
     void subscribe_channel(Method&& method, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        channel_->subscribe<Message>(BOUND_PROTOCOL(method, args));
+        channel_->subscribe<Message>(BIND_SHARED(method, args));
     }
 
     /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST#).
     /// Method is invoked with error::subscriber_stopped if already stopped.
-    template <class Protocol, class Message, typename Method, typename... Args>
+    template <class Derived, class Message, typename Method, typename... Args>
     void subscribe_broadcast(Method&& method, Args&&... args) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
-        // handler is a bool function, causes problem with std::bind.
-        const auto bouncer =
-        [self = shared_from_this(), handler = BOUND_PROTOCOL(method, args)]
+        const auto bouncer = [self = shared_from_this(),
+            handler = BIND_SHARED(method, args)]
         (const auto& ec, const typename Message::cptr& message, auto id)
         {
             return self->handle_broadcast<Message>(ec, message, id, handler);
@@ -229,42 +224,12 @@ private:
     bool started_{};
 };
 
-#undef BOUND_PROTOCOL
-
-// See define.hpp for BIND# macros.
-
-#define POST1(method, p1) \
-    post<CLASS>(&CLASS::method, p1)
-#define POST2(method, p1, p2) \
-    post<CLASS>(&CLASS::method, p1, p2)
-#define POST3(method, p1, p2, p3) \
-    post<CLASS>(&CLASS::method, p1, p2, p3)
-
-#define SEND1(message, method, p1) \
-    send<CLASS>(message, &CLASS::method, p1)
-#define SEND2(message, method, p1, p2) \
-    send<CLASS>(message, &CLASS::method, p1, p2)
-#define SEND3(message, method, p1, p2, p3) \
-    send<CLASS>(message, &CLASS::method, p1, p2, p3)
-
-#define SUBSCRIBE_CHANNEL1(message, method, p1) \
-    subscribe_channel<CLASS, message>(&CLASS::method, p1)
-#define SUBSCRIBE_CHANNEL2(message, method, p1, p2) \
-    subscribe_channel<CLASS, message>(&CLASS::method, p1, p2)
-#define SUBSCRIBE_CHANNEL3(message, method, p1, p2, p3) \
-    subscribe_channel<CLASS, message>(&CLASS::method, p1, p2, p3)
-#define SUBSCRIBE_CHANNEL4(message, method, p1, p2, p3, p4) \
-    subscribe_channel<CLASS, message>(&CLASS::method, p1, p2, p3, p4)
-
-////#define SUBSCRIBE_BROADCAST1(message, method, p1) \
-////    subscribe_broadcast<CLASS, message>(&CLASS::method, p1)
-////#define SUBSCRIBE_BROADCAST2(message, method, p1, p2) \
-////    subscribe_broadcast<CLASS, message>(&CLASS::method, p1, p2)
-#define SUBSCRIBE_BROADCAST3(message, method, p1, p2, p3) \
-    subscribe_broadcast<CLASS, message>(&CLASS::method, p1, p2, p3)
-#define SUBSCRIBE_BROADCAST4(message, method, p1, p2, p3, p4) \
-    subscribe_broadcast<CLASS, message>(&CLASS::method, p1, p2, p3, p4)
-
+#define SEND(message, method, ...) \
+    send<CLASS>(message, &CLASS::method, __VA_ARGS__)
+#define SUBSCRIBE_CHANNEL(message, method, ...) \
+    subscribe_channel<CLASS, message>(&CLASS::method, __VA_ARGS__)
+#define SUBSCRIBE_BROADCAST(message, method, ...) \
+    subscribe_broadcast<CLASS, message>(&CLASS::method, __VA_ARGS__)
 #define BROADCAST(message, ptr) broadcast<message>(ptr)
 
 } // namespace network

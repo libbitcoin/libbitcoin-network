@@ -47,11 +47,10 @@ public:
 
 protected:
     /// Bind a method in the base or derived class (use BIND#).
-    template <class Session, typename Method, typename... Args>
+    template <class Derived, typename Method, typename... Args>
     auto bind(Method&& method, Args&&... args) NOEXCEPT
     {
-        return std::bind(std::forward<Method>(method),
-            shared_from_base<Session>(), std::forward<Args>(args)...);
+        return BIND_SHARED(method, args);
     }
 
 private:
@@ -87,15 +86,11 @@ public:
     template <class Message, typename Handler = broadcaster::handler<Message>>
     void subscribe(Handler&& handler, channel_id id) NOEXCEPT
     {
-        // Handler is a bool function, causes problem with std::bind.
-        const auto bouncer =
-        [self = shared_from_this(), handler = std::move(handler), id]()
+        const auto bouncer = [self = shared_from_this(),
+            handler = std::move(handler), id]()
         {
             self->do_subscribe<Handler>(handler, id);
         };
-
-        // Subscribe on network strand (protects broadcaster).
-        boost::asio::post(strand(), bouncer);
     }
 
     template <class Message>
@@ -103,13 +98,13 @@ public:
         channel_id sender) NOEXCEPT
     {
         boost::asio::post(strand(),
-            BIND2(do_broadcast<Message>, message, sender));
+            BIND(do_broadcast<Message>, message, sender));
     }
 
     virtual void unsubscribe(channel_id subscriber) NOEXCEPT
     {
         boost::asio::post(strand(),
-            BIND1(do_unsubscribe, subscriber));
+            BIND(do_unsubscribe, subscriber));
     }
 
     /// Start/stop.

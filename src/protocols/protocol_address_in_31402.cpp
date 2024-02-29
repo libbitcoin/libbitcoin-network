@@ -59,12 +59,12 @@ void protocol_address_in_31402::start() NOEXCEPT
         return;
 
     // Always allow a singleton unrequested address (advertisement).
-    SUBSCRIBE_CHANNEL2(address, handle_receive_address, _1, _2);
+    SUBSCRIBE_CHANNEL(address, handle_receive_address, _1, _2);
 
     // Do not request addresses from inbound channels.
     if (outbound_)
     {
-        SEND1(get_address{}, handle_send, _1);
+        SEND(get_address{}, handle_send, _1);
     }
 
     protocol::start();
@@ -147,7 +147,7 @@ bool protocol_address_in_31402::handle_receive_address(const code& ec,
 
     // This allows previously-rejected addresses.
     save(filtered,
-        BIND4(handle_save_address, _1, _2, end_size, start_size));
+        BIND(handle_save_address, _1, _2, end_size, start_size));
 
     return true;
 }

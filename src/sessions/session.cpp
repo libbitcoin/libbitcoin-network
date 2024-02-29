@@ -119,16 +119,16 @@ void session::start_channel(const channel::ptr& channel,
     pend(channel);
 
     result_handler start =
-        BIND4(handle_channel_start, _1, channel, std::move(starter),
+        BIND(handle_channel_start, _1, channel, std::move(starter),
             std::move(stopper));
 
     result_handler shake =
-        BIND3(handle_handshake, _1, channel, std::move(start));
+        BIND(handle_handshake, _1, channel, std::move(start));
 
     // Switch to channel context.
     // Channel/network strands share same pool.
     boost::asio::post(channel->strand(),
-        BIND2(do_attach_handshake, channel, std::move(shake)));
+        BIND(do_attach_handshake, channel, std::move(shake)));
 }
 
 void session::do_attach_handshake(const channel::ptr& channel,
@@ -179,7 +179,7 @@ void session::handle_handshake(const code& ec, const channel::ptr& channel,
 
     // Return to network context.
     boost::asio::post(network_.strand(),
-        BIND3(do_handle_handshake, ec, channel, start));
+        BIND(do_handle_handshake, ec, channel, start));
 }
 
 void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
@@ -223,8 +223,8 @@ void session::handle_channel_start(const code& ec, const channel::ptr& channel,
     }
 
     channel->subscribe_stop(
-        BIND3(handle_channel_stopped, _1, channel, stopped),
-        BIND3(handle_channel_started, _1, channel, started));
+        BIND(handle_channel_stopped, _1, channel, stopped),
+        BIND(handle_channel_started, _1, channel, started));
 }
 
 void session::handle_channel_started(const code& ec,
@@ -234,7 +234,7 @@ void session::handle_channel_started(const code& ec,
 
     // Return to network context.
     boost::asio::post(network_.strand(),
-        BIND3(do_handle_channel_started, ec, channel, started));
+        BIND(do_handle_channel_started, ec, channel, started));
 }
 
 void session::do_handle_channel_started(const code& ec,
@@ -251,7 +251,7 @@ void session::do_handle_channel_started(const code& ec,
 
     // Switch to channel context (started is invoked on network strand).
     boost::asio::post(channel->strand(),
-        BIND2(do_attach_protocols, channel, started));
+        BIND(do_attach_protocols, channel, started));
 }
 
 void session::do_attach_protocols(const channel::ptr& channel,
@@ -317,7 +317,7 @@ void session::handle_channel_stopped(const code& ec,
 
     // Return to network context.
     boost::asio::post(network_.strand(),
-        BIND3(do_handle_channel_stopped, ec, channel, stopped));
+        BIND(do_handle_channel_stopped, ec, channel, stopped));
 }
 
 // Unnonce in stop vs. handshake to avoid loopback race (in/out same strand).
@@ -360,10 +360,10 @@ void session::defer(const steady_clock::duration& timeout,
     const auto timer = std::make_shared<deadline>(log, network_.strand());
 
     timer->start(
-        BIND3(handle_timer, _1, key, std::move(handler)), timeout);
+        BIND(handle_timer, _1, key, std::move(handler)), timeout);
 
     stop_subscriber_.subscribe(
-        BIND3(handle_defer, _1, key, timer), key);
+        BIND(handle_defer, _1, key, timer), key);
 }
 
 void session::handle_timer(const code& ec, object_key key,
@@ -385,7 +385,7 @@ bool session::handle_defer(const code&, object_key,
 void session::pend(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    stop_subscriber_.subscribe(BIND2(handle_pend, _1, channel),
+    stop_subscriber_.subscribe(BIND(handle_pend, _1, channel),
         channel->identifier());
 }
 
