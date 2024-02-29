@@ -94,7 +94,14 @@
 namespace libbitcoin {
 namespace network {
 
-// The 'bind' method and 'CLASS' names are conventional.
+#define BIND_SHARED(method, args) \
+    std::bind(std::forward<Method>(method), shared_from_base<Derived>(), \
+        std::forward<Args>(args)...)
+
+#define BIND_THIS(method, args) \
+    std::bind(std::forward<Method>(method), static_cast<Derived*>(this), \
+    std::forward<Args>(args)...)
+
 #define BIND1(method, p1) \
     bind<CLASS>(&CLASS::method, p1)
 #define BIND2(method, p1, p2) \
@@ -109,6 +116,13 @@ namespace network {
     bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6)
 #define BIND7(method, p1, p2, p3, p4, p5, p6, p7) \
     bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6, p7)
+
+#define POST1(method, p1) \
+    post<CLASS>(&CLASS::method, p1)
+#define POST2(method, p1, p2) \
+    post<CLASS>(&CLASS::method, p1, p2)
+#define POST3(method, p1, p2, p3) \
+    post<CLASS>(&CLASS::method, p1, p2, p3)
 
 } // namespace network
 } // namespace libbitcoin
