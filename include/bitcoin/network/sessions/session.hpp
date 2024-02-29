@@ -98,13 +98,13 @@ public:
         channel_id sender) NOEXCEPT
     {
         boost::asio::post(strand(),
-            BIND2(do_broadcast<Message>, message, sender));
+            BIND(do_broadcast<Message>, message, sender));
     }
 
     virtual void unsubscribe(channel_id subscriber) NOEXCEPT
     {
         boost::asio::post(strand(),
-            BIND1(do_unsubscribe, subscriber));
+            BIND(do_unsubscribe, subscriber));
     }
 
     /// Start/stop.

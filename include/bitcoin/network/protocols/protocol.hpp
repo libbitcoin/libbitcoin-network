@@ -224,31 +224,12 @@ private:
     bool started_{};
 };
 
-#define SEND1(message, method, p1) \
-    send<CLASS>(message, &CLASS::method, p1)
-#define SEND2(message, method, p1, p2) \
-    send<CLASS>(message, &CLASS::method, p1, p2)
-#define SEND3(message, method, p1, p2, p3) \
-    send<CLASS>(message, &CLASS::method, p1, p2, p3)
-
-#define SUBSCRIBE_CHANNEL1(message, method, p1) \
-    subscribe_channel<CLASS, message>(&CLASS::method, p1)
-#define SUBSCRIBE_CHANNEL2(message, method, p1, p2) \
-    subscribe_channel<CLASS, message>(&CLASS::method, p1, p2)
-#define SUBSCRIBE_CHANNEL3(message, method, p1, p2, p3) \
-    subscribe_channel<CLASS, message>(&CLASS::method, p1, p2, p3)
-#define SUBSCRIBE_CHANNEL4(message, method, p1, p2, p3, p4) \
-    subscribe_channel<CLASS, message>(&CLASS::method, p1, p2, p3, p4)
-
-////#define SUBSCRIBE_BROADCAST1(message, method, p1) \
-////    subscribe_broadcast<CLASS, message>(&CLASS::method, p1)
-////#define SUBSCRIBE_BROADCAST2(message, method, p1, p2) \
-////    subscribe_broadcast<CLASS, message>(&CLASS::method, p1, p2)
-#define SUBSCRIBE_BROADCAST3(message, method, p1, p2, p3) \
-    subscribe_broadcast<CLASS, message>(&CLASS::method, p1, p2, p3)
-#define SUBSCRIBE_BROADCAST4(message, method, p1, p2, p3, p4) \
-    subscribe_broadcast<CLASS, message>(&CLASS::method, p1, p2, p3, p4)
-
+#define SEND(message, method, ...) \
+    send<CLASS>(message, &CLASS::method, __VA_ARGS__)
+#define SUBSCRIBE_CHANNEL(message, method, ...) \
+    subscribe_channel<CLASS, message>(&CLASS::method, __VA_ARGS__)
+#define SUBSCRIBE_BROADCAST(message, method, ...) \
+    subscribe_broadcast<CLASS, message>(&CLASS::method, __VA_ARGS__)
 #define BROADCAST(message, ptr) broadcast<message>(ptr)
 
 } // namespace network

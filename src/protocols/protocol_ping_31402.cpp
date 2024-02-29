@@ -52,7 +52,7 @@ void protocol_ping_31402::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE_CHANNEL2(ping, handle_receive_ping, _1, _2);
+    SUBSCRIBE_CHANNEL(ping, handle_receive_ping, _1, _2);
     send_ping();
 
     protocol::start();
@@ -71,7 +71,7 @@ void protocol_ping_31402::stopping(const code&) NOEXCEPT
 
 void protocol_ping_31402::send_ping() NOEXCEPT
 {
-    SEND1(ping{}, handle_send_ping, _1);
+    SEND(ping{}, handle_send_ping, _1);
 }
 
 // Also invoked by protocol_ping_31402.
@@ -82,7 +82,7 @@ void protocol_ping_31402::handle_send_ping(const code& ec) NOEXCEPT
     if (stopped(ec))
         return;
 
-    timer_->start(BIND1(handle_timer, _1));
+    timer_->start(BIND(handle_timer, _1));
     protocol::handle_send(ec);
 }
 

@@ -91,7 +91,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    session::start(BIND2(handle_started, _1, std::move(handler)));
+    session::start(BIND(handle_started, _1, std::move(handler)));
 }
 
 void session_seed::handle_started(const code& ec,
@@ -118,7 +118,7 @@ void session_seed::handle_started(const code& ec,
     BC_POP_WARNING()
 
     // Invoke sufficient on count, invoke complete with all seeds stopped.
-    racer->start(move_copy(handler), BIND1(stop_seed, _1));
+    racer->start(move_copy(handler), BIND(stop_seed, _1));
 
     for (const auto& seed: settings().seeds)
     {
@@ -130,7 +130,7 @@ void session_seed::handle_started(const code& ec,
         });
 
         start_seed(error::success, seed, connector,
-            BIND4(handle_connect, _1, _2, seed, racer));
+            BIND(handle_connect, _1, _2, seed, racer));
     }
 }
 
@@ -170,8 +170,8 @@ void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
     const auto channel = create_channel(socket, true);
 
     start_channel(channel,
-        BIND2(handle_channel_start, _1, channel),
-        BIND3(handle_channel_stop, _1, channel, racer));
+        BIND(handle_channel_start, _1, channel),
+        BIND(handle_channel_stop, _1, channel, racer));
 }
 
 void session_seed::attach_handshake(const channel::ptr& channel,

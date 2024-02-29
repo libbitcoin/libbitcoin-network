@@ -53,8 +53,8 @@ void protocol_ping_60001::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE_CHANNEL2(pong, handle_receive_pong, _1, _2);
-    ////SUBSCRIBE_CHANNEL2(ping, handle_receive_ping, _1, _2);
+    SUBSCRIBE_CHANNEL(pong, handle_receive_pong, _1, _2);
+    ////SUBSCRIBE_CHANNEL(ping, handle_receive_ping, _1, _2);
     ////send_ping();
 
     protocol_ping_31402::start();
@@ -79,7 +79,7 @@ void protocol_ping_60001::send_ping() NOEXCEPT
 
     // The ping/pong nonce is arbitrary and distinct from the channel nonce.
     nonce_ = pseudo_random::next<uint64_t>(add1(minimum_nonce), bc::max_int64);
-    SEND1(ping{ nonce_ }, handle_send, _1);
+    SEND(ping{ nonce_ }, handle_send, _1);
 }
 
 ////void protocol_ping_31402::handle_send_ping(const code& ec) NOEXCEPT
@@ -89,7 +89,7 @@ void protocol_ping_60001::send_ping() NOEXCEPT
 ////    if (stopped(ec))
 ////        return;
 ////
-////    timer_->start(BIND1(handle_timer, _1));
+////    timer_->start(BIND(handle_timer, _1));
 ////    protocol::handle_send(ec);
 ////}
 
@@ -152,7 +152,7 @@ bool protocol_ping_60001::handle_receive_ping(const code& ec,
     if (stopped(ec))
         return false;
 
-    SEND1(pong{ message->nonce }, handle_send_pong, _1);
+    SEND(pong{ message->nonce }, handle_send_pong, _1);
     return true;
 }
 

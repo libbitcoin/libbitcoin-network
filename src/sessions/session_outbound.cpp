@@ -77,7 +77,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
         LOGN("Address protocol disabled, may cause empty address pool.");
     }
 
-    session::start(BIND2(handle_started, _1, std::move(handler)));
+    session::start(BIND(handle_started, _1, std::move(handler)));
 }
 
 void session_outbound::handle_started(const code& ec,
@@ -134,11 +134,11 @@ void session_outbound::start_connect(const code&) NOEXCEPT
     BC_POP_WARNING()
             
     // Race to first success or last failure.
-    racer->start(BIND3(handle_connect, _1, _2, key));
+    racer->start(BIND(handle_connect, _1, _2, key));
 
     // Attempt to connect with unique address for each connector of batch.
     for (const auto& connector: *connectors)
-        take(BIND5(do_one, _1, _2, key, racer, connector));
+        take(BIND(do_one, _1, _2, key, racer, connector));
 }
 
 // Attempt to connect the given peer and invoke handle_one.
@@ -159,12 +159,12 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
     // Guard restartable connector (shutdown delay).
     if (stopped())
     {
-        restore(peer, BIND1(handle_reclaim, _1));
+        restore(peer, BIND(handle_reclaim, _1));
         racer->finish(error::service_stopped, nullptr);
         return;
     }
 
-    connector->connect(peer, BIND4(handle_one, _1, _2, key, racer));
+    connector->connect(peer, BIND(handle_one, _1, _2, key, racer));
 }
 
 // Handle each do_one connection attempt, stopping on first success.
@@ -206,7 +206,7 @@ void session_outbound::handle_connect(const code& ec,
     if (ec == error::address_not_found)
     {
         LOGS("Address pool is empty.");
-        defer(settings().connect_timeout(), BIND1(start_connect, _1));
+        defer(settings().connect_timeout(), BIND(start_connect, _1));
         return;
     }
 
@@ -214,15 +214,15 @@ void session_outbound::handle_connect(const code& ec,
     if (ec)
     {
         // Avoid tight loop with delay timer.
-        defer(BIND1(start_connect, _1));
+        defer(BIND(start_connect, _1));
         return;
     }
 
     const auto channel = create_channel(socket, false);
 
     start_channel(channel,
-        BIND2(handle_channel_start, _1, channel),
-        BIND2(handle_channel_stop, _1, channel));
+        BIND(handle_channel_start, _1, channel),
+        BIND(handle_channel_stop, _1, channel));
 }
 
 void session_outbound::attach_handshake(const channel::ptr& channel,
@@ -296,7 +296,7 @@ void session_outbound::reclaim(const code& ec,
 
     if (stopped() || always_reclaim(ec) || maybe_reclaim(ec))
     {
-        restore(socket->address(), BIND1(handle_reclaim, _1));
+        restore(socket->address(), BIND(handle_reclaim, _1));
     }
 }
 
@@ -312,7 +312,7 @@ void session_outbound::reclaim(const code& ec,
 
     if (stopped() || always_reclaim(ec) || maybe_reclaim(ec))
     {
-        restore(channel->get_updated_address(), BIND1(handle_reclaim, _1));
+        restore(channel->get_updated_address(), BIND(handle_reclaim, _1));
     }
 }
 

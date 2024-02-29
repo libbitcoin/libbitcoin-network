@@ -54,7 +54,7 @@ session_manual::session_manual(p2p& network, uint64_t identifier) NOEXCEPT
 void session_manual::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    session::start(BIND2(handle_started, _1, std::move(handler)));
+    session::start(BIND(handle_started, _1, std::move(handler)));
 }
 
 void session_manual::handle_started(const code& ec,
@@ -113,7 +113,7 @@ void session_manual::start_connect(const code&, const endpoint& peer,
     }
 
     connector->connect(peer,
-        BIND5(handle_connect, _1, _2, peer, connector, handler));
+        BIND(handle_connect, _1, _2, peer, connector, handler));
 }
 
 void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
@@ -145,7 +145,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
         }
 
         // Avoid tight loop with delay timer.
-        defer(BIND4(start_connect, _1, peer, connector, handler));
+        defer(BIND(start_connect, _1, peer, connector, handler));
         return;
     }
 
@@ -153,8 +153,8 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
 
     // It is possible for start_channel to directly invoke the handlers.
     start_channel(channel,
-        BIND4(handle_channel_start, _1, channel, peer, handler),
-        BIND5(handle_channel_stop, _1, channel, peer, connector, handler));
+        BIND(handle_channel_start, _1, channel, peer, handler),
+        BIND(handle_channel_stop, _1, channel, peer, connector, handler));
 }
 
 void session_manual::attach_handshake(const channel::ptr& channel,

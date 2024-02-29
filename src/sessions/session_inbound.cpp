@@ -59,7 +59,7 @@ void session_inbound::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    session::start(BIND2(handle_started, _1, std::move(handler)));
+    session::start(BIND(handle_started, _1, std::move(handler)));
 }
 
 void session_inbound::handle_started(const code& ec,
@@ -117,7 +117,7 @@ void session_inbound::start_accept(const code&,
     if (stopped())
         return;
 
-    acceptor->accept(BIND3(handle_accept, _1, _2, acceptor));
+    acceptor->accept(BIND(handle_accept, _1, _2, acceptor));
 }
 
 void session_inbound::handle_accept(const code& ec,
@@ -137,7 +137,7 @@ void session_inbound::handle_accept(const code& ec,
     {
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
         LOGF("Failed to accept inbound connection, " << ec.message());
-        defer(BIND2(start_accept, _1, acceptor));
+        defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
@@ -174,8 +174,8 @@ void session_inbound::handle_accept(const code& ec,
         << acceptor->local() << "].");
 
     start_channel(channel,
-        BIND2(handle_channel_start, _1, channel),
-        BIND2(handle_channel_stop, _1, channel));
+        BIND(handle_channel_start, _1, channel),
+        BIND(handle_channel_stop, _1, channel));
 }
 
 bool session_inbound::blacklisted(const config::address& address) const NOEXCEPT

@@ -58,10 +58,10 @@ void protocol_address_out_31402::start() NOEXCEPT
     // Advertise self if configured for inbound and with self address(es).
     if (settings().advertise_enabled())
     {
-        SEND1(selfs(), handle_send, _1);
+        SEND(selfs(), handle_send, _1);
     }
 
-    SUBSCRIBE_CHANNEL2(get_address, handle_receive_get_address, _1, _2);
+    SUBSCRIBE_CHANNEL(get_address, handle_receive_get_address, _1, _2);
     protocol::start();
 }
 
@@ -84,11 +84,11 @@ bool protocol_address_out_31402::handle_receive_get_address(const code& ec,
         return true;
     }
 
-    fetch(BIND2(handle_fetch_address, _1, _2));
+    fetch(BIND(handle_fetch_address, _1, _2));
     sent_ = true;
 
     LOGP("Relay start [" << authority() << "].");
-    SUBSCRIBE_BROADCAST3(address, handle_broadcast_address, _1, _2, _3);
+    SUBSCRIBE_BROADCAST(address, handle_broadcast_address, _1, _2, _3);
     return true;
 }
 
@@ -107,7 +107,7 @@ void protocol_address_out_31402::handle_fetch_address(const code& ec,
     LOGP("Sending (" << message->addresses.size() << ") addresses to "
         "[" << authority() << "]");
 
-    SEND1(*message, handle_send, _1);
+    SEND(*message, handle_send, _1);
 }
 
 // ----------------------------------------------------------------------------
@@ -132,7 +132,7 @@ bool protocol_address_out_31402::handle_broadcast_address(const code& ec,
     LOGP("Relay (" << message->addresses.size() << ") addresses to ["
         << authority() << "].");
 
-    SEND1(*message, handle_send, _1);
+    SEND(*message, handle_send, _1);
     return true;
 }
 

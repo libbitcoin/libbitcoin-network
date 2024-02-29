@@ -186,7 +186,7 @@ size_t protocol::address_count() const NOEXCEPT
 void protocol::fetch(address_handler&& handler) NOEXCEPT
 {
     session_.fetch(
-        BIND3(handle_fetch, _1, _2, std::move(handler)));
+        BIND(handle_fetch, _1, _2, std::move(handler)));
 }
 
 void protocol::handle_fetch(const code& ec, const address_cptr& message,
@@ -201,7 +201,7 @@ void protocol::save(const address_cptr& message,
     count_handler&& handler) NOEXCEPT
 {
     session_.save(message,
-        BIND3(handle_save, _1, _2, std::move(handler)));
+        BIND(handle_save, _1, _2, std::move(handler)));
 }
 
 void protocol::handle_save(const code& ec, size_t accepted,

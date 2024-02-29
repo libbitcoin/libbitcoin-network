@@ -97,32 +97,13 @@ namespace network {
 #define BIND_SHARED(method, args) \
     std::bind(std::forward<Method>(method), shared_from_base<Derived>(), \
         std::forward<Args>(args)...)
-
 #define BIND_THIS(method, args) \
     std::bind(std::forward<Method>(method), static_cast<Derived*>(this), \
     std::forward<Args>(args)...)
-
-#define BIND1(method, p1) \
-    bind<CLASS>(&CLASS::method, p1)
-#define BIND2(method, p1, p2) \
-    bind<CLASS>(&CLASS::method, p1, p2)
-#define BIND3(method, p1, p2, p3) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3)
-#define BIND4(method, p1, p2, p3, p4) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4)
-#define BIND5(method, p1, p2, p3, p4, p5) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5)
-#define BIND6(method, p1, p2, p3, p4, p5, p6) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6)
-#define BIND7(method, p1, p2, p3, p4, p5, p6, p7) \
-    bind<CLASS>(&CLASS::method, p1, p2, p3, p4, p5, p6, p7)
-
-#define POST1(method, p1) \
-    post<CLASS>(&CLASS::method, p1)
-#define POST2(method, p1, p2) \
-    post<CLASS>(&CLASS::method, p1, p2)
-#define POST3(method, p1, p2, p3) \
-    post<CLASS>(&CLASS::method, p1, p2, p3)
+#define BIND(method, ...) \
+    bind<CLASS>(&CLASS::method, __VA_ARGS__)
+#define POST(method, ...) \
+    post<CLASS>(&CLASS::method, __VA_ARGS__)
 
 } // namespace network
 } // namespace libbitcoin

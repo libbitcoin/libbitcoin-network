@@ -59,9 +59,9 @@ void protocol_seed_31402::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE_CHANNEL2(address, handle_receive_address, _1, _2);
-    SUBSCRIBE_CHANNEL2(get_address, handle_receive_get_address, _1, _2);
-    SEND1(get_address{}, handle_send_get_address, _1);
+    SUBSCRIBE_CHANNEL(address, handle_receive_address, _1, _2);
+    SUBSCRIBE_CHANNEL(get_address, handle_receive_get_address, _1, _2);
+    SEND(get_address{}, handle_send_get_address, _1);
 
     protocol::start();
 }
@@ -107,7 +107,7 @@ void protocol_seed_31402::handle_send_get_address(const code& ec) NOEXCEPT
     if (stopped(ec))
         return;
 
-    timer_->start(BIND1(handle_timer, _1));
+    timer_->start(BIND(handle_timer, _1));
     sent_get_address_ = true;
 
     if (complete())
@@ -168,7 +168,7 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
     const auto end_size = filtered->addresses.size();
 
     save(filtered,
-        BIND4(handle_save_addresses, _1, _2, end_size, start_size));
+        BIND(handle_save_addresses, _1, _2, end_size, start_size));
 
     return true;
 }
@@ -212,7 +212,7 @@ bool protocol_seed_31402::handle_receive_get_address(const code& ec,
     // Advertise self if configured for inbound and with self address(es).
     if (settings().advertise_enabled())
     {
-        SEND1(selfs(), handle_send_address, _1);
+        SEND(selfs(), handle_send_address, _1);
     }
 
     // handle_send_address has been bypassed, so completion here.
