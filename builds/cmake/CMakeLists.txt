@@ -287,6 +287,7 @@ if (with-tests)
 
     add_test( NAME libbitcoin-network-test COMMAND libbitcoin-network-test
             --run_test=empty_tests
+            --log_level=warning
             --show_progress=no
             --detect_memory_leak=0
             --report_level=no
