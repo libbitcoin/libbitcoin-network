@@ -35,7 +35,7 @@ template <class Derived, bc::if_base_of<Base, Derived>>
 std::shared_ptr<Derived> enable_shared_from_base<Base>::
 shared_from_base() NOEXCEPT
 {
-    // Instance (not just type) must be upcastable to Derived.
+    // Instance must be downcastable to Derived.
     return std::static_pointer_cast<Derived>(this->shared_from_this());
 }
 
