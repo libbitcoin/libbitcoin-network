@@ -24,9 +24,13 @@
 
 namespace libbitcoin {
 namespace network {
+    
+// enable_shared_from_base : enable_shared_from_this
+// ----------------------------------------------------------------------------
 
 template <class Base>
-void enable_shared_from_base<Base>::nop() volatile NOEXCEPT
+void enable_shared_from_base<Base>::
+nop() volatile NOEXCEPT
 {
 }
 
@@ -35,8 +39,44 @@ template <class Derived, bc::if_base_of<Base, Derived>>
 std::shared_ptr<Derived> enable_shared_from_base<Base>::
 shared_from_base() NOEXCEPT
 {
-    // Instance (not just type) must be upcastable to Derived.
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return std::static_pointer_cast<Derived>(this->shared_from_this());
+    BC_POP_WARNING()
+}
+
+// enable_shared_from_sibling
+// ----------------------------------------------------------------------------
+
+template <class Base, class Sibling>
+enable_shared_from_sibling<Base, Sibling>::
+enable_shared_from_sibling() NOEXCEPT
+{
+}
+
+template <class Base, class Sibling>
+enable_shared_from_sibling<Base, Sibling>::
+~enable_shared_from_sibling() NOEXCEPT
+{
+}
+
+template <class Base, class Sibling>
+void enable_shared_from_sibling<Base, Sibling>::
+nop() volatile NOEXCEPT
+{
+}
+
+template <class Base, class Sibling>
+template <class Derived, bc::if_base_of<Base, Derived>>
+std::shared_ptr<Derived> enable_shared_from_sibling<Base, Sibling>::
+shared_from_sibling() NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    // Obtain shared pointer to object from Sibling class inheritance path.
+    const auto sibling = dynamic_cast<Sibling*>(this)->shared_from_this();
+    BC_POP_WARNING()
+
+    // Cast pointer back to Derived (from Base) class it was created from.
+    return std::dynamic_pointer_cast<Derived>(sibling);
 }
 
 } // namespace network
