@@ -40,7 +40,7 @@ using namespace messages;
 using namespace std::placeholders;
 
 // Dump up to this size of payload as hex in order to diagnose failure.
-static constexpr size_t invalid_payload_dump_size = chain::max_block_size;
+static constexpr size_t invalid_payload_dump_size = chain::max_block_weight;
 static constexpr uint32_t http_magic  = 0x20544547;
 static constexpr uint32_t https_magic = 0x02010316;
 
@@ -292,6 +292,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 
     if (code)
     {
+        // TODO: specialize for header/block/tx messages and provide hash.
         LOGR("Invalid " << head->command << " payload from [" << authority()
             << "] (" << encode_base16({ payload_buffer_.begin(),
                 std::next(payload_buffer_.begin(), std::min(payload_size,
