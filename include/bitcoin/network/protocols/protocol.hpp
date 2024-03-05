@@ -49,6 +49,7 @@ public:
     DELETE_COPY_MOVE(protocol);
 
     /// The channel is stopping (called on strand by stop subscription).
+    /// The stopped flag is set before this is invoked by subscriber stop.
     /// This must be called only from the channel strand (not thread safe).
     virtual void stopping(const code& ec) NOEXCEPT;
 
