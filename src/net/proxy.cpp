@@ -40,7 +40,7 @@ using namespace messages;
 using namespace std::placeholders;
 
 // Dump up to this size of payload as hex in order to diagnose failure.
-static constexpr size_t invalid_payload_dump_size = chain::max_block_weight;
+static constexpr size_t invalid_payload_dump_size = 0xff;
 static constexpr uint32_t http_magic  = 0x20544547;
 static constexpr uint32_t https_magic = 0x02010316;
 
@@ -292,11 +292,24 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 
     if (code)
     {
-        // TODO: specialize for header/block/tx messages and provide hash.
-        LOGR("Invalid " << head->command << " payload from [" << authority()
-            << "] (" << encode_base16({ payload_buffer_.begin(),
-                std::next(payload_buffer_.begin(), std::min(payload_size,
-                invalid_payload_dump_size))}) << ") " << code.message());
+        if (head->command == messages::transaction::command ||
+            head->command == messages::block::command)
+        {
+            LOGR("Invalid " << head->command << " payload from [" << authority()
+                << "] with hash [" << encode_hash(bitcoin_hash(payload_buffer_)) << "] "
+                << code.message());
+        }
+        else
+        {
+            LOGR("Invalid " << head->command << " payload from [" << authority()
+                << "] with bytes (" << encode_base16(
+                    {
+                        payload_buffer_.begin(),
+                        std::next(payload_buffer_.begin(),
+                        std::min(payload_size, invalid_payload_dump_size))
+                    })
+                << "...) " << code.message());
+        }
 
         stop(code);
         return;
