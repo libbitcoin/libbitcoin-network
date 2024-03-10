@@ -41,7 +41,7 @@
 /// ---------------------------------------------------------------------------
 
 /// TODO: Move to build configuration.
-#define WITH_EVENTS
+////#define WITH_EVENTS
 #define WITH_LOGGING
 #if !defined(NDEBUG)
     #define WITH_LOGO
@@ -55,9 +55,9 @@
 #define WITH_LOGF
 #define WITH_LOGQ
 
-#if defined(WITH_EVENTS)
-    #define HAVE_EVENTS
-#endif
+////#if defined(WITH_EVENTS)
+////    #define HAVE_EVENTS
+////#endif
 #if defined(WITH_LOGGING)
     #define HAVE_LOGGING
     #if defined(WITH_LOGO)
