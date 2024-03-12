@@ -76,6 +76,7 @@ notify(const code& ec, const Args&... args) NOEXCEPT
         // Invoke handler and handle result.
         if (!(*it)(ec, args...))
         {
+            // Use std::list as this is linear in std::deque.
             it = queue_.erase(it);
         }
         else
