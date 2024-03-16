@@ -74,6 +74,8 @@ void proxy::resume() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     paused_ = false;
+
+    // TODO: resume of an idle channel results in termination for invalid_magic.
     read_heading();
 }
 
