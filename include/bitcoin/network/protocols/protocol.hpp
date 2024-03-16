@@ -150,8 +150,11 @@ protected:
     /// Stop the channel.
     virtual void stop(const code& ec) NOEXCEPT;
 
-    /// Pause the channel (strand required).
+    /// Pause reading from the socket, stops timers (requires strand).
     virtual void pause() NOEXCEPT;
+
+    /// Resume reading from the socket, starts timers (requires strand).
+    virtual void resume() NOEXCEPT;
 
     /// Properties.
     /// -----------------------------------------------------------------------

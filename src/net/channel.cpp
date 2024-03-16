@@ -89,8 +89,8 @@ void channel::stop(const code& ec) NOEXCEPT
 void channel::do_stop(const code&) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    inactivity_->stop();
-    expiration_->stop();
+    stop_expiration();
+    stop_inactivity();
 }
 
 // Pause/resume (paused upon create).
@@ -99,6 +99,15 @@ void channel::do_stop(const code&) NOEXCEPT
 // Timers are set for handshake and reset upon protocol start.
 // Version protocols may have more restrictive completion timeouts.
 // A restarted timer invokes completion handler with error::operation_canceled.
+
+void channel::pause() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    stop_expiration();
+    stop_inactivity();
+    proxy::pause();
+}
+
 void channel::resume() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -219,9 +228,15 @@ void channel::signal_activity() NOEXCEPT
 // Timers.
 // ----------------------------------------------------------------------------
 // TODO: build DoS protection around rate_limit_, backlog(), total(), and time.
-
-// Called from start or strand.
 // A restarted timer invokes completion handler with error::operation_canceled.
+// Called from start or strand.
+
+void channel::stop_expiration() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    expiration_->stop();
+}
+
 void channel::start_expiration() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -253,7 +268,12 @@ void channel::handle_expiration(const code& ec) NOEXCEPT
     stop(error::channel_expired);
 }
 
-// Called from start or strand.
+void channel::stop_inactivity() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    inactivity_->stop();
+}
+
 void channel::start_inactivity() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
