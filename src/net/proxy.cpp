@@ -169,8 +169,7 @@ void proxy::read_heading() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Terminates the read loop (cannot be resumed).
-    // Pauses the read loop (can be resumed), does not pause timer.
+    // Both terminate read loop, paused can be resumed, stopped cannot.
     if (stopped() || paused())
         return;
 

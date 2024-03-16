@@ -82,7 +82,10 @@ public:
     /// Idempotent, may be called multiple times.
     void stop(const code& ec) NOEXCEPT override;
 
-    /// Resume reading from the socket (requires strand).
+    /// Pause reading from the socket, stops timers (requires strand).
+    void pause() NOEXCEPT override;
+
+    /// Resume reading from the socket, starts timers (requires strand).
     void resume() NOEXCEPT override;
 
     /// The channel does not "speak" to peers (e.g. seed connection).
@@ -124,9 +127,11 @@ private:
     bool is_handshaked() const NOEXCEPT;
     void do_stop(const code& ec) NOEXCEPT;
 
+    void stop_expiration() NOEXCEPT;
     void start_expiration() NOEXCEPT;
     void handle_expiration(const code& ec) NOEXCEPT;
 
+    void stop_inactivity() NOEXCEPT;
     void start_inactivity() NOEXCEPT;
     void handle_inactivity(const code& ec) NOEXCEPT;
 
