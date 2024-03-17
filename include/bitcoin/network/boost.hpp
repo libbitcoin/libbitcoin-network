@@ -45,6 +45,5 @@
 #include <boost/circular_buffer.hpp>
 #include <boost/regex.hpp>
 #include <boost/system/error_code.hpp>
-#include <boost/thread.hpp>
 
 #endif

@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/async/threadpool.hpp>
 
+#include <thread>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/thread.hpp>
@@ -42,7 +43,7 @@ threadpool::threadpool(size_t number_threads, thread_priority priority) NOEXCEPT
 {
     for (size_t thread = 0; thread < number_threads; ++thread)
     {
-        threads_.push_back(network::thread([this, priority]() NOEXCEPT
+        threads_.push_back(std::thread([this, priority]() NOEXCEPT
         {
             set_priority(priority);
 
@@ -73,7 +74,7 @@ void threadpool::stop() NOEXCEPT
 
 bool threadpool::join() NOEXCEPT
 {
-    const auto this_id = boost::this_thread::get_id();
+    const auto this_id = std::this_thread::get_id();
 
     for (auto& thread: threads_)
     {
