@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_THREADPOOL_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_THREADPOOL_HPP
 
-#include <memory>
+#include <thread>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/thread.hpp>
@@ -64,7 +64,7 @@ private:
     asio::io_context service_{};
 
     // These are not thread safe.
-    std::vector<thread> threads_{};
+    std::vector<std::thread> threads_{};
     work_guard work_;
 };
 

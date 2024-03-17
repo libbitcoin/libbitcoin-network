@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/async/thread.hpp>
 
-#include <algorithm>
 #include <thread>
 
 #ifdef HAVE_MSC
@@ -71,50 +70,9 @@ void set_priority(thread_priority priority) NOEXCEPT
 #endif
 }
 
-thread_priority priority(bool priority) NOEXCEPT
+size_t cores() NOEXCEPT
 {
-    return priority ? thread_priority::high : thread_priority::normal;
-}
-
-inline size_t cores()
-{
-    // Cores must be at least 1 (guards against irrational API return).
-    return std::max(std::thread::hardware_concurrency(), 1u);
-}
-
-// This is used to default the number of threads to the number of cores and to
-// ensure that no less than one thread is configured.
-size_t thread_default(size_t configured) NOEXCEPT
-{
-    if (is_zero(configured))
-        return cores();
-
-    // Configured but no less than 1.
-    return std::max(configured, one);
-}
-
-// This is used to ensure that threads does not exceed cores in the case of
-// parallel work distribution, while allowing the user to reduce parallelism so
-// as not to monopolize the processor. It also makes optimal config easy (0).
-size_t thread_ceiling(size_t configured) NOEXCEPT
-{
-    if (is_zero(configured))
-        return cores();
-
-    // Cores/1 but no more than configured.
-    return std::min(configured, cores());
-}
-
-// This is used to ensure that at least a minimum required number of threads is
-// allocated, so that thread starvation does not occur. It also allows the user
-// to increase threads above minimum. It always ensures at least core threads.
-size_t thread_floor(size_t configured) NOEXCEPT
-{
-    if (is_zero(configured))
-        return cores();
-
-    // Configured but no less than cores/1.
-    return std::max(configured, cores());
+    return std::max(std::thread::hardware_concurrency(), 1_u32);
 }
 
 } // namespace network

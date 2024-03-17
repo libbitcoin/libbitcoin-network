@@ -20,25 +20,11 @@
 #define LIBBITCOIN_NETWORK_ASYNC_THREAD_HPP
 
 #include <memory>
-#include <boost/thread.hpp>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
-
-////// Adapted from: stackoverflow.com/a/18298965/1172329
-////#ifndef thread_local
-////    #if (__STDC_VERSION__ >= 201112) && (!defined __STDC_NO_THREADS__)
-////        #define thread_local _Thread_local
-////    #elif defined(_MSC_VER)
-////        #define thread_local __declspec(thread)
-////    #elif defined(__GNUC__)
-////        #define thread_local __thread
-////    #else
-////        #error "Cannot define thread_local"
-////    #endif
-////#endif
 
 enum class thread_priority
 {
@@ -48,15 +34,11 @@ enum class thread_priority
     lowest
 };
 
-// Boost thread is used because of thread_specific_ptr limitation:
-// stackoverflow.com/q/22448022/1172329
-typedef boost::thread thread;
+// Always at least 1 (guards against irrational API return).
+BCT_API size_t cores() NOEXCEPT;
 
+// Set thread priority for the current thread.
 BCT_API void set_priority(thread_priority priority) NOEXCEPT;
-BCT_API thread_priority priority(bool priority) NOEXCEPT;
-BCT_API size_t thread_default(size_t configured) NOEXCEPT;
-BCT_API size_t thread_ceiling(size_t configured) NOEXCEPT;
-BCT_API size_t thread_floor(size_t configured) NOEXCEPT;
 
 } // namespace network
 } // namespace libbitcoin
