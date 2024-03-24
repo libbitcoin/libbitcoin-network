@@ -101,10 +101,10 @@ public:
     writer write(uint8_t level) const NOEXCEPT;
 
     /// Fire event with optional value, recorded with current time.
-    void fire(uint8_t event, uint64_t value=zero) const NOEXCEPT;
+    void fire(uint8_t event_, uint64_t value=zero) const NOEXCEPT;
 
     /// Fire event with nanosecond duration value, recorded with current time.
-    void span(uint8_t event, const time& started) const NOEXCEPT;
+    void span(uint8_t event_, const time& started) const NOEXCEPT;
 
     /// If stopped, handler is invoked with error::subscriber_stopped/defaults
     /// and dropped. Otherwise it is held until stop/drop. False if failed.

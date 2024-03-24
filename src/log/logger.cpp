@@ -138,25 +138,25 @@ void logger::do_subscribe_messages(const message_notifier& handler) NOEXCEPT
 // events
 // ----------------------------------------------------------------------------
 
-void logger::span(uint8_t event, const time& started) const NOEXCEPT
+void logger::span(uint8_t event_, const time& started) const NOEXCEPT
 {
     // value parameter is time span in nanoseconds.
-    fire(event, (now() - started).count());
+    fire(event_, (now() - started).count());
 }
 
-void logger::fire(uint8_t event, uint64_t value) const NOEXCEPT
+void logger::fire(uint8_t event_, uint64_t value) const NOEXCEPT
 {
     boost::asio::post(strand_,
         std::bind(&logger::do_notify_event,
-            this, event, value, fine_clock::now()));
+            this, event_, value, fine_clock::now()));
 }
 
 // private
-void logger::do_notify_event(uint8_t event, uint64_t value,
+void logger::do_notify_event(uint8_t event_, uint64_t value,
     const time& point) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    event_subscriber_.notify(error::success, event, value, point);
+    event_subscriber_.notify(error::success, event_, value, point);
 }
 
 void logger::subscribe_events(event_notifier&& handler) NOEXCEPT

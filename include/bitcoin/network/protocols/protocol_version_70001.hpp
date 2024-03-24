@@ -27,11 +27,10 @@
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_version_31402.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
-
-class session;
 
 class BCT_API protocol_version_70001
   : public protocol_version_31402, protected tracker<protocol_version_70001>
