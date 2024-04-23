@@ -219,7 +219,7 @@ private:
 
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
-    channel::ptr channel_;
+    const channel::ptr channel_;
 
     // This is thread safe.
     const session::ptr session_;
