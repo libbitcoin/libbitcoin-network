@@ -42,7 +42,9 @@ class BCT_API session
   : public enable_shared_from_base<session>, public reporter
 {
 public:
+    typedef std::shared_ptr<session> ptr;
     typedef broadcaster::channel_id channel_id;
+
     DELETE_COPY_MOVE(session);
 
 protected:

@@ -35,12 +35,12 @@ using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
-protocol_ping_31402::protocol_ping_31402(session& session,
+protocol_ping_31402::protocol_ping_31402(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    timer_(std::make_shared<deadline>(session.log, channel->strand(),
-        session.settings().channel_heartbeat())),
-    tracker<protocol_ping_31402>(session.log)
+    timer_(std::make_shared<deadline>(session->log, channel->strand(),
+        session->settings().channel_heartbeat())),
+    tracker<protocol_ping_31402>(session->log)
 {
 }
 

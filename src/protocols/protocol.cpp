@@ -38,10 +38,11 @@ using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
-protocol::protocol(session& session, const channel::ptr& channel) NOEXCEPT
+protocol::protocol(const session::ptr& session,
+    const channel::ptr& channel) NOEXCEPT
   : channel_(channel),
     session_(session),
-    reporter(session.log)
+    reporter(session->log)
 {
 }
 
@@ -157,7 +158,7 @@ void protocol::set_negotiated_version(uint32_t value) NOEXCEPT
 
 const network::settings& protocol::settings() const NOEXCEPT
 {
-    return session_.settings();
+    return session_->settings();
 }
 
 address protocol::selfs() const NOEXCEPT
@@ -187,12 +188,12 @@ uint64_t protocol::identifier() const NOEXCEPT
 
 size_t protocol::address_count() const NOEXCEPT
 {
-    return session_.address_count();
+    return session_->address_count();
 }
 
 void protocol::fetch(address_handler&& handler) NOEXCEPT
 {
-    session_.fetch(
+    session_->fetch(
         BIND(handle_fetch, _1, _2, std::move(handler)));
 }
 
@@ -207,7 +208,7 @@ void protocol::handle_fetch(const code& ec, const address_cptr& message,
 void protocol::save(const address_cptr& message,
     count_handler&& handler) NOEXCEPT
 {
-    session_.save(message,
+    session_->save(message,
         BIND(handle_save, _1, _2, std::move(handler)));
 }
 

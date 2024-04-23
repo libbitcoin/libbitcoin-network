@@ -149,8 +149,7 @@ void session::attach_handshake(const channel::ptr& channel,
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
 
-    // Weak reference safe as sessions outlive protocols.
-    auto& self = *this;
+    const auto self = shared_from_this();
     const auto maximum_version = settings().protocol_maximum;
     const auto extended_version = maximum_version >= messages::level::bip37;
     const auto enable_reject = settings().enable_reject &&
@@ -281,8 +280,7 @@ void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
-    // Weak reference safe as sessions outlive protocols.
-    auto& self = *this;
+    const auto self = shared_from_this();
     const auto enable_alert = settings().enable_alert;
     const auto enable_address = settings().enable_address;
     const auto negotiated_version = channel->negotiated_version();

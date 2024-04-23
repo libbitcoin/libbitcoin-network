@@ -41,28 +41,28 @@ using namespace messages;
 using namespace std::placeholders;
 
 // Require the configured minimum protocol and services by default.
-protocol_version_31402::protocol_version_31402(session& session,
+protocol_version_31402::protocol_version_31402(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_31402(session, channel,
-      session.settings().services_minimum,
-      session.settings().services_maximum)
+      session->settings().services_minimum,
+      session->settings().services_maximum)
 {
 }
 
 // Used for seeding (should probably not override these).
-protocol_version_31402::protocol_version_31402(session& session,
+protocol_version_31402::protocol_version_31402(const session::ptr& session,
     const channel::ptr& channel, uint64_t minimum_services,
     uint64_t maximum_services) NOEXCEPT
   : protocol(session, channel),
     inbound_(channel->inbound()),
-    minimum_version_(session.settings().protocol_minimum),
-    maximum_version_(session.settings().protocol_maximum),
+    minimum_version_(session->settings().protocol_minimum),
+    maximum_version_(session->settings().protocol_maximum),
     minimum_services_(minimum_services),
     maximum_services_(maximum_services),
-    invalid_services_(session.settings().invalid_services),
-    timer_(std::make_shared<deadline>(session.log, channel->strand(),
-        session.settings().channel_handshake())),
-    tracker<protocol_version_31402>(session.log)
+    invalid_services_(session->settings().invalid_services),
+    timer_(std::make_shared<deadline>(session->log, channel->strand(),
+        session->settings().channel_handshake())),
+    tracker<protocol_version_31402>(session->log)
 {
 }
 

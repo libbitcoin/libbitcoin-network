@@ -226,7 +226,8 @@ class mock_protocol
 public:
     typedef std::shared_ptr<mock_protocol> ptr;
 
-    mock_protocol(session& session, const channel::ptr& channel) NOEXCEPT
+    mock_protocol(const session::ptr& session,
+        const channel::ptr& channel) NOEXCEPT
       : protocol(session, channel)
     {
     }

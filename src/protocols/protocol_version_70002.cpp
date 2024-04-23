@@ -39,21 +39,21 @@ using namespace std::placeholders;
 static const std::string insufficient_version = "insufficient-version";
 static const std::string insufficient_services = "insufficient-services";
 
-protocol_version_70002::protocol_version_70002(session& session,
+protocol_version_70002::protocol_version_70002(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70002(session, channel,
-        session.settings().services_minimum,
-        session.settings().services_maximum,
-        session.settings().enable_transaction)
+        session->settings().services_minimum,
+        session->settings().services_maximum,
+        session->settings().enable_transaction)
 {
 }
 
-protocol_version_70002::protocol_version_70002(session& session,
+protocol_version_70002::protocol_version_70002(const session::ptr& session,
     const channel::ptr& channel, uint64_t minimum_services,
     uint64_t maximum_services, bool relay) NOEXCEPT
   : protocol_version_70001(session, channel, minimum_services,
       maximum_services, relay),
-    tracker<protocol_version_70002>(session.log)
+    tracker<protocol_version_70002>(session->log)
 {
 }
 
