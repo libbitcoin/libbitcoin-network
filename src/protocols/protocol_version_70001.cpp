@@ -35,22 +35,22 @@ namespace network {
 using namespace system;
 using namespace bc::network::messages;
 
-protocol_version_70001::protocol_version_70001(session& session,
+protocol_version_70001::protocol_version_70001(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70001(session, channel,
-        session.settings().services_minimum,
-        session.settings().services_maximum,
-        session.settings().enable_transaction)
+        session->settings().services_minimum,
+        session->settings().services_maximum,
+        session->settings().enable_transaction)
 {
 }
 
-protocol_version_70001::protocol_version_70001(session& session,
+protocol_version_70001::protocol_version_70001(const session::ptr& session,
     const channel::ptr& channel, uint64_t minimum_services,
     uint64_t maximum_services, bool relay) NOEXCEPT
   : protocol_version_31402(session, channel, minimum_services,
       maximum_services),
     relay_(relay),
-    tracker<protocol_version_70001>(session.log)
+    tracker<protocol_version_70001>(session->log)
 {
 }
 

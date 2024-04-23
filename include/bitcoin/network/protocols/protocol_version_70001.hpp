@@ -39,13 +39,13 @@ public:
     typedef std::shared_ptr<protocol_version_70001> ptr;
 
     /// Construct a version protocol instance using configured values.
-    protocol_version_70001(session& session,
+    protocol_version_70001(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Construct a version protocol instance using parameterized services.
-    protocol_version_70001(session& session, const channel::ptr& channel,
-        uint64_t minimum_services, uint64_t maximum_services,
-        bool relay) NOEXCEPT;
+    protocol_version_70001(const session::ptr& session,
+        const channel::ptr& channel, uint64_t minimum_services,
+        uint64_t maximum_services, bool relay) NOEXCEPT;
 
 protected:
     messages::version version_factory(bool relay=false) const NOEXCEPT override;

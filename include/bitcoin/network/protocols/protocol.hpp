@@ -118,7 +118,7 @@ protected:
             return self->handle_broadcast<Message>(ec, message, id, handler);
         };
 
-        session_.subscribe<Message>(bouncer, channel_->identifier());
+        session_->subscribe<Message>(bouncer, channel_->identifier());
     }
 
     /// Broadcast a message instance to peers (use BROADCAST).
@@ -126,14 +126,14 @@ protected:
     void broadcast(const typename Message::cptr& message) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        session_.broadcast<Message>(message, channel_->identifier());
+        session_->broadcast<Message>(message, channel_->identifier());
     }
 
     /// Start/Stop.
     /// -----------------------------------------------------------------------
 
     /// Construct an instance.
-    protocol(session& session, const channel::ptr& channel) NOEXCEPT;
+    protocol(const session::ptr& session, const channel::ptr& channel) NOEXCEPT;
 
     /// Asserts that protocol is stopped.
     virtual ~protocol() NOEXCEPT;
@@ -219,10 +219,10 @@ private:
 
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
-    channel::ptr channel_;
+    const channel::ptr channel_;
 
     // This is thread safe.
-    session& session_;
+    const session::ptr session_;
 
     // This is protected by strand.
     bool started_{};

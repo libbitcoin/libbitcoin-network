@@ -40,11 +40,11 @@ using namespace std::placeholders;
 // Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-protocol_address_in_31402::protocol_address_in_31402(session& session,
-    const channel::ptr& channel) NOEXCEPT
+protocol_address_in_31402::protocol_address_in_31402(
+    const session::ptr& session, const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     outbound_(!channel->inbound()),
-    tracker<protocol_address_in_31402>(session.log)
+    tracker<protocol_address_in_31402>(session->log)
 {
 }
 

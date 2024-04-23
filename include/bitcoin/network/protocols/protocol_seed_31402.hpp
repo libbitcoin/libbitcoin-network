@@ -37,7 +37,7 @@ class BCT_API protocol_seed_31402
 public:
     typedef std::shared_ptr<protocol_seed_31402> ptr;
 
-    protocol_seed_31402(session& session,
+    protocol_seed_31402(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Perform seeding, stops channel on completion (strand required).

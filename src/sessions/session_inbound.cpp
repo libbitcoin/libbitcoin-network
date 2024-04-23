@@ -200,8 +200,7 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
     // Inbound does not require any node services (e.g. bitnodes.io is zero).
     constexpr auto minimum_services = messages::service::node_none;
 
-    // Weak reference safe as sessions outlive protocols.
-    auto& self = *this;
+    const auto self = shared_from_this();
     const auto maximum_version = settings().protocol_maximum;
     const auto maximum_services = settings().services_maximum;
     const auto extended_version = maximum_version >= messages::level::bip37;
