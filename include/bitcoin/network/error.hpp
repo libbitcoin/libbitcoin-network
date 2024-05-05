@@ -116,6 +116,7 @@ enum error_t : uint8_t
     channel_inactive,
     channel_stopped,
     service_stopped,
+    service_suspended,
     subscriber_exists,
     subscriber_stopped,
     desubscribed

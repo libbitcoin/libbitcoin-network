@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/net/connector.hpp>
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -43,10 +44,12 @@ using namespace std::placeholders;
 // ----------------------------------------------------------------------------
 
 connector::connector(const logger& log, asio::strand& strand,
-    asio::io_context& service, const settings& settings) NOEXCEPT
+    asio::io_context& service, const settings& settings,
+    std::atomic_bool& suspended) NOEXCEPT
   : settings_(settings),
     service_(service),
     strand_(strand),
+    suspended_(suspended),
     resolver_(strand),
     timer_(std::make_shared<deadline>(log, strand, settings.connect_timeout())),
     reporter(log),
@@ -106,6 +109,12 @@ void connector::start(const std::string& hostname, uint16_t port,
         return;
     }
 
+    if (suspended_.load())
+    {
+        handler(error::service_suspended, nullptr);
+        return;
+    }
+
     // Capture the handler.
     racer_.start(std::move(handler));
 
@@ -136,6 +145,14 @@ void connector::handle_resolve(const error::boost_code& ec,
     if (socket->stopped())
     {
         racer_.finish(error::operation_canceled, nullptr);
+        return;
+    }
+
+    if (suspended_.load())
+    {
+        timer_->stop();
+        socket->stop();
+        racer_.finish(error::service_suspended, nullptr);
         return;
     }
 
@@ -176,6 +193,14 @@ void connector::handle_connect(const code& ec, const finish_ptr& finish,
     if (socket->stopped())
     {
         racer_.finish(error::operation_canceled, nullptr);
+        return;
+    }
+
+    if (suspended_.load())
+    {
+        socket->stop();
+        timer_->stop();
+        racer_.finish(error::service_suspended, nullptr);
         return;
     }
 

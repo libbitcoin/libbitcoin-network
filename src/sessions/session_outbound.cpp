@@ -98,6 +98,7 @@ void session_outbound::handle_started(const code& ec,
     LOG_ONLY(const auto batch = settings().connect_batch_size;)
     LOGN("Create " << peers << " connections " << batch << " at a time.");
 
+    // There is currently no way to vary the number of connections at runtime.
     for (size_t peer = 0; peer < peers; ++peer)
         start_connect(error::success);
 
@@ -164,15 +165,19 @@ void session_outbound::do_one(const code& ec, const config::address& peer,
         return;
     }
 
-    connector->connect(peer, BIND(handle_one, _1, _2, key, racer));
+    connector->connect(peer, BIND(handle_one, _1, _2, key, peer, racer));
 }
 
 // Handle each do_one connection attempt, stopping on first success.
 void session_outbound::handle_one(const code& ec, const socket::ptr& socket,
-    object_key key, const race::ptr& racer) NOEXCEPT
+    object_key key, const config::address& peer,
+    const race::ptr& racer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     ////COUNT(events::outbound2, key);
+
+    if (ec == error::service_suspended)
+        restore(peer, BIND(handle_reclaim, _1));
 
     // Winner in quality race is first to pass success.
     if (racer->finish(ec, socket))
@@ -207,6 +212,13 @@ void session_outbound::handle_connect(const code& ec,
     {
         LOGS("Address pool is empty.");
         defer(settings().connect_timeout(), BIND(start_connect, _1));
+        return;
+    }
+
+    if (ec == error::service_suspended)
+    {
+        ////LOGS("Suspended outbound channel start.");
+        defer(BIND(start_connect, _1));
         return;
     }
 
