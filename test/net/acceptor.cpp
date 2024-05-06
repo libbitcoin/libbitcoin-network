@@ -58,9 +58,10 @@ BOOST_AUTO_TEST_CASE(acceptor__construct__default__stopped_expected)
 {
     const logger log{};
     threadpool pool(1);
+    std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
 
     BOOST_REQUIRE(&instance->get_settings() == &set);
     BOOST_REQUIRE(&instance->get_service() == &pool.service());
@@ -74,9 +75,10 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
 {
     const logger log{};
     threadpool pool(1);
+    std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
 
     // Result codes inconsistent due to context.
     instance->start(42);
@@ -96,9 +98,10 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
     // TODO: There is no way to fake successful acceptance.
     const logger log{};
     threadpool pool(2);
+    std::atomic_bool suspended{ false };
     asio::strand strand(pool.service().get_executor());
     settings set(bc::system::chain::selection::mainnet);
-    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
 
     // Result codes inconsistent due to context.
     instance->start(42);

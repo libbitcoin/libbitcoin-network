@@ -312,7 +312,7 @@ public:
     acceptor::ptr create_acceptor() NOEXCEPT override
     {
         return ((acceptor_ = std::make_shared<Acceptor>(log, strand(),
-            service(), network_settings())));
+            service(), network_settings(), suspended_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -332,6 +332,7 @@ public:
 
 private:
     typename Acceptor::ptr acceptor_;
+    std::atomic_bool suspended_{ false };
 
     class mock_inbound_session
       : public session_inbound
