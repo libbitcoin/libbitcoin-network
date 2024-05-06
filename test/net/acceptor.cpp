@@ -93,7 +93,8 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     BOOST_REQUIRE(instance->get_stopped());
 }
 
-BOOST_AUTO_TEST_CASE(acceptor__accept__stop_suspended__service_suspended)
+// race
+BOOST_AUTO_TEST_CASE(acceptor__accept__stop_suspended__service_stopped_or_suspended)
 {
     // TODO: There is no way to fake successful acceptance.
     const logger log{};
@@ -122,7 +123,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop_suspended__service_suspended)
     pool.stop();
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE(instance->get_stopped());
-    BOOST_REQUIRE_EQUAL(result.first, error::service_suspended);
+    BOOST_REQUIRE(result.first == error::service_suspended || result.first == error::service_stopped);
     BOOST_REQUIRE(!result.second);
 }
 
