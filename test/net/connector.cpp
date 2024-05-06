@@ -80,6 +80,36 @@ class tiny_timeout
     }
 };
 
+BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address_suspended__service_suspended)
+{
+    logger log{};
+    log.stop();
+    threadpool pool(2);
+    std::atomic_bool suspended{ true };
+    asio::strand strand(pool.service().get_executor());
+    const tiny_timeout set(bc::system::chain::selection::mainnet);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+    auto result = true;
+
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        // DNS resolve failure (race), timeout includes a socket.
+        instance->connect(config::address{ config::endpoint{ "42.42.42.42:42" }.to_address() },
+            [&](const code& ec, const socket::ptr& socket) NOEXCEPT
+            {
+                result &= (ec == error::service_suspended);
+                result &= is_null(socket);
+            });
+
+        std::this_thread::sleep_for(microseconds(1));
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE(instance->get_stopped());
+    BOOST_REQUIRE(result);
+}
+
 BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeout)
 {
     logger log{};
