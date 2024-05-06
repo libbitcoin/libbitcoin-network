@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(acceptor__accept__stop_suspended__service_suspended)
     pool.stop();
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE(instance->get_stopped());
-    BOOST_REQUIRE(result.first == error::service_suspended);
+    BOOST_REQUIRE_EQUAL(result.first, error::service_suspended);
     BOOST_REQUIRE(!result.second);
 }
 
