@@ -65,13 +65,13 @@ p2p::~p2p() NOEXCEPT
 acceptor::ptr p2p::create_acceptor() NOEXCEPT
 {
     return std::make_shared<acceptor>(log, strand(), service(),
-        network_settings());
+        network_settings(), accept_suspended_);
 }
 
 connector::ptr p2p::create_connector() NOEXCEPT
 {
     return std::make_shared<connector>(log, strand(), service(),
-        network_settings());
+        network_settings(), connect_suspended_);
 }
 
 connectors_ptr p2p::create_connectors(size_t count) NOEXCEPT
@@ -370,6 +370,41 @@ void p2p::do_connect_handled(const config::endpoint& endpoint,
         manual_->connect(endpoint, move_copy(handler));
     else
         handler(error::service_stopped, nullptr);
+}
+
+// Suspensions.
+// ----------------------------------------------------------------------------
+
+void p2p::suspend_acceptors() NOEXCEPT
+{
+    accept_suspended_.store(true);
+}
+
+void p2p::resume_acceptors() NOEXCEPT
+{
+    accept_suspended_.store(false);
+}
+
+void p2p::suspend_connectors() NOEXCEPT
+{
+    connect_suspended_.store(true);
+}
+
+void p2p::resume_connectors() NOEXCEPT
+{
+    connect_suspended_.store(false);
+}
+
+void p2p::suspend() NOEXCEPT
+{
+    suspend_acceptors();
+    suspend_connectors();
+}
+
+void p2p::resume() NOEXCEPT
+{
+    resume_acceptors();
+    resume_connectors();
 }
 
 // Properties.

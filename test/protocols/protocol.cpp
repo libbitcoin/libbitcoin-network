@@ -82,7 +82,8 @@ class mock_acceptor
 public:
     mock_acceptor(const logger& log, asio::strand& strand,
         asio::io_context& service, const settings& settings) NOEXCEPT
-      : acceptor(log, strand, service, settings), stopped_(false), port_(0)
+      : acceptor(log, strand, service, settings, suspended_),
+        stopped_(false), port_(0)
     {
     }
 
@@ -134,6 +135,7 @@ public:
 private:
     bool stopped_;
     uint16_t port_;
+    std::atomic_bool suspended_{ false };
 };
 
 // Use mock connector to inject mock channel.
@@ -143,7 +145,8 @@ class mock_connector
 public:
     mock_connector(const logger& log, asio::strand& strand,
         asio::io_context& service, const settings& settings) NOEXCEPT
-      : connector(log, strand, service, settings), stopped_(false)
+      : connector(log, strand, service, settings, suspended_),
+        stopped_(false)
     {
     }
 
@@ -169,6 +172,7 @@ public:
 
 private:
     bool stopped_;
+    std::atomic_bool suspended_{ false };
 };
 
 // Use mock p2p network to inject mock channels.

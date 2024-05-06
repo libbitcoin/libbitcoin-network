@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_NET_CONNECTOR_HPP
 #define LIBBITCOIN_NETWORK_NET_CONNECTOR_HPP
 
+#include <atomic>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -51,7 +52,8 @@ public:
 
     /// Construct an instance.
     connector(const logger& log, asio::strand& strand,
-        asio::io_context& service, const settings& settings) NOEXCEPT;
+        asio::io_context& service, const settings& settings,
+        std::atomic_bool& suspended) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~connector() NOEXCEPT;
@@ -90,6 +92,7 @@ protected:
     const settings& settings_;
     asio::io_context& service_;
     asio::strand& strand_;
+    std::atomic_bool& suspended_;
 
     // These are protected by strand.
     asio::resolver resolver_;

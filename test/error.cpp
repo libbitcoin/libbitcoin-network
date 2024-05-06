@@ -437,6 +437,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__service_stopped__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "service stopped");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__service_suspended__true_exected_message)
+{
+    constexpr auto value = error::service_suspended;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "service suspended");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__subscriber_exists__true_exected_message)
 {
     constexpr auto value = error::subscriber_exists;

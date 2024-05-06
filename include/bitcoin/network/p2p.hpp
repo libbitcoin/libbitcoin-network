@@ -109,6 +109,13 @@ public:
     virtual void connect(const config::endpoint& endpoint,
         channel_notifier&& handler) NOEXCEPT;
 
+    /// Suspensions.
+    /// -----------------------------------------------------------------------
+
+    /// Suspend/resume all connections.
+    virtual void suspend() NOEXCEPT;
+    virtual void resume() NOEXCEPT;
+
     /// Properties.
     /// -----------------------------------------------------------------------
 
@@ -198,6 +205,12 @@ protected:
     virtual acceptor::ptr create_acceptor() NOEXCEPT;
     virtual connector::ptr create_connector() NOEXCEPT;
 
+    /// Suspend/resume inbound/outbound connections.
+    virtual void suspend_acceptors() NOEXCEPT;
+    virtual void resume_acceptors() NOEXCEPT;
+    virtual void suspend_connectors() NOEXCEPT;
+    virtual void resume_connectors() NOEXCEPT;
+
     /// Register nonces for loopback (true implies found), require strand.
     virtual bool store_nonce(const channel& channel) NOEXCEPT;
     virtual bool unstore_nonce(const channel& channel) NOEXCEPT;
@@ -252,6 +265,8 @@ private:
     // These are thread safe.
     const settings& settings_;
     std::atomic_bool closed_{ false };
+    std::atomic_bool accept_suspended_{ false };
+    std::atomic_bool connect_suspended_{ false };
     std::atomic<size_t> total_channel_count_{};
     std::atomic<size_t> inbound_channel_count_{};
 

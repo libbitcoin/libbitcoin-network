@@ -132,6 +132,13 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
+    if (ec == error::service_suspended)
+    {
+        ////LOGS("Suspended inbound channel start.");
+        defer(BIND(start_accept, _1, acceptor));
+        return;
+    }
+
     // There was an error accepting the channel, so try again after delay.
     if (ec)
     {

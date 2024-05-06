@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/net/acceptor.hpp>
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <utility>
@@ -49,10 +50,12 @@ inline asio::endpoint make_endpoint(bool enable_ipv6, uint16_t port) NOEXCEPT
 // Calls are stranded to protect the acceptor member.
 
 acceptor::acceptor(const logger& log, asio::strand& strand,
-    asio::io_context& service, const settings& settings) NOEXCEPT
+    asio::io_context& service, const settings& settings,
+    std::atomic_bool& suspended) NOEXCEPT
   : settings_(settings),
     service_(service),
     strand_(strand),
+    suspended_(suspended),
     acceptor_(strand_),
     reporter(log),
     tracker<acceptor>(log)
@@ -150,6 +153,12 @@ void acceptor::accept(socket_handler&& handler) NOEXCEPT
         return;
     }
 
+    if (suspended_.load())
+    {
+        handler(error::service_suspended, nullptr);
+        return;
+    }
+
     // Create the socket.
     const auto socket = std::make_shared<network::socket>(log, service_);
 
@@ -170,6 +179,13 @@ void acceptor::handle_accept(const code& ec, const socket::ptr& socket,
     {
         socket->stop();
         handler(ec, nullptr);
+        return;
+    }
+
+    if (suspended_.load())
+    {
+        socket->stop();
+        handler(error::service_suspended, nullptr);
         return;
     }
 

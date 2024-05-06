@@ -231,7 +231,7 @@ public:
     connector::ptr create_connector() NOEXCEPT override
     {
         return ((connector_ = std::make_shared<Connector>(log, strand(),
-            service(), network_settings())));
+            service(), network_settings(), suspended_)));
     }
 
     session_inbound::ptr attach_inbound_session() NOEXCEPT override
@@ -272,6 +272,7 @@ public:
 
 private:
     typename Connector::ptr connector_;
+    std::atomic_bool suspended_{ false };
 
     class mock_inbound_session
       : public session_inbound
@@ -321,7 +322,7 @@ public:
     mock_connector_stop_connect(const logger& log, asio::strand& strand,
         asio::io_context& service, const settings& settings,
         mock_session_seed::ptr session) NOEXCEPT
-      : mock_connector_connect_success(log, strand, service, settings),
+      : mock_connector_connect_success(log, strand, service, settings, suspended_),
         session_(session)
     {
     }
@@ -340,6 +341,7 @@ public:
 
 private:
     mock_session_seed::ptr session_;
+    std::atomic_bool suspended_{ false };
 };
 
 // Can't derive from mock_p2p because Connector has more arguments.

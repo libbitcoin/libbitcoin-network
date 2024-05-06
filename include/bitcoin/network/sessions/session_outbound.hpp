@@ -65,7 +65,8 @@ private:
     void do_one(const code& ec, const config::address& peer, object_key key,
         const race::ptr& racer, const connector::ptr& connector) NOEXCEPT;
     void handle_one(const code& ec, const socket::ptr& socket,
-        object_key key, const race::ptr& racer) NOEXCEPT;
+        object_key key, const config::address& peer,
+        const race::ptr& racer) NOEXCEPT;
     void handle_connect(const code& ec, const socket::ptr& socket,
         object_key key) NOEXCEPT;
 

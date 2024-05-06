@@ -92,6 +92,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { channel_inactive, "channel inactive" },
     { channel_stopped, "channel stopped" },
     { service_stopped, "service stopped" },
+    { service_suspended, "service suspended" },
     { subscriber_exists, "subscriber exists" },
     { subscriber_stopped, "subscriber stopped" },
     { desubscribed, "subscriber desubscribed" }

@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_NET_ACCEPTOR_HPP
 #define LIBBITCOIN_NETWORK_NET_ACCEPTOR_HPP
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <bitcoin/system.hpp>
@@ -49,7 +50,8 @@ public:
 
     /// Construct an instance.
     acceptor(const logger& log, asio::strand& strand,
-        asio::io_context& service, const settings& settings) NOEXCEPT;
+        asio::io_context& service, const settings& settings,
+        std::atomic_bool& suspended) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~acceptor() NOEXCEPT;
@@ -88,6 +90,7 @@ protected:
     const settings& settings_;
     asio::io_context& service_;
     asio::strand& strand_;
+    std::atomic_bool& suspended_;
 
     // These are protected by strand.
     asio::acceptor acceptor_;
