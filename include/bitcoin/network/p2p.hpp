@@ -113,7 +113,7 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Suspend/resume all connections.
-    virtual void suspend() NOEXCEPT;
+    virtual void suspend(const code& ec) NOEXCEPT;
     virtual void resume() NOEXCEPT;
 
     /// Properties.
