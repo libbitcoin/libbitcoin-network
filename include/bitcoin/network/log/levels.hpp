@@ -31,26 +31,30 @@ enum : uint8_t
 {
     application, // Unused by network lib
     news,        // News
-    objects,     // Objects
     session,     // Sessions/connect/accept
     protocol,    // Protocols
     proxy,       // proXy/socket/channel
     wire,        // Wire sharking
     remote,      // Remote behavior
     fault,       // Fault
-    quit         // Quitting
+    quit,        // Quitting
+    objects,     // Objects
+    verbose      // Verbose
 };
 
-// LOG_ONLY() is insufficient for individual disablement.
 #if defined(HAVE_LOGGING)
     #define LOG_ONLY(name) name
     #define LOG(level_, message) \
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
         log.write(network::levels::level_) << message << std::endl; \
         BC_POP_WARNING()
+    #define LOG_LOG(name, level_) \
+        log.write(network::levels::application) << name \
+            << network::levels::level_ << std::endl;
 #else
     #define LOG_ONLY(name)
     #define LOG(level, message)
+    #define LOG_LOG(level_, message)
 #endif
 
 #if defined(HAVE_LOGO)
@@ -128,6 +132,13 @@ enum : uint8_t
     #define LOGQ(message)
 #endif
 
+#if defined(HAVE_LOGV)
+    constexpr auto verbose_defined = true;
+    #define LOGV(message) LOG(verbose, message)
+#else
+    #define LOGV(message)
+    constexpr auto verbose_defined = false;
+#endif
 
 } // namespace levels
 } // namespace network
