@@ -93,6 +93,40 @@ BOOST_AUTO_TEST_CASE(acceptor__start__stop__success)
     BOOST_REQUIRE(instance->get_stopped());
 }
 
+// race
+BOOST_AUTO_TEST_CASE(acceptor__accept__stop_suspended__service_stopped_or_suspended)
+{
+    // TODO: There is no way to fake successful acceptance.
+    const logger log{};
+    threadpool pool(2);
+    std::atomic_bool suspended{ true };
+    asio::strand strand(pool.service().get_executor());
+    settings set(bc::system::chain::selection::mainnet);
+    auto instance = std::make_shared<accessor>(log, strand, pool.service(), set, suspended);
+
+    // Result codes inconsistent due to context.
+    instance->start(42);
+
+    std::pair<code, socket::ptr>  result{};
+    boost::asio::post(strand, [&, instance]() NOEXCEPT
+    {
+        instance->accept([&](const code& ec, const socket::ptr& socket) NOEXCEPT
+        {
+            result.first = ec;
+            result.second = socket;
+        });
+
+        std::this_thread::sleep_for(microseconds(1));
+        instance->stop();
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE(instance->get_stopped());
+    BOOST_REQUIRE(result.first == error::service_suspended || result.first == error::service_stopped);
+    BOOST_REQUIRE(!result.second);
+}
+
 BOOST_AUTO_TEST_CASE(acceptor__accept__stop__channel_stopped)
 {
     // TODO: There is no way to fake successful acceptance.
