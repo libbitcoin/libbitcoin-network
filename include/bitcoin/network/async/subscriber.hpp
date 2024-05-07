@@ -41,7 +41,7 @@ public:
     ~subscriber() NOEXCEPT;
 
     /// If stopped, handler is invoked with error::subscriber_stopped.
-    /// Otherwise hanndler retained. Subscription code is also returned here.
+    /// Otherwise handler retained. Subscription code is also returned here.
     code subscribe(handler&& handler) NOEXCEPT;
 
     /// Invoke each handler in order with specified arguments.
