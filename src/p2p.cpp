@@ -386,6 +386,11 @@ void p2p::do_connect_handled(const config::endpoint& endpoint,
 // Suspensions.
 // ----------------------------------------------------------------------------
 
+bool p2p::suspended() const NOEXCEPT
+{
+    return connect_suspended_.load() || accept_suspended_.load();
+}
+
 void p2p::suspend_acceptors() NOEXCEPT
 {
     accept_suspended_.store(true);
