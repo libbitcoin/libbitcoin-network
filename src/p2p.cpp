@@ -52,16 +52,17 @@ p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
 {
     BC_ASSERT_MSG(!is_zero(settings.threads), "empty threadpool");
 
-    LOG_LOG("News logging compiled....: ", news_defined);
-    LOG_LOG("Session logging compiled.: ", session_defined);
-    LOG_LOG("Protocol logging compiled: ", protocol_defined);
-    LOG_LOG("ProXy logging compiled...: ", proxy_defined);
-    LOG_LOG("Wire logging compiled....: ", wire_defined);
-    LOG_LOG("Remote logging compiled..: ", remote_defined);
-    LOG_LOG("Fault logging compiled...: ", fault_defined);
-    LOG_LOG("Quit logging compiled....: ", quit_defined);
-    LOG_LOG("Object logging compiled..: ", objects_defined);
-    LOG_LOG("Verbose logging compiled.: ", verbose_defined);
+    ////LOG_LOG("Aplication log compiled..: ", news_defined);
+    ////LOG_LOG("News log compiled........: ", news_defined);
+    ////LOG_LOG("Session log compiled.....: ", session_defined);
+    ////LOG_LOG("Protocol log compiled....: ", protocol_defined);
+    ////LOG_LOG("ProXy log compiled.......: ", proxy_defined);
+    ////LOG_LOG("Wire log compiled........: ", wire_defined);
+    ////LOG_LOG("Remote log compiled......: ", remote_defined);
+    ////LOG_LOG("Fault log compiled.......: ", fault_defined);
+    ////LOG_LOG("Quit log compiled........: ", quit_defined);
+    ////LOG_LOG("Object log compiled......: ", objects_defined);
+    ////LOG_LOG("Verbose log compiled.....: ", verbose_defined);
 }
 
 p2p::~p2p() NOEXCEPT
