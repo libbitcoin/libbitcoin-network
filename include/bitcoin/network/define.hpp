@@ -50,42 +50,66 @@
 #define WITH_LOGS
 #define WITH_LOGP
 #define WITH_LOGX
-#define WITH_LOGW
+////#define WITH_LOGW
 #define WITH_LOGR
 #define WITH_LOGF
 #define WITH_LOGQ
+#define WITH_LOGV
 
 ////#if defined(WITH_EVENTS)
 ////    #define HAVE_EVENTS
 ////#endif
 #if defined(WITH_LOGGING)
     #define HAVE_LOGGING
+
+    /// Objects (shared object construct/destruct).
     #if defined(WITH_LOGO)
         #define HAVE_LOGO
     #endif
+
+    /// News (general progression).
     #if defined(WITH_LOGN)
         #define HAVE_LOGN
     #endif
+
+    /// Sessions.
     #if defined(WITH_LOGS)
         #define HAVE_LOGS
     #endif
+
+    /// Protocols.
     #if defined(WITH_LOGP)
         #define HAVE_LOGP
     #endif
+
+    /// ProXy.
     #if defined(WITH_LOGX)
         #define HAVE_LOGX
     #endif
+
+    /// Wire communication (currently unused).
     #if defined(WITH_LOGW)
         #define HAVE_LOGW
     #endif
+
+    /// Remote (peer errors).
     #if defined(WITH_LOGR)
         #define HAVE_LOGR
     #endif
+
+    /// Fault (own errors).
     #if defined(WITH_LOGF)
         #define HAVE_LOGF
     #endif
+
+    /// Quitting connections (e.g. read/write/send abort).
     #if defined(WITH_LOGQ)
         #define HAVE_LOGQ
+    #endif
+
+    /// Verbose (ad-hoc debugging).
+    #if defined(WITH_LOGV)
+        #define HAVE_LOGV
     #endif
 #endif
 
