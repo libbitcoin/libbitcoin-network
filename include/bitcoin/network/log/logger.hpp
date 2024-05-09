@@ -115,6 +115,7 @@ public:
     void stop(const code& ec, const std::string& message, uint8_t level) NOEXCEPT;
     void stop(const std::string& message, uint8_t level=levels::quit) NOEXCEPT;
     void stop(uint8_t level=levels::quit) NOEXCEPT;
+    bool stopped() const NOEXCEPT;
 
 protected:
     bool stranded() const NOEXCEPT;
