@@ -115,8 +115,8 @@ public:
     /// Nework connections are suspended (incoming and/or outgoing).
     virtual bool suspended() const NOEXCEPT;
 
-    /// Suspend/resume all connections.
-    virtual void suspend(const code& ec) NOEXCEPT;
+    /// Suspend/resume all connections (echos input parameter).
+    virtual code suspend(const code& ec) NOEXCEPT;
     virtual void resume() NOEXCEPT;
 
     /// Properties.
