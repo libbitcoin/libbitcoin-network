@@ -81,6 +81,11 @@ void logger::stop(const code& ec, const std::string& message,
             this, ec, zulu_time(), message, level));
 }
 
+bool logger::stopped() const NOEXCEPT
+{
+    return stopped_.load();
+}
+
 // private
 void logger::do_stop(const code& ec, time_t zulu, const std::string& message,
     uint8_t level) NOEXCEPT
@@ -117,7 +122,7 @@ void logger::do_notify_message(const code& ec, uint8_t level, time_t zulu,
 
 void logger::subscribe_messages(message_notifier&& handler) NOEXCEPT
 {
-    if (stopped_.load())
+    if (stopped())
     {
         handler(error::service_stopped, {}, {}, {});
         return;
@@ -161,7 +166,7 @@ void logger::do_notify_event(uint8_t event_, uint64_t value,
 
 void logger::subscribe_events(event_notifier&& handler) NOEXCEPT
 {
-    if (stopped_.load())
+    if (stopped())
     {
         handler(error::service_stopped, {}, {}, {});
         return;
