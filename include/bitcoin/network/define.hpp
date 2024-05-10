@@ -46,6 +46,7 @@
 #if !defined(NDEBUG)
     #define WITH_LOGO
 #endif
+#define WITH_LOGA
 #define WITH_LOGN
 #define WITH_LOGS
 #define WITH_LOGP
@@ -65,6 +66,10 @@
     /// Objects (shared object construct/destruct).
     #if defined(WITH_LOGO)
         #define HAVE_LOGO
+    #endif
+
+    #if defined(WITH_LOGA)
+        #define HAVE_LOGA
     #endif
 
     /// News (general progression).

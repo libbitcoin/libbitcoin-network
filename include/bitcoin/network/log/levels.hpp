@@ -43,7 +43,6 @@ enum : uint8_t
 };
 
 #if defined(HAVE_LOGGING)
-    constexpr auto application_defined = true;
     #define LOG_ONLY(name) name
     #define LOG(level_, message) \
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT) \
@@ -53,7 +52,6 @@ enum : uint8_t
         log.write(network::levels::application) << name \
             << network::levels::level_ << std::endl;
 #else
-    constexpr auto application_defined = false;
     #define LOG_ONLY(name)
     #define LOG(level, message)
     #define LOG_LOG(level_, message)
@@ -68,6 +66,14 @@ enum : uint8_t
 #else
     constexpr auto objects_defined = false;
     #define LOGO(message)
+#endif
+
+#if defined(HAVE_LOGA)
+    constexpr auto application_defined = true;
+    #define LOGA(message) LOG(application, message)
+#else
+    #define LOGA(message)
+    constexpr auto application_defined = false;
 #endif
 
 #if defined(HAVE_LOGN)
