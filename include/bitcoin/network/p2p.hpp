@@ -208,12 +208,6 @@ protected:
     virtual acceptor::ptr create_acceptor() NOEXCEPT;
     virtual connector::ptr create_connector() NOEXCEPT;
 
-    /// Suspend/resume inbound/outbound connections.
-    virtual void suspend_acceptors() NOEXCEPT;
-    virtual void resume_acceptors() NOEXCEPT;
-    virtual void suspend_connectors() NOEXCEPT;
-    virtual void resume_connectors() NOEXCEPT;
-
     /// Register nonces for loopback (true implies found), require strand.
     virtual bool store_nonce(const channel& channel) NOEXCEPT;
     virtual bool unstore_nonce(const channel& channel) NOEXCEPT;
@@ -241,6 +235,12 @@ private:
 
     virtual code start_hosts() NOEXCEPT;
     virtual code stop_hosts() NOEXCEPT;
+
+    /// Suspend/resume inbound/outbound connections.
+    void suspend_acceptors() NOEXCEPT;
+    void resume_acceptors() NOEXCEPT;
+    void suspend_connectors() NOEXCEPT;
+    void resume_connectors() NOEXCEPT;
 
     void handle_start(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_run(const code& ec, const result_handler& handler) NOEXCEPT;
