@@ -34,7 +34,6 @@ enum : uint8_t
     session,     // Sessions/connect/accept
     protocol,    // Protocols
     proxy,       // proXy/socket/channel
-    wire,        // Wire sharking
     remote,      // Remote behavior
     fault,       // Fault
     quitting,    // Quitting
@@ -106,14 +105,6 @@ enum : uint8_t
 #else
     constexpr auto proxy_defined = false;
     #define LOGX(message)
-#endif
-
-#if defined(HAVE_LOGW)
-    constexpr auto wire_defined = true;
-    #define LOGW(message) LOG(wire, message)
-#else
-    constexpr auto wire_defined = false;
-    #define LOGW(message)
 #endif
 
 #if defined(HAVE_LOGR)
