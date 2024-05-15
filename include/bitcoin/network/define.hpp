@@ -51,7 +51,6 @@
 #define WITH_LOGS
 #define WITH_LOGP
 #define WITH_LOGX
-////#define WITH_LOGW
 #define WITH_LOGR
 #define WITH_LOGF
 #define WITH_LOGQ
@@ -90,11 +89,6 @@
     /// ProXy.
     #if defined(WITH_LOGX)
         #define HAVE_LOGX
-    #endif
-
-    /// Wire communication (currently unused).
-    #if defined(WITH_LOGW)
-        #define HAVE_LOGW
     #endif
 
     /// Remote (peer errors).

@@ -57,7 +57,6 @@ p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
     ////LOG_LOG("Session log compiled.....: ", session_defined);
     ////LOG_LOG("Protocol log compiled....: ", protocol_defined);
     ////LOG_LOG("ProXy log compiled.......: ", proxy_defined);
-    ////LOG_LOG("Wire log compiled........: ", wire_defined);
     ////LOG_LOG("Remote log compiled......: ", remote_defined);
     ////LOG_LOG("Fault log compiled.......: ", fault_defined);
     ////LOG_LOG("Quitting log compiled....: ", quitting_defined);
