@@ -37,7 +37,7 @@ enum : uint8_t
     wire,        // Wire sharking
     remote,      // Remote behavior
     fault,       // Fault
-    quit,        // Quitting
+    quitting,    // Quitting
     objects,     // Objects
     verbose      // Verbose
 };
@@ -133,10 +133,10 @@ enum : uint8_t
 #endif
 
 #if defined(HAVE_LOGQ)
-    constexpr auto quit_defined = true;
-    #define LOGQ(message) LOG(quit, message)
+    constexpr auto quitting_defined = true;
+    #define LOGQ(message) LOG(quitting, message)
 #else
-    constexpr auto quit_defined = false;
+    constexpr auto quitting_defined = false;
     #define LOGQ(message)
 #endif
 
