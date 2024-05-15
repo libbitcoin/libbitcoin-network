@@ -60,7 +60,7 @@ p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
     ////LOG_LOG("Wire log compiled........: ", wire_defined);
     ////LOG_LOG("Remote log compiled......: ", remote_defined);
     ////LOG_LOG("Fault log compiled.......: ", fault_defined);
-    ////LOG_LOG("Quit log compiled........: ", quit_defined);
+    ////LOG_LOG("Quitting log compiled....: ", quitting_defined);
     ////LOG_LOG("Object log compiled......: ", objects_defined);
     ////LOG_LOG("Verbose log compiled.....: ", verbose_defined);
 }
