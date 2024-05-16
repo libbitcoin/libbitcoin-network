@@ -115,8 +115,8 @@ public:
     /// Network connections are suspended (incoming and/or outgoing).
     virtual bool suspended() const NOEXCEPT;
 
-    /// Suspend all connections (echos parameter).
-    virtual code suspend(const code& ec) NOEXCEPT;
+    /// Suspend all connections.
+    virtual void suspend(const code& ec) NOEXCEPT;
 
     /// Resume all connection.
     virtual void resume() NOEXCEPT;
@@ -221,6 +221,7 @@ protected:
 
     /// Notify subscribers of new non-seed connection, require strand.
     virtual void notify_connect(const channel::ptr& channel) NOEXCEPT;
+    virtual void subscribe_close(stop_handler&& handler) NOEXCEPT;
 
     /// Maintain address pool.
     virtual void take(address_item_handler&& handler) NOEXCEPT;

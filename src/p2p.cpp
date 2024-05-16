@@ -283,6 +283,13 @@ void p2p::do_unsubscribe_connect(object_key key) NOEXCEPT
     connect_subscriber_.notify_one(key, error::desubscribed, nullptr);
 }
 
+// protected
+void p2p::subscribe_close(stop_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    subscribe_close(std::move(handler), create_key());
+}
+
 // private
 code p2p::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
 {
@@ -411,11 +418,10 @@ void p2p::resume_connectors() NOEXCEPT
     connect_suspended_.store(false);
 }
 
-code p2p::suspend(const code& ec) NOEXCEPT
+void p2p::suspend(const code&) NOEXCEPT
 {
     suspend_acceptors();
     suspend_connectors();
-    return ec;
 }
 
 void p2p::resume() NOEXCEPT
