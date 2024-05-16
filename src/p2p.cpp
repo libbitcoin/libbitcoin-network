@@ -418,11 +418,10 @@ void p2p::resume_connectors() NOEXCEPT
     connect_suspended_.store(false);
 }
 
-code p2p::suspend(const code& ec) NOEXCEPT
+void p2p::suspend(const code&) NOEXCEPT
 {
     suspend_acceptors();
     suspend_connectors();
-    return ec;
 }
 
 void p2p::resume() NOEXCEPT

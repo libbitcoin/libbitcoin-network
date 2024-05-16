@@ -115,8 +115,8 @@ public:
     /// Network connections are suspended (incoming and/or outgoing).
     virtual bool suspended() const NOEXCEPT;
 
-    /// Suspend all connections (echos parameter).
-    virtual code suspend(const code& ec) NOEXCEPT;
+    /// Suspend all connections.
+    virtual void suspend(const code& ec) NOEXCEPT;
 
     /// Resume all connection.
     virtual void resume() NOEXCEPT;
