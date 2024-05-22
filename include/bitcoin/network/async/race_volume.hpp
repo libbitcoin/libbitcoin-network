@@ -27,9 +27,13 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe.
-/// Race is a bind that invokes handler with the first set of arguments
-/// but only after a preconfigured number of invocations. This assists in
-/// synchronizing the results of a set of racing asynchronous operations.
+/// Used in seed session to continue once sufficient seeding has occurred.
+/// race_volume<Success, Fail>(size, required) invokes sufficient(Success)
+/// provided at start(sufficient, complete) when the first call to finish(count)
+/// is made where count >= required. If no finish is sufficient then the final
+/// call to finish, based on the constructor 'size' parameter, invokes
+/// sufficient(Fail). The final call also invokes complete(Success), regardless
+/// of sufficiency.
 template <error::error_t Success, error::error_t Fail>
 class race_volume final
 {

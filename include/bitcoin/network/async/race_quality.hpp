@@ -29,9 +29,11 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe.
-/// Race is a bind that invokes handler with the first set of arguments
-/// but only after a preconfigured number of invocations. This assists in
-/// synchronizing the results of a set of racing asynchronous operations.
+/// Used in outbound session to invoke for first succeesful handshake.
+/// race_quality invokes complete(args) provided at start(complete), with
+/// args from first successful call to finish(args), with success determined
+/// by first argument in 'args', or upon the last expected invocation of
+/// finish(...), based on the constructor 'size' parameter.
 template <typename... Args>
 class race_quality final
 {

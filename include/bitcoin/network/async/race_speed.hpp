@@ -29,9 +29,10 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe.
-/// Race is a bind that invokes handler with the first set of arguments
-/// but only after a preconfigured number of invocations. This assists in
-/// synchronizing the results of a set of racing asynchronous operations.
+/// Used in connector to race between timer (connection timeout) and connect.
+/// race_speed<Size> invokes complete(args) provided at start(complete), with
+/// args from first call to finish(args), upon the last expected invocation of
+/// finish(...) based on the templatized Size number of expected calls.
 template <size_t Size, typename... Args>
 class race_speed final
 {
