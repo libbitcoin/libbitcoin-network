@@ -133,6 +133,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/async/enable_shared_from_base.cpp \
     test/async/race_quality.cpp \
     test/async/race_speed.cpp \
+    test/async/race_unity.cpp \
     test/async/race_volume.cpp \
     test/async/subscriber.cpp \
     test/async/thread.cpp \
@@ -235,6 +236,7 @@ include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/handlers.hpp \
     include/bitcoin/network/async/race_quality.hpp \
     include/bitcoin/network/async/race_speed.hpp \
+    include/bitcoin/network/async/race_unity.hpp \
     include/bitcoin/network/async/race_volume.hpp \
     include/bitcoin/network/async/subscriber.hpp \
     include/bitcoin/network/async/thread.hpp \
@@ -256,6 +258,7 @@ include_bitcoin_network_impl_async_HEADERS = \
     include/bitcoin/network/impl/async/enable_shared_from_base.ipp \
     include/bitcoin/network/impl/async/race_quality.ipp \
     include/bitcoin/network/impl/async/race_speed.ipp \
+    include/bitcoin/network/impl/async/race_unity.ipp \
     include/bitcoin/network/impl/async/race_volume.ipp \
     include/bitcoin/network/impl/async/subscriber.ipp \
     include/bitcoin/network/impl/async/unsubscriber.ipp

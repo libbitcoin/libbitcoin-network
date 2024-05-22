@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_QUALITY_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_RACE_QUALITY_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_UNITY_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACE_UNITY_HPP
 
 #include <memory>
 #include <tuple>
@@ -29,30 +29,30 @@ namespace libbitcoin {
 namespace network {
 
 /// Not thread safe.
-/// Used in outbound session to invoke for first succeesful handshake.
-/// race_quality invokes complete(args) provided at start(complete), with
-/// args from first successful call to finish(args), with success determined
-/// by first argument in 'args', or upon the last expected invocation of
-/// finish(...), based on the constructor 'size' parameter.
+/// Used in node validation chaser to invoke upon complete, with first error.
+/// race_unity invokes complete(args) provided at start(complete), with args
+/// from first failed call to finish(args), with failure determined by first
+/// argument in 'args', at the last expected invocation of finish(...), based
+/// on the constructor 'size' parameter.
 template <typename... Args>
-class race_quality final
+class race_unity final
 {
 public:
-    typedef std::shared_ptr<race_quality> ptr;
+    typedef std::shared_ptr<race_unity> ptr;
     typedef std::function<void(Args...)> handler;
 
-    DELETE_COPY_MOVE(race_quality);
+    DELETE_COPY_MOVE(race_unity);
 
-    race_quality(size_t size) NOEXCEPT;
-    ~race_quality() NOEXCEPT;
+    race_unity(size_t size) NOEXCEPT;
+    ~race_unity() NOEXCEPT;
 
-    /// True if the race_quality is running.
+    /// True if the race_unity is running.
     inline bool running() const NOEXCEPT;
 
     /// False implies invalid usage.
     bool start(handler&& complete) NOEXCEPT;
 
-    /// True implies winning finisher (first that is not failed).
+    /// True implies winning finisher (last invocation, none failed).
     /// First arg is an 'error code', cast to bool (failed if true).
     /// There may be no winner, in which case last finish is invoked.
     bool finish(const Args&... args) NOEXCEPT;
@@ -67,14 +67,14 @@ private:
     void invoker(const handler& complete, const packed& args,
         unpack<Index...>) NOEXCEPT;
     bool invoke() NOEXCEPT;
-    bool set_winner(bool success) NOEXCEPT;
+    bool set_failure(bool failure) NOEXCEPT;
 
     // This is thread safe.
     const size_t size_;
 
     // These are not thread safe.
     packed args_{};
-    bool success_{};
+    bool failure_{};
     size_t runners_{};
     std::shared_ptr<handler> complete_{};
 };
@@ -82,6 +82,6 @@ private:
 } // namespace network
 } // namespace libbitcoin
 
-#include <bitcoin/network/impl/async/race_quality.ipp>
+#include <bitcoin/network/impl/async/race_unity.ipp>
 
 #endif

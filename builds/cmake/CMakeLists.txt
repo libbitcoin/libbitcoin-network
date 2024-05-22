@@ -341,6 +341,7 @@ if (with-tests)
         "../../test/async/enable_shared_from_base.cpp"
         "../../test/async/race_quality.cpp"
         "../../test/async/race_speed.cpp"
+        "../../test/async/race_unity.cpp"
         "../../test/async/race_volume.cpp"
         "../../test/async/subscriber.cpp"
         "../../test/async/thread.cpp"

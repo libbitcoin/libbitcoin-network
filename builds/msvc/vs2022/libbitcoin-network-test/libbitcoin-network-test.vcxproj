@@ -74,6 +74,7 @@
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp" />
     <ClCompile Include="..\..\..\..\test\async\race_quality.cpp" />
     <ClCompile Include="..\..\..\..\test\async\race_speed.cpp" />
+    <ClCompile Include="..\..\..\..\test\async\race_unity.cpp" />
     <ClCompile Include="..\..\..\..\test\async\race_volume.cpp" />
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp" />
     <ClCompile Include="..\..\..\..\test\async\thread.cpp" />

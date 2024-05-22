@@ -164,6 +164,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_quality.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_speed.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_unity.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_volume.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\thread.hpp" />
@@ -266,6 +267,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_quality.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_speed.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_unity.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_volume.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />

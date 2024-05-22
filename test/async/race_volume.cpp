@@ -41,9 +41,9 @@ BOOST_AUTO_TEST_CASE(race_volume__start__unstarted__true_running)
     BOOST_REQUIRE(race_volume.running());
 
     // Avoid running at destruct assertion.
-    BOOST_REQUIRE(race_volume.finish(2));
+    BOOST_REQUIRE(!race_volume.finish(2));
     BOOST_REQUIRE(race_volume.running());
-    BOOST_REQUIRE(race_volume.finish(4));
+    BOOST_REQUIRE(!race_volume.finish(4));
     BOOST_REQUIRE(!race_volume.running());
 }
 
@@ -55,11 +55,11 @@ BOOST_AUTO_TEST_CASE(race_volume__start__started__false_running)
     BOOST_REQUIRE(race_volume.running());
 
     // Avoid running at destruct assertion.
-    BOOST_REQUIRE(race_volume.finish(1));
+    BOOST_REQUIRE(!race_volume.finish(1));
     BOOST_REQUIRE(!race_volume.running());
 }
 
-BOOST_AUTO_TEST_CASE(race_volume__running__3_of_3__failed_sufficient_complete)
+BOOST_AUTO_TEST_CASE(race_volume__running__3_of_3__insufficient_complete)
 {
     race_volume_t race_volume{ 3, 10 };
     BOOST_REQUIRE(!race_volume.running());
@@ -79,23 +79,23 @@ BOOST_AUTO_TEST_CASE(race_volume__running__3_of_3__failed_sufficient_complete)
     BOOST_REQUIRE_EQUAL(sufficient, error::unknown);
     BOOST_REQUIRE_EQUAL(complete, error::unknown);
 
-    BOOST_REQUIRE(race_volume.finish(1));
+    BOOST_REQUIRE(!race_volume.finish(1));
     BOOST_REQUIRE(race_volume.running());
     BOOST_REQUIRE_EQUAL(sufficient, error::unknown);
     BOOST_REQUIRE_EQUAL(complete, error::unknown);
 
-    BOOST_REQUIRE(race_volume.finish(1));
+    BOOST_REQUIRE(!race_volume.finish(1));
     BOOST_REQUIRE(race_volume.running());
     BOOST_REQUIRE_EQUAL(sufficient, error::unknown);
     BOOST_REQUIRE_EQUAL(complete, error::unknown);
 
-    BOOST_REQUIRE(race_volume.finish(1));
+    BOOST_REQUIRE(!race_volume.finish(1));
     BOOST_REQUIRE(!race_volume.running());
     BOOST_REQUIRE_EQUAL(sufficient, error::invalid_magic);
     BOOST_REQUIRE_EQUAL(complete, error::success);
 }
 
-BOOST_AUTO_TEST_CASE(race_volume__running__4_of_3__false_finish)
+BOOST_AUTO_TEST_CASE(race_volume__running__4_of_3__insufficient)
 {
     race_volume_t race_volume{ 3, 10 };
     BOOST_REQUIRE(!race_volume.running());
@@ -112,9 +112,9 @@ BOOST_AUTO_TEST_CASE(race_volume__running__4_of_3__false_finish)
             complete = ec;
         }));
     BOOST_REQUIRE(race_volume.running());
-    BOOST_REQUIRE(race_volume.finish(1));
-    BOOST_REQUIRE(race_volume.finish(1));
-    BOOST_REQUIRE(race_volume.finish(1));
+    BOOST_REQUIRE(!race_volume.finish(1));
+    BOOST_REQUIRE(!race_volume.finish(1));
+    BOOST_REQUIRE(!race_volume.finish(1));
     BOOST_REQUIRE(!race_volume.finish(1));
 }
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(race_volume__finish__early_sufficiency__resources_deleted_a
     BOOST_REQUIRE(!bar_deleted);
 
     // First finish is neither sufficient nor complete.
-    BOOST_REQUIRE(race_volume.finish(5));
+    BOOST_REQUIRE(!race_volume.finish(5));
     BOOST_REQUIRE(race_volume.running());
     BOOST_REQUIRE_EQUAL(sufficient.first, error::unknown);
     BOOST_REQUIRE_EQUAL(complete.first, error::unknown);
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(race_volume__finish__early_sufficiency__resources_deleted_a
     BOOST_REQUIRE(!bar_deleted);
 
     // Third finish is complete.
-    BOOST_REQUIRE(race_volume.finish(42));
+    BOOST_REQUIRE(!race_volume.finish(42));
     BOOST_REQUIRE(!race_volume.running());
     BOOST_REQUIRE_EQUAL(sufficient.first, error::success);
     BOOST_REQUIRE_EQUAL(complete.first, error::success);
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(race_volume__finish__late_insufficiency__resources_deleted_
     BOOST_REQUIRE(!bar_deleted);
 
     // First finish is neither sufficient nor complete.
-    BOOST_REQUIRE(race_volume.finish(5));
+    BOOST_REQUIRE(!race_volume.finish(5));
     BOOST_REQUIRE(race_volume.running());
     BOOST_REQUIRE_EQUAL(sufficient.first, error::unknown);
     BOOST_REQUIRE_EQUAL(complete.first, error::unknown);
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(race_volume__finish__late_insufficiency__resources_deleted_
     BOOST_REQUIRE(!bar_deleted);
 
     // Second finish is neither sufficient nor complete.
-    BOOST_REQUIRE(race_volume.finish(9));
+    BOOST_REQUIRE(!race_volume.finish(9));
     BOOST_REQUIRE(race_volume.running());
     BOOST_REQUIRE_EQUAL(sufficient.first, error::unknown);
     BOOST_REQUIRE_EQUAL(complete.first, error::unknown);
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(race_volume__finish__late_insufficiency__resources_deleted_
     BOOST_REQUIRE(!bar_deleted);
 
     // Third finish is insufficient and complete.
-    BOOST_REQUIRE(race_volume.finish(9));
+    BOOST_REQUIRE(!race_volume.finish(9));
     BOOST_REQUIRE(!race_volume.running());
     BOOST_REQUIRE_EQUAL(sufficient.first, error::invalid_magic);
     BOOST_REQUIRE_EQUAL(complete.first, error::success);
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(race_volume__finish__late_sufficiency__resources_deleted_as
     BOOST_REQUIRE(!bar_deleted);
 
     // First finish is neither sufficient nor complete.
-    BOOST_REQUIRE(race_volume.finish(5));
+    BOOST_REQUIRE(!race_volume.finish(5));
     BOOST_REQUIRE(race_volume.running());
     BOOST_REQUIRE_EQUAL(sufficient.first, error::unknown);
     BOOST_REQUIRE_EQUAL(complete.first, error::unknown);
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(race_volume__finish__late_sufficiency__resources_deleted_as
     BOOST_REQUIRE(!bar_deleted);
 
     // Second finish is neither sufficient nor complete.
-    BOOST_REQUIRE(race_volume.finish(9));
+    BOOST_REQUIRE(!race_volume.finish(9));
     BOOST_REQUIRE(race_volume.running());
     BOOST_REQUIRE_EQUAL(sufficient.first, error::unknown);
     BOOST_REQUIRE_EQUAL(complete.first, error::unknown);
