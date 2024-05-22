@@ -81,7 +81,8 @@ finish(const Args&... args) NOEXCEPT
     const auto winner = set_winner(!ec);
 
     // Save args for winner (first success) or last failure.
-    if (winner || (!success_ && (runners_ == one)))
+    const auto last = (runners_ == one);
+    if (winner || (last && !success_))
         args_ = std::move(values);
 
     // false invoke implies logic error.
