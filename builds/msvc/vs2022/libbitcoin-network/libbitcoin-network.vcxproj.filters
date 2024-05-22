@@ -332,6 +332,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_speed.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_unity.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_volume.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
@@ -632,6 +635,9 @@
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_speed.ipp">
+      <Filter>include\bitcoin\network\impl\async</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_unity.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_volume.ipp">
