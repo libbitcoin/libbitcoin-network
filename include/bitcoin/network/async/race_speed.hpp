@@ -54,7 +54,7 @@ public:
     /// False implies invalid usage.
     bool start(handler&& complete) NOEXCEPT;
 
-    /// True implies winning finisher.
+    /// True implies winning finisher, there is always exactly one.
     bool finish(const Args&... args) NOEXCEPT;
 
 private:

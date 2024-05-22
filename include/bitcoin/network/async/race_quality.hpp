@@ -52,7 +52,7 @@ public:
     /// False implies invalid usage.
     bool start(handler&& complete) NOEXCEPT;
 
-    /// True implies winning finisher (first not failed).
+    /// True implies winning finisher (first that is not failed).
     /// First arg is an 'error code', cast to bool (failed if true).
     /// There may be no winner, in which case last finish is invoked.
     bool finish(const Args&... args) NOEXCEPT;

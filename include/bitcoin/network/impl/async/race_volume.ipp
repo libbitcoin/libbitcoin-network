@@ -74,12 +74,15 @@ finish(size_t count) NOEXCEPT
     if (!running())
         return false;
 
-    // Determine sufficiency, since not yet reached.
+    bool winner{ false };
+
+    // Determine sufficiency if not yet reached.
     if (sufficient_)
     {
         // Invoke sufficient and clear resources before race is finished.
         if (count >= required_)
         {
+            winner = true;
             (*sufficient_)(Success);
             sufficient_.reset();
         }
@@ -91,7 +94,7 @@ finish(size_t count) NOEXCEPT
     }
 
     // false invoke implies logic error.
-    return invoke();
+    return invoke() && winner;
 }
 
 // private

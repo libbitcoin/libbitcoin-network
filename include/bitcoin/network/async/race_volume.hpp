@@ -52,7 +52,7 @@ public:
     /// False implies invalid usage.
     bool start(handler&& sufficient, handler&& complete) NOEXCEPT;
 
-    /// Signal finisher and pass total count.
+    /// True implies first sufficient count (there may be none).
     bool finish(size_t count) NOEXCEPT;
 
 private:
