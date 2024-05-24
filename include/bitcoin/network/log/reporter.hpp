@@ -33,9 +33,11 @@ protected:
     reporter(const logger& logger) NOEXCEPT;
 
 public:
-    const logger& log;
     void fire(uint8_t event, size_t count=zero) const NOEXCEPT;
     void span(uint8_t event, const logger::time& started) const NOEXCEPT;
+
+    // This is thread safe.
+    const logger& log;
 };
 
 } // namespace network
