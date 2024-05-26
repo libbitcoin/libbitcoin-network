@@ -143,12 +143,6 @@ void logger::do_subscribe_messages(const message_notifier& handler) NOEXCEPT
 // events
 // ----------------------------------------------------------------------------
 
-void logger::span(uint8_t event_, const time& started) const NOEXCEPT
-{
-    // value parameter is time span in nanoseconds.
-    fire(event_, (now() - started).count());
-}
-
 void logger::fire(uint8_t event_, uint64_t value) const NOEXCEPT
 {
     boost::asio::post(strand_,
