@@ -34,10 +34,5 @@ void reporter::fire(uint8_t event, size_t count) const NOEXCEPT
     log.fire(event, count);
 }
 
-void reporter::span(uint8_t event, const logger::time& started) const NOEXCEPT
-{
-    log.span(event, started);
-}
-
 } // namespace network
 } // namespace libbitcoin

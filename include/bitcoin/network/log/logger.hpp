@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_LOG_LOGGER_HPP
 
 #include <atomic>
+#include <chrono>
 #include <ostream>
 #include <sstream>
 #include <utility>
@@ -103,8 +104,13 @@ public:
     /// Fire event with optional value, recorded with current time.
     void fire(uint8_t event_, uint64_t value=zero) const NOEXCEPT;
 
-    /// Fire event with nanosecond duration value, recorded with current time.
-    void span(uint8_t event_, const time& started) const NOEXCEPT;
+    /// Fire event with value as duration start to now, in specified unints.
+    template <typename Time = milliseconds>
+    inline void span(uint8_t event_, const time& start) const NOEXCEPT
+    {
+        // value parameter is time span in Time units.
+        fire(event_, std::chrono::duration_cast<Time>(now() - start).count());
+    }
 
     /// If stopped, handler is invoked with error::subscriber_stopped/defaults
     /// and dropped. Otherwise it is held until stop/drop. False if failed.
