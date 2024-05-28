@@ -42,7 +42,7 @@ using namespace std::placeholders;
 
 p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
   : settings_(settings),
-    threadpool_(settings.threads),
+    threadpool_(std::min(settings.threads, 1_u32)),
     strand_(threadpool_.service().get_executor()),
     hosts_(settings, log),
     broadcaster_(strand_),
@@ -50,8 +50,6 @@ p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
     connect_subscriber_(strand_),
     reporter(log)
 {
-    BC_ASSERT_MSG(!is_zero(settings.threads), "empty threadpool");
-
     ////LOG_LOG("Aplication log compiled..: ", news_defined);
     ////LOG_LOG("News log compiled........: ", news_defined);
     ////LOG_LOG("Session log compiled.....: ", session_defined);
