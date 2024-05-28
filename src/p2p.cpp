@@ -42,7 +42,7 @@ using namespace std::placeholders;
 
 p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
   : settings_(settings),
-    threadpool_(std::min(settings.threads, 1_u32)),
+    threadpool_(std::max(settings.threads, 1_u32)),
     strand_(threadpool_.service().get_executor()),
     hosts_(settings, log),
     broadcaster_(strand_),
