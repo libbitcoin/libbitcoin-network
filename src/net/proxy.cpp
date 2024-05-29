@@ -244,7 +244,7 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
         return;
     }
 
-    // Buffer reserve increases with each larger message (up to maximum).
+    // Buffer capacity increases with each larger message (up to maximum).
     payload_buffer_.resize(head->payload_size);
 
     // Post handle_read_payload to strand upon stop, error, or buffer full.
@@ -320,11 +320,14 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     }
 
     // Don't retain larger than configured (time-space tradeoff).
-    payload_buffer_.resize(std::min(payload_buffer_.size(), minimum_buffer()));
-    payload_buffer_.shrink_to_fit();
+    if (minimum_buffer() < payload_buffer_.capacity())
+    {
+        payload_buffer_.resize(minimum_buffer());
+        payload_buffer_.shrink_to_fit();
+    }
 
-    LOGX("Recv " << head->command << " from [" << authority()
-        << "] (" << payload_size << " bytes)");
+    LOGX("Recv " << head->command << " from [" << authority() << "] ("
+        << payload_size << " bytes)");
 
     signal_activity();
     read_heading();
