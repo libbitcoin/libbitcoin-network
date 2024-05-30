@@ -66,7 +66,7 @@ typename block::cptr block::deserialize(uint32_t version,
         // If !witness then wire txs cannot have been segregated.
         if (tx->is_segregated())
         {
-            tx->set_hash(transaction::desegregated_hash(full,
+            tx->set_nominal_hash(transaction::desegregated_hash(full,
                 tx->serialized_size(false), start));
 
             if (!coinbase)
@@ -74,7 +74,7 @@ typename block::cptr block::deserialize(uint32_t version,
         }
         else
         {
-            tx->set_hash(bitcoin_hash(full, start));
+            tx->set_nominal_hash(bitcoin_hash(full, start));
         }
 
         coinbase = false;
