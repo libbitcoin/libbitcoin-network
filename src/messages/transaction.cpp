@@ -74,13 +74,14 @@ typename transaction::cptr transaction::deserialize(uint32_t version,
     {
         const auto true_size = tx.serialized_size(true);
         const auto false_size = tx.serialized_size(false);
-        tx.set_hash(desegregated_hash(true_size, false_size, data.data()));
         tx.set_witness_hash(bitcoin_hash(true_size, data.data()));
+        tx.set_nominal_hash(desegregated_hash(true_size, false_size,
+            data.data()));
     }
     else
     {
         const auto false_size = tx.serialized_size(false);
-        tx.set_hash(bitcoin_hash(false_size, data.data()));
+        tx.set_nominal_hash(bitcoin_hash(false_size, data.data()));
     }
 
     return message;
