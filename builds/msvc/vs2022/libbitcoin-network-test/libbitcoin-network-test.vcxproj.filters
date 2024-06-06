@@ -13,6 +13,9 @@
     <Filter Include="src\async">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\async\races">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\config">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
     </Filter>
@@ -39,17 +42,20 @@
     <ClCompile Include="..\..\..\..\test\async\enable_shared_from_base.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\race_quality.cpp">
-      <Filter>src\async</Filter>
+    <ClCompile Include="..\..\..\..\test\async\races\race_all.cpp">
+      <Filter>src\async\races</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\race_speed.cpp">
-      <Filter>src\async</Filter>
+    <ClCompile Include="..\..\..\..\test\async\races\race_quality.cpp">
+      <Filter>src\async\races</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\race_unity.cpp">
-      <Filter>src\async</Filter>
+    <ClCompile Include="..\..\..\..\test\async\races\race_speed.cpp">
+      <Filter>src\async\races</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\async\race_volume.cpp">
-      <Filter>src\async</Filter>
+    <ClCompile Include="..\..\..\..\test\async\races\race_unity.cpp">
+      <Filter>src\async\races</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\races\race_volume.cpp">
+      <Filter>src\async\races</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\subscriber.cpp">
       <Filter>src\async</Filter>

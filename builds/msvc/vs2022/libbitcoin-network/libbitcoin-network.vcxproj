@@ -162,10 +162,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_quality.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_speed.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_unity.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\race_volume.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\races\race_all.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\races\race_quality.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\races\race_speed.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\races\race_unity.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\races\race_volume.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\races\races.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\subscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\thread.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\threadpool.hpp" />
@@ -265,10 +267,11 @@
   <ItemGroup>
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\desubscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\enable_shared_from_base.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_quality.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_speed.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_unity.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\async\race_volume.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_all.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_quality.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_speed.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_unity.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_volume.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
     <None Include="packages.config" />

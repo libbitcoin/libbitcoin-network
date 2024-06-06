@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_SPEED_IPP
-#define LIBBITCOIN_NETWORK_ASYNC_RACE_SPEED_IPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACES_RACE_UNITY_IPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACES_RACE_UNITY_IPP
 
 #include <memory>
 #include <tuple>
@@ -28,28 +28,29 @@
 namespace libbitcoin {
 namespace network {
 
-template <size_t Size, typename... Args>
-race_speed<Size, Args...>::
-race_speed() NOEXCEPT
+template <typename... Args>
+race_unity<Args...>::
+race_unity(size_t size) NOEXCEPT
+  : size_(size)
 {
 }
 
-template <size_t Size, typename... Args>
-race_speed<Size, Args...>::
-~race_speed() NOEXCEPT
+template <typename... Args>
+race_unity<Args...>::
+~race_unity() NOEXCEPT
 {
-    BC_ASSERT_MSG(!running() && !complete_, "deleting running race_speed");
+    BC_ASSERT_MSG(!running() && !complete_, "deleting running race_unity");
 }
 
-template <size_t Size, typename... Args>
-inline bool race_speed<Size, Args...>::
+template <typename... Args>
+inline bool race_unity<Args...>::
 running() const NOEXCEPT
 {
     return to_bool(runners_);
 }
 
-template <size_t Size, typename... Args>
-bool race_speed<Size, Args...>::
+template <typename... Args>
+bool race_unity<Args...>::
 start(handler&& complete) NOEXCEPT
 {
     // false implies logic error.
@@ -60,42 +61,49 @@ start(handler&& complete) NOEXCEPT
     complete_ = std::make_shared<handler>(std::forward<handler>(complete));
     BC_POP_WARNING()
 
-    runners_ = Size;
+    failure_ = false;
+    runners_ = size_;
     return true;
 }
 
-template <size_t Size, typename... Args>
-bool race_speed<Size, Args...>::
+template <typename... Args>
+bool race_unity<Args...>::
 finish(const Args&... args) NOEXCEPT
 {
     // false implies logic error.
     if (!running())
         return false;
 
+    // First argument (by convention) determines failure.
     // Capture parameter pack as tuple of copied arguments.
-    const auto winner = is_winner();
+    auto values = std::tuple<Args...>(args...);
+    const auto& ec = std::get<0>(values);
+    const auto failer = set_failure(!!ec);
 
-    // Save args for winner (first to finish).
-    if (winner)
-        args_ = std::tuple<Args...>(args...);
+    // Save args for failer (first failure) or last success.
+    const auto last = (runners_ == one);
+    if (failer || (last && !failure_))
+        args_ = std::move(values);
 
-    // false implies logic error.
-    return invoke() && winner;
+    // false invoke implies logic error.
+    return invoke() && last && !failure_;
 }
 
 // private
 // ----------------------------------------------------------------------------
 
-template <size_t Size, typename... Args>
-bool race_speed<Size, Args...>::
-is_winner() const NOEXCEPT
+template <typename... Args>
+bool race_unity<Args...>::
+set_failure(bool failure) NOEXCEPT
 {
-    // Return is winner (first to finish).
-    return runners_ == Size;
+    // Return is failer (first to fail) and set failure.
+    failure &= !failure_;
+    failure_ |= failure;
+    return failure;
 }
 
-template <size_t Size, typename... Args>
-bool race_speed<Size, Args...>::
+template <typename... Args>
+bool race_unity<Args...>::
 invoke() NOEXCEPT
 {
     // false implies logic error.
@@ -119,9 +127,9 @@ invoke() NOEXCEPT
     return true;
 }
 
-template <size_t Size, typename... Args>
+template <typename... Args>
 template<size_t... Index>
-void race_speed<Size, Args...>::
+void race_unity<Args...>::
 invoker(const handler& complete, const packed& args, unpack<Index...>) NOEXCEPT
 {
     // Expand tuple into parameter pack.

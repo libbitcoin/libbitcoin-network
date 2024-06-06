@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011-2023 libbitcoin developers (see AUTHORS)
+ * Copyright (c) 2011-2024 libbitcoin developers (see AUTHORS)
  *
  * This file is part of libbitcoin.
  *
@@ -16,18 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_ASYNC_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_ASYNC_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACES_RACES_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACES_RACES_HPP
 
-#include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/desubscriber.hpp>
-#include <bitcoin/network/async/enable_shared_from_base.hpp>
-#include <bitcoin/network/async/handlers.hpp>
-#include <bitcoin/network/async/races/races.hpp>
-#include <bitcoin/network/async/subscriber.hpp>
-#include <bitcoin/network/async/thread.hpp>
-#include <bitcoin/network/async/threadpool.hpp>
-#include <bitcoin/network/async/time.hpp>
-#include <bitcoin/network/async/unsubscriber.hpp>
+#include <bitcoin/network/async/races/race_all.hpp>
+#include <bitcoin/network/async/races/race_quality.hpp>
+#include <bitcoin/network/async/races/race_speed.hpp>
+#include <bitcoin/network/async/races/race_unity.hpp>
+#include <bitcoin/network/async/races/race_volume.hpp>
 
 #endif
