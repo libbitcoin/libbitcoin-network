@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_RACE_UNITY_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_RACE_UNITY_HPP
+#ifndef LIBBITCOIN_NETWORK_ASYNC_RACES_RACE_UNITY_HPP
+#define LIBBITCOIN_NETWORK_ASYNC_RACES_RACE_UNITY_HPP
 
 #include <memory>
 #include <tuple>
@@ -82,6 +82,6 @@ private:
 } // namespace network
 } // namespace libbitcoin
 
-#include <bitcoin/network/impl/async/race_unity.ipp>
+#include <bitcoin/network/impl/async/races/race_unity.ipp>
 
 #endif
