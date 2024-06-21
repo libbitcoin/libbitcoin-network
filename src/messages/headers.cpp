@@ -147,9 +147,15 @@ inventory_items headers::to_inventory(inventory::type_id type) const NOEXCEPT
     inventory_items out;
     out.reserve(header_ptrs.size());
 
-    // msvc: emplace_back(type, header->hash()) does not compile.
     for (const auto& header: header_ptrs)
+    {
+#if defined(HAVE_CLANG)
+        // work around clang emplace_back bug (no matching constructor).
         out.push_back({ type, header->hash() });
+#else
+        out.emplace_back(type, header->hash());
+#endif
+    }
 
     return out;
 }
