@@ -150,7 +150,7 @@ inventory_items headers::to_inventory(inventory::type_id type) const NOEXCEPT
     for (const auto& header: header_ptrs)
     {
 #if defined(HAVE_CLANG)
-        // work around clang emplace_back bug (no matching constructor).
+        // emplace_back aggregate initialization requires clang 16.
         out.push_back({ type, header->hash() });
 #else
         out.emplace_back(type, header->hash());
