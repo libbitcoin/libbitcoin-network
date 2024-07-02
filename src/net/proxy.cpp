@@ -254,6 +254,8 @@ void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
 }
 
 // Handle errors and post message to subscribers.
+// The head object is allocated on another thread and destroyed on this one.
+// This introduces cross-thread allocation/deallocation, though size is small.
 void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     const heading_ptr& head) NOEXCEPT
 {
@@ -292,6 +294,10 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
     }
 
     // Notify subscribers of the new message.
+    // The message object is allocated on this thread and notify invokes
+    // subscribers on the same thread. This significantly reduces deallocation
+    // cost in constrast to allowing the object to destroyed on another thread.
+    // If object is passed to another thread destruction cost can be very high.
     const auto code = notify(head->id(), version(), payload_buffer_);
 
     if (code)
