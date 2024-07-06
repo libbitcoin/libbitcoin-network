@@ -50,7 +50,7 @@ struct BCT_API get_compact_transactions
     size_t size(uint32_t version) const NOEXCEPT;
 
     system::hash_digest block_hash;
-    std::vector<uint64_t> indexes;
+    std_vector<uint64_t> indexes;
 };
 
 } // namespace messages

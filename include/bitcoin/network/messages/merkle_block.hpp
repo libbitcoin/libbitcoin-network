@@ -57,7 +57,7 @@ public:
     system::data_chunk flags;
 };
 
-typedef std::vector<merkle_block> merkle_blocks;
+typedef std_vector<merkle_block> merkle_blocks;
 
 } // namespace messages
 } // namespace network

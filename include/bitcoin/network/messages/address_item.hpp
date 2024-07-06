@@ -50,7 +50,7 @@ struct BCT_API address_item
 bool operator==(const address_item& left, const address_item& right) NOEXCEPT;
 bool operator!=(const address_item& left, const address_item& right) NOEXCEPT;
 
-typedef std::vector<address_item> address_items;
+typedef std_vector<address_item> address_items;
 typedef std::shared_ptr<address_items> address_items_ptr;
 
 // tools.ietf.org/html/rfc4291#section-2.5.3

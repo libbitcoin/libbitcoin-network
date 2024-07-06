@@ -99,7 +99,7 @@ private:
     messages::address_item::cptr address_;
 };
 
-typedef std::vector<address> addresses;
+typedef std_vector<address> addresses;
 
 } // namespace config
 } // namespace network

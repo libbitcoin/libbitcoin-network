@@ -70,7 +70,7 @@ struct BCT_API inventory_item
 bool operator==(const inventory_item& left, const inventory_item& right) NOEXCEPT;
 bool operator!=(const inventory_item& left, const inventory_item& right) NOEXCEPT;
 
-typedef std::vector<inventory_item> inventory_items;
+typedef std_vector<inventory_item> inventory_items;
 
 } // namespace messages
 } // namespace network

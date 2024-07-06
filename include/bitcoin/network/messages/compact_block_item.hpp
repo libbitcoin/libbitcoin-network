@@ -44,7 +44,7 @@ public:
     system::chain::transaction::cptr transaction_ptr;
 };
 
-typedef std::vector<compact_block_item> compact_block_items;
+typedef std_vector<compact_block_item> compact_block_items;
 
 } // namespace messages
 } // namespace network
