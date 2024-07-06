@@ -31,7 +31,7 @@ namespace messages {
 /// see also get_blocks.
 struct BCT_API get_headers
 {
-    typedef std::vector<size_t> indexes;
+    typedef std_vector<size_t> indexes;
     typedef std::shared_ptr<const get_headers> cptr;
 
     static const identifier id;

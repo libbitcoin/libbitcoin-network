@@ -29,8 +29,8 @@ namespace messages {
 
 struct BCT_API alert_item
 {
-    typedef std::vector<uint32_t> cancels_t;
-    typedef std::vector<std::string> sub_versions_t;
+    typedef std_vector<uint32_t> cancels_t;
+    typedef std_vector<std::string> sub_versions_t;
     static const system::ec_uncompressed satoshi_public_key;
 
     static alert_item deserialize(uint32_t version,

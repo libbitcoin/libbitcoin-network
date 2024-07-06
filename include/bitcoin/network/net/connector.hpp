@@ -113,7 +113,7 @@ private:
         const socket::ptr& socket) NOEXCEPT;
 };
 
-typedef std::vector<connector::ptr> connectors;
+typedef std_vector<connector::ptr> connectors;
 typedef std::shared_ptr<connectors> connectors_ptr;
 
 } // namespace network

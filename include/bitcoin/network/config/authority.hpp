@@ -112,7 +112,7 @@ private:
     uint8_t cidr_;
 };
 
-typedef std::vector<authority> authorities;
+typedef std_vector<authority> authorities;
 
 } // namespace config
 } // namespace network
