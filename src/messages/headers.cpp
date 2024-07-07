@@ -133,7 +133,7 @@ bool headers::is_sequential() const NOEXCEPT
 
 hashes headers::to_hashes() const NOEXCEPT
 {
-    hashes out;
+    hashes out{};
     out.reserve(header_ptrs.size());
 
     for (const auto& header: header_ptrs)
@@ -144,18 +144,15 @@ hashes headers::to_hashes() const NOEXCEPT
 
 inventory_items headers::to_inventory(inventory::type_id type) const NOEXCEPT
 {
-    inventory_items out;
+    inventory_items out{};
     out.reserve(header_ptrs.size());
 
     for (const auto& header: header_ptrs)
-    {
-#if defined(HAVE_CLANG)
-        // emplace_back aggregate initialization requires clang 16.
         out.push_back({ type, header->hash() });
-#else
-        out.emplace_back(type, header->hash());
-#endif
-    }
+
+    // emplace_back aggregate initialization requires clang 16.
+    // This also fails following change to pmr vector.
+    ////out.emplace_back(type, header->hash());
 
     return out;
 }

@@ -113,7 +113,7 @@ private:
     uint16_t port_;
 };
 
-typedef std_vector<endpoint> endpoints;
+typedef std::vector<endpoint> endpoints;
 
 } // namespace config
 } // namespace network
