@@ -190,6 +190,7 @@ protected:
     /// Subscribe to session stop notification, obtain unsubscribe key.
     virtual object_key subscribe_stop(notifier&& handler) NOEXCEPT;
     virtual bool notify(object_key key) NOEXCEPT;
+    virtual object_key create_key() NOEXCEPT;
 
     /// Remove self from network close subscription (for session early stop).
     virtual void unsubscribe_close() NOEXCEPT;
@@ -232,8 +233,6 @@ protected:
     asio::strand& strand() NOEXCEPT;
 
 private:
-    object_key create_key() NOEXCEPT;
-
     void handle_channel_start(const code& ec, const channel::ptr& channel,
         const result_handler& started, const result_handler& stopped) NOEXCEPT;
 
