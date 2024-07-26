@@ -252,6 +252,9 @@
     <ClCompile Include="..\..\..\..\src\net\hosts.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\memory.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
@@ -561,6 +564,9 @@
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\hosts.hpp">
+      <Filter>include\bitcoin\network\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\memory.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp">

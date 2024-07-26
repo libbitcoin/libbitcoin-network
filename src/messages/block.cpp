@@ -19,11 +19,13 @@
 #include <bitcoin/network/messages/block.hpp>
 
 #include <iterator>
+#include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
 #include <bitcoin/network/messages/message.hpp>
 #include <bitcoin/network/messages/transaction.hpp>
+#include <bitcoin/network/net/memory.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -40,8 +42,11 @@ const uint32_t block::version_maximum = level::maximum_protocol;
 typename block::cptr block::deserialize(uint32_t version,
     const system::data_chunk& data, bool witness) NOEXCEPT
 {
+    static memory memory{};
     system::istream source{ data };
-    system::byte_reader reader{ source };
+    system::byte_reader reader{ source, memory.get_arena() };
+
+    // message, block and block_ptr are not allocated by reader's arena.
     const auto message = to_shared(deserialize(version, reader, witness));
     if (!reader)
         return nullptr;
@@ -81,6 +86,7 @@ typename block::cptr block::deserialize(uint32_t version,
         std::advance(start, full);
     }
 
+    message->block_ptr->set_retainer(memory.get_retainer());
     return message;
 }
 

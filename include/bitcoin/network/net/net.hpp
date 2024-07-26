@@ -26,6 +26,7 @@
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/distributor.hpp>
 #include <bitcoin/network/net/hosts.hpp>
+#include <bitcoin/network/net/memory.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/net/socket.hpp>
 
