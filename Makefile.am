@@ -94,6 +94,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/net/deadline.cpp \
     src/net/distributor.cpp \
     src/net/hosts.cpp \
+    src/net/memory.cpp \
     src/net/proxy.cpp \
     src/net/socket.cpp \
     src/protocols/protocol.cpp \
@@ -192,6 +193,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/net/deadline.cpp \
     test/net/distributor.cpp \
     test/net/hosts.cpp \
+    test/net/memory.cpp \
     test/net/proxy.cpp \
     test/net/socket.cpp \
     test/protocols/protocol.cpp \
@@ -342,6 +344,7 @@ include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/deadline.hpp \
     include/bitcoin/network/net/distributor.hpp \
     include/bitcoin/network/net/hosts.hpp \
+    include/bitcoin/network/net/memory.hpp \
     include/bitcoin/network/net/net.hpp \
     include/bitcoin/network/net/proxy.hpp \
     include/bitcoin/network/net/socket.hpp
