@@ -51,7 +51,7 @@ struct BCT_API block
     size_t size(uint32_t version, bool witness) const NOEXCEPT;
 
     system::chain::block::cptr block_ptr;
-    mutable size_t cached_size{};
+    ////mutable size_t cached_size{};
 };
 
 } // namespace messages
