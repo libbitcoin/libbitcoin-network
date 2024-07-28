@@ -21,6 +21,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/memory.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -33,7 +34,7 @@ using namespace system;
 #define CASE_NOTIFY(name) case messages::identifier::name: \
     return do_notify<messages::name>(SUBSCRIBER(name), version, data)
 
-distributor::distributor(asio::strand& strand) NOEXCEPT
+distributor::distributor(memory& memory, asio::strand& strand) NOEXCEPT
   : MAKE_SUBSCRIBER(address),
     MAKE_SUBSCRIBER(alert),
     MAKE_SUBSCRIBER(block),
@@ -66,7 +67,8 @@ distributor::distributor(asio::strand& strand) NOEXCEPT
     MAKE_SUBSCRIBER(send_headers),
     MAKE_SUBSCRIBER(transaction),
     MAKE_SUBSCRIBER(version),
-    MAKE_SUBSCRIBER(version_acknowledge)
+    MAKE_SUBSCRIBER(version_acknowledge),
+    memory_(memory)
 {
 }
 
@@ -150,6 +152,21 @@ void distributor::stop(const code& ec) NOEXCEPT
     STOP_SUBSCRIBER(transaction);
     STOP_SUBSCRIBER(version);
     STOP_SUBSCRIBER(version_acknowledge);
+}
+
+template <>
+code distributor::do_notify<messages::block>(
+    distributor::block_subscriber& subscriber, uint32_t version,
+    const system::data_chunk& data) NOEXCEPT
+{
+    if (!is_zero(subscriber.size()))
+    {
+        const auto ptr = messages::block::deserialize(memory_, version, data);
+        if (!ptr) return error::invalid_message;
+        subscriber.notify(error::success, ptr);
+    }
+
+    return error::success;
 }
 
 #undef SUBSCRIBER

@@ -443,9 +443,12 @@ channel::ptr session::create_channel(const socket::ptr& socket,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // Default message memory resource, override create_channel to replace.
+    static memory memory{};
+
     // Channel id must be created using create_key().
     const auto id = create_key();
-    return std::make_shared<channel>(log, socket, settings(), id, quiet);
+    return std::make_shared<channel>(memory, log, socket, settings(), id, quiet);
 }
 
 // At one object/session/ns, this overflows in ~585 years (and handled).

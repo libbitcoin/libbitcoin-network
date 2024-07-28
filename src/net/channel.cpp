@@ -27,6 +27,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/deadline.hpp>
+#include <bitcoin/network/net/memory.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -53,9 +54,9 @@ inline deadline::ptr expiration(const logger& log, asio::strand& strand,
     return timeout(log, strand, pseudo_random::duration(span));
 }
 
-channel::channel(const logger& log, const socket::ptr& socket,
+channel::channel(memory& memory, const logger& log, const socket::ptr& socket,
     const settings& settings, uint64_t identifier, bool quiet) NOEXCEPT
-  : proxy(socket),
+  : proxy(memory, socket),
     quiet_(quiet),
     settings_(settings),
     identifier_(identifier),

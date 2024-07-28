@@ -22,9 +22,10 @@ BOOST_AUTO_TEST_SUITE(distributor_tests)
 
 BOOST_AUTO_TEST_CASE(distributor__construct__stop__stops)
 {
+    memory memory{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor instance(strand);
+    distributor instance(memory, strand);
 
     std::promise<bool> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -40,9 +41,10 @@ BOOST_AUTO_TEST_CASE(distributor__construct__stop__stops)
 
 BOOST_AUTO_TEST_CASE(distributor__subscribe__stop__expected_code)
 {
+    memory memory{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor instance(strand);
+    distributor instance(memory, strand);
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
@@ -71,9 +73,10 @@ BOOST_AUTO_TEST_CASE(distributor__subscribe__stop__expected_code)
 
 BOOST_AUTO_TEST_CASE(distributor__notify__invalid_message__no_notification)
 {
+    memory memory{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor instance(strand);
+    distributor instance(memory, strand);
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
@@ -113,9 +116,10 @@ BOOST_AUTO_TEST_CASE(distributor__notify__invalid_message__no_notification)
 
 BOOST_AUTO_TEST_CASE(distributor__notify__valid_message_invalid_version__no_notification)
 {
+    memory memory{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor instance(strand);
+    distributor instance(memory, strand);
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
@@ -153,9 +157,10 @@ BOOST_AUTO_TEST_CASE(distributor__notify__valid_message_invalid_version__no_noti
 
 BOOST_AUTO_TEST_CASE(distributor__notify__valid_nonced_ping__expected_notification)
 {
+    memory memory{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor instance(strand);
+    distributor instance(memory, strand);
     constexpr uint64_t expected_nonce = 42;
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;

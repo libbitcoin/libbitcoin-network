@@ -37,8 +37,8 @@ public:
         proxy::subscribe_stop(std::move(handler));
     }
 
-    mock_proxy(socket::ptr socket) NOEXCEPT
-      : proxy(socket)
+    mock_proxy(const socket::ptr& socket) NOEXCEPT
+      : proxy(memory_, socket)
     {
     }
 
@@ -88,6 +88,7 @@ public:
     }
 
 private:
+    mutable memory memory_{};
     mutable bool stop_{ false };
     mutable std::promise<code> stopped_;
 };
