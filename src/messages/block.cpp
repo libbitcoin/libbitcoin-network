@@ -43,6 +43,13 @@ typename block::cptr block::deserialize(uint32_t version,
     const system::data_chunk& data, bool witness) NOEXCEPT
 {
     static memory memory{};
+    return deserialize(memory, version, data, witness);
+}
+
+// static
+typename block::cptr block::deserialize(auto& memory, uint32_t version,
+    const system::data_chunk& data, bool witness) NOEXCEPT
+{
     system::istream source{ data };
     system::byte_reader reader{ source, memory.get_arena() };
 
