@@ -38,8 +38,8 @@ public:
     arena* get_arena() NOEXCEPT;
     retainer::ptr get_retainer() NOEXCEPT;
 
-
 private:
+    // These are thread safe.
     arena* arena_;
     std::shared_mutex remap_mutex_{};
 };

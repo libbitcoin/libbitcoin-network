@@ -38,6 +38,8 @@ struct BCT_API block
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
+    static cptr deserialize(auto& memory, uint32_t version,
+        const system::data_chunk& data, bool witness=true) NOEXCEPT;
     static cptr deserialize(uint32_t version, const system::data_chunk& data,
         bool witness=true) NOEXCEPT;
     static block deserialize(uint32_t version, system::reader& source,
@@ -51,7 +53,6 @@ struct BCT_API block
     size_t size(uint32_t version, bool witness) const NOEXCEPT;
 
     system::chain::block::cptr block_ptr;
-    mutable size_t cached_size{};
 };
 
 } // namespace messages

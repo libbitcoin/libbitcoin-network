@@ -28,6 +28,7 @@
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/deadline.hpp>
+#include <bitcoin/network/net/memory.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -73,7 +74,7 @@ public:
     }
 
     /// Construct a channel to encapsulated and communicate on the socket.
-    channel(const logger& log, const socket::ptr& socket, 
+    channel(memory& memory, const logger& log, const socket::ptr& socket,
         const settings& settings, uint64_t identifier=zero,
         bool quiet=true) NOEXCEPT;
 

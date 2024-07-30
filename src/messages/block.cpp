@@ -43,6 +43,13 @@ typename block::cptr block::deserialize(uint32_t version,
     const system::data_chunk& data, bool witness) NOEXCEPT
 {
     static memory memory{};
+    return deserialize(memory, version, data, witness);
+}
+
+// static
+typename block::cptr block::deserialize(auto& memory, uint32_t version,
+    const system::data_chunk& data, bool witness) NOEXCEPT
+{
     system::istream source{ data };
     system::byte_reader reader{ source, memory.get_arena() };
 
@@ -86,6 +93,7 @@ typename block::cptr block::deserialize(uint32_t version,
         std::advance(start, full);
     }
 
+    // WARNING: retainer does not track objects shared from block (e.g. tx).
     message->block_ptr->set_retainer(memory.get_retainer());
     return message;
 }
@@ -97,10 +105,7 @@ block block::deserialize(uint32_t version, reader& source,
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    const auto start = source.get_read_position();
-    const auto block_ptr = to_shared<chain::block>(source, witness);
-    const auto size = source.get_read_position() - start;
-    return { block_ptr, size };
+    return { to_shared<chain::block>(source, witness) };
 }
 
 bool block::serialize(uint32_t version,
@@ -116,14 +121,12 @@ void block::serialize(uint32_t BC_DEBUG_ONLY(version), writer& sink,
     bool witness) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version, witness);)
-    ////BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
-    const auto start = sink.get_write_position();
+    BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     if (block_ptr)
         block_ptr->to_data(sink, witness);
 
-    cached_size = sink.get_write_position() - start;
-    BC_ASSERT(sink && cached_size == bytes);
+    BC_ASSERT(sink && (sink.get_write_position() - start) == bytes);
 }
 
 size_t block::size(uint32_t, bool witness) const NOEXCEPT

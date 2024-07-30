@@ -25,6 +25,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/net/memory.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -47,10 +48,10 @@ static constexpr uint32_t https_magic = 0x02010316;
 // This is created in a started state and must be stopped, as the subscribers
 // assert if not stopped. Subscribers may hold protocols even if the service
 // is not started.
-proxy::proxy(const socket::ptr& socket) NOEXCEPT
+proxy::proxy(memory& memory, const socket::ptr& socket) NOEXCEPT
   : socket_(socket),
     stop_subscriber_(socket->strand()),
-    distributor_(socket->strand()),
+    distributor_(memory, socket->strand()),
     reporter(socket->log)
 {
 }

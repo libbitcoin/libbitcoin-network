@@ -29,6 +29,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/distributor.hpp>
+#include <bitcoin/network/net/memory.hpp>
 #include <bitcoin/network/net/socket.hpp>
 
 namespace libbitcoin {
@@ -122,7 +123,7 @@ public:
     const config::address& address() const NOEXCEPT;
 
 protected:
-    proxy(const socket::ptr& socket) NOEXCEPT;
+    proxy(memory& memory, const socket::ptr& socket) NOEXCEPT;
 
     /// Property values provided to the proxy.
     virtual size_t minimum_buffer() const NOEXCEPT = 0;

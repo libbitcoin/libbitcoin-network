@@ -25,6 +25,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/net/memory.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -84,7 +85,7 @@ public:
     DEFINE_SUBSCRIBER(version_acknowledge);
 
     /// Create an instance of this class.
-    distributor(asio::strand& strand) NOEXCEPT;
+    distributor(memory& memory, asio::strand& strand) NOEXCEPT;
 
     /// If stopped, handler is invoked with error::subscriber_stopped.
     /// If key exists, handler is invoked with error::subscriber_exists.
@@ -115,9 +116,9 @@ private:
         if (!is_zero(subscriber.size()))
         {
             // Subscribers are notified only with stop code or error::success.
-            const auto message = messages::deserialize<Message>(data, version);
-            if (!message) return error::invalid_message;
-            subscriber.notify(error::success, message);
+            const auto ptr = messages::deserialize<Message>(data, version);
+            if (!ptr) return error::invalid_message;
+            subscriber.notify(error::success, ptr);
         }
 
         return error::success;
@@ -191,7 +192,14 @@ private:
     DECLARE_SUBSCRIBER(transaction);
     DECLARE_SUBSCRIBER(version);
     DECLARE_SUBSCRIBER(version_acknowledge);
+
+    memory& memory_;
 };
+
+template <>
+code distributor::do_notify<messages::block>(
+    distributor::block_subscriber& subscriber, uint32_t version,
+    const system::data_chunk& data) NOEXCEPT;
 
 #undef SUBSCRIBER
 #undef SUBSCRIBER_TYPE
