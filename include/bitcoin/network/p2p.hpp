@@ -196,6 +196,10 @@ protected:
         return session;
     }
 
+    /// Create unique identifier (sequential), requires strand.
+    virtual object_key create_key() NOEXCEPT;
+
+    /// Sequences.
     virtual void do_start(const result_handler& handler) NOEXCEPT;
     virtual void do_run(const result_handler& handler) NOEXCEPT;
     virtual void do_close() NOEXCEPT;
@@ -234,7 +238,6 @@ protected:
 private:
     code subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;
     connectors_ptr create_connectors(size_t count) NOEXCEPT;
-    object_key create_key() NOEXCEPT;
 
     virtual code start_hosts() NOEXCEPT;
     virtual code stop_hosts() NOEXCEPT;

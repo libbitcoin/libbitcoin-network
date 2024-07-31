@@ -447,8 +447,8 @@ channel::ptr session::create_channel(const socket::ptr& socket,
     static memory memory{};
 
     // Channel id must be created using create_key().
-    const auto id = create_key();
-    return std::make_shared<channel>(memory, log, socket, settings(), id, quiet);
+    return std::make_shared<channel>(memory, log, socket, settings(),
+        create_key(), quiet);
 }
 
 // At one object/session/ns, this overflows in ~585 years (and handled).
@@ -456,13 +456,7 @@ session::object_key session::create_key() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (is_zero(++keys_))
-    {
-        BC_ASSERT_MSG(false, "overflow");
-        LOGF("Session object overflow.");
-    }
-
-    return keys_;
+    return network_.create_key();
 }
 
 // Properties.
