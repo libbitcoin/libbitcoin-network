@@ -266,8 +266,7 @@ private:
     const uint64_t identifier_;
     std::atomic_bool stopped_{ true };
 
-    // These are not thread safe.
-    object_key keys_{};
+    // This is not thread safe.
     subscriber stop_subscriber_;
 };
 
