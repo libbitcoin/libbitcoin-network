@@ -144,15 +144,16 @@ namespace network {
 // Each header includes only its required common headers.
 
 // /async         : define
-// /messages      : define
+// /messages      : define memory
 // /log           : define /async
 // /config        : define /messages /async
-// /net           : define settings /config /log
+// /net           : define settings memory /config /log
 // /sessions      : define settings /net [forward: p2p]
 // /protocols     : define settings /sessions
 
 // Root directory singletons.
 
+// memory         : define
 // settings       : define /messages /config
 // p2p            : define settings /sessions
 

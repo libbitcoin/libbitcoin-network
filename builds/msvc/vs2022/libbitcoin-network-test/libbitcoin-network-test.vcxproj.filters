@@ -93,6 +93,9 @@
     <ClCompile Include="..\..\..\..\test\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\memory.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\address.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
@@ -229,9 +232,6 @@
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\memory.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp">

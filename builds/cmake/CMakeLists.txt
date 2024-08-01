@@ -219,6 +219,7 @@ link_libraries(
 #------------------------------------------------------------------------------
 add_library( ${CANONICAL_LIB_NAME}
     "../../src/error.cpp"
+    "../../src/memory.cpp"
     "../../src/p2p.cpp"
     "../../src/settings.cpp"
     "../../src/async/thread.cpp"
@@ -277,7 +278,6 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/net/deadline.cpp"
     "../../src/net/distributor.cpp"
     "../../src/net/hosts.cpp"
-    "../../src/net/memory.cpp"
     "../../src/net/proxy.cpp"
     "../../src/net/socket.cpp"
     "../../src/protocols/protocol.cpp"
@@ -334,6 +334,7 @@ if (with-tests)
     add_executable( libbitcoin-network-test
         "../../test/error.cpp"
         "../../test/main.cpp"
+        "../../test/memory.cpp"
         "../../test/p2p.cpp"
         "../../test/settings.cpp"
         "../../test/test.cpp"
@@ -401,7 +402,6 @@ if (with-tests)
         "../../test/net/deadline.cpp"
         "../../test/net/distributor.cpp"
         "../../test/net/hosts.cpp"
-        "../../test/net/memory.cpp"
         "../../test/net/proxy.cpp"
         "../../test/net/socket.cpp"
         "../../test/protocols/protocol.cpp"

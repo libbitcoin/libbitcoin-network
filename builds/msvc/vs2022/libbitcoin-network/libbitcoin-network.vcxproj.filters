@@ -114,6 +114,9 @@
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp">
       <Filter>src\log</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\memory.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\address.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
@@ -250,9 +253,6 @@
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\hosts.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\net\memory.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp">
@@ -413,6 +413,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\tracker.hpp">
       <Filter>include\bitcoin\network\log</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\memory.hpp">
+      <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\address.hpp">
       <Filter>include\bitcoin\network\messages</Filter>
     </ClInclude>
@@ -564,9 +567,6 @@
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\hosts.hpp">
-      <Filter>include\bitcoin\network\net</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\memory.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp">

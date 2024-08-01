@@ -86,6 +86,7 @@
     <ClCompile Include="..\..\..\..\src\log\capture.cpp" />
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
+    <ClCompile Include="..\..\..\..\src\memory.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\address.cpp">
       <ObjectFileName>$(IntDir)src_messages_address.obj</ObjectFileName>
     </ClCompile>
@@ -134,7 +135,6 @@
     <ClCompile Include="..\..\..\..\src\net\deadline.cpp" />
     <ClCompile Include="..\..\..\..\src\net\distributor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\hosts.cpp" />
-    <ClCompile Include="..\..\..\..\src\net\memory.cpp" />
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket.cpp" />
     <ClCompile Include="..\..\..\..\src\p2p.cpp" />
@@ -189,6 +189,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\reporter.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\tracker.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\address_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\alert.hpp" />
@@ -240,7 +241,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\hosts.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\memory.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\proxy.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp" />

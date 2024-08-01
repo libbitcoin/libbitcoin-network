@@ -20,8 +20,8 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/net/memory.hpp>
 
 namespace libbitcoin {
 namespace network {

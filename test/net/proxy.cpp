@@ -88,8 +88,8 @@ public:
     }
 
 private:
-    mutable memory memory_{};
     mutable bool stop_{ false };
+    mutable default_memory memory_{};
     mutable std::promise<code> stopped_;
 };
 

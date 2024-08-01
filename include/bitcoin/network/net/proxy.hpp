@@ -27,9 +27,9 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/distributor.hpp>
-#include <bitcoin/network/net/memory.hpp>
 #include <bitcoin/network/net/socket.hpp>
 
 namespace libbitcoin {

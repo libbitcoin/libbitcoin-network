@@ -36,6 +36,7 @@ src_libbitcoin_network_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_
 src_libbitcoin_network_la_LIBADD = ${boost_regex_LIBS} ${bitcoin_system_LIBS}
 src_libbitcoin_network_la_SOURCES = \
     src/error.cpp \
+    src/memory.cpp \
     src/p2p.cpp \
     src/settings.cpp \
     src/async/thread.cpp \
@@ -94,7 +95,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/net/deadline.cpp \
     src/net/distributor.cpp \
     src/net/hosts.cpp \
-    src/net/memory.cpp \
     src/net/proxy.cpp \
     src/net/socket.cpp \
     src/protocols/protocol.cpp \
@@ -126,6 +126,7 @@ test_libbitcoin_network_test_LDADD = src/libbitcoin-network.la ${boost_unit_test
 test_libbitcoin_network_test_SOURCES = \
     test/error.cpp \
     test/main.cpp \
+    test/memory.cpp \
     test/p2p.cpp \
     test/settings.cpp \
     test/test.cpp \
@@ -193,7 +194,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/net/deadline.cpp \
     test/net/distributor.cpp \
     test/net/hosts.cpp \
-    test/net/memory.cpp \
     test/net/proxy.cpp \
     test/net/socket.cpp \
     test/protocols/protocol.cpp \
@@ -226,6 +226,7 @@ include_bitcoin_network_HEADERS = \
     include/bitcoin/network/boost.hpp \
     include/bitcoin/network/define.hpp \
     include/bitcoin/network/error.hpp \
+    include/bitcoin/network/memory.hpp \
     include/bitcoin/network/p2p.hpp \
     include/bitcoin/network/settings.hpp \
     include/bitcoin/network/version.hpp
@@ -344,7 +345,6 @@ include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/deadline.hpp \
     include/bitcoin/network/net/distributor.hpp \
     include/bitcoin/network/net/hosts.hpp \
-    include/bitcoin/network/net/memory.hpp \
     include/bitcoin/network/net/net.hpp \
     include/bitcoin/network/net/proxy.hpp \
     include/bitcoin/network/net/socket.hpp
