@@ -42,10 +42,7 @@ arena* memory::get_arena() NOEXCEPT
 
 retainer::ptr memory::get_retainer() NOEXCEPT
 {
-    // Takes a shared lock on remap_mutex_ until destruct, blocking remap.
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    return std::make_unique<retainer>(remap_mutex_);
-    BC_POP_WARNING()
+    return {};
 }
 
 } // namespace network

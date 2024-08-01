@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_NET_MEMORY_HPP
 
 #include <memory>
-#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -35,13 +34,12 @@ public:
     memory() NOEXCEPT;
     memory(arena* arena) NOEXCEPT;
 
-    arena* get_arena() NOEXCEPT;
-    retainer::ptr get_retainer() NOEXCEPT;
+    virtual arena* get_arena() NOEXCEPT;
+    virtual retainer::ptr get_retainer() NOEXCEPT;
 
 private:
-    // These are thread safe.
+    // This is thread safe.
     arena* arena_;
-    std::shared_mutex remap_mutex_{};
 };
 
 } // namespace network
