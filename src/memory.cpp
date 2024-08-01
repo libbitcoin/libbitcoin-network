@@ -16,13 +16,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
+#include <bitcoin/network/memory.hpp>
 
-BOOST_AUTO_TEST_SUITE(memory_tests)
+#include <bitcoin/system.hpp>
+#include <bitcoin/network/define.hpp>
 
-BOOST_AUTO_TEST_CASE(memory_test)
+namespace libbitcoin {
+namespace network {
+
+default_memory::default_memory() NOEXCEPT
 {
-    BOOST_REQUIRE(true);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+arena* default_memory::get_arena() NOEXCEPT
+{
+    return default_arena::get();
+}
+
+retainer::ptr default_memory::get_retainer() NOEXCEPT
+{
+    return {};
+}
+
+} // namespace network
+} // namespace libbitcoin

@@ -16,32 +16,41 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_NET_MEMORY_HPP
-#define LIBBITCOIN_NETWORK_NET_MEMORY_HPP
+#ifndef LIBBITCOIN_NETWORK_MEMORY_HPP
+#define LIBBITCOIN_NETWORK_MEMORY_HPP
 
 #include <memory>
-#include <shared_mutex>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 
+/// Tracked memory allocation interface.
 class BCT_API memory
 {
 public:
-    DELETE_COPY_MOVE_DESTRUCT(memory);
+    /// Get memory arena.
+    virtual arena* get_arena() NOEXCEPT = 0;
 
-    memory() NOEXCEPT;
-    memory(arena* arena) NOEXCEPT;
+    /// Get memory retainer.
+    virtual retainer::ptr get_retainer() NOEXCEPT = 0;
+};
 
-    arena* get_arena() NOEXCEPT;
-    retainer::ptr get_retainer() NOEXCEPT;
+/// Default tracked memory implementation (untracked).
+class BCT_API default_memory final
+  : public memory
+{
+public:
+    DELETE_COPY_MOVE_DESTRUCT(default_memory);
 
-private:
-    // These are thread safe.
-    arena* arena_;
-    std::shared_mutex remap_mutex_{};
+    default_memory() NOEXCEPT;
+
+    /// Get memory arena (system default).
+    arena* get_arena() NOEXCEPT override;
+
+    /// Get memory retainer (empty pointer).
+    retainer::ptr get_retainer() NOEXCEPT override;
 };
 
 } // namespace network

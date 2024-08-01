@@ -444,7 +444,7 @@ channel::ptr session::create_channel(const socket::ptr& socket,
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Default message memory resource, override create_channel to replace.
-    static memory memory{};
+    static default_memory memory{};
 
     // Channel id must be created using create_key().
     return std::make_shared<channel>(memory, log, socket, settings(),

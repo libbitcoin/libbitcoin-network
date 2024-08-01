@@ -49,7 +49,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
 {
-    memory memory{};
+    default_memory memory{};
     const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
@@ -71,7 +71,7 @@ inline size_t payload_maximum(const settings& settings)
 
 BOOST_AUTO_TEST_CASE(channel__properties__default__expected)
 {
-    memory memory{};
+    default_memory memory{};
     const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());

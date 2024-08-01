@@ -18,6 +18,7 @@
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
+#include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/version.hpp>
@@ -100,7 +101,6 @@
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/distributor.hpp>
 #include <bitcoin/network/net/hosts.hpp>
-#include <bitcoin/network/net/memory.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/net/socket.hpp>

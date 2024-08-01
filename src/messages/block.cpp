@@ -21,11 +21,11 @@
 #include <iterator>
 #include <memory>
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
 #include <bitcoin/network/messages/message.hpp>
 #include <bitcoin/network/messages/transaction.hpp>
-#include <bitcoin/network/net/memory.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -42,12 +42,12 @@ const uint32_t block::version_maximum = level::maximum_protocol;
 typename block::cptr block::deserialize(uint32_t version,
     const system::data_chunk& data, bool witness) NOEXCEPT
 {
-    static memory memory{};
+    static default_memory memory{};
     return deserialize(memory, version, data, witness);
 }
 
 // static
-typename block::cptr block::deserialize(auto& memory, uint32_t version,
+typename block::cptr block::deserialize(memory& memory, uint32_t version,
     const system::data_chunk& data, bool witness) NOEXCEPT
 {
     system::istream source{ data };
