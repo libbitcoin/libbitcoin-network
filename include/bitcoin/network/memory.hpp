@@ -34,7 +34,7 @@ public:
     virtual arena* get_arena() NOEXCEPT = 0;
 
     /// Get memory retainer.
-    virtual retainer::ptr get_retainer() NOEXCEPT = 0;
+    virtual retainer::ptr get_retainer(size_t allocation=zero) NOEXCEPT = 0;
 };
 
 /// Default tracked memory implementation (untracked).
@@ -49,8 +49,8 @@ public:
     /// Get memory arena (system default).
     arena* get_arena() NOEXCEPT override;
 
-    /// Get memory retainer (empty pointer).
-    retainer::ptr get_retainer() NOEXCEPT override;
+    /// Get memory retainer (empty pointer, allocation unused).
+    retainer::ptr get_retainer(size_t=zero) NOEXCEPT override;
 };
 
 } // namespace network
