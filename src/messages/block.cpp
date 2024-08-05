@@ -59,12 +59,12 @@ typename block::cptr block::deserialize(memory& memory, uint32_t version,
         return nullptr;
 
     // Must have at least maximal_block available to prevent block overflow.
-    ////uint8_t* begin = nullptr;
+    uint8_t* begin = nullptr;
     const auto capacity = arena->get_capacity();
     if (capacity < maximal_block)
         arena->deallocate(arena->allocate(capacity), capacity);
-    ////else
-    ////    begin = system::pointer_cast<uint8_t>(arena->allocate(zero));
+    else
+        begin = system::pointer_cast<uint8_t>(arena->allocate(zero));
 
     system::istream source{ data };
     system::byte_reader reader{ source, arena };
@@ -75,8 +75,8 @@ typename block::cptr block::deserialize(memory& memory, uint32_t version,
     if (!reader)
         return nullptr;
 
-    ////const auto end = system::pointer_cast<uint8_t>(arena->allocate(zero));
-    ////const auto size = system::limit<size_t>(std::distance(begin, end));
+    const auto end = system::pointer_cast<uint8_t>(arena->allocate(zero));
+    const auto size = system::limit<size_t>(std::distance(begin, end));
 
     // Cache header hash.
     constexpr auto header_size = chain::header::serialized_size();
@@ -114,7 +114,7 @@ typename block::cptr block::deserialize(memory& memory, uint32_t version,
     }
 
     // WARNING: retainer does not track objects shared from block (e.g. tx).
-    message->block_ptr->set_retainer(memory.get_retainer());
+    message->block_ptr->set_retainer(memory.get_retainer(size));
     return message;
 }
 
