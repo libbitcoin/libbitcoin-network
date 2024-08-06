@@ -33,8 +33,8 @@ namespace messages {
 
 using namespace system;
 
-// Measured through block 550,000 - assumes consistent platform sizing.
-constexpr auto maximal_block = 11'904'912_size;
+// Measured through block 840,000 - assumes consistent platform sizing.
+constexpr auto maximal_block = 30'000'000_size;
     
 const std::string block::command = "block";
 const identifier block::id = identifier::block;
@@ -51,6 +51,10 @@ typename block::cptr block::deserialize(uint32_t version,
 
 // static
 // TODO: Move cached hashes to arena.
+// Must have at least maximal_block available to prevent block overflow.
+// Since the block allocation is unknown, a maximal block is assumed.
+// message, block and block_ptr are not allocated by reader's arena.
+// chain::block consists only of three pointers and two integral values.
 typename block::cptr block::deserialize(memory& memory, uint32_t version,
     const system::data_chunk& data, bool witness) NOEXCEPT
 {
@@ -58,25 +62,14 @@ typename block::cptr block::deserialize(memory& memory, uint32_t version,
     if (arena == nullptr)
         return nullptr;
 
-    // Must have at least maximal_block available to prevent block overflow.
-    uint8_t* begin = nullptr;
-    const auto capacity = arena->get_capacity();
-    if (capacity < maximal_block)
-        arena->deallocate(arena->allocate(capacity), capacity);
-    else
-        begin = system::pointer_cast<uint8_t>(arena->allocate(zero));
+    istream source{ data };
+    byte_reader reader{ source, arena };
 
-    system::istream source{ data };
-    system::byte_reader reader{ source, arena };
-
-    // message, block and block_ptr are not allocated by reader's arena.
-    // chain::block consists only of three pointers and two integral values.
+    // May block until all retainers of the arena are released.
+    const auto begin = pointer_cast<uint8_t>(arena->require(maximal_block));
     const auto message = to_shared(deserialize(version, reader, witness));
     if (!reader)
         return nullptr;
-
-    const auto end = system::pointer_cast<uint8_t>(arena->allocate(zero));
-    const auto size = system::limit<size_t>(std::distance(begin, end));
 
     // Cache header hash.
     constexpr auto header_size = chain::header::serialized_size();
@@ -113,8 +106,12 @@ typename block::cptr block::deserialize(memory& memory, uint32_t version,
         std::advance(start, full);
     }
 
+    // TODO: system::limit is not necessary if allocation begin < end.
+    const auto end = pointer_cast<uint8_t>(arena->allocate(zero));
+    const auto allocated = limit<size_t>(std::distance(begin, end));
+
     // WARNING: retainer does not track objects shared from block (e.g. tx).
-    message->block_ptr->set_retainer(memory.get_retainer(size));
+    message->block_ptr->set_retainer(memory.get_retainer(allocated));
     return message;
 }
 
