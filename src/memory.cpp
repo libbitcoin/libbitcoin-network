@@ -33,10 +33,5 @@ arena* default_memory::get_arena() NOEXCEPT
     return default_arena::get();
 }
 
-retainer::ptr default_memory::get_retainer(size_t) NOEXCEPT
-{
-    return {};
-}
-
 } // namespace network
 } // namespace libbitcoin

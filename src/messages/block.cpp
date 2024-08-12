@@ -65,7 +65,6 @@ typename block::cptr block::deserialize(memory& memory, uint32_t version,
     istream source{ data };
     byte_reader reader{ source, arena };
 
-    // May block until all retainers of the arena are released.
     const auto begin = pointer_cast<uint8_t>(arena->require(maximal_block));
     const auto message = to_shared(deserialize(version, reader, witness));
     if (!reader)
@@ -109,9 +108,7 @@ typename block::cptr block::deserialize(memory& memory, uint32_t version,
     // TODO: system::limit is not necessary if allocation begin < end.
     const auto end = pointer_cast<uint8_t>(arena->allocate(zero));
     const auto allocated = limit<size_t>(std::distance(begin, end));
-
-    // WARNING: retainer does not track objects shared from block (e.g. tx).
-    message->block_ptr->set_retainer(memory.get_retainer(allocated));
+    message->block_ptr->set_allocation(allocated);
     return message;
 }
 
