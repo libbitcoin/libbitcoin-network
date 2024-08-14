@@ -161,8 +161,14 @@ code distributor::do_notify<messages::block>(
 {
     if (!is_zero(subscriber.size()))
     {
-        const auto ptr = messages::block::deserialize(memory_, version, data);
-        if (!ptr) return error::invalid_message;
+        const auto arena = memory_.get_arena();
+        if (arena == nullptr)
+            return error::operation_failed;
+
+        const auto ptr = messages::block::deserialize(*arena, version, data);
+        if (!ptr)
+            return error::invalid_message;
+
         subscriber.notify(error::success, ptr);
     }
 
