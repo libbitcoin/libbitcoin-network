@@ -117,7 +117,10 @@ private:
         {
             // Subscribers are notified only with stop code or error::success.
             const auto ptr = messages::deserialize<Message>(data, version);
-            if (!ptr) return error::invalid_message;
+
+            if (!ptr)
+                return error::invalid_message;
+
             subscriber.notify(error::success, ptr);
         }
 
@@ -196,6 +199,7 @@ private:
     memory& memory_;
 };
 
+// block message uses specialized deserializer for memory management.
 template <>
 code distributor::do_notify<messages::block>(
     distributor::block_subscriber& subscriber, uint32_t version,
