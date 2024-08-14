@@ -39,7 +39,11 @@ struct BCT_API block
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
-    static cptr deserialize(memory& memory, uint32_t version,
+    /// Populate header and tx hashes onto the block.
+    static void set_hashes(const system::chain::block& block,
+        const system::data_chunk& data) NOEXCEPT;
+
+    static cptr deserialize(arena& arena, uint32_t version,
         const system::data_chunk& data, bool witness=true) NOEXCEPT;
     static cptr deserialize(uint32_t version, const system::data_chunk& data,
         bool witness=true) NOEXCEPT;

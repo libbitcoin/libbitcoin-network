@@ -306,6 +306,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
         if (head->command == messages::transaction::command ||
             head->command == messages::block::command)
         {
+            // error::operation_failed implies null arena, not invalid payload.
             LOGR("Invalid " << head->command << " payload from [" << authority()
                 << "] with hash [" << encode_hash(bitcoin_hash(payload_buffer_)) << "] "
                 << code.message());
