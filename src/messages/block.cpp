@@ -98,69 +98,22 @@ typename block::cptr block::deserialize(uint32_t version,
 typename block::cptr block::deserialize(arena& arena, uint32_t version,
     const data_chunk& data, bool witness) NOEXCEPT
 {
-    ////if (version < version_minimum || version > version_maximum)
-    ////    nullptr;
-
-    // TODO: arena::initialize().
-    // Returns current arena address (next allocation point).
-    // This implies a linear allocator, otherwise nullptr returned.
     const auto begin = pointer_cast<uint8_t>(arena.initialize());
     if (is_null(begin))
         return nullptr;
 
     istream source{ data };
     byte_reader reader{ source, &arena };
-
-    // block and all of its parts are allocated at the start of arena.
-    ////auto allocator = reader.get_allocator();
-    ////const auto raw = allocator.new_object<chain::block>(reader, witness);
-    ////if (is_null(raw) || !reader)
-    ////    return nullptr;
     const auto message = to_shared(deserialize(version, reader, witness));
     if (!reader)
         return nullptr;
 
-    // Copy header and tx hashes into preallocated optionals.
     set_hashes(*message->block_ptr, data);
-
-    // Compute allocated size of raw and its block.
     const auto end = pointer_cast<uint8_t>(arena.allocate(zero));
     const auto allocation = std::distance(begin, end);
     const auto size = possible_narrow_sign_cast<size_t>(allocation);
     message->block_ptr->set_allocation(size);
-
-    // Invokes destruct and deallocate (which may not need to free memory).
-    ////return std::make_shared<block>(std::shared_ptr<chain::block>(raw,
-    ////    allocator.deleter<chain::block>()));
     return message;
-
-    // Allocate memory for copy of block_ptr and its block, and define deleter.
-    ////const auto copy = pointer_cast<chain::block>(std::malloc(size));
-    ////if (is_null(copy))
-    ////    return nullptr;
-    ////
-    // Copy the contiguous byte buffer that represents the block.
-    ////std::memcpy(copy, block_ptr, size);
-    ////
-    // Do not invoke block destructor, no free required for linear allocator.
-    ////allocator.deleter<chain::block>()(block_ptr);
-    ////std::free(copy);
-    ////
-    ////const auto thread = std::this_thread::get_id();
-    ////const auto wiper = [thread](void* memory) NOEXCEPT
-    ////{
-    ////    if (std::this_thread::get_id() != thread)
-    ////    {
-    ////        std::free(memory);
-    ////    }
-    ////};
-    ////
-    // This leaks copy if destruct on same thread.
-    ////return std::make_shared<block>(std::shared_ptr<chain::block>(copy, wiper));
-    ////
-    // Create an owning block pointer with deallocator and assign to message.
-    ////const auto wiper = [](void* address) NOEXCEPT { std::free(address); };
-    ////return std::make_shared<block>(std::shared_ptr<chain::block>(copy, wiper));
 }
 
 // static
