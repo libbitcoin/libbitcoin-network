@@ -98,22 +98,28 @@ typename block::cptr block::deserialize(uint32_t version,
 typename block::cptr block::deserialize(arena& arena, uint32_t version,
     const data_chunk& data, bool witness) NOEXCEPT
 {
+    if (version < version_minimum || version > version_maximum)
+        return nullptr;
+
     const auto begin = pointer_cast<uint8_t>(arena.initialize());
     if (is_null(begin))
         return nullptr;
 
     istream source{ data };
     byte_reader reader{ source, &arena };
-    const auto message = to_shared(deserialize(version, reader, witness));
-    if (!reader)
+    auto allocator = reader.get_allocator();
+    const auto raw = allocator.new_object<chain::block>(reader, witness);
+    if (is_null(raw) || !reader)
         return nullptr;
 
-    set_hashes(*message->block_ptr, data);
+    set_hashes(*raw, data);
     const auto end = pointer_cast<uint8_t>(arena.allocate(zero));
     const auto allocation = std::distance(begin, end);
     const auto size = possible_narrow_sign_cast<size_t>(allocation);
-    message->block_ptr->set_allocation(size);
-    return message;
+    raw->set_allocation(size);
+    ////const auto deleter = allocator.deleter<chain::block>();
+    const auto deleter = [](auto) {};
+    return to_shared<block>(std::shared_ptr<chain::block>(raw, deleter));
 }
 
 // static
