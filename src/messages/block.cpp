@@ -94,7 +94,8 @@ typename block::cptr block::deserialize(uint32_t version,
 
 // static
 // WARNING: linear arena must allocate a maximal block and all contents.
-// WARNING: chain::block::cptr destruct frees all contained shared_ptr objects.
+// WARNING: the block_allocator block becomes invalidated once this method is
+// WARNING: called subsequently on the same thread.
 typename block::cptr block::deserialize(arena& arena, uint32_t version,
     const data_chunk& data, bool witness) NOEXCEPT
 {
@@ -107,19 +108,19 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
 
     istream source{ data };
     byte_reader reader{ source, &arena };
-    auto allocator = reader.get_allocator();
+    auto& allocator = reader.get_allocator();
     const auto raw = allocator.new_object<chain::block>(reader, witness);
     if (is_null(raw) || !reader)
         return nullptr;
 
     set_hashes(*raw, data);
     const auto end = pointer_cast<uint8_t>(arena.allocate(zero));
-    const auto allocation = std::distance(begin, end);
-    const auto size = possible_narrow_sign_cast<size_t>(allocation);
-    raw->set_allocation(size);
-    ////const auto deleter = allocator.deleter<chain::block>();
-    const auto deleter = [](auto) {};
-    return to_shared<block>(std::shared_ptr<chain::block>(raw, deleter));
+    const auto size = std::distance(begin, end);
+    raw->set_allocation(possible_narrow_sign_cast<size_t>(size));
+
+    // All block and contained object destructors should be optimized out.
+    return to_shared<block>(std::shared_ptr<chain::block>(raw,
+        allocator.deleter<chain::block>()));
 }
 
 // static
