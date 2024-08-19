@@ -87,19 +87,15 @@ address::cptr protocol_address_in_31402::filter(
 
     // Returns zero if minimum > maximum.
     const size_t select = pseudo_random::next(minimum, maximum);
-
     if (is_zero(select))
         return to_shared<address>();
 
-    // CLang doesn't like emplacement with default constructors, so use new.
-    BC_PUSH_WARNING(NO_NEW_OR_DELETE)
-    const auto message = std::shared_ptr<address>(new address{ items });
-    BC_POP_WARNING()
-
     // Shuffle, reduce, and filter to the target amount.
-    pseudo_random::shuffle(message->addresses);
-    message->addresses.resize(select);
-    std::erase_if(message->addresses, [&](const auto& address) NOEXCEPT
+    const auto message = to_shared<address>(items);
+    auto& addresses = const_cast<address_items&>(message->addresses);
+    pseudo_random::shuffle(addresses);
+    addresses.resize(select);
+    std::erase_if(addresses, [&](const auto& address) NOEXCEPT
     {
         return settings().excluded(address);
     });

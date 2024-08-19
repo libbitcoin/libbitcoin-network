@@ -102,9 +102,8 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
     if (version < version_minimum || version > version_maximum)
         return nullptr;
 
-    const auto begin = pointer_cast<uint8_t>(arena.initialize());
-    if (is_null(begin))
-        return nullptr;
+    // Get starting address of block allocation (nullptr if not detachable).
+    const auto begin = pointer_cast<uint8_t>(arena.start());
 
     istream source{ data };
     byte_reader reader{ source, &arena };
@@ -114,13 +113,21 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
         return nullptr;
 
     set_hashes(*raw, data);
-    const auto end = pointer_cast<uint8_t>(arena.allocate(zero));
-    const auto size = std::distance(begin, end);
-    raw->set_allocation(possible_narrow_sign_cast<size_t>(size));
+
+    // Get size of block allocation owned by begin (zero if non-detachable).
+    raw->set_allocation(arena.detach());
 
     // All block and contained object destructors should be optimized out.
     return to_shared<block>(std::shared_ptr<chain::block>(raw,
-        allocator.deleter<chain::block>()));
+        [&arena, begin](chain::block* ptr) NOEXCEPT
+        {
+            // Detach from non-null begin (raw may be aligned|non-detachable).
+            arena.release(begin, ptr->get_allocation());
+
+            // Detachable arena is nop deallocation, which is necesssary since
+            // the allocation has been detached from arena (and freed above).
+            byte_allocator::deleter<chain::block>(&arena);
+        }));
 }
 
 // static
