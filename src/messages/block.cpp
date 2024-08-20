@@ -93,39 +93,36 @@ typename block::cptr block::deserialize(uint32_t version,
 }
 
 // static
-// WARNING: linear arena must allocate a maximal block and all contents.
-// WARNING: the block_allocator block becomes invalidated once this method is
-// WARNING: called subsequently on the same thread.
+// WARNING: all shared block components invalidate when the block destructs.
 typename block::cptr block::deserialize(arena& arena, uint32_t version,
     const data_chunk& data, bool witness) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         return nullptr;
 
-    // Get starting address of block allocation (nullptr if not detachable).
-    const auto begin = pointer_cast<uint8_t>(arena.start());
+    // Set starting address of block allocation (nullptr if not detachable).
+    const auto memory = pointer_cast<uint8_t>(arena.start(data.size()));
 
     istream source{ data };
     byte_reader reader{ source, &arena };
     auto& allocator = reader.get_allocator();
-    const auto raw = allocator.new_object<chain::block>(reader, witness);
-    if (is_null(raw) || !reader)
+    const auto block = allocator.new_object<chain::block>(reader, witness);
+    if (is_null(block) || !reader)
         return nullptr;
 
-    set_hashes(*raw, data);
+    set_hashes(*block, data);
 
-    // Get size of block allocation owned by begin (zero if non-detachable).
-    raw->set_allocation(arena.detach());
+    // Set size of block allocation owned by memory (zero if non-detachable).
+    block->set_allocation(arena.detach());
 
     // All block and contained object destructors should be optimized out.
-    return to_shared<block>(std::shared_ptr<chain::block>(raw,
-        [&arena, begin](chain::block* ptr) NOEXCEPT
+    return to_shared<messages::block>(std::shared_ptr<chain::block>(block,
+        [&arena, memory](auto) NOEXCEPT
         {
-            // Detach from non-null begin (raw may be aligned|non-detachable).
-            arena.release(begin, ptr->get_allocation());
+            // Deallocate detached memory (nop if not detachable).
+            arena.release(memory);
 
-            // Detachable arena is nop deallocation, which is necesssary since
-            // the allocation has been detached from arena (and freed above).
+            // Destruct and deallocate objects (nop deallocate if detachable).
             byte_allocator::deleter<chain::block>(&arena);
         }));
 }
