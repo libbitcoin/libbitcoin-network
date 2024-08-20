@@ -101,7 +101,7 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
         return nullptr;
 
     // Set starting address of block allocation (nullptr if not detachable).
-    const auto memory = pointer_cast<uint8_t>(arena.start());
+    const auto memory = pointer_cast<uint8_t>(arena.start(data.size()));
 
     istream source{ data };
     byte_reader reader{ source, &arena };
