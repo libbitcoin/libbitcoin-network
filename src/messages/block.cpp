@@ -33,7 +33,6 @@ namespace messages {
 
 using namespace system;
 
-////BC_PUSH_WARNING(NO_MALLOC_OR_FREE)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
 
@@ -93,7 +92,6 @@ typename block::cptr block::deserialize(uint32_t version,
 }
 
 // static
-// WARNING: all shared block components invalidate when the block destructs.
 typename block::cptr block::deserialize(arena& arena, uint32_t version,
     const data_chunk& data, bool witness) NOEXCEPT
 {
@@ -165,7 +163,6 @@ size_t block::size(uint32_t, bool witness) const NOEXCEPT
 
 BC_POP_WARNING()
 BC_POP_WARNING()
-////BC_POP_WARNING()
 
 } // namespace messages
 } // namespace network
