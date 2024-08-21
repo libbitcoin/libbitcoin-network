@@ -34,7 +34,8 @@ public:
     virtual arena* get_arena() NOEXCEPT = 0;
 };
 
-/// Default tracked memory implementation (untracked).
+/// Default implementation of a thread safe arena container.
+/// This returns the default_arena, which passes through to new/delete.
 class BCT_API default_memory final
   : public memory
 {
