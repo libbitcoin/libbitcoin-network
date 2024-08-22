@@ -66,10 +66,20 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
     byte_reader reader{ source, &arena };
     auto& allocator = reader.get_allocator();
     const auto block = allocator.new_object<chain::block>(reader, witness);
-    if (is_null(block) || !reader)
-        return nullptr;
 
-    set_hashes(*block, data);
+    // Destruct block if created but failed to deserialize.
+    if (!reader && !is_null(block))
+        byte_allocator::deleter<chain::block>(&arena);
+
+    // Release memory if block construction or deserialization failed.
+    if (!reader || is_null(block))
+    {
+        arena.release(memory);
+        return nullptr;
+    }
+
+    // Cache hashes as extracted from serialized block.
+    block->set_hashes(data);
 
     // Set size of block allocation owned by memory (zero if non-detachable).
     block->set_allocation(arena.detach());
