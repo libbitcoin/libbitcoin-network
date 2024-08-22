@@ -117,11 +117,12 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
     return to_shared<messages::block>(std::shared_ptr<chain::block>(block,
         [&arena, memory](auto) NOEXCEPT
         {
-            // Deallocate detached memory (nop if not detachable).
-            arena.release(memory);
-
             // Destruct and deallocate objects (nop deallocate if detachable).
             byte_allocator::deleter<chain::block>(&arena);
+
+            // Deallocate detached memory (nop if not detachable).
+            // Follows destructor just in case a destructor traverses memory.
+            arena.release(memory);
         }));
 }
 
