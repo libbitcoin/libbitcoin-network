@@ -35,27 +35,6 @@ const identifier transaction::id = identifier::transaction;
 const uint32_t transaction::version_minimum = level::minimum_protocol;
 const uint32_t transaction::version_maximum = level::maximum_protocol;
 
-// Optimized non-witness hash derivation using witness-serialized tx.
-hash_digest transaction::desegregated_hash(size_t witnessed,
-    size_t unwitnessed, const uint8_t* data) NOEXCEPT
-{
-    BC_ASSERT_MSG(!is_null(data), "nullptr");
-
-    using namespace system;
-    constexpr auto preamble = sizeof(uint32_t) + two * sizeof(uint8_t);
-    const auto puts = floored_subtract(unwitnessed, two * sizeof(uint32_t));
-    const auto locktime = floored_subtract(witnessed, sizeof(uint32_t));
-
-    hash_digest digest{};
-    stream::out::fast stream{ digest };
-    hash::sha256x2::fast sink{ stream };
-    sink.write_bytes(data, sizeof(uint32_t));
-    sink.write_bytes(std::next(data, preamble), puts);
-    sink.write_bytes(std::next(data, locktime), sizeof(uint32_t));
-    sink.flush();
-    return digest;
-}
-
 // static
 typename transaction::cptr transaction::deserialize(uint32_t version,
     const data_chunk& data, bool witness) NOEXCEPT
@@ -75,8 +54,8 @@ typename transaction::cptr transaction::deserialize(uint32_t version,
         const auto true_size = tx.serialized_size(true);
         const auto false_size = tx.serialized_size(false);
         tx.set_witness_hash(bitcoin_hash(true_size, data.data()));
-        tx.set_nominal_hash(desegregated_hash(true_size, false_size,
-            data.data()));
+        tx.set_nominal_hash(chain::transaction::desegregated_hash(
+            true_size, false_size, data.data()));
     }
     else
     {
