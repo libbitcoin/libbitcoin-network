@@ -92,7 +92,6 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
             byte_allocator::deleter<chain::block>(&arena);
 
             // Deallocate detached memory (nop if not detachable).
-            // Follows destructor just in case a destructor traverses memory.
             arena.release(memory);
         }));
 }
