@@ -35,9 +35,6 @@ using namespace system;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
-
-// Measured through block 840,000 - assumes consistent platform sizing.
-constexpr auto maximal_block = 30'000'000_size;
     
 const std::string block::command = "block";
 const identifier block::id = identifier::block;
