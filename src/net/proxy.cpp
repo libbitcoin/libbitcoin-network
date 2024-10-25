@@ -410,7 +410,9 @@ void proxy::handle_write(const code& ec, size_t,
 
     if (ec)
     {
-        if (ec != error::peer_disconnect && ec != error::operation_canceled)
+        // Linux reports error::connect_failed when peer drops here.
+        if (ec != error::peer_disconnect && ec != error::operation_canceled &&
+            ec != error::connect_failed)
         {
             LOGF("Send failure " << heading::get_command(*payload) << " to ["
                 << authority() << "] (" << payload->size() << " bytes) "
