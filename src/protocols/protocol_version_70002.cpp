@@ -36,9 +36,6 @@ using namespace system;
 using namespace bc::network::messages;
 using namespace std::placeholders;
 
-static const std::string insufficient_version = "insufficient-version";
-static const std::string insufficient_services = "insufficient-services";
-
 protocol_version_70002::protocol_version_70002(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol_version_70002(session, channel,
