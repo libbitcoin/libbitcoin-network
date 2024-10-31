@@ -45,22 +45,22 @@ typename transaction::cptr transaction::deserialize(uint32_t version,
     if (!reader)
         return nullptr;
 
-    const auto& tx = *message->transaction_ptr;
+    const auto& tx = message->transaction_ptr;
 
     // Cache transaction hashes.
     // If !witness then wire txs cannot have been segregated.
-    if (tx.is_segregated())
+    if (tx->is_segregated())
     {
-        const auto true_size = tx.serialized_size(true);
-        const auto false_size = tx.serialized_size(false);
-        tx.set_witness_hash(bitcoin_hash(true_size, data.data()));
-        tx.set_nominal_hash(chain::transaction::desegregated_hash(
+        const auto true_size = tx->serialized_size(true);
+        const auto false_size = tx->serialized_size(false);
+        tx->set_witness_hash(bitcoin_hash(true_size, data.data()));
+        tx->set_nominal_hash(chain::transaction::desegregated_hash(
             true_size, false_size, data.data()));
     }
     else
     {
-        const auto false_size = tx.serialized_size(false);
-        tx.set_nominal_hash(bitcoin_hash(false_size, data.data()));
+        const auto false_size = tx->serialized_size(false);
+        tx->set_nominal_hash(bitcoin_hash(false_size, data.data()));
     }
 
     return message;
