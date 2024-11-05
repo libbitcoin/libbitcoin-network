@@ -28,6 +28,7 @@ namespace network {
 
 enum class thread_priority
 {
+    highest,
     high,
     normal,
     low,
