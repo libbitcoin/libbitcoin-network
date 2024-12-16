@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(session_seed__stop__started_sufficient__expected)
         session->stop();
     });
 
-    // This is a reace between success and seeding_unsuccessful.
+    // This is a race between success and seeding_unsuccessful.
     // This tends toward success with HAVE_LOGGING and otherwise without.
     const auto ec = started.get_future().get();
     BOOST_REQUIRE(ec == error::success || ec == error::seeding_unsuccessful);
