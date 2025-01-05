@@ -1,6 +1,6 @@
 #!/bin/bash
 ###############################################################################
-#  Copyright (c) 2014-2023 libbitcoin-network developers (see COPYING).
+#  Copyright (c) 2014-2025 libbitcoin-network developers (see COPYING).
 #
 #         GENERATED SOURCE CODE, DO NOT EDIT EXCEPT EXPERIMENTALLY
 #
@@ -39,6 +39,12 @@
 
 # Define constants.
 #==============================================================================
+# Branches for github dependencies.
+#------------------------------------------------------------------------------
+SECP256K1_BRANCH="v0.5.1"
+BITCOIN_SYSTEM_BRANCH="master"
+BITCOIN_NETWORK_BRANCH="master"
+
 
 # Declare associative array for computed presets.
 #------------------------------------------------------------------------------
@@ -964,12 +970,12 @@ build_all()
     export CPPFLAGS="$CPPFLAGS ${BOOST_FLAGS[@]}"
     build_from_tarball_boost "$BOOST_ARCHIVE" "$PARALLEL" "$BUILD_BOOST" "${BOOST_OPTIONS[@]}"
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github bitcoin-core secp256k1 v0.5.1 "$BUILD_SECP256K1"
+    create_from_github bitcoin-core secp256k1 ${SECP256K1_BRANCH} "$BUILD_SECP256K1"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${SECP256K1_FLAGS[@]}"
     build_from_github secp256k1 "$PARALLEL" false "$BUILD_SECP256K1" "${SECP256K1_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS
     export CPPFLAGS=$SAVE_CPPFLAGS
-    create_from_github libbitcoin libbitcoin-system master "yes"
+    create_from_github libbitcoin libbitcoin-system ${BITCOIN_SYSTEM_BRANCH} "yes"
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_SYSTEM_FLAGS[@]}"
     display_message "libbitcoin-system PRESET ${REPO_PRESET[libbitcoin-system]}"
@@ -978,7 +984,7 @@ build_all()
     local SAVE_CPPFLAGS="$CPPFLAGS"
     export CPPFLAGS="$CPPFLAGS ${BITCOIN_NETWORK_FLAGS[@]}"
     if [[ ! ($CI == true) ]]; then
-        create_from_github libbitcoin libbitcoin-network master "yes"
+        create_from_github libbitcoin libbitcoin-network ${BITCOIN_NETWORK_BRANCH} "yes"
         display_message "libbitcoin-network PRESET ${REPO_PRESET[libbitcoin-network]}"
         build_from_github_cmake libbitcoin-network ${REPO_PRESET[libbitcoin-network]} "$PARALLEL" true               "yes" "${BITCOIN_NETWORK_OPTIONS[@]}" $CUMULATIVE_FILTERED_ARGS_CMAKE "$@"
     else
