@@ -294,6 +294,7 @@ private:
     object_key keys_{};
 
     // Guards loopback.
+    // TODO: optimize, default bucket count is around 8.
     std::unordered_set<uint64_t> nonces_{};
 };
 

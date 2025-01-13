@@ -140,6 +140,8 @@ private:
     // These are not thread safe.
     buffer buffer_;
     bool stopped_{ true };
+
+    // TODO: optimize, default bucket count is around 8.
     std::unordered_set<config::authority> authorities_{};
 };
 

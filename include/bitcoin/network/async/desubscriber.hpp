@@ -74,6 +74,8 @@ private:
 
     // These are not thread safe.
     bool stopped_{ false };
+
+    // TODO: optimize, default bucket count is around 8.
     std::map<Key, handler> map_{};
 };
 
