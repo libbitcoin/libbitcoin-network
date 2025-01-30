@@ -109,6 +109,14 @@ size() const NOEXCEPT
     return queue_.size();
 }
 
+template <typename... Args>
+bool subscriber<Args...>::
+empty() const NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    return queue_.empty();
+}
+
 } // namespace network
 } // namespace libbitcoin
 

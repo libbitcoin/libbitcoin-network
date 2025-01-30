@@ -41,10 +41,12 @@ BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__stopped__subscriber_stopped)
             stop_result = { value, size };
             return true;
         });
-    
+
+        result &= !instance.empty();
         result &= is_one(instance.size());
         instance.stop(ec, expected);
 
+        result &= instance.empty();
         result &= is_zero(instance.size());
         result &= (instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
@@ -116,6 +118,7 @@ BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__removed__expected)
     std::pair<code, size_t> second_result;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
+        result &= instance.empty();
         result &= is_zero(instance.size());
         result &= !instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
@@ -131,8 +134,10 @@ BOOST_AUTO_TEST_CASE(unsubscriber__subscribe__removed__expected)
             return true;
         });
 
+        result &= !instance.empty();
         result &= is_one(instance.size());
         instance.stop(ec2, expected2);
+        result &= instance.empty();
         result &= is_zero(instance.size());
     });
 

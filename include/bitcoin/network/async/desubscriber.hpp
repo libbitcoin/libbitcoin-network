@@ -65,8 +65,11 @@ public:
     /// Invoke each handler in order, with default arguments, then drop all.
     void stop_default(const code& ec) NOEXCEPT;
 
-    /// The map size.
+    /// Subscriber map size.
     size_t size() const NOEXCEPT;
+
+    /// True if no subscribers.
+    bool empty() const NOEXCEPT;
 
 private:
     // This is thread safe.

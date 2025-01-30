@@ -143,6 +143,14 @@ size() const NOEXCEPT
     return map_.size();
 }
 
+template <typename Key, typename... Args>
+bool desubscriber<Key, Args...>::
+empty() const NOEXCEPT
+{
+    BC_ASSERT_MSG(strand_.running_in_this_thread(), "strand");
+    return map_.empty();
+}
+
 } // namespace network
 } // namespace libbitcoin
 

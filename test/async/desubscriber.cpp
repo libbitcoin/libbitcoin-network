@@ -35,6 +35,7 @@ BOOST_AUTO_TEST_CASE(desubscriber__subscribe__stopped__subscriber_stopped)
     std::pair<code, size_t> retry_result;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
+        result &= instance.empty();
         result &= is_zero(instance.size());
         result &= !instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
@@ -42,9 +43,11 @@ BOOST_AUTO_TEST_CASE(desubscriber__subscribe__stopped__subscriber_stopped)
             return true;
         }, 0);
 
+        result &= !instance.empty();
         result &= is_one(instance.size());
         instance.stop(ec, expected);
 
+        result &= instance.empty();
         result &= is_zero(instance.size());
         result &= (instance.subscribe([&](code value, size_t size) NOEXCEPT
         {
