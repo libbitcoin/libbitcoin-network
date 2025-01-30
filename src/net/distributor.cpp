@@ -180,7 +180,7 @@ code distributor::do_notify<messages::block>(
     }
     else
     {
-        ptr = messages::deserialize<messages::block>(data, version);
+        ptr = messages::block::deserialize(version, data);
     }
 
     if (!ptr)
