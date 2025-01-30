@@ -29,6 +29,9 @@ constexpr bool use_block_allocator = true;
 namespace libbitcoin {
 namespace network {
 
+// Compiler can't see is_null(arena).
+BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
+
 using namespace system;
 
 #define SUBSCRIBER(name) name##_subscriber_
@@ -168,7 +171,7 @@ code distributor::do_notify<messages::block>(
     if constexpr (use_block_allocator)
     {
         const auto arena = memory_.get_arena();
-        if (arena == nullptr)
+        if (is_null(arena))
             return error::operation_failed;
 
         const auto ptr = messages::block::deserialize(*arena, version, data);
@@ -182,7 +185,10 @@ code distributor::do_notify<messages::block>(
     {
         return do_notify<messages::block>(subscriber, version, data);
     }
+
 }
+
+BC_POP_WARNING()
 
 #undef SUBSCRIBER
 #undef MAKE_SUBSCRIBER
