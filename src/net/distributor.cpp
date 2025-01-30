@@ -169,28 +169,26 @@ code distributor::do_notify<messages::block>(
     if (subscriber.empty())
         return error::success;
 
+    messages::block::cptr ptr{};
     if constexpr (use_block_allocator)
     {
         const auto arena = memory_.get_arena();
         if (is_null(arena))
             return error::operation_failed;
 
-        const auto ptr = messages::block::deserialize(*arena, version, data);
-        if (!ptr)
-            return error::invalid_message;
-
-        subscriber.notify(error::success, ptr);
-        return error::success;
+        ptr = messages::block::deserialize(*arena, version, data);
     }
     else
     {
-        const auto ptr = messages::deserialize<messages::block>(data, version);
-        if (!ptr)
-            return error::invalid_message;
-
-        // Subscribers are notified only with stop code or error::success.
-        subscriber.notify(error::success, ptr);
+        ptr = messages::deserialize<messages::block>(data, version);
     }
+
+    if (!ptr)
+        return error::invalid_message;
+
+    // Subscribers are notified only with stop code or error::success.
+    subscriber.notify(error::success, ptr);
+    return error::success;
 }
 
 BC_POP_WARNING()
