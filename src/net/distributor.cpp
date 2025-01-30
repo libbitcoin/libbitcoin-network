@@ -24,6 +24,8 @@
 #include <bitcoin/network/messages/messages.hpp>
 
 // Set false to use default block allocation.
+// TODO: troubleshoot !use_block_allocator without noexcept.
+// TODO: default block allocator is extremely slow and node sync faults.
 constexpr bool use_block_allocator = true;
 
 namespace libbitcoin {
