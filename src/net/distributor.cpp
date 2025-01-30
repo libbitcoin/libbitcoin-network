@@ -165,6 +165,7 @@ code distributor::do_notify<messages::block>(
     distributor::block_subscriber& subscriber, uint32_t version,
     const system::data_chunk& data) NOEXCEPT
 {
+    // Avoid deserialization if there are no subscribers for the type.
     if (subscriber.empty())
         return error::success;
 
@@ -183,9 +184,13 @@ code distributor::do_notify<messages::block>(
     }
     else
     {
-        return do_notify<messages::block>(subscriber, version, data);
-    }
+        const auto ptr = messages::deserialize<messages::block>(data, version);
+        if (!ptr)
+            return error::invalid_message;
 
+        // Subscribers are notified only with stop code or error::success.
+        subscriber.notify(error::success, ptr);
+    }
 }
 
 BC_POP_WARNING()
