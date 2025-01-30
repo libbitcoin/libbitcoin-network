@@ -113,7 +113,7 @@ private:
         const system::data_chunk& data) NOEXCEPT
     {
         // Avoid deserialization if there are no subscribers for the type.
-        if (!is_zero(subscriber.size()))
+        if (!subscriber.empty())
         {
             // Subscribers are notified only with stop code or error::success.
             const auto ptr = messages::deserialize<Message>(data, version);
