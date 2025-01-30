@@ -19,7 +19,6 @@
 #include <bitcoin/network/net/proxy.hpp>
 
 #include <algorithm>
-#include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>

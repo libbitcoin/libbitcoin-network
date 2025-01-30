@@ -19,7 +19,6 @@
 #include <bitcoin/network/sessions/session_outbound.hpp>
 
 #include <algorithm>
-#include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
