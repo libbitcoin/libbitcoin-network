@@ -23,6 +23,9 @@
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 
+// Set false to use default block allocation.
+constexpr bool use_block_allocator = true;
+
 namespace libbitcoin {
 namespace network {
 
@@ -159,7 +162,10 @@ code distributor::do_notify<messages::block>(
     distributor::block_subscriber& subscriber, uint32_t version,
     const system::data_chunk& data) NOEXCEPT
 {
-    if (!is_zero(subscriber.size()))
+    if (subscriber.empty())
+        return error::success;
+
+    if constexpr (use_block_allocator)
     {
         const auto arena = memory_.get_arena();
         if (arena == nullptr)
@@ -170,9 +176,12 @@ code distributor::do_notify<messages::block>(
             return error::invalid_message;
 
         subscriber.notify(error::success, ptr);
+        return error::success;
     }
-
-    return error::success;
+    else
+    {
+        return do_notify<messages::block>(subscriber, version, data);
+    }
 }
 
 #undef SUBSCRIBER
