@@ -115,12 +115,11 @@ private:
         // Avoid deserialization if there are no subscribers for the type.
         if (!subscriber.empty())
         {
-            // Subscribers are notified only with stop code or error::success.
             const auto ptr = messages::deserialize<Message>(data, version);
-
             if (!ptr)
                 return error::invalid_message;
 
+            // Subscribers are notified only with stop code or error::success.
             subscriber.notify(error::success, ptr);
         }
 
