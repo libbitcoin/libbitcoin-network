@@ -45,8 +45,10 @@ const uint32_t block::version_maximum = level::maximum_protocol;
 typename block::cptr block::deserialize(uint32_t version,
     const data_chunk& data, bool witness) NOEXCEPT
 {
-    static default_memory memory{};
-    return deserialize(*memory.get_arena(), version, data, witness);
+    // default_arena::get() returns pointer to static instance of
+    // system::default_arena, which is not detachable and calls into
+    // std::malloc() and std::free() for each individual allocation.
+    return deserialize(*default_arena::get(), version, data, witness);
 }
 
 // static
@@ -58,8 +60,6 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
 
     // Set starting address of block allocation (nullptr if not detachable).
     const auto memory = pointer_cast<uint8_t>(arena.start(data.size()));
-    if (is_null(memory))
-        return nullptr;
 
     istream source{ data };
     byte_reader reader{ source, &arena };
@@ -85,10 +85,10 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
 
     // All block and contained object destructors should be optimized out.
     return to_shared<messages::block>(std::shared_ptr<chain::block>(block,
-        [&arena, memory](auto) NOEXCEPT
+        [&arena, memory](auto ptr) NOEXCEPT
         {
             // Destruct and deallocate objects (nop deallocate if detachable).
-            byte_allocator::deleter<chain::block>(&arena);
+            byte_allocator::deleter<chain::block>(&arena)(ptr);
 
             // Deallocate detached memory (nop if not detachable).
             arena.release(memory);
