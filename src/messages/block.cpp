@@ -85,10 +85,10 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
 
     // All block and contained object destructors should be optimized out.
     return to_shared<messages::block>(std::shared_ptr<chain::block>(block,
-        [&arena, memory](auto) NOEXCEPT
+        [&arena, memory](auto ptr) NOEXCEPT
         {
             // Destruct and deallocate objects (nop deallocate if detachable).
-            byte_allocator::deleter<chain::block>(&arena);
+            byte_allocator::deleter<chain::block>(&arena)(ptr);
 
             // Deallocate detached memory (nop if not detachable).
             arena.release(memory);
