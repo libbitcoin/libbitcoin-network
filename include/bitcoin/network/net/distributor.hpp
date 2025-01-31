@@ -198,7 +198,8 @@ private:
     memory& memory_;
 };
 
-// block message uses specialized deserializer for memory management.
+// Block message uses specialized deserializer for memory management.
+// Other message types use default (unspecified) memory allocation.
 template <>
 code distributor::do_notify<messages::block>(
     distributor::block_subscriber& subscriber, uint32_t version,
