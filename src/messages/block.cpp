@@ -45,8 +45,10 @@ const uint32_t block::version_maximum = level::maximum_protocol;
 typename block::cptr block::deserialize(uint32_t version,
     const data_chunk& data, bool witness) NOEXCEPT
 {
-    static default_memory memory{};
-    return deserialize(*memory.get_arena(), version, data, witness);
+    // default_arena::get() returns pointer to static instance of
+    // system::default_arena, which is not detachable and calls into
+    // std::malloc() and std::free() for each individual allocation.
+    return deserialize(*default_arena::get(), version, data, witness);
 }
 
 // static
