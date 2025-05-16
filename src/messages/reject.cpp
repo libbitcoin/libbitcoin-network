@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/messages/reject.hpp>
 
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/block.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
@@ -89,18 +90,29 @@ typename reject::cptr reject::deserialize(uint32_t version,
 reject reject::deserialize(uint32_t, reader& source) NOEXCEPT
 {
     auto message = source.read_string(max_reject_message);
-    const auto chain = is_chain(message);
+    const auto code = byte_to_reason(source.read_byte());
+    auto reason = source.read_string(max_reject_message);
+
+    const auto get_hash = [&message](reader& source) NOEXCEPT
+    {
+        if (!source || !is_chain(message))
+            return null_hash;
+
+        // Some nodes don't follow documented convention of hash for tx/block.
+        // Reset fault that occurs on hash read to accomodate those slackers.
+        const auto hash = source.read_hash();
+        if (!source)
+            source.set_limit();
+
+        return hash;
+    };
 
     return
     {
         std::move(message),
-        byte_to_reason(source.read_byte()),
-        source.read_string(max_reject_message),
-
-        // Some nodes do not follow the documented convention of supplying hash
-        // for tx and block rejects. Use this to prevent error by ensuring only
-        // and all provided bytes are read. to_array will pad/truncate.
-        chain ? to_array<hash_size>(source.read_bytes()) : null_hash
+        code,
+        std::move(reason),
+        get_hash(source)
     };
 }
 
