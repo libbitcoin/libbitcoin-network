@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/messages/compact_transactions.hpp>
 
+#include <memory>
 #include <numeric>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
@@ -60,7 +61,7 @@ compact_transactions compact_transactions::deserialize(uint32_t version,
 
         for (size_t tx = 0; tx < size; ++tx)
             transaction_ptrs.emplace_back(
-                new chain::transaction{ source, witness });
+                std::make_shared<const chain::transaction>(source, witness));
 
         return transaction_ptrs;
     };

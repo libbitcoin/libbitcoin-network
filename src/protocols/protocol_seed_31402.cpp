@@ -131,8 +131,8 @@ address::cptr protocol_seed_31402::filter(
     if (is_zero(select))
         return to_shared<address>();
 
-    // Shuffle, reduce, and filter to the target amount.
-    const auto message = to_shared<address>(new address{ items });
+    // Copy, shuffle, reduce, and filter to the target amount.
+    const auto message = std::make_shared<const address>(items);
     auto& addresses = const_cast<address_items&>(message->addresses);
     pseudo_random::shuffle(addresses);
     addresses.resize(select);
