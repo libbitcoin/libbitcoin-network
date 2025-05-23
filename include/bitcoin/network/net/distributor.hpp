@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_HPP
 #define LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_HPP
 
-#include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>

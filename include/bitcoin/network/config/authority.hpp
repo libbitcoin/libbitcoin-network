@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_CONFIG_AUTHORITY_HPP
 #define LIBBITCOIN_NETWORK_CONFIG_AUTHORITY_HPP
 
-#include <iostream>
 #include <memory>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/address.hpp>

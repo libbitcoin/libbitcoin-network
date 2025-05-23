@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/sessions/session.hpp>
 
-#include <functional>
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>

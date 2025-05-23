@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/deadline.hpp>
 
-#include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>

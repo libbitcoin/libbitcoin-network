@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/sessions/session_inbound.hpp>
 
-#include <functional>
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/log/log.hpp>

@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/socket.hpp>
 
-#include <functional>
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>

@@ -20,7 +20,6 @@
 
 #include <cstdio>
 #include <future>
-#include <iostream>
 
 struct p2p_tests_setup_fixture
 {

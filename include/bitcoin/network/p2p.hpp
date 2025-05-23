@@ -20,9 +20,7 @@
 #define LIBBITCOIN_NETWORK_P2P_HPP
 
 #include <atomic>
-#include <functional>
 #include <memory>
-#include <vector>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>

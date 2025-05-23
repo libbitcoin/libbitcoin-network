@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/config/authority.hpp>
 
-#include <iostream>
 #include <sstream>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/utilities.hpp>

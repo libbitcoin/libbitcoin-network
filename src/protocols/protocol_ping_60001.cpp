@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 
-#include <functional>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

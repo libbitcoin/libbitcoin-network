@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_UNSUBSCRIBER_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_UNSUBSCRIBER_HPP
 
-#include <functional>
 #include <list>
 #include <utility>
 #include <bitcoin/network/async/asio.hpp>

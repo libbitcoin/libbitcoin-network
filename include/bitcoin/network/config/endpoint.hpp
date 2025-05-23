@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_CONFIG_ENDPOINT_HPP
 #define LIBBITCOIN_NETWORK_CONFIG_ENDPOINT_HPP
 
-#include <iostream>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>

@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_RACES_RACE_ALL_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_RACES_RACE_ALL_HPP
 
-#include <functional>
 #include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/async/handlers.hpp>
