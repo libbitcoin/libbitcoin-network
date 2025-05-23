@@ -19,7 +19,6 @@
 #include <bitcoin/network/net/connector.hpp>
 
 #include <atomic>
-#include <functional>
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>

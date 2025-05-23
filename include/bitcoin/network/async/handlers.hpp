@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_HANDLERS_HPP
 #define LIBBITCOIN_NETWORK_ASYNC_HANDLERS_HPP
 
-#include <functional>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 

@@ -21,7 +21,6 @@
 
 #include <atomic>
 #include <deque>
-#include <functional>
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>

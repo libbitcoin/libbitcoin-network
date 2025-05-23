@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <atomic>
 #include <filesystem>
-#include <functional>
 #include <memory>
 #include <unordered_set>
 #include <bitcoin/system.hpp>

@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_HPP
 
-#include <functional>
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>

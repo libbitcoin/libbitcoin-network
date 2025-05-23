@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/config/endpoint.hpp>
 
-#include <iostream>
 #include <sstream>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>

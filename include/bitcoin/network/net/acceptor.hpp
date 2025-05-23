@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_NET_ACCEPTOR_HPP
 
 #include <atomic>
-#include <functional>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>

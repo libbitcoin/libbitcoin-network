@@ -21,7 +21,6 @@
 
 #include <atomic>
 #include <chrono>
-#include <ostream>
 #include <sstream>
 #include <utility>
 #include <bitcoin/system.hpp>

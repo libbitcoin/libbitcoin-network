@@ -22,7 +22,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <filesystem>
-#include <iostream>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network.hpp>
 

@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/config/address.hpp>
 
-#include <iostream>
 #include <sstream>
 #include <utility>
 #include <bitcoin/network/config/authority.hpp>

@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_SESSION_HPP
 
 #include <atomic>
-#include <functional>
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>
