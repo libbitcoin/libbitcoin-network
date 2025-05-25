@@ -1058,13 +1058,10 @@ ICU_OPTIONS=(
 # Define boost options.
 #------------------------------------------------------------------------------
 BOOST_OPTIONS=(
-"--with-chrono" \
 "--with-iostreams" \
-"--with-json" \
 "--with-locale" \
 "--with-program_options" \
 "--with-regex" \
-"--with-system" \
 "--with-thread" \
 "--with-test")
 
