@@ -141,10 +141,8 @@ endif()
 # Find boost
 #------------------------------------------------------------------------------
 find_package( Boost 1.86.0 REQUIRED COMPONENTS
-    regex
     unit_test_framework )
 
-set( boost_regex_LIBS "-lboost_regex" )
 set( boost_unit_test_framework_LIBS "-lboost_unit_test_framework" )
 
 set( Boost_LIBRARY_DIR $<IF:$<BOOL:${enable-ndebug}>,"${Boost_LIBRARY_DIR_RELEASE}","${Boost_LIBRARY_DIR_DEBUG}">)
@@ -214,7 +212,6 @@ endif()
 # Define project common libraries.
 #------------------------------------------------------------------------------
 link_libraries(
-    ${Boost_REGEX_LIBRARY}
     ${bitcoin_system_FOR_BUILD_LIBRARIES} )
 
 # Define ${CANONICAL_LIB_NAME} project.
@@ -327,7 +324,6 @@ endif()
 # ${CANONICAL_LIB_NAME} project specific libraries/linker flags.
 #------------------------------------------------------------------------------
 target_link_libraries( ${CANONICAL_LIB_NAME}
-    ${Boost_REGEX_LIBRARY}
     ${bitcoin_system_FOR_BUILD_LIBRARIES} )
 
 # Define libbitcoin-network-test project.
