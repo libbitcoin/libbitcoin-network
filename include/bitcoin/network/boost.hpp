@@ -21,29 +21,14 @@
 
 #include <bitcoin/network/version.hpp>
 
-// "By default, enable_current_exception and enable_error_info are integrated
-// directly in the throw_exception function. Defining BOOST_EXCEPTION_DISABLE
-// disables this integration."
-// www.boost.org/doc/libs/1_78_0/libs/exception/doc/configuration_macros.html
-// This does not prevent interfaces that are documented to throw from doing so.
-// It only prevents boost from internally wrapping the exception object with
-// another class (in boost/throw_exception.hpp). Nearly all instances of the
-// internal boost exceptions affecting this library occur in streambuf and are
-// caught and presumed discarded in std::istream (standards allow propagation).
-// See more comments in streamers.hpp on streams that may throw exceptions.
-// Must be set on the command line to ensure it is captured by all includes.
-////#define BOOST_EXCEPTION_DISABLE
-
 // Avoid namespace conflict between boost::placeholders and std::placeholders.
 // This arises when including <functional>, which declares std::placeholders.
 // www.boost.org/doc/libs/1_78_0/boost/bind.hpp
 #define BOOST_BIND_NO_PLACEHOLDERS
 
-// Include boost in cpp files only from here, so placeholders exclusion works.
-// Avoid use in header includes due to warning repetition (boost/format.hpp).
+// Include boost only from here, so placeholders exclusion works.
 #include <boost/asio.hpp>
 #include <boost/circular_buffer.hpp>
-#include <boost/regex.hpp>
 #include <boost/system/error_code.hpp>
 
 #endif

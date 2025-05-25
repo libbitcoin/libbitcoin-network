@@ -213,27 +213,23 @@ AS_CASE([${CC}], [*],
 
 # Check dependencies.
 #==============================================================================
-# Require Boost of at least version 1.76.0 and output ${boost_CPPFLAGS/LDFLAGS}.
+# Require Boost of at least version 1.86.0 and output ${boost_CPPFLAGS/LDFLAGS}.
 #------------------------------------------------------------------------------
 AS_CASE([${CC}], [*],
-    [AX_BOOST_BASE([1.76.0],
+    [AX_BOOST_BASE([1.86.0],
         [AC_SUBST([boost_CPPFLAGS], [${BOOST_CPPFLAGS}])
          AC_SUBST([boost_ISYS_CPPFLAGS], [`echo ${BOOST_CPPFLAGS} | $SED s/^-I/-isystem/g | $SED s/' -I'/' -isystem'/g`])
          AC_SUBST([boost_LDFLAGS], [${BOOST_LDFLAGS}])
          AC_MSG_NOTICE([boost_CPPFLAGS : ${boost_CPPFLAGS}])
          AC_MSG_NOTICE([boost_ISYS_CPPFLAGS : ${boost_ISYS_CPPFLAGS}])
          AC_MSG_NOTICE([boost_LDFLAGS : ${boost_LDFLAGS}])],
-        [AC_MSG_ERROR([Boost 1.76.0 or later is required but was not found.])])])
+        [AC_MSG_ERROR([Boost 1.86.0 or later is required but was not found.])])])
 
 AS_CASE([${enable_isystem}],[yes],
     [AC_SUBST([boost_BUILD_CPPFLAGS], [${boost_ISYS_CPPFLAGS}])],
     [AC_SUBST([boost_BUILD_CPPFLAGS], [${boost_CPPFLAGS}])])
 
 AC_MSG_NOTICE([boost_BUILD_CPPFLAGS : ${boost_BUILD_CPPFLAGS}])
-
-AX_BOOST_REGEX
-AC_SUBST([boost_regex_LIBS], [${BOOST_REGEX_LIB}])
-AC_MSG_NOTICE([boost_regex_LIBS : ${boost_regex_LIBS}])
 
 AS_CASE([${with_tests}], [yes],
     [AX_BOOST_UNIT_TEST_FRAMEWORK

@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/config/utilities.hpp>
 
+#include <regex>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -27,7 +28,6 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-using namespace system;
 using namespace boost::asio;
 
 constexpr uint8_t maximum_cidr_ip4 = 32;
@@ -75,48 +75,49 @@ inline bool make_address(asio::address& ip, const std::string& host) NOEXCEPT
 
 // regex parsers.
 // ----------------------------------------------------------------------------
-// C++11: use std::regex.
-using namespace boost;
 
 // en.wikipedia.org/wiki/List_of_URI_schemes
 // Schemes of p2p network and our zeromq endpoints.
 #define SCHEME "(tcp|udp|http|https|inproc):\\/\\/"
 #define IPV4   "([0-9.]+)"
-#define IPV6   "\\[([0-9a-f:]+)]"
+#define IPV6   "\\[([0-9a-f:]+)\\]"
 #define HOST   "([^:?/\\\\]+)"
 #define PORT   ":([1-9][0-9]{0,4})"
 #define CIDR   "\\/([1-9][0-9]{0,2})"
-////#define IPV6E4 "\\[([0-9a-f:.]+)]"
 
+// sregex_iterator doesn't provide `at()`.
+BC_PUSH_WARNING(NO_ARRAY_INDEXING)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // Excludes ipv4 mapped/compat, unbracketed, and ports allowed by make_address.
 bool parse_host(asio::address& ip, const std::string& value) NOEXCEPT
 {
-    static const regex regular
+    static const std::regex regular
     {
         "^(" IPV4 "|" IPV6 ")$"
     };
 
-    sregex_iterator token{ value.begin(), value.end(), regular }, end{};
+    std::sregex_iterator token{ value.begin(), value.end(), regular };
+    std::sregex_iterator end{};
     return token != end
-        && make_address(ip, (*token)[1]);
+        && make_address(ip, (*token)[1].str());
 }
 
 // Excludes ipv4 mapped/compat to ipv6.
 bool parse_authority(asio::address& ip, uint16_t& port, uint8_t& cidr,
     const std::string& value) NOEXCEPT
 {
-    static const regex regular
+    static const std::regex regular
     {
         "^(" IPV4 "|" IPV6 ")(" PORT ")?(" CIDR ")?$"
     };
 
-    sregex_iterator token{ value.begin(), value.end(), regular }, end{};
+    std::sregex_iterator token{ value.begin(), value.end(), regular };
+    std::sregex_iterator end{};
     return token != end
-        && make_address(ip, (*token)[1])
-        && to_integer(port, (*token)[5])
-        && to_integer(cidr, (*token)[7])
+        && make_address(ip, (*token)[1].str())
+        && to_integer(port, (*token)[5].str())
+        && to_integer(cidr, (*token)[7].str())
         && ((ip.is_v4() && cidr <= maximum_cidr_ip4) ||
             (ip.is_v6() && cidr <= maximum_cidr_ip6));
 }
@@ -125,18 +126,20 @@ bool parse_authority(asio::address& ip, uint16_t& port, uint8_t& cidr,
 bool parse_endpoint(std::string& scheme, std::string& host, uint16_t& port,
     const std::string& value) NOEXCEPT
 {
-    static const regex regular
+    static const std::regex regular
     {
         "^(" SCHEME ")?(" IPV4 "|" IPV6 "|" HOST ")(" PORT ")?$"
     };
 
-    sregex_iterator token{ value.begin(), value.end(), regular }, end{};
+    std::sregex_iterator token{ value.begin(), value.end(), regular };
+    std::sregex_iterator end{};
     return token != end
-        && to_string(scheme, (*token)[2])
-        && to_string(host,   (*token)[3])
-        && to_integer(port,  (*token)[8]);
+        && to_string(scheme, (*token)[2].str())
+        && to_string(host,   (*token)[3].str())
+        && to_integer(port,  (*token)[8].str());
 }
 
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 // asio/asio conversions.
@@ -144,14 +147,17 @@ BC_POP_WARNING()
 
 inline bool is_embedded_v4(const asio::ipv6& ip6) NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    // is_v4_compatible is deprecated, removed in 1.87, no replacement.
     return ip6.is_v4_mapped() || ip6.is_v4_compatible();
+    BC_POP_WARNING()
 }
 
 static asio::ipv6 to_v6(const asio::ipv4& ip4) NOEXCEPT
 {
     try
     {
-        return asio::ipv6{ splice(ip_map_prefix, ip4.to_bytes()) };
+        return asio::ipv6{ system::splice(ip_map_prefix, ip4.to_bytes()) };
     }
     catch (const std::exception&)
     {
@@ -168,6 +174,8 @@ asio::address denormalize(const asio::address& ip) NOEXCEPT
         try
         {
             const auto ip6 = ip.to_v6();
+
+            // to_v4 is deprecated, removed in 1.87, no replacement.
             if (is_embedded_v4(ip6)) return { ip6.to_v4() };
         }
         catch (const std::exception&)
@@ -185,7 +193,9 @@ inline std::string to_host(const asio::ipv6& ip6) NOEXCEPT
 {
     try
     {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         return is_embedded_v4(ip6) ? to_host(ip6.to_v4()) : ip6.to_string();
+        BC_POP_WARNING()
     }
     catch (const std::exception&)
     {
@@ -211,7 +221,9 @@ std::string to_host(const asio::address& ip) NOEXCEPT
     try
     {
         const auto host = denormalize(ip);
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         return host.is_v4() ? to_host(host.to_v4()) : to_host(host.to_v6());
+        BC_POP_WARNING()
     }
     catch (const std::exception&)
     {
