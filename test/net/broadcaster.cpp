@@ -47,19 +47,25 @@ BOOST_AUTO_TEST_CASE(broadcaster__subscribe__stop__expected_code)
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
-    std::promise<code> promise;
+    // Subscription will capture message and stop notifications.
+    std::promise<code> sub_promise;
+    std::promise<code> ping_promise;
+
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        BOOST_REQUIRE(!instance.subscribe(
+        sub_promise.set_value(instance.subscribe(
             [&](const code& ec, const messages::ping::cptr& ping, broadcaster::channel_id id) NOEXCEPT
             {
                 // Stop notification has nullptr message, zero id, and specified code.
                 result &= is_null(ping);
                 result &= is_zero(id);
-                promise.set_value(ec);
+                ping_promise.set_value(ec);
                 return true;
             }, channel_id));
     });
+
+    // Wait on successful subscription.
+    BOOST_REQUIRE(!sub_promise.get_future().get());
 
     boost::asio::post(strand, [&]() NOEXCEPT
     {
@@ -68,7 +74,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__subscribe__stop__expected_code)
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
+    BOOST_REQUIRE_EQUAL(ping_promise.get_future().get(), expected_ec);
     BOOST_REQUIRE(result);
 }
 
@@ -83,16 +89,17 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__valid_nonced_ping__expected_notificati
     auto result = true;
 
     // Subscription will capture message and stop notifications.
-    std::promise<code> promise;
+    std::promise<code> sub_promise;
+    std::promise<code> ping_promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        BOOST_REQUIRE(!instance.subscribe(
+        sub_promise.set_value(instance.subscribe(
             [&](const code& ec, const messages::ping::cptr& ping, broadcaster::channel_id id) NOEXCEPT
             {
                 // Handle stop notification (unavoidable test condition).
                 if (!ping)
                 {
-                    promise.set_value(ec);
+                    ping_promise.set_value(ec);
                     return true;
                 }
 
@@ -103,6 +110,9 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__valid_nonced_ping__expected_notificati
                 return true;
             }, channel_id));
     });
+
+    // Wait on successful subscription.
+    BOOST_REQUIRE(!sub_promise.get_future().get());
 
     // Move vs. emplace required on some platforms, possibly due to default constructor.
     const auto ping = std::make_shared<messages::ping>(messages::ping{ expected_nonce });
@@ -118,7 +128,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__valid_nonced_ping__expected_notificati
 
     pool.stop();
     BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
+    BOOST_REQUIRE_EQUAL(ping_promise.get_future().get(), expected_ec);
     BOOST_REQUIRE(result);
 }
 
