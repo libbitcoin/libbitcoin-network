@@ -67,7 +67,7 @@ get_headers get_headers::deserialize(uint32_t version, reader& source) NOEXCEPT
     // Protocol version is stoopid (and unused).
     source.skip_bytes(sizeof(uint32_t));
 
-    // Count of hashes is redundant with the message size.
+    // Count of hashes is unnecessary given message size, also stoopid.
     const auto count = source.read_size(max_get_headers);
 
     get_headers get;
