@@ -101,7 +101,7 @@ void get_headers::serialize(uint32_t version, writer& sink) const NOEXCEPT
     // Count of hashes is redundant with the message size.
     sink.write_variable(start_hashes.size());
 
-    for (const auto& start_hash : start_hashes)
+    for (const auto& start_hash: start_hashes)
         sink.write_bytes(start_hash);
 
     sink.write_bytes(stop_hash);
