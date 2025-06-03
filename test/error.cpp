@@ -182,6 +182,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__peer_insufficient__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "peer insufficient");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__peer_timestamp__true_exected_message)
+{
+    constexpr auto value = error::peer_timestamp;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "peer timestamp");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__protocol_violation__true_exected_message)
 {
     constexpr auto value = error::protocol_violation;

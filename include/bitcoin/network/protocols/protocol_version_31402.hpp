@@ -78,6 +78,8 @@ protected:
     const uint64_t invalid_services_;
 
 private:
+    static bool is_disallowed_deviation(uint64_t timestamp) NOEXCEPT;
+
     // These are protected by strand.
     bool sent_version_{};
     bool received_version_{};

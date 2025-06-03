@@ -84,13 +84,19 @@ void protocol_version_70002::rejection(const code& ec) NOEXCEPT
     }
     else if (ec == error::peer_unsupported)
     {
-        SEND((reject{ version::command, reject::reason_code::nonstandard }),
+        SEND((reject{ version::command, reject::reason_code::undefined,
+            "services" }),
             handle_send, _1);
     }
     else if (ec == error::protocol_violation)
     {
         SEND((reject{ version::command, reject::reason_code::duplicate }),
             handle_send, _1);
+    }
+    else if (ec == error::peer_timestamp)
+    {
+        SEND((reject{ version::command, reject::reason_code::undefined,
+            "timestamp" }), handle_send, _1);
     }
 
     return protocol_version_70001::rejection(ec);
