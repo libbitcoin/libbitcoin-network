@@ -68,7 +68,7 @@ get_headers get_headers::deserialize(uint32_t version, reader& source) NOEXCEPT
     source.skip_bytes(sizeof(uint32_t));
 
     // Count of hashes is unnecessary given message size, also stoopid.
-    const auto count = source.read_size(max_get_headers);
+    const auto count = source.read_size(max_locator);
 
     get_headers get;
     get.start_hashes.reserve(count);
