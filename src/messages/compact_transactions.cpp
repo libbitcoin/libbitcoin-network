@@ -60,8 +60,8 @@ compact_transactions compact_transactions::deserialize(uint32_t version,
         transaction_ptrs.reserve(size);
 
         for (size_t tx = 0; tx < size; ++tx)
-            transaction_ptrs.emplace_back(
-                std::make_shared<const chain::transaction>(source, witness));
+            transaction_ptrs.push_back(
+                to_shared<chain::transaction>(source, witness));
 
         return transaction_ptrs;
     };

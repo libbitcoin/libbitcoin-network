@@ -75,7 +75,7 @@ headers headers::deserialize(uint32_t version, reader& source) NOEXCEPT
 
     for (size_t header = 0; header < size; ++header)
     {
-        header_ptrs.push_back(std::make_shared<const chain::header>(source));
+        header_ptrs.push_back(to_shared<chain::header>(source));
         if (source.read_byte() != trail)
             source.invalidate();
     }
