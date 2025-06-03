@@ -28,11 +28,20 @@ namespace messages {
 // Minimum current libbitcoin protocol version: 31402
 // Minimum current satoshi    protocol version: 31800
 
+// * sendaddrv2 is unverioned in BIP155 but requires version 70016 in Sataoshi:
+// "BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
+// implementations reject messages they don't know. As a courtesy, don't send
+// it to nodes with a version before 70016, as no software is known to support
+// BIP155 that doesn't announce at least that protocol version number."
+// ** TODO: these should be based solely on NODE_COMPACT_FILTERS signal, but we
+// may associate protocol version at which it was deployed.
+
 // libbitcoin-network
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // version      v1
 // verack       v1
 // getaddr      v1
+// sendaddrv2   v4      70016   BIP155  expanded address types (*)
 // addr         v1
 // ping         v1
 // ping         v2      60001   BIP031  added nonce field
@@ -72,17 +81,12 @@ namespace messages {
 // cmpctblock   v4      70014   BIP152
 // getblocktxn  v4      70014   BIP152
 // sendcmpct    v4      70014   BIP152
-
-// TODO: these should be based solely on NODE_COMPACT_FILTERS signal.
-// TODO: but we may associate protocol version at which it was deployed.
-// cfilter      v4      70015   BIP157  not BIP-associated to p2p version
-// getcfilters  v4      70015   BIP157  not BIP-associated to p2p version
-// cfcheckpt    v4      70015   BIP157  not BIP-associated to p2p version
-// getcfcheckpt v4      70015   BIP157  not BIP-associated to p2p version
-// cfheaders    v4      70015   BIP157  not BIP-associated to p2p version
-// getcfheaders v4      70015   BIP157  not BIP-associated to p2p version
-
-// sendaddrv2   --      00000   BIP155  compat break, unversioned, handshake
+// cfilter      v4      70015   BIP157  not BIP-associated to p2p version (**)
+// getcfilters  v4      70015   BIP157  not BIP-associated to p2p version (**)
+// cfcheckpt    v4      70015   BIP157  not BIP-associated to p2p version (**)
+// getcfcheckpt v4      70015   BIP157  not BIP-associated to p2p version (**)
+// cfheaders    v4      70015   BIP157  not BIP-associated to p2p version (**)
+// getcfheaders v4      70015   BIP157  not BIP-associated to p2p version (**)
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 enum level: uint32_t
