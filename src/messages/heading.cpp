@@ -50,6 +50,7 @@
 #include <bitcoin/network/messages/ping.hpp>
 #include <bitcoin/network/messages/pong.hpp>
 #include <bitcoin/network/messages/reject.hpp>
+#include <bitcoin/network/messages/send_address_v2.hpp>
 #include <bitcoin/network/messages/send_compact.hpp>
 #include <bitcoin/network/messages/send_headers.hpp>
 #include <bitcoin/network/messages/transaction.hpp>
@@ -194,6 +195,7 @@ identifier heading::id() const NOEXCEPT
         COMMAND_ID(ping),
         COMMAND_ID(pong),
         COMMAND_ID(reject),
+        COMMAND_ID(send_address_v2),
         COMMAND_ID(send_compact),
         COMMAND_ID(send_headers),
         COMMAND_ID(transaction),

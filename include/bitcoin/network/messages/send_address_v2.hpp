@@ -16,52 +16,38 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_IDENTIFIER_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_IDENTIFIER_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_SEND_ADDRESS_V2_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_SEND_ADDRESS_V2_HPP
 
+#include <memory>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/enums/identifier.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
 
-enum class identifier
+struct BCT_API send_address_v2
 {
-    unknown,
-    address,
-    alert,
-    block,
-    bloom_filter_add,
-    bloom_filter_clear,
-    bloom_filter_load,
-    client_filter,
-    client_filter_checkpoint,
-    client_filter_headers,
-    compact_block,
-    compact_transactions,
-    fee_filter,
-    get_address,
-    get_blocks,
-    get_client_filter_checkpoint,
-    get_client_filter_headers,
-    get_client_filters,
-    get_compact_transactions,
-    get_data,
-    get_headers,
-    headers,
-    inventory,
-    memory_pool,
-    merkle_block,
-    not_found,
-    ping,
-    pong,
-    reject,
-    send_address_v2,
-    send_compact,
-    send_headers,
-    transaction,
-    version,
-    version_acknowledge
+    typedef std::shared_ptr<const send_address_v2> cptr;
+
+    static const identifier id;
+    static const std::string command;
+    static const uint32_t version_minimum;
+    static const uint32_t version_maximum;
+
+    static size_t size(uint32_t version) NOEXCEPT;
+
+    static cptr deserialize(uint32_t version,
+        const system::data_chunk& data) NOEXCEPT;
+    static send_address_v2 deserialize(uint32_t version,
+        system::reader& source) NOEXCEPT;
+
+    bool serialize(uint32_t version,
+        const system::data_slab& data) const NOEXCEPT;
+    void serialize(uint32_t version,
+        system::writer& sink) const NOEXCEPT;
 };
 
 } // namespace messages

@@ -62,6 +62,7 @@ broadcaster::broadcaster(asio::strand& strand) NOEXCEPT
     MAKE_SUBSCRIBER(ping),
     MAKE_SUBSCRIBER(pong),
     MAKE_SUBSCRIBER(reject),
+    MAKE_SUBSCRIBER(send_address_v2),
     MAKE_SUBSCRIBER(send_compact),
     MAKE_SUBSCRIBER(send_headers),
     MAKE_SUBSCRIBER(transaction),
@@ -100,6 +101,7 @@ void broadcaster::unsubscribe(channel_id subscriber) NOEXCEPT
     UNSUBSCRIBER(ping);
     UNSUBSCRIBER(pong);
     UNSUBSCRIBER(reject);
+    UNSUBSCRIBER(send_address_v2);
     UNSUBSCRIBER(send_compact);
     UNSUBSCRIBER(send_headers);
     UNSUBSCRIBER(transaction);
@@ -137,6 +139,7 @@ void broadcaster::stop(const code& ec) NOEXCEPT
     STOP_SUBSCRIBER(ping);
     STOP_SUBSCRIBER(pong);
     STOP_SUBSCRIBER(reject);
+    STOP_SUBSCRIBER(send_address_v2);
     STOP_SUBSCRIBER(send_compact);
     STOP_SUBSCRIBER(send_headers);
     STOP_SUBSCRIBER(transaction);

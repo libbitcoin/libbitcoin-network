@@ -176,6 +176,7 @@
     <ClCompile Include="..\..\..\..\test\messages\ping.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\pong.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\reject.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\send_address_v2.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\send_compact.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\send_headers.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\transaction.cpp" />
