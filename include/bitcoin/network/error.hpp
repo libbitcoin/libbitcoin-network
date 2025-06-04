@@ -75,6 +75,7 @@ enum error_t : uint8_t
     peer_disconnect,
     peer_unsupported,
     peer_insufficient,
+    peer_timestamp,
     protocol_violation,
     channel_overflow,
     channel_underflow,

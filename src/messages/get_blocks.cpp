@@ -90,7 +90,7 @@ get_blocks get_blocks::deserialize(uint32_t version, reader& source) NOEXCEPT
     const auto read_start_hashes = [](reader& source) NOEXCEPT
     {
         // Count of hashes is redundant with the message size.
-        const auto count = source.read_size(max_get_blocks);
+        const auto count = source.read_size(max_locator);
 
         hashes start_hashes;
         start_hashes.reserve(count);

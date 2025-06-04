@@ -44,6 +44,9 @@ constexpr size_t max_reject_message = max_uint16;
 // This is arbitrary, useful as an address pool and block announce guard.
 constexpr size_t maximum_advertisement = 10;
 
+/// Limit given 10 and max supported height chain (stop hash excluded).
+constexpr size_t max_locator = 10_size + system::floored_log2(max_size_t);
+
 ////constexpr size_t max_bloom_filter_hashes = 2'000;
 ////constexpr size_t max_get_data = 50'000;
 ////constexpr size_t max_get_client_filter_headers = 1'999;
@@ -52,8 +55,6 @@ constexpr size_t maximum_advertisement = 10;
 /////// compact filter checkpoint interval
 ////constexpr size_t client_filter_checkpoint_interval = 1000;
 
-/////// Effective limit given a 32 bit chain height boundary: 10 + log2(2^32) + 1.
-////constexpr size_t max_locator = 43;
 
 } // namespace messages
 } // namespace network

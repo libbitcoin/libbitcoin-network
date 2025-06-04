@@ -40,6 +40,9 @@ using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
+// Drop peer it its clock deviates more than 2 hours from own clock.
+constexpr auto allowed_timestamp_deviation = hours{ 2 };
+
 // Require the configured minimum protocol and services by default.
 protocol_version_31402::protocol_version_31402(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
@@ -273,6 +276,16 @@ bool protocol_version_31402::handle_receive_acknowledge(const code& ec,
 // Incoming [receive_version => send_acknowledge].
 // ----------------------------------------------------------------------------
 
+// private
+bool protocol_version_31402::is_disallowed_deviation(
+    uint64_t timestamp) NOEXCEPT
+{
+    const auto now = wall_clock::now();
+    const auto time = wall_clock::from_time_t(timestamp);
+    return time < (now - allowed_timestamp_deviation)
+        || time > (now + allowed_timestamp_deviation);
+}
+
 bool protocol_version_31402::handle_receive_version(const code& ec,
     const version::cptr& message) NOEXCEPT
 {
@@ -317,6 +330,15 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
             "for [" << authority() << "].");
 
         rejection(error::peer_insufficient);
+        return false;
+    }
+
+    if (is_disallowed_deviation(message->timestamp))
+    {
+        LOGP("Timestamp out of range (" << message->value << ") "
+            "for [" << authority() << "].");
+
+        rejection(error::peer_timestamp);
         return false;
     }
 

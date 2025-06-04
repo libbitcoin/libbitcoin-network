@@ -51,6 +51,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { peer_disconnect, "peer disconnect" },
     { peer_unsupported, "peer unsupported" },
     { peer_insufficient, "peer insufficient" },
+    { peer_timestamp, "peer timestamp" },
     { protocol_violation, "protocol violation" },
     { channel_overflow, "channel overflow" },
     { channel_underflow, "channel underflow" },

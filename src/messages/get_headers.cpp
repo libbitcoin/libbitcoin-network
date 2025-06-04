@@ -67,8 +67,8 @@ get_headers get_headers::deserialize(uint32_t version, reader& source) NOEXCEPT
     // Protocol version is stoopid (and unused).
     source.skip_bytes(sizeof(uint32_t));
 
-    // Count of hashes is redundant with the message size.
-    const auto count = source.read_size(max_get_headers);
+    // Count of hashes is unnecessary given message size, also stoopid.
+    const auto count = source.read_size(max_locator);
 
     get_headers get;
     get.start_hashes.reserve(count);
@@ -101,7 +101,7 @@ void get_headers::serialize(uint32_t version, writer& sink) const NOEXCEPT
     // Count of hashes is redundant with the message size.
     sink.write_variable(start_hashes.size());
 
-    for (const auto& start_hash : start_hashes)
+    for (const auto& start_hash: start_hashes)
         sink.write_bytes(start_hash);
 
     sink.write_bytes(stop_hash);
@@ -115,6 +115,12 @@ size_t get_headers::size(uint32_t) const NOEXCEPT
         hash_size +
         variable_size(start_hashes.size()) +
             (hash_size * start_hashes.size());
+}
+
+// Used to simplify logging message identity.
+const hash_digest& get_headers::start_hash() const NOEXCEPT
+{
+    return start_hashes.empty() ? null_hash : start_hashes.front();
 }
 
 } // namespace messages
