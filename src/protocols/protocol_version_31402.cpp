@@ -54,7 +54,8 @@ protocol_version_31402::protocol_version_31402(const session::ptr& session,
 
 // Used for seeding (should probably not override these).
 protocol_version_31402::protocol_version_31402(const session::ptr& session,
-    const channel::ptr& channel, uint64_t minimum_services,
+    const channel::ptr& channel,
+    uint64_t minimum_services,
     uint64_t maximum_services) NOEXCEPT
   : protocol(session, channel),
     inbound_(channel->inbound()),

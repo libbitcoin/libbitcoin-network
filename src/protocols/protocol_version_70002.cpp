@@ -27,11 +27,6 @@
 #include <bitcoin/network/protocols/protocol_version_70001.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
-// TODO: incorporate "sendaddrv2" into a new protocol_version_70016.
-// TODO: sendaddrv2 is a a broken protocol in that it is a formally unversioned
-// TODO: message, though Satoshi doesn't send until receiving version >= 70016.
-// TODO: must be sent/received before verack (and sent after version receipt).
-
 namespace libbitcoin {
 namespace network {
 
@@ -51,10 +46,11 @@ protocol_version_70002::protocol_version_70002(const session::ptr& session,
 }
 
 protocol_version_70002::protocol_version_70002(const session::ptr& session,
-    const channel::ptr& channel, uint64_t minimum_services,
-    uint64_t maximum_services, bool relay) NOEXCEPT
-  : protocol_version_70001(session, channel, minimum_services,
-      maximum_services, relay),
+    const channel::ptr& channel,
+    uint64_t minimum_services,
+    uint64_t maximum_services,
+    bool relay) NOEXCEPT
+  : protocol_version_70001(session, channel, minimum_services, maximum_services, relay),
     tracker<protocol_version_70002>(session->log)
 {
 }
@@ -76,6 +72,7 @@ void protocol_version_70002::shake(result_handler&& handle_event) NOEXCEPT
 
 // Outgoing [(in)sufficient_peer => send_reject].
 // ----------------------------------------------------------------------------
+// Reject is the only difference at protocol level 70002.
 
 void protocol_version_70002::rejection(const code& ec) NOEXCEPT
 {
@@ -104,7 +101,7 @@ void protocol_version_70002::rejection(const code& ec) NOEXCEPT
             "timestamp" }), handle_send, _1);
     }
 
-    return protocol_version_70001::rejection(ec);
+    protocol_version_70001::rejection(ec);
 }
 
 // Incoming [receive_reject => log].
