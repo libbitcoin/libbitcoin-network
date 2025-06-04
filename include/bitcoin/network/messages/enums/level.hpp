@@ -28,7 +28,7 @@ namespace messages {
 // Minimum current libbitcoin protocol version: 31402
 // Minimum current satoshi    protocol version: 31800
 
-// * sendaddrv2 is unverioned in BIP155 but requires version 70016 in Sataoshi:
+// * sendaddrv2 is unversioned in BIP155 but requires version 70016 in Sataoshi:
 // "BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
 // implementations reject messages they don't know. As a courtesy, don't send
 // it to nodes with a version before 70016, as no software is known to support
