@@ -27,6 +27,11 @@
 #include <bitcoin/network/protocols/protocol_version_70001.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
+// TODO: incorporate "sendaddrv2" into a new protocol_version_70016.
+// TODO: sendaddrv2 is a a broken protocol in that it is a formally unversioned
+// TODO: message, though Satoshi doesn't send until receiving version >= 70016.
+// TODO: must be sent/received before verack (and sent after version receipt).
+
 namespace libbitcoin {
 namespace network {
 
