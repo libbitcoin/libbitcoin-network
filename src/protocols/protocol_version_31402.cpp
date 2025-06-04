@@ -335,7 +335,7 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
 
     if (is_disallowed_deviation(message->timestamp))
     {
-        LOGP("Timestamp out of range (" << message->value << ") "
+        LOGR("Timestamp out of range (" << message->value << ") "
             "for [" << authority() << "].");
 
         rejection(error::peer_timestamp);
