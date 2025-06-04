@@ -85,6 +85,7 @@
 #include <bitcoin/network/messages/ping.hpp>
 #include <bitcoin/network/messages/pong.hpp>
 #include <bitcoin/network/messages/reject.hpp>
+#include <bitcoin/network/messages/send_address_v2.hpp>
 #include <bitcoin/network/messages/send_compact.hpp>
 #include <bitcoin/network/messages/send_headers.hpp>
 #include <bitcoin/network/messages/transaction.hpp>

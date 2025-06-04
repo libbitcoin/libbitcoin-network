@@ -83,6 +83,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/ping.cpp \
     src/messages/pong.cpp \
     src/messages/reject.cpp \
+    src/messages/send_address_v2.cpp \
     src/messages/send_compact.cpp \
     src/messages/send_headers.cpp \
     src/messages/transaction.cpp \
@@ -182,6 +183,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/ping.cpp \
     test/messages/pong.cpp \
     test/messages/reject.cpp \
+    test/messages/send_address_v2.cpp \
     test/messages/send_compact.cpp \
     test/messages/send_headers.cpp \
     test/messages/transaction.cpp \
@@ -323,6 +325,7 @@ include_bitcoin_network_messages_HEADERS = \
     include/bitcoin/network/messages/ping.hpp \
     include/bitcoin/network/messages/pong.hpp \
     include/bitcoin/network/messages/reject.hpp \
+    include/bitcoin/network/messages/send_address_v2.hpp \
     include/bitcoin/network/messages/send_compact.hpp \
     include/bitcoin/network/messages/send_headers.hpp \
     include/bitcoin/network/messages/transaction.hpp \

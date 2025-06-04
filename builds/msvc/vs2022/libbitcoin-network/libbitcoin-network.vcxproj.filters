@@ -219,6 +219,9 @@
     <ClCompile Include="..\..\..\..\src\messages\reject.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\send_address_v2.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\send_compact.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
@@ -531,6 +534,9 @@
       <Filter>include\bitcoin\network\messages</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\reject.hpp">
+      <Filter>include\bitcoin\network\messages</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\send_address_v2.hpp">
       <Filter>include\bitcoin\network\messages</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\send_compact.hpp">

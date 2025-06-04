@@ -148,6 +148,9 @@ enum level: uint32_t
     /// client filters protocol
     bip157 = 70015,
 
+    /// send_address_v2
+    bip155 = 70016,
+
     /// We require at least this of peers (for current address structure).
     minimum_protocol = address_time,
 

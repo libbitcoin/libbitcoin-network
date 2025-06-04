@@ -198,6 +198,9 @@
     <ClCompile Include="..\..\..\..\test\messages\reject.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\send_address_v2.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\send_compact.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>

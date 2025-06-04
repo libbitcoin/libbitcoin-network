@@ -211,6 +211,12 @@ BOOST_AUTO_TEST_CASE(heading__reject_id__always__expected)
     BOOST_REQUIRE(instance.id() == reject::id);
 }
 
+BOOST_AUTO_TEST_CASE(heading__send_address_v2_id__always__expected)
+{
+    const auto instance = heading{ 0u, send_address_v2::command, 0u, 0u };
+    BOOST_REQUIRE(instance.id() == send_address_v2::id);
+}
+
 BOOST_AUTO_TEST_CASE(heading__send_compact_id__always__expected)
 {
     const auto instance = heading{ 0u, send_compact::command, 0u, 0u };

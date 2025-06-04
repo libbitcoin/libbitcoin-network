@@ -77,6 +77,7 @@ public:
     DEFINE_SUBSCRIBER(ping);
     DEFINE_SUBSCRIBER(pong);
     DEFINE_SUBSCRIBER(reject);
+    DEFINE_SUBSCRIBER(send_address_v2);
     DEFINE_SUBSCRIBER(send_compact);
     DEFINE_SUBSCRIBER(send_headers);
     DEFINE_SUBSCRIBER(transaction);
@@ -153,6 +154,7 @@ private:
     SUBSCRIBER_OVERLOAD(ping);
     SUBSCRIBER_OVERLOAD(pong);
     SUBSCRIBER_OVERLOAD(reject);
+    SUBSCRIBER_OVERLOAD(send_address_v2);
     SUBSCRIBER_OVERLOAD(send_compact);
     SUBSCRIBER_OVERLOAD(send_headers);
     SUBSCRIBER_OVERLOAD(transaction);
@@ -188,6 +190,7 @@ private:
     DECLARE_SUBSCRIBER(ping);
     DECLARE_SUBSCRIBER(pong);
     DECLARE_SUBSCRIBER(reject);
+    DECLARE_SUBSCRIBER(send_address_v2);
     DECLARE_SUBSCRIBER(send_compact);
     DECLARE_SUBSCRIBER(send_headers);
     DECLARE_SUBSCRIBER(transaction);

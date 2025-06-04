@@ -69,6 +69,7 @@ distributor::distributor(memory& memory, asio::strand& strand) NOEXCEPT
     MAKE_SUBSCRIBER(ping),
     MAKE_SUBSCRIBER(pong),
     MAKE_SUBSCRIBER(reject),
+    MAKE_SUBSCRIBER(send_address_v2),
     MAKE_SUBSCRIBER(send_compact),
     MAKE_SUBSCRIBER(send_headers),
     MAKE_SUBSCRIBER(transaction),
@@ -111,6 +112,7 @@ code distributor::notify(messages::identifier id, uint32_t version,
         CASE_NOTIFY(ping);
         CASE_NOTIFY(pong);
         CASE_NOTIFY(reject);
+        CASE_NOTIFY(send_address_v2);
         CASE_NOTIFY(send_compact);
         CASE_NOTIFY(send_headers);
         CASE_NOTIFY(transaction);
@@ -153,6 +155,7 @@ void distributor::stop(const code& ec) NOEXCEPT
     STOP_SUBSCRIBER(ping);
     STOP_SUBSCRIBER(pong);
     STOP_SUBSCRIBER(reject);
+    STOP_SUBSCRIBER(send_address_v2);
     STOP_SUBSCRIBER(send_compact);
     STOP_SUBSCRIBER(send_headers);
     STOP_SUBSCRIBER(transaction);
