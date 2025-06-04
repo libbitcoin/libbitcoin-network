@@ -45,10 +45,11 @@ protocol_version_70001::protocol_version_70001(const session::ptr& session,
 }
 
 protocol_version_70001::protocol_version_70001(const session::ptr& session,
-    const channel::ptr& channel, uint64_t minimum_services,
-    uint64_t maximum_services, bool relay) NOEXCEPT
-  : protocol_version_31402(session, channel, minimum_services,
-      maximum_services),
+    const channel::ptr& channel,
+    uint64_t minimum_services,
+    uint64_t maximum_services,
+    bool relay) NOEXCEPT
+  : protocol_version_31402(session, channel, minimum_services, maximum_services),
     relay_(relay),
     tracker<protocol_version_70001>(session->log)
 {

@@ -300,6 +300,9 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70002.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70016.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\sessions\session.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
@@ -618,6 +621,9 @@
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70002.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70016.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocols.hpp">
