@@ -22,7 +22,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/protocols/protocol_ping_31402.hpp>
+#include <bitcoin/network/protocols/protocol_ping_106.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
@@ -39,7 +39,7 @@ constexpr auto minimum_nonce = add1(received);
 
 protocol_ping_60001::protocol_ping_60001(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
-  : protocol_ping_31402(session, channel),
+  : protocol_ping_106(session, channel),
     nonce_(received),
     tracker<protocol_ping_60001>(session->log)
 {
@@ -56,12 +56,12 @@ void protocol_ping_60001::start() NOEXCEPT
     ////SUBSCRIBE_CHANNEL(ping, handle_receive_ping, _1, _2);
     ////send_ping();
 
-    protocol_ping_31402::start();
+    protocol_ping_106::start();
 }
 
-////void protocol_ping_31402::stopping(const code&) NOEXCEPT
+////void protocol_ping_106::stopping(const code&) NOEXCEPT
 ////{
-////    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+////    BC_ASSERT_MSG(stranded(), "protocol_ping_106");
 ////
 ////    timer_->stop();
 ////}
@@ -81,9 +81,9 @@ void protocol_ping_60001::send_ping() NOEXCEPT
     SEND(ping{ nonce_ }, handle_send, _1);
 }
 
-////void protocol_ping_31402::handle_send_ping(const code& ec) NOEXCEPT
+////void protocol_ping_106::handle_send_ping(const code& ec) NOEXCEPT
 ////{
-////    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+////    BC_ASSERT_MSG(stranded(), "protocol_ping_106");
 ////
 ////    if (stopped(ec))
 ////        return;

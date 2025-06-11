@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_SEED_31402_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_SEED_31402_HPP
+#ifndef LIBBITCOIN_NETWORK_PROTOCOL_ALERT_311_HPP
+#define LIBBITCOIN_NETWORK_PROTOCOL_ALERT_311_HPP
 
 #include <memory>
 #include <bitcoin/system.hpp>
@@ -31,44 +31,22 @@
 
 namespace libbitcoin {
 namespace network {
-class BCT_API protocol_seed_31402
-  : public protocol, protected tracker<protocol_seed_31402>
+
+class BCT_API protocol_alert_311
+  : public protocol, protected tracker<protocol_alert_311>
 {
 public:
-    typedef std::shared_ptr<protocol_seed_31402> ptr;
+    typedef std::shared_ptr<protocol_alert_311> ptr;
 
-    protocol_seed_31402(const session::ptr& session,
+    protocol_alert_311(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
 
-    /// Perform seeding, stops channel on completion (strand required).
+    /// Start protocol (strand required).
     void start() NOEXCEPT override;
 
-    /// Capture stop subscription to clear timer.
-    void stopping(const code& ec) NOEXCEPT override;
-
 protected:
-    virtual bool complete() const NOEXCEPT;
-    virtual void handle_timer(const code& ec) NOEXCEPT;
-
-    virtual messages::address::cptr filter(
-        const messages::address_items& message) const NOEXCEPT;
-
-    virtual void handle_send_get_address(const code& ec) NOEXCEPT;
-    virtual bool handle_receive_address(const code& ec,
-        const messages::address::cptr& address) NOEXCEPT;
-    virtual void handle_save_addresses(const code& ec,
-        size_t accepted, size_t filtered, size_t start_size) NOEXCEPT;
-
-    virtual bool handle_receive_get_address(const code& ec,
-        const messages::get_address::cptr& message) NOEXCEPT;
-    virtual void handle_send_address(const code& ec) NOEXCEPT;
-
-private:
-    // These are protected by the strand.
-    bool sent_address_{};
-    bool sent_get_address_{};
-    bool received_address_{};
-    deadline::ptr timer_;
+    virtual bool handle_receive_alert(const code& ec,
+        const messages::alert::cptr& alert) NOEXCEPT;
 };
 
 } // namespace network

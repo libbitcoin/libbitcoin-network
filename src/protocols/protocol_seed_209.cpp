@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/protocols/protocol_seed_31402.hpp>
+#include <bitcoin/network/protocols/protocol_seed_209.hpp>
 
 #include <algorithm>
 #include <memory>
@@ -31,7 +31,7 @@
 namespace libbitcoin {
 namespace network {
 
-#define CLASS protocol_seed_31402
+#define CLASS protocol_seed_209
 
 using namespace system;
 using namespace messages;
@@ -40,21 +40,21 @@ using namespace std::placeholders;
 // Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-protocol_seed_31402::protocol_seed_31402(const session::ptr& session,
+protocol_seed_209::protocol_seed_209(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     timer_(std::make_shared<deadline>(session->log, channel->strand(),
         session->settings().channel_germination())),
-    tracker<protocol_seed_31402>(session->log)
+    tracker<protocol_seed_209>(session->log)
 {
 }
 
 // Start/Stop.
 // ----------------------------------------------------------------------------
 
-void protocol_seed_31402::start() NOEXCEPT
+void protocol_seed_209::start() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
     if (started())
         return;
@@ -66,23 +66,23 @@ void protocol_seed_31402::start() NOEXCEPT
     protocol::start();
 }
 
-bool protocol_seed_31402::complete() const NOEXCEPT
+bool protocol_seed_209::complete() const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
     return sent_address_ && sent_get_address_ && received_address_;
 }
 
-void protocol_seed_31402::stopping(const code&) NOEXCEPT
+void protocol_seed_209::stopping(const code&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
     timer_->stop();
 }
 
-void protocol_seed_31402::handle_timer(const code& ec) NOEXCEPT
+void protocol_seed_209::handle_timer(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
     if (stopped())
         return;
@@ -100,9 +100,9 @@ void protocol_seed_31402::handle_timer(const code& ec) NOEXCEPT
 // Inbound (store addresses).
 // ----------------------------------------------------------------------------
 
-void protocol_seed_31402::handle_send_get_address(const code& ec) NOEXCEPT
+void protocol_seed_209::handle_send_get_address(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
     if (stopped(ec))
         return;
@@ -114,7 +114,7 @@ void protocol_seed_31402::handle_send_get_address(const code& ec) NOEXCEPT
         stop(error::success);
 }
 
-address::cptr protocol_seed_31402::filter(
+address::cptr protocol_seed_209::filter(
     const address_items& items) const NOEXCEPT
 {
     const size_t cap = settings().host_pool_capacity;
@@ -145,10 +145,10 @@ address::cptr protocol_seed_31402::filter(
 }
 
 // Allow and handle any number of address messages when seeding.
-bool protocol_seed_31402::handle_receive_address(const code& ec,
+bool protocol_seed_209::handle_receive_address(const code& ec,
     const address::cptr& message) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
     if (stopped(ec))
         return false;
@@ -169,11 +169,11 @@ bool protocol_seed_31402::handle_receive_address(const code& ec,
     return true;
 }
 
-void protocol_seed_31402::handle_save_addresses(const code& ec,
+void protocol_seed_209::handle_save_addresses(const code& ec,
     size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
     size_t start_size) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
     if (stopped())
         return;
@@ -197,10 +197,10 @@ void protocol_seed_31402::handle_save_addresses(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Only send 0..1 address in response to each get_address when seeding.
-bool protocol_seed_31402::handle_receive_get_address(const code& ec,
+bool protocol_seed_209::handle_receive_get_address(const code& ec,
     const get_address::cptr&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
     if (stopped(ec))
         return false;
@@ -216,9 +216,9 @@ bool protocol_seed_31402::handle_receive_get_address(const code& ec,
     return true;
 }
 
-void protocol_seed_31402::handle_send_address(const code& ec) NOEXCEPT
+void protocol_seed_209::handle_send_address(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_seed_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
     if (stopped(ec))
         return;

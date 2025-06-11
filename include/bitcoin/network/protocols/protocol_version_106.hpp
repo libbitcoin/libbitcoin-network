@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_VERSION_31402_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_VERSION_31402_HPP
+#ifndef LIBBITCOIN_NETWORK_PROTOCOL_VERSION_106_HPP
+#define LIBBITCOIN_NETWORK_PROTOCOL_VERSION_106_HPP
 
 #include <memory>
 #include <bitcoin/system.hpp>
@@ -32,18 +32,18 @@
 namespace libbitcoin {
 namespace network {
 
-class BCT_API protocol_version_31402
-  : public protocol, protected tracker<protocol_version_31402>
+class BCT_API protocol_version_106
+  : public protocol, protected tracker<protocol_version_106>
 {
 public:
-    typedef std::shared_ptr<protocol_version_31402> ptr;
+    typedef std::shared_ptr<protocol_version_106> ptr;
 
     /// Construct a version protocol instance using configured values.
-    protocol_version_31402(const session::ptr& session,
+    protocol_version_106(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Construct a version protocol instance using parameterized services.
-    protocol_version_31402(const session::ptr& session,
+    protocol_version_106(const session::ptr& session,
         const channel::ptr& channel, uint64_t minimum_services,
         uint64_t maximum_services) NOEXCEPT;
 

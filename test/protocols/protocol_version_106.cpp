@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(protocol_tests)
 
-BOOST_AUTO_TEST_CASE(protocol_seed_31402_tests)
+BOOST_AUTO_TEST_CASE(protocol_version_106_tests)
 {
     BOOST_REQUIRE(true);
 }

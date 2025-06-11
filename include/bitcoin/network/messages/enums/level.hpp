@@ -43,10 +43,11 @@ namespace messages {
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // version      v1        106
 // verack       v1        106
-// addr         v1        106
 // ping         v1        106
-// getaddr      v1        209
+// addr         v1        106
+// addr         v1      31402   timestamp field added to addr message
 // ----------------------------------------------------------------------------
+// getaddr      v1        209
 // checkorder   --        209           obsolete
 // reply        --        209           obsolete
 // submitorder  --        209           obsolete

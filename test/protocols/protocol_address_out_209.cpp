@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(protocol_tests)
 
-BOOST_AUTO_TEST_CASE(protocol_ping_31402_tests)
+BOOST_AUTO_TEST_CASE(protocol_address_out_209_tests)
 {
     BOOST_REQUIRE(true);
 }

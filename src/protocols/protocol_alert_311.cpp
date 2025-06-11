@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/protocols/protocol_alert_31402.hpp>
+#include <bitcoin/network/protocols/protocol_alert_311.hpp>
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
@@ -29,26 +29,26 @@
 namespace libbitcoin {
 namespace network {
 
-#define CLASS protocol_alert_31402
+#define CLASS protocol_alert_311
 
 using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
 // This captures alert messages. Outp
-protocol_alert_31402::protocol_alert_31402(const session::ptr& session,
+protocol_alert_311::protocol_alert_311(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    tracker<protocol_alert_31402>(session->log)
+    tracker<protocol_alert_311>(session->log)
 {
 }
 
 // Start.
 // ----------------------------------------------------------------------------
 
-void protocol_alert_31402::start() NOEXCEPT
+void protocol_alert_311::start() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_alert_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_alert_311");
 
     if (started())
         return;
@@ -61,10 +61,10 @@ void protocol_alert_31402::start() NOEXCEPT
 // Inbound (log alert).
 // ----------------------------------------------------------------------------
 
-bool protocol_alert_31402::handle_receive_alert(const code& ec,
+bool protocol_alert_311::handle_receive_alert(const code& ec,
     const alert::cptr& LOG_ONLY(alert)) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_alert_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_alert_311");
 
     if (stopped(ec))
         return false;

@@ -24,7 +24,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_version_31402.hpp>
+#include <bitcoin/network/protocols/protocol_version_106.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
@@ -49,7 +49,7 @@ protocol_version_70001::protocol_version_70001(const session::ptr& session,
     uint64_t minimum_services,
     uint64_t maximum_services,
     bool relay) NOEXCEPT
-  : protocol_version_31402(session, channel, minimum_services, maximum_services),
+  : protocol_version_106(session, channel, minimum_services, maximum_services),
     relay_(relay),
     tracker<protocol_version_70001>(session->log)
 {
@@ -62,7 +62,7 @@ protocol_version_70001::protocol_version_70001(const session::ptr& session,
 messages::version protocol_version_70001::version_factory(bool) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70001");
-    return protocol_version_31402::version_factory(relay_);
+    return protocol_version_106::version_factory(relay_);
 }
 
 } // namespace network

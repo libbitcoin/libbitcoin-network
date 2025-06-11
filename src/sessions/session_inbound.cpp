@@ -226,7 +226,7 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
             maximum_services, enable_transaction)->shake(std::move(handler));
 
     else
-        channel->attach<protocol_version_31402>(self, minimum_services,
+        channel->attach<protocol_version_106>(self, minimum_services,
             maximum_services)->shake(std::move(handler));
 }
 
