@@ -36,7 +36,7 @@ const identifier address::id = identifier::address;
 const uint32_t address::version_minimum = level::minimum_protocol;
 const uint32_t address::version_maximum = level::maximum_protocol;
 
-// Time stamps are always used in address messages.
+// Time stamps are used in address messages since protocol version 209.
 constexpr auto with_timestamp = true;
 
 // static
