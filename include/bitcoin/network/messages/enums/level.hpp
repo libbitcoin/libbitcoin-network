@@ -33,60 +33,77 @@ namespace messages {
 // implementations reject messages they don't know. As a courtesy, don't send
 // it to nodes with a version before 70016, as no software is known to support
 // BIP155 that doesn't announce at least that protocol version number."
+// *** BIP330 is not versioned, but states "Since sketches are based on the
+// WTXIDs, the negotiation and support of Erlay should be enabled only if both
+// peers signal BIP-339 support." Therefore it requires version 70016.
 // ** TODO: these should be based solely on NODE_COMPACT_FILTERS signal, but we
-// may associate protocol version at which it was deployed.
+// may associate the protocol version at which it was deployed (70015).
 
 // libbitcoin-network
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// version      v1
-// verack       v1
-// getaddr      v1
-// sendaddrv2   v4      70016   BIP155  expanded address types (*)
-// addr         v1
-// ping         v1
+// version      v1        106
+// verack       v1        106
+// ping         v1        106
+// addr         v1        106
+// addr         v1      31402   timestamp field added to addr message
+// ----------------------------------------------------------------------------
+// getaddr      v1        209
+// checkorder   --        209           obsolete
+// reply        --        209           obsolete
+// submitorder  --        209           obsolete
+// alert        v4        311           disabled by default, deprecated
+// ----------------------------------------------------------------------------
 // ping         v2      60001   BIP031  added nonce field
 // pong         v1      60001   BIP031
 // reject       v3      70002   BIP061  disabled by default, deprecated
 // ----------------------------------------------------------------------------
-// alert        v4                      disabled by default, deprecated
-// checkorder   --                      obsolete
-// reply        --                      obsolete
-// submitorder  --                      obsolete
+// sendaddrv2   --      70016   BIP155  expanded address types (*)
+// addrv2       --      70016   BIP155  expanded address types
+// version      --      70016   BIP155  expanded address types
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 // libbitcoin-node
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// getblocks    v1
-// inv          v1
-// getdata      v1
-// block        v1
-// tx           v1
+// getblocks    v1        106
+// inv          v1        106
+// getdata      v1        106
+// block        v1        106
+// tx           v1        106
+// ----------------------------------------------------------------------------
 // getheaders   v3      31800           "headers first" added in v4
 // headers      v3      31800           "headers first" added in v4
 // mempool      v3      60002   BIP035
 // ----------------------------------------------------------------------------
-// merkleblock  v3      70001   BIP037  only unfiltered supported
-// getdata      v3      70001   BIP037  allow filtered_block flag in bip37
-// filterload   --      70001   BIP037  no intent to support, deprecated (bip111)
-// filteradd    --      70001   BIP037  no intent to support, deprecated (bip111)
-// filterclear  --      70001   BIP037  no intent to support, deprecated (bip111)
+// merkleblock  --      70001   BIP037  deprecated (bip111)
+// getdata      --      70001   BIP037  deprecated (bip111)
+// filterload   --      70001   BIP037  deprecated (bip111)
+// filteradd    --      70001   BIP037  deprecated (bip111)
+// filterclear  --      70001   BIP037  deprecated (bip111)
 // notfound     v2      70001           added at the same version as bip37
 // version      v2      70001           added (optional) relay field in bip37
 // ----------------------------------------------------------------------------
-// mempool      v3      70002           allow multiple inv messages in reply:
-//                                      undocumented (satoshi v0.9.0)
+// mempool      v3      70002           allow multiple inv reply (undocumented)
 // sendheaders  v3      70012   BIP130  "headers first" added in v4
 // feefilter    v3      70013   BIP133
+// ----------------------------------------------------------------------------
 // blocktxn     v4      70014   BIP152
 // cmpctblock   v4      70014   BIP152
 // getblocktxn  v4      70014   BIP152
 // sendcmpct    v4      70014   BIP152
+// ----------------------------------------------------------------------------
 // cfilter      v4      70015   BIP157  not BIP-associated to p2p version (**)
 // getcfilters  v4      70015   BIP157  not BIP-associated to p2p version (**)
 // cfcheckpt    v4      70015   BIP157  not BIP-associated to p2p version (**)
 // getcfcheckpt v4      70015   BIP157  not BIP-associated to p2p version (**)
 // cfheaders    v4      70015   BIP157  not BIP-associated to p2p version (**)
 // getcfheaders v4      70015   BIP157  not BIP-associated to p2p version (**)
+// ----------------------------------------------------------------------------
+// wtxidrelay   v4      70016   BIP339  signal tx relay based on witness tx id
+// sendtxrcncl  --      70016   BIP330  no intent to support (***)
+// reqrecon     --      70016   BIP330  no intent to support (***)
+// sketch       --      70016   BIP330  no intent to support (***)
+// reqsketchext --      70016   BIP330  no intent to support (***)
+// reconcildiff --      70016   BIP330  no intent to support (***)
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 enum level: uint32_t
@@ -94,11 +111,13 @@ enum level: uint32_t
     /// Used to generate canonical size required by consensus checks.
     canonical = 0,
 
-    /// Added version.address_sender, version.nonce, and version.user_agent.
-    version_updates = 106,
+    /// This is the first public release protocol version.
+    /// Added verack, version.address_sender, version.nonce, version.user_agent.
+    version_message = 106,
 
-    /// Added verack message, also heading.checksum and version.start_height.
-    verack_message = 209,
+    /// Added getaddr message, also version.start_height and heading.checksum.
+    /// Checksum was added to version after a delay, breaking earlier clients.
+    getaddr_message = 209,
 
     /// Added alert message.
     alert_message = 311,
@@ -115,26 +134,23 @@ enum level: uint32_t
     /// Don't request blocks from nodes of versions 32000-32400 (bitcoind hack).
     no_blocks_end = 32400,
 
-    /// Isolate protocol version from implementation version.
-    bip14 = 60000,
-
     /// ping.nonce, pong
     bip31 = 60001,
 
     /// memory_pool
     bip35 = 60002,
 
-    /// bloom filters, merkle_block, not_found, version.relay
+    /// version.relay, bloom filters, merkle_block, not_found
     bip37 = 70001,
 
     /// reject (satoshi node writes version.relay starting here)
     bip61 = 70002,
 
-    /// node_utxo service bit (draft)
-    bip64 = 70004,
+    /////// node_utxo service bit (draft)
+    ////bip64 = 70004,
 
-    /// node_bloom service bit
-    bip111 = 70011,
+    /////// node_bloom service bit
+    ////bip111 = 70011,
 
     /// send_headers
     bip130 = 70012,
@@ -150,6 +166,12 @@ enum level: uint32_t
 
     /// send_address_v2
     bip155 = 70016,
+
+    /////// sendtxrcncl, etc.
+    ////bip330 = 70016,
+
+    /// wtxidrelay
+    bip339 = 70016,
 
     /// We require at least this of peers (for current address structure).
     minimum_protocol = address_time,

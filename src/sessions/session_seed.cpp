@@ -205,7 +205,7 @@ void session_seed::attach_handshake(const channel::ptr& channel,
             maximum_services, enable_transaction)->shake(std::move(handler));
 
     else
-        channel->attach<protocol_version_31402>(self, minimum_services,
+        channel->attach<protocol_version_106>(self, minimum_services,
             maximum_services)->shake(std::move(handler));
 }
 
@@ -234,18 +234,18 @@ void session_seed::attach_protocols(const channel::ptr& channel) NOEXCEPT
     if (enable_pong)
         channel->attach<protocol_ping_60001>(self)->start();
     else
-        channel->attach<protocol_ping_31402>(self)->start();
+        channel->attach<protocol_ping_106>(self)->start();
 
     // Alert is deprecated.
     if (enable_alert)
-        channel->attach<protocol_alert_31402>(self)->start();
+        channel->attach<protocol_alert_311>(self)->start();
 
     // Reject is deprecated.
     if (enable_reject)
         channel->attach<protocol_reject_70002>(self)->start();
 
     // Seed protocol stops upon completion, causing session removal.
-    channel->attach<protocol_seed_31402>(self)->start();
+    channel->attach<protocol_seed_209>(self)->start();
 }
 
 void session_seed::handle_channel_stop(const code& LOG_ONLY(ec),

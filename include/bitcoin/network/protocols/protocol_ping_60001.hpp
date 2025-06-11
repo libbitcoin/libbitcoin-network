@@ -26,14 +26,14 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_ping_31402.hpp>
+#include <bitcoin/network/protocols/protocol_ping_106.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 class BCT_API protocol_ping_60001
-  : public protocol_ping_31402, protected tracker<protocol_ping_60001>
+  : public protocol_ping_106, protected tracker<protocol_ping_60001>
 {
 public:
     typedef std::shared_ptr<protocol_ping_60001> ptr;

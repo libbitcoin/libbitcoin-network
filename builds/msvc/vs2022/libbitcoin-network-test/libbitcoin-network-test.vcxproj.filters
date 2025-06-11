@@ -249,16 +249,16 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_31402.cpp">
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_209.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_31402.cpp">
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_209.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_31402.cpp">
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_311.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_31402.cpp">
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_106.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_60001.cpp">
@@ -267,10 +267,10 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_reject_70002.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_31402.cpp">
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_209.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_31402.cpp">
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_version_106.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70001.cpp">

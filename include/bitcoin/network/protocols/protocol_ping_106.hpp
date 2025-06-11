@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_OUT_31402_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_ADDRESS_OUT_31402_HPP
+#ifndef LIBBITCOIN_NETWORK_PROTOCOL_PING_106_HPP
+#define LIBBITCOIN_NETWORK_PROTOCOL_PING_106_HPP
 
 #include <memory>
 #include <bitcoin/system.hpp>
@@ -32,29 +32,31 @@
 namespace libbitcoin {
 namespace network {
 
-class BCT_API protocol_address_out_31402
-  : public protocol, protected tracker<protocol_address_out_31402>
+class BCT_API protocol_ping_106
+  : public protocol, protected tracker<protocol_ping_106>
 {
 public:
-    typedef std::shared_ptr<protocol_address_out_31402> ptr;
+    typedef std::shared_ptr<protocol_ping_106> ptr;
 
-    protocol_address_out_31402(const session::ptr& session,
+    protocol_ping_106(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
 
     /// Start protocol (strand required).
     void start() NOEXCEPT override;
 
+    /// The channel is stopping (called on strand by stop subscription).
+    void stopping(const code& ec) NOEXCEPT override;
+
 protected:
-    virtual bool handle_receive_get_address(const code& ec,
-        const messages::get_address::cptr& message) NOEXCEPT;
-    virtual void handle_fetch_address(const code& ec,
-        const messages::address::cptr& message) NOEXCEPT;
-    virtual bool handle_broadcast_address(const code& ec,
-        const messages::address::cptr& message, uint64_t sender) NOEXCEPT;
+    virtual void send_ping() NOEXCEPT;
+    virtual void handle_timer(const code& ec) NOEXCEPT;
+    virtual void handle_send_ping(const code& ec) NOEXCEPT;
+    virtual bool handle_receive_ping(const code& ec,
+        const messages::ping::cptr& message) NOEXCEPT;
 
 private:
     // This is protected by strand.
-    bool sent_{};
+    deadline::ptr timer_;
 };
 
 } // namespace network

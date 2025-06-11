@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/protocols/protocol_address_out_31402.hpp>
+#include <bitcoin/network/protocols/protocol_address_out_209.hpp>
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
@@ -29,7 +29,7 @@
 namespace libbitcoin {
 namespace network {
 
-#define CLASS protocol_address_out_31402
+#define CLASS protocol_address_out_209
 
 using namespace system;
 using namespace messages;
@@ -38,19 +38,19 @@ using namespace std::placeholders;
 // Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-protocol_address_out_31402::protocol_address_out_31402(
+protocol_address_out_209::protocol_address_out_209(
     const session::ptr& session, const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    tracker<protocol_address_out_31402>(session->log)
+    tracker<protocol_address_out_209>(session->log)
 {
 }
 
 // Start.
 // ----------------------------------------------------------------------------
 
-void protocol_address_out_31402::start() NOEXCEPT
+void protocol_address_out_209::start() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_address_out_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_address_out_209");
 
     if (started())
         return;
@@ -68,10 +68,10 @@ void protocol_address_out_31402::start() NOEXCEPT
 // Outbound (fetch and send addresses).
 // ----------------------------------------------------------------------------
 
-bool protocol_address_out_31402::handle_receive_get_address(const code& ec,
+bool protocol_address_out_209::handle_receive_get_address(const code& ec,
     const get_address::cptr&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_address_out_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_address_out_209");
 
     if (stopped(ec))
         return false;
@@ -96,10 +96,10 @@ bool protocol_address_out_31402::handle_receive_get_address(const code& ec,
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 
-void protocol_address_out_31402::handle_fetch_address(const code& ec,
+void protocol_address_out_209::handle_fetch_address(const code& ec,
     const address::cptr& message) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_address_out_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_address_out_209");
 
     if (stopped(ec))
         return;
@@ -112,10 +112,10 @@ void protocol_address_out_31402::handle_fetch_address(const code& ec,
 
 // ----------------------------------------------------------------------------
 
-bool protocol_address_out_31402::handle_broadcast_address(const code& ec,
+bool protocol_address_out_209::handle_broadcast_address(const code& ec,
     const address::cptr& message, uint64_t sender) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_address_out_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_address_out_209");
 
     if (stopped(ec))
     {

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/protocols/protocol_version_31402.hpp>
+#include <bitcoin/network/protocols/protocol_version_106.hpp>
 
 #include <algorithm>
 #include <memory>
@@ -34,7 +34,7 @@ namespace network {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-#define CLASS protocol_version_31402
+#define CLASS protocol_version_106
 
 using namespace system;
 using namespace messages;
@@ -44,16 +44,16 @@ using namespace std::placeholders;
 constexpr auto allowed_timestamp_deviation = hours{ 2 };
 
 // Require the configured minimum protocol and services by default.
-protocol_version_31402::protocol_version_31402(const session::ptr& session,
+protocol_version_106::protocol_version_106(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
-  : protocol_version_31402(session, channel,
+  : protocol_version_106(session, channel,
       session->settings().services_minimum,
       session->settings().services_maximum)
 {
 }
 
 // Used for seeding (should probably not override these).
-protocol_version_31402::protocol_version_31402(const session::ptr& session,
+protocol_version_106::protocol_version_106(const session::ptr& session,
     const channel::ptr& channel,
     uint64_t minimum_services,
     uint64_t maximum_services) NOEXCEPT
@@ -66,7 +66,7 @@ protocol_version_31402::protocol_version_31402(const session::ptr& session,
     invalid_services_(session->settings().invalid_services),
     timer_(std::make_shared<deadline>(session->log, channel->strand(),
         session->settings().channel_handshake())),
-    tracker<protocol_version_31402>(session->log)
+    tracker<protocol_version_106>(session->log)
 {
 }
 
@@ -76,7 +76,7 @@ protocol_version_31402::protocol_version_31402(const session::ptr& session,
 // Allow derived classes to modify the version message.
 // Relay always exposed on version, despite lack of definition < BIP37.
 // See comments in version::deserialize regarding BIP37 protocol bug.
-messages::version protocol_version_31402::version_factory(
+messages::version protocol_version_106::version_factory(
     bool relay) const NOEXCEPT
 {
     const auto timestamp = unix_time();
@@ -123,7 +123,7 @@ messages::version protocol_version_31402::version_factory(
 }
 
 // Allow derived classes to handle message rejection.
-void protocol_version_31402::rejection(const code& ec) NOEXCEPT
+void protocol_version_106::rejection(const code& ec) NOEXCEPT
 {
     callback(ec);
 }
@@ -133,9 +133,9 @@ void protocol_version_31402::rejection(const code& ec) NOEXCEPT
 
 // Session resumes the channel following return from start().
 // Sends are not precluded, but no messages can be received while paused.
-void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
+void protocol_version_106::shake(result_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_version_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_version_106");
 
     if (started())
     {
@@ -178,22 +178,22 @@ void protocol_version_31402::shake(result_handler&& handler) NOEXCEPT
 }
 
 // Allow service shutdown to terminate handshake.
-void protocol_version_31402::stopping(const code& ec) NOEXCEPT
+void protocol_version_106::stopping(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_version_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_version_106");
     callback(ec);
 }
 
-bool protocol_version_31402::complete() const NOEXCEPT
+bool protocol_version_106::complete() const NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_version_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_version_106");
     return sent_version_ && received_version_ && received_acknowledge_;
 }
 
 // Idempotent on the strand, first caller gets handler.
-void protocol_version_31402::callback(const code& ec) NOEXCEPT
+void protocol_version_106::callback(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_version_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_version_106");
 
     // This will asynchronously invoke handle_timer and if the channel is not
     // stopped, will then invoke callback(error::operation_canceled).
@@ -210,9 +210,9 @@ void protocol_version_31402::callback(const code& ec) NOEXCEPT
     handler_.reset();
 }
 
-void protocol_version_31402::handle_timer(const code& ec) NOEXCEPT
+void protocol_version_106::handle_timer(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_ping_106");
 
     if (stopped())
         return;
@@ -232,9 +232,9 @@ void protocol_version_31402::handle_timer(const code& ec) NOEXCEPT
 // Outgoing [send_version... receive_acknowledge].
 // ----------------------------------------------------------------------------
 
-void protocol_version_31402::handle_send_version(const code& ec) NOEXCEPT
+void protocol_version_106::handle_send_version(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_version_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_version_106");
 
     if (stopped(ec))
         return;
@@ -246,10 +246,10 @@ void protocol_version_31402::handle_send_version(const code& ec) NOEXCEPT
         callback(error::success);
 }
 
-bool protocol_version_31402::handle_receive_acknowledge(const code& ec,
+bool protocol_version_106::handle_receive_acknowledge(const code& ec,
     const version_acknowledge::cptr&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_version_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_version_106");
 
     if (stopped(ec))
         return false;
@@ -278,7 +278,7 @@ bool protocol_version_31402::handle_receive_acknowledge(const code& ec,
 // ----------------------------------------------------------------------------
 
 // private
-bool protocol_version_31402::is_disallowed_deviation(
+bool protocol_version_106::is_disallowed_deviation(
     uint64_t timestamp) NOEXCEPT
 {
     const auto now = wall_clock::now();
@@ -287,10 +287,10 @@ bool protocol_version_31402::is_disallowed_deviation(
         || time > (now + allowed_timestamp_deviation);
 }
 
-bool protocol_version_31402::handle_receive_version(const code& ec,
+bool protocol_version_106::handle_receive_version(const code& ec,
     const version::cptr& message) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_version_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_version_106");
 
     if (stopped(ec))
         return true;
@@ -368,9 +368,9 @@ bool protocol_version_31402::handle_receive_version(const code& ec,
     return true;
 }
 
-void protocol_version_31402::handle_send_acknowledge(const code& ec) NOEXCEPT
+void protocol_version_106::handle_send_acknowledge(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_version_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_version_106");
 
     if (stopped(ec))
         return;

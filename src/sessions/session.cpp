@@ -171,7 +171,7 @@ void session::attach_handshake(const channel::ptr& channel,
             ->shake(std::move(handler));
 
     else
-        channel->attach<protocol_version_31402>(self)
+        channel->attach<protocol_version_106>(self)
             ->shake(std::move(handler));
 }
 
@@ -288,11 +288,11 @@ void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
     const auto negotiated = channel->negotiated_version();
     const auto bip31 = negotiated >= messages::level::bip31;
     const auto bip61 = negotiated >= messages::level::bip61;
-    const auto bip155 = negotiated >= messages::level::bip155;
+    ////const auto bip155 = negotiated >= messages::level::bip155;
 
     // Alert is deprecated, independent of version.
     if (settings().enable_alert)
-        channel->attach<protocol_alert_31402>(self)->start();
+        channel->attach<protocol_alert_311>(self)->start();
 
     // Reject is deprecated, independent of version.
     if (bip61 && settings().enable_reject)
@@ -301,7 +301,7 @@ void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
     if (bip31)
         channel->attach<protocol_ping_60001>(self)->start();
     else
-        channel->attach<protocol_ping_31402>(self)->start();
+        channel->attach<protocol_ping_106>(self)->start();
 
     // Address (in/out) can be disabled, independent of version.
     if (settings().enable_address)
@@ -310,13 +310,13 @@ void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
         ////if (bip155)
         ////    channel->attach<protocol_address_in_70016>(self)->start();
         ////else
-            channel->attach<protocol_address_in_31402>(self)->start();
+            channel->attach<protocol_address_in_209>(self)->start();
 
         ////// Peer requested (stoopid because version support is negotiated).
         ////if (bip155 && channel->send_address_v2())
         ////    channel->attach<protocol_address_out_70016>(self)->start();
         ////else
-            channel->attach<protocol_address_out_31402>(self)->start();
+            channel->attach<protocol_address_out_209>(self)->start();
     }
 }
 

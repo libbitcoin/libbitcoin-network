@@ -36,7 +36,7 @@ const identifier version::id = identifier::version;
 const uint32_t messages::version::version_minimum = level::minimum_protocol;
 const uint32_t messages::version::version_maximum = level::maximum_protocol;
 
-// Time stamps are always used in version messages.
+// Time stamps are not used in version messages.
 constexpr auto with_timestamp = false;
 
 // This is just a guess, required as memory guard.

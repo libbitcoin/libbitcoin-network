@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/protocols/protocol_ping_31402.hpp>
+#include <bitcoin/network/protocols/protocol_ping_106.hpp>
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
@@ -29,25 +29,25 @@
 namespace libbitcoin {
 namespace network {
 
-#define CLASS protocol_ping_31402
+#define CLASS protocol_ping_106
 
 using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
-protocol_ping_31402::protocol_ping_31402(const session::ptr& session,
+protocol_ping_106::protocol_ping_106(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     timer_(std::make_shared<deadline>(session->log, channel->strand(),
         session->settings().channel_heartbeat())),
-    tracker<protocol_ping_31402>(session->log)
+    tracker<protocol_ping_106>(session->log)
 {
 }
 
-// Also invoked by protocol_ping_31402.
-void protocol_ping_31402::start() NOEXCEPT
+// Also invoked by protocol_ping_106.
+void protocol_ping_106::start() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_ping_106");
 
     if (started())
         return;
@@ -58,10 +58,10 @@ void protocol_ping_31402::start() NOEXCEPT
     protocol::start();
 }
 
-// Also invoked by protocol_ping_31402.
-void protocol_ping_31402::stopping(const code&) NOEXCEPT
+// Also invoked by protocol_ping_106.
+void protocol_ping_106::stopping(const code&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_ping_106");
 
     timer_->stop();
 }
@@ -69,15 +69,15 @@ void protocol_ping_31402::stopping(const code&) NOEXCEPT
 // Outgoing (send_ping [on timer] => handle_send).
 // ----------------------------------------------------------------------------
 
-void protocol_ping_31402::send_ping() NOEXCEPT
+void protocol_ping_106::send_ping() NOEXCEPT
 {
     SEND(ping{}, handle_send_ping, _1);
 }
 
-// Also invoked by protocol_ping_31402.
-void protocol_ping_31402::handle_send_ping(const code& ec) NOEXCEPT
+// Also invoked by protocol_ping_106.
+void protocol_ping_106::handle_send_ping(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_ping_106");
 
     if (stopped(ec))
         return;
@@ -86,9 +86,9 @@ void protocol_ping_31402::handle_send_ping(const code& ec) NOEXCEPT
     protocol::handle_send(ec);
 }
 
-void protocol_ping_31402::handle_timer(const code& ec) NOEXCEPT
+void protocol_ping_106::handle_timer(const code& ec) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_ping_106");
 
     if (stopped())
         return;
@@ -108,10 +108,10 @@ void protocol_ping_31402::handle_timer(const code& ec) NOEXCEPT
 // Incoming (receive_ping, the incoming traffic resets channel activity timer).
 // ----------------------------------------------------------------------------
 
-bool protocol_ping_31402::handle_receive_ping(const code&,
+bool protocol_ping_106::handle_receive_ping(const code&,
     const ping::cptr&) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_ping_31402");
+    BC_ASSERT_MSG(stranded(), "protocol_ping_106");
     return !stopped();
 }
 
