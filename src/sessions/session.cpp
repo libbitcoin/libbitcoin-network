@@ -288,7 +288,7 @@ void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
     const auto negotiated = channel->negotiated_version();
     const auto bip31 = negotiated >= messages::level::bip31;
     const auto bip61 = negotiated >= messages::level::bip61;
-    const auto bip155 = negotiated >= messages::level::bip155;
+    ////const auto bip155 = negotiated >= messages::level::bip155;
 
     // Alert is deprecated, independent of version.
     if (settings().enable_alert)
