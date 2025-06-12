@@ -27,6 +27,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -212,6 +213,9 @@ protected:
 
     /// Properties.
     /// -----------------------------------------------------------------------
+
+    /// Message level is supported by confired protocol level.
+    virtual bool is_configured(messages::level level) const NOEXCEPT;
 
     /// The session is stopped.
     virtual bool stopped() const NOEXCEPT;

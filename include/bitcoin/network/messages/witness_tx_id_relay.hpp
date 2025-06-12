@@ -16,56 +16,38 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_VERSION_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_VERSION_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_WITNESS_TX_ID_RELAY_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_WITNESS_TX_ID_RELAY_HPP
 
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
-#include <bitcoin/network/messages/address_item.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
 
-/// Current implementation supports no lower than version 209.
-struct BCT_API version
+struct BCT_API witness_tx_id_relay
 {
-    typedef std::shared_ptr<const version> cptr;
+    typedef std::shared_ptr<const witness_tx_id_relay> cptr;
 
     static const identifier id;
     static const std::string command;
     static const uint32_t version_minimum;
     static const uint32_t version_maximum;
 
+    static size_t size(uint32_t version) NOEXCEPT;
+
     static cptr deserialize(uint32_t version,
         const system::data_chunk& data) NOEXCEPT;
-    static version deserialize(uint32_t version,
+    static witness_tx_id_relay deserialize(uint32_t version,
         system::reader& source) NOEXCEPT;
 
     bool serialize(uint32_t version,
         const system::data_slab& data) const NOEXCEPT;
     void serialize(uint32_t version,
         system::writer& sink) const NOEXCEPT;
-
-    size_t size(uint32_t version) const NOEXCEPT;
-
-    uint32_t value;
-    uint64_t services;
-    uint64_t timestamp;
-    address_item address_receiver;
-
-    /// version >= 106
-    address_item address_sender;
-    uint64_t nonce;
-    std::string user_agent;
-
-    /// version >= 209
-    uint32_t start_height;
-
-    /// version >= 70001
-    bool relay;
 };
 
 } // namespace messages

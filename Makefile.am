@@ -89,6 +89,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/transaction.cpp \
     src/messages/version.cpp \
     src/messages/version_acknowledge.cpp \
+    src/messages/witness_tx_id_relay.cpp \
     src/net/acceptor.cpp \
     src/net/broadcaster.cpp \
     src/net/channel.cpp \
@@ -190,6 +191,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/transaction.cpp \
     test/messages/version.cpp \
     test/messages/version_acknowledge.cpp \
+    test/messages/witness_tx_id_relay.cpp \
     test/net/acceptor.cpp \
     test/net/broadcaster.cpp \
     test/net/channel.cpp \
@@ -332,7 +334,8 @@ include_bitcoin_network_messages_HEADERS = \
     include/bitcoin/network/messages/send_headers.hpp \
     include/bitcoin/network/messages/transaction.hpp \
     include/bitcoin/network/messages/version.hpp \
-    include/bitcoin/network/messages/version_acknowledge.hpp
+    include/bitcoin/network/messages/version_acknowledge.hpp \
+    include/bitcoin/network/messages/witness_tx_id_relay.hpp
 
 include_bitcoin_network_messages_enumsdir = ${includedir}/bitcoin/network/messages/enums
 include_bitcoin_network_messages_enums_HEADERS = \

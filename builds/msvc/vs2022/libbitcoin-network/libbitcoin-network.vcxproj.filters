@@ -237,6 +237,9 @@
     <ClCompile Include="..\..\..\..\src\messages\version_acknowledge.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\witness_tx_id_relay.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
@@ -555,6 +558,9 @@
       <Filter>include\bitcoin\network\messages</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\version_acknowledge.hpp">
+      <Filter>include\bitcoin\network\messages</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\witness_tx_id_relay.hpp">
       <Filter>include\bitcoin\network\messages</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp">

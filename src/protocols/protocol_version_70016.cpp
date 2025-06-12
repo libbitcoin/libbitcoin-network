@@ -45,7 +45,7 @@ protocol_version_70016::protocol_version_70016(const session::ptr& session,
   : protocol_version_70016(session, channel,
         session->settings().services_minimum,
         session->settings().services_maximum,
-        session->settings().enable_transaction,
+        session->settings().enable_relay,
         session->settings().enable_reject)
 {
 }
@@ -72,7 +72,7 @@ void protocol_version_70016::shake(result_handler&& handle_event) NOEXCEPT
     if (started())
         return;
 
-    // Protocol versions are cumulative, but reject is deprecated.
+    // Protocol versions are cumulative, but reject is optional.
     if (reject_)
     {
         protocol_version_70002::shake(std::move(handle_event));
@@ -82,16 +82,16 @@ void protocol_version_70016::shake(result_handler&& handle_event) NOEXCEPT
     protocol_version_70001::shake(std::move(handle_event));
 }
 
-
-// Incoming [send_address_v2 => negotiated state change].
+// Incoming [send_address_v2    => negotiated state change].
+// Incoming [witness_tx_id_relay => negotiated state change].
 // ----------------------------------------------------------------------------
-// send_address_v2 receipt is the only difference at protocol level 70016.
 
 void protocol_version_70016::handle_send_version(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70016");
 
     SUBSCRIBE_CHANNEL(send_address_v2, handle_receive_send_address_v2, _1, _2);
+    SUBSCRIBE_CHANNEL(witness_tx_id_relay, handle_receive_witness_tx_id_relay, _1, _2);
     protocol_version_70002::handle_send_version(ec);
 }
 
@@ -112,16 +112,33 @@ bool protocol_version_70016::handle_receive_send_address_v2(const code& ec,
     if (stopped(ec))
         return false;
 
-    // Late or already received send_address_v2.
+    // Late send_address_v2.
     if (complete_)
     {
         rejection(error::protocol_violation);
         return false;
     }
 
-    // TODO: set channel addressv2 property and use to attach protocols.
-    // TODO: implement updated protocol_address_in|out_70016.
-    complete_ = true;
+    // TODO: set channel send_address_v2 property and use to attach protocols.
+    return true;
+}
+
+bool protocol_version_70016::handle_receive_witness_tx_id_relay(const code& ec,
+    const witness_tx_id_relay::cptr&) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_version_70016");
+
+    if (stopped(ec))
+        return false;
+
+    // Late witness_tx_id_relay.
+    if (complete_)
+    {
+        rejection(error::protocol_violation);
+        return false;
+    }
+
+    // TODO: set channel witness_tx_id_relay_relay property and use to attach protocols.
     return true;
 }
 

@@ -75,6 +75,7 @@ distributor::distributor(memory& memory, asio::strand& strand) NOEXCEPT
     MAKE_SUBSCRIBER(transaction),
     MAKE_SUBSCRIBER(version),
     MAKE_SUBSCRIBER(version_acknowledge),
+    MAKE_SUBSCRIBER(witness_tx_id_relay),
     memory_(memory)
 {
 }
@@ -118,6 +119,7 @@ code distributor::notify(messages::identifier id, uint32_t version,
         CASE_NOTIFY(transaction);
         CASE_NOTIFY(version);
         CASE_NOTIFY(version_acknowledge);
+        CASE_NOTIFY(witness_tx_id_relay);
         case messages::identifier::unknown:
         default:
             return error::unknown_message;
@@ -161,6 +163,7 @@ void distributor::stop(const code& ec) NOEXCEPT
     STOP_SUBSCRIBER(transaction);
     STOP_SUBSCRIBER(version);
     STOP_SUBSCRIBER(version_acknowledge);
+    STOP_SUBSCRIBER(witness_tx_id_relay);
 }
 
 template <>

@@ -83,6 +83,7 @@ public:
     DEFINE_SUBSCRIBER(transaction);
     DEFINE_SUBSCRIBER(version);
     DEFINE_SUBSCRIBER(version_acknowledge);
+    DEFINE_SUBSCRIBER(witness_tx_id_relay);
 
     /// Create an instance of this class.
     distributor(memory& memory, asio::strand& strand) NOEXCEPT;
@@ -160,6 +161,7 @@ private:
     SUBSCRIBER_OVERLOAD(transaction);
     SUBSCRIBER_OVERLOAD(version);
     SUBSCRIBER_OVERLOAD(version_acknowledge);
+    SUBSCRIBER_OVERLOAD(witness_tx_id_relay);
 
     // These are thread safe.
     DECLARE_SUBSCRIBER(address);
@@ -196,6 +198,7 @@ private:
     DECLARE_SUBSCRIBER(transaction);
     DECLARE_SUBSCRIBER(version);
     DECLARE_SUBSCRIBER(version_acknowledge);
+    DECLARE_SUBSCRIBER(witness_tx_id_relay);
 
     memory& memory_;
 };

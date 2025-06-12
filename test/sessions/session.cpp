@@ -102,6 +102,11 @@ public:
     {
     }
 
+    bool is_configured(messages::level level) const NOEXCEPT override
+    {
+        return session::is_configured(level);
+    }
+
     bool stopped() const NOEXCEPT override
     {
         return session::stopped();
@@ -366,6 +371,9 @@ BOOST_AUTO_TEST_CASE(session__properties__default__expected)
     BOOST_REQUIRE(is_zero(session.address_count()));
     BOOST_REQUIRE(is_zero(session.channel_count()));
     BOOST_REQUIRE(is_zero(session.inbound_channel_count()));
+    BOOST_REQUIRE(session.is_configured(messages::level::canonical));
+    BOOST_REQUIRE(session.is_configured(messages::level::minimum_protocol));
+    BOOST_REQUIRE(session.is_configured(messages::level::maximum_protocol));
 }
 
 // factories

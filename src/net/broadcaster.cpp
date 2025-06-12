@@ -67,7 +67,8 @@ broadcaster::broadcaster(asio::strand& strand) NOEXCEPT
     MAKE_SUBSCRIBER(send_headers),
     MAKE_SUBSCRIBER(transaction),
     MAKE_SUBSCRIBER(version),
-    MAKE_SUBSCRIBER(version_acknowledge)
+    MAKE_SUBSCRIBER(version_acknowledge),
+    MAKE_SUBSCRIBER(witness_tx_id_relay)
 {
 }
 
@@ -107,6 +108,7 @@ void broadcaster::unsubscribe(channel_id subscriber) NOEXCEPT
     UNSUBSCRIBER(transaction);
     UNSUBSCRIBER(version);
     UNSUBSCRIBER(version_acknowledge);
+    UNSUBSCRIBER(witness_tx_id_relay);
 }
 
 void broadcaster::stop(const code& ec) NOEXCEPT
@@ -145,6 +147,7 @@ void broadcaster::stop(const code& ec) NOEXCEPT
     STOP_SUBSCRIBER(transaction);
     STOP_SUBSCRIBER(version);
     STOP_SUBSCRIBER(version_acknowledge);
+    STOP_SUBSCRIBER(witness_tx_id_relay);
 }
 
 #undef SUBSCRIBER

@@ -136,6 +136,11 @@ uint64_t channel::identifier() const NOEXCEPT
     return identifier_;
 }
 
+bool channel::is_negotiated(messages::level level) const NOEXCEPT
+{
+    return negotiated_version() >= level;
+}
+
 size_t channel::start_height() const NOEXCEPT
 {
     return start_height_;

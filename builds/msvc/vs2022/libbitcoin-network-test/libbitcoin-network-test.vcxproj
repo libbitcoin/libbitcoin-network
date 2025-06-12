@@ -182,6 +182,7 @@
     <ClCompile Include="..\..\..\..\test\messages\transaction.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\version.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\version_acknowledge.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\witness_tx_id_relay.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />
     <ClCompile Include="..\..\..\..\test\net\channel.cpp" />

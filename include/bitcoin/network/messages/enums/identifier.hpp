@@ -61,7 +61,8 @@ enum class identifier
     send_headers,
     transaction,
     version,
-    version_acknowledge
+    version_acknowledge,
+    witness_tx_id_relay
 };
 
 } // namespace messages

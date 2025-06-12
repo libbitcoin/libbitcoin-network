@@ -203,31 +203,38 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
 
-    // Inbound does not require any node services (e.g. bitnodes.io is zero).
+    // Inbound does not require any node services.
     constexpr auto minimum_services = messages::service::node_none;
-
-    const auto self = shared_from_this();
-    const auto maximum_version = settings().protocol_maximum;
     const auto maximum_services = settings().services_maximum;
-    const auto extended_version = maximum_version >= messages::level::bip37;
-    const auto enable_transaction = settings().enable_transaction;
-    const auto enable_reject = settings().enable_reject &&
-        maximum_version >= messages::level::bip61;
 
     // Protocol must pause the channel after receiving version and verack.
+    const auto self = shared_from_this();
+    const auto relay = settings().enable_relay;
+    const auto reject = settings().enable_reject;
+    const auto address_v2 = settings().enable_address_v2;
 
-    // Reject is deprecated.
-    if (enable_reject)
+    // Address v2 can be disabled, independent of version.
+    if (is_configured(messages::level::bip155) && address_v2)
+        channel->attach<protocol_version_70016>(self, minimum_services,
+            maximum_services, relay, reject)
+                ->shake(std::move(handler));
+
+    // Protocol versions are cumulative, but reject is deprecated.
+    else if (is_configured(messages::level::bip61) && reject)
         channel->attach<protocol_version_70002>(self, minimum_services,
-            maximum_services, enable_transaction)->shake(std::move(handler));
+            maximum_services, relay)
+                ->shake(std::move(handler));
 
-    else if (extended_version)
+    // settings().enable_relay is always passed to the peer during handshake.
+    else if (is_configured(messages::level::bip37))
         channel->attach<protocol_version_70001>(self, minimum_services,
-            maximum_services, enable_transaction)->shake(std::move(handler));
+            maximum_services, relay)
+                ->shake(std::move(handler));
 
-    else
+    else if (is_configured(messages::level::version_message))
         channel->attach<protocol_version_106>(self, minimum_services,
-            maximum_services)->shake(std::move(handler));
+            maximum_services)
+                ->shake(std::move(handler));
 }
 
 void session_inbound::handle_channel_start(const code&,

@@ -16,13 +16,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/address.hpp>
+#include <bitcoin/network/messages/witness_tx_id_relay.hpp>
 
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/messages/address_item.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
-#include <bitcoin/network/messages/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/message.hpp>
 
 namespace libbitcoin {
@@ -31,13 +29,19 @@ namespace messages {
 
 using namespace system;
 
-const std::string address::command = "addr";
-const identifier address::id = identifier::address;
-const uint32_t address::version_minimum = level::minimum_protocol;
-const uint32_t address::version_maximum = level::maximum_protocol;
+const std::string witness_tx_id_relay::command = "wtxidrelay";
+const identifier witness_tx_id_relay::id = identifier::witness_tx_id_relay;
+const uint32_t witness_tx_id_relay::version_minimum = level::bip339;
+const uint32_t witness_tx_id_relay::version_maximum = level::maximum_protocol;
 
 // static
-typename address::cptr address::deserialize(uint32_t version,
+size_t witness_tx_id_relay::size(uint32_t) NOEXCEPT
+{
+    return zero;
+}
+
+// static
+typename witness_tx_id_relay::cptr witness_tx_id_relay::deserialize(uint32_t version,
     const system::data_chunk& data) NOEXCEPT
 {
     system::istream source{ data };
@@ -47,24 +51,16 @@ typename address::cptr address::deserialize(uint32_t version,
 }
 
 // static
-address address::deserialize(uint32_t version, system::reader& source) NOEXCEPT
+witness_tx_id_relay witness_tx_id_relay::deserialize(uint32_t version,
+    reader& source) NOEXCEPT
 {
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    const auto with_timestamp = (version >= level::address_time);
-    const auto size = source.read_size(max_address);
-    address_items addresses;
-    addresses.reserve(size);
-
-    for (size_t address = 0; address < size; ++address)
-        addresses.push_back(address_item::deserialize(version, source,
-            with_timestamp));
-
-    return { addresses };
+    return {};
 }
 
-bool address::serialize(uint32_t version,
+bool witness_tx_id_relay::serialize(uint32_t version,
     const system::data_slab& data) const NOEXCEPT
 {
     system::ostream sink{ data };
@@ -73,25 +69,12 @@ bool address::serialize(uint32_t version,
     return writer;
 }
 
-void address::serialize(uint32_t version, writer& sink) const NOEXCEPT
+void witness_tx_id_relay::serialize(uint32_t BC_DEBUG_ONLY(version),
+    writer& BC_DEBUG_ONLY(sink)) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
-        
-    const auto with_timestamp = version >= level::address_time;
-    sink.write_variable(addresses.size());
-
-    for (const auto& net: addresses)
-        net.serialize(version, sink, with_timestamp);
-
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
-}
-
-size_t address::size(uint32_t version) const NOEXCEPT
-{
-    const auto with_timestamp = (version >= level::address_time);
-    return variable_size(addresses.size()) +
-        (addresses.size() * address_item::size(version, with_timestamp));
 }
 
 } // namespace messages

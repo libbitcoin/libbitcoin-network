@@ -33,11 +33,11 @@ namespace messages {
 // implementations reject messages they don't know. As a courtesy, don't send
 // it to nodes with a version before 70016, as no software is known to support
 // BIP155 that doesn't announce at least that protocol version number."
+// ** TODO: these should be based solely on NODE_COMPACT_FILTERS signal, but we
+// may associate the protocol version at which it was deployed (70015).
 // *** BIP330 is not versioned, but states "Since sketches are based on the
 // WTXIDs, the negotiation and support of Erlay should be enabled only if both
 // peers signal BIP-339 support." Therefore it requires version 70016.
-// ** TODO: these should be based solely on NODE_COMPACT_FILTERS signal, but we
-// may associate the protocol version at which it was deployed (70015).
 
 // libbitcoin-network
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -45,7 +45,7 @@ namespace messages {
 // verack       v1        106
 // ping         v1        106
 // addr         v1        106
-// addr         v1      31402   timestamp field added to addr message
+// addr         v1      31402           timestamp field added to addr message
 // ----------------------------------------------------------------------------
 // getaddr      v1        209
 // checkorder   --        209           obsolete
@@ -57,9 +57,8 @@ namespace messages {
 // pong         v1      60001   BIP031
 // reject       v3      70002   BIP061  disabled by default, deprecated
 // ----------------------------------------------------------------------------
-// sendaddrv2   --      70016   BIP155  expanded address types (*)
-// addrv2       --      70016   BIP155  expanded address types
-// version      --      70016   BIP155  expanded address types
+// sendaddrv2   --      70016   BIP155  in-handshake, single (*)
+// addrv2       --      70016   BIP155
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 // libbitcoin-node
@@ -83,13 +82,13 @@ namespace messages {
 // version      v2      70001           added (optional) relay field in bip37
 // ----------------------------------------------------------------------------
 // mempool      v3      70002           allow multiple inv reply (undocumented)
-// sendheaders  v3      70012   BIP130  "headers first" added in v4
+// sendheaders  v3      70012   BIP130  post-handshake, single
 // feefilter    v3      70013   BIP133
 // ----------------------------------------------------------------------------
 // blocktxn     v4      70014   BIP152
 // cmpctblock   v4      70014   BIP152
 // getblocktxn  v4      70014   BIP152
-// sendcmpct    v4      70014   BIP152
+// sendcmpct    v4      70014   BIP152  post-handshake, multiple (versioned)
 // ----------------------------------------------------------------------------
 // cfilter      v4      70015   BIP157  not BIP-associated to p2p version (**)
 // getcfilters  v4      70015   BIP157  not BIP-associated to p2p version (**)
@@ -98,7 +97,7 @@ namespace messages {
 // cfheaders    v4      70015   BIP157  not BIP-associated to p2p version (**)
 // getcfheaders v4      70015   BIP157  not BIP-associated to p2p version (**)
 // ----------------------------------------------------------------------------
-// wtxidrelay   v4      70016   BIP339  signal tx relay based on witness tx id
+// wtxidrelay   v4      70016   BIP339  in-handshake, single
 // sendtxrcncl  --      70016   BIP330  no intent to support (***)
 // reqrecon     --      70016   BIP330  no intent to support (***)
 // sketch       --      70016   BIP330  no intent to support (***)
@@ -110,6 +109,8 @@ enum level: uint32_t
 {
     /// Used to generate canonical size required by consensus checks.
     canonical = 0,
+
+    /// -----------------------------------------------------------------------
 
     /// This is the first public release protocol version.
     /// Added verack, version.address_sender, version.nonce, version.user_agent.
@@ -133,6 +134,8 @@ enum level: uint32_t
 
     /// Don't request blocks from nodes of versions 32000-32400 (bitcoind hack).
     no_blocks_end = 32400,
+
+    /// -----------------------------------------------------------------------
 
     /// ping.nonce, pong
     bip31 = 60001,
@@ -167,11 +170,13 @@ enum level: uint32_t
     /// send_address_v2
     bip155 = 70016,
 
-    /////// sendtxrcncl, etc.
-    ////bip330 = 70016,
-
     /// wtxidrelay
     bip339 = 70016,
+
+    /////// erlay
+    ////bip330 = 70016,
+
+    /// -----------------------------------------------------------------------
 
     /// We require at least this of peers (for current address structure).
     minimum_protocol = address_time,
