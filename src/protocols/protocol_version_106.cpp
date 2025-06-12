@@ -336,11 +336,11 @@ bool protocol_version_106::handle_receive_version(const code& ec,
 
     if (is_disallowed_deviation(message->timestamp))
     {
-        LOGR("Timestamp out of range (" << message->value << ") "
+        LOGR("Timestamp out of range (" << message->timestamp << ") "
             "for [" << authority() << "].");
 
-        rejection(error::peer_timestamp);
-        return false;
+        ////rejection(error::peer_timestamp);
+        ////return false;
     }
 
     const auto version = std::min(message->value, maximum_version_);
