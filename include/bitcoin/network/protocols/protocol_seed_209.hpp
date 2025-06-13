@@ -65,7 +65,7 @@ protected:
 
 private:
     // These are protected by the strand.
-    bool sent_address_{};
+    ////bool sent_address_{};
     bool sent_get_address_{};
     bool received_address_{};
     deadline::ptr timer_;

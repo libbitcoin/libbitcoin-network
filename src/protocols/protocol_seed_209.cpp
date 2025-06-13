@@ -70,7 +70,7 @@ bool protocol_seed_209::complete() const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
-    return sent_address_ && sent_get_address_ && received_address_;
+    return /*sent_address_ &&*/ sent_get_address_ && received_address_;
 }
 
 void protocol_seed_209::stopping(const code&) NOEXCEPT
@@ -211,6 +211,7 @@ bool protocol_seed_209::handle_receive_get_address(const code& ec,
     if (settings().advertise_enabled())
     {
         SEND(selfs(), handle_send_address, _1);
+        return true;
     }
 
     // handle_send_address has been bypassed, so completion here.
@@ -226,7 +227,9 @@ void protocol_seed_209::handle_send_address(const code& ec) NOEXCEPT
         return;
 
     // Multiple get_address messages are allowed, but do not delay stop.
-    sent_address_ = true;
+    // Dedicated seed nodes may never request addresses, so don't want on them
+    // to stop. If peer sends get_address before address, it will process.
+    ////sent_address_ = true;
 
     if (complete())
         stop(error::success);
