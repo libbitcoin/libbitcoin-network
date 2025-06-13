@@ -56,6 +56,8 @@ protected:
         const messages::version_acknowledge::cptr& message) NOEXCEPT override;
     virtual bool handle_receive_send_address_v2(const code& ec,
         const messages::send_address_v2::cptr& message) NOEXCEPT;
+    virtual bool handle_receive_witness_tx_id_relay(const code& ec,
+        const messages::witness_tx_id_relay::cptr& message) NOEXCEPT;
 
 private:
     // This is thread safe.

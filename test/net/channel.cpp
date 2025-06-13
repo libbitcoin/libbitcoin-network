@@ -82,6 +82,7 @@ BOOST_AUTO_TEST_CASE(channel__properties__default__expected)
     BOOST_REQUIRE(!channel_ptr->address());
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
     BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
+    BOOST_REQUIRE(channel_ptr->is_negotiated(messages::level::maximum_protocol));
 
     // TODO: compare to default instance.
     BOOST_REQUIRE(channel_ptr->peer_version());

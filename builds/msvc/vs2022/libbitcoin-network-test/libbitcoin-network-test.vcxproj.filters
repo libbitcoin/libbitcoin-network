@@ -216,6 +216,9 @@
     <ClCompile Include="..\..\..\..\test\messages\version_acknowledge.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\witness_tx_id_relay.cpp">
+      <Filter>src\messages</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp">
       <Filter>src\net</Filter>
     </ClCompile>

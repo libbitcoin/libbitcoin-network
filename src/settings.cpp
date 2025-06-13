@@ -45,9 +45,12 @@ settings::settings() NOEXCEPT
     services_minimum(service::minimum_services),
     invalid_services(176),
     enable_address(false),
+    enable_address_v2(false),
+    enable_witness_tx(false),
+    enable_compact(false),
     enable_alert(false),
     enable_reject(false),
-    enable_transaction(false),
+    enable_relay(false),
     enable_ipv6(false),
     enable_loopback(false),
     validate_checksum(false),
@@ -62,6 +65,7 @@ settings::settings() NOEXCEPT
     channel_heartbeat_minutes(5),
     channel_inactivity_minutes(10),
     channel_expiration_minutes(1440),
+    maximum_skew_minutes(120),
     host_pool_capacity(0),
     rate_limit(1024),
     minimum_buffer(4'000'000),
@@ -197,6 +201,11 @@ steady_clock::duration settings::channel_inactivity() const NOEXCEPT
 steady_clock::duration settings::channel_expiration() const NOEXCEPT
 {
     return minutes(channel_expiration_minutes);
+}
+
+steady_clock::duration settings::maximum_skew() const NOEXCEPT
+{
+    return minutes(maximum_skew_minutes);
 }
 
 size_t settings::minimum_address_count() const NOEXCEPT

@@ -148,29 +148,25 @@ void session::attach_handshake(const channel::ptr& channel,
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
 
-    const auto self = shared_from_this();
-    const auto maximum = settings().protocol_maximum;
-    const auto bip37 = maximum >= messages::level::bip37;
-    const auto bip61 = maximum >= messages::level::bip61;
-    const auto bip155 = maximum >= messages::level::bip155;
-
     // Protocol must pause the channel after receiving version and verack.
+    const auto self = shared_from_this();
 
-    // Address (in/out) can be disabled, independent of version.
-    if (bip155 && settings().enable_address)
+    // Address v2 can be disabled, independent of version.
+    if (is_configured(messages::level::bip155) && settings().enable_address_v2)
         channel->attach<protocol_version_70016>(self)
             ->shake(std::move(handler));
 
     // Protocol versions are cumulative, but reject is deprecated.
-    else if (bip61 && settings().enable_reject)
+    else if (is_configured(messages::level::bip61) && settings().enable_reject)
         channel->attach<protocol_version_70002>(self)
             ->shake(std::move(handler));
 
-    else if (bip37)
+    // settings().enable_relay is always passed to the peer during handshake.
+    else if (is_configured(messages::level::bip37))
         channel->attach<protocol_version_70001>(self)
             ->shake(std::move(handler));
 
-    else
+    else if (is_configured(messages::level::version_message))
         channel->attach<protocol_version_106>(self)
             ->shake(std::move(handler));
 }
@@ -285,38 +281,45 @@ void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
     const auto self = shared_from_this();
-    const auto negotiated = channel->negotiated_version();
-    const auto bip31 = negotiated >= messages::level::bip31;
-    const auto bip61 = negotiated >= messages::level::bip61;
-    ////const auto bip155 = negotiated >= messages::level::bip155;
 
     // Alert is deprecated, independent of version.
-    if (settings().enable_alert)
+    if (channel->is_negotiated(messages::level::alert_message) &&
+        settings().enable_alert)
         channel->attach<protocol_alert_311>(self)->start();
 
     // Reject is deprecated, independent of version.
-    if (bip61 && settings().enable_reject)
+    if (channel->is_negotiated(messages::level::bip61) &&
+        settings().enable_reject)
         channel->attach<protocol_reject_70002>(self)->start();
 
-    if (bip31)
+    if (channel->is_negotiated(messages::level::bip31))
         channel->attach<protocol_ping_60001>(self)->start();
-    else
+    else if (channel->is_negotiated(messages::level::version_message))
         channel->attach<protocol_ping_106>(self)->start();
 
-    // Address (in/out) can be disabled, independent of version.
+    if (settings().enable_address_v2)
+    {
+        ////// Address v2 can be disabled, independent of version.
+        ////if (channel->is_negotiated(messages::level::bip155)
+        ////    channel->attach<protocol_address_in_70016>(self)->start();
+    
+        ////// Sending address v2 is enabled in handshake.
+        ////if (channel->send_address_v2())
+        ////    channel->attach<protocol_address_out_70016>(self)->start();
+    }
+
     if (settings().enable_address)
     {
-        ////// Receive based on config and negotiated version only (sent).
-        ////if (bip155)
-        ////    channel->attach<protocol_address_in_70016>(self)->start();
-        ////else
+        if (channel->is_negotiated(messages::level::getaddr_message))
+        {
             channel->attach<protocol_address_in_209>(self)->start();
-
-        ////// Peer requested (stoopid because version support is negotiated).
-        ////if (bip155 && channel->send_address_v2())
-        ////    channel->attach<protocol_address_out_70016>(self)->start();
-        ////else
             channel->attach<protocol_address_out_209>(self)->start();
+        }
+        else if (channel->is_negotiated(messages::level::version_message))
+        {
+            ////channel->attach<protocol_address_in_106>(self)->start();
+            ////channel->attach<protocol_address_out_106>(self)->start();
+        }
     }
 }
 
@@ -512,6 +515,11 @@ const network::settings& session::settings() const NOEXCEPT
 uint64_t session::identifier() const NOEXCEPT
 {
     return identifier_;
+}
+
+bool session::is_configured(messages::level level) const NOEXCEPT
+{
+    return settings().protocol_maximum >= level;
 }
 
 // Utilities.

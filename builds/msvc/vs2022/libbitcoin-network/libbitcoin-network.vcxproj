@@ -177,6 +177,7 @@
     <ClCompile Include="..\..\..\..\src\messages\transaction.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\version.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\version_acknowledge.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\witness_tx_id_relay.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\broadcaster.cpp" />
     <ClCompile Include="..\..\..\..\src\net\channel.cpp" />
@@ -285,6 +286,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\transaction.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\version_acknowledge.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\witness_tx_id_relay.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\broadcaster.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel.hpp" />

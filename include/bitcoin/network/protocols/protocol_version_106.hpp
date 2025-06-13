@@ -76,9 +76,10 @@ protected:
     const uint64_t minimum_services_;
     const uint64_t maximum_services_;
     const uint64_t invalid_services_;
+    const uint32_t maximum_skew_minutes_;
 
 private:
-    static bool is_disallowed_deviation(uint64_t timestamp) NOEXCEPT;
+    static minutes to_deviation(uint64_t timestamp) NOEXCEPT;
 
     // These are protected by strand.
     bool sent_version_{};

@@ -70,7 +70,7 @@ bool protocol_seed_209::complete() const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
-    return sent_address_ && sent_get_address_ && received_address_;
+    return /*sent_address_ &&*/ sent_get_address_ && received_address_;
 }
 
 void protocol_seed_209::stopping(const code&) NOEXCEPT
@@ -163,26 +163,28 @@ bool protocol_seed_209::handle_receive_address(const code& ec,
     const auto filtered = filter(message->addresses);
     const auto end_size = filtered->addresses.size();
 
-    save(filtered,
-        BIND(handle_save_addresses, _1, _2, end_size, start_size));
+    save(filtered, BIND(handle_save_addresses, _1, _2, end_size, start_size));
 
     return true;
 }
 
 void protocol_seed_209::handle_save_addresses(const code& ec,
-    size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
-    size_t start_size) NOEXCEPT
+    size_t LOG_ONLY(accepted), size_t end_size, size_t start_size) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
     if (stopped())
         return;
 
+    // The seed sent addresses but the set was filtered to zero.
+    const auto emptied = (ec == error::address_not_found &&
+        is_zero(end_size) && !is_zero(start_size));
+
     // Save error does not stop the channel.
-    if (ec)
+    if (ec && !emptied)
         stop(ec);
 
-    LOGN("Accepted (" << start_size << ">" << filtered << ">" << accepted
+    LOGN("Accepted (" << start_size << ">" << end_size << ">" << accepted
         << ") addresses from seed [" << authority() << "].");
 
     // Multiple address messages are allowed, but do not delay session.
@@ -209,6 +211,7 @@ bool protocol_seed_209::handle_receive_get_address(const code& ec,
     if (settings().advertise_enabled())
     {
         SEND(selfs(), handle_send_address, _1);
+        return true;
     }
 
     // handle_send_address has been bypassed, so completion here.
@@ -224,7 +227,9 @@ void protocol_seed_209::handle_send_address(const code& ec) NOEXCEPT
         return;
 
     // Multiple get_address messages are allowed, but do not delay stop.
-    sent_address_ = true;
+    // Dedicated seed nodes may never request addresses, so don't want on them
+    // to stop. If peer sends get_address before address, it will process.
+    ////sent_address_ = true;
 
     if (complete())
         stop(error::success);

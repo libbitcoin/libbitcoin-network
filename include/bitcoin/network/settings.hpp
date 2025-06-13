@@ -47,9 +47,12 @@ struct BCT_API settings
     uint64_t services_minimum;
     uint64_t invalid_services;
     bool enable_address;
+    bool enable_address_v2;
+    bool enable_witness_tx;
+    bool enable_compact;
     bool enable_alert;
     bool enable_reject;
-    bool enable_transaction;
+    bool enable_relay;
     bool enable_ipv6;
     bool enable_loopback;
     bool validate_checksum;
@@ -64,6 +67,7 @@ struct BCT_API settings
     uint32_t channel_heartbeat_minutes;
     uint32_t channel_inactivity_minutes;
     uint32_t channel_expiration_minutes;
+    uint32_t maximum_skew_minutes;
     uint32_t host_pool_capacity;
     uint32_t minimum_buffer;
     uint32_t rate_limit;
@@ -94,6 +98,7 @@ struct BCT_API settings
     virtual steady_clock::duration channel_heartbeat() const NOEXCEPT;
     virtual steady_clock::duration channel_inactivity() const NOEXCEPT;
     virtual steady_clock::duration channel_expiration() const NOEXCEPT;
+    virtual steady_clock::duration maximum_skew() const NOEXCEPT;
     virtual size_t minimum_address_count() const NOEXCEPT;
     virtual std::filesystem::path file() const NOEXCEPT;
 

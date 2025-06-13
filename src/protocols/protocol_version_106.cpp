@@ -19,6 +19,7 @@
 #include <bitcoin/network/protocols/protocol_version_106.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -39,9 +40,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 using namespace system;
 using namespace messages;
 using namespace std::placeholders;
-
-// Drop peer it its clock deviates more than 2 hours from own clock.
-constexpr auto allowed_timestamp_deviation = hours{ 2 };
 
 // Require the configured minimum protocol and services by default.
 protocol_version_106::protocol_version_106(const session::ptr& session,
@@ -64,6 +62,7 @@ protocol_version_106::protocol_version_106(const session::ptr& session,
     minimum_services_(minimum_services),
     maximum_services_(maximum_services),
     invalid_services_(session->settings().invalid_services),
+    maximum_skew_minutes_(session->settings().maximum_skew_minutes),
     timer_(std::make_shared<deadline>(session->log, channel->strand(),
         session->settings().channel_handshake())),
     tracker<protocol_version_106>(session->log)
@@ -277,14 +276,13 @@ bool protocol_version_106::handle_receive_acknowledge(const code& ec,
 // Incoming [receive_version => send_acknowledge].
 // ----------------------------------------------------------------------------
 
-// private
-bool protocol_version_106::is_disallowed_deviation(
-    uint64_t timestamp) NOEXCEPT
+// static/private
+// Negative if the peer timestamp is behind our clock.positive otherwise.
+minutes protocol_version_106::to_deviation(uint64_t timestamp) NOEXCEPT
 {
     const auto now = wall_clock::now();
     const auto time = wall_clock::from_time_t(timestamp);
-    return time < (now - allowed_timestamp_deviation)
-        || time > (now + allowed_timestamp_deviation);
+    return std::chrono::duration_cast<minutes>(time - now);
 }
 
 bool protocol_version_106::handle_receive_version(const code& ec,
@@ -334,9 +332,10 @@ bool protocol_version_106::handle_receive_version(const code& ec,
         return false;
     }
 
-    if (is_disallowed_deviation(message->timestamp))
+    const auto deviation = to_deviation(message->timestamp);
+    if (absolute(deviation.count()) > maximum_skew_minutes_)
     {
-        LOGR("Timestamp out of range (" << message->value << ") "
+        LOGR("Peer time skewed by (" << deviation.count() << ") minutes "
             "for [" << authority() << "].");
 
         rejection(error::peer_timestamp);

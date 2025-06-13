@@ -179,34 +179,40 @@ void session_seed::attach_handshake(const channel::ptr& channel,
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
 
-    // Tx relay is parsed (by version) but always set to false for seeding.
-    constexpr auto enable_transaction = false;
-
     // Seeding does not require or provide any node services.
     // Nodes that require inbound connection services/txs will not accept.
     constexpr auto minimum_services = messages::service::node_none;
     constexpr auto maximum_services = messages::service::node_none;
 
-    const auto self = shared_from_this();
-    const auto maximum_version = settings().protocol_maximum;
-    const auto extended_version = maximum_version >= messages::level::bip37;
-    const auto enable_reject = settings().enable_reject &&
-        maximum_version >= messages::level::bip61;
+    // Tx relay is always disabled for seeding.
+    constexpr auto relay = false;
 
     // Protocol must pause the channel after receiving version and verack.
+    const auto self = shared_from_this();
+    const auto reject = settings().enable_reject;
+    const auto address_v2 = settings().enable_address_v2;
 
-    // Reject is deprecated.
-    if (enable_reject)
+    // Address v2 can be disabled, independent of version.
+    if (is_configured(messages::level::bip155) && address_v2)
+        channel->attach<protocol_version_70016>(self, minimum_services,
+            maximum_services, relay, reject)
+                ->shake(std::move(handler));
+
+    // Protocol versions are cumulative, but reject is deprecated.
+    else if (is_configured(messages::level::bip61) && reject)
         channel->attach<protocol_version_70002>(self, minimum_services,
-            maximum_services, enable_transaction)->shake(std::move(handler));
+            maximum_services, relay)
+                ->shake(std::move(handler));
 
-    else if (extended_version)
+    else if (is_configured(messages::level::bip37))
         channel->attach<protocol_version_70001>(self, minimum_services,
-            maximum_services, enable_transaction)->shake(std::move(handler));
+            maximum_services, relay)
+                ->shake(std::move(handler));
 
-    else
+    else if (is_configured(messages::level::version_message))
         channel->attach<protocol_version_106>(self, minimum_services,
-            maximum_services)->shake(std::move(handler));
+            maximum_services)
+                ->shake(std::move(handler));
 }
 
 void session_seed::handle_channel_start(const code& ec,
@@ -225,27 +231,37 @@ void session_seed::attach_protocols(const channel::ptr& channel) NOEXCEPT
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
 
     const auto self = shared_from_this();
-    const auto enable_alert = settings().enable_alert;
-    const auto negotiated_version = channel->negotiated_version();
-    const auto enable_pong = negotiated_version >= messages::level::bip31;
-    const auto enable_reject = settings().enable_reject &&
-        negotiated_version >= messages::level::bip61;
+    const auto alert = settings().enable_alert;
+    const auto reject = settings().enable_reject;
+    const auto address_v2 = settings().enable_address_v2;
 
-    if (enable_pong)
-        channel->attach<protocol_ping_60001>(self)->start();
-    else
-        channel->attach<protocol_ping_106>(self)->start();
-
-    // Alert is deprecated.
-    if (enable_alert)
+    // Alert is deprecated, independent of version.
+    if (channel->is_negotiated(messages::level::alert_message) && alert)
         channel->attach<protocol_alert_311>(self)->start();
 
-    // Reject is deprecated.
-    if (enable_reject)
+    // Reject is deprecated, independent of version.
+    if (channel->is_negotiated(messages::level::bip61) && reject)
         channel->attach<protocol_reject_70002>(self)->start();
 
+    if (channel->is_negotiated(messages::level::bip31))
+        channel->attach<protocol_ping_60001>(self)->start();
+    else if (channel->is_negotiated(messages::level::version_message))
+        channel->attach<protocol_ping_106>(self)->start();
+
     // Seed protocol stops upon completion, causing session removal.
-    channel->attach<protocol_seed_209>(self)->start();
+    if (channel->is_negotiated(messages::level::bip155) && address_v2)
+    {
+        channel->attach<protocol_seed_209>(self)->start();
+        ////channel->attach<protocol_seed_70016>(self)->start();
+    }
+    else if (channel->is_negotiated(messages::level::getaddr_message))
+    {
+        channel->attach<protocol_seed_209>(self)->start();
+    }
+    else if (channel->is_negotiated(messages::level::version_message))
+    {
+        ////channel->attach<protocol_seed_106>(self)->start();
+    }
 }
 
 void session_seed::handle_channel_stop(const code& LOG_ONLY(ec),

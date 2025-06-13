@@ -99,6 +99,9 @@ public:
     /// Arbitrary identifier of the channel (for session subscribers).
     uint64_t identifier() const NOEXCEPT;
 
+    /// Message level is supported by confired protocol level.
+    bool is_negotiated(messages::level level) const NOEXCEPT;
+
     /// Start height for version message (set only before handshake).
     size_t start_height() const NOEXCEPT;
     void set_start_height(size_t height) NOEXCEPT;

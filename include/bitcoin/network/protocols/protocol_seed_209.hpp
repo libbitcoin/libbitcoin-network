@@ -57,7 +57,7 @@ protected:
     virtual bool handle_receive_address(const code& ec,
         const messages::address::cptr& address) NOEXCEPT;
     virtual void handle_save_addresses(const code& ec,
-        size_t accepted, size_t filtered, size_t start_size) NOEXCEPT;
+        size_t accepted, size_t end_size, size_t start_size) NOEXCEPT;
 
     virtual bool handle_receive_get_address(const code& ec,
         const messages::get_address::cptr& message) NOEXCEPT;
@@ -65,7 +65,7 @@ protected:
 
 private:
     // These are protected by the strand.
-    bool sent_address_{};
+    ////bool sent_address_{};
     bool sent_get_address_{};
     bool received_address_{};
     deadline::ptr timer_;
