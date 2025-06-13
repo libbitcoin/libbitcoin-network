@@ -142,13 +142,13 @@ bool protocol_address_in_209::handle_receive_address(const code& ec,
     const auto end_size = filtered->addresses.size();
 
     // This allows previously-rejected addresses.
-    save(filtered, BIND(handle_save_address, _1, _2, end_size, start_size));
+    save(filtered, BIND(handle_save_addresses, _1, _2, end_size, start_size));
 
     return true;
 }
 
-void protocol_address_in_209::handle_save_address(const code& ec,
-    size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
+void protocol_address_in_209::handle_save_addresses(const code& ec,
+    size_t LOG_ONLY(accepted), size_t LOG_ONLY(end_size),
     size_t LOG_ONLY(start_size)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_address_in_209");
@@ -156,7 +156,7 @@ void protocol_address_in_209::handle_save_address(const code& ec,
     if (stopped(ec))
         return;
 
-    LOGP("Accepted (" << start_size << ">" << filtered << ">" << accepted << ") "
+    LOGP("Accepted (" << start_size << ">" << end_size << ">" << accepted << ") "
         "addresses from [" << authority() << "].");
 }
 
