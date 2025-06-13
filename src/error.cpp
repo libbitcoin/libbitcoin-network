@@ -142,7 +142,6 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
 
     // connect-resolve
     if (ec == boost_error_t::address_family_not_supported ||
-        ec == boost_error_t::address_not_available ||
         ec == boost_error_t::bad_address ||
         ec == boost_error_t::destination_address_required ||
         ec == asio_netdb_error_t::host_not_found ||
@@ -150,7 +149,8 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
         return error::resolve_failed;
 
     // connect-connect
-    if (ec == boost_error_t::not_connected ||
+    if (ec == boost_error_t::address_not_available ||
+        ec == boost_error_t::not_connected ||
         ec == boost_error_t::connection_refused ||
         ec == boost_error_t::broken_pipe ||
         ec == boost_error_t::host_unreachable ||
