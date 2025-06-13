@@ -62,6 +62,7 @@ protocol_version_106::protocol_version_106(const session::ptr& session,
     minimum_services_(minimum_services),
     maximum_services_(maximum_services),
     invalid_services_(session->settings().invalid_services),
+    maximum_skew_minutes_(session->settings().channel_maximum_skew_minutes),
     timer_(std::make_shared<deadline>(session->log, channel->strand(),
         session->settings().channel_handshake())),
     tracker<protocol_version_106>(session->log)
@@ -275,20 +276,13 @@ bool protocol_version_106::handle_receive_acknowledge(const code& ec,
 // Incoming [receive_version => send_acknowledge].
 // ----------------------------------------------------------------------------
 
-// private
+// static/private
 // Negative if the peer timestamp is behind our clock.positive otherwise.
 minutes protocol_version_106::to_deviation(uint64_t timestamp) NOEXCEPT
 {
     const auto now = wall_clock::now();
     const auto time = wall_clock::from_time_t(timestamp);
     return std::chrono::duration_cast<minutes>(time - now);
-}
-
-// private
-bool protocol_version_106::is_disallowed(minutes deviation) NOEXCEPT
-{
-    constexpr uint32_t allowed_deviation_minutes = 2 * 60;
-    return system::absolute(deviation.count()) > allowed_deviation_minutes;
 }
 
 bool protocol_version_106::handle_receive_version(const code& ec,
@@ -339,7 +333,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     }
 
     const auto deviation = to_deviation(message->timestamp);
-    if (is_disallowed(deviation))
+    if (absolute(deviation.count()) > maximum_skew_minutes_)
     {
         LOGR("Peer time skewed by (" << deviation.count() << ") minutes "
             "for [" << authority() << "].");
