@@ -62,7 +62,7 @@ protocol_version_106::protocol_version_106(const session::ptr& session,
     minimum_services_(minimum_services),
     maximum_services_(maximum_services),
     invalid_services_(session->settings().invalid_services),
-    maximum_skew_minutes_(session->settings().channel_maximum_skew_minutes),
+    maximum_skew_minutes_(session->settings().maximum_skew_minutes),
     timer_(std::make_shared<deadline>(session->log, channel->strand(),
         session->settings().channel_handshake())),
     tracker<protocol_version_106>(session->log)

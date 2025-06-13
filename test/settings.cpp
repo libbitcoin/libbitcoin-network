@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
-    BOOST_REQUIRE_EQUAL(instance.channel_maximum_skew_minutes, 120u);
+    BOOST_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
     BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
     BOOST_REQUIRE_EQUAL(instance.minimum_buffer, heading::maximum_payload(level::canonical, true));
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__mainnet__expected)
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
-    BOOST_REQUIRE_EQUAL(instance.channel_maximum_skew_minutes, 120u);
+    BOOST_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
     BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
     BOOST_REQUIRE_EQUAL(instance.minimum_buffer, heading::maximum_payload(level::canonical, true));
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__testnet__expected)
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
-    BOOST_REQUIRE_EQUAL(instance.channel_maximum_skew_minutes, 120u);
+    BOOST_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
     BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
     BOOST_REQUIRE_EQUAL(instance.minimum_buffer, heading::maximum_payload(level::canonical, true));
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__regtest__expected)
     BOOST_REQUIRE_EQUAL(instance.channel_heartbeat_minutes, 5u);
     BOOST_REQUIRE_EQUAL(instance.channel_inactivity_minutes, 10u);
     BOOST_REQUIRE_EQUAL(instance.channel_expiration_minutes, 1440u);
-    BOOST_REQUIRE_EQUAL(instance.channel_maximum_skew_minutes, 120u);
+    BOOST_REQUIRE_EQUAL(instance.maximum_skew_minutes, 120u);
     BOOST_REQUIRE_EQUAL(instance.host_pool_capacity, 0u);
     BOOST_REQUIRE_EQUAL(instance.minimum_buffer, heading::maximum_payload(level::canonical, true));
     BOOST_REQUIRE_EQUAL(instance.rate_limit, 1024u);
@@ -533,12 +533,12 @@ BOOST_AUTO_TEST_CASE(settings__channel_expiration__always__channel_expiration_mi
     BOOST_REQUIRE(instance.channel_expiration() == minutes(expected));
 }
 
-BOOST_AUTO_TEST_CASE(settings__channel_maximum_skew__always__channel_maximum_skew_minutes)
+BOOST_AUTO_TEST_CASE(settings__maximum_skew__always__maximum_skew_minutes)
 {
     settings instance{};
     constexpr auto expected = 42u;
-    instance.channel_maximum_skew_minutes = expected;
-    BOOST_REQUIRE(instance.channel_maximum_skew() == minutes(expected));
+    instance.maximum_skew_minutes = expected;
+    BOOST_REQUIRE(instance.maximum_skew() == minutes(expected));
 }
 
 BOOST_AUTO_TEST_CASE(settings__channel_germination__always__seeding_timeout_seconds)
