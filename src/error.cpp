@@ -38,6 +38,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { address_unsupported, "advertised services unsupported" },
     { address_insufficient, "advertised services insufficient" },
     { seeding_unsuccessful, "seeding unsuccessful" },
+    { seeding_complete, "seeding complete" },
         
     // file system
     { file_load, "failed to load file" },

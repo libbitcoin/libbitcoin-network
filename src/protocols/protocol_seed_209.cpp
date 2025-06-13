@@ -111,7 +111,7 @@ void protocol_seed_209::handle_send_get_address(const code& ec) NOEXCEPT
     sent_get_address_ = true;
 
     if (complete())
-        stop(error::success);
+        stop(error::seeding_complete);
 }
 
 address::cptr protocol_seed_209::filter(
@@ -192,7 +192,7 @@ void protocol_seed_209::handle_save_addresses(const code& ec,
     received_address_ = !is_one(start_size);
 
     if (complete())
-        stop(error::success);
+        stop(error::seeding_complete);
 }
 
 // Outbound (fetch and send addresses).
@@ -232,7 +232,7 @@ void protocol_seed_209::handle_send_address(const code& ec) NOEXCEPT
     ////sent_address_ = true;
 
     if (complete())
-        stop(error::success);
+        stop(error::seeding_complete);
 }
 
 BC_POP_WARNING()

@@ -62,6 +62,7 @@ enum error_t : uint8_t
     address_unsupported,
     address_insufficient,
     seeding_unsuccessful,
+    seeding_complete,
 
     // file system
     file_load,

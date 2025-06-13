@@ -97,6 +97,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__seeding_unsuccessful__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "seeding unsuccessful");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__seeding_complete__true_exected_message)
+{
+    constexpr auto value = error::seeding_complete;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "seeding complete");
+}
+
 // file system
 
 BOOST_AUTO_TEST_CASE(error_t__code__file_load__true_exected_message)
