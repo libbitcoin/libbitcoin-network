@@ -176,8 +176,12 @@ void protocol_seed_209::handle_save_addresses(const code& ec,
     if (stopped())
         return;
 
+    // The seed sent addresses but the set was filtered to zero.
+    const auto emptied = (ec == error::address_not_found &&
+        is_zero(end_size) && !is_zero(start_size));
+
     // Save error does not stop the channel.
-    if (ec)
+    if (ec && !emptied)
         stop(ec);
 
     LOGN("Accepted (" << start_size << ">" << end_size << ">" << accepted
