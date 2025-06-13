@@ -85,11 +85,11 @@ settings::settings(chain::selection context) NOEXCEPT
         {
             identifier = 3652501241;
             seeds.reserve(4);
-            seeds.push_back({ "mainnet1.libbitcoin.net", 8333 });
-            seeds.push_back({ "mainnet2.libbitcoin.net", 8333 });
-            seeds.push_back({ "mainnet3.libbitcoin.net", 8333 });
-            seeds.push_back({ "mainnet4.libbitcoin.net", 8333 });
-            binds.push_back({ asio::address{}, 8333 });
+            seeds.emplace_back("mainnet1.libbitcoin.net", 8333_u16);
+            seeds.emplace_back("mainnet2.libbitcoin.net", 8333_u16);
+            seeds.emplace_back("mainnet3.libbitcoin.net", 8333_u16);
+            seeds.emplace_back("mainnet4.libbitcoin.net", 8333_u16);
+            binds.emplace_back(asio::address{}, 8333_u16);
             break;
         }
 
@@ -97,18 +97,18 @@ settings::settings(chain::selection context) NOEXCEPT
         {
             identifier = 118034699;
             seeds.reserve(4);
-            seeds.push_back({ "testnet1.libbitcoin.net", 18333 });
-            seeds.push_back({ "testnet2.libbitcoin.net", 18333 });
-            seeds.push_back({ "testnet3.libbitcoin.net", 18333 });
-            seeds.push_back({ "testnet4.libbitcoin.net", 18333 });
-            binds.push_back({ asio::address{}, 18333 });
+            seeds.emplace_back("testnet1.libbitcoin.net", 18333_u16);
+            seeds.emplace_back("testnet2.libbitcoin.net", 18333_u16);
+            seeds.emplace_back("testnet3.libbitcoin.net", 18333_u16);
+            seeds.emplace_back("testnet4.libbitcoin.net", 18333_u16);
+            binds.emplace_back(asio::address{}, 18333_u16);
             break;
         }
 
         case chain::selection::regtest:
         {
             identifier = 3669344250;
-            binds.push_back({ asio::address{}, 18444 });
+            binds.emplace_back(asio::address{}, 18444_u16);
 
             // Regtest is private network only, so there is no seeding.
             break;
