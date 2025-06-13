@@ -67,6 +67,7 @@ struct BCT_API settings
     uint32_t channel_heartbeat_minutes;
     uint32_t channel_inactivity_minutes;
     uint32_t channel_expiration_minutes;
+    uint32_t channel_maximum_skew_minutes;
     uint32_t host_pool_capacity;
     uint32_t minimum_buffer;
     uint32_t rate_limit;
@@ -97,6 +98,7 @@ struct BCT_API settings
     virtual steady_clock::duration channel_heartbeat() const NOEXCEPT;
     virtual steady_clock::duration channel_inactivity() const NOEXCEPT;
     virtual steady_clock::duration channel_expiration() const NOEXCEPT;
+    virtual steady_clock::duration channel_maximum_skew() const NOEXCEPT;
     virtual size_t minimum_address_count() const NOEXCEPT;
     virtual std::filesystem::path file() const NOEXCEPT;
 
