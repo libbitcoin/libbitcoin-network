@@ -38,6 +38,7 @@ BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
     BOOST_REQUIRE_EQUAL(instance.invalid_services, 176u);
     BOOST_REQUIRE_EQUAL(instance.enable_address, false);
     BOOST_REQUIRE_EQUAL(instance.enable_address_v2, false);
+    BOOST_REQUIRE_EQUAL(instance.enable_witness_tx, false);
     BOOST_REQUIRE_EQUAL(instance.enable_compact, false);
     BOOST_REQUIRE_EQUAL(instance.enable_alert, false);
     BOOST_REQUIRE_EQUAL(instance.enable_reject, false);

@@ -48,6 +48,7 @@ struct BCT_API settings
     uint64_t invalid_services;
     bool enable_address;
     bool enable_address_v2;
+    bool enable_witness_tx;
     bool enable_compact;
     bool enable_alert;
     bool enable_reject;

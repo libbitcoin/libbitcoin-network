@@ -46,6 +46,7 @@ settings::settings() NOEXCEPT
     invalid_services(176),
     enable_address(false),
     enable_address_v2(false),
+    enable_witness_tx(false),
     enable_compact(false),
     enable_alert(false),
     enable_reject(false),
