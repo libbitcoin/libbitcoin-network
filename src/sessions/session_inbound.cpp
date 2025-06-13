@@ -213,6 +213,10 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
     const auto reject = settings().enable_reject;
     const auto address_v2 = settings().enable_address_v2;
 
+    // protocol_version_70016 sends and receives send_address_v2 even though
+    // inbound connections do not accept addresses. There is no message to
+    // disable address broadcasting, so this is just allowed to upgrade.
+
     // Address v2 can be disabled, independent of version.
     if (is_configured(messages::level::bip155) && address_v2)
         channel->attach<protocol_version_70016>(self, minimum_services,
@@ -248,7 +252,42 @@ void session_inbound::handle_channel_start(const code&,
 void session_inbound::attach_protocols(
     const channel::ptr& channel) NOEXCEPT
 {
-    session::attach_protocols(channel);
+    BC_ASSERT_MSG(channel->stranded(), "channel strand");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
+
+    const auto self = shared_from_this();
+
+    // Alert is deprecated, independent of version.
+    if (channel->is_negotiated(messages::level::alert_message) &&
+        settings().enable_alert)
+        channel->attach<protocol_alert_311>(self)->start();
+
+    // Reject is deprecated, independent of version.
+    if (channel->is_negotiated(messages::level::bip61) &&
+        settings().enable_reject)
+        channel->attach<protocol_reject_70002>(self)->start();
+
+    if (channel->is_negotiated(messages::level::bip31))
+        channel->attach<protocol_ping_60001>(self)->start();
+    else if (channel->is_negotiated(messages::level::version_message))
+        channel->attach<protocol_ping_106>(self)->start();
+
+    // Attach is overridden to disable inbound address protocols.
+
+    if (settings().enable_address_v2)
+    {
+        ////// Sending address v2 is enabled in handshake.
+        ////if (channel->send_address_v2())
+        ////    channel->attach<protocol_address_out_70016>(self)->start();
+    }
+
+    if (settings().enable_address)
+    {
+        if (channel->is_negotiated(messages::level::getaddr_message))
+            channel->attach<protocol_address_out_209>(self)->start();
+        ////else if (channel->is_negotiated(messages::level::version_message))
+        ////    channel->attach<protocol_address_out_106>(self)->start();
+    }
 }
 
 void session_inbound::handle_channel_stop(const code& LOG_ONLY(ec),
