@@ -163,15 +163,13 @@ bool protocol_seed_209::handle_receive_address(const code& ec,
     const auto filtered = filter(message->addresses);
     const auto end_size = filtered->addresses.size();
 
-    save(filtered,
-        BIND(handle_save_addresses, _1, _2, end_size, start_size));
+    save(filtered, BIND(handle_save_addresses, _1, _2, end_size, start_size));
 
     return true;
 }
 
 void protocol_seed_209::handle_save_addresses(const code& ec,
-    size_t LOG_ONLY(accepted), size_t LOG_ONLY(filtered),
-    size_t start_size) NOEXCEPT
+    size_t LOG_ONLY(accepted), size_t end_size, size_t start_size) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_seed_209");
 
@@ -182,7 +180,7 @@ void protocol_seed_209::handle_save_addresses(const code& ec,
     if (ec)
         stop(ec);
 
-    LOGN("Accepted (" << start_size << ">" << filtered << ">" << accepted
+    LOGN("Accepted (" << start_size << ">" << end_size << ">" << accepted
         << ") addresses from seed [" << authority() << "].");
 
     // Multiple address messages are allowed, but do not delay session.

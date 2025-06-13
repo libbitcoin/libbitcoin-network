@@ -142,8 +142,7 @@ bool protocol_address_in_209::handle_receive_address(const code& ec,
     const auto end_size = filtered->addresses.size();
 
     // This allows previously-rejected addresses.
-    save(filtered,
-        BIND(handle_save_address, _1, _2, end_size, start_size));
+    save(filtered, BIND(handle_save_address, _1, _2, end_size, start_size));
 
     return true;
 }
