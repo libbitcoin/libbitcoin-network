@@ -341,7 +341,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     const auto deviation = to_deviation(message->timestamp);
     if (is_disallowed(deviation))
     {
-        LOGR("Timestamp out of range (" << deviation.count() << ") minutes "
+        LOGR("Peer time skewed by (" << deviation.count() << ") minutes "
             "for [" << authority() << "].");
 
         rejection(error::peer_timestamp);
