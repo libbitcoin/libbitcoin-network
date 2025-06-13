@@ -19,6 +19,7 @@
 #include <bitcoin/network/protocols/protocol_version_106.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <memory>
 #include <utility>
 #include <bitcoin/system.hpp>
@@ -39,9 +40,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 using namespace system;
 using namespace messages;
 using namespace std::placeholders;
-
-// Drop peer it its clock deviates more than 2 hours from own clock.
-constexpr auto allowed_timestamp_deviation = hours{ 2 };
 
 // Require the configured minimum protocol and services by default.
 protocol_version_106::protocol_version_106(const session::ptr& session,
@@ -278,13 +276,19 @@ bool protocol_version_106::handle_receive_acknowledge(const code& ec,
 // ----------------------------------------------------------------------------
 
 // private
-bool protocol_version_106::is_disallowed_deviation(
-    uint64_t timestamp) NOEXCEPT
+// Negative if the peer timestamp is behind our clock.positive otherwise.
+minutes protocol_version_106::to_deviation(uint64_t timestamp) NOEXCEPT
 {
     const auto now = wall_clock::now();
     const auto time = wall_clock::from_time_t(timestamp);
-    return time < (now - allowed_timestamp_deviation)
-        || time > (now + allowed_timestamp_deviation);
+    return std::chrono::duration_cast<minutes>(time - now);
+}
+
+// private
+bool protocol_version_106::is_disallowed(minutes deviation) NOEXCEPT
+{
+    constexpr uint32_t allowed_deviation_minutes = 2 * 60;
+    return system::absolute(deviation.count()) > allowed_deviation_minutes;
 }
 
 bool protocol_version_106::handle_receive_version(const code& ec,
@@ -334,13 +338,14 @@ bool protocol_version_106::handle_receive_version(const code& ec,
         return false;
     }
 
-    if (is_disallowed_deviation(message->timestamp))
+    const auto deviation = to_deviation(message->timestamp);
+    if (is_disallowed(deviation))
     {
-        LOGR("Timestamp out of range (" << message->timestamp << ") "
+        LOGR("Timestamp out of range (" << deviation.count() << ") minutes "
             "for [" << authority() << "].");
 
-        ////rejection(error::peer_timestamp);
-        ////return false;
+        rejection(error::peer_timestamp);
+        return false;
     }
 
     const auto version = std::min(message->value, maximum_version_);
