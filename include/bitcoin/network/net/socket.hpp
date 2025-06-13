@@ -103,12 +103,12 @@ public:
 
 protected:
     // These are thread safe.
-    const config::address address_;
-    std::atomic_bool stopped_{};
     asio::strand strand_;
+    std::atomic_bool stopped_{};
 
     // These are protected by strand (see also handle_accept).
     asio::socket socket_;
+    config::address address_;
     config::authority authority_{};
 
 private:

@@ -50,9 +50,9 @@ socket::socket(const logger& log, asio::io_context& service) NOEXCEPT
 // authority_.port() nonzero implies outbound connection.
 socket::socket(const logger& log, asio::io_context& service,
     const config::address& address) NOEXCEPT
-  : address_(address),
-    strand_(service.get_executor()),
+  : strand_(service.get_executor()),
     socket_(strand_),
+    address_(address),
     reporter(log),
     tracker<socket>(log)
 {
@@ -228,8 +228,10 @@ void socket::handle_accept(const error::boost_code& ec,
 {
     // This is running in the acceptor (not socket) execution context.
     // socket_ and authority_ are not guarded here, see comments on accept.
+    // address_ remains defaulted for inbound (accepted) connections.
 
-    if (!ec) authority_ = { socket_.remote_endpoint() };
+    if (!ec)
+        authority_ = { socket_.remote_endpoint() };
 
     if (error::asio_is_canceled(ec))
     {
@@ -255,6 +257,10 @@ void socket::handle_connect(const error::boost_code& ec,
     BC_ASSERT_MSG(stranded(), "strand");
 
     authority_ = peer;
+
+    // Outgoing connection requires address_ for .inbound() resolution.
+    if (is_zero(address_.port()))
+        address_ = config::endpoint{ peer }.to_address();
 
     if (error::asio_is_canceled(ec))
     {
