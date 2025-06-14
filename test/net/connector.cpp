@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address_suspended__servic
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         // DNS resolve failure (race), timeout includes a socket.
-        instance->connect(config::address{ config::endpoint{ "42.42.42.42:42" }.to_address() },
+        instance->connect(config::endpoint{ "42.42.42.42:42" },
             [&](const code& ec, const socket::ptr& socket) NOEXCEPT
             {
                 result &= (ec == error::service_suspended);
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(connector__connect_address__bogus_address__operation_timeou
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         // DNS resolve failure (race), timeout includes a socket.
-        instance->connect(config::address{ config::endpoint{ "42.42.42.42:42" }.to_address() },
+        instance->connect(config::endpoint{ "42.42.42.42:42" },
             [&](const code& ec, const socket::ptr& socket) NOEXCEPT
             {
                 result &= (ec == error::operation_timeout);

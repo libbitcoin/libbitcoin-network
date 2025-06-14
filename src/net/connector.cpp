@@ -93,7 +93,7 @@ void connector::connect(const authority& host,
 void connector::connect(const endpoint& host,
     socket_handler&& handler) NOEXCEPT
 {
-    start(host.host(), host.port(), host.to_address(), std::move(handler));
+    start(host.host(), host.port(), host, std::move(handler));
 }
 
 // protected
