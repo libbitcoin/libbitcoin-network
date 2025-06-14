@@ -260,7 +260,7 @@ void socket::handle_connect(const error::boost_code& ec,
 
     // Outgoing connection requires address_ for .inbound() resolution.
     if (is_zero(address_.port()))
-        address_ = config::endpoint{ peer }.to_address();
+        address_ = { peer };
 
     if (error::asio_is_canceled(ec))
     {

@@ -21,6 +21,7 @@
 #include <sstream>
 #include <utility>
 #include <bitcoin/network/config/authority.hpp>
+#include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>
 #include <bitcoin/system.hpp>
 
@@ -57,17 +58,22 @@ address::address(const messages::address_item::cptr& message) NOEXCEPT
 {
 }
 
+address::address(const asio::endpoint& uri) NOEXCEPT
+  : address(endpoint{ uri })
+{
+}
+
 // Methods.
 // ----------------------------------------------------------------------------
 
 asio::address address::to_ip() const NOEXCEPT
 {
-    return config::denormalize(from_address(address_->ip));
+    return system::config::denormalize(from_address(address_->ip));
 }
 
 std::string address::to_host() const NOEXCEPT
 {
-    return config::to_host(to_ip());
+    return system::config::to_host(to_ip());
 }
 
 std::string address::to_string() const NOEXCEPT

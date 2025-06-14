@@ -21,7 +21,7 @@
 
 BOOST_AUTO_TEST_SUITE(authority_tests)
 
-using namespace network::config;
+using namespace config;
 using namespace boost::program_options;
 
 // tools.ietf.org/html/rfc4291#section-2.2
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(authority__ip_port_cidr__ipv4_authority__expected)
     stream << BC_AUTHORITY_IPV4_ADDRESS ":" << expected_port << "/" << expected_cidr;
     const authority host(stream.str());
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
-    BOOST_REQUIRE_EQUAL(host.ip(), from_host(BC_AUTHORITY_IPV4_ADDRESS));
+    BOOST_REQUIRE_EQUAL(host.ip(), system::config::from_host(BC_AUTHORITY_IPV4_ADDRESS));
     BOOST_REQUIRE_EQUAL(host.cidr(), expected_cidr);
 }
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(authority__ip_port_cidr__ipv6_authority__expected)
     stream << "[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]:" << expected_port << "/" << expected_cidr;
     const authority host(stream.str());
     BOOST_REQUIRE_EQUAL(host.port(), expected_port);
-    BOOST_REQUIRE_EQUAL(host.ip(), from_host("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]"));
+    BOOST_REQUIRE_EQUAL(host.ip(), system::config::from_host("[" BC_AUTHORITY_IPV6_COMPRESSED_ADDRESS "]"));
     BOOST_REQUIRE_EQUAL(host.cidr(), expected_cidr);
 }
 
@@ -473,32 +473,6 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item2__parameters__expected)
 
     const authority host(from_address(expected.ip), expected.port);
     BOOST_REQUIRE(net_equal(host.to_address_item(expected.timestamp, expected.services), expected));
-}
-
-// bool
-
-BOOST_AUTO_TEST_CASE(authority__bool__default__false)
-{
-    const authority host{};
-    BOOST_REQUIRE(!host);
-}
-
-BOOST_AUTO_TEST_CASE(authority__bool__unspecified__false)
-{
-    const authority host{ from_address(messages::unspecified_ip_address), 42 };
-    BOOST_REQUIRE(!host);
-}
-
-BOOST_AUTO_TEST_CASE(authority__bool__unspecified_ip_port__false)
-{
-    const authority host{ from_address(test_ipv6_address), messages::unspecified_ip_port };
-    BOOST_REQUIRE(!host);
-}
-
-BOOST_AUTO_TEST_CASE(authority__bool__loopback_nonzero_port__true)
-{
-    const authority host{ from_address(messages::loopback_ip_address), 42 };
-    BOOST_REQUIRE(host);
 }
 
 // equality

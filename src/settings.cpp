@@ -126,7 +126,9 @@ void settings::initialize() NOEXCEPT
     BC_ASSERT_MSG(friends.empty(), "friends not empty");
 
     // Dynamic conversion of peers is O(N^2), so set on initialize.
-    friends = system::projection<config::authorities>(peers);
+    // This converts endpoints to addresses, so will produce the default
+    // address for any hosts that are DNS names (i.e. not IP addresses).
+    friends = system::projection<network::config::authorities>(peers);
 }
 
 bool settings::witness_node() const NOEXCEPT

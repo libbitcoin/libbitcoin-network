@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(settings__first_self__empty_selfs__default)
 {
     settings instance{};
     instance.selfs.clear();
-    BOOST_REQUIRE(!instance.first_self());
+    BOOST_REQUIRE(instance.first_self() == config::authority{});
 }
 
 BOOST_AUTO_TEST_CASE(settings__first_self__multiple_selfs__front)

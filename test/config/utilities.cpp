@@ -19,6 +19,7 @@
 #include "../test.hpp"
 
 using namespace config;
+using namespace system::config;
 using namespace boost::program_options;
 
 BOOST_AUTO_TEST_SUITE(utilities_tests)

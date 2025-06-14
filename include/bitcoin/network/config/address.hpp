@@ -46,6 +46,9 @@ public:
     address(const messages::address_item& item) NOEXCEPT;
     address(const messages::address_item::cptr& message) NOEXCEPT;
 
+    /// If endpoint is a DNS name (not numeric) default address is returned.
+    address(const asio::endpoint& uri) NOEXCEPT;
+
     // Methods.
     // ------------------------------------------------------------------------
     // All values are denormalized (IPv6 or IPv4).
