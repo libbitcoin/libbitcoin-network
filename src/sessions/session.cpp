@@ -310,7 +310,7 @@ void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
 
     if (settings().enable_address)
     {
-        if (channel->is_negotiated(messages::level::getaddr_message))
+        if (channel->is_negotiated(messages::level::get_address_message))
         {
             channel->attach<protocol_address_in_209>(self)->start();
             channel->attach<protocol_address_out_209>(self)->start();

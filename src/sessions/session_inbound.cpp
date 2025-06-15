@@ -283,7 +283,7 @@ void session_inbound::attach_protocols(
 
     if (settings().enable_address)
     {
-        if (channel->is_negotiated(messages::level::getaddr_message))
+        if (channel->is_negotiated(messages::level::get_address_message))
             channel->attach<protocol_address_out_209>(self)->start();
         ////else if (channel->is_negotiated(messages::level::version_message))
         ////    channel->attach<protocol_address_out_106>(self)->start();

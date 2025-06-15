@@ -254,7 +254,7 @@ void session_seed::attach_protocols(const channel::ptr& channel) NOEXCEPT
         channel->attach<protocol_seed_209>(self)->start();
         ////channel->attach<protocol_seed_70016>(self)->start();
     }
-    else if (channel->is_negotiated(messages::level::getaddr_message))
+    else if (channel->is_negotiated(messages::level::get_address_message))
     {
         channel->attach<protocol_seed_209>(self)->start();
     }

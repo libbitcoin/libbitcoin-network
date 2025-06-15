@@ -41,17 +41,17 @@ namespace messages {
 
 // libbitcoin-network
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// version      v1        106
-// verack       v1        106
-// ping         v1        106
-// addr         v1        106
-// addr         v1      31402           timestamp field added to addr message
+// version      v1        106   N/A
+// verack       v1        106   N/A
+// ping         v1        106   N/A
+// addr         v1        106   N/A
+// addr         v1      31402   N/A     timestamp field added to addr message
 // ----------------------------------------------------------------------------
-// getaddr      v1        209
-// checkorder   --        209           obsolete
-// reply        --        209           obsolete
-// submitorder  --        209           obsolete
-// alert        v4        311           disabled by default, deprecated
+// getaddr      v1        209   N/A
+// checkorder   --        209   N/A     obsolete
+// reply        --        209   N/A     obsolete
+// submitorder  --        209   N/A     obsolete
+// alert        v4        311   N/A     disabled by default, deprecated
 // ----------------------------------------------------------------------------
 // ping         v2      60001   BIP031  added nonce field
 // pong         v1      60001   BIP031
@@ -63,14 +63,14 @@ namespace messages {
 
 // libbitcoin-node
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// getblocks    v1        106
-// inv          v1        106
-// getdata      v1        106
-// block        v1        106
-// tx           v1        106
+// getblocks    v1        106   N/A
+// inv          v1        106   N/A
+// getdata      v1        106   N/A
+// block        v1        106   N/A
+// tx           v1        106   N/A
 // ----------------------------------------------------------------------------
-// getheaders   v3      31800           "headers first" added in v4
-// headers      v3      31800           "headers first" added in v4
+// getheaders   v3      31800   N/A     "headers first" added in v4
+// headers      v3      31800   N/A     "headers first" added in v4
 // mempool      v3      60002   BIP035
 // ----------------------------------------------------------------------------
 // merkleblock  --      70001   BIP037  deprecated (bip111)
@@ -78,10 +78,10 @@ namespace messages {
 // filterload   --      70001   BIP037  deprecated (bip111)
 // filteradd    --      70001   BIP037  deprecated (bip111)
 // filterclear  --      70001   BIP037  deprecated (bip111)
-// notfound     v2      70001           added at the same version as bip37
-// version      v2      70001           added (optional) relay field in bip37
+// notfound     v2      70001   N/A     added at the same version as bip37
+// version      v2      70001   N/A     added (optional) relay field in bip37
 // ----------------------------------------------------------------------------
-// mempool      v3      70002           allow multiple inv reply (undocumented)
+// mempool      v3      70002   N/A     allow multiple inv reply
 // sendheaders  v3      70012   BIP130  post-handshake, single
 // feefilter    v3      70013   BIP133
 // ----------------------------------------------------------------------------
@@ -118,13 +118,13 @@ enum level: uint32_t
 
     /// Added getaddr message, also version.start_height and heading.checksum.
     /// Checksum was added to version after a delay, breaking earlier clients.
-    getaddr_message = 209,
+    get_address_message = 209,
 
     /// Added alert message.
     alert_message = 311,
 
     /// Added address.timestamp field to addresses.
-    address_time = 31402,
+    address_timestamp = 31402,
 
     /// This preceded the BIP system.
     headers_protocol = 31800,
@@ -152,8 +152,8 @@ enum level: uint32_t
     /////// node_utxo service bit (draft)
     ////bip64 = 70004,
 
-    /////// node_bloom service bit
-    ////bip111 = 70011,
+    /// node_bloom service bit (disables bloom filtering if not set)
+    bip111 = 70011,
 
     /// send_headers
     bip130 = 70012,
@@ -173,13 +173,13 @@ enum level: uint32_t
     /// wtxidrelay
     bip339 = 70016,
 
-    /////// erlay
-    ////bip330 = 70016,
+    /// erlay [not supported]
+    bip330 = 70016,
 
     /// -----------------------------------------------------------------------
 
     /// We require at least this of peers (for current address structure).
-    minimum_protocol = address_time,
+    minimum_protocol = address_timestamp,
 
     /// We support at most this internally (bound to settings default).
     maximum_protocol = bip130
