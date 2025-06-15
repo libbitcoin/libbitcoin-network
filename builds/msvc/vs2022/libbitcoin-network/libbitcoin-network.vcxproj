@@ -255,6 +255,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\compact_block.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\compact_block_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\compact_transactions.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\feature.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\identifier.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\level.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\enums\magic_numbers.hpp" />
