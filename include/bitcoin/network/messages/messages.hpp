@@ -33,6 +33,7 @@
 #include <bitcoin/network/messages/compact_block.hpp>
 #include <bitcoin/network/messages/compact_block_item.hpp>
 #include <bitcoin/network/messages/compact_transactions.hpp>
+#include <bitcoin/network/messages/enums/feature.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
 #include <bitcoin/network/messages/enums/magic_numbers.hpp>

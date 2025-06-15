@@ -92,6 +92,7 @@
 #include <bitcoin/network/messages/version.hpp>
 #include <bitcoin/network/messages/version_acknowledge.hpp>
 #include <bitcoin/network/messages/witness_tx_id_relay.hpp>
+#include <bitcoin/network/messages/enums/feature.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
 #include <bitcoin/network/messages/enums/level.hpp>
 #include <bitcoin/network/messages/enums/magic_numbers.hpp>

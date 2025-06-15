@@ -52,7 +52,7 @@ address address::deserialize(uint32_t version, system::reader& source) NOEXCEPT
     if (version < version_minimum || version > version_maximum)
         source.invalidate();
 
-    const auto with_timestamp = (version >= level::address_time);
+    const auto with_timestamp = (version >= level::address_timestamp);
     const auto size = source.read_size(max_address);
     address_items addresses;
     addresses.reserve(size);
@@ -78,7 +78,7 @@ void address::serialize(uint32_t version, writer& sink) const NOEXCEPT
     BC_DEBUG_ONLY(const auto bytes = size(version);)
     BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
         
-    const auto with_timestamp = version >= level::address_time;
+    const auto with_timestamp = version >= level::address_timestamp;
     sink.write_variable(addresses.size());
 
     for (const auto& net: addresses)
@@ -89,7 +89,7 @@ void address::serialize(uint32_t version, writer& sink) const NOEXCEPT
 
 size_t address::size(uint32_t version) const NOEXCEPT
 {
-    const auto with_timestamp = (version >= level::address_time);
+    const auto with_timestamp = (version >= level::address_timestamp);
     return variable_size(addresses.size()) +
         (addresses.size() * address_item::size(version, with_timestamp));
 }
