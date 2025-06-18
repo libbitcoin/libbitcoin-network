@@ -339,7 +339,6 @@ include_bitcoin_network_messages_HEADERS = \
 
 include_bitcoin_network_messages_enumsdir = ${includedir}/bitcoin/network/messages/enums
 include_bitcoin_network_messages_enums_HEADERS = \
-    include/bitcoin/network/messages/enums/feature.hpp \
     include/bitcoin/network/messages/enums/identifier.hpp \
     include/bitcoin/network/messages/enums/level.hpp \
     include/bitcoin/network/messages/enums/magic_numbers.hpp \
