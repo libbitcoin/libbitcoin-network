@@ -54,8 +54,9 @@
 #include <bitcoin/network/messages/send_compact.hpp>
 #include <bitcoin/network/messages/send_headers.hpp>
 #include <bitcoin/network/messages/transaction.hpp>
-#include <bitcoin/network/messages/version_acknowledge.hpp>
 #include <bitcoin/network/messages/version.hpp>
+#include <bitcoin/network/messages/version_acknowledge.hpp>
+#include <bitcoin/network/messages/witness_tx_id_relay.hpp>
 
 namespace libbitcoin {
 namespace network {
