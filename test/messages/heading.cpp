@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(heading__factory2__default_hash__expected)
     constexpr uint32_t magic = 42;
     constexpr auto command = "pong";
     const system::data_chunk payload{};
-    const auto instance = heading::factory(magic, command, payload, {});
+    const auto instance = heading::factory(magic, command, payload);
 
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);
@@ -308,13 +308,12 @@ BOOST_AUTO_TEST_CASE(heading__factory2__default_hash__expected)
     BOOST_REQUIRE(instance.id() == identifier::pong);
 }
 
-BOOST_AUTO_TEST_CASE(heading__factory2__non_default_hash__expected)
+BOOST_AUTO_TEST_CASE(heading__factory2__empty_hash__expected)
 {
     constexpr uint32_t magic = 42;
     constexpr auto command = "pong";
     const system::data_chunk payload{};
-    const auto hash = system::to_shared(empty_hash);
-    const auto instance = heading::factory(magic, command, payload, hash);
+    const auto instance = heading::factory(magic, command, payload.size(), empty_hash);
 
     BOOST_REQUIRE_EQUAL(instance.magic, magic);
     BOOST_REQUIRE_EQUAL(instance.command, command);

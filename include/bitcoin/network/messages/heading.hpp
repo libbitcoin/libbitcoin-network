@@ -46,8 +46,7 @@ struct BCT_API heading
     static heading factory(uint32_t magic, const std::string& command,
         const system::data_slice& payload) NOEXCEPT;
     static heading factory(uint32_t magic, const std::string& command,
-        const system::data_slice& payload,
-        const system::hash_cptr& payload_hash) NOEXCEPT;
+        size_t payload_size, const system::hash_digest& payload_hash) NOEXCEPT;
 
     // Heading does not use version.
     static constexpr size_t size() NOEXCEPT
