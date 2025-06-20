@@ -42,8 +42,6 @@ template <typename Message>
 typename Message::cptr deserialize(const system::data_chunk& body,
     uint32_t version) NOEXCEPT
 {
-    // TODO: build witness into feature w/magic and negotiated version.
-    // TODO: have deserialize use data for hash pregeneration as applicable.
     return Message::deserialize(version, body);
 }
 
@@ -53,23 +51,25 @@ template <typename Message>
 system::chunk_ptr serialize(const Message& message, uint32_t magic,
     uint32_t version) NOEXCEPT
 {
+    using namespace system;
     const auto size = heading::size() + message.size(version);
-    const auto data = std::make_shared<system::data_chunk>(size);
-    const auto body_start = std::next(data->begin(), heading::size());
-    const system::data_slab body(body_start, data->end());
-
-    ////// Transaction is the only message that can use the identity hash.
-    ////// TODO: Hash must match witness serialization of the transaction object.
-    ////system::hash_cptr hash{};
-    ////if constexpr (is_same_type<Message, transaction>) { hash = message.hash; }
-
-    // TODO: build witness into feature w/magic and negotiated version.
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    const auto data = std::make_shared<data_chunk>(size);
+    BC_POP_WARNING()
+    const auto start = std::next(data->begin(), heading::size());
+    const data_slab body(start, data->end());
     if (!message.serialize(version, body) ||
-        !heading::factory(magic, Message::command, body /*, hash*/).serialize(*data))
+        !heading::factory(magic, Message::command, body).serialize(*data))
         return {};
 
     return data;
 }
+
+// Specialize for tx to eliminate hash computation on non-witness writes.
+// Transaction is the only message that can reuse identity hash for heading.
+template <>
+system::chunk_ptr serialize<transaction>(const transaction& message,
+    uint32_t magic, uint32_t version) NOEXCEPT;
 
 } // namespace messages
 } // namespace network

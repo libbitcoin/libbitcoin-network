@@ -149,6 +149,12 @@ size_t get_blocks::size(uint32_t) const NOEXCEPT
             (hash_size * start_hashes.size());
 }
 
+// Used to simplify logging message identity.
+const hash_digest& get_blocks::start_hash() const NOEXCEPT
+{
+    return start_hashes.empty() ? null_hash : start_hashes.front();
+}
+
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

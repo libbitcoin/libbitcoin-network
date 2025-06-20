@@ -71,14 +71,14 @@ protected:
     /// Messaging.
     /// -----------------------------------------------------------------------
 
-    /// Bind a method in base or derived class (use BIND#).
+    /// Bind a method in base or derived class (use BIND).
     template <class Derived, typename Method, typename... Args>
     auto bind(Method&& method, Args&&... args) NOEXCEPT
     {
         return BIND_SHARED(method, args);
     }
 
-    /// Post a method in base or derived class to channel strand (use POST#).
+    /// Post a method in base or derived class to channel strand (use POST).
     template <class Derived, typename Method, typename... Args>
     auto post(Method&& method, Args&&... args) NOEXCEPT
     {
@@ -86,7 +86,7 @@ protected:
             BIND_SHARED(method, args));
     }
 
-    /// Send a message instance to peer (use SEND#).
+    /// Send a message instance to peer (use SEND).
     template <class Derived, class Message, typename Method, typename... Args>
     void send(const Message& message, Method&& method, Args&&... args) NOEXCEPT
     {
@@ -94,7 +94,7 @@ protected:
         channel_->send<Message>(message, BIND_SHARED(method, args));
     }
 
-    /// Subscribe to channel messages by type (use SUBSCRIBE_CHANNEL#).
+    /// Subscribe to channel messages by type (use SUBSCRIBE_CHANNEL).
     /// Method is invoked with error::subscriber_stopped if already stopped.
     template <class Derived, class Message, typename Method, typename... Args>
     void subscribe_channel(Method&& method, Args&&... args) NOEXCEPT
@@ -103,7 +103,7 @@ protected:
         channel_->subscribe<Message>(BIND_SHARED(method, args));
     }
 
-    /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST#).
+    /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST).
     /// Method is invoked with error::subscriber_stopped if already stopped.
     template <class Derived, class Message, typename Method, typename... Args>
     void subscribe_broadcast(Method&& method, Args&&... args) NOEXCEPT

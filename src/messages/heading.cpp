@@ -54,8 +54,9 @@
 #include <bitcoin/network/messages/send_compact.hpp>
 #include <bitcoin/network/messages/send_headers.hpp>
 #include <bitcoin/network/messages/transaction.hpp>
-#include <bitcoin/network/messages/version_acknowledge.hpp>
 #include <bitcoin/network/messages/version.hpp>
+#include <bitcoin/network/messages/version_acknowledge.hpp>
+#include <bitcoin/network/messages/witness_tx_id_relay.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -100,25 +101,23 @@ std::string heading::get_command(const data_chunk& payload) NOEXCEPT
 heading heading::factory(uint32_t magic, const std::string& command,
     const data_slice& payload) NOEXCEPT
 {
-    return factory(magic, command, payload, {});
+    const auto size = payload.size();
+    return factory(magic, command, size, bitcoin_hash(size, payload.data()));
 }
 
 // static
 heading heading::factory(uint32_t magic, const std::string& command,
-    const data_slice& payload, const hash_cptr& payload_hash) NOEXCEPT
+    size_t payload_size, const hash_digest& payload_hash) NOEXCEPT
 {
-    // Payload is constrained to uint32_t by protocol.
-    const auto size = payload.size();
-    if (is_limited<uint32_t>(size))
+    if (is_limited<uint32_t>(payload_size))
         return {};
 
     return
     {
         magic,
         command,
-        possible_narrow_cast<uint32_t>(size),
-        network_checksum(payload_hash ? *payload_hash :
-            bitcoin_hash(payload.size(), payload.data()))
+        possible_narrow_cast<uint32_t>(payload_size),
+        network_checksum(payload_hash)
     };
 }
 
