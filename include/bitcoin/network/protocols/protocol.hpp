@@ -120,7 +120,16 @@ protected:
         session_->subscribe<Message>(bouncer, channel_->identifier());
     }
 
+    /// Unsubscribe to messages broadcasts by type (use UNSUBSCRIBE_BROADCAST).
+    template <class Derived>
+    void unsubscribe_broadcast() NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        session_->unsubscribe(channel_->identifier());
+    }
+
     /// Broadcast a message instance to peers (use BROADCAST).
+    /// Channel identifier allows recipient-sender to self-identify.
     template <class Message>
     void broadcast(const typename Message::cptr& message) NOEXCEPT
     {
@@ -233,6 +242,8 @@ private:
     subscribe_channel<CLASS, message>(&CLASS::method, __VA_ARGS__)
 #define SUBSCRIBE_BROADCAST(message, method, ...) \
     subscribe_broadcast<CLASS, message>(&CLASS::method, __VA_ARGS__)
+#define UNSUBSCRIBE_BROADCAST() \
+    unsubscribe_broadcast<CLASS>()
 #define BROADCAST(message, ptr) broadcast<message>(ptr)
 
 } // namespace network
