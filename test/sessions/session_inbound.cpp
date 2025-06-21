@@ -296,6 +296,18 @@ public:
     }
 };
 
+class mock_session_inbound_disabled_true
+  : public mock_session_inbound
+{
+public:
+    using mock_session_inbound::mock_session_inbound;
+
+    bool disabled() const NOEXCEPT override
+    {
+        return true;
+    }
+};
+
 template <class Acceptor = acceptor>
 class mock_p2p
   : public p2p
@@ -825,6 +837,59 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
 
     // Start the session (with one mocked inbound channel) using the network reference.
     auto session = std::make_shared<mock_session_inbound_channel_count_fail>(net, 1);
+    BOOST_REQUIRE(session->stopped());
+
+    std::promise<code> session_started;
+    boost::asio::post(net.strand(), [=, &session_started]() NOEXCEPT
+    {
+        // Will cause started to be set and acceptor created.
+        session->start([&](const code& ec) NOEXCEPT
+        {
+            session_started.set_value(ec);
+        });
+    });
+
+    // mock_acceptor_start_success.start returns success, so start_accept invokes accept.accept.
+    BOOST_REQUIRE_EQUAL(session_started.get_future().get(), error::success);
+    BOOST_REQUIRE_EQUAL(net.get_acceptor()->port(), set.binds.front().port());
+    BOOST_REQUIRE(!net.get_acceptor()->stopped());
+    BOOST_REQUIRE(!session->stopped());
+
+    std::promise<bool> stopped;
+    boost::asio::post(net.strand(), [=, &stopped]() NOEXCEPT
+    {
+        session->stop();
+        stopped.set_value(true);
+    });
+
+    BOOST_REQUIRE(stopped.get_future().get());
+    BOOST_REQUIRE(session->stopped());
+    BOOST_REQUIRE_EQUAL(session->start_accept_code(), error::success);
+    BOOST_REQUIRE(net.get_acceptor()->stopped());
+
+    // Not attached because accept never succeeded.
+    BOOST_REQUIRE(!session->attached_handshake());
+}
+
+
+BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_disabled__not_attached)
+{
+    const logger log{};
+    settings set(selection::mainnet);
+    set.inbound_connections = 1;
+    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
+    BOOST_REQUIRE_EQUAL(set.binds.size(), one);
+
+    std::promise<code> net_started;
+    net.start([&](const code& ec)
+    {
+        net_started.set_value(ec);
+    });
+
+    BOOST_REQUIRE_EQUAL(net_started.get_future().get(), error::success);
+
+    // Start the session (with one mocked inbound channel) using the network reference.
+    auto session = std::make_shared<mock_session_inbound_disabled_true>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
     std::promise<code> session_started;

@@ -147,6 +147,13 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
+    if (disabled())
+    {
+        LOGS("Dropping inbound connection (disabled).");
+        socket->stop();
+        return;
+    }
+
     // There was no error, so listen again without delay.
     start_accept(error::success, acceptor);
 
@@ -192,6 +199,11 @@ bool session_inbound::blacklisted(const config::address& address) const NOEXCEPT
 bool session_inbound::whitelisted(const config::address& address) const NOEXCEPT
 {
     return settings().whitelisted(address);
+}
+
+bool session_inbound::disabled() const NOEXCEPT
+{
+    return false;
 }
 
 // Completion sequence.
