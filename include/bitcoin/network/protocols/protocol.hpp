@@ -121,6 +121,7 @@ protected:
     }
 
     /// Unsubscribe to messages broadcasts by type (use UNSUBSCRIBE_BROADCAST).
+    /// Unsubscribes ALL subscribers using subscribe_broadcast for the channel.
     template <class Derived>
     void unsubscribe_broadcast() NOEXCEPT
     {
@@ -242,9 +243,8 @@ private:
     subscribe_channel<CLASS, message>(&CLASS::method, __VA_ARGS__)
 #define SUBSCRIBE_BROADCAST(message, method, ...) \
     subscribe_broadcast<CLASS, message>(&CLASS::method, __VA_ARGS__)
-#define UNSUBSCRIBE_BROADCAST() \
-    unsubscribe_broadcast<CLASS>()
 #define BROADCAST(message, ptr) broadcast<message>(ptr)
+#define UNSUBSCRIBE_BROADCAST() unsubscribe_broadcast<CLASS>()
 
 } // namespace network
 } // namespace libbitcoin
