@@ -52,7 +52,7 @@ enum service: uint64_t
     node_client_filters = system::bit_right<uint32_t>(6),
 
     /// Serves only the last 288 (2 day) blocks.
-    node_xnetwork_limited = system::bit_right<uint32_t>(10),
+    node_network_limited = system::bit_right<uint32_t>(10),
 
     /// The minimum supported capability.
     minimum_services = node_none,
