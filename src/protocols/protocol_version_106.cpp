@@ -338,7 +338,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     const auto deviation = to_deviation(message->timestamp);
     if (absolute(deviation.count()) > maximum_skew_minutes_)
     {
-        LOGR("Peer time skewed by (" << deviation.count() << ") minutes "
+        LOGR("Skewed time (" << deviation.count() << ") minutes "
             "for [" << authority() << "] " << message->user_agent);
 
         rejection(error::peer_timestamp);
