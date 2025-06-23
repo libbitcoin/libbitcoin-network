@@ -332,12 +332,12 @@ bool protocol_version_106::handle_receive_version(const code& ec,
         return false;
     }
 
-    // Many satoshi v27.1 and v27.2 peers have large negative deviations.
+    // Many satoshi v27.1 and v27.2 peers have large negative clock deviations.
     const auto deviation = to_deviation(message->timestamp);
     if (absolute(deviation.count()) > maximum_skew_minutes_)
     {
         LOGR("Peer time skewed by (" << deviation.count() << ") minutes "
-            "for [" << authority() << "].");
+            "for [" << authority() << "] " << peer_version()->user_agent);
 
         rejection(error::peer_timestamp);
         return false;
