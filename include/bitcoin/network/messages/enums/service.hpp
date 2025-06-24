@@ -54,6 +54,10 @@ enum service: uint64_t
     /// Serves only the last 288 (2 day) blocks.
     node_network_limited = system::bit_right<uint32_t>(10),
 
+    /// Independent of network protocol level.
+    /// Opportunistic encryption of p2p protocol (no intent to support).
+    node_encrypted_transport = system::bit_right<uint32_t>(11),
+
     /// The minimum supported capability.
     minimum_services = node_none,
 
