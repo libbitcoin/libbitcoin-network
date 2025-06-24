@@ -301,13 +301,14 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     }
 
     LOG_ONLY(const auto prefix = (inbound_ ? "Inbound" : "Outbound");)
-    LOGN(prefix << " [" << authority() << "] version (" << message->value << ") "
-        << message->user_agent);
+    LOGN(prefix << " [" << authority() << "] version ("
+        << message->value << ") " << message->user_agent);
 
     if (to_bool(message->services & invalid_services_))
     {
         LOGR("Unsupported services (" << message->services << ") by ["
-            << authority() << "] showing (" << outbound().services() << ").");
+            << authority() << "] showing (" << outbound().services() << ") "
+            << message->user_agent);
 
         rejection(error::peer_unsupported);
         return false;
@@ -317,7 +318,8 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     if ((message->services & minimum_services_) != minimum_services_)
     {
         LOGR("Insufficient services (" << message->services << ") by ["
-            << authority() << "] showing (" << outbound().services() << ").");
+            << authority() << "] showing (" << outbound().services() << ") "
+            << message->user_agent);
 
         rejection(error::peer_insufficient);
         return false;
@@ -326,7 +328,7 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     if (message->value < minimum_version_)
     {
         LOGP("Insufficient peer protocol version (" << message->value << ") "
-            "for [" << authority() << "].");
+            "for [" << authority() << "] " << message->user_agent);
 
         rejection(error::peer_insufficient);
         return false;
@@ -336,8 +338,8 @@ bool protocol_version_106::handle_receive_version(const code& ec,
     const auto deviation = to_deviation(message->timestamp);
     if (absolute(deviation.count()) > maximum_skew_minutes_)
     {
-        LOGR("Peer time skewed by (" << deviation.count() << ") minutes "
-            "for [" << authority() << "] " << peer_version()->user_agent);
+        LOGR("Skewed time (" << deviation.count() << ") minutes "
+            "for [" << authority() << "] " << message->user_agent);
 
         rejection(error::peer_timestamp);
         return false;

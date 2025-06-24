@@ -169,7 +169,7 @@ address protocol::selfs() const NOEXCEPT
 
     address message{};
     message.addresses.reserve(selfs.size());
-    for (auto& self: selfs)
+    for (const auto& self: selfs)
         message.addresses.push_back(self.to_address_item(time_now, services));
 
     return message;
