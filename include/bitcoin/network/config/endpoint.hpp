@@ -41,8 +41,8 @@ public:
     using system::config::endpoint::endpoint;
 
     /// If endpoint is a DNS name (not numeric) default address is returned.
-    operator const address() const NOEXCEPT;
-    operator const authority() const NOEXCEPT;
+    operator address() const NOEXCEPT;
+    operator authority() const NOEXCEPT;
 
     /// Equality considers all properties (scheme, host, port).
     /// Non-numeric and invalid endpoints will match the default address_item.

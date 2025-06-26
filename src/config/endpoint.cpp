@@ -47,12 +47,12 @@ messages::address_item endpoint::to_address_item() const NOEXCEPT
     return to_address();
 }
 
-endpoint::operator const address() const NOEXCEPT
+endpoint::operator address() const NOEXCEPT
 {
     return to_address();
 }
 
-endpoint::operator const authority() const NOEXCEPT
+endpoint::operator authority() const NOEXCEPT
 {
     return authority{ to_address() };
 }
