@@ -63,8 +63,8 @@ protected:
     /// The authority is not whitelisted by configuration (for non-empty list).
     virtual bool whitelisted(const config::address& address) const NOEXCEPT;
 
-    /// Inbound services are disabled (e.g. because node is not current).
-    virtual bool disabled() const NOEXCEPT;
+    /// Inbound services are enabled (e.g. because node is current).
+    virtual bool enabled() const NOEXCEPT;
 
 private:
     void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;

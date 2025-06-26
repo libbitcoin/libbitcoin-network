@@ -147,7 +147,7 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
-    if (disabled())
+    if (!enabled())
     {
         LOGS("Dropping inbound connection (disabled).");
         socket->stop();
@@ -201,9 +201,9 @@ bool session_inbound::whitelisted(const config::address& address) const NOEXCEPT
     return settings().whitelisted(address);
 }
 
-bool session_inbound::disabled() const NOEXCEPT
+bool session_inbound::enabled() const NOEXCEPT
 {
-    return false;
+    return true;
 }
 
 // Completion sequence.

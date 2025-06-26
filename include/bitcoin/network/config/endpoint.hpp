@@ -40,6 +40,9 @@ public:
 
     using system::config::endpoint::endpoint;
 
+    /// Operators.
+    /// -----------------------------------------------------------------------
+
     /// If endpoint is a DNS name (not numeric) default address is returned.
     operator const address() const NOEXCEPT;
     operator const authority() const NOEXCEPT;

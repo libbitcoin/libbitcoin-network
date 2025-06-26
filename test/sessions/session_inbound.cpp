@@ -302,9 +302,9 @@ class mock_session_inbound_disabled_true
 public:
     using mock_session_inbound::mock_session_inbound;
 
-    bool disabled() const NOEXCEPT override
+    bool enabled() const NOEXCEPT override
     {
-        return true;
+        return false;
     }
 };
 
