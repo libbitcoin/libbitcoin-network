@@ -141,6 +141,11 @@ bool channel::is_negotiated(messages::level level) const NOEXCEPT
     return negotiated_version() >= level;
 }
 
+bool channel::is_peer_service(messages::service service) const NOEXCEPT
+{
+    return to_bool(bit_and<uint64_t>(peer_version_->services, service));
+}
+
 size_t channel::start_height() const NOEXCEPT
 {
     return start_height_;
@@ -172,7 +177,7 @@ bool channel::is_handshaked() const NOEXCEPT
 version::cptr channel::peer_version() const NOEXCEPT
 {
     // peer_version_ defaults to nullptr, which implies not handshaked.
-    return is_handshaked() ? peer_version_ : system::to_shared<messages::version>();
+    return is_handshaked() ? peer_version_ : to_shared<messages::version>();
 }
 
 void channel::set_peer_version(const version::cptr& value) NOEXCEPT
