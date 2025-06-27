@@ -51,7 +51,7 @@ struct BCT_API compact_block
     void serialize(uint32_t version, system::writer& sink,
         bool witness=true) const NOEXCEPT;
 
-    size_t size(uint32_t version, bool witness) const NOEXCEPT;
+    size_t size(uint32_t version, bool witness=true) const NOEXCEPT;
 
     system::chain::header::cptr header_ptr;
     uint64_t nonce;
