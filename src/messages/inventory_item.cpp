@@ -107,6 +107,7 @@ bool inventory_item::is_block_type() const NOEXCEPT
 
 bool inventory_item::is_transaction_type() const NOEXCEPT
 {
+    // Only wtxid corresponds to a witness hash.
     return type == type_id::witness_tx
         || type == type_id::transaction
         || type == type_id::wtxid;

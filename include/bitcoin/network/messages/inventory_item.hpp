@@ -60,9 +60,6 @@ struct BCT_API inventory_item
     bool is_block_type() const NOEXCEPT;
     bool is_transaction_type() const NOEXCEPT;
 
-    /// Convert message types to witness types.
-    ////void to_witness() NOEXCEPT;
-
     type_id type;
     system::hash_digest hash;
 };
