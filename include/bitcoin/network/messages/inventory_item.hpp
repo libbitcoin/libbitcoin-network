@@ -34,17 +34,18 @@ struct BCT_API inventory_item
 
     enum class type_id : uint32_t
     {
-        error = 0,
+        error            = 0,
+        transaction      = 1,
+        block            = 2,
+        filtered         = 3,
+        compact          = 4,
+        wtxid            = 5,
 
-        transaction    = system::bit_right<uint32_t>(0),
-        block          = system::bit_right<uint32_t>(1),
-        filtered_block = block | transaction,
-        compact_block  = system::bit_right<uint32_t>(2),
-
-        witness        = system::bit_right<uint32_t>(30),
-        witness_tx     = witness | transaction,
-        witness_block  = witness | block,
-        reserved       = witness | filtered_block
+        witness          = system::bit_right<uint32_t>(30),
+        witness_tx       = witness | transaction,
+        witness_block    = witness | block,
+        witness_filtered = witness | filtered,
+        witness_compact  = witness | compact
     };
 
     static type_id to_type(uint32_t value) NOEXCEPT;
@@ -58,7 +59,6 @@ struct BCT_API inventory_item
 
     bool is_block_type() const NOEXCEPT;
     bool is_transaction_type() const NOEXCEPT;
-    bool is_witnessable_type() const NOEXCEPT;
 
     /// Convert message types to witness types.
     ////void to_witness() NOEXCEPT;

@@ -27,8 +27,6 @@ using namespace bc::network::messages;
 // to_string
 // is_block_type
 // is_transaction_type
-// is_witnessable_type
-// to_witness
 
 BOOST_AUTO_TEST_CASE(inventory_item__size__always__expected)
 {

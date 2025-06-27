@@ -47,16 +47,20 @@ std::string inventory_item::to_string(type_id inventory_type) NOEXCEPT
             return "transaction";
         case type_id::block:
             return "block";
-        case type_id::filtered_block:
-            return "filtered_block";
-        case type_id::compact_block:
-            return "compact_block";
+        case type_id::filtered:
+            return "filtered";
+        case type_id::compact:
+            return "compact";
+        case type_id::wtxid:
+            return "wtxid";
         case type_id::witness_tx:
             return "witness_tx";
         case type_id::witness_block:
             return "witness_block";
-        case type_id::reserved:
-            return "reserved";
+        case type_id::witness_filtered:
+            return "witness_filtered";
+        case type_id::witness_compact:
+            return "witness_compact";
         case type_id::error:
         default:
             return "error";
@@ -94,30 +98,19 @@ void inventory_item::serialize(uint32_t BC_DEBUG_ONLY(version),
 bool inventory_item::is_block_type() const NOEXCEPT
 {
     return type == type_id::witness_block
+        || type == type_id::witness_compact
+        || type == type_id::witness_filtered
         || type == type_id::block
-        || type == type_id::compact_block
-        || type == type_id::filtered_block;
+        || type == type_id::compact
+        || type == type_id::filtered;
 }
 
 bool inventory_item::is_transaction_type() const NOEXCEPT
 {
     return type == type_id::witness_tx
-        || type == type_id::transaction;
+        || type == type_id::transaction
+        || type == type_id::wtxid;
 }
-
-bool inventory_item::is_witnessable_type() const NOEXCEPT
-{
-    return type == type_id::block
-        || type == type_id::transaction;
-}
-
-////// Requires a non-const instance.
-////void inventory_item::to_witness() NOEXCEPT
-////{
-////    // TODO: allow class enumerations in bitwise functions.
-////    if (is_witnessable_type())
-////        type = to_type(bit_or(to_number(type), to_number(type_id::witness)));
-////}
 
 bool operator==(const inventory_item& left, const inventory_item& right) NOEXCEPT
 {
