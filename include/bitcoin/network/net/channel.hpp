@@ -97,8 +97,11 @@ public:
     /// Arbitrary identifier of the channel (for session subscribers).
     uint64_t identifier() const NOEXCEPT;
 
-    /// Message level is supported by confired protocol level.
+    /// Message level is supported by configured protocol level.
     bool is_negotiated(messages::level level) const NOEXCEPT;
+
+    /// Service level is advertised by peer.
+    bool is_peer_service(messages::service service) const NOEXCEPT;
 
     /// Start height for version message (set only before handshake).
     size_t start_height() const NOEXCEPT;
