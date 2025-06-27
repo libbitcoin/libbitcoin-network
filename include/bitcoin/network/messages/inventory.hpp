@@ -57,6 +57,7 @@ struct BCT_API inventory
 
     size_t size(uint32_t version) const NOEXCEPT;
 
+    // TODO: change filter/to_hashes to views to avoid copies.
     inventory_items filter(type_id type) const NOEXCEPT;
     system::hashes to_hashes(type_id type) const NOEXCEPT;
     size_t count(type_id type) const NOEXCEPT;
