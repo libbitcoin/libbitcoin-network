@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_INVENTORY_HPP
 
 #include <memory>
+#include <ranges>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
@@ -57,13 +58,24 @@ struct BCT_API inventory
 
     size_t size(uint32_t version) const NOEXCEPT;
 
-    // TODO: change filter/to_hashes to views to avoid copies.
+    auto view(type_id type) const NOEXCEPT;
     inventory_items filter(type_id type) const NOEXCEPT;
     system::hashes to_hashes(type_id type) const NOEXCEPT;
     size_t count(type_id type) const NOEXCEPT;
+    bool any(type_id type) const NOEXCEPT;
 
     inventory_items items;
 };
+
+inline auto inventory::view(type_id type) const NOEXCEPT
+{
+    const auto is_type = [type](const auto& item) NOEXCEPT
+    {
+        return item.type == type;
+    };
+
+    return std::ranges::filter_view(items, is_type);
+}
 
 } // namespace messages
 } // namespace network

@@ -156,6 +156,16 @@ size_t inventory::count(type_id type) const NOEXCEPT
     return std::count_if(items.begin(), items.end(), is_type);
 }
 
+bool inventory::any(type_id type) const NOEXCEPT
+{
+    const auto is_type = [type](const inventory_item& item)
+    {
+        return item.type == type;
+    };
+
+    return std::any_of(items.begin(), items.end(), is_type);
+}
+
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin
