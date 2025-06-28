@@ -166,6 +166,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
 void session_manual::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) NOEXCEPT
 {
+    // manual session requires peer has minimum_services.
     session::attach_handshake(channel, std::move(handler));
 }
 
