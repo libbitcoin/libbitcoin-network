@@ -216,7 +216,8 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
     BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
 
     // Inbound does not require any node services.
-    constexpr auto minimum_services = messages::service::node_none;
+    using namespace messages;
+    constexpr auto minimum_services = service::node_none;
     const auto maximum_services = settings().services_maximum;
 
     // Protocol must pause the channel after receiving version and verack.
@@ -230,27 +231,23 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
     // disable address broadcasting, so this is just allowed to upgrade.
 
     // Address v2 can be disabled, independent of version.
-    if (is_configured(messages::level::bip155) && address_v2)
+    if (is_configured(level::bip155) && address_v2)
         channel->attach<protocol_version_70016>(self, minimum_services,
-            maximum_services, relay, reject)
-                ->shake(std::move(handler));
+            maximum_services, relay, reject)->shake(std::move(handler));
 
     // Protocol versions are cumulative, but reject is deprecated.
-    else if (is_configured(messages::level::bip61) && reject)
+    else if (is_configured(level::bip61) && reject)
         channel->attach<protocol_version_70002>(self, minimum_services,
-            maximum_services, relay)
-                ->shake(std::move(handler));
+            maximum_services, relay)->shake(std::move(handler));
 
     // settings().enable_relay is always passed to the peer during handshake.
-    else if (is_configured(messages::level::bip37))
+    else if (is_configured(level::bip37))
         channel->attach<protocol_version_70001>(self, minimum_services,
-            maximum_services, relay)
-                ->shake(std::move(handler));
+            maximum_services, relay)->shake(std::move(handler));
 
-    else if (is_configured(messages::level::version_message))
+    else if (is_configured(level::version_message))
         channel->attach<protocol_version_106>(self, minimum_services,
-            maximum_services)
-                ->shake(std::move(handler));
+            maximum_services)->shake(std::move(handler));
 }
 
 void session_inbound::handle_channel_start(const code&,
@@ -267,21 +264,20 @@ void session_inbound::attach_protocols(
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
+    using namespace messages;
     const auto self = shared_from_this();
 
     // Alert is deprecated, independent of version.
-    if (channel->is_negotiated(messages::level::alert_message) &&
-        settings().enable_alert)
+    if (channel->is_negotiated(level::alert_message) && settings().enable_alert)
         channel->attach<protocol_alert_311>(self)->start();
 
     // Reject is deprecated, independent of version.
-    if (channel->is_negotiated(messages::level::bip61) &&
-        settings().enable_reject)
+    if (channel->is_negotiated(level::bip61) && settings().enable_reject)
         channel->attach<protocol_reject_70002>(self)->start();
 
-    if (channel->is_negotiated(messages::level::bip31))
+    if (channel->is_negotiated(level::bip31))
         channel->attach<protocol_ping_60001>(self)->start();
-    else if (channel->is_negotiated(messages::level::version_message))
+    else if (channel->is_negotiated(level::version_message))
         channel->attach<protocol_ping_106>(self)->start();
 
     // Attach is overridden to disable inbound address protocols.
@@ -295,9 +291,9 @@ void session_inbound::attach_protocols(
 
     if (settings().enable_address)
     {
-        if (channel->is_negotiated(messages::level::get_address_message))
+        if (channel->is_negotiated(level::get_address_message))
             channel->attach<protocol_address_out_209>(self)->start();
-        ////else if (channel->is_negotiated(messages::level::version_message))
+        ////else if (channel->is_negotiated(level::version_message))
         ////    channel->attach<protocol_address_out_106>(self)->start();
     }
 }

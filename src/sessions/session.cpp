@@ -149,26 +149,23 @@ void session::attach_handshake(const channel::ptr& channel,
     BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
 
     // Protocol must pause the channel after receiving version and verack.
+    using namespace messages;
     const auto self = shared_from_this();
 
     // Address v2 can be disabled, independent of version.
-    if (is_configured(messages::level::bip155) && settings().enable_address_v2)
-        channel->attach<protocol_version_70016>(self)
-            ->shake(std::move(handler));
+    if (is_configured(level::bip155) && settings().enable_address_v2)
+        channel->attach<protocol_version_70016>(self)->shake(std::move(handler));
 
     // Protocol versions are cumulative, but reject is deprecated.
-    else if (is_configured(messages::level::bip61) && settings().enable_reject)
-        channel->attach<protocol_version_70002>(self)
-            ->shake(std::move(handler));
+    else if (is_configured(level::bip61) && settings().enable_reject)
+        channel->attach<protocol_version_70002>(self)->shake(std::move(handler));
 
     // settings().enable_relay is always passed to the peer during handshake.
-    else if (is_configured(messages::level::bip37))
-        channel->attach<protocol_version_70001>(self)
-            ->shake(std::move(handler));
+    else if (is_configured(level::bip37))
+        channel->attach<protocol_version_70001>(self)->shake(std::move(handler));
 
-    else if (is_configured(messages::level::version_message))
-        channel->attach<protocol_version_106>(self)
-            ->shake(std::move(handler));
+    else if (is_configured(level::version_message))
+        channel->attach<protocol_version_106>(self)->shake(std::move(handler));
 }
 
 void session::handle_handshake(const code& ec, const channel::ptr& channel,
@@ -280,27 +277,26 @@ void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
+    using namespace messages;
     const auto self = shared_from_this();
 
     // Alert is deprecated, independent of version.
-    if (channel->is_negotiated(messages::level::alert_message) &&
-        settings().enable_alert)
+    if (channel->is_negotiated(level::alert_message) && settings().enable_alert)
         channel->attach<protocol_alert_311>(self)->start();
 
     // Reject is deprecated, independent of version.
-    if (channel->is_negotiated(messages::level::bip61) &&
-        settings().enable_reject)
+    if (channel->is_negotiated(level::bip61) && settings().enable_reject)
         channel->attach<protocol_reject_70002>(self)->start();
 
-    if (channel->is_negotiated(messages::level::bip31))
+    if (channel->is_negotiated(level::bip31))
         channel->attach<protocol_ping_60001>(self)->start();
-    else if (channel->is_negotiated(messages::level::version_message))
+    else if (channel->is_negotiated(level::version_message))
         channel->attach<protocol_ping_106>(self)->start();
 
     if (settings().enable_address_v2)
     {
         ////// Address v2 can be disabled, independent of version.
-        ////if (channel->is_negotiated(messages::level::bip155)
+        ////if (channel->is_negotiated(level::bip155)
         ////    channel->attach<protocol_address_in_70016>(self)->start();
     
         ////// Sending address v2 is enabled in handshake.
@@ -310,12 +306,12 @@ void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
 
     if (settings().enable_address)
     {
-        if (channel->is_negotiated(messages::level::get_address_message))
+        if (channel->is_negotiated(level::get_address_message))
         {
             channel->attach<protocol_address_in_209>(self)->start();
             channel->attach<protocol_address_out_209>(self)->start();
         }
-        else if (channel->is_negotiated(messages::level::version_message))
+        else if (channel->is_negotiated(level::version_message))
         {
             ////channel->attach<protocol_address_in_106>(self)->start();
             ////channel->attach<protocol_address_out_106>(self)->start();
