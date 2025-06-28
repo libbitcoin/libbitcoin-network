@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_GET_DATA_HPP
 
 #include <memory>
+#include <ranges>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/enums/identifier.hpp>
@@ -33,6 +34,7 @@ namespace messages {
 struct BCT_API get_data
 {
     typedef std::shared_ptr<const get_data> cptr;
+    typedef inventory_item::type_id type_id;
 
     static const identifier id;
     static const std::string command;
@@ -51,8 +53,20 @@ struct BCT_API get_data
 
     size_t size(uint32_t version) const NOEXCEPT;
 
+    auto view(type_id type) const NOEXCEPT;
+
     inventory_items items;
 };
+
+inline auto get_data::view(type_id type) const NOEXCEPT
+{
+    const auto is_type = [type](const auto& item) NOEXCEPT
+    {
+        return item.type == type;
+    };
+
+    return std::ranges::filter_view(items, is_type);
+}
 
 } // namespace messages
 } // namespace network
