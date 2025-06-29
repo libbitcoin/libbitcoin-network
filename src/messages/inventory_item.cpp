@@ -97,6 +97,7 @@ void inventory_item::serialize(uint32_t BC_DEBUG_ONLY(version),
 
 bool inventory_item::is_block_type() const NOEXCEPT
 {
+    // Filtered are bip37, effectively deprecated by bip111.
     return type == type_id::witness_block
         || type == type_id::witness_compact
         || type == type_id::witness_filtered

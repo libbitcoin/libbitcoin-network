@@ -63,6 +63,8 @@ struct BCT_API inventory
     system::hashes to_hashes(type_id type) const NOEXCEPT;
     size_t count(type_id type) const NOEXCEPT;
     bool any(type_id type) const NOEXCEPT;
+    bool any_transaction() const NOEXCEPT;
+    bool any_block() const NOEXCEPT;
 
     inventory_items items;
 };
