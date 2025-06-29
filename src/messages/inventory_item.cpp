@@ -114,6 +114,15 @@ bool inventory_item::is_transaction_type() const NOEXCEPT
         || type == type_id::wtxid;
 }
 
+bool inventory_item::is_witness_type() const NOEXCEPT
+{
+    // wtxid excluded
+    return type == type_id::witness_tx
+        || type == type_id::witness_block
+        || type == type_id::witness_compact
+        || type == type_id::witness_filtered;
+}
+
 bool operator==(const inventory_item& left, const inventory_item& right) NOEXCEPT
 {
     return left.type == right.type

@@ -160,6 +160,7 @@ void session::attach_handshake(const channel::ptr& channel,
     else if (is_configured(level::bip61) && settings().enable_reject)
         channel->attach<protocol_version_70002>(self)->shake(std::move(handler));
 
+    // TODO: consider relay may be dynamic (disabled until current).
     // settings().enable_relay is always passed to the peer during handshake.
     else if (is_configured(level::bip37))
         channel->attach<protocol_version_70001>(self)->shake(std::move(handler));

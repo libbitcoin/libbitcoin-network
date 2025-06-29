@@ -30,7 +30,7 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 
-/// see also inventory.
+// see also inventory.
 struct BCT_API get_data
 {
     typedef std::shared_ptr<const get_data> cptr;
@@ -53,7 +53,15 @@ struct BCT_API get_data
 
     size_t size(uint32_t version) const NOEXCEPT;
 
+    // inventory implements the same methods.
     auto view(type_id type) const NOEXCEPT;
+    inventory_items filter(type_id type) const NOEXCEPT;
+    system::hashes to_hashes(type_id type) const NOEXCEPT;
+    size_t count(type_id type) const NOEXCEPT;
+    bool any(type_id type) const NOEXCEPT;
+    bool any_transaction() const NOEXCEPT;
+    bool any_block() const NOEXCEPT;
+    bool any_witness() const NOEXCEPT;
 
     inventory_items items;
 };
