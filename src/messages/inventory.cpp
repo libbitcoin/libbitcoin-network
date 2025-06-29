@@ -166,6 +166,26 @@ bool inventory::any(type_id type) const NOEXCEPT
     return std::any_of(items.begin(), items.end(), is_type);
 }
 
+bool inventory::any_transaction() const NOEXCEPT
+{
+    const auto is_transaction = [](const inventory_item& item)
+    {
+        return item.is_transaction_type();
+    };
+
+    return std::any_of(items.begin(), items.end(), is_transaction);
+}
+
+bool inventory::any_block() const NOEXCEPT
+{
+    const auto is_block = [](const inventory_item& item)
+    {
+        return item.is_block_type();
+    };
+
+    return std::any_of(items.begin(), items.end(), is_block);
+}
+
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin
