@@ -92,17 +92,79 @@ size_t get_data::size(uint32_t version) const NOEXCEPT
         (items.size() * inventory_item::size(version));
 }
 
-////// TODO: add inventory factory witness parameter (once node is ready).
-////// Requires a non-const instance for this in-place efficiency.
-////void get_data::to_witness() NOEXCEPT
-////{
-////    const auto convert = [](inventory_item& item) NOEXCEPT
-////    {
-////        item.to_witness();
-////    };
-////
-////    std::for_each(items.begin(), items.end(), convert);
-////}
+inventory_items get_data::filter(type_id type) const NOEXCEPT
+{
+    inventory_items out;
+    out.reserve(count(type));
+
+    for (const auto& item: items)
+        if (item.type == type)
+            out.push_back(item);
+
+    return out;
+}
+
+hashes get_data::to_hashes(type_id type) const NOEXCEPT
+{
+    hashes out;
+    out.reserve(count(type));
+
+    for (const auto& item: items)
+        if (item.type == type)
+            out.push_back(item.hash);
+
+    return out;
+}
+
+size_t get_data::count(type_id type) const NOEXCEPT
+{
+    const auto is_type = [type](const inventory_item& item)
+    {
+        return item.type == type;
+    };
+
+    return std::count_if(items.begin(), items.end(), is_type);
+}
+
+bool get_data::any(type_id type) const NOEXCEPT
+{
+    const auto is_type = [type](const inventory_item& item)
+    {
+        return item.type == type;
+    };
+
+    return std::any_of(items.begin(), items.end(), is_type);
+}
+
+bool get_data::any_transaction() const NOEXCEPT
+{
+    const auto is_transaction = [](const inventory_item& item)
+    {
+        return item.is_transaction_type();
+    };
+
+    return std::any_of(items.begin(), items.end(), is_transaction);
+}
+
+bool get_data::any_block() const NOEXCEPT
+{
+    const auto is_block = [](const inventory_item& item)
+    {
+        return item.is_block_type();
+    };
+
+    return std::any_of(items.begin(), items.end(), is_block);
+}
+
+bool get_data::any_witness() const NOEXCEPT
+{
+    const auto is_witness = [](const inventory_item& item)
+    {
+        return item.is_witness_type();
+    };
+
+    return std::any_of(items.begin(), items.end(), is_witness);
+}
 
 } // namespace messages
 } // namespace network

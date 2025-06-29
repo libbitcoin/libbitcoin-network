@@ -186,6 +186,16 @@ bool inventory::any_block() const NOEXCEPT
     return std::any_of(items.begin(), items.end(), is_block);
 }
 
+bool inventory::any_witness() const NOEXCEPT
+{
+    const auto is_witness = [](const inventory_item& item)
+    {
+        return item.is_witness_type();
+    };
+
+    return std::any_of(items.begin(), items.end(), is_witness);
+}
+
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

@@ -34,6 +34,7 @@ struct BCT_API inventory_item
 
     enum class type_id : uint32_t
     {
+        // It's so dumb that these are not flags (so use class enum).
         error            = 0,
         transaction      = 1,
         block            = 2,
@@ -41,6 +42,7 @@ struct BCT_API inventory_item
         compact          = 4,
         wtxid            = 5,
 
+        // And yet this is a flag, but excludes wtxid.
         witness          = system::bit_right<uint32_t>(30),
         witness_tx       = witness | transaction,
         witness_block    = witness | block,
@@ -59,6 +61,7 @@ struct BCT_API inventory_item
 
     bool is_block_type() const NOEXCEPT;
     bool is_transaction_type() const NOEXCEPT;
+    bool is_witness_type() const NOEXCEPT;
 
     type_id type;
     system::hash_digest hash;
