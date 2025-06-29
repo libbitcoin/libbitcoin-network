@@ -306,6 +306,7 @@ void session_outbound::reclaim(const code& ec,
     // Reclaiming address implies socket must be stopped.
     socket->stop();
 
+    // protocol_violation is not reclaimed.
     if (stopped() || always_reclaim(ec) || maybe_reclaim(ec))
     {
         restore(socket->address(), BIND(handle_reclaim, _1));
