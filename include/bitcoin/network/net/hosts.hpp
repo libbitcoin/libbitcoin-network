@@ -120,6 +120,7 @@ private:
         BC_POP_WARNING()
     }
 
+    // Inlines local to translation unit.
     inline messages::address_item::cptr pop() NOEXCEPT;
     inline void push(const std::string& line) NOEXCEPT;
     inline bool is_reserved(const config::authority& host) const NOEXCEPT;

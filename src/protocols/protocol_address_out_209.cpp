@@ -87,7 +87,7 @@ bool protocol_address_out_209::handle_receive_get_address(const code& ec,
     fetch(BIND(handle_fetch_address, _1, _2));
     sent_ = true;
 
-    LOGP("Relay start [" << authority() << "].");
+    LOGP("Address relay start [" << authority() << "].");
     SUBSCRIBE_BROADCAST(address, handle_broadcast_address, _1, _2, _3);
     return true;
 }
