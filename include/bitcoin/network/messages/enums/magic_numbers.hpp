@@ -33,28 +33,21 @@ constexpr size_t max_address = 1'000;
 constexpr size_t max_bloom_filter_add = 520;
 constexpr size_t max_bloom_filter_functions = 50;
 constexpr size_t max_bloom_filter_load = 36'000;
+////constexpr size_t max_bloom_filter_hashes = 2'000;
+constexpr size_t max_client_filter_request = 1'000;
 constexpr size_t max_get_blocks = 500;
 constexpr size_t max_get_headers = 2'000;
 constexpr size_t max_inventory = 50'000;
 constexpr size_t heading_command_size = 12;
 
-// This is just a guess, required as memory guard.
+/// This is just a guess, required as memory guard.
 constexpr size_t max_reject_message = max_uint16;
 
-// This is arbitrary, useful as an address pool and block announce guard.
+/// This is arbitrary, useful as an address pool and block announce guard.
 constexpr size_t maximum_advertisement = 10;
 
 /// Limit given 10 and max supported height chain (stop hash excluded).
 constexpr size_t max_locator = 10_size + system::floored_log2(max_size_t);
-
-////constexpr size_t max_bloom_filter_hashes = 2'000;
-////constexpr size_t max_get_data = 50'000;
-////constexpr size_t max_get_client_filter_headers = 1'999;
-////constexpr size_t max_get_client_filters = 99;
-
-/////// compact filter checkpoint interval
-////constexpr size_t client_filter_checkpoint_interval = 1000;
-
 
 } // namespace messages
 } // namespace network
