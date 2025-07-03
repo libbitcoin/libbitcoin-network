@@ -35,6 +35,11 @@ struct BCT_API client_filter
 {
     typedef std::shared_ptr<const client_filter> cptr;
 
+    enum type_id : uint8_t
+    {
+        neutrino = 0
+    };
+
     static const identifier id;
     static const std::string command;
     static const uint32_t version_minimum;
