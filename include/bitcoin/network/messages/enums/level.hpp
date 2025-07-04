@@ -182,7 +182,7 @@ enum level: uint32_t
     minimum_protocol = address_timestamp,
 
     /// We support at most this internally (bound to settings default).
-    maximum_protocol = bip130
+    maximum_protocol = bip157
 };
 
 } // namespace messages
