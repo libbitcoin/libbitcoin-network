@@ -36,6 +36,7 @@ constexpr size_t max_bloom_filter_load = 36'000;
 ////constexpr size_t max_bloom_filter_hashes = 2'000;
 constexpr size_t max_client_filters = 1'000;
 constexpr size_t max_client_filter_headers = 2'000;
+constexpr size_t client_filter_checkpoint_interval = 1'000;
 constexpr size_t max_get_blocks = 500;
 constexpr size_t max_get_headers = 2'000;
 constexpr size_t max_inventory = 50'000;
