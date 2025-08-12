@@ -88,11 +88,8 @@ public:
     template <class Message, typename Handler = broadcaster::handler<Message>>
     void subscribe(Handler&& handler, channel_id id) NOEXCEPT
     {
-        const auto bouncer = [self = shared_from_this(),
-            handler = std::move(handler), id]()
-        {
-            self->do_subscribe<Handler>(handler, id);
-        };
+        boost::asio::post(strand(),
+            BIND(do_subscribe<Handler>, std::forward<Handler>(handler), id));
     }
 
     template <class Message>
