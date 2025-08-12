@@ -37,13 +37,13 @@ using namespace system;
 using namespace messages;
 using namespace std::placeholders;
 
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 // Factory for fixed deadline timer pointer construction.
 inline deadline::ptr timeout(const logger& log, asio::strand& strand,
     const deadline::duration& span) NOEXCEPT
 {
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     return std::make_shared<deadline>(log, strand, span);
-    BC_POP_WARNING()
 }
 
 // Factory for varied deadline timer pointer construction.
@@ -315,6 +315,8 @@ void channel::handle_inactivity(const code& ec) NOEXCEPT
 
     stop(error::channel_inactive);
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
