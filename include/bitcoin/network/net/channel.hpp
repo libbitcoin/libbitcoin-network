@@ -27,6 +27,7 @@
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/deadline.hpp>
+#include <bitcoin/network/net/distributor.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -71,6 +72,38 @@ public:
         return protocol;
     }
 
+    /// Subscribe to messages from peer (requires strand).
+    /// Event handler is always invoked on the channel strand.
+    template <class Message, typename Handler = distributor::handler<Message>>
+    void subscribe(Handler&& handler) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        distributor_.subscribe(std::forward<Handler>(handler));
+    }
+
+    /// Serialize and write a message to the peer (requires strand).
+    /// Completion handler is always invoked on the channel strand.
+    template <class Message>
+    void send(const Message& message, result_handler&& complete) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+
+        // TODO: build witness into feature w/magic and negotiated version.
+        // TODO: if self and peer services show witness, set feature true.
+        const auto data = messages::serialize(message, settings_.identifier,
+            negotiated_version());
+
+        if (!data)
+        {
+            // This is an internal error, should never happen.
+            LOGF("Serialization failure (" << Message::command << ").");
+            complete(error::unknown);
+            return;
+        }
+
+        write(data, std::move(complete));
+    }
+
     /// Construct a channel to encapsulated and communicate on the socket.
     channel(memory& memory, const logger& log, const socket::ptr& socket,
         const settings& settings, uint64_t identifier=zero,
@@ -107,7 +140,7 @@ public:
     size_t start_height() const NOEXCEPT;
     void set_start_height(size_t height) NOEXCEPT;
 
-    /// Negotiated version should be written only in handshake.
+    /// Negotiated version should be written only in handshake (safety).
     uint32_t negotiated_version() const NOEXCEPT;
     void set_negotiated_version(uint32_t value) NOEXCEPT;
 
@@ -119,15 +152,17 @@ public:
     address_item_cptr get_updated_address() const NOEXCEPT;
 
 protected:
-    /// Property values provided to the proxy.
-    size_t minimum_buffer() const NOEXCEPT override;
-    size_t maximum_payload() const NOEXCEPT override;
-    uint32_t protocol_magic() const NOEXCEPT override;
-    bool validate_checksum() const NOEXCEPT override;
-    uint32_t version() const NOEXCEPT override;
+    typedef messages::heading::cptr heading_ptr;
 
-    /// Signals inbound traffic, called from proxy on strand (requires strand).
-    void signal_activity() NOEXCEPT override;
+    /// Protocol-specific read and dispatch.
+    void read_heading() NOEXCEPT;
+    void handle_read_heading(const code& ec, size_t) NOEXCEPT;
+    void handle_read_payload(const code& ec, size_t payload_size,
+        const heading_ptr& head) NOEXCEPT;
+
+    /// Notify subscribers of a new message (requires strand).
+    virtual code notify(messages::identifier id, uint32_t version,
+        const system::data_chunk& source) NOEXCEPT;
 
 private:
     bool is_handshaked() const NOEXCEPT;
@@ -152,12 +187,16 @@ private:
         system::pseudo_random::next<uint64_t>(one, max_uint64)
     };
 
-    // These are not thread safe.
+    // These are protected by strand.
+    distributor distributor_;
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
     uint32_t negotiated_version_;
     messages::version::cptr peer_version_{};
     size_t start_height_{};
+    system::data_chunk payload_buffer_{};
+    system::data_array<messages::heading::size()> heading_buffer_{};
+    system::read::bytes::copy heading_reader_{ heading_buffer_ };
 };
 
 typedef std::function<void(const code&, const channel::ptr&)> channel_handler;
