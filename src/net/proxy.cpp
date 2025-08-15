@@ -36,21 +36,14 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 using namespace system;
-using namespace messages;
 using namespace std::placeholders;
-
-// Dump up to this size of payload as hex in order to diagnose failure.
-static constexpr size_t invalid_payload_dump_size = 0xff;
-static constexpr uint32_t http_magic  = 0x20544547;
-static constexpr uint32_t https_magic = 0x02010316;
 
 // This is created in a started state and must be stopped, as the subscribers
 // assert if not stopped. Subscribers may hold protocols even if the service
 // is not started.
-proxy::proxy(memory& memory, const socket::ptr& socket) NOEXCEPT
+proxy::proxy(const socket::ptr& socket) NOEXCEPT
   : socket_(socket),
     stop_subscriber_(socket->strand()),
-    distributor_(memory, socket->strand()),
     reporter(socket->log)
 {
 }
@@ -74,9 +67,6 @@ void proxy::resume() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     paused_ = false;
-
-    // TODO: resume of an idle channel results in termination for invalid_magic.
-    read_heading();
 }
 
 bool proxy::paused() const NOEXCEPT
@@ -112,13 +102,9 @@ void proxy::stop(const code& ec) NOEXCEPT
 void proxy::do_stop(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    
+
     // Clear the write buffer, which holds handlers.
     queue_.clear();
-
-    // Post message handlers to strand and clear/stop accepting subscriptions.
-    // On channel_stopped message subscribers should ignore and perform no work.
-    distributor_.stop(ec);
 
     // Post stop handlers to strand and clear/stop accepting subscriptions.
     // The code provides information on the reason that the channel stopped.
@@ -154,190 +140,13 @@ void proxy::do_subscribe_stop(const result_handler& handler,
     complete(error::success);
 }
 
-// Read cycle (read continues until stop called).
+// Read complete message from peer.
 // ----------------------------------------------------------------------------
 
-code proxy::notify(identifier id, uint32_t version,
-    const data_chunk& source) NOEXCEPT
+void proxy::read(const data_slab& buffer, count_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    // TODO: build witness into feature w/magic and negotiated version.
-    // TODO: if self and peer services show witness, set feature true.
-    return distributor_.notify(id, version, source);
-}
-
-void proxy::read_heading() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // Both terminate read loop, paused can be resumed, stopped cannot.
-    // Pause only prevents start of the read loop, it does not prevent messages
-    // from being issued for sockets already past that point (e.g. waiting).
-    // This is mainly for startup coordination, preventing missed messages.
-    if (stopped() || paused())
-        return;
-
-    // Post handle_read_heading to strand upon stop, error, or buffer full.
-    socket_->read(heading_buffer_,
-        std::bind(&proxy::handle_read_heading,
-            shared_from_this(), _1, _2));
-}
-
-void proxy::handle_read_heading(const code& ec, size_t) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (stopped())
-    {
-        LOGQ("Heading read abort [" << authority() << "]");
-        stop(error::channel_stopped);
-        return;
-    }
-
-    if (ec)
-    {
-        if (ec != error::peer_disconnect && ec != error::operation_canceled)
-        {
-            LOGF("Heading read failure [" << authority() << "] "
-                << ec.message());
-        }
-
-        stop(ec);
-        return;
-    }
-
-    heading_reader_.set_position(zero);
-    const auto head = to_shared(heading::deserialize(heading_reader_));
-
-    if (!heading_reader_)
-    {
-        LOGR("Invalid heading from [" << authority() << "]");
-        stop(error::invalid_heading);
-        return;
-    }
-
-    if (head->magic != protocol_magic())
-    {
-        if (head->magic == http_magic || head->magic == https_magic)
-        {
-            LOGR("Http/s request from [" << authority() << "]");
-        }
-        else
-        {
-            LOGR("Invalid heading magic (0x"
-                << encode_base16(to_little_endian(head->magic))
-                << ") from [" << authority() << "]");
-        }
-
-        stop(error::invalid_magic);
-        return;
-    }
-
-    if (head->payload_size > maximum_payload())
-    {
-        LOGR("Oversized payload indicated by " << head->command
-            << " heading from [" << authority() << "] ("
-            << head->payload_size << " bytes)");
-
-        stop(error::oversized_payload);
-        return;
-    }
-
-    // Buffer capacity increases with each larger message (up to maximum).
-    payload_buffer_.resize(head->payload_size);
-
-    // Post handle_read_payload to strand upon stop, error, or buffer full.
-    socket_->read(payload_buffer_,
-        std::bind(&proxy::handle_read_payload,
-            shared_from_this(), _1, _2, head));
-}
-
-// Handle errors and post message to subscribers.
-// The head object is allocated on another thread and destroyed on this one.
-// This introduces cross-thread allocation/deallocation, though size is small.
-void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
-    const heading_ptr& head) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (stopped())
-    {
-        LOGQ("Payload read abort [" << authority() << "]");
-        stop(error::channel_stopped);
-        return;
-    }
-
-    if (ec)
-    {
-        if (ec != error::peer_disconnect && ec != error::operation_canceled)
-        {
-            LOGF("Payload read failure [" << authority() << "] "
-                << ec.message());
-        }
-
-        stop(ec);
-        return;
-    }
-
-    if (validate_checksum())
-    {
-        // This hash could be reused as w/txid, but simpler to disable check.
-        if (head->checksum != network_checksum(bitcoin_hash(payload_buffer_)))
-        {
-            LOGR("Invalid " << head->command << " payload from ["
-                << authority() << "] bad checksum.");
-
-            stop(error::invalid_checksum);
-            return;
-        }
-    }
-
-    // Notify subscribers of the new message.
-    // The message object is allocated on this thread and notify invokes
-    // subscribers on the same thread. This significantly reduces deallocation
-    // cost in constrast to allowing the object to destroyed on another thread.
-    // If object is passed to another thread destruction cost can be very high.
-    const auto code = notify(head->id(), version(), payload_buffer_);
-
-    if (code)
-    {
-        if (head->command == messages::transaction::command ||
-            head->command == messages::block::command)
-        {
-            // error::operation_failed implies null arena, not invalid payload.
-            LOGR("Invalid " << head->command << " payload from [" << authority()
-                << "] with hash [" << encode_hash(bitcoin_hash(payload_buffer_)) << "] "
-                << code.message());
-        }
-        else
-        {
-            LOGR("Invalid " << head->command << " payload from [" << authority()
-                << "] with bytes (" << encode_base16(
-                    {
-                        payload_buffer_.begin(),
-                        std::next(payload_buffer_.begin(),
-                        std::min(payload_size, invalid_payload_dump_size))
-                    })
-                << "...) " << code.message());
-        }
-
-        stop(code);
-        return;
-    }
-
-    // Don't retain larger than configured (time-space tradeoff).
-    if (minimum_buffer() < payload_buffer_.capacity())
-    {
-        payload_buffer_.resize(minimum_buffer());
-        payload_buffer_.shrink_to_fit();
-    }
-
-    LOGX("Recv " << head->command << " from [" << authority() << "] ("
-        << payload_size << " bytes)");
-
-    signal_activity();
-    read_heading();
+    socket_->read(buffer, std::move(handler));
 }
 
 // Send cycle (send continues until queue is empty).
@@ -345,8 +154,7 @@ void proxy::handle_read_payload(const code& ec, size_t LOG_ONLY(payload_size),
 // stackoverflow.com/questions/7754695/boost-asio-async-write-how-to-not-
 // interleaving-async-write-calls
 
-void proxy::write(const system::chunk_ptr& payload,
-    const result_handler& handler) NOEXCEPT
+void proxy::write(const chunk_ptr& payload, result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -358,7 +166,7 @@ void proxy::write(const system::chunk_ptr& payload,
     }
 
     const auto started = !queue_.empty();
-    queue_.push_back(std::make_pair(payload, handler));
+    queue_.push_back(std::make_pair(payload, std::move(handler)));
     total_ = ceilinged_add(total_.load(), payload->size());
     backlog_ = ceilinged_add(backlog_.load(), payload->size());
 
@@ -384,7 +192,7 @@ void proxy::write() NOEXCEPT
 }
 
 void proxy::handle_write(const code& ec, size_t,
-    const system::chunk_ptr& LOG_ONLY(payload),
+    const system::chunk_ptr& /*LOG_ONLY(payload)*/,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -413,9 +221,10 @@ void proxy::handle_write(const code& ec, size_t,
         if (ec != error::peer_disconnect && ec != error::operation_canceled &&
             ec != error::connect_failed)
         {
-            LOGF("Send failure " << heading::get_command(*payload) << " to ["
-                << authority() << "] (" << payload->size() << " bytes) "
-                << ec.message());
+            // TODO: messages dependency, move to channel.
+            ////LOGF("Send failure " << heading::get_command(*payload) << " to ["
+            ////    << authority() << "] (" << payload->size() << " bytes) "
+            ////    << ec.message());
         }
 
         stop(ec);
@@ -423,8 +232,9 @@ void proxy::handle_write(const code& ec, size_t,
         return;
     }
 
-    LOGX("Sent " <<  heading::get_command(*payload) << " to ["
-        << authority() << "] (" << payload->size() << " bytes)");
+    // TODO: messages dependency, move to channel.
+    ////LOGX("Sent " <<  heading::get_command(*payload) << " to ["
+    ////    << authority() << "] (" << payload->size() << " bytes)");
 
     handler(ec);
 }

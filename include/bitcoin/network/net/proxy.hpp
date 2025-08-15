@@ -27,8 +27,6 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/memory.hpp>
-#include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/net/distributor.hpp>
 #include <bitcoin/network/net/socket.hpp>
 
 namespace libbitcoin {
@@ -44,38 +42,6 @@ public:
     typedef subscriber<> stop_subscriber;
 
     DELETE_COPY_MOVE(proxy);
-
-    /// Serialize and write a message to the peer (requires strand).
-    /// Completion handler is always invoked on the channel strand.
-    template <class Message>
-    void send(const Message& message, result_handler&& complete) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-
-        // TODO: build witness into feature w/magic and negotiated version.
-        // TODO: if self and peer services show witness, set feature true.
-        const auto data = messages::serialize(message, protocol_magic(),
-            version());
-
-        if (!data)
-        {
-            // This is an internal error, should never happen.
-            LOGF("Serialization failure (" << Message::command << ").");
-            complete(error::unknown);
-            return;
-        }
-
-        write(data, std::move(complete));
-    }
-
-    /// Subscribe to messages from peer (requires strand).
-    /// Event handler is always invoked on the channel strand.
-    template <class Message, typename Handler = distributor::handler<Message>>
-    void subscribe(Handler&& handler) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        distributor_.subscribe(std::forward<Handler>(handler));
-    }
 
     /// Asserts/logs stopped.
     virtual ~proxy() NOEXCEPT;
@@ -122,44 +88,27 @@ public:
     const config::address& address() const NOEXCEPT;
 
 protected:
-    proxy(memory& memory, const socket::ptr& socket) NOEXCEPT;
+    proxy(const socket::ptr& socket) NOEXCEPT;
 
-    /// Property values provided to the proxy.
-    virtual size_t minimum_buffer() const NOEXCEPT = 0;
-    virtual size_t maximum_payload() const NOEXCEPT = 0;
-    virtual uint32_t protocol_magic() const NOEXCEPT = 0;
-    virtual bool validate_checksum() const NOEXCEPT = 0;
-    virtual uint32_t version() const NOEXCEPT = 0;
+    /// Read a serialized message from the peer (requires strand).
+    virtual void read(const system::data_slab& buffer,
+        count_handler&& handler) NOEXCEPT;
 
-    /// Events provided by the proxy.
-
-    /// A message has been received from the peer.
-    virtual void signal_activity() NOEXCEPT = 0;
-
-    /// Notify subscribers of a new message (requires strand).
-    virtual code notify(messages::identifier id, uint32_t version,
-        const system::data_chunk& source) NOEXCEPT;
-
-    /// Send a serialized message to the peer.
+    /// Send a serialized message to the peer (requires strand).
     virtual void write(const system::chunk_ptr& payload,
-        const result_handler& handler) NOEXCEPT;
+        result_handler&& handler) NOEXCEPT;
 
     /// Subscribe to stop notification (requires strand).
     void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
 private:
-    typedef messages::heading::cptr heading_ptr;
     typedef std::deque<std::pair<system::chunk_ptr, result_handler>> queue;
 
     void do_stop(const code& ec) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;
 
-    void read_heading() NOEXCEPT;
-    void handle_read_heading(const code& ec, size_t heading_size) NOEXCEPT;
-    void handle_read_payload(const code& ec, size_t payload_size,
-        const heading_ptr& head) NOEXCEPT;
-
+    // Implement chunked write with result handler.
     void write() NOEXCEPT;
     void handle_write(const code& ec, size_t bytes,
         const system::chunk_ptr& payload,
@@ -173,11 +122,7 @@ private:
 
     // These are protected by strand.
     queue queue_{};
-    system::data_chunk payload_buffer_{};
-    system::data_array<messages::heading::size()> heading_buffer_{};
-    system::read::bytes::copy heading_reader_{ heading_buffer_ };
     stop_subscriber stop_subscriber_;
-    distributor distributor_;
 };
 
 } // namespace network
