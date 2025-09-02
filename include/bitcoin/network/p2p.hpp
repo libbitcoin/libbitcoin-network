@@ -34,6 +34,7 @@
 namespace libbitcoin {
 namespace network {
 
+/// TODO: rename to net.h/cpp, net_peer.cpp, net_client.cpp (not derived).
 /// Peer-to-Peer network class, virtual, thread safe with exceptions:
 /// * attach must be called from network strand.
 /// * close must not be called concurrently or from any threadpool thread.
@@ -76,6 +77,36 @@ public:
     /// Must not call concurrently or from any threadpool thread (see ~).
     virtual void close() NOEXCEPT;
 
+    /// The node threadpool is stopped and may still be joining.
+    virtual bool closed() const NOEXCEPT;
+
+    /// Suspensions.
+    /// -----------------------------------------------------------------------
+
+    /// Network connections are suspended (incoming and/or outgoing).
+    virtual bool suspended() const NOEXCEPT;
+
+    /// Suspend all connections.
+    virtual void suspend(const code& ec) NOEXCEPT;
+
+    /// Resume all connection.
+    virtual void resume() NOEXCEPT;
+
+    /// Properties.
+    /// -----------------------------------------------------------------------
+
+    /// Network configuration settings.
+    const settings& network_settings() const NOEXCEPT;
+
+    /// Return a reference to the network io_context (thread safe).
+    asio::io_context& service() NOEXCEPT;
+
+    /// Return a reference to the network strand (thread safe).
+    asio::strand& strand() NOEXCEPT;
+
+    /// The strand is running in this thread.
+    bool stranded() const NOEXCEPT;
+
     /// Subscriptions.
     /// -----------------------------------------------------------------------
     /// A channel pointer should only be retained when subscribed to its stop,
@@ -97,7 +128,7 @@ public:
     virtual void unsubscribe_connect(object_key key) NOEXCEPT;
     virtual void unsubscribe_close(object_key key) NOEXCEPT;
 
-    /// Manual connections.
+    /// P2P Manual connections.
     /// -----------------------------------------------------------------------
 
     /// Maintain a connection.
@@ -107,23 +138,8 @@ public:
     virtual void connect(const config::endpoint& endpoint,
         channel_notifier&& handler) NOEXCEPT;
 
-    /// Suspensions.
+    /// P2P Properties.
     /// -----------------------------------------------------------------------
-
-    /// Network connections are suspended (incoming and/or outgoing).
-    virtual bool suspended() const NOEXCEPT;
-
-    /// Suspend all connections.
-    virtual void suspend(const code& ec) NOEXCEPT;
-
-    /// Resume all connection.
-    virtual void resume() NOEXCEPT;
-
-    /// Properties.
-    /// -----------------------------------------------------------------------
-
-    /// The node threadpool is stopped and may still be joining.
-    virtual bool closed() const NOEXCEPT;
 
     /// Get the number of addresses.
     virtual size_t address_count() const NOEXCEPT;
@@ -136,18 +152,6 @@ public:
 
     /// Get the number of inbound channels.
     virtual size_t inbound_channel_count() const NOEXCEPT;
-
-    /// Network configuration settings.
-    const settings& network_settings() const NOEXCEPT;
-
-    /// Return a reference to the network io_context (thread safe).
-    asio::io_context& service() NOEXCEPT;
-
-    /// Return a reference to the network strand (thread safe).
-    asio::strand& strand() NOEXCEPT;
-
-    /// The strand is running in this thread.
-    bool stranded() const NOEXCEPT;
 
     /// TEMP HACKS.
     /// -----------------------------------------------------------------------
@@ -169,7 +173,10 @@ public:
     }
 
 protected:
+    // Restrict access by concrete sessions.
     friend class session;
+    friend class session_peer;
+    friend class session_client;
 
     /// Attach session to network, caller must start (requires strand).
     template <class Session, class Network, typename... Args>
@@ -194,38 +201,25 @@ protected:
         return session;
     }
 
-    /// Create unique identifier (sequential), requires strand.
-    virtual object_key create_key() NOEXCEPT;
+    /// I/O factories.
+    virtual acceptor::ptr create_acceptor() NOEXCEPT;
+    virtual connector::ptr create_connector() NOEXCEPT;
+    virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
     /// Sequences.
     virtual void do_start(const result_handler& handler) NOEXCEPT;
     virtual void do_run(const result_handler& handler) NOEXCEPT;
     virtual void do_close() NOEXCEPT;
 
-    /// Override to attach specialized sessions, require strand.
-    virtual session_seed::ptr attach_seed_session() NOEXCEPT;
-    virtual session_manual::ptr attach_manual_session() NOEXCEPT;
-    virtual session_inbound::ptr attach_inbound_session() NOEXCEPT;
-    virtual session_outbound::ptr attach_outbound_session() NOEXCEPT;
-
-    /// Override for test injection.
-    virtual acceptor::ptr create_acceptor() NOEXCEPT;
-    virtual connector::ptr create_connector() NOEXCEPT;
-
-    /// Register nonces for loopback (true implies found), require strand.
-    virtual bool store_nonce(const channel& channel) NOEXCEPT;
-    virtual bool unstore_nonce(const channel& channel) NOEXCEPT;
-    virtual bool is_loopback(const channel& channel) const NOEXCEPT;
-
-    /// Count channel, guard loopback, reserve address.
-    virtual code count_channel(const channel& channel) NOEXCEPT;
-    virtual void uncount_channel(const channel& channel) NOEXCEPT;
-
     /// Notify subscribers of new non-seed connection, require strand.
     virtual void notify_connect(const channel::ptr& channel) NOEXCEPT;
     virtual void subscribe_close(stop_handler&& handler) NOEXCEPT;
+    virtual object_key create_key() NOEXCEPT;
 
-    /// Maintain address pool.
+    /// P2P
+    /// -----------------------------------------------------------------------
+
+    /// P2P hosts collection.
     virtual void take(address_item_handler&& handler) NOEXCEPT;
     virtual void restore(const address_item_cptr& address,
         result_handler&& complete) NOEXCEPT;
@@ -233,34 +227,56 @@ protected:
     virtual void save(const address_cptr& message,
         count_handler&& complete) NOEXCEPT;
 
+    /// P2P loopback detection.
+    virtual bool store_nonce(const channel_peer& channel) NOEXCEPT;
+    virtual bool unstore_nonce(const channel_peer& channel) NOEXCEPT;
+    virtual bool is_loopback(const channel_peer& channel) const NOEXCEPT;
+
+    /// P2P channel counting with address deconfliction.
+    virtual code count_channel(const channel_peer& channel) NOEXCEPT;
+    virtual void uncount_channel(const channel_peer& channel) NOEXCEPT;
+
+    /// P2P attach sessions (override to customize), require strand.
+    virtual session_seed::ptr attach_seed_session() NOEXCEPT;
+    virtual session_manual::ptr attach_manual_session() NOEXCEPT;
+    virtual session_inbound::ptr attach_inbound_session() NOEXCEPT;
+    virtual session_outbound::ptr attach_outbound_session() NOEXCEPT;
+
 private:
-    code subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;
-    connectors_ptr create_connectors(size_t count) NOEXCEPT;
-
-    virtual code start_hosts() NOEXCEPT;
-    virtual code stop_hosts() NOEXCEPT;
-
-    /// Suspend/resume inbound/outbound connections.
+    // Suspensions.
     void suspend_acceptors() NOEXCEPT;
     void resume_acceptors() NOEXCEPT;
     void suspend_connectors() NOEXCEPT;
     void resume_connectors() NOEXCEPT;
 
+    // Sequences.
     void handle_start(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_run(const code& ec, const result_handler& handler) NOEXCEPT;
+
+    // Subscriptions.
 
     void do_unsubscribe_connect(object_key key) NOEXCEPT;
     void do_notify_connect(const channel::ptr& channel) NOEXCEPT;
     void do_subscribe_connect(const channel_notifier& handler,
         const channel_completer& complete) NOEXCEPT;
 
+    code subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT;
     void do_unsubscribe_close(object_key key) NOEXCEPT;
     void do_subscribe_close(const stop_handler& handler,
         const stop_completer& complete) NOEXCEPT;
 
+    // P2P
+    // ------------------------------------------------------------------------
+
+    // P2P manual connections.
     void do_connect(const config::endpoint& endpoint) NOEXCEPT;
     void do_connect_handled(const config::endpoint& endpoint,
         const channel_notifier& handler) NOEXCEPT;
+
+    // P2P hosts collection.
+
+    virtual code start_hosts() NOEXCEPT;
+    virtual code stop_hosts() NOEXCEPT;
 
     void do_take(const address_item_handler& handler) NOEXCEPT;
     void do_restore(const address_item_cptr& address,

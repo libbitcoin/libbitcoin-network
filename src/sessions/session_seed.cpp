@@ -26,6 +26,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
+#include <bitcoin/network/sessions/session_peer.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -42,7 +43,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_seed::session_seed(p2p& network, uint64_t identifier) NOEXCEPT
-  : session(network, identifier), tracker<session_seed>(network.log)
+  : session_peer(network, identifier), tracker<session_seed>(network.log)
 {
 }
 
@@ -166,7 +167,8 @@ void session_seed::handle_connect(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    const auto channel = create_channel(socket, true);
+    const auto channel = create_channel(socket);
+    std::dynamic_pointer_cast<channel_peer>(channel)->set_quiet();
 
     start_channel(channel,
         BIND(handle_channel_start, _1, channel),
@@ -232,31 +234,32 @@ void session_seed::attach_protocols(const channel::ptr& channel) NOEXCEPT
     const auto alert = settings().enable_alert;
     const auto reject = settings().enable_reject;
     const auto address_v2 = settings().enable_address_v2;
+    const auto peer = std::dynamic_pointer_cast<channel_peer>(channel);
 
     // Alert is deprecated, independent of version.
-    if (channel->is_negotiated(level::alert_message) && alert)
+    if (peer->is_negotiated(level::alert_message) && alert)
         channel->attach<protocol_alert_311>(self)->start();
 
     // Reject is deprecated, independent of version.
-    if (channel->is_negotiated(level::bip61) && reject)
+    if (peer->is_negotiated(level::bip61) && reject)
         channel->attach<protocol_reject_70002>(self)->start();
 
-    if (channel->is_negotiated(level::bip31))
+    if (peer->is_negotiated(level::bip31))
         channel->attach<protocol_ping_60001>(self)->start();
-    else if (channel->is_negotiated(level::version_message))
+    else if (peer->is_negotiated(level::version_message))
         channel->attach<protocol_ping_106>(self)->start();
 
     // Seed protocol stops upon completion, causing session removal.
-    if (channel->is_negotiated(level::bip155) && address_v2)
+    if (peer->is_negotiated(level::bip155) && address_v2)
     {
         channel->attach<protocol_seed_209>(self)->start();
         ////channel->attach<protocol_seed_70016>(self)->start();
     }
-    else if (channel->is_negotiated(level::get_address_message))
+    else if (peer->is_negotiated(level::get_address_message))
     {
         channel->attach<protocol_seed_209>(self)->start();
     }
-    else if (channel->is_negotiated(level::version_message))
+    else if (peer->is_negotiated(level::version_message))
     {
         ////channel->attach<protocol_seed_106>(self)->start();
     }

@@ -221,6 +221,75 @@ void p2p::do_close() NOEXCEPT
     threadpool_.stop();
 }
 
+bool p2p::closed() const NOEXCEPT
+{
+    return closed_.load();
+}
+
+// Suspensions.
+// ----------------------------------------------------------------------------
+
+void p2p::suspend(const code&) NOEXCEPT
+{
+    suspend_acceptors();
+    suspend_connectors();
+}
+
+void p2p::resume() NOEXCEPT
+{
+    resume_acceptors();
+    resume_connectors();
+}
+
+bool p2p::suspended() const NOEXCEPT
+{
+    return connect_suspended_.load() || accept_suspended_.load();
+}
+
+void p2p::suspend_acceptors() NOEXCEPT
+{
+    accept_suspended_.store(true);
+}
+
+void p2p::resume_acceptors() NOEXCEPT
+{
+    accept_suspended_.store(false);
+}
+
+void p2p::suspend_connectors() NOEXCEPT
+{
+    connect_suspended_.store(true);
+}
+
+void p2p::resume_connectors() NOEXCEPT
+{
+    connect_suspended_.store(false);
+}
+
+// Properties.
+// ----------------------------------------------------------------------------
+
+const settings& p2p::network_settings() const NOEXCEPT
+{
+    return settings_;
+}
+
+asio::io_context& p2p::service() NOEXCEPT
+{
+    return threadpool_.service();
+}
+
+asio::strand& p2p::strand() NOEXCEPT
+{
+    return strand_;
+}
+
+bool p2p::stranded() const NOEXCEPT
+{
+    return strand_.running_in_this_thread();
+}
+
+
 // Subscriptions.
 // ----------------------------------------------------------------------------
 // Channel and network strands share same pool, and as long as a job is
@@ -346,7 +415,7 @@ p2p::object_key p2p::create_key() NOEXCEPT
     return keys_;
 }
 
-// Manual connections.
+// P2P Manual connections.
 // ----------------------------------------------------------------------------
 
 void p2p::connect(const config::endpoint& endpoint) NOEXCEPT
@@ -387,47 +456,7 @@ void p2p::do_connect_handled(const config::endpoint& endpoint,
         handler(error::service_stopped, nullptr);
 }
 
-// Suspensions.
-// ----------------------------------------------------------------------------
-
-bool p2p::suspended() const NOEXCEPT
-{
-    return connect_suspended_.load() || accept_suspended_.load();
-}
-
-void p2p::suspend_acceptors() NOEXCEPT
-{
-    accept_suspended_.store(true);
-}
-
-void p2p::resume_acceptors() NOEXCEPT
-{
-    accept_suspended_.store(false);
-}
-
-void p2p::suspend_connectors() NOEXCEPT
-{
-    connect_suspended_.store(true);
-}
-
-void p2p::resume_connectors() NOEXCEPT
-{
-    connect_suspended_.store(false);
-}
-
-void p2p::suspend(const code&) NOEXCEPT
-{
-    suspend_acceptors();
-    suspend_connectors();
-}
-
-void p2p::resume() NOEXCEPT
-{
-    resume_acceptors();
-    resume_connectors();
-}
-
-// Properties.
+// P2P Properties.
 // ----------------------------------------------------------------------------
 
 size_t p2p::address_count() const NOEXCEPT
@@ -450,32 +479,7 @@ size_t p2p::inbound_channel_count() const NOEXCEPT
     return inbound_channel_count_;
 }
 
-const settings& p2p::network_settings() const NOEXCEPT
-{
-    return settings_;
-}
-
-asio::io_context& p2p::service() NOEXCEPT
-{
-    return threadpool_.service();
-}
-
-asio::strand& p2p::strand() NOEXCEPT
-{
-    return strand_;
-}
-
-bool p2p::stranded() const NOEXCEPT
-{
-    return strand_.running_in_this_thread();
-}
-
-bool p2p::closed() const NOEXCEPT
-{
-    return closed_.load();
-}
-
-// Hosts collection.
+// P2P hosts collection.
 // ----------------------------------------------------------------------------
 // Protected, called from session (network strand) and channel (network pool).
 
@@ -558,10 +562,10 @@ void p2p::do_save(const address_cptr& message,
     hosts_.save(message, move_copy(handler));
 }
 
-// Loopback detection.
+// P2P loopback detection.
 // ----------------------------------------------------------------------------
 
-bool p2p::store_nonce(const channel& channel) NOEXCEPT
+bool p2p::store_nonce(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -577,7 +581,7 @@ bool p2p::store_nonce(const channel& channel) NOEXCEPT
     return true;
 }
 
-bool p2p::unstore_nonce(const channel& channel) NOEXCEPT
+bool p2p::unstore_nonce(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -593,7 +597,7 @@ bool p2p::unstore_nonce(const channel& channel) NOEXCEPT
     return true;
 }
 
-bool p2p::is_loopback(const channel& channel) const NOEXCEPT
+bool p2p::is_loopback(const channel_peer& channel) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -603,10 +607,10 @@ bool p2p::is_loopback(const channel& channel) const NOEXCEPT
     return to_bool(nonces_.count(channel.peer_version()->nonce));
 }
 
-// Channel counting with address deconfliction.
+// P2P channel counting with address deconfliction.
 // ----------------------------------------------------------------------------
 
-code p2p::count_channel(const channel& channel) NOEXCEPT
+code p2p::count_channel(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -646,7 +650,7 @@ code p2p::count_channel(const channel& channel) NOEXCEPT
     return error::success;
 }
 
-void p2p::uncount_channel(const channel& channel) NOEXCEPT
+void p2p::uncount_channel(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

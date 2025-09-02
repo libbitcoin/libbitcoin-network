@@ -25,7 +25,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol.hpp>
+#include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
@@ -42,7 +42,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 protocol_address_in_209::protocol_address_in_209(
     const session::ptr& session, const channel::ptr& channel) NOEXCEPT
-  : protocol(session, channel),
+  : protocol_peer(session, channel),
     outbound_(!channel->inbound()),
     tracker<protocol_address_in_209>(session->log)
 {

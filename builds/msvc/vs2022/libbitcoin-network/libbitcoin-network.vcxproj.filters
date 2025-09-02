@@ -249,6 +249,12 @@
     <ClCompile Include="..\..\..\..\src\net\channel.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\channel_client.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\channel_peer.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\connector.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
@@ -282,6 +288,12 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_alert_311.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_client.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_peer.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_106.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
@@ -309,6 +321,9 @@
     <ClCompile Include="..\..\..\..\src\sessions\session.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\sessions\session_client.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\sessions\session_inbound.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
@@ -316,6 +331,9 @@
       <Filter>src\sessions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\sessions\session_outbound.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\sessions\session_peer.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\sessions\session_seed.cpp">
@@ -572,6 +590,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_client.hpp">
+      <Filter>include\bitcoin\network\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_peer.hpp">
+      <Filter>include\bitcoin\network\net</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
@@ -608,6 +632,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_alert_311.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_peer.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_106.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
@@ -638,6 +668,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_client.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
@@ -645,6 +678,9 @@
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_outbound.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_peer.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_seed.hpp">

@@ -16,43 +16,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_REJECT_70002_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_REJECT_70002_HPP
+#include <bitcoin/network/protocols/protocol_client.hpp>
 
-#include <memory>
-#include <bitcoin/system.hpp>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
-#include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_peer.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class BCT_API protocol_reject_70002
-  : public protocol_peer, protected tracker<protocol_reject_70002>
+#define CLASS protocol_client
+
+protocol_client::protocol_client(const session::ptr& session,
+    const channel::ptr& channel) NOEXCEPT
+  : protocol(session, channel)
 {
-public:
-    typedef std::shared_ptr<protocol_reject_70002> ptr;
-
-    protocol_reject_70002(const session::ptr& session,
-        const channel::ptr& channel) NOEXCEPT;
-
-    /// Start protocol (strand required).
-    void start() NOEXCEPT override;
-
-protected:
-    virtual bool handle_receive_reject(const code& ec,
-        const messages::reject::cptr& message) NOEXCEPT;
-
-private:
-    std::string get_hash(const messages::reject& message) const NOEXCEPT;
-};
+}
 
 } // namespace network
 } // namespace libbitcoin
-
-#endif

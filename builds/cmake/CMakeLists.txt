@@ -275,6 +275,8 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/net/acceptor.cpp"
     "../../src/net/broadcaster.cpp"
     "../../src/net/channel.cpp"
+    "../../src/net/channel_client.cpp"
+    "../../src/net/channel_peer.cpp"
     "../../src/net/connector.cpp"
     "../../src/net/deadline.cpp"
     "../../src/net/distributor.cpp"
@@ -285,6 +287,8 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/protocols/protocol_address_in_209.cpp"
     "../../src/protocols/protocol_address_out_209.cpp"
     "../../src/protocols/protocol_alert_311.cpp"
+    "../../src/protocols/protocol_client.cpp"
+    "../../src/protocols/protocol_peer.cpp"
     "../../src/protocols/protocol_ping_106.cpp"
     "../../src/protocols/protocol_ping_60001.cpp"
     "../../src/protocols/protocol_reject_70002.cpp"
@@ -294,9 +298,11 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/protocols/protocol_version_70002.cpp"
     "../../src/protocols/protocol_version_70016.cpp"
     "../../src/sessions/session.cpp"
+    "../../src/sessions/session_client.cpp"
     "../../src/sessions/session_inbound.cpp"
     "../../src/sessions/session_manual.cpp"
     "../../src/sessions/session_outbound.cpp"
+    "../../src/sessions/session_peer.cpp"
     "../../src/sessions/session_seed.cpp" )
 
 # ${CANONICAL_LIB_NAME} project specific include directory normalization for build.

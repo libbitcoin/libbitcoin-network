@@ -23,7 +23,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol.hpp>
+#include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
@@ -38,7 +38,7 @@ using namespace std::placeholders;
 // This captures alert messages. Outp
 protocol_alert_311::protocol_alert_311(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
-  : protocol(session, channel),
+  : protocol_peer(session, channel),
     tracker<protocol_alert_311>(session->log)
 {
 }

@@ -104,21 +104,11 @@ void session::start_channel(const channel::ptr& channel,
         return;
     }
 
-    // In case of a loopback, inbound and outbound are on the same strand.
-    // Inbound does not check nonce until handshake completes, so no race.
-    if (!network_.store_nonce(*channel))
-    {
-        channel->stop(error::channel_conflict);
-        starter(error::channel_conflict);
-        stopper(error::channel_conflict);
-        return;
-    }
-
     // Pend channel for connection duration (for quick stop).
     pend(channel);
 
     result_handler start =
-        BIND(handle_channel_start, _1, channel, std::move(starter),
+        BIND(handle_channel_starting, _1, channel, std::move(starter),
             std::move(stopper));
 
     result_handler shake =
@@ -142,33 +132,6 @@ void session::do_attach_handshake(const channel::ptr& channel,
     channel->resume();
 }
 
-void session::attach_handshake(const channel::ptr& channel,
-    result_handler&& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
-
-    // Protocol must pause the channel after receiving version and verack.
-    using namespace messages;
-    const auto self = shared_from_this();
-
-    // Address v2 can be disabled, independent of version.
-    if (is_configured(level::bip155) && settings().enable_address_v2)
-        channel->attach<protocol_version_70016>(self)->shake(std::move(handler));
-
-    // Protocol versions are cumulative, but reject is deprecated.
-    else if (is_configured(level::bip61) && settings().enable_reject)
-        channel->attach<protocol_version_70002>(self)->shake(std::move(handler));
-
-    // TODO: consider relay may be dynamic (disabled until current).
-    // settings().enable_relay is always passed to the peer during handshake.
-    else if (is_configured(level::bip37))
-        channel->attach<protocol_version_70001>(self)->shake(std::move(handler));
-
-    else if (is_configured(level::version_message))
-        channel->attach<protocol_version_106>(self)->shake(std::move(handler));
-}
-
 void session::handle_handshake(const code& ec, const channel::ptr& channel,
     const result_handler& start) NOEXCEPT
 {
@@ -184,22 +147,11 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Handles channel and protocol start failures.
     if (ec)
     {
         unpend(channel);
-        network_.unstore_nonce(*channel);
         channel->stop(ec);
         start(ec);
-        return;
-    }
-
-    if (const auto code = network_.count_channel(*channel))
-    {
-        unpend(channel);
-        network_.unstore_nonce(*channel);
-        channel->stop(code);
-        start(code);
         return;
     }
 
@@ -207,8 +159,9 @@ void session::do_handle_handshake(const code& ec, const channel::ptr& channel,
     start(ec);
 }
 
-void session::handle_channel_start(const code& ec, const channel::ptr& channel,
-    const result_handler& started, const result_handler& stopped) NOEXCEPT
+void session::handle_channel_starting(const code& ec,
+    const channel::ptr& channel, const result_handler& started,
+    const result_handler& stopped) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -260,64 +213,12 @@ void session::do_attach_protocols(const channel::ptr& channel,
     // Protocol attach is always synchronous, complete here.
     attach_protocols(channel);
 
-    // Notify channel subscribers of fully-attached non-seed channel.
-    if (!channel->quiet())
-        network_.notify_connect(channel);
-
     // Resume accepting messages on the channel, timers restarted.
     channel->resume();
 
     // Complete on network strand.
     boost::asio::post(network_.strand(),
         std::bind(started, error::success));
-}
-
-// Override in derived sessions to attach protocols.
-void session::attach_protocols(const channel::ptr& channel) NOEXCEPT
-{
-    BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
-
-    using namespace messages;
-    const auto self = shared_from_this();
-
-    // Alert is deprecated, independent of version.
-    if (channel->is_negotiated(level::alert_message) && settings().enable_alert)
-        channel->attach<protocol_alert_311>(self)->start();
-
-    // Reject is deprecated, independent of version.
-    if (channel->is_negotiated(level::bip61) && settings().enable_reject)
-        channel->attach<protocol_reject_70002>(self)->start();
-
-    if (channel->is_negotiated(level::bip31))
-        channel->attach<protocol_ping_60001>(self)->start();
-    else if (channel->is_negotiated(level::version_message))
-        channel->attach<protocol_ping_106>(self)->start();
-
-    if (settings().enable_address_v2)
-    {
-        ////// Address v2 can be disabled, independent of version.
-        ////if (channel->is_negotiated(level::bip155)
-        ////    channel->attach<protocol_address_in_70016>(self)->start();
-    
-        ////// Sending address v2 is enabled in handshake.
-        ////if (channel->send_address_v2())
-        ////    channel->attach<protocol_address_out_70016>(self)->start();
-    }
-
-    if (settings().enable_address)
-    {
-        if (channel->is_negotiated(level::get_address_message))
-        {
-            channel->attach<protocol_address_in_209>(self)->start();
-            channel->attach<protocol_address_out_209>(self)->start();
-        }
-        else if (channel->is_negotiated(level::version_message))
-        {
-            ////channel->attach<protocol_address_in_106>(self)->start();
-            ////channel->attach<protocol_address_out_106>(self)->start();
-        }
-    }
 }
 
 void session::handle_channel_stopped(const code& ec,
@@ -337,8 +238,6 @@ void session::do_handle_channel_stopped(const code& ec,
     BC_ASSERT_MSG(stranded(), "strand");
 
     unpend(channel);
-    network_.unstore_nonce(*channel);
-    network_.uncount_channel(*channel);
     unsubscribe(channel->identifier());
 
     // Assume stop notification, but may be subscribe failure (idempotent).
@@ -427,42 +326,6 @@ bool session::notify(object_key key) NOEXCEPT
     return stop_subscriber_.notify_one(key, error::success);
 }
 
-void session::unsubscribe_close() NOEXCEPT
-{
-    network_.unsubscribe_close(identifier_);
-}
-
-// Factories.
-// ----------------------------------------------------------------------------
-
-acceptor::ptr session::create_acceptor() NOEXCEPT
-{
-    return network_.create_acceptor();
-}
-
-connector::ptr session::create_connector() NOEXCEPT
-{
-    return network_.create_connector();
-}
-
-connectors_ptr session::create_connectors(size_t count) NOEXCEPT
-{
-    return network_.create_connectors(count);
-}
-
-channel::ptr session::create_channel(const socket::ptr& socket,
-    bool quiet) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // Default message memory resource, override create_channel to replace.
-    static default_memory memory{};
-
-    // Channel id must be created using create_key().
-    return std::make_shared<channel>(memory, log, socket, settings(),
-        create_key(), quiet);
-}
-
 // At one object/session/ns, this overflows in ~585 years (and handled).
 session::object_key session::create_key() NOEXCEPT
 {
@@ -471,37 +334,30 @@ session::object_key session::create_key() NOEXCEPT
     return network_.create_key();
 }
 
+void session::unsubscribe_close() NOEXCEPT
+{
+    network_.unsubscribe_close(identifier_);
+}
+
 // Properties.
 // ----------------------------------------------------------------------------
 
+// protected
 bool session::stopped() const NOEXCEPT
 {
     return stopped_.load();
 }
 
+// protected
 bool session::stranded() const NOEXCEPT
 {
     return network_.stranded();
 }
 
-size_t session::address_count() const NOEXCEPT
+// protected
+asio::strand& session::strand() NOEXCEPT
 {
-    return network_.address_count();
-}
-
-size_t session::channel_count() const NOEXCEPT
-{
-    return network_.channel_count();
-}
-
-size_t session::inbound_channel_count() const NOEXCEPT
-{
-    return network_.inbound_channel_count();
-}
-
-size_t session::outbound_channel_count() const NOEXCEPT
-{
-    return floored_subtract(channel_count(), inbound_channel_count());
+    return network_.strand();
 }
 
 const network::settings& session::settings() const NOEXCEPT
@@ -512,44 +368,6 @@ const network::settings& session::settings() const NOEXCEPT
 uint64_t session::identifier() const NOEXCEPT
 {
     return identifier_;
-}
-
-bool session::is_configured(messages::level level) const NOEXCEPT
-{
-    return settings().protocol_maximum >= level;
-}
-
-// Utilities.
-// ----------------------------------------------------------------------------
-// stackoverflow.com/questions/57411283/
-// calling-non-const-function-of-another-class-by-reference-from-const-function
-
-void session::take(address_item_handler&& handler) const NOEXCEPT
-{
-    network_.take(std::move(handler));
-}
-
-void session::fetch(address_handler&& handler) const NOEXCEPT
-{
-    network_.fetch(std::move(handler));
-}
-
-void session::restore(const address_item_cptr& address,
-    result_handler&& handler) const NOEXCEPT
-{
-    network_.restore(address, std::move(handler));
-}
-
-void session::save(const address_cptr& message,
-    count_handler&& handler) const NOEXCEPT
-{
-    network_.save(message, std::move(handler));
-}
-
-// protected
-asio::strand& session::strand() NOEXCEPT
-{
-    return network_.strand();
 }
 
 BC_POP_WARNING()

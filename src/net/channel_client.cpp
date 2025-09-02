@@ -16,51 +16,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/net/channel.hpp>
+#include <bitcoin/network/net/channel_client.hpp>
 
-#include <functional>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/net/proxy.hpp>
+#include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-channel::channel(const logger& log, const socket::ptr& socket,
+channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT
-  : proxy(socket),
-    settings_(settings),
-    identifier_(identifier),
-    tracker<channel>(log)
+  : channel(log, socket, settings, identifier),
+    tracker<channel_client>(log)
 {
-}
-
-channel::~channel() NOEXCEPT
-{
-    BC_ASSERT_MSG(stopped(), "channel is not stopped");
-    if (!stopped()) { LOGF("~channel is not stopped."); }
-}
-
-// Properties.
-// ----------------------------------------------------------------------------
-
-uint64_t channel::nonce() const NOEXCEPT
-{
-    return nonce_;
-}
-
-uint64_t channel::identifier() const NOEXCEPT
-{
-    return identifier_;
-}
-
-network::settings channel::settings() const NOEXCEPT
-{
-    return settings_;
 }
 
 } // namespace network

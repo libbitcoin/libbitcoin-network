@@ -26,7 +26,6 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -84,23 +83,6 @@ protected:
     {
         return boost::asio::post(channel_->strand(),
             BIND_SHARED(method, args));
-    }
-
-    /// Send a message instance to peer (use SEND).
-    template <class Derived, class Message, typename Method, typename... Args>
-    void send(const Message& message, Method&& method, Args&&... args) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        channel_->send<Message>(message, BIND_SHARED(method, args));
-    }
-
-    /// Subscribe to channel messages by type (use SUBSCRIBE_CHANNEL).
-    /// Method is invoked with error::subscriber_stopped if already stopped.
-    template <class Derived, class Message, typename Method, typename... Args>
-    void subscribe_channel(Method&& method, Args&&... args) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        channel_->subscribe<Message>(BIND_SHARED(method, args));
     }
 
     /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST).
@@ -180,52 +162,19 @@ protected:
     /// The nonce of the channel.
     virtual uint64_t nonce() const NOEXCEPT;
 
-    /// The start height (for version message).
-    virtual size_t start_height() const NOEXCEPT;
-
-    /// The protocol version of the peer.
-    virtual messages::version::cptr peer_version() const NOEXCEPT;
-
-    /// Set protocol version of the peer (set only during handshake).
-    virtual void set_peer_version(const messages::version::cptr& value) NOEXCEPT;
-
-    /// The negotiated protocol version.
-    virtual uint32_t negotiated_version() const NOEXCEPT;
-
-    /// Set negotiated protocol version (set only during handshake).
-    virtual void set_negotiated_version(uint32_t value) NOEXCEPT;
-
     /// Network settings.
     virtual const network::settings& settings() const NOEXCEPT;
-
-    /// Advertised addresses with own services and current timestamp.
-    virtual messages::address selfs() const NOEXCEPT;
 
     /// Channel identifier (for broadcast identification).
     virtual uint64_t identifier() const NOEXCEPT;
 
-    /// Addresses.
+    /// Handlers.
     /// -----------------------------------------------------------------------
-
-    /// Number of entries in the address pool.
-    virtual size_t address_count() const NOEXCEPT;
-
-    /// Fetch a set of peer addresses from the address pool.
-    virtual void fetch(address_handler&& handler) NOEXCEPT;
-
-    /// Save a set of peer addresses to the address pool.
-    virtual void save(const address_cptr& message,
-        count_handler&& handler) NOEXCEPT;
 
     /// Capture send results, use for no-op send handling (logged).
     virtual void handle_send(const code& ec) NOEXCEPT;
 
 private:
-    void handle_fetch(const code& ec, const address_cptr& message,
-        const address_handler& handler) NOEXCEPT;
-    void handle_save(const code& ec, size_t accepted,
-        const count_handler& handler) NOEXCEPT;
-
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
     const channel::ptr channel_;
@@ -237,10 +186,6 @@ private:
     bool started_{};
 };
 
-#define SEND(message, method, ...) \
-    send<CLASS>(message, &CLASS::method, __VA_ARGS__)
-#define SUBSCRIBE_CHANNEL(message, method, ...) \
-    subscribe_channel<CLASS, message>(&CLASS::method, __VA_ARGS__)
 #define SUBSCRIBE_BROADCAST(message, method, ...) \
     subscribe_broadcast<CLASS, message>(&CLASS::method, __VA_ARGS__)
 #define BROADCAST(message, ptr) broadcast<message>(ptr)

@@ -27,7 +27,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol.hpp>
+#include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
@@ -55,7 +55,7 @@ protocol_version_106::protocol_version_106(const session::ptr& session,
     const channel::ptr& channel,
     uint64_t minimum_services,
     uint64_t maximum_services) NOEXCEPT
-  : protocol(session, channel),
+  : protocol_peer(session, channel),
     inbound_(channel->inbound()),
     minimum_version_(session->settings().protocol_minimum),
     maximum_version_(session->settings().protocol_maximum),

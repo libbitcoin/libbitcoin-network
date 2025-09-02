@@ -115,34 +115,14 @@ public:
     /// Stop the session (call from network strand).
     virtual void stop() NOEXCEPT;
 
-    /// Utilities.
-    /// -----------------------------------------------------------------------
-
-    /// Take an entry from address pool.
-    virtual void take(address_item_handler&& handler) const NOEXCEPT;
-
-    /// Fetch a subset of entries (count based on config) from address pool.
-    virtual void fetch(address_handler&& handler) const NOEXCEPT;
-
-    /// Restore an address to the address pool.
-    virtual void restore(const address_item_cptr& address,
-        result_handler&& handler) const NOEXCEPT;
-
-    /// Save a subset of entries (count based on config) from address pool.
-    virtual void save(const address_cptr& message,
-        count_handler&& handler) const NOEXCEPT;
-
     /// Properties.
     /// -----------------------------------------------------------------------
-
-    /// Arbitrary identifier of the session (for p2p subscriber).
-    uint64_t identifier() const NOEXCEPT;
 
     /// Access network configuration settings.
     const network::settings& settings() const NOEXCEPT;
 
-    /// Number of entries in the address pool.
-    virtual size_t address_count() const NOEXCEPT;
+    /// Arbitrary identifier of the session (for p2p subscriber).
+    uint64_t identifier() const NOEXCEPT;
 
 protected:
     typedef uint64_t object_key;
@@ -167,10 +147,10 @@ protected:
 
     /// Override to change version protocol (base calls from channel strand).
     virtual void attach_handshake(const channel::ptr& channel,
-        result_handler&& handler) NOEXCEPT;
+        result_handler&& handler) NOEXCEPT = 0;
 
     /// Override to change channel protocols (base calls from channel strand).
-    virtual void attach_protocols(const channel::ptr& channel) NOEXCEPT;
+    virtual void attach_protocols(const channel::ptr& channel) NOEXCEPT = 0;
 
     /// Subscriptions.
     /// -----------------------------------------------------------------------
@@ -196,23 +176,19 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Call to create channel acceptor, owned by caller.
-    virtual acceptor::ptr create_acceptor() NOEXCEPT;
+    virtual acceptor::ptr create_acceptor() NOEXCEPT = 0;
 
     /// Call to create channel connector, owned by caller.
-    virtual connector::ptr create_connector() NOEXCEPT;
+    virtual connector::ptr create_connector() NOEXCEPT = 0;
 
     /// Call to create a set of channel connectors, owned by caller.
-    virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
+    virtual connectors_ptr create_connectors(size_t count) NOEXCEPT = 0;
 
     /// Create a channel from the started socket.
-    virtual channel::ptr create_channel(const socket::ptr& socket,
-        bool quiet) NOEXCEPT;
+    virtual channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT = 0;
 
     /// Properties.
     /// -----------------------------------------------------------------------
-
-    /// Message level is supported by confired protocol level.
-    virtual bool is_configured(messages::level level) const NOEXCEPT;
 
     /// The session is stopped.
     virtual bool stopped() const NOEXCEPT;
@@ -220,40 +196,33 @@ protected:
     /// The current thread is on the network strand.
     virtual bool stranded() const NOEXCEPT;
 
-    /// Number of all connected channels.
-    virtual size_t channel_count() const NOEXCEPT;
-
-    /// Number of inbound connected channels.
-    virtual size_t inbound_channel_count() const NOEXCEPT;
-
-    /// Number of outbound connected channels (including manual).
-    virtual size_t outbound_channel_count() const NOEXCEPT;
-
     /// The network strand.
     asio::strand& strand() NOEXCEPT;
 
-private:
-    void handle_channel_start(const code& ec, const channel::ptr& channel,
-        const result_handler& started, const result_handler& stopped) NOEXCEPT;
-
-    void handle_handshake(const code& ec, const channel::ptr& channel,
-        const result_handler& start) NOEXCEPT;
-    void handle_channel_started(const code& ec, const channel::ptr& channel,
-        const result_handler& started) NOEXCEPT;
-    void handle_channel_stopped(const code& ec,const channel::ptr& channel,
+protected:
+    // TODO: it would be preferrable for these to be made private again.
+    virtual void handle_channel_starting(const code& ec,
+        const channel::ptr& channel, const result_handler& started,
         const result_handler& stopped) NOEXCEPT;
+    virtual void handle_handshake(const code& ec, const channel::ptr& channel,
+        const result_handler& start) NOEXCEPT;
+    virtual void handle_channel_started(const code& ec,
+        const channel::ptr& channel, const result_handler& started) NOEXCEPT;
+    virtual void handle_channel_stopped(const code& ec,
+        const channel::ptr& channel, const result_handler& stopped) NOEXCEPT;
 
-    void do_attach_handshake(const channel::ptr& channel,
+    virtual void do_attach_handshake(const channel::ptr& channel,
         const result_handler& handshake) NOEXCEPT;
-    void do_handle_handshake(const code& ec, const channel::ptr& channel,
-        const result_handler& start) NOEXCEPT;
-    void do_attach_protocols(const channel::ptr& channel,
+    virtual void do_handle_handshake(const code& ec,
+        const channel::ptr& channel, const result_handler& start) NOEXCEPT;
+    virtual void do_attach_protocols(const channel::ptr& channel,
         const result_handler& started) NOEXCEPT;
-    void do_handle_channel_started(const code& ec, const channel::ptr& channel,
-        const result_handler& started) NOEXCEPT;
-    void do_handle_channel_stopped(const code& ec, const channel::ptr& channel,
-        const result_handler& stopped) NOEXCEPT;
+    virtual void do_handle_channel_started(const code& ec,
+        const channel::ptr& channel, const result_handler& started) NOEXCEPT;
+    virtual void do_handle_channel_stopped(const code& ec,
+        const channel::ptr& channel, const result_handler& stopped) NOEXCEPT;
 
+private:
     void handle_timer(const code& ec, object_key key,
         const result_handler& complete) NOEXCEPT;
     bool handle_defer(const code& ec, object_key key,

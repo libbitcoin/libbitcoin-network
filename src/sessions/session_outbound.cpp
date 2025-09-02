@@ -25,7 +25,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
-#include <bitcoin/network/sessions/session.hpp>
+#include <bitcoin/network/sessions/session_peer.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -44,7 +44,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_outbound::session_outbound(p2p& network, uint64_t identifier) NOEXCEPT
-  : session(network, identifier), tracker<session_outbound>(network.log)
+  : session_peer(network, identifier), tracker<session_outbound>(network.log)
 {
 }
 
@@ -229,7 +229,7 @@ void session_outbound::handle_connect(const code& ec,
         return;
     }
 
-    const auto channel = create_channel(socket, false);
+    const auto channel = create_channel(socket);
 
     start_channel(channel,
         BIND(handle_channel_start, _1, channel),
@@ -240,7 +240,7 @@ void session_outbound::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) NOEXCEPT
 {
     // outbound session requires peer has minimum_services.
-    session::attach_handshake(channel, std::move(handler));
+    session_peer::attach_handshake(channel, std::move(handler));
 }
 
 void session_outbound::handle_channel_start(const code&,
@@ -255,7 +255,7 @@ void session_outbound::handle_channel_start(const code&,
 void session_outbound::attach_protocols(
     const channel::ptr& channel) NOEXCEPT
 {
-    session::attach_protocols(channel);
+    session_peer::attach_protocols(channel);
 }
 
 void session_outbound::handle_channel_stop(const code& ec,
@@ -325,7 +325,8 @@ void session_outbound::reclaim(const code& ec,
 
     if (stopped() || always_reclaim(ec) || maybe_reclaim(ec))
     {
-        restore(channel->get_updated_address(), BIND(handle_reclaim, _1));
+        const auto peer = std::dynamic_pointer_cast<channel_peer>(channel);
+        restore(peer->get_updated_address(), BIND(handle_reclaim, _1));
     }
 }
 
