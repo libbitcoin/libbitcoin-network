@@ -45,10 +45,10 @@ using namespace bc::network::messages;
 // deconfigure inbound/outbound/seed, use manual for test (?)
 
 class mock_channel
-  : public channel
+  : public channel_peer
 {
 public:
-    using channel::channel;
+    using channel_peer::channel_peer;
 
     // Capture last sent payload.
     void write(const system::chunk_ptr& payload,
@@ -225,14 +225,14 @@ public:
 };
 
 class mock_protocol
-  : public protocol
+  : public protocol_peer
 {
 public:
     typedef std::shared_ptr<mock_protocol> ptr;
 
     mock_protocol(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT
-      : protocol(session, channel)
+      : protocol_peer(session, channel)
     {
     }
 
@@ -274,22 +274,22 @@ public:
 
     version::cptr peer_version() const NOEXCEPT override
     {
-        return protocol::peer_version();
+        return protocol_peer::peer_version();
     }
 
     void set_peer_version(const version::cptr& value) NOEXCEPT override
     {
-        protocol::set_peer_version(value);
+        protocol_peer::set_peer_version(value);
     }
 
     uint32_t negotiated_version() const NOEXCEPT override
     {
-        return protocol::negotiated_version();
+        return protocol_peer::negotiated_version();
     }
 
     void set_negotiated_version(uint32_t value) NOEXCEPT override
     {
-        protocol::set_negotiated_version(value);
+        protocol_peer::set_negotiated_version(value);
     }
 
     /// Addresses.
@@ -297,13 +297,13 @@ public:
 
     void fetch(address_handler&& handler) NOEXCEPT override
     {
-        return protocol::fetch(std::move(handler));
+        return protocol_peer::fetch(std::move(handler));
     }
 
     void save(const messages::address::cptr& message,
         count_handler&& handler) NOEXCEPT override
     {
-        return protocol::save(message, std::move(handler));
+        return protocol_peer::save(message, std::move(handler));
     }
 
     virtual void handle_send(const code& ec) NOEXCEPT override

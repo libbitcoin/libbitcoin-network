@@ -23,6 +23,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
+#include <bitcoin/network/sessions/session_peer.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -39,7 +40,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_inbound::session_inbound(p2p& network, uint64_t identifier) NOEXCEPT
-  : session(network, identifier), tracker<session_inbound>(network.log)
+  : session_peer(network, identifier), tracker<session_inbound>(network.log)
 {
 }
 
@@ -181,7 +182,7 @@ void session_inbound::handle_accept(const code& ec,
         return;
     }
 
-    const auto channel = create_channel(socket, false);
+    const auto channel = create_channel(socket);
 
     LOGS("Accepted inbound connection [" << channel->authority() << "] on binding ["
         << acceptor->local() << "].");
@@ -267,18 +268,19 @@ void session_inbound::attach_protocols(
 
     using namespace messages;
     const auto self = shared_from_this();
+    const auto peer = std::dynamic_pointer_cast<channel_peer>(channel);
 
     // Alert is deprecated, independent of version.
-    if (channel->is_negotiated(level::alert_message) && settings().enable_alert)
+    if (peer->is_negotiated(level::alert_message) && settings().enable_alert)
         channel->attach<protocol_alert_311>(self)->start();
 
     // Reject is deprecated, independent of version.
-    if (channel->is_negotiated(level::bip61) && settings().enable_reject)
+    if (peer->is_negotiated(level::bip61) && settings().enable_reject)
         channel->attach<protocol_reject_70002>(self)->start();
 
-    if (channel->is_negotiated(level::bip31))
+    if (peer->is_negotiated(level::bip31))
         channel->attach<protocol_ping_60001>(self)->start();
-    else if (channel->is_negotiated(level::version_message))
+    else if (peer->is_negotiated(level::version_message))
         channel->attach<protocol_ping_106>(self)->start();
 
     // Attach is overridden to disable inbound address protocols.
@@ -286,15 +288,15 @@ void session_inbound::attach_protocols(
     if (settings().enable_address_v2)
     {
         ////// Sending address v2 is enabled in handshake.
-        ////if (channel->send_address_v2())
+        ////if (peer->send_address_v2())
         ////    channel->attach<protocol_address_out_70016>(self)->start();
     }
 
     if (settings().enable_address)
     {
-        if (channel->is_negotiated(level::get_address_message))
+        if (peer->is_negotiated(level::get_address_message))
             channel->attach<protocol_address_out_209>(self)->start();
-        ////else if (channel->is_negotiated(level::version_message))
+        ////else if (peer->is_negotiated(level::version_message))
         ////    channel->attach<protocol_address_out_106>(self)->start();
     }
 }

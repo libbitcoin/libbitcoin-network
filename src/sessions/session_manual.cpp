@@ -25,6 +25,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/p2p.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
+#include <bitcoin/network/sessions/session_peer.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -42,7 +43,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_manual::session_manual(p2p& network, uint64_t identifier) NOEXCEPT
-  : session(network, identifier), tracker<session_manual>(network.log)
+  : session_peer(network, identifier), tracker<session_manual>(network.log)
 {
 }
 
@@ -155,7 +156,7 @@ void session_manual::handle_connect(const code& ec, const socket::ptr& socket,
         return;
     }
 
-    const auto channel = create_channel(socket, false);
+    const auto channel = create_channel(socket);
 
     // It is possible for start_channel to directly invoke the handlers.
     start_channel(channel,
@@ -167,7 +168,7 @@ void session_manual::attach_handshake(const channel::ptr& channel,
     result_handler&& handler) NOEXCEPT
 {
     // manual session requires peer has minimum_services.
-    session::attach_handshake(channel, std::move(handler));
+    session_peer::attach_handshake(channel, std::move(handler));
 }
 
 void session_manual::handle_channel_start(const code& ec,
@@ -186,7 +187,7 @@ void session_manual::handle_channel_start(const code& ec,
 void session_manual::attach_protocols(
     const channel::ptr& channel) NOEXCEPT
 {
-    session::attach_protocols(channel);
+    session_peer::attach_protocols(channel);
 }
 
 void session_manual::handle_channel_stop(const code& ec,

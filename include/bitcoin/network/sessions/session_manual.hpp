@@ -25,7 +25,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/sessions/session.hpp>
+#include <bitcoin/network/sessions/session_peer.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -35,7 +35,7 @@ class p2p;
 
 /// Manual connections session, thread safe.
 class BCT_API session_manual
-  : public session, protected tracker<session_manual>
+  : public session_peer, protected tracker<session_manual>
 {
 public:
     typedef std::shared_ptr<session_manual> ptr;

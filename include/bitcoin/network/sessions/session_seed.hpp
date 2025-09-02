@@ -26,7 +26,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/sessions/session.hpp>
+#include <bitcoin/network/sessions/session_peer.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -36,7 +36,7 @@ class p2p;
 
 /// Seed connections session, thread safe.
 class BCT_API session_seed
-  : public session, protected tracker<session_seed>
+  : public session_peer, protected tracker<session_seed>
 {
 public:
     typedef std::shared_ptr<session_seed> ptr;
@@ -70,6 +70,7 @@ private:
         const result_handler& handler) NOEXCEPT;
     void handle_connect(const code& ec, const socket::ptr& socket,
         const config::endpoint& seed, const race::ptr& racer) NOEXCEPT;
+
     void handle_channel_start(const code& ec,
         const channel::ptr& channel) NOEXCEPT;
     void handle_channel_stop(const code& ec,

@@ -26,7 +26,6 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
@@ -129,95 +128,14 @@ uint64_t protocol::nonce() const NOEXCEPT
     return channel_->nonce();
 }
 
-size_t protocol::start_height() const NOEXCEPT
-{
-    return channel_->start_height();
-}
-
-version::cptr protocol::peer_version() const NOEXCEPT
-{
-    return channel_->peer_version();
-}
-
-// Call only from handshake (version protocol), for thread safety.
-void protocol::set_peer_version(const version::cptr& value) NOEXCEPT
-{
-    channel_->set_peer_version(value);
-}
-
-uint32_t protocol::negotiated_version() const NOEXCEPT
-{
-    return channel_->negotiated_version();
-}
-
-// Call only from handshake (version protocol), for thread safety.
-void protocol::set_negotiated_version(uint32_t value) NOEXCEPT
-{
-    channel_->set_negotiated_version(value);
-}
-
 const network::settings& protocol::settings() const NOEXCEPT
 {
     return session_->settings();
 }
 
-address protocol::selfs() const NOEXCEPT
-{
-    const auto time_now = unix_time();
-    const auto services = settings().services_maximum;
-    const auto& selfs = settings().selfs;
-
-    address message{};
-    message.addresses.reserve(selfs.size());
-    for (const auto& self: selfs)
-        message.addresses.push_back(self.to_address_item(time_now, services));
-
-    return message;
-}
-
 uint64_t protocol::identifier() const NOEXCEPT
 {
     return channel_->identifier();
-}
-
-// Addresses.
-// ----------------------------------------------------------------------------
-// Channel and network strands share same pool, and as long as a job is
-// running in the pool, it will continue to accept work. Therefore handlers
-// will not be orphaned during a stop as long as they remain in the pool.
-
-size_t protocol::address_count() const NOEXCEPT
-{
-    return session_->address_count();
-}
-
-void protocol::fetch(address_handler&& handler) NOEXCEPT
-{
-    session_->fetch(
-        BIND(handle_fetch, _1, _2, std::move(handler)));
-}
-
-void protocol::handle_fetch(const code& ec, const address_cptr& message,
-    const address_handler& handler) NOEXCEPT
-{
-    // Return to channel strand.
-    boost::asio::post(channel_->strand(),
-        std::bind(handler, ec, message));
-}
-
-void protocol::save(const address_cptr& message,
-    count_handler&& handler) NOEXCEPT
-{
-    session_->save(message,
-        BIND(handle_save, _1, _2, std::move(handler)));
-}
-
-void protocol::handle_save(const code& ec, size_t accepted,
-    const count_handler& handler) NOEXCEPT
-{
-    // Return to channel strand.
-    boost::asio::post(channel_->strand(),
-        std::bind(handler, ec, accepted));
 }
 
 // Send.

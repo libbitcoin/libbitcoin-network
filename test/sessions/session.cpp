@@ -24,10 +24,10 @@ using namespace bc::network::messages;
 using namespace bc::system::chain;
 
 class mock_channel
-  : public channel
+  : public channel_peer
 {
 public:
-    using channel::channel;
+    using channel_peer::channel_peer;
 
     void resume() NOEXCEPT override
     {
@@ -36,7 +36,7 @@ public:
         else
             resumed_ = true;
 
-        channel::resume();
+        channel_peer::resume();
     }
 
     bool resumed() const NOEXCEPT
@@ -52,12 +52,12 @@ public:
     void stop(const code& ec) NOEXCEPT override
     {
         stop_code_ = ec;
-        channel::stop(ec);
+        channel_peer::stop(ec);
     }
 
     void stopper(const code& ec) NOEXCEPT
     {
-        channel::stop(ec);
+        channel_peer::stop(ec);
     }
 
     code stop_code() const NOEXCEPT
@@ -85,16 +85,16 @@ public:
         else
             resumed_ = true;
 
-        ////channel::resume();
+        ////mock_channel::resume();
     }
 };
 
 class mock_session
-  : public session
+  : public session_peer
 {
 public:
     mock_session(p2p& network, size_t key) NOEXCEPT
-      : session(network, key)
+      : session_peer(network, key)
     {
     }
 
@@ -104,53 +104,53 @@ public:
 
     bool is_configured(messages::level level) const NOEXCEPT override
     {
-        return session::is_configured(level);
+        return session_peer::is_configured(level);
     }
 
     bool stopped() const NOEXCEPT override
     {
-        return session::stopped();
+        return session_peer::stopped();
     }
 
     bool stranded() const NOEXCEPT override
     {
-        return session::stranded();
+        return session_peer::stranded();
     }
 
     acceptor::ptr create_acceptor() NOEXCEPT override
     {
-        return session::create_acceptor();
+        return session_peer::create_acceptor();
     }
 
     connector::ptr create_connector() NOEXCEPT override
     {
-        return session::create_connector();
+        return session_peer::create_connector();
     }
 
     connectors_ptr create_connectors(size_t count) NOEXCEPT override
     {
-        return session::create_connectors(count);
+        return session_peer::create_connectors(count);
     }
 
     ////size_t address_count() const NOEXCEPT override
     ////{
-    ////    return session::address_count();
+    ////    return session_peer::address_count();
     ////}
 
     size_t channel_count() const NOEXCEPT override
     {
-        return session::channel_count();
+        return session_peer::channel_count();
     }
 
     size_t inbound_channel_count() const NOEXCEPT override
     {
-        return session::inbound_channel_count();
+        return session_peer::inbound_channel_count();
     }
 
     void start_channel(const channel::ptr& channel, result_handler&& started,
         result_handler&& stopped) NOEXCEPT override
     {
-        session::start_channel(channel, std::move(started), std::move(stopped));
+        session_peer::start_channel(channel, std::move(started), std::move(stopped));
     }
 
     void attach_handshake(const channel::ptr& channel,
@@ -293,25 +293,25 @@ public:
     }
 
 protected:
-    bool store_nonce(const channel& channel) NOEXCEPT override
+    bool store_nonce(const channel_peer& channel) NOEXCEPT override
     {
         stored_ = channel.nonce();
         return ((stored_result_ = p2p::store_nonce(channel)));
     }
 
-    bool unstore_nonce(const channel& channel) NOEXCEPT override
+    bool unstore_nonce(const channel_peer& channel) NOEXCEPT override
     {
         unstored_ = channel.nonce();
         return p2p::unstore_nonce(channel);
     }
 
-    code count_channel(const channel& channel) NOEXCEPT override
+    code count_channel(const channel_peer& channel) NOEXCEPT override
     {
         counted_ = channel.nonce();
         return ((counted_result_ = p2p::count_channel(channel)));
     }
 
-    void uncount_channel(const channel& channel) NOEXCEPT override
+    void uncount_channel(const channel_peer& channel) NOEXCEPT override
     {
         uncounted_ = channel.nonce();
         p2p::uncount_channel(channel);

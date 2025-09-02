@@ -23,6 +23,8 @@
 #include <bitcoin/network/protocols/protocol_address_in_209.hpp>
 #include <bitcoin/network/protocols/protocol_address_out_209.hpp>
 #include <bitcoin/network/protocols/protocol_alert_311.hpp>
+#include <bitcoin/network/protocols/protocol_client.hpp>
+#include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/protocols/protocol_ping_106.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 #include <bitcoin/network/protocols/protocol_reject_70002.hpp>
