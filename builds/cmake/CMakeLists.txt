@@ -219,7 +219,7 @@ link_libraries(
 add_library( ${CANONICAL_LIB_NAME}
     "../../src/error.cpp"
     "../../src/memory.cpp"
-    "../../src/p2p.cpp"
+    "../../src/net.cpp"
     "../../src/settings.cpp"
     "../../src/async/thread.cpp"
     "../../src/async/threadpool.cpp"
@@ -342,7 +342,7 @@ if (with-tests)
         "../../test/error.cpp"
         "../../test/main.cpp"
         "../../test/memory.cpp"
-        "../../test/p2p.cpp"
+        "../../test/net.cpp"
         "../../test/settings.cpp"
         "../../test/test.cpp"
         "../../test/test.hpp"

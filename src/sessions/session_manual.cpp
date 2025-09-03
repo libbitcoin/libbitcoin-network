@@ -23,7 +23,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/p2p.hpp>
+#include <bitcoin/network/net.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/sessions/session_peer.hpp>
 
@@ -42,7 +42,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session_manual::session_manual(p2p& network, uint64_t identifier) NOEXCEPT
+session_manual::session_manual(net& network, uint64_t identifier) NOEXCEPT
   : session_peer(network, identifier), tracker<session_manual>(network.log)
 {
 }

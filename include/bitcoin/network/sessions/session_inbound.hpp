@@ -30,7 +30,7 @@
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class net;
 
 /// Inbound connections session, thread safe.
 class BCT_API session_inbound
@@ -40,7 +40,7 @@ public:
     typedef std::shared_ptr<session_inbound> ptr;
 
     /// Construct an instance (network should be started).
-    session_inbound(p2p& network, uint64_t identifier) NOEXCEPT;
+    session_inbound(net& network, uint64_t identifier) NOEXCEPT;
 
     /// Start accepting inbound connections as configured (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;

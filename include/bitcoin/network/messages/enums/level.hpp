@@ -90,12 +90,12 @@ namespace messages {
 // getblocktxn  v4      70014   BIP152
 // sendcmpct    v4      70014   BIP152  post-handshake, multiple (versioned)
 // ----------------------------------------------------------------------------
-// cfilter      v4      70015   BIP157  not BIP-associated to p2p version (**)
-// getcfilters  v4      70015   BIP157  not BIP-associated to p2p version (**)
-// cfcheckpt    v4      70015   BIP157  not BIP-associated to p2p version (**)
-// getcfcheckpt v4      70015   BIP157  not BIP-associated to p2p version (**)
-// cfheaders    v4      70015   BIP157  not BIP-associated to p2p version (**)
-// getcfheaders v4      70015   BIP157  not BIP-associated to p2p version (**)
+// cfilter      v4      70015   BIP157  not BIP-associated to net version (**)
+// getcfilters  v4      70015   BIP157  not BIP-associated to net version (**)
+// cfcheckpt    v4      70015   BIP157  not BIP-associated to net version (**)
+// getcfcheckpt v4      70015   BIP157  not BIP-associated to net version (**)
+// cfheaders    v4      70015   BIP157  not BIP-associated to net version (**)
+// getcfheaders v4      70015   BIP157  not BIP-associated to net version (**)
 // ----------------------------------------------------------------------------
 // wtxidrelay   v4      70016   BIP339  in-handshake, single
 // sendtxrcncl  --      70016   BIP330  no intent to support (***)

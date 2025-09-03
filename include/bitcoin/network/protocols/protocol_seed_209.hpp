@@ -31,6 +31,7 @@
 
 namespace libbitcoin {
 namespace network {
+
 class BCT_API protocol_seed_209
   : public protocol_peer, protected tracker<protocol_seed_209>
 {

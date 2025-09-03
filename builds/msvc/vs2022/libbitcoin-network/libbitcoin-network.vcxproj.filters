@@ -240,6 +240,9 @@
     <ClCompile Include="..\..\..\..\src\messages\witness_tx_id_relay.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
@@ -272,9 +275,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket.cpp">
       <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\p2p.cpp">
-      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol.cpp">
       <Filter>src\protocols</Filter>
@@ -581,6 +581,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\witness_tx_id_relay.hpp">
       <Filter>include\bitcoin\network\messages</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp">
+      <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
@@ -616,9 +619,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp">
       <Filter>include\bitcoin\network\net</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\p2p.hpp">
-      <Filter>include\bitcoin\network</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>

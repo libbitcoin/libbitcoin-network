@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_P2P_HPP
-#define LIBBITCOIN_NETWORK_P2P_HPP
+#ifndef LIBBITCOIN_NETWORK_NET_HPP
+#define LIBBITCOIN_NETWORK_NET_HPP
 
 #include <atomic>
 #include <memory>
@@ -38,11 +38,11 @@ namespace network {
 /// Peer-to-Peer network class, virtual, thread safe with exceptions:
 /// * attach must be called from network strand.
 /// * close must not be called concurrently or from any threadpool thread.
-class BCT_API p2p
+class BCT_API net
   : public reporter
 {
 public:
-    typedef std::shared_ptr<p2p> ptr;
+    typedef std::shared_ptr<net> ptr;
     typedef uint64_t object_key;
 
     typedef desubscriber<object_key> stop_subscriber;
@@ -56,13 +56,13 @@ public:
     /// Constructors.
     /// -----------------------------------------------------------------------
 
-    DELETE_COPY_MOVE(p2p);
+    DELETE_COPY_MOVE(net);
 
     /// Construct an instance.
-    p2p(const settings& settings, const logger& log) NOEXCEPT;
+    net(const settings& settings, const logger& log) NOEXCEPT;
 
     /// Calls close().
-    virtual ~p2p() NOEXCEPT;
+    virtual ~net() NOEXCEPT;
 
     /// Sequences.
     /// -----------------------------------------------------------------------

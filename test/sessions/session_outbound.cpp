@@ -223,11 +223,11 @@ public:
 };
 
 template <class Connector = connector>
-class mock_p2p
-  : public p2p
+class mock_net
+  : public net
 {
 public:
-    using p2p::p2p;
+    using net::net;
 
     // Get last created connector.
     typename Connector::ptr get_connector() const NOEXCEPT
@@ -329,12 +329,12 @@ private:
     std::atomic_bool suspended_{ false };
 };
 
-// Can't derive from mock_p2p because Connector has more arguments.
-class mock_p2p_stop_connect
-  : public p2p
+// Can't derive from mock_net because Connector has more arguments.
+class mock_net_stop_connect
+  : public net
 {
 public:
-    using p2p::p2p;
+    using net::net;
 
     void set_session(mock_session_outbound::ptr session) NOEXCEPT
     {
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
     set.host_pool_capacity = 1;
     set.connect_batch_size = 1;
     set.outbound_connections = 1;
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__started__stopped)
     });
 
     // This indicates successful start, not connection(s) status.
-    // Because p2p is not started, connections will fail until stop.
+    // Because net is not started, connections will fail until stop.
     BOOST_REQUIRE_EQUAL(started.get_future().get(), error::success);
     BOOST_REQUIRE(!session->stopped());
 
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__stop__stopped__stopped)
 {
     const logger log{};
     settings set(selection::mainnet);
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     mock_session_outbound session(net, 1);
 
     std::promise<bool> promise;
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_outbound_connections__success)
     settings set(selection::mainnet);
     set.outbound_connections = 0;
     set.host_pool_capacity = 1;
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -498,7 +498,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_host_pool_capacity__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__zero_connect_batch_size__success)
     settings set(selection::mainnet);
     set.host_pool_capacity = 1;
     set.connect_batch_size = 0;
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -543,7 +543,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__no_address_count__address_not_foun
     const logger log{};
     settings set(selection::mainnet);
     set.host_pool_capacity = 1;
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__restart__operation_failed)
     set.host_pool_capacity = 1;
     set.connect_batch_size = 1;
     set.outbound_connections = 1;
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address_count>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__three_outbound_three_batch__succes
     set.connect_batch_size = 3;
     set.outbound_connections = 3;
     set.connect_timeout_seconds = 10000;
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address>(net, 1);
     BOOST_REQUIRE(session->stopped());
     
@@ -659,7 +659,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_connect_stopped__first_chan
 
     // This invokes session.stop from within start_connect and then continues.
     // First channel is stopped for service_stopped and others for channel_dropped.
-    mock_p2p_stop_connect net(set, log);
+    mock_net_stop_connect net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address>(net, 1);
     net.set_session(session);
     BOOST_REQUIRE(session->stopped());
@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(session_outbound__start__handle_one__first_channel_success)
     set.enable_ipv6 = true;
 
     // Started channel results in read failure.
-    mock_p2p<mock_connector_connect_success> net(set, log);
+    mock_net<mock_connector_connect_success> net(set, log);
     auto session = std::make_shared<mock_session_outbound_one_address>(net, 1);
     BOOST_REQUIRE(session->stopped());
 

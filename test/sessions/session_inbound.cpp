@@ -309,11 +309,11 @@ public:
 };
 
 template <class Acceptor = acceptor>
-class mock_p2p
-  : public p2p
+class mock_net
+  : public net
 {
 public:
-    using p2p::p2p;
+    using net::net;
 
     typename Acceptor::ptr get_acceptor() const NOEXCEPT
     {
@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__started__stopped)
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__stopped__stopped)
 {
     const logger log{};
     settings set(selection::mainnet);
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     mock_session_inbound session(net, 1);
 
     std::promise<bool> promise;
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__no_inbound_connections__success)
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 0;
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     mock_session_inbound session(net, 1);
     BOOST_REQUIRE(session.stopped());
 
@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__empty_binds__success)
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.binds.clear();
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     mock_session_inbound session(net, 1);
     BOOST_REQUIRE(session.stopped());
 
@@ -489,7 +489,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__inbound_connections_restart__operat
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_start_failure__not_accepte
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    mock_p2p<mock_acceptor_start_fail> net(set, log);
+    mock_net<mock_acceptor_start_fail> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE_EQUAL(set.binds.size(), one);
@@ -581,7 +581,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    mock_p2p<mock_acceptor_start_stopped> net(set, log);
+    mock_net<mock_acceptor_start_stopped> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE_EQUAL(set.binds.size(), one);
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__start__acceptor_started_accept_returns_sto
 ////    const logger log{};
 ////    settings set(selection::mainnet);
 ////    set.inbound_connections = 1;
-////    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
+////    mock_net<mock_acceptor_start_success_accept_success> net(set, log);
 ////
 ////    // start_accept is invoked with invalid_checksum.
 ////    auto session = std::make_shared<mock_session_start_accept_parameter_error>(net, 1);
@@ -672,7 +672,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_error__not_a
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    mock_p2p<mock_acceptor_start_success_accept_fail> net(set, log);
+    mock_net<mock_acceptor_start_success_accept_fail> net(set, log);
     auto session = std::make_shared<mock_session_inbound>(net, 1);
     BOOST_REQUIRE(session->stopped());
     BOOST_REQUIRE_EQUAL(set.binds.size(), one);
@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_not_whitelis
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
+    mock_net<mock_acceptor_start_success_accept_success> net(set, log);
     BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> net_started;
@@ -772,7 +772,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_blacklisted_
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
+    mock_net<mock_acceptor_start_success_accept_success> net(set, log);
     BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> net_started;
@@ -824,7 +824,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_oversubscrib
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
+    mock_net<mock_acceptor_start_success_accept_success> net(set, log);
     BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> net_started;
@@ -877,7 +877,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_disabled__no
     const logger log{};
     settings set(selection::mainnet);
     set.inbound_connections = 1;
-    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
+    mock_net<mock_acceptor_start_success_accept_success> net(set, log);
     BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> net_started;
@@ -930,7 +930,7 @@ BOOST_AUTO_TEST_CASE(session_inbound__stop__acceptor_started_accept_success__att
     settings set(selection::mainnet);
     set.inbound_connections = 1;
     set.connect_timeout_seconds = 10000;
-    mock_p2p<mock_acceptor_start_success_accept_success> net(set, log);
+    mock_net<mock_acceptor_start_success_accept_success> net(set, log);
     BOOST_REQUIRE_EQUAL(set.binds.size(), one);
 
     std::promise<code> net_started;
