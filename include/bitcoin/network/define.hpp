@@ -131,7 +131,7 @@ namespace network {
 } // namespace network
 } // namespace libbitcoin
 
-// define.hpp is the common include for /network (except p2p and settings).
+// define.hpp is the common include for /network (except net and settings).
 // All non-network headers include define.hpp.
 // Network inclusions are chained as follows.
 
@@ -148,13 +148,13 @@ namespace network {
 // /log           : define /async
 // /config        : define /messages /async
 // /net           : define settings memory /config /log
-// /sessions      : define settings /net [forward: p2p]
+// /sessions      : define settings /net [forward: net]
 // /protocols     : define settings /sessions
 
 // Root directory singletons.
 
 // memory         : define
 // settings       : define /messages /config
-// p2p            : define settings /sessions
+// net            : define settings /sessions
 
 #endif

@@ -49,7 +49,7 @@ size_t get_blocks::locator_size(size_t top) NOEXCEPT
 }
 
 // static
-// This algorithm is a p2p best practice, not a consensus or p2p rule.
+// This algorithm is a net best practice, not a consensus or net rule.
 get_blocks::indexes get_blocks::heights(size_t top) NOEXCEPT
 {
     auto step = one;

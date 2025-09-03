@@ -34,7 +34,7 @@
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class net;
 #define CLASS session
 
 /// Abstract base class for maintaining a channel set, thread safe.
@@ -121,7 +121,7 @@ public:
     /// Access network configuration settings.
     const network::settings& settings() const NOEXCEPT;
 
-    /// Arbitrary identifier of the session (for p2p subscriber).
+    /// Arbitrary identifier of the session (for net subscriber).
     uint64_t identifier() const NOEXCEPT;
 
 protected:
@@ -133,7 +133,7 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Construct an instance (network should be started).
-    session(p2p& network, uint64_t identifier) NOEXCEPT;
+    session(net& network, uint64_t identifier) NOEXCEPT;
 
     /// Asserts that session is stopped.
     virtual ~session() NOEXCEPT;
@@ -230,7 +230,7 @@ private:
     bool handle_pend(const code& ec, const channel::ptr& channel) NOEXCEPT;
 
     // These are thread safe (mostly).
-    p2p& network_;
+    net& network_;
     broadcaster& broadcaster_;
     const uint64_t identifier_;
     std::atomic_bool stopped_{ true };

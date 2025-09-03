@@ -27,7 +27,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/p2p.hpp>
+#include <bitcoin/network/net.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 
@@ -43,7 +43,7 @@ using namespace std::placeholders;
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session_peer::session_peer(p2p& network, uint64_t identifier) NOEXCEPT
+session_peer::session_peer(net& network, uint64_t identifier) NOEXCEPT
   : network_(network), session(network, identifier)
 {
 }

@@ -36,11 +36,11 @@ BOOST_AUTO_TEST_SUITE(protocol_tests)
 using namespace bc::system::chain;
 using namespace bc::network::messages;
 
-// settings (inject p2p)
-// mock_p2p (inject connector)
-// mock_sessions [mock_p2p] (bypass protocol attachments)
+// settings (inject net)
+// mock_net (inject connector)
+// mock_sessions [mock_net] (bypass protocol attachments)
 // mock_connector (inject channel)
-// mock_channel (inject protocols, uses p2p/connector, mock send/receive)
+// mock_channel (inject protocols, uses net/connector, mock send/receive)
 // mock_protocol(s) (test)
 // deconfigure inbound/outbound/seed, use manual for test (?)
 
@@ -175,12 +175,12 @@ private:
     std::atomic_bool suspended_{ false };
 };
 
-// Use mock p2p network to inject mock channels.
-class mock_p2p
-  : public p2p
+// Use mock net network to inject mock channels.
+class mock_net
+  : public net
 {
 public:
-    using p2p::p2p;
+    using net::net;
 
     // Create mock acceptor to inject mock channel.
     acceptor::ptr create_acceptor() NOEXCEPT override

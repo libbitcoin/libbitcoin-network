@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/p2p.hpp>
+#include <bitcoin/network/net.hpp>
 
 #include <algorithm>
 #include <memory>
@@ -39,7 +39,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 using namespace system;
 using namespace std::placeholders;
 
-p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
+net::net(const settings& settings, const logger& log) NOEXCEPT
   : settings_(settings),
     threadpool_(std::max(settings.threads, 1_u32)),
     strand_(threadpool_.service().get_executor()),
@@ -61,28 +61,28 @@ p2p::p2p(const settings& settings, const logger& log) NOEXCEPT
     ////LOG_LOG("Verbose log compiled.....: ", verbose_defined);
 }
 
-p2p::~p2p() NOEXCEPT
+net::~net() NOEXCEPT
 {
-    // Weak references in threadpool closures safe as p2p joins threads here.
-    p2p::close();
+    // Weak references in threadpool closures safe as net joins threads here.
+    net::close();
 }
 
 // I/O factories.
 // ----------------------------------------------------------------------------
 
-acceptor::ptr p2p::create_acceptor() NOEXCEPT
+acceptor::ptr net::create_acceptor() NOEXCEPT
 {
     return std::make_shared<acceptor>(log, strand(), service(),
         network_settings(), accept_suspended_);
 }
 
-connector::ptr p2p::create_connector() NOEXCEPT
+connector::ptr net::create_connector() NOEXCEPT
 {
     return std::make_shared<connector>(log, strand(), service(),
         network_settings(), connect_suspended_);
 }
 
-connectors_ptr p2p::create_connectors(size_t count) NOEXCEPT
+connectors_ptr net::create_connectors(size_t count) NOEXCEPT
 {
     const auto connects = std::make_shared<connectors>();
     connects->reserve(count);
@@ -96,21 +96,21 @@ connectors_ptr p2p::create_connectors(size_t count) NOEXCEPT
 // Start sequence.
 // ----------------------------------------------------------------------------
 
-void p2p::start(result_handler&& handler) NOEXCEPT
+void net::start(result_handler&& handler) NOEXCEPT
 {
     // Threadpool is started on construct, stopped only by work starvation.
     boost::asio::post(strand_,
-        std::bind(&p2p::do_start, this, std::move(handler)));
+        std::bind(&net::do_start, this, std::move(handler)));
 }
 
-void p2p::do_start(const result_handler& handler) NOEXCEPT
+void net::do_start(const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     manual_ = attach_manual_session();
-    manual_->start(std::bind(&p2p::handle_start, this, _1, handler));
+    manual_->start(std::bind(&net::handle_start, this, _1, handler));
 }
 
-void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
+void net::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -134,7 +134,7 @@ void p2p::handle_start(const code& ec, const result_handler& handler) NOEXCEPT
 // Run sequence (seeding may be ongoing after its handler is invoked).
 // ----------------------------------------------------------------------------
 
-void p2p::run(result_handler&& handler) NOEXCEPT
+void net::run(result_handler&& handler) NOEXCEPT
 {
     // Public methods can complete on caller thread.
     if (closed())
@@ -144,10 +144,10 @@ void p2p::run(result_handler&& handler) NOEXCEPT
     }
 
     boost::asio::post(strand_,
-        std::bind(&p2p::do_run, this, std::move(handler)));
+        std::bind(&net::do_run, this, std::move(handler)));
 }
 
-void p2p::do_run(const result_handler& handler) NOEXCEPT
+void net::do_run(const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -161,10 +161,10 @@ void p2p::do_run(const result_handler& handler) NOEXCEPT
         do_connect(peer);
 
     attach_inbound_session()->start(
-        std::bind(&p2p::handle_run, this, _1, handler));
+        std::bind(&net::handle_run, this, _1, handler));
 }
 
-void p2p::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
+void net::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -181,11 +181,11 @@ void p2p::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // Results in std::abort if called from a thread within the threadpool.
-void p2p::close() NOEXCEPT
+void net::close() NOEXCEPT
 {
     closed_.store(true);
     boost::asio::post(strand_,
-        std::bind(&p2p::do_close, this));
+        std::bind(&net::do_close, this));
 
     // Blocks on join of all threadpool threads.
     if (!threadpool_.join())
@@ -201,7 +201,7 @@ void p2p::close() NOEXCEPT
     }
 }
 
-void p2p::do_close() NOEXCEPT
+void net::do_close() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -221,7 +221,7 @@ void p2p::do_close() NOEXCEPT
     threadpool_.stop();
 }
 
-bool p2p::closed() const NOEXCEPT
+bool net::closed() const NOEXCEPT
 {
     return closed_.load();
 }
@@ -229,39 +229,39 @@ bool p2p::closed() const NOEXCEPT
 // Suspensions.
 // ----------------------------------------------------------------------------
 
-void p2p::suspend(const code&) NOEXCEPT
+void net::suspend(const code&) NOEXCEPT
 {
     suspend_acceptors();
     suspend_connectors();
 }
 
-void p2p::resume() NOEXCEPT
+void net::resume() NOEXCEPT
 {
     resume_acceptors();
     resume_connectors();
 }
 
-bool p2p::suspended() const NOEXCEPT
+bool net::suspended() const NOEXCEPT
 {
     return connect_suspended_.load() || accept_suspended_.load();
 }
 
-void p2p::suspend_acceptors() NOEXCEPT
+void net::suspend_acceptors() NOEXCEPT
 {
     accept_suspended_.store(true);
 }
 
-void p2p::resume_acceptors() NOEXCEPT
+void net::resume_acceptors() NOEXCEPT
 {
     accept_suspended_.store(false);
 }
 
-void p2p::suspend_connectors() NOEXCEPT
+void net::suspend_connectors() NOEXCEPT
 {
     connect_suspended_.store(true);
 }
 
-void p2p::resume_connectors() NOEXCEPT
+void net::resume_connectors() NOEXCEPT
 {
     connect_suspended_.store(false);
 }
@@ -269,22 +269,22 @@ void p2p::resume_connectors() NOEXCEPT
 // Properties.
 // ----------------------------------------------------------------------------
 
-const settings& p2p::network_settings() const NOEXCEPT
+const settings& net::network_settings() const NOEXCEPT
 {
     return settings_;
 }
 
-asio::io_context& p2p::service() NOEXCEPT
+asio::io_context& net::service() NOEXCEPT
 {
     return threadpool_.service();
 }
 
-asio::strand& p2p::strand() NOEXCEPT
+asio::strand& net::strand() NOEXCEPT
 {
     return strand_;
 }
 
-bool p2p::stranded() const NOEXCEPT
+bool net::stranded() const NOEXCEPT
 {
     return strand_.running_in_this_thread();
 }
@@ -299,7 +299,7 @@ bool p2p::stranded() const NOEXCEPT
 // invoked when stopped as the handler will go uninvoked if the pool empties.
 
 // public
-void p2p::subscribe_connect(channel_notifier&& handler,
+void net::subscribe_connect(channel_notifier&& handler,
     channel_completer&& complete) NOEXCEPT
 {
     // Public methods can complete on caller thread.
@@ -311,11 +311,11 @@ void p2p::subscribe_connect(channel_notifier&& handler,
     }
 
     boost::asio::post(strand_,
-        std::bind(&p2p::do_subscribe_connect,
+        std::bind(&net::do_subscribe_connect,
             this, std::move(handler), std::move(complete)));
 }
 
-void p2p::do_subscribe_connect(const channel_notifier& handler,
+void net::do_subscribe_connect(const channel_notifier& handler,
     const channel_completer& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -325,46 +325,46 @@ void p2p::do_subscribe_connect(const channel_notifier& handler,
 }
 
 // protected
-void p2p::notify_connect(const channel::ptr& channel) NOEXCEPT
+void net::notify_connect(const channel::ptr& channel) NOEXCEPT
 {
     boost::asio::post(strand_,
-        std::bind(&p2p::do_notify_connect, this, channel));
+        std::bind(&net::do_notify_connect, this, channel));
 }
 
-void p2p::do_notify_connect(const channel::ptr& channel) NOEXCEPT
+void net::do_notify_connect(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     connect_subscriber_.notify(error::success, channel);
 }
 
-void p2p::unsubscribe_connect(object_key key) NOEXCEPT
+void net::unsubscribe_connect(object_key key) NOEXCEPT
 {
     boost::asio::post(strand_,
-        std::bind(&p2p::do_unsubscribe_connect, this, key));
+        std::bind(&net::do_unsubscribe_connect, this, key));
 }
 
-void p2p::do_unsubscribe_connect(object_key key) NOEXCEPT
+void net::do_unsubscribe_connect(object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     connect_subscriber_.notify_one(key, error::desubscribed, nullptr);
 }
 
 // protected
-void p2p::subscribe_close(stop_handler&& handler) NOEXCEPT
+void net::subscribe_close(stop_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     subscribe_close(std::move(handler), create_key());
 }
 
 // private
-code p2p::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
+code net::subscribe_close(stop_handler&& handler, object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return stop_subscriber_.subscribe(std::move(handler), key);
 }
 
 // public
-void p2p::subscribe_close(stop_handler&& handler,
+void net::subscribe_close(stop_handler&& handler,
     stop_completer&& complete) NOEXCEPT
 {
     // Public methods can complete on caller thread.
@@ -376,11 +376,11 @@ void p2p::subscribe_close(stop_handler&& handler,
     }
 
     boost::asio::post(strand_,
-        std::bind(&p2p::do_subscribe_close,
+        std::bind(&net::do_subscribe_close,
             this, std::move(handler), std::move(complete)));
 }
 
-void p2p::do_subscribe_close(const stop_handler& handler,
+void net::do_subscribe_close(const stop_handler& handler,
     const stop_completer& complete) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -389,20 +389,20 @@ void p2p::do_subscribe_close(const stop_handler& handler,
     complete(subscribe_close(move_copy(handler), key), key);
 }
 
-void p2p::unsubscribe_close(object_key key) NOEXCEPT
+void net::unsubscribe_close(object_key key) NOEXCEPT
 {
     boost::asio::post(strand_,
-        std::bind(&p2p::do_unsubscribe_close, this, key));
+        std::bind(&net::do_unsubscribe_close, this, key));
 }
 
-void p2p::do_unsubscribe_close(object_key key) NOEXCEPT
+void net::do_unsubscribe_close(object_key key) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     stop_subscriber_.notify_one(key, error::desubscribed);
 }
 
 // At one object/session/ns, this overflows in ~585 years (and handled).
-p2p::object_key p2p::create_key() NOEXCEPT
+net::object_key net::create_key() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -418,19 +418,19 @@ p2p::object_key p2p::create_key() NOEXCEPT
 // P2P Manual connections.
 // ----------------------------------------------------------------------------
 
-void p2p::connect(const config::endpoint& endpoint) NOEXCEPT
+void net::connect(const config::endpoint& endpoint) NOEXCEPT
 {
     boost::asio::post(strand_,
-        std::bind(&p2p::do_connect, this, endpoint));
+        std::bind(&net::do_connect, this, endpoint));
 }
 
-void p2p::do_connect(const config::endpoint& endpoint) NOEXCEPT
+void net::do_connect(const config::endpoint& endpoint) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     if (manual_) manual_->connect(endpoint);
 }
 
-void p2p::connect(const config::endpoint& endpoint,
+void net::connect(const config::endpoint& endpoint,
     channel_notifier&& handler) NOEXCEPT
 {
     // Public methods can complete on caller thread.
@@ -441,11 +441,11 @@ void p2p::connect(const config::endpoint& endpoint,
     }
 
     boost::asio::post(strand_,
-        std::bind(&p2p::do_connect_handled, this, endpoint,
+        std::bind(&net::do_connect_handled, this, endpoint,
             std::move(handler)));
 }
 
-void p2p::do_connect_handled(const config::endpoint& endpoint,
+void net::do_connect_handled(const config::endpoint& endpoint,
     const channel_notifier& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -459,22 +459,22 @@ void p2p::do_connect_handled(const config::endpoint& endpoint,
 // P2P Properties.
 // ----------------------------------------------------------------------------
 
-size_t p2p::address_count() const NOEXCEPT
+size_t net::address_count() const NOEXCEPT
 {
     return hosts_.count();
 }
 
-size_t p2p::reserved_count() const NOEXCEPT
+size_t net::reserved_count() const NOEXCEPT
 {
     return hosts_.reserved();
 }
 
-size_t p2p::channel_count() const NOEXCEPT
+size_t net::channel_count() const NOEXCEPT
 {
     return total_channel_count_;
 }
 
-size_t p2p::inbound_channel_count() const NOEXCEPT
+size_t net::inbound_channel_count() const NOEXCEPT
 {
     return inbound_channel_count_;
 }
@@ -484,50 +484,50 @@ size_t p2p::inbound_channel_count() const NOEXCEPT
 // Protected, called from session (network strand) and channel (network pool).
 
 // private
-code p2p::start_hosts() NOEXCEPT
+code net::start_hosts() NOEXCEPT
 {
     return hosts_.start();
 }
 
 // private
-code p2p::stop_hosts() NOEXCEPT
+code net::stop_hosts() NOEXCEPT
 {
     return hosts_.stop();
 }
 
-void p2p::take(address_item_handler&& handler) NOEXCEPT
+void net::take(address_item_handler&& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
-        std::bind(&p2p::do_take, this, std::move(handler)));
+        std::bind(&net::do_take, this, std::move(handler)));
 }
 
-void p2p::do_take(const address_item_handler& handler) NOEXCEPT
+void net::do_take(const address_item_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     hosts_.take(move_copy(handler));
 }
 
-void p2p::restore(const address_item_cptr& address,
+void net::restore(const address_item_cptr& address,
     result_handler&& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
-        std::bind(&p2p::do_restore, this, address, std::move(handler)));
+        std::bind(&net::do_restore, this, address, std::move(handler)));
 }
 
-void p2p::do_restore(const address_item_cptr& address,
+void net::do_restore(const address_item_cptr& address,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     hosts_.restore(address, move_copy(handler));
 }
 
-void p2p::fetch(address_handler&& handler) NOEXCEPT
+void net::fetch(address_handler&& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
-        std::bind(&p2p::do_fetch, this, std::move(handler)));
+        std::bind(&net::do_fetch, this, std::move(handler)));
 }
 
-void p2p::do_fetch(const address_handler& handler) NOEXCEPT
+void net::do_fetch(const address_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -541,13 +541,13 @@ void p2p::do_fetch(const address_handler& handler) NOEXCEPT
     hosts_.fetch(move_copy(handler));
 }
 
-void p2p::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
+void net::save(const address_cptr& message, count_handler&& handler) NOEXCEPT
 {
     boost::asio::post(strand_,
-        std::bind(&p2p::do_save, this, message, std::move(handler)));
+        std::bind(&net::do_save, this, message, std::move(handler)));
 }
 
-void p2p::do_save(const address_cptr& message,
+void net::do_save(const address_cptr& message,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -565,7 +565,7 @@ void p2p::do_save(const address_cptr& message,
 // P2P loopback detection.
 // ----------------------------------------------------------------------------
 
-bool p2p::store_nonce(const channel_peer& channel) NOEXCEPT
+bool net::store_nonce(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -581,7 +581,7 @@ bool p2p::store_nonce(const channel_peer& channel) NOEXCEPT
     return true;
 }
 
-bool p2p::unstore_nonce(const channel_peer& channel) NOEXCEPT
+bool net::unstore_nonce(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -597,7 +597,7 @@ bool p2p::unstore_nonce(const channel_peer& channel) NOEXCEPT
     return true;
 }
 
-bool p2p::is_loopback(const channel_peer& channel) const NOEXCEPT
+bool net::is_loopback(const channel_peer& channel) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -610,7 +610,7 @@ bool p2p::is_loopback(const channel_peer& channel) const NOEXCEPT
 // P2P channel counting with address deconfliction.
 // ----------------------------------------------------------------------------
 
-code p2p::count_channel(const channel_peer& channel) NOEXCEPT
+code net::count_channel(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -650,7 +650,7 @@ code p2p::count_channel(const channel_peer& channel) NOEXCEPT
     return error::success;
 }
 
-void p2p::uncount_channel(const channel_peer& channel) NOEXCEPT
+void net::uncount_channel(const channel_peer& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -678,25 +678,25 @@ void p2p::uncount_channel(const channel_peer& channel) NOEXCEPT
 // Specializations (protected).
 // ----------------------------------------------------------------------------
 
-session_seed::ptr p2p::attach_seed_session() NOEXCEPT
+session_seed::ptr net::attach_seed_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return attach<session_seed>(*this);
 }
 
-session_manual::ptr p2p::attach_manual_session() NOEXCEPT
+session_manual::ptr net::attach_manual_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return attach<session_manual>(*this);
 }
 
-session_inbound::ptr p2p::attach_inbound_session() NOEXCEPT
+session_inbound::ptr net::attach_inbound_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return attach<session_inbound>(*this);
 }
 
-session_outbound::ptr p2p::attach_outbound_session() NOEXCEPT
+session_outbound::ptr net::attach_outbound_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return attach<session_outbound>(*this);

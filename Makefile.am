@@ -37,7 +37,7 @@ src_libbitcoin_network_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_network_la_SOURCES = \
     src/error.cpp \
     src/memory.cpp \
-    src/p2p.cpp \
+    src/net.cpp \
     src/settings.cpp \
     src/async/thread.cpp \
     src/async/threadpool.cpp \
@@ -136,7 +136,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/error.cpp \
     test/main.cpp \
     test/memory.cpp \
-    test/p2p.cpp \
+    test/net.cpp \
     test/settings.cpp \
     test/test.cpp \
     test/test.hpp \
@@ -239,7 +239,7 @@ include_bitcoin_network_HEADERS = \
     include/bitcoin/network/define.hpp \
     include/bitcoin/network/error.hpp \
     include/bitcoin/network/memory.hpp \
-    include/bitcoin/network/p2p.hpp \
+    include/bitcoin/network/net.hpp \
     include/bitcoin/network/settings.hpp \
     include/bitcoin/network/version.hpp
 

@@ -35,7 +35,7 @@
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class net;
 
 /// Abstract base class for maintaining a channel set, thread safe.
 class BCT_API session_peer
@@ -72,7 +72,7 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Construct an instance (network should be started).
-    session_peer(p2p& network, uint64_t identifier) NOEXCEPT;
+    session_peer(net& network, uint64_t identifier) NOEXCEPT;
 
     /// Channel sequence.
     /// -----------------------------------------------------------------------
@@ -127,7 +127,7 @@ private:
         const result_handler& stopped) NOEXCEPT override;
 
     // This is thread safe (mostly).
-    p2p& network_;
+    net& network_;
 };
 
 } // namespace network

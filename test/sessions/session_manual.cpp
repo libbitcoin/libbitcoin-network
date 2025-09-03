@@ -131,7 +131,7 @@ public:
     // Capture first start_connect call.
     void start_connect(const code&, const endpoint& peer,
         const connector::ptr& connector,
-        const p2p::channel_notifier& handler) NOEXCEPT override
+        const net::channel_notifier& handler) NOEXCEPT override
     {
         // Must be first to ensure connector::start_connect() preceeds promise release.
         session_manual::start_connect({}, peer, connector, handler);
@@ -217,11 +217,11 @@ public:
 };
 
 template <class Connector = connector>
-class mock_p2p
-  : public p2p
+class mock_net
+  : public net
 {
 public:
-    using p2p::p2p;
+    using net::net;
 
     // Get last created connector.
     typename Connector::ptr get_connector() const NOEXCEPT
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__started__stopped)
 {
     const logger log{};
     settings set(selection::mainnet);
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(session_manual__stop__stopped__stopped)
 {
     const logger log{};
     settings set(selection::mainnet);
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     mock_session_manual session(net, 1);
 
     std::promise<bool> promise;
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__started__operation_failed)
 {
     const logger log{};
     settings set(selection::mainnet);
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_unhandled__stopped__service_stopped
 {
     const logger log{};
     settings set(selection::mainnet);
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(session_manual__connect_handled__stopped__service_stopped)
 {
     const logger log{};
     settings set(selection::mainnet);
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_fail__service_stopp
     settings set(selection::mainnet);
 
     // Connect will return invalid_magic when executed.
-    mock_p2p<mock_connector_connect_fail> net(set, log);
+    mock_net<mock_connector_connect_fail> net(set, log);
 
     auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -530,7 +530,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_connect__connect_success_stopped__se
 {
     const logger log{};
     settings set(selection::mainnet);
-    mock_p2p<mock_connector_connect_success> net(set, log);
+    mock_net<mock_connector_connect_success> net(set, log);
     auto session = std::make_shared<mock_session_manual>(net, 1);
     BOOST_REQUIRE(session->stopped());
 
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE(session_manual__handle_channel_start__handshake_error__expe
     const logger log{};
     settings set(selection::mainnet);
 
-    mock_p2p<mock_connector_connect_success> net(set, log);
+    mock_net<mock_connector_connect_success> net(set, log);
 
     auto session = std::make_shared<mock_session_manual_handshake_failure>(net, 1);
     BOOST_REQUIRE(session->stopped());
@@ -642,7 +642,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_start__success)
 {
     const logger log{};
     settings set(selection::mainnet);
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
 
     std::promise<code> started;
     net.start([&](const code& ec) NOEXCEPT
@@ -660,7 +660,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_no_connections__success)
     BOOST_REQUIRE(set.peers.empty());
 
     // Connector is not invoked.
-    mock_p2p<> net(set, log);
+    mock_net<> net(set, log);
 
     std::promise<code> start;
     std::promise<code> run;
@@ -687,7 +687,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connection__s
     set.peers.push_back(expected);
 
     // Connect will return invalid_magic when executed.
-    mock_p2p<mock_connector_connect_fail> net(set, log);
+    mock_net<mock_connector_connect_fail> net(set, log);
 
     std::promise<code> start;
     std::promise<code> run;
@@ -723,7 +723,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_configured_connections__
     set.peers.push_back(expected);
 
     // Connect will return invalid_magic when executed.
-    mock_p2p<mock_connector_connect_fail> net(set, log);
+    mock_net<mock_connector_connect_fail> net(set, log);
 
     std::promise<code> start;
     std::promise<code> run;
@@ -756,7 +756,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect1__success)
     const endpoint expected{ "42.42.42.42", 42 };
 
     // Connect will return invalid_magic when executed.
-    mock_p2p<mock_connector_connect_fail> net(set, log);
+    mock_net<mock_connector_connect_fail> net(set, log);
 
     std::promise<code> start;
     std::promise<code> run;
@@ -786,7 +786,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect2__success)
     const endpoint expected{ "42.42.42.42", 42 };
 
     // Connect will return invalid_magic when executed.
-    mock_p2p<mock_connector_connect_fail> net(set, log);
+    mock_net<mock_connector_connect_fail> net(set, log);
 
     std::promise<code> start;
     std::promise<code> run;
@@ -816,7 +816,7 @@ BOOST_AUTO_TEST_CASE(session_manual__start__network_run_connect3__success)
     const endpoint expected{ "42.42.42.42", 42 };
 
     // Connect will return invalid_magic when executed, unless service is stopped.
-    mock_p2p<mock_connector_connect_fail> net(set, log);
+    mock_net<mock_connector_connect_fail> net(set, log);
 
     auto first = true;
     std::promise<code> start{};

@@ -178,6 +178,7 @@
     <ClCompile Include="..\..\..\..\src\messages\version.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\witness_tx_id_relay.cpp" />
+    <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\broadcaster.cpp" />
     <ClCompile Include="..\..\..\..\src\net\channel.cpp" />
@@ -189,7 +190,6 @@
     <ClCompile Include="..\..\..\..\src\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\src\net\socket.cpp" />
-    <ClCompile Include="..\..\..\..\src\p2p.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_in_209.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_out_209.cpp" />
@@ -293,6 +293,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\version_acknowledge.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\witness_tx_id_relay.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\broadcaster.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel.hpp" />
@@ -305,7 +306,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\proxy.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\socket.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\p2p.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_in_209.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_out_209.hpp" />

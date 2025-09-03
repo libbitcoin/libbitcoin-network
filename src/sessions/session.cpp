@@ -27,7 +27,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/p2p.hpp>
+#include <bitcoin/network/net.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
 
 namespace libbitcoin {
@@ -44,7 +44,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session::session(p2p& network, uint64_t identifier) NOEXCEPT
+session::session(net& network, uint64_t identifier) NOEXCEPT
   : network_(network),
     broadcaster_(network.broadcaster_),
     identifier_(identifier),

@@ -19,13 +19,13 @@
 #include <bitcoin/network/sessions/session_client.hpp>
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/p2p.hpp>
+#include <bitcoin/network/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-session_client::session_client(p2p& network, uint64_t identifier) NOEXCEPT
+session_client::session_client(net& network, uint64_t identifier) NOEXCEPT
   : network_(network), session(network, identifier)
 {
 }

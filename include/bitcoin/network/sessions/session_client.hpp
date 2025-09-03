@@ -26,7 +26,7 @@
 namespace libbitcoin {
 namespace network {
 
-class p2p;
+class net;
 
 class BCT_API session_client
   : public session
@@ -36,7 +36,7 @@ public:
 
 protected:
     /// Construct an instance (network should be started).
-    session_client(p2p& network, uint64_t identifier) NOEXCEPT;
+    session_client(net& network, uint64_t identifier) NOEXCEPT;
 
     /// Channel sequence.
     /// -----------------------------------------------------------------------
@@ -65,7 +65,7 @@ protected:
 
 private:
     // This is thread safe (mostly).
-    p2p& network_;
+    net& network_;
 };
 
 } // namespace network

@@ -219,6 +219,9 @@
     <ClCompile Include="..\..\..\..\test\messages\witness_tx_id_relay.cpp">
       <Filter>src\messages</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
@@ -245,9 +248,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\socket.cpp">
       <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\p2p.cpp">
-      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol.cpp">
       <Filter>src\protocols</Filter>
