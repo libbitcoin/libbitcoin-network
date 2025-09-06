@@ -174,7 +174,21 @@ void net::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    attach_outbound_session()->start(move_copy(handler));
+    attach_outbound_session()->start(
+        std::bind(&net::handle_client, this, _1, handler));
+}
+
+void net::handle_client(const code& ec, const result_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    if (ec)
+    {
+        handler(ec);
+        return;
+    }
+
+    attach_client_session()->start(move_copy(handler));
 }
 
 // Shutdown sequence.
@@ -700,6 +714,12 @@ session_outbound::ptr net::attach_outbound_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return attach<session_outbound>(*this);
+}
+
+session_inbound_client::ptr net::attach_client_session() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    return attach<session_inbound_client>(*this);
 }
 
 BC_POP_WARNING()
