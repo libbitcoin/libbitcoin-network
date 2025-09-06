@@ -21,6 +21,7 @@
 
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
+#include <bitcoin/network/sessions/session_inbound_client.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
 #include <bitcoin/network/sessions/session_outbound.hpp>
 #include <bitcoin/network/sessions/session_client.hpp>

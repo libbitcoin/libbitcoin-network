@@ -342,6 +342,9 @@
     <ClCompile Include="..\..\..\..\src\settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\sessions\session_inbound_client.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp">
@@ -694,6 +697,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp">
       <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound_client.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
