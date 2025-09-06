@@ -64,12 +64,14 @@ acceptor::ptr session_client::create_acceptor() NOEXCEPT
 
 connector::ptr session_client::create_connector() NOEXCEPT
 {
-    return network_.create_connector();
+    BC_ASSERT_MSG(false, "client sessions inbound only");
+    return {};
 }
 
-connectors_ptr session_client::create_connectors(size_t count) NOEXCEPT
+connectors_ptr session_client::create_connectors(size_t) NOEXCEPT
 {
-    return network_.create_connectors(count);
+    BC_ASSERT_MSG(false, "create_connectors");
+    return {};
 }
 
 channel::ptr session_client::create_channel(const socket::ptr& socket) NOEXCEPT
