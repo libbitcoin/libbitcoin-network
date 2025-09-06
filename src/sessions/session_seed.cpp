@@ -91,7 +91,7 @@ void session_seed::start(result_handler&& handler) NOEXCEPT
         return;
     }
 
-    session::start(BIND(handle_started, _1, std::move(handler)));
+    session_peer::start(BIND(handle_started, _1, std::move(handler)));
 }
 
 void session_seed::handle_started(const code& ec,

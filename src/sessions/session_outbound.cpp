@@ -76,7 +76,7 @@ void session_outbound::start(result_handler&& handler) NOEXCEPT
         LOGN("Address protocol disabled, may cause empty address pool.");
     }
 
-    session::start(BIND(handle_started, _1, std::move(handler)));
+    session_peer::start(BIND(handle_started, _1, std::move(handler)));
 }
 
 void session_outbound::handle_started(const code& ec,

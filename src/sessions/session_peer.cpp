@@ -86,8 +86,8 @@ void session_peer::do_handle_handshake(const code& ec, const channel::ptr& chann
     {
         unpend(channel);
         network_.unstore_nonce(*peer);
-        channel->stop(ec);
-        start(ec);
+        channel->stop(code);
+        start(code);
         return;
     }
 

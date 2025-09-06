@@ -54,7 +54,7 @@ session_manual::session_manual(net& network, uint64_t identifier) NOEXCEPT
 void session_manual::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    session::start(BIND(handle_started, _1, std::move(handler)));
+    session_peer::start(BIND(handle_started, _1, std::move(handler)));
 }
 
 void session_manual::handle_started(const code& ec,
