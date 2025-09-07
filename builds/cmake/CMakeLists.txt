@@ -217,6 +217,7 @@ link_libraries(
 # Define ${CANONICAL_LIB_NAME} project.
 #------------------------------------------------------------------------------
 add_library( ${CANONICAL_LIB_NAME}
+    "../../src/client.cpp"
     "../../src/error.cpp"
     "../../src/memory.cpp"
     "../../src/net.cpp"
@@ -300,6 +301,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/sessions/session.cpp"
     "../../src/sessions/session_client.cpp"
     "../../src/sessions/session_inbound.cpp"
+    "../../src/sessions/session_inbound_client.cpp"
     "../../src/sessions/session_manual.cpp"
     "../../src/sessions/session_outbound.cpp"
     "../../src/sessions/session_peer.cpp"
@@ -339,6 +341,7 @@ target_link_libraries( ${CANONICAL_LIB_NAME}
 #------------------------------------------------------------------------------
 if (with-tests)
     add_executable( libbitcoin-network-test
+        "../../test/client.cpp"
         "../../test/error.cpp"
         "../../test/main.cpp"
         "../../test/memory.cpp"

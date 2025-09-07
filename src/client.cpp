@@ -16,16 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SESSIONS_HPP
-#define LIBBITCOIN_NETWORK_SESSIONS_HPP
+#include <bitcoin/network/client.hpp>
 
-#include <bitcoin/network/sessions/session.hpp>
-#include <bitcoin/network/sessions/session_inbound.hpp>
-#include <bitcoin/network/sessions/session_inbound_client.hpp>
-#include <bitcoin/network/sessions/session_manual.hpp>
-#include <bitcoin/network/sessions/session_outbound.hpp>
-#include <bitcoin/network/sessions/session_client.hpp>
-#include <bitcoin/network/sessions/session_peer.hpp>
-#include <bitcoin/network/sessions/session_seed.hpp>
+#include <bitcoin/system.hpp>
+#include <bitcoin/network/config/config.hpp>
 
-#endif
+namespace libbitcoin {
+namespace network {
+
+} // namespace network
+} // namespace libbitcoin

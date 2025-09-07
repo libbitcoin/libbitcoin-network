@@ -69,6 +69,9 @@
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\client.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <Filter>src\config</Filter>
     </ClCompile>
