@@ -35,6 +35,7 @@ lib_LTLIBRARIES = src/libbitcoin-network.la
 src_libbitcoin_network_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 src_libbitcoin_network_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_network_la_SOURCES = \
+    src/client.cpp \
     src/error.cpp \
     src/memory.cpp \
     src/net.cpp \
@@ -118,6 +119,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/sessions/session.cpp \
     src/sessions/session_client.cpp \
     src/sessions/session_inbound.cpp \
+    src/sessions/session_inbound_client.cpp \
     src/sessions/session_manual.cpp \
     src/sessions/session_outbound.cpp \
     src/sessions/session_peer.cpp \
@@ -133,6 +135,7 @@ check_PROGRAMS = test/libbitcoin-network-test
 test_libbitcoin_network_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 test_libbitcoin_network_test_LDADD = src/libbitcoin-network.la ${boost_unit_test_framework_LIBS} ${bitcoin_system_LIBS}
 test_libbitcoin_network_test_SOURCES = \
+    test/client.cpp \
     test/error.cpp \
     test/main.cpp \
     test/memory.cpp \
@@ -236,6 +239,7 @@ include_bitcoin_HEADERS = \
 include_bitcoin_networkdir = ${includedir}/bitcoin/network
 include_bitcoin_network_HEADERS = \
     include/bitcoin/network/boost.hpp \
+    include/bitcoin/network/client.hpp \
     include/bitcoin/network/define.hpp \
     include/bitcoin/network/error.hpp \
     include/bitcoin/network/memory.hpp \
@@ -388,6 +392,7 @@ include_bitcoin_network_sessions_HEADERS = \
     include/bitcoin/network/sessions/session.hpp \
     include/bitcoin/network/sessions/session_client.hpp \
     include/bitcoin/network/sessions/session_inbound.hpp \
+    include/bitcoin/network/sessions/session_inbound_client.hpp \
     include/bitcoin/network/sessions/session_manual.hpp \
     include/bitcoin/network/sessions/session_outbound.hpp \
     include/bitcoin/network/sessions/session_peer.hpp \

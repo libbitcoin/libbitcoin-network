@@ -90,6 +90,9 @@
     <ClCompile Include="..\..\..\..\src\async\time.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\client.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\config\address.cpp">
       <Filter>src\config</Filter>
     </ClCompile>
@@ -327,6 +330,9 @@
     <ClCompile Include="..\..\..\..\src\sessions\session_inbound.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\sessions\session_inbound_client.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\sessions\session_manual.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
@@ -341,9 +347,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\settings.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\sessions\session_inbound_client.cpp">
-      <Filter>src\sessions</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -399,6 +402,9 @@
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp">
+      <Filter>include\bitcoin\network</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\client.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\address.hpp">
@@ -677,6 +683,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound_client.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_manual.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
@@ -697,9 +706,6 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp">
       <Filter>include\bitcoin\network</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound_client.hpp">
-      <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

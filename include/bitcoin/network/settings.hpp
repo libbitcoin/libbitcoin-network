@@ -22,6 +22,7 @@
 #include <filesystem>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/client.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/messages.hpp>
@@ -29,7 +30,7 @@
 namespace libbitcoin {
 namespace network {
 
-/// Common database configuration settings, properties not thread safe.
+/// Common network configuration settings, properties not thread safe.
 struct BCT_API settings
 {
     DEFAULT_COPY_MOVE_DESTRUCT(settings);
@@ -80,6 +81,9 @@ struct BCT_API settings
     config::authorities blacklists{};
     config::authorities whitelists{};
     config::authorities friends{};
+
+    /// Client settings.
+    network::client client{};
 
     /// Set friends.
     virtual void initialize() NOEXCEPT;
