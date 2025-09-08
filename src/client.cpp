@@ -24,5 +24,10 @@
 namespace libbitcoin {
 namespace network {
 
+bool client::enabled() const NOEXCEPT
+{
+    return to_bool(count) && !binds.empty();
+}
+
 } // namespace network
 } // namespace libbitcoin
