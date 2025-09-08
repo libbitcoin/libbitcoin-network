@@ -55,7 +55,7 @@ void session_inbound_client::start(result_handler&& handler) NOEXCEPT
 
     if (!settings().inbound_enabled())
     {
-        LOGN("Not configured for inbound connections.");
+        LOGN("Not configured for client connections.");
         handler(error::success);
         unsubscribe_close();
         return;
@@ -91,7 +91,7 @@ void session_inbound_client::handle_started(const code& ec,
             return;
         }
 
-        LOGN("Bound to endpoint [" << acceptor->local() << "].");
+        LOGN("Bound to client endpoint [" << acceptor->local() << "].");
 
         // Subscribe acceptor to stop desubscriber.
         subscribe_stop([=](const code&) NOEXCEPT
@@ -145,14 +145,14 @@ void session_inbound_client::handle_accept(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
-        LOGF("Failed to accept inbound connection, " << ec.message());
+        LOGF("Failed to accept client connection, " << ec.message());
         defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
     if (!enabled())
     {
-        LOGS("Dropping inbound connection (disabled).");
+        LOGS("Dropping client connection (disabled).");
         socket->stop();
         return;
     }
@@ -163,7 +163,7 @@ void session_inbound_client::handle_accept(const code& ec,
     // Creates channel_client cast returned as channel::ptr.
     const auto channel = create_channel(socket);
 
-    LOGS("Accepted inbound connection [" << channel->authority() << "] on binding ["
+    LOGS("Accepted client connection [" << channel->authority() << "] on binding ["
         << acceptor->local() << "].");
 
     start_channel(channel,

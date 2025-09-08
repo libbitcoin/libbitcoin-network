@@ -75,7 +75,7 @@ void session_inbound::handle_started(const code& ec,
         return;
     }
 
-    LOGN("Accepting " << settings().inbound_connections << " connections on "
+    LOGN("Accepting " << settings().inbound_connections << " peers on "
         << settings().binds.size() << " bindings.");
 
     for (const auto& bind: settings().binds)
@@ -89,7 +89,7 @@ void session_inbound::handle_started(const code& ec,
             return;
         }
 
-        LOGN("Bound to endpoint [" << acceptor->local() << "].");
+        LOGN("Bound to peer endpoint [" << acceptor->local() << "].");
 
         // Subscribe acceptor to stop desubscriber.
         subscribe_stop([=](const code&) NOEXCEPT
