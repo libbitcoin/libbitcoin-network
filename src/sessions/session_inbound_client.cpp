@@ -179,11 +179,13 @@ bool session_inbound_client::enabled() const NOEXCEPT
 // Completion sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound_client::attach_handshake(
-    const channel::ptr& BC_DEBUG_ONLY(channel), result_handler&&) NOEXCEPT
+// Handshake bypassed, channel remains paused until after protocol attach.
+void session_inbound_client::do_attach_handshake(const channel::ptr& channel,
+    const result_handler& handshake) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
+    handshake(error::success);
 }
 
 void session_inbound_client::handle_channel_start(const code&,
