@@ -188,12 +188,12 @@ void session_inbound_client::do_attach_handshake(const channel::ptr& channel,
     handshake(error::success);
 }
 
-void session_inbound_client::handle_channel_start(const code&,
-    const channel::ptr&) NOEXCEPT
+void session_inbound_client::handle_channel_start(const code& LOG_ONLY(ec),
+    const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    ////LOGS("Inbound client channel start [" << channel->authority() << "] "
-    ////    << ec.message());
+    LOGS("Inbound client channel start [" << channel->authority() << "] "
+        << ec.message());
 }
 
 void session_inbound_client::attach_protocols(
@@ -203,6 +203,9 @@ void session_inbound_client::attach_protocols(
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 }
 
+
+// TODO: presently nothing to invoke channel stop when the channel drops.
+// TODO: so this will not be called until the node is stopped.
 void session_inbound_client::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
