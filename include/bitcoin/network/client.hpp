@@ -29,7 +29,7 @@ namespace network {
 struct BCT_API client
 {
     /// Properties.
-    uint16_t count;
+    uint16_t count{};
     config::endpoints binds{};
 
     /// Helpers.
