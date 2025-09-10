@@ -29,7 +29,11 @@ namespace network {
 struct BCT_API client
 {
     /// Properties.
-    bool test{};
+    uint16_t count;
+    config::endpoints binds{};
+
+    /// Helpers.
+    virtual bool enabled() const NOEXCEPT;
 };
 
 } // namespace network

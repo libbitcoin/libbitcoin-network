@@ -22,10 +22,11 @@ BOOST_AUTO_TEST_SUITE(client_tests)
 
 BOOST_AUTO_TEST_CASE(client_test)
 {
-    client instance{};
+    const client instance{};
 
     // [client]
-    BOOST_REQUIRE(!instance.test);
+    BOOST_REQUIRE_EQUAL(instance.count, 0u);
+    BOOST_REQUIRE(instance.binds.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

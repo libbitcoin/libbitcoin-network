@@ -53,9 +53,9 @@ void session_inbound_client::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (!settings().inbound_enabled())
+    if (!settings().client.enabled())
     {
-        LOGN("Not configured for inbound connections.");
+        LOGN("Not configured for client connections.");
         handler(error::success);
         unsubscribe_close();
         return;
@@ -77,10 +77,10 @@ void session_inbound_client::handle_started(const code& ec,
         return;
     }
 
-    LOGN("Accepting " << settings().inbound_connections << " clients on "
-        << settings().binds.size() << " bindings.");
+    LOGN("Accepting " << settings().client.count << " clients on "
+        << settings().client.binds.size() << " bindings.");
 
-    for (const auto& bind: settings().binds)
+    for (const auto& bind: settings().client.binds)
     {
         const auto acceptor = create_acceptor();
 
@@ -91,7 +91,7 @@ void session_inbound_client::handle_started(const code& ec,
             return;
         }
 
-        LOGN("Bound to endpoint [" << acceptor->local() << "].");
+        LOGN("Bound to client endpoint [" << acceptor->local() << "].");
 
         // Subscribe acceptor to stop desubscriber.
         subscribe_stop([=](const code&) NOEXCEPT
@@ -145,14 +145,14 @@ void session_inbound_client::handle_accept(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
-        LOGF("Failed to accept inbound connection, " << ec.message());
+        LOGF("Failed to accept client connection, " << ec.message());
         defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
     if (!enabled())
     {
-        LOGS("Dropping inbound connection (disabled).");
+        LOGS("Dropping client connection (disabled).");
         socket->stop();
         return;
     }
@@ -163,7 +163,7 @@ void session_inbound_client::handle_accept(const code& ec,
     // Creates channel_client cast returned as channel::ptr.
     const auto channel = create_channel(socket);
 
-    LOGS("Accepted inbound connection [" << channel->authority() << "] on binding ["
+    LOGS("Accepted client connection [" << channel->authority() << "] on binding ["
         << acceptor->local() << "].");
 
     start_channel(channel,
@@ -179,19 +179,21 @@ bool session_inbound_client::enabled() const NOEXCEPT
 // Completion sequence.
 // ----------------------------------------------------------------------------
 
-void session_inbound_client::attach_handshake(
-    const channel::ptr& BC_DEBUG_ONLY(channel), result_handler&&) NOEXCEPT
+// Handshake bypassed, channel remains paused until after protocol attach.
+void session_inbound_client::do_attach_handshake(const channel::ptr& channel,
+    const result_handler& handshake) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
-    BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
+    BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
+    handshake(error::success);
 }
 
-void session_inbound_client::handle_channel_start(const code&,
-    const channel::ptr&) NOEXCEPT
+void session_inbound_client::handle_channel_start(const code& LOG_ONLY(ec),
+    const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    ////LOGS("Inbound client channel start [" << channel->authority() << "] "
-    ////    << ec.message());
+    LOGS("Inbound client channel start [" << channel->authority() << "] "
+        << ec.message());
 }
 
 void session_inbound_client::attach_protocols(
@@ -201,6 +203,9 @@ void session_inbound_client::attach_protocols(
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 }
 
+
+// TODO: presently nothing to invoke channel stop when the channel drops.
+// TODO: so this will not be called until the node is stopped.
 void session_inbound_client::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
