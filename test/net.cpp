@@ -37,7 +37,7 @@ struct net_tests_setup_fixture
 BOOST_FIXTURE_TEST_SUITE(net_tests, net_tests_setup_fixture)
 
 using namespace bc::system::chain;
-using namespace bc::network::messages;
+using namespace network::messages::p2p;
 
 template <error::error_t ManualCode = error::success,
     error::error_t SeedCode = error::success>

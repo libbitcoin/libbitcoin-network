@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(distributor__construct__stop__stops)
     default_memory memory{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor instance(memory, strand);
+    distributor_peer instance(memory, strand);
 
     std::promise<bool> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -44,14 +44,14 @@ BOOST_AUTO_TEST_CASE(distributor__subscribe__stop__expected_code)
     default_memory memory{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor instance(memory, strand);
+    distributor_peer instance(memory, strand);
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, const messages::ping::cptr& ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::p2p::ping::cptr& ping) NOEXCEPT
         {
             // Stop notification has nullptr message and specified code.
             result &= is_null(ping);
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__invalid_message__no_notification)
     default_memory memory{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor instance(memory, strand);
+    distributor_peer instance(memory, strand);
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__invalid_message__no_notification)
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, const messages::ping::cptr& ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::p2p::ping::cptr& ping) NOEXCEPT
         {
             result &= is_null(ping);
             promise.set_value(ec);
@@ -96,10 +96,10 @@ BOOST_AUTO_TEST_CASE(distributor__notify__invalid_message__no_notification)
     system::data_chunk empty{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        constexpr auto nonced_ping_version = messages::level::bip31;
+        constexpr auto nonced_ping_version = messages::p2p::level::bip31;
 
         // This line throws and is caught internal to the low level stream.
-        const auto ec = instance.notify(messages::identifier::ping, nonced_ping_version, empty);
+        const auto ec = instance.notify(messages::p2p::identifier::ping, nonced_ping_version, empty);
         result &= (ec == error::invalid_message);
     });
 
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__valid_message_invalid_version__no_noti
     default_memory memory{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor instance(memory, strand);
+    distributor_peer instance(memory, strand);
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__valid_message_invalid_version__no_noti
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, const messages::ping::cptr& ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::p2p::ping::cptr& ping) NOEXCEPT
         {
             result &= is_null(ping);
             promise.set_value(ec);
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__valid_message_invalid_version__no_noti
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         constexpr uint32_t invalid_ping_version = 0;
-        const auto ec = instance.notify(messages::identifier::ping, invalid_ping_version, ping);
+        const auto ec = instance.notify(messages::p2p::identifier::ping, invalid_ping_version, ping);
         result &= (ec == error::invalid_message);
     });
 
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__valid_nonced_ping__expected_notificati
     default_memory memory{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor instance(memory, strand);
+    distributor_peer instance(memory, strand);
     constexpr uint64_t expected_nonce = 42;
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__valid_nonced_ping__expected_notificati
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, const messages::ping::cptr& ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::p2p::ping::cptr& ping) NOEXCEPT
         {
             // Handle stop notification (unavoidable test condition).
             if (!ping)
@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE(distributor__notify__valid_nonced_ping__expected_notificati
     const auto ping = system::to_chunk(system::to_little_endian(expected_nonce));
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        constexpr auto nonced_ping_version = messages::level::bip31;
-        const auto ec = instance.notify(messages::identifier::ping, nonced_ping_version, ping);
+        constexpr auto nonced_ping_version = messages::p2p::level::bip31;
+        const auto ec = instance.notify(messages::p2p::identifier::ping, nonced_ping_version, ping);
         result &= (ec == error::success);
     });
 

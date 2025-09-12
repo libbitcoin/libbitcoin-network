@@ -42,7 +42,7 @@ address endpoint::to_address() const NOEXCEPT
 }
 
 // protected
-messages::address_item endpoint::to_address_item() const NOEXCEPT
+messages::p2p::address_item endpoint::to_address_item() const NOEXCEPT
 {
     return to_address();
 }
@@ -57,13 +57,13 @@ endpoint::operator authority() const NOEXCEPT
     return authority{ to_address() };
 }
 
-bool endpoint::operator==(const messages::address_item& other) const NOEXCEPT
+bool endpoint::operator==(const messages::p2p::address_item& other) const NOEXCEPT
 {
     // Will match default address_item if to_address_item() returns default.
     return to_address_item() == other;
 }
 
-bool endpoint::operator!=(const messages::address_item& other) const NOEXCEPT
+bool endpoint::operator!=(const messages::p2p::address_item& other) const NOEXCEPT
 {
     return !(*this == other);
 }

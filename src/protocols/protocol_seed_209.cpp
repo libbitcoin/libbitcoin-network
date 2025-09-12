@@ -23,7 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -34,7 +34,7 @@ namespace network {
 #define CLASS protocol_seed_209
 
 using namespace system;
-using namespace messages;
+using namespace messages::p2p;
 using namespace std::placeholders;
 
 // Bind throws (ok).

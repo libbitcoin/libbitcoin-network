@@ -21,7 +21,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/protocols/protocol_ping_106.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
@@ -31,7 +31,7 @@ namespace network {
 #define CLASS protocol_ping_60001
 
 using namespace system;
-using namespace messages;
+using namespace messages::p2p;
 using namespace std::placeholders;
 
 constexpr uint64_t received = zero;

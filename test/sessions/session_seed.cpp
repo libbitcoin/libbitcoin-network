@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(session_seed_tests)
 
-using namespace bc::network::messages;
+using namespace network::messages::p2p;
 using namespace bc::system::chain;
 
 class mock_connector_connect_success
@@ -258,7 +258,7 @@ public:
     {
     }
 
-    void save(const messages::address::cptr& message,
+    void save(const messages::p2p::address::cptr& message,
         count_handler&& complete) NOEXCEPT override
     {
         hosts_ += message->addresses.size();

@@ -22,7 +22,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -37,7 +37,7 @@ namespace network {
 #define CLASS protocol_version_70016
 
 using namespace system;
-using namespace bc::network::messages;
+using namespace network::messages::p2p;
 using namespace std::placeholders;
 
 protocol_version_70016::protocol_version_70016(const session::ptr& session,
@@ -96,7 +96,7 @@ void protocol_version_70016::handle_send_version(const code& ec) NOEXCEPT
 }
 
 bool protocol_version_70016::handle_receive_acknowledge(const code& ec,
-    const messages::version_acknowledge::cptr& message) NOEXCEPT
+    const messages::p2p::version_acknowledge::cptr& message) NOEXCEPT
 {
     complete_ = true;
 

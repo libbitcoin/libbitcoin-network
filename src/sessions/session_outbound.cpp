@@ -34,7 +34,7 @@ namespace network {
 
 using namespace system;
 using namespace config;
-using namespace messages;
+using namespace messages::p2p;
 using namespace std::placeholders;
 
 // Bind throws (ok).

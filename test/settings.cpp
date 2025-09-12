@@ -21,7 +21,7 @@
 BOOST_AUTO_TEST_SUITE(settings_tests)
 
 using namespace bc::system::chain;
-using namespace messages;
+using namespace messages::p2p;
 
 BOOST_AUTO_TEST_CASE(settings__construct__default__expected)
 {
@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(settings__insufficient__default__false)
 {
     settings instance{};
     constexpr uint64_t services = 0;
-    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    constexpr messages::p2p::address_item loop{ 42, services, loopback_ip_address, 8333 };
     instance.services_minimum = 0;
     BOOST_REQUIRE(!instance.insufficient(loop));
     instance.services_minimum = 1;
@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE(settings__insufficient__match__expected)
 {
     settings instance{};
     constexpr uint64_t services = 0b01010101;
-    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    constexpr messages::p2p::address_item loop{ 42, services, loopback_ip_address, 8333 };
     instance.services_minimum = services;
     BOOST_REQUIRE(!instance.insufficient(loop));
     instance.services_minimum = services | 0b00000010;
@@ -622,7 +622,7 @@ BOOST_AUTO_TEST_CASE(settings__unsupported__default__false)
 {
     settings instance{};
     constexpr uint64_t services = 0;
-    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    constexpr messages::p2p::address_item loop{ 42, services, loopback_ip_address, 8333 };
     instance.invalid_services = 0;
     BOOST_REQUIRE(!instance.unsupported(loop));
     instance.invalid_services = 1;
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(settings__unsupported__match__expected)
 {
     settings instance{};
     constexpr uint64_t services = 0b01010101;
-    constexpr messages::address_item loop{ 42, services, loopback_ip_address, 8333 };
+    constexpr messages::p2p::address_item loop{ 42, services, loopback_ip_address, 8333 };
     instance.invalid_services = services;
     BOOST_REQUIRE(instance.unsupported(loop));
     instance.invalid_services = services | 0b00000010;

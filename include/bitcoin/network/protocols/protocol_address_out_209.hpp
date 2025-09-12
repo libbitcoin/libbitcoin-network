@@ -24,7 +24,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -46,11 +46,11 @@ public:
 
 protected:
     virtual bool handle_receive_get_address(const code& ec,
-        const messages::get_address::cptr& message) NOEXCEPT;
+        const messages::p2p::get_address::cptr& message) NOEXCEPT;
     virtual void handle_fetch_address(const code& ec,
-        const messages::address::cptr& message) NOEXCEPT;
+        const messages::p2p::address::cptr& message) NOEXCEPT;
     virtual bool handle_broadcast_address(const code& ec,
-        const messages::address::cptr& message, uint64_t sender) NOEXCEPT;
+        const messages::p2p::address::cptr& message, uint64_t sender) NOEXCEPT;
 
 private:
     // This is protected by strand.

@@ -20,7 +20,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {
@@ -30,8 +30,8 @@ namespace config {
 using namespace boost::asio;
 using namespace system::config;
 
-static_assert(array_count<messages::ip_address> == ipv6_size);
-static_assert(is_same_type<ip::address_v6::bytes_type, messages::ip_address>);
+static_assert(array_count<messages::p2p::ip_address> == ipv6_size);
+static_assert(is_same_type<ip::address_v6::bytes_type, messages::p2p::ip_address>);
 
 static asio::ipv6 to_v6(const asio::ipv4& ip4) NOEXCEPT
 {
@@ -57,12 +57,12 @@ static asio::ipv6 get_ipv6(const asio::address& ip) NOEXCEPT
     }
 }
 
-messages::ip_address to_address(const asio::address& ip) NOEXCEPT
+messages::p2p::ip_address to_address(const asio::address& ip) NOEXCEPT
 {
     return get_ipv6(ip).to_bytes();
 }
 
-asio::address from_address(const messages::ip_address& address) NOEXCEPT
+asio::address from_address(const messages::p2p::ip_address& address) NOEXCEPT
 {
     try
     {

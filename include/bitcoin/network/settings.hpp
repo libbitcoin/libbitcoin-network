@@ -25,7 +25,7 @@
 #include <bitcoin/network/client.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -107,13 +107,13 @@ struct BCT_API settings
     virtual std::filesystem::path file() const NOEXCEPT;
 
     /// Filters.
-    virtual bool disabled(const messages::address_item& item) const NOEXCEPT;
-    virtual bool insufficient(const messages::address_item& item) const NOEXCEPT;
-    virtual bool unsupported(const messages::address_item& item) const NOEXCEPT;
-    virtual bool blacklisted(const messages::address_item& item) const NOEXCEPT;
-    virtual bool whitelisted(const messages::address_item& item) const NOEXCEPT;
-    virtual bool peered(const messages::address_item& item) const NOEXCEPT;
-    virtual bool excluded(const messages::address_item& item) const NOEXCEPT;
+    virtual bool disabled(const messages::p2p::address_item& item) const NOEXCEPT;
+    virtual bool insufficient(const messages::p2p::address_item& item) const NOEXCEPT;
+    virtual bool unsupported(const messages::p2p::address_item& item) const NOEXCEPT;
+    virtual bool blacklisted(const messages::p2p::address_item& item) const NOEXCEPT;
+    virtual bool whitelisted(const messages::p2p::address_item& item) const NOEXCEPT;
+    virtual bool peered(const messages::p2p::address_item& item) const NOEXCEPT;
+    virtual bool excluded(const messages::p2p::address_item& item) const NOEXCEPT;
 };
 
 } // namespace network

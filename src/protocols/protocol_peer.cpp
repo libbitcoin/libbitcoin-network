@@ -25,7 +25,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -36,7 +36,7 @@ namespace network {
 #define CLASS protocol_peer
 
 using namespace system;
-using namespace messages;
+using namespace messages::p2p;
 using namespace std::placeholders;
 
 protocol_peer::protocol_peer(const session::ptr& session,

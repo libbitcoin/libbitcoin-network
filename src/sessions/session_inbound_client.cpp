@@ -180,7 +180,8 @@ bool session_inbound_client::enabled() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // Handshake bypassed, channel remains paused until after protocol attach.
-void session_inbound_client::do_attach_handshake(const channel::ptr& channel,
+void session_inbound_client::do_attach_handshake(
+    const channel::ptr& BC_DEBUG_ONLY(channel),
     const result_handler& handshake) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");

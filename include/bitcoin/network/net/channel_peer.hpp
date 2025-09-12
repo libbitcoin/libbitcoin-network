@@ -25,10 +25,10 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/memory.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/deadline.hpp>
-#include <bitcoin/network/net/distributor.hpp>
+#include <bitcoin/network/net/distributor_peer.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -47,7 +47,8 @@ public:
 
     /// Subscribe to messages from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
-    template <class Message, typename Handler = distributor::handler<Message>>
+    template <class Message,
+        typename Handler = distributor_peer::handler<Message>>
     void subscribe(Handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
@@ -63,7 +64,7 @@ public:
 
         // TODO: build witness into feature w/magic and negotiated version.
         // TODO: if self and peer services show witness, set feature true.
-        const auto data = messages::serialize(message, settings().identifier,
+        const auto data = messages::p2p::serialize(message, settings().identifier,
             negotiated_version());
 
         if (!data)
@@ -96,10 +97,10 @@ public:
     void set_quiet() NOEXCEPT;
 
     /// Message level is supported by configured protocol level.
-    bool is_negotiated(messages::level level) const NOEXCEPT;
+    bool is_negotiated(messages::p2p::level level) const NOEXCEPT;
 
     /// Service level is advertised by peer.
-    bool is_peer_service(messages::service service) const NOEXCEPT;
+    bool is_peer_service(messages::p2p::service service) const NOEXCEPT;
 
     /// Start height for version message (set only before handshake).
     size_t start_height() const NOEXCEPT;
@@ -110,14 +111,14 @@ public:
     void set_negotiated_version(uint32_t value) NOEXCEPT;
 
     /// Peer version should be written only in handshake.
-    messages::version::cptr peer_version() const NOEXCEPT;
-    void set_peer_version(const messages::version::cptr& value) NOEXCEPT;
+    messages::p2p::version::cptr peer_version() const NOEXCEPT;
+    void set_peer_version(const messages::p2p::version::cptr& value) NOEXCEPT;
 
     /// Originating address of connection with current time and peer services.
     address_item_cptr get_updated_address() const NOEXCEPT;
 
 protected:
-    typedef messages::heading::cptr heading_ptr;
+    typedef messages::p2p::heading::cptr heading_ptr;
 
     /// Protocol-specific read and dispatch.
     void read_heading() NOEXCEPT;
@@ -126,7 +127,7 @@ protected:
         const heading_ptr& head) NOEXCEPT;
 
     /// Notify subscribers of a new message (requires strand).
-    virtual code notify(messages::identifier id, uint32_t version,
+    virtual code notify(messages::p2p::identifier id, uint32_t version,
         const system::data_chunk& source) NOEXCEPT;
 
 private:
@@ -143,14 +144,14 @@ private:
 
     // These are protected by strand/order.
     bool quiet_{};
-    distributor distributor_;
+    distributor_peer distributor_;
     deadline::ptr expiration_;
     deadline::ptr inactivity_;
     uint32_t negotiated_version_;
-    messages::version::cptr peer_version_{};
+    messages::p2p::version::cptr peer_version_{};
     size_t start_height_{};
     system::data_chunk payload_buffer_{};
-    system::data_array<messages::heading::size()> heading_buffer_{};
+    system::data_array<messages::p2p::heading::size()> heading_buffer_{};
     system::read::bytes::copy heading_reader_{ heading_buffer_ };
 };
 

@@ -24,7 +24,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -51,17 +51,17 @@ protected:
     virtual bool complete() const NOEXCEPT;
     virtual void handle_timer(const code& ec) NOEXCEPT;
 
-    virtual messages::address::cptr filter(
-        const messages::address_items& message) const NOEXCEPT;
+    virtual messages::p2p::address::cptr filter(
+        const messages::p2p::address_items& message) const NOEXCEPT;
 
     virtual void handle_send_get_address(const code& ec) NOEXCEPT;
     virtual bool handle_receive_address(const code& ec,
-        const messages::address::cptr& address) NOEXCEPT;
+        const messages::p2p::address::cptr& address) NOEXCEPT;
     virtual void handle_save_addresses(const code& ec,
         size_t accepted, size_t end_size, size_t start_size) NOEXCEPT;
 
     virtual bool handle_receive_get_address(const code& ec,
-        const messages::get_address::cptr& message) NOEXCEPT;
+        const messages::p2p::get_address::cptr& message) NOEXCEPT;
     virtual void handle_send_address(const code& ec) NOEXCEPT;
 
 private:

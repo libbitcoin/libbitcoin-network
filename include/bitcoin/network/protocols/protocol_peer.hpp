@@ -26,7 +26,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -76,10 +76,10 @@ protected:
     virtual size_t start_height() const NOEXCEPT;
 
     /// The protocol version of the peer.
-    virtual messages::version::cptr peer_version() const NOEXCEPT;
+    virtual messages::p2p::version::cptr peer_version() const NOEXCEPT;
 
     /// Set protocol version of the peer (set only during handshake).
-    virtual void set_peer_version(const messages::version::cptr& value) NOEXCEPT;
+    virtual void set_peer_version(const messages::p2p::version::cptr& value) NOEXCEPT;
 
     /// The negotiated protocol version.
     virtual uint32_t negotiated_version() const NOEXCEPT;
@@ -88,7 +88,7 @@ protected:
     virtual void set_negotiated_version(uint32_t value) NOEXCEPT;
 
     /// Advertised addresses with own services and current timestamp.
-    virtual messages::address selfs() const NOEXCEPT;
+    virtual messages::p2p::address selfs() const NOEXCEPT;
 
     /// Addresses.
     /// -----------------------------------------------------------------------

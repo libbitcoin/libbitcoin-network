@@ -292,8 +292,8 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
 ////    std::promise<code> message_stopped;
 ////    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
 ////    {
-////        proxy_ptr->subscribe_message<const messages::ping>(
-////            [&](code ec, messages::ping::cptr ping) NOEXCEPT
+////        proxy_ptr->subscribe_message<const messages::p2p::ping>(
+////            [&](code ec, messages::p2p::ping::cptr ping) NOEXCEPT
 ////            {
 ////                result &= is_null(ping);
 ////                message_stopped.set_value(ec);
@@ -339,8 +339,8 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
 ////            stop1_stopped.set_value(ec);
 ////        });
 ////
-////        proxy_ptr->subscribe_message<messages::ping>(
-////            [&](code ec, messages::ping::cptr ping) NOEXCEPT
+////        proxy_ptr->subscribe_message<messages::p2p::ping>(
+////            [&](code ec, messages::p2p::ping::cptr ping) NOEXCEPT
 ////            {
 ////                result &= is_null(ping);
 ////                message_stopped.set_value(ec);
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
 ////
 ////    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
 ////    {
-////        proxy_ptr->send<messages::ping>(messages::ping{ 42 }, handler);
+////        proxy_ptr->send<messages::p2p::ping>(messages::p2p::ping{ 42 }, handler);
 ////    });
 ////
 ////    // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(proxy__do_subscribe_stop__subscribed__expected)
 ////    std::promise<code> promise;
 ////    boost::asio::post(proxy_ptr->strand(), [&]() NOEXCEPT
 ////    {
-////        proxy_ptr->send<messages::ping>(messages::ping{ 42 }, [&](code ec)
+////        proxy_ptr->send<messages::p2p::ping>(messages::p2p::ping{ 42 }, [&](code ec)
 ////        {
 ////            // Send failure causes stop before handler invoked.
 ////            result &= proxy_ptr->stopped();

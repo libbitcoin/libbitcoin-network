@@ -26,7 +26,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
