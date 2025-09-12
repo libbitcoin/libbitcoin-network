@@ -91,7 +91,7 @@ void channel_peer::do_stop(const code& ec) NOEXCEPT
     stop_expiration();
     stop_inactivity();
 
-    // TODO: this was moved from proxy::do_stop, so order of stop hash changed.
+    // TODO: this was moved from proxy::do_stop, so order of stop has changed.
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
     distributor_.stop(ec);
