@@ -33,7 +33,7 @@ struct session_outbound_tests_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(session_outbound_tests, session_outbound_tests_setup_fixture)
 
-using namespace bc::network::messages;
+using namespace network::messages::p2p;
 using namespace bc::system::chain;
 
 class mock_connector_connect_success

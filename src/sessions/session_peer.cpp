@@ -25,7 +25,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/net.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
@@ -144,7 +144,7 @@ void session_peer::attach_handshake(const channel::ptr& channel,
     BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake attach");
 
     // Protocol must pause the channel after receiving version and verack.
-    using namespace messages;
+    using namespace messages::p2p;
     const auto self = shared_from_this();
 
     // Address v2 can be disabled, independent of version.
@@ -170,7 +170,7 @@ void session_peer::attach_protocols(const channel::ptr& channel) NOEXCEPT
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
-    using namespace messages;
+    using namespace messages::p2p;
     const auto self = shared_from_this();
     const auto peer = std::dynamic_pointer_cast<channel_peer>(channel);
 
@@ -266,7 +266,7 @@ size_t session_peer::outbound_channel_count() const NOEXCEPT
     return floored_subtract(channel_count(), inbound_channel_count());
 }
 
-bool session_peer::is_configured(messages::level level) const NOEXCEPT
+bool session_peer::is_configured(messages::p2p::level level) const NOEXCEPT
 {
     return settings().protocol_maximum >= level;
 }

@@ -21,7 +21,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/system.hpp>
 
 namespace libbitcoin {
@@ -29,20 +29,20 @@ namespace network {
 namespace config {
 
 /// True if ip_address starts with the ip map prefix (maps to a v4 address).
-constexpr bool is_v4(const messages::ip_address& ip) NOEXCEPT
+constexpr bool is_v4(const messages::p2p::ip_address& ip) NOEXCEPT
 {
     using namespace system::config;
     return std::equal(ip_map_prefix.begin(), ip_map_prefix.end(), ip.begin());
 }
 
-constexpr bool is_v6(const messages::ip_address& ip) NOEXCEPT
+constexpr bool is_v6(const messages::p2p::ip_address& ip) NOEXCEPT
 {
     return !is_v4(ip);
 }
 
 /// Not denormalizing.
-BCT_API messages::ip_address to_address(const asio::address& ip) NOEXCEPT;
-BCT_API asio::address from_address(const messages::ip_address& address) NOEXCEPT;
+BCT_API messages::p2p::ip_address to_address(const asio::address& ip) NOEXCEPT;
+BCT_API asio::address from_address(const messages::p2p::ip_address& address) NOEXCEPT;
 
 } // namespace config
 } // namespace network

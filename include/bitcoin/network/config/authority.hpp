@@ -22,7 +22,7 @@
 #include <memory>
 #include <bitcoin/network/config/address.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -41,21 +41,21 @@ public:
     /// Use base class constructors.
     using system::config::authority::authority;
 
-    authority(const messages::address_item& item) NOEXCEPT;
+    authority(const messages::p2p::address_item& item) NOEXCEPT;
 
-    /// Authority converted to messages::ip_address.
-    messages::ip_address to_ip_address() const NOEXCEPT;
+    /// Authority converted to messages::p2p::ip_address.
+    messages::p2p::ip_address to_ip_address() const NOEXCEPT;
 
-    /// Authority converted to messages::address_item.
-    messages::address_item to_address_item() const NOEXCEPT;
-    messages::address_item to_address_item(uint32_t timestamp,
+    /// Authority converted to messages::p2p::address_item.
+    messages::p2p::address_item to_address_item() const NOEXCEPT;
+    messages::p2p::address_item to_address_item(uint32_t timestamp,
         uint64_t services) const NOEXCEPT;
 
     /// Equality treats zero port as * and non-zero CIDR as subnet identifier.
     /// Equality is subnet containment when one subnet identifier is present.
     /// Distinct subnets are unequal even if intersecting, same subnets equal.
-    bool operator==(const messages::address_item& other) const NOEXCEPT;
-    bool operator!=(const messages::address_item& other) const NOEXCEPT;
+    bool operator==(const messages::p2p::address_item& other) const NOEXCEPT;
+    bool operator!=(const messages::p2p::address_item& other) const NOEXCEPT;
 };
 
 typedef std::vector<authority> authorities;

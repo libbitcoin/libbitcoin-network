@@ -23,14 +23,14 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 using namespace system;
-using namespace messages;
+using namespace messages::p2p;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
@@ -213,14 +213,14 @@ void hosts::fetch(address_handler&& handler) const NOEXCEPT
     // Vary the return count (quantity fingerprinting).
     const auto divide = pseudo_random::next<size_t>(
         settings_.address_lower, settings_.address_upper);
-    const auto size = std::min(messages::max_address, buffer_.size() / divide);
+    const auto size = std::min(messages::p2p::max_address, buffer_.size() / divide);
 
     // Vary the start position (value fingerprinting).
     const auto limit = sub1(buffer_.size());
     auto index = pseudo_random::next(zero, limit);
 
     // Allocate non-const message (converted to const by return).
-    const auto out = to_shared<messages::address>();
+    const auto out = to_shared<messages::p2p::address>();
     out->addresses.reserve(size);
 
     // O(N).
@@ -283,7 +283,7 @@ inline void hosts::push(const std::string& line) NOEXCEPT
     {
         const config::address item{ line };
 
-        if (!messages::is_specified(item))
+        if (!messages::p2p::is_specified(item))
         {
             LOGF("Address unspecified upon load [" << line << "].");
         }

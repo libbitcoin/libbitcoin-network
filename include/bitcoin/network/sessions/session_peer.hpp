@@ -27,7 +27,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -116,7 +116,7 @@ protected:
     virtual size_t outbound_channel_count() const NOEXCEPT;
 
     /// Message level is supported by confired protocol level.
-    virtual bool is_configured(messages::level level) const NOEXCEPT;
+    virtual bool is_configured(messages::p2p::level level) const NOEXCEPT;
 
 private:
     void do_handle_handshake(const code& ec, const channel::ptr& channel,

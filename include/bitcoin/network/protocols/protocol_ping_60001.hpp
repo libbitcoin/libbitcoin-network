@@ -24,7 +24,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_ping_106.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -48,11 +48,11 @@ protected:
     void send_ping() NOEXCEPT override;
     void handle_timer(const code& ec) NOEXCEPT override;
     bool handle_receive_ping(const code& ec,
-        const messages::ping::cptr& message) NOEXCEPT override;
+        const messages::p2p::ping::cptr& message) NOEXCEPT override;
 
     virtual void handle_send_pong(const code& ec) NOEXCEPT;
     virtual bool handle_receive_pong(const code& ec,
-        const messages::pong::cptr& message) NOEXCEPT;
+        const messages::p2p::pong::cptr& message) NOEXCEPT;
 
 private:
     // This is protected by strand.

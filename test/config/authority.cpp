@@ -33,40 +33,40 @@ using namespace boost::program_options;
 ////#define BC_AUTHORITY_IPV6_BOGUS_IPV4_ADDRESS "[::ffff:0:39]:256"
 
 // tools.ietf.org/html/rfc4291#section-2.5.2
-constexpr messages::ip_address test_unspecified_ip_address =
+constexpr messages::p2p::ip_address test_unspecified_ip_address =
 {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
 // tools.ietf.org/html/rfc4291#section-2.5.5.2
-constexpr messages::ip_address test_mapped_ip_address =
+constexpr messages::p2p::ip_address test_mapped_ip_address =
 {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0xff, 0xff, 0x01, 0x02, 0xf0, 0x01
 };
 
 // tools.ietf.org/html/rfc4291#section-2.5.5.1
-////constexpr messages::ip_address test_compatible_ip_address =
+////constexpr messages::p2p::ip_address test_compatible_ip_address =
 ////{
 ////    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 ////    0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0xf0, 0x01
 ////};
 
-constexpr messages::ip_address test_ipv6_address =
+constexpr messages::p2p::ip_address test_ipv6_address =
 {
     0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02
 };
 
-static bool ip_equal(const messages::ip_address& left,
-    const messages::ip_address& right)
+static bool ip_equal(const messages::p2p::ip_address& left,
+    const messages::p2p::ip_address& right)
 {
     return std::equal(left.begin(), left.end(), right.begin());
 }
 
-static bool net_equal(const messages::address_item& left,
-    const messages::address_item& right)
+static bool net_equal(const messages::p2p::address_item& left,
+    const messages::p2p::address_item& right)
 {
     return
         (left.timestamp == right.timestamp) &&
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(authority__ip_port_cidr__ipv6_authority__expected)
 BOOST_AUTO_TEST_CASE(authority__ip_port_cidr__address_item__expected)
 {
     constexpr uint16_t expected_port = 42;
-    const messages::address_item address
+    const messages::p2p::address_item address
     {
         0, 0, test_ipv6_address, expected_port
     };
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(authority__to_ip_address__ipv6_authority__expected)
 BOOST_AUTO_TEST_CASE(authority__to_ip_address__address_item__expected)
 {
     const auto& expected_ip = test_ipv6_address;
-    const messages::address_item address
+    const messages::p2p::address_item address
     {
         0, 0, test_ipv6_address, 42
     };
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(authority__to_string__ipv6_port__expected)
 
 BOOST_AUTO_TEST_CASE(authority__to_address_item1__default__ipv6_unspecified)
 {
-    const messages::address_item expected
+    const messages::p2p::address_item expected
     {
         0, 0, test_unspecified_ip_address, 0,
     };
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item1__default__ipv6_unspecified)
 
 BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv4_mapped_ip_address__ipv4)
 {
-    const messages::address_item expected
+    const messages::p2p::address_item expected
     {
         0, 0, test_mapped_ip_address, 42,
     };
@@ -438,12 +438,12 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv4_mapped_ip_address__ipv4)
 ////// datatracker.ietf.org/doc/html/rfc4291#section-2.5.5.1
 ////BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv4_compatible_ip_address__mapped_not_compatible)
 ////{
-////    const messages::address_item compatible
+////    const messages::p2p::address_item compatible
 ////    {
 ////        0, 0, test_compatible_ip_address, 42,
 ////    };
 ////
-////    const messages::address_item mapped
+////    const messages::p2p::address_item mapped
 ////    {
 ////        0, 0, test_mapped_ip_address, 42,
 ////    };
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv4_mapped_ip_address__ipv4)
 
 BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv6_address__ipv6_compressed)
 {
-    const messages::address_item expected
+    const messages::p2p::address_item expected
     {
         0, 0, test_ipv6_address, 42,
     };
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(authority__to_address_item1__ipv6_address__ipv6_compressed)
 
 BOOST_AUTO_TEST_CASE(authority__to_address_item2__parameters__expected)
 {
-    const messages::address_item expected
+    const messages::p2p::address_item expected
     {
         42, 24, test_ipv6_address, 42,
     };

@@ -24,7 +24,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_version_106.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -48,7 +48,7 @@ public:
         uint64_t maximum_services, bool relay) NOEXCEPT;
 
 protected:
-    messages::version version_factory(bool relay=false) const NOEXCEPT override;
+    messages::p2p::version version_factory(bool relay=false) const NOEXCEPT override;
 
 private:
     // This is thread safe (const).

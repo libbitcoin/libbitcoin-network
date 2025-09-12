@@ -211,7 +211,7 @@ class accessor
 {
 public:
     using endpoint::endpoint;
-    messages::address_item get_address_item() const NOEXCEPT
+    messages::p2p::address_item get_address_item() const NOEXCEPT
     {
         return to_address_item();
     }

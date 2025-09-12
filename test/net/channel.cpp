@@ -65,8 +65,8 @@
 ////
 ////inline size_t payload_maximum(const settings& settings)
 ////{
-////    return messages::heading::maximum_payload(settings.protocol_maximum,
-////        to_bool(settings.services_maximum & messages::service::node_witness));
+////    return messages::p2p::heading::maximum_payload(settings.protocol_maximum,
+////        to_bool(settings.services_maximum & messages::p2p::service::node_witness));
 ////}
 ////
 ////BOOST_AUTO_TEST_CASE(channel__properties__default__expected)
@@ -82,7 +82,7 @@
 ////    BOOST_REQUIRE(!channel_ptr->address());
 ////    BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
 ////    BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
-////    BOOST_REQUIRE(channel_ptr->is_negotiated(messages::level::maximum_protocol));
+////    BOOST_REQUIRE(channel_ptr->is_negotiated(messages::p2p::level::maximum_protocol));
 ////
 ////    // TODO: compare to default instance.
 ////    BOOST_REQUIRE(channel_ptr->peer_version());

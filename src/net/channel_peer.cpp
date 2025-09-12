@@ -26,7 +26,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/memory.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -35,7 +35,7 @@ namespace libbitcoin {
 namespace network {
 
 using namespace system;
-using namespace messages;
+using namespace messages::p2p;
 using namespace std::placeholders;
 
 // Dump up to this size of payload as hex in order to diagnose failure.
@@ -140,12 +140,12 @@ void channel_peer::set_quiet() NOEXCEPT
     quiet_ = true;
 }
 
-bool channel_peer::is_negotiated(messages::level level) const NOEXCEPT
+bool channel_peer::is_negotiated(messages::p2p::level level) const NOEXCEPT
 {
     return negotiated_version() >= level;
 }
 
-bool channel_peer::is_peer_service(messages::service service) const NOEXCEPT
+bool channel_peer::is_peer_service(messages::p2p::service service) const NOEXCEPT
 {
     return to_bool(bit_and<uint64_t>(peer_version_->services, service));
 }
@@ -181,7 +181,7 @@ bool channel_peer::is_handshaked() const NOEXCEPT
 version::cptr channel_peer::peer_version() const NOEXCEPT
 {
     // peer_version_ defaults to nullptr, which implies not handshaked.
-    return is_handshaked() ? peer_version_ : to_shared<messages::version>();
+    return is_handshaked() ? peer_version_ : to_shared<messages::p2p::version>();
 }
 
 void channel_peer::set_peer_version(const version::cptr& value) NOEXCEPT
@@ -285,7 +285,7 @@ void channel_peer::handle_inactivity(const code& ec) NOEXCEPT
     stop(error::channel_inactive);
 }
 
-code channel_peer::notify(messages::identifier id, uint32_t version,
+code channel_peer::notify(messages::p2p::identifier id, uint32_t version,
     const data_chunk& source) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -433,8 +433,8 @@ void channel_peer::handle_read_payload(const code& ec,
 
     if (code)
     {
-        if (head->command == messages::transaction::command ||
-            head->command == messages::block::command)
+        if (head->command == messages::p2p::transaction::command ||
+            head->command == messages::p2p::block::command)
         {
             // error::operation_failed implies null arena, not invalid payload.
             LOGR("Invalid " << head->command << " payload from [" << authority()

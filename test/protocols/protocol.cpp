@@ -34,7 +34,7 @@
 BOOST_AUTO_TEST_SUITE(protocol_tests)
 
 using namespace bc::system::chain;
-using namespace bc::network::messages;
+using namespace network::messages::p2p;
 
 // settings (inject net)
 // mock_net (inject connector)
@@ -58,7 +58,7 @@ public:
     }
 
     // Override protected base to notify subscribers.
-    code notify(messages::identifier, uint32_t,
+    code notify(messages::p2p::identifier, uint32_t,
         const system::data_chunk&) NOEXCEPT override
     {
         return error::success;
@@ -300,7 +300,7 @@ public:
         return protocol_peer::fetch(std::move(handler));
     }
 
-    void save(const messages::address::cptr& message,
+    void save(const messages::p2p::address::cptr& message,
         count_handler&& handler) NOEXCEPT override
     {
         return protocol_peer::save(message, std::move(handler));

@@ -183,7 +183,7 @@ void session_seed::attach_handshake(const channel::ptr& channel,
 
     // Seeding does not require or provide any node services.
     // Nodes that require inbound connection services/txs will not accept.
-    using namespace messages;
+    using namespace messages::p2p;
     constexpr auto minimum_services = service::node_none;
     constexpr auto maximum_services = service::node_none;
 
@@ -229,7 +229,7 @@ void session_seed::attach_protocols(const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
 
-    using namespace messages;
+    using namespace messages::p2p;
     const auto self = shared_from_this();
     const auto alert = settings().enable_alert;
     const auto reject = settings().enable_reject;

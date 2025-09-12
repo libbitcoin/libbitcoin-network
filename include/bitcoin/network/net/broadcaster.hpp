@@ -23,7 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -32,12 +32,12 @@ namespace network {
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 #define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
 #define DEFINE_SUBSCRIBER(name) using SUBSCRIBER_TYPE(name) = \
-    desubscriber<channel_id, const messages::name::cptr&, channel_id>
+    desubscriber<channel_id, const messages::p2p::name::cptr&, channel_id>
 #define SUBSCRIBER_OVERLOAD(name) code do_subscribe( \
-    broadcaster::handler<messages::name>&& handler, channel_id id) NOEXCEPT \
+    broadcaster::handler<messages::p2p::name>&& handler, channel_id id) NOEXCEPT \
     { return SUBSCRIBER(name).subscribe(std::move(handler), id); }
 #define NOTIFY_OVERLOAD(name) inline void notify( \
-    const messages::name::cptr& message, channel_id sender) NOEXCEPT \
+    const messages::p2p::name::cptr& message, channel_id sender) NOEXCEPT \
     { SUBSCRIBER(name).notify(error::success, message, sender); }
 
 /// Not thread safe.

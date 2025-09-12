@@ -24,7 +24,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -46,7 +46,7 @@ public:
 
 protected:
     virtual bool handle_receive_alert(const code& ec,
-        const messages::alert::cptr& alert) NOEXCEPT;
+        const messages::p2p::alert::cptr& alert) NOEXCEPT;
 };
 
 } // namespace network

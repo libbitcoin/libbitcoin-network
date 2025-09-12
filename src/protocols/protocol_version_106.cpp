@@ -25,7 +25,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/messages.hpp>
+#include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -38,7 +38,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 #define CLASS protocol_version_106
 
 using namespace system;
-using namespace messages;
+using namespace messages::p2p;
 using namespace std::placeholders;
 
 // Require the configured minimum protocol and services by default.
@@ -75,7 +75,7 @@ protocol_version_106::protocol_version_106(const session::ptr& session,
 // Allow derived classes to modify the version message.
 // Relay always exposed on version, despite lack of definition < BIP37.
 // See comments in version::deserialize regarding BIP37 protocol bug.
-messages::version protocol_version_106::version_factory(
+messages::p2p::version protocol_version_106::version_factory(
     bool relay) const NOEXCEPT
 {
     const auto timestamp = unix_time();
