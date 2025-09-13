@@ -16,41 +16,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_NET_CHANNEL_CLIENT_HPP
-#define LIBBITCOIN_NETWORK_NET_CHANNEL_CLIENT_HPP
+#include <bitcoin/network/messages/rpc/heading.hpp>
 
-#include <memory>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/settings.hpp>
-#include <bitcoin/network/net/channel.hpp>
-#include <bitcoin/network/net/distributor_client.hpp>
 
 namespace libbitcoin {
 namespace network {
+namespace messages {
+namespace rpc {
 
-class BCT_API channel_client
-  : public channel, protected tracker<channel_client>
-{
-public:
-    typedef std::shared_ptr<channel_client> ptr;
-
-    /// Construct client channel to encapsulate and communicate on the socket.
-    channel_client(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
-
-    /// Idempotent, may be called multiple times.
-    void stop(const code& ec) NOEXCEPT override;
-
-private:
-    void do_stop(const code& ec) NOEXCEPT;
-
-    distributor_client distributor_;
-};
-
+} // namespace rpc
+} // namespace messages
 } // namespace network
 } // namespace libbitcoin
-
-#endif

@@ -228,6 +228,12 @@
     <ClCompile Include="..\..\..\..\test\messages\p2p\witness_tx_id_relay.cpp">
       <Filter>src\messages\p2p</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\heading.cpp">
+      <Filter>src\messages\rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\message.cpp">
+      <Filter>src\messages\rpc</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\ping.cpp">
       <Filter>src\messages\rpc</Filter>
     </ClCompile>
@@ -249,7 +255,10 @@
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\distributor.cpp">
+    <ClCompile Include="..\..\..\..\test\net\distributor_client.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\distributor_peer.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp">

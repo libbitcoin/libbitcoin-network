@@ -16,40 +16,44 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_NET_CHANNEL_CLIENT_HPP
-#define LIBBITCOIN_NETWORK_NET_CHANNEL_CLIENT_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGE_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGE_HPP
 
 #include <memory>
 #include <bitcoin/system.hpp>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/settings.hpp>
-#include <bitcoin/network/net/channel.hpp>
-#include <bitcoin/network/net/distributor_client.hpp>
+#include <bitcoin/network/messages/rpc/heading.hpp>
 
 namespace libbitcoin {
 namespace network {
+namespace messages {
+namespace rpc {
 
-class BCT_API channel_client
-  : public channel, protected tracker<channel_client>
+/// Deserialize message payload from the client protocol encoding.
+/// Returns nullptr if serialization fails for any reason (expected).
+template <typename Message>
+typename Message::cptr deserialize(const system::data_chunk& body) NOEXCEPT
 {
-public:
-    typedef std::shared_ptr<channel_client> ptr;
+    return Message::deserialize(body);
+}
 
-    /// Construct client channel to encapsulate and communicate on the socket.
-    channel_client(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
+/// Serialize message object to the client protocol encoding.
+/// Returns nullptr if serialization fails for any reason (unexpected).
+template <typename Message>
+system::chunk_ptr serialize(const Message& message) NOEXCEPT
+{
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    const auto data = std::make_shared<system::data_chunk>(message.size());
+    BC_POP_WARNING()
 
-    /// Idempotent, may be called multiple times.
-    void stop(const code& ec) NOEXCEPT override;
+    if (!message.serialize(*data))
+        return {};
 
-private:
-    void do_stop(const code& ec) NOEXCEPT;
+    return data;
+}
 
-    distributor_client distributor_;
-};
-
+} // namespace rpc
+} // namespace messages
 } // namespace network
 } // namespace libbitcoin
 

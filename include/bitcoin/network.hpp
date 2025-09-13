@@ -97,6 +97,8 @@
 #include <bitcoin/network/messages/p2p/enums/level.hpp>
 #include <bitcoin/network/messages/p2p/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/p2p/enums/service.hpp>
+#include <bitcoin/network/messages/rpc/heading.hpp>
+#include <bitcoin/network/messages/rpc/message.hpp>
 #include <bitcoin/network/messages/rpc/messages.hpp>
 #include <bitcoin/network/messages/rpc/ping.hpp>
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
@@ -107,6 +109,7 @@
 #include <bitcoin/network/net/channel_peer.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/deadline.hpp>
+#include <bitcoin/network/net/distributor_client.hpp>
 #include <bitcoin/network/net/distributor_peer.hpp>
 #include <bitcoin/network/net/hosts.hpp>
 #include <bitcoin/network/net/net.hpp>

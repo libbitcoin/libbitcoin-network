@@ -167,12 +167,16 @@
     <ClCompile Include="..\..\..\..\test\messages\p2p\get_data.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\get_headers.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\headers.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\p2p\heading.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\p2p\heading.cpp">
+      <ObjectFileName>$(IntDir)test_messages_p2p_heading.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\p2p\inventory.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\inventory_item.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\memory_pool.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\merkle_block.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\p2p\message.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\p2p\message.cpp">
+      <ObjectFileName>$(IntDir)test_messages_p2p_message.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\p2p\not_found.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\ping.cpp">
       <ObjectFileName>$(IntDir)test_messages_p2p_ping.obj</ObjectFileName>
@@ -186,6 +190,12 @@
     <ClCompile Include="..\..\..\..\test\messages\p2p\version.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\witness_tx_id_relay.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\heading.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_heading.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\message.cpp">
+      <ObjectFileName>$(IntDir)test_messages_rpc_message.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\ping.cpp">
       <ObjectFileName>$(IntDir)test_messages_rpc_ping.obj</ObjectFileName>
     </ClCompile>
@@ -195,7 +205,8 @@
     <ClCompile Include="..\..\..\..\test\net\channel.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\distributor.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\distributor_client.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\distributor_peer.cpp" />
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\test\net\socket.cpp" />
