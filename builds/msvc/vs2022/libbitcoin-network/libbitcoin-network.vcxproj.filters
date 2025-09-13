@@ -258,6 +258,12 @@
     <ClCompile Include="..\..\..\..\src\messages\p2p\witness_tx_id_relay.cpp">
       <Filter>src\messages\p2p</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\rpc\heading.cpp">
+      <Filter>src\messages\rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\rpc\message.cpp">
+      <Filter>src\messages\rpc</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\rpc\ping.cpp">
       <Filter>src\messages\rpc</Filter>
     </ClCompile>
@@ -283,6 +289,9 @@
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\deadline.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\distributor_client.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\distributor_peer.cpp">
@@ -611,6 +620,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\identifier.hpp">
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\heading.hpp">
+      <Filter>include\bitcoin\network\messages\rpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\message.hpp">
+      <Filter>include\bitcoin\network\messages\rpc</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\messages.hpp">
       <Filter>include\bitcoin\network\messages\rpc</Filter>
     </ClInclude>
@@ -639,6 +654,9 @@
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp">
+      <Filter>include\bitcoin\network\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_client.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_peer.hpp">

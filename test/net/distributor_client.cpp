@@ -18,9 +18,9 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(distributor_tests)
+BOOST_AUTO_TEST_SUITE(distributor_client_tests)
 
-BOOST_AUTO_TEST_CASE(distributor__construct__stop__stops)
+BOOST_AUTO_TEST_CASE(distributor_client__construct__stop__stops)
 {
     default_memory memory{};
     threadpool pool(2);
@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(distributor__construct__stop__stops)
     BOOST_REQUIRE(promise.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(distributor__subscribe__stop__expected_code)
+BOOST_AUTO_TEST_CASE(distributor_client__subscribe__stop__expected_code)
 {
     default_memory memory{};
     threadpool pool(2);
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(distributor__subscribe__stop__expected_code)
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(distributor__notify__invalid_message__no_notification)
+BOOST_AUTO_TEST_CASE(distributor_client__notify__invalid_message__no_notification)
 {
     default_memory memory{};
     threadpool pool(2);
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__invalid_message__no_notification)
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(distributor__notify__valid_message_invalid_version__no_notification)
+BOOST_AUTO_TEST_CASE(distributor_client__notify__valid_message_invalid_version__no_notification)
 {
     default_memory memory{};
     threadpool pool(2);
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(distributor__notify__valid_message_invalid_version__no_noti
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(distributor__notify__valid_nonced_ping__expected_notification)
+BOOST_AUTO_TEST_CASE(distributor_client__notify__valid_nonced_ping__expected_notification)
 {
     default_memory memory{};
     threadpool pool(2);

@@ -81,7 +81,8 @@ void channel_peer::stop(const code& ec) NOEXCEPT
 
     // Stop is posted to strand to protect timers.
     boost::asio::post(strand(),
-        std::bind(&channel_peer::do_stop, shared_from_base<channel_peer>(), ec));
+        std::bind(&channel_peer::do_stop,
+            shared_from_base<channel_peer>(), ec));
 }
 
 // This should not be called internally, as derived rely on stop() override.

@@ -16,12 +16,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
+#include "../../test.hpp"
 
-#include <bitcoin/network/messages/rpc/enums/identifier.hpp>
-#include <bitcoin/network/messages/rpc/heading.hpp>
-#include <bitcoin/network/messages/rpc/message.hpp>
-#include <bitcoin/network/messages/rpc/ping.hpp>
+BOOST_AUTO_TEST_SUITE(rpc_message_tests)
 
-#endif
+using namespace system;
+using namespace network::messages::rpc;
+
+BOOST_AUTO_TEST_CASE(rpc_message_tests)
+{
+    BOOST_REQUIRE(true);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

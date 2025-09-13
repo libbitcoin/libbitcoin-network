@@ -162,12 +162,16 @@
     <ClCompile Include="..\..\..\..\src\messages\p2p\get_data.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\get_headers.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\headers.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\p2p\heading.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\p2p\heading.cpp">
+      <ObjectFileName>$(IntDir)src_messages_p2p_heading.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\p2p\inventory.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\inventory_item.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\memory_pool.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\merkle_block.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\p2p\message.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\p2p\message.cpp">
+      <ObjectFileName>$(IntDir)src_messages_p2p_message.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\p2p\not_found.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\ping.cpp">
       <ObjectFileName>$(IntDir)src_messages_p2p_ping.obj</ObjectFileName>
@@ -181,6 +185,12 @@
     <ClCompile Include="..\..\..\..\src\messages\p2p\version.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\witness_tx_id_relay.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\rpc\heading.cpp">
+      <ObjectFileName>$(IntDir)src_messages_rpc_heading.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\rpc\message.cpp">
+      <ObjectFileName>$(IntDir)src_messages_rpc_message.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\rpc\ping.cpp">
       <ObjectFileName>$(IntDir)src_messages_rpc_ping.obj</ObjectFileName>
     </ClCompile>
@@ -192,6 +202,7 @@
     <ClCompile Include="..\..\..\..\src\net\channel_peer.cpp" />
     <ClCompile Include="..\..\..\..\src\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\src\net\deadline.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\distributor_client.cpp" />
     <ClCompile Include="..\..\..\..\src\net\distributor_peer.cpp" />
     <ClCompile Include="..\..\..\..\src\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp" />
@@ -302,6 +313,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\p2p\version_acknowledge.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\p2p\witness_tx_id_relay.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\identifier.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\heading.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\message.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\ping.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
@@ -312,6 +325,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_client.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\hosts.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp" />

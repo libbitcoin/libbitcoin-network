@@ -38,7 +38,7 @@ size_t ping::size() NOEXCEPT
 }
 
 // static
-typename ping::cptr ping::deserialize(const system::data_chunk& data) NOEXCEPT
+typename ping::cptr ping::deserialize(const data_chunk& data) NOEXCEPT
 {
     system::istream source{ data };
     system::byte_reader reader{ source };
@@ -53,7 +53,7 @@ ping ping::deserialize(reader& source) NOEXCEPT
     return { nonce };
 }
 
-bool ping::serialize(const system::data_slab& data) const NOEXCEPT
+bool ping::serialize(const data_slab& data) const NOEXCEPT
 {
     system::ostream sink{ data };
     system::byte_writer writer{ sink };

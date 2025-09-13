@@ -91,6 +91,8 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/p2p/version.cpp \
     src/messages/p2p/version_acknowledge.cpp \
     src/messages/p2p/witness_tx_id_relay.cpp \
+    src/messages/rpc/heading.cpp \
+    src/messages/rpc/message.cpp \
     src/messages/rpc/ping.cpp \
     src/net/acceptor.cpp \
     src/net/broadcaster.cpp \
@@ -99,6 +101,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/net/channel_peer.cpp \
     src/net/connector.cpp \
     src/net/deadline.cpp \
+    src/net/distributor_client.cpp \
     src/net/distributor_peer.cpp \
     src/net/hosts.cpp \
     src/net/proxy.cpp \
@@ -202,13 +205,16 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/p2p/version.cpp \
     test/messages/p2p/version_acknowledge.cpp \
     test/messages/p2p/witness_tx_id_relay.cpp \
+    test/messages/rpc/heading.cpp \
+    test/messages/rpc/message.cpp \
     test/messages/rpc/ping.cpp \
     test/net/acceptor.cpp \
     test/net/broadcaster.cpp \
     test/net/channel.cpp \
     test/net/connector.cpp \
     test/net/deadline.cpp \
-    test/net/distributor.cpp \
+    test/net/distributor_client.cpp \
+    test/net/distributor_peer.cpp \
     test/net/hosts.cpp \
     test/net/proxy.cpp \
     test/net/socket.cpp \
@@ -358,6 +364,8 @@ include_bitcoin_network_messages_p2p_enums_HEADERS = \
 
 include_bitcoin_network_messages_rpcdir = ${includedir}/bitcoin/network/messages/rpc
 include_bitcoin_network_messages_rpc_HEADERS = \
+    include/bitcoin/network/messages/rpc/heading.hpp \
+    include/bitcoin/network/messages/rpc/message.hpp \
     include/bitcoin/network/messages/rpc/messages.hpp \
     include/bitcoin/network/messages/rpc/ping.hpp
 
@@ -374,6 +382,7 @@ include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/channel_peer.hpp \
     include/bitcoin/network/net/connector.hpp \
     include/bitcoin/network/net/deadline.hpp \
+    include/bitcoin/network/net/distributor_client.hpp \
     include/bitcoin/network/net/distributor_peer.hpp \
     include/bitcoin/network/net/hosts.hpp \
     include/bitcoin/network/net/net.hpp \
