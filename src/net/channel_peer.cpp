@@ -472,7 +472,6 @@ void channel_peer::handle_read_payload(const code& ec,
     read_heading();
 }
 
-
 BC_POP_WARNING()
 
 } // namespace network
