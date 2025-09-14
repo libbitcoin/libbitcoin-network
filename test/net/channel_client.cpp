@@ -18,9 +18,9 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(channel_tests)
+BOOST_AUTO_TEST_SUITE(channel_client_tests)
 
-BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
+BOOST_AUTO_TEST_CASE(channel_client__stopped__default__false)
 {
     constexpr auto expected_identifier = 42u;
     const logger log{};
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel>(log, socket_ptr, set, expected_identifier);
+    auto channel_ptr = std::make_shared<channel_client>(log, socket_ptr, set, expected_identifier);
     BOOST_REQUIRE(!channel_ptr->stopped());
 
     BOOST_REQUIRE_NE(channel_ptr->nonce(), zero);

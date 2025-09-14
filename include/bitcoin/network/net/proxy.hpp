@@ -75,7 +75,7 @@ public:
     /// The number of bytes in the write backlog.
     uint64_t backlog() const NOEXCEPT;
 
-    /// The total number of bytes queued/sent to the peer.
+    /// The total number of bytes queued/sent to the remote endpoint.
     uint64_t total() const NOEXCEPT;
 
     /// The socket was accepted (vs. connected).
@@ -90,11 +90,15 @@ public:
 protected:
     proxy(const socket::ptr& socket) NOEXCEPT;
 
-    /// Read a serialized message from the peer (requires strand).
+    /// Read part of a message from the remote endpoint (requires strand).
+    virtual void read_some(const system::data_slab& buffer,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Read a fixed-size message from the remote endpoint (requires strand).
     virtual void read(const system::data_slab& buffer,
         count_handler&& handler) NOEXCEPT;
 
-    /// Send a serialized message to the peer (requires strand).
+    /// Send a complete message to the remote endpoint (requires strand).
     virtual void write(const system::chunk_ptr& payload,
         result_handler&& handler) NOEXCEPT;
 

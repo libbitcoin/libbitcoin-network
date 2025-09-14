@@ -140,7 +140,17 @@ void proxy::do_subscribe_stop(const result_handler& handler,
     complete(error::success);
 }
 
-// Read complete message from peer.
+// Read partial (up to buffer-sized) message from peer.
+// ----------------------------------------------------------------------------
+
+void proxy::read_some(const data_slab& buffer,
+    count_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    socket_->read_some(buffer, std::move(handler));
+}
+
+// Read complete (buffer-sized) message from peer.
 // ----------------------------------------------------------------------------
 
 void proxy::read(const data_slab& buffer, count_handler&& handler) NOEXCEPT
