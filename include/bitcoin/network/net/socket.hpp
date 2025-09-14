@@ -75,11 +75,15 @@ public:
     virtual void connect(const asio::endpoints& range,
         result_handler&& handler) NOEXCEPT;
 
-    /// Read from the socket, handler posted to socket strand.
+    /// Read up to full slab from the socket, handler posted to socket strand.
+    virtual void read_some(const system::data_slab& out,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Read full slab from the socket, handler posted to socket strand.
     virtual void read(const system::data_slab& out,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write to the socket, handler posted to socket strand.
+    /// Write full slice to the socket, handler posted to socket strand.
     virtual void write(const system::data_slice& in,
         count_handler&& handler) NOEXCEPT;
 
@@ -115,6 +119,8 @@ private:
     void do_stop() NOEXCEPT;
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
+    void do_read_some(const asio::mutable_buffer& out,
+        const count_handler& handler) NOEXCEPT;
     void do_read(const asio::mutable_buffer& out,
         const count_handler& handler) NOEXCEPT;
     void do_write(const asio::const_buffer& in,
