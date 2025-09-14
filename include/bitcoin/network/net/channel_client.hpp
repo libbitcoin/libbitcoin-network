@@ -24,6 +24,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/rpc/messages.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/distributor_client.hpp>
@@ -37,6 +38,39 @@ class BCT_API channel_client
 public:
     typedef std::shared_ptr<channel_client> ptr;
 
+    /// Subscribe to messages from client (requires strand).
+    /// Event handler is always invoked on the channel strand.
+    template <class Message,
+        typename Handler = distributor_client::handler<Message>>
+    void subscribe(Handler&& handler) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        distributor_.subscribe(std::forward<Handler>(handler));
+    }
+
+    /// Serialize and write a message to the client (requires strand).
+    /// Completion handler is always invoked on the channel strand.
+    template <class Message>
+    void send(const Message& message, result_handler&& complete) NOEXCEPT
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+
+        ///////////////////////////////////////////////////////////////////////
+        // TODO: update serialize to include status line and headers.
+        ///////////////////////////////////////////////////////////////////////
+        const auto data = messages::rpc::serialize(message);
+
+        if (!data)
+        {
+            // This is an internal error, should never happen.
+            LOGF("Serialization failure (" << Message::command << ").");
+            complete(error::unknown);
+            return;
+        }
+
+        write(data, std::move(complete));
+    }
+
     /// Construct client channel to encapsulate and communicate on the socket.
     channel_client(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
@@ -44,10 +78,26 @@ public:
     /// Idempotent, may be called multiple times.
     void stop(const code& ec) NOEXCEPT override;
 
+    /// Resume reading from the socket (requires strand).
+    void resume() NOEXCEPT override;
+
+protected:
+    /// Client read and dispatch.
+    void read_request() NOEXCEPT;
+    void handle_read_request(const code& ec, size_t) NOEXCEPT;
+    ////void handle_read_headers(const code& ec, size_t) NOEXCEPT;
+    ////void handle_read_body(const code& ec, size_t) NOEXCEPT;
+
+    /// Notify subscribers of a new message (requires strand).
+    virtual code notify(messages::rpc::identifier id,
+        const system::data_chunk& source) NOEXCEPT;
+
 private:
     void do_stop(const code& ec) NOEXCEPT;
 
     distributor_client distributor_;
+    system::data_array<messages::rpc::max_request> read_buffer_{};
+    system::read::bytes::copy request_reader_{ read_buffer_ };
 };
 
 } // namespace network

@@ -286,6 +286,9 @@ void channel_peer::handle_inactivity(const code& ec) NOEXCEPT
     stop(error::channel_inactive);
 }
 
+// Read cycle (read continues until stop called).
+// ----------------------------------------------------------------------------
+
 code channel_peer::notify(messages::p2p::identifier id, uint32_t version,
     const data_chunk& source) NOEXCEPT
 {
@@ -295,9 +298,6 @@ code channel_peer::notify(messages::p2p::identifier id, uint32_t version,
     // TODO: if self and peer services show witness, set feature true.
     return distributor_.notify(id, version, source);
 }
-
-// Read cycle (read continues until stop called).
-// ----------------------------------------------------------------------------
 
 void channel_peer::read_heading() NOEXCEPT
 {
@@ -471,7 +471,6 @@ void channel_peer::handle_read_payload(const code& ec,
     start_inactivity();
     read_heading();
 }
-
 
 BC_POP_WARNING()
 

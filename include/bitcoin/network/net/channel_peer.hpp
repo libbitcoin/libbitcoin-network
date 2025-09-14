@@ -64,8 +64,8 @@ public:
 
         // TODO: build witness into feature w/magic and negotiated version.
         // TODO: if self and peer services show witness, set feature true.
-        const auto data = messages::p2p::serialize(message, settings().identifier,
-            negotiated_version());
+        const auto data = messages::p2p::serialize(message,
+            settings().identifier, negotiated_version());
 
         if (!data)
         {

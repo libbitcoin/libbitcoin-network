@@ -163,6 +163,30 @@ BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
     BOOST_REQUIRE(pool.join());
 }
 
+BOOST_AUTO_TEST_CASE(socket__read_some__disconnected__error)
+{
+    const logger log{};
+    threadpool pool(2);
+    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
+
+    system::data_array<42> data;
+    instance->read_some({ data }, [instance](const code& ec, size_t size)
+    {
+        // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
+        BOOST_REQUIRE_EQUAL(ec, error::bad_stream);
+        BOOST_REQUIRE_EQUAL(size, zero);
+    });
+
+    // Test race.
+    std::this_thread::sleep_for(microseconds(1));
+
+    // Stopping the socket precludes assertion.
+    instance->stop();
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+}
+
 BOOST_AUTO_TEST_CASE(socket__read__disconnected__error)
 {
     const logger log{};

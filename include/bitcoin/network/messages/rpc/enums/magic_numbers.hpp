@@ -16,13 +16,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_MAGIC_NUMBERS_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_MAGIC_NUMBERS_HPP
 
-#include <bitcoin/network/messages/rpc/enums/identifier.hpp>
-#include <bitcoin/network/messages/rpc/enums/magic_numbers.hpp>
-#include <bitcoin/network/messages/rpc/heading.hpp>
-#include <bitcoin/network/messages/rpc/message.hpp>
-#include <bitcoin/network/messages/rpc/ping.hpp>
+#include <bitcoin/network/define.hpp>
+
+namespace libbitcoin {
+namespace network {
+namespace messages {
+namespace rpc {
+
+/// Client-server protocol constants.
+///----------------------------------------------------------------------------
+
+constexpr size_t max_request = 4 * 1024;
+
+} // namespace rpc
+} // namespace messages
+} // namespace network
+} // namespace libbitcoin
 
 #endif

@@ -327,6 +327,12 @@
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\channel_peer.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\channel_client.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\test\test.hpp">

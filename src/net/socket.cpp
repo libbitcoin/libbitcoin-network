@@ -137,7 +137,15 @@ void socket::connect(const asio::endpoints& range,
             shared_from_this(), range, std::move(handler)));
 }
 
-// Read into pre-allocated buffer (bitcoin).
+void socket::read_some(const data_slab& out, count_handler&& handler) NOEXCEPT
+{
+    // asio::mutable_buffer is essentially a data_slab.
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_read_some, shared_from_this(),
+            asio::mutable_buffer{ out.data(), out.size() },
+                std::move(handler)));
+}
+
 void socket::read(const data_slab& out, count_handler&& handler) NOEXCEPT
 {
     // asio::mutable_buffer is essentially a data_slab.
@@ -180,7 +188,25 @@ void socket::do_connect(const asio::endpoints& range,
     }
 }
 
-// Read into pre-allocated buffer (bitcoin).
+void socket::do_read_some(const asio::mutable_buffer& out,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    try
+    {
+        // This operation posts handler to the strand.
+        socket_.async_read_some(out,
+            std::bind(&socket::handle_io,
+                shared_from_this(), _1, _2, handler));
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_read_some: " << e.what());
+        handler(error::operation_failed, zero);
+    }
+}
+
 void socket::do_read(const asio::mutable_buffer& out,
     const count_handler& handler) NOEXCEPT
 {

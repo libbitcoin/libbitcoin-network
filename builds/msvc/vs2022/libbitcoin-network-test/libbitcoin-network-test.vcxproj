@@ -203,6 +203,8 @@
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />
     <ClCompile Include="..\..\..\..\test\net\channel.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\channel_client.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\channel_peer.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
     <ClCompile Include="..\..\..\..\test\net\distributor_client.cpp" />
