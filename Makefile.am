@@ -371,7 +371,8 @@ include_bitcoin_network_messages_rpc_HEADERS = \
 
 include_bitcoin_network_messages_rpc_enumsdir = ${includedir}/bitcoin/network/messages/rpc/enums
 include_bitcoin_network_messages_rpc_enums_HEADERS = \
-    include/bitcoin/network/messages/rpc/enums/identifier.hpp
+    include/bitcoin/network/messages/rpc/enums/identifier.hpp \
+    include/bitcoin/network/messages/rpc/enums/magic_numbers.hpp
 
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \
