@@ -16,36 +16,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_VERB_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_VERB_HPP
+#include "../../../test.hpp"
 
-#include <bitcoin/network/define.hpp>
+BOOST_AUTO_TEST_SUITE(rpc_magic_numbers_tests)
 
-namespace libbitcoin {
-namespace network {
-namespace messages {
-namespace rpc {
+using namespace network::messages::rpc;
 
-enum class verb
+BOOST_AUTO_TEST_CASE(rpc_magic_numbers_test)
 {
-    get,
-    post,
-    put,
-    patch,
-    delete_,
-    head,
-    options,
-    trace,
-    connect,
-    undefined
-};
+    BOOST_REQUIRE(true);
+}
 
-BCT_API verb to_verb(const std::string& value) NOEXCEPT;
-BCT_API const std::string& from_verb(verb value) NOEXCEPT;
-
-} // namespace rpc
-} // namespace messages
-} // namespace network
-} // namespace libbitcoin
-
-#endif
+BOOST_AUTO_TEST_SUITE_END()

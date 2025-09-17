@@ -20,9 +20,9 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_REQUEST_HPP
 
 #include <memory>
-#include <unordered_map>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/rpc/heading.hpp>
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
 #include <bitcoin/network/messages/rpc/enums/verb.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
@@ -35,7 +35,6 @@ namespace rpc {
 struct BCT_API request
 {
     typedef std::shared_ptr<const request> cptr;
-    typedef std::unordered_multimap<std::string, std::string> headers_t;
 
     static const identifier id;
     static const std::string command;
@@ -51,7 +50,7 @@ struct BCT_API request
     rpc::verb verb;
     std::string path;
     rpc::version version;
-    headers_t headers{};
+    heading::headers_t headers{};
 };
 
 } // namespace rpc

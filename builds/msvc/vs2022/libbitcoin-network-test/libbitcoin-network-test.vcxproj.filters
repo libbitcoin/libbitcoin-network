@@ -28,8 +28,14 @@
     <Filter Include="src\messages\p2p">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\messages\p2p\enums">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\messages\rpc">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\rpc\enums">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\net">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
@@ -147,6 +153,18 @@
     <ClCompile Include="..\..\..\..\test\messages\p2p\compact_transactions.cpp">
       <Filter>src\messages\p2p</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\p2p\enums\identifier.cpp">
+      <Filter>src\messages\p2p\enums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\p2p\enums\level.cpp">
+      <Filter>src\messages\p2p\enums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\p2p\enums\magic_numbers.cpp">
+      <Filter>src\messages\p2p\enums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\p2p\enums\service.cpp">
+      <Filter>src\messages\p2p\enums</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\p2p\fee_filter.cpp">
       <Filter>src\messages\p2p</Filter>
     </ClCompile>
@@ -227,6 +245,21 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\p2p\witness_tx_id_relay.cpp">
       <Filter>src\messages\p2p</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\identifier.cpp">
+      <Filter>src\messages\rpc\enums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\magic_numbers.cpp">
+      <Filter>src\messages\rpc\enums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\status.cpp">
+      <Filter>src\messages\rpc\enums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\verb.cpp">
+      <Filter>src\messages\rpc\enums</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\version.cpp">
+      <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\heading.cpp">
       <Filter>src\messages\rpc</Filter>
