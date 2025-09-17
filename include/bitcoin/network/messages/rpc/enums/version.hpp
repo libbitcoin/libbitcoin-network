@@ -16,9 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_IDENTIFIER_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_IDENTIFIER_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_VERSION_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_VERSION_HPP
 
+#include <unordered_map>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -26,13 +27,40 @@ namespace network {
 namespace messages {
 namespace rpc {
 
-enum class identifier
+enum class version
 {
-    unknown,
-    ping,
-    request,
-    response
+    http_0_9,
+    http_1_0,
+    http_1_1,
+    undefined
 };
+
+inline version to_version(const std::string& value) NOEXCEPT
+{
+    static const std::unordered_map<std::string, version> map
+    {
+        { "HTTP/0.9", version::http_0_9 },
+        { "HTTP/1.0", version::http_1_0 },
+        { "HTTP/1.1", version::http_1_1 },
+        { "undefined", version::undefined }
+    };
+
+    const auto found = map.find(value);
+    return found == map.end() ? version::undefined : found->second;
+}
+
+inline std::string from_version(version value) NOEXCEPT
+{
+    static const std::unordered_map<version, std::string> map
+    {
+        { version::http_0_9, "HTTP/0.9" },
+        { version::http_1_0, "HTTP/1.0" },
+        { version::http_1_1,"HTTP/1.1" },
+        { version::undefined, "undefined" }
+    };
+
+    return map.at(value);
+}
 
 } // namespace rpc
 } // namespace messages

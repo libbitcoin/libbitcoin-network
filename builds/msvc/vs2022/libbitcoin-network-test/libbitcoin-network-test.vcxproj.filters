@@ -237,6 +237,12 @@
     <ClCompile Include="..\..\..\..\test\messages\rpc\ping.cpp">
       <Filter>src\messages\rpc</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\request.cpp">
+      <Filter>src\messages\rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\response.cpp">
+      <Filter>src\messages\rpc</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -247,6 +253,12 @@
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\channel.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\channel_client.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\net\channel_peer.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\connector.cpp">
@@ -326,12 +338,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\test.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\channel_peer.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\channel_client.cpp">
-      <Filter>src\net</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

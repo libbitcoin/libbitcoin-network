@@ -199,6 +199,8 @@
     <ClCompile Include="..\..\..\..\test\messages\rpc\ping.cpp">
       <ObjectFileName>$(IntDir)test_messages_rpc_ping.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\request.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\response.cpp" />
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />

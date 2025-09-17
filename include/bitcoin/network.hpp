@@ -101,8 +101,13 @@
 #include <bitcoin/network/messages/rpc/message.hpp>
 #include <bitcoin/network/messages/rpc/messages.hpp>
 #include <bitcoin/network/messages/rpc/ping.hpp>
+#include <bitcoin/network/messages/rpc/request.hpp>
+#include <bitcoin/network/messages/rpc/response.hpp>
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
 #include <bitcoin/network/messages/rpc/enums/magic_numbers.hpp>
+#include <bitcoin/network/messages/rpc/enums/status.hpp>
+#include <bitcoin/network/messages/rpc/enums/verb.hpp>
+#include <bitcoin/network/messages/rpc/enums/version.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/channel.hpp>

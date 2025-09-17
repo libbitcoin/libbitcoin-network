@@ -194,6 +194,8 @@
     <ClCompile Include="..\..\..\..\src\messages\rpc\ping.cpp">
       <ObjectFileName>$(IntDir)src_messages_rpc_ping.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\rpc\request.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\rpc\response.cpp" />
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\broadcaster.cpp" />
@@ -314,10 +316,15 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\p2p\witness_tx_id_relay.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\identifier.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\magic_numbers.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\status.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\verb.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\heading.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\message.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\ping.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\request.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\response.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\broadcaster.hpp" />

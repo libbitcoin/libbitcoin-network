@@ -94,6 +94,8 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/rpc/heading.cpp \
     src/messages/rpc/message.cpp \
     src/messages/rpc/ping.cpp \
+    src/messages/rpc/request.cpp \
+    src/messages/rpc/response.cpp \
     src/net/acceptor.cpp \
     src/net/broadcaster.cpp \
     src/net/channel.cpp \
@@ -208,9 +210,13 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/rpc/heading.cpp \
     test/messages/rpc/message.cpp \
     test/messages/rpc/ping.cpp \
+    test/messages/rpc/request.cpp \
+    test/messages/rpc/response.cpp \
     test/net/acceptor.cpp \
     test/net/broadcaster.cpp \
     test/net/channel.cpp \
+    test/net/channel_client.cpp \
+    test/net/channel_peer.cpp \
     test/net/connector.cpp \
     test/net/deadline.cpp \
     test/net/distributor_client.cpp \
@@ -367,12 +373,17 @@ include_bitcoin_network_messages_rpc_HEADERS = \
     include/bitcoin/network/messages/rpc/heading.hpp \
     include/bitcoin/network/messages/rpc/message.hpp \
     include/bitcoin/network/messages/rpc/messages.hpp \
-    include/bitcoin/network/messages/rpc/ping.hpp
+    include/bitcoin/network/messages/rpc/ping.hpp \
+    include/bitcoin/network/messages/rpc/request.hpp \
+    include/bitcoin/network/messages/rpc/response.hpp
 
 include_bitcoin_network_messages_rpc_enumsdir = ${includedir}/bitcoin/network/messages/rpc/enums
 include_bitcoin_network_messages_rpc_enums_HEADERS = \
     include/bitcoin/network/messages/rpc/enums/identifier.hpp \
-    include/bitcoin/network/messages/rpc/enums/magic_numbers.hpp
+    include/bitcoin/network/messages/rpc/enums/magic_numbers.hpp \
+    include/bitcoin/network/messages/rpc/enums/status.hpp \
+    include/bitcoin/network/messages/rpc/enums/verb.hpp \
+    include/bitcoin/network/messages/rpc/enums/version.hpp
 
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \
