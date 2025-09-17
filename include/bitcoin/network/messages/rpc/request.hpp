@@ -16,22 +16,42 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_IDENTIFIER_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_IDENTIFIER_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_REQUEST_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_REQUEST_HPP
 
+#include <memory>
+#include <unordered_map>
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/rpc/enums/identifier.hpp>
+#include <bitcoin/network/messages/rpc/enums/verb.hpp>
+#include <bitcoin/network/messages/rpc/enums/version.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
 namespace rpc {
 
-enum class identifier
+struct BCT_API request
 {
-    unknown,
-    ping,
-    request,
-    response
+    typedef std::shared_ptr<const request> cptr;
+    typedef std::unordered_multimap<std::string, std::string> headers_t;
+
+    static const identifier id;
+    static const std::string command;
+
+    size_t size() const NOEXCEPT;
+
+    static cptr deserialize(const system::data_chunk& data) NOEXCEPT;
+    static request deserialize(system::reader& source) NOEXCEPT;
+
+    bool serialize(const system::data_slab& data) const NOEXCEPT;
+    void serialize(system::writer& sink) const NOEXCEPT;
+
+    rpc::verb verb;
+    std::string path;
+    rpc::version version;
+    headers_t headers{};
 };
 
 } // namespace rpc

@@ -150,9 +150,13 @@ private:
     uint32_t negotiated_version_;
     messages::p2p::version::cptr peer_version_{};
     size_t start_height_{};
+
     system::data_chunk payload_buffer_{};
     system::data_array<messages::p2p::heading::size()> heading_buffer_{};
-    system::read::bytes::copy heading_reader_{ heading_buffer_ };
+
+    // Because heading buffer is fixed the stream can be reused as well.
+    system::stream::in::fast heading_stream_{ heading_buffer_ };
+    system::read::bytes::fast heading_reader_{ heading_stream_ };
 };
 
 } // namespace network

@@ -267,6 +267,12 @@
     <ClCompile Include="..\..\..\..\src\messages\rpc\ping.cpp">
       <Filter>src\messages\rpc</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\rpc\request.cpp">
+      <Filter>src\messages\rpc</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\rpc\response.cpp">
+      <Filter>src\messages\rpc</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -623,6 +629,15 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\magic_numbers.hpp">
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\status.hpp">
+      <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\verb.hpp">
+      <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\version.hpp">
+      <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\heading.hpp">
       <Filter>include\bitcoin\network\messages\rpc</Filter>
     </ClInclude>
@@ -633,6 +648,12 @@
       <Filter>include\bitcoin\network\messages\rpc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\ping.hpp">
+      <Filter>include\bitcoin\network\messages\rpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\request.hpp">
+      <Filter>include\bitcoin\network\messages\rpc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\response.hpp">
       <Filter>include\bitcoin\network\messages\rpc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp">

@@ -204,7 +204,6 @@ void session_inbound_client::attach_protocols(
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 }
 
-
 // TODO: presently nothing to invoke channel stop when the channel drops.
 // TODO: so this will not be called until the node is stopped.
 void session_inbound_client::handle_channel_stop(const code& LOG_ONLY(ec),

@@ -85,8 +85,6 @@ protected:
     /// Client read and dispatch.
     void read_request() NOEXCEPT;
     void handle_read_request(const code& ec, size_t) NOEXCEPT;
-    ////void handle_read_headers(const code& ec, size_t) NOEXCEPT;
-    ////void handle_read_body(const code& ec, size_t) NOEXCEPT;
 
     /// Notify subscribers of a new message (requires strand).
     virtual code notify(messages::rpc::identifier id,
@@ -96,8 +94,7 @@ private:
     void do_stop(const code& ec) NOEXCEPT;
 
     distributor_client distributor_;
-    system::data_array<messages::rpc::max_request> read_buffer_{};
-    system::read::bytes::copy request_reader_{ read_buffer_ };
+    system::data_chunk buffer_{};
 };
 
 } // namespace network

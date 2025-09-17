@@ -16,27 +16,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_IDENTIFIER_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_IDENTIFIER_HPP
+#include "../../test.hpp"
 
-#include <bitcoin/network/define.hpp>
+BOOST_AUTO_TEST_SUITE(rpc_response_tests)
 
-namespace libbitcoin {
-namespace network {
-namespace messages {
-namespace rpc {
+using namespace network::messages::rpc;
 
-enum class identifier
+BOOST_AUTO_TEST_CASE(response__properties__always__expected)
 {
-    unknown,
-    ping,
-    request,
-    response
-};
+    BOOST_REQUIRE_EQUAL(response::command, "response");
+    BOOST_REQUIRE(response::id == identifier::response);
+}
 
-} // namespace rpc
-} // namespace messages
-} // namespace network
-} // namespace libbitcoin
+BOOST_AUTO_TEST_CASE(rpc_response_test)
+{
+    BOOST_REQUIRE(true);
+}
 
-#endif
+BOOST_AUTO_TEST_SUITE_END()
