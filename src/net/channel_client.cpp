@@ -87,15 +87,14 @@ void channel_client::read_request() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Both terminate read loop, paused can be resumed, stopped cannot.
-    // Pause only prevents start of the read loop, it does not prevent messages
-    // from being issued for sockets already past that point (e.g. waiting).
-    // This is mainly for startup coordination, preventing missed messages.
     if (stopped() || paused())
         return;
 
+    // TODO: dynamic or fixed.
+    buffer_.resize(messages::rpc::max_request);
+
     // Post handle_read_heading to strand upon stop, error, or buffer full.
-    read_some(read_buffer_,
+    read_some(buffer_,
         std::bind(&channel_client::handle_read_request,
             shared_from_base<channel_client>(), _1, _2));
 }
@@ -123,27 +122,23 @@ void channel_client::handle_read_request(const code& ec, size_t) NOEXCEPT
         return;
     }
 
-    request_reader_.set_position(zero);
+    const auto request = messages::rpc::request::deserialize(buffer_);
 
-    // TODO: deserialize request, headers, body.
-
-    if (!request_reader_)
+    if (!request)
     {
-        LOGR("Invalid request header from [" << authority() << "]");
-        stop(error::invalid_heading);
+        // TODO: notify subscribers with faulted request object.
+        LOGR("Request invalid or oversized header [" << authority() << "]");
+        stop(error::invalid_message);
         return;
     }
 
-    // TODO: notify subscribers.
+    ////std::string out{};
+    ////out.resize(request->size());
+    ////if (request->serialize(out))
+    ////{
+    ////    LOGA(out);
+    ////}
 }
-
-////void channel_client::handle_read_headers(const code& ec, size_t) NOEXCEPT
-////{
-////}
-////
-////void channel_client::handle_read_body(const code& ec, size_t) NOEXCEPT
-////{
-////}
 
 BC_POP_WARNING()
 
