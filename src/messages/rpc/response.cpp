@@ -20,6 +20,9 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
+#include <bitcoin/network/messages/rpc/enums/status.hpp>
+#include <bitcoin/network/messages/rpc/enums/version.hpp>
+#include <bitcoin/network/messages/rpc/heading.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -33,8 +36,11 @@ const std::string response::command = "response";
 
 size_t response::size() const NOEXCEPT
 {
-    // TODO: compute size.
-    return zero;
+    return
+        from_version(version).size() + heading::space.size() +
+        from_status(status).size() + heading::terminal.size() +
+        heading::headers_size(headers) +
+        heading::terminal.size();
 }
 
 // static
@@ -47,10 +53,14 @@ typename response::cptr response::deserialize(const data_chunk& data) NOEXCEPT
 }
 
 // static
-response response::deserialize(reader&) NOEXCEPT
+response response::deserialize(reader& source) NOEXCEPT
 {
-    // TODO: deserialize source.
-    return {};
+    return
+    {
+        to_version(source.read_line(heading::space)),
+        to_status(source.read_line()),
+        heading::to_headers(source)
+    };
 }
 
 bool response::serialize(const data_slab& data) const NOEXCEPT
@@ -61,10 +71,14 @@ bool response::serialize(const data_slab& data) const NOEXCEPT
     return writer;
 }
 
-void response::serialize(writer& BC_DEBUG_ONLY(sink)) const NOEXCEPT
+void response::serialize(writer& sink) const NOEXCEPT
 {
     BC_DEBUG_ONLY(const auto bytes = size();)
     BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
+
+    sink.write_line(from_version(version), heading::space);
+    sink.write_line(from_status(status));
+    heading::from_headers(headers, sink);
 
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }

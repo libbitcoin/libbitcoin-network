@@ -24,6 +24,7 @@
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 #include <bitcoin/network/messages/rpc/enums/verb.hpp>
+#include <bitcoin/network/messages/rpc/heading.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -35,29 +36,14 @@ using namespace system;
 const identifier request::id = identifier::request;
 const std::string request::command = "request";
 
-const std::string space{ " " };
-const std::string separator{ ":" };
-const std::string terminal{ "\r\n" };
-
 size_t request::size() const NOEXCEPT
 {
-    const auto headers_size = [this]() NOEXCEPT
-    {
-        return std::accumulate(headers.begin(), headers.end(), zero,
-            [](size_t sum, const auto& pair) NOEXCEPT
-            {
-                return sum +
-                    pair.first.size() + separator.size() +
-                    pair.second.size() + terminal.size();
-            });
-    };
-
     return
-        from_verb(verb).size() + space.size() +
-        path.size() + space.size() +
-        from_version(version).size() + terminal.size() +
-        headers_size() +
-        terminal.size();
+        from_verb(verb).size() + heading::space.size() +
+        path.size() + heading::space.size() +
+        from_version(version).size() + heading::terminal.size() +
+        heading::headers_size(headers) +
+        heading::terminal.size();
 }
 
 // static
@@ -69,54 +55,15 @@ typename request::cptr request::deserialize(const data_chunk& data) NOEXCEPT
     return reader ? message : nullptr;
 }
 
-// local
-request::headers_t to_headers(reader& source) NOEXCEPT
-{
-    request::headers_t headers{};
-
-    // Read until empty/fail or line starts with first terminal character.
-    while (!source.is_exhausted() && (source.peek_byte() != terminal.front()))
-    {
-        // Must control read order here.
-        auto header = source.read_line(separator);
-        headers.emplace(std::move(header), source.read_line());
-    }
-
-    // Headers end with empty line.
-    if (!source.read_line().empty())
-        source.invalidate();
-
-    if (!source)
-        return {};
-
-    // name:value pairs are not validated at this point.
-    return headers;
-}
-
-// local
-void from_headers(const request::headers_t& headers, writer& sink) NOEXCEPT
-{
-    // Write all headers.
-    std::for_each(headers.begin(), headers.end(),
-        [&sink](const auto& header) NOEXCEPT
-        {
-            sink.write_line(header.first, separator);
-            sink.write_line(header.second);
-        });
-
-    // Headers end with empty line.
-    sink.write_line();
-}
-
 // static
 request request::deserialize(reader& source) NOEXCEPT
 {
     return
     {
-        to_verb(source.read_line(space)),
-        source.read_line(space),
+        to_verb(source.read_line(heading::space)),
+        source.read_line(heading::space),
         to_version(source.read_line()),
-        to_headers(source)
+        heading::to_headers(source)
     };
 }
 
@@ -133,10 +80,10 @@ void request::serialize(writer& sink) const NOEXCEPT
     BC_DEBUG_ONLY(const auto bytes = size();)
     BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
-    sink.write_line(from_verb(verb), space);
-    sink.write_line(path, space);
+    sink.write_line(from_verb(verb), heading::space);
+    sink.write_line(path, heading::space);
     sink.write_line(from_version(version));
-    from_headers(headers, sink);
+    heading::from_headers(headers, sink);
 
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }

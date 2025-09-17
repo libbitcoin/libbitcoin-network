@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_HEADING_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_HEADING_HPP
 
-#include <memory>
+#include <unordered_map>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -27,6 +27,20 @@ namespace libbitcoin {
 namespace network {
 namespace messages {
 namespace rpc {
+
+struct BCT_API heading
+{
+    using headers_t = std::unordered_multimap<std::string, std::string>;
+
+    static const std::string space;
+    static const std::string separator;
+    static const std::string terminal;
+
+    static size_t headers_size(const headers_t& headers) NOEXCEPT;
+    static headers_t to_headers(system::reader& source) NOEXCEPT;
+    static void from_headers(const headers_t& headers,
+        system::writer& sink) NOEXCEPT;
+};
 
 } // namespace rpc
 } // namespace messages

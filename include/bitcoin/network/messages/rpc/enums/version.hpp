@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_VERSION_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_VERSION_HPP
 
-#include <unordered_map>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -35,32 +34,8 @@ enum class version
     undefined
 };
 
-inline version to_version(const std::string& value) NOEXCEPT
-{
-    static const std::unordered_map<std::string, version> map
-    {
-        { "HTTP/0.9", version::http_0_9 },
-        { "HTTP/1.0", version::http_1_0 },
-        { "HTTP/1.1", version::http_1_1 },
-        { "undefined", version::undefined }
-    };
-
-    const auto found = map.find(value);
-    return found == map.end() ? version::undefined : found->second;
-}
-
-inline std::string from_version(version value) NOEXCEPT
-{
-    static const std::unordered_map<version, std::string> map
-    {
-        { version::http_0_9, "HTTP/0.9" },
-        { version::http_1_0, "HTTP/1.0" },
-        { version::http_1_1,"HTTP/1.1" },
-        { version::undefined, "undefined" }
-    };
-
-    return map.at(value);
-}
+BCT_API version to_version(const std::string& value) NOEXCEPT;
+BCT_API const std::string& from_version(version value) NOEXCEPT;
 
 } // namespace rpc
 } // namespace messages

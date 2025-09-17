@@ -16,45 +16,48 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_RESPONSE_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_RESPONSE_HPP
-
-#include <memory>
-#include <bitcoin/system.hpp>
-#include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/heading.hpp>
-#include <bitcoin/network/messages/rpc/enums/identifier.hpp>
-#include <bitcoin/network/messages/rpc/enums/status.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
+
+#include <unordered_map>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
 namespace rpc {
 
-struct BCT_API response
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+version to_version(const std::string& value) NOEXCEPT
 {
-    typedef std::shared_ptr<const response> cptr;
+    static const std::unordered_map<std::string, version> map
+    {
+        { "HTTP/0.9", version::http_0_9 },
+        { "HTTP/1.0", version::http_1_0 },
+        { "HTTP/1.1", version::http_1_1 },
+        { "undefined", version::undefined }
+    };
 
-    static const identifier id;
-    static const std::string command;
+    const auto found = map.find(value);
+    return found == map.end() ? version::undefined : found->second;
+}
 
-    size_t size() const NOEXCEPT;
+const std::string& from_version(version value) NOEXCEPT
+{
+    static const std::unordered_map<version, std::string> map
+    {
+        { version::http_0_9, "HTTP/0.9" },
+        { version::http_1_0, "HTTP/1.0" },
+        { version::http_1_1,"HTTP/1.1" },
+        { version::undefined, "undefined" }
+    };
 
-    static cptr deserialize(const system::data_chunk& data) NOEXCEPT;
-    static response deserialize(system::reader& source) NOEXCEPT;
+    return map.at(value);
+}
 
-    bool serialize(const system::data_slab& data) const NOEXCEPT;
-    void serialize(system::writer& sink) const NOEXCEPT;
-
-    rpc::version version;
-    rpc::status status;
-    heading::headers_t headers{};
-};
+BC_POP_WARNING()
 
 } // namespace rpc
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin
-
-#endif
