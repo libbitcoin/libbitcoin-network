@@ -22,9 +22,26 @@ BOOST_AUTO_TEST_SUITE(rpc_version_tests)
 
 using namespace network::messages::rpc;
 
-BOOST_AUTO_TEST_CASE(rpc_version_test)
+BOOST_AUTO_TEST_CASE(rpc_version__to_version__always__expected)
 {
-    BOOST_REQUIRE(true);
+    // Default
+    BOOST_REQUIRE(to_version("UNDEFINED/0.0") == version::undefined);
+
+    // HTTP Versions
+    BOOST_REQUIRE(to_version("HTTP/0.9") == version::http_0_9);
+    BOOST_REQUIRE(to_version("HTTP/1.0") == version::http_1_0);
+    BOOST_REQUIRE(to_version("HTTP/1.1") == version::http_1_1);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_version__from_version__always__expected)
+{
+    // Default
+    BOOST_REQUIRE_EQUAL(from_version(version::undefined), "UNDEFINED/0.0");
+
+    // HTTP Versions
+    BOOST_REQUIRE_EQUAL(from_version(version::http_0_9), "HTTP/0.9");
+    BOOST_REQUIRE_EQUAL(from_version(version::http_1_0), "HTTP/1.0");
+    BOOST_REQUIRE_EQUAL(from_version(version::http_1_1), "HTTP/1.1");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
