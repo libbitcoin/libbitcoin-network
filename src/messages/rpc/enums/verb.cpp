@@ -41,7 +41,7 @@ verb to_verb(const std::string& value) NOEXCEPT
         { "OPTIONS", verb::options },
         { "TRACE", verb::trace },
         { "CONNECT", verb::connect },
-        { "undefined", verb::undefined }
+        { "UNDEFINED", verb::undefined }
     };
 
     const auto found = map.find(value);
@@ -61,7 +61,7 @@ const std::string& from_verb(verb value) NOEXCEPT
         { verb::options, "OPTIONS" },
         { verb::trace, "TRACE" },
         { verb::connect, "CONNECT" },
-        { verb::undefined, "undefined" }
+        { verb::undefined, "UNDEFINED" }
     };
 
     return map.at(value);
