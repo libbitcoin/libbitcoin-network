@@ -35,7 +35,7 @@ version to_version(const std::string& value) NOEXCEPT
         { "HTTP/0.9", version::http_0_9 },
         { "HTTP/1.0", version::http_1_0 },
         { "HTTP/1.1", version::http_1_1 },
-        { "undefined", version::undefined }
+        { "UNDEFINED/0.0", version::undefined }
     };
 
     const auto found = map.find(value);
@@ -49,7 +49,7 @@ const std::string& from_version(version value) NOEXCEPT
         { version::http_0_9, "HTTP/0.9" },
         { version::http_1_0, "HTTP/1.0" },
         { version::http_1_1,"HTTP/1.1" },
-        { version::undefined, "undefined" }
+        { version::undefined, "UNDEFINED/0.0" }
     };
 
     return map.at(value);

@@ -22,9 +22,38 @@ BOOST_AUTO_TEST_SUITE(rpc_verb_tests)
 
 using namespace network::messages::rpc;
 
-BOOST_AUTO_TEST_CASE(rpc_verb_test)
+BOOST_AUTO_TEST_CASE(rpc_verb__to_verb__always__expected)
 {
-    BOOST_REQUIRE(true);
+    // Default
+    BOOST_REQUIRE(to_verb("UNDEFINED") == verb::undefined);
+
+    // HTTP Verbs
+    BOOST_REQUIRE(to_verb("GET") == verb::get);
+    BOOST_REQUIRE(to_verb("POST") == verb::post);
+    BOOST_REQUIRE(to_verb("PUT") == verb::put);
+    BOOST_REQUIRE(to_verb("PATCH") == verb::patch);
+    BOOST_REQUIRE(to_verb("DELETE") == verb::delete_);
+    BOOST_REQUIRE(to_verb("HEAD") == verb::head);
+    BOOST_REQUIRE(to_verb("OPTIONS") == verb::options);
+    BOOST_REQUIRE(to_verb("TRACE") == verb::trace);
+    BOOST_REQUIRE(to_verb("CONNECT") == verb::connect);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_verb__from_verb__always__expected)
+{
+    // Default
+    BOOST_REQUIRE_EQUAL(from_verb(verb::undefined), "UNDEFINED");
+
+    // HTTP Verbs
+    BOOST_REQUIRE_EQUAL(from_verb(verb::get), "GET");
+    BOOST_REQUIRE_EQUAL(from_verb(verb::post), "POST");
+    BOOST_REQUIRE_EQUAL(from_verb(verb::put), "PUT");
+    BOOST_REQUIRE_EQUAL(from_verb(verb::patch), "PATCH");
+    BOOST_REQUIRE_EQUAL(from_verb(verb::delete_), "DELETE");
+    BOOST_REQUIRE_EQUAL(from_verb(verb::head), "HEAD");
+    BOOST_REQUIRE_EQUAL(from_verb(verb::options), "OPTIONS");
+    BOOST_REQUIRE_EQUAL(from_verb(verb::trace), "TRACE");
+    BOOST_REQUIRE_EQUAL(from_verb(verb::connect), "CONNECT");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
