@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_HEADING_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_HEADING_HPP
 
-#include <unordered_map>
+#include <map>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -30,7 +30,8 @@ namespace rpc {
 
 struct BCT_API heading
 {
-    using headers_t = std::unordered_multimap<std::string, std::string>;
+    /// Ordered multimap ensures consistent output order.
+    using headers_t = std::multimap<std::string, std::string>;
 
     static const std::string space;
     static const std::string separator;

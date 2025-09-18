@@ -131,7 +131,8 @@ BOOST_AUTO_TEST_CASE(rpc_request__deserialize__string_buffer__expected)
 
 BOOST_AUTO_TEST_CASE(rpc_request__serialize__string_buffer__expected)
 {
-    const std::string expected{ "GET /api/test HTTP/1.1\r\nContent-Type:application/json\r\nAccept:text/plain\r\n\r\n" };
+    // Use of std::multimap (ordered) sorts headers.
+    const std::string expected{ "GET /api/test HTTP/1.1\r\nAccept:text/plain\r\nContent-Type:application/json\r\n\r\n" };
     const heading::headers_t headers{ { "Content-Type", "application/json" }, { "Accept", "text/plain" } };
     const request instance{ verb::get, "/api/test", version::http_1_1, headers };
 
