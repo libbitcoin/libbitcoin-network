@@ -38,9 +38,9 @@ size_t response::size() const NOEXCEPT
 {
     return
         from_version(version).size() + heading::space.size() +
-        from_status(status).size() + heading::terminal.size() +
+        from_status(status).size() + heading::line.size() +
         heading::headers_size(headers) +
-        heading::terminal.size();
+        heading::line.size();
 }
 
 // static

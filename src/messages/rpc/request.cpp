@@ -41,9 +41,9 @@ size_t request::size() const NOEXCEPT
     return
         from_verb(verb).size() + heading::space.size() +
         path.size() + heading::space.size() +
-        from_version(version).size() + heading::terminal.size() +
+        from_version(version).size() + heading::line.size() +
         heading::headers_size(headers) +
-        heading::terminal.size();
+        heading::line.size();
 }
 
 // static
