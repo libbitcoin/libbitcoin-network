@@ -35,6 +35,7 @@ struct BCT_API heading
 
     static const std::string space;
     static const std::string separator;
+    static const std::string line;
     static const std::string terminal;
 
     static size_t headers_size(const headers_t& headers) NOEXCEPT;

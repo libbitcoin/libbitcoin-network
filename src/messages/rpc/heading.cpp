@@ -31,7 +31,8 @@ using namespace system;
 
 const std::string heading::space{ " " };
 const std::string heading::separator{ ":" };
-const std::string heading::terminal{ "\r\n" };
+const std::string heading::line{ "\r\n" };
+const std::string heading::terminal{ "\r\n\r\n" };
 
 size_t heading::headers_size(const headers_t& headers) NOEXCEPT
 {
@@ -40,7 +41,7 @@ size_t heading::headers_size(const headers_t& headers) NOEXCEPT
         {
             return sum +
                 pair.first.size() + heading::separator.size() +
-                pair.second.size() + heading::terminal.size();
+                pair.second.size() + heading::line.size();
         });
 };
 
@@ -48,8 +49,8 @@ heading::headers_t heading::to_headers(reader& source) NOEXCEPT
 {
     headers_t out{};
 
-    // Read until empty/fail or line starts with first terminal character.
-    while (!source.is_exhausted() && (source.peek_byte() != terminal.front()))
+    // Read until empty/fail or line starts with first line character.
+    while (!source.is_exhausted() && (source.peek_byte() != line.front()))
     {
         // Must control read order here.
         auto header = source.read_line(separator);

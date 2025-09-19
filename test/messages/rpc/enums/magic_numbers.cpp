@@ -22,9 +22,7 @@ BOOST_AUTO_TEST_SUITE(rpc_magic_numbers_tests)
 
 using namespace network::messages::rpc;
 
-BOOST_AUTO_TEST_CASE(rpc_magic_numbers__all_always__expected)
-{
-    BOOST_REQUIRE_EQUAL(max_request, 4 * 1024);
-}
+static_assert(min_heading == system::power2(10u));
+static_assert(max_heading == system::power2(13u));
 
 BOOST_AUTO_TEST_SUITE_END()

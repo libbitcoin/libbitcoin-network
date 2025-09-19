@@ -29,7 +29,8 @@ namespace rpc {
 /// Client-server protocol constants.
 ///----------------------------------------------------------------------------
 
-constexpr size_t max_request = 4 * 1024;
+constexpr size_t min_heading = 1 * 1024;
+constexpr size_t max_heading = 8 * 1024;
 
 } // namespace rpc
 } // namespace messages

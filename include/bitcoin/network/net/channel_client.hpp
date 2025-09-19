@@ -84,17 +84,19 @@ public:
 protected:
     /// Client read and dispatch.
     void read_request() NOEXCEPT;
-    void handle_read_request(const code& ec, size_t) NOEXCEPT;
 
     /// Notify subscribers of a new message (requires strand).
     virtual code notify(messages::rpc::identifier id,
         const system::data_chunk& source) NOEXCEPT;
 
 private:
+    void handle_read_request(const code& ec, size_t bytes_read,
+        size_t offset) NOEXCEPT;
+    void read_request(size_t offset) NOEXCEPT;
     void do_stop(const code& ec) NOEXCEPT;
 
     distributor_client distributor_;
-    system::data_chunk buffer_{};
+    system::data_chunk buffer_;
 };
 
 } // namespace network

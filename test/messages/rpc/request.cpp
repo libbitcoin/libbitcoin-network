@@ -141,4 +141,38 @@ BOOST_AUTO_TEST_CASE(rpc_request__serialize__string_buffer__expected)
     BOOST_REQUIRE_EQUAL(to_string(buffer), expected);
 }
 
+BOOST_AUTO_TEST_CASE(rpc_request__deserialize__big_buffer__expected)
+{
+    const std::string text
+    {
+        "GET / HTTP/1.1\r\n"
+        "Host: 192.168.0.219:8080\r\n"
+        "Connection: keep-alive\r\n"
+        "Upgrade-Insecure-Requests: 1\r\n"
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36\r\n"
+        "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\r\n"
+        "Accept-Encoding: gzip, deflate\r\n"
+        "Accept-Language: en-US,en;q=0.9\r\n"
+        "\r\n"
+    };
+
+    const auto buffer = to_chunk(text);
+    istream source{ buffer };
+    byte_reader reader{ source };
+    reader.set_limit(buffer.size());
+    const auto instance = to_shared(request::deserialize(reader));
+    BOOST_REQUIRE(reader);
+    BOOST_REQUIRE(instance->verb == verb::get);
+    BOOST_REQUIRE_EQUAL(instance->path, "/");
+    BOOST_REQUIRE(instance->version == version::http_1_1);
+    BOOST_REQUIRE_EQUAL(instance->headers.size(), 7u);
+    BOOST_REQUIRE_EQUAL(instance->headers.find("Accept")->second, " text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
+    BOOST_REQUIRE_EQUAL(instance->headers.find("Accept-Encoding")->second, " gzip, deflate");
+    BOOST_REQUIRE_EQUAL(instance->headers.find("Accept-Language")->second, " en-US,en;q=0.9");
+    BOOST_REQUIRE_EQUAL(instance->headers.find("Connection")->second, " keep-alive");
+    BOOST_REQUIRE_EQUAL(instance->headers.find("Host")->second, " 192.168.0.219:8080");
+    BOOST_REQUIRE_EQUAL(instance->headers.find("Upgrade-Insecure-Requests")->second, " 1");
+    BOOST_REQUIRE_EQUAL(instance->headers.find("User-Agent")->second, " Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
