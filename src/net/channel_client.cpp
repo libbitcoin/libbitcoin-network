@@ -137,8 +137,8 @@ void channel_client::handle_read_request(const code& ec, size_t bytes_read,
 
     const auto size = offset + bytes_read;
     const auto end = std::next(buffer_.cbegin(), size);
-    const auto populated = std::ranges::subrange(buffer_.cbegin(), end);
-    if (search(populated, heading::terminal).empty())
+    const auto content = std::ranges::subrange(buffer_.cbegin(), end);
+    if (search(content, heading::terminal).empty())
     {
         if (buffer_.size() == max_heading)
         {
@@ -148,7 +148,6 @@ void channel_client::handle_read_request(const code& ec, size_t bytes_read,
             return;
         }
 
-        static_assert(max_heading < to_half(max_size_t));
         buffer_.resize(limit(two * buffer_.size(), max_heading));
         read_request(size);
         return;
@@ -165,18 +164,6 @@ void channel_client::handle_read_request(const code& ec, size_t bytes_read,
         stop(error::invalid_message);
         return;
     }
-
-    // reader is positioned to first body byte and limited to read bytes.
-    // However more read is required and not limited to fixed buffer.
-    // Also a second request may potentially arrive at the end of a first when
-    // operating in full duplex mode, so we need to limit reads to predicted
-    // lengths, either via content-length or iteration over chunked encoding.
-    // We can reuse and increase the buffer size for each length/chunk, as
-    // required, and reset (trim) after body completion. But we want contiguous
-    // reads per chunk, cannot predict the request header length, and prefer to
-    // not copy the partial body read to the buffer start before reading after
-    // completing the header, since the body might already be read. So we can
-    // just resize up the buffer if required, but this invalidates iterators.
 
     std::string out{};
     out.resize(request->size());
