@@ -81,6 +81,7 @@ BOOST_AUTO_TEST_CASE(rpc_response__serialize__empty__round_trip)
 BOOST_AUTO_TEST_CASE(rpc_response__serialize__non_empty__round_trip)
 {
     const heading::headers_t headers{ { "Content-Type", "application/json" }, { "Accept", "text/plain" } };
+    const heading::headers_t lowered{ { "content-type", "application/json" }, { "accept", "text/plain" } };
     const response original{ version::http_1_1, status::ok, headers };
 
     data_chunk buffer(original.size());
@@ -90,12 +91,13 @@ BOOST_AUTO_TEST_CASE(rpc_response__serialize__non_empty__round_trip)
     BOOST_REQUIRE(duplicate);
     BOOST_REQUIRE(duplicate->version == original.version);
     BOOST_REQUIRE(duplicate->status == original.status);
-    BOOST_REQUIRE(duplicate->headers == original.headers);
+    BOOST_REQUIRE(duplicate->headers == lowered);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_response__serialize__reader_writer__round_trip)
 {
     const heading::headers_t headers{ { "Host", "example.com" } };
+    const heading::headers_t lowered{ { "host", "example.com" } };
     const response original{ version::http_1_1, status::created, headers };
 
     data_chunk buffer(original.size());
@@ -110,7 +112,7 @@ BOOST_AUTO_TEST_CASE(rpc_response__serialize__reader_writer__round_trip)
     BOOST_REQUIRE(reader);
     BOOST_REQUIRE(duplicate.version == original.version);
     BOOST_REQUIRE(duplicate.status == original.status);
-    BOOST_REQUIRE(duplicate.headers == original.headers);
+    BOOST_REQUIRE(duplicate.headers == lowered);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_response__deserialize__string_buffer__expected)
@@ -121,15 +123,15 @@ BOOST_AUTO_TEST_CASE(rpc_response__deserialize__string_buffer__expected)
     BOOST_REQUIRE(instance->version == version::http_1_1);
     BOOST_REQUIRE(instance->status == status::ok);
     BOOST_REQUIRE_EQUAL(instance->headers.size(), 2u);
-    BOOST_REQUIRE_EQUAL(instance->headers.find("Content-Type")->second, "application/json");
-    BOOST_REQUIRE_EQUAL(instance->headers.find("Accept")->second, "text/plain");
+    BOOST_REQUIRE_EQUAL(instance->headers.find("content-type")->second, "application/json");
+    BOOST_REQUIRE_EQUAL(instance->headers.find("accept")->second, "text/plain");
 }
 
 BOOST_AUTO_TEST_CASE(rpc_response__serialize__string_buffer__expected)
 {
     // Use of std::multimap (ordered) sorts headers.
-    const std::string expected{ "HTTP/1.1 200 OK\r\nAccept:text/plain\r\nContent-Type:application/json\r\n\r\n" };
-    const heading::headers_t headers{ { "Content-Type", "application/json" }, { "Accept", "text/plain" } };
+    const std::string expected{ "HTTP/1.1 200 OK\r\naccept:text/plain\r\ncontent-type:application/json\r\n\r\n" };
+    const heading::headers_t headers{ { "content-type", "application/json" }, { "accept", "text/plain" } };
     const response instance{ version::http_1_1, status::ok, headers };
 
     data_chunk buffer(instance.size());
