@@ -34,6 +34,46 @@ const std::string heading::separator{ ":" };
 const std::string heading::line{ "\r\n" };
 const std::string heading::terminal{ "\r\n\r\n" };
 
+const char token_special_chars[]
+{
+    0x21, // ascii 33, '!'
+    0x23, // ascii 35, '#'
+    0x24, // ascii 36, '$'
+    0x25, // ascii 37, '%'
+    0x26, // ascii 38, '&'
+    0x27, // ascii 39, '''
+    0x2a, // ascii 42, '*'
+    0x2b, // ascii 43, '+'
+    0x2d, // ascii 45, '-'
+    0x2e, // ascii 46, '.'
+    0x5e, // ascii 94, '^'
+    0x5f, // ascii 95, '_'
+    0x60, // ascii 96, '`'
+    0x7c, // ascii 124, '|'
+    0x7e  // ascii 126, '~'
+};
+
+constexpr bool is_token_special(char character) NOEXCEPT
+{
+    return std::any_of(std::begin(token_special_chars),
+        std::end(token_special_chars), [=](auto special) NOEXCEPT
+        {
+            return special = character;
+        });
+}
+
+constexpr bool is_token_character(char character) NOEXCEPT
+{
+    return is_ascii_alpha(character)
+        || is_ascii_number(character)
+        || is_token_special(character);
+}
+
+constexpr bool is_token(const std::string& text) NOEXCEPT
+{
+    return std::all_of(text.begin(), text.end(), is_token_character);
+}
+
 size_t heading::headers_size(const headers_t& headers) NOEXCEPT
 {
     return std::accumulate(headers.begin(), headers.end(), zero,
@@ -52,9 +92,9 @@ heading::headers_t heading::to_headers(reader& source) NOEXCEPT
     // Read until empty/fail or line starts with first line character.
     while (!source.is_exhausted() && (source.peek_byte() != line.front()))
     {
-        // Must control read order here.
-        auto header = source.read_line(separator);
-        out.emplace(std::move(header), source.read_line());
+        const auto token = source.read_line(separator);
+        if (!is_token(token)) return {};
+        out.emplace(ascii_to_lower(token), source.read_line());
     }
 
     // Headers end with empty line.

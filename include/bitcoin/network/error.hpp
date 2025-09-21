@@ -121,7 +121,51 @@ enum error_t : uint8_t
     service_suspended,
     subscriber_exists,
     subscriber_stopped,
-    desubscribed
+    desubscribed,
+
+    // http 4xx client error
+    bad_request,
+    unauthorized,
+    payment_required,
+    forbidden,
+    not_found,
+    method_not_allowed,
+    not_acceptable,
+    proxy_authentication_required,
+    request_timeout,
+    conflict,
+    gone,
+    length_required,
+    precondition_failed,
+    payload_too_large,
+    uri_too_long,
+    unsupported_media_type,
+    range_not_satisfiable,
+    expectation_failed,
+    im_a_teapot,
+    misdirected_request,
+    unprocessable_entity,
+    locked,
+    failed_dependency,
+    too_early,
+    upgrade_required,
+    precondition_required,
+    too_many_requests,
+    request_header_fields_too_large,
+    unavailable_for_legal_reasons,
+
+    // http 5xx server error
+    internal_server_error,
+    not_implemented,
+    bad_gateway,
+    service_unavailable,
+    gateway_timeout,
+    http_version_not_supported,
+    variant_also_negotiates,
+    insufficient_storage,
+    loop_detected,
+    not_extended,
+    network_authentication_required
 };
 
 // No current need for error_code equivalence mapping.
