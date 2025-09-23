@@ -261,10 +261,10 @@
     <ClCompile Include="..\..\..\..\src\messages\p2p\witness_tx_id_relay.cpp">
       <Filter>src\messages\p2p</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\status.cpp">
+    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\method.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\verb.cpp">
+    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\status.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\rpc\enums\version.cpp">
@@ -641,10 +641,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\magic_numbers.hpp">
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\status.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\method.hpp">
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\verb.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\status.hpp">
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\version.hpp">

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_VERB_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_VERB_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
 
 #include <bitcoin/network/define.hpp>
 
@@ -26,7 +26,7 @@ namespace network {
 namespace messages {
 namespace rpc {
 
-enum class verb
+enum class method
 {
     get,
     post,
@@ -40,8 +40,8 @@ enum class verb
     undefined
 };
 
-BCT_API verb to_verb(const std::string& value) NOEXCEPT;
-BCT_API const std::string& from_verb(verb value) NOEXCEPT;
+BCT_API method to_method(const std::string& value) NOEXCEPT;
+BCT_API const std::string& from_method(method value) NOEXCEPT;
 
 } // namespace rpc
 } // namespace messages

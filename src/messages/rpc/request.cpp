@@ -22,8 +22,8 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
+#include <bitcoin/network/messages/rpc/enums/method.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
-#include <bitcoin/network/messages/rpc/enums/verb.hpp>
 #include <bitcoin/network/messages/rpc/heading.hpp>
 
 namespace libbitcoin {
@@ -39,8 +39,8 @@ const std::string request::command = "request";
 size_t request::size() const NOEXCEPT
 {
     return
-        from_verb(verb).size() + heading::space.size() +
-        path.size() + heading::space.size() +
+        from_method(method).size() + heading::space.size() +
+        target.size() + heading::space.size() +
         from_version(version).size() + heading::line.size() +
         heading::fields_size(fields) +
         heading::line.size();
@@ -60,7 +60,7 @@ request request::deserialize(reader& source) NOEXCEPT
 {
     return
     {
-        to_verb(source.read_line(heading::space)),
+        to_method(source.read_line(heading::space)),
         source.read_line(heading::space),
         to_version(source.read_line()),
         heading::to_fields(source)
@@ -80,8 +80,8 @@ void request::serialize(writer& sink) const NOEXCEPT
     BC_DEBUG_ONLY(const auto bytes = size();)
     BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
-    sink.write_line(from_verb(verb), heading::space);
-    sink.write_line(path, heading::space);
+    sink.write_line(from_method(method), heading::space);
+    sink.write_line(target, heading::space);
     sink.write_line(from_version(version));
     heading::from_fields(fields, sink);
 

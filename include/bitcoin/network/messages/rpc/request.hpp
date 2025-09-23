@@ -24,7 +24,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/heading.hpp>
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
-#include <bitcoin/network/messages/rpc/enums/verb.hpp>
+#include <bitcoin/network/messages/rpc/enums/method.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 
 namespace libbitcoin {
@@ -47,9 +47,11 @@ struct BCT_API request
     bool serialize(const system::data_slab& data) const NOEXCEPT;
     void serialize(system::writer& sink) const NOEXCEPT;
 
-    rpc::verb verb;
-    std::string path;
+    // datatracker.ietf.org/doc/html/rfc9112#name-request-line
+    rpc::method method;
+    std::string target;
     rpc::version version;
+
     heading::fields fields;
 };
 

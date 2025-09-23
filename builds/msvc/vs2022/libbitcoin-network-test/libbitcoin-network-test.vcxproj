@@ -206,8 +206,8 @@
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\magic_numbers.cpp">
       <ObjectFileName>$(IntDir)test_messages_rpc_enums_magic_numbers.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\method.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\status.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\verb.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\version.cpp">
       <ObjectFileName>$(IntDir)test_messages_rpc_enums_version.obj</ObjectFileName>
     </ClCompile>

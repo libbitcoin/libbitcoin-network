@@ -252,10 +252,10 @@
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\magic_numbers.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\status.cpp">
+    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\method.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\verb.cpp">
+    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\status.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\version.cpp">

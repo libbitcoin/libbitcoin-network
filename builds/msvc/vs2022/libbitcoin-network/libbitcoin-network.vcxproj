@@ -187,8 +187,8 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\p2p\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\witness_tx_id_relay.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\method.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\rpc\enums\status.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\verb.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\rpc\enums\version.cpp">
       <ObjectFileName>$(IntDir)src_messages_rpc_enums_version.obj</ObjectFileName>
     </ClCompile>
@@ -323,8 +323,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\p2p\witness_tx_id_relay.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\identifier.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\magic_numbers.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\status.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\verb.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\heading.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\message.hpp" />
