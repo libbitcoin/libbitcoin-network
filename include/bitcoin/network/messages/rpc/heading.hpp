@@ -35,9 +35,11 @@ struct BCT_API heading
 
     static const std::string space;
     static const std::string separator;
+    static const std::string separators;
     static const std::string line;
     static const std::string terminal;
 
+    /// Canonical serialization buffer size (includes 1 OWS SP).
     static size_t fields_size(const fields& fields) NOEXCEPT;
     static fields to_fields(system::reader& source) NOEXCEPT;
     static void from_fields(const fields& fields,

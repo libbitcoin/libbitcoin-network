@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(rpc_response__size__http_1_1_content_type_json__expected)
 {
     const heading::fields fields{ { "Content-Type", "application/json" } };
     const response instance{ version::http_1_1, status::ok, fields };
-    BOOST_REQUIRE_EQUAL(instance.size(), 50u);
+    BOOST_REQUIRE_EQUAL(instance.size(), 51u);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_response__deserialize__empty_response__returns_nullptr)
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(rpc_response__serialize__reader_writer__round_trip)
 
 BOOST_AUTO_TEST_CASE(rpc_response__deserialize__string_buffer__expected)
 {
-    const std::string text{ "HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nAccept:text/plain\r\n\r\n" };
+    const std::string text{ "HTTP/1.1 200 OK\r\nContent-Type:application/json \r\nAccept: text/plain\r\n\r\n" };
     const auto instance = response::deserialize(to_chunk(text));
     BOOST_REQUIRE(instance);
     BOOST_REQUIRE(instance->version == version::http_1_1);
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(rpc_response__deserialize__string_buffer__expected)
 BOOST_AUTO_TEST_CASE(rpc_response__serialize__string_buffer__expected)
 {
     // Use of std::multimap (ordered) sorts fields.
-    const std::string expected{ "HTTP/1.1 200 OK\r\naccept:text/plain\r\ncontent-type:application/json\r\n\r\n" };
+    const std::string expected{ "HTTP/1.1 200 OK\r\naccept: text/plain\r\ncontent-type: application/json\r\n\r\n" };
     const heading::fields fields{ { "content-type", "application/json" }, { "accept", "text/plain" } };
     const response instance{ version::http_1_1, status::ok, fields };
 

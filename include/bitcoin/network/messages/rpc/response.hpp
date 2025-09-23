@@ -39,6 +39,7 @@ struct BCT_API response
     static const identifier id;
     static const std::string command;
 
+    /// Canonical serialization buffer size (includes 1 OWS SP).
     size_t size() const NOEXCEPT;
 
     static cptr deserialize(const system::data_chunk& data) NOEXCEPT;

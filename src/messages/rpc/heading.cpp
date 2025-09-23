@@ -31,6 +31,7 @@ using namespace system;
 
 const std::string heading::space{ " " };
 const std::string heading::separator{ ":" };
+const std::string heading::separators{ ": " };
 const std::string heading::line{ "\r\n" };
 const std::string heading::terminal{ "\r\n\r\n" };
 
@@ -80,7 +81,7 @@ size_t heading::fields_size(const fields& headers) NOEXCEPT
         [](size_t sum, const auto& pair) NOEXCEPT
         {
             return sum +
-                pair.first.size() + heading::separator.size() +
+                pair.first.size() + heading::separators.size() +
                 pair.second.size() + heading::line.size();
         });
 };
@@ -96,7 +97,7 @@ heading::fields heading::to_fields(reader& source) NOEXCEPT
         if (!is_token(token))
             return {};
 
-        out.emplace(ascii_to_lower(token), source.read_line());
+        out.emplace(ascii_to_lower(token), trim_copy(source.read_line()));
     }
 
     // Headers end with empty line.
@@ -116,7 +117,7 @@ void heading::from_fields(const fields& fields, writer& sink) NOEXCEPT
     std::for_each(fields.begin(), fields.end(),
         [&sink](const auto& header) NOEXCEPT
         {
-            sink.write_line(header.first, separator);
+            sink.write_line(header.first, separators);
             sink.write_line(header.second);
         });
 
