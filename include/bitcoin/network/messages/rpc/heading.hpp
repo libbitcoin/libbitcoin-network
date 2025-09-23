@@ -31,16 +31,16 @@ namespace rpc {
 struct BCT_API heading
 {
     /// Ordered multimap ensures consistent output order.
-    using headers_t = std::multimap<std::string, std::string>;
+    using fields = std::multimap<std::string, std::string>;
 
     static const std::string space;
     static const std::string separator;
     static const std::string line;
     static const std::string terminal;
 
-    static size_t headers_size(const headers_t& headers) NOEXCEPT;
-    static headers_t to_headers(system::reader& source) NOEXCEPT;
-    static void from_headers(const headers_t& headers,
+    static size_t fields_size(const fields& fields) NOEXCEPT;
+    static fields to_fields(system::reader& source) NOEXCEPT;
+    static void from_fields(const fields& fields,
         system::writer& sink) NOEXCEPT;
 };
 

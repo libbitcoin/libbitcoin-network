@@ -74,7 +74,7 @@ constexpr bool is_token(const std::string& text) NOEXCEPT
     return std::all_of(text.begin(), text.end(), is_token_character);
 }
 
-size_t heading::headers_size(const headers_t& headers) NOEXCEPT
+size_t heading::fields_size(const fields& headers) NOEXCEPT
 {
     return std::accumulate(headers.begin(), headers.end(), zero,
         [](size_t sum, const auto& pair) NOEXCEPT
@@ -85,15 +85,17 @@ size_t heading::headers_size(const headers_t& headers) NOEXCEPT
         });
 };
 
-heading::headers_t heading::to_headers(reader& source) NOEXCEPT
+heading::fields heading::to_fields(reader& source) NOEXCEPT
 {
-    headers_t out{};
+    fields out{};
 
     // Read until empty/fail or line starts with first line character.
     while (!source.is_exhausted() && (source.peek_byte() != line.front()))
     {
         const auto token = source.read_line(separator);
-        if (!is_token(token)) return {};
+        if (!is_token(token))
+            return {};
+
         out.emplace(ascii_to_lower(token), source.read_line());
     }
 
@@ -108,17 +110,17 @@ heading::headers_t heading::to_headers(reader& source) NOEXCEPT
     return out;
 }
 
-void heading::from_headers(const headers_t& headers, writer& sink) NOEXCEPT
+void heading::from_fields(const fields& fields, writer& sink) NOEXCEPT
 {
-    // Write all headers.
-    std::for_each(headers.begin(), headers.end(),
+    // Write all fields.
+    std::for_each(fields.begin(), fields.end(),
         [&sink](const auto& header) NOEXCEPT
         {
             sink.write_line(header.first, separator);
             sink.write_line(header.second);
         });
 
-    // Headers end with empty line.
+    // Fields end with empty line.
     sink.write_line();
 }
 

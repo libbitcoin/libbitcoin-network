@@ -39,7 +39,7 @@ size_t response::size() const NOEXCEPT
     return
         from_version(version).size() + heading::space.size() +
         from_status(status).size() + heading::line.size() +
-        heading::headers_size(headers) +
+        heading::fields_size(fields) +
         heading::line.size();
 }
 
@@ -59,7 +59,7 @@ response response::deserialize(reader& source) NOEXCEPT
     {
         to_version(source.read_line(heading::space)),
         to_status(source.read_line()),
-        heading::to_headers(source)
+        heading::to_fields(source)
     };
 }
 
@@ -78,7 +78,7 @@ void response::serialize(writer& sink) const NOEXCEPT
 
     sink.write_line(from_version(version), heading::space);
     sink.write_line(from_status(status));
-    heading::from_headers(headers, sink);
+    heading::from_fields(fields, sink);
 
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }

@@ -49,7 +49,7 @@ struct BCT_API response
 
     rpc::version version;
     rpc::status status;
-    heading::headers_t headers{};
+    heading::fields fields{};
 };
 
 } // namespace rpc

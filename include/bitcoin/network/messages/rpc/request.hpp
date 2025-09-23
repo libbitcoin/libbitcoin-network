@@ -50,7 +50,7 @@ struct BCT_API request
     rpc::verb verb;
     std::string path;
     rpc::version version;
-    heading::headers_t headers{};
+    heading::fields fields;
 };
 
 } // namespace rpc

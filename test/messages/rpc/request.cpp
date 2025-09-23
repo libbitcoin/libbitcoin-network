@@ -37,8 +37,8 @@ BOOST_AUTO_TEST_CASE(rpc_request__size__empty__expected)
 
 BOOST_AUTO_TEST_CASE(rpc_request__size__http_1_1_content_type_json__expected)
 {
-    const heading::headers_t headers{ { "Content-Type", "application/json" } };
-    const request instance{ verb::post, "/api/resource", version::http_1_1, headers };
+    const heading::fields fields{ { "Content-Type", "application/json" } };
+    const request instance{ verb::post, "/api/resource", version::http_1_1, fields };
     BOOST_REQUIRE_EQUAL(instance.size(), 62u);
 }
 
@@ -66,14 +66,14 @@ BOOST_AUTO_TEST_CASE(rpc_request__serialize___empty__round_trip)
     BOOST_REQUIRE(duplicate->verb == original.verb);
     BOOST_REQUIRE(duplicate->path == original.path);
     BOOST_REQUIRE(duplicate->version == original.version);
-    BOOST_REQUIRE(duplicate->headers == original.headers);
+    BOOST_REQUIRE(duplicate->fields == original.fields);
 }
 
 // Asserts.
 ////BOOST_AUTO_TEST_CASE(rpc_request__serialize__insufficient_ostream__returns_nullptr)
 ////{
-////    const heading::headers_t headers{ { "Content-Type", "application/json" }, { "Accept", "text/plain" } };
-////    const request instance{ verb::get, "/api/test", version::http_1_1, headers };
+////    const heading::fields fields{ { "Content-Type", "application/json" }, { "Accept", "text/plain" } };
+////    const request instance{ verb::get, "/api/test", version::http_1_1, fields };
 ////
 ////    data_chunk buffer(sub1(instance.size()));
 ////    BOOST_REQUIRE(!instance.serialize(buffer));
@@ -81,9 +81,9 @@ BOOST_AUTO_TEST_CASE(rpc_request__serialize___empty__round_trip)
 
 BOOST_AUTO_TEST_CASE(rpc_request__serialize__non_empty__round_trip)
 {
-    const heading::headers_t headers{ { "Content-Type", "application/json" }, { "Accept", "text/plain" } };
-    const heading::headers_t lowered{ { "content-type", "application/json" }, { "accept", "text/plain" } };
-    const request original{ verb::get, "/api/test", version::http_1_1, headers };
+    const heading::fields fields{ { "Content-Type", "application/json" }, { "Accept", "text/plain" } };
+    const heading::fields lowered{ { "content-type", "application/json" }, { "accept", "text/plain" } };
+    const request original{ verb::get, "/api/test", version::http_1_1, fields };
 
     data_chunk buffer(original.size());
     BOOST_REQUIRE(original.serialize(buffer));
@@ -93,14 +93,14 @@ BOOST_AUTO_TEST_CASE(rpc_request__serialize__non_empty__round_trip)
     BOOST_REQUIRE(duplicate->verb == original.verb);
     BOOST_REQUIRE(duplicate->path == original.path);
     BOOST_REQUIRE(duplicate->version == original.version);
-    BOOST_REQUIRE(duplicate->headers == lowered);
+    BOOST_REQUIRE(duplicate->fields == lowered);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_request__serialize__reader_writer__round_trip)
 {
-    const heading::headers_t headers{ { "Host", "example.com" } };
-    const heading::headers_t lowered{ { "host", "example.com" } };
-    const request original{ verb::post, "/resource", version::http_1_1, headers };
+    const heading::fields fields{ { "Host", "example.com" } };
+    const heading::fields lowered{ { "host", "example.com" } };
+    const request original{ verb::post, "/resource", version::http_1_1, fields };
 
     data_chunk buffer(original.size());
     ostream sink{ buffer };
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(rpc_request__serialize__reader_writer__round_trip)
     BOOST_REQUIRE(duplicate.verb == original.verb);
     BOOST_REQUIRE(duplicate.path == original.path);
     BOOST_REQUIRE(duplicate.version == original.version);
-    BOOST_REQUIRE(duplicate.headers == lowered);
+    BOOST_REQUIRE(duplicate.fields == lowered);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_request__deserialize__string_buffer__expected)
@@ -126,17 +126,17 @@ BOOST_AUTO_TEST_CASE(rpc_request__deserialize__string_buffer__expected)
     BOOST_REQUIRE(instance->verb == verb::get);
     BOOST_REQUIRE_EQUAL(instance->path, "/api/test");
     BOOST_REQUIRE(instance->version == version::http_1_1);
-    BOOST_REQUIRE_EQUAL(instance->headers.size(), 2u);
-    BOOST_REQUIRE_EQUAL(instance->headers.find("content-type")->second, "application/json");
-    BOOST_REQUIRE_EQUAL(instance->headers.find("accept")->second, "text/plain");
+    BOOST_REQUIRE_EQUAL(instance->fields.size(), 2u);
+    BOOST_REQUIRE_EQUAL(instance->fields.find("content-type")->second, "application/json");
+    BOOST_REQUIRE_EQUAL(instance->fields.find("accept")->second, "text/plain");
 }
 
 BOOST_AUTO_TEST_CASE(rpc_request__serialize__string_buffer__expected)
 {
-    // Use of std::multimap (ordered) sorts headers.
+    // Use of std::multimap (ordered) sorts fields.
     const std::string expected{ "GET /api/test HTTP/1.1\r\naccept:text/plain\r\ncontent-type:application/json\r\n\r\n" };
-    const heading::headers_t headers{ { "content-type", "application/json" }, { "accept", "text/plain" } };
-    const request instance{ verb::get, "/api/test", version::http_1_1, headers };
+    const heading::fields fields{ { "content-type", "application/json" }, { "accept", "text/plain" } };
+    const request instance{ verb::get, "/api/test", version::http_1_1, fields };
 
     data_chunk buffer(instance.size());
     BOOST_REQUIRE(instance.serialize(buffer));
@@ -167,14 +167,14 @@ BOOST_AUTO_TEST_CASE(rpc_request__deserialize__big_buffer__expected)
     BOOST_REQUIRE(instance->verb == verb::get);
     BOOST_REQUIRE_EQUAL(instance->path, "/");
     BOOST_REQUIRE(instance->version == version::http_1_1);
-    BOOST_REQUIRE_EQUAL(instance->headers.size(), 7u);
-    BOOST_REQUIRE_EQUAL(instance->headers.find("accept")->second, " text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
-    BOOST_REQUIRE_EQUAL(instance->headers.find("accept-encoding")->second, " gzip, deflate");
-    BOOST_REQUIRE_EQUAL(instance->headers.find("accept-language")->second, " en-US,en;q=0.9");
-    BOOST_REQUIRE_EQUAL(instance->headers.find("connection")->second, " keep-alive");
-    BOOST_REQUIRE_EQUAL(instance->headers.find("host")->second, " 192.168.0.219:8080");
-    BOOST_REQUIRE_EQUAL(instance->headers.find("upgrade-insecure-requests")->second, " 1");
-    BOOST_REQUIRE_EQUAL(instance->headers.find("user-agent")->second, " Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36");
+    BOOST_REQUIRE_EQUAL(instance->fields.size(), 7u);
+    BOOST_REQUIRE_EQUAL(instance->fields.find("accept")->second, " text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");
+    BOOST_REQUIRE_EQUAL(instance->fields.find("accept-encoding")->second, " gzip, deflate");
+    BOOST_REQUIRE_EQUAL(instance->fields.find("accept-language")->second, " en-US,en;q=0.9");
+    BOOST_REQUIRE_EQUAL(instance->fields.find("connection")->second, " keep-alive");
+    BOOST_REQUIRE_EQUAL(instance->fields.find("host")->second, " 192.168.0.219:8080");
+    BOOST_REQUIRE_EQUAL(instance->fields.find("upgrade-insecure-requests")->second, " 1");
+    BOOST_REQUIRE_EQUAL(instance->fields.find("user-agent")->second, " Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

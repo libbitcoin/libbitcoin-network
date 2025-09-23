@@ -42,7 +42,7 @@ size_t request::size() const NOEXCEPT
         from_verb(verb).size() + heading::space.size() +
         path.size() + heading::space.size() +
         from_version(version).size() + heading::line.size() +
-        heading::headers_size(headers) +
+        heading::fields_size(fields) +
         heading::line.size();
 }
 
@@ -63,7 +63,7 @@ request request::deserialize(reader& source) NOEXCEPT
         to_verb(source.read_line(heading::space)),
         source.read_line(heading::space),
         to_version(source.read_line()),
-        heading::to_headers(source)
+        heading::to_fields(source)
     };
 }
 
@@ -83,7 +83,7 @@ void request::serialize(writer& sink) const NOEXCEPT
     sink.write_line(from_verb(verb), heading::space);
     sink.write_line(path, heading::space);
     sink.write_line(from_version(version));
-    heading::from_headers(headers, sink);
+    heading::from_fields(fields, sink);
 
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
