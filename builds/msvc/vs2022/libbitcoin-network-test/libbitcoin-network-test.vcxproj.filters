@@ -258,6 +258,9 @@
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\status.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\target.cpp">
+      <Filter>src\messages\rpc\enums</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\version.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>

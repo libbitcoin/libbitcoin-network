@@ -267,6 +267,9 @@
     <ClCompile Include="..\..\..\..\src\messages\rpc\enums\status.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\target.cpp">
+      <Filter>src\messages\rpc\enums</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\rpc\enums\version.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
@@ -645,6 +648,9 @@
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\status.hpp">
+      <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\target.hpp">
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\version.hpp">

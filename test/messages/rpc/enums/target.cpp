@@ -16,19 +16,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
+#include "../../../test.hpp"
 
-#include <bitcoin/network/messages/rpc/enums/identifier.hpp>
-#include <bitcoin/network/messages/rpc/enums/magic_numbers.hpp>
-#include <bitcoin/network/messages/rpc/enums/method.hpp>
-#include <bitcoin/network/messages/rpc/enums/status.hpp>
-#include <bitcoin/network/messages/rpc/enums/target.hpp>
-#include <bitcoin/network/messages/rpc/enums/version.hpp>
-#include <bitcoin/network/messages/rpc/heading.hpp>
-#include <bitcoin/network/messages/rpc/message.hpp>
-#include <bitcoin/network/messages/rpc/ping.hpp>
-#include <bitcoin/network/messages/rpc/request.hpp>
-#include <bitcoin/network/messages/rpc/response.hpp>
+BOOST_AUTO_TEST_SUITE(rpc_target_tests)
 
-#endif
+using namespace network::messages::rpc;
+
+BOOST_AUTO_TEST_CASE(rpc_target__to_target__always__expected)
+{
+    BOOST_REQUIRE(to_target("foobar", method::options) == target::undefined);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

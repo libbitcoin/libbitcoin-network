@@ -107,6 +107,7 @@
 #include <bitcoin/network/messages/rpc/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/rpc/enums/method.hpp>
 #include <bitcoin/network/messages/rpc/enums/status.hpp>
+#include <bitcoin/network/messages/rpc/enums/target.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/broadcaster.hpp>

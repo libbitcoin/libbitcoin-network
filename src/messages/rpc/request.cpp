@@ -23,7 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
 #include <bitcoin/network/messages/rpc/enums/method.hpp>
-////#include <bitcoin/network/messages/rpc/enums/target.hpp>
+#include <bitcoin/network/messages/rpc/enums/target.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 #include <bitcoin/network/messages/rpc/heading.hpp>
 
@@ -97,23 +97,7 @@ void request::serialize(writer& sink) const NOEXCEPT
 
 rpc::target request::target() const NOEXCEPT
 {
-    // Only for OPTIONS method.
-    if (method == rpc::method::options && path == "*")
-        return rpc::target::asterisk;
-
-    // TODO: use URI parser for rpc::target::authority (only for CONNECT).
-    else if (method == rpc::method::connect)
-        return rpc::target::undefined;
-
-    // TODO: validate path (any method).
-    else if (path.starts_with("/"))
-        return rpc::target::origin;
-
-    // TODO: use URI parser for unescape and full validation (any method).
-    else if (path.starts_with("http://") || path.starts_with("https://"))
-        return rpc::target::absolute;
-
-    return rpc::target::undefined;
+    return to_target(path, method);
 }
 
 bool request::valid() const NOEXCEPT

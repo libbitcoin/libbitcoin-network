@@ -25,24 +25,13 @@
 #include <bitcoin/network/messages/rpc/heading.hpp>
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
 #include <bitcoin/network/messages/rpc/enums/method.hpp>
+#include <bitcoin/network/messages/rpc/enums/target.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
 namespace rpc {
-
-enum class target
-{
-    origin,
-    absolute,
-    authority,
-    asterisk,
-    undefined
-};
-
-BCT_API method to_method(const std::string& value) NOEXCEPT;
-BCT_API const std::string& from_method(method value) NOEXCEPT;
 
 struct BCT_API request
 {
