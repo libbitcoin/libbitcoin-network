@@ -16,19 +16,36 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
 
-#include <bitcoin/network/messages/rpc/enums/identifier.hpp>
-#include <bitcoin/network/messages/rpc/enums/magic_numbers.hpp>
-#include <bitcoin/network/messages/rpc/enums/method.hpp>
-#include <bitcoin/network/messages/rpc/enums/status.hpp>
-#include <bitcoin/network/messages/rpc/enums/target.hpp>
-#include <bitcoin/network/messages/rpc/enums/version.hpp>
-#include <bitcoin/network/messages/rpc/heading.hpp>
-#include <bitcoin/network/messages/rpc/message.hpp>
-#include <bitcoin/network/messages/rpc/ping.hpp>
-#include <bitcoin/network/messages/rpc/request.hpp>
-#include <bitcoin/network/messages/rpc/response.hpp>
+#include <bitcoin/network/define.hpp>
+
+namespace libbitcoin {
+namespace network {
+namespace messages {
+namespace rpc {
+
+enum class method
+{
+    get,
+    post,
+    put,
+    patch,
+    delete_,
+    head,
+    options,
+    trace,
+    connect,
+    undefined
+};
+
+BCT_API method to_method(const std::string& value) NOEXCEPT;
+BCT_API const std::string& from_method(method value) NOEXCEPT;
+
+} // namespace rpc
+} // namespace messages
+} // namespace network
+} // namespace libbitcoin
 
 #endif

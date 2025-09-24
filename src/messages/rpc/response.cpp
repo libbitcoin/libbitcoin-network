@@ -38,9 +38,9 @@ size_t response::size() const NOEXCEPT
 {
     return
         from_version(version).size() + heading::space.size() +
-        from_status(status).size() + heading::line.size() +
-        heading::headers_size(headers) +
-        heading::line.size();
+        from_status(status).size() + heading::crlf.size() +
+        heading::fields_size(fields) +
+        heading::crlf.size();
 }
 
 // static
@@ -55,11 +55,14 @@ typename response::cptr response::deserialize(const data_chunk& data) NOEXCEPT
 // static
 response response::deserialize(reader& source) NOEXCEPT
 {
+    // Status combines status-code and the optional reason phrase, which is
+    // expected to match the enumeration. This is sufficient for server
+    // implementation as deserialization is used only for round trip testing.
     return
     {
         to_version(source.read_line(heading::space)),
         to_status(source.read_line()),
-        heading::to_headers(source)
+        heading::to_fields(source)
     };
 }
 
@@ -78,7 +81,7 @@ void response::serialize(writer& sink) const NOEXCEPT
 
     sink.write_line(from_version(version), heading::space);
     sink.write_line(from_status(status));
-    heading::from_headers(headers, sink);
+    heading::from_fields(fields, sink);
 
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }

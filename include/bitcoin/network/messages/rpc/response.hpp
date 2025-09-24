@@ -39,6 +39,7 @@ struct BCT_API response
     static const identifier id;
     static const std::string command;
 
+    /// Canonical serialization buffer size (includes 1 OWS SP).
     size_t size() const NOEXCEPT;
 
     static cptr deserialize(const system::data_chunk& data) NOEXCEPT;
@@ -47,9 +48,12 @@ struct BCT_API response
     bool serialize(const system::data_slab& data) const NOEXCEPT;
     void serialize(system::writer& sink) const NOEXCEPT;
 
+    // status combines status-code and optional reason phrase.
+    // datatracker.ietf.org/doc/html/rfc9112#name-status-line
     rpc::version version;
     rpc::status status;
-    heading::headers_t headers{};
+
+    heading::fields fields{};
 };
 
 } // namespace rpc

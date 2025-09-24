@@ -24,7 +24,8 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/heading.hpp>
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
-#include <bitcoin/network/messages/rpc/enums/verb.hpp>
+#include <bitcoin/network/messages/rpc/enums/method.hpp>
+#include <bitcoin/network/messages/rpc/enums/target.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 
 namespace libbitcoin {
@@ -39,18 +40,28 @@ struct BCT_API request
     static const identifier id;
     static const std::string command;
 
-    size_t size() const NOEXCEPT;
-
     static cptr deserialize(const system::data_chunk& data) NOEXCEPT;
     static request deserialize(system::reader& source) NOEXCEPT;
 
     bool serialize(const system::data_slab& data) const NOEXCEPT;
     void serialize(system::writer& sink) const NOEXCEPT;
 
-    rpc::verb verb;
+    /// Canonical serialization buffer size (includes 1 OWS SP).
+    size_t size() const NOEXCEPT;
+
+    /// The request is valid.
+    bool valid() const NOEXCEPT;
+
+    /// The computed target type (of the path).
+    rpc::target target() const NOEXCEPT;
+
+    // datatracker.ietf.org/doc/html/rfc9112#name-request-line
+    rpc::method method;
     std::string path;
     rpc::version version;
-    heading::headers_t headers{};
+
+    heading::fields fields;
+    std::string body;
 };
 
 } // namespace rpc

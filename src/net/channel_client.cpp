@@ -138,13 +138,13 @@ void channel_client::handle_read_request(const code& ec, size_t bytes_read,
     const auto size = offset + bytes_read;
     const auto end = std::next(buffer_.cbegin(), size);
     const auto content = std::ranges::subrange(buffer_.cbegin(), end);
-    if (search(content, heading::terminal).empty())
+    if (search(content, heading::crlfx2).empty())
     {
         if (buffer_.size() == max_heading)
         {
             // TODO: notify subscribers with faulted request object.
             LOGR("Request oversized header [" << authority() << "]");
-            stop(error::invalid_message);
+            ////notify(error::request_header_fields_too_large);
             return;
         }
 
@@ -159,18 +159,20 @@ void channel_client::handle_read_request(const code& ec, size_t bytes_read,
     const auto request = to_shared(request::deserialize(reader));
     if (!reader)
     {
-        // TODO: notify subscribers with faulted request object.
+        // listener not re-engaged so protocol drops channel in send handler.
         LOGR("Request invalid header [" << authority() << "]");
-        stop(error::invalid_message);
+        ////notify(error::bad_request);
         return;
     }
 
-    std::string out{};
-    out.resize(request->size());
-    if (request->serialize(out))
-    {
-        LOGA(out);
-    }
+    ////const auto chunked = request->is_chunked();
+    ////const auto content = request->content_length();
+
+    ////std::string out{};
+    ////out.resize(request->size());
+    ////if (request->serialize(out)) { LOGA(out); }
+
+    ////notify(error::success, request);
 }
 
 BC_POP_WARNING()

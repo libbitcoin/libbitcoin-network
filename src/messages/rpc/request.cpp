@@ -22,8 +22,9 @@
 #include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
+#include <bitcoin/network/messages/rpc/enums/method.hpp>
+#include <bitcoin/network/messages/rpc/enums/target.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
-#include <bitcoin/network/messages/rpc/enums/verb.hpp>
 #include <bitcoin/network/messages/rpc/heading.hpp>
 
 namespace libbitcoin {
@@ -39,11 +40,11 @@ const std::string request::command = "request";
 size_t request::size() const NOEXCEPT
 {
     return
-        from_verb(verb).size() + heading::space.size() +
+        from_method(method).size() + heading::space.size() +
         path.size() + heading::space.size() +
-        from_version(version).size() + heading::line.size() +
-        heading::headers_size(headers) +
-        heading::line.size();
+        from_version(version).size() + heading::crlf.size() +
+        heading::fields_size(fields) +
+        heading::crlf.size();
 }
 
 // static
@@ -58,13 +59,19 @@ typename request::cptr request::deserialize(const data_chunk& data) NOEXCEPT
 // static
 request request::deserialize(reader& source) NOEXCEPT
 {
-    return
+    const request out
     {
-        to_verb(source.read_line(heading::space)),
+        to_method(source.read_line(heading::space)),
         source.read_line(heading::space),
         to_version(source.read_line()),
-        heading::to_headers(source)
+        heading::to_fields(source)
     };
+
+    // TODO: update tests.
+    ////if (!out.valid())
+    ////    source.invalidate();
+
+    return out;
 }
 
 bool request::serialize(const data_slab& data) const NOEXCEPT
@@ -80,12 +87,25 @@ void request::serialize(writer& sink) const NOEXCEPT
     BC_DEBUG_ONLY(const auto bytes = size();)
     BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
-    sink.write_line(from_verb(verb), heading::space);
+    sink.write_line(from_method(method), heading::space);
     sink.write_line(path, heading::space);
     sink.write_line(from_version(version));
-    heading::from_headers(headers, sink);
+    heading::from_fields(fields, sink);
 
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
+}
+
+rpc::target request::target() const NOEXCEPT
+{
+    return to_target(path, method);
+}
+
+bool request::valid() const NOEXCEPT
+{
+    // TODO: These imply properly parsed, not semantically correct.
+    return (method != rpc::method::undefined) &&
+        (version == rpc::version::undefined) &&
+        (target() == rpc::target::undefined);
 }
 
 } // namespace rpc

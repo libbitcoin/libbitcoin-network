@@ -28,6 +28,8 @@ namespace rpc {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+// datatracker.ietf.org/doc/html/rfc9110#name-status-codes
+
 status to_status(const std::string& value) NOEXCEPT
 {
     static const std::unordered_map<std::string, status> map

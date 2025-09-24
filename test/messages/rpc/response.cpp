@@ -37,9 +37,9 @@ BOOST_AUTO_TEST_CASE(rpc_response__size__empty__expected)
 
 BOOST_AUTO_TEST_CASE(rpc_response__size__http_1_1_content_type_json__expected)
 {
-    const heading::headers_t headers{ { "Content-Type", "application/json" } };
-    const response instance{ version::http_1_1, status::ok, headers };
-    BOOST_REQUIRE_EQUAL(instance.size(), 50u);
+    const heading::fields fields{ { "Content-Type", "application/json" } };
+    const response instance{ version::http_1_1, status::ok, fields };
+    BOOST_REQUIRE_EQUAL(instance.size(), 51u);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_response__deserialize__empty_response__returns_nullptr)
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(rpc_response__serialize__empty__round_trip)
     BOOST_REQUIRE(duplicate);
     BOOST_REQUIRE(duplicate->version == original.version);
     BOOST_REQUIRE(duplicate->status == original.status);
-    BOOST_REQUIRE(duplicate->headers == original.headers);
+    BOOST_REQUIRE(duplicate->fields == original.fields);
 }
 
 // Asserts.
@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(rpc_response__serialize__empty__round_trip)
 
 BOOST_AUTO_TEST_CASE(rpc_response__serialize__non_empty__round_trip)
 {
-    const heading::headers_t headers{ { "Content-Type", "application/json" }, { "Accept", "text/plain" } };
-    const heading::headers_t lowered{ { "content-type", "application/json" }, { "accept", "text/plain" } };
+    const heading::fields headers{ { "Content-Type", "application/json" }, { "Accept", "text/plain" } };
+    const heading::fields lowered{ { "content-type", "application/json" }, { "accept", "text/plain" } };
     const response original{ version::http_1_1, status::ok, headers };
 
     data_chunk buffer(original.size());
@@ -91,14 +91,14 @@ BOOST_AUTO_TEST_CASE(rpc_response__serialize__non_empty__round_trip)
     BOOST_REQUIRE(duplicate);
     BOOST_REQUIRE(duplicate->version == original.version);
     BOOST_REQUIRE(duplicate->status == original.status);
-    BOOST_REQUIRE(duplicate->headers == lowered);
+    BOOST_REQUIRE(duplicate->fields == lowered);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_response__serialize__reader_writer__round_trip)
 {
-    const heading::headers_t headers{ { "Host", "example.com" } };
-    const heading::headers_t lowered{ { "host", "example.com" } };
-    const response original{ version::http_1_1, status::created, headers };
+    const heading::fields fields{ { "Host", "example.com" } };
+    const heading::fields lowered{ { "host", "example.com" } };
+    const response original{ version::http_1_1, status::created, fields };
 
     data_chunk buffer(original.size());
     ostream sink{ buffer };
@@ -112,27 +112,27 @@ BOOST_AUTO_TEST_CASE(rpc_response__serialize__reader_writer__round_trip)
     BOOST_REQUIRE(reader);
     BOOST_REQUIRE(duplicate.version == original.version);
     BOOST_REQUIRE(duplicate.status == original.status);
-    BOOST_REQUIRE(duplicate.headers == lowered);
+    BOOST_REQUIRE(duplicate.fields == lowered);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_response__deserialize__string_buffer__expected)
 {
-    const std::string text{ "HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nAccept:text/plain\r\n\r\n" };
+    const std::string text{ "HTTP/1.1 200 OK\r\nContent-Type:application/json \r\nAccept: text/plain\r\n\r\n" };
     const auto instance = response::deserialize(to_chunk(text));
     BOOST_REQUIRE(instance);
     BOOST_REQUIRE(instance->version == version::http_1_1);
     BOOST_REQUIRE(instance->status == status::ok);
-    BOOST_REQUIRE_EQUAL(instance->headers.size(), 2u);
-    BOOST_REQUIRE_EQUAL(instance->headers.find("content-type")->second, "application/json");
-    BOOST_REQUIRE_EQUAL(instance->headers.find("accept")->second, "text/plain");
+    BOOST_REQUIRE_EQUAL(instance->fields.size(), 2u);
+    BOOST_REQUIRE_EQUAL(instance->fields.find("content-type")->second, "application/json");
+    BOOST_REQUIRE_EQUAL(instance->fields.find("accept")->second, "text/plain");
 }
 
 BOOST_AUTO_TEST_CASE(rpc_response__serialize__string_buffer__expected)
 {
-    // Use of std::multimap (ordered) sorts headers.
-    const std::string expected{ "HTTP/1.1 200 OK\r\naccept:text/plain\r\ncontent-type:application/json\r\n\r\n" };
-    const heading::headers_t headers{ { "content-type", "application/json" }, { "accept", "text/plain" } };
-    const response instance{ version::http_1_1, status::ok, headers };
+    // Use of std::multimap (ordered) sorts fields.
+    const std::string expected{ "HTTP/1.1 200 OK\r\naccept: text/plain\r\ncontent-type: application/json\r\n\r\n" };
+    const heading::fields fields{ { "content-type", "application/json" }, { "accept", "text/plain" } };
+    const response instance{ version::http_1_1, status::ok, fields };
 
     data_chunk buffer(instance.size());
     BOOST_REQUIRE(instance.serialize(buffer));
