@@ -48,8 +48,11 @@ struct BCT_API response
     bool serialize(const system::data_slab& data) const NOEXCEPT;
     void serialize(system::writer& sink) const NOEXCEPT;
 
+    // status combines status-code and optional reason phrase.
+    // datatracker.ietf.org/doc/html/rfc9112#name-status-line
     rpc::version version;
     rpc::status status;
+
     heading::fields fields{};
 };
 

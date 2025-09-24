@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(rpc_request__serialize___empty__round_trip)
     const auto duplicate = request::deserialize(buffer);
     BOOST_REQUIRE(duplicate);
     BOOST_REQUIRE(duplicate->method == original.method);
-    BOOST_REQUIRE(duplicate->target == original.target);
+    BOOST_REQUIRE(duplicate->path == original.path);
     BOOST_REQUIRE(duplicate->version == original.version);
     BOOST_REQUIRE(duplicate->fields == original.fields);
 }
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(rpc_request__serialize__non_empty__round_trip)
     const auto duplicate = request::deserialize(buffer);
     BOOST_REQUIRE(duplicate);
     BOOST_REQUIRE(duplicate->method == original.method);
-    BOOST_REQUIRE(duplicate->target == original.target);
+    BOOST_REQUIRE(duplicate->path == original.path);
     BOOST_REQUIRE(duplicate->version == original.version);
     BOOST_REQUIRE(duplicate->fields == lowered);
 }
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(rpc_request__serialize__reader_writer__round_trip)
     const auto duplicate = request::deserialize(reader);
     BOOST_REQUIRE(reader);
     BOOST_REQUIRE(duplicate.method == original.method);
-    BOOST_REQUIRE(duplicate.target == original.target);
+    BOOST_REQUIRE(duplicate.path == original.path);
     BOOST_REQUIRE(duplicate.version == original.version);
     BOOST_REQUIRE(duplicate.fields == lowered);
 }
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(rpc_request__deserialize__string_buffer__expected)
     const auto instance = request::deserialize(to_chunk(text));
     BOOST_REQUIRE(instance);
     BOOST_REQUIRE(instance->method == method::get);
-    BOOST_REQUIRE_EQUAL(instance->target, "/api/test");
+    BOOST_REQUIRE_EQUAL(instance->path, "/api/test");
     BOOST_REQUIRE(instance->version == version::http_1_1);
     BOOST_REQUIRE_EQUAL(instance->fields.size(), 2u);
     BOOST_REQUIRE_EQUAL(instance->fields.find("content-type")->second, "application/json");
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(rpc_request__deserialize__big_buffer__expected_trimmed)
     const auto instance = to_shared(request::deserialize(reader));
     BOOST_REQUIRE(reader);
     BOOST_REQUIRE(instance->method == method::get);
-    BOOST_REQUIRE_EQUAL(instance->target, "/");
+    BOOST_REQUIRE_EQUAL(instance->path, "/");
     BOOST_REQUIRE(instance->version == version::http_1_1);
     BOOST_REQUIRE_EQUAL(instance->fields.size(), 7u);
     BOOST_REQUIRE_EQUAL(instance->fields.find("accept")->second, "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7");

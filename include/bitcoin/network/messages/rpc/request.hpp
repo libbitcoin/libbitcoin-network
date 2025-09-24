@@ -32,6 +32,18 @@ namespace network {
 namespace messages {
 namespace rpc {
 
+enum class target
+{
+    origin,
+    absolute,
+    authority,
+    asterisk,
+    undefined
+};
+
+BCT_API method to_method(const std::string& value) NOEXCEPT;
+BCT_API const std::string& from_method(method value) NOEXCEPT;
+
 struct BCT_API request
 {
     typedef std::shared_ptr<const request> cptr;
@@ -39,21 +51,28 @@ struct BCT_API request
     static const identifier id;
     static const std::string command;
 
-    /// Canonical serialization buffer size (includes 1 OWS SP).
-    size_t size() const NOEXCEPT;
-
     static cptr deserialize(const system::data_chunk& data) NOEXCEPT;
     static request deserialize(system::reader& source) NOEXCEPT;
 
     bool serialize(const system::data_slab& data) const NOEXCEPT;
     void serialize(system::writer& sink) const NOEXCEPT;
 
+    /// Canonical serialization buffer size (includes 1 OWS SP).
+    size_t size() const NOEXCEPT;
+
+    /// The request is valid.
+    bool valid() const NOEXCEPT;
+
+    /// The computed target type (of the path).
+    rpc::target target() const NOEXCEPT;
+
     // datatracker.ietf.org/doc/html/rfc9112#name-request-line
     rpc::method method;
-    std::string target;
+    std::string path;
     rpc::version version;
 
     heading::fields fields;
+    std::string body;
 };
 
 } // namespace rpc

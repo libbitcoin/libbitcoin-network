@@ -23,6 +23,7 @@
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/rpc/enums/identifier.hpp>
 #include <bitcoin/network/messages/rpc/enums/method.hpp>
+////#include <bitcoin/network/messages/rpc/enums/target.hpp>
 #include <bitcoin/network/messages/rpc/enums/version.hpp>
 #include <bitcoin/network/messages/rpc/heading.hpp>
 
@@ -40,10 +41,10 @@ size_t request::size() const NOEXCEPT
 {
     return
         from_method(method).size() + heading::space.size() +
-        target.size() + heading::space.size() +
-        from_version(version).size() + heading::line.size() +
+        path.size() + heading::space.size() +
+        from_version(version).size() + heading::crlf.size() +
         heading::fields_size(fields) +
-        heading::line.size();
+        heading::crlf.size();
 }
 
 // static
@@ -58,13 +59,19 @@ typename request::cptr request::deserialize(const data_chunk& data) NOEXCEPT
 // static
 request request::deserialize(reader& source) NOEXCEPT
 {
-    return
+    const request out
     {
         to_method(source.read_line(heading::space)),
         source.read_line(heading::space),
         to_version(source.read_line()),
         heading::to_fields(source)
     };
+
+    // TODO: update tests.
+    ////if (!out.valid())
+    ////    source.invalidate();
+
+    return out;
 }
 
 bool request::serialize(const data_slab& data) const NOEXCEPT
@@ -81,11 +88,40 @@ void request::serialize(writer& sink) const NOEXCEPT
     BC_DEBUG_ONLY(const auto start = sink.get_write_position();)
 
     sink.write_line(from_method(method), heading::space);
-    sink.write_line(target, heading::space);
+    sink.write_line(path, heading::space);
     sink.write_line(from_version(version));
     heading::from_fields(fields, sink);
 
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
+}
+
+rpc::target request::target() const NOEXCEPT
+{
+    // Only for OPTIONS method.
+    if (method == rpc::method::options && path == "*")
+        return rpc::target::asterisk;
+
+    // TODO: use URI parser for rpc::target::authority (only for CONNECT).
+    else if (method == rpc::method::connect)
+        return rpc::target::undefined;
+
+    // TODO: validate path (any method).
+    else if (path.starts_with("/"))
+        return rpc::target::origin;
+
+    // TODO: use URI parser for unescape and full validation (any method).
+    else if (path.starts_with("http://") || path.starts_with("https://"))
+        return rpc::target::absolute;
+
+    return rpc::target::undefined;
+}
+
+bool request::valid() const NOEXCEPT
+{
+    // TODO: These imply properly parsed, not semantically correct.
+    return (method != rpc::method::undefined) &&
+        (version == rpc::version::undefined) &&
+        (target() == rpc::target::undefined);
 }
 
 } // namespace rpc

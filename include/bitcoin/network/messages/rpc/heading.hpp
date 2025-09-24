@@ -20,6 +20,8 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_HEADING_HPP
 
 #include <map>
+#include <optional>
+#include <string_view>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -30,20 +32,29 @@ namespace rpc {
 
 struct BCT_API heading
 {
-    /// Ordered multimap ensures consistent output order.
     using fields = std::multimap<std::string, std::string>;
 
+    static const std::string tab;
     static const std::string space;
     static const std::string separator;
     static const std::string separators;
-    static const std::string line;
-    static const std::string terminal;
+    static const std::string crlfx2;
+    static const std::string crlf;
+    static const system::string_list whitespace;
 
     /// Canonical serialization buffer size (includes 1 OWS SP).
     static size_t fields_size(const fields& fields) NOEXCEPT;
     static fields to_fields(system::reader& source) NOEXCEPT;
     static void from_fields(const fields& fields,
         system::writer& sink) NOEXCEPT;
+
+protected:
+    using string_t = std::optional<std::string>;
+
+    static bool validate_unquoted_value(std::string_view value) NOEXCEPT;
+    static string_t unescape_quoted_value(std::string_view value) NOEXCEPT;
+    static string_t to_field_name(const std::string& value) NOEXCEPT;
+    static string_t to_field_value(std::string&& value) NOEXCEPT;
 };
 
 } // namespace rpc
