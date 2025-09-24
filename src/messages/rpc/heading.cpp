@@ -115,7 +115,7 @@ constexpr bool is_comment_text(char point) NOEXCEPT
 // This is redundant with inclusion of only whitespace and (visible or quoted).
 constexpr bool is_control_text(char point) NOEXCEPT
 {
-    // CTL + \t
+    // CTL except \t
     return (point <= 0x1f && point != 0x09) || point == 0x7f;
 };
 
@@ -128,7 +128,6 @@ constexpr bool is_visible_text(char point) NOEXCEPT
 
 // A sender SHOULD NOT generate a quoted-pair in a quoted-string except where
 // necessary to quote DQUOTE and backslash octets occurring within that string.
-// A sender SHOULD NOT generate a quoted-pair in a comment except where
 constexpr bool is_escapable_quoted_text(char point) NOEXCEPT
 {
     return point == double_quote || point == backslash;
