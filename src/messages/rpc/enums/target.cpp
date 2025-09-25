@@ -26,25 +26,101 @@ namespace network {
 namespace messages {
 namespace rpc {
 
+using namespace system::wallet;
+
+bool is_origin_form(const std::string& target) NOEXCEPT
+{
+    // path-absolute ; begins with "/" but not "//"
+    // datatracker.ietf.org/doc/html/rfc3986#section-3.3
+    if (target.empty() || !target.starts_with("/") || target.starts_with("//"))
+        return false;
+
+    // TODO: boost::urls::parse_origin_form (exact).
+    uri uri{};
+    if (!uri.decode(target))
+        return false;
+
+    // Path-absolute and optional query.
+    return !uri.has_scheme()
+        && !uri.has_authority()
+        && !uri.has_fragment();
+}
+
+bool is_absolute_form(const std::string& target) NOEXCEPT
+{
+    if (target.empty())
+        return false;
+
+    // TODO: boost::urls::parse_absolute_uri (exact).
+    uri uri{};
+    if (!uri.decode(target))
+        return false;
+
+    // Specific schemes required, uri normalizes to lower case.
+    // At least http/s scheme and authority, optional path and query.
+    const auto scheme = uri.scheme();
+    return (scheme == "http" || scheme == "https")
+        && uri.has_authority()
+        && !uri.has_fragment();
+}
+
+// Used for CONNECT method.
+bool is_authority_form(const std::string& target) NOEXCEPT
+{
+    if (target.empty())
+        return false;
+
+    // TODO: boost::urls::parse_authority (exact).
+    uri uri{};
+    if (!uri.decode(target))
+        return false;
+
+    // Authority only (current uri requires //, which is not allowed by http).
+    return !uri.has_scheme()
+        && uri.has_authority()
+        && uri.path().empty()
+        && !uri.has_query()
+        && !uri.has_fragment();
+}
+
+// Used for OPTIONS method.
+bool is_asterisk_form(const std::string& target) NOEXCEPT
+{
+    // Asterisk only.
+    return target == "*";
+}
+
 target to_target(const std::string& value, method method) NOEXCEPT
 {
-    // Only for OPTIONS method.
-    if (method == method::options && value == "*")
-        return target::asterisk;
-
-    // TODO: use URI parser for rpc::target::authority (only for CONNECT).
-    else if (method == method::connect)
-        return target::undefined;
-
-    // TODO: validate path (any method).
-    else if (value.starts_with("/"))
-        return target::origin;
-
-    // TODO: use URI parser for unescape and full validation (any method).
-    else if (value.starts_with("http://") || value.starts_with("https://"))
-        return target::absolute;
-
-    return target::undefined;
+    switch (method)
+    {
+        case method::get:
+        case method::head:
+        case method::post:
+        case method::put:
+        case method::delete_:
+        case method::trace:
+        {
+            return is_origin_form(value) ?
+                target::origin : (is_absolute_form(value) ?
+                    target::absolute : target::undefined);
+        }
+        case method::options:
+        {
+            return is_asterisk_form(value) ?
+                target::asterisk : (is_origin_form(value) ?
+                    target::origin : (is_absolute_form(value) ?
+                        target::absolute : target::undefined));
+        }
+        case method::connect:
+        {
+            return is_authority_form(value) ?
+                target::authority : target::undefined;
+        }
+        default:
+        case method::undefined:
+            return target::undefined;
+    }
 }
 
 } // namespace rpc
