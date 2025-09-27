@@ -122,7 +122,7 @@ constexpr bool is_control_text(char point) NOEXCEPT
 constexpr bool is_visible_text(char point) NOEXCEPT
 {
     // '!' - '~'
-    return 0x21 <= point && point <= 0x7e ||
+    return (0x21 <= point && point <= 0x7e) ||
         is_obsolete_text(point);
 };
 
