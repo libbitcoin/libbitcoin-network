@@ -26,61 +26,53 @@ namespace network {
 namespace messages {
 namespace rpc {
 
+using namespace boost::urls;
 using namespace system::wallet;
 
 bool is_origin_form(const std::string& target) NOEXCEPT
 {
-    // path-absolute ; begins with "/" but not "//"
-    // datatracker.ietf.org/doc/html/rfc3986#section-3.3
-    if (target.empty() || !target.starts_with("/") || target.starts_with("//"))
+    try
+    {
+        // "/index.html?field=value" (no authority)
+        return !parse_origin_form(target).has_error();
+    }
+    catch (std::exception)
+    {
+        // s.size() > url_view::max_size
         return false;
-
-    // TODO: boost::urls::parse_origin_form (exact).
-    uri uri{};
-    if (!uri.decode(target))
-        return false;
-
-    // Path-absolute and optional query.
-    return !uri.has_scheme()
-        && !uri.has_authority()
-        && !uri.has_fragment();
+    }
 }
 
 bool is_absolute_form(const std::string& target) NOEXCEPT
 {
-    if (target.empty())
-        return false;
+    try
+    {
+        // "foo://www.boost.org/index.html?field=value" (no fragment)
+        const auto uri = parse_absolute_uri(target);
+        if (uri.has_error())
+            return false;
 
-    // TODO: boost::urls::parse_absolute_uri (exact).
-    uri uri{};
-    if (!uri.decode(target))
+        // Limit to http/s.
+        const auto scheme = uri->scheme_id();
+        return scheme == scheme::http || scheme == scheme::https;
+    }
+    catch (std::exception)
+    {
+        // s.size() > url_view::max_size
         return false;
-
-    // Specific schemes required, uri normalizes to lower case.
-    // At least http/s scheme and authority, optional path and query.
-    const auto scheme = uri.scheme();
-    return (scheme == "http" || scheme == "https")
-        && uri.has_authority()
-        && !uri.has_fragment();
+    }
 }
 
 // Used for CONNECT method.
 bool is_authority_form(const std::string& target) NOEXCEPT
 {
-    if (target.empty())
+    // Requires leading "//", which is not allowed by parse_authority.
+    if (!target.starts_with("//"))
         return false;
 
-    // TODO: boost::urls::parse_authority (exact).
-    uri uri{};
-    if (!uri.decode(target))
-        return false;
-
-    // Authority only (current uri requires //, which is not allowed by http).
-    return !uri.has_scheme()
-        && uri.has_authority()
-        && uri.path().empty()
-        && !uri.has_query()
-        && !uri.has_fragment();
+    // "[ userinfo "@" ] host [ ":" port ]"
+    const auto start = std::next(target.begin(), two);
+    return !parse_authority(std::string_view{ start, target.end() }).has_error();
 }
 
 // Used for OPTIONS method.
