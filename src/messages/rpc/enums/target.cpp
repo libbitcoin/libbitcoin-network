@@ -71,8 +71,8 @@ bool is_authority_form(const std::string& target) NOEXCEPT
         return false;
 
     // "[ userinfo "@" ] host [ ":" port ]"
-    const auto start = std::next(target.begin(), two);
-    return !parse_authority(std::string_view{ start, target.end() }).has_error();
+    const auto at = std::next(target.begin(), two);
+    return !parse_authority(std::string_view{ at, target.end() }).has_error();
 }
 
 // Used for OPTIONS method.
