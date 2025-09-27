@@ -67,9 +67,8 @@ request request::deserialize(reader& source) NOEXCEPT
         heading::to_fields(source)
     };
 
-    // TODO: update tests.
-    ////if (!out.valid())
-    ////    source.invalidate();
+    if (!out.valid())
+        source.invalidate();
 
     return out;
 }
@@ -104,8 +103,8 @@ bool request::valid() const NOEXCEPT
 {
     // TODO: These imply properly parsed, not semantically correct.
     return (method != rpc::method::undefined) &&
-        (version == rpc::version::undefined) &&
-        (target() == rpc::target::undefined);
+        (version != rpc::version::undefined) &&
+        (target() != rpc::target::undefined);
 }
 
 } // namespace rpc
