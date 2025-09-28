@@ -48,21 +48,44 @@ BOOST_AUTO_TEST_CASE(rpc_request__size__http_1_1_content_type_json__expected)
 
 // target
 
+BOOST_AUTO_TEST_CASE(rpc_request__target__minimal_origin_form__returns_origin)
+{
+    const request instance{ method::get, "/", version::http_1_1, {} };
+    BOOST_REQUIRE(instance.target() == target::origin);
+}
+
 BOOST_AUTO_TEST_CASE(rpc_request__target__origin_form__returns_origin)
 {
     const request instance{ method::get, "/index.html?query=example", version::http_1_1, {} };
     BOOST_REQUIRE(instance.target() == target::origin);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_request__target__absolute_form__returns_absolute)
+BOOST_AUTO_TEST_CASE(rpc_request__target__http_absolute_form__returns_absolute)
+{
+    const request instance{ method::post, "http://example.com/path", version::http_1_0, {} };
+    BOOST_REQUIRE(instance.target() == target::absolute);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_request__target__https_absolute_form__returns_absolute)
 {
     const request instance{ method::post, "https://example.com/path", version::http_1_0, {} };
     BOOST_REQUIRE(instance.target() == target::absolute);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_request__target__authority_form__returns_undefined)
+BOOST_AUTO_TEST_CASE(rpc_request__target__ftp_absolute_form__returns_undefined)
 {
-    // Implementation incomplete.
+    const request instance{ method::post, "ftp://example.com/path", version::http_1_0, {} };
+    BOOST_REQUIRE(instance.target() == target::undefined);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_request__target__authority_form__returns_authority)
+{
+    const request instance{ method::connect, "//example.com:443", version::http_0_9, {} };
+    BOOST_REQUIRE(instance.target() == target::authority);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_request__target__invalid_authority_form__returns_undefined)
+{
     const request instance{ method::connect, "example.com:443", version::http_0_9, {} };
     BOOST_REQUIRE(instance.target() == target::undefined);
 }
