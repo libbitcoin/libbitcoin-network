@@ -36,7 +36,7 @@ bool is_origin_form(const std::string& target) NOEXCEPT
         // "/index.html?field=value" (no authority)
         return !parse_origin_form(target).has_error();
     }
-    catch (std::exception)
+    catch (const std::exception&)
     {
         // s.size() > url_view::max_size
         return false;
@@ -56,7 +56,7 @@ bool is_absolute_form(const std::string& target) NOEXCEPT
         const auto scheme = uri->scheme_id();
         return scheme == scheme::http || scheme == scheme::https;
     }
-    catch (std::exception)
+    catch (const std::exception&)
     {
         // s.size() > url_view::max_size
         return false;
