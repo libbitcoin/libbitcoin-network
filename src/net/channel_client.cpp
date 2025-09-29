@@ -40,15 +40,15 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT
   : channel(log, socket, settings, identifier),
-    distributor_(socket->strand()),
-    buffer_{ max_head + max_body },
+    subscriber_{ strand() },
+    buffer_{ ceilinged_add(max_head, max_body) },
     tracker<channel_client>(log)
 {
     parser_.header_limit(max_head);
     parser_.body_limit(max_body);
 }
 
-// Stop (started upon create).
+// Start/stop/resume (started upon create).
 // ----------------------------------------------------------------------------
 
 void channel_client::stop(const code& ec) NOEXCEPT
@@ -66,46 +66,25 @@ void channel_client::stop(const code& ec) NOEXCEPT
 void channel_client::do_stop(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    distributor_.stop(ec);
+    subscriber_.stop(ec, {});
 }
-
-// Pause/resume (paused upon create).
-// ----------------------------------------------------------------------------
 
 void channel_client::resume() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     channel::resume();
-    read_resume();
+    read_request();
 }
 
 // Read cycle (read continues until stop called, call only once).
 // ----------------------------------------------------------------------------
 
-void channel_client::read_resume() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    BC_ASSERT_MSG(is_zero(buffer_.size()), "call read_resume only once");
-
-    if (stopped() || paused())
-        return;
-
-    read_request();
-}
-
 void channel_client::read_request() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Limit set on construct, does not result in allocation.
-    const auto size   = buffer_.size();
-    const auto limit  = buffer_.max_size();
-    const auto remain = floored_subtract(limit, size);
-    const auto buffer = buffer_.prepare(remain);
-
     // Post handle_read_heading to strand upon stop, error, or buffer full.
-    read_some(buffer_.prepare(remain),
+    read_some(buffer_.prepare(buffer_.max_size() - buffer_.size()),
         std::bind(&channel_client::handle_read_request,
             shared_from_base<channel_client>(), _1, _2));
 }
@@ -137,35 +116,27 @@ void channel_client::handle_read_request(const code& ec,
     // Commits read bytes_read to buffer size.
     const auto code = parse_buffer(bytes_read);
 
-    if (code == error::need_more)
+    if (code != error::need_more)
     {
-        // Wait on more bytes for this request.
-        read_request();
-        return;
+        if (code)
+        {
+            LOGR("Invalid request [" << authority() << "] " << code.message());
+        }
+
+        subscriber_.notify(code, parser_.release());
+        buffer_.consume(buffer_.size());
     }
 
-    if (code)
-    {
-        LOGR("Request parse error [" << authority() << "] " << code.message());
-    }
-
-    // Clears buffer (size set to zero).
-    // Failure responses are sent by handler (followed by stop).
-    notify(code, parser_.release());
-
-    // Wait on next request.
+    // Wait on more bytes for this request (if need_more), or for next request.
     read_request();
 }
 
-// put() will not return http::error::need_more if either the header_limit or
-// body_limit has been reached (returns other specific error code).
 code channel_client::parse_buffer(size_t bytes_read) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    using namespace boost::asio;
     using namespace boost::beast;
-
     error_code result{};
+
     buffer_.commit(bytes_read);
 
     try
@@ -179,26 +150,6 @@ code channel_client::parse_buffer(size_t bytes_read) NOEXCEPT
     }
 
     return error::beast_to_error_code(result);
-}
-
-code channel_client::notify(const code&,
-    const asio::http_request&) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // These correspond to libbitcoin request.
-    ////const auto target = request.target();
-    ////const auto method = request.method();
-    ////const auto version = request.version();
-    ////const auto& field = request["field-name"];
-    ////const auto& body = request.body();
-
-    // TODO: process and distribute request.
-    //// distributor_.notify(id, source);
-
-    // Invalidates the above parser reference (cannot be passed on above).
-    buffer_.consume(buffer_.size());
-    return error::success;
 }
 
 BC_POP_WARNING()

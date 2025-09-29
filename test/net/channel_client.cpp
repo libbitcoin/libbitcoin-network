@@ -88,7 +88,6 @@ BOOST_AUTO_TEST_CASE(channel_client__properties__default__expected)
     channel_ptr.reset();
 }
 
-
 BOOST_AUTO_TEST_CASE(channel_client__subscribe_message__subscribed__expected)
 {
     const logger log{};
@@ -103,10 +102,10 @@ BOOST_AUTO_TEST_CASE(channel_client__subscribe_message__subscribed__expected)
     std::promise<code> message_stopped;
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->subscribe<const messages::rpc::ping>(
-            [&](code ec, messages::rpc::ping::cptr ping) NOEXCEPT
+        channel_ptr->subscribe<asio::http_request>(
+            [&](code ec, const asio::http_request& request) NOEXCEPT
             {
-                result &= is_null(ping);
+                result &= is_zero(request.payload_size());
                 message_stopped.set_value(ec);
                 return true;
             });
@@ -152,10 +151,10 @@ BOOST_AUTO_TEST_CASE(channel_client__stop__all_subscribed__expected)
             stop1_stopped.set_value(ec);
         });
 
-        channel_ptr->subscribe<messages::rpc::ping>(
-            [&](code ec, messages::rpc::ping::cptr ping) NOEXCEPT
+        channel_ptr->subscribe<asio::http_request>(
+            [&](code ec, const asio::http_request& request) NOEXCEPT
             {
-                result &= is_null(ping);
+                result &= is_zero(request.payload_size());
                 message_stopped.set_value(ec);
                 return true;
             });
@@ -192,7 +191,7 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected)
 
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send<messages::rpc::ping>(messages::rpc::ping{ 42 }, handler);
+        channel_ptr->send<asio::http_response>({}, handler);
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
@@ -213,7 +212,7 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected)
     std::promise<code> promise;
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send<messages::rpc::ping>(messages::rpc::ping{ 42 }, [&](code ec)
+        channel_ptr->send(asio::http_response{}, [&](code ec)
         {
             // Send failure causes stop before handler invoked.
             result &= channel_ptr->stopped();

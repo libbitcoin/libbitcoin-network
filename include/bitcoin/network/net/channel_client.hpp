@@ -20,14 +20,13 @@
 #define LIBBITCOIN_NETWORK_NET_CHANNEL_CLIENT_HPP
 
 #include <memory>
+#include <utility>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/rpc/messages.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/net/channel.hpp>
-#include <bitcoin/network/net/distributor_client.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -36,34 +35,34 @@ class BCT_API channel_client
   : public channel, protected tracker<channel_client>
 {
 public:
+    typedef subscriber<asio::http_request> request_subscriber;
+    typedef request_subscriber::handler request_notifier;
+
     typedef std::shared_ptr<channel_client> ptr;
 
-    /// Subscribe to messages from client (requires strand).
-    /// Event handler is always invoked on the channel strand.
-    template <class Message,
-        typename Handler = distributor_client::handler<Message>>
+    /// Subscribe to channel request messages (use SUBSCRIBE_CHANNEL).
+    /// Method is invoked with error::subscriber_stopped if already stopped.
+    template <class Message, typename Handler = asio::http_request,
+        if_same<Message, asio::http_request> = true>
     void subscribe(Handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        distributor_.subscribe(std::forward<Handler>(handler));
+        subscriber_.subscribe(std::forward<Handler>(handler));
     }
 
-    /// Serialize and write a message to the client (requires strand).
-    /// Completion handler is always invoked on the channel strand.
-    template <class Message>
-    void send(const Message& message, result_handler&& complete) NOEXCEPT
+    /// Send a message instance to peer (use SEND).
+    template <class Message, if_same<Message, asio::http_response> = true>
+    void send(const Message&, result_handler&& complete) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
-        ///////////////////////////////////////////////////////////////////////
-        // TODO: update serialize to include status line and headers.
-        ///////////////////////////////////////////////////////////////////////
-        const auto data = messages::rpc::serialize(message);
+        // TODO: serialize message to data chunk.
+        const auto data = std::make_shared<system::data_chunk>();
 
         if (!data)
         {
             // This is an internal error, should never happen.
-            LOGF("Serialization failure (" << Message::command << ").");
+            LOGF("Serialization failure (http_response).");
             complete(error::unknown);
             return;
         }
@@ -81,21 +80,13 @@ public:
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
 
-protected:
-    /// Client read and dispatch.
-    void read_resume() NOEXCEPT;
-
-    /// Notify subscribers of a new request (requires strand).
-    virtual code notify(const code& ec,
-        const asio::http_request& request) NOEXCEPT;
-
 private:
     void read_request() NOEXCEPT;
     code parse_buffer(size_t bytes_read) NOEXCEPT;
     void handle_read_request(const code& ec, size_t bytes_read) NOEXCEPT;
     void do_stop(const code& ec) NOEXCEPT;
 
-    distributor_client distributor_;
+    request_subscriber subscriber_;
     asio::http_buffer buffer_;
     asio::http_parser parser_{};
 };
