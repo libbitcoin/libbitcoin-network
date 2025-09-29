@@ -61,7 +61,6 @@ protected:
         channel_->subscribe<Message>(BIND_SHARED(method, args));
     }
 
-
     /// Start/Stop.
     /// -----------------------------------------------------------------------
 
