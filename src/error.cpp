@@ -141,7 +141,35 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
     { insufficient_storage, "insufficient storage" },
     { loop_detected, "loop detected" },
     { not_extended, "not extended" },
-    { network_authentication_required, "network authentication required" }
+    { network_authentication_required, "network authentication required" },
+
+    // boost beast error
+    { end_of_stream, "end of stream" },
+    { partial_message, "partial message" },
+    { need_more, "need more" },
+    { unexpected_body, "unexpected body" },
+    { need_buffer, "need buffer" },
+    { end_of_chunk, "end of chunk" },
+    { buffer_overflow, "buffer overflow" },
+    { header_limit, "header limit" },
+    { body_limit, "body limit" },
+    { bad_alloc, "bad alloc" },
+    { bad_line_ending, "bad line ending" },
+    { bad_method, "bad method" },
+    { bad_target, "bad target" },
+    { bad_version, "bad version" },
+    { bad_status, "bad status" },
+    { bad_reason, "bad reason" },
+    { bad_field, "bad field" },
+    { bad_value, "bad value" },
+    { bad_content_length, "bad content length" },
+    { bad_transfer_encoding, "bad transfer encoding" },
+    { bad_chunk, "bad chunk" },
+    { bad_chunk_extension, "bad chunk extension" },
+    { bad_obs_fold, "bad obs fold" },
+    { multiple_content_length, "multiple content length" },
+    { stale_parser, "stale parser" },
+    { short_read, "short read" }
 };
 
 DEFINE_ERROR_T_CATEGORY(error, "network", "network code")
@@ -275,6 +303,69 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
     ////    ec == boost_error_t::result_out_of_range ||
     ////    ec == boost_error_t::state_not_recoverable ||
     ////    ec == boost_error_t::value_too_large)
+    return error::unknown;
+}
+
+code beast_to_error_code(const error::boost_code& ec) NOEXCEPT
+{
+    using namespace boost::beast;
+
+    if (!ec)
+        return {};
+
+    if (ec == http::error::end_of_stream)
+        return error::end_of_stream;
+    if (ec == http::error::partial_message)
+        return error::partial_message;
+    if (ec == http::error::need_more)
+        return error::need_more;
+    if (ec == http::error::unexpected_body)
+        return error::unexpected_body;
+    if (ec == http::error::need_buffer)
+        return error::need_buffer;
+    if (ec == http::error::end_of_chunk)
+        return error::end_of_chunk;
+    if (ec == http::error::buffer_overflow)
+        return error::buffer_overflow;
+    if (ec == http::error::header_limit)
+        return error::header_limit;
+    if (ec == http::error::body_limit)
+        return error::body_limit;
+    if (ec == http::error::bad_alloc)
+        return error::bad_alloc;
+    if (ec == http::error::bad_line_ending)
+        return error::bad_line_ending;
+    if (ec == http::error::bad_method)
+        return error::bad_method;
+    if (ec == http::error::bad_target)
+        return error::bad_target;
+    if (ec == http::error::bad_version)
+        return error::bad_version;
+    if (ec == http::error::bad_status)
+        return error::bad_status;
+    if (ec == http::error::bad_reason)
+        return error::bad_reason;
+    if (ec == http::error::bad_field)
+        return error::bad_field;
+    if (ec == http::error::bad_value)
+        return error::bad_value;
+    if (ec == http::error::bad_content_length)
+        return error::bad_content_length;
+    if (ec == http::error::bad_transfer_encoding)
+        return error::bad_transfer_encoding;
+    if (ec == http::error::bad_chunk)
+        return error::bad_chunk;
+    if (ec == http::error::bad_chunk_extension)
+        return error::bad_chunk_extension;
+    if (ec == http::error::bad_obs_fold)
+        return error::bad_obs_fold;
+    if (ec == http::error::multiple_content_length)
+        return error::multiple_content_length;
+    if (ec == http::error::stale_parser)
+        return error::stale_parser;
+    if (ec == http::error::short_read)
+        return error::short_read;
+
     return error::unknown;
 }
 
