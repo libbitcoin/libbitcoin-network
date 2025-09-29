@@ -102,15 +102,10 @@ void channel_client::read_request() NOEXCEPT
     const auto size   = buffer_.size();
     const auto limit  = buffer_.max_size();
     const auto remain = floored_subtract(limit, size);
-
-    // TODO: read_some(mutable_buffer buffer,...) allows for simplification of
-    // TODO: read_some(buffer_.prepare(remain),...)
     const auto buffer = buffer_.prepare(remain);
-    const auto begin  = pointer_cast<uint8_t>(buffer.data());
-    const auto end    = std::next(begin, remain);
 
     // Post handle_read_heading to strand upon stop, error, or buffer full.
-    read_some({ begin, end },
+    read_some(buffer_.prepare(remain),
         std::bind(&channel_client::handle_read_request,
             shared_from_base<channel_client>(), _1, _2));
 }

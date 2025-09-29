@@ -76,15 +76,15 @@ public:
         result_handler&& handler) NOEXCEPT;
 
     /// Read up to full slab from the socket, handler posted to socket strand.
-    virtual void read_some(const system::data_slab& out,
+    virtual void read_some(const asio::mutable_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
     /// Read full slab from the socket, handler posted to socket strand.
-    virtual void read(const system::data_slab& out,
+    virtual void read(const asio::mutable_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
     /// Write full slice to the socket, handler posted to socket strand.
-    virtual void write(const system::data_slice& in,
+    virtual void write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
     // Properties.

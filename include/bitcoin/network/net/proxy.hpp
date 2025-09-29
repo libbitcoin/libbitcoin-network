@@ -91,10 +91,10 @@ protected:
     proxy(const socket::ptr& socket) NOEXCEPT;
 
     /// Read part of a message from the remote endpoint (requires strand).
-    virtual void read_some(const system::data_slab& buffer,
+    virtual void read_some(const asio::mutable_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
-    /// Read a fixed-size message from the remote endpoint (requires strand).
+    /// Read fixed-size message from the remote endpoint (requires strand).
     virtual void read(const system::data_slab& buffer,
         count_handler&& handler) NOEXCEPT;
 
