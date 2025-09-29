@@ -91,7 +91,7 @@ bool threadpool::join() NOEXCEPT
         {
             thread.join();
         }
-        catch (std::exception&)
+        catch (const std::exception&)
         {
             return false;
         }

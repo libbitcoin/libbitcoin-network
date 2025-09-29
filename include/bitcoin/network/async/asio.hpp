@@ -31,6 +31,8 @@ namespace asio {
 
 // stackoverflow.com/questions/66765121/
 // asiostrandasioio-contextexecutor-type-vs-io-contextstrand
+
+// asio
 typedef boost::asio::io_context io_context;
 typedef boost::asio::io_context::executor_type executor_type;
 typedef boost::asio::strand<executor_type> strand;
@@ -38,22 +40,32 @@ typedef boost::asio::steady_timer steady_timer;
 typedef boost::asio::mutable_buffer mutable_buffer;
 typedef boost::asio::const_buffer const_buffer;
 
+// addressing
 typedef boost::asio::ip::v6_only v6_only;
 typedef boost::asio::ip::address address;
 typedef boost::asio::ip::address_v4 ipv4;
 typedef boost::asio::ip::address_v6 ipv6;
 typedef boost::asio::ip::tcp tcp;
 
+// accept/connect
 typedef tcp::acceptor acceptor;
 typedef tcp::resolver resolver;
 typedef tcp::endpoint endpoint;
 typedef resolver::results_type endpoints;
 typedef asio::acceptor::reuse_address reuse_address;
 
+// connect
 typedef tcp::socket socket;
 typedef std::shared_ptr<socket> socket_ptr;
 
-constexpr auto max_connections = boost::asio::socket_base::max_listen_connections;
+// http
+typedef boost::beast::flat_buffer http_buffer;
+typedef boost::beast::http::string_body http_string_body;
+typedef boost::beast::http::request<http_string_body> http_request;
+typedef boost::beast::http::request_parser<http_string_body> http_parser;
+
+constexpr auto max_connections = 
+    boost::asio::socket_base::max_listen_connections;
 
 } // namespace asio
 } // namespace network

@@ -855,4 +855,240 @@ BOOST_AUTO_TEST_CASE(error_t__code__network_authentication_required__true_execte
     BOOST_REQUIRE_EQUAL(ec.message(), "network authentication required");
 }
 
+// boost beast error
+
+BOOST_AUTO_TEST_CASE(error_t__code__end_of_stream__true_exected_message)
+{
+    constexpr auto value = error::end_of_stream;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "end of stream");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__partial_message__true_exected_message)
+{
+    constexpr auto value = error::partial_message;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "partial message");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__need_more__true_exected_message)
+{
+    constexpr auto value = error::need_more;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "need more");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__unexpected_body__true_exected_message)
+{
+    constexpr auto value = error::unexpected_body;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "unexpected body");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__need_buffer__true_exected_message)
+{
+    constexpr auto value = error::need_buffer;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "need buffer");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__end_of_chunk__true_exected_message)
+{
+    constexpr auto value = error::end_of_chunk;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "end of chunk");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__buffer_overflow__true_exected_message)
+{
+    constexpr auto value = error::buffer_overflow;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "buffer overflow");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__header_limit__true_exected_message)
+{
+    constexpr auto value = error::header_limit;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "header limit");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__body_limit__true_exected_message)
+{
+    constexpr auto value = error::body_limit;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "body limit");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_alloc__true_exected_message)
+{
+    constexpr auto value = error::bad_alloc;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad alloc");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_line_ending__true_exected_message)
+{
+    constexpr auto value = error::bad_line_ending;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad line ending");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_method__true_exected_message)
+{
+    constexpr auto value = error::bad_method;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad method");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_target__true_exected_message)
+{
+    constexpr auto value = error::bad_target;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad target");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_version__true_exected_message)
+{
+    constexpr auto value = error::bad_version;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad version");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_status__true_exected_message)
+{
+    constexpr auto value = error::bad_status;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad status");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_reason__true_exected_message)
+{
+    constexpr auto value = error::bad_reason;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad reason");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_field__true_exected_message)
+{
+    constexpr auto value = error::bad_field;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad field");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_value__true_exected_message)
+{
+    constexpr auto value = error::bad_value;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad value");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_content_length__true_exected_message)
+{
+    constexpr auto value = error::bad_content_length;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad content length");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_transfer_encoding__true_exected_message)
+{
+    constexpr auto value = error::bad_transfer_encoding;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad transfer encoding");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_chunk__true_exected_message)
+{
+    constexpr auto value = error::bad_chunk;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad chunk");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_chunk_extension__true_exected_message)
+{
+    constexpr auto value = error::bad_chunk_extension;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad chunk extension");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__bad_obs_fold__true_exected_message)
+{
+    constexpr auto value = error::bad_obs_fold;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "bad obs fold");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__multiple_content_length__true_exected_message)
+{
+    constexpr auto value = error::multiple_content_length;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "multiple content length");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__stale_parser__true_exected_message)
+{
+    constexpr auto value = error::stale_parser;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "stale parser");
+}
+
+BOOST_AUTO_TEST_CASE(error_t__code__short_read__true_exected_message)
+{
+    constexpr auto value = error::short_read;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "short read");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

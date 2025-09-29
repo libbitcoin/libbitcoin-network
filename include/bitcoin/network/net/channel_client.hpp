@@ -83,20 +83,21 @@ public:
 
 protected:
     /// Client read and dispatch.
-    void read_request() NOEXCEPT;
+    void read_resume() NOEXCEPT;
 
-    /// Notify subscribers of a new message (requires strand).
-    virtual code notify(messages::rpc::identifier id,
-        const system::data_chunk& source) NOEXCEPT;
+    /// Notify subscribers of a new request (requires strand).
+    virtual code notify(const code& ec,
+        const asio::http_request& request) NOEXCEPT;
 
 private:
-    void handle_read_request(const code& ec, size_t bytes_read,
-        size_t offset) NOEXCEPT;
-    void read_request(size_t offset) NOEXCEPT;
+    void read_request() NOEXCEPT;
+    code parse_buffer(size_t bytes_read) NOEXCEPT;
+    void handle_read_request(const code& ec, size_t bytes_read) NOEXCEPT;
     void do_stop(const code& ec) NOEXCEPT;
 
     distributor_client distributor_;
-    system::data_chunk buffer_;
+    asio::http_buffer buffer_;
+    asio::http_parser parser_{};
 };
 
 } // namespace network

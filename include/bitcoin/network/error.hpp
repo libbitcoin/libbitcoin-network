@@ -165,11 +165,42 @@ enum error_t : uint8_t
     insufficient_storage,
     loop_detected,
     not_extended,
-    network_authentication_required
+    network_authentication_required,
+
+    // boost beast error
+    end_of_stream,
+    partial_message,
+    need_more,
+    unexpected_body,
+    need_buffer,
+    end_of_chunk,
+    buffer_overflow,
+    header_limit,
+    body_limit,
+    bad_alloc,
+    bad_line_ending,
+    bad_method,
+    bad_target,
+    bad_version,
+    bad_status,
+    bad_reason,
+    bad_field,
+    bad_value,
+    bad_content_length,
+    bad_transfer_encoding,
+    bad_chunk,
+    bad_chunk_extension,
+    bad_obs_fold,
+    multiple_content_length,
+    stale_parser,
+    short_read
 };
 
 // No current need for error_code equivalence mapping.
 DECLARE_ERROR_T_CODE_CATEGORY(error);
+
+/// Shortcircuit common code mapping.
+BCT_API bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT;
 
 /// Unfortunately std::error_code and boost::system::error_code are distinct
 /// types, so they do not compare as would be expected across distinct
@@ -182,8 +213,8 @@ DECLARE_ERROR_T_CODE_CATEGORY(error);
 /// despite being effectively identical. So we provide this explicit mapping.
 BCT_API code asio_to_error_code(const error::boost_code& ec) NOEXCEPT;
 
-/// Shortcircuit common code mapping.
-BCT_API bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT;
+/// 1:1 mapping of boost::beast:http::error to network (or error::unknown).
+BCT_API code beast_to_error_code(const error::boost_code& ec) NOEXCEPT;
 
 } // namespace error
 } // namespace network

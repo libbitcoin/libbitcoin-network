@@ -41,9 +41,11 @@ channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT
   : channel(log, socket, settings, identifier),
     distributor_(socket->strand()),
-    buffer_(min_heading),
+    buffer_{ max_head + max_body },
     tracker<channel_client>(log)
 {
+    parser_.header_limit(max_head);
+    parser_.body_limit(max_body);
 }
 
 // Stop (started upon create).
@@ -75,46 +77,48 @@ void channel_client::resume() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     channel::resume();
-    read_request();
+    read_resume();
 }
 
-// Read cycle (read continues until stop called).
+// Read cycle (read continues until stop called, call only once).
 // ----------------------------------------------------------------------------
 
-code channel_client::notify(messages::rpc::identifier id,
-    const system::data_chunk& source) NOEXCEPT
+void channel_client::read_resume() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return distributor_.notify(id, source);
+    BC_ASSERT_MSG(is_zero(buffer_.size()), "call read_resume only once");
+
+    if (stopped() || paused())
+        return;
+
+    read_request();
 }
 
 void channel_client::read_request() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (stopped() || paused())
-        return;
+    // Limit set on construct, does not result in allocation.
+    const auto size   = buffer_.size();
+    const auto limit  = buffer_.max_size();
+    const auto remain = floored_subtract(limit, size);
 
-    read_request(zero);
-}
-
-void channel_client::read_request(size_t offset) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
+    // TODO: read_some(mutable_buffer buffer,...) allows for simplification of
+    // TODO: read_some(buffer_.prepare(remain),...)
+    const auto buffer = buffer_.prepare(remain);
+    const auto begin  = pointer_cast<uint8_t>(buffer.data());
+    const auto end    = std::next(begin, remain);
 
     // Post handle_read_heading to strand upon stop, error, or buffer full.
-    read_some({ std::next(buffer_.begin(), offset), buffer_.end() },
+    read_some({ begin, end },
         std::bind(&channel_client::handle_read_request,
-            shared_from_base<channel_client>(), _1, _2, offset));
+            shared_from_base<channel_client>(), _1, _2));
 }
 
-void channel_client::handle_read_request(const code& ec, size_t bytes_read,
-    size_t offset) NOEXCEPT
+void channel_client::handle_read_request(const code& ec,
+    size_t bytes_read) NOEXCEPT
 {
-    // Reliance on API correctness and protected invocation is sufficient.
     BC_ASSERT_MSG(stranded(), "strand");
-    BC_ASSERT_MSG(!is_add_overflow(offset, bytes_read), "overflow");
-    BC_ASSERT_MSG(buffer_.size() >= add(offset, bytes_read), "buffer overflow");
 
     if (stopped())
     {
@@ -135,44 +139,71 @@ void channel_client::handle_read_request(const code& ec, size_t bytes_read,
         return;
     }
 
-    const auto size = offset + bytes_read;
-    const auto end = std::next(buffer_.cbegin(), size);
-    const auto content = std::ranges::subrange(buffer_.cbegin(), end);
-    if (search(content, heading::crlfx2).empty())
-    {
-        if (buffer_.size() == max_heading)
-        {
-            // TODO: notify subscribers with faulted request object.
-            LOGR("Request oversized header [" << authority() << "]");
-            ////notify(error::request_header_fields_too_large);
-            return;
-        }
+    // Commits read bytes_read to buffer size.
+    const auto code = parse_buffer(bytes_read);
 
-        buffer_.resize(limit(two * buffer_.size(), max_heading));
-        read_request(size);
+    if (code == error::need_more)
+    {
+        // Wait on more bytes for this request.
+        read_request();
         return;
     }
 
-    istream source{ buffer_ };
-    byte_reader reader{ source };
-    reader.set_limit(size);
-    const auto request = to_shared(request::deserialize(reader));
-    if (!reader)
+    if (code)
     {
-        // listener not re-engaged so protocol drops channel in send handler.
-        LOGR("Request invalid header [" << authority() << "]");
-        ////notify(error::bad_request);
-        return;
+        LOGR("Request parse error [" << authority() << "] " << code.message());
     }
 
-    ////const auto chunked = request->is_chunked();
-    ////const auto content = request->content_length();
+    // Clears buffer (size set to zero).
+    // Failure responses are sent by handler (followed by stop).
+    notify(code, parser_.release());
 
-    ////std::string out{};
-    ////out.resize(request->size());
-    ////if (request->serialize(out)) { LOGA(out); }
+    // Wait on next request.
+    read_request();
+}
 
-    ////notify(error::success, request);
+// put() will not return http::error::need_more if either the header_limit or
+// body_limit has been reached (returns other specific error code).
+code channel_client::parse_buffer(size_t bytes_read) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    using namespace boost::asio;
+    using namespace boost::beast;
+
+    error_code result{};
+    buffer_.commit(bytes_read);
+
+    try
+    {
+        parser_.put({ buffer_.data() }, result);
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Request parse exception [" << authority() << "] " << e.what());
+        result = http::error::bad_alloc;
+    }
+
+    return error::beast_to_error_code(result);
+}
+
+code channel_client::notify(const code&,
+    const asio::http_request&) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // These correspond to libbitcoin request.
+    ////const auto target = request.target();
+    ////const auto method = request.method();
+    ////const auto version = request.version();
+    ////const auto& field = request["field-name"];
+    ////const auto& body = request.body();
+
+    // TODO: process and distribute request.
+    //// distributor_.notify(id, source);
+
+    // Invalidates the above parser reference (cannot be passed on above).
+    buffer_.consume(buffer_.size());
+    return error::success;
 }
 
 BC_POP_WARNING()
