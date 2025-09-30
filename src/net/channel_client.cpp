@@ -19,6 +19,7 @@
 #include <bitcoin/network/net/channel_client.hpp>
 
 #include <algorithm>
+#include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -30,6 +31,8 @@
 namespace libbitcoin {
 namespace network {
 
+#define CLASS channel_client
+
 using namespace system;
 using namespace messages::rpc;
 using namespace std::placeholders;
@@ -40,12 +43,11 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT
   : channel(log, socket, settings, identifier),
-    subscriber_{ strand() },
-    buffer_{ ceilinged_add(max_head, max_body) },
+    subscriber_(strand()),
+    buffer_(ceilinged_add(max_head, max_body)),
     tracker<channel_client>(log)
 {
-    parser_.header_limit(max_head);
-    parser_.body_limit(max_body);
+    initialize(parser_);
 }
 
 // Start/stop/resume (started upon create).
@@ -113,8 +115,8 @@ void channel_client::handle_read_request(const code& ec,
         return;
     }
 
-    // Commits read bytes_read to buffer size.
-    const auto code = parse_buffer(bytes_read);
+    buffer_.commit(bytes_read);
+    const auto code = parse(buffer_);
 
     if (code != error::need_more)
     {
@@ -123,7 +125,7 @@ void channel_client::handle_read_request(const code& ec,
             LOGR("Invalid request [" << authority() << "] " << code.message());
         }
 
-        subscriber_.notify(code, parser_.release());
+        subscriber_.notify(code, detach(parser_));
         buffer_.consume(buffer_.size());
     }
 
@@ -131,17 +133,35 @@ void channel_client::handle_read_request(const code& ec,
     read_request();
 }
 
-code channel_client::parse_buffer(size_t bytes_read) NOEXCEPT
+// Parser utilities.
+// ----------------------------------------------------------------------------
+// static
+
+void channel_client::initialize(http_parser_ptr& parser) NOEXCEPT
+{
+    parser = std::make_unique<asio::http_parser>();
+    parser->header_limit(max_head);
+    parser->body_limit(max_body);
+}
+
+asio::http_request channel_client::detach(http_parser_ptr& parser) NOEXCEPT
+{
+    BC_ASSERT(parser);
+    auto out = parser->release();
+    initialize(parser);
+    return out;
+}
+
+// Handles exceptions, error code conversion, and const_buffer wrapping.
+code channel_client::parse(const asio::http_buffer& buffer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     using namespace boost::beast;
     error_code result{};
 
-    buffer_.commit(bytes_read);
-
     try
     {
-        parser_.put({ buffer_.data() }, result);
+        parser_->put(asio::const_buffer{ buffer.data() }, result);
     }
     catch (const std::exception& LOG_ONLY(e))
     {

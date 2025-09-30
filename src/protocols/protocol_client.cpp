@@ -18,7 +18,10 @@
  */
 #include <bitcoin/network/protocols/protocol_client.hpp>
 
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/rpc/messages.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
@@ -27,11 +30,60 @@ namespace network {
 
 #define CLASS protocol_client
 
+using namespace asio;
+using namespace messages::rpc;
+using namespace std::placeholders;
+
+// Bind throws (ok).
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 protocol_client::protocol_client(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
-  : protocol(session, channel)
+  : protocol(session, channel),
+    channel_(std::dynamic_pointer_cast<channel_client>(channel)),
+    session_(std::dynamic_pointer_cast<session_client>(session)),
+    tracker<protocol_client>(session->log)
 {
 }
+
+// Start.
+// ----------------------------------------------------------------------------
+
+void protocol_client::start() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_client");
+
+    if (started())
+        return;
+
+    SUBSCRIBE_CHANNEL(http_request, handle_receive_request, _1, _2);
+    protocol::start();
+}
+
+// Inbound/outbound.
+// ----------------------------------------------------------------------------
+
+void protocol_client::handle_receive_request(const code& ec,
+    const http_request&) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "protocol_client");
+
+    if (stopped(ec))
+        return;
+
+    static std::atomic_size_t count{};
+
+    using namespace boost::beast;
+    http_response response{ http::status::ok, 11 };
+    response.set(http::field::content_type, "text/plain");
+    response.body() = "Hello, World!\r\n#";
+    response.body() += system::serialize(count++);
+    response.prepare_payload();
+
+    SEND(response, handle_send, _1);
+}
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin

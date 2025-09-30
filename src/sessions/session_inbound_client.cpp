@@ -198,10 +198,13 @@ void session_inbound_client::handle_channel_start(const code& LOG_ONLY(ec),
 }
 
 void session_inbound_client::attach_protocols(
-    const channel::ptr& BC_DEBUG_ONLY(channel)) NOEXCEPT
+    const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
+
+    const auto self = shared_from_this();
+    channel->attach<protocol_client>(self)->start();
 }
 
 // TODO: presently nothing to invoke channel stop when the channel drops.

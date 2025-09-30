@@ -186,6 +186,24 @@ private:
     bool started_{};
 };
 
+// TODO: channel and session could be obtained using a pure virtual base method
+// implemented by intermediate base protocols (e.g. client, peer). This would
+// eliminate redundant storage at a minimal upcasting cost.
+
+#define DECLARE_SEND() \
+    template <class Derived, class Message, typename Method, typename... Args> \
+    void send(const Message& message, Method&& method, Args&&... args) NOEXCEPT \
+    { channel_->send<Message>(message, BIND_SHARED(method, args)); }
+
+#define DECLARE_SUBSCRIBE_CHANNEL() \
+    template <class Derived, class Message, typename Method, typename... Args> \
+    void subscribe_channel(Method&& method, Args&&... args) NOEXCEPT \
+    { channel_->subscribe<Message>(BIND_SHARED(method, args)); }
+
+#define SEND(message, method, ...) \
+    send<CLASS>(message, &CLASS::method, __VA_ARGS__)
+#define SUBSCRIBE_CHANNEL(message, method, ...) \
+    subscribe_channel<CLASS, message>(&CLASS::method, __VA_ARGS__)
 #define SUBSCRIBE_BROADCAST(message, method, ...) \
     subscribe_broadcast<CLASS, message>(&CLASS::method, __VA_ARGS__)
 #define BROADCAST(message, ptr) broadcast<message>(ptr)

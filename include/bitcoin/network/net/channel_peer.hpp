@@ -55,7 +55,7 @@ public:
         distributor_.subscribe(std::forward<Handler>(handler));
     }
 
-    /// Serialize and write a message to the peer (requires strand).
+    /// Serialize and write message to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
     template <class Message>
     void send(const Message& message, result_handler&& complete) NOEXCEPT
