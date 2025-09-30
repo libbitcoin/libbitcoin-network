@@ -126,7 +126,6 @@ void channel_client::handle_read_request(const code& ec,
         }
 
         subscriber_.notify(code, detach(parser_));
-        buffer_.consume(buffer_.size());
     }
 
     // Wait on more bytes for this request (if need_more), or for next request.
@@ -135,8 +134,8 @@ void channel_client::handle_read_request(const code& ec,
 
 // Parser utilities.
 // ----------------------------------------------------------------------------
-// static
 
+// static
 void channel_client::initialize(http_parser_ptr& parser) NOEXCEPT
 {
     parser = std::make_unique<asio::http_parser>();
@@ -144,6 +143,7 @@ void channel_client::initialize(http_parser_ptr& parser) NOEXCEPT
     parser->body_limit(max_body);
 }
 
+// static
 asio::http_request channel_client::detach(http_parser_ptr& parser) NOEXCEPT
 {
     BC_ASSERT(parser);
@@ -152,24 +152,26 @@ asio::http_request channel_client::detach(http_parser_ptr& parser) NOEXCEPT
     return out;
 }
 
-// Handles exceptions, error code conversion, and const_buffer wrapping.
-code channel_client::parse(const asio::http_buffer& buffer) NOEXCEPT
+// Handles exceptions, error code conversion, buffer wrapping, and consumption.
+code channel_client::parse(asio::http_buffer& buffer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     using namespace boost::beast;
-    error_code result{};
+    error_code ec{};
+    size_t parsed{};
 
     try
     {
-        parser_->put(asio::const_buffer{ buffer.data() }, result);
+        parsed = parser_->put(asio::const_buffer{ buffer.data() }, ec);
     }
     catch (const std::exception& LOG_ONLY(e))
     {
         LOGF("Request parse exception [" << authority() << "] " << e.what());
-        result = http::error::bad_alloc;
+        ec = http::error::bad_alloc;
     }
 
-    return error::beast_to_error_code(result);
+    buffer.consume(parsed);
+    return error::beast_to_error_code(ec);
 }
 
 BC_POP_WARNING()

@@ -130,7 +130,7 @@ private:
     // Parser utilities.
     static asio::http_request detach(http_parser_ptr& parser) NOEXCEPT;
     static void initialize(http_parser_ptr& parser) NOEXCEPT;
-    code parse(const asio::http_buffer& buffer) NOEXCEPT;
+    code parse(asio::http_buffer& buffer) NOEXCEPT;
 
     void read_request() NOEXCEPT;
     void handle_read_request(const code& ec, size_t bytes_read) NOEXCEPT;
