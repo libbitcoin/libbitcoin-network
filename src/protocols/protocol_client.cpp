@@ -7309,7 +7309,8 @@ void protocol_client::handle_receive_request(const code& ec,
     {
         http_response response{ http::status::http_version_not_supported, 11 };
         response.set(http::field::server, BC_USER_AGENT);
-        SEND(response, handle_bad_request, _1, error::http_version_not_supported);
+        SEND(response, handle_unalive_request, _1,
+            error::http_version_not_supported);
         return;
     }
 
@@ -7333,7 +7334,7 @@ void protocol_client::handle_receive_request(const code& ec,
         response.set(http::field::content_type, "image/x-icon");
         response.body() = to_string(hexicon);
         response.prepare_payload();
-        SEND(response, handle_send, _1);
+        SEND(response, handle_unalive_request, _1, error::im_a_teapot);
         return;
     }
 
@@ -7361,10 +7362,11 @@ void protocol_client::handle_receive_request(const code& ec,
 
     http_response response{ http::status::method_not_allowed, 11 };
     response.set(http::field::server, BC_USER_AGENT);
-    SEND(response, handle_bad_request, _1, error::method_not_allowed);
+    SEND(response, handle_unalive_request, _1, error::method_not_allowed);
 }
 
-void protocol_client::handle_bad_request(const code&, const code& reason) NOEXCEPT
+void protocol_client::handle_unalive_request(const code&,
+    const code& reason) NOEXCEPT
 {
     stop(reason);
 }

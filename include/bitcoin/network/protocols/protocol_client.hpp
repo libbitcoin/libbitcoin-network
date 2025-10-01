@@ -48,7 +48,7 @@ protected:
         const asio::http_request& request) NOEXCEPT;
 
 private:
-    void handle_bad_request(const code& ec, const code& reason) NOEXCEPT;
+    void handle_unalive_request(const code& ec, const code& reason) NOEXCEPT;
 
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
