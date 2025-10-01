@@ -85,7 +85,7 @@ void channel_client::read_request() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Post handle_read_heading to strand upon stop, error, or buffer full.
+    // 'prepare' appends available to write portion of buffer (moves pointers).
     read_some(buffer_.prepare(buffer_.max_size() - buffer_.size()),
         std::bind(&channel_client::handle_read_request,
             shared_from_base<channel_client>(), _1, _2));
@@ -115,6 +115,7 @@ void channel_client::handle_read_request(const code& ec,
         return;
     }
 
+    // 'commit' identifies written portion of buffer (moves pointers).
     buffer_.commit(bytes_read);
     const auto code = parse(buffer_);
 
@@ -162,6 +163,7 @@ code channel_client::parse(asio::http_buffer& buffer) NOEXCEPT
 
     try
     {
+        // 'put' parses some portion of unparsed buffer (defined by .data()).
         parsed = parser_->put(asio::const_buffer{ buffer.data() }, ec);
     }
     catch (const std::exception& LOG_ONLY(e))
@@ -170,6 +172,7 @@ code channel_client::parse(asio::http_buffer& buffer) NOEXCEPT
         ec = http::error::bad_alloc;
     }
 
+    // 'consume' increases parsed portion of buffer (moves pointers).
     buffer.consume(parsed);
     return error::beast_to_error_code(ec);
 }
