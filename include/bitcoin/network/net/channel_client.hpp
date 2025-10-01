@@ -115,7 +115,7 @@ public:
     }
 
     /// Construct client channel to encapsulate and communicate on the socket.
-    channel_client(const logger& log, const network::socket::ptr& socket,
+    channel_client(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
 
     /// Idempotent, may be called multiple times.
