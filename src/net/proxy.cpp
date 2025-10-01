@@ -143,7 +143,7 @@ void proxy::do_subscribe_stop(const result_handler& handler,
 // Read partial (up to buffer-sized) message from peer.
 // ----------------------------------------------------------------------------
 
-void proxy::read_some(const data_slab& buffer,
+void proxy::read_some(const asio::mutable_buffer& buffer,
     count_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -156,7 +156,7 @@ void proxy::read_some(const data_slab& buffer,
 void proxy::read(const data_slab& buffer, count_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    socket_->read(buffer, std::move(handler));
+    socket_->read({ buffer.begin(), buffer.size() }, std::move(handler));
 }
 
 // Send cycle (send continues until queue is empty).
@@ -164,6 +164,7 @@ void proxy::read(const data_slab& buffer, count_handler&& handler) NOEXCEPT
 // stackoverflow.com/questions/7754695/boost-asio-async-write-how-to-not-
 // interleaving-async-write-calls
 
+// Cannot reasonably support non-owner data object such as asio::const_buffer.
 void proxy::write(const chunk_ptr& payload, result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -196,7 +197,7 @@ void proxy::write() NOEXCEPT
         return;
 
     auto& job = queue_.front();
-    socket_->write(*job.first,
+    socket_->write({ job.first->data(), job.first->size() },
         std::bind(&proxy::handle_write,
             shared_from_this(), _1, _2, job.first, job.second));
 }

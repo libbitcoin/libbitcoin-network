@@ -41,31 +41,11 @@ class BCT_API protocol_peer
 protected:
     typedef std::shared_ptr<protocol_peer> ptr;
 
-    /// Messaging.
-    /// -----------------------------------------------------------------------
-
-    /// Send a message instance to peer (use SEND).
-    template <class Derived, class Message, typename Method, typename... Args>
-    void send(const Message& message, Method&& method, Args&&... args) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        channel_->send<Message>(message, BIND_SHARED(method, args));
-    }
-
-    /// Subscribe to channel messages by type (use SUBSCRIBE_CHANNEL).
-    /// Method is invoked with error::subscriber_stopped if already stopped.
-    template <class Derived, class Message, typename Method, typename... Args>
-    void subscribe_channel(Method&& method, Args&&... args) NOEXCEPT
-    {
-        BC_ASSERT_MSG(stranded(), "strand");
-        channel_->subscribe<Message>(BIND_SHARED(method, args));
-    }
-
-
-    /// Start/Stop.
-    /// -----------------------------------------------------------------------
+    DECLARE_SEND();
+    DECLARE_SUBSCRIBE_CHANNEL();
 
     /// Construct an instance.
+    /// -----------------------------------------------------------------------
     protocol_peer(const session::ptr& session,
         const channel::ptr& channel) NOEXCEPT;
 
@@ -116,11 +96,6 @@ private:
     // This is thread safe.
     const session_peer::ptr session_;
 };
-
-#define SEND(message, method, ...) \
-    send<CLASS>(message, &CLASS::method, __VA_ARGS__)
-#define SUBSCRIBE_CHANNEL(message, method, ...) \
-    subscribe_channel<CLASS, message>(&CLASS::method, __VA_ARGS__)
 
 } // namespace network
 } // namespace libbitcoin

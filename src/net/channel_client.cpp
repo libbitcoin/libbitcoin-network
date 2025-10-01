@@ -19,6 +19,7 @@
 #include <bitcoin/network/net/channel_client.hpp>
 
 #include <algorithm>
+#include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -30,6 +31,8 @@
 namespace libbitcoin {
 namespace network {
 
+#define CLASS channel_client
+
 using namespace system;
 using namespace messages::rpc;
 using namespace std::placeholders;
@@ -37,18 +40,18 @@ using namespace std::ranges;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+// TODO: inactivity timeout, duration timeout, connection limit.
 channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT
   : channel(log, socket, settings, identifier),
-    distributor_(socket->strand()),
-    buffer_{ max_head + max_body },
+    subscriber_(strand()),
+    buffer_(ceilinged_add(max_head, max_body)),
     tracker<channel_client>(log)
 {
-    parser_.header_limit(max_head);
-    parser_.body_limit(max_body);
+    initialize(parser_);
 }
 
-// Stop (started upon create).
+// Start/stop/resume (started upon create).
 // ----------------------------------------------------------------------------
 
 void channel_client::stop(const code& ec) NOEXCEPT
@@ -66,51 +69,25 @@ void channel_client::stop(const code& ec) NOEXCEPT
 void channel_client::do_stop(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    distributor_.stop(ec);
+    subscriber_.stop(ec, {});
 }
-
-// Pause/resume (paused upon create).
-// ----------------------------------------------------------------------------
 
 void channel_client::resume() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     channel::resume();
-    read_resume();
+    read_request();
 }
 
 // Read cycle (read continues until stop called, call only once).
 // ----------------------------------------------------------------------------
 
-void channel_client::read_resume() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    BC_ASSERT_MSG(is_zero(buffer_.size()), "call read_resume only once");
-
-    if (stopped() || paused())
-        return;
-
-    read_request();
-}
-
 void channel_client::read_request() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Limit set on construct, does not result in allocation.
-    const auto size   = buffer_.size();
-    const auto limit  = buffer_.max_size();
-    const auto remain = floored_subtract(limit, size);
-
-    // TODO: read_some(mutable_buffer buffer,...) allows for simplification of
-    // TODO: read_some(buffer_.prepare(remain),...)
-    const auto buffer = buffer_.prepare(remain);
-    const auto begin  = pointer_cast<uint8_t>(buffer.data());
-    const auto end    = std::next(begin, remain);
-
-    // Post handle_read_heading to strand upon stop, error, or buffer full.
-    read_some({ begin, end },
+    // 'prepare' appends available to write portion of buffer (moves pointers).
+    read_some(buffer_.prepare(buffer_.max_size() - buffer_.size()),
         std::bind(&channel_client::handle_read_request,
             shared_from_base<channel_client>(), _1, _2));
 }
@@ -139,71 +116,78 @@ void channel_client::handle_read_request(const code& ec,
         return;
     }
 
-    // Commits read bytes_read to buffer size.
-    const auto code = parse_buffer(bytes_read);
+    // 'commit' identifies written portion of buffer (moves pointers).
+    buffer_.commit(bytes_read);
+    const auto code = parse(buffer_);
 
+    // Read more because it was requested or not making progress.
     if (code == error::need_more)
     {
-        // Wait on more bytes for this request.
         read_request();
         return;
     }
 
+    // Log but allow protocol to handle and respond to the invalid request.
     if (code)
     {
-        LOGR("Request parse error [" << authority() << "] " << code.message());
+        LOGR("Invalid request [" << authority() << "] " << code.message());
     }
 
-    // Clears buffer (size set to zero).
-    // Failure responses are sent by handler (followed by stop).
-    notify(code, parser_.release());
-
-    // Wait on next request.
+    subscriber_.notify(code, detach(parser_));
     read_request();
 }
 
-// put() will not return http::error::need_more if either the header_limit or
-// body_limit has been reached (returns other specific error code).
-code channel_client::parse_buffer(size_t bytes_read) NOEXCEPT
+// Parser utilities.
+// ----------------------------------------------------------------------------
+
+// static
+void channel_client::initialize(http_parser_ptr& parser) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
-    using namespace boost::asio;
-    using namespace boost::beast;
-
-    error_code result{};
-    buffer_.commit(bytes_read);
-
-    try
-    {
-        parser_.put({ buffer_.data() }, result);
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Request parse exception [" << authority() << "] " << e.what());
-        result = http::error::bad_alloc;
-    }
-
-    return error::beast_to_error_code(result);
+    parser = std::make_unique<asio::http_parser>();
+    parser->header_limit(max_head);
+    parser->body_limit(max_body);
 }
 
-code channel_client::notify(const code&,
-    const asio::http_request&) NOEXCEPT
+// static
+asio::http_request channel_client::detach(http_parser_ptr& parser) NOEXCEPT
+{
+    BC_ASSERT(parser);
+    auto out = parser->release();
+    initialize(parser);
+    return out;
+}
+
+// Handles exceptions, error conversion, buffer wrap/consume, and iteration.
+code channel_client::parse(asio::http_buffer& buffer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    using namespace boost::beast;
+    size_t parsed{ buffer.size() };
+    error_code ec{};
 
-    // These correspond to libbitcoin request.
-    ////const auto target = request.target();
-    ////const auto method = request.method();
-    ////const auto version = request.version();
-    ////const auto& field = request["field-name"];
-    ////const auto& body = request.body();
+    // Making progress, not done, and no other error (stopped ensures halt).
+    while (!is_zero(parsed) && !parser_->is_done() && !ec && !stopped())
+    {
+        try
+        {
+            // 'put' parses some part of unparsed buffer (defined by .data()).
+            parsed = parser_->put(asio::const_buffer{ buffer.data() }, ec);
 
-    // TODO: process and distribute request.
-    //// distributor_.notify(id, source);
+            // 'consume' increases parsed portion of buffer (moves pointers).
+            buffer.consume(parsed);
+        }
+        catch (const std::exception& LOG_ONLY(e))
+        {
+            LOGF("Request parse exception [" << authority() << "] " << e.what());
+            ec = http::error::bad_alloc;
+        }
+    }
 
-    // Invalidates the above parser reference (cannot be passed on above).
-    buffer_.consume(buffer_.size());
-    return error::success;
+    // Not making progress, not done, and no other error - presumes more data.
+    if (is_zero(parsed) && !parser_->is_done() && !ec)
+        return error::need_more;
+
+    return error::beast_to_error_code(ec);
 }
 
 BC_POP_WARNING()

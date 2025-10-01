@@ -62,7 +62,9 @@ typedef std::shared_ptr<socket> socket_ptr;
 typedef boost::beast::flat_buffer http_buffer;
 typedef boost::beast::http::string_body http_string_body;
 typedef boost::beast::http::request<http_string_body> http_request;
+typedef boost::beast::http::response<http_string_body> http_response;
 typedef boost::beast::http::request_parser<http_string_body> http_parser;
+typedef boost::beast::http::serializer<false, http_string_body> http_serializer;
 
 constexpr auto max_connections = 
     boost::asio::socket_base::max_listen_connections;

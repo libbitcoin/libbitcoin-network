@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/channel_peer.hpp>
 
-#include <functional>
 #include <memory>
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
