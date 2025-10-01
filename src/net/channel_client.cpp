@@ -40,6 +40,7 @@ using namespace std::ranges;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+// TODO: inactivity timeout, duration timeout, connection limit.
 channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT
   : channel(log, socket, settings, identifier),
@@ -119,17 +120,20 @@ void channel_client::handle_read_request(const code& ec,
     buffer_.commit(bytes_read);
     const auto code = parse(buffer_);
 
-    if (code != error::need_more)
+    // Read more because it was requested or not making progress.
+    if (code == error::need_more)
     {
-        if (code)
-        {
-            LOGR("Invalid request [" << authority() << "] " << code.message());
-        }
-
-        subscriber_.notify(code, detach(parser_));
+        read_request();
+        return;
     }
 
-    // Wait on more bytes for this request (if need_more), or for next request.
+    // Log but allow protocol to handle and respond to the invalid request.
+    if (code)
+    {
+        LOGR("Invalid request [" << authority() << "] " << code.message());
+    }
+
+    subscriber_.notify(code, detach(parser_));
     read_request();
 }
 
@@ -153,27 +157,36 @@ asio::http_request channel_client::detach(http_parser_ptr& parser) NOEXCEPT
     return out;
 }
 
-// Handles exceptions, error code conversion, buffer wrapping, and consumption.
+// Handles exceptions, error conversion, buffer wrap/consume, and iteration.
 code channel_client::parse(asio::http_buffer& buffer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     using namespace boost::beast;
+    size_t parsed{ buffer.size() };
     error_code ec{};
-    size_t parsed{};
 
-    try
+    // Making progress, not done, and no other error (stopped ensures halt).
+    while (!is_zero(parsed) && !parser_->is_done() && !ec && !stopped())
     {
-        // 'put' parses some portion of unparsed buffer (defined by .data()).
-        parsed = parser_->put(asio::const_buffer{ buffer.data() }, ec);
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Request parse exception [" << authority() << "] " << e.what());
-        ec = http::error::bad_alloc;
+        try
+        {
+            // 'put' parses some part of unparsed buffer (defined by .data()).
+            parsed = parser_->put(asio::const_buffer{ buffer.data() }, ec);
+
+            // 'consume' increases parsed portion of buffer (moves pointers).
+            buffer.consume(parsed);
+        }
+        catch (const std::exception& LOG_ONLY(e))
+        {
+            LOGF("Request parse exception [" << authority() << "] " << e.what());
+            ec = http::error::bad_alloc;
+        }
     }
 
-    // 'consume' increases parsed portion of buffer (moves pointers).
-    buffer.consume(parsed);
+    // Not making progress, not done, and no other error - presumes more data.
+    if (is_zero(parsed) && !parser_->is_done() && !ec)
+        return error::need_more;
+
     return error::beast_to_error_code(ec);
 }
 
