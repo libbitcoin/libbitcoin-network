@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(channel_client__stop__all_subscribed__expected)
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_not_stopped)
+BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_stopped)
 {
     const logger log{};
     threadpool pool(2);
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_not_stopped)
     const auto handler = [&](code ec) NOEXCEPT
     {
         // Send failure causes stop before handler invoked.
-        result &= !channel_ptr->stopped();
+        result &= channel_ptr->stopped();
         promise.set_value(ec);
     };
 
@@ -195,14 +195,11 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_not_stopped)
     });
 
     BOOST_REQUIRE(!channel_ptr->stopped());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get().value(), to_value(boost::beast::http::error::header_limit));
+    BOOST_REQUIRE_EQUAL(promise.get_future().get().value(), error::bad_stream);
     BOOST_REQUIRE(result);
-
-    channel_ptr->stop(error::service_stopped);
-    BOOST_REQUIRE(channel_ptr->stopped());
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected_not_stopped)
+BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected_stopped)
 {
     const logger log{};
     threadpool pool(2);
@@ -218,17 +215,14 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected_not_stop
         channel_ptr->send(asio::http_response{}, [&](code ec)
         {
             // Send failure causes stop before handler invoked.
-            result &= !channel_ptr->stopped();
+            result &= channel_ptr->stopped();
             promise.set_value(ec);
         });
     });
 
     BOOST_REQUIRE(!channel_ptr->stopped());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get().value(), to_value(boost::beast::http::error::header_limit));
+    BOOST_REQUIRE_EQUAL(promise.get_future().get().value(), error::bad_stream);
     BOOST_REQUIRE(result);
-
-    channel_ptr->stop(error::service_stopped);
-    BOOST_REQUIRE(channel_ptr->stopped());
 }
 
 BOOST_AUTO_TEST_CASE(channel_client__paused__resume_after_read_fail__true)
