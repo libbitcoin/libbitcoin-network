@@ -199,8 +199,11 @@ enum error_t : uint8_t
 // No current need for error_code equivalence mapping.
 DECLARE_ERROR_T_CODE_CATEGORY(error);
 
-/// Shortcircuit common code mapping.
+/// Shortcircuit common boost code mapping.
 BCT_API bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT;
+
+/// Shortcircuit common beast code mapping.
+BCT_API bool beast_is_canceled(const error::boost_code& ec) NOEXCEPT;
 
 /// Unfortunately std::error_code and boost::system::error_code are distinct
 /// types, so they do not compare as would be expected across distinct

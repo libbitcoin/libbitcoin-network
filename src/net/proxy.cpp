@@ -140,23 +140,52 @@ void proxy::do_subscribe_stop(const result_handler& handler,
     complete(error::success);
 }
 
-// Read partial (up to buffer-sized) message from peer.
+// Reads.
 // ----------------------------------------------------------------------------
 
 void proxy::read_some(const asio::mutable_buffer& buffer,
     count_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
     socket_->read_some(buffer, std::move(handler));
 }
 
-// Read complete (buffer-sized) message from peer.
+void proxy::read(const asio::mutable_buffer& buffer,
+    count_handler&& handler) NOEXCEPT
+{
+    socket_->read(buffer, std::move(handler));
+}
+
+void proxy::read(http_flat_buffer& buffer, http_string_request& request,
+    count_handler&& handler) NOEXCEPT
+{
+    socket_->http_read(request, std::move(handler));
+}
+
+void proxy::read(http_string_request& request,
+    count_handler&& handler) NOEXCEPT
+{
+    socket_->http_read(request, std::move(handler));
+}
+
+// Writes.
 // ----------------------------------------------------------------------------
 
-void proxy::read(const data_slab& buffer, count_handler&& handler) NOEXCEPT
+void proxy::write(const http_string_response& response,
+    count_handler&& handler) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "strand");
-    socket_->read({ buffer.begin(), buffer.size() }, std::move(handler));
+    socket_->http_write(response, std::move(handler));
+}
+
+void proxy::write(const http_data_response& response,
+    count_handler&& handler) NOEXCEPT
+{
+    socket_->http_write(response, std::move(handler));
+}
+
+void proxy::write(http_file_response& response,
+    count_handler&& handler) NOEXCEPT
+{
+    socket_->http_write(response, std::move(handler));
 }
 
 // Send cycle (send continues until queue is empty).
@@ -164,8 +193,17 @@ void proxy::read(const data_slab& buffer, count_handler&& handler) NOEXCEPT
 // stackoverflow.com/questions/7754695/boost-asio-async-write-how-to-not-
 // interleaving-async-write-calls
 
-// Cannot reasonably support non-owner data object such as asio::const_buffer.
-void proxy::write(const chunk_ptr& payload, result_handler&& handler) NOEXCEPT
+void proxy::write(const asio::const_buffer& payload,
+    result_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_write,
+            shared_from_this(), payload, std::move(handler)));
+}
+
+// private
+void proxy::do_write(const asio::const_buffer& payload,
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -178,8 +216,8 @@ void proxy::write(const chunk_ptr& payload, result_handler&& handler) NOEXCEPT
 
     const auto started = !queue_.empty();
     queue_.push_back(std::make_pair(payload, std::move(handler)));
-    total_ = ceilinged_add(total_.load(), payload->size());
-    backlog_ = ceilinged_add(backlog_.load(), payload->size());
+    total_ = ceilinged_add(total_.load(), payload.size());
+    backlog_ = ceilinged_add(backlog_.load(), payload.size());
 
     LOGX("Queue for [" << authority() << "]: " << queue_.size()
         << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
@@ -189,6 +227,7 @@ void proxy::write(const chunk_ptr& payload, result_handler&& handler) NOEXCEPT
         write();
 }
 
+// private
 void proxy::write() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -197,13 +236,14 @@ void proxy::write() NOEXCEPT
         return;
 
     auto& job = queue_.front();
-    socket_->write({ job.first->data(), job.first->size() },
+    socket_->write({ job.first.data(), job.first.size() },
         std::bind(&proxy::handle_write,
             shared_from_this(), _1, _2, job.first, job.second));
 }
 
+// private
 void proxy::handle_write(const code& ec, size_t,
-    const system::chunk_ptr& /*LOG_ONLY(payload)*/,
+    const asio::const_buffer& /*LOG_ONLY(payload)*/,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -216,7 +256,7 @@ void proxy::handle_write(const code& ec, size_t,
     }
 
     // guarded by write().
-    backlog_ = floored_subtract(backlog_.load(), queue_.front().first->size());
+    backlog_ = floored_subtract(backlog_.load(), queue_.front().first.size());
     queue_.pop_front();
 
     LOGX("Dequeue for [" << authority() << "]: " << queue_.size()
@@ -232,6 +272,7 @@ void proxy::handle_write(const code& ec, size_t,
         if (ec != error::peer_disconnect && ec != error::operation_canceled &&
             ec != error::connect_failed)
         {
+            // BUGBUG: payload changed from data_chunk_ptr to const_buffer.
             // TODO: messages dependency, move to channel.
             ////LOGF("Send failure " << heading::get_command(*payload) << " to ["
             ////    << authority() << "] (" << payload->size() << " bytes) "
@@ -243,6 +284,7 @@ void proxy::handle_write(const code& ec, size_t,
         return;
     }
 
+    // BUGBUG: payload changed from data_chunk_ptr to const_buffer.
     // TODO: messages dependency, move to channel.
     ////LOGX("Sent " <<  heading::get_command(*payload) << " to ["
     ////    << authority() << "] (" << payload->size() << " bytes)");

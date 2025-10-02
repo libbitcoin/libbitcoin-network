@@ -164,6 +164,49 @@ void socket::write(const asio::const_buffer& in,
             shared_from_this(), in, std::move(handler)));
 }
 
+// HTTP I/O.
+// ----------------------------------------------------------------------------
+
+void socket::http_read(http_flat_buffer& buffer, http_string_request& request,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_http_read_string_buffered, shared_from_this(),
+            std::ref(buffer), std::ref(request), std::move(handler)));
+}
+
+void socket::http_read(http_string_request& request,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_http_read_string, shared_from_this(),
+            std::ref(request), std::move(handler)));
+}
+
+void socket::http_write(const http_string_response& response,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_http_write_string,
+            shared_from_this(), std::cref(response), std::move(handler)));
+}
+
+void socket::http_write(const http_data_response& response,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_http_write_data,
+            shared_from_this(), std::cref(response), std::move(handler)));
+}
+
+void socket::http_write(http_file_response& response,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_http_write_file,
+            shared_from_this(), std::ref(response), std::move(handler)));
+}
+
 // executors (private).
 // ----------------------------------------------------------------------------
 // These execute on the strand to protect the member socket.
@@ -241,6 +284,130 @@ void socket::do_write(const asio::const_buffer& in,
     catch (const std::exception& LOG_ONLY(e))
     {
         LOGF("Exception @ do_write: " << e.what());
+        handler(error::operation_failed, zero);
+    }
+}
+
+// http executors (private).
+// ----------------------------------------------------------------------------
+
+void socket::do_http_read_string_buffered(
+    const std::reference_wrapper<http_flat_buffer>& buffer,
+    const std::reference_wrapper<http_string_request>& request,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    auto complete = [=](const code& ec, size_t size) NOEXCEPT
+    {
+        buffer.get().consume(size);
+        handler(ec, size);
+    };
+
+    try
+    {
+        // This operation posts handler to the strand.
+        boost::beast::http::async_read(socket_, buffer.get(), request.get(),
+            std::bind(&socket::handle_http,
+                shared_from_this(), _1, _2, std::move(complete)));
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_http_read_string_buffered: " << e.what());
+        handler(error::operation_failed, zero);
+    }
+}
+
+void socket::do_http_read_string(
+    const std::reference_wrapper<http_string_request>& request,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Performance: a temporary buffer is allocated for each request.
+    const auto buffer = std::make_shared<http_flat_buffer>();
+    auto complete = [=](const code& ec, size_t size) NOEXCEPT
+    {
+        buffer->consume(size);
+        handler(ec, size);
+    };
+
+    try
+    {
+        // This operation posts handler to the strand.
+        boost::beast::http::async_read(socket_, *buffer, request.get(),
+            std::bind(&socket::handle_http,
+                shared_from_this(), _1, _2, std::move(complete)));
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_http_read_string: " << e.what());
+        handler(error::operation_failed, zero);
+    }
+}
+
+void socket::do_http_write_string(
+    const std::reference_wrapper<const http_string_response>& response,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    try
+    {
+        // This operation posts handler to the strand.
+        boost::beast::http::async_write(socket_, response.get(),
+            std::bind(&socket::handle_http,
+                shared_from_this(), _1, _2, handler));
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_http_write_string: " << e.what());
+        handler(error::operation_failed, zero);
+    }
+}
+
+void socket::do_http_write_data(
+    const std::reference_wrapper<const http_data_response>& response,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    try
+    {
+        // This operation posts handler to the strand.
+        boost::beast::http::async_write(socket_, response.get(),
+            std::bind(&socket::handle_http,
+                shared_from_this(), _1, _2, handler));
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_http_write_data: " << e.what());
+        handler(error::operation_failed, zero);
+    }
+}
+
+void socket::do_http_write_file(
+    const std::reference_wrapper<http_file_response>& response,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    const auto writer = std::make_shared<http_file_serializer>(response.get());
+    auto complete = [writer, handler](const code& ec, size_t size) NOEXCEPT
+    {
+        handler(ec, size);
+    };
+
+    try
+    {
+        // This operation posts handler to the strand.
+        boost::beast::http::async_write(socket_, *writer,
+            std::bind(&socket::handle_http,
+                shared_from_this(), _1, _2, std::move(complete)));
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_http_write_file: " << e.what());
         handler(error::operation_failed, zero);
     }
 }
@@ -323,6 +490,30 @@ void socket::handle_io(const error::boost_code& ec, size_t size,
     if (code == error::unknown)
     {
         LOGX("Raw io code (" << ec.value() << ") " << ec.category().name()
+            << ":" << ec.message());
+    }
+
+    handler(code, size);
+}
+
+void socket::handle_http(const error::boost_code& ec, size_t size,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // TODO: verify codes.
+    if (error::beast_is_canceled(ec))
+    {
+        handler(error::channel_stopped, size);
+        return;
+    }
+
+    // Translate other beast error codes and invoke caller handler.
+    const auto code = error::beast_to_error_code(ec);
+
+    if (code == error::unknown)
+    {
+        LOGX("Raw beast code (" << ec.value() << ") " << ec.category().name()
             << ":" << ec.message());
     }
 

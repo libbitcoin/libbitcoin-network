@@ -65,6 +65,14 @@ constexpr auto max_connections = boost::asio::socket_base::max_listen_connection
 // flat_buffer
 typedef boost::beast::flat_buffer http_flat_buffer;
 
+// beast::http::vector_body<uint8_t>
+typedef boost::beast::http::vector_body<uint8_t> http_data_body;
+typedef boost::beast::http::request<http_data_body> http_data_request;
+typedef boost::beast::http::response<http_data_body> http_data_response;
+typedef boost::beast::http::request_parser<http_data_body> http_data_parser;
+typedef boost::beast::http::serializer<false, http_data_body> http_data_serializer;
+typedef std::unique_ptr<http_data_parser> http_data_parser_ptr;
+
 // beast::http::string_body
 typedef boost::beast::http::string_body http_string_body;
 typedef boost::beast::http::request<http_string_body> http_string_request;
