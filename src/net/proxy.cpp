@@ -251,7 +251,6 @@ void proxy::handle_write(const code& ec, size_t bytes,
     if (stopped())
     {
         LOGQ("Send abort [" << authority() << "]");
-        stop(error::channel_stopped);
         return;
     }
 
@@ -279,7 +278,6 @@ void proxy::handle_write(const code& ec, size_t bytes,
             ////    << ec.message());
         }
 
-        stop(ec);
         handler(ec, zero);
         return;
     }
