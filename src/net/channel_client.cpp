@@ -87,12 +87,6 @@ void channel_client::read_request() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    ////// TODO:
-    ////http_string_request request{};
-    ////read(buffer_, request,
-    ////    std::bind(&channel_client::handle_read_request,
-    ////        shared_from_base<channel_client>(), _1, _2));
-
     // 'prepare' appends available to write portion of buffer (moves pointers).
     read_some(buffer_.prepare(buffer_.max_size() - buffer_.size()),
         std::bind(&channel_client::handle_read_request,
@@ -113,7 +107,8 @@ void channel_client::handle_read_request(const code& ec,
 
     if (ec)
     {
-        if (ec != error::peer_disconnect && ec != error::operation_canceled)
+        if (ec != error::peer_disconnect &&
+            ec != error::operation_canceled)
         {
             LOGF("Request read failure [" << authority() << "] "
                 << ec.message());
