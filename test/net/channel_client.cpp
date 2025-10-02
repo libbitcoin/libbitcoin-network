@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE(channel_client__subscribe_message__subscribed__expected)
     std::promise<code> message_stopped;
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->subscribe<asio::http_request>(
-            [&](code ec, const asio::http_request& request) NOEXCEPT
+        channel_ptr->subscribe<http_string_request>(
+            [&](code ec, const http_string_request& request) NOEXCEPT
             {
                 result &= is_zero(request.payload_size());
                 message_stopped.set_value(ec);
@@ -151,8 +151,8 @@ BOOST_AUTO_TEST_CASE(channel_client__stop__all_subscribed__expected)
             stop1_stopped.set_value(ec);
         });
 
-        channel_ptr->subscribe<asio::http_request>(
-            [&](code ec, const asio::http_request& request) NOEXCEPT
+        channel_ptr->subscribe<http_string_request>(
+            [&](code ec, const http_string_request& request) NOEXCEPT
             {
                 result &= is_zero(request.payload_size());
                 message_stopped.set_value(ec);
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_stopped)
 
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send<asio::http_response>({}, handler);
+        channel_ptr->send<http_string_response>({}, handler);
     });
 
     BOOST_REQUIRE(!channel_ptr->stopped());
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected_stopped)
     std::promise<code> promise;
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send(asio::http_response{}, [&](code ec)
+        channel_ptr->send(http_string_response{}, [&](code ec)
         {
             // Send failure causes stop before handler invoked.
             result &= channel_ptr->stopped();

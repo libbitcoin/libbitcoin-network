@@ -38,15 +38,15 @@ class BCT_API channel_client
   : public channel, protected tracker<channel_client>
 {
 public:
-    typedef subscriber<asio::http_request> request_subscriber;
+    typedef subscriber<http_string_request> request_subscriber;
     typedef request_subscriber::handler request_notifier;
 
     typedef std::shared_ptr<channel_client> ptr;
 
     /// Subscribe to http_response from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
-    template <class Message, typename Handler = asio::http_request,
-        if_same<Message, asio::http_request> = true>
+    template <class Message, typename Handler = http_string_request,
+        if_same<Message, http_string_request> = true>
     void subscribe(Handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
@@ -55,24 +55,24 @@ public:
 
     /// Serialize and write http_response to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
-    template <class Message, if_same<Message, asio::http_response> = true>
+    template <class Message, if_same<Message, http_string_response> = true>
     void send(const Message& response, result_handler&& complete) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
 
-        if (!response.body().empty() && !response.has_content_length())
+        const auto& body = response.body();
+        if (!body.empty() && !response.has_content_length())
         {
             const code ec{ error::oversized_payload };
-            LOGF("Serialization failure (http_response), " << ec.message());
+            LOGF("Serialization failure, " << ec.message());
             complete(ec);
             return;
         }
 
         using namespace system;
         using namespace boost::beast;
-        const auto& body = response.body();
         const auto body_size = body.size();
         const auto data = std::make_shared<data_chunk>();
         size_t head_size{};
@@ -89,7 +89,7 @@ public:
 
         // Serialize headers to buffer.
         error_code ec{};
-        asio::http_serializer writer{ response };
+        http_string_serializer writer{ response };
         writer.split(true);
         writer.next(ec, head_writer);
         writer.consume(head_size);
@@ -100,7 +100,7 @@ public:
 
         if (ec)
         {
-            LOGF("Serialization failure (http_response), " << ec.message());
+            LOGF("Serialization failure, " << ec.message());
             complete(ec);
             return;
         }
@@ -114,6 +114,15 @@ public:
         BC_POP_WARNING()
     }
 
+    /// Serialize and write http_file_request to peer (requires strand).
+    /// Completion handler is always invoked on the channel strand.
+    template <class Message, if_same<Message, http_file_response> = true>
+    void send(const http_file_response&, result_handler&& complete) NOEXCEPT
+    {
+        // TODO: implement.
+        complete(error::not_implemented);
+    }
+
     /// Construct client channel to encapsulate and communicate on the socket.
     channel_client(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
@@ -125,20 +134,18 @@ public:
     void resume() NOEXCEPT override;
 
 private:
-    using http_parser_ptr = std::unique_ptr<asio::http_parser>;
-
     // Parser utilities.
-    static asio::http_request detach(http_parser_ptr& parser) NOEXCEPT;
-    static void initialize(http_parser_ptr& parser) NOEXCEPT;
-    code parse(asio::http_buffer& buffer) NOEXCEPT;
+    static http_string_request detach(http_string_parser_ptr& parser) NOEXCEPT;
+    static void initialize(http_string_parser_ptr& parser) NOEXCEPT;
+    code parse(http_flat_buffer& buffer) NOEXCEPT;
 
     void read_request() NOEXCEPT;
     void handle_read_request(const code& ec, size_t bytes_read) NOEXCEPT;
     void do_stop(const code& ec) NOEXCEPT;
 
     request_subscriber subscriber_;
-    asio::http_buffer buffer_;
-    http_parser_ptr parser_{};
+    http_flat_buffer buffer_;
+    http_string_parser_ptr parser_{};
 };
 
 } // namespace network

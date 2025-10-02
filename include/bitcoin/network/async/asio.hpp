@@ -58,18 +58,29 @@ typedef asio::acceptor::reuse_address reuse_address;
 typedef tcp::socket socket;
 typedef std::shared_ptr<socket> socket_ptr;
 
-// http
-typedef boost::beast::flat_buffer http_buffer;
-typedef boost::beast::http::string_body http_string_body;
-typedef boost::beast::http::request<http_string_body> http_request;
-typedef boost::beast::http::response<http_string_body> http_response;
-typedef boost::beast::http::request_parser<http_string_body> http_parser;
-typedef boost::beast::http::serializer<false, http_string_body> http_serializer;
-
-constexpr auto max_connections = 
-    boost::asio::socket_base::max_listen_connections;
+constexpr auto max_connections = boost::asio::socket_base::max_listen_connections;
 
 } // namespace asio
+
+// flat_buffer
+typedef boost::beast::flat_buffer http_flat_buffer;
+
+// beast::http::string_body
+typedef boost::beast::http::string_body http_string_body;
+typedef boost::beast::http::request<http_string_body> http_string_request;
+typedef boost::beast::http::response<http_string_body> http_string_response;
+typedef boost::beast::http::request_parser<http_string_body> http_string_parser;
+typedef boost::beast::http::serializer<false, http_string_body> http_string_serializer;
+typedef std::unique_ptr<http_string_parser> http_string_parser_ptr;
+
+// beast::http::file_body
+typedef boost::beast::http::file_body http_file_body;
+typedef boost::beast::http::request<http_file_body> http_file_request;
+typedef boost::beast::http::response<http_file_body> http_file_response;
+typedef boost::beast::http::request_parser<http_file_body> http_file_parser;
+typedef boost::beast::http::serializer<false, http_file_body> http_file_serializer;
+typedef std::unique_ptr<http_file_parser> http_file_parser_ptr;
+
 } // namespace network
 } // namespace libbitcoin
 

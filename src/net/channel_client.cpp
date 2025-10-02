@@ -141,15 +141,16 @@ void channel_client::handle_read_request(const code& ec,
 // ----------------------------------------------------------------------------
 
 // static
-void channel_client::initialize(http_parser_ptr& parser) NOEXCEPT
+void channel_client::initialize(http_string_parser_ptr& parser) NOEXCEPT
 {
-    parser = std::make_unique<asio::http_parser>();
+    parser = std::make_unique<http_string_parser>();
     parser->header_limit(max_head);
     parser->body_limit(max_body);
 }
 
 // static
-asio::http_request channel_client::detach(http_parser_ptr& parser) NOEXCEPT
+http_string_request channel_client::detach(
+    http_string_parser_ptr& parser) NOEXCEPT
 {
     BC_ASSERT(parser);
     auto out = parser->release();
@@ -158,7 +159,7 @@ asio::http_request channel_client::detach(http_parser_ptr& parser) NOEXCEPT
 }
 
 // Handles exceptions, error conversion, buffer wrap/consume, and iteration.
-code channel_client::parse(asio::http_buffer& buffer) NOEXCEPT
+code channel_client::parse(http_flat_buffer& buffer) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     using namespace boost::beast;
