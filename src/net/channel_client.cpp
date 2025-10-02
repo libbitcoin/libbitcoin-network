@@ -87,6 +87,13 @@ void channel_client::read_request() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
+    // Both terminate read loop, paused can be resumed, stopped cannot.
+    // Pause only prevents start of the read loop, it does not prevent messages
+    // from being issued for sockets already past that point (e.g. waiting).
+    // This is mainly for startup coordination, preventing missed messages.
+    if (stopped() || paused())
+        return;
+
     // 'prepare' appends available to write portion of buffer (moves pointers).
     read_some(buffer_.prepare(buffer_.max_size() - buffer_.size()),
         std::bind(&channel_client::handle_read_request,
@@ -107,8 +114,8 @@ void channel_client::handle_read_request(const code& ec,
 
     if (ec)
     {
-        if (ec != error::peer_disconnect &&
-            ec != error::operation_canceled)
+        // Don't log common conditions.
+        if (ec != error::peer_disconnect && ec != error::operation_canceled)
         {
             LOGF("Request read failure [" << authority() << "] "
                 << ec.message());
