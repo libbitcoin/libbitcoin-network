@@ -43,9 +43,9 @@ public:
 
     typedef std::shared_ptr<channel_client> ptr;
 
-    /// Subscribe to http_response from peer (requires strand).
+    /// Subscribe to http_request from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
-    template <class Message, typename Handler = http_string_request,
+    template <class Message, typename Handler,
         if_same<Message, http_string_request> = true>
     void subscribe(Handler&& handler) NOEXCEPT
     {
@@ -53,74 +53,22 @@ public:
         subscriber_.subscribe(std::forward<Handler>(handler));
     }
 
-    /// Serialize and write http_response to peer (requires strand).
+    /// Serialize and write http response to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
-    template <class Message, if_same<Message, http_string_response> = true>
-    void send(const Message& response, result_handler&& complete) NOEXCEPT
+    template <class Message>
+    void send(Message&& message, result_handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        BC_PUSH_WARNING(NO_UNSAFE_COPY_N)
 
-        const auto& body = response.body();
-        if (!body.empty() && !response.has_content_length())
+        const auto response = std::make_shared<Message>(
+            std::forward<Message>(message));
+
+        auto complete = [response, handler](const code& ec, size_t) NOEXCEPT
         {
-            const code ec{ error::oversized_payload };
-            LOGF("Serialization failure, " << ec.message());
-            complete(ec);
-            return;
-        }
-
-        using namespace system;
-        using namespace boost::beast;
-        const auto body_size = body.size();
-        const auto data = std::make_shared<data_chunk>();
-        size_t head_size{};
-
-        const auto head_writer = [&data, &head_size, body_size](
-            error_code& out, const auto& buffers) NOEXCEPT
-        {
-            using namespace boost::asio;
-            head_size = buffer_size(buffers);
-            data->resize(ceilinged_add(head_size, body_size));
-            buffer_copy(buffer(data->data(), head_size), buffers);
-            out = error::success;
+            handler(ec);
         };
 
-        // Serialize headers to buffer.
-        error_code ec{};
-        http_string_serializer writer{ response };
-        writer.split(true);
-        writer.next(ec, head_writer);
-        writer.consume(head_size);
-
-        // Above assumes all headers are passed one iteration.
-        if (!ec && !writer.is_header_done())
-            ec = http::error::header_limit;
-
-        if (ec)
-        {
-            LOGF("Serialization failure, " << ec.message());
-            complete(ec);
-            return;
-        }
-
-        // Copy body directly into data_chunk after headers.
-        const auto from = pointer_cast<const uint8_t>(body.data());
-        std::copy_n(from, body_size, std::next(data->data(), head_size));
-        write(data, std::move(complete));
-
-        BC_POP_WARNING()
-        BC_POP_WARNING()
-    }
-
-    /// Serialize and write http_file_request to peer (requires strand).
-    /// Completion handler is always invoked on the channel strand.
-    template <class Message, if_same<Message, http_file_response> = true>
-    void send(const http_file_response&, result_handler&& complete) NOEXCEPT
-    {
-        // TODO: implement.
-        complete(error::not_implemented);
+        write(*response, std::move(complete));
     }
 
     /// Construct client channel to encapsulate and communicate on the socket.

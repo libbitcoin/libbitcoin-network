@@ -50,13 +50,6 @@ class mock_channel
 public:
     using channel_peer::channel_peer;
 
-    // Capture last sent payload.
-    void write(const system::chunk_ptr& payload,
-        result_handler&&) NOEXCEPT override
-    {
-        payload_ = payload;
-    }
-
     // Override protected base to notify subscribers.
     code notify(messages::p2p::identifier, uint32_t,
         const system::data_chunk&) NOEXCEPT override
@@ -64,15 +57,6 @@ public:
         return error::success;
         ////return channel::notify(id, version, source);
     }
-
-    // Get last sent payload.
-    system::chunk_ptr sent() const NOEXCEPT
-    {
-        return payload_;
-    }
-
-private:
-    system::chunk_ptr payload_;
 };
 
 // Use mock acceptor to inject mock channel.

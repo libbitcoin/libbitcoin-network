@@ -58,24 +58,28 @@ public:
     /// Serialize and write message to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
     template <class Message>
-    void send(const Message& message, result_handler&& complete) NOEXCEPT
+    void send(const Message& message, result_handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
-        // TODO: build witness into feature w/magic and negotiated version.
-        // TODO: if self and peer services show witness, set feature true.
         const auto data = messages::p2p::serialize(message,
             settings().identifier, negotiated_version());
 
         if (!data)
         {
-            // This is an internal error, should never happen.
-            LOGF("Serialization failure (" << Message::command << ").");
-            complete(error::unknown);
+            LOGF("Serialization failure (" << message.command << ").");
+            handler(error::unknown);
             return;
         }
 
-        write(data, std::move(complete));
+        const asio::const_buffer buffer { data->data(), data->size() };
+
+        auto complete = [data, handler](const code& ec, size_t) NOEXCEPT
+        {
+            handler(ec);
+        };
+
+        write(buffer, std::move(complete));
     }
 
     /// Construct a p2p channel to encapsulate and communicate on the socket.

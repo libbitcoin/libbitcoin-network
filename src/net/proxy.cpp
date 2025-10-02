@@ -158,7 +158,7 @@ void proxy::read(const asio::mutable_buffer& buffer,
 void proxy::read(http_flat_buffer& buffer, http_string_request& request,
     count_handler&& handler) NOEXCEPT
 {
-    socket_->http_read(request, std::move(handler));
+    socket_->http_read(buffer, request, std::move(handler));
 }
 
 void proxy::read(http_string_request& request,
@@ -169,6 +169,7 @@ void proxy::read(http_string_request& request,
 
 // Writes.
 // ----------------------------------------------------------------------------
+// Writes are composed but http is half duplex so there is no interleave risk.
 
 void proxy::write(const http_string_response& response,
     count_handler&& handler) NOEXCEPT
@@ -194,7 +195,7 @@ void proxy::write(http_file_response& response,
 // interleaving-async-write-calls
 
 void proxy::write(const asio::const_buffer& payload,
-    result_handler&& handler) NOEXCEPT
+    count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write,
@@ -203,14 +204,14 @@ void proxy::write(const asio::const_buffer& payload,
 
 // private
 void proxy::do_write(const asio::const_buffer& payload,
-    const result_handler& handler) NOEXCEPT
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped())
     {
         LOGQ("Payload write abort [" << authority() << "]");
-        handler(error::channel_stopped);
+        handler(error::channel_stopped, zero);
         return;
     }
 
@@ -242,9 +243,9 @@ void proxy::write() NOEXCEPT
 }
 
 // private
-void proxy::handle_write(const code& ec, size_t,
-    const asio::const_buffer& /*LOG_ONLY(payload)*/,
-    const result_handler& handler) NOEXCEPT
+void proxy::handle_write(const code& ec, size_t bytes,
+    const asio::const_buffer& /* LOG_ONLY(payload) */,
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -260,7 +261,7 @@ void proxy::handle_write(const code& ec, size_t,
     queue_.pop_front();
 
     LOGX("Dequeue for [" << authority() << "]: " << queue_.size()
-        << " (" << backlog_.load() << " bytes)");
+        << " (" << backlog_.load() << " backlog)");
 
     // All handlers must be invoked, so continue regardless of error state.
     // Handlers are invoked in queued order, after all outstanding complete.
@@ -280,7 +281,7 @@ void proxy::handle_write(const code& ec, size_t,
         }
 
         stop(ec);
-        handler(ec);
+        handler(ec, zero);
         return;
     }
 
@@ -289,7 +290,7 @@ void proxy::handle_write(const code& ec, size_t,
     ////LOGX("Sent " <<  heading::get_command(*payload) << " to ["
     ////    << authority() << "] (" << payload->size() << " bytes)");
 
-    handler(ec);
+    handler(ec, bytes);
 }
 
 // Properties.

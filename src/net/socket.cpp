@@ -501,8 +501,7 @@ void socket::handle_http(const error::boost_code& ec, size_t size,
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // TODO: verify codes.
-    if (error::beast_is_canceled(ec))
+    if (error::asio_is_canceled(ec))
     {
         handler(error::channel_stopped, size);
         return;

@@ -113,7 +113,7 @@ void protocol_client::handle_receive_request(const code& ec,
     {
         http_string_response response{ http::status::http_version_not_supported, request.version() };
         response.set(http::field::server, BC_USER_AGENT);
-        SEND(response, handle_unalive_request, _1, error::http_version_not_supported);
+        SEND(std::move(response), handle_unalive_request, _1, error::http_version_not_supported);
         return;
     }
 
@@ -125,7 +125,7 @@ void protocol_client::handle_receive_request(const code& ec,
         response.set(http::field::content_type, "text/html; charset=UTF-8");
         response.body() = form;
         response.prepare_payload();
-        SEND(response, handle_send, _1);
+        SEND(std::move(response), handle_send, _1);
         return;
     }
 
@@ -133,11 +133,19 @@ void protocol_client::handle_receive_request(const code& ec,
     if (request.method() == http::verb::get &&
         get_mime_type(request.target()).starts_with("image/"))
     {
-        const auto path = "m:/server" + std::string{ request.target() };
-        error_code code{ error::not_found };
+        auto path = "m:/server/images" + std::string{ request.target() };
+        error_code code{};
         http::file_body::value_type file{};
 
-        try { file.open(path.c_str(), file_mode::read, code); } catch (...) {}
+        try
+        {
+            // file.open does not reset code for success.
+            file.open(path.c_str(), file_mode::read, code);
+        }
+        catch (...)
+        {
+            code = error::not_found;
+        }
 
         if (code)
         {
@@ -149,7 +157,7 @@ void protocol_client::handle_receive_request(const code& ec,
             response.body() += "\r\nerror  : ";
             response.body() += code.message();
             response.prepare_payload();
-            SEND(response, handle_unalive_request, _1, error::not_found);
+            SEND(std::move(response), handle_unalive_request, _1, error::not_found);
             return;
         }
 
@@ -157,7 +165,7 @@ void protocol_client::handle_receive_request(const code& ec,
         response.set(http::field::content_type, get_mime_type(path));
         response.body() = std::move(file);
         response.prepare_payload();
-        SEND(response, handle_unalive_request, _1, error::im_a_teapot);
+        SEND(std::move(response), handle_unalive_request, _1, error::im_a_teapot);
         return;
     }
 
@@ -179,13 +187,13 @@ void protocol_client::handle_receive_request(const code& ec,
         response.body() += "\r\n";
         response.body() += request.body();
         response.prepare_payload();
-        SEND(response, handle_send, _1);
+        SEND(std::move(response), handle_send, _1);
         return;
     }
 
     http_string_response response{ http::status::method_not_allowed, request.version() };
     response.set(http::field::server, BC_USER_AGENT);
-    SEND(response, handle_unalive_request, _1, error::method_not_allowed);
+    SEND(std::move(response), handle_unalive_request, _1, error::method_not_allowed);
 }
 
 void protocol_client::handle_unalive_request(const code&,

@@ -40,6 +40,7 @@ using namespace std::ranges;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+// TODO: http server should not accept requests until 
 // TODO: inactivity timeout, duration timeout, connection limit.
 channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT

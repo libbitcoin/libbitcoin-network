@@ -310,7 +310,7 @@ void channel_peer::read_heading() NOEXCEPT
         return;
 
     // Post handle_read_heading to strand upon stop, error, or buffer full.
-    read(heading_buffer_,
+    read({ heading_buffer_.data(), heading_buffer_.size() },
         std::bind(&channel_peer::handle_read_heading,
             shared_from_base<channel_peer>(), _1, _2));
 }
@@ -379,7 +379,7 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
     payload_buffer_.resize(head->payload_size);
 
     // Post handle_read_payload to strand upon stop, error, or buffer full.
-    read(payload_buffer_,
+    read({ payload_buffer_.data(), payload_buffer_.size() },
         std::bind(&channel_peer::handle_read_payload,
             shared_from_base<channel_peer>(), _1, _2, head));
 }

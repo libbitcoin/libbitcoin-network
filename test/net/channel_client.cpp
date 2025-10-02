@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(channel_client__stop__all_subscribed__expected)
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_stopped)
+BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_not_stopped)
 {
     const logger log{};
     threadpool pool(2);
@@ -184,8 +184,7 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_stopped)
     std::promise<code> promise;
     const auto handler = [&](code ec) NOEXCEPT
     {
-        // Send failure causes stop before handler invoked.
-        result &= channel_ptr->stopped();
+        result &= !channel_ptr->stopped();
         promise.set_value(ec);
     };
 
@@ -199,7 +198,7 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_stopped)
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected_stopped)
+BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected_not_stopped)
 {
     const logger log{};
     threadpool pool(2);
@@ -214,8 +213,7 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected_stopped)
     {
         channel_ptr->send(http_string_response{}, [&](code ec)
         {
-            // Send failure causes stop before handler invoked.
-            result &= channel_ptr->stopped();
+            result &= !channel_ptr->stopped();
             promise.set_value(ec);
         });
     });

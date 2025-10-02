@@ -306,12 +306,6 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
     return error::unknown;
 }
 
-bool beast_is_canceled(const error::boost_code& ec) NOEXCEPT
-{
-    // TODO: verify codes.
-    return asio_is_canceled(ec);
-}
-
 code beast_to_error_code(const error::boost_code& ec) NOEXCEPT
 {
     using namespace boost::beast;
@@ -372,8 +366,7 @@ code beast_to_error_code(const error::boost_code& ec) NOEXCEPT
     if (ec == http::error::short_read)
         return error::short_read;
 
-    // TODO: return asio_to_error_code(ec)?
-    return error::unknown;
+    return asio_to_error_code(ec);
 }
 
 } // namespace error

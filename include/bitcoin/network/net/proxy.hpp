@@ -119,18 +119,15 @@ protected:
     virtual void write(http_file_response& response,
         count_handler&& handler) NOEXCEPT;
 
-    ///////////////////////////////////////////////////////////////////////////
-    // TODO: ensure caller to retains payload ownership via handler.
-    ///////////////////////////////////////////////////////////////////////////
     /// Send a complete message to the remote endpoint.
     virtual void write(const asio::const_buffer& payload,
-        result_handler&& handler) NOEXCEPT;
+        count_handler&& handler) NOEXCEPT;
 
     /// Subscribe to stop notification (requires strand).
     void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
 private:
-    typedef std::deque<std::pair<asio::const_buffer, result_handler>> queue;
+    typedef std::deque<std::pair<asio::const_buffer, count_handler>> queue;
 
     void do_stop(const code& ec) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
@@ -139,10 +136,10 @@ private:
     // Implement chunked write with result handler.
     void write() NOEXCEPT;
     void do_write(const asio::const_buffer& payload,
-        const result_handler& handler) NOEXCEPT;
+        const count_handler& handler) NOEXCEPT;
     void handle_write(const code& ec, size_t bytes,
         const asio::const_buffer& payload,
-        const result_handler& handler) NOEXCEPT;
+        const count_handler& handler) NOEXCEPT;
 
     // These are thread safe.
     std::atomic_bool paused_{ true };
