@@ -246,38 +246,11 @@
     <ClCompile Include="..\..\..\..\test\messages\p2p\witness_tx_id_relay.cpp">
       <Filter>src\messages\p2p</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\identifier.cpp">
-      <Filter>src\messages\rpc\enums</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\magic_numbers.cpp">
-      <Filter>src\messages\rpc\enums</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\method.cpp">
-      <Filter>src\messages\rpc\enums</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\status.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\target.cpp">
       <Filter>src\messages\rpc\enums</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\version.cpp">
-      <Filter>src\messages\rpc\enums</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\heading.cpp">
-      <Filter>src\messages\rpc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\message.cpp">
-      <Filter>src\messages\rpc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\ping.cpp">
-      <Filter>src\messages\rpc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\request.cpp">
-      <Filter>src\messages\rpc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\response.cpp">
-      <Filter>src\messages\rpc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net.cpp">
       <Filter>src</Filter>

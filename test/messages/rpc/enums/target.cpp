@@ -24,7 +24,7 @@ using namespace network::messages::rpc;
 
 BOOST_AUTO_TEST_CASE(rpc_target__to_target__always__expected)
 {
-    BOOST_REQUIRE(to_target("foobar", method::options) == target::undefined);
+    BOOST_REQUIRE(to_target("foobar", boost::beast::http::verb::options) == target::unknown);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

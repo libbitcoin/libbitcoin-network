@@ -21,12 +21,6 @@
 
 #include <bitcoin/network/version.hpp>
 
-// Avoid namespace conflict between boost::placeholders and std::placeholders.
-// This arises when including <functional>, which declares std::placeholders.
-// www.boost.org/doc/libs/1_78_0/boost/bind.hpp
-#define BOOST_BIND_NO_PLACEHOLDERS
-
-// Include boost only from here, so placeholders exclusion works.
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/core.hpp>

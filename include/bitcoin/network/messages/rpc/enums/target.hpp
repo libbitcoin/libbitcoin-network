@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_TARGET_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/enums/method.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -33,11 +32,11 @@ enum class target
     absolute,
     authority,
     asterisk,
-    undefined
+    unknown
 };
 
 BCT_API target to_target(const std::string& value,
-    method method) NOEXCEPT;
+    boost::beast::http::verb method) NOEXCEPT;
 
 } // namespace rpc
 } // namespace messages
