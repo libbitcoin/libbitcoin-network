@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_P2P_INVENTORY_ITEM_HPP
 
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

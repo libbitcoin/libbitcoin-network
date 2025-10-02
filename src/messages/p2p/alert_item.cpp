@@ -19,7 +19,6 @@
 #include <bitcoin/network/messages/p2p/alert_item.hpp>
 
 #include <numeric>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/p2p/enums/identifier.hpp>
 #include <bitcoin/network/messages/p2p/enums/level.hpp>
 #include <bitcoin/network/messages/p2p/enums/magic_numbers.hpp>

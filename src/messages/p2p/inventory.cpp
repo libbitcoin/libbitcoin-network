@@ -20,7 +20,6 @@
 
 #include <algorithm>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/p2p/enums/identifier.hpp>
 #include <bitcoin/network/messages/p2p/enums/level.hpp>
 #include <bitcoin/network/messages/p2p/enums/magic_numbers.hpp>

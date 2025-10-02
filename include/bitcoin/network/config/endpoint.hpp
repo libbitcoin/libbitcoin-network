@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_CONFIG_ENDPOINT_HPP
 
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/config/address.hpp>
 #include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/define.hpp>

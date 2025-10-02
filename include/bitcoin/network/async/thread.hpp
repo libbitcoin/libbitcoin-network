@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_ASYNC_THREAD_HPP
 
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

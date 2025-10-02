@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_ASYNC_ENABLE_SHARED_FROM_BASE_IPP
 
 #include <memory>
-#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {

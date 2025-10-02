@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_PEER_HPP
 
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/memory.hpp>

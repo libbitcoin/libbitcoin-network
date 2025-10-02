@@ -23,7 +23,6 @@
 #include <deque>
 #include <memory>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/memory.hpp>

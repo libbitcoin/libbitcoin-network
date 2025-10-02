@@ -19,7 +19,6 @@
 #include "test.hpp"
 
 #include <filesystem>
-#include <bitcoin/system.hpp>
 
 // copied from libbitcoin-system-test
 

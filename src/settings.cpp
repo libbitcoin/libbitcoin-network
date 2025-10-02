@@ -19,7 +19,6 @@
 #include <bitcoin/network/settings.hpp>
 
 #include <filesystem>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/client.hpp>
 #include <bitcoin/network/config/config.hpp>

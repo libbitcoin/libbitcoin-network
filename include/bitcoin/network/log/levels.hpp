@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_LOG_LEVELS_HPP
 #define LIBBITCOIN_NETWORK_LOG_LEVELS_HPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

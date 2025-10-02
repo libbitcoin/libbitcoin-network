@@ -21,7 +21,6 @@
 
 #include <iterator>
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/p2p/heading.hpp>
 #include <bitcoin/network/messages/p2p/transaction.hpp>

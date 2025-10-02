@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_SETTINGS_HPP
 
 #include <filesystem>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/client.hpp>
 #include <bitcoin/network/config/config.hpp>

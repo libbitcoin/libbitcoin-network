@@ -20,7 +20,6 @@
 
 #include <iterator>
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/p2p/enums/identifier.hpp>
 #include <bitcoin/network/messages/p2p/enums/level.hpp>

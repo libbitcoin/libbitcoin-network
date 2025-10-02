@@ -23,7 +23,6 @@
 #include <bitcoin/network/config/authority.hpp>
 #include <bitcoin/network/config/endpoint.hpp>
 #include <bitcoin/network/config/utilities.hpp>
-#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {

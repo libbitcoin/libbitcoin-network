@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_REJECT_70002_HPP
 
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

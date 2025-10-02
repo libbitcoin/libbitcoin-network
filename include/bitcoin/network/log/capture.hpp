@@ -21,7 +21,6 @@
 
 #include <atomic>
 #include <optional>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 

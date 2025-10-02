@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_NET_BROADCASTER_HPP
 
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/p2p/messages.hpp>

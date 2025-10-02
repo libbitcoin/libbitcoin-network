@@ -20,7 +20,6 @@
 
 #include <algorithm>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>

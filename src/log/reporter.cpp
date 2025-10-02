@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/log/reporter.hpp>
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
