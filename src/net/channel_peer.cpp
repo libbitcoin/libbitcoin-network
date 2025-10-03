@@ -388,6 +388,7 @@ void channel_peer::handle_read_payload(const code& ec,
 
     if (ec)
     {
+        // Don't log common conditions.
         if (ec != error::peer_disconnect && ec != error::operation_canceled)
         {
             LOGF("Payload read failure [" << authority() << "] "

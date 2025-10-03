@@ -36,6 +36,8 @@ using namespace system;
 using namespace messages::p2p;
 using namespace std::placeholders;
 
+// Protocols invoke channel stop for application layer protocol violations.
+// Channels invoke channel stop for channel timouts and communcation failures.
 protocol::protocol(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : channel_(channel),
