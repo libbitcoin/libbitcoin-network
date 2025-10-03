@@ -41,6 +41,9 @@ static constexpr size_t invalid_payload_dump_size = 0xff;
 static constexpr uint32_t http_magic = 0x20544547;
 static constexpr uint32_t https_magic = 0x02010316;
 
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // Factory for fixed deadline timer pointer construction.
@@ -460,6 +463,8 @@ void channel_peer::handle_read_payload(const code& ec,
     read_heading();
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

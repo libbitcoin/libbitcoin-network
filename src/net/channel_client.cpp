@@ -38,6 +38,9 @@ using namespace messages::rpc;
 using namespace std::placeholders;
 using namespace std::ranges;
 
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // TODO: inactivity timeout, duration timeout, connection limit.
@@ -137,8 +140,8 @@ void channel_client::handle_read_request(const code& ec, size_t,
     subscriber_.notify(error::success, *request);
 }
 
-// return error::beast_to_error_code(ec);
-
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network
