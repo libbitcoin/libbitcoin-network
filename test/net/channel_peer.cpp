@@ -68,15 +68,9 @@ BOOST_AUTO_TEST_CASE(channel_peer__stopped__default__false)
     BOOST_REQUIRE_NE(channel_ptr->nonce(), zero);
     BOOST_REQUIRE_EQUAL(channel_ptr->identifier(), expected_identifier);
 
-    // Stop completion is asynchronous.
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(error::invalid_magic);
-    channel_ptr.reset();
-}
-
-inline size_t payload_maximum(const settings& settings)
-{
-    return messages::p2p::heading::maximum_payload(settings.protocol_maximum,
-        to_bool(settings.services_maximum & messages::p2p::service::node_witness));
 }
 
 BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
@@ -88,6 +82,13 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
     const settings set(bc::system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
     auto channel_ptr = std::make_shared<channel_peer>(memory, log, socket_ptr, set, 42);
+
+    const auto payload_maximum = [](const settings& settings) NOEXCEPT
+    {
+        using namespace messages::p2p;
+        return heading::maximum_payload(settings.protocol_maximum,
+            to_bool(settings.services_maximum & service::node_witness));
+    };
 
     BOOST_REQUIRE(!channel_ptr->address());
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
@@ -102,8 +103,9 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
     BOOST_REQUIRE_EQUAL(channel_ptr->settings().validate_checksum, set.validate_checksum);
     BOOST_REQUIRE_EQUAL(channel_ptr->settings().minimum_buffer, set.minimum_buffer);
 
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(error::invalid_magic);
-    channel_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
@@ -121,8 +123,8 @@ BOOST_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
     std::promise<code> message_stopped;
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->subscribe<const messages::p2p::ping>(
-            [&](code ec, messages::p2p::ping::cptr ping) NOEXCEPT
+        using namespace messages::p2p;
+        channel_ptr->subscribe<const ping>([&](code ec, ping::cptr ping) NOEXCEPT
             {
                 result &= is_null(ping);
                 message_stopped.set_value(ec);
@@ -132,7 +134,10 @@ BOOST_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
 
     BOOST_REQUIRE(!channel_ptr->stopped());
 
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(expected_ec);
+
     BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE(channel_ptr->stopped());
     BOOST_REQUIRE(result);
@@ -171,19 +176,22 @@ BOOST_AUTO_TEST_CASE(channel_peer__stop__all_subscribed__expected)
             stop1_stopped.set_value(ec);
         });
 
-        channel_ptr->subscribe<messages::p2p::ping>(
-            [&](code ec, messages::p2p::ping::cptr ping) NOEXCEPT
-            {
-                result &= is_null(ping);
-                message_stopped.set_value(ec);
-                return true;
-            });
+        using namespace messages::p2p;
+        channel_ptr->subscribe<ping>([&](code ec, ping::cptr ping) NOEXCEPT
+        {
+            result &= is_null(ping);
+            message_stopped.set_value(ec);
+            return true;
+        });
     });
 
     BOOST_REQUIRE(!channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(stop_subscribed.get_future().get(), error::success);
 
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(expected_ec);
+
     BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE_EQUAL(stop1_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE_EQUAL(stop2_stopped.get_future().get(), expected_ec);
@@ -205,19 +213,24 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected__expected)
     std::promise<code> promise;
     const auto handler = [&](code ec) NOEXCEPT
     {
-        // Send failure causes stop before handler invoked.
-        result &= channel_ptr->stopped();
+        result &= !channel_ptr->stopped();
         promise.set_value(ec);
     };
 
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send<messages::p2p::ping>(messages::p2p::ping{ 42 }, handler);
+        using namespace messages::p2p;
+        channel_ptr->send<ping>(ping{ 42 }, handler);
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
+    BOOST_REQUIRE(!channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
     BOOST_REQUIRE(result);
+
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
+    channel_ptr->stop(error::invalid_magic);
 }
 
 BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
@@ -234,17 +247,22 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
     std::promise<code> promise;
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send<messages::p2p::ping>(messages::p2p::ping{ 42 }, [&](code ec)
+        using namespace messages::p2p;
+        channel_ptr->send<ping>(ping{ 42 }, [&](code ec)
         {
-            // Send failure causes stop before handler invoked.
-            result &= channel_ptr->stopped();
+            result &= !channel_ptr->stopped();
             promise.set_value(ec);
         });
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
+    BOOST_REQUIRE(!channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::bad_stream);
     BOOST_REQUIRE(result);
+
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
+    channel_ptr->stop(error::invalid_magic);
 }
 
 BOOST_AUTO_TEST_CASE(channel_peer__paused__resume_after_read_fail__true)
@@ -271,20 +289,15 @@ BOOST_AUTO_TEST_CASE(channel_peer__paused__resume_after_read_fail__true)
     std::promise<bool> paused_after_read_fail;
     boost::asio::post(channel_ptr->strand(), [=, &paused_after_read_fail]() NOEXCEPT
     {
+        // paused() requires strand.
         paused_after_read_fail.set_value(channel_ptr->paused());
     });
 
     BOOST_REQUIRE(paused_after_read_fail.get_future().get());
 
-    // Ensures stop is not executed concurrenty due to resume, guarding promise.
-    std::promise<bool> stopped;
-    boost::asio::post(channel_ptr->strand(), [=, &stopped]() NOEXCEPT
-    {
-        channel_ptr->stop(error::invalid_magic);
-        stopped.set_value(true);
-    });
-
-    BOOST_REQUIRE(stopped.get_future().get());
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
+    channel_ptr->stop(error::invalid_magic);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

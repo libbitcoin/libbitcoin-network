@@ -49,14 +49,6 @@ class mock_channel
 {
 public:
     using channel_peer::channel_peer;
-
-    // Override protected base to notify subscribers.
-    code notify(messages::p2p::identifier, uint32_t,
-        const system::data_chunk&) NOEXCEPT override
-    {
-        return error::success;
-        ////return channel::notify(id, version, source);
-    }
 };
 
 // Use mock acceptor to inject mock channel.
@@ -292,6 +284,7 @@ public:
 
     virtual void handle_send(const code& ec) NOEXCEPT override
     {
+        // Causes channel stop on ec.
         return protocol::handle_send(ec);
     }
 };

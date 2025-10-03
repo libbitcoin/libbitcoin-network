@@ -67,9 +67,9 @@ BOOST_AUTO_TEST_CASE(channel_client__stopped__default__false)
     BOOST_REQUIRE_NE(channel_ptr->nonce(), zero);
     BOOST_REQUIRE_EQUAL(channel_ptr->identifier(), expected_identifier);
 
-    // Stop completion is asynchronous.
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(error::invalid_magic);
-    channel_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(channel_client__properties__default__expected)
@@ -84,8 +84,9 @@ BOOST_AUTO_TEST_CASE(channel_client__properties__default__expected)
     BOOST_REQUIRE(!channel_ptr->address());
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
 
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(error::invalid_magic);
-    channel_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(channel_client__subscribe_message__subscribed__expected)
@@ -113,9 +114,12 @@ BOOST_AUTO_TEST_CASE(channel_client__subscribe_message__subscribed__expected)
 
     BOOST_REQUIRE(!channel_ptr->stopped());
 
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(expected_ec);
-    BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
+
     BOOST_REQUIRE(channel_ptr->stopped());
+    BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE(result);
 }
 
@@ -163,15 +167,18 @@ BOOST_AUTO_TEST_CASE(channel_client__stop__all_subscribed__expected)
     BOOST_REQUIRE(!channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(stop_subscribed.get_future().get(), error::success);
 
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(expected_ec);
+
+    BOOST_REQUIRE(channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE_EQUAL(stop1_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE_EQUAL(stop2_stopped.get_future().get(), expected_ec);
-    BOOST_REQUIRE(channel_ptr->stopped());
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_not_stopped)
+BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected)
 {
     const logger log{};
     threadpool pool(2);
@@ -193,12 +200,17 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_not_stopped)
         channel_ptr->send<http_string_response>({}, handler);
     });
 
+    // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
     BOOST_REQUIRE(!channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(promise.get_future().get().value(), error::bad_stream);
     BOOST_REQUIRE(result);
+
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
+    channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected_not_stopped)
+BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected)
 {
     const logger log{};
     threadpool pool(2);
@@ -218,9 +230,14 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected_not_stop
         });
     });
 
+    // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
     BOOST_REQUIRE(!channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(promise.get_future().get().value(), error::bad_stream);
     BOOST_REQUIRE(result);
+
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
+    channel_ptr->stop(error::invalid_magic);
 }
 
 BOOST_AUTO_TEST_CASE(channel_client__paused__resume_after_read_fail__true)
@@ -246,20 +263,15 @@ BOOST_AUTO_TEST_CASE(channel_client__paused__resume_after_read_fail__true)
     std::promise<bool> paused_after_read_fail;
     boost::asio::post(channel_ptr->strand(), [=, &paused_after_read_fail]() NOEXCEPT
     {
+        // paused() requires strand.
         paused_after_read_fail.set_value(channel_ptr->paused());
     });
 
     BOOST_REQUIRE(paused_after_read_fail.get_future().get());
 
-    // Ensures stop is not executed concurrenty due to resume, guarding promise.
-    std::promise<bool> stopped;
-    boost::asio::post(channel_ptr->strand(), [=, &stopped]() NOEXCEPT
-    {
-        channel_ptr->stop(error::invalid_magic);
-        stopped.set_value(true);
-    });
-
-    BOOST_REQUIRE(stopped.get_future().get());
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
+    channel_ptr->stop(error::invalid_magic);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
