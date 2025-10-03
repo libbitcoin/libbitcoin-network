@@ -38,7 +38,6 @@ class BCT_API channel_client
 {
 public:
     typedef subscriber<http_string_request> request_subscriber;
-    typedef request_subscriber::handler request_notifier;
 
     typedef std::shared_ptr<channel_client> ptr;
 
