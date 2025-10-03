@@ -143,11 +143,11 @@ void proxy::do_subscribe_stop(const result_handler& handler,
 // Reads.
 // ----------------------------------------------------------------------------
 
-void proxy::read_some(const asio::mutable_buffer& buffer,
-    count_handler&& handler) NOEXCEPT
-{
-    socket_->read_some(buffer, std::move(handler));
-}
+////void proxy::read_some(const asio::mutable_buffer& buffer,
+////    count_handler&& handler) NOEXCEPT
+////{
+////    socket_->read_some(buffer, std::move(handler));
+////}
 
 void proxy::read(const asio::mutable_buffer& buffer,
     count_handler&& handler) NOEXCEPT

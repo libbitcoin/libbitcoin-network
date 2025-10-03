@@ -90,9 +90,9 @@ public:
 protected:
     proxy(const socket::ptr& socket) NOEXCEPT;
 
-    /// Read part of a message from the remote endpoint.
-    virtual void read_some(const asio::mutable_buffer& buffer,
-        count_handler&& handler) NOEXCEPT;
+    /////// Read part of a message from the remote endpoint.
+    ////virtual void read_some(const asio::mutable_buffer& buffer,
+    ////    count_handler&& handler) NOEXCEPT;
 
     /// Read fixed-size message from the remote endpoint.
     virtual void read(const asio::mutable_buffer& buffer,
