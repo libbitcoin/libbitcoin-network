@@ -14,6 +14,7 @@
  * Maintainers: Do not include this header internal to this library.
  */
 
+#include <bitcoin/system.hpp>
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/client.hpp>
 #include <bitcoin/network/define.hpp>
