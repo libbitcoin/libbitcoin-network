@@ -113,7 +113,7 @@ void protocol_client::handle_receive_request(const code& ec,
     {
         http_string_response response{ http::status::http_version_not_supported, request.version() };
         response.set(http::field::server, BC_USER_AGENT);
-        SEND(std::move(response), handle_unalive_request, _1, error::http_version_not_supported);
+        SEND(std::move(response), handle_failed_request, _1, error::http_version_not_supported);
         return;
     }
 
@@ -125,7 +125,7 @@ void protocol_client::handle_receive_request(const code& ec,
         response.set(http::field::content_type, "text/html; charset=UTF-8");
         response.body() = form;
         response.prepare_payload();
-        SEND(std::move(response), handle_send, _1);
+        SEND(std::move(response), handle_successful_request, _1);
         return;
     }
 
@@ -157,7 +157,7 @@ void protocol_client::handle_receive_request(const code& ec,
             response.body() += "\r\nerror  : ";
             response.body() += code.message();
             response.prepare_payload();
-            SEND(std::move(response), handle_unalive_request, _1, error::not_found);
+            SEND(std::move(response), handle_failed_request, _1, error::not_found);
             return;
         }
 
@@ -165,7 +165,7 @@ void protocol_client::handle_receive_request(const code& ec,
         response.set(http::field::content_type, get_mime_type(path));
         response.body() = std::move(file);
         response.prepare_payload();
-        SEND(std::move(response), handle_unalive_request, _1, error::im_a_teapot);
+        SEND(std::move(response), handle_failed_request, _1, error::im_a_teapot);
         return;
     }
 
@@ -187,16 +187,23 @@ void protocol_client::handle_receive_request(const code& ec,
         response.body() += "\r\n";
         response.body() += request.body();
         response.prepare_payload();
-        SEND(std::move(response), handle_send, _1);
+        SEND(std::move(response), handle_successful_request, _1);
         return;
     }
 
     http_string_response response{ http::status::method_not_allowed, request.version() };
     response.set(http::field::server, BC_USER_AGENT);
-    SEND(std::move(response), handle_unalive_request, _1, error::method_not_allowed);
+    SEND(std::move(response), handle_failed_request, _1, error::method_not_allowed);
 }
 
-void protocol_client::handle_unalive_request(const code&,
+// Invoked to continue as half-duplex, required if not stopping.
+void protocol_client::handle_successful_request(const code&) NOEXCEPT
+{
+    resume();
+}
+
+// Invoked to terminate connection after error response (as applicable).
+void protocol_client::handle_failed_request(const code&,
     const code& reason) NOEXCEPT
 {
     stop(reason);

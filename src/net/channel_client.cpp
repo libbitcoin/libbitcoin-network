@@ -40,7 +40,6 @@ using namespace std::ranges;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// TODO: implement half-async iteration (via send completion).
 // TODO: inactivity timeout, duration timeout, connection limit.
 channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT
@@ -72,11 +71,18 @@ void channel_client::do_stop(const code& ec) NOEXCEPT
     subscriber_.stop(ec, {});
 }
 
+// Resume must be called (only once) from message handler (if not stopped).
+// Calling more than once is safe but implies a protocol problem. Failure to
+// call after successful message handling will result in a stalled channel.
 void channel_client::resume() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    channel::resume();
-    read_request();
+
+    if (paused())
+    {
+        channel::resume();
+        read_request();
+    }
 }
 
 // Read cycle (read continues until stop called, call only once).
@@ -101,8 +107,8 @@ void channel_client::read_request() NOEXCEPT
             shared_from_base<channel_client>(), _1, _2, request));
 }
 
-void channel_client::handle_read_request(const code& ec,
-    size_t bytes_read, const http_string_request_ptr& request) NOEXCEPT
+void channel_client::handle_read_request(const code& ec, size_t,
+    const http_string_request_ptr& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -125,8 +131,13 @@ void channel_client::handle_read_request(const code& ec,
         return;
     }
 
+    // HTTP is half duplex, this subscriber must stop or resume channel.
+    pause();
+
     subscriber_.notify(error::success, *request);
 }
+
+// return error::beast_to_error_code(ec);
 
 BC_POP_WARNING()
 
