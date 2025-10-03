@@ -108,7 +108,6 @@ void channel_client::handle_read_request(const code& ec,
     if (stopped())
     {
         LOGQ("Request read abort [" << authority() << "]");
-        stop(error::channel_stopped);
         return;
     }
 

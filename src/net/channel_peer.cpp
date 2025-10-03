@@ -90,7 +90,6 @@ void channel_peer::do_stop(const code& ec) NOEXCEPT
     stop_expiration();
     stop_inactivity();
 
-    // TODO: this was moved from proxy::do_stop, so order of stop has changed.
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
     distributor_.stop(ec);
@@ -287,16 +286,6 @@ void channel_peer::handle_inactivity(const code& ec) NOEXCEPT
 // Read cycle (read continues until stop called).
 // ----------------------------------------------------------------------------
 
-code channel_peer::notify(messages::p2p::identifier id, uint32_t version,
-    const data_chunk& source) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // TODO: build witness into feature w/magic and negotiated version.
-    // TODO: if self and peer services show witness, set feature true.
-    return distributor_.notify(id, version, source);
-}
-
 void channel_peer::read_heading() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -321,12 +310,12 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
     if (stopped())
     {
         LOGQ("Heading read abort [" << authority() << "]");
-        stop(error::channel_stopped);
         return;
     }
 
     if (ec)
     {
+        // Don't log common conditions.
         if (ec != error::peer_disconnect && ec != error::operation_canceled)
         {
             LOGF("Heading read failure [" << authority() << "] "
@@ -394,7 +383,6 @@ void channel_peer::handle_read_payload(const code& ec,
     if (stopped())
     {
         LOGQ("Payload read abort [" << authority() << "]");
-        stop(error::channel_stopped);
         return;
     }
 
@@ -428,7 +416,8 @@ void channel_peer::handle_read_payload(const code& ec,
     // subscribers on the same thread. This significantly reduces deallocation
     // cost in constrast to allowing the object to destroyed on another thread.
     // If object is passed to another thread destruction cost can be very high.
-    const auto code = notify(head->id(), negotiated_version(), payload_buffer_);
+    const auto code = distributor_.notify(head->id(), negotiated_version(),
+        payload_buffer_);
 
     if (code)
     {

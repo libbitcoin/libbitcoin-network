@@ -61,19 +61,19 @@ public:
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
-        const auto data = messages::p2p::serialize(message,
-            settings().identifier, negotiated_version());
+        using namespace messages::p2p;
+        const auto id = settings().identifier;
+        const auto ptr = serialize(message, id, negotiated_version());
 
-        if (!data)
+        if (!ptr)
         {
             LOGF("Serialization failure (" << message.command << ").");
             handler(error::unknown);
             return;
         }
 
-        const asio::const_buffer buffer { data->data(), data->size() };
-
-        auto complete = [data, handler](const code& ec, size_t) NOEXCEPT
+        const asio::const_buffer buffer { ptr->data(), ptr->size() };
+        auto complete = [ptr, handler](const code& ec, size_t) NOEXCEPT
         {
             handler(ec);
         };
@@ -128,10 +128,6 @@ protected:
     void handle_read_heading(const code& ec, size_t) NOEXCEPT;
     void handle_read_payload(const code& ec, size_t payload_size,
         const heading_ptr& head) NOEXCEPT;
-
-    /// Notify subscribers of a new message (requires strand).
-    virtual code notify(messages::p2p::identifier id, uint32_t version,
-        const system::data_chunk& source) NOEXCEPT;
 
 private:
     bool is_handshaked() const NOEXCEPT;

@@ -76,6 +76,7 @@ bool proxy::paused() const NOEXCEPT
 
 // Stop (socket/proxy started upon create).
 // ----------------------------------------------------------------------------
+// The proxy is not allowed to stop itself (internally).
 
 bool proxy::stopped() const NOEXCEPT
 {

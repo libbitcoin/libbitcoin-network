@@ -55,19 +55,18 @@ public:
     /// Serialize and write http response to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
     template <class Message>
-    void send(Message&& message, result_handler&& handler) NOEXCEPT
+    void send(Message&& response, result_handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
-        const auto response = std::make_shared<Message>(
-            std::forward<Message>(message));
-
-        auto complete = [response, handler](const code& ec, size_t) NOEXCEPT
+        using namespace system;
+        const auto ptr = make_shared(std::forward<Message>(response));
+        auto complete = [ptr, handler](const code& ec, size_t) NOEXCEPT
         {
             handler(ec);
         };
 
-        write(*response, std::move(complete));
+        write(*ptr, std::move(complete));
     }
 
     /// Construct client channel to encapsulate and communicate on the socket.
