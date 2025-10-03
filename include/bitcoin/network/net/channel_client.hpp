@@ -96,7 +96,7 @@ public:
 private:
     void do_stop(const code& ec) NOEXCEPT;
     void handle_read_request(const code& ec, size_t bytes_read,
-        const http_string_request_ptr& request) NOEXCEPT;
+        const http_string_request_cptr& request) NOEXCEPT;
 
     // These are protected by strand.
     http_flat_buffer request_buffer_;

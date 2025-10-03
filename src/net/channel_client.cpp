@@ -107,7 +107,7 @@ void channel_client::read_request() NOEXCEPT
 }
 
 void channel_client::handle_read_request(const code& ec, size_t,
-    const http_string_request_ptr& request) NOEXCEPT
+    const http_string_request_cptr& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

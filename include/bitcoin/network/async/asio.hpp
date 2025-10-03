@@ -71,6 +71,7 @@ typedef boost::beast::http::request<http_data_body> http_data_request;
 typedef boost::beast::http::response<http_data_body> http_data_response;
 typedef boost::beast::http::request_parser<http_data_body> http_data_parser;
 typedef boost::beast::http::serializer<false, http_data_body> http_data_serializer;
+typedef std::shared_ptr<const http_data_request> http_data_request_cptr;
 typedef std::shared_ptr<http_data_request> http_data_request_ptr;
 
 // beast::http::string_body
@@ -79,6 +80,7 @@ typedef boost::beast::http::request<http_string_body> http_string_request;
 typedef boost::beast::http::response<http_string_body> http_string_response;
 typedef boost::beast::http::request_parser<http_string_body> http_string_parser;
 typedef boost::beast::http::serializer<false, http_string_body> http_string_serializer;
+typedef std::shared_ptr<const http_string_request> http_string_request_cptr;
 typedef std::shared_ptr<http_string_request> http_string_request_ptr;
 
 // beast::http::file_body
@@ -87,6 +89,7 @@ typedef boost::beast::http::request<http_file_body> http_file_request;
 typedef boost::beast::http::response<http_file_body> http_file_response;
 typedef boost::beast::http::request_parser<http_file_body> http_file_parser;
 typedef boost::beast::http::serializer<false, http_file_body> http_file_serializer;
+typedef std::shared_ptr<const http_file_request> http_file_request_cptr;
 typedef std::shared_ptr<http_file_request> http_file_request_ptr;
 
 } // namespace network
