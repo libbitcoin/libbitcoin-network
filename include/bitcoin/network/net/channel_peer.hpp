@@ -144,6 +144,7 @@ private:
     void handle_inactivity(const code& ec) NOEXCEPT;
 
     // These are protected by strand/order.
+
     bool quiet_{};
     distributor_peer distributor_;
     deadline::ptr expiration_;
