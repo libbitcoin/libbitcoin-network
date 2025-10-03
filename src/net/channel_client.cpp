@@ -100,7 +100,7 @@ void channel_client::read_request() NOEXCEPT
     reading_ = true;
     const auto request = to_shared<http_string_request>();
 
-    // 'prepare' appends available to write portion of buffer (moves pointers).
+    // Post handle_read_request to strand upon stop, error, or buffer full.
     read(request_buffer_, *request,
         std::bind(&channel_client::handle_read_request,
             shared_from_base<channel_client>(), _1, _2, request));
