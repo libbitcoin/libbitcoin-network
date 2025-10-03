@@ -191,17 +191,17 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected)
     std::promise<code> promise;
     const auto handler = [&](code ec) NOEXCEPT
     {
-        result &= !channel_ptr->stopped();
+        result &= channel_ptr->stopped();
         promise.set_value(ec);
     };
 
+    BOOST_REQUIRE(!channel_ptr->stopped());
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->send<http_string_response>({}, handler);
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
-    BOOST_REQUIRE(!channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(promise.get_future().get().value(), error::bad_stream);
     BOOST_REQUIRE(result);
 
@@ -221,17 +221,18 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected)
 
     auto result = true;
     std::promise<code> promise;
+
+    BOOST_REQUIRE(!channel_ptr->stopped());
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
         channel_ptr->send(http_string_response{}, [&](code ec)
         {
-            result &= !channel_ptr->stopped();
+            result &= channel_ptr->stopped();
             promise.set_value(ec);
         });
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
-    BOOST_REQUIRE(!channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(promise.get_future().get().value(), error::bad_stream);
     BOOST_REQUIRE(result);
 

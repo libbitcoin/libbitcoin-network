@@ -61,10 +61,20 @@ public:
 
         using namespace system;
         const auto ptr = make_shared(std::forward<Message>(response));
-        auto complete = [ptr, handler](const code& ec, size_t) NOEXCEPT
+
+        // Capture response in intermediate completion handler.
+        auto complete = [self = shared_from_base<channel_client>(), ptr,
+            handle = std::move(handler)](const code& ec, size_t) NOEXCEPT
         {
-            handler(ec);
+            if (ec) self->stop(ec);
+            handle(ec);
         };
+
+        if (!ptr)
+        {
+            complete(error::bad_alloc, zero);
+            return;
+        }
 
         write(*ptr, std::move(complete));
     }

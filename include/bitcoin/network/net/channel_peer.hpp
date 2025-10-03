@@ -65,19 +65,21 @@ public:
         const auto id = settings().identifier;
         const auto ptr = serialize(message, id, negotiated_version());
 
+        // Capture message in intermediate completion handler.
+        auto complete = [self = shared_from_base<channel_peer>(), ptr,
+            handle = std::move(handler)](const code& ec, size_t) NOEXCEPT
+        {
+            if (ec) self->stop(ec);
+            handle(ec);
+        };
+
         if (!ptr)
         {
-            LOGF("Serialization failure (" << message.command << ").");
-            handler(error::unknown);
+            complete(error::bad_alloc, zero);
             return;
         }
 
-        const asio::const_buffer buffer { ptr->data(), ptr->size() };
-        auto complete = [ptr, handler](const code& ec, size_t) NOEXCEPT
-        {
-            handler(ec);
-        };
-
+        const asio::const_buffer buffer{ ptr->data(), ptr->size() };
         write(buffer, std::move(complete));
     }
 
