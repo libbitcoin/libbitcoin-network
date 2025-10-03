@@ -61,7 +61,7 @@ void channel_client::stop(const code& ec) NOEXCEPT
     // Stop the read loop, stop accepting new work, cancel pending work.
     channel::stop(ec);
 
-    // Stop is posted to strand to protect timers.
+    // Stop is posted to strand to protect subscriber.
     boost::asio::post(strand(),
         std::bind(&channel_client::do_stop,
             shared_from_base<channel_client>(), ec));
