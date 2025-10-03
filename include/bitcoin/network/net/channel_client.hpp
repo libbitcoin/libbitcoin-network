@@ -90,18 +90,13 @@ public:
     void resume() NOEXCEPT override;
 
 private:
-    // Parser utilities.
-    static http_string_request detach(http_string_parser_ptr& parser) NOEXCEPT;
-    static void initialize(http_string_parser_ptr& parser) NOEXCEPT;
-    code parse(http_flat_buffer& buffer) NOEXCEPT;
-
     void read_request() NOEXCEPT;
-    void handle_read_request(const code& ec, size_t bytes_read) NOEXCEPT;
     void do_stop(const code& ec) NOEXCEPT;
+    void handle_read_request(const code& ec, size_t bytes_read,
+        const http_string_request_ptr& request) NOEXCEPT;
 
+    http_flat_buffer request_buffer_;
     request_subscriber subscriber_;
-    http_flat_buffer buffer_;
-    http_string_parser_ptr parser_{};
 };
 
 } // namespace network
