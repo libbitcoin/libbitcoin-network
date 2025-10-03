@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/p2p/bloom_filter_add.hpp>
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/p2p/enums/identifier.hpp>
 #include <bitcoin/network/messages/p2p/enums/level.hpp>
 #include <bitcoin/network/messages/p2p/enums/magic_numbers.hpp>

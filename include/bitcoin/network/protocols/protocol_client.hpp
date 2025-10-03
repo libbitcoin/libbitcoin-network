@@ -45,10 +45,12 @@ protected:
     DECLARE_SUBSCRIBE_CHANNEL();
 
     virtual void handle_receive_request(const code& ec,
-        const asio::http_request& request) NOEXCEPT;
+        const http_string_request& request) NOEXCEPT;
+    virtual void handle_successful_request(const code& ec) NOEXCEPT;
+    virtual void handle_failed_request(const code& ec,
+        const code& reason) NOEXCEPT;
 
 private:
-    void handle_unalive_request(const code& ec, const code& reason) NOEXCEPT;
 
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.

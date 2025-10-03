@@ -67,9 +67,9 @@ BOOST_AUTO_TEST_CASE(channel_client__stopped__default__false)
     BOOST_REQUIRE_NE(channel_ptr->nonce(), zero);
     BOOST_REQUIRE_EQUAL(channel_ptr->identifier(), expected_identifier);
 
-    // Stop completion is asynchronous.
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(error::invalid_magic);
-    channel_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(channel_client__properties__default__expected)
@@ -84,8 +84,9 @@ BOOST_AUTO_TEST_CASE(channel_client__properties__default__expected)
     BOOST_REQUIRE(!channel_ptr->address());
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
 
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(error::invalid_magic);
-    channel_ptr.reset();
 }
 
 BOOST_AUTO_TEST_CASE(channel_client__subscribe_message__subscribed__expected)
@@ -102,8 +103,8 @@ BOOST_AUTO_TEST_CASE(channel_client__subscribe_message__subscribed__expected)
     std::promise<code> message_stopped;
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->subscribe<asio::http_request>(
-            [&](code ec, const asio::http_request& request) NOEXCEPT
+        channel_ptr->subscribe<http_string_request>(
+            [&](code ec, const http_string_request& request) NOEXCEPT
             {
                 result &= is_zero(request.payload_size());
                 message_stopped.set_value(ec);
@@ -113,9 +114,12 @@ BOOST_AUTO_TEST_CASE(channel_client__subscribe_message__subscribed__expected)
 
     BOOST_REQUIRE(!channel_ptr->stopped());
 
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(expected_ec);
-    BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
+
     BOOST_REQUIRE(channel_ptr->stopped());
+    BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE(result);
 }
 
@@ -151,8 +155,8 @@ BOOST_AUTO_TEST_CASE(channel_client__stop__all_subscribed__expected)
             stop1_stopped.set_value(ec);
         });
 
-        channel_ptr->subscribe<asio::http_request>(
-            [&](code ec, const asio::http_request& request) NOEXCEPT
+        channel_ptr->subscribe<http_string_request>(
+            [&](code ec, const http_string_request& request) NOEXCEPT
             {
                 result &= is_zero(request.payload_size());
                 message_stopped.set_value(ec);
@@ -163,15 +167,18 @@ BOOST_AUTO_TEST_CASE(channel_client__stop__all_subscribed__expected)
     BOOST_REQUIRE(!channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(stop_subscribed.get_future().get(), error::success);
 
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
     channel_ptr->stop(expected_ec);
+
+    BOOST_REQUIRE(channel_ptr->stopped());
     BOOST_REQUIRE_EQUAL(message_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE_EQUAL(stop1_stopped.get_future().get(), expected_ec);
     BOOST_REQUIRE_EQUAL(stop2_stopped.get_future().get(), expected_ec);
-    BOOST_REQUIRE(channel_ptr->stopped());
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_stopped)
+BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected)
 {
     const logger log{};
     threadpool pool(2);
@@ -184,22 +191,26 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected_stopped)
     std::promise<code> promise;
     const auto handler = [&](code ec) NOEXCEPT
     {
-        // Send failure causes stop before handler invoked.
         result &= channel_ptr->stopped();
         promise.set_value(ec);
     };
 
+    BOOST_REQUIRE(!channel_ptr->stopped());
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send<asio::http_response>({}, handler);
+        channel_ptr->send<http_string_response>({}, handler);
     });
 
-    BOOST_REQUIRE(!channel_ptr->stopped());
+    // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
     BOOST_REQUIRE_EQUAL(promise.get_future().get().value(), error::bad_stream);
     BOOST_REQUIRE(result);
+
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
+    channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected_stopped)
+BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected)
 {
     const logger log{};
     threadpool pool(2);
@@ -210,19 +221,24 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected_stopped)
 
     auto result = true;
     std::promise<code> promise;
+
+    BOOST_REQUIRE(!channel_ptr->stopped());
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send(asio::http_response{}, [&](code ec)
+        channel_ptr->send(http_string_response{}, [&](code ec)
         {
-            // Send failure causes stop before handler invoked.
             result &= channel_ptr->stopped();
             promise.set_value(ec);
         });
     });
 
-    BOOST_REQUIRE(!channel_ptr->stopped());
+    // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
     BOOST_REQUIRE_EQUAL(promise.get_future().get().value(), error::bad_stream);
     BOOST_REQUIRE(result);
+
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
+    channel_ptr->stop(error::invalid_magic);
 }
 
 BOOST_AUTO_TEST_CASE(channel_client__paused__resume_after_read_fail__true)
@@ -248,20 +264,15 @@ BOOST_AUTO_TEST_CASE(channel_client__paused__resume_after_read_fail__true)
     std::promise<bool> paused_after_read_fail;
     boost::asio::post(channel_ptr->strand(), [=, &paused_after_read_fail]() NOEXCEPT
     {
+        // paused() requires strand.
         paused_after_read_fail.set_value(channel_ptr->paused());
     });
 
     BOOST_REQUIRE(paused_after_read_fail.get_future().get());
 
-    // Ensures stop is not executed concurrenty due to resume, guarding promise.
-    std::promise<bool> stopped;
-    boost::asio::post(channel_ptr->strand(), [=, &stopped]() NOEXCEPT
-    {
-        channel_ptr->stop(error::invalid_magic);
-        stopped.set_value(true);
-    });
-
-    BOOST_REQUIRE(stopped.get_future().get());
+    // Stop is asynchronous, threadpool destruct blocks until all complete.
+    // Calling stop here sets channel.stopped and prevents destructor assertion.
+    channel_ptr->stop(error::invalid_magic);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

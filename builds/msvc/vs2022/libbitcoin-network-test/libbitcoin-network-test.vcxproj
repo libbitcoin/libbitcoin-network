@@ -157,9 +157,7 @@
     <ClCompile Include="..\..\..\..\test\messages\p2p\compact_block.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\compact_block_item.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\compact_transactions.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\p2p\enums\identifier.cpp">
-      <ObjectFileName>$(IntDir)test_messages_p2p_enums_identifier.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\p2p\enums\identifier.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\enums\level.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\enums\magic_numbers.cpp">
       <ObjectFileName>$(IntDir)test_messages_p2p_enums_magic_numbers.obj</ObjectFileName>
@@ -175,54 +173,27 @@
     <ClCompile Include="..\..\..\..\test\messages\p2p\get_data.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\get_headers.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\headers.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\p2p\heading.cpp">
-      <ObjectFileName>$(IntDir)test_messages_p2p_heading.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\p2p\heading.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\inventory.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\inventory_item.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\memory_pool.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\merkle_block.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\p2p\message.cpp">
-      <ObjectFileName>$(IntDir)test_messages_p2p_message.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\p2p\message.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\not_found.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\p2p\ping.cpp">
-      <ObjectFileName>$(IntDir)test_messages_p2p_ping.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\p2p\ping.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\pong.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\reject.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\send_address_v2.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\send_compact.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\send_headers.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\transaction.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\p2p\version.cpp">
-      <ObjectFileName>$(IntDir)test_messages_p2p_version.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\p2p\version.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\p2p\witness_tx_id_relay.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\identifier.cpp">
-      <ObjectFileName>$(IntDir)test_messages_rpc_enums_identifier.obj</ObjectFileName>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\magic_numbers.cpp">
       <ObjectFileName>$(IntDir)test_messages_rpc_enums_magic_numbers.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\method.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\status.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\target.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\version.cpp">
-      <ObjectFileName>$(IntDir)test_messages_rpc_enums_version.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\heading.cpp">
-      <ObjectFileName>$(IntDir)test_messages_rpc_heading.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\message.cpp">
-      <ObjectFileName>$(IntDir)test_messages_rpc_message.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\ping.cpp">
-      <ObjectFileName>$(IntDir)test_messages_rpc_ping.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\rpc\request.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\rpc\response.cpp" />
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />

@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/hosts.hpp>
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>

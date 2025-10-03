@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/broadcaster.hpp>
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/messages/p2p/messages.hpp>
 

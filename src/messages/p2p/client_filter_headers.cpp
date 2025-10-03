@@ -21,7 +21,6 @@
 
 #include <bitcoin/network/messages/p2p/client_filter_headers.hpp>
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/p2p/enums/identifier.hpp>
 #include <bitcoin/network/messages/p2p/enums/level.hpp>
 #include <bitcoin/network/messages/p2p/message.hpp>

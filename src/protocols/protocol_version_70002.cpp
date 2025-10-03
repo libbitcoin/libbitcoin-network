@@ -19,7 +19,6 @@
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/p2p/messages.hpp>

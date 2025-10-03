@@ -91,15 +91,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/p2p/version.cpp \
     src/messages/p2p/version_acknowledge.cpp \
     src/messages/p2p/witness_tx_id_relay.cpp \
-    src/messages/rpc/heading.cpp \
-    src/messages/rpc/message.cpp \
-    src/messages/rpc/ping.cpp \
-    src/messages/rpc/request.cpp \
-    src/messages/rpc/response.cpp \
-    src/messages/rpc/enums/method.cpp \
-    src/messages/rpc/enums/status.cpp \
     src/messages/rpc/enums/target.cpp \
-    src/messages/rpc/enums/version.cpp \
     src/net/acceptor.cpp \
     src/net/broadcaster.cpp \
     src/net/channel.cpp \
@@ -215,17 +207,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/p2p/enums/level.cpp \
     test/messages/p2p/enums/magic_numbers.cpp \
     test/messages/p2p/enums/service.cpp \
-    test/messages/rpc/heading.cpp \
-    test/messages/rpc/message.cpp \
-    test/messages/rpc/ping.cpp \
-    test/messages/rpc/request.cpp \
-    test/messages/rpc/response.cpp \
-    test/messages/rpc/enums/identifier.cpp \
     test/messages/rpc/enums/magic_numbers.cpp \
-    test/messages/rpc/enums/method.cpp \
-    test/messages/rpc/enums/status.cpp \
     test/messages/rpc/enums/target.cpp \
-    test/messages/rpc/enums/version.cpp \
     test/net/acceptor.cpp \
     test/net/broadcaster.cpp \
     test/net/channel.cpp \
@@ -384,21 +367,12 @@ include_bitcoin_network_messages_p2p_enums_HEADERS = \
 
 include_bitcoin_network_messages_rpcdir = ${includedir}/bitcoin/network/messages/rpc
 include_bitcoin_network_messages_rpc_HEADERS = \
-    include/bitcoin/network/messages/rpc/heading.hpp \
-    include/bitcoin/network/messages/rpc/message.hpp \
-    include/bitcoin/network/messages/rpc/messages.hpp \
-    include/bitcoin/network/messages/rpc/ping.hpp \
-    include/bitcoin/network/messages/rpc/request.hpp \
-    include/bitcoin/network/messages/rpc/response.hpp
+    include/bitcoin/network/messages/rpc/messages.hpp
 
 include_bitcoin_network_messages_rpc_enumsdir = ${includedir}/bitcoin/network/messages/rpc/enums
 include_bitcoin_network_messages_rpc_enums_HEADERS = \
-    include/bitcoin/network/messages/rpc/enums/identifier.hpp \
     include/bitcoin/network/messages/rpc/enums/magic_numbers.hpp \
-    include/bitcoin/network/messages/rpc/enums/method.hpp \
-    include/bitcoin/network/messages/rpc/enums/status.hpp \
-    include/bitcoin/network/messages/rpc/enums/target.hpp \
-    include/bitcoin/network/messages/rpc/enums/version.hpp
+    include/bitcoin/network/messages/rpc/enums/target.hpp
 
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \

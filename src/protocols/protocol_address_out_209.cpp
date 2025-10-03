@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/protocols/protocol_address_out_209.hpp>
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/p2p/messages.hpp>

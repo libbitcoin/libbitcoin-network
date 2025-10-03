@@ -58,18 +58,37 @@ typedef asio::acceptor::reuse_address reuse_address;
 typedef tcp::socket socket;
 typedef std::shared_ptr<socket> socket_ptr;
 
-// http
-typedef boost::beast::flat_buffer http_buffer;
-typedef boost::beast::http::string_body http_string_body;
-typedef boost::beast::http::request<http_string_body> http_request;
-typedef boost::beast::http::response<http_string_body> http_response;
-typedef boost::beast::http::request_parser<http_string_body> http_parser;
-typedef boost::beast::http::serializer<false, http_string_body> http_serializer;
-
-constexpr auto max_connections = 
-    boost::asio::socket_base::max_listen_connections;
+constexpr auto max_connections = boost::asio::socket_base::max_listen_connections;
 
 } // namespace asio
+
+// flat_buffer
+typedef boost::beast::flat_buffer http_flat_buffer;
+
+// beast::http::vector_body<uint8_t>
+typedef boost::beast::http::vector_body<uint8_t> http_data_body;
+typedef boost::beast::http::request<http_data_body> http_data_request;
+typedef boost::beast::http::response<http_data_body> http_data_response;
+typedef boost::beast::http::request_parser<http_data_body> http_data_parser;
+typedef boost::beast::http::serializer<false, http_data_body> http_data_serializer;
+typedef std::shared_ptr<http_data_request> http_data_request_ptr;
+
+// beast::http::string_body
+typedef boost::beast::http::string_body http_string_body;
+typedef boost::beast::http::request<http_string_body> http_string_request;
+typedef boost::beast::http::response<http_string_body> http_string_response;
+typedef boost::beast::http::request_parser<http_string_body> http_string_parser;
+typedef boost::beast::http::serializer<false, http_string_body> http_string_serializer;
+typedef std::shared_ptr<http_string_request> http_string_request_ptr;
+
+// beast::http::file_body
+typedef boost::beast::http::file_body http_file_body;
+typedef boost::beast::http::request<http_file_body> http_file_request;
+typedef boost::beast::http::response<http_file_body> http_file_response;
+typedef boost::beast::http::request_parser<http_file_body> http_file_parser;
+typedef boost::beast::http::serializer<false, http_file_body> http_file_serializer;
+typedef std::shared_ptr<http_file_request> http_file_request_ptr;
+
 } // namespace network
 } // namespace libbitcoin
 

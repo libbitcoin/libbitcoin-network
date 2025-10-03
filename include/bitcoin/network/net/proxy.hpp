@@ -23,7 +23,6 @@
 #include <deque>
 #include <memory>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/memory.hpp>
@@ -34,6 +33,7 @@ namespace network {
 
 /// Abstract, thread safe except some methods requiring strand.
 /// Handles all channel communication, error handling, and logging.
+/// Caller must retain ownership of read/write buffers until handler invoked.
 class BCT_API proxy
   : public enable_shared_from_base<proxy>, public reporter
 {
@@ -90,23 +90,43 @@ public:
 protected:
     proxy(const socket::ptr& socket) NOEXCEPT;
 
-    /// Read part of a message from the remote endpoint (requires strand).
-    virtual void read_some(const asio::mutable_buffer& buffer,
+    /////// Read part of a message from the remote endpoint.
+    ////virtual void read_some(const asio::mutable_buffer& buffer,
+    ////    count_handler&& handler) NOEXCEPT;
+
+    /// Read fixed-size message from the remote endpoint.
+    virtual void read(const asio::mutable_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
-    /// Read fixed-size message from the remote endpoint (requires strand).
-    virtual void read(const system::data_slab& buffer,
+    /// Read full http string request from the socket.
+    virtual void read(http_flat_buffer& buffer, http_string_request& request,
         count_handler&& handler) NOEXCEPT;
 
-    /// Send a complete message to the remote endpoint (requires strand).
-    virtual void write(const system::chunk_ptr& payload,
-        result_handler&& handler) NOEXCEPT;
+    /// Read full http string request from the socket.
+    virtual void read(http_string_request& request,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write full http string response to the socket.
+    virtual void write(const http_string_response& response,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write full http data response to the socket.
+    virtual void write(const http_data_response& response,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write full http file response to the socket.
+    virtual void write(http_file_response& response,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Send a complete message to the remote endpoint.
+    virtual void write(const asio::const_buffer& payload,
+        count_handler&& handler) NOEXCEPT;
 
     /// Subscribe to stop notification (requires strand).
     void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
 private:
-    typedef std::deque<std::pair<system::chunk_ptr, result_handler>> queue;
+    typedef std::deque<std::pair<asio::const_buffer, count_handler>> queue;
 
     void do_stop(const code& ec) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
@@ -114,9 +134,11 @@ private:
 
     // Implement chunked write with result handler.
     void write() NOEXCEPT;
+    void do_write(const asio::const_buffer& payload,
+        const count_handler& handler) NOEXCEPT;
     void handle_write(const code& ec, size_t bytes,
-        const system::chunk_ptr& payload,
-        const result_handler& handler) NOEXCEPT;
+        const asio::const_buffer& payload,
+        const count_handler& handler) NOEXCEPT;
 
     // These are thread safe.
     std::atomic_bool paused_{ true };

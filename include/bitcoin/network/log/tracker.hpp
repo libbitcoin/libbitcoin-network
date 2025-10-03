@@ -21,7 +21,6 @@
 
 #include <atomic>
 #include <typeinfo>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/levels.hpp>
 #include <bitcoin/network/log/logger.hpp>

@@ -19,16 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
 
-#include <bitcoin/network/messages/rpc/enums/identifier.hpp>
 #include <bitcoin/network/messages/rpc/enums/magic_numbers.hpp>
-#include <bitcoin/network/messages/rpc/enums/method.hpp>
-#include <bitcoin/network/messages/rpc/enums/status.hpp>
 #include <bitcoin/network/messages/rpc/enums/target.hpp>
-#include <bitcoin/network/messages/rpc/enums/version.hpp>
-#include <bitcoin/network/messages/rpc/heading.hpp>
-#include <bitcoin/network/messages/rpc/message.hpp>
-#include <bitcoin/network/messages/rpc/ping.hpp>
-#include <bitcoin/network/messages/rpc/request.hpp>
-#include <bitcoin/network/messages/rpc/response.hpp>
 
 #endif

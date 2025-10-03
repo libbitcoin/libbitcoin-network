@@ -38,17 +38,19 @@ using namespace messages::rpc;
 using namespace std::placeholders;
 using namespace std::ranges;
 
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // TODO: inactivity timeout, duration timeout, connection limit.
 channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT
   : channel(log, socket, settings, identifier),
+    request_buffer_(ceilinged_add(max_head, max_body)),
     subscriber_(strand()),
-    buffer_(ceilinged_add(max_head, max_body)),
     tracker<channel_client>(log)
 {
-    initialize(parser_);
 }
 
 // Start/stop/resume (started upon create).
@@ -59,7 +61,7 @@ void channel_client::stop(const code& ec) NOEXCEPT
     // Stop the read loop, stop accepting new work, cancel pending work.
     channel::stop(ec);
 
-    // Stop is posted to strand to protect timers.
+    // Stop is posted to strand to protect subscriber.
     boost::asio::post(strand(),
         std::bind(&channel_client::do_stop,
             shared_from_base<channel_client>(), ec));
@@ -85,27 +87,39 @@ void channel_client::resume() NOEXCEPT
 void channel_client::read_request() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(!reading_, "already reading");
 
-    // 'prepare' appends available to write portion of buffer (moves pointers).
-    read_some(buffer_.prepare(buffer_.max_size() - buffer_.size()),
+    // Both terminate read loop, paused can be resumed, stopped cannot.
+    // Pause only prevents start of the read loop, it does not prevent messages
+    // from being issued for sockets already past that point (e.g. waiting).
+    // This is mainly for startup coordination, preventing missed messages.
+    if (stopped() || paused() || reading_)
+        return;
+
+    // HTTP is half duplex.
+    reading_ = true;
+    const auto request = to_shared<http_string_request>();
+
+    // Post handle_read_request to strand upon stop, error, or buffer full.
+    read(request_buffer_, *request,
         std::bind(&channel_client::handle_read_request,
-            shared_from_base<channel_client>(), _1, _2));
+            shared_from_base<channel_client>(), _1, _2, request));
 }
 
-void channel_client::handle_read_request(const code& ec,
-    size_t bytes_read) NOEXCEPT
+void channel_client::handle_read_request(const code& ec, size_t,
+    const http_string_request_ptr& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     if (stopped())
     {
         LOGQ("Request read abort [" << authority() << "]");
-        stop(error::channel_stopped);
         return;
     }
 
     if (ec)
     {
+        // Don't log common conditions.
         if (ec != error::peer_disconnect && ec != error::operation_canceled)
         {
             LOGF("Request read failure [" << authority() << "] "
@@ -116,80 +130,13 @@ void channel_client::handle_read_request(const code& ec,
         return;
     }
 
-    // 'commit' identifies written portion of buffer (moves pointers).
-    buffer_.commit(bytes_read);
-    const auto code = parse(buffer_);
-
-    // Read more because it was requested or not making progress.
-    if (code == error::need_more)
-    {
-        read_request();
-        return;
-    }
-
-    // Log but allow protocol to handle and respond to the invalid request.
-    if (code)
-    {
-        LOGR("Invalid request [" << authority() << "] " << code.message());
-    }
-
-    subscriber_.notify(code, detach(parser_));
-    read_request();
+    // HTTP is half duplex.
+    reading_ = false;
+    subscriber_.notify(error::success, *request);
 }
 
-// Parser utilities.
-// ----------------------------------------------------------------------------
-
-// static
-void channel_client::initialize(http_parser_ptr& parser) NOEXCEPT
-{
-    parser = std::make_unique<asio::http_parser>();
-    parser->header_limit(max_head);
-    parser->body_limit(max_body);
-}
-
-// static
-asio::http_request channel_client::detach(http_parser_ptr& parser) NOEXCEPT
-{
-    BC_ASSERT(parser);
-    auto out = parser->release();
-    initialize(parser);
-    return out;
-}
-
-// Handles exceptions, error conversion, buffer wrap/consume, and iteration.
-code channel_client::parse(asio::http_buffer& buffer) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    using namespace boost::beast;
-    size_t parsed{ buffer.size() };
-    error_code ec{};
-
-    // Making progress, not done, and no other error (stopped ensures halt).
-    while (!is_zero(parsed) && !parser_->is_done() && !ec && !stopped())
-    {
-        try
-        {
-            // 'put' parses some part of unparsed buffer (defined by .data()).
-            parsed = parser_->put(asio::const_buffer{ buffer.data() }, ec);
-
-            // 'consume' increases parsed portion of buffer (moves pointers).
-            buffer.consume(parsed);
-        }
-        catch (const std::exception& LOG_ONLY(e))
-        {
-            LOGF("Request parse exception [" << authority() << "] " << e.what());
-            ec = http::error::bad_alloc;
-        }
-    }
-
-    // Not making progress, not done, and no other error - presumes more data.
-    if (is_zero(parsed) && !parser_->is_done() && !ec)
-        return error::need_more;
-
-    return error::beast_to_error_code(ec);
-}
-
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

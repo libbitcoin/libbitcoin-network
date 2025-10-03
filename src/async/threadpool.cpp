@@ -19,7 +19,6 @@
 #include <bitcoin/network/async/threadpool.hpp>
 
 #include <thread>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/thread.hpp>
 #include <bitcoin/network/define.hpp>

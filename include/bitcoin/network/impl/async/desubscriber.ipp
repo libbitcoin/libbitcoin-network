@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_ASYNC_DESUBSCRIBER_IPP
 #define LIBBITCOIN_NETWORK_ASYNC_DESUBSCRIBER_IPP
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

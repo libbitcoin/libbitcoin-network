@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <ranges>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/p2p/enums/identifier.hpp>
 #include <bitcoin/network/messages/p2p/inventory_item.hpp>

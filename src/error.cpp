@@ -18,7 +18,6 @@
  */
 ////#include <bitcoin/network/error.hpp>
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 
@@ -366,7 +365,7 @@ code beast_to_error_code(const error::boost_code& ec) NOEXCEPT
     if (ec == http::error::short_read)
         return error::short_read;
 
-    return error::unknown;
+    return asio_to_error_code(ec);
 }
 
 } // namespace error

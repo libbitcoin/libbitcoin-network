@@ -19,7 +19,6 @@
 #include <bitcoin/network/async/time.hpp>
 
 #include <time.h>
-#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {

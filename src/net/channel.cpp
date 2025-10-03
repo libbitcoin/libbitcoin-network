@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/net/channel.hpp>
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -29,6 +28,8 @@
 namespace libbitcoin {
 namespace network {
 
+// Protocols invoke channel stop for application layer protocol violations.
+// Channels invoke channel stop for channel timouts and communcation failures.
 channel::channel(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT
   : proxy(socket),

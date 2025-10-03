@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_ASYNC_RACES_RACE_VOLUME_HPP
 
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

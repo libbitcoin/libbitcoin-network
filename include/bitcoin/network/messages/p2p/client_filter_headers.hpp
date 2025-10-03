@@ -23,7 +23,6 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_P2P_CLIENT_FILTER_HEADERS_HPP
 
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/p2p/enums/identifier.hpp>
 

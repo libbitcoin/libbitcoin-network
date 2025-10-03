@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_NET_CHANNEL_PEER_HPP
 
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -58,24 +57,30 @@ public:
     /// Serialize and write message to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
     template <class Message>
-    void send(const Message& message, result_handler&& complete) NOEXCEPT
+    void send(const Message& message, result_handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
-        // TODO: build witness into feature w/magic and negotiated version.
-        // TODO: if self and peer services show witness, set feature true.
-        const auto data = messages::p2p::serialize(message,
-            settings().identifier, negotiated_version());
+        using namespace messages::p2p;
+        const auto id = settings().identifier;
+        const auto ptr = serialize(message, id, negotiated_version());
 
-        if (!data)
+        // Capture message in intermediate completion handler.
+        auto complete = [self = shared_from_base<channel_peer>(), ptr,
+            handle = std::move(handler)](const code& ec, size_t) NOEXCEPT
         {
-            // This is an internal error, should never happen.
-            LOGF("Serialization failure (" << Message::command << ").");
-            complete(error::unknown);
+            if (ec) self->stop(ec);
+            handle(ec);
+        };
+
+        if (!ptr)
+        {
+            complete(error::bad_alloc, zero);
             return;
         }
 
-        write(data, std::move(complete));
+        const asio::const_buffer buffer{ ptr->data(), ptr->size() };
+        write(buffer, std::move(complete));
     }
 
     /// Construct a p2p channel to encapsulate and communicate on the socket.
@@ -126,10 +131,6 @@ protected:
     void handle_read_payload(const code& ec, size_t payload_size,
         const heading_ptr& head) NOEXCEPT;
 
-    /// Notify subscribers of a new message (requires strand).
-    virtual code notify(messages::p2p::identifier id, uint32_t version,
-        const system::data_chunk& source) NOEXCEPT;
-
 private:
     bool is_handshaked() const NOEXCEPT;
     void do_stop(const code& ec) NOEXCEPT;
@@ -143,6 +144,7 @@ private:
     void handle_inactivity(const code& ec) NOEXCEPT;
 
     // These are protected by strand/order.
+
     bool quiet_{};
     distributor_peer distributor_;
     deadline::ptr expiration_;

@@ -19,7 +19,6 @@
 #include <bitcoin/network/sessions/session_manual.hpp>
 
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/log/log.hpp>

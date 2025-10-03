@@ -19,7 +19,6 @@
 #include <bitcoin/network/sessions/session_inbound.hpp>
 
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>

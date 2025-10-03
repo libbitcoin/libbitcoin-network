@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/memory.hpp>
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

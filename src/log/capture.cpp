@@ -20,7 +20,6 @@
 
 #include <optional>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {

@@ -19,7 +19,6 @@
 #include <bitcoin/network/messages/rpc/enums/target.hpp>
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/enums/method.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -27,7 +26,7 @@ namespace messages {
 namespace rpc {
 
 using namespace boost::urls;
-using namespace system::wallet;
+using namespace boost::beast::http;
 
 bool is_origin_form(const std::string& target) NOEXCEPT
 {
@@ -82,36 +81,37 @@ bool is_asterisk_form(const std::string& target) NOEXCEPT
     return target == "*";
 }
 
-target to_target(const std::string& value, method method) NOEXCEPT
+// common http verbs
+target to_target(const std::string& value, verb method) NOEXCEPT
 {
     switch (method)
     {
-        case method::get:
-        case method::head:
-        case method::post:
-        case method::put:
-        case method::delete_:
-        case method::trace:
+        case verb::get:
+        case verb::head:
+        case verb::post:
+        case verb::put:
+        case verb::delete_:
+        case verb::trace:
         {
             return is_origin_form(value) ?
                 target::origin : (is_absolute_form(value) ?
-                    target::absolute : target::undefined);
+                    target::absolute : target::unknown);
         }
-        case method::options:
+        case verb::options:
         {
             return is_asterisk_form(value) ?
                 target::asterisk : (is_origin_form(value) ?
                     target::origin : (is_absolute_form(value) ?
-                        target::absolute : target::undefined));
+                        target::absolute : target::unknown));
         }
-        case method::connect:
+        case verb::connect:
         {
             return is_authority_form(value) ?
-                target::authority : target::undefined;
+                target::authority : target::unknown;
         }
         default:
-        case method::undefined:
-            return target::undefined;
+        case verb::unknown:
+            return target::unknown;
     }
 }
 

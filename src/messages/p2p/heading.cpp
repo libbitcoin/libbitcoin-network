@@ -19,7 +19,6 @@
 #include <bitcoin/network/messages/p2p/heading.hpp>
 
 #include <map>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/p2p/address.hpp>
 #include <bitcoin/network/messages/p2p/alert.hpp>
 #include <bitcoin/network/messages/p2p/block.hpp>

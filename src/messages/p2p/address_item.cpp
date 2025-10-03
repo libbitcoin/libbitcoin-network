@@ -19,7 +19,6 @@
 #include <bitcoin/network/messages/p2p/address_item.hpp>
 
 #include <tuple>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/p2p/enums/identifier.hpp>
 #include <bitcoin/network/messages/p2p/enums/level.hpp>
 #include <bitcoin/network/messages/p2p/message.hpp>

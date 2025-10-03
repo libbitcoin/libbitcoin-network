@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/p2p/memory_pool.hpp>
 
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/messages/p2p/enums/identifier.hpp>
 #include <bitcoin/network/messages/p2p/enums/level.hpp>
 #include <bitcoin/network/messages/p2p/message.hpp>

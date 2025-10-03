@@ -19,7 +19,6 @@
 #include <bitcoin/network/protocols/protocol_address_in_209.hpp>
 
 #include <algorithm>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/p2p/messages.hpp>

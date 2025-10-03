@@ -19,7 +19,6 @@
 #include <bitcoin/network/net/channel_peer.hpp>
 
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -42,6 +41,9 @@ static constexpr size_t invalid_payload_dump_size = 0xff;
 static constexpr uint32_t http_magic = 0x20544547;
 static constexpr uint32_t https_magic = 0x02010316;
 
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // Factory for fixed deadline timer pointer construction.
@@ -78,7 +80,7 @@ void channel_peer::stop(const code& ec) NOEXCEPT
     // Stop the read loop, stop accepting new work, cancel pending work.
     channel::stop(ec);
 
-    // Stop is posted to strand to protect timers.
+    // Stop is posted to strand to protect timers and distributor.
     boost::asio::post(strand(),
         std::bind(&channel_peer::do_stop,
             shared_from_base<channel_peer>(), ec));
@@ -91,7 +93,6 @@ void channel_peer::do_stop(const code& ec) NOEXCEPT
     stop_expiration();
     stop_inactivity();
 
-    // TODO: this was moved from proxy::do_stop, so order of stop has changed.
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
     distributor_.stop(ec);
@@ -288,16 +289,6 @@ void channel_peer::handle_inactivity(const code& ec) NOEXCEPT
 // Read cycle (read continues until stop called).
 // ----------------------------------------------------------------------------
 
-code channel_peer::notify(messages::p2p::identifier id, uint32_t version,
-    const data_chunk& source) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // TODO: build witness into feature w/magic and negotiated version.
-    // TODO: if self and peer services show witness, set feature true.
-    return distributor_.notify(id, version, source);
-}
-
 void channel_peer::read_heading() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -310,7 +301,7 @@ void channel_peer::read_heading() NOEXCEPT
         return;
 
     // Post handle_read_heading to strand upon stop, error, or buffer full.
-    read(heading_buffer_,
+    read({ heading_buffer_.data(), heading_buffer_.size() },
         std::bind(&channel_peer::handle_read_heading,
             shared_from_base<channel_peer>(), _1, _2));
 }
@@ -322,12 +313,12 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
     if (stopped())
     {
         LOGQ("Heading read abort [" << authority() << "]");
-        stop(error::channel_stopped);
         return;
     }
 
     if (ec)
     {
+        // Don't log common conditions.
         if (ec != error::peer_disconnect && ec != error::operation_canceled)
         {
             LOGF("Heading read failure [" << authority() << "] "
@@ -379,7 +370,7 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
     payload_buffer_.resize(head->payload_size);
 
     // Post handle_read_payload to strand upon stop, error, or buffer full.
-    read(payload_buffer_,
+    read({ payload_buffer_.data(), payload_buffer_.size() },
         std::bind(&channel_peer::handle_read_payload,
             shared_from_base<channel_peer>(), _1, _2, head));
 }
@@ -395,12 +386,12 @@ void channel_peer::handle_read_payload(const code& ec,
     if (stopped())
     {
         LOGQ("Payload read abort [" << authority() << "]");
-        stop(error::channel_stopped);
         return;
     }
 
     if (ec)
     {
+        // Don't log common conditions.
         if (ec != error::peer_disconnect && ec != error::operation_canceled)
         {
             LOGF("Payload read failure [" << authority() << "] "
@@ -429,7 +420,8 @@ void channel_peer::handle_read_payload(const code& ec,
     // subscribers on the same thread. This significantly reduces deallocation
     // cost in constrast to allowing the object to destroyed on another thread.
     // If object is passed to another thread destruction cost can be very high.
-    const auto code = notify(head->id(), negotiated_version(), payload_buffer_);
+    const auto code = distributor_.notify(head->id(), negotiated_version(),
+        payload_buffer_);
 
     if (code)
     {
@@ -471,6 +463,8 @@ void channel_peer::handle_read_payload(const code& ec,
     read_heading();
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

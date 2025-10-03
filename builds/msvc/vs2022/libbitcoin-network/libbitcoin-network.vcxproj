@@ -162,48 +162,24 @@
     <ClCompile Include="..\..\..\..\src\messages\p2p\get_data.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\get_headers.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\headers.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\p2p\heading.cpp">
-      <ObjectFileName>$(IntDir)src_messages_p2p_heading.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\p2p\heading.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\inventory.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\inventory_item.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\memory_pool.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\merkle_block.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\p2p\message.cpp">
-      <ObjectFileName>$(IntDir)src_messages_p2p_message.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\p2p\message.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\not_found.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\p2p\ping.cpp">
-      <ObjectFileName>$(IntDir)src_messages_p2p_ping.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\p2p\ping.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\pong.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\reject.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\send_address_v2.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\send_compact.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\send_headers.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\transaction.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\p2p\version.cpp">
-      <ObjectFileName>$(IntDir)src_messages_p2p_version.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\p2p\version.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\witness_tx_id_relay.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\method.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\status.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\rpc\enums\target.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\version.cpp">
-      <ObjectFileName>$(IntDir)src_messages_rpc_enums_version.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\rpc\heading.cpp">
-      <ObjectFileName>$(IntDir)src_messages_rpc_heading.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\rpc\message.cpp">
-      <ObjectFileName>$(IntDir)src_messages_rpc_message.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\rpc\ping.cpp">
-      <ObjectFileName>$(IntDir)src_messages_rpc_ping.obj</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\rpc\request.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\rpc\response.cpp" />
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\broadcaster.cpp" />
@@ -322,18 +298,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\p2p\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\p2p\version_acknowledge.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\p2p\witness_tx_id_relay.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\identifier.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\magic_numbers.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\method.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\status.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\target.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\version.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\heading.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\message.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\messages.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\ping.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\request.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\response.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\broadcaster.hpp" />

@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_SESSION_SEED_HPP
 
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>

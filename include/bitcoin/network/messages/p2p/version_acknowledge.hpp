@@ -20,7 +20,6 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_P2P_VERSION_ACKNOWLEDGE_HPP
 
 #include <memory>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/p2p/enums/identifier.hpp>
 

@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -192,8 +191,8 @@ private:
 
 #define DECLARE_SEND() \
     template <class Derived, class Message, typename Method, typename... Args> \
-    void send(const Message& message, Method&& method, Args&&... args) NOEXCEPT \
-    { channel_->send<Message>(message, BIND_SHARED(method, args)); }
+    void send(Message&& message, Method&& method, Args&&... args) NOEXCEPT \
+    { channel_->send<Message>(std::forward<Message>(message), BIND_SHARED(method, args)); }
 
 #define DECLARE_SUBSCRIBE_CHANNEL() \
     template <class Derived, class Message, typename Method, typename... Args> \

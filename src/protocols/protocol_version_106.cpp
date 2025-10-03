@@ -22,7 +22,6 @@
 #include <chrono>
 #include <memory>
 #include <utility>
-#include <bitcoin/system.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/p2p/messages.hpp>

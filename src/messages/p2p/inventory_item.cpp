@@ -18,7 +18,6 @@
  */
 #include <bitcoin/network/messages/p2p/inventory_item.hpp>
 
-#include <bitcoin/system.hpp>
 
 namespace libbitcoin {
 namespace network {
