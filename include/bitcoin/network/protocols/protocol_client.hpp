@@ -46,10 +46,11 @@ protected:
 
     virtual void handle_receive_request(const code& ec,
         const http_string_request& request) NOEXCEPT;
+    virtual void handle_successful_request(const code& ec) NOEXCEPT;
+    virtual void handle_failed_request(const code& ec,
+        const code& reason) NOEXCEPT;
 
 private:
-    void handle_successful_request(const code& ec) NOEXCEPT;
-    void handle_failed_request(const code& ec, const code& reason) NOEXCEPT;
 
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.

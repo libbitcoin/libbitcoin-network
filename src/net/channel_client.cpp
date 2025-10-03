@@ -74,18 +74,11 @@ void channel_client::do_stop(const code& ec) NOEXCEPT
     subscriber_.stop(ec, {});
 }
 
-// Resume must be called (only once) from message handler (if not stopped).
-// Calling more than once is safe but implies a protocol problem. Failure to
-// call after successful message handling will result in a stalled channel.
 void channel_client::resume() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    if (paused())
-    {
-        channel::resume();
-        read_request();
-    }
+    channel::resume();
+    read_request();
 }
 
 // Read cycle (read continues until stop called, call only once).
@@ -94,14 +87,17 @@ void channel_client::resume() NOEXCEPT
 void channel_client::read_request() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(!reading_, "already reading");
 
     // Both terminate read loop, paused can be resumed, stopped cannot.
     // Pause only prevents start of the read loop, it does not prevent messages
     // from being issued for sockets already past that point (e.g. waiting).
     // This is mainly for startup coordination, preventing missed messages.
-    if (stopped() || paused())
+    if (stopped() || paused() || reading_)
         return;
 
+    // HTTP is half duplex.
+    reading_ = true;
     const auto request = to_shared<http_string_request>();
 
     // 'prepare' appends available to write portion of buffer (moves pointers).
@@ -134,9 +130,8 @@ void channel_client::handle_read_request(const code& ec, size_t,
         return;
     }
 
-    // HTTP is half duplex, this subscriber must stop or resume channel.
-    pause();
-
+    // HTTP is half duplex.
+    reading_ = false;
     subscriber_.notify(error::success, *request);
 }
 

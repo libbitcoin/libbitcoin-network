@@ -199,7 +199,7 @@ void protocol_client::handle_receive_request(const code& ec,
 // Invoked to continue as half-duplex, required if not stopping.
 void protocol_client::handle_successful_request(const code&) NOEXCEPT
 {
-    resume();
+    channel_->read_request();
 }
 
 // Invoked to terminate connection after error response (as applicable).

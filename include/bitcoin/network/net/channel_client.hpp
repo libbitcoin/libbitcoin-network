@@ -89,14 +89,20 @@ public:
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
 
-private:
+    /// Must be called (only once) from protocol message handler (if no stop).
+    /// Calling more than once is safe but implies a protocol problem. Failure
+    /// to call after successful message handling results in stalled channel.
     void read_request() NOEXCEPT;
+
+private:
     void do_stop(const code& ec) NOEXCEPT;
     void handle_read_request(const code& ec, size_t bytes_read,
         const http_string_request_ptr& request) NOEXCEPT;
 
+    // These are protected by strand.
     http_flat_buffer request_buffer_;
     request_subscriber subscriber_;
+    bool reading_{};
 };
 
 } // namespace network
