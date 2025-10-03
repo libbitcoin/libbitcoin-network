@@ -51,7 +51,7 @@ protocol_client::protocol_client(const session::ptr& session,
 
 void protocol_client::start() NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_client");
+    BC_ASSERT_MSG(stranded(), "strand");
 
     if (started())
         return;
@@ -102,7 +102,7 @@ std::string get_mime_type(const std::string& path) NOEXCEPT
 void protocol_client::handle_receive_request(const code& ec,
     const http_string_request& request) NOEXCEPT
 {
-    BC_ASSERT_MSG(stranded(), "protocol_client");
+    BC_ASSERT_MSG(stranded(), "strand");
     using namespace boost::beast;
     using namespace system;
 
@@ -199,6 +199,7 @@ void protocol_client::handle_receive_request(const code& ec,
 // Invoked to continue as half-duplex, required if not stopping.
 void protocol_client::handle_successful_request(const code&) NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     channel_->read_request();
 }
 
@@ -206,6 +207,7 @@ void protocol_client::handle_successful_request(const code&) NOEXCEPT
 void protocol_client::handle_failed_request(const code&,
     const code& reason) NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     stop(reason);
 }
 
