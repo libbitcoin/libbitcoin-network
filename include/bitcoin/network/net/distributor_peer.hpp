@@ -35,8 +35,8 @@ namespace network {
     unsubscriber<const messages::p2p::name::cptr&>
 #define SUBSCRIBER_OVERLOAD(name) code do_subscribe( \
     distributor_peer::handler<messages::p2p::name>&& handler) NOEXCEPT \
-    { return SUBSCRIBER(name).subscribe( \
-      std::forward<distributor_peer::handler<messages::p2p::name>>(handler)); }
+    { return SUBSCRIBER(name).subscribe(std::forward< \
+        distributor_peer::handler<messages::p2p::name>>(handler)); }
 
 /// Not thread safe.
 class BCT_API distributor_peer

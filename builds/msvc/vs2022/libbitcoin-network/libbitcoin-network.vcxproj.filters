@@ -623,6 +623,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\messages.hpp">
       <Filter>include\bitcoin\network\messages\rpc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\method.hpp">
+      <Filter>include\bitcoin\network\messages\rpc</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>

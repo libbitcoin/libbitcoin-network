@@ -27,6 +27,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/rpc/messages.hpp>
 #include <bitcoin/network/net/channel.hpp>
+#include <bitcoin/network/net/distributor_client.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -38,18 +39,17 @@ class BCT_API channel_client
 {
 public:
     typedef subscriber<http_string_request> request_subscriber;
-    typedef request_subscriber::handler request_notifier;
 
     typedef std::shared_ptr<channel_client> ptr;
 
     /// Subscribe to http_request from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
-    template <class Message, typename Handler,
-        if_same<Message, http_string_request> = true>
+    template <class Message, typename Handler =
+        distributor_client::handler<Message>>
     void subscribe(Handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
-        subscriber_.subscribe(std::forward<Handler>(handler));
+        distributor_.subscribe(std::forward<Handler>(handler));
     }
 
     /// Serialize and write http response to peer (requires strand).
@@ -97,11 +97,11 @@ public:
 private:
     void do_stop(const code& ec) NOEXCEPT;
     void handle_read_request(const code& ec, size_t bytes_read,
-        const http_string_request_ptr& request) NOEXCEPT;
+        const http_string_request_cptr& request) NOEXCEPT;
 
     // These are protected by strand.
     http_flat_buffer request_buffer_;
-    request_subscriber subscriber_;
+    distributor_client distributor_;
     bool reading_{};
 };
 

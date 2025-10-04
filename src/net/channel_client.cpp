@@ -48,7 +48,7 @@ channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT
   : channel(log, socket, settings, identifier),
     request_buffer_(ceilinged_add(max_head, max_body)),
-    subscriber_(strand()),
+    distributor_(socket->strand()),
     tracker<channel_client>(log)
 {
 }
@@ -71,7 +71,7 @@ void channel_client::stop(const code& ec) NOEXCEPT
 void channel_client::do_stop(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    subscriber_.stop(ec, {});
+    distributor_.stop(ec);
 }
 
 void channel_client::resume() NOEXCEPT
@@ -107,7 +107,7 @@ void channel_client::read_request() NOEXCEPT
 }
 
 void channel_client::handle_read_request(const code& ec, size_t,
-    const http_string_request_ptr& request) NOEXCEPT
+    const http_string_request_cptr& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -132,7 +132,7 @@ void channel_client::handle_read_request(const code& ec, size_t,
 
     // HTTP is half duplex.
     reading_ = false;
-    subscriber_.notify(error::success, *request);
+    distributor_.notify(request);
 }
 
 BC_POP_WARNING()
