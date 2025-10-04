@@ -21,6 +21,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/rpc/messages.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
@@ -44,13 +45,36 @@ protected:
     DECLARE_SEND();
     DECLARE_SUBSCRIBE_CHANNEL();
 
-    virtual void handle_receive_request(const code& ec,
+    /// Message handlers by http method.
+    virtual void handle_receive_get(const code& ec,
+        const messages::rpc::method::get& request) NOEXCEPT;
+    virtual void handle_receive_head(const code& ec,
+        const messages::rpc::method::head& request) NOEXCEPT;
+    virtual void handle_receive_post(const code& ec,
+        const messages::rpc::method::post& request) NOEXCEPT;
+    virtual void handle_receive_put(const code& ec,
+        const messages::rpc::method::put& request) NOEXCEPT;
+    virtual void handle_receive_delete(const code& ec,
+        const messages::rpc::method::delete_& request) NOEXCEPT;
+    virtual void handle_receive_trace(const code& ec,
+        const messages::rpc::method::trace& request) NOEXCEPT;
+    virtual void handle_receive_options(const code& ec,
+        const messages::rpc::method::options& request) NOEXCEPT;
+    virtual void handle_receive_connect(const code& ec,
+        const messages::rpc::method::connect& request) NOEXCEPT;
+
+    /// Send a common not_allowed response.
+    virtual void send_not_allowed(const code& ec,
         const http_string_request& request) NOEXCEPT;
+
+    /// Request handler must invoke one of these.
     virtual void handle_successful_request(const code& ec) NOEXCEPT;
     virtual void handle_failed_request(const code& ec,
         const code& reason) NOEXCEPT;
 
 private:
+    static const std::string& get_form() NOEXCEPT;
+    static std::string get_mime_type(const std::string& path) NOEXCEPT;
 
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.

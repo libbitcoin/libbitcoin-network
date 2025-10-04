@@ -46,8 +46,8 @@ public:
 
     /// Subscribe to messages from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
-    template <class Message,
-        typename Handler = distributor_peer::handler<Message>>
+    template <class Message, typename Handler =
+        distributor_peer::handler<Message>>
     void subscribe(Handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");

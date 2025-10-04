@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_TARGET_HPP
 
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/async/async.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -35,8 +36,7 @@ enum class target
     unknown
 };
 
-BCT_API target to_target(const std::string& value,
-    boost::beast::http::verb method) NOEXCEPT;
+BCT_API target to_target(const std::string& value, http::verb method) NOEXCEPT;
 
 } // namespace rpc
 } // namespace messages

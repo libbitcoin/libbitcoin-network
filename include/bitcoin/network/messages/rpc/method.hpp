@@ -16,22 +16,47 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_MAGIC_NUMBERS_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_MAGIC_NUMBERS_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
 
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/async/async.hpp>
+
+ /// Type-differentiation for request message distribution.
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
 namespace rpc {
+namespace method {
 
-/// Client-server protocol constants.
-///----------------------------------------------------------------------------
+#define DECLARE_METHOD(name) \
+struct name \
+{ \
+    const http_string_request* operator->() const noexcept \
+    { \
+        return ptr.get(); \
+    } \
+    const http_string_request& operator*() const noexcept \
+    { \
+        return *ptr; \
+    } \
+    static constexpr http::verb method = http::verb::name; \
+    http_string_request_cptr ptr{}; \
+}
 
-constexpr size_t max_head = 4 * 1024;
-constexpr size_t max_body = 4 * 1024 * 1024;
+DECLARE_METHOD(get);
+DECLARE_METHOD(head);
+DECLARE_METHOD(post);
+DECLARE_METHOD(put);
+DECLARE_METHOD(delete_);
+DECLARE_METHOD(trace);
+DECLARE_METHOD(options);
+DECLARE_METHOD(connect);
 
+#undef DECLARE_METHOD
+
+} // namespace method
 } // namespace rpc
 } // namespace messages
 } // namespace network

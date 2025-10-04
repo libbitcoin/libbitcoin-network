@@ -98,6 +98,7 @@
 #include <bitcoin/network/messages/p2p/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/p2p/enums/service.hpp>
 #include <bitcoin/network/messages/rpc/messages.hpp>
+#include <bitcoin/network/messages/rpc/method.hpp>
 #include <bitcoin/network/messages/rpc/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/rpc/enums/target.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
