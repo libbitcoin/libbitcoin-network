@@ -30,31 +30,42 @@ namespace messages {
 namespace rpc {
 namespace method {
 
-#define DECLARE_METHOD(name) \
-struct name \
-{ \
-    const http_string_request* operator->() const noexcept \
-    { \
-        return ptr.get(); \
-    } \
-    const http_string_request& operator*() const noexcept \
-    { \
-        return *ptr; \
-    } \
-    static constexpr http::verb method = http::verb::name; \
-    http_string_request_cptr ptr{}; \
-}
+template <http::verb Verb>
+struct method_
+{
+    /// May differ from from ptr->method() (e.g. verb::unknown).
+    static constexpr http::verb method = Verb;
 
-DECLARE_METHOD(get);
-DECLARE_METHOD(head);
-DECLARE_METHOD(post);
-DECLARE_METHOD(put);
-DECLARE_METHOD(delete_);
-DECLARE_METHOD(trace);
-DECLARE_METHOD(options);
-DECLARE_METHOD(connect);
+    /// Overload structure -> to obtain .ptr.
+    const http_string_request* operator->() const NOEXCEPT
+    {
+        return ptr.get();
+    }
 
-#undef DECLARE_METHOD
+    /// Overload structure * to obtain *ptr.
+    const http_string_request& operator*() const NOEXCEPT
+    {
+        return *ptr;
+    }
+
+    /// Test before pointer dereference.
+    operator bool() const NOEXCEPT
+    {
+        return !!ptr;
+    }
+
+    http_string_request_cptr ptr{};
+};
+
+using get     = method_<http::verb::get>;
+using head    = method_<http::verb::head>;
+using post    = method_<http::verb::post>;
+using put     = method_<http::verb::put>;
+using delete_ = method_<http::verb::delete_>;
+using trace   = method_<http::verb::trace>;
+using options = method_<http::verb::options>;
+using connect = method_<http::verb::connect>;
+using unknown = method_<http::verb::unknown>;
 
 } // namespace method
 } // namespace rpc

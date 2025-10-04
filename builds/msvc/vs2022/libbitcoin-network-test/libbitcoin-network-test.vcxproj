@@ -194,6 +194,7 @@
       <ObjectFileName>$(IntDir)test_messages_rpc_enums_magic_numbers.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\target.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\rpc\method.cpp" />
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />
