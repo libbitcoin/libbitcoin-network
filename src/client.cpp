@@ -23,9 +23,61 @@
 namespace libbitcoin {
 namespace network {
 
-bool client::enabled() const NOEXCEPT
+// All values default to constructor defaults (zero/empty).
+
+bool admin::enabled() const NOEXCEPT
 {
-    return to_bool(count) && !binds.empty();
+    return !path.empty()
+        && !binds.empty()
+        && !is_zero(host.port())
+        && to_bool(connections);
+}
+
+bool explore::enabled() const NOEXCEPT
+{
+    return !path.empty()
+        && !binds.empty()
+        && !is_zero(host.port())
+        && to_bool(connections);
+}
+
+bool rest::enabled() const NOEXCEPT
+{
+    return !binds.empty()
+        && !is_zero(host.port())
+        && to_bool(connections);
+}
+
+bool websocket::enabled() const NOEXCEPT
+{
+    return !binds.empty()
+        && !is_zero(host.port())
+        && to_bool(connections);
+}
+
+bool bitcoind::enabled() const NOEXCEPT
+{
+    return !binds.empty()
+        && !is_zero(host.port())
+        && to_bool(connections);
+}
+
+bool electrum::enabled() const NOEXCEPT
+{
+    return !binds.empty()
+        && to_bool(connections);
+}
+
+bool stratum_v1::enabled() const NOEXCEPT
+{
+    return !binds.empty()
+        && to_bool(connections);
+}
+
+bool stratum_v2::enabled() const NOEXCEPT
+{
+    return !binds.empty()
+        && to_bool(connections);
 }
 
 } // namespace network

@@ -82,7 +82,14 @@ struct BCT_API settings
     config::authorities friends{};
 
     /// Client settings.
-    network::client client{};
+    network::admin admin{};
+    network::explore explore{};
+    network::rest rest{};
+    network::websocket websocket{};
+    network::bitcoind bitcoind{};
+    network::electrum electrum{};
+    network::stratum_v1 stratum_v1{};
+    network::stratum_v2 stratum_v2{};
 
     /// Set friends.
     virtual void initialize() NOEXCEPT;

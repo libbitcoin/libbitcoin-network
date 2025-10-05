@@ -83,7 +83,7 @@ private:
 
     // These are thread safe.
     const session_client::ptr session_;
-    const std::filesystem::path root_;
+    const std::filesystem::path& root_;
 };
 
 } // namespace network
