@@ -25,7 +25,7 @@
 namespace std {
 
 std::ostream& operator<<(std::ostream& stream,
-    const system::data_slice& slice) noexcept
+    const system::data_slice& slice) NOEXCEPT
 {
     // Avoid serialize() here for its own test benefit.
     // stream << serialize(slice);
@@ -41,7 +41,7 @@ namespace test {
 
 const std::string directory = "tests";
 
-bool clear(const std::filesystem::path& file_directory) noexcept
+bool clear(const std::filesystem::path& file_directory) NOEXCEPT
 {
     // remove_all returns count removed, and error code if fails.
     // create_directories returns true if path exists or created.
@@ -54,7 +54,7 @@ bool clear(const std::filesystem::path& file_directory) noexcept
     BC_POP_WARNING()
 }
 
-bool create(const std::filesystem::path& file_path) noexcept
+bool create(const std::filesystem::path& file_path) NOEXCEPT
 {
     // Creates and returns true if file already existed (and no error).
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -63,7 +63,7 @@ bool create(const std::filesystem::path& file_path) noexcept
     BC_POP_WARNING()
 }
 
-bool exists(const std::filesystem::path& file_path) noexcept
+bool exists(const std::filesystem::path& file_path) NOEXCEPT
 {
     // Returns true only if file existed.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -72,7 +72,7 @@ bool exists(const std::filesystem::path& file_path) noexcept
     BC_POP_WARNING()
 }
 
-bool remove(const std::filesystem::path& file_path) noexcept
+bool remove(const std::filesystem::path& file_path) NOEXCEPT
 {
     // Deletes and returns false if file did not exist (or error).
     std::error_code ec;
