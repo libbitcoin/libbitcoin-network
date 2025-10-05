@@ -43,7 +43,7 @@ protocol_client::protocol_client(const session::ptr& session,
   : protocol(session, channel),
     channel_(std::dynamic_pointer_cast<channel_client>(channel)),
     session_(std::dynamic_pointer_cast<session_client>(session)),
-    root_(system::to_path("m:/server")),
+    root_(channel->settings().admin.path),
     tracker<protocol_client>(session->log)
 {
 }

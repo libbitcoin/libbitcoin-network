@@ -52,7 +52,7 @@ void session_inbound_client::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    if (!settings().client.enabled())
+    if (!settings().admin.enabled())
     {
         LOGN("Not configured for client connections.");
         handler(error::success);
@@ -76,10 +76,10 @@ void session_inbound_client::handle_started(const code& ec,
         return;
     }
 
-    LOGN("Accepting " << settings().client.count << " clients on "
-        << settings().client.binds.size() << " bindings.");
+    LOGN("Accepting " << settings().admin.connections << " clients on "
+        << settings().admin.binds.size() << " bindings.");
 
-    for (const auto& bind: settings().client.binds)
+    for (const auto& bind: settings().admin.binds)
     {
         const auto acceptor = create_acceptor();
 

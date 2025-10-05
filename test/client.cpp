@@ -20,13 +20,75 @@
 
 BOOST_AUTO_TEST_SUITE(client_tests)
 
-BOOST_AUTO_TEST_CASE(client_test)
+BOOST_AUTO_TEST_CASE(client__admin__defaults__expected)
 {
-    const client instance{};
-
-    // [client]
-    BOOST_REQUIRE_EQUAL(instance.count, 0u);
+    const admin instance{};
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE(instance.path.empty());
+    BOOST_REQUIRE_EQUAL(instance.host.port(), 0u);
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(client__explore__defaults__expected)
+{
+    const explore instance{};
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE(instance.path.empty());
+    BOOST_REQUIRE_EQUAL(instance.host.port(), 0u);
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(client__rest__defaults__expected)
+{
+    const rest instance{};
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.host.port(), 0u);
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(client__websocket__defaults__expected)
+{
+    const websocket instance{};
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.host.port(), 0u);
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(client__bitcoind__defaults__expected)
+{
+    const bitcoind instance{};
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.host.port(), 0u);
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(client__electrum__defaults__expected)
+{
+    const electrum instance{};
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(client__stratum_v1__defaults__expected)
+{
+    const stratum_v1 instance{};
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(client__stratum_v2__defaults__expected)
+{
+    const stratum_v2 instance{};
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE(!instance.enabled());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
