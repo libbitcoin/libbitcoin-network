@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(client__websocket__defaults__expected)
     const websocket instance{};
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.host.port(), 0u);
+    BOOST_REQUIRE(instance.host.host().empty());
     BOOST_REQUIRE(!instance.enabled());
 }
 
