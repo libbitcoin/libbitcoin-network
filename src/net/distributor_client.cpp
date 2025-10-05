@@ -70,6 +70,8 @@ void distributor_client::notify(
         CASE_NOTIFY(error::success, trace);
         CASE_NOTIFY(error::success, options);
         CASE_NOTIFY(error::success, connect);
+
+        default:
         CASE_NOTIFY(error::success, unknown);
     }
 }
