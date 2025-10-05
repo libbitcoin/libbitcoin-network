@@ -49,7 +49,7 @@ namespace std {
 
 // data_slice -> base16(data)
 std::ostream& operator<<(std::ostream& stream,
-    const system::data_slice& slice) noexcept;
+    const system::data_slice& slice) NOEXCEPT;
 
 // std::vector<Type> -> join(<<Type)
 template <typename Type>
@@ -78,7 +78,7 @@ std::ostream& operator<<(std::ostream& stream,
 // array<Type, Size> -> join(<<Type)
 template <typename Type, size_t Size>
 std::ostream& operator<<(std::ostream& stream,
-    const std_array<Type, Size>& values) noexcept
+    const std_array<Type, Size>& values) NOEXCEPT
 {
     // Ok when testing serialize because only used for error message out.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -96,10 +96,24 @@ namespace test {
 // Total path length cannot exceed MAX_PATH in HAVE_MSC builds.
 extern const std::string directory;
 
-bool clear(const std::filesystem::path& directory) noexcept;
-bool create(const std::filesystem::path& file_path) noexcept;
-bool exists(const std::filesystem::path& file_path) noexcept;
-bool remove(const std::filesystem::path& file_path) noexcept;
+bool clear(const std::filesystem::path& directory) NOEXCEPT;
+bool create(const std::filesystem::path& file_path) NOEXCEPT;
+bool exists(const std::filesystem::path& file_path) NOEXCEPT;
+bool remove(const std::filesystem::path& file_path) NOEXCEPT;
+
+struct directory_setup_fixture
+{
+    DELETE_COPY_MOVE(directory_setup_fixture);
+
+    directory_setup_fixture() NOEXCEPT
+    {
+        BOOST_REQUIRE(clear(directory));
+    }
+    ~directory_setup_fixture() NOEXCEPT
+    {
+        BOOST_REQUIRE(clear(directory));
+    }
+};
 
 } // namespace test
 

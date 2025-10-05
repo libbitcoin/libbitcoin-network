@@ -93,6 +93,7 @@ typedef http::request_parser<http_file_body> http_file_parser;
 typedef http::serializer<false, http_file_body> http_file_serializer;
 typedef std::shared_ptr<const http_file_request> http_file_request_cptr;
 typedef std::shared_ptr<http_file_request> http_file_request_ptr;
+typedef http_file_body::value_type http_file;
 
 } // namespace network
 } // namespace libbitcoin

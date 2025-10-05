@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_TARGET_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_TARGET_HPP
 
+#include <filesystem>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/async/async.hpp>
 
@@ -27,6 +28,7 @@ namespace network {
 namespace messages {
 namespace rpc {
 
+/// Enumeration of valid http 1.1 target types.
 enum class target
 {
     origin,
@@ -36,7 +38,35 @@ enum class target
     unknown
 };
 
+/// "/index.html?field=value" (no authority).
+BCT_API bool is_origin_form(const std::string& target) NOEXCEPT;
+
+/// "scheme://www.boost.org/index.html?field=value" (no fragment).
+BCT_API bool is_absolute_form(const std::string& target) NOEXCEPT;
+
+/// Used for CONNECT method.
+/// Requires leading "//", which is not allowed by parse_authority.
+BCT_API bool is_authority_form(const std::string& target) NOEXCEPT;
+
+/// Asterisk only.
+/// Used for OPTIONS method.
+BCT_API bool is_asterisk_form(const std::string& target) NOEXCEPT;
+
+/// Validate method against target and return enumerated type of target.
 BCT_API target to_target(const std::string& value, http::verb method) NOEXCEPT;
+
+/// Sanitize base/target to ensure it remains strictly within base.
+BCT_API std::filesystem::path sanitize_origin(
+    const std::filesystem::path& base, const std::string& target) NOEXCEPT;
+
+/// Returned file is closed if failed.
+/// Sanitize base/target to ensure it remains strictly within base.
+BCT_API http_file get_file_body(const std::filesystem::path&) NOEXCEPT;
+
+/// Defaults to "application/octet-stream".
+/// Return mime type (e.g. "image/jpeg") for given file system path.
+BCT_API const std::string& get_mime_type(
+    const std::filesystem::path& path) NOEXCEPT;
 
 } // namespace rpc
 } // namespace messages
