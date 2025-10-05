@@ -37,11 +37,13 @@ using namespace std::placeholders;
 // Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+// TODO: get from config (need access to 'server' config).
 protocol_client::protocol_client(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     channel_(std::dynamic_pointer_cast<channel_client>(channel)),
     session_(std::dynamic_pointer_cast<session_client>(session)),
+    root_(system::to_path("m:/server")),
     tracker<protocol_client>(session->log)
 {
 }
@@ -64,6 +66,7 @@ void protocol_client::start() NOEXCEPT
     SUBSCRIBE_CHANNEL(method::trace,   handle_receive_trace,   _1, _2);
     SUBSCRIBE_CHANNEL(method::options, handle_receive_options, _1, _2);
     SUBSCRIBE_CHANNEL(method::connect, handle_receive_connect, _1, _2);
+    SUBSCRIBE_CHANNEL(method::unknown, handle_receive_unknown, _1, _2);
     protocol::start();
 }
 
@@ -80,10 +83,11 @@ void protocol_client::handle_receive_get(const code& ec,
     if (stopped(ec))
         return;
 
-    // Default path GET returns HTML form.
+    const auto version = request->version();
     if (request->target() == "/")
     {
-        http_string_response response{ http::status::ok, request->version() };
+        // Default path GET returns HTML form.
+        http_string_response response{ http::status::ok, version };
         response.set(http::field::content_type, "text/html; charset=UTF-8");
         response.body() = get_form();
         response.prepare_payload();
@@ -91,47 +95,36 @@ void protocol_client::handle_receive_get(const code& ec,
         return;
     }
 
+    // Empty path implies invalid.
+    const auto path = sanitize_origin(root_, request->target());
+
     // favicon.ico path GET returns image.
-    if (get_mime_type(request->target()).starts_with("image/"))
+    if (get_mime_type(path).starts_with("image/"))
     {
-        auto path = "m:/server/images" + std::string{ request->target() };
-        error::boost_code code{};
-        http::file_body::value_type file{};
-
-        try
+        auto file = get_file_body(path);
+        if (file.is_open())
         {
-            // file.open does not reset code for success.
-            file.open(path.c_str(), boost::beast::file_mode::read, code);
-        }
-        catch (...)
-        {
-            code = error::not_found;
-        }
-
-        if (code)
-        {
-            http_string_response response{ http::status::not_found, request->version() };
-            response.set(http::field::server, BC_USER_AGENT);
-            response.body() += BC_USER_AGENT;
-            response.body() += "\r\nfile   : ";
-            response.body() += request->target();
-            response.body() += "\r\nerror  : ";
-            response.body() += code.message();
+            http_file_response response{ http::status::ok, version };
+            response.set(http::field::content_type, get_mime_type(path));
+            response.body() = std::move(file);
             response.prepare_payload();
-            SEND(std::move(response), handle_failed_request, _1, error::not_found);
+            SEND(std::move(response), handle_failed_request, _1, error::im_a_teapot);
             return;
         }
 
-        http_file_response response{ http::status::ok, request->version() };
-        response.set(http::field::content_type, get_mime_type(path));
-        response.body() = std::move(file);
+        // Return 404 Not Found.
+        http_string_response response{ http::status::not_found, version };
+        response.set(http::field::server, BC_USER_AGENT);
+        response.body() += BC_USER_AGENT;
+        response.body() += "\r\nfile   : ";
+        response.body() += request->target();
         response.prepare_payload();
-        SEND(std::move(response), handle_failed_request, _1, error::im_a_teapot);
+        SEND(std::move(response), handle_failed_request, _1, error::not_found);
         return;
     }
 
     // Other GETs just echo.
-    http_string_response response{ http::status::ok, request->version() };
+    http_string_response response{ http::status::ok, version };
     response.set(http::field::content_type, "text/plain");
     response.body() += BC_USER_AGENT;
     response.body() += "\r\nmethod : ";
@@ -139,7 +132,7 @@ void protocol_client::handle_receive_get(const code& ec,
     response.body() += "\r\ntarget : ";
     response.body() += request->target();
     response.body() += "\r\nversion: ";
-    response.body() += system::serialize(request->version());
+    response.body() += system::serialize(version);
     response.body() += "\r\npayload: ";
     response.body() += system::serialize(request->body().size());
     response.body() += "\r\n";
@@ -160,7 +153,8 @@ void protocol_client::handle_receive_post(const code& ec,
         return;
 
     // Echo.
-    http_string_response response{ http::status::ok, request->version() };
+    const auto version = request->version();
+    http_string_response response{ http::status::ok, version };
     response.set(http::field::content_type, "text/plain");
     response.body() += BC_USER_AGENT;
     response.body() += "\r\nmethod : ";
@@ -168,7 +162,7 @@ void protocol_client::handle_receive_post(const code& ec,
     response.body() += "\r\ntarget : ";
     response.body() += request->target();
     response.body() += "\r\nversion: ";
-    response.body() += system::serialize(request->version());
+    response.body() += system::serialize(version);
     response.body() += "\r\npayload: ";
     response.body() += system::serialize(request->body().size());
     response.body() += "\r\n";
@@ -184,53 +178,62 @@ void protocol_client::handle_receive_put(const code& ec,
     const method::put& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    send_not_allowed(ec, *request);
+    send_not_allowed(ec, request.ptr);
 }
 
 void protocol_client::handle_receive_head(const code& ec,
     const method::head& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    send_not_allowed(ec, *request);
+    send_not_allowed(ec, request.ptr);
 }
 
 void protocol_client::handle_receive_delete(const code& ec,
     const method::delete_& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    send_not_allowed(ec, *request);
+    send_not_allowed(ec, request.ptr);
 }
 
 void protocol_client::handle_receive_trace(const code& ec,
     const method::trace& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    send_not_allowed(ec, *request);
+    send_not_allowed(ec, request.ptr);
 }
 
 void protocol_client::handle_receive_options(const code& ec,
     const method::options& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    send_not_allowed(ec, *request);
+    send_not_allowed(ec, request.ptr);
 }
 
 void protocol_client::handle_receive_connect(const code& ec,
     const method::connect& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    send_not_allowed(ec, *request);
+    send_not_allowed(ec, request.ptr);
+}
+
+void protocol_client::handle_receive_unknown(const code& ec,
+    const method::unknown& request) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    send_not_allowed(ec, request.ptr);
 }
 
 void protocol_client::send_not_allowed(const code& ec,
-    const http_string_request& request) NOEXCEPT
+    const http_string_request_cptr& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(ec || request, "success with null request");
 
     if (stopped(ec))
         return;
 
-    http_string_response response{ http::status::method_not_allowed, request.version() };
+    const auto version = request->version();
+    http_string_response response{ http::status::method_not_allowed, version };
     SEND(std::move(response), handle_failed_request, _1, error::method_not_allowed);
 }
 
@@ -280,24 +283,6 @@ R"(<!DOCTYPE html>
     };
 
     return form;
-}
-
-// static/private
-std::string protocol_client::get_mime_type(const std::string& path) NOEXCEPT
-{
-    if (path.ends_with(".jpg") || path.ends_with(".jpeg"))
-        return "image/jpeg";
-
-    if (path.ends_with(".png"))
-        return "image/png";
-
-    if (path.ends_with(".gif"))
-        return "image/gif";
-
-    if (path.ends_with(".ico"))
-        return "image/x-icon";
-
-    return "application/octet-stream";
 }
 
 BC_POP_WARNING()

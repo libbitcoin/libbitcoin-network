@@ -62,10 +62,12 @@ protected:
         const messages::rpc::method::options& request) NOEXCEPT;
     virtual void handle_receive_connect(const code& ec,
         const messages::rpc::method::connect& request) NOEXCEPT;
+    virtual void handle_receive_unknown(const code& ec,
+        const messages::rpc::method::unknown& request) NOEXCEPT;
 
     /// Send a common not_allowed response.
     virtual void send_not_allowed(const code& ec,
-        const http_string_request& request) NOEXCEPT;
+        const http_string_request_cptr& request) NOEXCEPT;
 
     /// Request handler must invoke one of these.
     virtual void handle_successful_request(const code& ec) NOEXCEPT;
@@ -74,14 +76,14 @@ protected:
 
 private:
     static const std::string& get_form() NOEXCEPT;
-    static std::string get_mime_type(const std::string& path) NOEXCEPT;
 
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
     const channel_client::ptr channel_;
 
-    // This is thread safe.
+    // These are thread safe.
     const session_client::ptr session_;
+    const std::filesystem::path root_;
 };
 
 } // namespace network

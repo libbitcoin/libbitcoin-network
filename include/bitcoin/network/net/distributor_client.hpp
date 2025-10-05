@@ -32,10 +32,10 @@ namespace network {
 #define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
 #define HANDLER(name) distributor_client::handler<messages::rpc::method::name>
 #define DEFINE_SUBSCRIBER(name) \
-using SUBSCRIBER_TYPE(name) = subscriber<const messages::rpc::method::name&>
+    using SUBSCRIBER_TYPE(name) = subscriber<const messages::rpc::method::name&>
 #define SUBSCRIBER_OVERLOAD(name) \
-code do_subscribe(HANDLER(name)&& handler) NOEXCEPT \
-{ return SUBSCRIBER(name).subscribe(std::forward<HANDLER(name)>(handler)); }
+    code do_subscribe(HANDLER(name)&& handler) NOEXCEPT \
+    { return SUBSCRIBER(name).subscribe(std::forward<HANDLER(name)>(handler)); }
 
 /// Not thread safe.
 class BCT_API distributor_client
@@ -55,6 +55,7 @@ public:
     DEFINE_SUBSCRIBER(trace);
     DEFINE_SUBSCRIBER(options);
     DEFINE_SUBSCRIBER(connect);
+    DEFINE_SUBSCRIBER(unknown);
 
     /// Create an instance of this class.
     distributor_client(asio::strand& strand) NOEXCEPT;
@@ -80,10 +81,11 @@ public:
 private:
     // Deserialize a stream into a message instance and notify subscribers.
     template <typename Subscriber, class Method>
-    void do_notify(Subscriber& subscriber, const Method& method) const NOEXCEPT
+    void do_notify(const code& ec, Subscriber& subscriber,
+        const Method& method) const NOEXCEPT
     {
-        // Subscribers are notified only with stop code or error::success.
-        subscriber.notify(error::success, method);
+        BC_ASSERT_MSG(ec || method, "success with null request");
+        subscriber.notify(ec, method);
     }
 
     SUBSCRIBER_OVERLOAD(get);
@@ -94,6 +96,7 @@ private:
     SUBSCRIBER_OVERLOAD(trace);
     SUBSCRIBER_OVERLOAD(options);
     SUBSCRIBER_OVERLOAD(connect);
+    SUBSCRIBER_OVERLOAD(unknown);
 
     // These are thread safe.
     DECLARE_SUBSCRIBER(get);
@@ -104,6 +107,7 @@ private:
     DECLARE_SUBSCRIBER(trace);
     DECLARE_SUBSCRIBER(options);
     DECLARE_SUBSCRIBER(connect);
+    DECLARE_SUBSCRIBER(unknown);
 };
 
 #undef SUBSCRIBER
