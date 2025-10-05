@@ -78,8 +78,7 @@ BOOST_AUTO_TEST_CASE(distributor_client__notify__null_message__null_unknown_with
     constexpr auto expected_ec = error::operation_failed;
     auto result = true;
 
-    // Subscription will capture only the stop notification.
-    std::promise<code> promise;
+    std::promise<code> promise{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         using namespace messages::rpc;
@@ -97,57 +96,12 @@ BOOST_AUTO_TEST_CASE(distributor_client__notify__null_message__null_unknown_with
         instance.notify({});
     });
 
-    ////boost::asio::post(strand, [&]() NOEXCEPT
-    ////{
-    ////    instance.stop(expected_ec);
-    ////});
-
     pool.stop();
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
     BOOST_REQUIRE(result);
 }
 
-////BOOST_AUTO_TEST_CASE(distributor_client__notify__valid_message_invalid_version__no_notification)
-////{
-////    threadpool pool(2);
-////    asio::strand strand(pool.service().get_executor());
-////    distributor_client instance(strand);
-////    constexpr auto expected_ec = error::invalid_magic;
-////    auto result = true;
-////
-////    // Subscription will capture only the stop notification.
-////    std::promise<code> promise;
-////    boost::asio::post(strand, [&]() NOEXCEPT
-////    {
-////        instance.subscribe([&](const code& ec, const messages::p2p::ping::cptr& ping) NOEXCEPT
-////        {
-////            result &= is_null(ping);
-////            promise.set_value(ec);
-////            return true;
-////        });
-////    });
-////    
-////    // Invalid object version will not cause a notification.
-////    const auto ping = system::to_chunk(system::to_little_endian(42));
-////    boost::asio::post(strand, [&]() NOEXCEPT
-////    {
-////        constexpr uint32_t invalid_ping_version = 0;
-////        const auto ec = instance.notify(messages::p2p::identifier::ping, invalid_ping_version, ping);
-////        result &= (ec == error::invalid_message);
-////    });
-////
-////    boost::asio::post(strand, [&]() NOEXCEPT
-////    {
-////        instance.stop(expected_ec);
-////    });
-////
-////    pool.stop();
-////    BOOST_REQUIRE(pool.join());
-////    BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
-////    BOOST_REQUIRE(result);
-////}
-////
 ////BOOST_AUTO_TEST_CASE(distributor_client__notify__valid_nonced_ping__expected_notification)
 ////{
 ////    threadpool pool(2);

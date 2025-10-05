@@ -22,6 +22,12 @@ using namespace network::messages::rpc;
 
 BOOST_FIXTURE_TEST_SUITE(rpc_target_tests, test::directory_setup_fixture)
 
+// is_origin_form
+// is_absolute_form
+// is_authority_form
+// is_asterisk_form
+// to_target
+
 // sanitize_origin
 
 BOOST_AUTO_TEST_CASE(rpc_target__sanitize_origin__empty__empty)
