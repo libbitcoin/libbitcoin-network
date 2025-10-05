@@ -75,9 +75,9 @@ BOOST_AUTO_TEST_CASE(distributor_client__notify__null_message__null_unknown_with
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     distributor_client instance(strand);
-    constexpr auto expected_ec = error::operation_failed;
     auto result = true;
 
+    bool set{};
     std::promise<code> promise{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
@@ -85,7 +85,14 @@ BOOST_AUTO_TEST_CASE(distributor_client__notify__null_message__null_unknown_with
         instance.subscribe([&](const code& ec, const method::unknown& request) NOEXCEPT
         {
             result &= !request;
-            promise.set_value(ec);
+
+            // Skip stop notification (unavoidable test condition).
+            if (!set)
+            {
+                promise.set_value(ec);
+                set = true;
+            }
+
             return true;
         });
     });
@@ -96,9 +103,14 @@ BOOST_AUTO_TEST_CASE(distributor_client__notify__null_message__null_unknown_with
         instance.notify({});
     });
 
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        instance.stop(error::invalid_magic);
+    });
+
     pool.stop();
     BOOST_REQUIRE(pool.join());
-    BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::operation_failed);
     BOOST_REQUIRE(result);
 }
 
