@@ -26,7 +26,7 @@ BOOST_AUTO_TEST_CASE(client__admin__defaults__expected)
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE_EQUAL(instance.host.port(), 0u);
+    BOOST_REQUIRE(instance.host.host().empty());
     BOOST_REQUIRE(!instance.enabled());
 }
 
@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(client__explore__defaults__expected)
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE_EQUAL(instance.host.port(), 0u);
+    BOOST_REQUIRE(instance.host.host().empty());
     BOOST_REQUIRE(!instance.enabled());
 }
 
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(client__rest__defaults__expected)
     const rest instance{};
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.host.port(), 0u);
+    BOOST_REQUIRE(instance.host.host().empty());
     BOOST_REQUIRE(!instance.enabled());
 }
 
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(client__bitcoind__defaults__expected)
     const bitcoind instance{};
     BOOST_REQUIRE_EQUAL(instance.connections, 0u);
     BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.host.port(), 0u);
+    BOOST_REQUIRE(instance.host.host().empty());
     BOOST_REQUIRE(!instance.enabled());
 }
 

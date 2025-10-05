@@ -33,7 +33,7 @@ struct BCT_API admin
     uint16_t connections{};
     config::endpoints binds{};
     std::filesystem::path path{};
-    config::authority host{};
+    config::endpoint host{};
 
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;
@@ -46,7 +46,7 @@ struct BCT_API explore
     uint16_t connections{};
     config::endpoints binds{};
     std::filesystem::path path{};
-    config::authority host{};
+    config::endpoint host{};
 
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;
@@ -58,7 +58,7 @@ struct BCT_API rest
     /// Properties.
     uint16_t connections{};
     config::endpoints binds{};
-    config::authority host{};
+    config::endpoint host{};
 
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;
@@ -70,7 +70,7 @@ struct BCT_API websocket
     /// Properties.
     uint16_t connections{};
     config::endpoints binds{};
-    config::authority host{};
+    config::endpoint host{};
 
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;
@@ -82,7 +82,7 @@ struct BCT_API bitcoind
     /// Properties.
     uint16_t connections{};
     config::endpoints binds{};
-    config::authority host{};
+    config::endpoint host{};
 
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;
