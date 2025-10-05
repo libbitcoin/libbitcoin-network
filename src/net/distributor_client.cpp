@@ -30,10 +30,10 @@ using namespace system;
 #define SUBSCRIBER(name) name##_subscriber_
 #define MAKE_SUBSCRIBER(name) SUBSCRIBER(name)(strand)
 #define STOP_SUBSCRIBER(name) SUBSCRIBER(name).stop_default(ec)
-
-#define CASE_NOTIFY(name) \
-case http::verb::name: \
-return do_notify(SUBSCRIBER(name), messages::rpc::method::name{ request })
+#define DO_NOTIFY(ec, name) \
+    do_notify(ec, SUBSCRIBER(name), messages::rpc::method::name{ request });
+#define CASE_NOTIFY(ec, name) \
+    case http::verb::name: { DO_NOTIFY(ec, name); return; }
 
 distributor_client::distributor_client(asio::strand& strand) NOEXCEPT
   : MAKE_SUBSCRIBER(get),
@@ -43,26 +43,34 @@ distributor_client::distributor_client(asio::strand& strand) NOEXCEPT
     MAKE_SUBSCRIBER(delete_),
     MAKE_SUBSCRIBER(trace),
     MAKE_SUBSCRIBER(options),
-    MAKE_SUBSCRIBER(connect)
+    MAKE_SUBSCRIBER(connect),
+    MAKE_SUBSCRIBER(unknown)
 {
 }
 
 void distributor_client::notify(
     const http_string_request_cptr& request) const NOEXCEPT
 {
+    if (!request)
+    {
+        DO_NOTIFY(error::operation_failed, unknown);
+        return;
+    }
+
     // Does not throw.
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     switch (request->method())
     BC_POP_WARNING()
     {
-        CASE_NOTIFY(get);
-        CASE_NOTIFY(head);
-        CASE_NOTIFY(post);
-        CASE_NOTIFY(put);
-        CASE_NOTIFY(delete_);
-        CASE_NOTIFY(trace);
-        CASE_NOTIFY(options);
-        CASE_NOTIFY(connect);
+        CASE_NOTIFY(error::success, get);
+        CASE_NOTIFY(error::success, head);
+        CASE_NOTIFY(error::success, post);
+        CASE_NOTIFY(error::success, put);
+        CASE_NOTIFY(error::success, delete_);
+        CASE_NOTIFY(error::success, trace);
+        CASE_NOTIFY(error::success, options);
+        CASE_NOTIFY(error::success, connect);
+        CASE_NOTIFY(error::success, unknown);
     }
 }
 
@@ -76,10 +84,12 @@ void distributor_client::stop(const code& ec) NOEXCEPT
     STOP_SUBSCRIBER(trace);
     STOP_SUBSCRIBER(options);
     STOP_SUBSCRIBER(connect);
+    STOP_SUBSCRIBER(unknown);
 }
 
 #undef SUBSCRIBER
 #undef MAKE_SUBSCRIBER
+#undef DO_NOTIFY
 #undef CASE_NOTIFY
 #undef STOP_SUBSCRIBER
 
