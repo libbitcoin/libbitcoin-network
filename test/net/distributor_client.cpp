@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(distributor_client__subscribe__stop__expected_code)
         instance.subscribe([&](const code& ec, const method::get& request) NOEXCEPT
         {
             // Stop notification has nullptr message and specified code.
-            result &= !request;
+            result = request;
             promise.set_value(ec);
             return true;
         });
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(distributor_client__subscribe__stop__expected_code)
     pool.stop();
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
-    BOOST_REQUIRE(result);
+    BOOST_REQUIRE(!result);
 }
 
 BOOST_AUTO_TEST_CASE(distributor_client__notify__null_message__null_unknown_with_operation_failed)
@@ -84,11 +84,10 @@ BOOST_AUTO_TEST_CASE(distributor_client__notify__null_message__null_unknown_with
         using namespace messages::rpc;
         instance.subscribe([&](const code& ec, const method::unknown& request) NOEXCEPT
         {
-            result &= !request;
-
             // Skip stop notification (unavoidable test condition).
             if (!set)
             {
+                result = request;
                 promise.set_value(ec);
                 set = true;
             }
@@ -111,55 +110,50 @@ BOOST_AUTO_TEST_CASE(distributor_client__notify__null_message__null_unknown_with
     pool.stop();
     BOOST_REQUIRE(pool.join());
     BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::operation_failed);
-    BOOST_REQUIRE(result);
+    BOOST_REQUIRE(!result);
 }
 
-////BOOST_AUTO_TEST_CASE(distributor_client__notify__valid_nonced_ping__expected_notification)
-////{
-////    threadpool pool(2);
-////    asio::strand strand(pool.service().get_executor());
-////    distributor_client instance(strand);
-////    constexpr uint64_t expected_nonce = 42;
-////    constexpr auto expected_ec = error::invalid_magic;
-////    auto result = true;
-////
-////    // Subscription will capture message and stop notifications.
-////    std::promise<code> promise;
-////    boost::asio::post(strand, [&]() NOEXCEPT
-////    {
-////        instance.subscribe([&](const code& ec, const messages::p2p::ping::cptr& ping) NOEXCEPT
-////        {
-////            // Handle stop notification (unavoidable test condition).
-////            if (!ping)
-////            {
-////                promise.set_value(ec);
-////                return true;
-////            }
-////
-////            // Handle message notification.
-////            result &= (ping->nonce == expected_nonce);
-////            result &= (ec == error::success);
-////            return true;
-////        });
-////    });
-////
-////    const auto ping = system::to_chunk(system::to_little_endian(expected_nonce));
-////    boost::asio::post(strand, [&]() NOEXCEPT
-////    {
-////        constexpr auto nonced_ping_version = messages::p2p::level::bip31;
-////        const auto ec = instance.notify(messages::p2p::identifier::ping, nonced_ping_version, ping);
-////        result &= (ec == error::success);
-////    });
-////
-////    boost::asio::post(strand, [&]() NOEXCEPT
-////    {
-////        instance.stop(expected_ec);
-////    });
-////
-////    pool.stop();
-////    BOOST_REQUIRE(pool.join());
-////    BOOST_REQUIRE_EQUAL(promise.get_future().get(), expected_ec);
-////    BOOST_REQUIRE(result);
-////}
+BOOST_AUTO_TEST_CASE(distributor_client__notify__get_message__expected_method)
+{
+    threadpool pool(2);
+    asio::strand strand(pool.service().get_executor());
+    distributor_client instance(strand);
+    auto result = true;
+
+    bool set{};
+    std::promise<code> promise{};
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        using namespace messages::rpc;
+        instance.subscribe([&](const code& ec, const method::get& request) NOEXCEPT
+        {
+            // Skip stop notification (unavoidable test condition).
+            if (!set)
+            {
+                result = (request->method() == http::verb::get);
+                promise.set_value(ec);
+                set = true;
+            }
+
+            return true;
+        });
+    });
+
+    // Notify with get request.
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        instance.notify(std::make_shared<http_string_request>(http::verb::get, "/", 11));
+    });
+
+    boost::asio::post(strand, [&]() NOEXCEPT
+    {
+        instance.stop(error::invalid_magic);
+    });
+
+    pool.stop();
+    BOOST_REQUIRE(pool.join());
+    BOOST_REQUIRE_EQUAL(promise.get_future().get(), error::success);
+    BOOST_REQUIRE(result);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
