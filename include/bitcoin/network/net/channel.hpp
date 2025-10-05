@@ -74,7 +74,7 @@ public:
     uint64_t identifier() const NOEXCEPT;
 
     /// Configuration settings.
-    network::settings settings() const NOEXCEPT;
+    const network::settings& settings() const NOEXCEPT;
 
 private:
     // These are thread safe (const).

@@ -58,7 +58,7 @@ uint64_t channel::identifier() const NOEXCEPT
     return identifier_;
 }
 
-network::settings channel::settings() const NOEXCEPT
+const network::settings& channel::settings() const NOEXCEPT
 {
     return settings_;
 }
