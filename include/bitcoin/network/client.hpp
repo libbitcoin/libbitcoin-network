@@ -33,7 +33,9 @@ struct BCT_API admin
     uint16_t connections{};
     config::endpoints binds{};
     std::filesystem::path path{};
-    config::endpoint host{};
+
+    /// Validated against requests if specified.
+    config::endpoints hosts{};
 
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;
@@ -46,7 +48,9 @@ struct BCT_API explore
     uint16_t connections{};
     config::endpoints binds{};
     std::filesystem::path path{};
-    config::endpoint host{};
+
+    /// Validated against requests if specified.
+    config::endpoints hosts{};
 
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;
@@ -58,7 +62,9 @@ struct BCT_API rest
     /// Properties.
     uint16_t connections{};
     config::endpoints binds{};
-    config::endpoint host{};
+
+    /// Validated against requests if specified.
+    config::endpoints hosts{};
 
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;
@@ -70,7 +76,9 @@ struct BCT_API websocket
     /// Properties.
     uint16_t connections{};
     config::endpoints binds{};
-    config::endpoint host{};
+
+    /// Validated against requests if specified.
+    config::endpoints hosts{};
 
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;
@@ -82,7 +90,9 @@ struct BCT_API bitcoind
     /// Properties.
     uint16_t connections{};
     config::endpoints binds{};
-    config::endpoint host{};
+
+    /// Validated against requests if specified.
+    config::endpoints hosts{};
 
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;
