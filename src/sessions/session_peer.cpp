@@ -43,7 +43,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_peer::session_peer(net& network, uint64_t identifier) NOEXCEPT
-  : network_(network), session(network, identifier)
+  : session(network, identifier), network_(network)
 {
 }
 
@@ -214,21 +214,6 @@ void session_peer::attach_protocols(const channel::ptr& channel) NOEXCEPT
 
 // Factories.
 // ----------------------------------------------------------------------------
-
-acceptor::ptr session_peer::create_acceptor() NOEXCEPT
-{
-    return network_.create_acceptor();
-}
-
-connector::ptr session_peer::create_connector() NOEXCEPT
-{
-    return network_.create_connector();
-}
-
-connectors_ptr session_peer::create_connectors(size_t count) NOEXCEPT
-{
-    return network_.create_connectors(count);
-}
 
 channel::ptr session_peer::create_channel(const socket::ptr& socket) NOEXCEPT
 {

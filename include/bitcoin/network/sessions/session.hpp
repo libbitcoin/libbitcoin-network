@@ -175,13 +175,13 @@ protected:
     /// -----------------------------------------------------------------------
 
     /// Call to create channel acceptor, owned by caller.
-    virtual acceptor::ptr create_acceptor() NOEXCEPT = 0;
+    virtual acceptor::ptr create_acceptor() NOEXCEPT;
 
     /// Call to create channel connector, owned by caller.
-    virtual connector::ptr create_connector() NOEXCEPT = 0;
+    virtual connector::ptr create_connector() NOEXCEPT;
 
     /// Call to create a set of channel connectors, owned by caller.
-    virtual connectors_ptr create_connectors(size_t count) NOEXCEPT = 0;
+    virtual connectors_ptr create_connectors(size_t count) NOEXCEPT;
 
     /// Create a channel from the started socket.
     virtual channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT = 0;

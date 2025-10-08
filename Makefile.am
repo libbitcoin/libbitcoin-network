@@ -120,8 +120,8 @@ src_libbitcoin_network_la_SOURCES = \
     src/protocols/protocol_version_70016.cpp \
     src/sessions/session.cpp \
     src/sessions/session_client.cpp \
+    src/sessions/session_client_inbound.cpp \
     src/sessions/session_inbound.cpp \
-    src/sessions/session_inbound_client.cpp \
     src/sessions/session_manual.cpp \
     src/sessions/session_outbound.cpp \
     src/sessions/session_peer.cpp \
@@ -414,8 +414,8 @@ include_bitcoin_network_sessionsdir = ${includedir}/bitcoin/network/sessions
 include_bitcoin_network_sessions_HEADERS = \
     include/bitcoin/network/sessions/session.hpp \
     include/bitcoin/network/sessions/session_client.hpp \
+    include/bitcoin/network/sessions/session_client_inbound.hpp \
     include/bitcoin/network/sessions/session_inbound.hpp \
-    include/bitcoin/network/sessions/session_inbound_client.hpp \
     include/bitcoin/network/sessions/session_manual.hpp \
     include/bitcoin/network/sessions/session_outbound.hpp \
     include/bitcoin/network/sessions/session_peer.hpp \

@@ -70,13 +70,10 @@ protected:
         const http_string_request_cptr& request) NOEXCEPT;
 
     /// Request handler must invoke one of these.
-    virtual void handle_successful_request(const code& ec) NOEXCEPT;
-    virtual void handle_failed_request(const code& ec,
+    virtual void handle_complete(const code& ec,
         const code& reason) NOEXCEPT;
 
 private:
-    static const std::string& get_form() NOEXCEPT;
-
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
     const channel_client::ptr channel_;
@@ -84,6 +81,7 @@ private:
     // These are thread safe.
     const session_client::ptr session_;
     const std::filesystem::path& root_;
+    const std::string& default_;
 };
 
 } // namespace network

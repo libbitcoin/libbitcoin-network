@@ -240,7 +240,7 @@ protected:
     virtual session_manual::ptr attach_manual_session() NOEXCEPT;
     virtual session_inbound::ptr attach_inbound_session() NOEXCEPT;
     virtual session_outbound::ptr attach_outbound_session() NOEXCEPT;
-    virtual session_inbound_client::ptr attach_client_session() NOEXCEPT;
+    virtual session_client_inbound::ptr attach_client_session() NOEXCEPT;
 
 private:
     // Suspensions.

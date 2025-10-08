@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_SESSION_CLIENT_HPP
 
 #include <memory>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 
@@ -34,38 +35,55 @@ class BCT_API session_client
 public:
     typedef std::shared_ptr<session_client> ptr;
 
+    /// Start accepting connections as configured (call from network strand).
+    void start(result_handler&& handler) NOEXCEPT override;
+
 protected:
     /// Construct an instance (network should be started).
-    session_client(net& network, uint64_t identifier) NOEXCEPT;
+    session_client(net& network, uint64_t identifier,
+        const config::endpoints& bindings, size_t connections,
+        const std::string& name) NOEXCEPT;
+
+    /// Accept cycle.
+    /// -----------------------------------------------------------------------
+
+    /// Start accepting based on constructed configuration (called from start).
+    virtual void start_accept(const code& ec,
+        const acceptor::ptr& acceptor) NOEXCEPT;
 
     /// Channel sequence.
     /// -----------------------------------------------------------------------
 
-    /// Override to change version protocol (base calls from channel strand).
+    /// Default no-op implementation of client-server handshake protocol.
     void attach_handshake(const channel::ptr& channel,
         result_handler&& handler) NOEXCEPT override;
 
-    /// Override to change channel protocols (base calls from channel strand).
-    void attach_protocols(const channel::ptr& channel) NOEXCEPT override;
-
-    /// Factories.
-    /// -----------------------------------------------------------------------
-
-    /// Call to create channel acceptor, owned by caller.
-    acceptor::ptr create_acceptor() NOEXCEPT override;
-
-    /// Call to create channel connector, owned by caller.
-    connector::ptr create_connector() NOEXCEPT override;
-
-    /// Call to create a set of channel connectors, owned by caller.
-    connectors_ptr create_connectors(size_t count) NOEXCEPT override;
-
-    /// Create a channel from the started socket.
-    channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT override;
+    /// Default no-op implementation of client-server handshake protocol.
+    void do_attach_handshake(const channel::ptr& channel,
+        const result_handler& handshake) NOEXCEPT override;
 
 private:
+    void handle_started(const code& ec,
+        const result_handler& handler) NOEXCEPT;
+    void handle_accepted(const code& ec, const socket::ptr& socket,
+        const acceptor::ptr& acceptor) NOEXCEPT;
+
+    // Completion sequence.
+    void handle_channel_start(const code& ec,
+        const channel::ptr& channel) NOEXCEPT;
+    void handle_channel_stop(const code& ec,
+        const channel::ptr& channel) NOEXCEPT;
+
     // This is thread safe (mostly).
     net& network_;
+
+    // These are thread safe.
+    const config::endpoints& bindings_;
+    const size_t connections_;
+    const std::string name_;
+
+    // This is protected by strand.
+    size_t channel_count_{};
 };
 
 } // namespace network

@@ -52,7 +52,7 @@ void session_inbound::start(result_handler&& handler) NOEXCEPT
 
     if (!settings().inbound_enabled())
     {
-        LOGN("Not configured for inbound connections.");
+        LOGN("Not configured for inbound peer connections.");
         handler(error::success);
         unsubscribe_close();
         return;
@@ -116,10 +116,10 @@ void session_inbound::start_accept(const code&,
     if (stopped())
         return;
 
-    acceptor->accept(BIND(handle_accept, _1, _2, acceptor));
+    acceptor->accept(BIND(handle_accepted, _1, _2, acceptor));
 }
 
-void session_inbound::handle_accept(const code& ec,
+void session_inbound::handle_accepted(const code& ec,
     const socket::ptr& socket, const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -142,33 +142,14 @@ void session_inbound::handle_accept(const code& ec,
     if (ec)
     {
         BC_ASSERT_MSG(!socket || socket->stopped(), "unexpected socket");
-        LOGF("Failed to accept inbound connection, " << ec.message());
+        LOGF("Failed to accept inbound peer connection, " << ec.message());
         defer(BIND(start_accept, _1, acceptor));
         return;
     }
 
     if (!enabled())
     {
-        LOGS("Dropping inbound connection (disabled).");
-        socket->stop();
-        return;
-    }
-
-    // There was no error, so listen again without delay.
-    start_accept(error::success, acceptor);
-
-    const auto address = socket->authority().to_address_item();
-
-    if (!whitelisted(address))
-    {
-        ////LOGS("Dropping not whitelisted connection [" << socket->authority() << "].");
-        socket->stop();
-        return;
-    }
-
-    if (blacklisted(address))
-    {
-        ////LOGS("Dropping blacklisted connection [" << socket->authority() << "].");
+        LOGS("Dropping inbound peer connection (disabled).");
         socket->stop();
         return;
     }
@@ -176,15 +157,34 @@ void session_inbound::handle_accept(const code& ec,
     // Could instead stop listening when at limit, though this is simpler.
     if (inbound_channel_count() >= settings().inbound_connections)
     {
-        LOGS("Dropping oversubscribed connection [" << socket->authority() << "].");
+        LOGS("Dropping oversubscribed peer [" << socket->authority() << "].");
+        socket->stop();
+        return;
+    }
+
+    const auto address = socket->authority().to_address_item();
+
+    if (!whitelisted(address))
+    {
+        ////LOGS("Dropping not whitelisted peer [" << socket->authority() << "].");
+        socket->stop();
+        return;
+    }
+
+    if (blacklisted(address))
+    {
+        ////LOGS("Dropping blacklisted peer [" << socket->authority() << "].");
         socket->stop();
         return;
     }
 
     const auto channel = create_channel(socket);
 
-    LOGS("Accepted inbound connection [" << channel->authority() << "] on binding ["
-        << acceptor->local() << "].");
+    LOGS("Accepted peer connection [" << channel->authority()
+        << "] on binding [" << acceptor->local() << "].");
+
+    // There was no error, so listen again without delay.
+    start_accept(error::success, acceptor);
 
     start_channel(channel,
         BIND(handle_channel_start, _1, channel),
@@ -304,7 +304,7 @@ void session_inbound::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    LOGS("Inbound channel stop [" << channel->authority() << "] "
+    LOGS("Inbound peer channel stop [" << channel->authority() << "] "
         << ec.message());
 }
 

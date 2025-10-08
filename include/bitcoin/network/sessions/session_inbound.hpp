@@ -66,8 +66,9 @@ protected:
     virtual bool enabled() const NOEXCEPT;
 
 private:
-    void handle_started(const code& ec, const result_handler& handler) NOEXCEPT;
-    void handle_accept(const code& ec, const socket::ptr& socket,
+    void handle_started(const code& ec,
+        const result_handler& handler) NOEXCEPT;
+    void handle_accepted(const code& ec, const socket::ptr& socket,
         const acceptor::ptr& acceptor) NOEXCEPT;
 
     void handle_channel_start(const code& ec,

@@ -27,38 +27,35 @@ namespace network {
 
 bool admin::enabled() const NOEXCEPT
 {
+    // Path is currently required.
     return !path.empty()
         && !binds.empty()
-        && !host.host().empty()
         && to_bool(connections);
 }
 
 bool explore::enabled() const NOEXCEPT
 {
+    // Path is currently required.
     return !path.empty()
         && !binds.empty()
-        && !host.host().empty()
         && to_bool(connections);
 }
 
 bool rest::enabled() const NOEXCEPT
 {
     return !binds.empty()
-        && !host.host().empty()
         && to_bool(connections);
 }
 
 bool websocket::enabled() const NOEXCEPT
 {
     return !binds.empty()
-        && !host.host().empty()
         && to_bool(connections);
 }
 
 bool bitcoind::enabled() const NOEXCEPT
 {
     return !binds.empty()
-        && !host.host().empty()
         && to_bool(connections);
 }
 
