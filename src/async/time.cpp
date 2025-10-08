@@ -18,38 +18,112 @@
  */
 #include <bitcoin/network/async/time.hpp>
 
-#include <chrono>
-#include <format>
-#include <string>
+#include <time.h>
 
 namespace libbitcoin {
 namespace network {
 
-// Time aliases
-using hours = std::chrono::hours;
-using minutes = std::chrono::minutes;
-using seconds = std::chrono::seconds;
-using milliseconds = std::chrono::milliseconds;
-using microseconds = std::chrono::microseconds;
-using nanoseconds = std::chrono::nanoseconds;
+// local utilities
+// ----------------------------------------------------------------------------
+// These are complicated by lack of std::localtime/std::gmtime thread safety,
+// and by the fact that msvc reverses the parameters and inverts the result.
 
-using steady_clock = std::chrono::steady_clock;
-using fine_clock = std::chrono::high_resolution_clock;
-using wall_clock = std::chrono::system_clock;
-
-// Current UTC time as time_t.
-time_t zulu_time() NOEXCEPT
+inline bool local_time(tm& out_local, time_t time) NOEXCEPT
 {
-    return wall_clock::to_time_t(wall_clock::now());
+    // std::localtime not threadsafe due to static buffer, use localtime_s.
+#ifdef HAVE_MSC
+    // proprietary msvc implemention, parameters swapped, returns errno_t.
+    return is_zero(localtime_s(&out_local, &time));
+#else
+    // C++11 implemention returns parameter pointer, nullptr implies failure.
+    return !is_null(localtime_r(&time, &out_local));
+#endif
 }
 
-// Current UTC time as uint32_t (Unix timestamp).
+inline bool zulu_time(tm& out_zulu, time_t time) NOEXCEPT
+{
+    // std::gmtime is not threadsafe due to static buffer, use gmtime_s.
+#ifdef HAVE_MSC
+    // proprietary msvc implemention, parameters swapped, returns errno_t.
+    return is_zero(gmtime_s(&out_zulu, &time));
+#else
+    // C++11 implemention returns parameter pointer, nullptr implies failure.
+    return !is_null(gmtime_r(&time , &out_zulu));
+#endif
+}
+
+// published
+// ----------------------------------------------------------------------------
+// BUGBUG: en.wikipedia.org/wiki/Year_2038_problem
+
+time_t zulu_time() NOEXCEPT
+{
+    const auto now = wall_clock::now();
+    return wall_clock::to_time_t(now);
+}
+
 uint32_t unix_time() NOEXCEPT
 {
     BC_PUSH_WARNING(NO_CASTS_FOR_ARITHMETIC_CONVERSION)
     return static_cast<uint32_t>(zulu_time());
     BC_POP_WARNING()
 }
+
+std::string format_local_time(time_t time) NOEXCEPT
+{
+    tm out{};
+    if (!local_time(out, time))
+        return "";
+
+    constexpr auto format = "%FT%T";
+    constexpr size_t size = std::size("yyyy-mm-dd hh:mm:ss");
+    char buffer[size];
+
+    // Returns number of characters, zero implies failure and undefined buffer.
+    BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
+    return is_zero(std::strftime(buffer, size, format, &out)) ? "" : buffer;
+    BC_POP_WARNING()
+}
+
+std::string format_zulu_time(time_t time) NOEXCEPT
+{
+    tm out{};
+    if (!zulu_time(out, time))
+        return "";
+
+    // %FT%TZ writes RFC 3339 formatted utc time.
+    constexpr auto format = "%FT%TZ";
+    constexpr size_t size = std::size("yyyy-mm-ddThh:mm:ssZ");
+    char buffer[size];
+
+    // Returns number of characters, zero implies failure and undefined buffer.
+    BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
+    return is_zero(std::strftime(buffer, size, format, &out)) ? "" : buffer;
+    BC_POP_WARNING()
+}
+
+std::string format_http_time(time_t time) NOEXCEPT
+{
+    tm out{};
+    if (!zulu_time(out, time))
+        return "";
+
+    // "%a, %d %b %Y %H:%M:%S GMT" writes RFC 7231 formatted utc time.
+    constexpr auto format = "%a, %d %b %Y %H:%M:%S GMT";
+    constexpr auto size = std::size("Day, DD Mon YYYY HH:MM:SS GMT");
+    char buffer[size];
+
+    BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
+    return is_zero(std::strftime(buffer, size, format, &out)) ? "" : buffer;
+    BC_POP_WARNING()
+}
+
+// C++20 support is not yet up to snuff.
+#if defined(DISABLED)
+
+#include <chrono>
+#include <format>
+#include <string>
 
 // Format time as local time: "yyyy-mm-ddThh:mm:ss".
 std::string format_local_time(time_t time) NOEXCEPT
@@ -101,6 +175,8 @@ std::string format_http_time(time_t time) NOEXCEPT
         return {};
     }
 }
+
+#endif // DISABLED
 
 } // namespace network
 } // namespace libbitcoin
