@@ -338,6 +338,24 @@ void session::unsubscribe_close() NOEXCEPT
     network_.unsubscribe_close(identifier_);
 }
 
+// Factories.
+// ----------------------------------------------------------------------------
+
+acceptor::ptr session::create_acceptor() NOEXCEPT
+{
+    return network_.create_acceptor();
+}
+
+connector::ptr session::create_connector() NOEXCEPT
+{
+    return network_.create_connector();
+}
+
+connectors_ptr session::create_connectors(size_t count) NOEXCEPT
+{
+    return network_.create_connectors(count);
+}
+
 // Properties.
 // ----------------------------------------------------------------------------
 

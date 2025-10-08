@@ -209,8 +209,8 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70016.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_client.cpp" />
+    <ClCompile Include="..\..\..\..\src\sessions\session_client_inbound.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_inbound.cpp" />
-    <ClCompile Include="..\..\..\..\src\sessions\session_inbound_client.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_manual.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_outbound.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_peer.cpp" />
@@ -333,8 +333,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocols.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_client.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_client_inbound.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound_client.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_manual.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_outbound.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_peer.hpp" />

@@ -27,6 +27,7 @@ namespace network {
 
 bool admin::enabled() const NOEXCEPT
 {
+    // Path is currently required.
     return !path.empty()
         && !binds.empty()
         && to_bool(connections);
@@ -34,6 +35,7 @@ bool admin::enabled() const NOEXCEPT
 
 bool explore::enabled() const NOEXCEPT
 {
+    // Path is currently required.
     return !path.empty()
         && !binds.empty()
         && to_bool(connections);

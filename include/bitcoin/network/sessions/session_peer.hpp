@@ -90,15 +90,6 @@ protected:
     /// Factories.
     /// -----------------------------------------------------------------------
 
-    /// Call to create channel acceptor, owned by caller.
-    acceptor::ptr create_acceptor() NOEXCEPT override;
-
-    /// Call to create channel connector, owned by caller.
-    connector::ptr create_connector() NOEXCEPT override;
-
-    /// Call to create a set of channel connectors, owned by caller.
-    connectors_ptr create_connectors(size_t count) NOEXCEPT override;
-
     /// Create a channel from the started socket.
     channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT override;
 

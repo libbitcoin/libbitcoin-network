@@ -177,6 +177,7 @@ void net::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
         std::bind(&net::handle_client, this, _1, handler));
 }
 
+// TODO: remove from network, apply a set of these in node.
 void net::handle_client(const code& ec, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -187,7 +188,13 @@ void net::handle_client(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    attach_client_session()->start(move_copy(handler));
+    if (network_settings().admin.enabled())
+    {
+        attach_client_session()->start(move_copy(handler));
+        return;
+    }
+    
+    handler(ec);
 }
 
 // Shutdown sequence.
@@ -715,10 +722,11 @@ session_outbound::ptr net::attach_outbound_session() NOEXCEPT
     return attach<session_outbound>(*this);
 }
 
-session_inbound_client::ptr net::attach_client_session() NOEXCEPT
+// TODO: remove from network, apply a set of these in node.
+session_client_inbound::ptr net::attach_client_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return attach<session_inbound_client>(*this);
+    return attach<session_client_inbound>(*this);
 }
 
 BC_POP_WARNING()
