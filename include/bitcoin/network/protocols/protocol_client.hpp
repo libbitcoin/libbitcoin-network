@@ -19,7 +19,9 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_CLIENT_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_CLIENT_HPP
 
+#include <filesystem>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/messages.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
@@ -65,23 +67,36 @@ protected:
     virtual void handle_receive_unknown(const code& ec,
         const messages::rpc::method::unknown& request) NOEXCEPT;
 
-    /// Send a common not_allowed response.
-    virtual void send_not_allowed(const code& ec,
-        const http_string_request_cptr& request) NOEXCEPT;
+    virtual void send_file(const http_string_request& request,
+        http_file&& file, const std::string& mime_type) NOEXCEPT;
+    virtual void send_bad_host(const http_string_request& request) NOEXCEPT;
+    virtual void send_not_found(const http_string_request& request) NOEXCEPT;
+    virtual void send_bad_target(const http_string_request& request) NOEXCEPT;
+    virtual void send_method_not_allowed(const http_string_request& request,
+        const code& ec) NOEXCEPT;
 
-    /// Request handler must invoke one of these.
+    /// Request handler MUST invoke one of these unless stopped(ec).
     virtual void handle_complete(const code& ec,
         const code& reason) NOEXCEPT;
 
 private:
+    void add_common_headers(http_fields& fields,
+        const http_string_request& request, bool closing=false) const NOEXCEPT;
+    bool is_allowed_host(const std::string& host) const NOEXCEPT;
+    const std::filesystem::path to_local_path(
+        const std::string& target) const NOEXCEPT;
+
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
     const channel_client::ptr channel_;
 
     // These are thread safe.
     const session_client::ptr session_;
+    const system::string_list host_names_;
     const std::filesystem::path& root_;
     const std::string& default_;
+    const std::string& server_;
+    const size_t timeout_;
 };
 
 } // namespace network

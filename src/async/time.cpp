@@ -59,7 +59,7 @@ std::string format_local_time(time_t time) NOEXCEPT
         using namespace std::chrono;
         const auto point = wall_clock::from_time_t(time);
         const auto trunc = time_point_cast<seconds>(point);
-        const auto zoned = zoned_time{ current_zone(), trunc };
+        const auto zoned = zoned_seconds{ current_zone(), trunc };
         return std::format("{:%FT%T}", zoned);
     }
     catch (...)
@@ -76,7 +76,7 @@ std::string format_zulu_time(time_t time) NOEXCEPT
         using namespace std::chrono;
         const auto point = wall_clock::from_time_t(time);
         const auto trunc = time_point_cast<seconds>(point);
-        const auto zoned = zoned_time{ "UTC", trunc };
+        const auto zoned = zoned_seconds{ "UTC", trunc };
         return std::format("{:%FT%TZ}", zoned);
     }
     catch (...)
@@ -93,7 +93,7 @@ std::string format_http_time(time_t time) NOEXCEPT
         using namespace std::chrono;
         const auto point = wall_clock::from_time_t(time);
         const auto trunc = time_point_cast<seconds>(point);
-        const auto zoned = zoned_time{ "UTC", trunc };
+        const auto zoned = zoned_seconds{ "UTC", trunc };
         return std::format("{:%a, %d %b %Y %H:%M:%S GMT}", zoned);
     }
     catch (...)
