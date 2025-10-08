@@ -75,7 +75,7 @@ private:
         const channel::ptr& channel) NOEXCEPT;
 
     // This is thread safe (mostly).
-    net& network_;
+    ////net& network_;
 
     // These are thread safe.
     const config::endpoints& bindings_;

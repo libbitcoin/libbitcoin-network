@@ -102,5 +102,81 @@ std::string format_zulu_time(time_t time) NOEXCEPT
     BC_POP_WARNING()
 }
 
+std::string format_http_time(time_t time) NOEXCEPT
+{
+    tm out{};
+    if (!zulu_time(out, time))
+        return "";
+
+    // "%a, %d %b %Y %H:%M:%S GMT" writes RFC 7231 formatted utc time.
+    constexpr auto format = "%a, %d %b %Y %H:%M:%S GMT";
+    constexpr auto size = std::size("Day, DD Mon YYYY HH:MM:SS GMT");
+    char buffer[size];
+
+    BC_PUSH_WARNING(NO_ARRAY_TO_POINTER_DECAY)
+    return is_zero(std::strftime(buffer, size, format, &out)) ? "" : buffer;
+    BC_POP_WARNING()
+}
+
+// C++20 support is not yet up to snuff.
+#if defined(DISABLED)
+
+#include <chrono>
+#include <format>
+#include <string>
+
+// Format time as local time: "yyyy-mm-ddThh:mm:ss".
+std::string format_local_time(time_t time) NOEXCEPT
+{
+    try
+    {
+        using namespace std::chrono;
+        const auto point = wall_clock::from_time_t(time);
+        const auto trunc = time_point_cast<seconds>(point);
+        const auto zoned = zoned_seconds{ current_zone(), trunc };
+        return std::format("{:%FT%T}", zoned);
+    }
+    catch (...)
+    {
+        return {};
+    }
+}
+
+// Format time as RFC 3339 UTC: "yyyy-mm-ddThh:mm:ssZ".
+std::string format_zulu_time(time_t time) NOEXCEPT
+{
+    try
+    {
+        using namespace std::chrono;
+        const auto point = wall_clock::from_time_t(time);
+        const auto trunc = time_point_cast<seconds>(point);
+        const auto zoned = zoned_seconds{ "UTC", trunc };
+        return std::format("{:%FT%TZ}", zoned);
+    }
+    catch (...)
+    {
+        return {};
+    }
+}
+
+// Format time as RFC 7231 UTC: "Day, DD Mon YYYY HH:MM:SS GMT".
+std::string format_http_time(time_t time) NOEXCEPT
+{
+    try
+    {
+        using namespace std::chrono;
+        const auto point = wall_clock::from_time_t(time);
+        const auto trunc = time_point_cast<seconds>(point);
+        const auto zoned = zoned_seconds{ "UTC", trunc };
+        return std::format("{:%a, %d %b %Y %H:%M:%S GMT}", zoned);
+    }
+    catch (...)
+    {
+        return {};
+    }
+}
+
+#endif // DISABLED
+
 } // namespace network
 } // namespace libbitcoin

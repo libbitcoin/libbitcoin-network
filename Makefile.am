@@ -150,6 +150,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/async/subscriber.cpp \
     test/async/thread.cpp \
     test/async/threadpool.cpp \
+    test/async/time.cpp \
     test/async/unsubscriber.cpp \
     test/async/races/race_all.cpp \
     test/async/races/race_quality.cpp \

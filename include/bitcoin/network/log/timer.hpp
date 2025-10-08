@@ -54,18 +54,6 @@ struct timer final
     }
 };
 
-/// Current zulu (utc) time using the wall clock, as time_t.
-BCT_API time_t zulu_time() NOEXCEPT;
-
-/// Current zulu (utc) time using the wall clock, cast to uint32_t.
-BCT_API uint32_t unix_time() NOEXCEPT;
-
-/// Specified zulu (utc) time as local time: "yyyy-mm-ddThh:mm:ssL".
-BCT_API std::string BCT_API format_local_time(time_t zulu) NOEXCEPT;
-
-/// Specified zulu (utc) time as RFC 3339 utc time:  "yyyy-mm-ddThh:mm:ssZ".
-BCT_API std::string BCT_API format_zulu_time(time_t zulu) NOEXCEPT;
-
 } // namespace network
 } // namespace libbitcoin
 

@@ -42,7 +42,7 @@ session_client::session_client(net& network, uint64_t identifier,
     const config::endpoints& bindings, size_t connections,
     const std::string& name) NOEXCEPT
   : session(network, identifier),
-    network_(network),
+    ////network_(network),
     bindings_(bindings),
     connections_(connections),
     name_(name)

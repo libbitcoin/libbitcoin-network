@@ -18,12 +18,18 @@
  */
 #include <bitcoin/network/client.hpp>
 
+#include <algorithm>
 #include <bitcoin/network/config/config.hpp>
 
 namespace libbitcoin {
 namespace network {
 
+using namespace system;
+
 // All values default to constructor defaults (zero/empty).
+
+// enabled() helpers
+// ----------------------------------------------------------------------------
 
 bool admin::enabled() const NOEXCEPT
 {
@@ -75,6 +81,89 @@ bool stratum_v2::enabled() const NOEXCEPT
 {
     return !binds.empty()
         && to_bool(connections);
+}
+
+// host_names() helpers
+// ----------------------------------------------------------------------------
+
+static string_list to_host_names(const config::endpoints& hosts) NOEXCEPT
+{
+    string_list out{};
+    out.resize(hosts.size());
+    std::ranges::transform(hosts, out.begin(), [](const auto& value) NOEXCEPT
+    {
+        return ascii_to_lower(value.to_uri());
+    });
+
+    return out;
+}
+
+string_list admin::host_names() const NOEXCEPT
+{
+    return to_host_names(hosts);
+}
+
+string_list explore::host_names() const NOEXCEPT
+{
+    return to_host_names(hosts);
+}
+
+string_list rest::host_names() const NOEXCEPT
+{
+    return to_host_names(hosts);
+}
+
+string_list websocket::host_names() const NOEXCEPT
+{
+    return to_host_names(hosts);
+}
+
+string_list bitcoind::host_names() const NOEXCEPT
+{
+    return to_host_names(hosts);
+}
+
+// timeout() helpers
+// ----------------------------------------------------------------------------
+
+steady_clock::duration admin::timeout() const NOEXCEPT
+{
+    return seconds{ timeout_seconds };
+}
+
+steady_clock::duration explore::timeout() const NOEXCEPT
+{
+    return seconds{ timeout_seconds };
+}
+
+steady_clock::duration rest::timeout() const NOEXCEPT
+{
+    return seconds{ timeout_seconds };
+}
+
+steady_clock::duration websocket::timeout() const NOEXCEPT
+{
+    return seconds{ timeout_seconds };
+}
+
+steady_clock::duration bitcoind::timeout() const NOEXCEPT
+{
+    return seconds{ timeout_seconds };
+}
+
+steady_clock::duration electrum::timeout() const NOEXCEPT
+{
+    return seconds{ timeout_seconds };
+}
+
+steady_clock::duration stratum_v1::timeout() const NOEXCEPT
+{
+    return seconds{ timeout_seconds };
+}
+
+steady_clock::duration stratum_v2::timeout() const NOEXCEPT
+{
+    return seconds{ timeout_seconds };
 }
 
 } // namespace network

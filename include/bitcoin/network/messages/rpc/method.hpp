@@ -30,12 +30,8 @@ namespace messages {
 namespace rpc {
 namespace method {
 
-template <http::verb Verb>
-struct method_
+struct method_ptr
 {
-    /// May differ from from ptr->method() (e.g. verb::unknown).
-    static constexpr http::verb method = Verb;
-
     /// Overload structure -> to obtain .ptr.
     const http_string_request* operator->() const NOEXCEPT
     {
@@ -57,15 +53,23 @@ struct method_
     http_string_request_cptr ptr{};
 };
 
-using get     = method_<http::verb::get>;
-using head    = method_<http::verb::head>;
-using post    = method_<http::verb::post>;
-using put     = method_<http::verb::put>;
-using delete_ = method_<http::verb::delete_>;
-using trace   = method_<http::verb::trace>;
-using options = method_<http::verb::options>;
-using connect = method_<http::verb::connect>;
-using unknown = method_<http::verb::unknown>;
+
+template <http::verb Verb>
+struct method_alias : public method_ptr
+{
+    /// May differ from from ptr->method() (e.g. verb::unknown).
+    static constexpr http::verb method = Verb;
+};
+
+using get     = method_alias<http::verb::get>;
+using head    = method_alias<http::verb::head>;
+using post    = method_alias<http::verb::post>;
+using put     = method_alias<http::verb::put>;
+using delete_ = method_alias<http::verb::delete_>;
+using trace   = method_alias<http::verb::trace>;
+using options = method_alias<http::verb::options>;
+using connect = method_alias<http::verb::connect>;
+using unknown = method_alias<http::verb::unknown>;
 
 } // namespace method
 } // namespace rpc
