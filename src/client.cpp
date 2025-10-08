@@ -92,7 +92,7 @@ static string_list to_host_names(const config::endpoints& hosts) NOEXCEPT
     out.resize(hosts.size());
     std::ranges::transform(hosts, out.begin(), [](const auto& value) NOEXCEPT
     {
-        return ascii_to_lower(value.host());
+        return ascii_to_lower(value.to_uri());
     });
 
     return out;
