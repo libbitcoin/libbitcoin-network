@@ -43,6 +43,21 @@ typedef std::chrono::high_resolution_clock fine_clock;
 /// C++20: std::chrono::system_clock measures Unix Time.
 typedef std::chrono::system_clock wall_clock;
 
+/// Current zulu (utc) time using the wall clock, as time_t.
+BCT_API time_t zulu_time() NOEXCEPT;
+
+/// Current zulu (utc) time using the wall clock, cast to uint32_t.
+BCT_API uint32_t unix_time() NOEXCEPT;
+
+/// Specified zulu (utc) time as local time: "yyyy-mm-ddThh:mm:ssL".
+BCT_API std::string BCT_API format_local_time(time_t time) NOEXCEPT;
+
+/// Specified zulu (utc) time as RFC 3339 utc: "yyyy-mm-ddThh:mm:ssZ".
+BCT_API std::string BCT_API format_zulu_time(time_t time) NOEXCEPT;
+
+/// Specified zulu (utc) time as RFC 7231 utc: "Day, DD Mon YYYY HH:MM:SS GMT"
+BCT_API std::string BCT_API format_http_time(time_t time) NOEXCEPT;
+
 } // namespace network
 } // namespace libbitcoin
 

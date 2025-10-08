@@ -78,6 +78,9 @@
     <ClCompile Include="..\..\..\..\test\async\threadpool.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\async\time.cpp">
+      <Filter>src\async</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
