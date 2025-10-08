@@ -37,6 +37,9 @@ struct BCT_API admin
     /// Validated against requests if specified.
     config::endpoints hosts{};
 
+    /// Default page for default URL.
+    std::string default_{};
+
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;
 };
@@ -51,6 +54,9 @@ struct BCT_API explore
 
     /// Validated against requests if specified.
     config::endpoints hosts{};
+
+    /// Default page for default URL.
+    std::string default_{};
 
     /// Helpers.
     virtual bool enabled() const NOEXCEPT;

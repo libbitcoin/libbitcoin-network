@@ -27,6 +27,7 @@ BOOST_AUTO_TEST_CASE(client__admin__defaults__expected)
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE(instance.path.empty());
     BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE(instance.default_.empty());
     BOOST_REQUIRE(!instance.enabled());
 }
 
@@ -37,6 +38,7 @@ BOOST_AUTO_TEST_CASE(client__explore__defaults__expected)
     BOOST_REQUIRE(instance.binds.empty());
     BOOST_REQUIRE(instance.path.empty());
     BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE(instance.default_.empty());
     BOOST_REQUIRE(!instance.enabled());
 }
 

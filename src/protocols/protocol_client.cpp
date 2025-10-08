@@ -44,6 +44,7 @@ protocol_client::protocol_client(const session::ptr& session,
     channel_(std::dynamic_pointer_cast<channel_client>(channel)),
     session_(std::dynamic_pointer_cast<session_client>(session)),
     root_(channel->settings().admin.path),
+    default_(channel->settings().admin.default_),
     tracker<protocol_client>(session->log)
 {
 }
@@ -82,33 +83,31 @@ void protocol_client::handle_receive_get(const code& ec,
         return;
 
     const auto version = request->version();
-    if (request->target() == "/")
+
+    // Set default path as required.
+    auto target = std::string{ request->target() };
+    if (target == "/")
+        target += default_;
+
+    // Empty path implies invalid.
+    const auto path = sanitize_origin(root_, target);
+    if (path.empty())
     {
-        // Default path GET returns HTML form.
-        http_string_response response{ http::status::ok, version };
-        response.set(http::field::content_type, "text/html; charset=UTF-8");
-        response.body() = get_form();
+        // Return 404 Not Found and disconnect for bad target error.
+        http_string_response response{ http::status::not_found, version };
+        response.set(http::field::server, BC_USER_AGENT);
+        response.body() += BC_USER_AGENT;
+        response.body() += "\r\nfile   : ";
+        response.body() += request->target();
         response.prepare_payload();
-        SEND(std::move(response), handle_successful_request, _1);
+        SEND(std::move(response), handle_complete, _1, error::bad_target);
         return;
     }
 
-    // Empty path implies invalid.
-    const auto path = sanitize_origin(root_, request->target());
-
-    // favicon.ico path GET returns image.
-    if (get_mime_type(path).starts_with("image/"))
+    // Empty implies file not found.
+    auto file = get_file_body(path);
+    if (!file.is_open())
     {
-        auto file = get_file_body(path);
-        if (file.is_open())
-        {
-            http_file_response response{ http::status::ok, version };
-            response.set(http::field::content_type, get_mime_type(path));
-            response.body() = std::move(file);
-            response.prepare_payload();
-            SEND(std::move(response), handle_failed_request, _1, error::im_a_teapot);
-            return;
-        }
 
         // Return 404 Not Found.
         http_string_response response{ http::status::not_found, version };
@@ -117,60 +116,31 @@ void protocol_client::handle_receive_get(const code& ec,
         response.body() += "\r\nfile   : ";
         response.body() += request->target();
         response.prepare_payload();
-        SEND(std::move(response), handle_failed_request, _1, error::not_found);
+        SEND(std::move(response), handle_complete, _1, error::not_found);
         return;
     }
 
-    // Other GETs just echo.
-    http_string_response response{ http::status::ok, version };
-    response.set(http::field::content_type, "text/plain");
-    response.body() += BC_USER_AGENT;
-    response.body() += "\r\nmethod : ";
-    response.body() += request->method_string();
-    response.body() += "\r\ntarget : ";
-    response.body() += request->target();
-    response.body() += "\r\nversion: ";
-    response.body() += system::serialize(version);
-    response.body() += "\r\npayload: ";
-    response.body() += system::serialize(request->body().size());
-    response.body() += "\r\n";
-    response.body() += request->body();
+    // TODO: if not keep-alive drop with new error::keep_alive.
+    const code result = (request->keep_alive() ? error::success :
+        error::bad_field);
+
+    http_file_response response{ http::status::ok, version };
+    response.set(http::field::content_type, get_mime_type(path));
+    response.body() = std::move(file);
     response.prepare_payload();
-    SEND(std::move(response), handle_successful_request, _1);
+    SEND(std::move(response), handle_complete, _1, result);
+    return;
 }
 
-// Handle post method.
+// Handle disallowed methods.
 // ----------------------------------------------------------------------------
 
 void protocol_client::handle_receive_post(const code& ec,
     const method::post& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-
-    if (stopped(ec))
-        return;
-
-    // Echo.
-    const auto version = request->version();
-    http_string_response response{ http::status::ok, version };
-    response.set(http::field::content_type, "text/plain");
-    response.body() += BC_USER_AGENT;
-    response.body() += "\r\nmethod : ";
-    response.body() += request->method_string();
-    response.body() += "\r\ntarget : ";
-    response.body() += request->target();
-    response.body() += "\r\nversion: ";
-    response.body() += system::serialize(version);
-    response.body() += "\r\npayload: ";
-    response.body() += system::serialize(request->body().size());
-    response.body() += "\r\n";
-    response.body() += request->body();
-    response.prepare_payload();
-    SEND(std::move(response), handle_successful_request, _1);
+    send_not_allowed(ec, request.ptr);
 }
-
-// Handle disallowed methods.
-// ----------------------------------------------------------------------------
 
 void protocol_client::handle_receive_put(const code& ec,
     const method::put& request) NOEXCEPT
@@ -221,6 +191,7 @@ void protocol_client::handle_receive_unknown(const code& ec,
     send_not_allowed(ec, request.ptr);
 }
 
+// common
 void protocol_client::send_not_allowed(const code& ec,
     const http_string_request_cptr& request) NOEXCEPT
 {
@@ -232,55 +203,25 @@ void protocol_client::send_not_allowed(const code& ec,
 
     const auto version = request->version();
     http_string_response response{ http::status::method_not_allowed, version };
-    SEND(std::move(response), handle_failed_request, _1, error::method_not_allowed);
+    SEND(std::move(response), handle_complete, _1, error::method_not_allowed);
 }
 
 // Handle sends.
 // ----------------------------------------------------------------------------
 
-// Invoked to continue as half-duplex, required if not stopping.
-void protocol_client::handle_successful_request(const code&) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    channel_->read_request();
-}
-
-// Invoked to terminate connection after error response (as applicable).
-void protocol_client::handle_failed_request(const code&,
+void protocol_client::handle_complete(const code& ec,
     const code& reason) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    stop(reason);
-}
 
-// Utility.
-// ----------------------------------------------------------------------------
-
-// static/private
-const std::string& protocol_client::get_form() NOEXCEPT
-{
-    static const std::string form
+    if (ec)
     {
-R"(<!DOCTYPE html>
-<html>
-<head>
-    <title>Login Form</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-</head>
-<body>
-    <h1>All your nodes are us!</h1>
-    <form action="/submit" method="POST">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" placeholder="Enter username"><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" placeholder="Enter password"><br>
-        <input type="submit" value="Submit">
-    </form>
-</body>
-</html>)" 
-    };
+        stop(reason);
+        return;
+    }
 
-    return form;
+    // Continue half duplex.
+    channel_->read_request();
 }
 
 BC_POP_WARNING()
