@@ -70,10 +70,8 @@ void protocol_client::start() NOEXCEPT
     protocol::start();
 }
 
-// Inbound/outbound.
-// ----------------------------------------------------------------------------
-
 // Handle get method.
+// ----------------------------------------------------------------------------
 
 void protocol_client::handle_receive_get(const code& ec,
     const method::get& request) NOEXCEPT
@@ -171,7 +169,7 @@ void protocol_client::handle_receive_post(const code& ec,
     SEND(std::move(response), handle_successful_request, _1);
 }
 
-// Handle disallosed methods.
+// Handle disallowed methods.
 // ----------------------------------------------------------------------------
 
 void protocol_client::handle_receive_put(const code& ec,
