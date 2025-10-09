@@ -341,6 +341,8 @@ std::filesystem::path protocol_client::to_local_path(
 bool protocol_client::is_allowed_origin(const std::string& origin,
     size_t version) const NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
     // Allow same-origin and no-origin requests.
     // Origin header field is not available until http 1.1.
     if (origin.empty() || version < http_version_1_1)
@@ -353,6 +355,8 @@ bool protocol_client::is_allowed_origin(const std::string& origin,
 bool protocol_client::is_allowed_host(const std::string& host,
     size_t version) const NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
     // Disallow unspecified host.
     // Host header field is mandatory at http 1.1.
     if (host.empty() && version >= http_version_1_1)
@@ -365,6 +369,8 @@ bool protocol_client::is_allowed_host(const std::string& host,
 void protocol_client::add_common_headers(http_fields& fields,
     const http_string_request& request, bool closing) const NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
+
     // date (current)
     // ------------------------------------------------------------------------
     fields.set(field::date, format_http_time(zulu_time()));
