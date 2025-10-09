@@ -45,6 +45,15 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // [field] returns "" if not found but .at(field) throws.
 
+// TODO: update host config parsing so that all binding ports are defaulted.
+// TODO: configure timeouts and integrate with keep-alive.
+// TODO: generalize and customize failure return pages and mime types.
+// TODO: generalize config settings using a common struct.
+// TODO: pass generalized config struct to this as base class.
+// TODO: use server.hosts as .origins for other http/s & ws/s protocols.
+// TODO: add new settings to node parser (some will not be exposed due
+// TODO: to overgeneralization).
+
 protocol_client::protocol_client(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
