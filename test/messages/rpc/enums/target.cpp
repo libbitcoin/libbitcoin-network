@@ -22,9 +22,12 @@ using namespace network::messages::rpc;
 
 BOOST_FIXTURE_TEST_SUITE(rpc_target_tests, test::directory_setup_fixture)
 
-#if defined (HAVE_MSC)
+#if defined(HAVE_MSC)
     static const std::string root{ "c:\\home\\name" };
     static const std::string norm{ "c:/home/name" };
+#elif defined(HAVE_APPLE)
+    static const std::string root{ "/home/name" };
+    static const std::string norm{ "/System/Volumes/Data/home/name" };
 #else
     static const std::string root{ "/home/name" };
     static const std::string norm{ "/home/name" };
