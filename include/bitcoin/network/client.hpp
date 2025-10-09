@@ -31,6 +31,7 @@ namespace network {
 struct BCT_API admin
 {
     /// Properties.
+    bool secure{};
     uint16_t connections{};
     config::endpoints binds{};
     std::filesystem::path path{};
@@ -55,6 +56,7 @@ struct BCT_API admin
 struct BCT_API explore
 {
     /// Properties.
+    bool secure{};
     uint16_t connections{};
     config::endpoints binds{};
     std::filesystem::path path{};
@@ -79,6 +81,7 @@ struct BCT_API explore
 struct BCT_API rest
 {
     /// Properties.
+    bool secure{};
     uint16_t connections{};
     config::endpoints binds{};
     std::string server{};
@@ -99,6 +102,7 @@ struct BCT_API rest
 struct BCT_API websocket
 {
     /// Properties.
+    bool secure{};
     uint16_t connections{};
     config::endpoints binds{};
     std::string server{};
@@ -119,6 +123,7 @@ struct BCT_API websocket
 struct BCT_API bitcoind
 {
     /// Properties.
+    bool secure{};
     uint16_t connections{};
     config::endpoints binds{};
     std::string server{};
@@ -139,6 +144,7 @@ struct BCT_API bitcoind
 struct BCT_API electrum
 {
     /// Properties.
+    bool secure{};
     uint16_t connections{};
     config::endpoints binds{};
 
@@ -154,6 +160,7 @@ struct BCT_API electrum
 struct BCT_API stratum_v1
 {
     /// Properties.
+    bool secure{};
     uint16_t connections{};
     config::endpoints binds{};
 
@@ -169,6 +176,7 @@ struct BCT_API stratum_v1
 struct BCT_API stratum_v2
 {
     /// Properties.
+    bool secure{};
     uint16_t connections{};
     config::endpoints binds{};
 
