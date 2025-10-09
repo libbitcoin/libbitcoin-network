@@ -575,4 +575,46 @@ BOOST_AUTO_TEST_CASE(utilities__parse_endpoint__invalids__false_expected)
     BOOST_REQUIRE(!parse_endpoint(scheme, host, port, ""));
 }
 
+// to_normal_host
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__empty_zero_zero__empty)
+{
+    BOOST_REQUIRE(to_normal_host({ "", 0 }, 0).empty());
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__empty_zero_nonzero__nonzero)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_host({ "", 0 }, 42), ":42");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__nonempty_zero_nonzero__nonempty_nonzero)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_host({ "localhost", 0 }, 42), "localhost:42");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__numeric_zero_nonzero__numeric_nonzero)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_host({ "127.0.0.1", 0 }, 42), "127.0.0.1:42");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__scheme_empty_zero_nonzero__empty_nonzero)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_host({ "https", "", 0 }, 42), ":42");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__scheme_nonempty_zero_nonzero__nonempty_nonzero)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_host({ "https", "localhost", 0 }, 42), "localhost:42");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__scheme_nonempty_nonzero_zero__nonempty_nonzero)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_host({ "https", "localhost", 42 }, 0), "localhost:42");
+}
+
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__empty_scheme_nonempty_nonzero_zero__nonempty_nonzero)
+{
+    BOOST_REQUIRE_EQUAL(to_normal_host({ "", "localhost", 42 }, 0), "localhost:42");
+}
+
 BOOST_AUTO_TEST_SUITE_END()

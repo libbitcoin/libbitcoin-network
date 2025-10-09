@@ -284,46 +284,4 @@ BOOST_AUTO_TEST_CASE(endpoint__inequality_address_item__same_v6__false)
     BOOST_REQUIRE(!(host1 != host2.get_address_item()));
 }
 
-// to_normal_host
-
-BOOST_AUTO_TEST_CASE(endpoint__to_normal_host__empty_zero_zero__empty)
-{
-    BOOST_REQUIRE(endpoint::to_normal_host({ "", 0 }, 0).empty());
-}
-
-BOOST_AUTO_TEST_CASE(endpoint__to_normal_host__empty_zero_nonzero__nonzero)
-{
-    BOOST_REQUIRE_EQUAL(endpoint::to_normal_host({ "", 0 }, 42), ":42");
-}
-
-BOOST_AUTO_TEST_CASE(endpoint__to_normal_host__nonempty_zero_nonzero__nonempty_nonzero)
-{
-    BOOST_REQUIRE_EQUAL(endpoint::to_normal_host({ "localhost", 0 }, 42), "localhost:42");
-}
-
-BOOST_AUTO_TEST_CASE(endpoint__to_normal_host__numeric_zero_nonzero__numeric_nonzero)
-{
-    BOOST_REQUIRE_EQUAL(endpoint::to_normal_host({ "127.0.0.1", 0 }, 42), "127.0.0.1:42");
-}
-
-BOOST_AUTO_TEST_CASE(endpoint__to_normal_host__scheme_empty_zero_nonzero__empty_nonzero)
-{
-    BOOST_REQUIRE_EQUAL(endpoint::to_normal_host({ "https", "", 0 }, 42), ":42");
-}
-
-BOOST_AUTO_TEST_CASE(endpoint__to_normal_host__scheme_nonempty_zero_nonzero__nonempty_nonzero)
-{
-    BOOST_REQUIRE_EQUAL(endpoint::to_normal_host({ "https", "localhost", 0 }, 42), "localhost:42");
-}
-
-BOOST_AUTO_TEST_CASE(endpoint__to_normal_host__scheme_nonempty_nonzero_zero__nonempty_nonzero)
-{
-    BOOST_REQUIRE_EQUAL(endpoint::to_normal_host({ "https", "localhost", 42 }, 0), "localhost:42");
-}
-
-BOOST_AUTO_TEST_CASE(endpoint__to_normal_host__empty_scheme_nonempty_nonzero_zero__nonempty_nonzero)
-{
-    BOOST_REQUIRE_EQUAL(endpoint::to_normal_host({ "", "localhost", 42 }, 0), "localhost:42");
-}
-
 BOOST_AUTO_TEST_SUITE_END()

@@ -73,6 +73,17 @@ asio::address from_address(const messages::p2p::ip_address& address) NOEXCEPT
     }
 }
 
+std::string to_normal_host(const endpoint& value,
+    uint16_t default_port) NOEXCEPT
+{
+    // The scheme is empty, host is lowered, and port is defaulted.
+    return endpoint
+    {
+        system::ascii_to_lower(value.host()),
+        is_zero(value.port()) ? default_port : value.port()
+    }.to_uri();
+}
+
 } // namespace config
 } // namespace network
 } // namespace libbitcoin
