@@ -37,6 +37,7 @@ namespace network {
 using namespace asio;
 using namespace http;
 using namespace system;
+using namespace network::config;
 using namespace messages::rpc;
 using namespace std::placeholders;
 
@@ -348,8 +349,7 @@ bool protocol_client::is_allowed_origin(const std::string& origin,
     if (origin.empty() || version < http_version_1_1)
         return true;
 
-    return origins_.empty() ||
-        contains(origins_, config::endpoint::to_normal_host(origin, port_));
+    return origins_.empty() || contains(origins_, to_normal_host(origin, port_));
 }
 
 bool protocol_client::is_allowed_host(const std::string& host,
@@ -362,8 +362,7 @@ bool protocol_client::is_allowed_host(const std::string& host,
     if (host.empty() && version >= http_version_1_1)
         return false;
 
-    return hosts_.empty() ||
-        contains(hosts_, config::endpoint::to_normal_host(host, port_));
+    return hosts_.empty() || contains(hosts_, to_normal_host(host, port_));
 }
 
 void protocol_client::add_common_headers(http_fields& fields,

@@ -98,7 +98,7 @@ static string_list to_host_names(const config::endpoints& hosts,
     out.resize(hosts.size());
     std::ranges::transform(hosts, out.begin(), [=](const auto& value) NOEXCEPT
     {
-        return endpoint::to_normal_host(value, port);
+        return value.to_lower(port);
     });
 
     return out;

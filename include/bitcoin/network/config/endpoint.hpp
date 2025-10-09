@@ -39,10 +39,6 @@ public:
 
     using system::config::endpoint::endpoint;
 
-    /// Utility to remove scheme and guarantee ascii lowered host:port form.
-    static std::string to_normal_host(const endpoint& value,
-        uint16_t default_port) NOEXCEPT;
-
     /// Operators.
     /// -----------------------------------------------------------------------
 
@@ -73,7 +69,7 @@ struct hash<bc::network::config::endpoint>
 {
     size_t operator()(const bc::network::config::endpoint& value) const NOEXCEPT
     {
-        return std::hash<std::string>{}(value.to_uri());
+        return std::hash<std::string>{}(value.to_string());
     }
 };
 } // namespace std
