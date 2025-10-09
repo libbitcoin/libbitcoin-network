@@ -32,7 +32,7 @@ address endpoint::to_address() const NOEXCEPT
     try
     {
         // Throws if textual authority does not parse to IP address.
-        return { to_authority() };
+        return { to_string() };
     }
     catch (const std::exception&)
     {

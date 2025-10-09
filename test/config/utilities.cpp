@@ -532,89 +532,58 @@ BOOST_AUTO_TEST_CASE(utilities__parse_authority__v6_invalids__false)
 
 BOOST_AUTO_TEST_CASE(utilities__parse_endpoint__full__true_expected)
 {
-    std::string scheme{};
     std::string host{};
     uint16_t port{};
-    BOOST_REQUIRE(parse_endpoint(scheme, host, port, "tcp://foo.bar:42"));
-    BOOST_REQUIRE_EQUAL(scheme, "tcp");
+    BOOST_REQUIRE(parse_endpoint(host, port, "foo.bar:42"));
     BOOST_REQUIRE_EQUAL(host, "foo.bar");
     BOOST_REQUIRE_EQUAL(port, 42u);
 }
 
-BOOST_AUTO_TEST_CASE(utilities__parse_endpoint__host_only__true_expected)
-{
-    std::string scheme{};
-    std::string host{};
-    uint16_t port{};
-    BOOST_REQUIRE(parse_endpoint(scheme, host, port, "foo.bar"));
-    BOOST_REQUIRE(scheme.empty());
-    BOOST_REQUIRE_EQUAL(host, "foo.bar");
-    BOOST_REQUIRE_EQUAL(port, 0u);
-}
-
 BOOST_AUTO_TEST_CASE(utilities__parse_endpoint__host_port__true_expected)
 {
-    std::string scheme{};
     std::string host{};
     uint16_t port{};
-    BOOST_REQUIRE(parse_endpoint(scheme, host, port, "foo.bar:65535"));
-    BOOST_REQUIRE(scheme.empty());
+    BOOST_REQUIRE(parse_endpoint(host, port, "foo.bar:65535"));
     BOOST_REQUIRE_EQUAL(host, "foo.bar");
     BOOST_REQUIRE_EQUAL(port, 65535u);
 }
 
 BOOST_AUTO_TEST_CASE(utilities__parse_endpoint__invalids__false_expected)
 {
-    std::string scheme{};
     std::string host{};
     uint16_t port{};
-    BOOST_REQUIRE(!parse_endpoint(scheme, host, port, "tcp://foo.bar:65536"));
-    BOOST_REQUIRE(!parse_endpoint(scheme, host, port, "foobar://foo.bar:42"));
-    BOOST_REQUIRE(!parse_endpoint(scheme, host, port, "tcp://:42"));
-    BOOST_REQUIRE(!parse_endpoint(scheme, host, port, ":42"));
-    BOOST_REQUIRE(!parse_endpoint(scheme, host, port, ""));
+    BOOST_REQUIRE(!parse_endpoint(host, port, "tcp://foo.bar:65536"));
+    BOOST_REQUIRE(!parse_endpoint(host, port, "foobar://foo.bar:42"));
+    BOOST_REQUIRE(!parse_endpoint(host, port, "tcp://:42"));
+    BOOST_REQUIRE(!parse_endpoint(host, port, ":42"));
+    BOOST_REQUIRE(!parse_endpoint(host, port, ""));
 }
 
 // to_normal_host
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__empty_zero_zero__empty)
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__empty_default_zero__empty)
 {
-    BOOST_REQUIRE(to_normal_host({ "", 0 }, 0).empty());
+    BOOST_REQUIRE(to_normal_host("", 0).empty());
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__empty_zero_nonzero__nonzero)
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__empty_default_nonzero__empty)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_host({ "", 0 }, 42), ":42");
+    BOOST_REQUIRE(to_normal_host("", 42).empty());
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__nonempty_zero_nonzero__nonempty_nonzero)
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__nonempty_default_nonzero__nonempty_nonzero)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_host({ "localhost", 0 }, 42), "localhost:42");
+    BOOST_REQUIRE_EQUAL(to_normal_host("localhost", 42), "localhost:42");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__numeric_zero_nonzero__numeric_nonzero)
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__numeric_nonzero__numeric_nonzero)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_host({ "127.0.0.1", 0 }, 42), "127.0.0.1:42");
+    BOOST_REQUIRE_EQUAL(to_normal_host("127.0.0.1", 42), "127.0.0.1:42");
 }
 
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__scheme_empty_zero_nonzero__empty_nonzero)
+BOOST_AUTO_TEST_CASE(utilities__to_normal_host__numeric_nonzero_nonzero__numeric_origin_nonzero)
 {
-    BOOST_REQUIRE_EQUAL(to_normal_host({ "https", "", 0 }, 42), ":42");
-}
-
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__scheme_nonempty_zero_nonzero__nonempty_nonzero)
-{
-    BOOST_REQUIRE_EQUAL(to_normal_host({ "https", "localhost", 0 }, 42), "localhost:42");
-}
-
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__scheme_nonempty_nonzero_zero__nonempty_nonzero)
-{
-    BOOST_REQUIRE_EQUAL(to_normal_host({ "https", "localhost", 42 }, 0), "localhost:42");
-}
-
-BOOST_AUTO_TEST_CASE(utilities__to_normal_host__empty_scheme_nonempty_nonzero_zero__nonempty_nonzero)
-{
-    BOOST_REQUIRE_EQUAL(to_normal_host({ "", "localhost", 42 }, 0), "localhost:42");
+    BOOST_REQUIRE_EQUAL(to_normal_host("127.0.0.1:80", 42), "127.0.0.1:80");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

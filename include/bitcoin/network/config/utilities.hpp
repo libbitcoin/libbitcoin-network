@@ -44,8 +44,9 @@ constexpr bool is_v6(const messages::p2p::ip_address& ip) NOEXCEPT
 BCT_API messages::p2p::ip_address to_address(const asio::address& ip) NOEXCEPT;
 BCT_API asio::address from_address(const messages::p2p::ip_address& address) NOEXCEPT;
 
-/// Utility to remove scheme and guarantee ascii lowered host:port form.
-BCT_API std::string to_normal_host(const endpoint& value, uint16_t default_port) NOEXCEPT;
+/// Get ascii lowered host:port form, with default substitution.
+BCT_API std::string to_normal_host(const std::string& host,
+    uint16_t default_port) NOEXCEPT;
 
 } // namespace config
 } // namespace network

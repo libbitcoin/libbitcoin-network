@@ -69,7 +69,7 @@ struct hash<bc::network::config::endpoint>
 {
     size_t operator()(const bc::network::config::endpoint& value) const NOEXCEPT
     {
-        return std::hash<std::string>{}(value.to_uri());
+        return std::hash<std::string>{}(value.to_string());
     }
 };
 } // namespace std

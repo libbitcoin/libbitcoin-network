@@ -349,7 +349,7 @@ bool protocol_client::is_allowed_origin(const std::string& origin,
         return true;
 
     return origins_.empty() ||
-        contains(origins_, config::endpoint::to_normal_host(origin, port_));
+        contains(origins_, config::to_normal_host(origin, port_));
 }
 
 bool protocol_client::is_allowed_host(const std::string& host,
@@ -363,7 +363,7 @@ bool protocol_client::is_allowed_host(const std::string& host,
         return false;
 
     return hosts_.empty() ||
-        contains(hosts_, config::endpoint::to_normal_host(host, port_));
+        contains(hosts_, config::to_normal_host(host, port_));
 }
 
 void protocol_client::add_common_headers(http_fields& fields,
