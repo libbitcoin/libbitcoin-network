@@ -18,8 +18,8 @@
  */
 #include <bitcoin/network/protocols/protocol_client.hpp>
 
-#include <algorithm>
-#include <ranges>
+#include <filesystem>
+#include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -43,16 +43,20 @@ using namespace std::placeholders;
 // Bind throws (ok).
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
+// [field] returns "" if not found but .at(field) throws.
+
 protocol_client::protocol_client(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     channel_(std::dynamic_pointer_cast<channel_client>(channel)),
     session_(std::dynamic_pointer_cast<session_client>(session)),
-    host_names_(channel->settings().admin.host_names()),
+    origins_(channel->settings().admin.host_names()), // always from admin
+    hosts_(channel->settings().admin.host_names()),
     root_(channel->settings().admin.path),
     default_(channel->settings().admin.default_),
     server_(channel->settings().admin.server),
     timeout_(channel->settings().admin.timeout_seconds),
+    port_(channel->settings().admin.secure ? default_tls : default_http),
     tracker<protocol_client>(session->log)
 {
 }
@@ -90,8 +94,8 @@ void protocol_client::send_file(const http_string_request& request,
 
     http_file_response response{ status::ok, request.version() };
     add_common_headers(response.base(), request);
-    response.set(field::content_type, mime_type);
 
+    response.set(field::content_type, mime_type);
     response.body() = std::move(file);
     response.prepare_payload();
 
@@ -106,12 +110,32 @@ void protocol_client::send_not_found(
     http_string_response response{ status::not_found, request.version() };
     add_common_headers(response.base(), request);
 
+    // TODO: formatted response with matching content-type.
     const code reason{ error::not_found };
-    response.body() += reason.message() + " : target : ";
+    response.body() += reason.message() + " : ";
     response.body() += request.target();
     response.prepare_payload();
 
     SEND(std::move(response), handle_complete, _1, error::success);
+}
+
+// Closes channel.
+void protocol_client::send_forbidden(
+    const http_string_request& request) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    const auto version = request.version();
+    http_string_response response{ status::forbidden, version };
+    add_common_headers(response.base(), request, true);
+
+    // TODO: formatted response with matching content-type.
+    const code reason{ error::forbidden };
+    response.body() += reason.message() + " : ";
+    response.body() += request[field::origin];
+    response.prepare_payload();
+
+    SEND(std::move(response), handle_complete, _1, reason);
 }
 
 // Closes channel.
@@ -123,9 +147,10 @@ void protocol_client::send_bad_host(
     http_string_response response{ status::bad_request, request.version() };
     add_common_headers(response.base(), request, true);
 
+    // TODO: formatted response with matching content-type.
     const code reason{ error::bad_request };
     response.body() += reason.message() + " : host : ";
-    response.body() += request.at(field::host);
+    response.body() += request[field::host];
     response.prepare_payload();
 
     SEND(std::move(response), handle_complete, _1, reason);
@@ -140,6 +165,7 @@ void protocol_client::send_bad_target(
     http_string_response response{ status::bad_request, request.version() };
     add_common_headers(response.base(), request, true);
 
+    // TODO: formatted response with matching content-type.
     const code reason{ error::bad_request };
     response.body() += reason.message() + " : target : ";
     response.body() += request.target();
@@ -161,6 +187,7 @@ void protocol_client::send_method_not_allowed(
     http_string_response response{ status::method_not_allowed, version };
     add_common_headers(response.base(), request, true);
 
+    // TODO: formatted response with matching content-type.
     const code reason{ error::method_not_allowed };
     response.body() += reason.message() + " : ";
     response.body() += request.method_string();
@@ -180,8 +207,15 @@ void protocol_client::handle_receive_get(const code& ec,
     if (stopped(ec))
         return;
 
-    // Enforce http host header if any hosts are configured.
-    if (!is_allowed_host(request->at(field::host)))
+    // Enforce http origin policy (requries configured hosts).
+    if (!is_allowed_origin((*request)[field::origin], request->version()))
+    {
+        send_forbidden(*request);
+        return;
+    }
+
+    // Enforce http host header (if any hosts are configured).
+    if (!is_allowed_host((*request)[field::host], request->version()))
     {
         send_bad_host(*request);
         return;
@@ -208,6 +242,12 @@ void protocol_client::handle_receive_get(const code& ec,
 
 // Handle disallowed-by-default methods (override to implement).
 // ----------------------------------------------------------------------------
+
+////void protocol_client::handle_receive_get(const code& ec,
+////    const method::post& request) NOEXCEPT
+////{
+////    send_method_not_allowed(*request, ec);
+////}
 
 void protocol_client::handle_receive_post(const code& ec,
     const method::post& request) NOEXCEPT
@@ -282,36 +322,55 @@ void protocol_client::handle_complete(const code& ec,
 // ----------------------------------------------------------------------------
 // private
 
-// TODO: sanitize_origin() must be enhanced for security purposes.
-const std::filesystem::path protocol_client::to_local_path(
+std::filesystem::path protocol_client::to_local_path(
     const std::string& target) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return sanitize_origin(root_, target == "/" ? target + default_ : target);
 }
 
-bool protocol_client::is_allowed_host(const std::string& host) const NOEXCEPT
+bool protocol_client::is_allowed_origin(const std::string& origin,
+    size_t version) const NOEXCEPT
 {
-    if (host_names_.empty())
+    // Allow same-origin and no-origin requests.
+    // Origin header field is not available until http 1.1.
+    if (origin.empty() || version < http_version_1_1)
         return true;
 
-    using namespace system;
-    return contains(host_names_, ascii_to_lower(host));
+    return origins_.empty() ||
+        contains(origins_, config::endpoint::to_normal_host(origin, port_));
+}
+
+bool protocol_client::is_allowed_host(const std::string& host,
+    size_t version) const NOEXCEPT
+{
+    // Disallow unspecified host.
+    // Host header field is mandatory at http 1.1.
+    if (host.empty() && version >= http_version_1_1)
+        return false;
+
+    return hosts_.empty() ||
+        contains(hosts_, config::endpoint::to_normal_host(host, port_));
 }
 
 void protocol_client::add_common_headers(http_fields& fields,
     const http_string_request& request, bool closing) const NOEXCEPT
 {
-    // date
+    // date (current)
     // ------------------------------------------------------------------------
     fields.set(field::date, format_http_time(zulu_time()));
 
-    // server
+    // server (configured)
     // ------------------------------------------------------------------------
     if (!server_.empty())
         fields.set(field::server, server_);
 
-    // connection
+    // origin (allow)
+    // ------------------------------------------------------------------------
+    if (to_bool(request.base().count(field::origin)))
+        fields.set(field::access_control_allow_origin, request[field::origin]);
+
+    // connection (close or keep-alive)
     // ------------------------------------------------------------------------
     // http 1.1 assumes keep-alive if not specified, http 1.0 does not.
     // Beast parser defaults keep-alive to true in http 1.1 requests.
@@ -322,10 +381,10 @@ void protocol_client::add_common_headers(http_fields& fields,
         return;
     }
 
-    if (request.version() < 11u)
+    if (request.version() < http_version_1_1)
         fields.set(field::connection, "keep-alive");
 
-    // keep_alive
+    // keep_alive (configured timeout)
     // ------------------------------------------------------------------------
     // The keep_alive.timeout field is encoded as seconds.
 
