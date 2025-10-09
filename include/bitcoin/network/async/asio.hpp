@@ -97,6 +97,9 @@ typedef std::shared_ptr<http_file_request> http_file_request_ptr;
 typedef http_file_body::value_type http_file;
 typedef http::fields http_fields;
 
+constexpr int32_t http_version_1_1 = 11;
+constexpr int32_t http_version_1_0 = 10;
+
 } // namespace network
 } // namespace libbitcoin
 

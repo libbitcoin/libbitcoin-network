@@ -55,6 +55,13 @@ BCT_API bool is_asterisk_form(const std::string& target) NOEXCEPT;
 /// Validate method against target and return enumerated type of target.
 BCT_API target to_target(const std::string& value, http::verb method) NOEXCEPT;
 
+/// True if string characters are considered safe for file system mapping.
+BCT_API bool is_safe_target(const std::string& target) NOEXCEPT;
+
+/// Convert target to absolute canonical path of root, empty if invalid/unsafe.
+BCT_API std::filesystem::path to_canonical(const std::filesystem::path& root,
+    const std::string& target) NOEXCEPT;
+
 /// Sanitize base/target to ensure it remains strictly within base.
 BCT_API std::filesystem::path sanitize_origin(
     const std::filesystem::path& base, const std::string& target) NOEXCEPT;

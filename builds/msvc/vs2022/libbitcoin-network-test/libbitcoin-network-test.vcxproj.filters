@@ -309,6 +309,12 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_311.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_client.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_peer.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_106.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>

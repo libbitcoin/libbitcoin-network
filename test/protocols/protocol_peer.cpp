@@ -16,28 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_MAGIC_NUMBERS_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_MAGIC_NUMBERS_HPP
+#include "../test.hpp"
 
-#include <bitcoin/network/define.hpp>
+BOOST_AUTO_TEST_SUITE(protocol_tests)
 
-namespace libbitcoin {
-namespace network {
-namespace messages {
-namespace rpc {
+BOOST_AUTO_TEST_CASE(protocol_peer_tests)
+{
+    BOOST_REQUIRE(true);
+}
 
-/// Client-server protocol constants.
-///----------------------------------------------------------------------------
-
-constexpr size_t max_url  = 1 * 1024;
-constexpr size_t max_head = 4 * 1024;
-constexpr size_t max_body = 4 * 1024 * 1024;
-constexpr uint16_t default_http = 80;
-constexpr uint16_t default_tls = 443;
-
-} // namespace rpc
-} // namespace messages
-} // namespace network
-} // namespace libbitcoin
-
-#endif
+BOOST_AUTO_TEST_SUITE_END()

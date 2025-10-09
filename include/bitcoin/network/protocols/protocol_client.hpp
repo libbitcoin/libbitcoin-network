@@ -71,6 +71,7 @@ protected:
         http_file&& file, const std::string& mime_type) NOEXCEPT;
     virtual void send_bad_host(const http_string_request& request) NOEXCEPT;
     virtual void send_not_found(const http_string_request& request) NOEXCEPT;
+    virtual void send_forbidden(const http_string_request& request) NOEXCEPT;
     virtual void send_bad_target(const http_string_request& request) NOEXCEPT;
     virtual void send_method_not_allowed(const http_string_request& request,
         const code& ec) NOEXCEPT;
@@ -80,11 +81,15 @@ protected:
         const code& reason) NOEXCEPT;
 
 private:
-    void add_common_headers(http_fields& fields,
-        const http_string_request& request, bool closing=false) const NOEXCEPT;
-    bool is_allowed_host(const std::string& host) const NOEXCEPT;
-    const std::filesystem::path to_local_path(
+    std::filesystem::path to_local_path(
         const std::string& target) const NOEXCEPT;
+    void add_common_headers(http_fields& fields,
+        const http_string_request& request,
+        bool closing=false) const NOEXCEPT;
+    bool is_allowed_origin(const std::string& origin,
+        size_t version) const NOEXCEPT;
+    bool is_allowed_host(const std::string& host,
+        size_t version) const NOEXCEPT;
 
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
@@ -92,11 +97,13 @@ private:
 
     // These are thread safe.
     const session_client::ptr session_;
-    const system::string_list host_names_;
+    const system::string_list origins_;
+    const system::string_list hosts_;
     const std::filesystem::path& root_;
     const std::string& default_;
     const std::string& server_;
     const size_t timeout_;
+    const uint16_t port_;
 };
 
 } // namespace network

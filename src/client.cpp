@@ -18,8 +18,9 @@
  */
 #include <bitcoin/network/client.hpp>
 
-#include <algorithm>
+#include <ranges>
 #include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/messages/rpc/enums/magic_numbers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -86,13 +87,18 @@ bool stratum_v2::enabled() const NOEXCEPT
 // host_names() helpers
 // ----------------------------------------------------------------------------
 
-static string_list to_host_names(const config::endpoints& hosts) NOEXCEPT
+static string_list to_host_names(const config::endpoints& hosts,
+    bool secure) NOEXCEPT
 {
+    using namespace config;
+    using namespace messages::rpc;
+    const auto port = secure ? default_tls : default_http;
+
     string_list out{};
     out.resize(hosts.size());
-    std::ranges::transform(hosts, out.begin(), [](const auto& value) NOEXCEPT
+    std::ranges::transform(hosts, out.begin(), [=](const auto& value) NOEXCEPT
     {
-        return ascii_to_lower(value.to_uri());
+        return endpoint::to_normal_host(value, port);
     });
 
     return out;
@@ -100,27 +106,27 @@ static string_list to_host_names(const config::endpoints& hosts) NOEXCEPT
 
 string_list admin::host_names() const NOEXCEPT
 {
-    return to_host_names(hosts);
+    return to_host_names(hosts, secure);
 }
 
 string_list explore::host_names() const NOEXCEPT
 {
-    return to_host_names(hosts);
+    return to_host_names(hosts, secure);
 }
 
 string_list rest::host_names() const NOEXCEPT
 {
-    return to_host_names(hosts);
+    return to_host_names(hosts, secure);
 }
 
 string_list websocket::host_names() const NOEXCEPT
 {
-    return to_host_names(hosts);
+    return to_host_names(hosts, secure);
 }
 
 string_list bitcoind::host_names() const NOEXCEPT
 {
-    return to_host_names(hosts);
+    return to_host_names(hosts, secure);
 }
 
 // timeout() helpers

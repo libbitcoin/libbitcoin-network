@@ -22,55 +22,222 @@ using namespace network::messages::rpc;
 
 BOOST_FIXTURE_TEST_SUITE(rpc_target_tests, test::directory_setup_fixture)
 
+#if defined(HAVE_MSC)
+    static const std::string root{ "c:\\home\\name" };
+    static const std::string norm{ "c:/home/name" };
+#elif defined(HAVE_APPLE)
+    static const std::string root{ "/home/name" };
+    static const std::string norm{ "/System/Volumes/Data/home/name" };
+#else
+    static const std::string root{ "/home/name" };
+    static const std::string norm{ "/home/name" };
+#endif
+
 // is_origin_form
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_origin_form__path_with_query__true)
+{
+    BOOST_REQUIRE(is_origin_form("/index.html?field=value"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_origin_form__malformed_uri__false)
+{
+    BOOST_REQUIRE(!is_origin_form("/[invalid"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_origin_form__oversized__false)
+{
+    const std::string oversized(max_url, 'a');
+    BOOST_REQUIRE(!is_origin_form("/" + oversized));
+}
+
 // is_absolute_form
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_absolute_form__http_uri__true)
+{
+    BOOST_REQUIRE(is_absolute_form("http://www.boost.org/index.html"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_absolute_form__ftp_scheme__false)
+{
+    BOOST_REQUIRE(!is_absolute_form("ftp://example.com"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_absolute_form__malformed_uri__false)
+{
+    BOOST_REQUIRE(!is_absolute_form("http://[invalid"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_absolute_form__oversized__false)
+{
+    const std::string oversized(max_url, 'a');
+    BOOST_REQUIRE(!is_absolute_form("/" + oversized));
+}
+
 // is_authority_form
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_authority_form__valid_authority__true)
+{
+    BOOST_REQUIRE(is_authority_form("//user@host:8080"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_authority_form__no_leading_slashes__false)
+{
+    BOOST_REQUIRE(!is_authority_form("host:8080"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_authority_form__oversized__false)
+{
+    const std::string oversized(max_url, 'a');
+    BOOST_REQUIRE(!is_authority_form("/" + oversized));
+}
+
 // is_asterisk_form
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_asterisk_form__asterisk__true)
+{
+    BOOST_REQUIRE(is_asterisk_form("*"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_asterisk_form__non_asterisk__false)
+{
+    BOOST_REQUIRE(!is_asterisk_form("/"));
+}
+
 // to_target
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(rpc_target__to_target__get_origin__origin)
+{
+    BOOST_REQUIRE(to_target("/index.html", http::verb::get) == target::origin);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__to_target__options_asterisk__asterisk)
+{
+    BOOST_REQUIRE(to_target("*", http::verb::options) == target::asterisk);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__to_target__connect_authority__authority)
+{
+    BOOST_REQUIRE(to_target("//host:8080", http::verb::connect) == target::authority);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__to_target__unknown_method__unknown)
+{
+    BOOST_REQUIRE(to_target("/index.html", http::verb::unknown) == target::unknown);
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__to_target__invalid_target__unknown)
+{
+    BOOST_REQUIRE(to_target("http://[invalid", http::verb::get) == target::unknown);
+}
 
 // sanitize_origin
+// ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(rpc_target__sanitize_origin__empty__empty)
 {
     // empty is an invalid origin
-    const auto path = sanitize_origin("/home/name", "");
+    const auto path = sanitize_origin(root, "");
     BOOST_REQUIRE(path.empty());
 }
 
 BOOST_AUTO_TEST_CASE(rpc_target__sanitize_origin__no_leading_slash__empty)
 {
     // leading non-slash is an invalid origin
-    const auto path = sanitize_origin("/home/name", "path");
+    const auto path = sanitize_origin(root, "path");
     BOOST_REQUIRE(path.empty());
 }
 
 BOOST_AUTO_TEST_CASE(rpc_target__sanitize_origin__leading_double_slash__empty)
 {
     // leading double-slash is an invalid origin
-    const auto path = sanitize_origin("/home/name", "//");
+    const auto path = sanitize_origin(root, "//");
     BOOST_REQUIRE(path.empty());
 }
 
 BOOST_AUTO_TEST_CASE(rpc_target__sanitize_origin__leading_scheme__empty)
 {
     // leading scheme is an invalid origin
-    const auto path = sanitize_origin("/home/name", "http://");
+    const auto path = sanitize_origin(root, "http://");
     BOOST_REQUIRE(path.empty());
 }
 
-BOOST_AUTO_TEST_CASE(rpc_target__sanitize_origin__slash_only__expected)
+BOOST_AUTO_TEST_CASE(rpc_target__sanitize_origin__slash_only__empty)
 {
-    const auto path = sanitize_origin("/home/name", "/");
-    BOOST_REQUIRE_EQUAL(path.string(), "/home/name/");
+    // slash only target must be defaulted (e.g. /index.html) before sanitize.
+    const auto path = sanitize_origin(root, "/");
+    BOOST_REQUIRE(path.empty());
 }
+
+// is_safe_target
+// ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(rpc_target__sanitize_origin__slashed_path__concatenated)
 {
-    const auto path = sanitize_origin("/home/name", "/path/foo/bar.ext");
-    BOOST_REQUIRE_EQUAL(path.string(), "/home/name/path/foo/bar.ext");
+    const auto path = sanitize_origin(root, "/path/foo/bar.ext");
+    BOOST_REQUIRE_EQUAL(path.generic_string(), norm + "/path/foo/bar.ext");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_safe_target__abstract_socket__false)
+{
+    BOOST_REQUIRE(!is_safe_target("/@socket"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_safe_target__port_like__false)
+{
+    BOOST_REQUIRE(!is_safe_target("/path:foo"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_safe_target__path_traversal__false)
+{
+    BOOST_REQUIRE(!is_safe_target("/path/../bar"));
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__is_safe_target__single_segment__true)
+{
+    BOOST_REQUIRE(is_safe_target("/file.ext"));
+}
+
+// to_canonical
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(rpc_target__to_canonical__non_existent_root__concatenated)
+{
+    const auto path = to_canonical(root + "/nonexistent", "/file.ext");
+    BOOST_REQUIRE_EQUAL(path.generic_string(), norm + "/nonexistent/file.ext");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__to_canonical__non_absolute_root__empty)
+{
+    const auto path = to_canonical("relative/path", "/file.ext");
+    BOOST_REQUIRE(path.empty());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__to_canonical__escaping_path__empty)
+{
+    const auto path = to_canonical(root, "/path/../../etc/passwd");
+    BOOST_REQUIRE(path.empty());
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__sanitize_origin__valid_deep_path__concatenated)
+{
+    const auto path = sanitize_origin(root, "/deep/path/to/file.ext");
+    BOOST_REQUIRE_EQUAL(path.generic_string(), norm + "/deep/path/to/file.ext");
+}
+
+BOOST_AUTO_TEST_CASE(rpc_target__sanitize_origin__valid_non_existent_file__concatenated)
+{
+    const auto path = sanitize_origin(root, "/new/file.ext");
+    BOOST_REQUIRE_EQUAL(path.generic_string(), norm + "/new/file.ext");
 }
 
 // get_file_body
+// ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(rpc_target__get_file_body__exists__is_open)
 {
@@ -95,6 +262,7 @@ BOOST_AUTO_TEST_CASE(rpc_target__get_file_body__invalid_characters__does_not_thr
 }
 
 // get_mime_type
+// ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(rpc_target__get_mime_type__not_found__default)
 {

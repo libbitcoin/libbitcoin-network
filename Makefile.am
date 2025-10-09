@@ -227,6 +227,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/protocols/protocol_address_in_209.cpp \
     test/protocols/protocol_address_out_209.cpp \
     test/protocols/protocol_alert_311.cpp \
+    test/protocols/protocol_client.cpp \
+    test/protocols/protocol_peer.cpp \
     test/protocols/protocol_ping_106.cpp \
     test/protocols/protocol_ping_60001.cpp \
     test/protocols/protocol_reject_70002.cpp \

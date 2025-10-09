@@ -26,6 +26,18 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
+// static
+std::string endpoint::to_normal_host(const endpoint& value,
+    uint16_t default_port) NOEXCEPT
+{
+    // The scheme is empty, host is lowered, and port is defaulted.
+    return endpoint
+    {
+        system::ascii_to_lower(value.host()),
+        is_zero(value.port()) ? default_port : value.port()
+    }.to_uri();
+}
+
 // protected
 address endpoint::to_address() const NOEXCEPT
 {
