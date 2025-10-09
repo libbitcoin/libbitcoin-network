@@ -20,7 +20,9 @@
 
 #include <filesystem>
 #include <unordered_map>
+#include <regex>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/rpc/enums/magic_numbers.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -30,8 +32,14 @@ namespace rpc {
 using namespace boost::urls;
 using namespace boost::beast::http;
 
+// This is sub1(size_t)!
+////constexpr auto max_url = boost::url_view::max_size();
+
 bool is_origin_form(const std::string& target) NOEXCEPT
 {
+    if (target.size() > max_url)
+        return false;
+
     // Excludes leading "//", which is allowed by parse_origin_form.
     if (target.starts_with("//"))
         return false;
@@ -43,13 +51,16 @@ bool is_origin_form(const std::string& target) NOEXCEPT
     }
     catch (const std::exception&)
     {
-        // s.size() > url_view::max_size
+        // target.size() > url_view::max_size.
         return false;
     }
 }
 
 bool is_absolute_form(const std::string& target) NOEXCEPT
 {
+    if (target.size() > max_url)
+        return false;
+
     try
     {
         // "scheme://www.boost.org/index.html?field=value" (no fragment).
@@ -63,7 +74,7 @@ bool is_absolute_form(const std::string& target) NOEXCEPT
     }
     catch (const std::exception&)
     {
-        // s.size() > url_view::max_size
+        // target.size() > url_view::max_size.
         return false;
     }
 }
@@ -71,6 +82,9 @@ bool is_absolute_form(const std::string& target) NOEXCEPT
 // Used for CONNECT method.
 bool is_authority_form(const std::string& target) NOEXCEPT
 {
+    if (target.size() > max_url)
+        return false;
+
     // Requires leading "//", which is not allowed by parse_authority.
     if (!target.starts_with("//"))
         return false;
@@ -121,25 +135,81 @@ target to_target(const std::string& value, verb method) NOEXCEPT
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// TODO: sanitize out to ensure it remains strictly within base. 
-///////////////////////////////////////////////////////////////////////////////
+bool is_safe_target(const std::string& target) NOEXCEPT
+{
+    try
+    {
+        static const std::regex allowed
+        {
+            R"(^/([a-zA-Z0-9_\-\.]+/)*[a-zA-Z0-9_\-\.]+$)",
+            std::regex::optimize
+        };
+
+        return std::regex_match(target, allowed) &&
+            (target.find("..") == std::string::npos);
+    }
+    catch (...)
+    {
+        return false;
+    }
+}
+
+static bool contains(const std::filesystem::path& canonicalized_root,
+    const std::filesystem::path& canonicalized_path) THROWS
+{
+    // Ensure that canonicalized path is within root.
+    const auto full = canonicalized_path.generic_u8string();
+    const auto base = canonicalized_root.generic_u8string();
+    return full.starts_with(base) && (full.size() > base.size());
+}
+
+// weakly_canonical allows for files/directories that don't exist.
+std::filesystem::path to_canonical(const std::filesystem::path& root,
+    const std::string& target) NOEXCEPT
+{
+    try
+    {
+        using namespace system;
+        using namespace std::filesystem;
+
+        // Ensure that root is an absolute path.
+        if (!root.is_absolute())
+            return {};
+
+        // Ensure that canonicalized root is a directory.
+        const auto dir = weakly_canonical(root);
+        if (exists(dir) && !is_directory(dir))
+            return {};
+
+        // Win32 fs::path assumes std::string is ANSI, so cast to u8string.
+        const auto norm = cast_to_u8string(target);
+
+        // The / path concat operator fails with a leading slash on target.
+        // But target always has a leading slash, so just string concatenate.
+        const auto full = root.generic_u8string() + norm;
+
+        // Ensure that if canonicalized path exists it is a regular file.
+        const auto path = weakly_canonical(full);
+        if (exists(path) && !is_regular_file(path))
+            return {};
+
+        // Ensure that canonicalized path is within base.
+        if (contains(dir, path))
+            return path;
+    }
+    catch (...)
+    {
+    }
+
+    return {};
+}
+
+// sanitize out to ensure it remains strictly within base, empty if failed. 
 std::filesystem::path sanitize_origin(const std::filesystem::path& base,
     const std::string& target) NOEXCEPT
 {
-    // Valid origin requires leading slash.
-    if (is_origin_form(target))
-    {
-        try
-        {
-            std::filesystem::path path{ base };
-            path += system::to_path(target);
-            return path;
-        }
-        catch (...)
-        {
-        }
-    }
+    if (is_origin_form(target) && is_safe_target(target))
+        return to_canonical(base, target);
 
     return {};
 }
