@@ -39,6 +39,10 @@ public:
 
     using system::config::endpoint::endpoint;
 
+    /// Utility to remove scheme and guarantee ascii lowered host:port form.
+    static std::string to_normal_host(const endpoint& value,
+        uint16_t default_port) NOEXCEPT;
+
     /// Operators.
     /// -----------------------------------------------------------------------
 
