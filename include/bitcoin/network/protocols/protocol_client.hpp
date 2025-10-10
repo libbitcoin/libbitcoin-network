@@ -81,8 +81,8 @@ protected:
         const code& reason) NOEXCEPT;
 
 private:
-    ////std::filesystem::path to_local_path(
-    ////    const std::string& target) const NOEXCEPT;
+    std::filesystem::path to_local_path(
+        const std::string& target) const NOEXCEPT;
     void add_common_headers(http_fields& fields,
         const http_string_request& request,
         bool closing=false) const NOEXCEPT;
@@ -99,8 +99,8 @@ private:
     const session_client::ptr session_;
     const system::string_list origins_;
     const system::string_list hosts_;
-    ////const std::filesystem::path& root_;
-    ////const std::string& default_;
+    const std::filesystem::path& root_;
+    const std::string& default_;
     const std::string& server_;
     const uint16_t port_;
 };
