@@ -46,14 +46,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // [field] returns "" if not found but .at(field) throws.
 
-// TODO: generalize and customize failure return pages and mime types.
-// TODO: use server.hosts as .origins for other http/s & ws/s protocols.
-// TODO: add new settings to node parser (some will not be exposed due
-// TODO: to overgeneralization).
-// TODO: make this class base for http_server and derive http and html servers.
-// TODO: build tcp_server directly over session_client and channel.
-// TODO: clean up these names.
-
 protocol_client::protocol_client(const session::ptr& session,
     const channel::ptr& channel, const http_server& options) NOEXCEPT
   : protocol(session, channel),
