@@ -85,12 +85,6 @@ public:
     channel_peer(memory& memory, const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
 
-    /// Construct a p2p channel to encapsulate and communicate on the socket.
-    channel_peer(memory& memory, const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier,
-        const deadline::ptr& inactivity,
-        const deadline::ptr& expiration={}) NOEXCEPT;
-
     /////// Pause reading from the socket, stops timers (requires strand).
     ////void pause() NOEXCEPT override;
 

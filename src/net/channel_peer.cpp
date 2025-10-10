@@ -48,34 +48,12 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// Factory for fixed deadline timer pointer construction.
-inline deadline::ptr timeout(const logger& log, asio::strand& strand,
-    const deadline::duration& span) NOEXCEPT
-{
-    return std::make_shared<deadline>(log, strand, span);
-}
-
-// Factory for varied deadline timer pointer construction.
-inline deadline::ptr expiration(const logger& log, asio::strand& strand,
-    const deadline::duration& span) NOEXCEPT
-{
-    return timeout(log, strand, pseudo_random::duration(span));
-}
-
 channel_peer::channel_peer(memory& memory, const logger& log,
     const socket::ptr& socket, const network::settings& settings,
     uint64_t identifier) NOEXCEPT
-  : channel_peer(memory, log, socket, settings, identifier,
-      timeout(log, socket->strand(), settings.channel_inactivity()),
-      expiration(log, socket->strand(), settings.channel_expiration()))
-{
-}
-
-channel_peer::channel_peer(memory& memory, const logger& log,
-    const socket::ptr& socket, const network::settings& settings,
-    uint64_t identifier, const deadline::ptr& inactivity,
-    const deadline::ptr& expiration) NOEXCEPT
-  : channel(log, socket, settings, identifier, inactivity, expiration),
+  : channel(log, socket, settings, identifier,
+      settings.channel_inactivity(),
+      pseudo_random::duration(settings.channel_expiration())),
     distributor_(memory, socket->strand()),
     negotiated_version_(settings.protocol_maximum),
     tracker<channel_peer>(log)

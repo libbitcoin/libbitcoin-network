@@ -82,13 +82,8 @@ public:
     /// Uses peer config for timeouts if not specified via other construct.
     /// Construct client channel to encapsulate and communicate on the socket.
     channel_client(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
-
-    /// Construct client channel to encapsulate and communicate on the socket.
-    channel_client(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier,
-        const deadline::ptr& inactivity,
-        const deadline::ptr& expiration={}) NOEXCEPT;
+        const network::settings& settings, uint64_t identifier=zero,
+        const http_server& options={}) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
