@@ -18,13 +18,9 @@
  */
 #include <bitcoin/network/net/channel_client.hpp>
 
-#include <algorithm>
-#include <memory>
-#include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/rpc/messages.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -36,17 +32,23 @@ namespace network {
 using namespace system;
 using namespace messages::rpc;
 using namespace std::placeholders;
-using namespace std::ranges;
 
 // Shared pointers required in handler parameters so closures control lifetime.
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// TODO: inactivity timeout, duration timeout, connection limit.
+// Timers defaults to null (timeouts disabled).
 channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier) NOEXCEPT
-  : channel(log, socket, settings, identifier),
+  : channel_client(log, socket, settings, identifier, {}, {})
+{
+}
+
+channel_client::channel_client(const logger& log, const socket::ptr& socket,
+    const network::settings& settings, uint64_t identifier,
+    const deadline::ptr& inactivity,  const deadline::ptr& expiration) NOEXCEPT
+  : channel(log, socket, settings, identifier, inactivity, expiration),
     request_buffer_(ceilinged_add(max_head, max_body)),
     distributor_(socket->strand()),
     tracker<channel_client>(log)
@@ -56,21 +58,11 @@ channel_client::channel_client(const logger& log, const socket::ptr& socket,
 // Start/stop/resume (started upon create).
 // ----------------------------------------------------------------------------
 
-void channel_client::stop(const code& ec) NOEXCEPT
-{
-    // Stop the read loop, stop accepting new work, cancel pending work.
-    channel::stop(ec);
-
-    // Stop is posted to strand to protect subscriber.
-    boost::asio::post(strand(),
-        std::bind(&channel_client::do_stop,
-            shared_from_base<channel_client>(), ec));
-}
-
 // This should not be called internally, as derived rely on stop() override.
-void channel_client::do_stop(const code& ec) NOEXCEPT
+void channel_client::stopping(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
+    channel::stopping(ec);
     distributor_.stop(ec);
 }
 

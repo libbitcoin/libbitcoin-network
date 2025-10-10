@@ -18,6 +18,8 @@
  */
 #include <bitcoin/network/net/channel_peer.hpp>
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -63,66 +65,50 @@ inline deadline::ptr expiration(const logger& log, asio::strand& strand,
 channel_peer::channel_peer(memory& memory, const logger& log,
     const socket::ptr& socket, const network::settings& settings,
     uint64_t identifier) NOEXCEPT
-  : channel(log, socket, settings, identifier),
+  : channel_peer(memory, log, socket, settings, identifier,
+      timeout(log, socket->strand(), settings.channel_inactivity()),
+      expiration(log, socket->strand(), settings.channel_expiration()))
+{
+}
+
+channel_peer::channel_peer(memory& memory, const logger& log,
+    const socket::ptr& socket, const network::settings& settings,
+    uint64_t identifier, const deadline::ptr& inactivity,
+    const deadline::ptr& expiration) NOEXCEPT
+  : channel(log, socket, settings, identifier, inactivity, expiration),
     distributor_(memory, socket->strand()),
-    expiration_(expiration(log, socket->strand(), settings.channel_expiration())),
-    inactivity_(timeout(log, socket->strand(), settings.channel_inactivity())),
     negotiated_version_(settings.protocol_maximum),
     tracker<channel_peer>(log)
 {
 }
 
-// Stop (started upon create).
+// Start/stop/resume (started upon create).
 // ----------------------------------------------------------------------------
 
-void channel_peer::stop(const code& ec) NOEXCEPT
-{
-    // Stop the read loop, stop accepting new work, cancel pending work.
-    channel::stop(ec);
-
-    // Stop is posted to strand to protect timers and distributor.
-    boost::asio::post(strand(),
-        std::bind(&channel_peer::do_stop,
-            shared_from_base<channel_peer>(), ec));
-}
-
-// This should not be called internally, as derived rely on stop() override.
-void channel_peer::do_stop(const code& ec) NOEXCEPT
+// This should not be called internally.
+void channel_peer::stopping(const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    stop_expiration();
-    stop_inactivity();
+
+    // Stops timers and any other base channel state.
+    channel::stopping(ec);
 
     // Post message handlers to strand and clear/stop accepting subscriptions.
     // On channel_stopped message subscribers should ignore and perform no work.
     distributor_.stop(ec);
 }
 
-// Pause/resume (paused upon create).
-// ----------------------------------------------------------------------------
+////void channel_peer::pause() NOEXCEPT
+////{
+////    BC_ASSERT_MSG(stranded(), "strand");
+////    channel::pause();
+////}
 
-// Timers are set for handshake and reset upon protocol start.
-// Version protocols may have more restrictive completion timeouts.
-// A restarted timer invokes completion handler with error::operation_canceled.
-
-void channel_peer::pause() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    stop_expiration();
-    stop_inactivity();
-    channel::pause();
-}
-
+// TODO: resume of an idle channel results in termination for invalid_magic.
 void channel_peer::resume() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    start_expiration();
-    start_inactivity();
-
-    // Resume from pause and then start read loop.
     channel::resume();
-
-    // TODO: resume of an idle channel results in termination for invalid_magic.
     read_heading();
 }
 
@@ -173,7 +159,6 @@ void channel_peer::set_negotiated_version(uint32_t value) NOEXCEPT
     negotiated_version_ = value;
 }
 
-// private
 bool channel_peer::is_handshaked() const NOEXCEPT
 {
     return !is_null(peer_version_);
@@ -202,88 +187,6 @@ address_item_cptr channel_peer::get_updated_address() const NOEXCEPT
         peer->services = peer_version_->services;
 
     return peer;
-}
-
-// Timers.
-// ----------------------------------------------------------------------------
-// TODO: build DoS protection around rate_limit_, backlog(), total(), and time.
-// A restarted timer invokes completion handler with error::operation_canceled.
-// Called from start or strand.
-
-void channel_peer::stop_expiration() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    expiration_->stop();
-}
-
-void channel_peer::start_expiration() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (stopped())
-        return;
-
-    // Handler is posted to the socket strand.
-    expiration_->start(
-        std::bind(&channel_peer::handle_expiration,
-            shared_from_base<channel_peer>(), _1));
-}
-
-void channel_peer::handle_expiration(const code& ec) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // error::operation_canceled is set by timer reset (channel not stopped).
-    if (stopped() || ec == error::operation_canceled)
-        return;
-
-    if (ec)
-    {
-        LOGF("Lifetime timer fail [" << authority() << "] " << ec.message());
-        stop(ec);
-        return;
-    }
-
-    stop(error::channel_expired);
-}
-
-void channel_peer::stop_inactivity() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    inactivity_->stop();
-}
-
-// Cancels previous timer and retains configured duration.
-void channel_peer::start_inactivity() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (stopped())
-        return;
-
-    // Handler is posted to the socket strand.
-    inactivity_->start(
-        std::bind(&channel_peer::handle_inactivity,
-            shared_from_base<channel_peer>(), _1));
-}
-
-// There is no timeout set on individual sends and receives, just inactivity.
-void channel_peer::handle_inactivity(const code& ec) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // error::operation_canceled is set by timer reset (channel not stopped).
-    if (stopped() || ec == error::operation_canceled)
-        return;
-
-    if (ec)
-    {
-        LOGF("Inactivity timer fail [" << authority() << "] " << ec.message());
-        stop(ec);
-        return;
-    }
-
-    stop(error::channel_inactive);
 }
 
 // Read cycle (read continues until stop called).
@@ -459,7 +362,6 @@ void channel_peer::handle_read_payload(const code& ec,
     LOGX("Recv " << head->command << " from [" << authority() << "] ("
         << payload_size << " bytes)");
 
-    start_inactivity();
     read_heading();
 }
 

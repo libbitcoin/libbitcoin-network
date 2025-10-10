@@ -79,12 +79,16 @@ public:
         write(*ptr, std::move(complete));
     }
 
+    /// Uses peer config for timeouts if not specified via other construct.
     /// Construct client channel to encapsulate and communicate on the socket.
     channel_client(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
 
-    /// Idempotent, may be called multiple times.
-    void stop(const code& ec) NOEXCEPT override;
+    /// Construct client channel to encapsulate and communicate on the socket.
+    channel_client(const logger& log, const socket::ptr& socket,
+        const network::settings& settings, uint64_t identifier,
+        const deadline::ptr& inactivity,
+        const deadline::ptr& expiration) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
@@ -93,6 +97,10 @@ public:
     /// Calling more than once is safe but implies a protocol problem. Failure
     /// to call after successful message handling results in stalled channel.
     void read_request() NOEXCEPT;
+
+protected:
+    /// Stranded handler invoked from stop().
+    void stopping(const code& ec) NOEXCEPT override;
 
 private:
     void do_stop(const code& ec) NOEXCEPT;

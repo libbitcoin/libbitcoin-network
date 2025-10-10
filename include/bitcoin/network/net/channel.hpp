@@ -23,6 +23,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -62,10 +63,18 @@ public:
 
     /// Construct a channel to encapsulated and communicate on the socket.
     channel(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
+        const network::settings& settings, uint64_t identifier=zero,
+        const deadline::ptr& inactivity={},
+        const deadline::ptr& expiration={}) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~channel() NOEXCEPT;
+
+    /// Pause reading from the socket, stops timers (requires strand).
+    void pause() NOEXCEPT override;
+
+    /// Resume reading from the socket, starts timers (requires strand).
+    void resume() NOEXCEPT override;
 
     /// Arbitrary nonce of the channel (for loopback guard).
     uint64_t nonce() const NOEXCEPT;
@@ -76,7 +85,22 @@ public:
     /// Configuration settings.
     const network::settings& settings() const NOEXCEPT;
 
+protected:
+    /// Stranded handler invoked from stop().
+    void stopping(const code& ec) NOEXCEPT override;
+
+    /// Stranded notifier, allows timer reset.
+    void waiting() NOEXCEPT override;
+
 private:
+    void stop_expiration() NOEXCEPT;
+    void start_expiration() NOEXCEPT;
+    void handle_expiration(const code& ec) NOEXCEPT;
+
+    void stop_inactivity() NOEXCEPT;
+    void start_inactivity() NOEXCEPT;
+    void handle_inactivity(const code& ec) NOEXCEPT;
+
     // These are thread safe (const).
     const network::settings& settings_;
     const uint64_t identifier_;
@@ -84,6 +108,10 @@ private:
     {
         system::pseudo_random::next<uint64_t>(one, max_uint64)
     };
+
+    // These are protected by strand.
+    deadline::ptr inactivity_;
+    deadline::ptr expiration_;
 };
 
 typedef std::function<void(const code&, const channel::ptr&)> channel_handler;

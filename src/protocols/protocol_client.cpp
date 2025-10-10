@@ -46,8 +46,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // [field] returns "" if not found but .at(field) throws.
 
-// TODO: update host config parsing so that all binding ports are defaulted.
-// TODO: configure timeouts and integrate with keep-alive.
 // TODO: generalize and customize failure return pages and mime types.
 // TODO: generalize config settings using a common struct.
 // TODO: pass generalized config struct to this as base class.

@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/net/channel.hpp>
 
+#include <memory>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -28,13 +29,21 @@
 namespace libbitcoin {
 namespace network {
 
+using namespace system;
+using namespace std::placeholders;
+
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 // Protocols invoke channel stop for application layer protocol violations.
 // Channels invoke channel stop for channel timouts and communcation failures.
 channel::channel(const logger& log, const socket::ptr& socket,
-    const network::settings& settings, uint64_t identifier) NOEXCEPT
+    const network::settings& settings, uint64_t identifier,
+    const deadline::ptr& inactivity, const deadline::ptr& expiration) NOEXCEPT
   : proxy(socket),
     settings_(settings),
     identifier_(identifier),
+    inactivity_(inactivity),
+    expiration_(expiration),
     tracker<channel>(log)
 {
 }
@@ -43,6 +52,127 @@ channel::~channel() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "channel is not stopped");
     if (!stopped()) { LOGF("~channel is not stopped."); }
+}
+
+// Start/stop/resume (started/paused upon create).
+// ----------------------------------------------------------------------------
+
+// This should not be called internally.
+void channel::stopping(const code& ec) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    stop_expiration();
+    stop_inactivity();
+    proxy::stopping(ec);
+}
+
+// Timers are set for handshake and reset upon protocol start.
+// Version protocols may have more restrictive completion timeouts.
+// A restarted timer invokes completion handler with error::operation_canceled.
+
+void channel::pause() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    stop_expiration();
+    stop_inactivity();
+    proxy::pause();
+}
+
+// Resume timers from pause and start read loop.
+void channel::resume() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    start_expiration();
+    start_inactivity();
+    proxy::resume();
+}
+
+// Timers.
+// ----------------------------------------------------------------------------
+// TODO: build DoS protection around rate_limit_, backlog(), total(), and time.
+// A restarted timer invokes completion handler with error::operation_canceled.
+// Called from start or strand.
+
+// protected, invoked by channel async read calls.
+void channel::waiting() NOEXCEPT
+{
+    start_inactivity();
+}
+
+void channel::stop_expiration() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    if (expiration_) expiration_->stop();
+}
+
+void channel::start_expiration() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    if (stopped())
+        return;
+
+    // Handler is posted to the socket strand.
+    if (expiration_) expiration_->start(
+        std::bind(&channel::handle_expiration,
+            shared_from_base<channel>(), _1));
+}
+
+void channel::handle_expiration(const code& ec) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // error::operation_canceled is set by timer reset (channel not stopped).
+    if (stopped() || ec == error::operation_canceled)
+        return;
+
+    if (ec)
+    {
+        LOGF("Lifetime timer fail [" << authority() << "] " << ec.message());
+        stop(ec);
+        return;
+    }
+
+    stop(error::channel_expired);
+}
+
+void channel::stop_inactivity() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    if (inactivity_) inactivity_->stop();
+}
+
+// Cancels previous timer and retains configured duration.
+void channel::start_inactivity() NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    if (stopped())
+        return;
+
+    // Handler is posted to the socket strand.
+    if (inactivity_) inactivity_->start(
+        std::bind(&channel::handle_inactivity,
+            shared_from_base<channel>(), _1));
+}
+
+// There is no timeout set on individual sends and receives, just inactivity.
+void channel::handle_inactivity(const code& ec) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // error::operation_canceled is set by timer reset (channel not stopped).
+    if (stopped() || ec == error::operation_canceled)
+        return;
+
+    if (ec)
+    {
+        LOGF("Inactivity timer fail [" << authority() << "] " << ec.message());
+        stop(ec);
+        return;
+    }
+
+    stop(error::channel_inactive);
 }
 
 // Properties.
@@ -62,6 +192,8 @@ const network::settings& channel::settings() const NOEXCEPT
 {
     return settings_;
 }
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
