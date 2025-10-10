@@ -53,12 +53,13 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // TODO: add new settings to node parser (some will not be exposed due
 // TODO: to overgeneralization).
 
+// timeout_seconds not yet implemented.
 protocol_client::protocol_client(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
     channel_(std::dynamic_pointer_cast<channel_client>(channel)),
     session_(std::dynamic_pointer_cast<session_client>(session)),
-    origins_(channel->settings().admin.host_names()), // always from admin
+    origins_(channel->settings().admin.host_names()),
     hosts_(channel->settings().admin.host_names()),
     root_(channel->settings().admin.path),
     default_(channel->settings().admin.default_),
