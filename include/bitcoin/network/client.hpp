@@ -30,6 +30,7 @@ namespace network {
 /// ---------------------------------------------------------------------------
 
 /// tcp/ip server settings (hash bindings/security/connections/timeout).
+/// This is designed for RPC servers that don't require http communication. 
 struct BCT_API tcp_server
 {
     /// Not implemented (TLS).
@@ -46,6 +47,8 @@ struct BCT_API tcp_server
 };
 
 /// http/s server settings (hash server/host names).
+/// This is designed for web servers that don't require origin handling.
+/// This includes websockets (handshake) and bitcoind json-rpc.
 struct BCT_API http_server
   : public tcp_server
 {
@@ -60,6 +63,7 @@ struct BCT_API http_server
 };
 
 /// html (http/s) document server settings (has directory/default).
+/// This is for web servers that expose a local file system directory.
 struct BCT_API html_server
   : public http_server
 {
@@ -71,6 +75,12 @@ struct BCT_API html_server
 
     /// !path.empty() && http_server::enabled() [hidden, not virtual]
     bool enabled() const NOEXCEPT;
+
+    /// Validated against origins if configured (recommended).
+    config::endpoints origins{};
+
+    /// Normalized origins.
+    system::string_list origin_names() const NOEXCEPT;
 };
 
 /// ---------------------------------------------------------------------------
