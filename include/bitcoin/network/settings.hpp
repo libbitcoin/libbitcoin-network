@@ -84,7 +84,6 @@ struct BCT_API settings
     /// Client settings.
     network::admin admin{};
     network::explore explore{};
-    network::rest rest{};
     network::websocket websocket{};
     network::bitcoind bitcoind{};
     network::electrum electrum{};

@@ -27,166 +27,74 @@
 namespace libbitcoin {
 namespace network {
 
-/// HTTP/S admin web server settings.
-struct BCT_API admin
+/// ---------------------------------------------------------------------------
+
+/// tcp/ip server settings (hash bindings/security/connections/timeout).
+struct BCT_API tcp_server
 {
-    /// Properties.
-    bool secure{};
-    uint16_t connections{};
+    /// Not implemented (TLS).
+    bool secure{ false };
     config::endpoints binds{};
+    uint16_t connections{ 0 };
+
+    /// Not fully implemented, keep-alive (recommended).
+    uint32_t timeout_seconds{ 60 };
+
+    /// !binds.empty() && !is_zero(connections)
+    bool enabled() const NOEXCEPT;
+    steady_clock::duration timeout() const NOEXCEPT;
+};
+
+/// http/s server settings (hash server/host names).
+struct BCT_API http_server
+  : public tcp_server
+{
+    /// Sent via responses if configured (recommended).
+    std::string server{ "libbitcoin/4.0" };
+
+    /// Validated against requests if configured (recommended).
+    config::endpoints hosts{};
+
+    /// Normalized hosts.
+    system::string_list host_names() const NOEXCEPT;
+};
+
+/// html (http/s) document server settings (has directory/default).
+struct BCT_API html_server
+  : public http_server
+{
+    /// Directory to serve.
     std::filesystem::path path{};
-    std::string server{};
 
-    /// Validated against requests if specified.
-    config::endpoints hosts{};
+    /// Default page for default URL (recommended).
+    std::string default_{ "index.html" };
 
-    // keep-alive timeout.
-    uint32_t timeout_seconds{};
-
-    /// Default page for default URL.
-    std::string default_{};
-
-    /// Helpers.
-    virtual bool enabled() const NOEXCEPT;
-    virtual system::string_list host_names() const NOEXCEPT;
-    virtual steady_clock::duration timeout() const NOEXCEPT;
+    /// !path.empty() && http_server::enabled() [hidden, not virtual]
+    bool enabled() const NOEXCEPT;
 };
 
-/// HTTP/S block explorer settings.
-struct BCT_API explore
-{
-    /// Properties.
-    bool secure{};
-    uint16_t connections{};
-    config::endpoints binds{};
-    std::filesystem::path path{};
-    std::string server{};
+/// ---------------------------------------------------------------------------
 
-    /// Validated against requests if specified.
-    config::endpoints hosts{};
+/// native admin interface, isolated (http/s, stateless html)
+using admin = html_server;
 
-    // keep-alive timeout.
-    uint32_t timeout_seconds{};
+/// native RESTful block explorer (http/s, stateless html/json)
+using explore = html_server;
 
-    /// Default page for default URL.
-    std::string default_{};
+/// native websocket query interface (http/s->tcp/s, json, upgrade handshake)
+using websocket = http_server;
 
-    /// Helpers.
-    virtual bool enabled() const NOEXCEPT;
-    virtual system::string_list host_names() const NOEXCEPT;
-    virtual steady_clock::duration timeout() const NOEXCEPT;
-};
+/// bitcoind compatibility interface (http/s, stateless json-rpc-v2)
+using bitcoind = http_server;
 
-/// Native RESTful query interface settings.
-struct BCT_API rest
-{
-    /// Properties.
-    bool secure{};
-    uint16_t connections{};
-    config::endpoints binds{};
-    std::string server{};
+/// electrum compatibility interface (tcp/s, json-rpc-v2)
+using electrum = tcp_server;
 
-    /// Validated against requests if specified.
-    config::endpoints hosts{};
+/// stratum v1 compatibility interface (tcp/s, json-rpc-v1, auth handshake)
+using stratum_v1 = tcp_server;
 
-    // keep-alive timeout.
-    uint32_t timeout_seconds{};
-
-    /// Helpers.
-    virtual bool enabled() const NOEXCEPT;
-    virtual system::string_list host_names() const NOEXCEPT;
-    virtual steady_clock::duration timeout() const NOEXCEPT;
-};
-
-// Native WebSocket query interface settings.
-struct BCT_API websocket
-{
-    /// Properties.
-    bool secure{};
-    uint16_t connections{};
-    config::endpoints binds{};
-    std::string server{};
-
-    /// Validated against requests if specified.
-    config::endpoints hosts{};
-
-    // keep-alive timeout.
-    uint32_t timeout_seconds{};
-
-    /// Helpers.
-    virtual bool enabled() const NOEXCEPT;
-    virtual system::string_list host_names() const NOEXCEPT;
-    virtual steady_clock::duration timeout() const NOEXCEPT;
-};
-
-// bitcoind compatibility interface settings.
-struct BCT_API bitcoind
-{
-    /// Properties.
-    bool secure{};
-    uint16_t connections{};
-    config::endpoints binds{};
-    std::string server{};
-
-    /// Validated against requests if specified.
-    config::endpoints hosts{};
-
-    // keep-alive timeout.
-    uint32_t timeout_seconds{};
-
-    /// Helpers.
-    virtual bool enabled() const NOEXCEPT;
-    virtual system::string_list host_names() const NOEXCEPT;
-    virtual steady_clock::duration timeout() const NOEXCEPT;
-};
-
-// Electrum compatibility interface settings.
-struct BCT_API electrum
-{
-    /// Properties.
-    bool secure{};
-    uint16_t connections{};
-    config::endpoints binds{};
-
-    // Channel timeout.
-    uint32_t timeout_seconds{};
-
-    /// Helpers.
-    virtual bool enabled() const NOEXCEPT;
-    virtual steady_clock::duration timeout() const NOEXCEPT;
-};
-
-// Stratum v1 compatibility interface settings.
-struct BCT_API stratum_v1
-{
-    /// Properties.
-    bool secure{};
-    uint16_t connections{};
-    config::endpoints binds{};
-
-    // Channel timeout.
-    uint32_t timeout_seconds{};
-
-    /// Helpers.
-    virtual bool enabled() const NOEXCEPT;
-    virtual steady_clock::duration timeout() const NOEXCEPT;
-};
-
-// Stratum v2 compatibility interface settings.
-struct BCT_API stratum_v2
-{
-    /// Properties.
-    bool secure{};
-    uint16_t connections{};
-    config::endpoints binds{};
-
-    // Channel timeout.
-    uint32_t timeout_seconds{};
-
-    /// Helpers.
-    virtual bool enabled() const NOEXCEPT;
-    virtual steady_clock::duration timeout() const NOEXCEPT;
-};
+/// stratum v2 compatibility interface (tcp[/s], binary, auth/privacy handshake)
+using stratum_v2 = tcp_server;
 
 } // namespace network
 } // namespace libbitcoin

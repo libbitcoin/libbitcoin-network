@@ -23,73 +23,112 @@ BOOST_AUTO_TEST_SUITE(client_tests)
 BOOST_AUTO_TEST_CASE(client__admin__defaults__expected)
 {
     const admin instance{};
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE(instance.hosts.empty());
-    BOOST_REQUIRE(instance.default_.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
     BOOST_REQUIRE(!instance.enabled());
+
+    // http_server
+    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
+    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE(instance.host_names().empty());
+
+    // html_server
+    BOOST_REQUIRE(instance.path.empty());
+    BOOST_REQUIRE_EQUAL(instance.default_, "index.html");
 }
 
 BOOST_AUTO_TEST_CASE(client__explore__defaults__expected)
 {
     const explore instance{};
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
-    BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE(instance.hosts.empty());
-    BOOST_REQUIRE(instance.default_.empty());
-    BOOST_REQUIRE(!instance.enabled());
-}
 
-BOOST_AUTO_TEST_CASE(client__rest__defaults__expected)
-{
-    const rest instance{};
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
     BOOST_REQUIRE(!instance.enabled());
+
+    // http_server
+    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
+    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE(instance.host_names().empty());
+
+    // html_server
+    BOOST_REQUIRE(instance.path.empty());
+    BOOST_REQUIRE_EQUAL(instance.default_, "index.html");
 }
 
 BOOST_AUTO_TEST_CASE(client__websocket__defaults__expected)
 {
     const websocket instance{};
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
     BOOST_REQUIRE(!instance.enabled());
+
+    // http_server
+    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
+    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE(instance.host_names().empty());
 }
 
 BOOST_AUTO_TEST_CASE(client__bitcoind__defaults__expected)
 {
     const bitcoind instance{};
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
     BOOST_REQUIRE(!instance.enabled());
+
+    // http_server
+    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
+    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE(instance.host_names().empty());
 }
 
 BOOST_AUTO_TEST_CASE(client__electrum__defaults__expected)
 {
     const electrum instance{};
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
     BOOST_REQUIRE(!instance.enabled());
 }
 
 BOOST_AUTO_TEST_CASE(client__stratum_v1__defaults__expected)
 {
     const stratum_v1 instance{};
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
     BOOST_REQUIRE(!instance.enabled());
 }
 
 BOOST_AUTO_TEST_CASE(client__stratum_v2__defaults__expected)
 {
     const stratum_v2 instance{};
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
     BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
     BOOST_REQUIRE(!instance.enabled());
 }
 

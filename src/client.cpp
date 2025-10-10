@@ -25,76 +25,29 @@
 namespace libbitcoin {
 namespace network {
 
-using namespace system;
-
-// All values default to constructor defaults (zero/empty).
-
-// enabled() helpers
+// tcp_server
 // ----------------------------------------------------------------------------
 
-bool admin::enabled() const NOEXCEPT
+bool tcp_server::enabled() const NOEXCEPT
 {
-    // Path is currently required.
-    return !path.empty()
-        && !binds.empty()
-        && to_bool(connections);
+    return !binds.empty() && to_bool(connections);
 }
 
-bool explore::enabled() const NOEXCEPT
+steady_clock::duration tcp_server::timeout() const NOEXCEPT
 {
-    // Path is currently required.
-    return !path.empty()
-        && !binds.empty()
-        && to_bool(connections);
+    return seconds{ timeout_seconds };
 }
 
-bool rest::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-bool websocket::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-bool bitcoind::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-bool electrum::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-bool stratum_v1::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-bool stratum_v2::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-// host_names() helpers
+// http_server
 // ----------------------------------------------------------------------------
 
-static string_list to_host_names(const config::endpoints& hosts,
+inline system::string_list to_host_names(const config::endpoints& hosts,
     bool secure) NOEXCEPT
 {
-    using namespace config;
     using namespace messages::rpc;
     const auto port = secure ? default_tls : default_http;
 
-    string_list out{};
+    system::string_list out{};
     out.resize(hosts.size());
     std::ranges::transform(hosts, out.begin(), [=](const auto& value) NOEXCEPT
     {
@@ -104,72 +57,18 @@ static string_list to_host_names(const config::endpoints& hosts,
     return out;
 }
 
-string_list admin::host_names() const NOEXCEPT
+system::string_list http_server::host_names() const NOEXCEPT
 {
+    // secure changes default port from 80 to 443.
     return to_host_names(hosts, secure);
 }
 
-string_list explore::host_names() const NOEXCEPT
-{
-    return to_host_names(hosts, secure);
-}
-
-string_list rest::host_names() const NOEXCEPT
-{
-    return to_host_names(hosts, secure);
-}
-
-string_list websocket::host_names() const NOEXCEPT
-{
-    return to_host_names(hosts, secure);
-}
-
-string_list bitcoind::host_names() const NOEXCEPT
-{
-    return to_host_names(hosts, secure);
-}
-
-// timeout() helpers
+// html_server
 // ----------------------------------------------------------------------------
 
-steady_clock::duration admin::timeout() const NOEXCEPT
+bool html_server::enabled() const NOEXCEPT
 {
-    return seconds{ timeout_seconds };
-}
-
-steady_clock::duration explore::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
-}
-
-steady_clock::duration rest::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
-}
-
-steady_clock::duration websocket::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
-}
-
-steady_clock::duration bitcoind::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
-}
-
-steady_clock::duration electrum::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
-}
-
-steady_clock::duration stratum_v1::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
-}
-
-steady_clock::duration stratum_v2::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
+    return !path.empty() && http_server::enabled();
 }
 
 } // namespace network
