@@ -59,9 +59,7 @@ protocol_client::protocol_client(const session::ptr& session,
   : protocol(session, channel),
     channel_(std::dynamic_pointer_cast<channel_client>(channel)),
     session_(std::dynamic_pointer_cast<session_client>(session)),
-
-    // TODO: pass origins via http_server (reference to admin.hosts).
-    origins_(channel->settings().admin.host_names()),
+    origins_(channel->settings().admin.origin_names()),
     hosts_(options.host_names()),
 
     // TODO: Hacked in to keep [admin] running (implement derived).

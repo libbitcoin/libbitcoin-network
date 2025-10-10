@@ -71,5 +71,11 @@ bool html_server::enabled() const NOEXCEPT
     return !path.empty() && http_server::enabled();
 }
 
+system::string_list html_server::origin_names() const NOEXCEPT
+{
+    // secure changes default port from 80 to 443.
+    return to_host_names(hosts, secure);
+}
+
 } // namespace network
 } // namespace libbitcoin

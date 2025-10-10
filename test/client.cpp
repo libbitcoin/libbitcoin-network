@@ -20,9 +20,38 @@
 
 BOOST_AUTO_TEST_SUITE(client_tests)
 
-BOOST_AUTO_TEST_CASE(client__admin__defaults__expected)
+BOOST_AUTO_TEST_CASE(client__tcp_server__defaults__expected)
 {
-    const admin instance{};
+    const tcp_server instance{};
+
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(client__http_server__defaults__expected)
+{
+    const http_server instance{};
+
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
+    BOOST_REQUIRE(!instance.enabled());
+
+    // http_server
+    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
+    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE(instance.host_names().empty());
+}
+
+BOOST_AUTO_TEST_CASE(client__html_server__defaults__expected)
+{
+    const html_server instance{};
 
     // tcp_server
     BOOST_REQUIRE(!instance.secure);
@@ -39,97 +68,8 @@ BOOST_AUTO_TEST_CASE(client__admin__defaults__expected)
     // html_server
     BOOST_REQUIRE(instance.path.empty());
     BOOST_REQUIRE_EQUAL(instance.default_, "index.html");
-}
-
-BOOST_AUTO_TEST_CASE(client__explore__defaults__expected)
-{
-    const explore instance{};
-
-    // tcp_server
-    BOOST_REQUIRE(!instance.secure);
-    BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
-    BOOST_REQUIRE(!instance.enabled());
-
-    // http_server
-    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
-    BOOST_REQUIRE(instance.hosts.empty());
-    BOOST_REQUIRE(instance.host_names().empty());
-
-    // html_server
-    BOOST_REQUIRE(instance.path.empty());
-    BOOST_REQUIRE_EQUAL(instance.default_, "index.html");
-}
-
-BOOST_AUTO_TEST_CASE(client__websocket__defaults__expected)
-{
-    const websocket instance{};
-
-    // tcp_server
-    BOOST_REQUIRE(!instance.secure);
-    BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
-    BOOST_REQUIRE(!instance.enabled());
-
-    // http_server
-    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
-    BOOST_REQUIRE(instance.hosts.empty());
-    BOOST_REQUIRE(instance.host_names().empty());
-}
-
-BOOST_AUTO_TEST_CASE(client__bitcoind__defaults__expected)
-{
-    const bitcoind instance{};
-
-    // tcp_server
-    BOOST_REQUIRE(!instance.secure);
-    BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
-    BOOST_REQUIRE(!instance.enabled());
-
-    // http_server
-    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
-    BOOST_REQUIRE(instance.hosts.empty());
-    BOOST_REQUIRE(instance.host_names().empty());
-}
-
-BOOST_AUTO_TEST_CASE(client__electrum__defaults__expected)
-{
-    const electrum instance{};
-
-    // tcp_server
-    BOOST_REQUIRE(!instance.secure);
-    BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
-    BOOST_REQUIRE(!instance.enabled());
-}
-
-BOOST_AUTO_TEST_CASE(client__stratum_v1__defaults__expected)
-{
-    const stratum_v1 instance{};
-
-    // tcp_server
-    BOOST_REQUIRE(!instance.secure);
-    BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
-    BOOST_REQUIRE(!instance.enabled());
-}
-
-BOOST_AUTO_TEST_CASE(client__stratum_v2__defaults__expected)
-{
-    const stratum_v2 instance{};
-
-    // tcp_server
-    BOOST_REQUIRE(!instance.secure);
-    BOOST_REQUIRE(instance.binds.empty());
-    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
-    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
-    BOOST_REQUIRE(!instance.enabled());
+    BOOST_REQUIRE(instance.origins.empty());
+    BOOST_REQUIRE(instance.origin_names().empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
