@@ -38,8 +38,6 @@ class BCT_API channel_client
   : public channel, protected tracker<channel_client>
 {
 public:
-    typedef subscriber<http_string_request> request_subscriber;
-
     typedef std::shared_ptr<channel_client> ptr;
 
     /// Subscribe to http_request from peer (requires strand).
