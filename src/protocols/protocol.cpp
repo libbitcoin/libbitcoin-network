@@ -103,6 +103,13 @@ void protocol::resume() NOEXCEPT
     channel_->resume();
 }
 
+// Zero if timer expired.
+size_t protocol::remaining() const NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "stranded");
+    return channel_->remaining();
+}
+
 // Properties.
 // ----------------------------------------------------------------------------
 // The public properties may be accessed outside the strand, except during

@@ -76,6 +76,9 @@ public:
     /// Resume reading from the socket, starts timers (requires strand).
     void resume() NOEXCEPT override;
 
+    /// Seconds before channel expires, zero if expired (requires strand).
+    size_t remaining() const NOEXCEPT;
+
     /// Arbitrary nonce of the channel (for loopback guard).
     uint64_t nonce() const NOEXCEPT;
 
