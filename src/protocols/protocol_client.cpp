@@ -55,21 +55,21 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // TODO: clean up these names.
 
 protocol_client::protocol_client(const session::ptr& session,
-    const channel::ptr& channel, const http_server& settings) NOEXCEPT
+    const channel::ptr& channel, const http_server& options) NOEXCEPT
   : protocol(session, channel),
     channel_(std::dynamic_pointer_cast<channel_client>(channel)),
     session_(std::dynamic_pointer_cast<session_client>(session)),
 
     // TODO: pass origins via http_server (reference to admin.hosts).
     origins_(channel->settings().admin.host_names()),
-    hosts_(settings.host_names()),
+    hosts_(options.host_names()),
 
     // TODO: Hacked in to keep [admin] running (implement derived).
     root_(channel->settings().admin.path),
     default_(channel->settings().admin.default_),
 
-    server_(settings.server),
-    port_(settings.secure ? default_tls : default_http),
+    server_(options.server),
+    port_(options.secure ? default_tls : default_http),
     tracker<protocol_client>(session->log)
 {
 }
