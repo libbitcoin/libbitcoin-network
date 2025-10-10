@@ -47,25 +47,29 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // [field] returns "" if not found but .at(field) throws.
 
 // TODO: generalize and customize failure return pages and mime types.
-// TODO: generalize config settings using a common struct.
-// TODO: pass generalized config struct to this as base class.
 // TODO: use server.hosts as .origins for other http/s & ws/s protocols.
 // TODO: add new settings to node parser (some will not be exposed due
 // TODO: to overgeneralization).
+// TODO: make this class base for http_server and derive http and html servers.
+// TODO: build tcp_server directly over session_client and channel.
+// TODO: clean up these names.
 
-// timeout_seconds not yet implemented.
 protocol_client::protocol_client(const session::ptr& session,
-    const channel::ptr& channel) NOEXCEPT
+    const channel::ptr& channel, const http_server& settings) NOEXCEPT
   : protocol(session, channel),
     channel_(std::dynamic_pointer_cast<channel_client>(channel)),
     session_(std::dynamic_pointer_cast<session_client>(session)),
+
+    // TODO: pass origins via http_server (reference to admin.hosts).
     origins_(channel->settings().admin.host_names()),
-    hosts_(channel->settings().admin.host_names()),
+    hosts_(settings.host_names()),
+
+    // TODO: Hacked in to keep [admin] running (implement derived).
     root_(channel->settings().admin.path),
     default_(channel->settings().admin.default_),
-    server_(channel->settings().admin.server),
-    timeout_(channel->settings().admin.timeout_seconds),
-    port_(channel->settings().admin.secure ? default_tls : default_http),
+
+    server_(settings.server),
+    port_(settings.secure ? default_tls : default_http),
     tracker<protocol_client>(session->log)
 {
 }
@@ -253,7 +257,7 @@ void protocol_client::handle_receive_get(const code& ec,
 // ----------------------------------------------------------------------------
 
 ////void protocol_client::handle_receive_get(const code& ec,
-////    const method::post& request) NOEXCEPT
+////    const method::get& request) NOEXCEPT
 ////{
 ////    send_method_not_allowed(*request, ec);
 ////}
@@ -401,8 +405,9 @@ void protocol_client::add_common_headers(http_fields& fields,
     // ------------------------------------------------------------------------
     // The keep_alive.timeout field is encoded as seconds.
 
-    if (!is_zero(timeout_))
-        fields.set(field::keep_alive, "timeout=" + serialize(timeout_));
+    // Remaining is zero if inactivity timer is expired (or not configured).
+    if (const auto secs = remaining())
+        fields.set(field::keep_alive, "timeout=" + serialize(secs));
 }
 
 BC_POP_WARNING()

@@ -37,8 +37,8 @@ public:
     typedef std::shared_ptr<protocol_client> ptr;
 
     /// Construct an instance.
-    protocol_client(const session::ptr& session,
-        const channel::ptr& channel) NOEXCEPT;
+    protocol_client(const session::ptr& session, const channel::ptr& channel,
+        const http_server& settings) NOEXCEPT;
 
     /// Start protocol (strand required).
     void start() NOEXCEPT override;
@@ -102,7 +102,6 @@ private:
     const std::filesystem::path& root_;
     const std::string& default_;
     const std::string& server_;
-    const size_t timeout_;
     const uint16_t port_;
 };
 

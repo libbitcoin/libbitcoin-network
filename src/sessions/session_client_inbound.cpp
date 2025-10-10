@@ -48,7 +48,7 @@ void session_client_inbound::attach_protocols(
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
     const auto self = shared_from_this();
-    channel->attach<protocol_client>(self)->start();
+    channel->attach<protocol_client>(self, settings().admin)->start();
 }
 
 // TODO: channel_client_inbound
@@ -59,8 +59,10 @@ channel::ptr session_client_inbound::create_channel(
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
     // Channel id must be created using create_key().
-    return std::make_shared<channel_client>(log, socket, settings(),
-        create_key());
+    const auto id = create_key();
+    const auto timeout = settings().admin.timeout();
+    const auto action = std::make_shared<deadline>(log, socket->strand(), timeout);
+    return std::make_shared<channel_client>(log, socket, settings(), id, action);
 
     BC_POP_WARNING()
 }

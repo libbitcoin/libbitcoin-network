@@ -147,25 +147,32 @@ void proxy::do_subscribe_stop(const result_handler& handler,
 
 // Reads.
 // ----------------------------------------------------------------------------
+// Method waiting() is invoked directly if read() is called from strand().
 
 void proxy::read(const asio::mutable_buffer& buffer,
     count_handler&& handler) NOEXCEPT
 {
-    waiting();
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::waiting, shared_from_this()));
+
     socket_->read(buffer, std::move(handler));
 }
 
 void proxy::read(http_flat_buffer& buffer, http_string_request& request,
     count_handler&& handler) NOEXCEPT
 {
-    waiting();
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::waiting, shared_from_this()));
+
     socket_->http_read(buffer, request, std::move(handler));
 }
 
 void proxy::read(http_string_request& request,
     count_handler&& handler) NOEXCEPT
 {
-    waiting();
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::waiting, shared_from_this()));
+
     socket_->http_read(request, std::move(handler));
 }
 

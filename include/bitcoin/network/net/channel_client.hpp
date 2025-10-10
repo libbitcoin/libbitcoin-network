@@ -88,7 +88,7 @@ public:
     channel_client(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier,
         const deadline::ptr& inactivity,
-        const deadline::ptr& expiration) NOEXCEPT;
+        const deadline::ptr& expiration={}) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
