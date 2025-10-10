@@ -90,9 +90,11 @@ public:
 protected:
     proxy(const socket::ptr& socket) NOEXCEPT;
 
-    /////// Read part of a message from the remote endpoint.
-    ////virtual void read_some(const asio::mutable_buffer& buffer,
-    ////    count_handler&& handler) NOEXCEPT;
+    /// Stranded handler invoked from stop().
+    virtual void stopping(const code& ec) NOEXCEPT;
+
+    /// Stranded event, allows timer reset.
+    virtual void waiting() NOEXCEPT;
 
     /// Read fixed-size message from the remote endpoint.
     virtual void read(const asio::mutable_buffer& buffer,
@@ -128,7 +130,6 @@ protected:
 private:
     typedef std::deque<std::pair<asio::const_buffer, count_handler>> queue;
 
-    void do_stop(const code& ec) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;
 

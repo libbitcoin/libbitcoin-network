@@ -20,13 +20,11 @@
 #define LIBBITCOIN_NETWORK_NET_CHANNEL_PEER_HPP
 
 #include <memory>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/memory.hpp>
 #include <bitcoin/network/messages/p2p/messages.hpp>
 #include <bitcoin/network/net/channel.hpp>
-#include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/distributor_peer.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -87,11 +85,14 @@ public:
     channel_peer(memory& memory, const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
 
-    /// Idempotent, may be called multiple times.
-    void stop(const code& ec) NOEXCEPT override;
+    /// Construct a p2p channel to encapsulate and communicate on the socket.
+    channel_peer(memory& memory, const logger& log, const socket::ptr& socket,
+        const network::settings& settings, uint64_t identifier,
+        const deadline::ptr& inactivity,
+        const deadline::ptr& expiration) NOEXCEPT;
 
-    /// Pause reading from the socket, stops timers (requires strand).
-    void pause() NOEXCEPT override;
+    /////// Pause reading from the socket, stops timers (requires strand).
+    ////void pause() NOEXCEPT override;
 
     /// Resume reading from the socket, starts timers (requires strand).
     void resume() NOEXCEPT override;
@@ -125,30 +126,23 @@ public:
 protected:
     typedef messages::p2p::heading::cptr heading_ptr;
 
+    /// Stranded handler invoked from channel::stop().
+    void stopping(const code& ec) NOEXCEPT override;
+
     /// Protocol-specific read and dispatch.
     void read_heading() NOEXCEPT;
     void handle_read_heading(const code& ec, size_t) NOEXCEPT;
     void handle_read_payload(const code& ec, size_t payload_size,
         const heading_ptr& head) NOEXCEPT;
 
-private:
+    /// For protocol version context.
     bool is_handshaked() const NOEXCEPT;
-    void do_stop(const code& ec) NOEXCEPT;
 
-    void stop_expiration() NOEXCEPT;
-    void start_expiration() NOEXCEPT;
-    void handle_expiration(const code& ec) NOEXCEPT;
-
-    void stop_inactivity() NOEXCEPT;
-    void start_inactivity() NOEXCEPT;
-    void handle_inactivity(const code& ec) NOEXCEPT;
-
+private:
     // These are protected by strand/order.
 
     bool quiet_{};
     distributor_peer distributor_;
-    deadline::ptr expiration_;
-    deadline::ptr inactivity_;
     uint32_t negotiated_version_;
     messages::p2p::version::cptr peer_version_{};
     size_t start_height_{};
