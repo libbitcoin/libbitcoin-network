@@ -59,10 +59,8 @@ channel::ptr session_client_inbound::create_channel(
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
     // Channel id must be created using create_key().
-    const auto id = create_key();
-    const auto timeout = settings().admin.timeout();
-    const auto action = std::make_shared<deadline>(log, socket->strand(), timeout);
-    return std::make_shared<channel_client>(log, socket, settings(), id, action);
+    return std::make_shared<channel_client>(log, socket, settings(),
+        create_key(), settings().admin);
 
     BC_POP_WARNING()
 }

@@ -38,7 +38,7 @@ public:
 
     /// Construct an instance.
     protocol_client(const session::ptr& session, const channel::ptr& channel,
-        const http_server& settings) NOEXCEPT;
+        const http_server& options) NOEXCEPT;
 
     /// Start protocol (strand required).
     void start() NOEXCEPT override;

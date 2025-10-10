@@ -38,17 +38,10 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// Timers defaults to null (timeouts disabled).
-channel_client::channel_client(const logger& log, const socket::ptr& socket,
-    const network::settings& settings, uint64_t identifier) NOEXCEPT
-  : channel_client(log, socket, settings, identifier, {}, {})
-{
-}
-
 channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier,
-    const deadline::ptr& inactivity,  const deadline::ptr& expiration) NOEXCEPT
-  : channel(log, socket, settings, identifier, inactivity, expiration),
+    const http_server& options) NOEXCEPT
+  : channel(log, socket, settings, identifier, options.timeout(), {}),
     request_buffer_(ceilinged_add(max_head, max_body)),
     distributor_(socket->strand()),
     tracker<channel_client>(log)

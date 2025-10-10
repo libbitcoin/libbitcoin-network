@@ -64,8 +64,8 @@ public:
     /// Construct a channel to encapsulated and communicate on the socket.
     channel(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero,
-        const deadline::ptr& inactivity={},
-        const deadline::ptr& expiration={}) NOEXCEPT;
+        const deadline::duration& inactivity={},
+        const deadline::duration& expiration={}) NOEXCEPT;
 
     /// Asserts/logs stopped.
     virtual ~channel() NOEXCEPT;
