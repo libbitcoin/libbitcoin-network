@@ -93,9 +93,10 @@ void channel::resume() NOEXCEPT
 // A restarted timer invokes completion handler with error::operation_canceled.
 // Called from start or strand.
 
-// protected, invoked by channel async read calls.
+// protected
 void channel::waiting() NOEXCEPT
 {
+    BC_ASSERT_MSG(stranded(), "strand");
     start_inactivity();
 }
 
