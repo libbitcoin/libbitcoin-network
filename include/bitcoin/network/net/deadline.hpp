@@ -58,6 +58,9 @@ public:
     /// Cancel the timer, ok if stopped. The handler will be invoked.
     void stop() NOEXCEPT;
 
+    /// The time duration until the timer expires (may be negative).
+    seconds remaining() const NOEXCEPT;
+
 private:
     void handle_timer(const error::boost_code& ec,
         const result_handler& handle) NOEXCEPT;

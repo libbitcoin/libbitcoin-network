@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/net/deadline.hpp>
 
+#include <chrono>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
@@ -38,6 +39,7 @@ deadline::deadline(const logger& log, asio::strand& strand,
     timer_(strand),
     tracker<deadline>(log)
 {
+    timer_.expires_from_now();
 }
 
 deadline::~deadline() NOEXCEPT
@@ -67,6 +69,12 @@ void deadline::stop() NOEXCEPT
 {
     timer_.cancel();
     BC_DEBUG_ONLY(timer_.expires_at(epoch);)
+}
+
+seconds deadline::remaining() const NOEXCEPT
+{
+    const auto difference = timer_.expiry() - steady_clock::now();
+    return std::chrono::duration_cast<seconds>(difference);
 }
 
 // Callback always (cancel or otherwise) fired with the normalized error code.
