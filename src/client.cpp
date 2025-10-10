@@ -27,64 +27,7 @@ namespace network {
 
 using namespace system;
 
-// All values default to constructor defaults (zero/empty).
-
-// enabled() helpers
-// ----------------------------------------------------------------------------
-
-bool admin::enabled() const NOEXCEPT
-{
-    // Path is currently required.
-    return !path.empty()
-        && !binds.empty()
-        && to_bool(connections);
-}
-
-bool explore::enabled() const NOEXCEPT
-{
-    // Path is currently required.
-    return !path.empty()
-        && !binds.empty()
-        && to_bool(connections);
-}
-
-bool rest::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-bool websocket::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-bool bitcoind::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-bool electrum::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-bool stratum_v1::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-bool stratum_v2::enabled() const NOEXCEPT
-{
-    return !binds.empty()
-        && to_bool(connections);
-}
-
-// host_names() helpers
+// helpers
 // ----------------------------------------------------------------------------
 
 static string_list to_host_names(const config::endpoints& hosts,
@@ -104,72 +47,36 @@ static string_list to_host_names(const config::endpoints& hosts,
     return out;
 }
 
-string_list admin::host_names() const NOEXCEPT
-{
-    return to_host_names(hosts, secure);
-}
+// All values default to constructor defaults (zero/empty).
 
-string_list explore::host_names() const NOEXCEPT
-{
-    return to_host_names(hosts, secure);
-}
-
-string_list rest::host_names() const NOEXCEPT
-{
-    return to_host_names(hosts, secure);
-}
-
-string_list websocket::host_names() const NOEXCEPT
-{
-    return to_host_names(hosts, secure);
-}
-
-string_list bitcoind::host_names() const NOEXCEPT
-{
-    return to_host_names(hosts, secure);
-}
-
-// timeout() helpers
+// tcp_server
 // ----------------------------------------------------------------------------
 
-steady_clock::duration admin::timeout() const NOEXCEPT
+bool tcp_server::enabled() const NOEXCEPT
+{
+    return !binds.empty()
+        && to_bool(connections);
+}
+
+steady_clock::duration tcp_server::timeout() const NOEXCEPT
 {
     return seconds{ timeout_seconds };
 }
 
-steady_clock::duration explore::timeout() const NOEXCEPT
+// http_server
+// ----------------------------------------------------------------------------
+
+string_list http_server::host_names() const NOEXCEPT
 {
-    return seconds{ timeout_seconds };
+    return to_host_names(hosts, secure);
 }
 
-steady_clock::duration rest::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
-}
+// html_server
+// ----------------------------------------------------------------------------
 
-steady_clock::duration websocket::timeout() const NOEXCEPT
+bool html_server::enabled() const NOEXCEPT
 {
-    return seconds{ timeout_seconds };
-}
-
-steady_clock::duration bitcoind::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
-}
-
-steady_clock::duration electrum::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
-}
-
-steady_clock::duration stratum_v1::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
-}
-
-steady_clock::duration stratum_v2::timeout() const NOEXCEPT
-{
-    return seconds{ timeout_seconds };
+    return !path.empty() && http_server::enabled();
 }
 
 } // namespace network
