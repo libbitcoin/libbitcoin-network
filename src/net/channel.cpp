@@ -103,8 +103,7 @@ void channel::waiting() NOEXCEPT
 size_t channel::remaining() const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    const auto count_seconds = inactivity_->remaining().count();
-    return inactivity_ ? limit<size_t>(count_seconds) : zero;
+    return inactivity_ ? limit<size_t>(inactivity_->remaining().count()) : zero;
 }
 
 void channel::stop_expiration() NOEXCEPT
