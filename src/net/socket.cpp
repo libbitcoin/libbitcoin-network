@@ -136,15 +136,6 @@ void socket::connect(const asio::endpoints& range,
             shared_from_this(), range, std::move(handler)));
 }
 
-////void socket::read_some(const asio::mutable_buffer& out,
-////    count_handler&& handler) NOEXCEPT
-////{
-////    // asio::mutable_buffer is essentially a data_slab.
-////    boost::asio::dispatch(strand_,
-////        std::bind(&socket::do_read_some,
-////            shared_from_this(), out, std::move(handler)));
-////}
-
 void socket::read(const asio::mutable_buffer& out,
     count_handler&& handler) NOEXCEPT
 {

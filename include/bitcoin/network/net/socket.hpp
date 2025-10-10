@@ -74,10 +74,6 @@ public:
     virtual void connect(const asio::endpoints& range,
         result_handler&& handler) NOEXCEPT;
 
-    /////// Read up to full buffer from the socket, handler posted to socket strand.
-    ////virtual void read_some(const asio::mutable_buffer& out,
-    ////    count_handler&& handler) NOEXCEPT;
-
     /// Read full buffer from the socket, handler posted to socket strand.
     virtual void read(const asio::mutable_buffer& out,
         count_handler&& handler) NOEXCEPT;
