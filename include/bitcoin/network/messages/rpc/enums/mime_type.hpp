@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_MIME_TYPE_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_MIME_TYPE_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_MIME_TYPE_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_MIME_TYPE_HPP
 
 #include <filesystem>
 #include <bitcoin/network/define.hpp>
