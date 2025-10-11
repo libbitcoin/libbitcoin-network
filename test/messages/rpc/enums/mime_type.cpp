@@ -37,6 +37,12 @@ BOOST_AUTO_TEST_CASE(mime_type__to_mime_type__invalid__unknown)
     BOOST_REQUIRE(to_mime_type("invalid/type") == mime_type::unknown);
 }
 
+BOOST_AUTO_TEST_CASE(mime_type__to_mime_type__invalid_with_default__default)
+{
+    BOOST_REQUIRE(to_mime_type("", mime_type::font_woff) == mime_type::font_woff);
+    BOOST_REQUIRE(to_mime_type("invalid/type", mime_type::font_woff2) == mime_type::font_woff2);
+}
+
 BOOST_AUTO_TEST_CASE(mime_type__to_mime_type__valid__expected)
 {
     BOOST_REQUIRE(to_mime_type("image/png") == mime_type::image_png);
@@ -72,6 +78,11 @@ BOOST_AUTO_TEST_CASE(mime_type__from_mime_type__unknown__unknown)
     BOOST_REQUIRE_EQUAL(from_mime_type(mime_type::unknown), "unknown");
 }
 
+BOOST_AUTO_TEST_CASE(mime_type__from_mime_type__unknown_with_default__default)
+{
+    BOOST_REQUIRE_EQUAL(from_mime_type(mime_type::unknown, "DEFAULT"), "DEFAULT");
+}
+
 BOOST_AUTO_TEST_CASE(mime_type__from_mime_type__valid__expected)
 {
     BOOST_REQUIRE_EQUAL(from_mime_type(mime_type::text_html), "text/html");
@@ -94,6 +105,12 @@ BOOST_AUTO_TEST_CASE(mime_type__to_mime_types__invalid__unknown)
     BOOST_REQUIRE(to_mime_types("image/foo,invalid/type") == expected);
 }
 
+BOOST_AUTO_TEST_CASE(mime_type__to_mime_types__invalid_with_default__default)
+{
+    const mime_types expected{ mime_type::font_woff };
+    BOOST_REQUIRE(to_mime_types("image/foo,invalid/type", mime_type::font_woff) == expected);
+}
+
 BOOST_AUTO_TEST_CASE(mime_type__to_mime_types__empty__unknown)
 {
     const mime_types expected{ mime_type::unknown };
@@ -108,7 +125,7 @@ BOOST_AUTO_TEST_CASE(mime_type__to_mime_types__valid_and_special_characters__exp
         mime_type::unknown
     };
 
-    BOOST_REQUIRE(to_mime_types("text/html; charset=\"UTF-8,example\",~`!@#$%^&*()") == expected);
+    BOOST_REQUIRE(to_mime_types("text/html; charset=\"UTF-8,example\",~`!@#$%^&*(),What's this?") == expected);
 }
 
 BOOST_AUTO_TEST_CASE(mime_type__to_mime_types__valids__expected)
@@ -121,6 +138,18 @@ BOOST_AUTO_TEST_CASE(mime_type__to_mime_types__valids__expected)
     };
 
     BOOST_REQUIRE(to_mime_types("text/html,application/json,text/plain") == expected);
+}
+
+BOOST_AUTO_TEST_CASE(mime_type__to_mime_types__duplicated_unsorted__expected_deduplicated_sorted)
+{
+    const mime_types expected
+    {
+        mime_type::application_json,
+        mime_type::text_html,
+        mime_type::text_plain
+    };
+
+    BOOST_REQUIRE(to_mime_types("text/html,text/plain,text/html,application/json,text/plain") == expected);
 }
 
 BOOST_AUTO_TEST_CASE(mime_type__to_mime_types__case_insensitive__expected)
@@ -163,6 +192,12 @@ BOOST_AUTO_TEST_CASE(mime_type__from_mime_types__unknown__unknown)
 {
     const mime_types types{ mime_type::unknown };
     BOOST_REQUIRE_EQUAL(from_mime_types(types), "unknown");
+}
+
+BOOST_AUTO_TEST_CASE(mime_type__from_mime_types__unknown_default__default)
+{
+    const mime_types types{ mime_type::unknown };
+    BOOST_REQUIRE_EQUAL(from_mime_types(types, "DEFAULT"), "DEFAULT");
 }
 
 BOOST_AUTO_TEST_CASE(mime_type__from_mime_types__valid__expected)
@@ -211,6 +246,14 @@ BOOST_AUTO_TEST_CASE(mime_type__file_mime_type__not_found__default)
     BOOST_REQUIRE(file_mime_type(".") == mime_type::application_octet);
     BOOST_REQUIRE(file_mime_type(".42") == mime_type::application_octet);
     BOOST_REQUIRE(file_mime_type(".xml.") == mime_type::application_octet);
+}
+
+BOOST_AUTO_TEST_CASE(mime_type__file_mime_type__not_found_default__default)
+{
+    BOOST_REQUIRE(file_mime_type("", mime_type::font_woff) == mime_type::font_woff);
+    BOOST_REQUIRE(file_mime_type(".", mime_type::font_woff) == mime_type::font_woff);
+    BOOST_REQUIRE(file_mime_type(".42", mime_type::font_woff) == mime_type::font_woff);
+    BOOST_REQUIRE(file_mime_type(".xml.", mime_type::font_woff) == mime_type::font_woff);
 }
 
 BOOST_AUTO_TEST_CASE(mime_type__file_mime_type__lower_case_exist__expected)
