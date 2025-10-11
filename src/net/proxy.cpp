@@ -158,7 +158,7 @@ void proxy::read(const asio::mutable_buffer& buffer,
     socket_->read(buffer, std::move(handler));
 }
 
-void proxy::read(http_flat_buffer& buffer, http_string_request& request,
+void proxy::read(http::flat_buffer& buffer, http::string_request& request,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand(),
@@ -167,7 +167,7 @@ void proxy::read(http_flat_buffer& buffer, http_string_request& request,
     socket_->http_read(buffer, request, std::move(handler));
 }
 
-void proxy::read(http_string_request& request,
+void proxy::read(http::string_request& request,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand(),
@@ -180,19 +180,19 @@ void proxy::read(http_string_request& request,
 // ----------------------------------------------------------------------------
 // Writes are composed but http is half duplex so there is no interleave risk.
 
-void proxy::write(const http_string_response& response,
+void proxy::write(const http::string_response& response,
     count_handler&& handler) NOEXCEPT
 {
     socket_->http_write(response, std::move(handler));
 }
 
-void proxy::write(const http_data_response& response,
+void proxy::write(const http::data_response& response,
     count_handler&& handler) NOEXCEPT
 {
     socket_->http_write(response, std::move(handler));
 }
 
-void proxy::write(http_file_response& response,
+void proxy::write(http::file_response& response,
     count_handler&& handler) NOEXCEPT
 {
     socket_->http_write(response, std::move(handler));

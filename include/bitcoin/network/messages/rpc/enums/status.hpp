@@ -16,11 +16,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../../../test.hpp"
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_STATUS_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_STATUS_HPP
 
-BOOST_AUTO_TEST_SUITE(magic_numbers_tests)
+#include <bitcoin/network/define.hpp>
 
-static_assert(network::http::max_head == system::power2(12u));
-static_assert(network::http::max_body == system::power2(22u));
+namespace libbitcoin {
+namespace network {
+namespace http {
 
-BOOST_AUTO_TEST_SUITE_END()
+/// Status is aliased to beast boost define.
+using status = boost::beast::http::status;
+
+} // namespace http
+} // namespace network
+} // namespace libbitcoin
+
+#endif

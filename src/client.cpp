@@ -44,8 +44,7 @@ steady_clock::duration tcp_server::timeout() const NOEXCEPT
 inline system::string_list to_host_names(const config::endpoints& hosts,
     bool secure) NOEXCEPT
 {
-    using namespace messages::rpc;
-    const auto port = secure ? default_tls : default_http;
+    const auto port = secure ? http::default_tls : http::default_http;
 
     system::string_list out{};
     out.resize(hosts.size());

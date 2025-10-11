@@ -53,6 +53,8 @@ private:
     mutable std::promise<code> stopped_;
 };
 
+using namespace http;
+
 BOOST_AUTO_TEST_CASE(channel_client__stopped__default__false)
 {
     constexpr auto expected_identifier = 42u;
@@ -103,7 +105,6 @@ BOOST_AUTO_TEST_CASE(channel_client__subscribe_message__subscribed__expected)
     std::promise<code> message_stopped;
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        using namespace messages::rpc;
         channel_ptr->subscribe<method::get>(
             [&](code ec, const method::get& request) NOEXCEPT
             {
@@ -156,7 +157,6 @@ BOOST_AUTO_TEST_CASE(channel_client__stop__all_subscribed__expected)
             stop1_stopped.set_value(ec);
         });
 
-        using namespace messages::rpc;
         channel_ptr->subscribe<method::post>(
             [&](code ec, const method::post& request) NOEXCEPT
             {
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected)
     BOOST_REQUIRE(!channel_ptr->stopped());
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send<http_string_response>({}, handler);
+        channel_ptr->send<http::string_response>({}, handler);
     });
 
     // 10009 (WSAEBADF, invalid file handle) gets mapped to bad_stream.
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected)
     BOOST_REQUIRE(!channel_ptr->stopped());
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        channel_ptr->send(http_string_response{}, [&](code ec)
+        channel_ptr->send(http::string_response{}, [&](code ec)
         {
             result &= channel_ptr->stopped();
             promise.set_value(ec);

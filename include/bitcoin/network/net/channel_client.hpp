@@ -40,7 +40,7 @@ class BCT_API channel_client
 public:
     typedef std::shared_ptr<channel_client> ptr;
 
-    /// Subscribe to http_request from peer (requires strand).
+    /// Subscribe to http::request from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
     template <class Message, typename Handler =
         distributor_client::handler<Message>>
@@ -98,10 +98,10 @@ protected:
 private:
     void do_stop(const code& ec) NOEXCEPT;
     void handle_read_request(const code& ec, size_t bytes_read,
-        const http_string_request_cptr& request) NOEXCEPT;
+        const http::string_request_cptr& request) NOEXCEPT;
 
     // These are protected by strand.
-    http_flat_buffer request_buffer_;
+    http::flat_buffer request_buffer_;
     distributor_client distributor_;
     bool reading_{};
 };

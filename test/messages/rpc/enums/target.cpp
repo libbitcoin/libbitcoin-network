@@ -18,7 +18,7 @@
  */
 #include "../../../test.hpp"
 
-using namespace network::messages::rpc;
+using namespace network::http;
 
 BOOST_FIXTURE_TEST_SUITE(target_tests, test::directory_setup_fixture)
 

@@ -30,7 +30,6 @@ namespace network {
 #define CLASS channel_client
 
 using namespace system;
-using namespace messages::rpc;
 using namespace std::placeholders;
 
 // Shared pointers required in handler parameters so closures control lifetime.
@@ -42,7 +41,7 @@ channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier,
     const http_server& options) NOEXCEPT
   : channel(log, socket, settings, identifier, options.timeout(), {}),
-    request_buffer_(ceilinged_add(max_head, max_body)),
+    request_buffer_(ceilinged_add(http::max_head, http::max_body)),
     distributor_(socket->strand()),
     tracker<channel_client>(log)
 {
@@ -83,7 +82,7 @@ void channel_client::read_request() NOEXCEPT
 
     // HTTP is half duplex.
     reading_ = true;
-    const auto request = to_shared<http_string_request>();
+    const auto request = to_shared<http::string_request>();
 
     // Post handle_read_request to strand upon stop, error, or buffer full.
     read(request_buffer_, *request,
@@ -92,7 +91,7 @@ void channel_client::read_request() NOEXCEPT
 }
 
 void channel_client::handle_read_request(const code& ec, size_t,
-    const http_string_request_cptr& request) NOEXCEPT
+    const http::string_request_cptr& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

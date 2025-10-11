@@ -101,23 +101,23 @@ protected:
         count_handler&& handler) NOEXCEPT;
 
     /// Read full http string request from the socket.
-    virtual void read(http_flat_buffer& buffer, http_string_request& request,
+    virtual void read(http::flat_buffer& buffer, http::string_request& request,
         count_handler&& handler) NOEXCEPT;
 
     /// Read full http string request from the socket.
-    virtual void read(http_string_request& request,
+    virtual void read(http::string_request& request,
         count_handler&& handler) NOEXCEPT;
 
     /// Write full http string response to the socket.
-    virtual void write(const http_string_response& response,
+    virtual void write(const http::string_response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Write full http data response to the socket.
-    virtual void write(const http_data_response& response,
+    virtual void write(const http::data_response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Write full http file response to the socket.
-    virtual void write(http_file_response& response,
+    virtual void write(http::file_response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Send a complete message to the remote endpoint.

@@ -24,8 +24,7 @@
 
 namespace libbitcoin {
 namespace network {
-namespace messages {
-namespace rpc {
+namespace http {
 
 /// Enumeration of utilized MIME types.
 enum class mime_type
@@ -66,11 +65,7 @@ BCT_API std::string from_mime_types(const mime_types& types,
 BCT_API mime_type file_mime_type(const std::filesystem::path& path,
     mime_type default_=mime_type::application_octet) NOEXCEPT;
 
-} // namespace rpc
-} // namespace messages
-
-using http_mime_type = messages::rpc::mime_type;
-
+} // namespace http
 } // namespace network
 } // namespace libbitcoin
 

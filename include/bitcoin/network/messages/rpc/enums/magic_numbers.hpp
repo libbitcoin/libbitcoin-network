@@ -23,8 +23,7 @@
 
 namespace libbitcoin {
 namespace network {
-namespace messages {
-namespace rpc {
+namespace http {
 
 /// Client-server protocol constants.
 ///----------------------------------------------------------------------------
@@ -35,8 +34,7 @@ constexpr size_t max_body = 4 * 1024 * 1024;
 constexpr uint16_t default_http = 80;
 constexpr uint16_t default_tls = 443;
 
-} // namespace rpc
-} // namespace messages
+} // namespace http
 } // namespace network
 } // namespace libbitcoin
 

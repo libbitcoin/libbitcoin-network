@@ -19,27 +19,27 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
 
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/rpc/enums/verb.hpp>
 
- /// Type-differentiation for request message distribution.
+/// Type-differentiation for request message distribution.
 
 namespace libbitcoin {
 namespace network {
-namespace messages {
-namespace rpc {
+namespace http {
 namespace method {
 
 struct method_ptr
 {
     /// Overload structure -> to obtain .ptr.
-    const http_string_request* operator->() const NOEXCEPT
+    const string_request* operator->() const NOEXCEPT
     {
         return ptr.get();
     }
 
     /// Overload structure * to obtain *ptr.
-    const http_string_request& operator*() const NOEXCEPT
+    const string_request& operator*() const NOEXCEPT
     {
         return *ptr;
     }
@@ -50,9 +50,8 @@ struct method_ptr
         return !!ptr;
     }
 
-    http_string_request_cptr ptr{};
+    string_request_cptr ptr{};
 };
-
 
 template <verb Verb>
 struct method_alias : public method_ptr
@@ -72,8 +71,7 @@ using connect = method_alias<verb::connect>;
 using unknown = method_alias<verb::unknown>;
 
 } // namespace method
-} // namespace rpc
-} // namespace messages
+} // namespace http
 } // namespace network
 } // namespace libbitcoin
 

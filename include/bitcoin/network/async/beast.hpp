@@ -26,46 +26,44 @@
 
 namespace libbitcoin {
 namespace network {
-
-/// TODO: create own http namespace and remove http_ prefixes.
-namespace http = boost::beast::http;
-
-// flat_buffer
-typedef boost::beast::flat_buffer http_flat_buffer;
+namespace http {
 
 /// beast::http::vector_body<uint8_t>
-typedef http::vector_body<uint8_t> http_data_body;
-typedef http::request<http_data_body> http_data_request;
-typedef http::response<http_data_body> http_data_response;
-typedef http::request_parser<http_data_body> http_data_parser;
-typedef http::serializer<false, http_data_body> http_data_serializer;
-typedef std::shared_ptr<const http_data_request> http_data_request_cptr;
-typedef std::shared_ptr<http_data_request> http_data_request_ptr;
+typedef boost::beast::http::vector_body<uint8_t> data_body;
+typedef boost::beast::http::request<data_body> data_request;
+typedef boost::beast::http::response<data_body> data_response;
+typedef boost::beast::http::request_parser<data_body> data_parser;
+typedef boost::beast::http::serializer<false, data_body> data_serializer;
+typedef std::shared_ptr<const data_request> data_request_cptr;
+typedef std::shared_ptr<data_request> data_request_ptr;
 
 /// beast::http::string_body
-typedef http::string_body http_string_body;
-typedef http::request<http_string_body> http_string_request;
-typedef http::response<http_string_body> http_string_response;
-typedef http::request_parser<http_string_body> http_string_parser;
-typedef http::serializer<false, http_string_body> http_string_serializer;
-typedef std::shared_ptr<const http_string_request> http_string_request_cptr;
-typedef std::shared_ptr<http_string_request> http_string_request_ptr;
+typedef boost::beast::http::string_body string_body;
+typedef boost::beast::http::request<string_body> string_request;
+typedef boost::beast::http::response<string_body> string_response;
+typedef boost::beast::http::request_parser<string_body> string_parser;
+typedef boost::beast::http::serializer<false, string_body> string_serializer;
+typedef std::shared_ptr<const string_request> string_request_cptr;
+typedef std::shared_ptr<string_request> string_request_ptr;
 
 /// beast::http::file_body
-typedef http::file_body http_file_body;
-typedef http::request<http_file_body> http_file_request;
-typedef http::response<http_file_body> http_file_response;
-typedef http::request_parser<http_file_body> http_file_parser;
-typedef http::serializer<false, http_file_body> http_file_serializer;
-typedef std::shared_ptr<const http_file_request> http_file_request_cptr;
-typedef std::shared_ptr<http_file_request> http_file_request_ptr;
+typedef boost::beast::http::file_body file_body;
+typedef boost::beast::http::request<file_body> file_request;
+typedef boost::beast::http::response<file_body> file_response;
+typedef boost::beast::http::request_parser<file_body> file_parser;
+typedef boost::beast::http::serializer<false, file_body> file_serializer;
+typedef std::shared_ptr<const file_request> file_request_cptr;
+typedef std::shared_ptr<file_request> file_request_ptr;
 
-typedef http_file_body::value_type http_file;
-typedef http::fields http_fields;
+typedef file_body::value_type file;
+typedef boost::beast::http::field field;
+typedef boost::beast::http::fields fields;
+typedef boost::beast::flat_buffer flat_buffer;
 
-constexpr int32_t http_version_1_1 = 11;
-constexpr int32_t http_version_1_0 = 10;
+constexpr int32_t version_1_1 = 11;
+constexpr int32_t version_1_0 = 10;
 
+} // namespace http
 } // namespace network
 } // namespace libbitcoin
 

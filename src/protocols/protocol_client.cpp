@@ -36,10 +36,8 @@ namespace network {
 #define CLASS protocol_client
 
 using namespace asio;
-using namespace http;
 using namespace system;
 using namespace network::config;
-using namespace messages::rpc;
 using namespace std::placeholders;
 
 // Bind throws (ok).
@@ -60,7 +58,7 @@ protocol_client::protocol_client(const session::ptr& session,
     default_(channel->settings().admin.default_),
 
     server_(options.server),
-    port_(options.secure ? default_tls : default_http),
+    port_(options.secure ? http::default_tls : http::default_http),
     tracker<protocol_client>(session->log)
 {
 }
@@ -75,31 +73,31 @@ void protocol_client::start() NOEXCEPT
     if (started())
         return;
 
-    SUBSCRIBE_CHANNEL(method::get,     handle_receive_get,     _1, _2);
-    SUBSCRIBE_CHANNEL(method::head,    handle_receive_head,    _1, _2);
-    SUBSCRIBE_CHANNEL(method::post,    handle_receive_post,    _1, _2);
-    SUBSCRIBE_CHANNEL(method::put,     handle_receive_put,     _1, _2);
-    SUBSCRIBE_CHANNEL(method::delete_, handle_receive_delete,  _1, _2);
-    SUBSCRIBE_CHANNEL(method::trace,   handle_receive_trace,   _1, _2);
-    SUBSCRIBE_CHANNEL(method::options, handle_receive_options, _1, _2);
-    SUBSCRIBE_CHANNEL(method::connect, handle_receive_connect, _1, _2);
-    SUBSCRIBE_CHANNEL(method::unknown, handle_receive_unknown, _1, _2);
+    SUBSCRIBE_CHANNEL(http::method::get,     handle_receive_get,     _1, _2);
+    SUBSCRIBE_CHANNEL(http::method::head,    handle_receive_head,    _1, _2);
+    SUBSCRIBE_CHANNEL(http::method::post,    handle_receive_post,    _1, _2);
+    SUBSCRIBE_CHANNEL(http::method::put,     handle_receive_put,     _1, _2);
+    SUBSCRIBE_CHANNEL(http::method::delete_, handle_receive_delete,  _1, _2);
+    SUBSCRIBE_CHANNEL(http::method::trace,   handle_receive_trace,   _1, _2);
+    SUBSCRIBE_CHANNEL(http::method::options, handle_receive_options, _1, _2);
+    SUBSCRIBE_CHANNEL(http::method::connect, handle_receive_connect, _1, _2);
+    SUBSCRIBE_CHANNEL(http::method::unknown, handle_receive_unknown, _1, _2);
     protocol::start();
 }
 
 // Do sends.
 // ----------------------------------------------------------------------------
 
-void protocol_client::send_file(const http_string_request& request,
-    http_file&& file, mime_type type) NOEXCEPT
+void protocol_client::send_file(const http::string_request& request,
+    http::file&& file, http::mime_type type) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     BC_ASSERT_MSG(file.is_open(), "sending closed file handle");
 
-    http_file_response response{ status::ok, request.version() };
+    http::file_response response{ http::status::ok, request.version() };
     add_common_headers(response, request);
 
-    response.set(field::content_type, from_mime_type(type));
+    response.set(http::field::content_type, from_mime_type(type));
     response.body() = std::move(file);
     response.prepare_payload();
 
@@ -107,11 +105,11 @@ void protocol_client::send_file(const http_string_request& request,
 }
 
 void protocol_client::send_not_found(
-    const http_string_request& request) NOEXCEPT
+    const http::string_request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    http_string_response response{ status::not_found, request.version() };
+    http::string_response response{ http::status::not_found, request.version() };
     add_common_headers(response, request);
 
     // TODO: formatted response with matching content-type.
@@ -125,30 +123,30 @@ void protocol_client::send_not_found(
 
 // Closes channel.
 void protocol_client::send_forbidden(
-    const http_string_request& request) NOEXCEPT
+    const http::string_request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    http_string_response response{ status::forbidden, request.version() };
+    http::string_response response{ http::status::forbidden, request.version() };
     add_common_headers(response, request, true);
-    response.body() = error_page(response.reason(), request[field::accept]);
+    response.body() = error_page(response.reason(), request[http::field::accept]);
     response.prepare_payload();
     SEND(std::move(response), handle_complete, _1, error::forbidden);
 }
 
 // Closes channel.
 void protocol_client::send_bad_host(
-    const http_string_request& request) NOEXCEPT
+    const http::string_request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    http_string_response response{ status::bad_request, request.version() };
+    http::string_response response{ http::status::bad_request, request.version() };
     add_common_headers(response, request, true);
 
     // TODO: formatted response with matching content-type.
     const code reason{ error::bad_request };
     response.body() += reason.message() + " : host : ";
-    response.body() += request[field::host];
+    response.body() += request[http::field::host];
     response.prepare_payload();
 
     SEND(std::move(response), handle_complete, _1, reason);
@@ -156,11 +154,11 @@ void protocol_client::send_bad_host(
 
 // Closes channel.
 void protocol_client::send_bad_target(
-    const http_string_request& request) NOEXCEPT
+    const http::string_request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    http_string_response response{ status::bad_request, request.version() };
+    http::string_response response{ http::status::bad_request, request.version() };
     add_common_headers(response, request, true);
 
     // TODO: formatted response with matching content-type.
@@ -174,7 +172,7 @@ void protocol_client::send_bad_target(
 
 // Closes channel.
 void protocol_client::send_method_not_allowed(
-    const http_string_request& request, const code& ec) NOEXCEPT
+    const http::string_request& request, const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -182,7 +180,7 @@ void protocol_client::send_method_not_allowed(
         return;
 
     const auto version = request.version();
-    http_string_response response{ status::method_not_allowed, version };
+    http::string_response response{ http::status::method_not_allowed, version };
     add_common_headers(response, request, true);
 
     // TODO: formatted response with matching content-type.
@@ -198,7 +196,7 @@ void protocol_client::send_method_not_allowed(
 // ----------------------------------------------------------------------------
 
 void protocol_client::handle_receive_get(const code& ec,
-    const method::get& request) NOEXCEPT
+    const http::method::get& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -206,14 +204,14 @@ void protocol_client::handle_receive_get(const code& ec,
         return;
 
     // Enforce http origin policy (requires configured hosts).
-    if (!is_allowed_origin((*request)[field::origin], request->version()))
+    if (!is_allowed_origin((*request)[http::field::origin], request->version()))
     {
         send_forbidden(*request);
         return;
     }
 
     // Enforce http host header (if any hosts are configured).
-    if (!is_allowed_host((*request)[field::host], request->version()))
+    if (!is_allowed_host((*request)[http::field::host], request->version()))
     {
         send_bad_host(*request);
         return;
@@ -228,14 +226,14 @@ void protocol_client::handle_receive_get(const code& ec,
     }
 
     // Not open implies file not found (non-terminal).
-    auto file = get_file_body(path);
+    auto file = http::get_file_body(path);
     if (!file.is_open())
     {
         send_not_found(*request);
         return;
     }
 
-    send_file(*request, std::move(file), file_mime_type(path));
+    send_file(*request, std::move(file), http::file_mime_type(path));
 }
 
 // Handle disallowed-by-default methods (override to implement).
@@ -248,49 +246,49 @@ void protocol_client::handle_receive_get(const code& ec,
 ////}
 
 void protocol_client::handle_receive_post(const code& ec,
-    const method::post& request) NOEXCEPT
+    const http::method::post& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
 void protocol_client::handle_receive_put(const code& ec,
-    const method::put& request) NOEXCEPT
+    const http::method::put& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
 void protocol_client::handle_receive_head(const code& ec,
-    const method::head& request) NOEXCEPT
+    const http::method::head& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
 void protocol_client::handle_receive_delete(const code& ec,
-    const method::delete_& request) NOEXCEPT
+    const http::method::delete_& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
 void protocol_client::handle_receive_trace(const code& ec,
-    const method::trace& request) NOEXCEPT
+    const http::method::trace& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
 void protocol_client::handle_receive_options(const code& ec,
-    const method::options& request) NOEXCEPT
+    const http::method::options& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
 void protocol_client::handle_receive_connect(const code& ec,
-    const method::connect& request) NOEXCEPT
+    const http::method::connect& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
 void protocol_client::handle_receive_unknown(const code& ec,
-    const method::unknown& request) NOEXCEPT
+    const http::method::unknown& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
@@ -324,7 +322,8 @@ std::filesystem::path protocol_client::to_local_path(
     const std::string& target) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return sanitize_origin(root_, target == "/" ? target + default_ : target);
+    return http::sanitize_origin(root_,
+        target == "/" ? target + default_ : target);
 }
 
 bool protocol_client::is_allowed_origin(const std::string& origin,
@@ -334,7 +333,7 @@ bool protocol_client::is_allowed_origin(const std::string& origin,
 
     // Allow same-origin and no-origin requests.
     // Origin header field is not available until http 1.1.
-    if (origin.empty() || version < http_version_1_1)
+    if (origin.empty() || version < http::version_1_1)
         return true;
 
     return origins_.empty() || contains(origins_, to_normal_host(origin, port_));
@@ -347,30 +346,30 @@ bool protocol_client::is_allowed_host(const std::string& host,
 
     // Disallow unspecified host.
     // Host header field is mandatory at http 1.1.
-    if (host.empty() && version >= http_version_1_1)
+    if (host.empty() && version >= http::version_1_1)
         return false;
 
     return hosts_.empty() || contains(hosts_, to_normal_host(host, port_));
 }
 
-void protocol_client::add_common_headers(http_fields& fields,
-    const http_string_request& request, bool closing) const NOEXCEPT
+void protocol_client::add_common_headers(http::fields& fields,
+    const http::string_request& request, bool closing) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // date (current)
     // ------------------------------------------------------------------------
-    fields.set(field::date, format_http_time(zulu_time()));
+    fields.set(http::field::date, format_http_time(zulu_time()));
 
     // server (configured)
     // ------------------------------------------------------------------------
     if (!server_.empty())
-        fields.set(field::server, server_);
+        fields.set(http::field::server, server_);
 
     // origin (allow)
     // ------------------------------------------------------------------------
-    if (to_bool(request.count(field::origin)))
-        fields.set(field::access_control_allow_origin, request[field::origin]);
+    if (to_bool(request.count(http::field::origin)))
+        fields.set(http::field::access_control_allow_origin, request[http::field::origin]);
 
     // connection (close or keep-alive)
     // ------------------------------------------------------------------------
@@ -379,12 +378,12 @@ void protocol_client::add_common_headers(http_fields& fields,
 
     if (closing || !request.keep_alive())
     {
-        fields.set(field::connection, "close");
+        fields.set(http::field::connection, "close");
         return;
     }
 
-    if (request.version() < http_version_1_1)
-        fields.set(field::connection, "keep-alive");
+    if (request.version() < http::version_1_1)
+        fields.set(http::field::connection, "keep-alive");
 
     // keep_alive (configured timeout)
     // ------------------------------------------------------------------------
@@ -392,7 +391,7 @@ void protocol_client::add_common_headers(http_fields& fields,
 
     // Remaining is zero if inactivity timer is expired (or not configured).
     if (const auto secs = remaining())
-        fields.set(field::keep_alive, "timeout=" + serialize(secs));
+        fields.set(http::field::keep_alive, "timeout=" + serialize(secs));
 }
 
 // Error page generation.
@@ -402,7 +401,7 @@ std::string protocol_client::error_page(const std::string& status,
     const std::string& accepts) const NOEXCEPT
 {
     // Get the mime types (priority and encoding not considered).
-    const auto mime = to_mime_types(accepts);
+    const auto mime = http::to_mime_types(accepts);
 
     // TODO: switch on supported mime types to formatted page.
 
