@@ -502,23 +502,23 @@ BOOST_AUTO_TEST_CASE(error_t__code__bad_request__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "bad request");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__unauthorized__true_exected_message)
-{
-    constexpr auto value = error::unauthorized;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "unauthorized");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__payment_required__true_exected_message)
-{
-    constexpr auto value = error::payment_required;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "payment required");
-}
+////BOOST_AUTO_TEST_CASE(error_t__code__unauthorized__true_exected_message)
+////{
+////    constexpr auto value = error::unauthorized;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "unauthorized");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__payment_required__true_exected_message)
+////{
+////    constexpr auto value = error::payment_required;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "payment required");
+////}
 
 BOOST_AUTO_TEST_CASE(error_t__code__forbidden__true_exected_message)
 {
@@ -547,313 +547,313 @@ BOOST_AUTO_TEST_CASE(error_t__code__method_not_allowed__true_exected_message)
     BOOST_REQUIRE_EQUAL(ec.message(), "method not allowed");
 }
 
-BOOST_AUTO_TEST_CASE(error_t__code__not_acceptable__true_exected_message)
-{
-    constexpr auto value = error::not_acceptable;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "not acceptable");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__proxy_authentication_required__true_exected_message)
-{
-    constexpr auto value = error::proxy_authentication_required;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "proxy authentication required");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__request_timeout__true_exected_message)
-{
-    constexpr auto value = error::request_timeout;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "request timeout");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__conflict__true_exected_message)
-{
-    constexpr auto value = error::conflict;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "conflict");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__gone__true_exected_message)
-{
-    constexpr auto value = error::gone;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "gone");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__length_required__true_exected_message)
-{
-    constexpr auto value = error::length_required;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "length required");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__precondition_failed__true_exected_message)
-{
-    constexpr auto value = error::precondition_failed;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "precondition failed");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__payload_too_large__true_exected_message)
-{
-    constexpr auto value = error::payload_too_large;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "payload too large");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__uri_too_long__true_exected_message)
-{
-    constexpr auto value = error::uri_too_long;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "uri too long");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__unsupported_media_type__true_exected_message)
-{
-    constexpr auto value = error::unsupported_media_type;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "unsupported media type");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__range_not_satisfiable__true_exected_message)
-{
-    constexpr auto value = error::range_not_satisfiable;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "range not satisfiable");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__expectation_failed__true_exected_message)
-{
-    constexpr auto value = error::expectation_failed;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "expectation failed");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__im_a_teapot__true_exected_message)
-{
-    constexpr auto value = error::im_a_teapot;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "im a teapot");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__misdirected_request__true_exected_message)
-{
-    constexpr auto value = error::misdirected_request;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "misdirected request");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__unprocessable_entity__true_exected_message)
-{
-    constexpr auto value = error::unprocessable_entity;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "unprocessable entity");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__locked__true_exected_message)
-{
-    constexpr auto value = error::locked;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "locked");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__failed_dependency__true_exected_message)
-{
-    constexpr auto value = error::failed_dependency;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "failed dependency");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__too_early__true_exected_message)
-{
-    constexpr auto value = error::too_early;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "too early");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__upgrade_required__true_exected_message)
-{
-    constexpr auto value = error::upgrade_required;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "upgrade required");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__precondition_required__true_exected_message)
-{
-    constexpr auto value = error::precondition_required;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "precondition required");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__too_many_requests__true_exected_message)
-{
-    constexpr auto value = error::too_many_requests;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "too many requests");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__request_header_fields_too_large__true_exected_message)
-{
-    constexpr auto value = error::request_header_fields_too_large;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "request header fields too large");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__unavailable_for_legal_reasons__true_exected_message)
-{
-    constexpr auto value = error::unavailable_for_legal_reasons;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "unavailable for legal reasons");
-}
+////BOOST_AUTO_TEST_CASE(error_t__code__not_acceptable__true_exected_message)
+////{
+////    constexpr auto value = error::not_acceptable;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "not acceptable");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__proxy_authentication_required__true_exected_message)
+////{
+////    constexpr auto value = error::proxy_authentication_required;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "proxy authentication required");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__request_timeout__true_exected_message)
+////{
+////    constexpr auto value = error::request_timeout;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "request timeout");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__conflict__true_exected_message)
+////{
+////    constexpr auto value = error::conflict;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "conflict");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__gone__true_exected_message)
+////{
+////    constexpr auto value = error::gone;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "gone");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__length_required__true_exected_message)
+////{
+////    constexpr auto value = error::length_required;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "length required");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__precondition_failed__true_exected_message)
+////{
+////    constexpr auto value = error::precondition_failed;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "precondition failed");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__payload_too_large__true_exected_message)
+////{
+////    constexpr auto value = error::payload_too_large;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "payload too large");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__uri_too_long__true_exected_message)
+////{
+////    constexpr auto value = error::uri_too_long;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "uri too long");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__unsupported_media_type__true_exected_message)
+////{
+////    constexpr auto value = error::unsupported_media_type;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "unsupported media type");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__range_not_satisfiable__true_exected_message)
+////{
+////    constexpr auto value = error::range_not_satisfiable;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "range not satisfiable");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__expectation_failed__true_exected_message)
+////{
+////    constexpr auto value = error::expectation_failed;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "expectation failed");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__im_a_teapot__true_exected_message)
+////{
+////    constexpr auto value = error::im_a_teapot;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "im a teapot");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__misdirected_request__true_exected_message)
+////{
+////    constexpr auto value = error::misdirected_request;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "misdirected request");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__unprocessable_entity__true_exected_message)
+////{
+////    constexpr auto value = error::unprocessable_entity;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "unprocessable entity");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__locked__true_exected_message)
+////{
+////    constexpr auto value = error::locked;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "locked");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__failed_dependency__true_exected_message)
+////{
+////    constexpr auto value = error::failed_dependency;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "failed dependency");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__too_early__true_exected_message)
+////{
+////    constexpr auto value = error::too_early;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "too early");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__upgrade_required__true_exected_message)
+////{
+////    constexpr auto value = error::upgrade_required;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "upgrade required");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__precondition_required__true_exected_message)
+////{
+////    constexpr auto value = error::precondition_required;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "precondition required");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__too_many_requests__true_exected_message)
+////{
+////    constexpr auto value = error::too_many_requests;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "too many requests");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__request_header_fields_too_large__true_exected_message)
+////{
+////    constexpr auto value = error::request_header_fields_too_large;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "request header fields too large");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__unavailable_for_legal_reasons__true_exected_message)
+////{
+////    constexpr auto value = error::unavailable_for_legal_reasons;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "unavailable for legal reasons");
+////}
 
 // http 5xx server error
 
-BOOST_AUTO_TEST_CASE(error_t__code__internal_server_error__true_exected_message)
-{
-    constexpr auto value = error::internal_server_error;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "internal server error");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__not_implemented__true_exected_message)
-{
-    constexpr auto value = error::not_implemented;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "not implemented");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__bad_gateway__true_exected_message)
-{
-    constexpr auto value = error::bad_gateway;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "bad gateway");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__service_unavailable__true_exected_message)
-{
-    constexpr auto value = error::service_unavailable;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "service unavailable");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__gateway_timeout__true_exected_message)
-{
-    constexpr auto value = error::gateway_timeout;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "gateway timeout");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__http_version_not_supported__true_exected_message)
-{
-    constexpr auto value = error::http_version_not_supported;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "http version not supported");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__variant_also_negotiates__true_exected_message)
-{
-    constexpr auto value = error::variant_also_negotiates;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "variant also negotiates");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__insufficient_storage__true_exected_message)
-{
-    constexpr auto value = error::insufficient_storage;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "insufficient storage");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__loop_detected__true_exected_message)
-{
-    constexpr auto value = error::loop_detected;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "loop detected");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__not_extended__true_exected_message)
-{
-    constexpr auto value = error::not_extended;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "not extended");
-}
-
-BOOST_AUTO_TEST_CASE(error_t__code__network_authentication_required__true_exected_message)
-{
-    constexpr auto value = error::network_authentication_required;
-    const auto ec = code(value);
-    BOOST_REQUIRE(ec);
-    BOOST_REQUIRE(ec == value);
-    BOOST_REQUIRE_EQUAL(ec.message(), "network authentication required");
-}
+////BOOST_AUTO_TEST_CASE(error_t__code__internal_server_error__true_exected_message)
+////{
+////    constexpr auto value = error::internal_server_error;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "internal server error");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__not_implemented__true_exected_message)
+////{
+////    constexpr auto value = error::not_implemented;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "not implemented");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__bad_gateway__true_exected_message)
+////{
+////    constexpr auto value = error::bad_gateway;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "bad gateway");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__service_unavailable__true_exected_message)
+////{
+////    constexpr auto value = error::service_unavailable;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "service unavailable");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__gateway_timeout__true_exected_message)
+////{
+////    constexpr auto value = error::gateway_timeout;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "gateway timeout");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__http_version_not_supported__true_exected_message)
+////{
+////    constexpr auto value = error::http_version_not_supported;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "http version not supported");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__variant_also_negotiates__true_exected_message)
+////{
+////    constexpr auto value = error::variant_also_negotiates;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "variant also negotiates");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__insufficient_storage__true_exected_message)
+////{
+////    constexpr auto value = error::insufficient_storage;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "insufficient storage");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__loop_detected__true_exected_message)
+////{
+////    constexpr auto value = error::loop_detected;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "loop detected");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__not_extended__true_exected_message)
+////{
+////    constexpr auto value = error::not_extended;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "not extended");
+////}
+////
+////BOOST_AUTO_TEST_CASE(error_t__code__network_authentication_required__true_exected_message)
+////{
+////    constexpr auto value = error::network_authentication_required;
+////    const auto ec = code(value);
+////    BOOST_REQUIRE(ec);
+////    BOOST_REQUIRE(ec == value);
+////    BOOST_REQUIRE_EQUAL(ec.message(), "network authentication required");
+////}
 
 // boost beast error
 

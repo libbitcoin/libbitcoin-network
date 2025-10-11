@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_METHOD_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/messages/rpc/enums/verb.hpp>
 
  /// Type-differentiation for request message distribution.
 
@@ -54,22 +54,22 @@ struct method_ptr
 };
 
 
-template <http::verb Verb>
+template <verb Verb>
 struct method_alias : public method_ptr
 {
     /// May differ from from ptr->method() (e.g. verb::unknown).
-    static constexpr http::verb method = Verb;
+    static constexpr verb method = Verb;
 };
 
-using get     = method_alias<http::verb::get>;
-using head    = method_alias<http::verb::head>;
-using post    = method_alias<http::verb::post>;
-using put     = method_alias<http::verb::put>;
-using delete_ = method_alias<http::verb::delete_>;
-using trace   = method_alias<http::verb::trace>;
-using options = method_alias<http::verb::options>;
-using connect = method_alias<http::verb::connect>;
-using unknown = method_alias<http::verb::unknown>;
+using get     = method_alias<verb::get>;
+using head    = method_alias<verb::head>;
+using post    = method_alias<verb::post>;
+using put     = method_alias<verb::put>;
+using delete_ = method_alias<verb::delete_>;
+using trace   = method_alias<verb::trace>;
+using options = method_alias<verb::options>;
+using connect = method_alias<verb::connect>;
+using unknown = method_alias<verb::unknown>;
 
 } // namespace method
 } // namespace rpc

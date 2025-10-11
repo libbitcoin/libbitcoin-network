@@ -16,19 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_ASYNC_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_ASYNC_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_VERB_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_VERB_HPP
 
-#include <bitcoin/network/async/asio.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/async/beast.hpp>
-#include <bitcoin/network/async/desubscriber.hpp>
-#include <bitcoin/network/async/enable_shared_from_base.hpp>
-#include <bitcoin/network/async/handlers.hpp>
-#include <bitcoin/network/async/races/races.hpp>
-#include <bitcoin/network/async/subscriber.hpp>
-#include <bitcoin/network/async/thread.hpp>
-#include <bitcoin/network/async/threadpool.hpp>
-#include <bitcoin/network/async/time.hpp>
-#include <bitcoin/network/async/unsubscriber.hpp>
+
+namespace libbitcoin {
+namespace network {
+namespace messages {
+namespace rpc {
+
+/// Verbs are aliased to beast boost define.
+using verb = http::verb;
+
+} // namespace rpc
+} // namespace messages
+} // namespace network
+} // namespace libbitcoin
 
 #endif

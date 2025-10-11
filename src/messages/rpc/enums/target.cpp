@@ -236,44 +236,6 @@ http_file get_file_body(const std::filesystem::path& path) NOEXCEPT
     return file;
 }
 
-BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-const std::string& get_mime_type(const std::filesystem::path& path) NOEXCEPT
-{
-    static const std::string default_type{ "application/octet-stream" };
-    static const std::unordered_map<std::string, std::string> types
-    {
-        { ".html",  "text/html" },
-        { ".htm",   "text/html" },
-        { ".css",   "text/css" },
-        { ".js",    "application/javascript" },
-        { ".json",  "application/json" },
-        { ".xml",   "application/xml" },
-        { ".txt",   "text/plain" },
-        { ".png",   "image/png" },
-        { ".jpg",   "image/jpeg" },
-        { ".jpeg",  "image/jpeg" },
-        { ".gif",   "image/gif" },
-        { ".svg",   "image/svg+xml" },
-        { ".ico",   "image/x-icon" },
-        { ".pdf",   "application/pdf" },
-        { ".zip",   "application/zip" },
-        { ".mp4",   "video/mp4" },
-        { ".mp3",   "audio/mpeg" },
-        { ".woff",  "font/woff" },
-        { ".woff2", "font/woff2" }
-    };
-
-    if (!path.has_extension())
-        return default_type;
-
-    using namespace system;
-    const auto type = types.find(ascii_to_lower(path.extension().string()));
-    return type != types.end() ? type->second : default_type;
-}
-
-BC_POP_WARNING()
-
 } // namespace rpc
 } // namespace messages
 } // namespace network

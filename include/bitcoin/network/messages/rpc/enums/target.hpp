@@ -16,12 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_TARGET_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_TARGET_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_TARGET_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_TARGET_HPP
 
 #include <filesystem>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/async/beast.hpp>
+#include <bitcoin/network/messages/rpc/enums/verb.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -53,7 +54,7 @@ BCT_API bool is_authority_form(const std::string& target) NOEXCEPT;
 BCT_API bool is_asterisk_form(const std::string& target) NOEXCEPT;
 
 /// Validate method against target and return enumerated type of target.
-BCT_API target to_target(const std::string& value, http::verb method) NOEXCEPT;
+BCT_API target to_target(const std::string& value, verb method) NOEXCEPT;
 
 /// True if string characters are considered safe for file system mapping.
 BCT_API bool is_safe_target(const std::string& target) NOEXCEPT;
@@ -69,11 +70,6 @@ BCT_API std::filesystem::path sanitize_origin(
 /// Returned file is closed if failed.
 /// Sanitize base/target to ensure it remains strictly within base.
 BCT_API http_file get_file_body(const std::filesystem::path&) NOEXCEPT;
-
-/// Defaults to "application/octet-stream".
-/// Return mime type (e.g. "image/jpeg") for given file system path.
-BCT_API const std::string& get_mime_type(
-    const std::filesystem::path& path) NOEXCEPT;
 
 } // namespace rpc
 } // namespace messages
