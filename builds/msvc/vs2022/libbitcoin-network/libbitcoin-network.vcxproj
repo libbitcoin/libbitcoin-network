@@ -179,6 +179,7 @@
     <ClCompile Include="..\..\..\..\src\messages\p2p\version.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\version_acknowledge.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\p2p\witness_tx_id_relay.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\mime_type.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\rpc\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\src\net.cpp" />
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
@@ -221,6 +222,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\asio.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\beast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
@@ -299,6 +301,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\p2p\version_acknowledge.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\p2p\witness_tx_id_relay.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\magic_numbers.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\mime_type.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\target.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\method.hpp" />

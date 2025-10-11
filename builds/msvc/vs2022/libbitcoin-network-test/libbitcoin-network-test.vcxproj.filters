@@ -252,6 +252,9 @@
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\magic_numbers.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\rpc\enums\mime_type.cpp">
+      <Filter>src\messages\rpc\enums</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\rpc\enums\target.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>

@@ -91,6 +91,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/p2p/version.cpp \
     src/messages/p2p/version_acknowledge.cpp \
     src/messages/p2p/witness_tx_id_relay.cpp \
+    src/messages/rpc/enums/mime_type.cpp \
     src/messages/rpc/enums/target.cpp \
     src/net/acceptor.cpp \
     src/net/broadcaster.cpp \
@@ -210,6 +211,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/p2p/enums/service.cpp \
     test/messages/rpc/method.cpp \
     test/messages/rpc/enums/magic_numbers.cpp \
+    test/messages/rpc/enums/mime_type.cpp \
     test/messages/rpc/enums/target.cpp \
     test/net/acceptor.cpp \
     test/net/broadcaster.cpp \
@@ -266,6 +268,7 @@ include_bitcoin_network_asyncdir = ${includedir}/bitcoin/network/async
 include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/asio.hpp \
     include/bitcoin/network/async/async.hpp \
+    include/bitcoin/network/async/beast.hpp \
     include/bitcoin/network/async/desubscriber.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
     include/bitcoin/network/async/handlers.hpp \
@@ -377,6 +380,7 @@ include_bitcoin_network_messages_rpc_HEADERS = \
 include_bitcoin_network_messages_rpc_enumsdir = ${includedir}/bitcoin/network/messages/rpc/enums
 include_bitcoin_network_messages_rpc_enums_HEADERS = \
     include/bitcoin/network/messages/rpc/enums/magic_numbers.hpp \
+    include/bitcoin/network/messages/rpc/enums/mime_type.hpp \
     include/bitcoin/network/messages/rpc/enums/target.hpp
 
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net

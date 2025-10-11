@@ -70,11 +70,6 @@ BCT_API std::filesystem::path sanitize_origin(
 /// Sanitize base/target to ensure it remains strictly within base.
 BCT_API http_file get_file_body(const std::filesystem::path&) NOEXCEPT;
 
-/// Defaults to "application/octet-stream".
-/// Return mime type (e.g. "image/jpeg") for given file system path.
-BCT_API const std::string& get_mime_type(
-    const std::filesystem::path& path) NOEXCEPT;
-
 } // namespace rpc
 } // namespace messages
 } // namespace network

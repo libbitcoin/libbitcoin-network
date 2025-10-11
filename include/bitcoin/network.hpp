@@ -25,6 +25,7 @@
 #include <bitcoin/network/version.hpp>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/async/beast.hpp>
 #include <bitcoin/network/async/desubscriber.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/handlers.hpp>
@@ -100,6 +101,7 @@
 #include <bitcoin/network/messages/rpc/messages.hpp>
 #include <bitcoin/network/messages/rpc/method.hpp>
 #include <bitcoin/network/messages/rpc/enums/magic_numbers.hpp>
+#include <bitcoin/network/messages/rpc/enums/mime_type.hpp>
 #include <bitcoin/network/messages/rpc/enums/target.hpp>
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/broadcaster.hpp>
