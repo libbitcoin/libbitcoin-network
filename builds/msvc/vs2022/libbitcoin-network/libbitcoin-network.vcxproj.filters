@@ -626,6 +626,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\mime_type.hpp">
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\status.hpp">
+      <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\target.hpp">
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
     </ClInclude>

@@ -20,6 +20,8 @@
 
 BOOST_AUTO_TEST_SUITE(distributor_client_tests)
 
+using namespace http;
+
 BOOST_AUTO_TEST_CASE(distributor_client__construct__stop__stops)
 {
     threadpool pool(2);
@@ -49,7 +51,6 @@ BOOST_AUTO_TEST_CASE(distributor_client__subscribe__stop__expected_code)
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        using namespace messages::rpc;
         instance.subscribe([&](const code& ec, const method::get& request) NOEXCEPT
         {
             // Stop notification has nullptr message and specified code.
@@ -81,7 +82,6 @@ BOOST_AUTO_TEST_CASE(distributor_client__notify__null_message__null_unknown_with
     std::promise<code> promise{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        using namespace messages::rpc;
         instance.subscribe([&](const code& ec, const method::unknown& request) NOEXCEPT
         {
             // Skip stop notification (unavoidable test condition).
@@ -124,13 +124,12 @@ BOOST_AUTO_TEST_CASE(distributor_client__notify__get_message__expected_method)
     std::promise<code> promise{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        using namespace messages::rpc;
         instance.subscribe([&](const code& ec, const method::get& request) NOEXCEPT
         {
             // Skip stop notification (unavoidable test condition).
             if (!set)
             {
-                result = (request->method() == http::verb::get);
+                result = (request->method() == verb::get);
                 promise.set_value(ec);
                 set = true;
             }
@@ -142,7 +141,7 @@ BOOST_AUTO_TEST_CASE(distributor_client__notify__get_message__expected_method)
     // Notify with get request.
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.notify(std::make_shared<http_string_request>(http::verb::get, "/", 11));
+        instance.notify(std::make_shared<string_request>(verb::get, "/", 11));
     });
 
     boost::asio::post(strand, [&]() NOEXCEPT

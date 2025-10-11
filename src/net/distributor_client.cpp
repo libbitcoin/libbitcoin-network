@@ -31,7 +31,7 @@ using namespace system;
 #define MAKE_SUBSCRIBER(name) SUBSCRIBER(name)(strand)
 #define STOP_SUBSCRIBER(name) SUBSCRIBER(name).stop_default(ec)
 #define DO_NOTIFY(ec, name) \
-    do_notify(ec, SUBSCRIBER(name), messages::rpc::method::name{ request });
+    do_notify(ec, SUBSCRIBER(name), http::method::name{ request });
 #define CASE_NOTIFY(ec, name) \
     case http::verb::name: { DO_NOTIFY(ec, name); return; }
 
@@ -49,7 +49,7 @@ distributor_client::distributor_client(asio::strand& strand) NOEXCEPT
 }
 
 void distributor_client::notify(
-    const http_string_request_cptr& request) const NOEXCEPT
+    const http::string_request_cptr& request) const NOEXCEPT
 {
     if (!request)
     {

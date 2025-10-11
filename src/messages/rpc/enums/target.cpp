@@ -26,13 +26,9 @@
 
 namespace libbitcoin {
 namespace network {
-namespace messages {
-namespace rpc {
+namespace http {
 
-using namespace boost::urls;
-using namespace boost::beast::http;
-
-// This is sub1(size_t)!
+// This is sub1(size_t)! so we use an internal define (e.g. 1kb).
 ////constexpr auto max_url = boost::url_view::max_size();
 
 bool is_origin_form(const std::string& target) NOEXCEPT
@@ -47,9 +43,9 @@ bool is_origin_form(const std::string& target) NOEXCEPT
     try
     {
         // "/index.html?field=value" (no authority).
-        return !parse_origin_form(target).has_error();
+        return !boost::urls::parse_origin_form(target).has_error();
     }
-    catch (const std::exception&)
+    catch (...)
     {
         // target.size() > url_view::max_size.
         return false;
@@ -64,15 +60,16 @@ bool is_absolute_form(const std::string& target) NOEXCEPT
     try
     {
         // "scheme://www.boost.org/index.html?field=value" (no fragment).
-        const auto uri = parse_absolute_uri(target);
+        const auto uri = boost::urls::parse_absolute_uri(target);
         if (uri.has_error())
             return false;
 
         // Limit to http/s.
         const auto scheme = uri->scheme_id();
-        return scheme == scheme::http || scheme == scheme::https;
+        return scheme == boost::urls::scheme::http
+            || scheme == boost::urls::scheme::https;
     }
-    catch (const std::exception&)
+    catch (...)
     {
         // target.size() > url_view::max_size.
         return false;
@@ -91,7 +88,8 @@ bool is_authority_form(const std::string& target) NOEXCEPT
 
     // "[ userinfo "@" ] host [ ":" port ]"
     const auto at = std::next(target.begin(), two);
-    return !parse_authority(std::string_view{ at, target.end() }).has_error();
+    const auto authority = std::string_view{ at, target.end() };
+    return !boost::urls::parse_authority(authority).has_error();
 }
 
 // Used for OPTIONS method.
@@ -214,12 +212,12 @@ std::filesystem::path sanitize_origin(const std::filesystem::path& base,
     return {};
 }
 
-http_file get_file_body(const std::filesystem::path& path) NOEXCEPT
+http::file get_file_body(const std::filesystem::path& path) NOEXCEPT
 {
     using namespace system;
     using namespace boost::beast;
 
-    // http_file::open accepts a "utf-8 encoded path to the file" on win32.
+    // http::file::open accepts a "utf-8 encoded path to the file" on win32.
     const auto utf8_path = from_path(path);
     http::file_body::value_type file{};
 
@@ -236,7 +234,6 @@ http_file get_file_body(const std::filesystem::path& path) NOEXCEPT
     return file;
 }
 
-} // namespace rpc
-} // namespace messages
+} // namespace http
 } // namespace network
 } // namespace libbitcoin

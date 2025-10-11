@@ -25,8 +25,7 @@
 
 namespace libbitcoin {
 namespace network {
-namespace messages {
-namespace rpc {
+namespace http {
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
@@ -148,7 +147,6 @@ mime_type file_mime_type(const std::filesystem::path& path,
 
 BC_POP_WARNING()
 
-} // namespace rpc
-} // namespace messages
+} // namespace http
 } // namespace network
 } // namespace libbitcoin

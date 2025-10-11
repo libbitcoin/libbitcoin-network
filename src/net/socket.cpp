@@ -157,7 +157,7 @@ void socket::write(const asio::const_buffer& in,
 // HTTP I/O.
 // ----------------------------------------------------------------------------
 
-void socket::http_read(http_flat_buffer& buffer, http_string_request& request,
+void socket::http_read(http::flat_buffer& buffer, http::string_request& request,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
@@ -165,7 +165,7 @@ void socket::http_read(http_flat_buffer& buffer, http_string_request& request,
             std::ref(buffer), std::ref(request), std::move(handler)));
 }
 
-void socket::http_read(http_string_request& request,
+void socket::http_read(http::string_request& request,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
@@ -173,7 +173,7 @@ void socket::http_read(http_string_request& request,
             std::ref(request), std::move(handler)));
 }
 
-void socket::http_write(const http_string_response& response,
+void socket::http_write(const http::string_response& response,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
@@ -181,7 +181,7 @@ void socket::http_write(const http_string_response& response,
             shared_from_this(), std::cref(response), std::move(handler)));
 }
 
-void socket::http_write(const http_data_response& response,
+void socket::http_write(const http::data_response& response,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
@@ -189,7 +189,7 @@ void socket::http_write(const http_data_response& response,
             shared_from_this(), std::cref(response), std::move(handler)));
 }
 
-void socket::http_write(http_file_response& response,
+void socket::http_write(http::file_response& response,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
@@ -282,8 +282,8 @@ void socket::do_write(const asio::const_buffer& in,
 // ----------------------------------------------------------------------------
 
 void socket::do_http_read_string_buffered(
-    const std::reference_wrapper<http_flat_buffer>& buffer,
-    const std::reference_wrapper<http_string_request>& request,
+    const std::reference_wrapper<http::flat_buffer>& buffer,
+    const std::reference_wrapper<http::string_request>& request,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -309,13 +309,13 @@ void socket::do_http_read_string_buffered(
 }
 
 void socket::do_http_read_string(
-    const std::reference_wrapper<http_string_request>& request,
+    const std::reference_wrapper<http::string_request>& request,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Performance: a temporary buffer is allocated for each request.
-    const auto buffer = std::make_shared<http_flat_buffer>();
+    const auto buffer = std::make_shared<http::flat_buffer>();
     auto complete = [=](const code& ec, size_t size) NOEXCEPT
     {
         buffer->consume(size);
@@ -337,7 +337,7 @@ void socket::do_http_read_string(
 }
 
 void socket::do_http_write_string(
-    const std::reference_wrapper<const http_string_response>& response,
+    const std::reference_wrapper<const http::string_response>& response,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -357,7 +357,7 @@ void socket::do_http_write_string(
 }
 
 void socket::do_http_write_data(
-    const std::reference_wrapper<const http_data_response>& response,
+    const std::reference_wrapper<const http::data_response>& response,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -377,12 +377,12 @@ void socket::do_http_write_data(
 }
 
 void socket::do_http_write_file(
-    const std::reference_wrapper<http_file_response>& response,
+    const std::reference_wrapper<http::file_response>& response,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    const auto writer = std::make_shared<http_file_serializer>(response.get());
+    const auto writer = std::make_shared<http::file_serializer>(response.get());
     auto complete = [writer, handler](const code& ec, size_t size) NOEXCEPT
     {
         handler(ec, size);

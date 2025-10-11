@@ -307,62 +307,62 @@ code asio_to_error_code(const error::boost_code& ec) NOEXCEPT
 
 code beast_to_error_code(const error::boost_code& ec) NOEXCEPT
 {
-    using namespace boost::beast;
+    namespace beast = boost::beast::http;
 
     if (!ec)
         return {};
 
-    if (ec == http::error::end_of_stream)
+    if (ec == beast::error::end_of_stream)
         return error::end_of_stream;
-    if (ec == http::error::partial_message)
+    if (ec == beast::error::partial_message)
         return error::partial_message;
-    if (ec == http::error::need_more)
+    if (ec == beast::error::need_more)
         return error::need_more;
-    if (ec == http::error::unexpected_body)
+    if (ec == beast::error::unexpected_body)
         return error::unexpected_body;
-    if (ec == http::error::need_buffer)
+    if (ec == beast::error::need_buffer)
         return error::need_buffer;
-    if (ec == http::error::end_of_chunk)
+    if (ec == beast::error::end_of_chunk)
         return error::end_of_chunk;
-    if (ec == http::error::buffer_overflow)
+    if (ec == beast::error::buffer_overflow)
         return error::buffer_overflow;
-    if (ec == http::error::header_limit)
+    if (ec == beast::error::header_limit)
         return error::header_limit;
-    if (ec == http::error::body_limit)
+    if (ec == beast::error::body_limit)
         return error::body_limit;
-    if (ec == http::error::bad_alloc)
+    if (ec == beast::error::bad_alloc)
         return error::bad_alloc;
-    if (ec == http::error::bad_line_ending)
+    if (ec == beast::error::bad_line_ending)
         return error::bad_line_ending;
-    if (ec == http::error::bad_method)
+    if (ec == beast::error::bad_method)
         return error::bad_method;
-    if (ec == http::error::bad_target)
+    if (ec == beast::error::bad_target)
         return error::bad_target;
-    if (ec == http::error::bad_version)
+    if (ec == beast::error::bad_version)
         return error::bad_version;
-    if (ec == http::error::bad_status)
+    if (ec == beast::error::bad_status)
         return error::bad_status;
-    if (ec == http::error::bad_reason)
+    if (ec == beast::error::bad_reason)
         return error::bad_reason;
-    if (ec == http::error::bad_field)
+    if (ec == beast::error::bad_field)
         return error::bad_field;
-    if (ec == http::error::bad_value)
+    if (ec == beast::error::bad_value)
         return error::bad_value;
-    if (ec == http::error::bad_content_length)
+    if (ec == beast::error::bad_content_length)
         return error::bad_content_length;
-    if (ec == http::error::bad_transfer_encoding)
+    if (ec == beast::error::bad_transfer_encoding)
         return error::bad_transfer_encoding;
-    if (ec == http::error::bad_chunk)
+    if (ec == beast::error::bad_chunk)
         return error::bad_chunk;
-    if (ec == http::error::bad_chunk_extension)
+    if (ec == beast::error::bad_chunk_extension)
         return error::bad_chunk_extension;
-    if (ec == http::error::bad_obs_fold)
+    if (ec == beast::error::bad_obs_fold)
         return error::bad_obs_fold;
-    if (ec == http::error::multiple_content_length)
+    if (ec == beast::error::multiple_content_length)
         return error::multiple_content_length;
-    if (ec == http::error::stale_parser)
+    if (ec == beast::error::stale_parser)
         return error::stale_parser;
-    if (ec == http::error::short_read)
+    if (ec == beast::error::short_read)
         return error::short_read;
 
     return asio_to_error_code(ec);

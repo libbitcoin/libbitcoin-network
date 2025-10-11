@@ -49,31 +49,31 @@ protected:
 
     /// Message handlers by http method.
     virtual void handle_receive_get(const code& ec,
-        const messages::rpc::method::get& request) NOEXCEPT;
+        const http::method::get& request) NOEXCEPT;
     virtual void handle_receive_head(const code& ec,
-        const messages::rpc::method::head& request) NOEXCEPT;
+        const http::method::head& request) NOEXCEPT;
     virtual void handle_receive_post(const code& ec,
-        const messages::rpc::method::post& request) NOEXCEPT;
+        const http::method::post& request) NOEXCEPT;
     virtual void handle_receive_put(const code& ec,
-        const messages::rpc::method::put& request) NOEXCEPT;
+        const http::method::put& request) NOEXCEPT;
     virtual void handle_receive_delete(const code& ec,
-        const messages::rpc::method::delete_& request) NOEXCEPT;
+        const http::method::delete_& request) NOEXCEPT;
     virtual void handle_receive_trace(const code& ec,
-        const messages::rpc::method::trace& request) NOEXCEPT;
+        const http::method::trace& request) NOEXCEPT;
     virtual void handle_receive_options(const code& ec,
-        const messages::rpc::method::options& request) NOEXCEPT;
+        const http::method::options& request) NOEXCEPT;
     virtual void handle_receive_connect(const code& ec,
-        const messages::rpc::method::connect& request) NOEXCEPT;
+        const http::method::connect& request) NOEXCEPT;
     virtual void handle_receive_unknown(const code& ec,
-        const messages::rpc::method::unknown& request) NOEXCEPT;
+        const http::method::unknown& request) NOEXCEPT;
 
-    virtual void send_file(const http_string_request& request,
-        http_file&& file, http_mime_type type) NOEXCEPT;
-    virtual void send_bad_host(const http_string_request& request) NOEXCEPT;
-    virtual void send_not_found(const http_string_request& request) NOEXCEPT;
-    virtual void send_forbidden(const http_string_request& request) NOEXCEPT;
-    virtual void send_bad_target(const http_string_request& request) NOEXCEPT;
-    virtual void send_method_not_allowed(const http_string_request& request,
+    virtual void send_file(const http::string_request& request,
+        http::file&& file, http::mime_type type) NOEXCEPT;
+    virtual void send_bad_host(const http::string_request& request) NOEXCEPT;
+    virtual void send_not_found(const http::string_request& request) NOEXCEPT;
+    virtual void send_forbidden(const http::string_request& request) NOEXCEPT;
+    virtual void send_bad_target(const http::string_request& request) NOEXCEPT;
+    virtual void send_method_not_allowed(const http::string_request& request,
         const code& ec) NOEXCEPT;
 
     /// Request handler MUST invoke one of these unless stopped(ec).
@@ -87,8 +87,8 @@ protected:
 private:
     std::filesystem::path to_local_path(
         const std::string& target) const NOEXCEPT;
-    void add_common_headers(http_fields& fields,
-        const http_string_request& request,
+    void add_common_headers(http::fields& fields,
+        const http::string_request& request,
         bool closing=false) const NOEXCEPT;
     bool is_allowed_origin(const std::string& origin,
         size_t version) const NOEXCEPT;

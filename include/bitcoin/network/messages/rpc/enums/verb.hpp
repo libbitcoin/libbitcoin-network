@@ -20,18 +20,15 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_RPC_ENUMS_VERB_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/async/beast.hpp>
 
 namespace libbitcoin {
 namespace network {
-namespace messages {
-namespace rpc {
+namespace http {
 
-/// Verbs are aliased to beast boost define.
-using verb = http::verb;
+/// Verb is aliased to beast boost define.
+using verb = boost::beast::http::verb;
 
-} // namespace rpc
-} // namespace messages
+} // namespace http
 } // namespace network
 } // namespace libbitcoin
 

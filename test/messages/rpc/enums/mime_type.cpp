@@ -19,7 +19,7 @@
 #include "../../../test.hpp"
 
 using namespace system;
-using namespace network::messages::rpc;
+using namespace network::http;
 
 BOOST_AUTO_TEST_SUITE(mime_type_tests)
 

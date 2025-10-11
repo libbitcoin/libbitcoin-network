@@ -86,23 +86,23 @@ public:
     /// -----------------------------------------------------------------------
 
     /// Read full http string request from the socket, reusing provided buffer.
-    virtual void http_read(http_flat_buffer& buffer,
-        http_string_request& request, count_handler&& handler) NOEXCEPT;
+    virtual void http_read(http::flat_buffer& buffer,
+        http::string_request& request, count_handler&& handler) NOEXCEPT;
 
     /// Read full http string request from the socket, using temporary buffer.
-    virtual void http_read(http_string_request& request,
+    virtual void http_read(http::string_request& request,
         count_handler&& handler) NOEXCEPT;
 
     /// Write full http string response to the socket.
-    virtual void http_write(const http_string_response& response,
+    virtual void http_write(const http::string_response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Write full http data response to the socket.
-    virtual void http_write(const http_data_response& response,
+    virtual void http_write(const http::data_response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Write full http file response to the socket (mutable response).
-    virtual void http_write(http_file_response& response,
+    virtual void http_write(http::file_response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Properties.
@@ -146,20 +146,20 @@ private:
         const count_handler& handler) NOEXCEPT;
 
     void do_http_read_string_buffered(
-        const std::reference_wrapper<http_flat_buffer>& buffer,
-        const std::reference_wrapper<http_string_request>& request,
+        const std::reference_wrapper<http::flat_buffer>& buffer,
+        const std::reference_wrapper<http::string_request>& request,
         const count_handler& handler) NOEXCEPT;
     void do_http_read_string(
-        const std::reference_wrapper<http_string_request>& request,
+        const std::reference_wrapper<http::string_request>& request,
         const count_handler& handler) NOEXCEPT;
     void do_http_write_string(
-        const std::reference_wrapper<const http_string_response>& response,
+        const std::reference_wrapper<const http::string_response>& response,
         const count_handler& handler) NOEXCEPT;
     void do_http_write_data(
-        const std::reference_wrapper<const http_data_response>& response,
+        const std::reference_wrapper<const http::data_response>& response,
         const count_handler& handler) NOEXCEPT;
     void do_http_write_file(
-        const std::reference_wrapper<http_file_response>& response,
+        const std::reference_wrapper<http::file_response>& response,
         const count_handler& handler) NOEXCEPT;
 
     void handle_accept(const error::boost_code& ec,

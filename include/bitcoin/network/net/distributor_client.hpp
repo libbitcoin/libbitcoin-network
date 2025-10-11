@@ -30,9 +30,9 @@ namespace network {
 #define SUBSCRIBER(name) name##_subscriber_
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 #define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
-#define HANDLER(name) distributor_client::handler<messages::rpc::method::name>
+#define HANDLER(name) distributor_client::handler<http::method::name>
 #define DEFINE_SUBSCRIBER(name) \
-    using SUBSCRIBER_TYPE(name) = subscriber<const messages::rpc::method::name&>
+    using SUBSCRIBER_TYPE(name) = subscriber<const http::method::name&>
 #define SUBSCRIBER_OVERLOAD(name) \
     code do_subscribe(HANDLER(name)&& handler) NOEXCEPT \
     { return SUBSCRIBER(name).subscribe(std::forward<HANDLER(name)>(handler)); }
@@ -71,7 +71,7 @@ public:
 
     /// Relay a message instance to each subscriber of the request method.
     virtual void notify(
-        const http_string_request_cptr& request) const NOEXCEPT;
+        const http::string_request_cptr& request) const NOEXCEPT;
 
     /// Stop all subscribers, prevents subsequent subscription (idempotent).
     /// The subscriber is stopped regardless of the error code, however by
