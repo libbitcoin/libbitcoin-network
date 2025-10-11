@@ -68,7 +68,7 @@ protected:
         const messages::rpc::method::unknown& request) NOEXCEPT;
 
     virtual void send_file(const http_string_request& request,
-        http_file&& file, const std::string& mime_type) NOEXCEPT;
+        http_file&& file, http_mime_type type) NOEXCEPT;
     virtual void send_bad_host(const http_string_request& request) NOEXCEPT;
     virtual void send_not_found(const http_string_request& request) NOEXCEPT;
     virtual void send_forbidden(const http_string_request& request) NOEXCEPT;
@@ -79,6 +79,10 @@ protected:
     /// Request handler MUST invoke one of these unless stopped(ec).
     virtual void handle_complete(const code& ec,
         const code& reason) NOEXCEPT;
+
+    /// Override to replace error response pages.
+    virtual std::string error_page(const std::string& status,
+        const std::string& accepts) const NOEXCEPT;
 
 private:
     std::filesystem::path to_local_path(

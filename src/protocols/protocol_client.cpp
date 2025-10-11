@@ -20,6 +20,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <unordered_map>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
@@ -90,15 +91,15 @@ void protocol_client::start() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 void protocol_client::send_file(const http_string_request& request,
-    http_file&& file, const std::string& mime_type) NOEXCEPT
+    http_file&& file, mime_type type) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     BC_ASSERT_MSG(file.is_open(), "sending closed file handle");
 
     http_file_response response{ status::ok, request.version() };
-    add_common_headers(response.base(), request);
+    add_common_headers(response, request);
 
-    response.set(field::content_type, mime_type);
+    response.set(field::content_type, from_mime_type(type));
     response.body() = std::move(file);
     response.prepare_payload();
 
@@ -111,7 +112,7 @@ void protocol_client::send_not_found(
     BC_ASSERT_MSG(stranded(), "strand");
 
     http_string_response response{ status::not_found, request.version() };
-    add_common_headers(response.base(), request);
+    add_common_headers(response, request);
 
     // TODO: formatted response with matching content-type.
     const code reason{ error::not_found };
@@ -128,17 +129,11 @@ void protocol_client::send_forbidden(
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    const auto version = request.version();
-    http_string_response response{ status::forbidden, version };
-    add_common_headers(response.base(), request, true);
-
-    // TODO: formatted response with matching content-type.
-    const code reason{ error::forbidden };
-    response.body() += reason.message() + " : ";
-    response.body() += request[field::origin];
+    http_string_response response{ status::forbidden, request.version() };
+    add_common_headers(response, request, true);
+    response.body() = error_page(response.reason(), request[field::accept]);
     response.prepare_payload();
-
-    SEND(std::move(response), handle_complete, _1, reason);
+    SEND(std::move(response), handle_complete, _1, error::forbidden);
 }
 
 // Closes channel.
@@ -148,7 +143,7 @@ void protocol_client::send_bad_host(
     BC_ASSERT_MSG(stranded(), "strand");
 
     http_string_response response{ status::bad_request, request.version() };
-    add_common_headers(response.base(), request, true);
+    add_common_headers(response, request, true);
 
     // TODO: formatted response with matching content-type.
     const code reason{ error::bad_request };
@@ -166,7 +161,7 @@ void protocol_client::send_bad_target(
     BC_ASSERT_MSG(stranded(), "strand");
 
     http_string_response response{ status::bad_request, request.version() };
-    add_common_headers(response.base(), request, true);
+    add_common_headers(response, request, true);
 
     // TODO: formatted response with matching content-type.
     const code reason{ error::bad_request };
@@ -188,7 +183,7 @@ void protocol_client::send_method_not_allowed(
 
     const auto version = request.version();
     http_string_response response{ status::method_not_allowed, version };
-    add_common_headers(response.base(), request, true);
+    add_common_headers(response, request, true);
 
     // TODO: formatted response with matching content-type.
     const code reason{ error::method_not_allowed };
@@ -210,7 +205,7 @@ void protocol_client::handle_receive_get(const code& ec,
     if (stopped(ec))
         return;
 
-    // Enforce http origin policy (requries configured hosts).
+    // Enforce http origin policy (requires configured hosts).
     if (!is_allowed_origin((*request)[field::origin], request->version()))
     {
         send_forbidden(*request);
@@ -240,7 +235,7 @@ void protocol_client::handle_receive_get(const code& ec,
         return;
     }
 
-    send_file(*request, std::move(file), get_mime_type(path));
+    send_file(*request, std::move(file), file_mime_type(path));
 }
 
 // Handle disallowed-by-default methods (override to implement).
@@ -374,7 +369,7 @@ void protocol_client::add_common_headers(http_fields& fields,
 
     // origin (allow)
     // ------------------------------------------------------------------------
-    if (to_bool(request.base().count(field::origin)))
+    if (to_bool(request.count(field::origin)))
         fields.set(field::access_control_allow_origin, request[field::origin]);
 
     // connection (close or keep-alive)
@@ -398,6 +393,22 @@ void protocol_client::add_common_headers(http_fields& fields,
     // Remaining is zero if inactivity timer is expired (or not configured).
     if (const auto secs = remaining())
         fields.set(field::keep_alive, "timeout=" + serialize(secs));
+}
+
+// Error page generation.
+// ----------------------------------------------------------------------------
+
+std::string protocol_client::error_page(const std::string& status,
+    const std::string& accepts) const NOEXCEPT
+{
+    // Get the mime types (priority and encoding not considered).
+    const auto mime = to_mime_types(accepts);
+
+    // TODO: switch on supported mime types to formatted page.
+
+    std::ostringstream out{};
+    out << status;
+    return out.str();
 }
 
 BC_POP_WARNING()

@@ -261,6 +261,9 @@
     <ClCompile Include="..\..\..\..\src\messages\p2p\witness_tx_id_relay.cpp">
       <Filter>src\messages\p2p</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\mime_type.cpp">
+      <Filter>src\messages\rpc\enums</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\rpc\enums\target.cpp">
       <Filter>src\messages\rpc\enums</Filter>
     </ClCompile>
@@ -381,6 +384,9 @@
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp">
+      <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\beast.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp">
@@ -615,6 +621,9 @@
       <Filter>include\bitcoin\network\messages\p2p</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\magic_numbers.hpp">
+      <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\mime_type.hpp">
       <Filter>include\bitcoin\network\messages\rpc\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\target.hpp">
