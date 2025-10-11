@@ -73,14 +73,14 @@ struct BCT_API html_server
     /// Default page for default URL (recommended).
     std::string default_{ "index.html" };
 
-    /// !path.empty() && http_server::enabled() [hidden, not virtual]
-    bool enabled() const NOEXCEPT;
-
     /// Validated against origins if configured (recommended).
     config::endpoints origins{};
 
     /// Normalized origins.
     system::string_list origin_names() const NOEXCEPT;
+
+    /// !path.empty() && http_server::enabled() [hidden, not virtual]
+    bool enabled() const NOEXCEPT;
 };
 
 /// ---------------------------------------------------------------------------
