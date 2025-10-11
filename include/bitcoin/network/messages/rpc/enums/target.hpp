@@ -21,7 +21,8 @@
 
 #include <filesystem>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/async/beast.hpp>
+#include <bitcoin/network/messages/rpc/enums/verb.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -53,7 +54,7 @@ BCT_API bool is_authority_form(const std::string& target) NOEXCEPT;
 BCT_API bool is_asterisk_form(const std::string& target) NOEXCEPT;
 
 /// Validate method against target and return enumerated type of target.
-BCT_API target to_target(const std::string& value, http::verb method) NOEXCEPT;
+BCT_API target to_target(const std::string& value, verb method) NOEXCEPT;
 
 /// True if string characters are considered safe for file system mapping.
 BCT_API bool is_safe_target(const std::string& target) NOEXCEPT;

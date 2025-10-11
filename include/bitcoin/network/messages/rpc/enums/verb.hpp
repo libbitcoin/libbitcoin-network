@@ -16,13 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_RPC_MESSAGES_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_RPC_VERB_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_RPC_VERB_HPP
 
-#include <bitcoin/network/messages/rpc/enums/magic_numbers.hpp>
-#include <bitcoin/network/messages/rpc/enums/mime_type.hpp>
-#include <bitcoin/network/messages/rpc/enums/target.hpp>
-#include <bitcoin/network/messages/rpc/enums/verb.hpp>
-#include <bitcoin/network/messages/rpc/method.hpp>
+#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/async/beast.hpp>
+
+namespace libbitcoin {
+namespace network {
+namespace messages {
+namespace rpc {
+
+/// Verbs are aliased to beast boost define.
+using verb = http::verb;
+
+} // namespace rpc
+} // namespace messages
+} // namespace network
+} // namespace libbitcoin
 
 #endif

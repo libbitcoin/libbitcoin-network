@@ -303,6 +303,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\magic_numbers.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\mime_type.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\target.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\enums\verb.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\rpc\method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net.hpp" />
