@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/rpc/enums/mime_type.hpp>
+#include <bitcoin/network/messages/client/enums/mime_type.hpp>
 
 #include <algorithm>
 #include <unordered_map>

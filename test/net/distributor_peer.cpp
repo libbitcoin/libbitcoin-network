@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(distributor_peer__subscribe__stop__expected_code)
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, const messages::p2p::ping::cptr& ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::peer::ping::cptr& ping) NOEXCEPT
         {
             // Stop notification has nullptr message and specified code.
             result &= is_null(ping);
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(distributor_peer__notify__invalid_message__no_notification)
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, const messages::p2p::ping::cptr& ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::peer::ping::cptr& ping) NOEXCEPT
         {
             result &= is_null(ping);
             promise.set_value(ec);
@@ -96,10 +96,10 @@ BOOST_AUTO_TEST_CASE(distributor_peer__notify__invalid_message__no_notification)
     system::data_chunk empty{};
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        constexpr auto nonced_ping_version = messages::p2p::level::bip31;
+        constexpr auto nonced_ping_version = messages::peer::level::bip31;
 
         // This line throws and is caught internal to the low level stream.
-        const auto ec = instance.notify(messages::p2p::identifier::ping, nonced_ping_version, empty);
+        const auto ec = instance.notify(messages::peer::identifier::ping, nonced_ping_version, empty);
         result &= (ec == error::invalid_message);
     });
 
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(distributor_peer__notify__valid_message_invalid_version__no
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, const messages::p2p::ping::cptr& ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::peer::ping::cptr& ping) NOEXCEPT
         {
             result &= is_null(ping);
             promise.set_value(ec);
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(distributor_peer__notify__valid_message_invalid_version__no
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         constexpr uint32_t invalid_ping_version = 0;
-        const auto ec = instance.notify(messages::p2p::identifier::ping, invalid_ping_version, ping);
+        const auto ec = instance.notify(messages::peer::identifier::ping, invalid_ping_version, ping);
         result &= (ec == error::invalid_message);
     });
 
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(distributor_peer__notify__valid_nonced_ping__expected_notif
     std::promise<code> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.subscribe([&](const code& ec, const messages::p2p::ping::cptr& ping) NOEXCEPT
+        instance.subscribe([&](const code& ec, const messages::peer::ping::cptr& ping) NOEXCEPT
         {
             // Handle stop notification (unavoidable test condition).
             if (!ping)
@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE(distributor_peer__notify__valid_nonced_ping__expected_notif
     const auto ping = system::to_chunk(system::to_little_endian(expected_nonce));
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        constexpr auto nonced_ping_version = messages::p2p::level::bip31;
-        const auto ec = instance.notify(messages::p2p::identifier::ping, nonced_ping_version, ping);
+        constexpr auto nonced_ping_version = messages::peer::level::bip31;
+        const auto ec = instance.notify(messages::peer::identifier::ping, nonced_ping_version, ping);
         result &= (ec == error::success);
     });
 

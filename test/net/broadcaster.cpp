@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__subscribe__stop__expected_code)
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         sub_promise.set_value(instance.subscribe(
-            [&](const code& ec, const messages::p2p::ping::cptr& ping, broadcaster::channel_id id) NOEXCEPT
+            [&](const code& ec, const messages::peer::ping::cptr& ping, broadcaster::channel_id id) NOEXCEPT
             {
                 // Stop notification has nullptr message, zero id, and specified code.
                 result &= is_null(ping);
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__valid_nonced_ping__expected_notificati
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         sub_promise.set_value(instance.subscribe(
-            [&](const code& ec, const messages::p2p::ping::cptr& ping, broadcaster::channel_id id) NOEXCEPT
+            [&](const code& ec, const messages::peer::ping::cptr& ping, broadcaster::channel_id id) NOEXCEPT
             {
                 // Handle stop notification (unavoidable test condition).
                 if (!ping)
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(broadcaster__notify__valid_nonced_ping__expected_notificati
     BOOST_REQUIRE(!sub_promise.get_future().get());
 
     // Move vs. emplace required on some platforms, possibly due to default constructor.
-    const auto ping = std::make_shared<messages::p2p::ping>(messages::p2p::ping{ expected_nonce });
+    const auto ping = std::make_shared<messages::peer::ping>(messages::peer::ping{ expected_nonce });
     boost::asio::post(strand, [&]() NOEXCEPT
     {
         instance.notify(ping, channel_id);

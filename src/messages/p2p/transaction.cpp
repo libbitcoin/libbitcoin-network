@@ -16,17 +16,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/p2p/transaction.hpp>
+#include <bitcoin/network/messages/peer/transaction.hpp>
 
 #include <iterator>
-#include <bitcoin/network/messages/p2p/enums/identifier.hpp>
-#include <bitcoin/network/messages/p2p/enums/level.hpp>
-#include <bitcoin/network/messages/p2p/message.hpp>
+#include <bitcoin/network/messages/peer/enums/identifier.hpp>
+#include <bitcoin/network/messages/peer/enums/level.hpp>
+#include <bitcoin/network/messages/peer/message.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-namespace p2p {
+namespace peer {
 
 using namespace system;
     
@@ -102,7 +102,7 @@ size_t transaction::size(uint32_t, bool witness) const NOEXCEPT
     return transaction_ptr ? transaction_ptr->serialized_size(witness) : zero;
 }
 
-} // namespace p2p
+} // namespace peer
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

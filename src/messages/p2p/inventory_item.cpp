@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/p2p/inventory_item.hpp>
+#include <bitcoin/network/messages/peer/inventory_item.hpp>
 
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-namespace p2p {
+namespace peer {
 
 using namespace system;
 
@@ -134,7 +134,7 @@ bool operator!=(const inventory_item& left, const inventory_item& right) NOEXCEP
     return !(left == right);
 }
 
-} // namespace p2p
+} // namespace peer
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

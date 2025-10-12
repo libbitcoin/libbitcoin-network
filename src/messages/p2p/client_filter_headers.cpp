@@ -19,16 +19,16 @@
 
 // Sponsored in part by Digital Contract Design, LLC
 
-#include <bitcoin/network/messages/p2p/client_filter_headers.hpp>
+#include <bitcoin/network/messages/peer/client_filter_headers.hpp>
 
-#include <bitcoin/network/messages/p2p/enums/identifier.hpp>
-#include <bitcoin/network/messages/p2p/enums/level.hpp>
-#include <bitcoin/network/messages/p2p/message.hpp>
+#include <bitcoin/network/messages/peer/enums/identifier.hpp>
+#include <bitcoin/network/messages/peer/enums/level.hpp>
+#include <bitcoin/network/messages/peer/message.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-namespace p2p {
+namespace peer {
 
 using namespace system;
     
@@ -110,7 +110,7 @@ size_t client_filter_headers::size(uint32_t) const NOEXCEPT
             (filter_hashes.size() * hash_size);
 }
 
-} // namespace p2p
+} // namespace peer
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

@@ -16,25 +16,25 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/p2p/version.hpp>
+#include <bitcoin/network/messages/peer/version.hpp>
 
 #include <algorithm>
-#include <bitcoin/network/messages/p2p/enums/identifier.hpp>
-#include <bitcoin/network/messages/p2p/enums/level.hpp>
-#include <bitcoin/network/messages/p2p/message.hpp>
+#include <bitcoin/network/messages/peer/enums/identifier.hpp>
+#include <bitcoin/network/messages/peer/enums/level.hpp>
+#include <bitcoin/network/messages/peer/message.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-namespace p2p {
+namespace peer {
 
 using namespace system;
     
 // version.relay added by bip37.
 const std::string version::command = "version";
 const identifier version::id = identifier::version;
-const uint32_t messages::p2p::version::version_minimum = level::minimum_protocol;
-const uint32_t messages::p2p::version::version_maximum = level::maximum_protocol;
+const uint32_t messages::peer::version::version_minimum = level::minimum_protocol;
+const uint32_t messages::peer::version::version_maximum = level::maximum_protocol;
 
 // Time stamps are not used in version messages.
 constexpr auto with_timestamp = false;
@@ -166,7 +166,7 @@ size_t version::size(uint32_t version) const NOEXCEPT
         + ((version < level::bip37) ? zero : sizeof(uint8_t));
 }
 
-} // namespace p2p
+} // namespace peer
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

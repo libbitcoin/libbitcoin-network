@@ -32,33 +32,33 @@ using namespace boost::program_options;
 ////#define BC_AUTHORITY_IPV6_BOGUS_IPV4_ADDRESS "[::ffff:0:39]:256"
 
 // tools.ietf.org/html/rfc4291#section-2.5.2
-constexpr messages::p2p::ip_address test_unspecified_ip_address =
+constexpr messages::peer::ip_address test_unspecified_ip_address =
 {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
 // tools.ietf.org/html/rfc4291#section-2.5.5.2
-constexpr messages::p2p::ip_address test_mapped_ip_address =
+constexpr messages::peer::ip_address test_mapped_ip_address =
 {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0xff, 0xff, 0x01, 0x02, 0xf0, 0x01
 };
 
 ////// tools.ietf.org/html/rfc4291#section-2.5.5.1
-////constexpr messages::p2p::ip_address test_compatible_ip_address =
+////constexpr messages::peer::ip_address test_compatible_ip_address =
 ////{
 ////    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 ////    0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0xf0, 0x01
 ////};
 
-constexpr messages::p2p::ip_address test_ipv6_address =
+constexpr messages::peer::ip_address test_ipv6_address =
 {
     0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02
 };
 
-constexpr messages::p2p::address_item test_unspecified_ip_address_item
+constexpr messages::peer::address_item test_unspecified_ip_address_item
 {
     10,
     20,
@@ -66,7 +66,7 @@ constexpr messages::p2p::address_item test_unspecified_ip_address_item
     30
 };
 
-constexpr messages::p2p::address_item test_mapped_ip_address_item
+constexpr messages::peer::address_item test_mapped_ip_address_item
 {
     11,
     21,
@@ -74,7 +74,7 @@ constexpr messages::p2p::address_item test_mapped_ip_address_item
     31
 };
 
-constexpr messages::p2p::address_item test_ipv6_address_item
+constexpr messages::peer::address_item test_ipv6_address_item
 {
     13,
     23,
@@ -181,13 +181,13 @@ BOOST_AUTO_TEST_CASE(address__is_v4__default__true)
 
 BOOST_AUTO_TEST_CASE(address__is_v4__unspecified_v6__true)
 {
-    const address item{ messages::p2p::unspecified_address_item };
+    const address item{ messages::peer::unspecified_address_item };
     BOOST_REQUIRE(!item.is_v4());
 }
 
 BOOST_AUTO_TEST_CASE(address__is_v4__loopback_v6__true)
 {
-    const address item{ messages::p2p::address_item{ 0, 0, messages::p2p::loopback_ip_address, 42 } };
+    const address item{ messages::peer::address_item{ 0, 0, messages::peer::loopback_ip_address, 42 } };
     BOOST_REQUIRE(!item.is_v4());
 }
 
@@ -207,13 +207,13 @@ BOOST_AUTO_TEST_CASE(address__is_v6__default__true)
 
 BOOST_AUTO_TEST_CASE(address__is_v6__unspecified_v6__true)
 {
-    const address item{ messages::p2p::unspecified_address_item };
+    const address item{ messages::peer::unspecified_address_item };
     BOOST_REQUIRE(item.is_v6());
 }
 
 BOOST_AUTO_TEST_CASE(address__is_v6__loopback_v6__true)
 {
-    const address item{ messages::p2p::address_item{ 0, 0, messages::p2p::loopback_ip_address, 42 } };
+    const address item{ messages::peer::address_item{ 0, 0, messages::peer::loopback_ip_address, 42 } };
     BOOST_REQUIRE(item.is_v6());
 }
 
@@ -228,19 +228,19 @@ BOOST_AUTO_TEST_CASE(address__is_v6__loopback_v4__false)
 BOOST_AUTO_TEST_CASE(address__address_item__default__unspecified)
 {
     const address host{};
-    const messages::p2p::address_item& item = host;
+    const messages::peer::address_item& item = host;
     BOOST_REQUIRE_EQUAL(item.ip, host.ip());
     BOOST_REQUIRE_EQUAL(item.port, host.port());
-    BOOST_REQUIRE(!messages::p2p::is_specified(item));
+    BOOST_REQUIRE(!messages::peer::is_specified(item));
 }
 
 BOOST_AUTO_TEST_CASE(address__address_item__default__secified_expected)
 {
-    const address host{ messages::p2p::address_item{ 0, 0, messages::p2p::loopback_ip_address, 42 } };
-    const messages::p2p::address_item& item = host;
+    const address host{ messages::peer::address_item{ 0, 0, messages::peer::loopback_ip_address, 42 } };
+    const messages::peer::address_item& item = host;
     BOOST_REQUIRE_EQUAL(item.ip, host.ip());
     BOOST_REQUIRE_EQUAL(item.port, host.port());
-    BOOST_REQUIRE(messages::p2p::is_specified(item));
+    BOOST_REQUIRE(messages::peer::is_specified(item));
 }
 
 // port
@@ -254,7 +254,7 @@ BOOST_AUTO_TEST_CASE(address__port__default__zero_false)
 
 BOOST_AUTO_TEST_CASE(address__port__nullptr__zero_false)
 {
-    const address host{ messages::p2p::address_item::cptr{} };
+    const address host{ messages::peer::address_item::cptr{} };
     BOOST_REQUIRE(!host);
     BOOST_REQUIRE_EQUAL(host.port(), 0u);
 }
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(address__equality__ipv6_ipv6_port__true)
     BOOST_REQUIRE(host1 == host2);
 }
 
-constexpr messages::p2p::address_item test_ipv6_address_item_distinct_timestamp
+constexpr messages::peer::address_item test_ipv6_address_item_distinct_timestamp
 {
     42,
     23,
@@ -496,7 +496,7 @@ constexpr messages::p2p::address_item test_ipv6_address_item_distinct_timestamp
     33
 };
 
-constexpr messages::p2p::address_item test_ipv6_address_item_distinct_service
+constexpr messages::peer::address_item test_ipv6_address_item_distinct_service
 {
     13,
     42,
@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(address__equality__distinct_services__true)
 BOOST_AUTO_TEST_CASE(address__equality__default_address_item__true)
 {
     const address host1{};
-    const messages::p2p::address_item host2{};
+    const messages::peer::address_item host2{};
     BOOST_REQUIRE(host1 == host2);
 }
 
@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(address__inequality__distinct_services__false)
 BOOST_AUTO_TEST_CASE(address__inequality__default_address_item__true)
 {
     const address host1{};
-    const messages::p2p::address_item host2{};
+    const messages::peer::address_item host2{};
     BOOST_REQUIRE(!(host1 != host2));
 }
 

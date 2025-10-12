@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(p2p_inventory_tests)
 
-using namespace network::messages::p2p;
+using namespace network::messages::peer;
 
 // factory move/copy
 // filter

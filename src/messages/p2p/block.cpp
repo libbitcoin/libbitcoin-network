@@ -16,20 +16,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/p2p/block.hpp>
+#include <bitcoin/network/messages/peer/block.hpp>
 
 #include <iterator>
 #include <memory>
 #include <bitcoin/network/memory.hpp>
-#include <bitcoin/network/messages/p2p/enums/identifier.hpp>
-#include <bitcoin/network/messages/p2p/enums/level.hpp>
-#include <bitcoin/network/messages/p2p/message.hpp>
-#include <bitcoin/network/messages/p2p/transaction.hpp>
+#include <bitcoin/network/messages/peer/enums/identifier.hpp>
+#include <bitcoin/network/messages/peer/enums/level.hpp>
+#include <bitcoin/network/messages/peer/message.hpp>
+#include <bitcoin/network/messages/peer/transaction.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-namespace p2p {
+namespace peer {
 
 using namespace system;
 
@@ -84,7 +84,7 @@ typename block::cptr block::deserialize(arena& arena, uint32_t version,
     block->set_allocation(arena.detach());
 
     // All block and contained object destructors should be optimized out.
-    return to_shared<messages::p2p::block>(std::shared_ptr<chain::block>(block,
+    return to_shared<messages::peer::block>(std::shared_ptr<chain::block>(block,
         [&arena, memory](auto ptr) NOEXCEPT
         {
             // Destruct and deallocate objects (nop deallocate if detachable).
@@ -134,7 +134,7 @@ size_t block::size(uint32_t, bool witness) const NOEXCEPT
 BC_POP_WARNING()
 BC_POP_WARNING()
 
-} // namespace p2p
+} // namespace peer
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(p2p_witness_tx_id_relay_tests)
 
-using namespace network::messages::p2p;
+using namespace network::messages::peer;
 
 BOOST_AUTO_TEST_CASE(witness_tx_id_relay__properties__always__expected)
 {

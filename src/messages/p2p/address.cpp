@@ -16,18 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/p2p/address.hpp>
+#include <bitcoin/network/messages/peer/address.hpp>
 
-#include <bitcoin/network/messages/p2p/address_item.hpp>
-#include <bitcoin/network/messages/p2p/enums/identifier.hpp>
-#include <bitcoin/network/messages/p2p/enums/level.hpp>
-#include <bitcoin/network/messages/p2p/enums/magic_numbers.hpp>
-#include <bitcoin/network/messages/p2p/message.hpp>
+#include <bitcoin/network/messages/peer/address_item.hpp>
+#include <bitcoin/network/messages/peer/enums/identifier.hpp>
+#include <bitcoin/network/messages/peer/enums/level.hpp>
+#include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
+#include <bitcoin/network/messages/peer/message.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-namespace p2p {
+namespace peer {
 
 using namespace system;
 
@@ -94,7 +94,7 @@ size_t address::size(uint32_t version) const NOEXCEPT
         (addresses.size() * address_item::size(version, with_timestamp));
 }
 
-} // namespace p2p
+} // namespace peer
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

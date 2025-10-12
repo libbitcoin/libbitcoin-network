@@ -28,12 +28,12 @@ BOOST_AUTO_TEST_SUITE(utilities_tests)
 
 BOOST_AUTO_TEST_CASE(utilities__is_v4__default__false)
 {
-    BOOST_REQUIRE(!is_v4(messages::p2p::ip_address{}));
+    BOOST_REQUIRE(!is_v4(messages::peer::ip_address{}));
 }
 
 BOOST_AUTO_TEST_CASE(utilities__is_v4__loopback_v6__false)
 {
-    BOOST_REQUIRE(!is_v4(messages::p2p::loopback_ip_address));
+    BOOST_REQUIRE(!is_v4(messages::peer::loopback_ip_address));
 }
 
 BOOST_AUTO_TEST_CASE(utilities__is_v4__loopback_mapped__true)
@@ -51,12 +51,12 @@ BOOST_AUTO_TEST_CASE(utilities__is_v4__loopback_mapped__true)
 
 BOOST_AUTO_TEST_CASE(utilities__is_v6__default__true)
 {
-    BOOST_REQUIRE(is_v6(messages::p2p::ip_address{}));
+    BOOST_REQUIRE(is_v6(messages::peer::ip_address{}));
 }
 
 BOOST_AUTO_TEST_CASE(utilities__is_v6__loopback_v6__true)
 {
-    BOOST_REQUIRE(is_v6(messages::p2p::loopback_ip_address));
+    BOOST_REQUIRE(is_v6(messages::peer::loopback_ip_address));
 }
 
 BOOST_AUTO_TEST_CASE(utilities__is_v6__loopback_mapped__false)
@@ -345,29 +345,29 @@ BOOST_AUTO_TEST_CASE(utilities__to_literal__v6__expected_literal_v6)
 BOOST_AUTO_TEST_CASE(utilities__to_address__default__non_default)
 {
     // default address is v4 and ip_address is v6, to_address is not denormalizing.
-    BOOST_REQUIRE_NE(to_address(asio::address{}), messages::p2p::ip_address{});
+    BOOST_REQUIRE_NE(to_address(asio::address{}), messages::peer::ip_address{});
 }
 
 BOOST_AUTO_TEST_CASE(utilities__to_address__default_v4__not_default)
 {
-    BOOST_REQUIRE_NE(to_address(asio::ipv4{}), messages::p2p::ip_address{});
+    BOOST_REQUIRE_NE(to_address(asio::ipv4{}), messages::peer::ip_address{});
 }
 
 BOOST_AUTO_TEST_CASE(utilities__to_address__default_v6__default)
 {
-    BOOST_REQUIRE_EQUAL(to_address(asio::ipv6{}), messages::p2p::ip_address{});
+    BOOST_REQUIRE_EQUAL(to_address(asio::ipv6{}), messages::peer::ip_address{});
 }
 
 // from_address
 
 BOOST_AUTO_TEST_CASE(utilities__from_address__default__default_v6)
 {
-    BOOST_REQUIRE_EQUAL(from_address(messages::p2p::ip_address{}), asio::ipv6{});
+    BOOST_REQUIRE_EQUAL(from_address(messages::peer::ip_address{}), asio::ipv6{});
 }
 
 BOOST_AUTO_TEST_CASE(utilities__from_address__v6_mapped_loopback__loopback_v4)
 {
-    constexpr messages::p2p::ip_address loopback_v4
+    constexpr messages::peer::ip_address loopback_v4
     {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 127, 0, 0, 1
     };
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(utilities__from_address__v6_mapped_loopback__loopback_v4)
 
 BOOST_AUTO_TEST_CASE(utilities__from_address__loopback_v6__loopback_v6)
 {
-    constexpr messages::p2p::ip_address loopback_v6
+    constexpr messages::peer::ip_address loopback_v6
     {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
     };

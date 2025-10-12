@@ -21,7 +21,7 @@
 #include <algorithm>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -32,7 +32,7 @@ namespace network {
 #define CLASS protocol_address_in_209
 
 using namespace system;
-using namespace messages::p2p;
+using namespace messages::peer;
 using namespace std::placeholders;
 
 // Bind throws (ok).

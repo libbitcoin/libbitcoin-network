@@ -16,51 +16,51 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/p2p/heading.hpp>
+#include <bitcoin/network/messages/peer/heading.hpp>
 
 #include <map>
-#include <bitcoin/network/messages/p2p/address.hpp>
-#include <bitcoin/network/messages/p2p/alert.hpp>
-#include <bitcoin/network/messages/p2p/block.hpp>
-#include <bitcoin/network/messages/p2p/bloom_filter_add.hpp>
-#include <bitcoin/network/messages/p2p/bloom_filter_clear.hpp>
-#include <bitcoin/network/messages/p2p/bloom_filter_load.hpp>
-#include <bitcoin/network/messages/p2p/client_filter.hpp>
-#include <bitcoin/network/messages/p2p/client_filter_checkpoint.hpp>
-#include <bitcoin/network/messages/p2p/client_filter_headers.hpp>
-#include <bitcoin/network/messages/p2p/compact_block.hpp>
-#include <bitcoin/network/messages/p2p/compact_transactions.hpp>
-#include <bitcoin/network/messages/p2p/fee_filter.hpp>
-#include <bitcoin/network/messages/p2p/get_address.hpp>
-#include <bitcoin/network/messages/p2p/get_blocks.hpp>
-#include <bitcoin/network/messages/p2p/get_client_filter_checkpoint.hpp>
-#include <bitcoin/network/messages/p2p/get_client_filter_headers.hpp>
-#include <bitcoin/network/messages/p2p/get_client_filters.hpp>
-#include <bitcoin/network/messages/p2p/get_compact_transactions.hpp>
-#include <bitcoin/network/messages/p2p/get_data.hpp>
-#include <bitcoin/network/messages/p2p/get_headers.hpp>
-#include <bitcoin/network/messages/p2p/headers.hpp>
-#include <bitcoin/network/messages/p2p/enums/identifier.hpp>
-#include <bitcoin/network/messages/p2p/inventory.hpp>
-#include <bitcoin/network/messages/p2p/message.hpp>
-#include <bitcoin/network/messages/p2p/memory_pool.hpp>
-#include <bitcoin/network/messages/p2p/merkle_block.hpp>
-#include <bitcoin/network/messages/p2p/not_found.hpp>
-#include <bitcoin/network/messages/p2p/ping.hpp>
-#include <bitcoin/network/messages/p2p/pong.hpp>
-#include <bitcoin/network/messages/p2p/reject.hpp>
-#include <bitcoin/network/messages/p2p/send_address_v2.hpp>
-#include <bitcoin/network/messages/p2p/send_compact.hpp>
-#include <bitcoin/network/messages/p2p/send_headers.hpp>
-#include <bitcoin/network/messages/p2p/transaction.hpp>
-#include <bitcoin/network/messages/p2p/version.hpp>
-#include <bitcoin/network/messages/p2p/version_acknowledge.hpp>
-#include <bitcoin/network/messages/p2p/witness_tx_id_relay.hpp>
+#include <bitcoin/network/messages/peer/address.hpp>
+#include <bitcoin/network/messages/peer/alert.hpp>
+#include <bitcoin/network/messages/peer/block.hpp>
+#include <bitcoin/network/messages/peer/bloom_filter_add.hpp>
+#include <bitcoin/network/messages/peer/bloom_filter_clear.hpp>
+#include <bitcoin/network/messages/peer/bloom_filter_load.hpp>
+#include <bitcoin/network/messages/peer/client_filter.hpp>
+#include <bitcoin/network/messages/peer/client_filter_checkpoint.hpp>
+#include <bitcoin/network/messages/peer/client_filter_headers.hpp>
+#include <bitcoin/network/messages/peer/compact_block.hpp>
+#include <bitcoin/network/messages/peer/compact_transactions.hpp>
+#include <bitcoin/network/messages/peer/fee_filter.hpp>
+#include <bitcoin/network/messages/peer/get_address.hpp>
+#include <bitcoin/network/messages/peer/get_blocks.hpp>
+#include <bitcoin/network/messages/peer/get_client_filter_checkpoint.hpp>
+#include <bitcoin/network/messages/peer/get_client_filter_headers.hpp>
+#include <bitcoin/network/messages/peer/get_client_filters.hpp>
+#include <bitcoin/network/messages/peer/get_compact_transactions.hpp>
+#include <bitcoin/network/messages/peer/get_data.hpp>
+#include <bitcoin/network/messages/peer/get_headers.hpp>
+#include <bitcoin/network/messages/peer/headers.hpp>
+#include <bitcoin/network/messages/peer/enums/identifier.hpp>
+#include <bitcoin/network/messages/peer/inventory.hpp>
+#include <bitcoin/network/messages/peer/message.hpp>
+#include <bitcoin/network/messages/peer/memory_pool.hpp>
+#include <bitcoin/network/messages/peer/merkle_block.hpp>
+#include <bitcoin/network/messages/peer/not_found.hpp>
+#include <bitcoin/network/messages/peer/ping.hpp>
+#include <bitcoin/network/messages/peer/pong.hpp>
+#include <bitcoin/network/messages/peer/reject.hpp>
+#include <bitcoin/network/messages/peer/send_address_v2.hpp>
+#include <bitcoin/network/messages/peer/send_compact.hpp>
+#include <bitcoin/network/messages/peer/send_headers.hpp>
+#include <bitcoin/network/messages/peer/transaction.hpp>
+#include <bitcoin/network/messages/peer/version.hpp>
+#include <bitcoin/network/messages/peer/version_acknowledge.hpp>
+#include <bitcoin/network/messages/peer/witness_tx_id_relay.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-namespace p2p {
+namespace peer {
 
 using namespace system;
 
@@ -209,7 +209,7 @@ BC_POP_WARNING()
 
 #undef COMMAND_ID
 
-} // namespace p2p
+} // namespace peer
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

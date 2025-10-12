@@ -19,16 +19,16 @@
 
 // Sponsored in part by Digital Contract Design, LLC
 
-#include <bitcoin/network/messages/p2p/get_client_filter_checkpoint.hpp>
+#include <bitcoin/network/messages/peer/get_client_filter_checkpoint.hpp>
 
-#include <bitcoin/network/messages/p2p/enums/identifier.hpp>
-#include <bitcoin/network/messages/p2p/enums/level.hpp>
-#include <bitcoin/network/messages/p2p/message.hpp>
+#include <bitcoin/network/messages/peer/enums/identifier.hpp>
+#include <bitcoin/network/messages/peer/enums/level.hpp>
+#include <bitcoin/network/messages/peer/message.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-namespace p2p {
+namespace peer {
 
 using namespace system;
     
@@ -90,7 +90,7 @@ void get_client_filter_checkpoint::serialize(uint32_t BC_DEBUG_ONLY(version),
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
-} // namespace p2p
+} // namespace peer
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

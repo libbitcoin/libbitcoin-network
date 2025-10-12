@@ -22,13 +22,13 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/client.hpp>
 #include <bitcoin/network/config/config.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 using namespace system;
-using namespace messages::p2p;
+using namespace messages::peer;
 
 static_assert(heading::maximum_payload(level::canonical, true) == 4'000'000);
 static_assert(heading::maximum_payload(level::canonical, false) == 1'800'003);

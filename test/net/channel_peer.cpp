@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
 
     const auto payload_maximum = [](const settings& settings) NOEXCEPT
     {
-        using namespace messages::p2p;
+        using namespace messages::peer;
         return heading::maximum_payload(settings.protocol_maximum,
             to_bool(settings.services_maximum & service::node_witness));
     };
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__properties__default__expected)
     BOOST_REQUIRE(!channel_ptr->address());
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
     BOOST_REQUIRE_EQUAL(channel_ptr->negotiated_version(), set.protocol_maximum);
-    BOOST_REQUIRE(channel_ptr->is_negotiated(messages::p2p::level::maximum_protocol));
+    BOOST_REQUIRE(channel_ptr->is_negotiated(messages::peer::level::maximum_protocol));
 
     // TODO: compare to default instance.
     BOOST_REQUIRE(channel_ptr->peer_version());
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__subscribe_message__subscribed__expected)
     std::promise<code> message_stopped;
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        using namespace messages::p2p;
+        using namespace messages::peer;
         channel_ptr->subscribe<const ping>([&](code ec, ping::cptr ping) NOEXCEPT
             {
                 result &= is_null(ping);
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__stop__all_subscribed__expected)
             stop1_stopped.set_value(ec);
         });
 
-        using namespace messages::p2p;
+        using namespace messages::peer;
         channel_ptr->subscribe<ping>([&](code ec, ping::cptr ping) NOEXCEPT
         {
             result &= is_null(ping);
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected__expected)
     BOOST_REQUIRE(!channel_ptr->stopped());
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        using namespace messages::p2p;
+        using namespace messages::peer;
         channel_ptr->send<ping>(ping{ 42 }, handler);
     });
 
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(channel_peer__send__not_connected_move__expected)
     BOOST_REQUIRE(!channel_ptr->stopped());
     boost::asio::post(channel_ptr->strand(), [&]() NOEXCEPT
     {
-        using namespace messages::p2p;
+        using namespace messages::peer;
         channel_ptr->send<ping>(ping{ 42 }, [&](code ec)
         {
             result &= channel_ptr->stopped();

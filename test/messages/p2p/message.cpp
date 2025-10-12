@@ -21,7 +21,7 @@
 BOOST_AUTO_TEST_SUITE(p2p_message_tests)
 
 using namespace system;
-using namespace network::messages::p2p;
+using namespace network::messages::peer;
 
 constexpr auto empty_checksum = 0xe2e0f65d_u32;
 constexpr auto empty_hash = sha256::double_hash(sha256::ablocks_t<0>{});

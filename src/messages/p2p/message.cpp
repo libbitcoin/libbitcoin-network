@@ -16,18 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/p2p/message.hpp>
+#include <bitcoin/network/messages/peer/message.hpp>
 
 #include <iterator>
 #include <memory>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/p2p/heading.hpp>
-#include <bitcoin/network/messages/p2p/transaction.hpp>
+#include <bitcoin/network/messages/peer/heading.hpp>
+#include <bitcoin/network/messages/peer/transaction.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-namespace p2p {
+namespace peer {
 
 template <>
 system::chunk_ptr serialize<transaction>(const transaction& message,
@@ -66,7 +66,7 @@ system::chunk_ptr serialize<transaction>(const transaction& message,
     return data;
 }
 
-} // namespace p2p
+} // namespace peer
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

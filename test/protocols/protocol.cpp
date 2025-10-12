@@ -34,7 +34,7 @@
 BOOST_AUTO_TEST_SUITE(protocol_tests)
 
 using namespace bc::system::chain;
-using namespace network::messages::p2p;
+using namespace network::messages::peer;
 
 // settings (inject net)
 // mock_net (inject connector)
@@ -276,7 +276,7 @@ public:
         return protocol_peer::fetch(std::move(handler));
     }
 
-    void save(const messages::p2p::address::cptr& message,
+    void save(const messages::peer::address::cptr& message,
         count_handler&& handler) NOEXCEPT override
     {
         return protocol_peer::save(message, std::move(handler));

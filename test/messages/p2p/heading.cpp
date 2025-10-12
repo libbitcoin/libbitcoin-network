@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(p2p_heading_tests)
 
-using namespace network::messages::p2p;
+using namespace network::messages::peer;
 
 // deserialize
 // serialize
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(rpc_heading__get_command__empty_payload__unknown)
 
 BOOST_AUTO_TEST_CASE(rpc_heading__get_command__short_payload__unknown)
 {
-    constexpr auto minimum = sizeof(uint32_t) + messages::p2p::heading::command_size;
+    constexpr auto minimum = sizeof(uint32_t) + messages::peer::heading::command_size;
     const system::data_chunk payload(sub1(minimum), 'a');
     BOOST_REQUIRE_EQUAL(heading::get_command(payload), "<unknown>");
 }

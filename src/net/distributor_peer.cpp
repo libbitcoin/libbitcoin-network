@@ -20,7 +20,7 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/memory.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 
 // Set false to use default block allocation.
 constexpr bool use_block_allocator = true;
@@ -36,8 +36,8 @@ using namespace system;
 #define SUBSCRIBER(name) name##_subscriber_
 #define MAKE_SUBSCRIBER(name) SUBSCRIBER(name)(strand)
 #define STOP_SUBSCRIBER(name) SUBSCRIBER(name).stop_default(ec)
-#define CASE_NOTIFY(name) case messages::p2p::identifier::name: \
-    return do_notify<messages::p2p::name>(SUBSCRIBER(name), version, data)
+#define CASE_NOTIFY(name) case messages::peer::identifier::name: \
+    return do_notify<messages::peer::name>(SUBSCRIBER(name), version, data)
 
 distributor_peer::distributor_peer(memory& memory, asio::strand& strand) NOEXCEPT
   : MAKE_SUBSCRIBER(address),
@@ -79,7 +79,7 @@ distributor_peer::distributor_peer(memory& memory, asio::strand& strand) NOEXCEP
 {
 }
 
-code distributor_peer::notify(messages::p2p::identifier id, uint32_t version,
+code distributor_peer::notify(messages::peer::identifier id, uint32_t version,
     const data_chunk& data) NOEXCEPT
 {
     switch (id)
@@ -119,7 +119,7 @@ code distributor_peer::notify(messages::p2p::identifier id, uint32_t version,
         CASE_NOTIFY(version);
         CASE_NOTIFY(version_acknowledge);
         CASE_NOTIFY(witness_tx_id_relay);
-        case messages::p2p::identifier::unknown:
+        case messages::peer::identifier::unknown:
         default:
             return error::unknown_message;
     }
@@ -166,7 +166,7 @@ void distributor_peer::stop(const code& ec) NOEXCEPT
 }
 
 template <>
-code distributor_peer::do_notify<messages::p2p::block>(
+code distributor_peer::do_notify<messages::peer::block>(
     distributor_peer::block_subscriber& subscriber, uint32_t version,
     const system::data_chunk& data) NOEXCEPT
 {
@@ -174,18 +174,18 @@ code distributor_peer::do_notify<messages::p2p::block>(
     if (subscriber.empty())
         return error::success;
 
-    messages::p2p::block::cptr ptr{};
+    messages::peer::block::cptr ptr{};
     if constexpr (use_block_allocator)
     {
         const auto arena = memory_.get_arena();
         if (is_null(arena))
             return error::operation_failed;
 
-        ptr = messages::p2p::block::deserialize(*arena, version, data);
+        ptr = messages::peer::block::deserialize(*arena, version, data);
     }
     else
     {
-        ptr = messages::p2p::block::deserialize(version, data);
+        ptr = messages::peer::block::deserialize(version, data);
     }
 
     if (!ptr)

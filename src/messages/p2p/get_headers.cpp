@@ -16,18 +16,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/p2p/get_headers.hpp>
+#include <bitcoin/network/messages/peer/get_headers.hpp>
 
-#include <bitcoin/network/messages/p2p/enums/identifier.hpp>
-#include <bitcoin/network/messages/p2p/enums/level.hpp>
-#include <bitcoin/network/messages/p2p/enums/magic_numbers.hpp>
-#include <bitcoin/network/messages/p2p/get_blocks.hpp>
-#include <bitcoin/network/messages/p2p/message.hpp>
+#include <bitcoin/network/messages/peer/enums/identifier.hpp>
+#include <bitcoin/network/messages/peer/enums/level.hpp>
+#include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
+#include <bitcoin/network/messages/peer/get_blocks.hpp>
+#include <bitcoin/network/messages/peer/message.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace messages {
-namespace p2p {
+namespace peer {
 
 using namespace system;
     
@@ -123,7 +123,7 @@ const hash_digest& get_headers::start_hash() const NOEXCEPT
     return start_hashes.empty() ? null_hash : start_hashes.front();
 }
 
-} // namespace p2p
+} // namespace peer
 } // namespace messages
 } // namespace network
 } // namespace libbitcoin

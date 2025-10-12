@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(p2p_address_item_tests)
 
-using namespace network::messages::p2p;
+using namespace network::messages::peer;
 
 BOOST_AUTO_TEST_CASE(address_item__loopback_ip_address__always__expected)
 {
@@ -90,12 +90,12 @@ BOOST_AUTO_TEST_CASE(address_item__size__without_timestamp__expected)
 
 BOOST_AUTO_TEST_CASE(address_item__is_specified__default__false)
 {
-    BOOST_REQUIRE(!is_specified(messages::p2p::address_item{}));
+    BOOST_REQUIRE(!is_specified(messages::peer::address_item{}));
 }
 
 BOOST_AUTO_TEST_CASE(address_item__is_specified__loopback__true)
 {
-    const messages::p2p::address_item item{ 0, 0, messages::p2p::loopback_ip_address, 42 };
+    const messages::peer::address_item item{ 0, 0, messages::peer::loopback_ip_address, 42 };
     BOOST_REQUIRE(is_specified(item));
 }
 

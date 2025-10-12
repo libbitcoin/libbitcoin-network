@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(p2p_client_filter_tests)
 
-using namespace network::messages::p2p;
+using namespace network::messages::peer;
 
 BOOST_AUTO_TEST_CASE(client_filter__properties__always__expected)
 {

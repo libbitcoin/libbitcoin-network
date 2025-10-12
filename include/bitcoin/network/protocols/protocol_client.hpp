@@ -23,7 +23,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/rpc/messages.hpp>
+#include <bitcoin/network/messages/client/messages.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 

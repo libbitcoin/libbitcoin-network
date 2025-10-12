@@ -21,7 +21,7 @@
 #include <utility>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_version_70001.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -32,7 +32,7 @@ namespace network {
 #define CLASS protocol_version_70002
 
 using namespace system;
-using namespace network::messages::p2p;
+using namespace network::messages::peer;
 using namespace std::placeholders;
 
 protocol_version_70002::protocol_version_70002(const session::ptr& session,

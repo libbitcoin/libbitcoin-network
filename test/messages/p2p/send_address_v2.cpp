@@ -20,7 +20,7 @@
 
 BOOST_AUTO_TEST_SUITE(p2p_send_address_v2_tests)
 
-using namespace network::messages::p2p;
+using namespace network::messages::peer;
 
 BOOST_AUTO_TEST_CASE(send_address_v2__properties__always__expected)
 {

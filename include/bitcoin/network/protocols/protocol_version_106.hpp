@@ -23,7 +23,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -53,7 +53,7 @@ public:
     void stopping(const code& ec) NOEXCEPT override;
 
 protected:
-    virtual messages::p2p::version version_factory(bool relay=false) const NOEXCEPT;
+    virtual messages::peer::version version_factory(bool relay=false) const NOEXCEPT;
     virtual void rejection(const code& ec) NOEXCEPT;
 
     virtual bool complete() const NOEXCEPT;
@@ -62,11 +62,11 @@ protected:
 
     virtual void handle_send_version(const code& ec) NOEXCEPT;
     virtual bool handle_receive_version(const code& ec,
-        const messages::p2p::version::cptr& message) NOEXCEPT;
+        const messages::peer::version::cptr& message) NOEXCEPT;
 
     virtual void handle_send_acknowledge(const code& ec) NOEXCEPT;
     virtual bool handle_receive_acknowledge(const code& ec,
-        const messages::p2p::version_acknowledge::cptr& message) NOEXCEPT;
+        const messages::peer::version_acknowledge::cptr& message) NOEXCEPT;
 
     // These are thread safe (const).
     const bool inbound_;
