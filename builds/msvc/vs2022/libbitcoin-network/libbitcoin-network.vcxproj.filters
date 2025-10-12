@@ -79,14 +79,14 @@
     <Filter Include="src\messages">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\p2p">
+    <Filter Include="src\messages\client">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\rpc">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\rpc\enums">
+    <Filter Include="src\messages\client\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\peer">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000009}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000005}</UniqueIdentifier>
@@ -138,134 +138,134 @@
     <ClCompile Include="..\..\..\..\src\memory.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\address.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\client\enums\mime_type.cpp">
+      <Filter>src\messages\client\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\address_item.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\client\enums\target.cpp">
+      <Filter>src\messages\client\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\alert.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\address.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\alert_item.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\address_item.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\block.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\alert.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\bloom_filter_add.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\alert_item.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\bloom_filter_clear.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\block.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\bloom_filter_load.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\bloom_filter_add.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\client_filter.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\bloom_filter_clear.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\client_filter_checkpoint.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\bloom_filter_load.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\client_filter_headers.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\client_filter.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\compact_block.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\client_filter_checkpoint.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\compact_block_item.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\client_filter_headers.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\compact_transactions.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\compact_block.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\fee_filter.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\compact_block_item.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\get_address.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\compact_transactions.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\get_blocks.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\fee_filter.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\get_client_filter_checkpoint.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\get_address.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\get_client_filter_headers.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\get_blocks.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\get_client_filters.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\get_client_filter_checkpoint.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\get_compact_transactions.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\get_client_filter_headers.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\get_data.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\get_client_filters.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\get_headers.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\get_compact_transactions.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\headers.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\get_data.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\heading.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\get_headers.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\inventory.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\headers.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\inventory_item.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\heading.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\memory_pool.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\inventory.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\merkle_block.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\inventory_item.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\message.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\memory_pool.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\not_found.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\merkle_block.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\ping.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\message.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\pong.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\not_found.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\reject.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\ping.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\send_address_v2.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\pong.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\send_compact.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\reject.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\send_headers.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\send_address_v2.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\transaction.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\send_compact.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\version.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\send_headers.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\version_acknowledge.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\transaction.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\p2p\witness_tx_id_relay.cpp">
-      <Filter>src\messages\p2p</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\version.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\mime_type.cpp">
-      <Filter>src\messages\rpc\enums</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\version_acknowledge.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\rpc\enums\target.cpp">
-      <Filter>src\messages\rpc\enums</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\peer\witness_tx_id_relay.cpp">
+      <Filter>src\messages\peer</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net.cpp">
       <Filter>src</Filter>
