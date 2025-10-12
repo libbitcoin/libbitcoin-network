@@ -48,12 +48,12 @@ public:
 
     /// Equality considers all properties (scheme, host, port).
     /// Non-numeric and invalid endpoints will match the default address_item.
-    bool operator==(const messages::p2p::address_item& other) const NOEXCEPT;
-    bool operator!=(const messages::p2p::address_item& other) const NOEXCEPT;
+    bool operator==(const messages::peer::address_item& other) const NOEXCEPT;
+    bool operator!=(const messages::peer::address_item& other) const NOEXCEPT;
 
 protected:
     address to_address() const NOEXCEPT;
-    messages::p2p::address_item to_address_item() const NOEXCEPT;
+    messages::peer::address_item to_address_item() const NOEXCEPT;
 };
 
 typedef std::vector<endpoint> endpoints;

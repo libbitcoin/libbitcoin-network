@@ -216,7 +216,7 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
     BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
 
     // Inbound does not require any node services.
-    using namespace messages::p2p;
+    using namespace messages::peer;
     constexpr auto minimum_services = service::node_none;
     const auto maximum_services = settings().services_maximum;
 
@@ -265,7 +265,7 @@ void session_inbound::attach_protocols(
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
-    using namespace messages::p2p;
+    using namespace messages::peer;
     const auto self = shared_from_this();
     const auto peer = std::dynamic_pointer_cast<channel_peer>(channel);
 

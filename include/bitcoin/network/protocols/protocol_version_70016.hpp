@@ -23,7 +23,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -52,11 +52,11 @@ public:
 protected:
     void handle_send_version(const code& ec) NOEXCEPT override;
     bool handle_receive_acknowledge(const code& ec,
-        const messages::p2p::version_acknowledge::cptr& message) NOEXCEPT override;
+        const messages::peer::version_acknowledge::cptr& message) NOEXCEPT override;
     virtual bool handle_receive_send_address_v2(const code& ec,
-        const messages::p2p::send_address_v2::cptr& message) NOEXCEPT;
+        const messages::peer::send_address_v2::cptr& message) NOEXCEPT;
     virtual bool handle_receive_witness_tx_id_relay(const code& ec,
-        const messages::p2p::witness_tx_id_relay::cptr& message) NOEXCEPT;
+        const messages::peer::witness_tx_id_relay::cptr& message) NOEXCEPT;
 
 private:
     // This is thread safe.

@@ -21,14 +21,12 @@
 
 #include <algorithm>
 #include <atomic>
-#include <filesystem>
-#include <memory>
 #include <unordered_set>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
@@ -101,10 +99,10 @@ public:
     virtual bool unreserve(const config::authority& host) NOEXCEPT;
 
 private:
-    typedef boost::circular_buffer<messages::p2p::address_item> buffer;
+    typedef boost::circular_buffer<messages::peer::address_item> buffer;
 
     // Equality ignores timestamp and services.
-    inline buffer::iterator find(const messages::p2p::address_item& host) NOEXCEPT
+    inline buffer::iterator find(const messages::peer::address_item& host) NOEXCEPT
     {
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         return std::find(buffer_.begin(), buffer_.end(), host);
@@ -112,7 +110,7 @@ private:
     }
 
     // Equality ignores timestamp and services.
-    inline bool is_pooled(const messages::p2p::address_item& host) NOEXCEPT
+    inline bool is_pooled(const messages::peer::address_item& host) NOEXCEPT
     {
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
         return find(host) != buffer_.end();
@@ -120,7 +118,7 @@ private:
     }
 
     // Inlines local to translation unit.
-    inline messages::p2p::address_item::cptr pop() NOEXCEPT;
+    inline messages::peer::address_item::cptr pop() NOEXCEPT;
     inline void push(const std::string& line) NOEXCEPT;
     inline bool is_reserved(const config::authority& host) const NOEXCEPT;
 

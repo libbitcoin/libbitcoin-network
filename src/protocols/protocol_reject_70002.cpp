@@ -20,7 +20,7 @@
 
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -31,7 +31,7 @@ namespace network {
 #define CLASS protocol_reject_70002
 
 using namespace system;
-using namespace messages::p2p;
+using namespace messages::peer;
 using namespace std::placeholders;
 
 // This protocol creates log overflow DOS vector, and is not in widespread use.

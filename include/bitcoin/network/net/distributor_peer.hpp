@@ -23,7 +23,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/memory.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -32,11 +32,11 @@ namespace network {
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 #define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
 #define DEFINE_SUBSCRIBER(name) using SUBSCRIBER_TYPE(name) = \
-    unsubscriber<const messages::p2p::name::cptr&>
+    unsubscriber<const messages::peer::name::cptr&>
 #define SUBSCRIBER_OVERLOAD(name) code do_subscribe( \
-    distributor_peer::handler<messages::p2p::name>&& handler) NOEXCEPT \
+    distributor_peer::handler<messages::peer::name>&& handler) NOEXCEPT \
     { return SUBSCRIBER(name).subscribe(std::forward< \
-        distributor_peer::handler<messages::p2p::name>>(handler)); }
+        distributor_peer::handler<messages::peer::name>>(handler)); }
 
 /// Not thread safe.
 class BCT_API distributor_peer
@@ -99,7 +99,7 @@ public:
 
     /// Relay a message instance to each subscriber of the type.
     /// Returns error code if fails to deserialize, otherwise success.
-    virtual code notify(messages::p2p::identifier id, uint32_t version,
+    virtual code notify(messages::peer::identifier id, uint32_t version,
         const system::data_chunk& data) NOEXCEPT;
 
     /// Stop all subscribers, prevents subsequent subscription (idempotent).
@@ -116,7 +116,7 @@ private:
         // Avoid deserialization if there are no subscribers for the type.
         if (!subscriber.empty())
         {
-            const auto ptr = messages::p2p::deserialize<Message>(data, version);
+            const auto ptr = messages::peer::deserialize<Message>(data, version);
             if (!ptr)
                 return error::invalid_message;
 
@@ -206,7 +206,7 @@ private:
 // Block message uses specialized deserializer for memory management.
 // Other message types use default (unspecified) memory allocation.
 template <>
-code distributor_peer::do_notify<messages::p2p::block>(
+code distributor_peer::do_notify<messages::peer::block>(
     distributor_peer::block_subscriber& subscriber, uint32_t version,
     const system::data_chunk& data) NOEXCEPT;
 

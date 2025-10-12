@@ -21,7 +21,7 @@
 #include <utility>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_version_106.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -32,7 +32,7 @@ namespace network {
 #define CLASS protocol_version_70001
 
 using namespace system;
-using namespace network::messages::p2p;
+using namespace network::messages::peer;
 
 protocol_version_70001::protocol_version_70001(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
@@ -58,7 +58,7 @@ protocol_version_70001::protocol_version_70001(const session::ptr& session,
 // ----------------------------------------------------------------------------
 // Relay is the only difference at protocol level 70001.
 
-messages::p2p::version protocol_version_70001::version_factory(bool) const NOEXCEPT
+messages::peer::version protocol_version_70001::version_factory(bool) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "protocol_version_70001");
     return protocol_version_106::version_factory(relay_);

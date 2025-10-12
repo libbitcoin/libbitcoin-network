@@ -19,13 +19,12 @@
 #ifndef LIBBITCOIN_NETWORK_NET_CHANNEL_CLIENT_HPP
 #define LIBBITCOIN_NETWORK_NET_CHANNEL_CLIENT_HPP
 
-#include <algorithm>
 #include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/rpc/messages.hpp>
+#include <bitcoin/network/messages/client/messages.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/distributor_client.hpp>
 #include <bitcoin/network/net/socket.hpp>

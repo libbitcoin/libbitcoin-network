@@ -23,7 +23,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
@@ -45,10 +45,10 @@ public:
 
 protected:
     virtual bool handle_receive_reject(const code& ec,
-        const messages::p2p::reject::cptr& message) NOEXCEPT;
+        const messages::peer::reject::cptr& message) NOEXCEPT;
 
 private:
-    std::string get_hash(const messages::p2p::reject& message) const NOEXCEPT;
+    std::string get_hash(const messages::peer::reject& message) const NOEXCEPT;
 };
 
 } // namespace network

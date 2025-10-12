@@ -32,7 +32,7 @@ namespace config {
 // ----------------------------------------------------------------------------
 
 address::address() NOEXCEPT
-  : address(system::to_shared<messages::p2p::address_item>())
+  : address(system::to_shared<messages::peer::address_item>())
 {
 }
 
@@ -42,18 +42,18 @@ address::address(const std::string& host) THROWS
     std::stringstream(host) >> *this;
 }
 
-address::address(messages::p2p::address_item&& item) NOEXCEPT
+address::address(messages::peer::address_item&& item) NOEXCEPT
   : address(system::to_shared(std::move(item)))
 {
 }
 
-address::address(const messages::p2p::address_item& item) NOEXCEPT
+address::address(const messages::peer::address_item& item) NOEXCEPT
   : address(system::to_shared(item))
 {
 }
 
-address::address(const messages::p2p::address_item::cptr& message) NOEXCEPT
-  : address_(message ? message : system::to_shared<messages::p2p::address_item>())
+address::address(const messages::peer::address_item::cptr& message) NOEXCEPT
+  : address_(message ? message : system::to_shared<messages::peer::address_item>())
 {
 }
 
@@ -97,7 +97,7 @@ bool address::is_v6() const NOEXCEPT
     return !is_v4();
 }
 
-const messages::p2p::ip_address& address::ip() const NOEXCEPT
+const messages::peer::ip_address& address::ip() const NOEXCEPT
 {
     return address_->ip;
 }
@@ -120,19 +120,19 @@ uint64_t address::services() const NOEXCEPT
 // Operators.
 // ----------------------------------------------------------------------------
 
-address::operator const messages::p2p::address_item& () const NOEXCEPT
+address::operator const messages::peer::address_item& () const NOEXCEPT
 {
     return *address_;
 }
 
-address::operator const messages::p2p::address_item::cptr& () const NOEXCEPT
+address::operator const messages::peer::address_item::cptr& () const NOEXCEPT
 {
     return address_;
 }
 
 address::operator bool() const NOEXCEPT
 {
-    return messages::p2p::is_specified(*address_);
+    return messages::peer::is_specified(*address_);
 }
 
 bool address::operator==(const address& other) const NOEXCEPT
@@ -147,14 +147,14 @@ bool address::operator!=(const address& other) const NOEXCEPT
     return !(*this == other);
 }
 
-bool address::operator==(const messages::p2p::address_item& other) const NOEXCEPT
+bool address::operator==(const messages::peer::address_item& other) const NOEXCEPT
 {
     return (address_->ip == other.ip)
         && ((address_->port == other.port) ||
             (is_zero(address_->port) || is_zero(other.port)));
 }
 
-bool address::operator!=(const messages::p2p::address_item& other) const NOEXCEPT
+bool address::operator!=(const messages::peer::address_item& other) const NOEXCEPT
 {
     return !(*this == other);
 }

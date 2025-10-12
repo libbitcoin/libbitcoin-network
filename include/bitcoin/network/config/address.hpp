@@ -22,13 +22,13 @@
 #include <memory>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace config {
 
-/// Container for messages::p2p::address_item (with timstamp and services).
+/// Container for messages::peer::address_item (with timstamp and services).
 /// IPv4 addresses are converted to IPv6-mapped for message encoding.
 /// Provided for connect/session, and serialization to/from hosts file.
 class BCT_API address
@@ -42,9 +42,9 @@ public:
 
     /// [IPv6]|IPv4[:8333][/timestamp[/services]] (IPv6 [literal]).
     address(const std::string& host) THROWS;
-    address(messages::p2p::address_item&& item) NOEXCEPT;
-    address(const messages::p2p::address_item& item) NOEXCEPT;
-    address(const messages::p2p::address_item::cptr& message) NOEXCEPT;
+    address(messages::peer::address_item&& item) NOEXCEPT;
+    address(const messages::peer::address_item& item) NOEXCEPT;
+    address(const messages::peer::address_item::cptr& message) NOEXCEPT;
 
     /// If endpoint is a DNS name (not numeric) default address is returned.
     address(const asio::endpoint& uri) NOEXCEPT;
@@ -68,7 +68,7 @@ public:
     /// The address properties.
     bool is_v4() const NOEXCEPT;
     bool is_v6() const NOEXCEPT;
-    const messages::p2p::ip_address& ip() const NOEXCEPT;
+    const messages::peer::ip_address& ip() const NOEXCEPT;
     uint16_t port() const NOEXCEPT;
     uint32_t timestamp() const NOEXCEPT;
     uint64_t services() const NOEXCEPT;
@@ -77,8 +77,8 @@ public:
     /// -----------------------------------------------------------------------
 
     /// The address item.
-    operator const messages::p2p::address_item& () const NOEXCEPT;
-    operator const messages::p2p::address_item::cptr& () const NOEXCEPT;
+    operator const messages::peer::address_item& () const NOEXCEPT;
+    operator const messages::peer::address_item::cptr& () const NOEXCEPT;
 
     /// False if the port is zero.
     operator bool() const NOEXCEPT;
@@ -87,8 +87,8 @@ public:
     /// Does not compare times or services (used in address protocols).
     bool operator==(const address& other) const NOEXCEPT;
     bool operator!=(const address& other) const NOEXCEPT;
-    bool operator==(const messages::p2p::address_item& other) const NOEXCEPT;
-    bool operator!=(const messages::p2p::address_item& other) const NOEXCEPT;
+    bool operator==(const messages::peer::address_item& other) const NOEXCEPT;
+    bool operator!=(const messages::peer::address_item& other) const NOEXCEPT;
 
     /// Same format as construct(string) and to_string().
     friend std::istream& operator>>(std::istream& input,
@@ -98,7 +98,7 @@ public:
 
 private:
     // This is not thread safe.
-    messages::p2p::address_item::cptr address_;
+    messages::peer::address_item::cptr address_;
 };
 
 typedef std::vector<address> addresses;

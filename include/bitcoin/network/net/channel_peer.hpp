@@ -23,7 +23,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/memory.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/distributor_peer.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -59,7 +59,7 @@ public:
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
-        using namespace messages::p2p;
+        using namespace messages::peer;
         const auto id = settings().identifier;
         const auto ptr = serialize(message, id, negotiated_version());
 
@@ -85,9 +85,6 @@ public:
     channel_peer(memory& memory, const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
 
-    /////// Pause reading from the socket, stops timers (requires strand).
-    ////void pause() NOEXCEPT override;
-
     /// Resume reading from the socket, starts timers (requires strand).
     void resume() NOEXCEPT override;
 
@@ -97,10 +94,10 @@ public:
     void set_quiet() NOEXCEPT;
 
     /// Message level is supported by configured protocol level.
-    bool is_negotiated(messages::p2p::level level) const NOEXCEPT;
+    bool is_negotiated(messages::peer::level level) const NOEXCEPT;
 
     /// Service level is advertised by peer.
-    bool is_peer_service(messages::p2p::service service) const NOEXCEPT;
+    bool is_peer_service(messages::peer::service service) const NOEXCEPT;
 
     /// Start height for version message (set only before handshake).
     size_t start_height() const NOEXCEPT;
@@ -111,14 +108,14 @@ public:
     void set_negotiated_version(uint32_t value) NOEXCEPT;
 
     /// Peer version should be written only in handshake.
-    messages::p2p::version::cptr peer_version() const NOEXCEPT;
-    void set_peer_version(const messages::p2p::version::cptr& value) NOEXCEPT;
+    messages::peer::version::cptr peer_version() const NOEXCEPT;
+    void set_peer_version(const messages::peer::version::cptr& value) NOEXCEPT;
 
     /// Originating address of connection with current time and peer services.
     address_item_cptr get_updated_address() const NOEXCEPT;
 
 protected:
-    typedef messages::p2p::heading::cptr heading_ptr;
+    typedef messages::peer::heading::cptr heading_ptr;
 
     /// Stranded handler invoked from channel::stop().
     void stopping(const code& ec) NOEXCEPT override;
@@ -138,11 +135,11 @@ private:
     bool quiet_{};
     distributor_peer distributor_;
     uint32_t negotiated_version_;
-    messages::p2p::version::cptr peer_version_{};
+    messages::peer::version::cptr peer_version_{};
     size_t start_height_{};
 
     system::data_chunk payload_buffer_{};
-    system::data_array<messages::p2p::heading::size()> heading_buffer_{};
+    system::data_array<messages::peer::heading::size()> heading_buffer_{};
 
     // Because heading buffer is fixed the stream can be reused as well.
     system::stream::in::fast heading_stream_{ heading_buffer_ };

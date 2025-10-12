@@ -33,7 +33,7 @@ struct hosts_tests_setup_fixture
 
 BOOST_FIXTURE_TEST_SUITE(hosts_tests, hosts_tests_setup_fixture)
 
-using namespace messages::p2p;
+using namespace messages::peer;
 
 class mock_settings final
   : public settings
