@@ -25,6 +25,23 @@
 namespace libbitcoin {
 namespace network {
 
+// utility
+static system::string_list to_host_names(const config::endpoints& hosts,
+    bool secure) NOEXCEPT
+{
+    const auto port = secure ? http::default_tls : http::default_http;
+
+    system::string_list out{};
+    out.resize(hosts.size());
+    std::ranges::transform(hosts, out.begin(), [=](const auto& value) NOEXCEPT
+        {
+            return value.to_lower(port);
+        });
+
+    return out;
+}
+
+
 // tcp_server
 // ----------------------------------------------------------------------------
 
@@ -40,21 +57,6 @@ steady_clock::duration tcp_server::timeout() const NOEXCEPT
 
 // http_server
 // ----------------------------------------------------------------------------
-
-inline system::string_list to_host_names(const config::endpoints& hosts,
-    bool secure) NOEXCEPT
-{
-    const auto port = secure ? http::default_tls : http::default_http;
-
-    system::string_list out{};
-    out.resize(hosts.size());
-    std::ranges::transform(hosts, out.begin(), [=](const auto& value) NOEXCEPT
-    {
-        return value.to_lower(port);
-    });
-
-    return out;
-}
 
 system::string_list http_server::host_names() const NOEXCEPT
 {
