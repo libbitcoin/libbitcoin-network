@@ -85,9 +85,6 @@ public:
     channel_peer(memory& memory, const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
 
-    /////// Pause reading from the socket, stops timers (requires strand).
-    ////void pause() NOEXCEPT override;
-
     /// Resume reading from the socket, starts timers (requires strand).
     void resume() NOEXCEPT override;
 

@@ -22,6 +22,7 @@
 #include <memory>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 
 namespace libbitcoin {

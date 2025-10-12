@@ -19,17 +19,12 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_PEER_HPP
 #define LIBBITCOIN_NETWORK_SESSION_PEER_HPP
 
-#include <atomic>
 #include <memory>
-#include <utility>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/p2p/messages.hpp>
+#include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
-#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {

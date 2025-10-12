@@ -76,12 +76,6 @@ void channel_peer::stopping(const code& ec) NOEXCEPT
     distributor_.stop(ec);
 }
 
-////void channel_peer::pause() NOEXCEPT
-////{
-////    BC_ASSERT_MSG(stranded(), "strand");
-////    channel::pause();
-////}
-
 // TODO: resume of an idle channel results in termination for invalid_magic.
 void channel_peer::resume() NOEXCEPT
 {

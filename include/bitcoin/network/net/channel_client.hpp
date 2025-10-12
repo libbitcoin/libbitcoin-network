@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_NET_CHANNEL_CLIENT_HPP
 #define LIBBITCOIN_NETWORK_NET_CHANNEL_CLIENT_HPP
 
-#include <algorithm>
 #include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
