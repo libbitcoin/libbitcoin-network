@@ -292,6 +292,8 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/protocols/protocol_address_out_209.cpp"
     "../../src/protocols/protocol_alert_311.cpp"
     "../../src/protocols/protocol_client.cpp"
+    "../../src/protocols/protocol_client_html.cpp"
+    "../../src/protocols/protocol_client_http.cpp"
     "../../src/protocols/protocol_peer.cpp"
     "../../src/protocols/protocol_ping_106.cpp"
     "../../src/protocols/protocol_ping_60001.cpp"

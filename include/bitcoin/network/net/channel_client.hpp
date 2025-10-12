@@ -39,7 +39,7 @@ class BCT_API channel_client
 public:
     typedef std::shared_ptr<channel_client> ptr;
 
-    /// Subscribe to http::request from peer (requires strand).
+    /// Subscribe to request from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
     template <class Message, typename Handler =
         distributor_client::handler<Message>>
@@ -49,15 +49,14 @@ public:
         distributor_.subscribe(std::forward<Handler>(handler));
     }
 
-    /// Serialize and write http response to peer (requires strand).
+    /// Serialize and write response to peer (requires strand).
     /// Completion handler is always invoked on the channel strand.
     template <class Message>
     void send(Message&& response, result_handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
 
-        using namespace system;
-        const auto ptr = make_shared(std::forward<Message>(response));
+        const auto ptr = system::make_shared(std::forward<Message>(response));
 
         // Capture response in intermediate completion handler.
         auto complete = [self = shared_from_base<channel_client>(), ptr,

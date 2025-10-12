@@ -199,6 +199,8 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_out_209.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_alert_311.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_client.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_client_html.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_client_http.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_peer.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_106.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_60001.cpp" />
@@ -326,6 +328,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_out_209.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_alert_311.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client_html.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client_http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_106.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_60001.hpp" />

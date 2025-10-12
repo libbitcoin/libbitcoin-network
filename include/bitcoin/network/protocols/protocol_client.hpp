@@ -19,11 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_CLIENT_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_CLIENT_HPP
 
-#include <filesystem>
-#include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/client/messages.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
@@ -33,80 +29,21 @@ namespace network {
 class BCT_API protocol_client
   : public protocol, protected tracker<protocol_client>
 {
-public:
+protected:
     typedef std::shared_ptr<protocol_client> ptr;
 
-    /// Construct an instance.
-    protocol_client(const session::ptr& session, const channel::ptr& channel,
-        const http_server& options) NOEXCEPT;
-
-    /// Start protocol (strand required).
-    void start() NOEXCEPT override;
-
-protected:
     DECLARE_SEND();
     DECLARE_SUBSCRIBE_CHANNEL();
 
-    /// Message handlers by http method.
-    virtual void handle_receive_get(const code& ec,
-        const http::method::get& request) NOEXCEPT;
-    virtual void handle_receive_head(const code& ec,
-        const http::method::head& request) NOEXCEPT;
-    virtual void handle_receive_post(const code& ec,
-        const http::method::post& request) NOEXCEPT;
-    virtual void handle_receive_put(const code& ec,
-        const http::method::put& request) NOEXCEPT;
-    virtual void handle_receive_delete(const code& ec,
-        const http::method::delete_& request) NOEXCEPT;
-    virtual void handle_receive_trace(const code& ec,
-        const http::method::trace& request) NOEXCEPT;
-    virtual void handle_receive_options(const code& ec,
-        const http::method::options& request) NOEXCEPT;
-    virtual void handle_receive_connect(const code& ec,
-        const http::method::connect& request) NOEXCEPT;
-    virtual void handle_receive_unknown(const code& ec,
-        const http::method::unknown& request) NOEXCEPT;
-
-    virtual void send_file(const http::string_request& request,
-        http::file&& file, http::mime_type type) NOEXCEPT;
-    virtual void send_bad_host(const http::string_request& request) NOEXCEPT;
-    virtual void send_not_found(const http::string_request& request) NOEXCEPT;
-    virtual void send_forbidden(const http::string_request& request) NOEXCEPT;
-    virtual void send_bad_target(const http::string_request& request) NOEXCEPT;
-    virtual void send_method_not_allowed(const http::string_request& request,
-        const code& ec) NOEXCEPT;
-
-    /// Request handler MUST invoke one of these unless stopped(ec).
-    virtual void handle_complete(const code& ec,
-        const code& reason) NOEXCEPT;
-
-    /// Override to replace error response pages.
-    virtual std::string error_page(const std::string& status,
-        const std::string& accepts) const NOEXCEPT;
+    /// Construct an instance.
+    /// -----------------------------------------------------------------------
+    protocol_client(const session::ptr& session,
+        const channel::ptr& channel) NOEXCEPT;
 
 private:
-    std::filesystem::path to_local_path(
-        const std::string& target) const NOEXCEPT;
-    void add_common_headers(http::fields& fields,
-        const http::string_request& request,
-        bool closing=false) const NOEXCEPT;
-    bool is_allowed_origin(const std::string& origin,
-        size_t version) const NOEXCEPT;
-    bool is_allowed_host(const std::string& host,
-        size_t version) const NOEXCEPT;
-
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
     const channel_client::ptr channel_;
-
-    // These are thread safe.
-    const session_client::ptr session_;
-    const system::string_list origins_;
-    const system::string_list hosts_;
-    const std::filesystem::path& root_;
-    const std::string& default_;
-    const std::string& server_;
-    const uint16_t port_;
 };
 
 } // namespace network
