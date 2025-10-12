@@ -21,8 +21,6 @@
 
 #include <algorithm>
 #include <atomic>
-#include <filesystem>
-#include <memory>
 #include <unordered_set>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>

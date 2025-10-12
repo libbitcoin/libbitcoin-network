@@ -18,9 +18,9 @@
  */
 #include <bitcoin/network/net/channel_peer.hpp>
 
-#include <algorithm>
 #include <iterator>
 #include <memory>
+#include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
