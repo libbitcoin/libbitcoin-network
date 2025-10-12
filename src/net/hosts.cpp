@@ -288,7 +288,8 @@ inline void hosts::push(const std::string& line) NOEXCEPT
         }
         else if (settings_.disabled(item))
         {
-            LOGF("Address disabled upon load [" << line << "].");
+            // IPv6 addresses saved and loaded with IPv6 disabled.
+            ////LOGF("Address disabled upon load [" << line << "].");
         }
         else if (settings_.insufficient(item))
         {
