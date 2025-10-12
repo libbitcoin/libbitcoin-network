@@ -320,70 +320,70 @@ include_bitcoin_network_log_HEADERS = \
     include/bitcoin/network/log/timer.hpp \
     include/bitcoin/network/log/tracker.hpp
 
-include_bitcoin_network_messages_p2pdir = ${includedir}/bitcoin/network/messages/p2p
-include_bitcoin_network_messages_p2p_HEADERS = \
-    include/bitcoin/network/messages/p2p/address.hpp \
-    include/bitcoin/network/messages/p2p/address_item.hpp \
-    include/bitcoin/network/messages/p2p/alert.hpp \
-    include/bitcoin/network/messages/p2p/alert_item.hpp \
-    include/bitcoin/network/messages/p2p/block.hpp \
-    include/bitcoin/network/messages/p2p/bloom_filter_add.hpp \
-    include/bitcoin/network/messages/p2p/bloom_filter_clear.hpp \
-    include/bitcoin/network/messages/p2p/bloom_filter_load.hpp \
-    include/bitcoin/network/messages/p2p/client_filter.hpp \
-    include/bitcoin/network/messages/p2p/client_filter_checkpoint.hpp \
-    include/bitcoin/network/messages/p2p/client_filter_headers.hpp \
-    include/bitcoin/network/messages/p2p/compact_block.hpp \
-    include/bitcoin/network/messages/p2p/compact_block_item.hpp \
-    include/bitcoin/network/messages/p2p/compact_transactions.hpp \
-    include/bitcoin/network/messages/p2p/fee_filter.hpp \
-    include/bitcoin/network/messages/p2p/get_address.hpp \
-    include/bitcoin/network/messages/p2p/get_blocks.hpp \
-    include/bitcoin/network/messages/p2p/get_client_filter_checkpoint.hpp \
-    include/bitcoin/network/messages/p2p/get_client_filter_headers.hpp \
-    include/bitcoin/network/messages/p2p/get_client_filters.hpp \
-    include/bitcoin/network/messages/p2p/get_compact_transactions.hpp \
-    include/bitcoin/network/messages/p2p/get_data.hpp \
-    include/bitcoin/network/messages/p2p/get_headers.hpp \
-    include/bitcoin/network/messages/p2p/headers.hpp \
-    include/bitcoin/network/messages/p2p/heading.hpp \
-    include/bitcoin/network/messages/p2p/inventory.hpp \
-    include/bitcoin/network/messages/p2p/inventory_item.hpp \
-    include/bitcoin/network/messages/p2p/memory_pool.hpp \
-    include/bitcoin/network/messages/p2p/merkle_block.hpp \
-    include/bitcoin/network/messages/p2p/message.hpp \
-    include/bitcoin/network/messages/p2p/messages.hpp \
-    include/bitcoin/network/messages/p2p/not_found.hpp \
-    include/bitcoin/network/messages/p2p/ping.hpp \
-    include/bitcoin/network/messages/p2p/pong.hpp \
-    include/bitcoin/network/messages/p2p/reject.hpp \
-    include/bitcoin/network/messages/p2p/send_address_v2.hpp \
-    include/bitcoin/network/messages/p2p/send_compact.hpp \
-    include/bitcoin/network/messages/p2p/send_headers.hpp \
-    include/bitcoin/network/messages/p2p/transaction.hpp \
-    include/bitcoin/network/messages/p2p/version.hpp \
-    include/bitcoin/network/messages/p2p/version_acknowledge.hpp \
-    include/bitcoin/network/messages/p2p/witness_tx_id_relay.hpp
+include_bitcoin_network_messages_clientdir = ${includedir}/bitcoin/network/messages/client
+include_bitcoin_network_messages_client_HEADERS = \
+    include/bitcoin/network/messages/client/messages.hpp \
+    include/bitcoin/network/messages/client/method.hpp
 
-include_bitcoin_network_messages_p2p_enumsdir = ${includedir}/bitcoin/network/messages/p2p/enums
-include_bitcoin_network_messages_p2p_enums_HEADERS = \
-    include/bitcoin/network/messages/p2p/enums/identifier.hpp \
-    include/bitcoin/network/messages/p2p/enums/level.hpp \
-    include/bitcoin/network/messages/p2p/enums/magic_numbers.hpp \
-    include/bitcoin/network/messages/p2p/enums/service.hpp
+include_bitcoin_network_messages_client_enumsdir = ${includedir}/bitcoin/network/messages/client/enums
+include_bitcoin_network_messages_client_enums_HEADERS = \
+    include/bitcoin/network/messages/client/enums/magic_numbers.hpp \
+    include/bitcoin/network/messages/client/enums/mime_type.hpp \
+    include/bitcoin/network/messages/client/enums/status.hpp \
+    include/bitcoin/network/messages/client/enums/target.hpp \
+    include/bitcoin/network/messages/client/enums/verb.hpp
 
-include_bitcoin_network_messages_rpcdir = ${includedir}/bitcoin/network/messages/rpc
-include_bitcoin_network_messages_rpc_HEADERS = \
-    include/bitcoin/network/messages/rpc/messages.hpp \
-    include/bitcoin/network/messages/rpc/method.hpp
+include_bitcoin_network_messages_peerdir = ${includedir}/bitcoin/network/messages/peer
+include_bitcoin_network_messages_peer_HEADERS = \
+    include/bitcoin/network/messages/peer/address.hpp \
+    include/bitcoin/network/messages/peer/address_item.hpp \
+    include/bitcoin/network/messages/peer/alert.hpp \
+    include/bitcoin/network/messages/peer/alert_item.hpp \
+    include/bitcoin/network/messages/peer/block.hpp \
+    include/bitcoin/network/messages/peer/bloom_filter_add.hpp \
+    include/bitcoin/network/messages/peer/bloom_filter_clear.hpp \
+    include/bitcoin/network/messages/peer/bloom_filter_load.hpp \
+    include/bitcoin/network/messages/peer/client_filter.hpp \
+    include/bitcoin/network/messages/peer/client_filter_checkpoint.hpp \
+    include/bitcoin/network/messages/peer/client_filter_headers.hpp \
+    include/bitcoin/network/messages/peer/compact_block.hpp \
+    include/bitcoin/network/messages/peer/compact_block_item.hpp \
+    include/bitcoin/network/messages/peer/compact_transactions.hpp \
+    include/bitcoin/network/messages/peer/fee_filter.hpp \
+    include/bitcoin/network/messages/peer/get_address.hpp \
+    include/bitcoin/network/messages/peer/get_blocks.hpp \
+    include/bitcoin/network/messages/peer/get_client_filter_checkpoint.hpp \
+    include/bitcoin/network/messages/peer/get_client_filter_headers.hpp \
+    include/bitcoin/network/messages/peer/get_client_filters.hpp \
+    include/bitcoin/network/messages/peer/get_compact_transactions.hpp \
+    include/bitcoin/network/messages/peer/get_data.hpp \
+    include/bitcoin/network/messages/peer/get_headers.hpp \
+    include/bitcoin/network/messages/peer/headers.hpp \
+    include/bitcoin/network/messages/peer/heading.hpp \
+    include/bitcoin/network/messages/peer/inventory.hpp \
+    include/bitcoin/network/messages/peer/inventory_item.hpp \
+    include/bitcoin/network/messages/peer/memory_pool.hpp \
+    include/bitcoin/network/messages/peer/merkle_block.hpp \
+    include/bitcoin/network/messages/peer/message.hpp \
+    include/bitcoin/network/messages/peer/messages.hpp \
+    include/bitcoin/network/messages/peer/not_found.hpp \
+    include/bitcoin/network/messages/peer/ping.hpp \
+    include/bitcoin/network/messages/peer/pong.hpp \
+    include/bitcoin/network/messages/peer/reject.hpp \
+    include/bitcoin/network/messages/peer/send_address_v2.hpp \
+    include/bitcoin/network/messages/peer/send_compact.hpp \
+    include/bitcoin/network/messages/peer/send_headers.hpp \
+    include/bitcoin/network/messages/peer/transaction.hpp \
+    include/bitcoin/network/messages/peer/version.hpp \
+    include/bitcoin/network/messages/peer/version_acknowledge.hpp \
+    include/bitcoin/network/messages/peer/witness_tx_id_relay.hpp
 
-include_bitcoin_network_messages_rpc_enumsdir = ${includedir}/bitcoin/network/messages/rpc/enums
-include_bitcoin_network_messages_rpc_enums_HEADERS = \
-    include/bitcoin/network/messages/rpc/enums/magic_numbers.hpp \
-    include/bitcoin/network/messages/rpc/enums/mime_type.hpp \
-    include/bitcoin/network/messages/rpc/enums/status.hpp \
-    include/bitcoin/network/messages/rpc/enums/target.hpp \
-    include/bitcoin/network/messages/rpc/enums/verb.hpp
+include_bitcoin_network_messages_peer_enumsdir = ${includedir}/bitcoin/network/messages/peer/enums
+include_bitcoin_network_messages_peer_enums_HEADERS = \
+    include/bitcoin/network/messages/peer/enums/identifier.hpp \
+    include/bitcoin/network/messages/peer/enums/level.hpp \
+    include/bitcoin/network/messages/peer/enums/magic_numbers.hpp \
+    include/bitcoin/network/messages/peer/enums/service.hpp
 
 include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \

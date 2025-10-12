@@ -282,9 +282,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\fee_filter.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\get_address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\get_blocks.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\get_client_filters.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\get_client_filter_checkpoint.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\get_client_filter_headers.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\get_client_filters.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\get_compact_transactions.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\get_data.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\get_headers.hpp" />
