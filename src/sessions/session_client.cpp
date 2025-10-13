@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/sessions/session_client.hpp>
 
+#include <utility>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net.hpp>
