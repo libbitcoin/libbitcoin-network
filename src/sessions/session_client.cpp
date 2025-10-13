@@ -23,6 +23,12 @@
 #include <bitcoin/network/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 
+// This is nearly identical to session_inbound (peer).
+// The difference is handshake and protocol attamchment. Otherwise that class
+// could be replaced by this one. However that also derives from session_peer
+// which we don't wnat in downstream client-server sessions. So for now they
+// are just very redundant.
+
 namespace libbitcoin {
 namespace network {
 
@@ -37,7 +43,6 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-// TODO: parameterize settings().[type] struct
 session_client::session_client(net& network, uint64_t identifier,
     const config::endpoints& bindings, size_t connections,
     const std::string& name) NOEXCEPT

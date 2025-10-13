@@ -207,7 +207,7 @@ bool session_inbound::enabled() const NOEXCEPT
     return true;
 }
 
-// Completion sequence.
+// Channel sequence.
 // ----------------------------------------------------------------------------
 
 void session_inbound::attach_handshake(const channel::ptr& channel,
@@ -252,6 +252,8 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
             maximum_services)->shake(std::move(handler));
 }
 
+// Completion sequence.
+// ----------------------------------------------------------------------------
 void session_inbound::handle_channel_start(const code&,
     const channel::ptr&) NOEXCEPT
 {
