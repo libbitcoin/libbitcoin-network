@@ -184,7 +184,7 @@
     <ClCompile Include="..\..\..\..\src\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\src\net\broadcaster.cpp" />
     <ClCompile Include="..\..\..\..\src\net\channel.cpp" />
-    <ClCompile Include="..\..\..\..\src\net\channel_client.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\channel_http.cpp" />
     <ClCompile Include="..\..\..\..\src\net\channel_peer.cpp" />
     <ClCompile Include="..\..\..\..\src\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\src\net\deadline.cpp" />
@@ -311,7 +311,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\acceptor.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\broadcaster.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_client.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp" />

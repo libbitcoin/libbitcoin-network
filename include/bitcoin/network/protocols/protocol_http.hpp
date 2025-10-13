@@ -94,7 +94,7 @@ protected:
 private:
     // This is mostly thread safe, and used in a thread safe manner.
     // pause/resume/paused/attach not invoked, setters limited to handshake.
-    const channel_client::ptr channel_;
+    const channel_http::ptr channel_;
 
     // These are thread safe.
     const session_client::ptr session_;

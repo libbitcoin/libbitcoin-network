@@ -33,11 +33,11 @@
 namespace libbitcoin {
 namespace network {
 
-class BCT_API channel_client
-  : public channel, protected tracker<channel_client>
+class BCT_API channel_http
+  : public channel, protected tracker<channel_http>
 {
 public:
-    typedef std::shared_ptr<channel_client> ptr;
+    typedef std::shared_ptr<channel_http> ptr;
 
     /// Subscribe to request from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
@@ -59,7 +59,7 @@ public:
         const auto ptr = system::make_shared(std::forward<Message>(response));
 
         // Capture response in intermediate completion handler.
-        auto complete = [self = shared_from_base<channel_client>(), ptr,
+        auto complete = [self = shared_from_base<channel_http>(), ptr,
             handle = std::move(handler)](const code& ec, size_t) NOEXCEPT
         {
             if (ec) self->stop(ec);
@@ -77,7 +77,7 @@ public:
 
     /// Uses peer config for timeouts if not specified via other construct.
     /// Construct client channel to encapsulate and communicate on the socket.
-    channel_client(const logger& log, const socket::ptr& socket,
+    channel_http(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero,
         const network::settings::http_server& options={}) NOEXCEPT;
 

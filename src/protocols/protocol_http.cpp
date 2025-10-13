@@ -45,7 +45,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 protocol_http::protocol_http(const session::ptr& session,
     const channel::ptr& channel, const settings::http_server& options) NOEXCEPT
   : protocol_client(session, channel),
-    channel_(std::dynamic_pointer_cast<channel_client>(channel)),
+    channel_(std::dynamic_pointer_cast<channel_http>(channel)),
     session_(std::dynamic_pointer_cast<session_client>(session)),
     origins_(channel->settings().admin.origin_names()),
     hosts_(options.host_names()),
