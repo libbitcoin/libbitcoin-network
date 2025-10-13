@@ -218,7 +218,7 @@ public:
     void take(address_item_handler&& handler) const NOEXCEPT override
     {
         // Default address is ipv6, will case disabled(address) true.
-        handler(error::success, system::make_shared<const address_item>());
+        handler(error::success, system::to_shared<const address_item>());
     }
 };
 

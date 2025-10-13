@@ -219,7 +219,7 @@ void hosts::fetch(address_handler&& handler) const NOEXCEPT
     auto index = pseudo_random::next(zero, limit);
 
     // Allocate non-const message (converted to const by return).
-    const auto out = make_shared<messages::peer::address>();
+    const auto out = to_shared<messages::peer::address>();
     out->addresses.reserve(size);
 
     // O(N).
