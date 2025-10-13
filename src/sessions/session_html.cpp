@@ -60,6 +60,5 @@ channel::ptr session_html::create_channel(const socket::ptr& socket) NOEXCEPT
     BC_POP_WARNING()
 }
 
-
 } // namespace network
 } // namespace libbitcoin
