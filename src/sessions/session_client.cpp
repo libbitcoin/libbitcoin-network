@@ -81,7 +81,7 @@ void session_client::handle_started(const code& ec,
         return;
     }
 
-    LOGN("Accepting " << connections_ << " " << name_ << " clients on "
+    LOGN("Accepting " << connections_ << " " << name_ << " connections on "
         << bindings_.size() << " bindings.");
 
     for (const auto& bind: bindings_)
@@ -95,7 +95,8 @@ void session_client::handle_started(const code& ec,
             return;
         }
 
-        LOGN("Bound to client endpoint [" << acceptor->local() << "].");
+        LOGN("Bound to " << name_ << " endpoint ["
+            << acceptor->local() << "].");
 
         // Subscribe acceptor to stop desubscriber.
         subscribe_stop([=](const code&) NOEXCEPT
@@ -138,13 +139,13 @@ void session_client::handle_accepted(const code& ec,
         return;
     }
 
-    // Client services are allowed to connect and get busy response.
-    ////if (ec == error::service_suspended)
-    ////{
-    ////    ////LOGS("Suspended " << name_ << " channel start.");
-    ////    defer(BIND(start_accept, _1, acceptor));
-    ////    return;
-    ////}
+    // Suspension is controlled via acceptor construction.
+    if (ec == error::service_suspended)
+    {
+        ////LOGS("Suspended " << name_ << " channel start.");
+        defer(BIND(start_accept, _1, acceptor));
+        return;
+    }
 
     // There was an error accepting the channel, so try again after delay.
     if (ec)
@@ -155,13 +156,12 @@ void session_client::handle_accepted(const code& ec,
         return;
     }
 
-    // Client services are allowed to connect and get busy response.
-    ////if (!enabled())
-    ////{
-    ////    LOGS("Dropping " << name_ << " connection (disabled).");
-    ////    socket->stop();
-    ////    return;
-    ////}
+    if (!enabled())
+    {
+        LOGS("Dropping " << name_ << " connection (disabled).");
+        socket->stop();
+        return;
+    }
 
     // We have to drop without responding, otherwise count will overflow.
     // Could instead stop listening when at limit, though this is simpler.
@@ -173,12 +173,24 @@ void session_client::handle_accepted(const code& ec,
         return;
     }
 
-    // TODO: black/white listing.
-    // Client services are allowed to connect and get unauthorized response.
-    ////const auto address = socket->authority().to_address_item();
+    const auto address = socket->authority().to_address_item();
 
-    // TODO: pass session info to channel (busy, unauthorized).
-    // Creates channel_client cast returned as channel::ptr.
+    if (!whitelisted(address))
+    {
+        ////LOGS("Dropping not whitelisted peer [" << socket->authority() << "].");
+        socket->stop();
+        return;
+    }
+
+    if (blacklisted(address))
+    {
+        ////LOGS("Dropping blacklisted peer [" << socket->authority() << "].");
+        socket->stop();
+        return;
+    }
+
+    // TODO: pass session info to channel for http (e.g. busy, unauthorized).
+    // Creates channel_xxxx cast as channel::ptr.
     const auto channel = create_channel(socket);
 
     LOGS("Accepted " << name_ << " connection [" << channel->authority()
@@ -190,6 +202,21 @@ void session_client::handle_accepted(const code& ec,
     start_channel(channel,
         BIND(handle_channel_start, _1, channel),
         BIND(handle_channel_stop, _1, channel));
+}
+
+bool session_client::blacklisted(const config::address& address) const NOEXCEPT
+{
+    return settings().blacklisted(address);
+}
+
+bool session_client::whitelisted(const config::address& address) const NOEXCEPT
+{
+    return settings().whitelisted(address);
+}
+
+bool session_client::enabled() const NOEXCEPT
+{
+    return true;
 }
 
 // Channel sequence.
