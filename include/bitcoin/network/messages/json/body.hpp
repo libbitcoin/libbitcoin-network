@@ -110,12 +110,10 @@ struct body
         using buffer_t = typename Parser::buffer_t;
 
         template <bool Request>
-        explicit writer(http::header<Request>&, value_type& parser) NOEXCEPT
-          : parser_{ parser } {}
+        explicit writer(http::header<Request>&) NOEXCEPT {}
 
         void init(error_code& ec) NOEXCEPT
         {
-            parser_.reset();
             buffer_.clear();
             ec.clear();
         }
@@ -123,10 +121,6 @@ struct body
         template <class Buffers>
         std::size_t put(const Buffers& buffers, error_code& ec) NOEXCEPT
         {
-            // Prioritize existing parser error.
-            if ((ec = parser_.get_error()))
-                return {};
-
             std::size_t added{};
             for (auto const& buffer: buffers)
             {
@@ -137,15 +131,12 @@ struct body
                 added += size;
             }
 
+            ec.clear();
             return added;
         }
 
         void finish(error_code& ec) NOEXCEPT
         {
-            // Prioritize existing parser error.
-            if ((ec = parser_.get_error()))
-                return;
-
             // Nothing written to the response implies an error.
             if (buffer_.empty())
             {
@@ -160,7 +151,6 @@ struct body
         }
 
     private:
-        value_type& parser_;
         buffer_t buffer_{};
     };
 };

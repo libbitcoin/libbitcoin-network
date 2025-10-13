@@ -34,6 +34,7 @@ struct mock_parser
     bool done{ false };
     std::string written{};
     error::boost_code result{};
+    error::boost_code second_write_result{};
 
     void reset() NOEXCEPT
     {
@@ -62,6 +63,7 @@ struct mock_parser
         if ((ec = result))
             return {};
 
+        result = second_write_result;
         written += data;
         return data.size();
     }
@@ -141,6 +143,29 @@ BOOST_AUTO_TEST_CASE(body_reader__put__multiple_buffers__writes_clears_error_and
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(size, value1.size() + value2.size());
     BOOST_REQUIRE_EQUAL(parse.written, value1 + value2);
+}
+
+BOOST_AUTO_TEST_CASE(body_reader__put__multiple_buffers_second_write_fails__stops_and_returns_partial_size)
+{
+    mock_parser parse{};
+    http::header<true> header{};
+    body<mock_parser>::reader reader{ header, parse };
+
+    const std::string value1{ "{\"jsonrpc\": \"2.0\", " };
+    const std::string value2{ "\"method\": \"getbalance\"}" };
+    const std::array buffers
+    {
+        asio::const_buffer{ value1.data(), value1.size() },
+        asio::const_buffer{ value2.data(), value2.size() }
+    };
+
+    parse.second_write_result = fake_error;
+
+    error::boost_code ec{};
+    const auto size = reader.put(buffers, ec);
+    BOOST_REQUIRE_EQUAL(ec, fake_error);
+    BOOST_REQUIRE_EQUAL(size, value1.size());
+    BOOST_REQUIRE_EQUAL(parse.written, value1);
 }
 
 BOOST_AUTO_TEST_CASE(body_reader__put__parser_done___returns_real_error_and_zero)
@@ -234,51 +259,29 @@ BOOST_AUTO_TEST_CASE(body_reader__finish__not_done_error__returns_error)
 
 // body<mock_parser>::writer tests.
 // ----------------------------------------------------------------------------
-// writer doesn't observe parser.done, and it's not set by parser.
 
-BOOST_AUTO_TEST_CASE(body_writer__init__done_parser__resets_parser_and_clears_buffer)
+BOOST_AUTO_TEST_CASE(body_writer__init__non_empty_buffer__clears_buffer_and_error)
 {
-    mock_parser parse{};
     http::header<false> header{};
-    body<mock_parser>::writer writer{ header, parse };
+    body<mock_parser>::writer writer{ header };
 
-    parse.done = true;
-    parse.result = fake_error;
-    parse.written = "42";
+    const std::string value{ "{\"result\": 0.5}" };
+    const asio::const_buffer buffer{ value.data(), value.size() };
 
-    error::boost_code ec{ fake_error };
+    // Put some data in the buffer.
+    error::boost_code ec{};
+    writer.put(std::array{ buffer }, ec);
+
+    ec = fake_error;
     writer.init(ec);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!parse.done);
-    BOOST_REQUIRE(!parse.result);
-    BOOST_REQUIRE(parse.written.empty());
-    BOOST_REQUIRE(writer.buffer().empty());
-}
-
-BOOST_AUTO_TEST_CASE(body_writer__init__not_done_parser__resets_parser_and_clears_buffer)
-{
-    mock_parser parse{};
-    http::header<false> header{};
-    body<mock_parser>::writer writer{ header, parse };
-
-    parse.done = false;
-    parse.result = fake_error;
-    parse.written = "42";
-
-    error::boost_code ec{ fake_error };
-    writer.init(ec);
-    BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!parse.done);
-    BOOST_REQUIRE(!parse.result);
-    BOOST_REQUIRE(parse.written.empty());
     BOOST_REQUIRE(writer.buffer().empty());
 }
 
 BOOST_AUTO_TEST_CASE(body_writer__put__valid_buffer__appends_clears_error_and_returns_size)
 {
-    mock_parser parse{};
     http::header<false> header{};
-    body<mock_parser>::writer writer{ header, parse };
+    body<mock_parser>::writer writer{ header };
 
     const std::string value{ "{\"result\": 0.5}" };
     const asio::const_buffer buffer{ value.data(), value.size() };
@@ -292,9 +295,8 @@ BOOST_AUTO_TEST_CASE(body_writer__put__valid_buffer__appends_clears_error_and_re
 
 BOOST_AUTO_TEST_CASE(body_writer__put__multiple_buffers__appends_clears_error_and_returns_size)
 {
-    mock_parser parse{};
     http::header<false> header{};
-    body<mock_parser>::writer writer{ header, parse };
+    body<mock_parser>::writer writer{ header };
 
     const std::string value1{ "{\"result\": " };
     const std::string value2{ "0.5}" };
@@ -304,74 +306,57 @@ BOOST_AUTO_TEST_CASE(body_writer__put__multiple_buffers__appends_clears_error_an
         asio::const_buffer{ value2.data(), value2.size() }
     };
 
-    error::boost_code ec{};
+    error::boost_code ec{ fake_error };
     const auto size = writer.put(buffers, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(size, value1.size() + value2.size());
     BOOST_REQUIRE_EQUAL(writer.buffer(), value1 + value2);
 }
 
-BOOST_AUTO_TEST_CASE(body_writer__put__parser_error__returns_error_and_zero)
+BOOST_AUTO_TEST_CASE(body_writer__put__empty_buffer__clears_error_and_returns_zero)
 {
-    mock_parser parse{};
     http::header<false> header{};
-    body<mock_parser>::writer writer{ header, parse };
+    body<mock_parser>::writer writer{ header };
 
-    const std::string value{ "{\"result\": null}" };
+    const std::string value{};
     const asio::const_buffer buffer{ value.data(), value.size() };
-    parse.result = fake_error;
 
-    error::boost_code ec{};
+    error::boost_code ec{ fake_error };
     const auto size = writer.put(std::array{ buffer }, ec);
-    BOOST_REQUIRE_EQUAL(ec, fake_error);
+    BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(size, zero);
     BOOST_REQUIRE(writer.buffer().empty());
 }
 
 BOOST_AUTO_TEST_CASE(body_writer__finish__non_empty_buffer__clears_error)
 {
-    mock_parser parse{};
     http::header<false> header{};
-    body<mock_parser>::writer writer{ header, parse };
+    body<mock_parser>::writer writer{ header };
 
     const std::string value{ "{\"result\": null}" };
     const asio::const_buffer buffer{ value.data(), value.size() };
-
     error::boost_code ec{ fake_error };
+
     writer.put(std::array{ buffer }, ec);
     writer.finish(ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(writer.buffer(), value);
 }
 
-BOOST_AUTO_TEST_CASE(body_writer__finish__empty_buffer__returns_real_error)
+BOOST_AUTO_TEST_CASE(body_writer__finish__empty_buffer__returns_protocol_error)
 {
-    mock_parser parse{};
     http::header<false> header{};
-    body<mock_parser>::writer writer{ header, parse };
+    body<mock_parser>::writer writer{ header };
 
     error::boost_code ec{};
     writer.finish(ec);
-    BOOST_REQUIRE_EQUAL(ec, real_error);
-}
-
-BOOST_AUTO_TEST_CASE(body_writer__finish__parser_error__returns_error)
-{
-    mock_parser parse{};
-    http::header<false> header{};
-    body<mock_parser>::writer writer{ header, parse };
-
-    parse.result = fake_error;
-    error::boost_code ec{};
-    writer.finish(ec);
-    BOOST_REQUIRE_EQUAL(ec, fake_error);
+    BOOST_REQUIRE_EQUAL(ec, protocol_error);
 }
 
 BOOST_AUTO_TEST_CASE(body_writer__buffer__empty_after_init__returns_empty)
 {
-    mock_parser parse{};
     http::header<false> header{};
-    body<mock_parser>::writer writer{ header, parse };
+    body<mock_parser>::writer writer{ header };
 
     error::boost_code ec{ fake_error };
     writer.init(ec);
@@ -381,12 +366,12 @@ BOOST_AUTO_TEST_CASE(body_writer__buffer__empty_after_init__returns_empty)
 
 BOOST_AUTO_TEST_CASE(body_writer__buffer__after_put__returns_appended_data)
 {
-    mock_parser parse{};
     http::header<false> header{};
-    body<mock_parser>::writer writer{ header, parse };
+    body<mock_parser>::writer writer{ header };
 
     const std::string value{ "{\"id\": 1}" };
     const asio::const_buffer buffer{ value.data(), value.size() };
+
     error::boost_code ec{ fake_error };
     writer.put(std::array{ buffer }, ec);
     BOOST_REQUIRE(!ec);
