@@ -250,7 +250,7 @@ protected:
     virtual session_manual::ptr attach_manual_session() NOEXCEPT;
     virtual session_inbound::ptr attach_inbound_session() NOEXCEPT;
     virtual session_outbound::ptr attach_outbound_session() NOEXCEPT;
-    virtual session_html<protocol_html>::ptr attach_web_session() NOEXCEPT;
+    virtual session_server<protocol_html>::ptr attach_server_session() NOEXCEPT;
 
 private:
     // Suspensions.
@@ -262,7 +262,7 @@ private:
     // Sequences.
     void handle_start(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_run(const code& ec, const result_handler& handler) NOEXCEPT;
-    void handle_web(const code& ec, const result_handler& handler) NOEXCEPT;
+    void handle_server(const code& ec, const result_handler& handler) NOEXCEPT;
 
     // Subscriptions.
 

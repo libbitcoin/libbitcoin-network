@@ -426,12 +426,12 @@ include_bitcoin_network_protocols_HEADERS = \
 include_bitcoin_network_sessionsdir = ${includedir}/bitcoin/network/sessions
 include_bitcoin_network_sessions_HEADERS = \
     include/bitcoin/network/sessions/session.hpp \
-    include/bitcoin/network/sessions/session_html.hpp \
     include/bitcoin/network/sessions/session_inbound.hpp \
     include/bitcoin/network/sessions/session_manual.hpp \
     include/bitcoin/network/sessions/session_outbound.hpp \
     include/bitcoin/network/sessions/session_peer.hpp \
     include/bitcoin/network/sessions/session_seed.hpp \
+    include/bitcoin/network/sessions/session_server.hpp \
     include/bitcoin/network/sessions/session_tcp.hpp \
     include/bitcoin/network/sessions/sessions.hpp
 
