@@ -26,7 +26,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/client/messages.hpp>
 #include <bitcoin/network/net/channel.hpp>
-#include <bitcoin/network/net/distributor_client.hpp>
+#include <bitcoin/network/net/distributor_http.hpp>
 #include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -42,7 +42,7 @@ public:
     /// Subscribe to request from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
     template <class Message, typename Handler =
-        distributor_client::handler<Message>>
+        distributor_http::handler<Message>>
     void subscribe(Handler&& handler) NOEXCEPT
     {
         BC_ASSERT_MSG(stranded(), "strand");
@@ -100,7 +100,7 @@ private:
 
     // These are protected by strand.
     http::flat_buffer request_buffer_;
-    distributor_client distributor_;
+    distributor_http distributor_;
     bool reading_{};
 };
 

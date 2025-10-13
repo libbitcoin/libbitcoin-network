@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/net/distributor_client.hpp>
+#include <bitcoin/network/net/distributor_http.hpp>
 
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/async/async.hpp>
@@ -35,7 +35,7 @@ using namespace system;
 #define CASE_NOTIFY(ec, name) \
     case http::verb::name: { DO_NOTIFY(ec, name); return; }
 
-distributor_client::distributor_client(asio::strand& strand) NOEXCEPT
+distributor_http::distributor_http(asio::strand& strand) NOEXCEPT
   : MAKE_SUBSCRIBER(get),
     MAKE_SUBSCRIBER(head),
     MAKE_SUBSCRIBER(post),
@@ -48,7 +48,7 @@ distributor_client::distributor_client(asio::strand& strand) NOEXCEPT
 {
 }
 
-void distributor_client::notify(
+void distributor_http::notify(
     const http::string_request_cptr& request) const NOEXCEPT
 {
     if (!request)
@@ -76,7 +76,7 @@ void distributor_client::notify(
     }
 }
 
-void distributor_client::stop(const code& ec) NOEXCEPT
+void distributor_http::stop(const code& ec) NOEXCEPT
 {
     STOP_SUBSCRIBER(get);
     STOP_SUBSCRIBER(head);

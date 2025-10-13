@@ -205,7 +205,7 @@
     <ClCompile Include="..\..\..\..\test\net\channel_peer.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\distributor_client.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\distributor_http.cpp" />
     <ClCompile Include="..\..\..\..\test\net\distributor_peer.cpp" />
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />

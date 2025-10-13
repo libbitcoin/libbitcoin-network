@@ -18,15 +18,15 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(distributor_client_tests)
+BOOST_AUTO_TEST_SUITE(distributor_http_tests)
 
 using namespace http;
 
-BOOST_AUTO_TEST_CASE(distributor_client__construct__stop__stops)
+BOOST_AUTO_TEST_CASE(distributor_http__construct__stop__stops)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor_client instance(strand);
+    distributor_http instance(strand);
 
     std::promise<bool> promise;
     boost::asio::post(strand, [&]() NOEXCEPT
@@ -40,11 +40,11 @@ BOOST_AUTO_TEST_CASE(distributor_client__construct__stop__stops)
     BOOST_REQUIRE(promise.get_future().get());
 }
 
-BOOST_AUTO_TEST_CASE(distributor_client__subscribe__stop__expected_code)
+BOOST_AUTO_TEST_CASE(distributor_http__subscribe__stop__expected_code)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor_client instance(strand);
+    distributor_http instance(strand);
     constexpr auto expected_ec = error::invalid_magic;
     auto result = true;
 
@@ -71,11 +71,11 @@ BOOST_AUTO_TEST_CASE(distributor_client__subscribe__stop__expected_code)
     BOOST_REQUIRE(!result);
 }
 
-BOOST_AUTO_TEST_CASE(distributor_client__notify__null_message__null_unknown_with_operation_failed)
+BOOST_AUTO_TEST_CASE(distributor_http__notify__null_message__null_unknown_with_operation_failed)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor_client instance(strand);
+    distributor_http instance(strand);
     auto result = true;
 
     bool set{};
@@ -113,11 +113,11 @@ BOOST_AUTO_TEST_CASE(distributor_client__notify__null_message__null_unknown_with
     BOOST_REQUIRE(!result);
 }
 
-BOOST_AUTO_TEST_CASE(distributor_client__notify__get_message__expected_method)
+BOOST_AUTO_TEST_CASE(distributor_http__notify__get_message__expected_method)
 {
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
-    distributor_client instance(strand);
+    distributor_http instance(strand);
     auto result = true;
 
     bool set{};

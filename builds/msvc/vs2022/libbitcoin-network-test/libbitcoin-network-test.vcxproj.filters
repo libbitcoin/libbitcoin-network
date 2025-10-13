@@ -285,7 +285,7 @@
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\distributor_client.cpp">
+    <ClCompile Include="..\..\..\..\test\net\distributor_http.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\distributor_peer.cpp">

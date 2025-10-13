@@ -100,7 +100,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/net/channel_peer.cpp \
     src/net/connector.cpp \
     src/net/deadline.cpp \
-    src/net/distributor_client.cpp \
+    src/net/distributor_http.cpp \
     src/net/distributor_peer.cpp \
     src/net/hosts.cpp \
     src/net/proxy.cpp \
@@ -222,7 +222,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/net/channel_peer.cpp \
     test/net/connector.cpp \
     test/net/deadline.cpp \
-    test/net/distributor_client.cpp \
+    test/net/distributor_http.cpp \
     test/net/distributor_peer.cpp \
     test/net/hosts.cpp \
     test/net/proxy.cpp \
@@ -396,7 +396,7 @@ include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/channel_peer.hpp \
     include/bitcoin/network/net/connector.hpp \
     include/bitcoin/network/net/deadline.hpp \
-    include/bitcoin/network/net/distributor_client.hpp \
+    include/bitcoin/network/net/distributor_http.hpp \
     include/bitcoin/network/net/distributor_peer.hpp \
     include/bitcoin/network/net/hosts.hpp \
     include/bitcoin/network/net/net.hpp \

@@ -291,7 +291,7 @@
     <ClCompile Include="..\..\..\..\src\net\deadline.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\net\distributor_client.cpp">
+    <ClCompile Include="..\..\..\..\src\net\distributor_http.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\distributor_peer.cpp">
@@ -671,7 +671,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_client.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_http.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_peer.hpp">

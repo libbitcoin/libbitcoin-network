@@ -30,7 +30,7 @@ namespace network {
 #define SUBSCRIBER(name) name##_subscriber_
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 #define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
-#define HANDLER(name) distributor_client::handler<http::method::name>
+#define HANDLER(name) distributor_http::handler<http::method::name>
 #define DEFINE_SUBSCRIBER(name) \
     using SUBSCRIBER_TYPE(name) = subscriber<const http::method::name&>
 #define SUBSCRIBER_OVERLOAD(name) \
@@ -38,14 +38,14 @@ namespace network {
     { return SUBSCRIBER(name).subscribe(std::forward<HANDLER(name)>(handler)); }
 
 /// Not thread safe.
-class BCT_API distributor_client
+class BCT_API distributor_http
 {
 public:
     /// Helper for external declarations.
     template <class Method>
     using handler = std::function<void(const code&, const Method&)>;
 
-    DELETE_COPY_MOVE_DESTRUCT(distributor_client);
+    DELETE_COPY_MOVE_DESTRUCT(distributor_http);
 
     DEFINE_SUBSCRIBER(get);
     DEFINE_SUBSCRIBER(head);
@@ -58,7 +58,7 @@ public:
     DEFINE_SUBSCRIBER(unknown);
 
     /// Create an instance of this class.
-    distributor_client(asio::strand& strand) NOEXCEPT;
+    distributor_http(asio::strand& strand) NOEXCEPT;
 
     /// If stopped, handler is invoked with error::subscriber_stopped.
     /// If key exists, handler is invoked with error::subscriber_exists.
