@@ -354,12 +354,6 @@
     <ClCompile Include="..\..\..\..\src\sessions\session.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\sessions\session_client.cpp">
-      <Filter>src\sessions</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\sessions\session_html.cpp">
-      <Filter>src\sessions</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\sessions\session_inbound.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
@@ -373,6 +367,9 @@
       <Filter>src\sessions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\sessions\session_seed.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\sessions\session_tcp.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\settings.cpp">
@@ -737,9 +734,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_client.hpp">
-      <Filter>include\bitcoin\network\sessions</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_html.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
@@ -756,6 +750,9 @@
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_seed.hpp">
+      <Filter>include\bitcoin\network\sessions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_tcp.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\sessions.hpp">

@@ -43,14 +43,12 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // [field] returns "" if not found but .at(field) throws.
 
 protocol_http::protocol_http(const session::ptr& session,
-    const channel::ptr& channel, const settings::http_server& options) NOEXCEPT
+    const channel::ptr& channel, const options_t& options) NOEXCEPT
   : protocol_client(session, channel),
     channel_(std::dynamic_pointer_cast<channel_http>(channel)),
-    session_(std::dynamic_pointer_cast<session_client>(session)),
-    origins_(channel->settings().admin.origin_names()),
-    hosts_(options.host_names()),
-    server_(options.server),
-    port_(options.secure ? default_tls : default_http),
+    session_(std::dynamic_pointer_cast<session_tcp>(session)),
+    default_port_(options.secure ? default_tls : default_http),
+    options_(options),
     tracker<protocol_http>(session->log)
 {
 }
@@ -243,20 +241,6 @@ void protocol_http::handle_complete(const code& ec,
 // Utilities.
 // ----------------------------------------------------------------------------
 
-bool protocol_http::is_allowed_origin(const std::string& origin,
-    size_t version) const NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // Allow same-origin and no-origin requests.
-    // Origin header field is not available until http 1.1.
-    if (origin.empty() || version < version_1_1)
-        return true;
-
-    return origins_.empty() ||
-        system::contains(origins_, config::to_normal_host(origin, port_));
-}
-
 bool protocol_http::is_allowed_host(const std::string& host,
     size_t version) const NOEXCEPT
 {
@@ -267,8 +251,8 @@ bool protocol_http::is_allowed_host(const std::string& host,
     if (host.empty() && version >= version_1_1)
         return false;
 
-    return hosts_.empty() ||
-        system::contains(hosts_, config::to_normal_host(host, port_));
+    return options_.hosts.empty() || system::contains(options_.hosts,
+        config::to_normal_host(host, default_port()));
 }
 
 // TODO: pass and set response mime_type.
@@ -283,8 +267,8 @@ void protocol_http::add_common_headers(fields& fields,
 
     // server (configured)
     // ------------------------------------------------------------------------
-    if (!server_.empty())
-        fields.set(field::server, server_);
+    if (!options_.server.empty())
+        fields.set(field::server, options_.server);
 
     // origin (allow)
     // ------------------------------------------------------------------------
@@ -325,6 +309,14 @@ std::string protocol_http::format_status(const http::status /*status*/,
 {
     // TODO: format proper status response bodies for status and mime type.
     return reason + (details.empty() ? "" : " [" + details + "]");
+}
+
+// Properties.
+// ----------------------------------------------------------------------------
+
+uint16_t protocol_http::default_port() const NOEXCEPT
+{
+    return default_port_;
 }
 
 BC_POP_WARNING()

@@ -23,7 +23,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/sessions/session_client.hpp>
+#include <bitcoin/network/sessions/session_tcp.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -31,21 +31,51 @@ namespace network {
 class net;
 
 /// Inbound client connections session, thread safe.
-class BCT_API session_html
-  : public session_client, protected tracker<session_html>
+template <typename Protocol>
+class session_html
+  : public session_tcp, protected tracker<session_html<Protocol>>
 {
 public:
-    typedef std::shared_ptr<session_html> ptr;
+    typedef std::shared_ptr<session_html<Protocol>> ptr;
+    using options_t = typename Protocol::options_t;
+    using channel_t = typename Protocol::channel_t;
 
     /// Construct an instance (network should be started).
-    session_html(net& network, uint64_t identifier) NOEXCEPT;
+    session_html(net& network, uint64_t identifier, const options_t& options,
+        const std::string& name) NOEXCEPT
+      : session_tcp(network, identifier, options, name),
+        tracker<session_html<Protocol>>(network)
+    {
+    }
 
 protected:
     /// Create a channel from the started socket.
-    channel::ptr create_channel(const socket::ptr& socket) NOEXCEPT override;
+    inline channel::ptr create_channel(
+        const socket::ptr& socket) NOEXCEPT override
+    {
+        BC_ASSERT_MSG(stranded(), "strand");
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-    /// Overridden to change channel protocols (base calls from channel strand).
-    void attach_protocols(const channel::ptr& channel) NOEXCEPT override;
+        // Channel id must be created using create_key().
+        return std::make_shared<channel_t>(log, socket,
+            settings(), create_key(), options_);
+
+        BC_POP_WARNING()
+    }
+
+    /// Overridden to set channel protocols (base calls from channel strand).
+    inline void attach_protocols(const channel::ptr& channel) NOEXCEPT override
+    {
+        BC_ASSERT_MSG(channel->stranded(), "channel strand");
+        BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
+
+        const auto self = shared_from_this();
+        channel->attach<Protocol>(self, options_)->start();
+    }
+
+private:
+    // This is thread safe.
+    options_t options_;
 };
 
 } // namespace network

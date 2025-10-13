@@ -226,12 +226,12 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70016.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session.cpp" />
-    <ClCompile Include="..\..\..\..\test\sessions\session_client.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_html.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_inbound.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_manual.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_outbound.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_seed.cpp" />
+    <ClCompile Include="..\..\..\..\test\sessions\session_tcp.cpp" />
     <ClCompile Include="..\..\..\..\test\settings.cpp" />
     <ClCompile Include="..\..\..\..\test\test.cpp" />
   </ItemGroup>

@@ -23,6 +23,7 @@
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/messages.hpp>
+#include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol_client.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
@@ -33,6 +34,8 @@ class BCT_API protocol_http
   : public protocol_client, protected tracker<protocol_http>
 {
 public:
+    using channel_t = channel_http;
+    using options_t = settings::http_server;
     typedef std::shared_ptr<protocol_http> ptr;
 
     protocol_http(const session::ptr& session,
@@ -85,11 +88,11 @@ protected:
         const std::string& details = {}) const NOEXCEPT;
 
     /// Utilities.
-    /// -----------------------------------------------------------------------
-    bool is_allowed_origin(const std::string& origin,
-        size_t version) const NOEXCEPT;
     bool is_allowed_host(const std::string& host,
         size_t version) const NOEXCEPT;
+
+    /// Properties.
+    uint16_t default_port() const NOEXCEPT;
 
 private:
     // This is mostly thread safe, and used in a thread safe manner.
@@ -97,11 +100,9 @@ private:
     const channel_http::ptr channel_;
 
     // These are thread safe.
-    const session_client::ptr session_;
-    const system::string_list origins_;
-    const system::string_list hosts_;
-    const std::string& server_;
-    const uint16_t port_;
+    const session_tcp::ptr session_;
+    const uint16_t default_port_;
+    const options_t& options_;
 };
 
 } // namespace network

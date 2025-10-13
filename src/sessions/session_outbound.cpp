@@ -43,7 +43,7 @@ BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 session_outbound::session_outbound(net& network, uint64_t identifier) NOEXCEPT
-  : session_peer(network, identifier), tracker<session_outbound>(network.log)
+  : session_peer(network, identifier), tracker<session_outbound>(network)
 {
 }
 

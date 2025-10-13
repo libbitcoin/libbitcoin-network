@@ -210,13 +210,12 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70002.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70016.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session.cpp" />
-    <ClCompile Include="..\..\..\..\src\sessions\session_client.cpp" />
-    <ClCompile Include="..\..\..\..\src\sessions\session_html.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_inbound.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_manual.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_outbound.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_peer.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_seed.cpp" />
+    <ClCompile Include="..\..\..\..\src\sessions\session_tcp.cpp" />
     <ClCompile Include="..\..\..\..\src\settings.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -339,13 +338,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70016.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocols.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_client.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_html.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_manual.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_outbound.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_seed.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_tcp.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\sessions.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\version.hpp" />

@@ -18,9 +18,9 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(session_client_tests)
+BOOST_AUTO_TEST_SUITE(session_tcp_tests)
 
-BOOST_AUTO_TEST_CASE(session_client_test)
+BOOST_AUTO_TEST_CASE(session_tcp_test)
 {
     BOOST_REQUIRE(true);
 }

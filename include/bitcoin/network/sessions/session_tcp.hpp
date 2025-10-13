@@ -16,33 +16,34 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SESSION_CLIENT_HPP
-#define LIBBITCOIN_NETWORK_SESSION_CLIENT_HPP
+#ifndef LIBBITCOIN_NETWORK_SESSION_TCP_HPP
+#define LIBBITCOIN_NETWORK_SESSION_TCP_HPP
 
 #include <memory>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 class net;
 
-class BCT_API session_client
+class BCT_API session_tcp
   : public session
 {
 public:
-    typedef std::shared_ptr<session_client> ptr;
+    typedef std::shared_ptr<session_tcp> ptr;
+    using options_t = settings::html_server;
 
     /// Start accepting connections as configured (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;
 
 protected:
     /// Construct an instance (network should be started).
-    session_client(net& network, uint64_t identifier,
-        const config::endpoints& bindings, size_t connections,
+    session_tcp(net& network, uint64_t identifier, const options_t& options,
         const std::string& name) NOEXCEPT;
 
     /// Accept cycle.
@@ -91,8 +92,7 @@ private:
     ////net& network_;
 
     // These are thread safe.
-    const config::endpoints& bindings_;
-    const size_t connections_;
+    const options_t& options_;
     const std::string name_;
 
     // This is protected by strand.

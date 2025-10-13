@@ -121,13 +121,12 @@ src_libbitcoin_network_la_SOURCES = \
     src/protocols/protocol_version_70002.cpp \
     src/protocols/protocol_version_70016.cpp \
     src/sessions/session.cpp \
-    src/sessions/session_client.cpp \
-    src/sessions/session_html.cpp \
     src/sessions/session_inbound.cpp \
     src/sessions/session_manual.cpp \
     src/sessions/session_outbound.cpp \
     src/sessions/session_peer.cpp \
-    src/sessions/session_seed.cpp
+    src/sessions/session_seed.cpp \
+    src/sessions/session_tcp.cpp
 
 # local: test/libbitcoin-network-test
 #------------------------------------------------------------------------------
@@ -242,12 +241,12 @@ test_libbitcoin_network_test_SOURCES = \
     test/protocols/protocol_version_70002.cpp \
     test/protocols/protocol_version_70016.cpp \
     test/sessions/session.cpp \
-    test/sessions/session_client.cpp \
     test/sessions/session_html.cpp \
     test/sessions/session_inbound.cpp \
     test/sessions/session_manual.cpp \
     test/sessions/session_outbound.cpp \
-    test/sessions/session_seed.cpp
+    test/sessions/session_seed.cpp \
+    test/sessions/session_tcp.cpp
 
 endif WITH_TESTS
 
@@ -427,12 +426,12 @@ include_bitcoin_network_protocols_HEADERS = \
 include_bitcoin_network_sessionsdir = ${includedir}/bitcoin/network/sessions
 include_bitcoin_network_sessions_HEADERS = \
     include/bitcoin/network/sessions/session.hpp \
-    include/bitcoin/network/sessions/session_client.hpp \
     include/bitcoin/network/sessions/session_html.hpp \
     include/bitcoin/network/sessions/session_inbound.hpp \
     include/bitcoin/network/sessions/session_manual.hpp \
     include/bitcoin/network/sessions/session_outbound.hpp \
     include/bitcoin/network/sessions/session_peer.hpp \
     include/bitcoin/network/sessions/session_seed.hpp \
+    include/bitcoin/network/sessions/session_tcp.hpp \
     include/bitcoin/network/sessions/sessions.hpp
 
