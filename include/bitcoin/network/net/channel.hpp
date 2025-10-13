@@ -22,7 +22,6 @@
 #include <memory>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/settings.hpp>
@@ -30,8 +29,11 @@
 namespace libbitcoin {
 namespace network {
 
+/// Abstract base channel with timers and identity.
+/// See proxy base class for its thread safety constraints.
+/// A channel is a proxy with timers and connection state.
 class BCT_API channel
-  : public proxy, protected tracker<channel>
+  : public proxy
 {
 public:
     typedef std::shared_ptr<channel> ptr;
@@ -61,12 +63,6 @@ public:
         return protocol;
     }
 
-    /// Construct a channel to encapsulated and communicate on the socket.
-    channel(const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero,
-        const deadline::duration& inactivity={},
-        const deadline::duration& expiration={}) NOEXCEPT;
-
     /// Asserts/logs stopped.
     virtual ~channel() NOEXCEPT;
 
@@ -89,6 +85,12 @@ public:
     const network::settings& settings() const NOEXCEPT;
 
 protected:
+    /// Construct a channel to encapsulated and communicate on the socket.
+    channel(const logger& log, const socket::ptr& socket,
+        const network::settings& settings, uint64_t identifier=zero,
+        const deadline::duration& inactivity={},
+        const deadline::duration& expiration={}) NOEXCEPT;
+
     /// Stranded handler invoked from stop().
     void stopping(const code& ec) NOEXCEPT override;
 

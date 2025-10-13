@@ -52,8 +52,7 @@ channel::channel(const logger& log, const socket::ptr& socket,
     settings_(settings),
     identifier_(identifier),
     inactivity_(make_timer(log, socket->strand(), inactivity)),
-    expiration_(make_timer(log, socket->strand(), expiration)),
-    tracker<channel>(log)
+    expiration_(make_timer(log, socket->strand(), expiration))
 {
 }
 
