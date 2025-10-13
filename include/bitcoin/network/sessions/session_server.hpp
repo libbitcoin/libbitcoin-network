@@ -69,7 +69,7 @@ protected:
 
 private:
     // This is thread safe.
-    options_t options_;
+    const options_t& options_;
 };
 
 } // namespace network
