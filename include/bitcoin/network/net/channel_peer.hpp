@@ -31,11 +31,9 @@
 namespace libbitcoin {
 namespace network {
 
-/// Virtual, thread safe except for:
-/// * See proxy for its thread safety constraints.
-/// * Version into should only be written before/during handshake.
-/// * attach/resume/signal_activity must be called from the strand.
-/// A channel is a proxy with timers and connection state.
+/// Full duplex bitcoin peer-to-peer tcp/ip channel.
+/// Version into should only be written before/during handshake.
+/// Attach/resume/signal_activity must be called from the strand.
 class BCT_API channel_peer
   : public channel, protected tracker<channel_peer>
 {
