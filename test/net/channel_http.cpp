@@ -18,23 +18,23 @@
  */
 #include "../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(channel_client_tests)
+BOOST_AUTO_TEST_SUITE(channel_http_tests)
 
-class mock_channel_client
-  : public channel_client
+class mock_channel_http
+  : public channel_http
 {
 public:
-    using channel_client::channel_client;
+    using channel_http::channel_http;
 
     // Call must be stranded.
     void subscribe_stop1(result_handler handler) NOEXCEPT
     {
-        channel_client::subscribe_stop(std::move(handler));
+        channel_http::subscribe_stop(std::move(handler));
     }
 
     void stop(const code& ec) NOEXCEPT override
     {
-        channel_client::stop(ec);
+        channel_http::stop(ec);
 
         if (!stop_)
         {
@@ -55,7 +55,7 @@ private:
 
 using namespace http;
 
-BOOST_AUTO_TEST_CASE(channel_client__stopped__default__false)
+BOOST_AUTO_TEST_CASE(channel_http__stopped__default__false)
 {
     constexpr auto expected_identifier = 42u;
     const logger log{};
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(channel_client__stopped__default__false)
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_client>(log, socket_ptr, set, expected_identifier);
+    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, set, expected_identifier);
     BOOST_REQUIRE(!channel_ptr->stopped());
 
     BOOST_REQUIRE_NE(channel_ptr->nonce(), zero);
@@ -74,14 +74,14 @@ BOOST_AUTO_TEST_CASE(channel_client__stopped__default__false)
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__properties__default__expected)
+BOOST_AUTO_TEST_CASE(channel_http__properties__default__expected)
 {
     const logger log{};
     threadpool pool(1);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_client>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, set, 42);
 
     BOOST_REQUIRE(!channel_ptr->address());
     BOOST_REQUIRE_NE(channel_ptr->nonce(), 0u);
@@ -91,14 +91,14 @@ BOOST_AUTO_TEST_CASE(channel_client__properties__default__expected)
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__subscribe_message__subscribed__expected)
+BOOST_AUTO_TEST_CASE(channel_http__subscribe_message__subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_client>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, set, 42);
     constexpr auto expected_ec = error::invalid_magic;
 
     auto result = true;
@@ -125,14 +125,14 @@ BOOST_AUTO_TEST_CASE(channel_client__subscribe_message__subscribed__expected)
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__stop__all_subscribed__expected)
+BOOST_AUTO_TEST_CASE(channel_http__stop__all_subscribed__expected)
 {
     const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<mock_channel_client>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<mock_channel_http>(log, socket_ptr, set, 42);
     constexpr auto expected_ec = error::invalid_magic;
 
     std::promise<code> stop2_stopped;
@@ -180,14 +180,14 @@ BOOST_AUTO_TEST_CASE(channel_client__stop__all_subscribed__expected)
     BOOST_REQUIRE(result);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected)
+BOOST_AUTO_TEST_CASE(channel_http__send__not_connected__expected)
 {
     const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_client>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, set, 42);
 
     auto result = true;
     std::promise<code> promise;
@@ -212,14 +212,14 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected__expected)
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected)
+BOOST_AUTO_TEST_CASE(channel_http__send__not_connected_move__expected)
 {
     const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel_client>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<channel_http>(log, socket_ptr, set, 42);
 
     auto result = true;
     std::promise<code> promise;
@@ -243,14 +243,14 @@ BOOST_AUTO_TEST_CASE(channel_client__send__not_connected_move__expected)
     channel_ptr->stop(error::invalid_magic);
 }
 
-BOOST_AUTO_TEST_CASE(channel_client__paused__resume_after_read_fail__true)
+BOOST_AUTO_TEST_CASE(channel_http__paused__resume_after_read_fail__true)
 {
     const logger log{};
     threadpool pool(2);
     asio::strand strand(pool.service().get_executor());
     const settings set(system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<mock_channel_client>(log, socket_ptr, set, 42);
+    auto channel_ptr = std::make_shared<mock_channel_http>(log, socket_ptr, set, 42);
 
     std::promise<bool> paused_after_resume;
     boost::asio::post(channel_ptr->strand(), [=, &paused_after_resume]() NOEXCEPT

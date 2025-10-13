@@ -33,11 +33,11 @@
 namespace libbitcoin {
 namespace network {
 
-class BCT_API channel_client
-  : public channel, protected tracker<channel_client>
+class BCT_API channel_http
+  : public channel, protected tracker<channel_http>
 {
 public:
-    typedef std::shared_ptr<channel_client> ptr;
+    typedef std::shared_ptr<channel_http> ptr;
 
     /// Subscribe to request from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
@@ -59,7 +59,7 @@ public:
         const auto ptr = system::make_shared(std::forward<Message>(response));
 
         // Capture response in intermediate completion handler.
-        auto complete = [self = shared_from_base<channel_client>(), ptr,
+        auto complete = [self = shared_from_base<channel_http>(), ptr,
             handle = std::move(handler)](const code& ec, size_t) NOEXCEPT
         {
             if (ec) self->stop(ec);
@@ -77,16 +77,20 @@ public:
 
     /// Uses peer config for timeouts if not specified via other construct.
     /// Construct client channel to encapsulate and communicate on the socket.
-    channel_client(const logger& log, const socket::ptr& socket,
+    channel_http(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero,
         const network::settings::http_server& options={}) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
 
+    /// http is half-duplex, so reads must wait until send is completed.
     /// Must be called (only once) from protocol message handler (if no stop).
     /// Calling more than once is safe but implies a protocol problem. Failure
     /// to call after successful message handling results in stalled channel.
+    /// This can be buried in the common send completion hander, conditioned on
+    /// on the result code. This is simpler and more performant than having the
+    /// distributor issue a completion handler to invoke read continuation.
     void read_request() NOEXCEPT;
 
 protected:

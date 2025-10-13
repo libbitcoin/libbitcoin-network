@@ -22,7 +22,7 @@
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/broadcaster.hpp>
 #include <bitcoin/network/net/channel.hpp>
-#include <bitcoin/network/net/channel_client.hpp>
+#include <bitcoin/network/net/channel_http.hpp>
 #include <bitcoin/network/net/channel_peer.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/deadline.hpp>

@@ -30,7 +30,7 @@ namespace network {
 protocol_client::protocol_client(const session::ptr& session,
     const channel::ptr& channel) NOEXCEPT
   : protocol(session, channel),
-    channel_(std::dynamic_pointer_cast<channel_client>(channel)),
+    channel_(std::dynamic_pointer_cast<channel_http>(channel)),
     tracker<protocol_client>(session->log)
 {
 }

@@ -130,43 +130,44 @@ BOOST_AUTO_TEST_CASE(socket__accept__cancel_acceptor__channel_stopped)
     BOOST_REQUIRE(pool.join());
 }
 
-BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
-{
-    const logger log{};
-    threadpool pool(2);
-    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
-    asio::strand strand(pool.service().get_executor());
-
-    const asio::endpoint endpoint(asio::tcp::v6(), 42);
-    asio::endpoints endpoints;
-    endpoints.create(endpoint, "bogus.xxx", "service");
-
-    instance->connect(endpoints, [instance](const code& ec)
-    {
-        // Socket cancellation sets channel_stopped and default ipv6 authority.
-        // TODO: 3 (ERROR_PATH_NOT_FOUND) code gets mapped to unknown.
-        ////BOOST_REQUIRE(ec == error::unknown || ec == error::channel_stopped);
-
-        // gcc/ubuntu (one time in CI):
-        // fatal error: in "socket_tests/socket__connect__invalid__error":
-        // std::length_error: basic_string::_M_create
-        BOOST_REQUIRE(ec);
-
-        // Default authority string inconsistent due to context.
-        ////BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::ffff:0:0]");
-        ////BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "0.0.0.0");
-    });
-
-    // Test race.
-    std::this_thread::sleep_for(microseconds(1));
-
-    // Stopping the socket cancels connection attempt, but should fail first.
-    // Delay above increases chance that connect fail will win consistently.
-    instance->stop();
-
-    pool.stop();
-    BOOST_REQUIRE(pool.join());
-}
+// Test is a race condition, periodically fails.
+////BOOST_AUTO_TEST_CASE(socket__connect__invalid__error)
+////{
+////    const logger log{};
+////    threadpool pool(2);
+////    const auto instance = std::make_shared<socket_accessor>(log, pool.service());
+////    asio::strand strand(pool.service().get_executor());
+////
+////    const asio::endpoint endpoint(asio::tcp::v6(), 42);
+////    asio::endpoints endpoints;
+////    endpoints.create(endpoint, "bogus.xxx", "service");
+////
+////    instance->connect(endpoints, [instance](const code& ec)
+////    {
+////        // Socket cancellation sets channel_stopped and default ipv6 authority.
+////        // TODO: 3 (ERROR_PATH_NOT_FOUND) code gets mapped to unknown.
+////        ////BOOST_REQUIRE(ec == error::unknown || ec == error::channel_stopped);
+////
+////        // gcc/ubuntu (one time in CI):
+////        // fatal error: in "socket_tests/socket__connect__invalid__error":
+////        // std::length_error: basic_string::_M_create
+////        BOOST_REQUIRE(ec);
+////
+////        // Default authority string inconsistent due to context.
+////        ////BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "[::ffff:0:0]");
+////        ////BOOST_REQUIRE_EQUAL(instance->get_authority().to_string(), "0.0.0.0");
+////    });
+////
+////    // Test race.
+////    std::this_thread::sleep_for(microseconds(1));
+////
+////    // Stopping the socket cancels connection attempt, but should fail first.
+////    // Delay above increases chance that connect fail will win consistently.
+////    instance->stop();
+////
+////    pool.stop();
+////    BOOST_REQUIRE(pool.join());
+////}
 
 ////BOOST_AUTO_TEST_CASE(socket__read_some__disconnected__error)
 ////{

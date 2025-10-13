@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/sessions/session_inbound.hpp>
 
+#include <memory>
 #include <utility>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net.hpp>
@@ -131,6 +132,7 @@ void session_inbound::handle_accepted(const code& ec,
         return;
     }
 
+    // Suspension is controlled via acceptor construction.
     if (ec == error::service_suspended)
     {
         ////LOGS("Suspended inbound channel start.");
@@ -206,7 +208,7 @@ bool session_inbound::enabled() const NOEXCEPT
     return true;
 }
 
-// Completion sequence.
+// Channel sequence.
 // ----------------------------------------------------------------------------
 
 void session_inbound::attach_handshake(const channel::ptr& channel,
@@ -251,6 +253,8 @@ void session_inbound::attach_handshake(const channel::ptr& channel,
             maximum_services)->shake(std::move(handler));
 }
 
+// Completion sequence.
+// ----------------------------------------------------------------------------
 void session_inbound::handle_channel_start(const code&,
     const channel::ptr&) NOEXCEPT
 {

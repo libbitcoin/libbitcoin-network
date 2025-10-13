@@ -48,19 +48,17 @@ void session_html::attach_protocols(
     channel->attach<protocol_html>(self, settings().admin)->start();
 }
 
-// TODO: channel_client_inbound
 channel::ptr session_html::create_channel(const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
     // Channel id must be created using create_key().
-    return std::make_shared<channel_client>(log, socket, settings(),
+    return std::make_shared<channel_http>(log, socket, settings(),
         create_key(), settings().admin);
 
     BC_POP_WARNING()
 }
-
 
 } // namespace network
 } // namespace libbitcoin

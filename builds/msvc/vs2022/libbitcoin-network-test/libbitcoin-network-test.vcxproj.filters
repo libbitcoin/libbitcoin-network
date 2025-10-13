@@ -270,7 +270,7 @@
     <ClCompile Include="..\..\..\..\test\net\channel.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\channel_client.cpp">
+    <ClCompile Include="..\..\..\..\test\net\channel_http.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\channel_peer.cpp">

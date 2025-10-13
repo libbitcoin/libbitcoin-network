@@ -76,6 +76,7 @@ void connector::stop() NOEXCEPT
 // Methods.
 // ----------------------------------------------------------------------------
 
+// This used by outbound (address from pool).
 void connector::connect(const address& host,
     socket_handler&& handler) NOEXCEPT
 {
@@ -89,6 +90,9 @@ void connector::connect(const authority& host,
         std::move(handler));
 }
 
+// TODO: this is getting a zero port for seeds (and maybe manual).
+// TODO: that results in the connection being interpreted as inbound.
+// This used by seed and manual (endpoint from config).
 void connector::connect(const endpoint& host,
     socket_handler&& handler) NOEXCEPT
 {
