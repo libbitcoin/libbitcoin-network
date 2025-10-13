@@ -30,6 +30,13 @@
 namespace libbitcoin {
 namespace network {
 
+/// This abstract base protocol subscribes to http request messages (by verb)
+/// and dispatches the message obect to virtual methods by verb. Standard
+/// responses are sent for disalloved verbs and other invalidated requests.
+/// Utilities are provided to simplify common header response validation and
+/// behavior based configured options. Derive from this class to implement an
+/// http service that does NOT process a document directory (see protocol_html
+/// for that).
 class BCT_API protocol_http
   : public protocol, protected tracker<protocol_http>
 {
@@ -38,13 +45,13 @@ public:
     using options_t = settings::http_server;
     typedef std::shared_ptr<protocol_http> ptr;
 
+    void start() NOEXCEPT override;
+
+protected:
     protocol_http(const session::ptr& session,
         const channel::ptr& channel,
         const settings::http_server& options) NOEXCEPT;
 
-    void start() NOEXCEPT override;
-
-protected:
     DECLARE_SEND();
     DECLARE_SUBSCRIBE_CHANNEL();
 
@@ -76,7 +83,7 @@ protected:
     virtual void send_method_not_allowed(const http::string_request& request,
         const code& ec) NOEXCEPT;
 
-    /// Request handler MUST invoke one this once unless stopped.
+    /// Request handler MUST invoke this once unless stopped.
     virtual void handle_complete(const code& ec,
         const code& reason) NOEXCEPT;
 

@@ -31,6 +31,12 @@
 namespace libbitcoin {
 namespace network {
 
+/// "html" refers to a document server build on the http protocol. This base
+/// protocol subscribes to http request and serves documents from a file system
+/// relative directory. GET targets are sanitized and standard status responses
+/// sent based on acceptable mime types. Headers are validated in accordance
+/// with specified configuration options. This protocol is designed as a base
+/// for more dynamic protocols that might handle additional verbs.
 class BCT_API protocol_html
   : public protocol_http, protected tracker<protocol_html>
 {
