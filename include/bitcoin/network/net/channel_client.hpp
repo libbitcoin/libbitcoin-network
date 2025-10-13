@@ -24,7 +24,7 @@
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/client/messages.hpp>
+#include <bitcoin/network/messages/http/messages.hpp>
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/distributor_http.hpp>
 #include <bitcoin/network/net/socket.hpp>

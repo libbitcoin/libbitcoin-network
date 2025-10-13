@@ -136,8 +136,8 @@
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
     <ClCompile Include="..\..\..\..\src\memory.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\client\enums\mime_type.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\client\enums\target.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\address.cpp">
       <ObjectFileName>$(IntDir)src_messages_peer_address.obj</ObjectFileName>
     </ClCompile>
@@ -256,13 +256,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\tracker.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\memory.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\magic_numbers.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\mime_type.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\status.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\target.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\verb.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\messages.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\method.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\magic_numbers.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\mime_type.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\status.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\target.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\verb.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\messages.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\alert.hpp" />

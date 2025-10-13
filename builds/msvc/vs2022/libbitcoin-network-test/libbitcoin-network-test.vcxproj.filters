@@ -25,10 +25,10 @@
     <Filter Include="src\messages">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\client">
+    <Filter Include="src\messages\http">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\client\enums">
+    <Filter Include="src\messages\http\enums">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\peer">
@@ -114,17 +114,17 @@
     <ClCompile Include="..\..\..\..\test\memory.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\client\enums\magic_numbers.cpp">
-      <Filter>src\messages\client\enums</Filter>
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\magic_numbers.cpp">
+      <Filter>src\messages\http\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\client\enums\mime_type.cpp">
-      <Filter>src\messages\client\enums</Filter>
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\mime_type.cpp">
+      <Filter>src\messages\http\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\client\enums\target.cpp">
-      <Filter>src\messages\client\enums</Filter>
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp">
+      <Filter>src\messages\http\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\client\method.cpp">
-      <Filter>src\messages\client</Filter>
+    <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
+      <Filter>src\messages\http</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\address.cpp">
       <Filter>src\messages\peer</Filter>

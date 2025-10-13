@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/client/enums/target.hpp>
+#include <bitcoin/network/messages/http/enums/target.hpp>
 
 #include <filesystem>
 #include <unordered_map>
 #include <regex>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/client/enums/magic_numbers.hpp>
+#include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
 
 namespace libbitcoin {
 namespace network {

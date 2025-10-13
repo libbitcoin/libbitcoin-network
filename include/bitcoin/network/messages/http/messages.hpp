@@ -16,20 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_CLIENT_ENUMS_VERB_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_CLIENT_ENUMS_VERB_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_MESSAGES_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_MESSAGES_HPP
 
-#include <bitcoin/network/define.hpp>
-
-namespace libbitcoin {
-namespace network {
-namespace http {
-
-/// Verb is aliased to beast boost define.
-using verb = boost::beast::http::verb;
-
-} // namespace http
-} // namespace network
-} // namespace libbitcoin
+#include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
+#include <bitcoin/network/messages/http/enums/mime_type.hpp>
+#include <bitcoin/network/messages/http/enums/status.hpp>
+#include <bitcoin/network/messages/http/enums/target.hpp>
+#include <bitcoin/network/messages/http/enums/verb.hpp>
+#include <bitcoin/network/messages/http/method.hpp>
 
 #endif

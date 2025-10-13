@@ -24,7 +24,7 @@
 #include <bitcoin/network/client.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/messages/client/messages.hpp>
+#include <bitcoin/network/messages/http/messages.hpp>
 #include <bitcoin/network/protocols/protocol_client_http.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 

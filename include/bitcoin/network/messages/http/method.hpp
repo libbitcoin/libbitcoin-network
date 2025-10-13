@@ -16,12 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_CLIENT_METHOD_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_CLIENT_METHOD_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_METHOD_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_METHOD_HPP
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/client/enums/verb.hpp>
+#include <bitcoin/network/messages/http/enums/verb.hpp>
 
 /// Type-differentiation for request message distribution.
 
