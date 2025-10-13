@@ -43,6 +43,7 @@ public:
     session_server(net& network, uint64_t identifier, const options_t& options,
         const std::string& name) NOEXCEPT
       : session_tcp(network, identifier, options, name),
+        options_(options),
         tracker<session_server<Protocol>>(network)
     {
     }
@@ -68,7 +69,7 @@ protected:
 
 private:
     // This is thread safe.
-    options_t options_;
+    const options_t& options_;
 };
 
 } // namespace network
