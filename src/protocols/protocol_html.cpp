@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/protocols/protocol_client_html.hpp>
+#include <bitcoin/network/protocols/protocol_html.hpp>
 
 #include <filesystem>
 #include <memory>
@@ -27,13 +27,13 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/http/messages.hpp>
-#include <bitcoin/network/protocols/protocol_client_http.hpp>
+#include <bitcoin/network/protocols/protocol_http.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-#define CLASS protocol_client_html
+#define CLASS protocol_html
 
 using namespace http;
 using namespace std::placeholders;
@@ -43,19 +43,19 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // [field] returns "" if not found but .at(field) throws.
 
-protocol_client_html::protocol_client_html(const session::ptr& session,
+protocol_html::protocol_html(const session::ptr& session,
     const channel::ptr& channel, const settings::html_server& options) NOEXCEPT
-  : protocol_client_http(session, channel, options),
+  : protocol_http(session, channel, options),
     root_(channel->settings().admin.path),
     default_(channel->settings().admin.default_),
-    tracker<protocol_client_html>(session->log)
+    tracker<protocol_html>(session->log)
 {
 }
 
 // Handle get method.
 // ----------------------------------------------------------------------------
 
-void protocol_client_html::handle_receive_get(const code& ec,
+void protocol_html::handle_receive_get(const code& ec,
     const method::get& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -99,7 +99,7 @@ void protocol_client_html::handle_receive_get(const code& ec,
 // Senders.
 // ----------------------------------------------------------------------------
 
-void protocol_client_html::send_file(const string_request& request,
+void protocol_html::send_file(const string_request& request,
     file&& file, mime_type type) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -119,7 +119,7 @@ void protocol_client_html::send_file(const string_request& request,
 // ----------------------------------------------------------------------------
 // private
 
-std::filesystem::path protocol_client_html::to_local_path(
+std::filesystem::path protocol_html::to_local_path(
     const std::string& target) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");

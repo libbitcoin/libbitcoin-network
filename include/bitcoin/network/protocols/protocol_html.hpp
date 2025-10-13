@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_CLIENT_HTML_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_CLIENT_HTML_HPP
+#ifndef LIBBITCOIN_NETWORK_PROTOCOL_HTML_HPP
+#define LIBBITCOIN_NETWORK_PROTOCOL_HTML_HPP
 
 #include <filesystem>
 #include <bitcoin/network/async/async.hpp>
@@ -25,19 +25,19 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/http/messages.hpp>
-#include <bitcoin/network/protocols/protocol_client_http.hpp>
+#include <bitcoin/network/protocols/protocol_http.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class BCT_API protocol_client_html
-  : public protocol_client_http, protected tracker<protocol_client_html>
+class BCT_API protocol_html
+  : public protocol_http, protected tracker<protocol_html>
 {
 public:
-    typedef std::shared_ptr<protocol_client_html> ptr;
+    typedef std::shared_ptr<protocol_html> ptr;
 
-    protocol_client_html(const session::ptr& session,
+    protocol_html(const session::ptr& session,
         const channel::ptr& channel,
         const settings::html_server& options) NOEXCEPT;
 
