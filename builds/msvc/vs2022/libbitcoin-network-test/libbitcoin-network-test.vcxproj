@@ -213,7 +213,6 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_in_209.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_209.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_311.cpp" />
-    <ClCompile Include="..\..\..\..\test\protocols\protocol_client.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_html.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_http.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_peer.cpp" />

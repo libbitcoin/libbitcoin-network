@@ -108,7 +108,6 @@ src_libbitcoin_network_la_SOURCES = \
     src/protocols/protocol_address_in_209.cpp \
     src/protocols/protocol_address_out_209.cpp \
     src/protocols/protocol_alert_311.cpp \
-    src/protocols/protocol_client.cpp \
     src/protocols/protocol_html.cpp \
     src/protocols/protocol_http.cpp \
     src/protocols/protocol_peer.cpp \
@@ -228,7 +227,6 @@ test_libbitcoin_network_test_SOURCES = \
     test/protocols/protocol_address_in_209.cpp \
     test/protocols/protocol_address_out_209.cpp \
     test/protocols/protocol_alert_311.cpp \
-    test/protocols/protocol_client.cpp \
     test/protocols/protocol_html.cpp \
     test/protocols/protocol_http.cpp \
     test/protocols/protocol_peer.cpp \
@@ -409,7 +407,6 @@ include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol_address_in_209.hpp \
     include/bitcoin/network/protocols/protocol_address_out_209.hpp \
     include/bitcoin/network/protocols/protocol_alert_311.hpp \
-    include/bitcoin/network/protocols/protocol_client.hpp \
     include/bitcoin/network/protocols/protocol_html.hpp \
     include/bitcoin/network/protocols/protocol_http.hpp \
     include/bitcoin/network/protocols/protocol_peer.hpp \

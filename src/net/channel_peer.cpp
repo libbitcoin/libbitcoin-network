@@ -139,7 +139,8 @@ bool channel_peer::is_handshaked() const NOEXCEPT
 version::cptr channel_peer::peer_version() const NOEXCEPT
 {
     // peer_version_ defaults to nullptr, which implies not handshaked.
-    return is_handshaked() ? peer_version_ : to_shared<messages::peer::version>();
+    return is_handshaked() ? peer_version_ :
+        make_shared<messages::peer::version>();
 }
 
 void channel_peer::set_peer_version(const version::cptr& value) NOEXCEPT

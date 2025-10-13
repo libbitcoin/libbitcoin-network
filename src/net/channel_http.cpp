@@ -82,7 +82,7 @@ void channel_http::read_request() NOEXCEPT
 
     // HTTP is half duplex.
     reading_ = true;
-    const auto request = to_shared<http::string_request>();
+    const auto request = make_shared<http::string_request>();
 
     // Post handle_read_request to strand upon stop, error, or buffer full.
     read(request_buffer_, *request,

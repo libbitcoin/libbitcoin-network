@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_SESSION_SERVER_HPP
 #define LIBBITCOIN_NETWORK_SESSION_SERVER_HPP
 
-#include <memory>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
@@ -53,11 +52,10 @@ protected:
     inline channel::ptr create_channel(
         const socket::ptr& socket) NOEXCEPT override
     {
+        using namespace system;
         BC_ASSERT_MSG(stranded(), "strand");
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        return std::make_shared<channel_t>(log, socket, settings(),
-            create_key(), options_);
-        BC_POP_WARNING()
+        return make_shared<channel_t>(log, socket, settings(), create_key(),
+            options_);
     }
 
     /// Overridden to set channel protocols (base calls from channel strand).

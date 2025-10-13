@@ -44,7 +44,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 protocol_http::protocol_http(const session::ptr& session,
     const channel::ptr& channel, const options_t& options) NOEXCEPT
-  : protocol_client(session, channel),
+  : protocol(session, channel),
     channel_(std::dynamic_pointer_cast<channel_http>(channel)),
     session_(std::dynamic_pointer_cast<session_tcp>(session)),
     default_port_(options.secure ? default_tls : default_http),
