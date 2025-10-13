@@ -24,12 +24,6 @@
 #include <bitcoin/network/net.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 
-// This is nearly identical to session_inbound (peer).
-// The difference is handshake and protocol attamchment. Otherwise that class
-// could be replaced by this one. However that also derives from session_peer
-// which we don't wnat in downstream client-server sessions. So for now they
-// are just very redundant.
-
 namespace libbitcoin {
 namespace network {
 

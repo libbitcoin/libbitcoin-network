@@ -21,7 +21,6 @@
 
 #include <memory>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session_tcp.hpp>
 
@@ -31,16 +30,22 @@ namespace network {
 class net;
 
 /// Client-server connections session template, thread safe.
+/// Declare a concrete instance of this type for client-server protocols built
+/// on tcp/ip. Base class processing performs all connection management and
+/// session tracking. This includes start/stop/disable/enable/black/whitelist.
 template <typename Protocol>
 class session_server
   : public session_tcp, protected tracker<session_server<Protocol>>
 {
 public:
     typedef std::shared_ptr<session_server<Protocol>> ptr;
+
+    /// The protocol must define these public types.
     using options_t = typename Protocol::options_t;
     using channel_t = typename Protocol::channel_t;
 
     /// Construct an instance (network should be started).
+    /// The options reference must be kept in scope, the string name is copied.
     session_server(net& network, uint64_t identifier, const options_t& options,
         const std::string& name) NOEXCEPT
       : session_tcp(network, identifier, options, name),
@@ -50,7 +55,9 @@ public:
     }
 
 protected:
-    /// Create a channel from the started socket.
+    /// Override to construct channel. This allows the implementation to pass
+    /// other values to protocol construction and/or select the desired channel
+    /// based on available factors (e.g. a distinct protocol version).
     inline channel::ptr create_channel(
         const socket::ptr& socket) NOEXCEPT override
     {
@@ -61,11 +68,25 @@ protected:
         BC_POP_WARNING()
     }
 
-    /// Overridden to set channel protocols (base calls from channel strand).
+    /// Override to implement a connection handshake as required. By default
+    /// this is bypassed, which applies to basic http services. A handshake
+    /// is used to implement TLS and WebSocket upgrade from http (for example).
+    /// Handshake protocol(s) must invoke handler one time at completion.
+    inline void attach_handshake(const channel::ptr& channel,
+        result_handler&& handler) NOEXCEPT override
+    {
+        BC_ASSERT_MSG(channel->stranded(), "channel strand");
+        BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake");
+        session_tcp::attach_handshake(channel, std::move(handler));
+    }
+
+    /// Overridden to set channel protocols. This allows the implementation to
+    /// pass other values to protocol construction and/or select the desired
+    /// protocol based on available factors (e.g. a distinct protocol version).
     inline void attach_protocols(const channel::ptr& channel) NOEXCEPT override
     {
         BC_ASSERT_MSG(channel->stranded(), "channel strand");
-        BC_ASSERT_MSG(channel->paused(), "channel not paused for attach");
+        BC_ASSERT_MSG(channel->paused(), "channel not paused for protocols");
         channel->attach<Protocol>(shared_from_this(), options_)->start();
     }
 
