@@ -16,9 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/sessions/session_client_inbound.hpp>
+#include <bitcoin/network/sessions/session_html.hpp>
 
-#include <utility>
+#include <memory>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
@@ -28,20 +29,16 @@ namespace libbitcoin {
 namespace network {
 
 #define LOGGING_NAME "admin"
-#define CLASS session_client_inbound
 
-using namespace system;
-using namespace std::placeholders;
-
-session_client_inbound::session_client_inbound(net& network,
+session_html::session_html(net& network,
     uint64_t identifier) NOEXCEPT
   : session_client(network, identifier, network.network_settings().admin.binds,
       network.network_settings().admin.connections, LOGGING_NAME),
-    tracker<session_client_inbound>(network.log)
+    tracker<session_html>(network.log)
 {
 }
 
-void session_client_inbound::attach_protocols(
+void session_html::attach_protocols(
     const channel::ptr& channel) NOEXCEPT
 {
     BC_ASSERT_MSG(channel->stranded(), "channel strand");
@@ -52,8 +49,7 @@ void session_client_inbound::attach_protocols(
 }
 
 // TODO: channel_client_inbound
-channel::ptr session_client_inbound::create_channel(
-    const socket::ptr& socket) NOEXCEPT
+channel::ptr session_html::create_channel(const socket::ptr& socket) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)

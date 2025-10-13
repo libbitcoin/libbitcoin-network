@@ -723,10 +723,10 @@ session_outbound::ptr net::attach_outbound_session() NOEXCEPT
 }
 
 // TODO: remove from network, apply a set of these in node.
-session_client_inbound::ptr net::attach_client_session() NOEXCEPT
+session_html::ptr net::attach_client_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return attach<session_client_inbound>(*this);
+    return attach<session_html>(*this);
 }
 
 BC_POP_WARNING()
