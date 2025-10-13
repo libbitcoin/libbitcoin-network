@@ -28,6 +28,10 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
+/// http protocol versions
+constexpr int32_t version_1_1 = 11;
+constexpr int32_t version_1_0 = 10;
+
 /// beast::http::vector_body<uint8_t>
 typedef boost::beast::http::vector_body<uint8_t> data_body;
 typedef boost::beast::http::request<data_body> data_request;
@@ -55,13 +59,18 @@ typedef boost::beast::http::serializer<false, file_body> file_serializer;
 typedef std::shared_ptr<const file_request> file_request_cptr;
 typedef std::shared_ptr<file_request> file_request_ptr;
 
+/// general purpose
 typedef file_body::value_type file;
 typedef boost::beast::http::field field;
 typedef boost::beast::http::fields fields;
 typedef boost::beast::flat_buffer flat_buffer;
 
-constexpr int32_t version_1_1 = 11;
-constexpr int32_t version_1_0 = 10;
+/// json-rpc
+template <bool Request>
+using header = boost::beast::http::header<Request, http::fields>;
+
+/// websockets
+using websocket = boost::beast::websocket::stream<asio::socket>;
 
 } // namespace http
 } // namespace network

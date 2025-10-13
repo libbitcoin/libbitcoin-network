@@ -58,6 +58,13 @@
 #include <bitcoin/network/messages/http/enums/status.hpp>
 #include <bitcoin/network/messages/http/enums/target.hpp>
 #include <bitcoin/network/messages/http/enums/verb.hpp>
+#include <bitcoin/network/messages/json/body.hpp>
+#include <bitcoin/network/messages/json/messages.hpp>
+#include <bitcoin/network/messages/json/parser.hpp>
+#include <bitcoin/network/messages/json/serializer.hpp>
+#include <bitcoin/network/messages/json/types.hpp>
+#include <bitcoin/network/messages/json/enums/protocol.hpp>
+#include <bitcoin/network/messages/json/enums/transport.hpp>
 #include <bitcoin/network/messages/peer/address.hpp>
 #include <bitcoin/network/messages/peer/address_item.hpp>
 #include <bitcoin/network/messages/peer/alert.hpp>
@@ -109,9 +116,11 @@
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/channel_http.hpp>
 #include <bitcoin/network/net/channel_peer.hpp>
+#include <bitcoin/network/net/channel_websocket.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/distributor_http.hpp>
+#include <bitcoin/network/net/distributor_json.hpp>
 #include <bitcoin/network/net/distributor_peer.hpp>
 #include <bitcoin/network/net/hosts.hpp>
 #include <bitcoin/network/net/net.hpp>
