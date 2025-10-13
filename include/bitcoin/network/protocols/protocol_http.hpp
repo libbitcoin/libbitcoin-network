@@ -24,14 +24,14 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol_client.hpp>
+#include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 
 namespace libbitcoin {
 namespace network {
 
 class BCT_API protocol_http
-  : public protocol_client, protected tracker<protocol_http>
+  : public protocol, protected tracker<protocol_http>
 {
 public:
     using channel_t = channel_http;
@@ -45,6 +45,9 @@ public:
     void start() NOEXCEPT override;
 
 protected:
+    DECLARE_SEND();
+    DECLARE_SUBSCRIBE_CHANNEL();
+
     /// Message handlers by http method.
     virtual void handle_receive_get(const code& ec,
         const http::method::get& request) NOEXCEPT;
