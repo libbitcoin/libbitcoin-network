@@ -22,7 +22,7 @@
 #include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/client.hpp>
+#include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -44,7 +44,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // [field] returns "" if not found but .at(field) throws.
 
 protocol_client_html::protocol_client_html(const session::ptr& session,
-    const channel::ptr& channel, const html_server& options) NOEXCEPT
+    const channel::ptr& channel, const settings::html_server& options) NOEXCEPT
   : protocol_client_http(session, channel, options),
     root_(channel->settings().admin.path),
     default_(channel->settings().admin.default_),

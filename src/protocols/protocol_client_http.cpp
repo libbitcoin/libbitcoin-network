@@ -21,7 +21,7 @@
 #include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/client.hpp>
+#include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -43,7 +43,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // [field] returns "" if not found but .at(field) throws.
 
 protocol_client_http::protocol_client_http(const session::ptr& session,
-    const channel::ptr& channel, const http_server& options) NOEXCEPT
+    const channel::ptr& channel, const settings::http_server& options) NOEXCEPT
   : protocol_client(session, channel),
     channel_(std::dynamic_pointer_cast<channel_client>(channel)),
     session_(std::dynamic_pointer_cast<session_client>(session)),

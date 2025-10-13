@@ -79,7 +79,7 @@ public:
     /// Construct client channel to encapsulate and communicate on the socket.
     channel_client(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero,
-        const http_server& options={}) NOEXCEPT;
+        const network::settings::http_server& options={}) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;

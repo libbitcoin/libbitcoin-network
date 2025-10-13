@@ -18,10 +18,11 @@
  */
 #include <bitcoin/network/settings.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/client.hpp>
 #include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/messages/http/messages.hpp>
 #include <bitcoin/network/messages/peer/messages.hpp>
 
 namespace libbitcoin {
@@ -265,6 +266,61 @@ bool settings::excluded(const address_item& item) const NOEXCEPT
         || peered(item)
         || blacklisted(item)
         || !whitelisted(item);
+}
+
+
+// ----------------------------------------------------------------------------
+
+// utility
+static system::string_list to_host_names(const config::endpoints& hosts,
+    bool secure) NOEXCEPT
+{
+    const auto port = secure ? http::default_tls : http::default_http;
+
+    system::string_list out{};
+    out.resize(hosts.size());
+    std::ranges::transform(hosts, out.begin(), [=](const auto& value) NOEXCEPT
+    {
+        return value.to_lower(port);
+    });
+
+    return out;
+}
+
+// tcp_server
+// ----------------------------------------------------------------------------
+
+bool settings::tcp_server::enabled() const NOEXCEPT
+{
+    return !binds.empty() && to_bool(connections);
+}
+
+steady_clock::duration settings::tcp_server::timeout() const NOEXCEPT
+{
+    return seconds{ timeout_seconds };
+}
+
+// http_server
+// ----------------------------------------------------------------------------
+
+system::string_list settings::http_server::host_names() const NOEXCEPT
+{
+    // secure changes default port from 80 to 443.
+    return to_host_names(hosts, secure);
+}
+
+// html_server
+// ----------------------------------------------------------------------------
+
+bool settings::html_server::enabled() const NOEXCEPT
+{
+    return !path.empty() && http_server::enabled();
+}
+
+system::string_list settings::html_server::origin_names() const NOEXCEPT
+{
+    // secure changes default port from 80 to 443.
+    return to_host_names(hosts, secure);
 }
 
 } // namespace network

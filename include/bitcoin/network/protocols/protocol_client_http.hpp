@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_CLIENT_HTTP_HPP
 
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/client.hpp>
+#include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/messages.hpp>
 #include <bitcoin/network/protocols/protocol_client.hpp>
@@ -36,7 +36,8 @@ public:
     typedef std::shared_ptr<protocol_client_http> ptr;
 
     protocol_client_http(const session::ptr& session,
-        const channel::ptr& channel, const http_server& options) NOEXCEPT;
+        const channel::ptr& channel,
+        const settings::http_server& options) NOEXCEPT;
 
     void start() NOEXCEPT override;
 

@@ -124,7 +124,6 @@
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
-    <ClCompile Include="..\..\..\..\src\client.cpp" />
     <ClCompile Include="..\..\..\..\src\config\address.cpp">
       <ObjectFileName>$(IntDir)src_config_address.obj</ObjectFileName>
     </ClCompile>
@@ -240,7 +239,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\client.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\config.hpp" />

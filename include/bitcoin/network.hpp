@@ -16,7 +16,6 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/boost.hpp>
-#include <bitcoin/network/client.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/memory.hpp>

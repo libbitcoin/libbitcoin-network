@@ -21,7 +21,7 @@
 
 #include <filesystem>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/client.hpp>
+#include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/http/messages.hpp>
@@ -38,7 +38,8 @@ public:
     typedef std::shared_ptr<protocol_client_html> ptr;
 
     protocol_client_html(const session::ptr& session,
-        const channel::ptr& channel, const html_server& options) NOEXCEPT;
+        const channel::ptr& channel,
+        const settings::html_server& options) NOEXCEPT;
 
 protected:
     /// Message handlers by http method.
