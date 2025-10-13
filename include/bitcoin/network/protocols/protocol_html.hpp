@@ -35,11 +35,12 @@ class BCT_API protocol_html
   : public protocol_http, protected tracker<protocol_html>
 {
 public:
+    using channel_t = channel_http;
+    using options_t = settings::html_server;
     typedef std::shared_ptr<protocol_html> ptr;
 
     protocol_html(const session::ptr& session,
-        const channel::ptr& channel,
-        const settings::html_server& options) NOEXCEPT;
+        const channel::ptr& channel, const options_t& options) NOEXCEPT;
 
 protected:
     /// Message handlers by http method.
@@ -51,13 +52,14 @@ protected:
         http::file&& file, http::mime_type type) NOEXCEPT;
 
     /// Utilities.
+    bool is_allowed_origin(const std::string& origin,
+        size_t version) const NOEXCEPT;
     std::filesystem::path to_local_path(
         const std::string& target) const NOEXCEPT;
 
 private:
-    // These are thread safe.
-    const std::filesystem::path& root_;
-    const std::string& default_;
+    // This is thread safe.
+    const options_t& options_;
 };
 
 } // namespace network

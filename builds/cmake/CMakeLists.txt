@@ -303,13 +303,12 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/protocols/protocol_version_70002.cpp"
     "../../src/protocols/protocol_version_70016.cpp"
     "../../src/sessions/session.cpp"
-    "../../src/sessions/session_client.cpp"
-    "../../src/sessions/session_html.cpp"
     "../../src/sessions/session_inbound.cpp"
     "../../src/sessions/session_manual.cpp"
     "../../src/sessions/session_outbound.cpp"
     "../../src/sessions/session_peer.cpp"
-    "../../src/sessions/session_seed.cpp" )
+    "../../src/sessions/session_seed.cpp"
+    "../../src/sessions/session_tcp.cpp" )
 
 # ${CANONICAL_LIB_NAME} project specific include directory normalization for build.
 #------------------------------------------------------------------------------
@@ -448,12 +447,12 @@ if (with-tests)
         "../../test/protocols/protocol_version_70002.cpp"
         "../../test/protocols/protocol_version_70016.cpp"
         "../../test/sessions/session.cpp"
-        "../../test/sessions/session_client.cpp"
         "../../test/sessions/session_html.cpp"
         "../../test/sessions/session_inbound.cpp"
         "../../test/sessions/session_manual.cpp"
         "../../test/sessions/session_outbound.cpp"
-        "../../test/sessions/session_seed.cpp" )
+        "../../test/sessions/session_seed.cpp"
+        "../../test/sessions/session_tcp.cpp" )
 
     add_test( NAME libbitcoin-network-test COMMAND libbitcoin-network-test
             --run_test=*

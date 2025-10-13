@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/sessions/session_client.hpp>
+#include <bitcoin/network/sessions/session_tcp.hpp>
 
 #include <utility>
 #include <bitcoin/network/config/config.hpp>
@@ -33,7 +33,7 @@
 namespace libbitcoin {
 namespace network {
 
-#define CLASS session_client
+#define CLASS session_tcp
 
 using namespace system;
 using namespace std::placeholders;
@@ -44,13 +44,11 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
-session_client::session_client(net& network, uint64_t identifier,
-    const config::endpoints& bindings, size_t connections,
-    const std::string& name) NOEXCEPT
+session_tcp::session_tcp(net& network, uint64_t identifier,
+    const options_t& options, const std::string& name) NOEXCEPT
   : session(network, identifier),
     ////network_(network),
-    bindings_(bindings),
-    connections_(connections),
+    options_(options),
     name_(name)
 {
 }
@@ -58,12 +56,12 @@ session_client::session_client(net& network, uint64_t identifier,
 // Start/stop sequence.
 // ----------------------------------------------------------------------------
 
-void session_client::start(result_handler&& handler) NOEXCEPT
+void session_tcp::start(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Path is also currently required for admin and explore.
-    if (bindings_.empty() || is_zero(connections_))
+    if (!options_.enabled())
     {
         LOGN("Not configured for " << name_ << " connections.");
         handler(error::success);
@@ -74,7 +72,7 @@ void session_client::start(result_handler&& handler) NOEXCEPT
     session::start(BIND(handle_started, _1, std::move(handler)));
 }
 
-void session_client::handle_started(const code& ec,
+void session_tcp::handle_started(const code& ec,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -87,10 +85,10 @@ void session_client::handle_started(const code& ec,
         return;
     }
 
-    LOGN("Accepting " << connections_ << " " << name_ << " connections on "
-        << bindings_.size() << " bindings.");
+    LOGN("Accepting " << options_.connections << " " << name_
+        << " connections on " << options_.binds.size() << " bindings.");
 
-    for (const auto& bind: bindings_)
+    for (const auto& bind: options_.binds)
     {
         const auto acceptor = create_acceptor();
 
@@ -121,7 +119,7 @@ void session_client::handle_started(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Attempt to accept peers on each configured endpoint.
-void session_client::start_accept(const code&,
+void session_tcp::start_accept(const code&,
     const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -133,7 +131,7 @@ void session_client::start_accept(const code&,
     acceptor->accept(BIND(handle_accepted, _1, _2, acceptor));
 }
 
-void session_client::handle_accepted(const code& ec,
+void session_tcp::handle_accepted(const code& ec,
     const socket::ptr& socket, const acceptor::ptr& acceptor) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -171,7 +169,7 @@ void session_client::handle_accepted(const code& ec,
 
     // We have to drop without responding, otherwise count will overflow.
     // Could instead stop listening when at limit, though this is simpler.
-    if (channel_count_ >= connections_)
+    if (channel_count_ >= options_.connections)
     {
         LOGS("Dropping oversubscribed " << name_ << " connection ["
             << socket->authority() << "].");
@@ -210,17 +208,17 @@ void session_client::handle_accepted(const code& ec,
         BIND(handle_channel_stop, _1, channel));
 }
 
-bool session_client::blacklisted(const config::address& address) const NOEXCEPT
+bool session_tcp::blacklisted(const config::address& address) const NOEXCEPT
 {
     return settings().blacklisted(address);
 }
 
-bool session_client::whitelisted(const config::address& address) const NOEXCEPT
+bool session_tcp::whitelisted(const config::address& address) const NOEXCEPT
 {
     return settings().whitelisted(address);
 }
 
-bool session_client::enabled() const NOEXCEPT
+bool session_tcp::enabled() const NOEXCEPT
 {
     return true;
 }
@@ -229,14 +227,14 @@ bool session_client::enabled() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 // Some client types do not utilize a handshake, so default is bypassed.
-void session_client::attach_handshake(const channel::ptr&,
+void session_tcp::attach_handshake(const channel::ptr&,
     result_handler&&) NOEXCEPT
 {
     BC_ASSERT(false);
 }
 
 // Handshake bypassed, channel remains paused until after protocol attach.
-void session_client::do_attach_handshake(
+void session_tcp::do_attach_handshake(
     const channel::ptr& BC_DEBUG_ONLY(channel),
     const result_handler& handshake) NOEXCEPT
 {
@@ -248,7 +246,7 @@ void session_client::do_attach_handshake(
 // Completion sequence.
 // ----------------------------------------------------------------------------
 
-void session_client::handle_channel_start(const code& LOG_ONLY(ec),
+void session_tcp::handle_channel_start(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -259,7 +257,7 @@ void session_client::handle_channel_start(const code& LOG_ONLY(ec),
     channel_count_ = ceilinged_add(channel_count_, one);
 }
 
-void session_client::handle_channel_stop(const code& LOG_ONLY(ec),
+void session_tcp::handle_channel_stop(const code& LOG_ONLY(ec),
     const channel::ptr& LOG_ONLY(channel)) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");

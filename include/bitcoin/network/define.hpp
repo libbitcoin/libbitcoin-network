@@ -155,6 +155,6 @@ namespace network {
 
 // memory         : define
 // settings       : define /messages /config
-// net            : define settings /sessions
+// net            : define settings /sessions /protocols 
 
 #endif

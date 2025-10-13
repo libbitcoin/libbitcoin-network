@@ -48,7 +48,7 @@ session::session(net& network, uint64_t identifier) NOEXCEPT
     broadcaster_(network.broadcaster_),
     identifier_(identifier),
     stop_subscriber_(network.strand()),
-    reporter(network.log)
+    reporter(network)
 {
 }
 

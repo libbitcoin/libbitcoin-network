@@ -137,8 +137,8 @@ struct BCT_API settings
     /// TODO: move these to node or server.
     /// Client-server settings.
     /// -----------------------------------------------------------------------
-    /// native admin interface, isolated (http/s, stateless html)
-    html_server admin{};
+    /// native admin web interface, isolated (http/s, stateless html)
+    html_server web{};
 
     /// native RESTful block explorer (http/s, stateless html/json)
     html_server explore{};

@@ -27,6 +27,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -51,7 +52,7 @@ public:
     typedef desubscriber<object_key, const channel::ptr&> channel_subscriber;
     typedef channel_subscriber::handler channel_notifier;
     typedef channel_subscriber::completer channel_completer;
-
+    
     /// Constructors.
     /// -----------------------------------------------------------------------
 
@@ -152,6 +153,15 @@ public:
     /// Get the number of inbound channels.
     virtual size_t inbound_channel_count() const NOEXCEPT;
 
+    /// Operators.
+    /// -----------------------------------------------------------------------
+
+    /// This avoids undefine type warning in forward session usage.
+    operator const logger&() const NOEXCEPT
+    {
+        return log;
+    }
+
     /// TEMP HACKS.
     /// -----------------------------------------------------------------------
     /// Not thread safe, read from stranded handler only.
@@ -174,8 +184,8 @@ public:
 protected:
     // Restrict access by concrete sessions.
     friend class session;
+    friend class session_tcp;
     friend class session_peer;
-    friend class session_client;
 
     /// Attach session to network, caller must start (requires strand).
     template <class Session, class Network, typename... Args>
@@ -240,7 +250,7 @@ protected:
     virtual session_manual::ptr attach_manual_session() NOEXCEPT;
     virtual session_inbound::ptr attach_inbound_session() NOEXCEPT;
     virtual session_outbound::ptr attach_outbound_session() NOEXCEPT;
-    virtual session_html::ptr attach_client_session() NOEXCEPT;
+    virtual session_server<protocol_html>::ptr attach_server_session() NOEXCEPT;
 
 private:
     // Suspensions.
@@ -252,7 +262,7 @@ private:
     // Sequences.
     void handle_start(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_run(const code& ec, const result_handler& handler) NOEXCEPT;
-    void handle_client(const code& ec, const result_handler& handler) NOEXCEPT;
+    void handle_server(const code& ec, const result_handler& handler) NOEXCEPT;
 
     // Subscriptions.
 

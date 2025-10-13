@@ -44,10 +44,9 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 // [field] returns "" if not found but .at(field) throws.
 
 protocol_html::protocol_html(const session::ptr& session,
-    const channel::ptr& channel, const settings::html_server& options) NOEXCEPT
+    const channel::ptr& channel, const options_t& options) NOEXCEPT
   : protocol_http(session, channel, options),
-    root_(channel->settings().admin.path),
-    default_(channel->settings().admin.default_),
+    options_(options),
     tracker<protocol_html>(session->log)
 {
 }
@@ -117,13 +116,28 @@ void protocol_html::send_file(const string_request& request,
 
 // Utilities.
 // ----------------------------------------------------------------------------
-// private
+
+bool protocol_html::is_allowed_origin(const std::string& origin,
+    size_t version) const NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Allow same-origin and no-origin requests.
+    // Origin header field is not available until http 1.1.
+    if (origin.empty() || version < version_1_1)
+        return true;
+
+    return options_.origins.empty() || system::contains(options_.origins,
+        config::to_normal_host(origin, default_port()));
+}
 
 std::filesystem::path protocol_html::to_local_path(
     const std::string& target) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return sanitize_origin(root_, target == "/" ? target + default_ : target);
+
+    return sanitize_origin(options_.path,
+        target == "/" ? target + options_.default_ : target);
 }
 
 BC_POP_WARNING()

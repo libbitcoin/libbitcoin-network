@@ -348,9 +348,6 @@
     <ClCompile Include="..\..\..\..\test\sessions\session.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\sessions\session_client.cpp">
-      <Filter>src\sessions</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\sessions\session_html.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
@@ -364,6 +361,9 @@
       <Filter>src\sessions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\sessions\session_seed.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_tcp.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\settings.cpp">

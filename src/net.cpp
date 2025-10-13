@@ -27,6 +27,7 @@
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/peer/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
+#include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
 #include <bitcoin/network/settings.hpp>
 
@@ -71,14 +72,14 @@ net::~net() NOEXCEPT
 
 acceptor::ptr net::create_acceptor() NOEXCEPT
 {
-    return std::make_shared<acceptor>(log, strand(), service(),
-        network_settings(), accept_suspended_);
+    return std::make_shared<acceptor>(log, strand(), service(), settings_,
+        accept_suspended_);
 }
 
 connector::ptr net::create_connector() NOEXCEPT
 {
-    return std::make_shared<connector>(log, strand(), service(),
-        network_settings(), connect_suspended_);
+    return std::make_shared<connector>(log, strand(), service(), settings_,
+        connect_suspended_);
 }
 
 connectors_ptr net::create_connectors(size_t count) NOEXCEPT
@@ -174,11 +175,10 @@ void net::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
     }
 
     attach_outbound_session()->start(
-        std::bind(&net::handle_client, this, _1, handler));
+        std::bind(&net::handle_server, this, _1, handler));
 }
 
-// TODO: remove from network, apply a set of these in node.
-void net::handle_client(const code& ec, const result_handler& handler) NOEXCEPT
+void net::handle_server(const code& ec, const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -188,9 +188,9 @@ void net::handle_client(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    if (network_settings().admin.enabled())
+    if (settings_.web.enabled())
     {
-        attach_client_session()->start(move_copy(handler));
+        attach_server_session()->start(move_copy(handler));
         return;
     }
     
@@ -722,11 +722,10 @@ session_outbound::ptr net::attach_outbound_session() NOEXCEPT
     return attach<session_outbound>(*this);
 }
 
-// TODO: remove from network, apply a set of these in node.
-session_html::ptr net::attach_client_session() NOEXCEPT
+session_server<protocol_html>::ptr net::attach_server_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
-    return attach<session_html>(*this);
+    return attach<session_server<protocol_html>>(*this, settings_.web, "web");
 }
 
 BC_POP_WARNING()
