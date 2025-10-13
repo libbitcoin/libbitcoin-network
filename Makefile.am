@@ -50,8 +50,8 @@ src_libbitcoin_network_la_SOURCES = \
     src/log/capture.cpp \
     src/log/logger.cpp \
     src/log/reporter.cpp \
-    src/messages/client/enums/mime_type.cpp \
-    src/messages/client/enums/target.cpp \
+    src/messages/http/enums/mime_type.cpp \
+    src/messages/http/enums/target.cpp \
     src/messages/peer/address.cpp \
     src/messages/peer/address_item.cpp \
     src/messages/peer/alert.cpp \
@@ -100,7 +100,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/net/channel_peer.cpp \
     src/net/connector.cpp \
     src/net/deadline.cpp \
-    src/net/distributor_client.cpp \
+    src/net/distributor_http.cpp \
     src/net/distributor_peer.cpp \
     src/net/hosts.cpp \
     src/net/proxy.cpp \
@@ -110,6 +110,8 @@ src_libbitcoin_network_la_SOURCES = \
     src/protocols/protocol_address_out_209.cpp \
     src/protocols/protocol_alert_311.cpp \
     src/protocols/protocol_client.cpp \
+    src/protocols/protocol_client_html.cpp \
+    src/protocols/protocol_client_http.cpp \
     src/protocols/protocol_peer.cpp \
     src/protocols/protocol_ping_106.cpp \
     src/protocols/protocol_ping_60001.cpp \
@@ -164,10 +166,10 @@ test_libbitcoin_network_test_SOURCES = \
     test/config/utilities.cpp \
     test/log/timer.cpp \
     test/log/tracker.cpp \
-    test/messages/client/method.cpp \
-    test/messages/client/enums/magic_numbers.cpp \
-    test/messages/client/enums/mime_type.cpp \
-    test/messages/client/enums/target.cpp \
+    test/messages/http/method.cpp \
+    test/messages/http/enums/magic_numbers.cpp \
+    test/messages/http/enums/mime_type.cpp \
+    test/messages/http/enums/target.cpp \
     test/messages/peer/address.cpp \
     test/messages/peer/address_item.cpp \
     test/messages/peer/alert.cpp \
@@ -220,7 +222,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/net/channel_peer.cpp \
     test/net/connector.cpp \
     test/net/deadline.cpp \
-    test/net/distributor_client.cpp \
+    test/net/distributor_http.cpp \
     test/net/distributor_peer.cpp \
     test/net/hosts.cpp \
     test/net/proxy.cpp \
@@ -320,18 +322,18 @@ include_bitcoin_network_log_HEADERS = \
     include/bitcoin/network/log/timer.hpp \
     include/bitcoin/network/log/tracker.hpp
 
-include_bitcoin_network_messages_clientdir = ${includedir}/bitcoin/network/messages/client
-include_bitcoin_network_messages_client_HEADERS = \
-    include/bitcoin/network/messages/client/messages.hpp \
-    include/bitcoin/network/messages/client/method.hpp
+include_bitcoin_network_messages_httpdir = ${includedir}/bitcoin/network/messages/http
+include_bitcoin_network_messages_http_HEADERS = \
+    include/bitcoin/network/messages/http/messages.hpp \
+    include/bitcoin/network/messages/http/method.hpp
 
-include_bitcoin_network_messages_client_enumsdir = ${includedir}/bitcoin/network/messages/client/enums
-include_bitcoin_network_messages_client_enums_HEADERS = \
-    include/bitcoin/network/messages/client/enums/magic_numbers.hpp \
-    include/bitcoin/network/messages/client/enums/mime_type.hpp \
-    include/bitcoin/network/messages/client/enums/status.hpp \
-    include/bitcoin/network/messages/client/enums/target.hpp \
-    include/bitcoin/network/messages/client/enums/verb.hpp
+include_bitcoin_network_messages_http_enumsdir = ${includedir}/bitcoin/network/messages/http/enums
+include_bitcoin_network_messages_http_enums_HEADERS = \
+    include/bitcoin/network/messages/http/enums/magic_numbers.hpp \
+    include/bitcoin/network/messages/http/enums/mime_type.hpp \
+    include/bitcoin/network/messages/http/enums/status.hpp \
+    include/bitcoin/network/messages/http/enums/target.hpp \
+    include/bitcoin/network/messages/http/enums/verb.hpp
 
 include_bitcoin_network_messages_peerdir = ${includedir}/bitcoin/network/messages/peer
 include_bitcoin_network_messages_peer_HEADERS = \
@@ -394,7 +396,7 @@ include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/channel_peer.hpp \
     include/bitcoin/network/net/connector.hpp \
     include/bitcoin/network/net/deadline.hpp \
-    include/bitcoin/network/net/distributor_client.hpp \
+    include/bitcoin/network/net/distributor_http.hpp \
     include/bitcoin/network/net/distributor_peer.hpp \
     include/bitcoin/network/net/hosts.hpp \
     include/bitcoin/network/net/net.hpp \
@@ -408,6 +410,8 @@ include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol_address_out_209.hpp \
     include/bitcoin/network/protocols/protocol_alert_311.hpp \
     include/bitcoin/network/protocols/protocol_client.hpp \
+    include/bitcoin/network/protocols/protocol_client_html.hpp \
+    include/bitcoin/network/protocols/protocol_client_http.hpp \
     include/bitcoin/network/protocols/protocol_peer.hpp \
     include/bitcoin/network/protocols/protocol_ping_106.hpp \
     include/bitcoin/network/protocols/protocol_ping_60001.hpp \

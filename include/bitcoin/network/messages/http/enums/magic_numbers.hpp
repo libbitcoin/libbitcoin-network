@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_CLIENT_ENUMS_STATUS_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_CLIENT_ENUMS_STATUS_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_ENUMS_MAGIC_NUMBERS_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_ENUMS_MAGIC_NUMBERS_HPP
 
 #include <bitcoin/network/define.hpp>
 
@@ -25,8 +25,14 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
-/// Status is aliased to beast boost define.
-using status = boost::beast::http::status;
+/// Client-server protocol constants.
+///----------------------------------------------------------------------------
+
+constexpr size_t max_url  = 1 * 1024;
+constexpr size_t max_head = 4 * 1024;
+constexpr size_t max_body = 4 * 1024 * 1024;
+constexpr uint16_t default_http = 80;
+constexpr uint16_t default_tls = 443;
 
 } // namespace http
 } // namespace network

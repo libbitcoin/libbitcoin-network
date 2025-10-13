@@ -142,12 +142,12 @@
     <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\client\enums\magic_numbers.cpp">
-      <ObjectFileName>$(IntDir)test_messages_client_enums_magic_numbers.obj</ObjectFileName>
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\magic_numbers.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_enums_magic_numbers.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\client\enums\mime_type.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\client\enums\target.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\client\method.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\mime_type.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\method.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_address.obj</ObjectFileName>
     </ClCompile>
@@ -205,7 +205,7 @@
     <ClCompile Include="..\..\..\..\test\net\channel_peer.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\distributor_client.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\distributor_http.cpp" />
     <ClCompile Include="..\..\..\..\test\net\distributor_peer.cpp" />
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />

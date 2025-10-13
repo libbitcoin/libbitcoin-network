@@ -40,10 +40,10 @@
     <Filter Include="include\bitcoin\network\messages">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\messages\client">
+    <Filter Include="include\bitcoin\network\messages\http">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\messages\client\enums">
+    <Filter Include="include\bitcoin\network\messages\http\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000B1}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\messages\peer">
@@ -79,10 +79,10 @@
     <Filter Include="src\messages">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\client">
+    <Filter Include="src\messages\http">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000008}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\client\enums">
+    <Filter Include="src\messages\http\enums">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-00000000000A}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\messages\peer">
@@ -138,11 +138,11 @@
     <ClCompile Include="..\..\..\..\src\memory.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\client\enums\mime_type.cpp">
-      <Filter>src\messages\client\enums</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp">
+      <Filter>src\messages\http\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\client\enums\target.cpp">
-      <Filter>src\messages\client\enums</Filter>
+    <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp">
+      <Filter>src\messages\http\enums</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\address.cpp">
       <Filter>src\messages\peer</Filter>
@@ -291,7 +291,7 @@
     <ClCompile Include="..\..\..\..\src\net\deadline.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\net\distributor_client.cpp">
+    <ClCompile Include="..\..\..\..\src\net\distributor_http.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\distributor_peer.cpp">
@@ -319,6 +319,12 @@
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol_client.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_client_html.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_client_http.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\protocols\protocol_peer.cpp">
@@ -482,26 +488,26 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\memory.hpp">
       <Filter>include\bitcoin\network</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\magic_numbers.hpp">
-      <Filter>include\bitcoin\network\messages\client\enums</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\magic_numbers.hpp">
+      <Filter>include\bitcoin\network\messages\http\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\mime_type.hpp">
-      <Filter>include\bitcoin\network\messages\client\enums</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\mime_type.hpp">
+      <Filter>include\bitcoin\network\messages\http\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\status.hpp">
-      <Filter>include\bitcoin\network\messages\client\enums</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\status.hpp">
+      <Filter>include\bitcoin\network\messages\http\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\target.hpp">
-      <Filter>include\bitcoin\network\messages\client\enums</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\target.hpp">
+      <Filter>include\bitcoin\network\messages\http\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\verb.hpp">
-      <Filter>include\bitcoin\network\messages\client\enums</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\verb.hpp">
+      <Filter>include\bitcoin\network\messages\http\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\messages.hpp">
-      <Filter>include\bitcoin\network\messages\client</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\messages.hpp">
+      <Filter>include\bitcoin\network\messages\http</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\method.hpp">
-      <Filter>include\bitcoin\network\messages\client</Filter>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp">
+      <Filter>include\bitcoin\network\messages\http</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address.hpp">
       <Filter>include\bitcoin\network\messages\peer</Filter>
@@ -665,7 +671,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_client.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_http.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_peer.hpp">
@@ -696,6 +702,12 @@
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client_html.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client_http.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_peer.hpp">

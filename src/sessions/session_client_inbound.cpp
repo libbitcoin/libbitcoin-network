@@ -48,7 +48,7 @@ void session_client_inbound::attach_protocols(
     BC_ASSERT_MSG(channel->paused(), "channel not paused for protocol attach");
 
     const auto self = shared_from_this();
-    channel->attach<protocol_client>(self, settings().admin)->start();
+    channel->attach<protocol_client_html>(self, settings().admin)->start();
 }
 
 // TODO: channel_client_inbound

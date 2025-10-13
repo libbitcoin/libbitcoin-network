@@ -1,0 +1,132 @@
+/**
+ * Copyright (c) 2011-2025 libbitcoin developers (see AUTHORS)
+ *
+ * This file is part of libbitcoin.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#include <bitcoin/network/protocols/protocol_client_html.hpp>
+
+#include <filesystem>
+#include <memory>
+#include <utility>
+#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/client.hpp>
+#include <bitcoin/network/config/config.hpp>
+#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/http/messages.hpp>
+#include <bitcoin/network/protocols/protocol_client_http.hpp>
+#include <bitcoin/network/sessions/sessions.hpp>
+
+namespace libbitcoin {
+namespace network {
+
+#define CLASS protocol_client_html
+
+using namespace http;
+using namespace std::placeholders;
+
+// Bind throws (ok).
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
+// [field] returns "" if not found but .at(field) throws.
+
+protocol_client_html::protocol_client_html(const session::ptr& session,
+    const channel::ptr& channel, const html_server& options) NOEXCEPT
+  : protocol_client_http(session, channel, options),
+    root_(channel->settings().admin.path),
+    default_(channel->settings().admin.default_),
+    tracker<protocol_client_html>(session->log)
+{
+}
+
+// Handle get method.
+// ----------------------------------------------------------------------------
+
+void protocol_client_html::handle_receive_get(const code& ec,
+    const method::get& request) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    if (stopped(ec))
+        return;
+
+    // Enforce http origin policy (requires configured hosts).
+    if (!is_allowed_origin((*request)[field::origin], request->version()))
+    {
+        send_forbidden(*request);
+        return;
+    }
+
+    // Enforce http host header (if any hosts are configured).
+    if (!is_allowed_host((*request)[field::host], request->version()))
+    {
+        send_bad_host(*request);
+        return;
+    }
+
+    // Empty path implies malformed target (terminal).
+    const auto path = to_local_path(request->target());
+    if (path.empty())
+    {
+        send_bad_target(*request);
+        return;
+    }
+
+    // Not open implies file not found (non-terminal).
+    auto file = get_file_body(path);
+    if (!file.is_open())
+    {
+        send_not_found(*request);
+        return;
+    }
+
+    send_file(*request, std::move(file), file_mime_type(path));
+}
+
+// Senders.
+// ----------------------------------------------------------------------------
+
+void protocol_client_html::send_file(const string_request& request,
+    file&& file, mime_type type) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    BC_ASSERT_MSG(file.is_open(), "sending closed file handle");
+
+    file_response response{ status::ok, request.version() };
+    add_common_headers(response, request);
+
+    response.set(field::content_type, from_mime_type(type));
+    response.body() = std::move(file);
+    response.prepare_payload();
+
+    SEND(std::move(response), handle_complete, _1, error::success);
+}
+
+// Utilities.
+// ----------------------------------------------------------------------------
+// private
+
+std::filesystem::path protocol_client_html::to_local_path(
+    const std::string& target) const NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    return sanitize_origin(root_, target == "/" ? target + default_ : target);
+}
+
+BC_POP_WARNING()
+
+} // namespace network
+} // namespace libbitcoin

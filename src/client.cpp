@@ -20,7 +20,7 @@
 
 #include <ranges>
 #include <bitcoin/network/config/config.hpp>
-#include <bitcoin/network/messages/client/messages.hpp>
+#include <bitcoin/network/messages/http/messages.hpp>
 
 namespace libbitcoin {
 namespace network {

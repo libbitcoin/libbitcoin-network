@@ -136,8 +136,8 @@
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
     <ClCompile Include="..\..\..\..\src\memory.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\client\enums\mime_type.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\client\enums\target.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\address.cpp">
       <ObjectFileName>$(IntDir)src_messages_peer_address.obj</ObjectFileName>
     </ClCompile>
@@ -189,7 +189,7 @@
     <ClCompile Include="..\..\..\..\src\net\channel_peer.cpp" />
     <ClCompile Include="..\..\..\..\src\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\src\net\deadline.cpp" />
-    <ClCompile Include="..\..\..\..\src\net\distributor_client.cpp" />
+    <ClCompile Include="..\..\..\..\src\net\distributor_http.cpp" />
     <ClCompile Include="..\..\..\..\src\net\distributor_peer.cpp" />
     <ClCompile Include="..\..\..\..\src\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp" />
@@ -199,6 +199,8 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_out_209.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_alert_311.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_client.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_client_html.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_client_http.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_peer.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_106.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_60001.cpp" />
@@ -254,13 +256,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\timer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\log\tracker.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\memory.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\magic_numbers.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\mime_type.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\status.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\target.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\enums\verb.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\messages.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\client\method.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\magic_numbers.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\mime_type.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\status.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\target.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\verb.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\messages.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address_item.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\alert.hpp" />
@@ -315,7 +317,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\deadline.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_client.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\hosts.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\net.hpp" />
@@ -326,6 +328,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_out_209.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_alert_311.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client_html.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client_http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_106.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_60001.hpp" />
