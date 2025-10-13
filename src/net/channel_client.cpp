@@ -39,7 +39,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 channel_client::channel_client(const logger& log, const socket::ptr& socket,
     const network::settings& settings, uint64_t identifier,
-    const http_server& options) NOEXCEPT
+    const network::settings::http_server& options) NOEXCEPT
   : channel(log, socket, settings, identifier, options.timeout(), {}),
     request_buffer_(ceilinged_add(http::max_head, http::max_body)),
     distributor_(socket->strand()),

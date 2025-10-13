@@ -84,9 +84,6 @@
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\client.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <Filter>src\config</Filter>
     </ClCompile>
@@ -315,6 +312,12 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_client.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_html.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_http.cpp">
+      <Filter>src\protocols</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\protocols\protocol_peer.cpp">
       <Filter>src\protocols</Filter>
     </ClCompile>
@@ -343,6 +346,12 @@
       <Filter>src\protocols</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\sessions\session.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_client.cpp">
+      <Filter>src\sessions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\sessions\session_html.cpp">
       <Filter>src\sessions</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\sessions\session_inbound.cpp">

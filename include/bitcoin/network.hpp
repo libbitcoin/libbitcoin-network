@@ -16,7 +16,6 @@
 
 #include <bitcoin/system.hpp>
 #include <bitcoin/network/boost.hpp>
-#include <bitcoin/network/client.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
 #include <bitcoin/network/memory.hpp>
@@ -123,8 +122,8 @@
 #include <bitcoin/network/protocols/protocol_address_out_209.hpp>
 #include <bitcoin/network/protocols/protocol_alert_311.hpp>
 #include <bitcoin/network/protocols/protocol_client.hpp>
-#include <bitcoin/network/protocols/protocol_client_html.hpp>
-#include <bitcoin/network/protocols/protocol_client_http.hpp>
+#include <bitcoin/network/protocols/protocol_html.hpp>
+#include <bitcoin/network/protocols/protocol_http.hpp>
 #include <bitcoin/network/protocols/protocol_peer.hpp>
 #include <bitcoin/network/protocols/protocol_ping_106.hpp>
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
@@ -137,7 +136,7 @@
 #include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/sessions/session_client.hpp>
-#include <bitcoin/network/sessions/session_client_inbound.hpp>
+#include <bitcoin/network/sessions/session_html.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>
 #include <bitcoin/network/sessions/session_manual.hpp>
 #include <bitcoin/network/sessions/session_outbound.hpp>

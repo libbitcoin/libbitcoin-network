@@ -16,16 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SESSIONS_HPP
-#define LIBBITCOIN_NETWORK_SESSIONS_HPP
+#include "../test.hpp"
 
-#include <bitcoin/network/sessions/session.hpp>
-#include <bitcoin/network/sessions/session_client.hpp>
-#include <bitcoin/network/sessions/session_html.hpp>
-#include <bitcoin/network/sessions/session_inbound.hpp>
-#include <bitcoin/network/sessions/session_manual.hpp>
-#include <bitcoin/network/sessions/session_outbound.hpp>
-#include <bitcoin/network/sessions/session_peer.hpp>
-#include <bitcoin/network/sessions/session_seed.hpp>
+BOOST_AUTO_TEST_SUITE(session_html_tests)
 
-#endif
+BOOST_AUTO_TEST_CASE(session_html_test)
+{
+    BOOST_REQUIRE(true);
+}
+
+BOOST_AUTO_TEST_SUITE_END()

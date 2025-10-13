@@ -16,12 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/protocols/protocol_client_http.hpp>
+#include <bitcoin/network/protocols/protocol_http.hpp>
 
 #include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/client.hpp>
+#include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -32,7 +32,7 @@
 namespace libbitcoin {
 namespace network {
 
-#define CLASS protocol_client_http
+#define CLASS protocol_http
 
 using namespace http;
 using namespace std::placeholders;
@@ -42,8 +42,8 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // [field] returns "" if not found but .at(field) throws.
 
-protocol_client_http::protocol_client_http(const session::ptr& session,
-    const channel::ptr& channel, const http_server& options) NOEXCEPT
+protocol_http::protocol_http(const session::ptr& session,
+    const channel::ptr& channel, const settings::http_server& options) NOEXCEPT
   : protocol_client(session, channel),
     channel_(std::dynamic_pointer_cast<channel_client>(channel)),
     session_(std::dynamic_pointer_cast<session_client>(session)),
@@ -51,14 +51,14 @@ protocol_client_http::protocol_client_http(const session::ptr& session,
     hosts_(options.host_names()),
     server_(options.server),
     port_(options.secure ? default_tls : default_http),
-    tracker<protocol_client_http>(session->log)
+    tracker<protocol_http>(session->log)
 {
 }
 
 // Start.
 // ----------------------------------------------------------------------------
 
-void protocol_client_http::start() NOEXCEPT
+void protocol_http::start() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -80,55 +80,55 @@ void protocol_client_http::start() NOEXCEPT
 // Handle disallowed-by-default methods (override to implement).
 // ----------------------------------------------------------------------------
 
-void protocol_client_http::handle_receive_get(const code& ec,
+void protocol_http::handle_receive_get(const code& ec,
     const method::get& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
-void protocol_client_http::handle_receive_post(const code& ec,
+void protocol_http::handle_receive_post(const code& ec,
     const method::post& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
-void protocol_client_http::handle_receive_put(const code& ec,
+void protocol_http::handle_receive_put(const code& ec,
     const method::put& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
-void protocol_client_http::handle_receive_head(const code& ec,
+void protocol_http::handle_receive_head(const code& ec,
     const method::head& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
-void protocol_client_http::handle_receive_delete(const code& ec,
+void protocol_http::handle_receive_delete(const code& ec,
     const method::delete_& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
-void protocol_client_http::handle_receive_trace(const code& ec,
+void protocol_http::handle_receive_trace(const code& ec,
     const method::trace& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
-void protocol_client_http::handle_receive_options(const code& ec,
+void protocol_http::handle_receive_options(const code& ec,
     const method::options& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
-void protocol_client_http::handle_receive_connect(const code& ec,
+void protocol_http::handle_receive_connect(const code& ec,
     const method::connect& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
 }
 
-void protocol_client_http::handle_receive_unknown(const code& ec,
+void protocol_http::handle_receive_unknown(const code& ec,
     const method::unknown& request) NOEXCEPT
 {
     send_method_not_allowed(*request, ec);
@@ -138,7 +138,7 @@ void protocol_client_http::handle_receive_unknown(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Closes channel.
-void protocol_client_http::send_method_not_allowed(
+void protocol_http::send_method_not_allowed(
     const string_request& request, const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -156,7 +156,7 @@ void protocol_client_http::send_method_not_allowed(
     SEND(std::move(response), handle_complete, _1, error::method_not_allowed);
 }
 
-void protocol_client_http::send_not_found(
+void protocol_http::send_not_found(
     const string_request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -172,7 +172,7 @@ void protocol_client_http::send_not_found(
 }
 
 // Closes channel.
-void protocol_client_http::send_forbidden(
+void protocol_http::send_forbidden(
     const string_request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -188,7 +188,7 @@ void protocol_client_http::send_forbidden(
 }
 
 // Closes channel.
-void protocol_client_http::send_bad_host(
+void protocol_http::send_bad_host(
     const string_request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -204,7 +204,7 @@ void protocol_client_http::send_bad_host(
 }
 
 // Closes channel.
-void protocol_client_http::send_bad_target(
+void protocol_http::send_bad_target(
     const string_request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -222,7 +222,7 @@ void protocol_client_http::send_bad_target(
 // Handle sends.
 // ----------------------------------------------------------------------------
 
-void protocol_client_http::handle_complete(const code& ec,
+void protocol_http::handle_complete(const code& ec,
     const code& reason) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -243,7 +243,7 @@ void protocol_client_http::handle_complete(const code& ec,
 // Utilities.
 // ----------------------------------------------------------------------------
 
-bool protocol_client_http::is_allowed_origin(const std::string& origin,
+bool protocol_http::is_allowed_origin(const std::string& origin,
     size_t version) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -257,7 +257,7 @@ bool protocol_client_http::is_allowed_origin(const std::string& origin,
         system::contains(origins_, config::to_normal_host(origin, port_));
 }
 
-bool protocol_client_http::is_allowed_host(const std::string& host,
+bool protocol_http::is_allowed_host(const std::string& host,
     size_t version) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -272,7 +272,7 @@ bool protocol_client_http::is_allowed_host(const std::string& host,
 }
 
 // TODO: pass and set response mime_type.
-void protocol_client_http::add_common_headers(fields& fields,
+void protocol_http::add_common_headers(fields& fields,
     const string_request& request, bool closing) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -319,7 +319,7 @@ void protocol_client_http::add_common_headers(fields& fields,
 // status.reason text is only available on non-polymorphic response types, so
 // so it's dereferenced before calling and passed along with status enum value.
 
-std::string protocol_client_http::format_status(const http::status /*status*/,
+std::string protocol_http::format_status(const http::status /*status*/,
     const std::string& reason, const http::mime_type& /*type*/,
     const std::string& details) const NOEXCEPT
 {

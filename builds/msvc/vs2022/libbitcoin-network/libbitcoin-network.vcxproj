@@ -124,7 +124,6 @@
     <ClCompile Include="..\..\..\..\src\async\thread.cpp" />
     <ClCompile Include="..\..\..\..\src\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\src\async\time.cpp" />
-    <ClCompile Include="..\..\..\..\src\client.cpp" />
     <ClCompile Include="..\..\..\..\src\config\address.cpp">
       <ObjectFileName>$(IntDir)src_config_address.obj</ObjectFileName>
     </ClCompile>
@@ -199,8 +198,8 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_address_out_209.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_alert_311.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_client.cpp" />
-    <ClCompile Include="..\..\..\..\src\protocols\protocol_client_html.cpp" />
-    <ClCompile Include="..\..\..\..\src\protocols\protocol_client_http.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_html.cpp" />
+    <ClCompile Include="..\..\..\..\src\protocols\protocol_http.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_peer.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_106.cpp" />
     <ClCompile Include="..\..\..\..\src\protocols\protocol_ping_60001.cpp" />
@@ -212,7 +211,7 @@
     <ClCompile Include="..\..\..\..\src\protocols\protocol_version_70016.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_client.cpp" />
-    <ClCompile Include="..\..\..\..\src\sessions\session_client_inbound.cpp" />
+    <ClCompile Include="..\..\..\..\src\sessions\session_html.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_inbound.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_manual.cpp" />
     <ClCompile Include="..\..\..\..\src\sessions\session_outbound.cpp" />
@@ -240,7 +239,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\client.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\authority.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\config\config.hpp" />
@@ -328,8 +326,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_address_out_209.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_alert_311.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client_html.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_client_http.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_html.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_http.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_106.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_ping_60001.hpp" />
@@ -342,7 +340,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocols.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_client.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_client_inbound.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_html.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_manual.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_outbound.hpp" />

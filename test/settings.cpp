@@ -834,4 +834,59 @@ BOOST_AUTO_TEST_CASE(settings__excluded__default__true)
     BOOST_REQUIRE(instance.excluded({}));
 }
 
+// client-server
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(client__tcp_server__defaults__expected)
+{
+    const settings::tcp_server instance{};
+
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
+    BOOST_REQUIRE(!instance.enabled());
+}
+
+BOOST_AUTO_TEST_CASE(client__http_server__defaults__expected)
+{
+    const settings::http_server instance{};
+
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
+    BOOST_REQUIRE(!instance.enabled());
+
+    // http_server
+    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
+    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE(instance.host_names().empty());
+}
+
+BOOST_AUTO_TEST_CASE(client__html_server__defaults__expected)
+{
+    const settings::html_server instance{};
+
+    // tcp_server
+    BOOST_REQUIRE(!instance.secure);
+    BOOST_REQUIRE(instance.binds.empty());
+    BOOST_REQUIRE_EQUAL(instance.connections, 0u);
+    BOOST_REQUIRE_EQUAL(instance.timeout_seconds, 60u);
+    BOOST_REQUIRE(!instance.enabled());
+
+    // http_server
+    BOOST_REQUIRE_EQUAL(instance.server, "libbitcoin/4.0");
+    BOOST_REQUIRE(instance.hosts.empty());
+    BOOST_REQUIRE(instance.host_names().empty());
+
+    // html_server
+    BOOST_REQUIRE(instance.path.empty());
+    BOOST_REQUIRE_EQUAL(instance.default_, "index.html");
+    BOOST_REQUIRE(instance.origins.empty());
+    BOOST_REQUIRE(instance.origin_names().empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

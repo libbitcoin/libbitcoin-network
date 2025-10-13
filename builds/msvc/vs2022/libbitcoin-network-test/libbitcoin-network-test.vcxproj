@@ -130,7 +130,6 @@
     <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\test\async\time.cpp" />
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp" />
-    <ClCompile Include="..\..\..\..\test\client.cpp" />
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>
     </ClCompile>
@@ -215,6 +214,8 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_address_out_209.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_alert_311.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_client.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_html.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_http.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_peer.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_106.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_60001.cpp" />
@@ -225,6 +226,8 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70016.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session.cpp" />
+    <ClCompile Include="..\..\..\..\test\sessions\session_client.cpp" />
+    <ClCompile Include="..\..\..\..\test\sessions\session_html.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_inbound.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_manual.cpp" />
     <ClCompile Include="..\..\..\..\test\sessions\session_outbound.cpp" />

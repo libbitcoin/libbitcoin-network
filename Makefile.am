@@ -35,7 +35,6 @@ lib_LTLIBRARIES = src/libbitcoin-network.la
 src_libbitcoin_network_la_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 src_libbitcoin_network_la_LIBADD = ${bitcoin_system_LIBS}
 src_libbitcoin_network_la_SOURCES = \
-    src/client.cpp \
     src/error.cpp \
     src/memory.cpp \
     src/net.cpp \
@@ -110,8 +109,8 @@ src_libbitcoin_network_la_SOURCES = \
     src/protocols/protocol_address_out_209.cpp \
     src/protocols/protocol_alert_311.cpp \
     src/protocols/protocol_client.cpp \
-    src/protocols/protocol_client_html.cpp \
-    src/protocols/protocol_client_http.cpp \
+    src/protocols/protocol_html.cpp \
+    src/protocols/protocol_http.cpp \
     src/protocols/protocol_peer.cpp \
     src/protocols/protocol_ping_106.cpp \
     src/protocols/protocol_ping_60001.cpp \
@@ -123,7 +122,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/protocols/protocol_version_70016.cpp \
     src/sessions/session.cpp \
     src/sessions/session_client.cpp \
-    src/sessions/session_client_inbound.cpp \
+    src/sessions/session_html.cpp \
     src/sessions/session_inbound.cpp \
     src/sessions/session_manual.cpp \
     src/sessions/session_outbound.cpp \
@@ -140,7 +139,6 @@ check_PROGRAMS = test/libbitcoin-network-test
 test_libbitcoin_network_test_CPPFLAGS = -I${srcdir}/include ${bitcoin_system_BUILD_CPPFLAGS}
 test_libbitcoin_network_test_LDADD = src/libbitcoin-network.la ${boost_unit_test_framework_LIBS} ${bitcoin_system_LIBS}
 test_libbitcoin_network_test_SOURCES = \
-    test/client.cpp \
     test/error.cpp \
     test/main.cpp \
     test/memory.cpp \
@@ -232,6 +230,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/protocols/protocol_address_out_209.cpp \
     test/protocols/protocol_alert_311.cpp \
     test/protocols/protocol_client.cpp \
+    test/protocols/protocol_html.cpp \
+    test/protocols/protocol_http.cpp \
     test/protocols/protocol_peer.cpp \
     test/protocols/protocol_ping_106.cpp \
     test/protocols/protocol_ping_60001.cpp \
@@ -242,6 +242,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/protocols/protocol_version_70002.cpp \
     test/protocols/protocol_version_70016.cpp \
     test/sessions/session.cpp \
+    test/sessions/session_client.cpp \
+    test/sessions/session_html.cpp \
     test/sessions/session_inbound.cpp \
     test/sessions/session_manual.cpp \
     test/sessions/session_outbound.cpp \
@@ -258,7 +260,6 @@ include_bitcoin_HEADERS = \
 include_bitcoin_networkdir = ${includedir}/bitcoin/network
 include_bitcoin_network_HEADERS = \
     include/bitcoin/network/boost.hpp \
-    include/bitcoin/network/client.hpp \
     include/bitcoin/network/define.hpp \
     include/bitcoin/network/error.hpp \
     include/bitcoin/network/memory.hpp \
@@ -410,8 +411,8 @@ include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol_address_out_209.hpp \
     include/bitcoin/network/protocols/protocol_alert_311.hpp \
     include/bitcoin/network/protocols/protocol_client.hpp \
-    include/bitcoin/network/protocols/protocol_client_html.hpp \
-    include/bitcoin/network/protocols/protocol_client_http.hpp \
+    include/bitcoin/network/protocols/protocol_html.hpp \
+    include/bitcoin/network/protocols/protocol_http.hpp \
     include/bitcoin/network/protocols/protocol_peer.hpp \
     include/bitcoin/network/protocols/protocol_ping_106.hpp \
     include/bitcoin/network/protocols/protocol_ping_60001.hpp \
@@ -427,7 +428,7 @@ include_bitcoin_network_sessionsdir = ${includedir}/bitcoin/network/sessions
 include_bitcoin_network_sessions_HEADERS = \
     include/bitcoin/network/sessions/session.hpp \
     include/bitcoin/network/sessions/session_client.hpp \
-    include/bitcoin/network/sessions/session_client_inbound.hpp \
+    include/bitcoin/network/sessions/session_html.hpp \
     include/bitcoin/network/sessions/session_inbound.hpp \
     include/bitcoin/network/sessions/session_manual.hpp \
     include/bitcoin/network/sessions/session_outbound.hpp \

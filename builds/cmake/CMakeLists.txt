@@ -217,7 +217,6 @@ link_libraries(
 # Define ${CANONICAL_LIB_NAME} project.
 #------------------------------------------------------------------------------
 add_library( ${CANONICAL_LIB_NAME}
-    "../../src/client.cpp"
     "../../src/error.cpp"
     "../../src/memory.cpp"
     "../../src/net.cpp"
@@ -292,8 +291,8 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/protocols/protocol_address_out_209.cpp"
     "../../src/protocols/protocol_alert_311.cpp"
     "../../src/protocols/protocol_client.cpp"
-    "../../src/protocols/protocol_client_html.cpp"
-    "../../src/protocols/protocol_client_http.cpp"
+    "../../src/protocols/protocol_html.cpp"
+    "../../src/protocols/protocol_http.cpp"
     "../../src/protocols/protocol_peer.cpp"
     "../../src/protocols/protocol_ping_106.cpp"
     "../../src/protocols/protocol_ping_60001.cpp"
@@ -305,7 +304,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/protocols/protocol_version_70016.cpp"
     "../../src/sessions/session.cpp"
     "../../src/sessions/session_client.cpp"
-    "../../src/sessions/session_client_inbound.cpp"
+    "../../src/sessions/session_html.cpp"
     "../../src/sessions/session_inbound.cpp"
     "../../src/sessions/session_manual.cpp"
     "../../src/sessions/session_outbound.cpp"
@@ -346,7 +345,6 @@ target_link_libraries( ${CANONICAL_LIB_NAME}
 #------------------------------------------------------------------------------
 if (with-tests)
     add_executable( libbitcoin-network-test
-        "../../test/client.cpp"
         "../../test/error.cpp"
         "../../test/main.cpp"
         "../../test/memory.cpp"
@@ -438,6 +436,8 @@ if (with-tests)
         "../../test/protocols/protocol_address_out_209.cpp"
         "../../test/protocols/protocol_alert_311.cpp"
         "../../test/protocols/protocol_client.cpp"
+        "../../test/protocols/protocol_html.cpp"
+        "../../test/protocols/protocol_http.cpp"
         "../../test/protocols/protocol_peer.cpp"
         "../../test/protocols/protocol_ping_106.cpp"
         "../../test/protocols/protocol_ping_60001.cpp"
@@ -448,6 +448,8 @@ if (with-tests)
         "../../test/protocols/protocol_version_70002.cpp"
         "../../test/protocols/protocol_version_70016.cpp"
         "../../test/sessions/session.cpp"
+        "../../test/sessions/session_client.cpp"
+        "../../test/sessions/session_html.cpp"
         "../../test/sessions/session_inbound.cpp"
         "../../test/sessions/session_manual.cpp"
         "../../test/sessions/session_outbound.cpp"

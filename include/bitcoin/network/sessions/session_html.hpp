@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_SESSION_CLIENT_INBOUND_HPP
-#define LIBBITCOIN_NETWORK_SESSION_CLIENT_INBOUND_HPP
+#ifndef LIBBITCOIN_NETWORK_SESSION_HTTP_HPP
+#define LIBBITCOIN_NETWORK_SESSION_HTTP_HPP
 
 #include <memory>
 #include <bitcoin/network/define.hpp>
@@ -31,14 +31,14 @@ namespace network {
 class net;
 
 /// Inbound client connections session, thread safe.
-class BCT_API session_client_inbound
-  : public session_client, protected tracker<session_client_inbound>
+class BCT_API session_html
+  : public session_client, protected tracker<session_html>
 {
 public:
-    typedef std::shared_ptr<session_client_inbound> ptr;
+    typedef std::shared_ptr<session_html> ptr;
 
     /// Construct an instance (network should be started).
-    session_client_inbound(net& network, uint64_t identifier) NOEXCEPT;
+    session_html(net& network, uint64_t identifier) NOEXCEPT;
 
 protected:
     /// Create a channel from the started socket.
