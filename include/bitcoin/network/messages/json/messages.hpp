@@ -16,19 +16,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_BOOST_HPP
-#define LIBBITCOIN_NETWORK_BOOST_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_MESSAGES_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_JSON_MESSAGES_HPP
 
-#include <bitcoin/network/version.hpp>
-
-#include <boost/asio.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/bimap.hpp>
-#include <boost/bimap/set_of.hpp>
-#include <boost/bimap/multiset_of.hpp>
-#include <boost/circular_buffer.hpp>
-#include <boost/system/error_code.hpp>
+#include <bitcoin/network/messages/json/enums/protocol.hpp>
+#include <bitcoin/network/messages/json/enums/transport.hpp>
+#include <bitcoin/network/messages/json/body.hpp>
+#include <bitcoin/network/messages/json/parser.hpp>
+#include <bitcoin/network/messages/json/serializer.hpp>
+#include <bitcoin/network/messages/json/types.hpp>
 
 #endif

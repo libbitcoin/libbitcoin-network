@@ -72,6 +72,7 @@ protected:
     /// this is bypassed, which applies to basic http services. A handshake
     /// is used to implement TLS and WebSocket upgrade from http (for example).
     /// Handshake protocol(s) must invoke handler one time at completion.
+    /// Use std::dynamic_pointer_cast<channel_t>(channel) to obtain channel_t.
     inline void attach_handshake(const channel::ptr& channel,
         result_handler&& handler) NOEXCEPT override
     {
@@ -83,6 +84,7 @@ protected:
     /// Overridden to set channel protocols. This allows the implementation to
     /// pass other values to protocol construction and/or select the desired
     /// protocol based on available factors (e.g. a distinct protocol version).
+    /// Use std::dynamic_pointer_cast<channel_t>(channel) to obtain channel_t.
     inline void attach_protocols(const channel::ptr& channel) NOEXCEPT override
     {
         BC_ASSERT_MSG(channel->stranded(), "channel strand");

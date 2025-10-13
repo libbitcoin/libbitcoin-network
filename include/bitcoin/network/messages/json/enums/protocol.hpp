@@ -16,19 +16,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_BOOST_HPP
-#define LIBBITCOIN_NETWORK_BOOST_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_ENUMS_PROTOCOL_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_JSON_ENUMS_PROTOCOL_HPP
 
-#include <bitcoin/network/version.hpp>
+#include <bitcoin/network/define.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/bimap.hpp>
-#include <boost/bimap/set_of.hpp>
-#include <boost/bimap/multiset_of.hpp>
-#include <boost/circular_buffer.hpp>
-#include <boost/system/error_code.hpp>
+namespace libbitcoin {
+namespace network {
+namespace json {
+
+/// Enumeration of JSON-RPC protocol versions.
+enum class protocol
+{
+    /// JSON-RPC 1.0 (bitcoin core).
+    v1,
+
+    /// JSON-RPC 2.0 (electrum daemon, electrum protocol, stratum v1).
+    v2,
+
+    /// Undefined version.
+    undefined
+};
+} // namespace json
+} // namespace network
+} // namespace libbitcoin
 
 #endif

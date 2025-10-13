@@ -16,19 +16,24 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_BOOST_HPP
-#define LIBBITCOIN_NETWORK_BOOST_HPP
+#ifndef LIBBITCOIN_NETWORK_NET_CHANNEL_WEBSOCKET_HPP
+#define LIBBITCOIN_NETWORK_NET_CHANNEL_WEBSOCKET_HPP
 
-#include <bitcoin/network/version.hpp>
+#include <memory>
+#include <bitcoin/network/net/channel.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/bimap.hpp>
-#include <boost/bimap/set_of.hpp>
-#include <boost/bimap/multiset_of.hpp>
-#include <boost/circular_buffer.hpp>
-#include <boost/system/error_code.hpp>
+namespace libbitcoin {
+namespace network {
+
+/// Full websocket peer-to-peer tcp/ip channel.
+class BCT_API channel_websocket
+  : public channel, protected tracker<channel_websocket>
+{
+public:
+    typedef std::shared_ptr<channel_websocket> ptr;
+};
+
+} // namespace network
+} // namespace libbitcoin
 
 #endif

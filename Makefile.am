@@ -166,6 +166,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/http/enums/magic_numbers.cpp \
     test/messages/http/enums/mime_type.cpp \
     test/messages/http/enums/target.cpp \
+    test/messages/json/body.cpp \
     test/messages/peer/address.cpp \
     test/messages/peer/address_item.cpp \
     test/messages/peer/alert.cpp \
@@ -333,6 +334,19 @@ include_bitcoin_network_messages_http_enums_HEADERS = \
     include/bitcoin/network/messages/http/enums/target.hpp \
     include/bitcoin/network/messages/http/enums/verb.hpp
 
+include_bitcoin_network_messages_jsondir = ${includedir}/bitcoin/network/messages/json
+include_bitcoin_network_messages_json_HEADERS = \
+    include/bitcoin/network/messages/json/body.hpp \
+    include/bitcoin/network/messages/json/messages.hpp \
+    include/bitcoin/network/messages/json/parser.hpp \
+    include/bitcoin/network/messages/json/serializer.hpp \
+    include/bitcoin/network/messages/json/types.hpp
+
+include_bitcoin_network_messages_json_enumsdir = ${includedir}/bitcoin/network/messages/json/enums
+include_bitcoin_network_messages_json_enums_HEADERS = \
+    include/bitcoin/network/messages/json/enums/protocol.hpp \
+    include/bitcoin/network/messages/json/enums/transport.hpp
+
 include_bitcoin_network_messages_peerdir = ${includedir}/bitcoin/network/messages/peer
 include_bitcoin_network_messages_peer_HEADERS = \
     include/bitcoin/network/messages/peer/address.hpp \
@@ -392,9 +406,11 @@ include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/channel.hpp \
     include/bitcoin/network/net/channel_http.hpp \
     include/bitcoin/network/net/channel_peer.hpp \
+    include/bitcoin/network/net/channel_websocket.hpp \
     include/bitcoin/network/net/connector.hpp \
     include/bitcoin/network/net/deadline.hpp \
     include/bitcoin/network/net/distributor_http.hpp \
+    include/bitcoin/network/net/distributor_json.hpp \
     include/bitcoin/network/net/distributor_peer.hpp \
     include/bitcoin/network/net/hosts.hpp \
     include/bitcoin/network/net/net.hpp \

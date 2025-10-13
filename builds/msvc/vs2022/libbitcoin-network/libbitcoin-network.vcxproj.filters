@@ -44,13 +44,19 @@
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000010}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\messages\http\enums">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000B1}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000C1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\bitcoin\network\messages\peer">
+    <Filter Include="include\bitcoin\network\messages\json">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000A1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\bitcoin\network\messages\json\enums">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000D1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\bitcoin\network\messages\peer">
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000B1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="include\bitcoin\network\messages\peer\enums">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000C1}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000E1}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\bitcoin\network\net">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000004}</UniqueIdentifier>
@@ -62,7 +68,7 @@
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000006}</UniqueIdentifier>
     </Filter>
     <Filter Include="resource">
-      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000D1}</UniqueIdentifier>
+      <UniqueIdentifier>{564EB540-D6B6-425C-0000-0000000000F1}</UniqueIdentifier>
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{564EB540-D6B6-425C-0000-000000000000}</UniqueIdentifier>
@@ -497,6 +503,27 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp">
       <Filter>include\bitcoin\network\messages\http</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\body.hpp">
+      <Filter>include\bitcoin\network\messages\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\protocol.hpp">
+      <Filter>include\bitcoin\network\messages\json\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\transport.hpp">
+      <Filter>include\bitcoin\network\messages\json\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\messages.hpp">
+      <Filter>include\bitcoin\network\messages\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser.hpp">
+      <Filter>include\bitcoin\network\messages\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serializer.hpp">
+      <Filter>include\bitcoin\network\messages\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\types.hpp">
+      <Filter>include\bitcoin\network\messages\json</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address.hpp">
       <Filter>include\bitcoin\network\messages\peer</Filter>
     </ClInclude>
@@ -653,6 +680,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_peer.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_websocket.hpp">
+      <Filter>include\bitcoin\network\net</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\connector.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
@@ -660,6 +690,9 @@
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_http.hpp">
+      <Filter>include\bitcoin\network\net</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_json.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\distributor_peer.hpp">

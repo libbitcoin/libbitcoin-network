@@ -16,19 +16,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_BOOST_HPP
-#define LIBBITCOIN_NETWORK_BOOST_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_HPP
 
-#include <bitcoin/network/version.hpp>
+#include <string_view>
+#include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
+#include <bitcoin/network/messages/json/types.hpp>
 
-#include <boost/asio.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/bimap.hpp>
-#include <boost/bimap/set_of.hpp>
-#include <boost/bimap/multiset_of.hpp>
-#include <boost/circular_buffer.hpp>
-#include <boost/system/error_code.hpp>
+namespace libbitcoin {
+namespace network {
+namespace json {
+
+// TODO: implement.
+struct parser
+{
+    using buffer_t = string_t;
+
+    void reset() NOEXCEPT {};
+    bool is_done() const NOEXCEPT { return false; };
+    bool has_error() const NOEXCEPT { return false; };
+    error::boost_code get_error() const NOEXCEPT { return {}; };
+    size_t write(std::string_view view, const error::boost_code& ec) NOEXCEPT;
+};
+
+} // namespace json
+} // namespace network
+} // namespace libbitcoin
 
 #endif

@@ -20,19 +20,30 @@
 
 BOOST_AUTO_TEST_SUITE(channel_tests)
 
+// channel is abstract non-virtual base class.
+struct accessor
+  : public channel
+{
+    ////using channel::channel;
+    accessor(const logger& log, const socket::ptr& socket,
+        const network::settings& settings, uint64_t identifier) NOEXCEPT
+      : channel(log, socket, settings, identifier)
+    {
+    }
+};
+
 BOOST_AUTO_TEST_CASE(channel__stopped__default__false)
 {
-    constexpr auto expected_identifier = 42u;
+    constexpr auto expected = 42u;
     const logger log{};
-    threadpool pool(1);
+    threadpool pool{ one };
     asio::strand strand(pool.service().get_executor());
     const settings set(bc::system::chain::selection::mainnet);
     auto socket_ptr = std::make_shared<network::socket>(log, pool.service());
-    auto channel_ptr = std::make_shared<channel>(log, socket_ptr, set, expected_identifier);
+    auto channel_ptr = std::make_shared<accessor>(log, socket_ptr, set, expected);
     BOOST_REQUIRE(!channel_ptr->stopped());
-
     BOOST_REQUIRE_NE(channel_ptr->nonce(), zero);
-    BOOST_REQUIRE_EQUAL(channel_ptr->identifier(), expected_identifier);
+    BOOST_REQUIRE_EQUAL(channel_ptr->identifier(), expected);
 
     // Stop completion is asynchronous.
     channel_ptr->stop(error::invalid_magic);

@@ -33,6 +33,7 @@
 namespace libbitcoin {
 namespace network {
 
+/// Half-duplex reading of http-request and sending of http-response.
 class BCT_API channel_http
   : public channel, protected tracker<channel_http>
 {
