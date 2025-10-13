@@ -131,6 +131,7 @@ void session_inbound::handle_accepted(const code& ec,
         return;
     }
 
+    // Suspension is controlled via acceptor construction.
     if (ec == error::service_suspended)
     {
         ////LOGS("Suspended inbound channel start.");

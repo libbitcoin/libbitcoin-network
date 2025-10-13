@@ -84,9 +84,13 @@ public:
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
 
+    /// http is half-duplex, so reads must wait until send is completed.
     /// Must be called (only once) from protocol message handler (if no stop).
     /// Calling more than once is safe but implies a protocol problem. Failure
     /// to call after successful message handling results in stalled channel.
+    /// This can be buried in the common send completion hander, conditioned on
+    /// on the result code. This is simpler and more performant than having the
+    /// distributor issue a completion handler to invoke read continuation.
     void read_request() NOEXCEPT;
 
 protected:
