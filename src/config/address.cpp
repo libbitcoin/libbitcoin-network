@@ -28,13 +28,11 @@ namespace libbitcoin {
 namespace network {
 namespace config {
 
-using namespace system;
-
 // Constructors.
 // ----------------------------------------------------------------------------
 
 address::address() NOEXCEPT
-  : address(make_shared<messages::peer::address_item>())
+  : address(system::to_shared<messages::peer::address_item>())
 {
 }
 
@@ -45,17 +43,17 @@ address::address(const std::string& host) THROWS
 }
 
 address::address(messages::peer::address_item&& item) NOEXCEPT
-  : address(to_shared(std::move(item)))
+  : address(system::to_shared(std::move(item)))
 {
 }
 
 address::address(const messages::peer::address_item& item) NOEXCEPT
-  : address(to_shared(item))
+  : address(system::to_shared(item))
 {
 }
 
 address::address(const messages::peer::address_item::cptr& message) NOEXCEPT
-  : address_(message ? message : make_shared<messages::peer::address_item>())
+  : address_(message ? message : system::to_shared<messages::peer::address_item>())
 {
 }
 
@@ -167,6 +165,7 @@ std::istream& operator>>(std::istream& input,
     std::string line{};
     input >> line;
 
+    using namespace system;
     const auto tokens = split(line, "/", true, false);
     if (is_limited(tokens.size(), 1, 3))
         throw istream_exception(line);

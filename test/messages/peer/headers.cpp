@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(headers__size__two__expected)
     // Each header must trail a zero byte (yes, it's stoopid).
     constexpr auto values = two * (chain::header::serialized_size() + sizeof(uint8_t));
     constexpr auto expected = variable_size(two) + values;
-    const headers message{ { make_shared<chain::header>(), make_shared<chain::header>() } };
+    const headers message{ { to_shared<chain::header>(), to_shared<chain::header>() } };
     BOOST_REQUIRE_EQUAL(message.size(level::headers_protocol), expected);
 }
 
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(headers__serialize2__overflow__sink_false)
     {
         chain::header_cptrs
         {
-            make_shared<chain::header>()
+            to_shared<chain::header>()
         }
     };
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(headers__serialize2__default_header__expected)
     {
         chain::header_cptrs
         {
-            make_shared<chain::header>()
+            to_shared<chain::header>()
         }
     };
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(headers__serialize1__overflow__sink_false)
     {
         chain::header_cptrs
         {
-            make_shared<chain::header>()
+            to_shared<chain::header>()
         }
     };
 
@@ -127,8 +127,8 @@ BOOST_AUTO_TEST_CASE(headers__serialize1__headers__expected)
     {
         chain::header_cptrs
         {
-            make_shared<chain::header>(),
-            make_shared<chain::header>(
+            to_shared<chain::header>(),
+            to_shared<chain::header>(
             {
                 10,
                 { 42 },
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(headers__deserialize2__default_header__expected)
     {
         chain::header_cptrs
         {
-            make_shared<chain::header>()
+            to_shared<chain::header>()
         }
     };
 
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(headers__deserialize1__headers__expected)
     {
         chain::header_cptrs
         {
-            make_shared<chain::header>(),
+            to_shared<chain::header>(),
             to_shared<chain::header>(
             {
                 10,

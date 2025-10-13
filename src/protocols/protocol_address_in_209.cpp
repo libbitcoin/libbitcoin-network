@@ -86,7 +86,7 @@ address::cptr protocol_address_in_209::filter(
     // Returns zero if minimum > maximum.
     const size_t select = pseudo_random::next(minimum, maximum);
     if (is_zero(select))
-        return make_shared<address>();
+        return to_shared<address>();
 
     // Shuffle, reduce, and filter to the target amount.
     const auto message = to_shared<address>(items);
