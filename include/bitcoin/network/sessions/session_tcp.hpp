@@ -41,7 +41,7 @@ class BCT_API session_tcp
 {
 public:
     typedef std::shared_ptr<session_tcp> ptr;
-    using options_t = settings::html_server;
+    using options_t = settings::tcp_server;
 
     /// Start accepting connections as configured (call from network strand).
     void start(result_handler&& handler) NOEXCEPT override;
