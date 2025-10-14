@@ -764,16 +764,16 @@ BOOST_AUTO_TEST_CASE(error_t__code__method_not_allowed__true_exected_message)
 ////    BOOST_REQUIRE(ec == value);
 ////    BOOST_REQUIRE_EQUAL(ec.message(), "internal server error");
 ////}
-////
-////BOOST_AUTO_TEST_CASE(error_t__code__not_implemented__true_exected_message)
-////{
-////    constexpr auto value = error::not_implemented;
-////    const auto ec = code(value);
-////    BOOST_REQUIRE(ec);
-////    BOOST_REQUIRE(ec == value);
-////    BOOST_REQUIRE_EQUAL(ec.message(), "not implemented");
-////}
-////
+
+BOOST_AUTO_TEST_CASE(error_t__code__not_implemented__true_exected_message)
+{
+    constexpr auto value = error::not_implemented;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "not implemented");
+}
+
 ////BOOST_AUTO_TEST_CASE(error_t__code__bad_gateway__true_exected_message)
 ////{
 ////    constexpr auto value = error::bad_gateway;

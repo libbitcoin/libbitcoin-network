@@ -131,7 +131,7 @@ DEFINE_ERROR_T_MESSAGE_MAP(error)
 
     ////// http 5xx server error
     ////{ internal_server_error, "internal server error" },
-    ////{ not_implemented, "not implemented" },
+    { not_implemented, "not implemented" },
     ////{ bad_gateway, "bad gateway" },
     ////{ service_unavailable, "service unavailable" },
     ////{ gateway_timeout, "gateway timeout" },

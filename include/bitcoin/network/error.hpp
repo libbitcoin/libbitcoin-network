@@ -155,7 +155,7 @@ enum error_t : uint8_t
 
     ////// http 5xx server error
     ////internal_server_error,
-    ////not_implemented,
+    not_implemented,
     ////bad_gateway,
     ////service_unavailable,
     ////gateway_timeout,
