@@ -167,6 +167,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/http/enums/mime_type.cpp \
     test/messages/http/enums/target.cpp \
     test/messages/json/body.cpp \
+    test/messages/json/parser.cpp \
     test/messages/peer/address.cpp \
     test/messages/peer/address_item.cpp \
     test/messages/peer/alert.cpp \
@@ -217,6 +218,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/net/channel.cpp \
     test/net/channel_http.cpp \
     test/net/channel_peer.cpp \
+    test/net/channel_tcp.cpp \
     test/net/connector.cpp \
     test/net/deadline.cpp \
     test/net/distributor_http.cpp \
@@ -235,6 +237,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/protocols/protocol_ping_60001.cpp \
     test/protocols/protocol_reject_70002.cpp \
     test/protocols/protocol_seed_209.cpp \
+    test/protocols/protocol_tcp.cpp \
     test/protocols/protocol_version_106.cpp \
     test/protocols/protocol_version_70001.cpp \
     test/protocols/protocol_version_70002.cpp \
@@ -406,6 +409,7 @@ include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/channel.hpp \
     include/bitcoin/network/net/channel_http.hpp \
     include/bitcoin/network/net/channel_peer.hpp \
+    include/bitcoin/network/net/channel_tcp.hpp \
     include/bitcoin/network/net/channel_websocket.hpp \
     include/bitcoin/network/net/connector.hpp \
     include/bitcoin/network/net/deadline.hpp \
@@ -430,6 +434,7 @@ include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol_ping_60001.hpp \
     include/bitcoin/network/protocols/protocol_reject_70002.hpp \
     include/bitcoin/network/protocols/protocol_seed_209.hpp \
+    include/bitcoin/network/protocols/protocol_tcp.hpp \
     include/bitcoin/network/protocols/protocol_version_106.hpp \
     include/bitcoin/network/protocols/protocol_version_70001.hpp \
     include/bitcoin/network/protocols/protocol_version_70002.hpp \

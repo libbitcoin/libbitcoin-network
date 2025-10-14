@@ -24,6 +24,7 @@
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/channel_http.hpp>
 #include <bitcoin/network/net/channel_peer.hpp>
+#include <bitcoin/network/net/channel_tcp.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/deadline.hpp>
 #include <bitcoin/network/net/distributor_http.hpp>

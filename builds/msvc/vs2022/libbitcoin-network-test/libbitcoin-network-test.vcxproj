@@ -148,6 +148,7 @@
     <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\method.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json\body.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\json\parser.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_address.obj</ObjectFileName>
     </ClCompile>
@@ -203,6 +204,7 @@
     <ClCompile Include="..\..\..\..\test\net\channel.cpp" />
     <ClCompile Include="..\..\..\..\test\net\channel_http.cpp" />
     <ClCompile Include="..\..\..\..\test\net\channel_peer.cpp" />
+    <ClCompile Include="..\..\..\..\test\net\channel_tcp.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
     <ClCompile Include="..\..\..\..\test\net\distributor_http.cpp" />
@@ -221,6 +223,7 @@
     <ClCompile Include="..\..\..\..\test\protocols\protocol_ping_60001.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_reject_70002.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_seed_209.cpp" />
+    <ClCompile Include="..\..\..\..\test\protocols\protocol_tcp.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_106.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70001.cpp" />
     <ClCompile Include="..\..\..\..\test\protocols\protocol_version_70002.cpp" />

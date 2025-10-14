@@ -116,6 +116,7 @@
 #include <bitcoin/network/net/channel.hpp>
 #include <bitcoin/network/net/channel_http.hpp>
 #include <bitcoin/network/net/channel_peer.hpp>
+#include <bitcoin/network/net/channel_tcp.hpp>
 #include <bitcoin/network/net/channel_websocket.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/deadline.hpp>
@@ -137,6 +138,7 @@
 #include <bitcoin/network/protocols/protocol_ping_60001.hpp>
 #include <bitcoin/network/protocols/protocol_reject_70002.hpp>
 #include <bitcoin/network/protocols/protocol_seed_209.hpp>
+#include <bitcoin/network/protocols/protocol_tcp.hpp>
 #include <bitcoin/network/protocols/protocol_version_106.hpp>
 #include <bitcoin/network/protocols/protocol_version_70001.hpp>
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>

@@ -41,9 +41,9 @@ class BCT_API protocol_html
   : public protocol_http, protected tracker<protocol_html>
 {
 public:
-    using channel_t = channel_http;
-    using options_t = settings::html_server;
     typedef std::shared_ptr<protocol_html> ptr;
+    using options_t = settings::html_server;
+    using channel_t = channel_http;
 
     protocol_html(const session::ptr& session,
         const channel::ptr& channel, const options_t& options) NOEXCEPT;
