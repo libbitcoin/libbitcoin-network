@@ -36,7 +36,7 @@ struct BCT_API settings
     struct tcp_server
     {
         /// For logging only.
-        const std::string name;
+        std::string name{};
 
         /// Not implemented (TLS).
         bool secure{ false };
