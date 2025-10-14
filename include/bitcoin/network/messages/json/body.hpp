@@ -29,8 +29,6 @@ namespace libbitcoin {
 namespace network {
 namespace json {
 
-using error_code = error::boost_code;
-
 template <class Parser>
 struct body
 {
@@ -48,7 +46,8 @@ struct body
         {
         }
 
-        void init(std::optional<std::uint64_t> const&, error_code& ec) NOEXCEPT
+        void init(std::optional<std::uint64_t> const&,
+            json::error_code& ec) NOEXCEPT
         {
             ////BC_ASSERT(parser_.is_done());
             parser_.reset();
@@ -56,7 +55,7 @@ struct body
         }
 
         template <class Buffers>
-        std::size_t put(const Buffers& buffers, error_code& ec) NOEXCEPT
+        std::size_t put(const Buffers& buffers, json::error_code& ec) NOEXCEPT
         {
             ////BC_ASSERT(!parser_.is_done());
 
@@ -86,7 +85,7 @@ struct body
             return added;
         }
 
-        void finish(error_code& ec) NOEXCEPT
+        void finish(json::error_code& ec) NOEXCEPT
         {
             // Prioritize existing parser error.
             if ((ec = parser_.get_error()))
@@ -112,19 +111,22 @@ struct body
         template <bool Request>
         explicit writer(http::header<Request>&) NOEXCEPT {}
 
-        void init(error_code& ec) NOEXCEPT
+        void init(json::error_code& ec) NOEXCEPT
         {
             buffer_.clear();
             ec.clear();
         }
 
         template <class Buffers>
-        std::size_t put(const Buffers& buffers, error_code& ec) NOEXCEPT
+        std::size_t put(const Buffers& buffers, json::error_code& ec) NOEXCEPT
         {
+            using namespace boost::asio;
+            const auto increase = buffer_size(buffers);
+            buffer_.reserve(system::ceilinged_add(buffer_.size(), increase));
+
             std::size_t added{};
             for (auto const& buffer: buffers)
             {
-                using namespace boost::asio;
                 const auto size = buffer_size(buffer);
                 const auto data = buffer_cast<const char_t*>(buffer);
                 buffer_.append(data, size);
@@ -135,7 +137,7 @@ struct body
             return added;
         }
 
-        void finish(error_code& ec) NOEXCEPT
+        void finish(json::error_code& ec) NOEXCEPT
         {
             // Nothing written to the response implies an error.
             if (buffer_.empty())
