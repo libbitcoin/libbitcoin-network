@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include <variant>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/messages/json/enums/protocol.hpp>
 
 namespace libbitcoin {
@@ -32,16 +33,16 @@ namespace json {
 /// Forward declaration for array_t/object_t. 
 struct value_t;
 
-struct null_t {};
+struct BCT_API null_t {};
 using code_t = int64_t;
 using boolean_t = bool;
 using number_t = double;
 using string_t = std::string;
 using array_t = std::vector<value_t>;
 using object_t = std::unordered_map<string_t, value_t>;
-using identity_t = std::variant<string_t, code_t, null_t>;
+using identity_t = std::variant<null_t, code_t, string_t>;
 
-struct value_t
+struct BCT_API value_t
 {
     using type = std::variant
     <
@@ -58,15 +59,15 @@ struct value_t
 };
 using value_option = std::optional<value_t>;
 
-struct error_t
+struct BCT_API result_t
 {
     code_t code{};
     string_t message{};
     value_option data{};
 };
-using error_option = std::optional<error_t>;
+using error_option = std::optional<result_t>;
 
-struct request_t
+struct BCT_API request_t
 {
     string_t jsonrpc{};
     string_t method{};
@@ -74,13 +75,15 @@ struct request_t
     identity_t id{};
 };
 
-struct response_t
+struct BCT_API response_t
 {
     string_t jsonrpc{};
     value_option result{};
     error_option error{};
     identity_t id{};
 };
+
+using error_code = error::boost_code;
 
 } // namespace json
 } // namespace network
