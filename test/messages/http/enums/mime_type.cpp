@@ -242,12 +242,12 @@ BOOST_AUTO_TEST_CASE(mime_type__from_mime_types__unsotered__expected_sorted)
 
 BOOST_AUTO_TEST_CASE(mime_type__extension_mime_type__not_found__default)
 {
-    BOOST_REQUIRE(extension_mime_type("") == mime_type::application_octet);
-    BOOST_REQUIRE(extension_mime_type(".") == mime_type::application_octet);
-    BOOST_REQUIRE(extension_mime_type(".42") == mime_type::application_octet);
-    BOOST_REQUIRE(extension_mime_type(".xml.") == mime_type::application_octet);
-    BOOST_REQUIRE(extension_mime_type("test123/test456/") == mime_type::application_octet);
-    BOOST_REQUIRE(extension_mime_type("test123/test456/file") == mime_type::application_octet);
+    BOOST_REQUIRE(extension_mime_type("") == mime_type::unknown);
+    BOOST_REQUIRE(extension_mime_type(".") == mime_type::unknown);
+    BOOST_REQUIRE(extension_mime_type(".42") == mime_type::unknown);
+    BOOST_REQUIRE(extension_mime_type(".xml.") == mime_type::unknown);
+    BOOST_REQUIRE(extension_mime_type("test123/test456/") == mime_type::unknown);
+    BOOST_REQUIRE(extension_mime_type("test123/test456/file") == mime_type::unknown);
 }
 
 BOOST_AUTO_TEST_CASE(mime_type__extension_mime_type__not_found_default__default)
@@ -293,10 +293,10 @@ BOOST_AUTO_TEST_CASE(mime_type__extension_mime_type__mixed_case_exist__expected)
 
 BOOST_AUTO_TEST_CASE(mime_type__file_mime_type__not_found__default)
 {
-    BOOST_REQUIRE(file_mime_type("") == mime_type::application_octet);
-    BOOST_REQUIRE(file_mime_type(".") == mime_type::application_octet);
-    BOOST_REQUIRE(file_mime_type(".42") == mime_type::application_octet);
-    BOOST_REQUIRE(file_mime_type(".xml.") == mime_type::application_octet);
+    BOOST_REQUIRE(file_mime_type("") == mime_type::unknown);
+    BOOST_REQUIRE(file_mime_type(".") == mime_type::unknown);
+    BOOST_REQUIRE(file_mime_type(".42") == mime_type::unknown);
+    BOOST_REQUIRE(file_mime_type(".xml.") == mime_type::unknown);
 }
 
 BOOST_AUTO_TEST_CASE(mime_type__file_mime_type__not_found_default__default)

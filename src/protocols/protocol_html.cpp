@@ -92,7 +92,8 @@ void protocol_html::handle_receive_get(const code& ec,
         return;
     }
 
-    send_file(*request, std::move(file), file_mime_type(path));
+    const auto default_type = mime_type::application_octet;
+    send_file(*request, std::move(file), file_mime_type(path, default_type));
 }
 
 // Senders.
