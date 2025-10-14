@@ -35,6 +35,9 @@ struct BCT_API settings
     /// This is designed for RPC servers that don't require http communication. 
     struct tcp_server
     {
+        /// For logging only.
+        const std::string name;
+
         /// Not implemented (TLS).
         bool secure{ false };
         config::endpoints binds{};
@@ -138,25 +141,25 @@ struct BCT_API settings
     /// Client-server settings.
     /// -----------------------------------------------------------------------
     /// native admin web interface, isolated (http/s, stateless html)
-    html_server web{};
+    html_server web{ "web" };
 
     /// native RESTful block explorer (http/s, stateless html/json)
-    html_server explore{};
+    html_server explore{ "explore" };
 
     /// native websocket query interface (http/s->tcp/s, json, handshake)
-    http_server websocket{};
+    http_server websocket{ "websocket" };
 
     /// bitcoind compat interface (http/s, stateless json-rpc-v2)
-    http_server bitcoind{};
+    http_server bitcoind{ "bitcoind" };
 
     /// electrum compat interface (tcp/s, json-rpc-v2)
-    tcp_server electrum{};
+    tcp_server electrum{ "electrum" };
 
     /// stratum v1 compat interface (tcp/s, json-rpc-v1, auth handshake)
-    tcp_server stratum_v1{};
+    tcp_server stratum_v1{ "stratum_v1" };
 
     /// stratum v2 compat interface (tcp[/s], binary, auth/privacy handshake)
-    tcp_server stratum_v2{};
+    tcp_server stratum_v2{ "stratum_v2" };
     /// -----------------------------------------------------------------------
 
     /// Set friends.

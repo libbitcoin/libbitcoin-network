@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_PROTOCOL_HTTP_HPP
 #define LIBBITCOIN_NETWORK_PROTOCOL_HTTP_HPP
 
+#include <memory>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/define.hpp>
@@ -41,17 +42,17 @@ class BCT_API protocol_http
   : public protocol, protected tracker<protocol_http>
 {
 public:
-    using channel_t = channel_http;
-    using options_t = settings::http_server;
     typedef std::shared_ptr<protocol_http> ptr;
+    using options_t = settings::http_server;
+    using channel_t = channel_http;
+
+    // TODO: move back to protected once derived instances are implemented.
+    protocol_http(const session::ptr& session, const channel::ptr& channel,
+        const options_t& options) NOEXCEPT;
 
     void start() NOEXCEPT override;
 
 protected:
-    protocol_http(const session::ptr& session,
-        const channel::ptr& channel,
-        const settings::http_server& options) NOEXCEPT;
-
     DECLARE_SEND();
     DECLARE_SUBSCRIBE_CHANNEL();
 

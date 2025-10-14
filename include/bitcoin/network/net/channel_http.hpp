@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_NET_CHANNEL_CLIENT_HPP
-#define LIBBITCOIN_NETWORK_NET_CHANNEL_CLIENT_HPP
+#ifndef LIBBITCOIN_NETWORK_NET_CHANNEL_HTTP_HPP
+#define LIBBITCOIN_NETWORK_NET_CHANNEL_HTTP_HPP
 
 #include <memory>
 #include <utility>
@@ -39,6 +39,7 @@ class BCT_API channel_http
 {
 public:
     typedef std::shared_ptr<channel_http> ptr;
+    using options_t = settings::http_server;
 
     /// Subscribe to request from peer (requires strand).
     /// Event handler is always invoked on the channel strand.
@@ -80,7 +81,7 @@ public:
     /// Construct client channel to encapsulate and communicate on the socket.
     channel_http(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero,
-        const network::settings::http_server& options={}) NOEXCEPT;
+        const options_t& options={}) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;

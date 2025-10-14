@@ -33,6 +33,9 @@ class net;
 /// Declare a concrete instance of this type for client-server protocols built
 /// on tcp/ip. Base class processing performs all connection management and
 /// session tracking. This includes start/stop/disable/enable/black/whitelist.
+/// Protocol must declare options_t and channel_t. This protocol is constructed
+/// and attached to a constructed instance of channel_t. The protocol construct
+/// and attachment can be overridden and/or augmented with other protocols.
 template <typename Protocol>
 class session_server
   : public session_tcp, protected tracker<session_server<Protocol>>
@@ -46,11 +49,10 @@ public:
 
     /// Construct an instance (network should be started).
     /// The options reference must be kept in scope, the string name is copied.
-    session_server(net& network, uint64_t identifier, const options_t& options,
-        const std::string& name) NOEXCEPT
-      : session_tcp(network, identifier, options, name),
-        options_(options),
-        tracker<session_server<Protocol>>(network)
+    session_server(net& network, uint64_t identifier,
+        const options_t& options) NOEXCEPT
+      : session_tcp(network, identifier, options),
+        options_(options), tracker<session_server<Protocol>>(network)
     {
     }
 

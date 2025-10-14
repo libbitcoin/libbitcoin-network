@@ -680,6 +680,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_peer.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_tcp.hpp">
+      <Filter>include\bitcoin\network\net</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\net\channel_websocket.hpp">
       <Filter>include\bitcoin\network\net</Filter>
     </ClInclude>
@@ -741,6 +744,9 @@
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_seed_209.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_tcp.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_106.hpp">

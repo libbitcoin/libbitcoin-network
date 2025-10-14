@@ -48,8 +48,8 @@ public:
 
 protected:
     /// Construct an instance (network should be started).
-    session_tcp(net& network, uint64_t identifier, const options_t& options,
-        const std::string& name) NOEXCEPT;
+    session_tcp(net& network, uint64_t identifier,
+        const options_t& options) NOEXCEPT;
 
     /// Accept cycle.
     /// -----------------------------------------------------------------------
@@ -98,7 +98,7 @@ private:
 
     // These are thread safe.
     const options_t& options_;
-    const std::string name_;
+    const std::string& name_;
 
     // This is protected by strand.
     size_t channel_count_{};
