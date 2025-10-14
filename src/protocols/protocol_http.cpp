@@ -154,6 +154,20 @@ void protocol_http::send_method_not_allowed(
     SEND(std::move(response), handle_complete, _1, error::method_not_allowed);
 }
 
+void protocol_http::send_not_implemented(
+    const string_request& request) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+    std::string details{ "server configuration" };
+    const auto code = status::not_implemented;
+    const auto mime = to_mime_type(request[field::accept]);
+    string_response response{ code, request.version() };
+    add_common_headers(response, request);
+    response.body() = format_status(code, response.reason(), mime, details);
+    response.prepare_payload();
+    SEND(std::move(response), handle_complete, _1, error::not_implemented);
+}
+
 void protocol_http::send_not_found(
     const string_request& request) NOEXCEPT
 {

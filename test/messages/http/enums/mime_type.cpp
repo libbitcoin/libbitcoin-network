@@ -237,15 +237,66 @@ BOOST_AUTO_TEST_CASE(mime_type__from_mime_types__unsotered__expected_sorted)
     BOOST_REQUIRE_EQUAL(from_mime_types(types), "application/json,text/html");
 }
 
+// extension_mime_type
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(mime_type__extension_mime_type__not_found__default)
+{
+    BOOST_REQUIRE(extension_mime_type("") == mime_type::unknown);
+    BOOST_REQUIRE(extension_mime_type(".") == mime_type::unknown);
+    BOOST_REQUIRE(extension_mime_type(".42") == mime_type::unknown);
+    BOOST_REQUIRE(extension_mime_type(".xml.") == mime_type::unknown);
+    BOOST_REQUIRE(extension_mime_type("test123/test456/") == mime_type::unknown);
+    BOOST_REQUIRE(extension_mime_type("test123/test456/file") == mime_type::unknown);
+}
+
+BOOST_AUTO_TEST_CASE(mime_type__extension_mime_type__not_found_default__default)
+{
+    BOOST_REQUIRE(extension_mime_type("", mime_type::font_woff) == mime_type::font_woff);
+    BOOST_REQUIRE(extension_mime_type(".", mime_type::font_woff) == mime_type::font_woff);
+    BOOST_REQUIRE(extension_mime_type(".42", mime_type::font_woff) == mime_type::font_woff);
+    BOOST_REQUIRE(extension_mime_type(".xml.", mime_type::font_woff) == mime_type::font_woff);
+}
+
+BOOST_AUTO_TEST_CASE(mime_type__extension_mime_type__lower_case_exist__expected)
+{
+    BOOST_REQUIRE(extension_mime_type(".html") == mime_type::text_html);
+    BOOST_REQUIRE(extension_mime_type(".htm") == mime_type::text_html);
+    BOOST_REQUIRE(extension_mime_type(".css") == mime_type::text_css);
+    BOOST_REQUIRE(extension_mime_type(".js") == mime_type::application_javascript);
+    BOOST_REQUIRE(extension_mime_type(".json") == mime_type::application_json);
+    BOOST_REQUIRE(extension_mime_type(".xml") == mime_type::application_xml);
+    BOOST_REQUIRE(extension_mime_type(".txt") == mime_type::text_plain);
+    BOOST_REQUIRE(extension_mime_type(".png") == mime_type::image_png);
+    BOOST_REQUIRE(extension_mime_type(".jpg") == mime_type::image_jpeg);
+    BOOST_REQUIRE(extension_mime_type(".jpeg") == mime_type::image_jpeg);
+    BOOST_REQUIRE(extension_mime_type(".gif") == mime_type::image_gif);
+    BOOST_REQUIRE(extension_mime_type(".svg") == mime_type::image_svg_xml);
+    BOOST_REQUIRE(extension_mime_type(".ico") == mime_type::image_x_icon);
+    BOOST_REQUIRE(extension_mime_type(".pdf") == mime_type::application_pdf);
+    BOOST_REQUIRE(extension_mime_type(".zip") == mime_type::application_zip);
+    BOOST_REQUIRE(extension_mime_type(".mp4") == mime_type::video_mp4);
+    BOOST_REQUIRE(extension_mime_type(".mp3") == mime_type::audio_mpeg);
+    BOOST_REQUIRE(extension_mime_type(".woff") == mime_type::font_woff);
+    BOOST_REQUIRE(extension_mime_type(".woff2") == mime_type::font_woff2);
+}
+
+BOOST_AUTO_TEST_CASE(mime_type__extension_mime_type__mixed_case_exist__expected)
+{
+    BOOST_REQUIRE(extension_mime_type(".hTml") == mime_type::text_html);
+    BOOST_REQUIRE(extension_mime_type(".htM") == mime_type::text_html);
+    BOOST_REQUIRE(extension_mime_type(".CSS") == mime_type::text_css);
+}
+
 // file_mime_type
 // ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(mime_type__file_mime_type__not_found__default)
 {
-    BOOST_REQUIRE(file_mime_type("") == mime_type::application_octet);
-    BOOST_REQUIRE(file_mime_type(".") == mime_type::application_octet);
-    BOOST_REQUIRE(file_mime_type(".42") == mime_type::application_octet);
-    BOOST_REQUIRE(file_mime_type(".xml.") == mime_type::application_octet);
+    BOOST_REQUIRE(file_mime_type("") == mime_type::unknown);
+    BOOST_REQUIRE(file_mime_type(".") == mime_type::unknown);
+    BOOST_REQUIRE(file_mime_type(".42") == mime_type::unknown);
+    BOOST_REQUIRE(file_mime_type(".xml.") == mime_type::unknown);
 }
 
 BOOST_AUTO_TEST_CASE(mime_type__file_mime_type__not_found_default__default)

@@ -81,6 +81,7 @@ protected:
     virtual void send_not_found(const http::string_request& request) NOEXCEPT;
     virtual void send_forbidden(const http::string_request& request) NOEXCEPT;
     virtual void send_bad_target(const http::string_request& request) NOEXCEPT;
+    virtual void send_not_implemented(const http::string_request& request) NOEXCEPT;
     virtual void send_method_not_allowed(const http::string_request& request,
         const code& ec) NOEXCEPT;
 
