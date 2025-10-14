@@ -62,6 +62,8 @@ BCT_API mime_types to_mime_types(const std::string& accepts,
 BCT_API std::string from_mime_types(const mime_types& types,
     const std::string& default_="unknown") NOEXCEPT;
 
+BCT_API mime_type extension_mime_type(const std::string& extension,
+    mime_type default_=mime_type::application_octet) NOEXCEPT;
 BCT_API mime_type file_mime_type(const std::filesystem::path& path,
     mime_type default_=mime_type::application_octet) NOEXCEPT;
 

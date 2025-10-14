@@ -61,7 +61,7 @@ protected:
     bool is_allowed_origin(const std::string& origin,
         size_t version) const NOEXCEPT;
     std::filesystem::path to_local_path(
-        const std::string& target) const NOEXCEPT;
+        const std::string& target="/") const NOEXCEPT;
 
 private:
     // This is thread safe.

@@ -110,7 +110,7 @@ std::string from_mime_types(const mime_types& types,
     return join(out, ",");
 }
 
-mime_type file_mime_type(const std::filesystem::path& path,
+mime_type extension_mime_type(const std::string& extension,
     mime_type default_) NOEXCEPT
 {
     static const std::unordered_map<std::string, mime_type> types
@@ -137,12 +137,18 @@ mime_type file_mime_type(const std::filesystem::path& path,
         { ".mp4",   mime_type::video_mp4 }
     };
 
+    const auto type = types.find(system::ascii_to_lower(extension));
+    return type == types.end() ? default_ : type->second;
+}
+
+mime_type file_mime_type(const std::filesystem::path& path,
+    mime_type default_) NOEXCEPT
+{
     if (!path.has_extension())
         return default_;
 
     const auto extension = system::cast_to_string(path.extension().u8string());
-    const auto type = types.find(system::ascii_to_lower(extension));
-    return type == types.end() ? default_ : type->second;
+    return extension_mime_type(extension, default_);
 }
 
 BC_POP_WARNING()
