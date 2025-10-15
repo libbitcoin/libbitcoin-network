@@ -312,6 +312,9 @@ system::string_list settings::http_server::host_names() const NOEXCEPT
 // html_server
 // ----------------------------------------------------------------------------
 
+// Because session_tcp upcasts html_server to tcp_server settings, this doesn't
+// get executed, so presently an empty path allows the service to start. This
+// can be hacked away external to the session at startup.
 bool settings::html_server::enabled() const NOEXCEPT
 {
     return !path.empty() && http_server::enabled();
