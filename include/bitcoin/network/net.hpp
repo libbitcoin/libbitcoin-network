@@ -196,7 +196,7 @@ protected:
 
         // Sessions are attached after network start.
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        const auto session = std::make_shared<Session>(net, id,
+        auto session = std::make_shared<Session>(net, id,
             std::forward<Args>(args)...);
         BC_POP_WARNING()
 
