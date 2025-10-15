@@ -51,7 +51,7 @@ public:
             return nullptr;
 
         // Protocols are attached after channel start (read paused).
-        const auto protocol = std::make_shared<Protocol>(session,
+        auto protocol = std::make_shared<Protocol>(session,
             shared_from_base<channel>(), std::forward<Args>(args)...);
 
         // Protocol lifetime is ensured by the channel (proxy) stop subscriber.

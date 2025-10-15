@@ -21,6 +21,7 @@
 
 #include <atomic>
 #include <memory>
+#include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
@@ -196,7 +197,7 @@ protected:
 
         // Sessions are attached after network start.
         BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        const auto session = std::make_shared<Session>(net, id,
+        auto session = std::make_shared<Session>(net, id,
             std::forward<Args>(args)...);
         BC_POP_WARNING()
 
@@ -253,7 +254,7 @@ protected:
 
     /// TODO: client-server, move to libbitcoin-server.
     virtual session_server<protocol_html>::ptr attach_web_session() NOEXCEPT;
-    virtual session_server<protocol_http>::ptr attach_explore_session() NOEXCEPT;
+    ////virtual session_server<protocol_http>::ptr attach_explore_session() NOEXCEPT;
     virtual session_server<protocol_http>::ptr attach_websocket_session() NOEXCEPT;
     virtual session_server<protocol_http>::ptr attach_bitcoind_session() NOEXCEPT;
     virtual session_server<protocol_tcp>::ptr attach_electrum_session() NOEXCEPT;
@@ -273,7 +274,7 @@ private:
 
     // TODO: client-server, move to libbitcoin-server.
     void start_web(const code& ec, const result_handler& handler) NOEXCEPT;
-    void start_explore(const code& ec, const result_handler& handler) NOEXCEPT;
+    ////void start_explore(const code& ec, const result_handler& handler) NOEXCEPT;
     void start_websocket(const code& ec, const result_handler& handler) NOEXCEPT;
     void start_bitcoind(const code& ec, const result_handler& handler) NOEXCEPT;
     void start_electrum(const code& ec, const result_handler& handler) NOEXCEPT;

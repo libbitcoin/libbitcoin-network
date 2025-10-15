@@ -29,6 +29,9 @@ namespace network {
 
 class net;
 
+// make_shared<>
+BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+
 /// Client-server connections session template, thread safe.
 /// Declare a concrete instance of this type for client-server protocols built
 /// on tcp/ip. Base class processing performs all connection management and
@@ -36,12 +39,12 @@ class net;
 /// Protocol must declare options_t and channel_t. This protocol is constructed
 /// and attached to a constructed instance of channel_t. The protocol construct
 /// and attachment can be overridden and/or augmented with other protocols.
-template <typename Protocol>
+template <typename Protocol, typename Session = session_tcp>
 class session_server
-  : public session_tcp, protected tracker<session_server<Protocol>>
+  : public Session, protected tracker<session_server<Protocol, Session>>
 {
 public:
-    typedef std::shared_ptr<session_server<Protocol>> ptr;
+    typedef std::shared_ptr<session_server<Protocol, Session>> ptr;
 
     /// The protocol must define these public types.
     using options_t = typename Protocol::options_t;
@@ -51,8 +54,8 @@ public:
     /// The options reference must be kept in scope, the string name is copied.
     session_server(net& network, uint64_t identifier,
         const options_t& options) NOEXCEPT
-      : session_tcp(network, identifier, options),
-        options_(options), tracker<session_server<Protocol>>(network)
+      : Session(network, identifier, options),
+        options_(options), tracker<session_server<Protocol, Session>>(network)
     {
     }
 
@@ -63,11 +66,10 @@ protected:
     inline channel::ptr create_channel(
         const socket::ptr& socket) NOEXCEPT override
     {
-        BC_ASSERT_MSG(stranded(), "strand");
-        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-        return std::make_shared<channel_t>(log, socket, settings(),
-            create_key(), options_);
-        BC_POP_WARNING()
+        BC_ASSERT_MSG(this->stranded(), "strand");
+
+        return std::make_shared<channel_t>(this->log, socket,
+            this->settings(), this->create_key(), options_);
     }
 
     /// Override to implement a connection handshake as required. By default
@@ -80,7 +82,8 @@ protected:
     {
         BC_ASSERT_MSG(channel->stranded(), "channel strand");
         BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake");
-        session_tcp::attach_handshake(channel, std::move(handler));
+
+        this->attach_handshake(channel, std::move(handler));
     }
 
     /// Overridden to set channel protocols. This allows the implementation to
@@ -91,13 +94,17 @@ protected:
     {
         BC_ASSERT_MSG(channel->stranded(), "channel strand");
         BC_ASSERT_MSG(channel->paused(), "channel not paused for protocols");
-        channel->attach<Protocol>(shared_from_this(), options_)->start();
+
+        const auto self = this->template shared_from_base<Session>();
+        channel->attach<Protocol>(self, options_)->start();
     }
 
 private:
     // This is thread safe.
     const options_t& options_;
 };
+
+BC_POP_WARNING()
 
 } // namespace network
 } // namespace libbitcoin
