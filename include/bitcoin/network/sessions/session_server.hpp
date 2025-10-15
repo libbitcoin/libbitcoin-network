@@ -84,7 +84,7 @@ protected:
         BC_ASSERT_MSG(channel->stranded(), "channel strand");
         BC_ASSERT_MSG(channel->paused(), "channel not paused for handshake");
 
-        this->attach_handshake(channel, std::move(handler));
+        Session::attach_handshake(channel, std::move(handler));
     }
 
     /// Overridden to set channel protocols. This allows the implementation to
