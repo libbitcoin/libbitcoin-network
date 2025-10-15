@@ -52,7 +52,8 @@ public:
 
     /// Construct an instance (network should be started).
     /// The options reference must be kept in scope, the string name is copied.
-    session_server(net& network, uint64_t identifier,
+    template <typename Network>
+    session_server(Network& network, uint64_t identifier,
         const options_t& options) NOEXCEPT
       : Session(network, identifier, options),
         options_(options), tracker<session_server<Protocol, Session>>(network)
