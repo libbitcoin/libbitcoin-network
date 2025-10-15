@@ -190,23 +190,26 @@ void net::start_web(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
+    // explore moved to node.
+    ////attach_web_session()->start(
+    ////    std::bind(&net::start_explore, this, _1, handler));
     attach_web_session()->start(
-        std::bind(&net::start_explore, this, _1, handler));
-}
-
-void net::start_explore(const code& ec, const result_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (ec)
-    {
-        handler(ec);
-        return;
-    }
-
-    attach_explore_session()->start(
         std::bind(&net::start_websocket, this, _1, handler));
 }
+
+////void net::start_explore(const code& ec, const result_handler& handler) NOEXCEPT
+////{
+////    BC_ASSERT_MSG(stranded(), "strand");
+////
+////    if (ec)
+////    {
+////        handler(ec);
+////        return;
+////    }
+////
+////    attach_explore_session()->start(
+////        std::bind(&net::start_websocket, this, _1, handler));
+////}
 
 void net::start_websocket(const code& ec, const result_handler& handler) NOEXCEPT
 {
@@ -808,11 +811,11 @@ session_server<protocol_html>::ptr net::attach_web_session() NOEXCEPT
     return attach<session_server<protocol_html>>(*this, settings_.web);
 }
 
-session_server<protocol_http>::ptr net::attach_explore_session() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    return attach<session_server<protocol_http>>(*this, settings_.explore);
-}
+////session_server<protocol_http>::ptr net::attach_explore_session() NOEXCEPT
+////{
+////    BC_ASSERT_MSG(stranded(), "strand");
+////    return attach<session_server<protocol_http>>(*this, settings_.explore);
+////}
 
 session_server<protocol_http>::ptr net::attach_websocket_session() NOEXCEPT
 {

@@ -253,7 +253,7 @@ protected:
 
     /// TODO: client-server, move to libbitcoin-server.
     virtual session_server<protocol_html>::ptr attach_web_session() NOEXCEPT;
-    virtual session_server<protocol_http>::ptr attach_explore_session() NOEXCEPT;
+    ////virtual session_server<protocol_http>::ptr attach_explore_session() NOEXCEPT;
     virtual session_server<protocol_http>::ptr attach_websocket_session() NOEXCEPT;
     virtual session_server<protocol_http>::ptr attach_bitcoind_session() NOEXCEPT;
     virtual session_server<protocol_tcp>::ptr attach_electrum_session() NOEXCEPT;
@@ -273,7 +273,7 @@ private:
 
     // TODO: client-server, move to libbitcoin-server.
     void start_web(const code& ec, const result_handler& handler) NOEXCEPT;
-    void start_explore(const code& ec, const result_handler& handler) NOEXCEPT;
+    ////void start_explore(const code& ec, const result_handler& handler) NOEXCEPT;
     void start_websocket(const code& ec, const result_handler& handler) NOEXCEPT;
     void start_bitcoind(const code& ec, const result_handler& handler) NOEXCEPT;
     void start_electrum(const code& ec, const result_handler& handler) NOEXCEPT;
