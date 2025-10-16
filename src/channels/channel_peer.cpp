@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/net/channel_peer.hpp>
+#include <bitcoin/network/channels/channel_peer.hpp>
 
 #include <iterator>
 #include <memory>

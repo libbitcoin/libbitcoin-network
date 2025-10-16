@@ -14,40 +14,46 @@
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000001}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\async\races">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\config">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\log">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\http">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\http\enums">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\messages\json">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000A}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
+    <Filter Include="src\channels">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\messages\peer\enums">
-      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
+    <Filter Include="src\config">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000003}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\net">
+    <Filter Include="src\distributors">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000004}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\log">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\protocols">
+    <Filter Include="src\messages">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000006}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sessions">
+    <Filter Include="src\messages\http">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\http\enums">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\json">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\peer">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\messages\peer\enums">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-00000000000F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\net">
       <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000007}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\protocols">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000008}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\sessions">
+      <UniqueIdentifier>{D28FC18A-8B81-4247-0000-000000000009}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -87,6 +93,18 @@
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp">
       <Filter>src\async</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel.cpp">
+      <Filter>src\channels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel_http.cpp">
+      <Filter>src\channels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp">
+      <Filter>src\channels</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\channels\channel_tcp.cpp">
+      <Filter>src\channels</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <Filter>src\config</Filter>
     </ClCompile>
@@ -98,6 +116,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\utilities.cpp">
       <Filter>src\config</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\distributors\distributor_http.cpp">
+      <Filter>src\distributors</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\distributors\distributor_peer.cpp">
+      <Filter>src\distributors</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\error.cpp">
       <Filter>src</Filter>
@@ -276,28 +300,10 @@
     <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\channel.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\channel_http.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\channel_peer.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\channel_tcp.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\connector.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\distributor_http.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\net\distributor_peer.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp">

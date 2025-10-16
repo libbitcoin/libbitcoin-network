@@ -21,14 +21,8 @@
 
 #include <bitcoin/network/net/acceptor.hpp>
 #include <bitcoin/network/net/broadcaster.hpp>
-#include <bitcoin/network/net/channel.hpp>
-#include <bitcoin/network/net/channel_http.hpp>
-#include <bitcoin/network/net/channel_peer.hpp>
-#include <bitcoin/network/net/channel_tcp.hpp>
 #include <bitcoin/network/net/connector.hpp>
 #include <bitcoin/network/net/deadline.hpp>
-#include <bitcoin/network/net/distributor_http.hpp>
-#include <bitcoin/network/net/distributor_peer.hpp>
 #include <bitcoin/network/net/hosts.hpp>
 #include <bitcoin/network/net/proxy.hpp>
 #include <bitcoin/network/net/socket.hpp>

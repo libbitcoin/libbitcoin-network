@@ -23,6 +23,7 @@
 #include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -252,15 +253,6 @@ protected:
     virtual session_inbound::ptr attach_inbound_session() NOEXCEPT;
     virtual session_outbound::ptr attach_outbound_session() NOEXCEPT;
 
-    /// TODO: client-server, move to libbitcoin-server.
-    virtual session_server<protocol_html>::ptr attach_web_session() NOEXCEPT;
-    ////virtual session_server<protocol_http>::ptr attach_explore_session() NOEXCEPT;
-    virtual session_server<protocol_http>::ptr attach_websocket_session() NOEXCEPT;
-    virtual session_server<protocol_http>::ptr attach_bitcoind_session() NOEXCEPT;
-    virtual session_server<protocol_tcp>::ptr attach_electrum_session() NOEXCEPT;
-    virtual session_server<protocol_tcp>::ptr attach_stratum_v1_session() NOEXCEPT;
-    virtual session_server<protocol_tcp>::ptr attach_stratum_v2_session() NOEXCEPT;
-
 private:
     // Suspensions.
     void suspend_acceptors() NOEXCEPT;
@@ -271,15 +263,6 @@ private:
     // Sequences.
     void handle_start(const code& ec, const result_handler& handler) NOEXCEPT;
     void handle_run(const code& ec, const result_handler& handler) NOEXCEPT;
-
-    // TODO: client-server, move to libbitcoin-server.
-    void start_web(const code& ec, const result_handler& handler) NOEXCEPT;
-    ////void start_explore(const code& ec, const result_handler& handler) NOEXCEPT;
-    void start_websocket(const code& ec, const result_handler& handler) NOEXCEPT;
-    void start_bitcoind(const code& ec, const result_handler& handler) NOEXCEPT;
-    void start_electrum(const code& ec, const result_handler& handler) NOEXCEPT;
-    void start_stratum_v1(const code& ec, const result_handler& handler) NOEXCEPT;
-    void start_stratum_v2(const code& ec, const result_handler& handler) NOEXCEPT;
 
     // Subscriptions.
 

@@ -25,7 +25,7 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/net/channel.hpp>
+#include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {

@@ -42,10 +42,15 @@ src_libbitcoin_network_la_SOURCES = \
     src/async/thread.cpp \
     src/async/threadpool.cpp \
     src/async/time.cpp \
+    src/channels/channel.cpp \
+    src/channels/channel_http.cpp \
+    src/channels/channel_peer.cpp \
     src/config/address.cpp \
     src/config/authority.cpp \
     src/config/endpoint.cpp \
     src/config/utilities.cpp \
+    src/distributors/distributor_http.cpp \
+    src/distributors/distributor_peer.cpp \
     src/log/capture.cpp \
     src/log/logger.cpp \
     src/log/reporter.cpp \
@@ -94,13 +99,8 @@ src_libbitcoin_network_la_SOURCES = \
     src/messages/peer/witness_tx_id_relay.cpp \
     src/net/acceptor.cpp \
     src/net/broadcaster.cpp \
-    src/net/channel.cpp \
-    src/net/channel_http.cpp \
-    src/net/channel_peer.cpp \
     src/net/connector.cpp \
     src/net/deadline.cpp \
-    src/net/distributor_http.cpp \
-    src/net/distributor_peer.cpp \
     src/net/hosts.cpp \
     src/net/proxy.cpp \
     src/net/socket.cpp \
@@ -156,10 +156,16 @@ test_libbitcoin_network_test_SOURCES = \
     test/async/races/race_speed.cpp \
     test/async/races/race_unity.cpp \
     test/async/races/race_volume.cpp \
+    test/channels/channel.cpp \
+    test/channels/channel_http.cpp \
+    test/channels/channel_peer.cpp \
+    test/channels/channel_tcp.cpp \
     test/config/address.cpp \
     test/config/authority.cpp \
     test/config/endpoint.cpp \
     test/config/utilities.cpp \
+    test/distributors/distributor_http.cpp \
+    test/distributors/distributor_peer.cpp \
     test/log/timer.cpp \
     test/log/tracker.cpp \
     test/messages/http/method.cpp \
@@ -215,14 +221,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/peer/enums/service.cpp \
     test/net/acceptor.cpp \
     test/net/broadcaster.cpp \
-    test/net/channel.cpp \
-    test/net/channel_http.cpp \
-    test/net/channel_peer.cpp \
-    test/net/channel_tcp.cpp \
     test/net/connector.cpp \
     test/net/deadline.cpp \
-    test/net/distributor_http.cpp \
-    test/net/distributor_peer.cpp \
     test/net/hosts.cpp \
     test/net/proxy.cpp \
     test/net/socket.cpp \
@@ -291,6 +291,15 @@ include_bitcoin_network_async_races_HEADERS = \
     include/bitcoin/network/async/races/race_volume.hpp \
     include/bitcoin/network/async/races/races.hpp
 
+include_bitcoin_network_channelsdir = ${includedir}/bitcoin/network/channels
+include_bitcoin_network_channels_HEADERS = \
+    include/bitcoin/network/channels/channel.hpp \
+    include/bitcoin/network/channels/channel_http.hpp \
+    include/bitcoin/network/channels/channel_peer.hpp \
+    include/bitcoin/network/channels/channel_tcp.hpp \
+    include/bitcoin/network/channels/channel_websocket.hpp \
+    include/bitcoin/network/channels/channels.hpp
+
 include_bitcoin_network_configdir = ${includedir}/bitcoin/network/config
 include_bitcoin_network_config_HEADERS = \
     include/bitcoin/network/config/address.hpp \
@@ -298,6 +307,13 @@ include_bitcoin_network_config_HEADERS = \
     include/bitcoin/network/config/config.hpp \
     include/bitcoin/network/config/endpoint.hpp \
     include/bitcoin/network/config/utilities.hpp
+
+include_bitcoin_network_distributorsdir = ${includedir}/bitcoin/network/distributors
+include_bitcoin_network_distributors_HEADERS = \
+    include/bitcoin/network/distributors/distributor_http.hpp \
+    include/bitcoin/network/distributors/distributor_json.hpp \
+    include/bitcoin/network/distributors/distributor_peer.hpp \
+    include/bitcoin/network/distributors/distributors.hpp
 
 include_bitcoin_network_impl_asyncdir = ${includedir}/bitcoin/network/impl/async
 include_bitcoin_network_impl_async_HEADERS = \
@@ -406,16 +422,8 @@ include_bitcoin_network_netdir = ${includedir}/bitcoin/network/net
 include_bitcoin_network_net_HEADERS = \
     include/bitcoin/network/net/acceptor.hpp \
     include/bitcoin/network/net/broadcaster.hpp \
-    include/bitcoin/network/net/channel.hpp \
-    include/bitcoin/network/net/channel_http.hpp \
-    include/bitcoin/network/net/channel_peer.hpp \
-    include/bitcoin/network/net/channel_tcp.hpp \
-    include/bitcoin/network/net/channel_websocket.hpp \
     include/bitcoin/network/net/connector.hpp \
     include/bitcoin/network/net/deadline.hpp \
-    include/bitcoin/network/net/distributor_http.hpp \
-    include/bitcoin/network/net/distributor_json.hpp \
-    include/bitcoin/network/net/distributor_peer.hpp \
     include/bitcoin/network/net/hosts.hpp \
     include/bitcoin/network/net/net.hpp \
     include/bitcoin/network/net/proxy.hpp \

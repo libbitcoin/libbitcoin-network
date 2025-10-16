@@ -22,6 +22,7 @@
 #include <chrono>
 #include <memory>
 #include <utility>
+#include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/messages/peer/messages.hpp>

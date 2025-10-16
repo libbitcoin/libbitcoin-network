@@ -22,6 +22,7 @@
 #include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -176,108 +177,7 @@ void net::handle_run(const code& ec, const result_handler& handler) NOEXCEPT
         return;
     }
 
-    attach_outbound_session()->start(
-        std::bind(&net::start_web, this, _1, handler));
-}
-
-void net::start_web(const code& ec, const result_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (ec)
-    {
-        handler(ec);
-        return;
-    }
-
-    // explore moved to node.
-    ////attach_web_session()->start(
-    ////    std::bind(&net::start_explore, this, _1, handler));
-    attach_web_session()->start(
-        std::bind(&net::start_websocket, this, _1, handler));
-}
-
-////void net::start_explore(const code& ec, const result_handler& handler) NOEXCEPT
-////{
-////    BC_ASSERT_MSG(stranded(), "strand");
-////
-////    if (ec)
-////    {
-////        handler(ec);
-////        return;
-////    }
-////
-////    attach_explore_session()->start(
-////        std::bind(&net::start_websocket, this, _1, handler));
-////}
-
-void net::start_websocket(const code& ec, const result_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (ec)
-    {
-        handler(ec);
-        return;
-    }
-
-    attach_websocket_session()->start(
-        std::bind(&net::start_bitcoind, this, _1, handler));
-}
-
-void net::start_bitcoind(const code& ec, const result_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (ec)
-    {
-        handler(ec);
-        return;
-    }
-
-    attach_bitcoind_session()->start(
-        std::bind(&net::start_electrum, this, _1, handler));
-}
-
-void net::start_electrum(const code& ec, const result_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (ec)
-    {
-        handler(ec);
-        return;
-    }
-
-    attach_electrum_session()->start(
-        std::bind(&net::start_stratum_v1, this, _1, handler));
-}
-
-void net::start_stratum_v1(const code& ec, const result_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (ec)
-    {
-        handler(ec);
-        return;
-    }
-
-    attach_stratum_v1_session()->start(
-        std::bind(&net::start_stratum_v2, this, _1, handler));
-}
-
-void net::start_stratum_v2(const code& ec, const result_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    if (ec)
-    {
-        handler(ec);
-        return;
-    }
-
-    attach_stratum_v2_session()->start(move_copy(handler));
+    attach_outbound_session()->start(move_copy(handler));
 }
 
 // Shutdown sequence.
@@ -803,48 +703,6 @@ session_outbound::ptr net::attach_outbound_session() NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     return attach<session_outbound>(*this);
-}
-
-session_server<protocol_html>::ptr net::attach_web_session() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    return attach<session_server<protocol_html>>(*this, settings_.web);
-}
-
-////session_server<protocol_http>::ptr net::attach_explore_session() NOEXCEPT
-////{
-////    BC_ASSERT_MSG(stranded(), "strand");
-////    return attach<session_server<protocol_http>>(*this, settings_.explore);
-////}
-
-session_server<protocol_http>::ptr net::attach_websocket_session() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    return attach<session_server<protocol_http>>(*this, settings_.websocket);
-}
-
-session_server<protocol_http>::ptr net::attach_bitcoind_session() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    return attach<session_server<protocol_http>>(*this, settings_.bitcoind);
-}
-
-session_server<protocol_tcp>::ptr net::attach_electrum_session() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    return attach<session_server<protocol_tcp>>(*this, settings_.electrum);
-}
-
-session_server<protocol_tcp>::ptr net::attach_stratum_v1_session() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    return attach<session_server<protocol_tcp>>(*this, settings_.stratum_v1);
-}
-
-session_server<protocol_tcp>::ptr net::attach_stratum_v2_session() NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-    return attach<session_server<protocol_tcp>>(*this, settings_.stratum_v2);
 }
 
 BC_POP_WARNING()
