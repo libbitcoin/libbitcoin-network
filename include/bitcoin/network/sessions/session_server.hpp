@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_SESSION_SERVER_HPP
 
 #include <memory>
+#include <utility>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/sessions/session_tcp.hpp>
@@ -51,12 +52,12 @@ public:
     using channel_t = typename Protocol::channel_t;
 
     /// Construct an instance (network should be started).
-    /// The options reference must be kept in scope, the string name is copied.
-    template <typename Network>
+    template <typename Network, typename... Args>
     session_server(Network& network, uint64_t identifier,
-        const options_t& options) NOEXCEPT
-      : Session(network, identifier, options),
-        options_(options), tracker<session_server<Protocol, Session>>(network)
+        const options_t& options, Args&&... args) NOEXCEPT
+      : Session(network, identifier, options, std::forward<Args>(args)...),
+        options_(options),
+        tracker<session_server<Protocol, Session>>(network)
     {
     }
 
