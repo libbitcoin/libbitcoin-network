@@ -33,7 +33,7 @@ class net;
 // make_shared<>
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-/// Client-server connections session template, thread safe.
+/// Template for network::session derivation with network::session_tcp.
 /// Declare a concrete instance of this type for client-server protocols built
 /// on tcp/ip. Base class processing performs all connection management and
 /// session tracking. This includes start/stop/disable/enable/black/whitelist.
