@@ -25,6 +25,7 @@ class base_class
 {
 public:
     typedef std::shared_ptr<base_class> ptr;
+    virtual ~base_class() {};
 
     template <class Derived>
     typename Derived::ptr self() NOEXCEPT
@@ -49,6 +50,7 @@ class derived_left
 {
 public:
     typedef std::shared_ptr<derived_left> ptr;
+    virtual ~derived_left() {};
 
     bool base_method() const NOEXCEPT override
     {
@@ -65,6 +67,7 @@ class underived_right
 {
 public:
     typedef std::shared_ptr<underived_right> ptr;
+    virtual ~underived_right() {};
 
     bool right_method() const NOEXCEPT
     {
@@ -76,6 +79,7 @@ class multiple : public derived_left, public underived_right
 {
 public:
     typedef std::shared_ptr<multiple> ptr;
+    virtual ~multiple() {};
 
     bool multiple_method() const NOEXCEPT
     {
