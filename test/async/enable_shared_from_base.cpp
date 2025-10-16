@@ -26,29 +26,64 @@ class base_class
 public:
     typedef std::shared_ptr<base_class> ptr;
 
-    template <typename Derived>
+    template <class Derived>
     typename Derived::ptr self() NOEXCEPT
     {
         return shared_from_base<Derived>();
     }
-
-    bool base_method(bool value) const NOEXCEPT
+    
+    template <class Sibling, class Shared>
+    typename Sibling::ptr sibling() NOEXCEPT
     {
-        return value;
+        return shared_from_sibling<Sibling, Shared>();
+    }
+
+    virtual bool base_method() const NOEXCEPT
+    {
+        return false;
     }
 };
 
-class derived_class
+class derived_left
   : public base_class
 {
 public:
-    typedef std::shared_ptr<derived_class> ptr;
+    typedef std::shared_ptr<derived_left> ptr;
 
-    bool derived_method(bool value) const NOEXCEPT
+    bool base_method() const NOEXCEPT override
     {
-        return value;
+        return true;
+    }
+
+    bool left_method() const NOEXCEPT
+    {
+        return true;
     }
 };
+
+class underived_right
+{
+public:
+    typedef std::shared_ptr<underived_right> ptr;
+
+    bool right_method() const NOEXCEPT
+    {
+        return true;
+    }
+};
+
+class multiple : public derived_left, public underived_right
+{
+public:
+    typedef std::shared_ptr<multiple> ptr;
+
+    bool multiple_method() const NOEXCEPT
+    {
+        return true;
+    }
+};
+
+// enable_shared_from_base
 
 BOOST_AUTO_TEST_CASE(enable_shared_from_base__nop__nop)
 {
@@ -58,30 +93,67 @@ BOOST_AUTO_TEST_CASE(enable_shared_from_base__nop__nop)
 
 BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_this__from_base__base)
 {
-    const auto alpha = std::make_shared<base_class>();
-    const auto beta = alpha->shared_from_this();
-    BOOST_REQUIRE(beta->base_method(true));
+    const auto base = std::make_shared<base_class>();
+    const auto self = base->shared_from_this();
+    BOOST_REQUIRE(!base->base_method());
+    BOOST_REQUIRE(!self->base_method());
 }
 
 BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_base__from_base__base)
 {
-    const auto alpha = std::make_shared<base_class>();
-    const auto beta = alpha->self<base_class>();
-    BOOST_REQUIRE(beta->base_method(true));
+    const auto base = std::make_shared<base_class>();
+    const auto self = base->self<base_class>();
+    BOOST_REQUIRE(!base->base_method());
+    BOOST_REQUIRE(!self->base_method());
 }
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_this__from_derived__base)
+BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_this__from_derived__polymorphic)
 {
-    const auto alpha = std::make_shared<derived_class>();
-    const auto beta = alpha->shared_from_this();
-    BOOST_REQUIRE(beta->base_method(true));
+    const auto left = std::make_shared<derived_left>();
+    const auto base = left->shared_from_this();
+
+    // Picks up the left override.
+    BOOST_REQUIRE(left->base_method());
+    BOOST_REQUIRE(base->base_method());
+
+    // But left is not directly accessible (why we need shared_from_base<>).
+    ////BOOST_REQUIRE(left->left_method());
 }
 
-BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_base__from_derived__derived)
+BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_base__from_base__derived_and_polymorphic)
 {
-    const auto alpha = std::make_shared<derived_class>();
-    const auto beta = alpha->self<derived_class>();
-    BOOST_REQUIRE(beta->derived_method(true));
+    const auto base = std::static_pointer_cast<base_class>(std::make_shared<derived_left>());
+    const auto left = base->self<derived_left>();
+
+    // This is overridden, even in the upcast instance.
+    BOOST_REQUIRE(base->base_method());
+
+    // Picks up the left override.
+    BOOST_REQUIRE(left->base_method());
+
+    // Derived left is now directly accessible.
+    BOOST_REQUIRE(left->left_method());
+}
+
+// enable_shared_from_sibling
+
+BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_sibling__multiple_derived__expected)
+{
+    const auto base = std::make_shared<multiple>();
+    const auto left = base->sibling<derived_left, base_class>();
+
+    // Works like shared_from_base (but less guarded/performant).
+    BOOST_REQUIRE(left->base_method());
+    BOOST_REQUIRE(left->left_method());
+}
+
+BOOST_AUTO_TEST_CASE(enable_shared_from_base__shared_from_sibling__multiple_sibling__expected)
+{
+    const auto base = std::make_shared<multiple>();
+    const auto right = base->sibling<underived_right, base_class>();
+
+    // right is now directly accessible from left, yet right does not implement shared_from_base.
+    BOOST_REQUIRE(right->right_method());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

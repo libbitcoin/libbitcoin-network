@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_ASYNC_ENABLE_SHARED_FROM_BASE_HPP
 
 #include <memory>
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -36,9 +37,14 @@ public:
     void nop() volatile NOEXCEPT;
 
 protected:
-    /// Use in derived class to create shared instance of self.
-    template <class Derived, bc::if_base_of<Base, Derived> = true>
+    /// Use in derived class to create shared pointer instance of self.
+    template <class Derived, if_base_of<Base, Derived> = true>
     std::shared_ptr<Derived> shared_from_base() NOEXCEPT;
+
+    /// Use in sibling class to create shared pointer instance of self.
+    /// Returns empty if instance of Shared is not also instance of Sibling.
+    template <class Sibling, class Shared, if_base_of<Base, Shared> = true>
+    std::shared_ptr<Sibling> shared_from_sibling() NOEXCEPT;
 };
 
 } // namespace network
