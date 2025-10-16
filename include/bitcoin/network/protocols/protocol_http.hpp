@@ -47,13 +47,12 @@ public:
     using options_t = settings::http_server;
     using channel_t = channel_http;
 
-    // TODO: move back to protected once derived instances are implemented.
+protected:
     protocol_http(const session::ptr& session, const channel::ptr& channel,
         const options_t& options) NOEXCEPT;
 
     void start() NOEXCEPT override;
 
-protected:
     DECLARE_SEND();
     DECLARE_SUBSCRIBE_CHANNEL();
 

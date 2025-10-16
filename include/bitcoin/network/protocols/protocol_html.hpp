@@ -45,10 +45,10 @@ public:
     using options_t = settings::html_server;
     using channel_t = channel_http;
 
+protected:
     protocol_html(const session::ptr& session,
         const channel::ptr& channel, const options_t& options) NOEXCEPT;
 
-protected:
     /// Message handlers by http method.
     void handle_receive_get(const code& ec,
         const http::method::get& request) NOEXCEPT override;

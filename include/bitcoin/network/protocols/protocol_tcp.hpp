@@ -39,6 +39,7 @@ public:
     using options_t = settings::tcp_server;
     using channel_t = channel_tcp;
 
+protected:
     protocol_tcp(const session::ptr& session, const channel::ptr& channel,
         const options_t&) NOEXCEPT
       : protocol(session, channel),
