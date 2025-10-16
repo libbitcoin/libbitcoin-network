@@ -16,12 +16,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/net/channel_http.hpp>
+#include <bitcoin/network/channels/channel_http.hpp>
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/net/channel.hpp>
+#include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {

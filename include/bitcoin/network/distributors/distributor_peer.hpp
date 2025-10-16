@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_PEER_HPP
-#define LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_PEER_HPP
+#ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_PEER_HPP
+#define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_PEER_HPP
 
 #include <utility>
 #include <bitcoin/network/async/async.hpp>

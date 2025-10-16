@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/messages.hpp>

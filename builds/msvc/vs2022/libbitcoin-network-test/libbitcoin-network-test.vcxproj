@@ -130,12 +130,18 @@
     <ClCompile Include="..\..\..\..\test\async\threadpool.cpp" />
     <ClCompile Include="..\..\..\..\test\async\time.cpp" />
     <ClCompile Include="..\..\..\..\test\async\unsubscriber.cpp" />
+    <ClCompile Include="..\..\..\..\test\channels\channel.cpp" />
+    <ClCompile Include="..\..\..\..\test\channels\channel_http.cpp" />
+    <ClCompile Include="..\..\..\..\test\channels\channel_peer.cpp" />
+    <ClCompile Include="..\..\..\..\test\channels\channel_tcp.cpp" />
     <ClCompile Include="..\..\..\..\test\config\address.cpp">
       <ObjectFileName>$(IntDir)test_config_address.obj</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\config\authority.cpp" />
     <ClCompile Include="..\..\..\..\test\config\endpoint.cpp" />
     <ClCompile Include="..\..\..\..\test\config\utilities.cpp" />
+    <ClCompile Include="..\..\..\..\test\distributors\distributor_http.cpp" />
+    <ClCompile Include="..\..\..\..\test\distributors\distributor_peer.cpp" />
     <ClCompile Include="..\..\..\..\test\error.cpp" />
     <ClCompile Include="..\..\..\..\test\log\timer.cpp" />
     <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
@@ -201,14 +207,8 @@
     <ClCompile Include="..\..\..\..\test\net.cpp" />
     <ClCompile Include="..\..\..\..\test\net\acceptor.cpp" />
     <ClCompile Include="..\..\..\..\test\net\broadcaster.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\channel.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\channel_http.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\channel_peer.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\channel_tcp.cpp" />
     <ClCompile Include="..\..\..\..\test\net\connector.cpp" />
     <ClCompile Include="..\..\..\..\test\net\deadline.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\distributor_http.cpp" />
-    <ClCompile Include="..\..\..\..\test\net\distributor_peer.cpp" />
     <ClCompile Include="..\..\..\..\test\net\hosts.cpp" />
     <ClCompile Include="..\..\..\..\test\net\proxy.cpp" />
     <ClCompile Include="..\..\..\..\test\net\socket.cpp" />

@@ -20,11 +20,12 @@
 #define LIBBITCOIN_NETWORK_PROTOCOL_TCP_HPP
 
 #include <memory>
-#include <bitcoin/network/settings.hpp>
+#include <bitcoin/network/channels/channels.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {

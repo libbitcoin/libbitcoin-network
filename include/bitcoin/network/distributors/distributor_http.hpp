@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_JSON_HPP
-#define LIBBITCOIN_NETWORK_NET_DISTRIBUTOR_JSON_HPP
+#ifndef LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_HTTP_HPP
+#define LIBBITCOIN_NETWORK_DISTRIBUTORS_DISTRIBUTOR_HTTP_HPP
 
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/json/messages.hpp>
+#include <bitcoin/network/messages/http/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -30,7 +30,7 @@ namespace network {
 #define SUBSCRIBER(name) name##_subscriber_
 #define SUBSCRIBER_TYPE(name) name##_subscriber
 #define DECLARE_SUBSCRIBER(name) SUBSCRIBER_TYPE(name) SUBSCRIBER(name)
-#define HANDLER(name) distributor_json::handler<http::method::name>
+#define HANDLER(name) distributor_http::handler<http::method::name>
 #define DEFINE_SUBSCRIBER(name) \
     using SUBSCRIBER_TYPE(name) = subscriber<const http::method::name&>
 #define SUBSCRIBER_OVERLOAD(name) \
@@ -38,19 +38,27 @@ namespace network {
     { return SUBSCRIBER(name).subscribe(std::forward<HANDLER(name)>(handler)); }
 
 /// Not thread safe.
-class BCT_API distributor_json
+class BCT_API distributor_http
 {
 public:
     /// Helper for external declarations.
     template <class Method>
     using handler = std::function<void(const code&, const Method&)>;
 
-    DELETE_COPY_MOVE_DESTRUCT(distributor_json);
+    DELETE_COPY_MOVE_DESTRUCT(distributor_http);
 
-    ////DEFINE_SUBSCRIBER(get);
+    DEFINE_SUBSCRIBER(get);
+    DEFINE_SUBSCRIBER(head);
+    DEFINE_SUBSCRIBER(post);
+    DEFINE_SUBSCRIBER(put);
+    DEFINE_SUBSCRIBER(delete_);
+    DEFINE_SUBSCRIBER(trace);
+    DEFINE_SUBSCRIBER(options);
+    DEFINE_SUBSCRIBER(connect);
+    DEFINE_SUBSCRIBER(unknown);
 
     /// Create an instance of this class.
-    distributor_json(asio::strand& strand) NOEXCEPT;
+    distributor_http(asio::strand& strand) NOEXCEPT;
 
     /// If stopped, handler is invoked with error::subscriber_stopped.
     /// If key exists, handler is invoked with error::subscriber_exists.
@@ -80,10 +88,26 @@ private:
         subscriber.notify(ec, method);
     }
 
-    ////SUBSCRIBER_OVERLOAD(get);
+    SUBSCRIBER_OVERLOAD(get);
+    SUBSCRIBER_OVERLOAD(head);
+    SUBSCRIBER_OVERLOAD(post);
+    SUBSCRIBER_OVERLOAD(put);
+    SUBSCRIBER_OVERLOAD(delete_);
+    SUBSCRIBER_OVERLOAD(trace);
+    SUBSCRIBER_OVERLOAD(options);
+    SUBSCRIBER_OVERLOAD(connect);
+    SUBSCRIBER_OVERLOAD(unknown);
 
     // These are thread safe.
-    ////DECLARE_SUBSCRIBER(get);
+    DECLARE_SUBSCRIBER(get);
+    DECLARE_SUBSCRIBER(head);
+    DECLARE_SUBSCRIBER(post);
+    DECLARE_SUBSCRIBER(put);
+    DECLARE_SUBSCRIBER(delete_);
+    DECLARE_SUBSCRIBER(trace);
+    DECLARE_SUBSCRIBER(options);
+    DECLARE_SUBSCRIBER(connect);
+    DECLARE_SUBSCRIBER(unknown);
 };
 
 #undef SUBSCRIBER
