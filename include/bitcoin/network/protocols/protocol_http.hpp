@@ -40,7 +40,7 @@ namespace network {
 /// http service that does NOT process a document directory (see protocol_html
 /// for that).
 class BCT_API protocol_http
-  : public protocol, protected tracker<protocol_http>
+  : public protocol
 {
 public:
     typedef std::shared_ptr<protocol_http> ptr;

@@ -38,7 +38,7 @@ namespace network {
 /// with specified configuration options. This protocol is designed as a base
 /// for more dynamic protocols that might handle additional verbs.
 class BCT_API protocol_html
-  : public protocol_http, protected tracker<protocol_html>
+  : public protocol_http
 {
 public:
     typedef std::shared_ptr<protocol_html> ptr;

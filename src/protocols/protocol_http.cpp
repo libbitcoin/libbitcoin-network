@@ -48,8 +48,7 @@ protocol_http::protocol_http(const session::ptr& session,
     channel_(std::dynamic_pointer_cast<channel_http>(channel)),
     session_(std::dynamic_pointer_cast<session_tcp>(session)),
     default_port_(options.secure ? default_tls : default_http),
-    options_(options),
-    tracker<protocol_http>(session->log)
+    options_(options)
 {
 }
 

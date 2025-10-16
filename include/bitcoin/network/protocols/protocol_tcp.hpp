@@ -30,9 +30,8 @@
 namespace libbitcoin {
 namespace network {
 
-// TODO: implement.
 class BCT_API protocol_tcp
-  : public protocol, protected tracker<protocol_tcp>
+  : public protocol
 {
 public:
     typedef std::shared_ptr<protocol_tcp> ptr;
@@ -42,8 +41,7 @@ public:
 protected:
     protocol_tcp(const session::ptr& session, const channel::ptr& channel,
         const options_t&) NOEXCEPT
-      : protocol(session, channel),
-        tracker<protocol_tcp>(session->log)
+      : protocol(session, channel)
     {
     }
 };
