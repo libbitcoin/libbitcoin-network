@@ -45,10 +45,6 @@ public:
         tracker<protocol_tcp>(session->log)
     {
     }
-
-    void start() NOEXCEPT override
-    {
-    }
 };
 
 } // namespace network
