@@ -71,8 +71,9 @@ protected:
     {
         BC_ASSERT_MSG(this->stranded(), "strand");
 
-        return std::make_shared<channel_t>(this->log, socket,
-            this->settings(), this->create_key(), options_);
+        return std::static_pointer_cast<channel>(
+            std::make_shared<channel_t>(this->log, socket,
+                this->settings(), this->create_key(), options_));
     }
 
     /// Override to implement a connection handshake as required. By default
