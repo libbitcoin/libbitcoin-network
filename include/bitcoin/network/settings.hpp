@@ -40,7 +40,7 @@ struct BCT_API settings
 
         /// Not implemented (TLS).
         bool secure{ false };
-        config::endpoints binds{};
+        config::authorities binds{};
         uint16_t connections{ 0 };
 
         /// Not fully implemented, keep-alive (recommended).
