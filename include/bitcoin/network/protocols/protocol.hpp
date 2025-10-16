@@ -44,6 +44,8 @@ class BCT_API protocol
   : public enable_shared_from_base<protocol>, public reporter
 {
 public:
+    typedef std::shared_ptr<protocol> ptr;
+
     DELETE_COPY_MOVE(protocol);
 
     /// The channel is stopping (called on strand by stop subscription).
