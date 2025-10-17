@@ -59,7 +59,7 @@ struct BCT_API settings
         system::string_list host_names() const NOEXCEPT;
     };
 
-    struct webs_server
+    struct websocket_server
       : public http_server
     {
         // TODO: settings unique to the websocket aspect.

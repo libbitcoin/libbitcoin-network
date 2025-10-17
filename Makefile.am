@@ -46,7 +46,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/channels/channel_http.cpp \
     src/channels/channel_peer.cpp \
     src/channels/channel_tcp.cpp \
-    src/channels/channel_webs.cpp \
+    src/channels/channel_websocket.cpp \
     src/config/address.cpp \
     src/config/authority.cpp \
     src/config/endpoint.cpp \
@@ -297,7 +297,7 @@ include_bitcoin_network_channels_HEADERS = \
     include/bitcoin/network/channels/channel_http.hpp \
     include/bitcoin/network/channels/channel_peer.hpp \
     include/bitcoin/network/channels/channel_tcp.hpp \
-    include/bitcoin/network/channels/channel_webs.hpp \
+    include/bitcoin/network/channels/channel_websocket.hpp \
     include/bitcoin/network/channels/channels.hpp
 
 include_bitcoin_network_configdir = ${includedir}/bitcoin/network/config
