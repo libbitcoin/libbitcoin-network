@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WEBSOCKET_HPP
 
 #include <memory>
-#include <bitcoin/network/channels/channel.hpp>
+#include <bitcoin/network/channels/channel_http.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 #include <bitcoin/network/net/socket.hpp>
@@ -29,9 +29,9 @@
 namespace libbitcoin {
 namespace network {
 
-/// Websocket peer-to-peer tcp/ip channel.
+/// Websocket tcp/ip channel, uses channel_http for upgrade/multiplex.
 class BCT_API channel_websocket
-  : public channel, protected tracker<channel_websocket>
+  : public channel_http, protected tracker<channel_websocket>
 {
 public:
     typedef std::shared_ptr<channel_websocket> ptr;
@@ -40,7 +40,7 @@ public:
     channel_websocket(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero,
         const options_t& options={}) NOEXCEPT
-      : channel(log, socket, settings, identifier, options.timeout()),
+      : channel_http(log, socket, settings, identifier, options),
         tracker<channel_websocket>(log)
     {
     }
