@@ -32,6 +32,9 @@ namespace json {
 // Utilities.
 // ----------------------------------------------------------------------------
 
+#define IF_REQUEST(expression) if constexpr (request) expression
+#define IF_RESPONSE(expression) if constexpr (response) expression
+
 // Return the fixed parser error code.
 TEMPLATE
 inline json::error_code CLASS::parse_error() NOEXCEPT
@@ -158,11 +161,7 @@ void CLASS::finalize() NOEXCEPT
     // Assign non-empty key (value should be empty).
     if (!key_.empty())
     {
-        if constexpr (request)
-        {
-            parsed_.jsonrpc = string_t{ key_ };
-        }
-
+        IF_REQUEST( parsed_.jsonrpc = string_t{ key_ });
         key_ = {};
     }
 
@@ -182,31 +181,19 @@ void CLASS::finalize() NOEXCEPT
         case state::method:
         {
             state_ = state::object_start;
-            if constexpr (request)
-            {
-                parsed_.method = string_t{ value_ };
-            }
-
+            IF_REQUEST(parsed_.method = string_t{ value_ });
             break;
         }
         case state::params:
         {
             state_ = state::object_start;
-            if constexpr (request)
-            {
-                parsed_.params = { string_t{ value_ } };
-            }
-
+            IF_REQUEST(parsed_.params = { string_t{ value_ } });
             break;
         }
         case state::result:
         {
             state_ = state::object_start;
-            if constexpr (response)
-            {
-                parsed_.result = { string_t{ value_ } };
-            }
-
+            IF_RESPONSE(parsed_.result = { string_t{ value_ } });
             break;
         }
         case state::error_message:
@@ -445,10 +432,7 @@ void CLASS::handle_method(char c) NOEXCEPT
         {
             state_ = state::object_start;
             value_ = {};
-            if constexpr (request)
-            {
-                parsed_.method = string_t{ value_ };
-            }
+            IF_REQUEST(parsed_.method = string_t{ value_ });
         }
     }
     else if (quoted_)
@@ -484,10 +468,7 @@ void CLASS::handle_params(char c) NOEXCEPT
     {
         state_ = state::object_start;
         value_ = {};
-        if constexpr (request)
-        {
-            parsed_.params = { string_t{ value_ } };
-        }
+        IF_REQUEST(parsed_.params = { string_t{ value_ } });
     }
 
     consume(value_, it_);
@@ -576,10 +557,7 @@ void CLASS::handle_result(char c) NOEXCEPT
     {
         state_ = state::object_start;
         value_ = {};
-        if constexpr (response)
-        {
-            parsed_.result = { string_t{ value_ } };
-        }
+        IF_RESPONSE(parsed_.result = { string_t{ value_ } });
     }
 
     consume(value_, it_);
@@ -606,10 +584,7 @@ void CLASS::handle_error_start(char c) NOEXCEPT
         {
             state_ = state::object_start;
             value_ = {};
-            if constexpr (response)
-            {
-                parsed_.error = {};
-            }
+            IF_RESPONSE(parsed_.error = {});
         }
     }
     else
@@ -693,14 +668,14 @@ void CLASS::handle_error_data(char c) NOEXCEPT
     {
         // Assign error object to response.
         state_ = state::object_start;
-        if constexpr (response)
-        {
-            parsed_.error = error_;
-        }
+        IF_RESPONSE(parsed_.error = error_);
     }
 
     consume(value_, it_);
 }
+
+#undef IF_REQUEST
+#undef IF_RESPONSE
 
 } // namespace json
 } // namespace network
