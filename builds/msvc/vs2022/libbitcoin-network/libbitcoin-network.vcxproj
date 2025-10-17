@@ -348,7 +348,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70002.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70016.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_websocket.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_websocket_handshake.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_websocket_shake.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocols.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_inbound.hpp" />

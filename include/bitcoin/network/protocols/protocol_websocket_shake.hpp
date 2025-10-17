@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_WEBSOCKET_HANDSHAKE_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_WEBSOCKET_HANDSHAKE_HPP
+#ifndef LIBBITCOIN_NETWORK_PROTOCOL_WEBSOCKET_SHAKE_HPP
+#define LIBBITCOIN_NETWORK_PROTOCOL_WEBSOCKET_SHAKE_HPP
 
 #include <memory>
 #include <bitcoin/network/channels/channels.hpp>
@@ -27,16 +27,16 @@
 namespace libbitcoin {
 namespace network {
 
-class BCT_API protocol_websocket_handshake
+class BCT_API protocol_websocket_shake
  : public protocol_http
 {
 public:
-    typedef std::shared_ptr<protocol_websocket_handshake> ptr;
+    typedef std::shared_ptr<protocol_websocket_shake> ptr;
     using channel_t = channel_http;
     using options_t = channel_t::options_t;
 
 protected:
-    protocol_websocket_handshake(const session::ptr& session,
+    protocol_websocket_shake(const session::ptr& session,
         const channel::ptr& channel, const options_t& options) NOEXCEPT
       : protocol_http(session, channel, options)
     {
