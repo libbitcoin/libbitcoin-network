@@ -58,6 +58,9 @@ protected:
 
 typedef std::vector<endpoint> endpoints;
 
+system::string_list to_host_names(const endpoints& hosts,
+    uint16_t default_port) NOEXCEPT;
+
 } // namespace config
 } // namespace network
 } // namespace libbitcoin
