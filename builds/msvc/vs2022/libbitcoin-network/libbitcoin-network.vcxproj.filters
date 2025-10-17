@@ -779,6 +779,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_version_70016.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_websocket.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocol_websocket_handshake.hpp">
+      <Filter>include\bitcoin\network\protocols</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\protocols\protocols.hpp">
       <Filter>include\bitcoin\network\protocols</Filter>
     </ClInclude>
