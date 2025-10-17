@@ -144,6 +144,8 @@
 #include <bitcoin/network/protocols/protocol_version_70001.hpp>
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 #include <bitcoin/network/protocols/protocol_version_70016.hpp>
+#include <bitcoin/network/protocols/protocol_websocket.hpp>
+#include <bitcoin/network/protocols/protocol_websocket_handshake.hpp>
 #include <bitcoin/network/protocols/protocols.hpp>
 #include <bitcoin/network/sessions/session.hpp>
 #include <bitcoin/network/sessions/session_inbound.hpp>

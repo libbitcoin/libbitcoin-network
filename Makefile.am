@@ -446,6 +446,8 @@ include_bitcoin_network_protocols_HEADERS = \
     include/bitcoin/network/protocols/protocol_version_70001.hpp \
     include/bitcoin/network/protocols/protocol_version_70002.hpp \
     include/bitcoin/network/protocols/protocol_version_70016.hpp \
+    include/bitcoin/network/protocols/protocol_websocket.hpp \
+    include/bitcoin/network/protocols/protocol_websocket_handshake.hpp \
     include/bitcoin/network/protocols/protocols.hpp
 
 include_bitcoin_network_sessionsdir = ${includedir}/bitcoin/network/sessions
