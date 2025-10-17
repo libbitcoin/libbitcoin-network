@@ -32,6 +32,8 @@ class BCT_API protocol_websocket_shake
 {
 public:
     typedef std::shared_ptr<protocol_websocket_shake> ptr;
+
+    /// The handshake is not a primary protocol, so this won't control service.
     using channel_t = channel_http;
     using options_t = channel_t::options_t;
 
