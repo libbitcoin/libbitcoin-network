@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_TCP_HPP
-#define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_TCP_HPP
+#ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WEBS_HPP
+#define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WEBS_HPP
 
 #include <memory>
 #include <bitcoin/network/channels/channel.hpp>
@@ -29,19 +29,19 @@
 namespace libbitcoin {
 namespace network {
 
-/// General purpose tcp channel.
-class BCT_API channel_tcp
-  : public channel, protected tracker<channel_tcp>
+/// Websocket peer-to-peer tcp/ip channel.
+class BCT_API channel_webs
+  : public channel, protected tracker<channel_webs>
 {
 public:
-    typedef std::shared_ptr<channel_tcp> ptr;
-    using options_t = settings::tcp_server;
+    typedef std::shared_ptr<channel_webs> ptr;
+    using options_t = settings::webs_server;
 
-    channel_tcp(const logger& log, const socket::ptr& socket,
+    channel_webs(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero,
         const options_t& options={}) NOEXCEPT
       : channel(log, socket, settings, identifier, options.timeout()),
-        tracker<channel_tcp>(log)
+        tracker<channel_webs>(log)
     {
     }
 };

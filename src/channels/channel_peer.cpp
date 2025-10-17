@@ -22,6 +22,7 @@
 #include <memory>
 #include <utility>
 #include <bitcoin/network/async/async.hpp>
+#include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
@@ -47,18 +48,6 @@ static constexpr uint32_t https_magic = 0x02010316;
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-
-channel_peer::channel_peer(memory& memory, const logger& log,
-    const socket::ptr& socket, const network::settings& settings,
-    uint64_t identifier) NOEXCEPT
-  : channel(log, socket, settings, identifier,
-      settings.channel_inactivity(),
-      pseudo_random::duration(settings.channel_expiration())),
-    distributor_(memory, socket->strand()),
-    negotiated_version_(settings.protocol_maximum),
-    tracker<channel_peer>(log)
-{
-}
 
 // Start/stop/resume (started upon create).
 // ----------------------------------------------------------------------------

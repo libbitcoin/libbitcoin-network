@@ -88,6 +88,14 @@ struct BCT_API settings
         bool enabled() const NOEXCEPT;
     };
 
+    /// A single http/s request/response is requried for websocket handshake.
+    /// This is for web servers that expose a websocket interface.
+    struct webs_server
+      : public http_server
+    {
+        // TODO: settings unique to the websocket aspect.
+    };
+
     DEFAULT_COPY_MOVE_DESTRUCT(settings);
 
     settings() NOEXCEPT;
@@ -147,7 +155,7 @@ struct BCT_API settings
     html_server explore{ "explore" };
 
     /// native websocket query interface (http/s->tcp/s, json, handshake)
-    http_server websocket{ "websocket" };
+    webs_server websocket{ "websocket" };
 
     /// bitcoind compat interface (http/s, stateless json-rpc-v2)
     http_server bitcoind{ "bitcoind" };

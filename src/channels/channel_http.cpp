@@ -37,16 +37,6 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-channel_http::channel_http(const logger& log, const socket::ptr& socket,
-    const network::settings& settings, uint64_t identifier,
-    const options_t& options) NOEXCEPT
-  : channel(log, socket, settings, identifier, options.timeout()),
-    request_buffer_(ceilinged_add(http::max_head, http::max_body)),
-    distributor_(socket->strand()),
-    tracker<channel_http>(log)
-{
-}
-
 // Start/stop/resume (started upon create).
 // ----------------------------------------------------------------------------
 
