@@ -291,7 +291,7 @@ system::string_list settings::http_server::host_names() const NOEXCEPT
     return config::to_host_names(hosts, port);
 }
 
-// webs_server
+// websocket_server
 // ----------------------------------------------------------------------------
 
 } // namespace network
