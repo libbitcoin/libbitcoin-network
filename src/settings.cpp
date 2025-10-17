@@ -268,36 +268,17 @@ bool settings::excluded(const address_item& item) const NOEXCEPT
         || !whitelisted(item);
 }
 
-
-// ----------------------------------------------------------------------------
-
-// utility
-static system::string_list to_host_names(const config::endpoints& hosts,
-    bool secure) NOEXCEPT
-{
-    const auto port = secure ? http::default_tls : http::default_http;
-
-    system::string_list out{};
-    out.resize(hosts.size());
-    std::ranges::transform(hosts, out.begin(), [=](const auto& value) NOEXCEPT
-    {
-        return value.to_lower(port);
-    });
-
-    return out;
-}
-
 // tcp_server
 // ----------------------------------------------------------------------------
-
-bool settings::tcp_server::enabled() const NOEXCEPT
-{
-    return !binds.empty() && to_bool(connections);
-}
 
 steady_clock::duration settings::tcp_server::timeout() const NOEXCEPT
 {
     return seconds{ timeout_seconds };
+}
+
+bool settings::tcp_server::enabled() const NOEXCEPT
+{
+    return !binds.empty() && to_bool(connections);
 }
 
 // http_server
@@ -306,25 +287,12 @@ steady_clock::duration settings::tcp_server::timeout() const NOEXCEPT
 system::string_list settings::http_server::host_names() const NOEXCEPT
 {
     // secure changes default port from 80 to 443.
-    return to_host_names(hosts, secure);
+    const auto port = secure ? http::default_tls : http::default_http;
+    return config::to_host_names(hosts, port);
 }
 
-// html_server
+// webs_server
 // ----------------------------------------------------------------------------
-
-// Because session_tcp upcasts html_server to tcp_server settings, this doesn't
-// get executed, so presently an empty path allows the service to start. This
-// can be hacked away external to the session at startup.
-bool settings::html_server::enabled() const NOEXCEPT
-{
-    return !path.empty() && http_server::enabled();
-}
-
-system::string_list settings::html_server::origin_names() const NOEXCEPT
-{
-    // secure changes default port from 80 to 443.
-    return to_host_names(hosts, secure);
-}
 
 } // namespace network
 } // namespace libbitcoin

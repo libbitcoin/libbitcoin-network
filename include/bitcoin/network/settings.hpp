@@ -31,29 +31,21 @@ namespace network {
 /// Common network configuration settings, properties not thread safe.
 struct BCT_API settings
 {
-    /// tcp/ip server settings (hash bindings/security/connections/timeout).
-    /// This is designed for RPC servers that don't require http communication. 
     struct tcp_server
     {
         /// For logging only.
         std::string name{};
 
-        /// Not implemented (TLS).
         bool secure{ false };
         config::authorities binds{};
         uint16_t connections{ 0 };
-
-        /// Not fully implemented, keep-alive (recommended).
         uint32_t timeout_seconds{ 60 };
 
-        /// !binds.empty() && !is_zero(connections)
-        bool enabled() const NOEXCEPT;
+        /// Helpers.
         steady_clock::duration timeout() const NOEXCEPT;
+        bool enabled() const NOEXCEPT;
     };
 
-    /// http/s server settings (hash server/host names).
-    /// This is designed for web servers that don't require origin handling.
-    /// This includes websockets (handshake) and bitcoind json-rpc.
     struct http_server
       : public tcp_server
     {
@@ -63,38 +55,17 @@ struct BCT_API settings
         /// Validated against requests if configured (recommended).
         config::endpoints hosts{};
 
-        /// Normalized hosts.
+        /// Normalized hosts helper.
         system::string_list host_names() const NOEXCEPT;
     };
 
-    /// html (http/s) document server settings (has directory/default).
-    /// This is for web servers that expose a local file system directory.
-    struct html_server
-      : public http_server
-    {
-        /// Directory to serve.
-        std::filesystem::path path{};
-
-        /// Default page for default URL (recommended).
-        std::string default_{ "index.html" };
-
-        /// Validated against origins if configured (recommended).
-        config::endpoints origins{};
-
-        /// Normalized origins.
-        system::string_list origin_names() const NOEXCEPT;
-
-        /// !path.empty() && http_server::enabled() [hidden, not virtual]
-        bool enabled() const NOEXCEPT;
-    };
-
-    /// A single http/s request/response is requried for websocket handshake.
-    /// This is for web servers that expose a websocket interface.
     struct webs_server
       : public http_server
     {
         // TODO: settings unique to the websocket aspect.
     };
+
+    // ----------------------------------------------------------------------------
 
     DEFAULT_COPY_MOVE_DESTRUCT(settings);
 
@@ -144,31 +115,6 @@ struct BCT_API settings
     config::authorities blacklists{};
     config::authorities whitelists{};
     config::authorities friends{};
-
-    /// TODO: move these to node or server.
-    /// Client-server settings.
-    /// -----------------------------------------------------------------------
-    /// native admin web interface, isolated (http/s, stateless html)
-    html_server web{ "web" };
-
-    /// native RESTful block explorer (http/s, stateless html/json)
-    html_server explore{ "explore" };
-
-    /// native websocket query interface (http/s->tcp/s, json, handshake)
-    webs_server websocket{ "websocket" };
-
-    /// bitcoind compat interface (http/s, stateless json-rpc-v2)
-    http_server bitcoind{ "bitcoind" };
-
-    /// electrum compat interface (tcp/s, json-rpc-v2)
-    tcp_server electrum{ "electrum" };
-
-    /// stratum v1 compat interface (tcp/s, json-rpc-v1, auth handshake)
-    tcp_server stratum_v1{ "stratum_v1" };
-
-    /// stratum v2 compat interface (tcp[/s], binary, auth/privacy handshake)
-    tcp_server stratum_v2{ "stratum_v2" };
-    /// -----------------------------------------------------------------------
 
     /// Set friends.
     virtual void initialize() NOEXCEPT;
