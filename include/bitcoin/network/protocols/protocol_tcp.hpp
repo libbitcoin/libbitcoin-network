@@ -35,8 +35,8 @@ class BCT_API protocol_tcp
 {
 public:
     typedef std::shared_ptr<protocol_tcp> ptr;
-    using options_t = settings::tcp_server;
     using channel_t = channel_tcp;
+    using options_t = channel_t::options_t;
 
 protected:
     protocol_tcp(const session::ptr& session, const channel::ptr& channel,

@@ -22,12 +22,12 @@
 #include <memory>
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/channels/channels.hpp>
-#include <bitcoin/network/settings.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/messages.hpp>
 #include <bitcoin/network/net/net.hpp>
 #include <bitcoin/network/protocols/protocol.hpp>
 #include <bitcoin/network/sessions/sessions.hpp>
+#include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -44,8 +44,8 @@ class BCT_API protocol_http
 {
 public:
     typedef std::shared_ptr<protocol_http> ptr;
-    using options_t = settings::http_server;
     using channel_t = channel_http;
+    using options_t = channel_t::options_t;
 
 protected:
     protocol_http(const session::ptr& session, const channel::ptr& channel,

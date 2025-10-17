@@ -31,6 +31,7 @@ class BCT_API channel_websocket
 {
 public:
     typedef std::shared_ptr<channel_websocket> ptr;
+    ////using options_t = settings::websocket_server;
 };
 
 } // namespace network
