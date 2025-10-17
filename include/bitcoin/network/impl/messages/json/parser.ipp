@@ -431,8 +431,8 @@ void CLASS::handle_method(char c) NOEXCEPT
         if (!quoted_)
         {
             state_ = state::object_start;
-            value_ = {};
             IF_REQUEST(parsed_.method = string_t{ value_ });
+            value_ = {};
         }
     }
     else if (quoted_)
@@ -467,8 +467,8 @@ void CLASS::handle_params(char c) NOEXCEPT
     else if (c == ',' && is_one(depth_) && !quoted_)
     {
         state_ = state::object_start;
-        value_ = {};
         IF_REQUEST(parsed_.params = { string_t{ value_ } });
+        value_ = {};
     }
 
     consume(value_, it_);
@@ -556,8 +556,8 @@ void CLASS::handle_result(char c) NOEXCEPT
     else if (c == ',' && is_one(depth_) && !quoted_)
     {
         state_ = state::object_start;
-        value_ = {};
         IF_RESPONSE(parsed_.result = { string_t{ value_ } });
+        value_ = {};
     }
 
     consume(value_, it_);
@@ -583,8 +583,8 @@ void CLASS::handle_error_start(char c) NOEXCEPT
         if (value_ == "null")
         {
             state_ = state::object_start;
-            value_ = {};
             IF_RESPONSE(parsed_.error = {});
+            value_ = {};
         }
     }
     else
