@@ -37,8 +37,8 @@ namespace network {
 /// responses are sent for disalloved verbs and other invalidated requests.
 /// Utilities are provided to simplify common header response validation and
 /// behavior based configured options. Derive from this class to implement an
-/// http service that does NOT process a document directory (see protocol_html
-/// for that).
+/// http service that does NOT process a document directory (see
+/// node::protocol_html for that).
 class BCT_API protocol_http
   : public protocol
 {
