@@ -666,7 +666,7 @@ void CLASS::handle_error_data(char c) NOEXCEPT
             // Assign error object to response.
             state_ = state::object_start;
             IF_RESPONSE(parsed_.error = error_);
-            ////value_ = {};
+            value_ = {};
 
             // Don't consume the closing brace.
             return;
