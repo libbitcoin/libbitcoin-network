@@ -30,23 +30,18 @@
 namespace libbitcoin {
 namespace network {
 
-// TODO: implement.
 class BCT_API protocol_tcp
-  : public protocol, protected tracker<protocol_tcp>
+  : public protocol
 {
 public:
     typedef std::shared_ptr<protocol_tcp> ptr;
     using options_t = settings::tcp_server;
     using channel_t = channel_tcp;
 
+protected:
     protocol_tcp(const session::ptr& session, const channel::ptr& channel,
         const options_t&) NOEXCEPT
-      : protocol(session, channel),
-        tracker<protocol_tcp>(session->log)
-    {
-    }
-
-    void start() NOEXCEPT override
+      : protocol(session, channel)
     {
     }
 };

@@ -457,7 +457,6 @@ include_bitcoin_network_sessions_HEADERS = \
     include/bitcoin/network/sessions/session_outbound.hpp \
     include/bitcoin/network/sessions/session_peer.hpp \
     include/bitcoin/network/sessions/session_seed.hpp \
-    include/bitcoin/network/sessions/session_server.hpp \
     include/bitcoin/network/sessions/session_tcp.hpp \
     include/bitcoin/network/sessions/sessions.hpp
 

@@ -354,7 +354,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_outbound.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_peer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_seed.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_server.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_tcp.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\sessions.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\settings.hpp" />

@@ -184,11 +184,6 @@ public:
     }
 
 protected:
-    // Restrict access by concrete sessions.
-    friend class session;
-    friend class session_tcp;
-    friend class session_peer;
-
     /// Attach session to network, caller must start (requires strand).
     template <class Session, class Network, typename... Args>
     typename Session::ptr attach(Network& net, Args&&... args) NOEXCEPT
@@ -212,6 +207,10 @@ protected:
         return session;
     }
 
+    /// Base session (no derived session access).
+    /// -----------------------------------------------------------------------
+    friend class session;
+
     /// I/O factories.
     virtual acceptor::ptr create_acceptor() NOEXCEPT;
     virtual connector::ptr create_connector() NOEXCEPT;
@@ -227,8 +226,9 @@ protected:
     virtual void subscribe_close(stop_handler&& handler) NOEXCEPT;
     virtual object_key create_key() NOEXCEPT;
 
-    /// P2P
+    /// Base P2P session (no concrete P2P session access).
     /// -----------------------------------------------------------------------
+    friend class session_peer;
 
     /// P2P hosts collection.
     virtual void take(address_item_handler&& handler) NOEXCEPT;

@@ -38,9 +38,10 @@ namespace network {
 class BCT_API protocol_peer
   : public protocol
 {
-protected:
+public:
     typedef std::shared_ptr<protocol_peer> ptr;
 
+protected:
     DECLARE_SEND();
     DECLARE_SUBSCRIBE_CHANNEL();
 

@@ -800,9 +800,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_seed.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_server.hpp">
-      <Filter>include\bitcoin\network\sessions</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\sessions\session_tcp.hpp">
       <Filter>include\bitcoin\network\sessions</Filter>
     </ClInclude>

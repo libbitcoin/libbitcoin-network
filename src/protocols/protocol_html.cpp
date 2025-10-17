@@ -46,8 +46,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 protocol_html::protocol_html(const session::ptr& session,
     const channel::ptr& channel, const options_t& options) NOEXCEPT
   : protocol_http(session, channel, options),
-    options_(options),
-    tracker<protocol_html>(session->log)
+    options_(options)
 {
 }
 
