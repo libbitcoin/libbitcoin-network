@@ -29,7 +29,7 @@
 namespace libbitcoin {
 namespace network {
 
-// TODO: implement.
+/// General purpose tcp channel.
 class BCT_API channel_tcp
   : public channel, protected tracker<channel_tcp>
 {

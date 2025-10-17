@@ -16,32 +16,32 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_PROTOCOL_TCP_HPP
-#define LIBBITCOIN_NETWORK_PROTOCOL_TCP_HPP
+#ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WEBS_HPP
+#define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WEBS_HPP
 
 #include <memory>
-#include <bitcoin/network/channels/channels.hpp>
+#include <bitcoin/network/channels/channel.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/net/net.hpp>
-#include <bitcoin/network/protocols/protocol.hpp>
-#include <bitcoin/network/sessions/sessions.hpp>
+#include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/net/socket.hpp>
 #include <bitcoin/network/settings.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-class BCT_API protocol_tcp
-  : public protocol
+/// Websocket peer-to-peer tcp/ip channel.
+class BCT_API channel_webs
+  : public channel, protected tracker<channel_webs>
 {
 public:
-    typedef std::shared_ptr<protocol_tcp> ptr;
-    using channel_t = channel_tcp;
-    using options_t = channel_t::options_t;
+    typedef std::shared_ptr<channel_webs> ptr;
+    using options_t = settings::webs_server;
 
-protected:
-    protocol_tcp(const session::ptr& session, const channel::ptr& channel,
-        const options_t&) NOEXCEPT
-      : protocol(session, channel)
+    channel_webs(const logger& log, const socket::ptr& socket,
+        const network::settings& settings, uint64_t identifier=zero,
+        const options_t& options={}) NOEXCEPT
+      : channel(log, socket, settings, identifier, options.timeout()),
+        tracker<channel_webs>(log)
     {
     }
 };

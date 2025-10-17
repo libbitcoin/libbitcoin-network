@@ -16,13 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "../test.hpp"
+#include <bitcoin/network/channels/channel_webs.hpp>
 
-BOOST_AUTO_TEST_SUITE(protocol_html_tests)
+namespace libbitcoin {
+namespace network {
 
-BOOST_AUTO_TEST_CASE(protocol_html_test)
-{
-    BOOST_REQUIRE(true);
-}
-
-BOOST_AUTO_TEST_SUITE_END()
+} // namespace network
+} // namespace libbitcoin

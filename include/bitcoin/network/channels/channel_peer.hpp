@@ -81,7 +81,15 @@ public:
 
     /// Construct a p2p channel to encapsulate and communicate on the socket.
     channel_peer(memory& memory, const logger& log, const socket::ptr& socket,
-        const network::settings& settings, uint64_t identifier=zero) NOEXCEPT;
+        const network::settings& settings, uint64_t identifier=zero) NOEXCEPT
+      : channel(log, socket, settings, identifier,
+          settings.channel_inactivity(),
+          system::pseudo_random::duration(settings.channel_expiration())),
+        distributor_(memory, socket->strand()),
+        negotiated_version_(settings.protocol_maximum),
+        tracker<channel_peer>(log)
+    {
+    }
 
     /// Resume reading from the socket, starts timers (requires strand).
     void resume() NOEXCEPT override;

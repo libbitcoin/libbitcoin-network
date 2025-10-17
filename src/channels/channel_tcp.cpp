@@ -16,24 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WEBSOCKET_HPP
-#define LIBBITCOIN_NETWORK_CHANNELS_CHANNEL_WEBSOCKET_HPP
-
-#include <memory>
-#include <bitcoin/network/channels/channel.hpp>
+#include <bitcoin/network/channels/channel_tcp.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-/// Full websocket peer-to-peer tcp/ip channel.
-class BCT_API channel_websocket
-  : public channel, protected tracker<channel_websocket>
-{
-public:
-    typedef std::shared_ptr<channel_websocket> ptr;
-};
-
 } // namespace network
 } // namespace libbitcoin
-
-#endif

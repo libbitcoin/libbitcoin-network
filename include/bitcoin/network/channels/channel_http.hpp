@@ -81,7 +81,13 @@ public:
     /// Construct client channel to encapsulate and communicate on the socket.
     channel_http(const logger& log, const socket::ptr& socket,
         const network::settings& settings, uint64_t identifier=zero,
-        const options_t& options={}) NOEXCEPT;
+        const options_t& options={}) NOEXCEPT
+      : channel(log, socket, settings, identifier, options.timeout()),
+        request_buffer_(system::ceilinged_add(http::max_head, http::max_body)),
+        distributor_(socket->strand()),
+        tracker<channel_http>(log)
+    {
+    }
 
     /// Resume reading from the socket (requires strand).
     void resume() NOEXCEPT override;
