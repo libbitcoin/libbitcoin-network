@@ -464,11 +464,17 @@ void CLASS::handle_params(char c) NOEXCEPT
     {
         --depth_;
     }
-    else if (c == ',' && is_one(depth_) && !quoted_)
+    else if (c == ',')
     {
-        state_ = state::object_start;
-        IF_REQUEST(parsed_.params = { string_t{ value_ } });
-        value_ = {};
+        if (is_one(depth_) && !quoted_)
+        {
+            state_ = state::object_start;
+            IF_REQUEST(parsed_.params = { string_t{ value_ } });
+            value_ = {};
+
+            // Don't consume the comma.
+            return;
+        }
     }
 
     consume(value_, it_);
@@ -553,11 +559,17 @@ void CLASS::handle_result(char c) NOEXCEPT
     {
         --depth_;
     }
-    else if (c == ',' && is_one(depth_) && !quoted_)
+    else if (c == ',')
     {
-        state_ = state::object_start;
-        IF_RESPONSE(parsed_.result = { string_t{ value_ } });
-        value_ = {};
+        if (is_one(depth_) && !quoted_)
+        {
+            state_ = state::object_start;
+            IF_RESPONSE(parsed_.result = { string_t{ value_ } });
+            value_ = {};
+
+            // Don't consume the comma.
+            return;
+        }
     }
 
     consume(value_, it_);
@@ -649,6 +661,16 @@ void CLASS::handle_error_data(char c) NOEXCEPT
     else if (c == '}')
     {
         --depth_;
+        if (is_one(depth_))
+        {
+            // Assign error object to response.
+            state_ = state::object_start;
+            IF_RESPONSE(parsed_.error = error_);
+            ////value_ = {};
+
+            // Don't consume the closing brace.
+            return;
+        }
     }
     else if (c == '[')
     {
@@ -658,17 +680,17 @@ void CLASS::handle_error_data(char c) NOEXCEPT
     {
         --depth_;
     }
-    else if (c == ',' && is_one(depth_) && !quoted_)
+    else if (c == ',')
     {
-        state_ = state::object_start;
-        error_.data = { string_t{ value_ } };
-        value_ = {};
-    }
-    else if (c == '}' && is_one(depth_))
-    {
-        // Assign error object to response.
-        state_ = state::object_start;
-        IF_RESPONSE(parsed_.error = error_);
+        if (is_one(depth_) && !quoted_)
+        {
+            state_ = state::object_start;
+            error_.data = { string_t{ value_ } };
+            value_ = {};
+
+            // Don't consume the comma.
+            return;
+        }
     }
 
     consume(value_, it_);
