@@ -35,6 +35,6 @@
 #include <bitcoin/network/protocols/protocol_version_70002.hpp>
 #include <bitcoin/network/protocols/protocol_version_70016.hpp>
 #include <bitcoin/network/protocols/protocol_websocket.hpp>
-#include <bitcoin/network/protocols/protocol_websocket_handshake.hpp>
+#include <bitcoin/network/protocols/protocol_websocket_shake.hpp>
 
 #endif
