@@ -371,6 +371,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\races\race_volume.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

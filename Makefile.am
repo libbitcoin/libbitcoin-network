@@ -330,6 +330,10 @@ include_bitcoin_network_impl_async_races_HEADERS = \
     include/bitcoin/network/impl/async/races/race_unity.ipp \
     include/bitcoin/network/impl/async/races/race_volume.ipp
 
+include_bitcoin_network_impl_messages_jsondir = ${includedir}/bitcoin/network/impl/messages/json
+include_bitcoin_network_impl_messages_json_HEADERS = \
+    include/bitcoin/network/impl/messages/json/parser.ipp
+
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \
     include/bitcoin/network/log/capture.hpp \

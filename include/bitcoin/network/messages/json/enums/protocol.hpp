@@ -37,6 +37,7 @@ enum class protocol
     /// Undefined version.
     undefined
 };
+
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
