@@ -45,7 +45,7 @@ json::error_code CLASS::get_error() const NOEXCEPT
 }
 
 TEMPLATE
-typename const CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
+const typename CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
 {
     if (is_done() && !has_error())
         return batch_;
