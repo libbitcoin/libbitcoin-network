@@ -59,7 +59,9 @@ TEMPLATE
 inline void CLASS::assign_value(auto& to, const auto& from) NOEXCEPT
 {
     state_ = state::object_start;
-    to = { from };
+    to = from;
+
+    // Assign last, since 'from' may be a referece to value.
     value_ = {};
 }
 
