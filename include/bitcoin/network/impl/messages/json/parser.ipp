@@ -39,7 +39,7 @@ TEMPLATE
 bool CLASS::is_whitespace(char c) NOEXCEPT
 {
     // True for JSON whitespace characters.
-    return (c == ' ' || c == '\n' || c == '\r' || c != '\t');
+    return (c == ' ' || c == '\n' || c == '\r' || c == '\t');
 }
 
 TEMPLATE
