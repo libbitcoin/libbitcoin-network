@@ -97,10 +97,15 @@ protected:
     bool consume_escape(char c) NOEXCEPT;
 
     /// Visitors.
+    /// -----------------------------------------------------------------------
+
+    /// State transitioners.
     void handle_initialize(char c) NOEXCEPT;
     void handle_object_start(char c) NOEXCEPT;
     void handle_key(char c) NOEXCEPT;
     void handle_value(char c) NOEXCEPT;
+
+    /// Quoted value handlers.
     void handle_jsonrpc(char c) NOEXCEPT;
     void handle_method(char c) NOEXCEPT;
     void handle_params(char c) NOEXCEPT;

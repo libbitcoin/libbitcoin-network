@@ -384,7 +384,7 @@ bool CLASS::consume_escape(char c) NOEXCEPT
     }
 }
 
-// Visitors.
+// Visitors : State transitioners.
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -588,6 +588,9 @@ void CLASS::handle_value(char c) NOEXCEPT
         state_ = state::error_state;
     }
 }
+
+// Visitors : Quoted value handlers.
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 void CLASS::handle_jsonrpc(char c) NOEXCEPT
