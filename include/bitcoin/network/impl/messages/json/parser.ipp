@@ -495,19 +495,19 @@ void CLASS::handle_params(char c) NOEXCEPT
     {
         quoted_ = !quoted_;
     }
-    else if (c == '{')
-    {
-        ++depth_;
-    }
-    else if (c == '}')
-    {
-        --depth_;
-    }
     else if (c == '[')
     {
         ++depth_;
     }
     else if (c == ']')
+    {
+        --depth_;
+    }
+    else if (c == '{')
+    {
+        ++depth_;
+    }
+    else if (c == '}')
     {
         --depth_;
     }
@@ -590,19 +590,19 @@ void CLASS::handle_result(char c) NOEXCEPT
     {
         quoted_ = !quoted_;
     }
-    else if (c == '{')
-    {
-        ++depth_;
-    }
-    else if (c == '}')
-    {
-        --depth_;
-    }
     else if (c == '[')
     {
         ++depth_;
     }
     else if (c == ']')
+    {
+        --depth_;
+    }
+    else if (c == '{')
+    {
+        ++depth_;
+    }
+    else if (c == '}')
     {
         --depth_;
     }
@@ -662,7 +662,6 @@ void CLASS::handle_error_code(char c) NOEXCEPT
             state_ = state::object_start;
             error_.code = out;
             value_ = {};
-
             if (c == '}')
                 --depth_;
         }
@@ -700,6 +699,14 @@ void CLASS::handle_error_data(char c) NOEXCEPT
     {
         quoted_ = !quoted_;
     }
+    else if (c == '[')
+    {
+        ++depth_;
+    }
+    else if (c == ']')
+    {
+        --depth_;
+    }
     else if (c == '{')
     {
         ++depth_;
@@ -717,14 +724,6 @@ void CLASS::handle_error_data(char c) NOEXCEPT
             // Don't consume the closing brace.
             return;
         }
-    }
-    else if (c == '[')
-    {
-        ++depth_;
-    }
-    else if (c == ']')
-    {
-        --depth_;
     }
     else if (c == ',')
     {
