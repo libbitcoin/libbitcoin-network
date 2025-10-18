@@ -24,8 +24,6 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 
- // TODO: use iif<>
-
 namespace libbitcoin {
 namespace network {
 namespace json {
@@ -61,7 +59,7 @@ public:
     /// Parsed object type.
     static constexpr auto request = Request;
     static constexpr auto response = !request;
-    using parsed_t = std::conditional_t<request, request_t, response_t>;
+    using parsed_t = iif<request, request_t, response_t>;
     using batch_t = std::vector<parsed_t>;
 
     /// Constructor.
