@@ -91,6 +91,7 @@ protected:
 
     /// Accumulate the current character.
     void parse_character(char c) NOEXCEPT;
+    bool consume_escape(char c) NOEXCEPT;
 
     /// Visitors.
     void handle_initialize(char c) NOEXCEPT;
@@ -113,6 +114,7 @@ protected:
     static inline bool to_number(int64_t& out, view token) NOEXCEPT;
     static inline void consume(view& token, const iterator& it) NOEXCEPT;
 
+    bool escaped_{};
     bool quoted_{};
     state state_{};
     size_t depth_{};

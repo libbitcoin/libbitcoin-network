@@ -67,9 +67,10 @@ inline void CLASS::consume(view& token, const iterator& it) NOEXCEPT
 TEMPLATE
 void CLASS::reset() NOEXCEPT
 {
+    escaped_ = {};
+    quoted_ = {};
     state_ = {};
     depth_ = {};
-    quoted_ = {};
     it_ = {};
     key_ = {};
     value_ = {};
@@ -310,6 +311,28 @@ void CLASS::parse_character(char c) NOEXCEPT
     }
 }
 
+TEMPLATE
+bool CLASS::consume_escape(char c) NOEXCEPT
+{
+    if (c == '\\' && !escaped_)
+    {
+        escaped_ = true;
+        consume(key_, it_);
+        return true;
+    }
+    else if (escaped_)
+    {
+        escaped_ = false;
+        consume(key_, it_);
+        return true;
+    }
+    else
+    {
+        escaped_ = false;
+        return false;
+    }
+}
+
 // Visitors.
 // ----------------------------------------------------------------------------
 
@@ -353,11 +376,8 @@ void CLASS::handle_key(char c) NOEXCEPT
     if (!quoted_)
         return;
 
-    if (c != '"')
-    {
-        consume(key_, it_);
+    if (consume_escape(c))
         return;
-    }
 
     quoted_ = false;
 
@@ -463,6 +483,9 @@ void CLASS::handle_value(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_jsonrpc(char c) NOEXCEPT
 {
+    if (consume_escape(c))
+        return;
+
     if (c == '"')
     {
         quoted_ = !quoted_;
@@ -490,6 +513,9 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_method(char c) NOEXCEPT
 {
+    if (consume_escape(c))
+        return;
+
     if (c == '"')
     {
         quoted_ = !quoted_;
@@ -509,6 +535,9 @@ void CLASS::handle_method(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_params(char c) NOEXCEPT
 {
+    if (consume_escape(c))
+        return;
+
     if (c == '"')
     {
         quoted_ = !quoted_;
@@ -548,6 +577,9 @@ void CLASS::handle_params(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_id(char c) NOEXCEPT
 {
+    if (consume_escape(c))
+        return;
+
     if (c == '"')
     {
         quoted_ = !quoted_;
@@ -604,6 +636,9 @@ void CLASS::handle_id(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_result(char c) NOEXCEPT
 {
+    if (consume_escape(c))
+        return;
+
     if (c == '"')
     {
         quoted_ = !quoted_;
@@ -693,6 +728,9 @@ void CLASS::handle_error_code(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_error_message(char c) NOEXCEPT
 {
+    if (consume_escape(c))
+        return;
+
     if (c == '"')
     {
         quoted_ = !quoted_;
@@ -719,6 +757,9 @@ void CLASS::handle_error_message(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_error_data(char c) NOEXCEPT
 {
+    if (consume_escape(c))
+        return;
+
     if (c == '"')
     {
         quoted_ = !quoted_;

@@ -50,6 +50,7 @@ struct test_parser
     using base::handle_error_data;
 
     // fields
+    using base::escaped_;
     using base::quoted_;
     using base::state_;
     using base::depth_;
