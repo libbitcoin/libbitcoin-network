@@ -62,6 +62,7 @@ public:
     static constexpr auto request = Request;
     static constexpr auto response = !request;
     using parsed_t = std::conditional_t<request, request_t, response_t>;
+    using batch_t = std::vector<parsed_t>;
 
     /// Constructor.
     explicit parser(json::protocol proto) NOEXCEPT
@@ -76,7 +77,7 @@ public:
     bool is_done() const NOEXCEPT;
     bool has_error() const NOEXCEPT;
     json::error_code get_error() const NOEXCEPT;
-    std::optional<parsed_t> get_parsed() const NOEXCEPT;
+    const batch_t& get_parsed() const NOEXCEPT;
 
     /// Invoke streaming parse of data.
     size_t write(std::string_view data, json::error_code& ec) NOEXCEPT;
@@ -84,7 +85,8 @@ public:
 protected:
     using state = parser_state;
     using view = std::string_view;
-    using iterator = view::const_iterator;
+    using rpc_iterator = batch_t::iterator;
+    using char_iterator = view::const_iterator;
 
     /// Finalize the current token.
     void finalize() NOEXCEPT;
@@ -112,19 +114,21 @@ protected:
 protected:
     static inline json::error_code parse_error() NOEXCEPT;
     static inline bool to_number(int64_t& out, view token) NOEXCEPT;
-    static inline void consume(view& token, const iterator& it) NOEXCEPT;
+    static inline void consume(view& token, const char_iterator& it) NOEXCEPT;
 
+    bool batched_{};
     bool escaped_{};
     bool quoted_{};
     state state_{};
     size_t depth_{};
 
-    iterator it_{};
+    char_iterator it_{};
     view key_{};
     view value_{};
 
+    batch_t batch_{};
     result_t error_{};
-    parsed_t parsed_{};
+    rpc_iterator parsed_{};
 
     const json::protocol protocol_;
 };

@@ -53,7 +53,7 @@ inline bool CLASS::to_number(int64_t& out, view token) NOEXCEPT
 
 // Token consumes character c by adjusting its view over the buffer.
 TEMPLATE
-inline void CLASS::consume(view& token, const iterator& it) NOEXCEPT
+inline void CLASS::consume(view& token, const char_iterator& it) NOEXCEPT
 {
     if (token.empty())
         token = { std::to_address(it), one };
@@ -67,6 +67,7 @@ inline void CLASS::consume(view& token, const iterator& it) NOEXCEPT
 TEMPLATE
 void CLASS::reset() NOEXCEPT
 {
+    batched_ = {};
     escaped_ = {};
     quoted_ = {};
     state_ = {};
@@ -74,6 +75,7 @@ void CLASS::reset() NOEXCEPT
     it_ = {};
     key_ = {};
     value_ = {};
+    batch_ = {};
     error_ = {};
     parsed_ = {};
 }
@@ -103,10 +105,10 @@ json::error_code CLASS::get_error() const NOEXCEPT
 }
 
 TEMPLATE
-std::optional<typename CLASS::parsed_t> CLASS::get_parsed() const NOEXCEPT
+typename const CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
 {
     if (is_done() && !has_error())
-        return parsed_;
+        return batch_;
 
     return {};
 }
@@ -147,24 +149,27 @@ size_t CLASS::write(std::string_view data, json::error_code& ec) NOEXCEPT
     // Enforce require content following parse.
     if (state_ == state::complete)
     {
-        if (protocol_ == protocol::v2 && parsed_.jsonrpc.empty())
+        if (batch_.empty())
+            state_ = state::error_state;
+
+        if (protocol_ == protocol::v2 && parsed_->jsonrpc.empty())
             state_ = state::error_state;
 
         if constexpr (request)
         {
             if (protocol_ == protocol::v1 &&
-                std::holds_alternative<null_t>(parsed_.id))
+                std::holds_alternative<null_t>(parsed_->id))
                 state_ = state::error_state;
         }
         else
         {
             // Exactly one of "result" or "error" in responses.
-            if (parsed_.result.has_value() == parsed_.error.has_value())
+            if (parsed_->result.has_value() == parsed_->error.has_value())
                 state_ = state::error_state;
 
             // Enforce required error fields if error is present.
-            if (parsed_.error.has_value() && (is_zero(parsed_.error->code) ||
-                parsed_.error->message.empty()))
+            if (parsed_->error.has_value() && (is_zero(parsed_->error->code) ||
+                parsed_->error->message.empty()))
                 state_ = state::error_state;
         }
     }
@@ -196,25 +201,25 @@ void CLASS::finalize() NOEXCEPT
         ////case state::jsonrpc:
         ////{
         ////    state_ = CLASS::state::object_start;
-        ////    parsed_.jsonrpc = string_t{ value_ };
+        ////    parsed_->jsonrpc = string_t{ value_ };
         ////    break;
         ////}
         case state::method:
         {
             state_ = state::object_start;
-            IF_REQUEST(parsed_.method = string_t{ value_ });
+            IF_REQUEST(parsed_->method = string_t{ value_ });
             break;
         }
         case state::params:
         {
             state_ = state::object_start;
-            IF_REQUEST(parsed_.params = { string_t{ value_ } });
+            IF_REQUEST(parsed_->params = { string_t{ value_ } });
             break;
         }
         case state::result:
         {
             state_ = state::object_start;
-            IF_RESPONSE(parsed_.result = { string_t{ value_ } });
+            IF_RESPONSE(parsed_->result = { string_t{ value_ } });
             break;
         }
         case state::error_message:
@@ -236,15 +241,15 @@ void CLASS::finalize() NOEXCEPT
             int64_t out{};
             if (to_number(out, value_))
             {
-                parsed_.id = code_t{ out };
+                parsed_->id = code_t{ out };
             }
             else if (value_ == "null")
             {
-                parsed_.id = null_t{};
+                parsed_->id = null_t{};
             }
             else
             {
-                parsed_.id = string_t{ value_ };
+                parsed_->id = string_t{ value_ };
             }
 
             break;
@@ -342,6 +347,17 @@ void CLASS::handle_initialize(char c) NOEXCEPT
     // Starting brace.
     if (c == '{')
     {
+        batched_ = false;
+        parsed_ = batch_.emplace_back();
+
+        state_ = state::object_start;
+        ++depth_;
+        return;
+    }
+    else if (c == '[')
+    {
+        batched_ = true;
+
         state_ = state::object_start;
         ++depth_;
         return;
@@ -367,6 +383,23 @@ void CLASS::handle_object_start(char c) NOEXCEPT
         --depth_;
         if (is_zero(depth_))
             state_ = state::complete;
+    }
+    else if (batched_)
+    {
+        if (c == '{')
+        {
+            parsed_ = batch_.emplace_back();
+            ++depth_;
+        }
+        else if (c == ']')
+        {
+            state_ = state::complete;
+            --depth_;
+        }
+        else if (c == ',')
+        {
+            state_ = state::object_start;
+        }
     }
 }
 
@@ -495,7 +528,7 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
                 (protocol_ == protocol::v2 && value_ == "2.0"))
             {
                 state_ = state::object_start;
-                parsed_.jsonrpc = string_t{ value_ };
+                parsed_->jsonrpc = string_t{ value_ };
                 value_ = {};
             }
             else
@@ -522,7 +555,7 @@ void CLASS::handle_method(char c) NOEXCEPT
         if (!quoted_)
         {
             state_ = state::object_start;
-            IF_REQUEST(parsed_.method = string_t{ value_ });
+            IF_REQUEST(parsed_->method = string_t{ value_ });
             value_ = {};
         }
     }
@@ -563,7 +596,7 @@ void CLASS::handle_params(char c) NOEXCEPT
         if (is_one(depth_) && !quoted_)
         {
             state_ = state::object_start;
-            IF_REQUEST(parsed_.params = { string_t{ value_ } });
+            IF_REQUEST(parsed_->params = { string_t{ value_ } });
             value_ = {};
 
             // Don't consume the comma.
@@ -588,15 +621,15 @@ void CLASS::handle_id(char c) NOEXCEPT
             int64_t out{};
             if (to_number(out, value_))
             {
-                parsed_.id = out;
+                parsed_->id = out;
             }
             else if (value_ == "null")
             {
-                parsed_.id = null_t{};
+                parsed_->id = null_t{};
             }
             else
             {
-                parsed_.id = string_t{ value_ };
+                parsed_->id = string_t{ value_ };
             }
 
             state_ = state::object_start;
@@ -614,7 +647,7 @@ void CLASS::handle_id(char c) NOEXCEPT
         if (value_ == "null")
         {
             state_ = state::object_start;
-            parsed_.id = null_t{};
+            parsed_->id = null_t{};
             value_ = {};
         }
     }
@@ -626,7 +659,7 @@ void CLASS::handle_id(char c) NOEXCEPT
     {
         int64_t out{};
         if (to_number(out, value_))
-            parsed_.id = out;
+            parsed_->id = out;
 
         state_ = state::object_start;
         value_ = {};
@@ -664,7 +697,7 @@ void CLASS::handle_result(char c) NOEXCEPT
         if (is_one(depth_) && !quoted_)
         {
             state_ = state::object_start;
-            IF_RESPONSE(parsed_.result = { string_t{ value_ } });
+            IF_RESPONSE(parsed_->result = { string_t{ value_ } });
             value_ = {};
 
             // Don't consume the comma.
@@ -690,7 +723,7 @@ void CLASS::handle_error_start(char c) NOEXCEPT
         if (value_ == "null")
         {
             state_ = state::object_start;
-            IF_RESPONSE(parsed_.error = {});
+            IF_RESPONSE(parsed_->error = {});
             value_ = {};
         }
     }
@@ -790,7 +823,7 @@ void CLASS::handle_error_data(char c) NOEXCEPT
 
             // Assign error object to response.
             state_ = state::object_start;
-            IF_RESPONSE(parsed_.error = error_);
+            IF_RESPONSE(parsed_->error = error_);
             value_ = {};
 
             // Don't consume the closing brace.
