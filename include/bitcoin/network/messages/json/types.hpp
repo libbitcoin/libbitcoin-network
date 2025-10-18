@@ -54,7 +54,7 @@ struct BCT_API value_t
         object_t
     >;
 
-    /// Firt type initialized by default (null_t).
+    /// First type initialized by default (null_t).
     type value{};
 };
 using value_option = std::optional<value_t>;
