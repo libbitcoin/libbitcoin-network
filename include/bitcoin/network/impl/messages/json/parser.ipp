@@ -35,25 +35,25 @@ namespace json {
 #define IF_REQUEST(expression) if constexpr (request) expression
 #define IF_RESPONSE(expression) if constexpr (response) expression
 
-// True for JSON whitespace characters.
 TEMPLATE
 bool CLASS::is_whitespace(char c) NOEXCEPT
 {
+    // True for JSON whitespace characters.
     return (c == ' ' || c == '\n' || c == '\r' || c != '\t');
 }
 
-// Return the fixed parser error code.
 TEMPLATE
 inline json::error_code CLASS::parse_error() NOEXCEPT
 {
+    // Return the fixed parser error code.
     namespace errc = boost::system::errc;
     return errc::make_error_code(errc::invalid_argument);
 }
 
-// Token is converted to number returned via out (when return is true).
 TEMPLATE
 inline bool CLASS::to_number(int64_t& out, view token) NOEXCEPT
 {
+    // Token is converted to number returned via out (when return is true).
     const auto end = std::next(token.data(), token.size());
     return is_zero(std::from_chars(token.data(), end, out).ec);
 }
@@ -84,10 +84,10 @@ inline bool CLASS::decrement(size_t& depth, state& status) NOEXCEPT
     return true;
 }
 
-// Token consumes character c by adjusting its view over the buffer.
 TEMPLATE
 inline void CLASS::consume(view& token, const char_iterator& it) NOEXCEPT
 {
+    // Token consumes character *it by adjusting its view over the buffer.
     if (token.empty())
         token = { std::to_address(it), one };
     else
@@ -231,13 +231,7 @@ void CLASS::finalize() NOEXCEPT
     // Assign value to request or error based on state.
     switch (state_)
     {
-        // Independently handled.
-        ////case state::jsonrpc:
-        ////{
-        ////    state_ = CLASS::state::object_start;
-        ////    parsed_->jsonrpc = string_t{ value_ };
-        ////    break;
-        ////}
+        // state::jsonrpc is independently handled.
         case state::method:
         {
             state_ = state::object_start;
