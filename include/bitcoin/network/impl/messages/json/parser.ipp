@@ -58,6 +58,32 @@ inline bool CLASS::to_number(int64_t& out, view token) NOEXCEPT
     return is_zero(std::from_chars(token.data(), end, out).ec);
 }
 
+TEMPLATE
+inline bool CLASS::increment(size_t& depth, state& status) NOEXCEPT
+{
+    // overflow guard.
+    if (is_zero(++depth))
+    {
+        status = state::error_state;
+        return false;
+    }
+
+    return true;
+}
+
+TEMPLATE
+inline bool CLASS::decrement(size_t& depth, state& status) NOEXCEPT
+{
+    // underflow guard.
+    if (is_zero(depth--))
+    {
+        status = state::error_state;
+        return false;
+    }
+
+    return true;
+}
+
 // Token consumes character c by adjusting its view over the buffer.
 TEMPLATE
 inline void CLASS::consume(view& token, const char_iterator& it) NOEXCEPT
@@ -370,7 +396,7 @@ void CLASS::handle_initialize(char c) NOEXCEPT
         parsed_ = batch_.emplace_back();
 
         state_ = state::object_start;
-        ++depth_;
+        increment(depth_, state_);
         return;
     }
     else if (c == '[')
@@ -378,7 +404,7 @@ void CLASS::handle_initialize(char c) NOEXCEPT
         batched_ = true;
 
         state_ = state::object_start;
-        ++depth_;
+        increment(depth_, state_);
         return;
     }
 
@@ -396,8 +422,7 @@ void CLASS::handle_object_start(char c) NOEXCEPT
     }
     else if (c == '}')
     {
-        --depth_;
-        if (is_zero(depth_))
+        if (decrement(depth_, state_) && is_zero(depth_))
             state_ = state::complete;
     }
     else if (batched_)
@@ -405,12 +430,12 @@ void CLASS::handle_object_start(char c) NOEXCEPT
         if (c == '{')
         {
             parsed_ = batch_.emplace_back();
-            ++depth_;
+            increment(depth_, state_);
         }
         else if (c == ']')
         {
             state_ = state::complete;
-            --depth_;
+            decrement(depth_, state_);
         }
         else if (c == ',')
         {
@@ -593,19 +618,23 @@ void CLASS::handle_params(char c) NOEXCEPT
     }
     else if (c == '[')
     {
-        ++depth_;
+        if (!increment(depth_, state_))
+            return;
     }
     else if (c == ']')
     {
-        --depth_;
+        if (!decrement(depth_, state_))
+            return;
     }
     else if (c == '{')
     {
-        ++depth_;
+        if (!increment(depth_, state_))
+            return;
     }
     else if (c == '}')
     {
-        --depth_;
+        if (!decrement(depth_, state_))
+            return;
     }
     else if (c == ',')
     {
@@ -694,19 +723,23 @@ void CLASS::handle_result(char c) NOEXCEPT
     }
     else if (c == '[')
     {
-        ++depth_;
+        if (!increment(depth_, state_))
+            return;
     }
     else if (c == ']')
     {
-        --depth_;
+        if (!decrement(depth_, state_))
+            return;
     }
     else if (c == '{')
     {
-        ++depth_;
+        if (!increment(depth_, state_))
+            return;
     }
     else if (c == '}')
     {
-        --depth_;
+        if (!decrement(depth_, state_))
+            return;
     }
     else if (c == ',')
     {
@@ -730,7 +763,7 @@ void CLASS::handle_error_start(char c) NOEXCEPT
     if (c == '{')
     {
         state_ = state::object_start;
-        ++depth_;
+        increment(depth_, state_);
     }
     else if (c == 'n' && value_ == "nul")
     {
@@ -765,7 +798,7 @@ void CLASS::handle_error_code(char c) NOEXCEPT
             error_.code = out;
             value_ = {};
             if (c == '}')
-                --depth_;
+                decrement(depth_, state_);
         }
         else
         {
@@ -799,7 +832,7 @@ void CLASS::handle_error_message(char c) NOEXCEPT
     {
         state_ = state::object_start;
         if (c == '}')
-            --depth_;
+            decrement(depth_, state_);
     }
 }
 
@@ -815,19 +848,24 @@ void CLASS::handle_error_data(char c) NOEXCEPT
     }
     else if (c == '[')
     {
-        ++depth_;
+       if (!increment(depth_, state_))
+           return;
     }
     else if (c == ']')
     {
-        --depth_;
+        if (!decrement(depth_, state_))
+            return;
     }
     else if (c == '{')
     {
-        ++depth_;
+        if (!increment(depth_, state_))
+            return;
     }
     else if (c == '}')
     {
-        --depth_;
+        if (!decrement(depth_, state_))
+            return;
+
         if (is_one(depth_))
         {
             // Validate required fields before assignment.

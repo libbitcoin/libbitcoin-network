@@ -116,6 +116,8 @@ protected:
     static inline bool is_whitespace(char c) NOEXCEPT;
     static inline json::error_code parse_error() NOEXCEPT;
     static inline bool to_number(int64_t& out, view token) NOEXCEPT;
+    static inline bool increment(size_t& depth, state& status) NOEXCEPT;
+    static inline bool decrement(size_t& depth, state& status) NOEXCEPT;
     static inline void consume(view& token, const char_iterator& it) NOEXCEPT;
 
     bool batched_{};
