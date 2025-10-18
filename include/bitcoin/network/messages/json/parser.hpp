@@ -56,31 +56,30 @@ public:
     /// Required for body template.
     using buffer_t = string_t;
 
-    /// Stratum v1 uses json-rpc v2 but does not require its "jsonrp" element.
-    static constexpr auto require_jsonrpc_v2 = Strict;
-
     /// Parsed object type.
+    /// -----------------------------------------------------------------------
     static constexpr auto request = Request;
     static constexpr auto response = !request;
     using parsed_t = iif<request, request_t, response_t>;
     using batch_t = std::vector<parsed_t>;
 
     /// Constructor.
+    /// -----------------------------------------------------------------------
     explicit parser(json::protocol proto) NOEXCEPT
       : protocol_{ proto }
     {
     }
 
     /// Properties.
+    /// -----------------------------------------------------------------------
     bool is_done() const NOEXCEPT;
     bool has_error() const NOEXCEPT;
     error_code get_error() const NOEXCEPT;
     const batch_t& get_parsed() const NOEXCEPT;
 
-    /// Invoke streaming parse of data.
+    /// Methods.
+    /// -----------------------------------------------------------------------
     size_t write(std::string_view data, error_code& ec) NOEXCEPT;
-
-    /// Clear state for new parse.
     void reset() NOEXCEPT;
 
 protected:
@@ -88,14 +87,25 @@ protected:
     using view = std::string_view;
     using rpc_iterator = batch_t::iterator;
     using char_iterator = view::const_iterator;
+    static constexpr auto require_jsonrpc_v2 = Strict;
 
-    /// Validate following completion, updates state.
+    /// Statics.
+    /// -----------------------------------------------------------------------
+    static inline error_code parse_error() NOEXCEPT;
+    static inline bool is_null(const id_t& id) NOEXCEPT;
+    static inline bool is_whitespace(char c) NOEXCEPT;
+    static inline bool to_number(int64_t& out, view token) NOEXCEPT;
+    static inline id_t to_id(view token) NOEXCEPT;
+    static inline bool increment(size_t& depth, state& status) NOEXCEPT;
+    static inline bool decrement(size_t& depth, state& status) NOEXCEPT;
+    static inline void consume(view& token, const char_iterator& at) NOEXCEPT;
+    static inline size_t distance(const char_iterator& from,
+        const char_iterator& to) NOEXCEPT;
+
+    /// Methods.
+    /// -----------------------------------------------------------------------
     void validate() NOEXCEPT;
-
-    /// Finalize the current token, sets result elements.
     void finalize() NOEXCEPT;
-
-    /// Accumulate the current character.
     void parse_character(char c) NOEXCEPT;
 
     /// Visitors - state transitions.
@@ -117,24 +127,6 @@ protected:
     void handle_error_message(char c) NOEXCEPT;
     void handle_error_data(char c) NOEXCEPT;
 
-protected:
-    /// Statics.
-    /// -----------------------------------------------------------------------
-    static inline error_code parse_error() NOEXCEPT;
-
-    static inline bool is_null(const id_t& id) NOEXCEPT;
-    static inline bool is_whitespace(char c) NOEXCEPT;
-
-    static inline bool to_number(int64_t& out, view token) NOEXCEPT;
-    static inline id_t to_id(view token) NOEXCEPT;
-
-    static inline bool increment(size_t& depth, state& status) NOEXCEPT;
-    static inline bool decrement(size_t& depth, state& status) NOEXCEPT;
-
-    static inline void consume(view& token, const char_iterator& at) NOEXCEPT;
-    static inline size_t distance(const char_iterator& from,
-        const char_iterator& to) NOEXCEPT;
-
     /// Escaping.
     /// -----------------------------------------------------------------------
     inline void consume_substitute(view& token, char c) NOEXCEPT;
@@ -155,6 +147,8 @@ protected:
     inline bool assign_request(auto& to, const auto& from) NOEXCEPT;
     inline void assign_value(auto& to, const auto& from) NOEXCEPT;
 
+private:
+    // These are not thread safe.
     bool batched_{};
     bool escaped_{};
     bool quoted_{};
@@ -169,6 +163,7 @@ protected:
     result_t error_{};
     rpc_iterator parsed_{};
 
+    // This is thread safe.
     const json::protocol protocol_;
 };
 
