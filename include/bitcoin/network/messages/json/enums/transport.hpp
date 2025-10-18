@@ -37,6 +37,7 @@ enum class transport
     /// Undefined transport.
     undefined
 };
+
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
