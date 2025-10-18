@@ -143,6 +143,15 @@ size_t CLASS::write(std::string_view data, json::error_code& ec) NOEXCEPT
         }
     }
 
+    if (state_ == state::complete)
+    {
+        if (protocol_ == protocol::v2 && parsed_.jsonrpc.empty())
+            state_ = state::error_state;  
+
+        // TODO:
+        // Add similar checks for other rules if needed (e.g., ID presence in v1).
+    }
+
     ec.clear();
     if (state_ == state::error_state)
         ec = parse_error();
@@ -157,13 +166,6 @@ size_t CLASS::write(std::string_view data, json::error_code& ec) NOEXCEPT
 TEMPLATE
 void CLASS::finalize() NOEXCEPT
 {
-    // Assign non-empty key (value should be empty).
-    if (!key_.empty())
-    {
-        IF_REQUEST( parsed_.jsonrpc = string_t{ key_ });
-        key_ = {};
-    }
-
     // Nothing to do if value is also empty.
     if (value_.empty())
         return;
@@ -171,6 +173,13 @@ void CLASS::finalize() NOEXCEPT
     // Assign value to request or error based on state.
     switch (state_)
     {
+        // Independently handled.
+        ////case state::jsonrpc:
+        ////{
+        ////    state_ = CLASS::state::object_start;
+        ////    parsed_.jsonrpc = string_t{ value_ };
+        ////    break;
+        ////}
         case state::method:
         {
             state_ = state::object_start;
@@ -618,7 +627,6 @@ void CLASS::handle_error_start(char c) NOEXCEPT
 {
     if (c == '{')
     {
-        // Reuse for error sub-object.
         state_ = state::object_start;
         ++depth_;
     }
@@ -646,14 +654,17 @@ void CLASS::handle_error_code(char c) NOEXCEPT
     {
         consume(value_, it_);
     }
-    else if (c == ',' && !quoted_)
+    else if (c == ',' || c == '}')
     {
         int64_t out{};
         if (to_number(out, value_))
         {
-            state_ = state::error_message;
+            state_ = state::object_start;
             error_.code = out;
             value_ = {};
+
+            if (c == '}')
+                --depth_;
         }
         else
         {
@@ -670,7 +681,8 @@ void CLASS::handle_error_message(char c) NOEXCEPT
         quoted_ = !quoted_;
         if (!quoted_)
         {
-            state_ = state::error_data;
+            // Return to key parsing.
+            state_ = state::object_start;
             error_.message = string_t{ value_ };
             value_ = {};
         }
@@ -718,7 +730,8 @@ void CLASS::handle_error_data(char c) NOEXCEPT
     {
         if (is_one(depth_) && !quoted_)
         {
-            state_ = state::object_start;
+            // This was already the case.
+            state_ = state::object_start; // Return to key parsing.
             error_.data = { string_t{ value_ } };
             value_ = {};
 
