@@ -153,6 +153,47 @@ inline bool CLASS::is_version(view token) const NOEXCEPT
         || (is_version2() && token == "2.0");
 }
 
+// Assignment.
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+inline bool CLASS::assign_response(auto& to, const auto& from) NOEXCEPT
+{
+    if constexpr (response)
+    {
+        assign_value(to, from);
+        return true;
+    }
+    else
+    {
+        state_ = state::error_state;
+        return false;
+    }
+}
+
+TEMPLATE
+inline bool CLASS::assign_request(auto& to, const auto& from) NOEXCEPT
+{
+    if constexpr (request)
+    {
+        assign_value(to, from);
+        return true;
+    }
+    else
+    {
+        state_ = state::error_state;
+        return false;
+    }
+}
+
+TEMPLATE
+inline void CLASS::assign_value(auto& to, const auto& from) NOEXCEPT
+{
+    state_ = state::object_start;
+    to = { from };
+    value_ = {};
+}
+
 // Escaping.
 // ----------------------------------------------------------------------------
 
@@ -339,14 +380,12 @@ void CLASS::finalize() NOEXCEPT
         // Error object.
         case state::error_message:
         {
-            state_ = state::object_start;
-            error_.message = string_t{ value_ };
+            assign_value(error_.message, value_);
             break;
         }
         case state::error_data:
         {
-            state_ = state::object_start;
-            error_.data = { string_t{ value_ } };
+            assign_value(error_.data, value_);
             break;
         }
 
@@ -354,37 +393,28 @@ void CLASS::finalize() NOEXCEPT
         case state::jsonrpc:
         {
             if (is_version(value_))
-            {
-                state_ = state::object_start;
-                parsed_->jsonrpc = string_t{ value_ };
-            }
+                assign_value(error_.jsonrpc, value_);
             else
-            {
                 state_ = state::error_state;
-            }
         }
         case state::method:
         {
-            state_ = state::object_start;
-            IF_REQUEST(parsed_->method = string_t{ value_ });
+            assign_request(parsed_->method, value_);
             break;
         }
         case state::params:
         {
-            state_ = state::object_start;
-            IF_REQUEST(parsed_->params = { string_t{ value_ } });
+            assign_request(parsed_->params, value_);
             break;
         }
         case state::result:
         {
-            state_ = state::object_start;
-            IF_RESPONSE(parsed_->result = { string_t{ value_ } });
+            assign_response(parsed_->result, value_);
             break;
         }
         case state::id:
         {
-            state_ = state::object_start;
-            parsed_->id = to_id(value_);
+            assign_value(parsed_->id, to_id(value_));
             break;
         }
 
@@ -395,9 +425,6 @@ void CLASS::finalize() NOEXCEPT
             break;
         }
     }
-
-    // Value and key are now both empty.
-    value_ = {};
 }
 
 TEMPLATE
@@ -671,15 +698,9 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
         if (!quoted_)
         {
             if (is_version(value_))
-            {
-                state_ = state::object_start;
-                parsed_->jsonrpc = string_t{ value_ };
-                value_ = {};
-            }
+                assign_value(parsed_->jsonrpc, value_);
             else
-            {
                 state_ = state::error_state;
-            }
         }
     }
     else if (quoted_)
@@ -702,11 +723,7 @@ void CLASS::handle_method(char c) NOEXCEPT
     {
         quoted_ = !quoted_;
         if (!quoted_)
-        {
-            state_ = state::object_start;
-            IF_REQUEST(parsed_->method = string_t{ value_ });
-            value_ = {};
-        }
+            assign_request(parsed_->method, value_);
     }
     else if (quoted_)
     {
@@ -752,11 +769,7 @@ void CLASS::handle_params(char c) NOEXCEPT
     {
         if (is_one(depth_) && !quoted_)
         {
-            state_ = state::object_start;
-            IF_REQUEST(parsed_->params = { string_t{ value_ } });
-            value_ = {};
-
-            // Don't consume the comma.
+            assign_request(parsed_->params, value_);
             return;
         }
     }
@@ -779,11 +792,7 @@ void CLASS::handle_id(char c) NOEXCEPT
     {
         quoted_ = !quoted_;
         if (!quoted_)
-        {
-            state_ = state::object_start;
-            parsed_->id = to_id(value_);
-            value_ = {};
-        }
+            assign_value(parsed_->id, to_id(value_));
     }
     else if (quoted_)
     {
@@ -792,13 +801,8 @@ void CLASS::handle_id(char c) NOEXCEPT
     else if (c == 'n' && value_ == "nul")
     {
         consume(value_, char_);
-
         if (value_ == "null")
-        {
-            state_ = state::object_start;
-            parsed_->id = null_t{};
-            value_ = {};
-        }
+            assign_value(parsed_->id, null_t{});
     }
     else if (std::isdigit(c) || c == '-')
     {
@@ -808,10 +812,15 @@ void CLASS::handle_id(char c) NOEXCEPT
     {
         int64_t out{};
         if (to_number(out, value_))
-            parsed_->id = out;
-
-        state_ = state::object_start;
-        value_ = {};
+        {
+            assign_value(parsed_->id, out);
+            if (c == '}')
+                decrement(depth_, state_);
+        }
+        else
+        {
+            state_ = state::error_state;
+        }
     }
     else if (!is_whitespace(c))
     {
@@ -853,11 +862,7 @@ void CLASS::handle_result(char c) NOEXCEPT
     {
         if (is_one(depth_) && !quoted_)
         {
-            state_ = state::object_start;
-            IF_RESPONSE(parsed_->result = { string_t{ value_ } });
-            value_ = {};
-
-            // Don't consume the comma.
+            assign_response(parsed_->result, value_);
             return;
         }
     }
@@ -881,13 +886,8 @@ void CLASS::handle_error_start(char c) NOEXCEPT
     else if (c == 'n' && value_ == "nul")
     {
         consume(value_, char_);
-
         if (value_ == "null")
-        {
-            state_ = state::object_start;
-            IF_RESPONSE(parsed_->error = {});
-            value_ = {};
-        }
+            assign_response(parsed_->error, result_t{});
     }
     else if (!is_whitespace(c))
     {
@@ -907,9 +907,7 @@ void CLASS::handle_error_code(char c) NOEXCEPT
         int64_t out{};
         if (to_number(out, value_))
         {
-            state_ = state::object_start;
-            error_.code = out;
-            value_ = {};
+            assign_value(error_.code, out);
             if (c == '}')
                 decrement(depth_, state_);
         }
@@ -934,12 +932,7 @@ void CLASS::handle_error_message(char c) NOEXCEPT
     {
         quoted_ = !quoted_;
         if (!quoted_)
-        {
-            // Return to key parsing.
-            state_ = state::object_start;
-            error_.message = string_t{ value_ };
-            value_ = {};
-        }
+            assign_value(error_.message, value_);
     }
     else if (quoted_)
     {
@@ -989,19 +982,13 @@ void CLASS::handle_error_data(char c) NOEXCEPT
 
         if (is_one(depth_))
         {
-            // Validate required fields before assignment.
             if (is_zero(error_.code) || error_.message.empty())
             {
                 state_ = state::error_state;
                 return;
             }
 
-            // Assign error object to response.
-            state_ = state::object_start;
-            IF_RESPONSE(parsed_->error = error_);
-            value_ = {};
-
-            // Don't consume the closing brace.
+            assign_response(parsed_->error, error_);
             return;
         }
     }
@@ -1009,11 +996,7 @@ void CLASS::handle_error_data(char c) NOEXCEPT
     {
         if (is_one(depth_) && !quoted_)
         {
-            state_ = state::object_start;
-            error_.data = { string_t{ value_ } };
-            value_ = {};
-
-            // Don't consume the comma.
+            assign_value(error_.data, value_);
             return;
         }
     }
@@ -1025,9 +1008,6 @@ void CLASS::handle_error_data(char c) NOEXCEPT
 
     consume(value_, char_);
 }
-
-#undef IF_REQUEST
-#undef IF_RESPONSE
 
 } // namespace json
 } // namespace network

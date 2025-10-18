@@ -150,6 +150,12 @@ protected:
     inline bool is_terminal(char c) const NOEXCEPT;
     inline bool is_version(view token) const NOEXCEPT;
 
+    /// Assignment.
+    /// -----------------------------------------------------------------------
+    inline bool assign_response(auto& to, const auto& from) NOEXCEPT;
+    inline bool assign_request(auto& to, const auto& from) NOEXCEPT;
+    inline void assign_value(auto& to, const auto& from) NOEXCEPT;
+
     bool batched_{};
     bool escaped_{};
     bool quoted_{};
