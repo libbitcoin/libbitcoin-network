@@ -669,9 +669,6 @@ void CLASS::handle_error_code(char c) NOEXCEPT
         {
             state_ = state::error_state;
         }
-
-        // This is a no-op.
-        ////return;  // Explicitly skip consume.
     }
 }
 
@@ -693,14 +690,11 @@ void CLASS::handle_error_message(char c) NOEXCEPT
     {
         consume(value_, it_);
     }
-    else if (c == ',' || c == '}') /*&& !quoted_)*/ // !quoted_ is redundant with above.
+    else if (c == ',' || c == '}')
     {
         state_ = state::object_start;
         if (c == '}')
             --depth_;
-
-        // no-op
-        ////return;  // Skip consumption.
     }
 }
 
@@ -728,7 +722,6 @@ void CLASS::handle_error_data(char c) NOEXCEPT
         --depth_;
         if (is_one(depth_))
         {
-            // Assign error object to response.
             state_ = state::object_start;
             IF_RESPONSE(parsed_.error = error_);
             value_ = {};
@@ -741,8 +734,7 @@ void CLASS::handle_error_data(char c) NOEXCEPT
     {
         if (is_one(depth_) && !quoted_)
         {
-            // This was already the case.
-            state_ = state::object_start; // Return to key parsing.
+            state_ = state::object_start;
             error_.data = { string_t{ value_ } };
             value_ = {};
 
