@@ -143,7 +143,8 @@ typename const CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
     if (is_done() && !has_error())
         return batch_;
 
-    return {};
+    static const batch_t empty{};
+    return empty;
 }
 
 // Invoke streaming parse of data.
