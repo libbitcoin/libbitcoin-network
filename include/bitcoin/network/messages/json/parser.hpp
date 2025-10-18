@@ -43,8 +43,8 @@ enum class parser_state
     error_code,
     error_message,
     error_data,
-    complete,
-    error_state
+    error_state,
+    complete
 };
 
 /// A minimal-copy parser for boost asio JSON-RPC v1/v2 stream parsing.
@@ -95,6 +95,7 @@ protected:
     static inline bool is_whitespace(char c) NOEXCEPT;
     static inline bool to_number(int64_t& out, view token) NOEXCEPT;
     static inline id_t to_id(view token) NOEXCEPT;
+    static inline bool toggle(bool& quoted) NOEXCEPT;
     static inline bool increment(size_t& depth, state& status) NOEXCEPT;
     static inline bool decrement(size_t& depth, state& status) NOEXCEPT;
     static inline size_t distance(const char_iterator& from,
@@ -134,11 +135,11 @@ protected:
 
     /// Versioning.
     /// -----------------------------------------------------------------------
-    inline bool is_closed() const NOEXCEPT;
+    inline bool is_version(view token) const NOEXCEPT;
     inline bool is_version1() const NOEXCEPT;
     inline bool is_version2() const NOEXCEPT;
-    inline bool is_terminal(char c) const NOEXCEPT;
-    inline bool is_version(view token) const NOEXCEPT;
+    inline bool is_terminal() const NOEXCEPT;
+    inline bool is_closed() const NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------
