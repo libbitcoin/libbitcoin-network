@@ -408,9 +408,10 @@ void CLASS::handle_initialize(char c) NOEXCEPT
         increment(depth_, state_);
         return;
     }
-
-    if (!is_whitespace(c))
+    else if (!is_whitespace(c))
+    {
         state_ = state::error_state;
+    }
 }
 
 TEMPLATE
@@ -423,25 +424,53 @@ void CLASS::handle_object_start(char c) NOEXCEPT
     }
     else if (c == '}')
     {
-        if (decrement(depth_, state_) && is_zero(depth_))
+        if (!decrement(depth_, state_))
+            return;
+
+        if (is_zero(depth_))
             state_ = state::complete;
     }
     else if (batched_)
     {
         if (c == '{')
         {
-            parsed_ = batch_.emplace_back();
-            increment(depth_, state_);
+            if (is_one(depth_))
+            {
+                parsed_ = batch_.emplace_back();
+                increment(depth_, state_);
+            }
+            else
+            {
+                state_ = state::error_state;
+            }
         }
         else if (c == ']')
         {
-            state_ = state::complete;
-            decrement(depth_, state_);
+            if (is_one(depth_))
+            {
+                state_ = state::complete;
+                decrement(depth_, state_);
+            }
+            else
+            {
+                state_ = state::error_state;
+            }
         }
         else if (c == ',')
         {
-            state_ = state::object_start;
+            if (is_one(depth_))
+                state_ = state::object_start;
+            else
+                state_ = state::error_state;
         }
+        else if (!is_whitespace(c))
+        {
+            state_ = state::error_state;
+        }
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
     }
 }
 
@@ -449,7 +478,12 @@ TEMPLATE
 void CLASS::handle_key(char c) NOEXCEPT
 {
     if (!quoted_)
+    {
+        if (!is_whitespace(c))
+            state_ = state::error_state;
+
         return;
+    }
 
     if (consume_escape(c))
         return;
@@ -605,6 +639,10 @@ void CLASS::handle_method(char c) NOEXCEPT
     {
         consume(value_, it_);
     }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+    }
 }
 
 TEMPLATE
@@ -648,6 +686,11 @@ void CLASS::handle_params(char c) NOEXCEPT
             // Don't consume the comma.
             return;
         }
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+        return;
     }
 
     consume(value_, it_);
@@ -710,6 +753,10 @@ void CLASS::handle_id(char c) NOEXCEPT
         state_ = state::object_start;
         value_ = {};
     }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+    }
 }
 
 TEMPLATE
@@ -754,6 +801,11 @@ void CLASS::handle_result(char c) NOEXCEPT
             return;
         }
     }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+        return;
+    }
 
     consume(value_, it_);
 }
@@ -777,7 +829,7 @@ void CLASS::handle_error_start(char c) NOEXCEPT
             value_ = {};
         }
     }
-    else
+    else if (!is_whitespace(c))
     {
         state_ = state::error_state;
     }
@@ -805,6 +857,10 @@ void CLASS::handle_error_code(char c) NOEXCEPT
         {
             state_ = state::error_state;
         }
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
     }
 }
 
@@ -834,6 +890,10 @@ void CLASS::handle_error_message(char c) NOEXCEPT
         state_ = state::object_start;
         if (c == '}')
             decrement(depth_, state_);
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
     }
 }
 
@@ -896,6 +956,11 @@ void CLASS::handle_error_data(char c) NOEXCEPT
             // Don't consume the comma.
             return;
         }
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+        return;
     }
 
     consume(value_, it_);
