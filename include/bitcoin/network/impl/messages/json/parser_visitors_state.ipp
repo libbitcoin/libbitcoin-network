@@ -1,0 +1,234 @@
+/**
+ * Copyright (c) 2011-2025 libbitcoin developers (see AUTHORS)
+ *
+ * This file is part of libbitcoin.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_VISITORS_STATE_IPP
+#define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_VISITORS_STATE_IPP
+
+namespace libbitcoin {
+namespace network {
+namespace json {
+
+// protected
+
+TEMPLATE
+void CLASS::handle_initialize(char c) NOEXCEPT
+{
+    // Starting brace.
+    if (c == '{')
+    {
+        batched_ = false;
+        parsed_ = batch_.emplace_back();
+
+        state_ = state::object_start;
+        increment(depth_, state_);
+        return;
+    }
+    else if (c == '[')
+    {
+        batched_ = true;
+
+        state_ = state::object_start;
+        increment(depth_, state_);
+        return;
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+    }
+}
+
+TEMPLATE
+void CLASS::handle_object_start(char c) NOEXCEPT
+{
+    if (c == '"')
+    {
+        quoted_ = true;
+        state_ = state::key;
+    }
+    else if (c == '}')
+    {
+        if (!decrement(depth_, state_))
+            return;
+
+        if (is_zero(depth_))
+            state_ = state::complete;
+    }
+    else if (batched_)
+    {
+        if (c == '{')
+        {
+            if (is_one(depth_))
+            {
+                parsed_ = batch_.emplace_back();
+                increment(depth_, state_);
+            }
+            else
+            {
+                state_ = state::error_state;
+            }
+        }
+        else if (c == ']')
+        {
+            if (is_one(depth_))
+            {
+                state_ = state::complete;
+                decrement(depth_, state_);
+            }
+            else
+            {
+                state_ = state::error_state;
+            }
+        }
+        else if (c == ',')
+        {
+            if (is_one(depth_))
+                state_ = state::object_start;
+            else
+                state_ = state::error_state;
+        }
+        else if (!is_whitespace(c))
+        {
+            state_ = state::error_state;
+        }
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+    }
+}
+
+TEMPLATE
+void CLASS::handle_key(char c) NOEXCEPT
+{
+    if (!quoted_)
+    {
+        if (!is_whitespace(c))
+            state_ = state::error_state;
+
+        return;
+    }
+
+    if (consume_escape(key_, c))
+        return;
+
+    quoted_ = false;
+
+    // TODO:
+    // Shift to key-based parsing inside errors by adding error-specific key handling,
+    // or route to error-specific handlers [if key_ == "code", go to handle_error_code].
+    if (key_ == "jsonrpc")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "method")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "params")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "id")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "result")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "error")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "code")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "message")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "data")
+    {
+        state_ = state::value;
+    }
+    else
+    {
+        state_ = state::error_state;
+    }
+}
+
+TEMPLATE
+void CLASS::handle_value(char c) NOEXCEPT
+{
+    if (c != ':')
+    {
+        state_ = state::error_state;
+        return;
+    }
+
+    // TODO:
+    // Shift to key-based parsing inside errors by adding error-specific key handling,
+    // or route to error-specific handlers [if key_ == "code", go to handle_error_code].
+    if (key_ == "jsonrpc")
+    {
+        state_ = state::jsonrpc;
+    }
+    else if (key_ == "method")
+    {
+        state_ = state::method;
+    }
+    else if (key_ == "params")
+    {
+        state_ = state::params;
+    }
+    else if (key_ == "id")
+    {
+        state_ = state::id;
+    }
+    else if (key_ == "result")
+    {
+        state_ = state::result;
+    }
+    else if (key_ == "error")
+    {
+        state_ = state::error_start;
+    }
+    else if (key_ == "code")
+    {
+        state_ = state::error_code;
+    }
+    else if (key_ == "message")
+    {
+        state_ = state::error_message;
+    }
+    else if (key_ == "data")
+    {
+        state_ = state::error_data;
+    }
+    else
+    {
+        state_ = state::error_state;
+    }
+}
+
+} // namespace json
+} // namespace network
+} // namespace libbitcoin
+
+#endif

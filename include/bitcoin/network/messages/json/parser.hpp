@@ -71,9 +71,6 @@ public:
     {
     }
 
-    /// Clear state for new parse.
-    void reset() NOEXCEPT;
-
     /// Properties.
     bool is_done() const NOEXCEPT;
     bool has_error() const NOEXCEPT;
@@ -83,31 +80,33 @@ public:
     /// Invoke streaming parse of data.
     size_t write(std::string_view data, error_code& ec) NOEXCEPT;
 
+    /// Clear state for new parse.
+    void reset() NOEXCEPT;
+
 protected:
     using state = parser_state;
     using view = std::string_view;
     using rpc_iterator = batch_t::iterator;
     using char_iterator = view::const_iterator;
 
-    /// Finalize the current token, sets result elements.
-    void finalize() NOEXCEPT;
-
     /// Validate following completion, updates state.
     void validate() NOEXCEPT;
+
+    /// Finalize the current token, sets result elements.
+    void finalize() NOEXCEPT;
 
     /// Accumulate the current character.
     void parse_character(char c) NOEXCEPT;
 
-    /// Visitors.
+    /// Visitors - state transitions.
     /// -----------------------------------------------------------------------
-
-    /// State transitioners.
     void handle_initialize(char c) NOEXCEPT;
     void handle_object_start(char c) NOEXCEPT;
     void handle_key(char c) NOEXCEPT;
     void handle_value(char c) NOEXCEPT;
 
-    /// Quoted value handlers.
+    /// Visitors - quoted values.
+    /// -----------------------------------------------------------------------
     void handle_jsonrpc(char c) NOEXCEPT;
     void handle_method(char c) NOEXCEPT;
     void handle_params(char c) NOEXCEPT;
@@ -119,7 +118,7 @@ protected:
     void handle_error_data(char c) NOEXCEPT;
 
 protected:
-    /// Static.
+    /// Statics.
     /// -----------------------------------------------------------------------
     static inline error_code parse_error() NOEXCEPT;
 
@@ -180,7 +179,17 @@ protected:
 #define TEMPLATE template <bool Request, bool Strict>
 #define CLASS parser<Request, Strict>
 
+#include <charconv>
+#include <iterator>
+#include <variant>
+
 #include <bitcoin/network/impl/messages/json/parser.ipp>
+#include <bitcoin/network/impl/messages/json/parser_assign.ipp>
+#include <bitcoin/network/impl/messages/json/parser_escape.ipp>
+#include <bitcoin/network/impl/messages/json/parser_statics.ipp>
+#include <bitcoin/network/impl/messages/json/parser_version.ipp>
+#include <bitcoin/network/impl/messages/json/parser_visitors_state.ipp>
+#include <bitcoin/network/impl/messages/json/parser_visitors_value.ipp>
 
 #undef CLASS
 #undef TEMPLATE
