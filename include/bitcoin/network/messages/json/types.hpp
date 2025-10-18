@@ -40,7 +40,7 @@ using number_t = double;
 using string_t = std::string;
 using array_t = std::vector<value_t>;
 using object_t = std::unordered_map<string_t, value_t>;
-using identity_t = std::variant<null_t, code_t, string_t>;
+using id_t = std::variant<null_t, code_t, string_t>;
 
 struct BCT_API value_t
 {
@@ -54,7 +54,7 @@ struct BCT_API value_t
         object_t
     >;
 
-    /// Firt type initialized by default (null_t).
+    /// First type initialized by default (null_t).
     type value{};
 };
 using value_option = std::optional<value_t>;
@@ -72,7 +72,7 @@ struct BCT_API request_t
     string_t jsonrpc{};
     string_t method{};
     value_option params{};
-    identity_t id{};
+    id_t id{};
 };
 
 struct BCT_API response_t
@@ -80,7 +80,7 @@ struct BCT_API response_t
     string_t jsonrpc{};
     value_option result{};
     error_option error{};
-    identity_t id{};
+    id_t id{};
 };
 
 using error_code = error::boost_code;

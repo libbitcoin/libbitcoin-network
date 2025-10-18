@@ -856,6 +856,24 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser.ipp">
       <Filter>include\bitcoin\network\impl\messages\json</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_assign.ipp">
+      <Filter>include\bitcoin\network\impl\messages\json</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_consume.ipp">
+      <Filter>include\bitcoin\network\impl\messages\json</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_statics.ipp">
+      <Filter>include\bitcoin\network\impl\messages\json</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_version.ipp">
+      <Filter>include\bitcoin\network\impl\messages\json</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_visitors_state.ipp">
+      <Filter>include\bitcoin\network\impl\messages\json</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_visitors_value.ipp">
+      <Filter>include\bitcoin\network\impl\messages\json</Filter>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
