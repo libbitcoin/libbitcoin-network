@@ -58,6 +58,22 @@ const typename CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+void CLASS::reset() NOEXCEPT
+{
+    batched_ = {};
+    escaped_ = {};
+    quoted_ = {};
+    state_ = {};
+    depth_ = {};
+    char_ = {};
+    key_ = {};
+    value_ = {};
+    batch_ = {};
+    error_ = {};
+    parsed_ = {};
+}
+
+TEMPLATE
 size_t CLASS::write(std::string_view data, json::error_code& ec) NOEXCEPT
 {
     for (auto char_ = data.begin(); char_ != data.end(); ++char_)
@@ -80,22 +96,6 @@ size_t CLASS::write(std::string_view data, json::error_code& ec) NOEXCEPT
     validate();
     ec = get_error();
     return distance(data.begin(), char_);
-}
-
-TEMPLATE
-void CLASS::reset() NOEXCEPT
-{
-    batched_ = {};
-    escaped_ = {};
-    quoted_ = {};
-    state_ = {};
-    depth_ = {};
-    char_ = {};
-    key_ = {};
-    value_ = {};
-    batch_ = {};
-    error_ = {};
-    parsed_ = {};
 }
 
 // protected
