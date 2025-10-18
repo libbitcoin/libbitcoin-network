@@ -93,7 +93,12 @@ protected:
 
     /// Accumulate the current character.
     void parse_character(char c) NOEXCEPT;
-    bool consume_escape(char c) NOEXCEPT;
+
+    /// Escaping.
+    /// -----------------------------------------------------------------------
+    inline bool consume_escape(view& token, char c) NOEXCEPT;
+    inline void consume_escaped(view& token, char c) NOEXCEPT;
+    inline void consume(view& token, char substitute) NOEXCEPT;
 
     /// Visitors.
     /// -----------------------------------------------------------------------

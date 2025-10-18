@@ -350,19 +350,54 @@ void CLASS::parse_character(char c) NOEXCEPT
     }
 }
 
+// Escaping.
+// ----------------------------------------------------------------------------
+
 TEMPLATE
-bool CLASS::consume_escape(char c) NOEXCEPT
+inline void CLASS::consume(view& token, char /* substitute */) NOEXCEPT
+{
+    // BUGBUG: view is not modifiable, requires dynamic token (vs. view).
+    consume(token, it_);
+}
+
+TEMPLATE
+inline void CLASS::consume_escaped(view& token, char c) NOEXCEPT
+{
+    // BUGBUG: doesn't support \uXXXX, requires 4 character accumulation.
+    switch (c)
+    {
+        case 'b':
+            consume(token, '\b');
+            return;
+        case 'f':
+            consume(token, '\f');
+            return;
+        case 'n':
+            consume(token, '\n');
+            return;
+        case 'r':
+            consume(token, '\r');
+            return;
+        case 't':
+            consume(token, '\t');
+            return;
+        default:
+            consume(token, it_);
+    }
+}
+
+TEMPLATE
+inline bool CLASS::consume_escape(view& token, char c) NOEXCEPT
 {
     if (c == '\\' && !escaped_)
     {
         escaped_ = true;
-        consume(key_, it_);
         return true;
     }
     else if (escaped_)
     {
+        consume_escaped(token, c);
         escaped_ = false;
-        consume(key_, it_);
         return true;
     }
     else
@@ -473,7 +508,7 @@ void CLASS::handle_key(char c) NOEXCEPT
         return;
     }
 
-    if (consume_escape(c))
+    if (consume_escape(key_, c))
         return;
 
     quoted_ = false;
@@ -583,7 +618,7 @@ void CLASS::handle_value(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_jsonrpc(char c) NOEXCEPT
 {
-    if (consume_escape(c))
+    if (consume_escape(value_, c))
         return;
 
     if (c == '"')
@@ -613,7 +648,7 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_method(char c) NOEXCEPT
 {
-    if (consume_escape(c))
+    if (consume_escape(value_, c))
         return;
 
     if (c == '"')
@@ -639,7 +674,7 @@ void CLASS::handle_method(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_params(char c) NOEXCEPT
 {
-    if (consume_escape(c))
+    if (consume_escape(value_, c))
         return;
 
     if (c == '"')
@@ -690,7 +725,7 @@ void CLASS::handle_params(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_id(char c) NOEXCEPT
 {
-    if (consume_escape(c))
+    if (consume_escape(value_, c))
         return;
 
     if (c == '"')
@@ -753,7 +788,7 @@ void CLASS::handle_id(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_result(char c) NOEXCEPT
 {
-    if (consume_escape(c))
+    if (consume_escape(value_, c))
         return;
 
     if (c == '"')
@@ -858,7 +893,7 @@ void CLASS::handle_error_code(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_error_message(char c) NOEXCEPT
 {
-    if (consume_escape(c))
+    if (consume_escape(value_, c))
         return;
 
     if (c == '"')
@@ -891,7 +926,7 @@ void CLASS::handle_error_message(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_error_data(char c) NOEXCEPT
 {
-    if (consume_escape(c))
+    if (consume_escape(value_, c))
         return;
 
     if (c == '"')
