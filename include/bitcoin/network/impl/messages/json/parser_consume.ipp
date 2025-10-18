@@ -16,8 +16,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_ESCAPE_IPP
-#define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_ESCAPE_IPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_CONSUME_IPP
+#define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_CONSUME_IPP
+
+#include <memory>
 
 namespace libbitcoin {
 namespace network {
@@ -26,10 +28,20 @@ namespace json {
 // protected
 
 TEMPLATE
+inline void CLASS::consume_char(view& token) NOEXCEPT
+{
+    // Token consumes character *char_ by incrementing its view over buffer.
+    if (token.empty())
+        token = { std::to_address(char_), one };
+    else
+        token = { token.data(), add1(token.size()) };
+}
+
+TEMPLATE
 inline void CLASS::consume_substitute(view& token, char /* c */) NOEXCEPT
 {
     // BUGBUG: view is not modifiable, requires dynamic token (vs. view).
-    consume(token, char_);
+    consume_char(token);
 }
 
 TEMPLATE
@@ -39,22 +51,22 @@ inline void CLASS::consume_escaped(view& token, char c) NOEXCEPT
     switch (c)
     {
         case 'b':
-            consume(token, '\b');
+            consume_substitute(token, '\b');
             return;
         case 'f':
-            consume(token, '\f');
+            consume_substitute(token, '\f');
             return;
         case 'n':
-            consume(token, '\n');
+            consume_substitute(token, '\n');
             return;
         case 'r':
-            consume(token, '\r');
+            consume_substitute(token, '\r');
             return;
         case 't':
-            consume(token, '\t');
+            consume_substitute(token, '\t');
             return;
         default:
-            consume(token, char_);
+            consume_char(token);
     }
 }
 

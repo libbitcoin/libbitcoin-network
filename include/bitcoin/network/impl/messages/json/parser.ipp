@@ -19,6 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_IPP
 
+#include <string_view>
+
 namespace libbitcoin {
 namespace network {
 namespace json {
@@ -39,9 +41,9 @@ bool CLASS::is_done() const NOEXCEPT
 }
 
 TEMPLATE
-json::error_code CLASS::get_error() const NOEXCEPT
+error_code CLASS::get_error() const NOEXCEPT
 {
-    return has_error() ? parse_error() : json::error_code{};
+    return has_error() ? parse_error() : error_code{};
 }
 
 TEMPLATE
@@ -74,7 +76,7 @@ void CLASS::reset() NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::write(std::string_view data, json::error_code& ec) NOEXCEPT
+size_t CLASS::write(std::string_view data, error_code& ec) NOEXCEPT
 {
     for (auto char_ = data.begin(); char_ != data.end(); ++char_)
     {

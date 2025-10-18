@@ -334,7 +334,7 @@ include_bitcoin_network_impl_messages_jsondir = ${includedir}/bitcoin/network/im
 include_bitcoin_network_impl_messages_json_HEADERS = \
     include/bitcoin/network/impl/messages/json/parser.ipp \
     include/bitcoin/network/impl/messages/json/parser_assign.ipp \
-    include/bitcoin/network/impl/messages/json/parser_escape.ipp \
+    include/bitcoin/network/impl/messages/json/parser_consume.ipp \
     include/bitcoin/network/impl/messages/json/parser_statics.ipp \
     include/bitcoin/network/impl/messages/json/parser_version.ipp \
     include/bitcoin/network/impl/messages/json/parser_visitors_state.ipp \

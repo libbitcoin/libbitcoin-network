@@ -19,6 +19,10 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_STATICS_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_STATICS_IPP
 
+#include <charconv>
+#include <iterator>
+#include <variant>
+
 namespace libbitcoin {
 namespace network {
 namespace json {
@@ -91,16 +95,6 @@ inline bool CLASS::decrement(size_t& depth, state& status) NOEXCEPT
     }
 
     return true;
-}
-
-TEMPLATE
-inline void CLASS::consume(view& token, const char_iterator& at) NOEXCEPT
-{
-    // Token consumes character *at by incrementing its view over at's buffer.
-    if (token.empty())
-        token = { std::to_address(at), one };
-    else
-        token = { token.data(), add1(token.size()) };
 }
 
 TEMPLATE

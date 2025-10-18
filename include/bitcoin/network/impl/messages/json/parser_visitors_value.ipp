@@ -19,6 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_VISITORS_VALUE_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_VISITORS_VALUE_IPP
 
+#include <cctype>
+
 namespace libbitcoin {
 namespace network {
 namespace json {
@@ -44,7 +46,7 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume(value_, char_);
+        consume_char(value_, char_);
     }
     else if (!is_whitespace(c))
     {
@@ -66,7 +68,7 @@ void CLASS::handle_method(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume(value_, char_);
+        consume_char(value_, char_);
     }
     else if (!is_whitespace(c))
     {
@@ -118,7 +120,7 @@ void CLASS::handle_params(char c) NOEXCEPT
         return;
     }
 
-    consume(value_, char_);
+    consume_char(value_, char_);
 }
 
 TEMPLATE
@@ -135,17 +137,17 @@ void CLASS::handle_id(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume(value_, char_);
+        consume_char(value_, char_);
     }
     else if (c == 'n' && value_ == "nul")
     {
-        consume(value_, char_);
+        consume_char(value_, char_);
         if (value_ == "null")
             assign_value(parsed_->id, null_t{});
     }
     else if (std::isdigit(c) || c == '-')
     {
-        consume(value_, char_);
+        consume_char(value_, char_);
     }
     else if (c == ',' && !quoted_ && is_one(depth_))
     {
@@ -211,7 +213,7 @@ void CLASS::handle_result(char c) NOEXCEPT
         return;
     }
 
-    consume(value_, char_);
+    consume_char(value_, char_);
 }
 
 TEMPLATE
@@ -224,7 +226,7 @@ void CLASS::handle_error_start(char c) NOEXCEPT
     }
     else if (c == 'n' && value_ == "nul")
     {
-        consume(value_, char_);
+        consume_char(value_, char_);
         if (value_ == "null")
             assign_response(parsed_->error, result_t{});
     }
@@ -239,7 +241,7 @@ void CLASS::handle_error_code(char c) NOEXCEPT
 {
     if (std::isdigit(c) || c == '-')
     {
-        consume(value_, char_);
+        consume_char(value_, char_);
     }
     else if (c == ',' || c == '}')
     {
@@ -275,7 +277,7 @@ void CLASS::handle_error_message(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume(value_, char_);
+        consume_char(value_, char_);
     }
     else if (c == ',' || c == '}')
     {
@@ -345,7 +347,7 @@ void CLASS::handle_error_data(char c) NOEXCEPT
         return;
     }
 
-    consume(value_, char_);
+    consume_char(value_, char_);
 }
 
 } // namespace json

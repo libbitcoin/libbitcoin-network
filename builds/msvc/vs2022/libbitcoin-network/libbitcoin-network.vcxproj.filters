@@ -859,7 +859,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_assign.ipp">
       <Filter>include\bitcoin\network\impl\messages\json</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_escape.ipp">
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_consume.ipp">
       <Filter>include\bitcoin\network\impl\messages\json</Filter>
     </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_statics.ipp">

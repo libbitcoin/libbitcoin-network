@@ -28,7 +28,8 @@ namespace json {
 TEMPLATE
 void CLASS::handle_initialize(char c) NOEXCEPT
 {
-    // Starting brace.
+    // delimiters cannot be escaped.
+
     if (c == '{')
     {
         batched_ = false;
@@ -55,9 +56,11 @@ void CLASS::handle_initialize(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_object_start(char c) NOEXCEPT
 {
+    // delimiters cannot be escaped.
+
     if (c == '"')
     {
-        quoted_ = true;
+        // state::key implies quoted.
         state_ = state::key;
     }
     else if (c == '}')
@@ -97,9 +100,14 @@ void CLASS::handle_object_start(char c) NOEXCEPT
         else if (c == ',')
         {
             if (is_one(depth_))
+            {
+                // no depth change.
                 state_ = state::object_start;
+            }
             else
+            {
                 state_ = state::error_state;
+            }
         }
         else if (!is_whitespace(c))
         {
@@ -112,46 +120,29 @@ void CLASS::handle_object_start(char c) NOEXCEPT
     }
 }
 
+// TODO:
+// Shift to key-based parsing inside errors by adding error-specific key handling,
+// or route to error-specific handlers [if key_ == "code", go to handle_error_code].
 TEMPLATE
 void CLASS::handle_key(char c) NOEXCEPT
 {
-    if (!quoted_)
-    {
-        if (!is_whitespace(c))
-            state_ = state::error_state;
-
-        return;
-    }
-
+    // terminating quote cannot be an escape or be escaped.
     if (consume_escape(key_, c))
         return;
 
-    quoted_ = false;
+    // consume non-quote.
+    if (c != '"')
+    {
+        consume_char(key_);
+        return;
+    }
 
-    // TODO:
-    // Shift to key-based parsing inside errors by adding error-specific key handling,
-    // or route to error-specific handlers [if key_ == "code", go to handle_error_code].
+    // In state::key, upon '"' state changes based on accumulated key.
     if (key_ == "jsonrpc")
     {
         state_ = state::value;
     }
-    else if (key_ == "method")
-    {
-        state_ = state::value;
-    }
-    else if (key_ == "params")
-    {
-        state_ = state::value;
-    }
     else if (key_ == "id")
-    {
-        state_ = state::value;
-    }
-    else if (key_ == "result")
-    {
-        state_ = state::value;
-    }
-    else if (key_ == "error")
     {
         state_ = state::value;
     }
@@ -167,12 +158,31 @@ void CLASS::handle_key(char c) NOEXCEPT
     {
         state_ = state::value;
     }
+    else if (request && key_ == "method")
+    {
+        state_ = state::value;
+    }
+    else if (request && key_ == "params")
+    {
+        state_ = state::value;
+    }
+    else if (response && key_ == "result")
+    {
+        state_ = state::value;
+    }
+    else if (response && key_ == "error")
+    {
+        state_ = state::value;
+    }
     else
     {
         state_ = state::error_state;
     }
 }
 
+// TODO:
+// Shift to key-based parsing inside errors by adding error-specific key handling,
+// or route to error-specific handlers [if key_ == "code", go to handle_error_code].
 TEMPLATE
 void CLASS::handle_value(char c) NOEXCEPT
 {
@@ -182,32 +192,14 @@ void CLASS::handle_value(char c) NOEXCEPT
         return;
     }
 
-    // TODO:
-    // Shift to key-based parsing inside errors by adding error-specific key handling,
-    // or route to error-specific handlers [if key_ == "code", go to handle_error_code].
+    // In state::value, upon ':' state changes based on current key.
     if (key_ == "jsonrpc")
     {
         state_ = state::jsonrpc;
     }
-    else if (key_ == "method")
-    {
-        state_ = state::method;
-    }
-    else if (key_ == "params")
-    {
-        state_ = state::params;
-    }
     else if (key_ == "id")
     {
         state_ = state::id;
-    }
-    else if (key_ == "result")
-    {
-        state_ = state::result;
-    }
-    else if (key_ == "error")
-    {
-        state_ = state::error_start;
     }
     else if (key_ == "code")
     {
@@ -220,6 +212,22 @@ void CLASS::handle_value(char c) NOEXCEPT
     else if (key_ == "data")
     {
         state_ = state::error_data;
+    }
+    else if (request && key_ == "method")
+    {
+        state_ = state::method;
+    }
+    else if (request && key_ == "params")
+    {
+        state_ = state::params;
+    }
+    else if (response && key_ == "result")
+    {
+        state_ = state::result;
+    }
+    else if (response && key_ == "error")
+    {
+        state_ = state::error_start;
     }
     else
     {

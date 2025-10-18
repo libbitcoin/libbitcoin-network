@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_HPP
 
-#include <optional>
 #include <string_view>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
@@ -98,7 +97,6 @@ protected:
     static inline id_t to_id(view token) NOEXCEPT;
     static inline bool increment(size_t& depth, state& status) NOEXCEPT;
     static inline bool decrement(size_t& depth, state& status) NOEXCEPT;
-    static inline void consume(view& token, const char_iterator& at) NOEXCEPT;
     static inline size_t distance(const char_iterator& from,
         const char_iterator& to) NOEXCEPT;
 
@@ -127,11 +125,12 @@ protected:
     void handle_error_message(char c) NOEXCEPT;
     void handle_error_data(char c) NOEXCEPT;
 
-    /// Escaping.
+    /// Comsuming.
     /// -----------------------------------------------------------------------
     inline void consume_substitute(view& token, char c) NOEXCEPT;
     inline void consume_escaped(view& token, char c) NOEXCEPT;
     inline bool consume_escape(view& token, char c) NOEXCEPT;
+    inline void consume_char(view& token) NOEXCEPT;
 
     /// Versioning.
     /// -----------------------------------------------------------------------
@@ -174,13 +173,9 @@ private:
 #define TEMPLATE template <bool Request, bool Strict>
 #define CLASS parser<Request, Strict>
 
-#include <charconv>
-#include <iterator>
-#include <variant>
-
 #include <bitcoin/network/impl/messages/json/parser.ipp>
 #include <bitcoin/network/impl/messages/json/parser_assign.ipp>
-#include <bitcoin/network/impl/messages/json/parser_escape.ipp>
+#include <bitcoin/network/impl/messages/json/parser_consume.ipp>
 #include <bitcoin/network/impl/messages/json/parser_statics.ipp>
 #include <bitcoin/network/impl/messages/json/parser_version.ipp>
 #include <bitcoin/network/impl/messages/json/parser_visitors_state.ipp>
