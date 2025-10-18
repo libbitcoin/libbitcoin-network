@@ -740,6 +740,14 @@ void CLASS::handle_error_data(char c) NOEXCEPT
         --depth_;
         if (is_one(depth_))
         {
+            // Validate required fields before assignment.
+            if (is_zero(error_.code) || error_.message.empty())
+            {
+                state_ = state::error_state;
+                return;
+            }
+
+            // Assign error object to response.
             state_ = state::object_start;
             IF_RESPONSE(parsed_.error = error_);
             value_ = {};
