@@ -669,6 +669,9 @@ void CLASS::handle_error_code(char c) NOEXCEPT
         {
             state_ = state::error_state;
         }
+
+        // This is a no-op.
+        ////return;  // Explicitly skip consume.
     }
 }
 
@@ -689,6 +692,15 @@ void CLASS::handle_error_message(char c) NOEXCEPT
     else if (quoted_)
     {
         consume(value_, it_);
+    }
+    else if (c == ',' || c == '}') /*&& !quoted_)*/ // !quoted_ is redundant with above.
+    {
+        state_ = state::object_start;
+        if (c == '}')
+            --depth_;
+
+        // no-op
+        ////return;  // Skip consumption.
     }
 }
 
