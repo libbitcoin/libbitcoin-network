@@ -401,10 +401,8 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
         quoted_ = !quoted_;
         if (!quoted_)
         {
-            if ((protocol_ == protocol::v1 &&
-                    (value_ == "1.0" || value_.empty())) ||
-                (protocol_ == protocol::v2 &&
-                    (value_ == "2.0" || value_.empty())))
+            if ((protocol_ == protocol::v1 && value_ == "1.0") ||
+                (protocol_ == protocol::v2 && value_ == "2.0"))
             {
                 state_ = state::object_start;
                 parsed_.jsonrpc = string_t{ value_ };
