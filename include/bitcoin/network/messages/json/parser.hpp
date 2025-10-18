@@ -93,7 +93,6 @@ protected:
 
     /// Accumulate the current character.
     void parse_character(char c) NOEXCEPT;
-    bool consume_whitespace(char c) NOEXCEPT;
     bool consume_escape(char c) NOEXCEPT;
 
     /// Visitors.

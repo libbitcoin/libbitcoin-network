@@ -351,18 +351,6 @@ void CLASS::parse_character(char c) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::consume_whitespace(char c) NOEXCEPT
-{
-    if (is_whitespace(c))
-    {
-        consume(key_, it_);
-        return true;
-    }
-
-    return false;
-}
-
-TEMPLATE
 bool CLASS::consume_escape(char c) NOEXCEPT
 {
     if (c == '\\' && !escaped_)
