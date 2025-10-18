@@ -112,7 +112,6 @@ std::optional<typename CLASS::parsed_t> CLASS::get_parsed() const NOEXCEPT
 
 // Invoke streaming parse of data.
 // ----------------------------------------------------------------------------
-// TODO: why is this processing request AND response.
 
 TEMPLATE
 size_t CLASS::write(std::string_view data, json::error_code& ec) NOEXCEPT
@@ -172,12 +171,6 @@ void CLASS::finalize() NOEXCEPT
     // Assign value to request or error based on state.
     switch (state_)
     {
-        case state::jsonrpc:
-        {
-            state_ = CLASS::state::object_start;
-            parsed_.jsonrpc = string_t{ value_ };
-            break;
-        }
         case state::method:
         {
             state_ = state::object_start;
@@ -330,66 +323,113 @@ void CLASS::handle_object_start(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_key(char c) NOEXCEPT
 {
-    if (c == '"' && quoted_)
-    {
-        quoted_ = false;
-        if (key_ == "jsonrpc" || key_ == "method"  ||
-            key_ == "params"  || key_ == "id"      ||
-            key_ == "result"  || key_ == "error"   ||
-            key_ == "code"    || key_ == "message" ||
-            key_ == "data")
-        {
-            state_ = state::value;
-        }
-        else
-        {
-            state_ = state::error_state;
-        }
-    }
-    else if (quoted_)
+    if (!quoted_)
+        return;
+
+    if (c != '"')
     {
         consume(key_, it_);
+        return;
+    }
+
+    quoted_ = false;
+
+    // TODO:
+    // Shift to key-based parsing inside errors by adding error-specific key handling,
+    // or route to error-specific handlers [if key_ == "code", go to handle_error_code].
+    if (key_ == "jsonrpc")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "method")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "params")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "id")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "result")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "error")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "code")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "message")
+    {
+        state_ = state::value;
+    }
+    else if (key_ == "data")
+    {
+        state_ = state::value;
+    }
+    else
+    {
+        state_ = state::error_state;
     }
 }
 
 TEMPLATE
 void CLASS::handle_value(char c) NOEXCEPT
 {
+    if (c != ':')
+    {
+        state_ = state::error_state;
+        return;
+    }
+
+    // TODO:
+    // Shift to key-based parsing inside errors by adding error-specific key handling,
+    // or route to error-specific handlers [if key_ == "code", go to handle_error_code].
     if (key_ == "jsonrpc")
     {
-        if (c == ':') state_ = state::jsonrpc;
+        state_ = state::jsonrpc;
     }
     else if (key_ == "method")
     {
-        if (c == ':') state_ = state::method;
+        state_ = state::method;
     }
     else if (key_ == "params")
     {
-        if (c == ':') state_ = state::params;
+        state_ = state::params;
     }
     else if (key_ == "id")
     {
-        if (c == ':') state_ = state::id;
+        state_ = state::id;
     }
     else if (key_ == "result")
     {
-        if (c == ':') state_ = state::result;
+        state_ = state::result;
     }
     else if (key_ == "error")
     {
-        if (c == ':') state_ = state::error_start;
+        state_ = state::error_start;
     }
     else if (key_ == "code")
     {
-        if (c == ':') state_ = state::error_code;
+        state_ = state::error_code;
     }
     else if (key_ == "message")
     {
-        if (c == ':') state_ = state::error_message;
+        state_ = state::error_message;
     }
     else if (key_ == "data")
     {
-        if (c == ':') state_ = state::error_data;
+        state_ = state::error_data;
+    }
+    else
+    {
+        state_ = state::error_state;
     }
 }
 
@@ -576,14 +616,10 @@ void CLASS::handle_result(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_error_start(char c) NOEXCEPT
 {
-    if (c == '[')
+    if (c == '{')
     {
-        state_ = state::error_code;
-        ++depth_;
-    }
-    else if (c == '{')
-    {
-        state_ = state::error_code;
+        // Reuse for error sub-object.
+        state_ = state::object_start;
         ++depth_;
     }
     else if (c == 'n' && value_ == "nul")
