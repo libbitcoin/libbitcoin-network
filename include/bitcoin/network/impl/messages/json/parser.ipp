@@ -143,19 +143,37 @@ size_t CLASS::write(std::string_view data, json::error_code& ec) NOEXCEPT
         }
     }
 
+    // Enforce require content following parse.
     if (state_ == state::complete)
     {
         if (protocol_ == protocol::v2 && parsed_.jsonrpc.empty())
-            state_ = state::error_state;  
+            state_ = state::error_state;
 
-        // TODO:
-        // Add similar checks for other rules if needed (e.g., ID presence in v1).
+        if constexpr (request)
+        {
+            if (protocol_ == protocol::v1 &&
+                std::holds_alternative<null_t>(parsed_.id))
+                state_ = state::error_state;
+        }
+        else
+        {
+            // Exactly one of "result" or "error" in responses.
+            if (parsed_.result.has_value() == parsed_.error.has_value())
+                state_ = state::error_state;
+
+            // Enforce required error fields if error is present.
+            if (parsed_.error.has_value() && (is_zero(parsed_.error->code) ||
+                parsed_.error->message.empty()))
+                state_ = state::error_state;
+        }
     }
 
+    // Set ec outparam.
     ec.clear();
     if (state_ == state::error_state)
         ec = parse_error();
 
+    // Set parsed character count for return.
     const auto consumed = std::distance(data.begin(), it_);
     return system::possible_narrow_and_sign_cast<size_t>(consumed);
 }
