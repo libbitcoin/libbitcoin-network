@@ -186,6 +186,8 @@ size_t CLASS::write(std::string_view data, json::error_code& ec) NOEXCEPT
         if (batch_.empty())
             state_ = state::error_state;
 
+        // TODO:
+        // Must relaxed for stratum v1 (doesn't require this mandatory field).
         if (protocol_ == protocol::v2 && parsed_->jsonrpc.empty())
             state_ = state::error_state;
 
