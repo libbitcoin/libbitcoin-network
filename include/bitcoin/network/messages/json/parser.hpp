@@ -93,6 +93,7 @@ protected:
 
     /// Accumulate the current character.
     void parse_character(char c) NOEXCEPT;
+    bool consume_whitespace(char c) NOEXCEPT;
     bool consume_escape(char c) NOEXCEPT;
 
     /// Visitors.
@@ -112,6 +113,7 @@ protected:
 
 ////private:
 protected:
+    static inline bool is_whitespace(char c) NOEXCEPT;
     static inline json::error_code parse_error() NOEXCEPT;
     static inline bool to_number(int64_t& out, view token) NOEXCEPT;
     static inline void consume(view& token, const char_iterator& it) NOEXCEPT;

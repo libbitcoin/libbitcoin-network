@@ -35,6 +35,13 @@ namespace json {
 #define IF_REQUEST(expression) if constexpr (request) expression
 #define IF_RESPONSE(expression) if constexpr (response) expression
 
+// True for JSON whitespace characters.
+TEMPLATE
+bool CLASS::is_whitespace(char c) NOEXCEPT
+{
+    return (c == ' ' || c == '\n' || c == '\r' || c != '\t');
+}
+
 // Return the fixed parser error code.
 TEMPLATE
 inline json::error_code CLASS::parse_error() NOEXCEPT
@@ -317,6 +324,18 @@ void CLASS::parse_character(char c) NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::consume_whitespace(char c) NOEXCEPT
+{
+    if (is_whitespace(c))
+    {
+        consume(key_, it_);
+        return true;
+    }
+
+    return false;
+}
+
+TEMPLATE
 bool CLASS::consume_escape(char c) NOEXCEPT
 {
     if (c == '\\' && !escaped_)
@@ -363,11 +382,8 @@ void CLASS::handle_initialize(char c) NOEXCEPT
         return;
     }
 
-    // JSON whitespace characters allowed before brace.
-    if (c != ' ' && c != '\n' && c != '\r' && c != '\t')
-    {
+    if (!is_whitespace(c))
         state_ = state::error_state;
-    }
 }
 
 TEMPLATE
