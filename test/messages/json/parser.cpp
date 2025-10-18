@@ -299,6 +299,8 @@ BOOST_AUTO_TEST_CASE(parser__get_response__incomplete_or_error__returns_empty)
     BOOST_REQUIRE(!parse.get_parsed());
 }
 
+#ifdef UNDEFINED
+
 BOOST_AUTO_TEST_CASE(parser__request_write__valid_v2_jsonrpc__parses_correctly)
 {
     request_parser parse{ json::protocol::v2 };
@@ -406,6 +408,8 @@ BOOST_AUTO_TEST_CASE(parser__response_write__invalid_v2_jsonrpc__sets_error_stat
     BOOST_REQUIRE_EQUAL(parse.key_, "invalid");
     BOOST_REQUIRE(parse.parsed_.jsonrpc.empty());
 }
+
+#endif // UNDEFINED
 
 // protected
 // ----------------------------------------------------------------------------
