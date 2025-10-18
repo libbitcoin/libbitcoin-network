@@ -48,13 +48,16 @@ enum class parser_state
     error_state
 };
 
-/// A no-copy parser for boost asio JSON-RPC v1/v2 stream parsing.
-template <bool Request>
+/// A minimal-copy parser for boost asio JSON-RPC v1/v2 stream parsing.
+template <bool Request, bool Strict = true>
 class parser
 {
 public:
     /// Required for body template.
     using buffer_t = string_t;
+
+    /// Stratum v1 uses json-rpc v2 but does not require its "jsonrp" element.
+    static constexpr auto require_jsonrpc_v2 = Strict;
 
     /// Parsed object type.
     static constexpr auto request = Request;
@@ -71,14 +74,14 @@ public:
     /// Clear state for new parse.
     void reset() NOEXCEPT;
 
-    /// Extractors.
+    /// Properties.
     bool is_done() const NOEXCEPT;
     bool has_error() const NOEXCEPT;
-    json::error_code get_error() const NOEXCEPT;
+    error_code get_error() const NOEXCEPT;
     const batch_t& get_parsed() const NOEXCEPT;
 
     /// Invoke streaming parse of data.
-    size_t write(std::string_view data, json::error_code& ec) NOEXCEPT;
+    size_t write(std::string_view data, error_code& ec) NOEXCEPT;
 
 protected:
     using state = parser_state;
@@ -86,17 +89,14 @@ protected:
     using rpc_iterator = batch_t::iterator;
     using char_iterator = view::const_iterator;
 
-    /// Finalize the current token.
+    /// Finalize the current token, sets result elements.
     void finalize() NOEXCEPT;
+
+    /// Validate following completion, updates state.
+    void validate() NOEXCEPT;
 
     /// Accumulate the current character.
     void parse_character(char c) NOEXCEPT;
-
-    /// Escaping.
-    /// -----------------------------------------------------------------------
-    inline bool consume_escape(view& token, char c) NOEXCEPT;
-    inline void consume_escaped(view& token, char c) NOEXCEPT;
-    inline void consume(view& token, char substitute) NOEXCEPT;
 
     /// Visitors.
     /// -----------------------------------------------------------------------
@@ -118,14 +118,37 @@ protected:
     void handle_error_message(char c) NOEXCEPT;
     void handle_error_data(char c) NOEXCEPT;
 
-////private:
 protected:
+    /// Static.
+    /// -----------------------------------------------------------------------
+    static inline error_code parse_error() NOEXCEPT;
+
+    static inline bool is_null(const id_t& id) NOEXCEPT;
     static inline bool is_whitespace(char c) NOEXCEPT;
-    static inline json::error_code parse_error() NOEXCEPT;
+
     static inline bool to_number(int64_t& out, view token) NOEXCEPT;
+    static inline id_t to_id(view token) NOEXCEPT;
+
     static inline bool increment(size_t& depth, state& status) NOEXCEPT;
     static inline bool decrement(size_t& depth, state& status) NOEXCEPT;
-    static inline void consume(view& token, const char_iterator& it) NOEXCEPT;
+
+    static inline void consume(view& token, const char_iterator& at) NOEXCEPT;
+    static inline size_t distance(const char_iterator& from,
+        const char_iterator& to) NOEXCEPT;
+
+    /// Escaping.
+    /// -----------------------------------------------------------------------
+    inline void consume_substitute(view& token, char c) NOEXCEPT;
+    inline void consume_escaped(view& token, char c) NOEXCEPT;
+    inline bool consume_escape(view& token, char c) NOEXCEPT;
+
+    /// Versioning.
+    /// -----------------------------------------------------------------------
+    inline bool is_closed() const NOEXCEPT;
+    inline bool is_version1() const NOEXCEPT;
+    inline bool is_version2() const NOEXCEPT;
+    inline bool is_terminal(char c) const NOEXCEPT;
+    inline bool is_version(view token) const NOEXCEPT;
 
     bool batched_{};
     bool escaped_{};
@@ -133,7 +156,7 @@ protected:
     state state_{};
     size_t depth_{};
 
-    char_iterator it_{};
+    char_iterator char_{};
     view key_{};
     view value_{};
 
@@ -148,8 +171,8 @@ protected:
 } // namespace network
 } // namespace libbitcoin
 
-#define TEMPLATE template <bool Request>
-#define CLASS parser<Request>
+#define TEMPLATE template <bool Request, bool Strict>
+#define CLASS parser<Request, Strict>
 
 #include <bitcoin/network/impl/messages/json/parser.ipp>
 

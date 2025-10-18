@@ -23,45 +23,63 @@
 #include <iterator>
 #include <optional>
 #include <string_view>
+#include <variant>
 #include <bitcoin/network/messages/json/types.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace json {
     
-// Utilities.
+// Static.
 // ----------------------------------------------------------------------------
-
-#define IF_REQUEST(expression) if constexpr (request) expression
-#define IF_RESPONSE(expression) if constexpr (response) expression
-
-TEMPLATE
-bool CLASS::is_whitespace(char c) NOEXCEPT
-{
-    // True for JSON whitespace characters.
-    return (c == ' ' || c == '\n' || c == '\r' || c == '\t');
-}
 
 TEMPLATE
 inline json::error_code CLASS::parse_error() NOEXCEPT
 {
-    // Return the fixed parser error code.
     namespace errc = boost::system::errc;
     return errc::make_error_code(errc::invalid_argument);
 }
 
 TEMPLATE
+bool CLASS::is_null(const id_t& id) NOEXCEPT
+{
+    return std::holds_alternative<null_t>(id);
+}
+
+TEMPLATE
+bool CLASS::is_whitespace(char c) NOEXCEPT
+{
+    return (c == ' ' || c == '\n' || c == '\r' || c == '\t');
+}
+
+TEMPLATE
 inline bool CLASS::to_number(int64_t& out, view token) NOEXCEPT
 {
-    // Token is converted to number returned via out (when return is true).
     const auto end = std::next(token.data(), token.size());
     return is_zero(std::from_chars(token.data(), end, out).ec);
 }
 
 TEMPLATE
+inline id_t CLASS::to_id(view token) NOEXCEPT
+{
+    int64_t out{};
+    if (to_number(out, token))
+    {
+        return out;
+    }
+    else if (token == "null")
+    {
+        return null_t{};
+    }
+    else
+    {
+        return string_t{ token };
+    }
+}
+
+TEMPLATE
 inline bool CLASS::increment(size_t& depth, state& status) NOEXCEPT
 {
-    // overflow guard.
     if (is_zero(++depth))
     {
         status = state::error_state;
@@ -74,7 +92,6 @@ inline bool CLASS::increment(size_t& depth, state& status) NOEXCEPT
 TEMPLATE
 inline bool CLASS::decrement(size_t& depth, state& status) NOEXCEPT
 {
-    // underflow guard.
     if (is_zero(depth--))
     {
         status = state::error_state;
@@ -85,13 +102,112 @@ inline bool CLASS::decrement(size_t& depth, state& status) NOEXCEPT
 }
 
 TEMPLATE
-inline void CLASS::consume(view& token, const char_iterator& it) NOEXCEPT
+inline void CLASS::consume(view& token, const char_iterator& at) NOEXCEPT
 {
-    // Token consumes character *it by adjusting its view over the buffer.
+    // Token consumes character *at by incrementing its view over at's buffer.
     if (token.empty())
-        token = { std::to_address(it), one };
+        token = { std::to_address(at), one };
     else
         token = { token.data(), add1(token.size()) };
+}
+
+TEMPLATE
+inline size_t CLASS::distance(const char_iterator& from,
+    const char_iterator& to) NOEXCEPT
+{
+    using namespace system;
+    return possible_narrow_and_sign_cast<size_t>(std::distance(from, to));
+}
+
+// Versioning.
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+inline bool CLASS::is_closed() const NOEXCEPT
+{
+    return is_zero(depth_) && state_ != state::error_state;
+}
+
+TEMPLATE
+inline bool CLASS::is_terminal(char c) const NOEXCEPT
+{
+    return is_version2() && *char_ == '\n';
+}
+
+TEMPLATE
+inline bool CLASS::is_version1() const NOEXCEPT
+{
+    return protocol_ == protocol::v1;
+}
+
+TEMPLATE
+inline bool CLASS::is_version2() const NOEXCEPT
+{
+    return protocol_ == protocol::v2;
+}
+
+TEMPLATE
+inline bool CLASS::is_version(view token) const NOEXCEPT
+{
+    return (is_version1() && token == "1.0")
+        || (is_version2() && token == "2.0");
+}
+
+// Escaping.
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+inline void CLASS::consume_substitute(view& token, char /* c */) NOEXCEPT
+{
+    // BUGBUG: view is not modifiable, requires dynamic token (vs. view).
+    consume(token, char_);
+}
+
+TEMPLATE
+inline void CLASS::consume_escaped(view& token, char c) NOEXCEPT
+{
+    // BUGBUG: doesn't support \uXXXX, requires 4 character accumulation.
+    switch (c)
+    {
+        case 'b':
+            consume(token, '\b');
+            return;
+        case 'f':
+            consume(token, '\f');
+            return;
+        case 'n':
+            consume(token, '\n');
+            return;
+        case 'r':
+            consume(token, '\r');
+            return;
+        case 't':
+            consume(token, '\t');
+            return;
+        default:
+            consume(token, char_);
+    }
+}
+
+TEMPLATE
+inline bool CLASS::consume_escape(view& token, char c) NOEXCEPT
+{
+    if (c == '\\' && !escaped_)
+    {
+        escaped_ = true;
+        return true;
+    }
+    else if (escaped_)
+    {
+        consume_escaped(token, c);
+        escaped_ = false;
+        return true;
+    }
+    else
+    {
+        escaped_ = false;
+        return false;
+    }
 }
 
 // Clear state for new parse.
@@ -105,7 +221,7 @@ void CLASS::reset() NOEXCEPT
     quoted_ = {};
     state_ = {};
     depth_ = {};
-    it_ = {};
+    char_ = {};
     key_ = {};
     value_ = {};
     batch_ = {};
@@ -113,28 +229,25 @@ void CLASS::reset() NOEXCEPT
     parsed_ = {};
 }
 
-// Extractors.
+// Properties.
 // ----------------------------------------------------------------------------
-
-TEMPLATE
-bool CLASS::is_done() const NOEXCEPT
-{
-    return state_ == state::complete;
-}
 
 TEMPLATE
 bool CLASS::has_error() const NOEXCEPT
 {
-    return !!get_error();
+    return state_ == state::error_state;
+}
+
+TEMPLATE
+bool CLASS::is_done() const NOEXCEPT
+{
+    return state_ == state::complete || has_error();
 }
 
 TEMPLATE
 json::error_code CLASS::get_error() const NOEXCEPT
 {
-    if (state_ == state::error_state)
-        return parse_error();
-
-    return {};
+    return has_error() ? parse_error() : json::error_code{};
 }
 
 TEMPLATE
@@ -153,75 +266,65 @@ typename const CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
 TEMPLATE
 size_t CLASS::write(std::string_view data, json::error_code& ec) NOEXCEPT
 {
-    for (it_ = data.begin(); it_ != data.end(); ++it_)
+    for (auto char_ = data.begin(); char_ != data.end(); ++char_)
     {
-        // Within parse_character(c), it_ always points to c in data.
-        parse_character(*it_);
+        parse_character(*char_);
 
-        // Terminal states.
-        if (state_ == state::complete || state_ == state::error_state)
+        if (is_terminal(*char_) && is_closed())
         {
-            ++it_;
-            break;
+            finalize();
+            state_ = state::complete;
         }
 
-        // Terminal v2 character....
-        if (protocol_ == protocol::v2 && (*it_ == '\n'))
+        if (is_done())
         {
-            // ...if after closing brace.
-            if (state_ != state::error_state && is_zero(depth_))
-            {
-                finalize();
-                state_ = state::complete;
-            }
-
-            ++it_;
+            ++char_;
             break;
         }
     }
 
-    // Enforce require content following parse.
-    if (state_ == state::complete)
-    {
-        if (batch_.empty())
-            state_ = state::error_state;
-
-        // TODO:
-        // Must relaxed for stratum v1 (doesn't require this mandatory field).
-        if (protocol_ == protocol::v2 && parsed_->jsonrpc.empty())
-            state_ = state::error_state;
-
-        if constexpr (request)
-        {
-            if (protocol_ == protocol::v1 &&
-                std::holds_alternative<null_t>(parsed_->id))
-                state_ = state::error_state;
-        }
-        else
-        {
-            // Exactly one of "result" or "error" in responses.
-            if (parsed_->result.has_value() == parsed_->error.has_value())
-                state_ = state::error_state;
-
-            // Enforce required error fields if error is present.
-            if (parsed_->error.has_value() && (is_zero(parsed_->error->code) ||
-                parsed_->error->message.empty()))
-                state_ = state::error_state;
-        }
-    }
-
-    // Set ec outparam.
-    ec.clear();
-    if (state_ == state::error_state)
-        ec = parse_error();
-
-    // Set parsed character count for return.
-    const auto consumed = std::distance(data.begin(), it_);
-    return system::possible_narrow_and_sign_cast<size_t>(consumed);
+    validate();
+    ec = get_error();
+    return distance(data.begin(), char_);
 }
 
 // protected
 // ----------------------------------------------------------------------------
+
+TEMPLATE
+void CLASS::validate() NOEXCEPT
+{
+    if (state_ != state::complete)
+        return;
+
+    // Unbatched requires a single element, empty implies error.
+    if (batch_.empty())
+        state_ = state::error_state;
+
+    if constexpr (require_jsonrpc_v2)
+    {
+        if (is_version2() && parsed_->jsonrpc.empty())
+            state_ = state::error_state;
+    }
+
+    if constexpr (request)
+    {
+        // Non-null "id" required in version1.
+        if (is_version1() && is_null(parsed_->id))
+            state_ = state::error_state;
+    }
+    else
+    {
+        // Exactly one of "result" or "error" allowed in responses.
+        if (parsed_->result.has_value() == parsed_->error.has_value())
+            state_ = state::error_state;
+
+        // Enforce required error fields if error is present.
+        if (parsed_->error.has_value() && (is_zero(parsed_->error->code) ||
+            parsed_->error->message.empty()))
+            state_ = state::error_state;
+    }
+}
 
 TEMPLATE
 void CLASS::finalize() NOEXCEPT
@@ -233,7 +336,33 @@ void CLASS::finalize() NOEXCEPT
     // Assign value to request or error based on state.
     switch (state_)
     {
-        // state::jsonrpc is independently handled.
+        // Error object.
+        case state::error_message:
+        {
+            state_ = state::object_start;
+            error_.message = string_t{ value_ };
+            break;
+        }
+        case state::error_data:
+        {
+            state_ = state::object_start;
+            error_.data = { string_t{ value_ } };
+            break;
+        }
+
+        // Parsed object.
+        case state::jsonrpc:
+        {
+            if (is_version(value_))
+            {
+                state_ = state::object_start;
+                parsed_->jsonrpc = string_t{ value_ };
+            }
+            else
+            {
+                state_ = state::error_state;
+            }
+        }
         case state::method:
         {
             state_ = state::object_start;
@@ -252,38 +381,14 @@ void CLASS::finalize() NOEXCEPT
             IF_RESPONSE(parsed_->result = { string_t{ value_ } });
             break;
         }
-        case state::error_message:
-        {
-            state_ = state::object_start;
-            error_.message = string_t{ value_ };
-            break;
-        }
-        case state::error_data:
-        {
-            state_ = state::object_start;
-            error_.data = { string_t{ value_ } };
-            break;
-        }
         case state::id:
         {
             state_ = state::object_start;
-
-            int64_t out{};
-            if (to_number(out, value_))
-            {
-                parsed_->id = code_t{ out };
-            }
-            else if (value_ == "null")
-            {
-                parsed_->id = null_t{};
-            }
-            else
-            {
-                parsed_->id = string_t{ value_ };
-            }
-
+            parsed_->id = to_id(value_);
             break;
         }
+
+        // Invalid.
         default:
         {
             state_ = state::error_state;
@@ -343,63 +448,6 @@ void CLASS::parse_character(char c) NOEXCEPT
             break;
         case state::error_state:
             break;
-    }
-}
-
-// Escaping.
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-inline void CLASS::consume(view& token, char /* substitute */) NOEXCEPT
-{
-    // BUGBUG: view is not modifiable, requires dynamic token (vs. view).
-    consume(token, it_);
-}
-
-TEMPLATE
-inline void CLASS::consume_escaped(view& token, char c) NOEXCEPT
-{
-    // BUGBUG: doesn't support \uXXXX, requires 4 character accumulation.
-    switch (c)
-    {
-        case 'b':
-            consume(token, '\b');
-            return;
-        case 'f':
-            consume(token, '\f');
-            return;
-        case 'n':
-            consume(token, '\n');
-            return;
-        case 'r':
-            consume(token, '\r');
-            return;
-        case 't':
-            consume(token, '\t');
-            return;
-        default:
-            consume(token, it_);
-    }
-}
-
-TEMPLATE
-inline bool CLASS::consume_escape(view& token, char c) NOEXCEPT
-{
-    if (c == '\\' && !escaped_)
-    {
-        escaped_ = true;
-        return true;
-    }
-    else if (escaped_)
-    {
-        consume_escaped(token, c);
-        escaped_ = false;
-        return true;
-    }
-    else
-    {
-        escaped_ = false;
-        return false;
     }
 }
 
@@ -622,8 +670,7 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
         quoted_ = !quoted_;
         if (!quoted_)
         {
-            if ((protocol_ == protocol::v1 && value_ == "1.0") ||
-                (protocol_ == protocol::v2 && value_ == "2.0"))
+            if (is_version(value_))
             {
                 state_ = state::object_start;
                 parsed_->jsonrpc = string_t{ value_ };
@@ -637,7 +684,11 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume(value_, it_);
+        consume(value_, char_);
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
     }
 }
 
@@ -659,7 +710,7 @@ void CLASS::handle_method(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume(value_, it_);
+        consume(value_, char_);
     }
     else if (!is_whitespace(c))
     {
@@ -715,7 +766,7 @@ void CLASS::handle_params(char c) NOEXCEPT
         return;
     }
 
-    consume(value_, it_);
+    consume(value_, char_);
 }
 
 TEMPLATE
@@ -729,31 +780,18 @@ void CLASS::handle_id(char c) NOEXCEPT
         quoted_ = !quoted_;
         if (!quoted_)
         {
-            int64_t out{};
-            if (to_number(out, value_))
-            {
-                parsed_->id = out;
-            }
-            else if (value_ == "null")
-            {
-                parsed_->id = null_t{};
-            }
-            else
-            {
-                parsed_->id = string_t{ value_ };
-            }
-
             state_ = state::object_start;
+            parsed_->id = to_id(value_);
             value_ = {};
         }
     }
     else if (quoted_)
     {
-        consume(value_, it_);
+        consume(value_, char_);
     }
     else if (c == 'n' && value_ == "nul")
     {
-        consume(value_, it_);
+        consume(value_, char_);
 
         if (value_ == "null")
         {
@@ -764,7 +802,7 @@ void CLASS::handle_id(char c) NOEXCEPT
     }
     else if (std::isdigit(c) || c == '-')
     {
-        consume(value_, it_);
+        consume(value_, char_);
     }
     else if (c == ',' && !quoted_ && is_one(depth_))
     {
@@ -829,7 +867,7 @@ void CLASS::handle_result(char c) NOEXCEPT
         return;
     }
 
-    consume(value_, it_);
+    consume(value_, char_);
 }
 
 TEMPLATE
@@ -842,7 +880,7 @@ void CLASS::handle_error_start(char c) NOEXCEPT
     }
     else if (c == 'n' && value_ == "nul")
     {
-        consume(value_, it_);
+        consume(value_, char_);
 
         if (value_ == "null")
         {
@@ -862,7 +900,7 @@ void CLASS::handle_error_code(char c) NOEXCEPT
 {
     if (std::isdigit(c) || c == '-')
     {
-        consume(value_, it_);
+        consume(value_, char_);
     }
     else if (c == ',' || c == '}')
     {
@@ -905,7 +943,7 @@ void CLASS::handle_error_message(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume(value_, it_);
+        consume(value_, char_);
     }
     else if (c == ',' || c == '}')
     {
@@ -985,7 +1023,7 @@ void CLASS::handle_error_data(char c) NOEXCEPT
         return;
     }
 
-    consume(value_, it_);
+    consume(value_, char_);
 }
 
 #undef IF_REQUEST
