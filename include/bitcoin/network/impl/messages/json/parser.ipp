@@ -164,7 +164,7 @@ void CLASS::finalize() NOEXCEPT
         case state::jsonrpc:
         {
             if (is_version(value_))
-                assign_value(error_.jsonrpc, value_);
+                assign_value(parsed_->jsonrpc, value_);
             else
                 state_ = state::error_state;
         }
