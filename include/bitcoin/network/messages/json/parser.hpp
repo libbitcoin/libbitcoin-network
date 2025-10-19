@@ -150,9 +150,7 @@ protected:
     /// Assignment.
     /// -----------------------------------------------------------------------
     inline void assign_error(error_option& to, const result_t& from) NOEXCEPT;
-    inline void assign_error(error_option& to, result_t&& from) NOEXCEPT;
-    inline void assign_value(value_option& to, const value_t& from) NOEXCEPT;
-    inline void assign_value(value_option& to, value_t&& from) NOEXCEPT;
+    inline void assign_value(value_option& to, const view_t& from) NOEXCEPT;
     inline void assign_string(string_t& to, const view_t& from) NOEXCEPT;
     inline void assign_string_id(id_t& to, const view_t& from) NOEXCEPT;
     inline void assign_numeric_id(code_t& to, const view_t& from) NOEXCEPT;

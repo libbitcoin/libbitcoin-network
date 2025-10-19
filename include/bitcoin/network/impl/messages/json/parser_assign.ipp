@@ -38,26 +38,10 @@ inline void CLASS::assign_error(error_option& to, const result_t& from) NOEXCEPT
 }
 
 TEMPLATE
-inline void CLASS::assign_error(error_option& to, result_t&& from) NOEXCEPT
+inline void CLASS::assign_value(value_option& to, const view_t& from) NOEXCEPT
 {
     state_ = state::object_start;
-    to = error_option{ std::move(from) };
-    value_ = {};
-}
-
-TEMPLATE
-inline void CLASS::assign_value(value_option& to, const value_t& from) NOEXCEPT
-{
-    state_ = state::object_start;
-    to = value_option{ from };
-    value_ = {};
-}
-
-TEMPLATE
-inline void CLASS::assign_value(value_option& to, value_t&& from) NOEXCEPT
-{
-    state_ = state::object_start;
-    to = value_option{ std::move(from) };
+    to = value_option{ value_t{ string_t{ from } } };
     value_ = {};
 }
 

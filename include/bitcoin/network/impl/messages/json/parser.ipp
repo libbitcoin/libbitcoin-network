@@ -162,41 +162,17 @@ void CLASS::finalize() NOEXCEPT
         }
         case state::method:
         {
-            if constexpr (request)
-            {
-                assign_string(parsed_->method, value_);
-            }
-            else
-            {
-                state_ = state::error_state;
-            }
-
+            ASSIGN_REQUEST(string, parsed_->method, value_)
             break;
         }
         case state::params:
         {
-            if constexpr (request)
-            {
-                assign_value(parsed_->params, value_);
-            }
-            else
-            {
-                state_ = state::error_state;
-            }
-
+            ASSIGN_REQUEST(value, parsed_->params, value_)
             break;
         }
         case state::result:
         {
-            if constexpr (response)
-            {
-                assign_value(parsed_->result, value_);
-            }
-            else
-            {
-                state_ = state::error_state;
-            }
-
+            ASSIGN_RESPONSE(value, parsed_->result, value_)
             break;
         }
         case state::id:
