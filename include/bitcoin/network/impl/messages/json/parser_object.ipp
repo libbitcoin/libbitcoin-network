@@ -196,6 +196,9 @@ void CLASS::handle_key(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_value(char c) NOEXCEPT
 {
+    if (is_whitespace(c))
+        return;
+
     if (c != ':')
     {
         state_ = state::error_state;
