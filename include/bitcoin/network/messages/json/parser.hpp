@@ -185,8 +185,8 @@ private:
 #include <bitcoin/network/impl/messages/json/parser_consume.ipp>
 #include <bitcoin/network/impl/messages/json/parser_statics.ipp>
 #include <bitcoin/network/impl/messages/json/parser_version.ipp>
-#include <bitcoin/network/impl/messages/json/parser_visitors_state.ipp>
-#include <bitcoin/network/impl/messages/json/parser_visitors_value.ipp>
+#include <bitcoin/network/impl/messages/json/parser_object.ipp>
+#include <bitcoin/network/impl/messages/json/parser_value.ipp>
 
 #undef CLASS
 #undef TEMPLATE

@@ -374,10 +374,10 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_assign.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_consume.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_object.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_statics.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_value.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_version.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_visitors_state.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_visitors_value.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
