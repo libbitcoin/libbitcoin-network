@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_STATICS_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_STATICS_IPP
 
+#include <cctype>
 #include <charconv>
 #include <iterator>
 #include <variant>
@@ -43,14 +44,44 @@ bool CLASS::is_null(const id_t& id) NOEXCEPT
 }
 
 TEMPLATE
+bool CLASS::is_numeric(char c) NOEXCEPT
+{
+    return std::isdigit(c)
+        || c == '-'
+        || c == '.'
+        || c == 'e'
+        || c == 'E'
+        || c == '+';
+}
+
+TEMPLATE
 bool CLASS::is_whitespace(char c) NOEXCEPT
 {
-    return (c == ' ' || c == '\n' || c == '\r' || c == '\t');
+    return c == ' '
+        || c == '\n'
+        || c == '\r'
+        || c == '\t';
+}
+
+TEMPLATE
+bool CLASS::is_nullic(view token, char c) NOEXCEPT
+{
+    return (token.empty()  && c == 'n')
+        || (token == "n"   && c == 'u')
+        || (token == "nu"  && c == 'l')
+        || (token == "nul" && c == 'l');
+}
+
+TEMPLATE
+inline bool CLASS::is_error(const result_t& error) NOEXCEPT
+{
+    return !is_zero(error.code) || !error.message.empty();
 }
 
 TEMPLATE
 inline bool CLASS::to_number(int64_t& out, view token) NOEXCEPT
 {
+    // BUGBUG: accept/convert any valid json number and reject all others.
     const auto end = std::next(token.data(), token.size());
     return is_zero(std::from_chars(token.data(), end, out).ec);
 }
@@ -61,16 +92,25 @@ inline id_t CLASS::to_id(view token) NOEXCEPT
     int64_t out{};
     if (to_number(out, token))
     {
+        // BUGBUG: conflates with quoted.
         return out;
     }
     else if (token == "null")
     {
+        // BUGBUG: conflates with quoted.
         return null_t{};
     }
     else
     {
+        // BUGBUG: conflates with null/number.
         return string_t{ token };
     }
+}
+
+TEMPLATE
+inline bool CLASS::toggle(bool& quoted) NOEXCEPT
+{
+    return !((quoted = !quoted));
 }
 
 TEMPLATE

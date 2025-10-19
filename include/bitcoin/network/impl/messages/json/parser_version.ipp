@@ -26,15 +26,10 @@ namespace json {
 // protected
 
 TEMPLATE
-inline bool CLASS::is_closed() const NOEXCEPT
+inline bool CLASS::is_version(view token) const NOEXCEPT
 {
-    return is_zero(depth_) && state_ != state::error_state;
-}
-
-TEMPLATE
-inline bool CLASS::is_terminal(char c) const NOEXCEPT
-{
-    return is_version2() && *char_ == '\n';
+    return (is_version1() && (token == "1.0" || token.empty()))
+        || (is_version2() && (token == "2.0"));
 }
 
 TEMPLATE
@@ -48,12 +43,16 @@ inline bool CLASS::is_version2() const NOEXCEPT
 {
     return protocol_ == protocol::v2;
 }
+TEMPLATE
+inline bool CLASS::is_terminal() const NOEXCEPT
+{
+    return is_version1() || *char_ == '\n';
+}
 
 TEMPLATE
-inline bool CLASS::is_version(view token) const NOEXCEPT
+inline bool CLASS::is_closed() const NOEXCEPT
 {
-    return (is_version1() && token == "1.0")
-        || (is_version2() && token == "2.0");
+    return is_zero(depth_) && !has_error() && is_terminal();
 }
 
 } // namespace json

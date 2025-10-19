@@ -43,8 +43,8 @@ enum class parser_state
     error_code,
     error_message,
     error_data,
-    complete,
-    error_state
+    error_state,
+    complete
 };
 
 /// A minimal-copy parser for boost asio JSON-RPC v1/v2 stream parsing.
@@ -92,9 +92,13 @@ protected:
     /// -----------------------------------------------------------------------
     static inline error_code parse_error() NOEXCEPT;
     static inline bool is_null(const id_t& id) NOEXCEPT;
+    static inline bool is_numeric(char c) NOEXCEPT;
     static inline bool is_whitespace(char c) NOEXCEPT;
+    static inline bool is_nullic(view token, char c) NOEXCEPT;
+    static inline bool is_error(const result_t& error) NOEXCEPT;
     static inline bool to_number(int64_t& out, view token) NOEXCEPT;
     static inline id_t to_id(view token) NOEXCEPT;
+    static inline bool toggle(bool& quoted) NOEXCEPT;
     static inline bool increment(size_t& depth, state& status) NOEXCEPT;
     static inline bool decrement(size_t& depth, state& status) NOEXCEPT;
     static inline size_t distance(const char_iterator& from,
@@ -106,7 +110,7 @@ protected:
     void finalize() NOEXCEPT;
     void parse_character(char c) NOEXCEPT;
 
-    /// Visitors - state transitions.
+    /// Visitors - object transitions.
     /// -----------------------------------------------------------------------
     void handle_initialize(char c) NOEXCEPT;
     void handle_object_start(char c) NOEXCEPT;
@@ -120,10 +124,13 @@ protected:
     void handle_params(char c) NOEXCEPT;
     void handle_id(char c) NOEXCEPT;
     void handle_result(char c) NOEXCEPT;
-    void handle_error_start(char c) NOEXCEPT;
-    void handle_error_code(char c) NOEXCEPT;
     void handle_error_message(char c) NOEXCEPT;
     void handle_error_data(char c) NOEXCEPT;
+
+    /// Visitors - unquoted values.
+    /// -----------------------------------------------------------------------
+    void handle_error_start(char c) NOEXCEPT;
+    void handle_error_code(char c) NOEXCEPT;
 
     /// Comsuming.
     /// -----------------------------------------------------------------------
@@ -134,11 +141,11 @@ protected:
 
     /// Versioning.
     /// -----------------------------------------------------------------------
-    inline bool is_closed() const NOEXCEPT;
+    inline bool is_version(view token) const NOEXCEPT;
     inline bool is_version1() const NOEXCEPT;
     inline bool is_version2() const NOEXCEPT;
-    inline bool is_terminal(char c) const NOEXCEPT;
-    inline bool is_version(view token) const NOEXCEPT;
+    inline bool is_terminal() const NOEXCEPT;
+    inline bool is_closed() const NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------
@@ -178,8 +185,8 @@ private:
 #include <bitcoin/network/impl/messages/json/parser_consume.ipp>
 #include <bitcoin/network/impl/messages/json/parser_statics.ipp>
 #include <bitcoin/network/impl/messages/json/parser_version.ipp>
-#include <bitcoin/network/impl/messages/json/parser_visitors_state.ipp>
-#include <bitcoin/network/impl/messages/json/parser_visitors_value.ipp>
+#include <bitcoin/network/impl/messages/json/parser_object.ipp>
+#include <bitcoin/network/impl/messages/json/parser_value.ipp>
 
 #undef CLASS
 #undef TEMPLATE
