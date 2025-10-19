@@ -106,9 +106,8 @@ protected:
 
     /// Methods.
     /// -----------------------------------------------------------------------
+    bool done_parsing(char c) NOEXCEPT;
     void validate() NOEXCEPT;
-    void finalize() NOEXCEPT;
-    void parse_character(char c) NOEXCEPT;
 
     /// Visitors - object transitions.
     /// -----------------------------------------------------------------------
@@ -144,8 +143,6 @@ protected:
     inline bool is_version(const view_t& token) const NOEXCEPT;
     inline bool is_version1() const NOEXCEPT;
     inline bool is_version2() const NOEXCEPT;
-    inline bool is_terminal() const NOEXCEPT;
-    inline bool is_closed() const NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------
