@@ -19,13 +19,14 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_VISITORS_VALUE_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_VISITORS_VALUE_IPP
 
-#include <cctype>
-
 namespace libbitcoin {
 namespace network {
 namespace json {
 
 // protected
+
+// quoted value handlers.
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 void CLASS::handle_jsonrpc(char c) NOEXCEPT
@@ -35,8 +36,7 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
 
     if (c == '"')
     {
-        quoted_ = !quoted_;
-        if (!quoted_)
+        if (toggle(quoted_))
         {
             if (is_version(value_))
                 assign_value(parsed_->jsonrpc, value_);
@@ -46,7 +46,7 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume_char(value_, char_);
+        consume_char(value_);
     }
     else if (!is_whitespace(c))
     {
@@ -62,13 +62,12 @@ void CLASS::handle_method(char c) NOEXCEPT
 
     if (c == '"')
     {
-        quoted_ = !quoted_;
-        if (!quoted_)
+        if (toggle(quoted_))
             assign_request(parsed_->method, value_);
     }
     else if (quoted_)
     {
-        consume_char(value_, char_);
+        consume_char(value_);
     }
     else if (!is_whitespace(c))
     {
@@ -84,43 +83,32 @@ void CLASS::handle_params(char c) NOEXCEPT
 
     if (c == '"')
     {
-        quoted_ = !quoted_;
+        if (toggle(quoted_))
+            assign_request(parsed_->params, value_);
     }
-    else if (c == '[')
+    else if (quoted_)
     {
-        if (!increment(depth_, state_))
-            return;
+        consume_char(value_, c);
     }
-    else if (c == ']')
+    else if (c == '[' || c == '{')
     {
-        if (!decrement(depth_, state_))
-            return;
+        increment(depth_, state_);
     }
-    else if (c == '{')
+    else if (c == ']' || c == '}')
     {
-        if (!increment(depth_, state_))
-            return;
-    }
-    else if (c == '}')
-    {
-        if (!decrement(depth_, state_))
-            return;
+        decrement(depth_, state_);
     }
     else if (c == ',')
     {
-        if (is_one(depth_) && !quoted_)
-        {
+        if (is_one(depth_))
             assign_request(parsed_->params, value_);
-            return;
-        }
+        else
+            state_ = state::error_state;
     }
     else if (!is_whitespace(c))
     {
         state_ = state::error_state;
-        return;
     }
-
-    consume_char(value_, char_);
 }
 
 TEMPLATE
@@ -131,32 +119,32 @@ void CLASS::handle_id(char c) NOEXCEPT
 
     if (c == '"')
     {
-        quoted_ = !quoted_;
-        if (!quoted_)
-            assign_value(parsed_->id, to_id(value_));
+        if (toggle(quoted_))
+            assign_value(parsed_->id, value_);
     }
     else if (quoted_)
     {
-        consume_char(value_, char_);
+        consume_char(value_);
     }
-    else if (c == 'n' && value_ == "nul")
+    else if (is_nullic(value_, c))
     {
-        consume_char(value_, char_);
+        consume_char(value_);
         if (value_ == "null")
             assign_value(parsed_->id, null_t{});
     }
-    else if (std::isdigit(c) || c == '-')
+    else if (is_numeric(c))
     {
-        consume_char(value_, char_);
+        consume_char(value_);
     }
-    else if (c == ',' && !quoted_ && is_one(depth_))
+    else if (c == ',')
     {
-        int64_t out{};
-        if (to_number(out, value_))
+        if (is_one(depth_))
         {
-            assign_value(parsed_->id, out);
-            if (c == '}')
-                decrement(depth_, state_);
+            int64_t out{};
+            if (to_number(out, value_))
+                assign_value(parsed_->id, out);
+            else
+                state_ = state::error_state;
         }
         else
         {
@@ -177,85 +165,27 @@ void CLASS::handle_result(char c) NOEXCEPT
 
     if (c == '"')
     {
-        quoted_ = !quoted_;
+        if (toggle(quoted_))
+            assign_response(parsed_->result, value_);
     }
-    else if (c == '[')
+    else if (quoted_)
     {
-        if (!increment(depth_, state_))
-            return;
+        consume_char(value_);
     }
-    else if (c == ']')
+    else if (c == '[' || c == '{')
     {
-        if (!decrement(depth_, state_))
-            return;
+        increment(depth_, state_);
     }
-    else if (c == '{')
+    else if (c == ']' || c == '}')
     {
-        if (!increment(depth_, state_))
-            return;
-    }
-    else if (c == '}')
-    {
-        if (!decrement(depth_, state_))
-            return;
+        decrement(depth_, state_);
     }
     else if (c == ',')
     {
-        if (is_one(depth_) && !quoted_)
-        {
+        if (is_one(depth_))
             assign_response(parsed_->result, value_);
-            return;
-        }
-    }
-    else if (!is_whitespace(c))
-    {
-        state_ = state::error_state;
-        return;
-    }
-
-    consume_char(value_, char_);
-}
-
-TEMPLATE
-void CLASS::handle_error_start(char c) NOEXCEPT
-{
-    if (c == '{')
-    {
-        state_ = state::object_start;
-        increment(depth_, state_);
-    }
-    else if (c == 'n' && value_ == "nul")
-    {
-        consume_char(value_, char_);
-        if (value_ == "null")
-            assign_response(parsed_->error, result_t{});
-    }
-    else if (!is_whitespace(c))
-    {
-        state_ = state::error_state;
-    }
-}
-
-TEMPLATE
-void CLASS::handle_error_code(char c) NOEXCEPT
-{
-    if (std::isdigit(c) || c == '-')
-    {
-        consume_char(value_, char_);
-    }
-    else if (c == ',' || c == '}')
-    {
-        int64_t out{};
-        if (to_number(out, value_))
-        {
-            assign_value(error_.code, out);
-            if (c == '}')
-                decrement(depth_, state_);
-        }
         else
-        {
             state_ = state::error_state;
-        }
     }
     else if (!is_whitespace(c))
     {
@@ -271,19 +201,21 @@ void CLASS::handle_error_message(char c) NOEXCEPT
 
     if (c == '"')
     {
-        quoted_ = !quoted_;
-        if (!quoted_)
+        if (toggle(quoted_))
             assign_value(error_.message, value_);
     }
     else if (quoted_)
     {
-        consume_char(value_, char_);
+        consume_char(value_);
     }
-    else if (c == ',' || c == '}')
+    else if (c == ',')
     {
         state_ = state::object_start;
-        if (c == '}')
-            decrement(depth_, state_);
+    }
+    else if (c == '}')
+    {
+        state_ = state::object_start;
+        decrement(depth_, state_);
     }
     else if (!is_whitespace(c))
     {
@@ -299,55 +231,93 @@ void CLASS::handle_error_data(char c) NOEXCEPT
 
     if (c == '"')
     {
-        quoted_ = !quoted_;
+        if (toggle(quoted_))
+            assign_response(error.data, value_);
     }
-    else if (c == '[')
+    else if (quoted_)
     {
-       if (!increment(depth_, state_))
-           return;
+        consume_char(value_);
     }
-    else if (c == ']')
+    else if (c == '[' || c == '{')
     {
-        if (!decrement(depth_, state_))
-            return;
+        increment(depth_, state_);
     }
-    else if (c == '{')
-    {
-        if (!increment(depth_, state_))
-            return;
-    }
-    else if (c == '}')
+    else if (c == ']' || c == '}')
     {
         if (!decrement(depth_, state_))
             return;
 
-        if (is_one(depth_))
+        if (c == '}')
         {
-            if (is_zero(error_.code) || error_.message.empty())
-            {
+            if (is_one(depth_) && is_error(error_))
+                assign_response(parsed_->error, error_);
+            else
                 state_ = state::error_state;
-                return;
-            }
-
-            assign_response(parsed_->error, error_);
-            return;
         }
     }
     else if (c == ',')
     {
-        if (is_one(depth_) && !quoted_)
-        {
+        if (is_one(depth_))
             assign_value(error_.data, value_);
-            return;
+        else
+            state_ = state::error_state;
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+    }
+}
+
+// unquoted value handlers.
+// ----------------------------------------------------------------------------
+
+// This is both state visitor and value visitor.
+TEMPLATE
+void CLASS::handle_error_start(char c) NOEXCEPT
+{
+    if (c == '{')
+    {
+        state_ = state::object_start;
+        increment(depth_, state_);
+    }
+    else if (is_nullic(value_, c))
+    {
+        consume_char(value_);
+        if (value_ == "null")
+            assign_response(parsed_->error, result_t{});
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+    }
+}
+
+TEMPLATE
+void CLASS::handle_error_code(char c) NOEXCEPT
+{
+    if (is_numeric(c))
+    {
+        consume_char(value_);
+    }
+    else if (c == ',' || c == '}')
+    {
+        int64_t out{};
+        if (to_number(out, value_))
+        {
+            assign_value(error_.code, out);
+
+            if (c == '}')
+                decrement(depth_, state_);
+        }
+        else
+        {
+            state_ = state::error_state;
         }
     }
     else if (!is_whitespace(c))
     {
         state_ = state::error_state;
-        return;
     }
-
-    consume_char(value_, char_);
 }
 
 } // namespace json

@@ -82,12 +82,10 @@ size_t CLASS::write(std::string_view data, error_code& ec) NOEXCEPT
     {
         parse_character(*char_);
 
-        if (is_terminal(*char_) && is_closed())
-        {
+        if (is_closed())
             finalize();
-            state_ = state::complete;
-        }
 
+        // Can terminate before fully consuming data.
         if (is_done())
         {
             ++char_;
@@ -141,26 +139,10 @@ void CLASS::validate() NOEXCEPT
 TEMPLATE
 void CLASS::finalize() NOEXCEPT
 {
-    // Nothing to do if value is also empty.
-    if (value_.empty())
-        return;
-
     // Assign value to request or error based on state.
     switch (state_)
     {
-        // Error object.
-        case state::error_message:
-        {
-            assign_value(error_.message, value_);
-            break;
-        }
-        case state::error_data:
-        {
-            assign_value(error_.data, value_);
-            break;
-        }
-
-        // Parsed object.
+        // Complete parsed object.
         case state::jsonrpc:
         {
             if (is_version(value_))
@@ -185,17 +167,39 @@ void CLASS::finalize() NOEXCEPT
         }
         case state::id:
         {
+            // BUGBUG: no quoting context.
             assign_value(parsed_->id, to_id(value_));
             break;
         }
 
-        // Invalid.
-        default:
+        // Complete error object.
+        case state::error_message:
         {
-            state_ = state::error_state;
+            assign_value(error_.message, value_);
             break;
         }
+        case state::error_data:
+        {
+            assign_value(error_.data, value_);
+            break;
+        }
+
+        // Invalid state.
+        case state::initial:
+        case state::object_start:
+        case state::key:
+        case state::value:
+        case state::error_start:
+        case state::error_code:
+        case state::error_state:
+        case state::complete:
+        {
+            state_ = state::error_state;
+        }
     }
+
+    if (state_ == state::object_start)
+        state_ = state::complete;
 }
 
 TEMPLATE

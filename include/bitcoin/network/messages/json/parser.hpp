@@ -92,7 +92,10 @@ protected:
     /// -----------------------------------------------------------------------
     static inline error_code parse_error() NOEXCEPT;
     static inline bool is_null(const id_t& id) NOEXCEPT;
+    static inline bool is_numeric(char c) NOEXCEPT;
     static inline bool is_whitespace(char c) NOEXCEPT;
+    static inline bool is_nullic(view token, char c) NOEXCEPT;
+    static inline bool is_error(const result_t& error) NOEXCEPT;
     static inline bool to_number(int64_t& out, view token) NOEXCEPT;
     static inline id_t to_id(view token) NOEXCEPT;
     static inline bool toggle(bool& quoted) NOEXCEPT;
@@ -107,7 +110,7 @@ protected:
     void finalize() NOEXCEPT;
     void parse_character(char c) NOEXCEPT;
 
-    /// Visitors - state transitions.
+    /// Visitors - object transitions.
     /// -----------------------------------------------------------------------
     void handle_initialize(char c) NOEXCEPT;
     void handle_object_start(char c) NOEXCEPT;
@@ -121,10 +124,13 @@ protected:
     void handle_params(char c) NOEXCEPT;
     void handle_id(char c) NOEXCEPT;
     void handle_result(char c) NOEXCEPT;
-    void handle_error_start(char c) NOEXCEPT;
-    void handle_error_code(char c) NOEXCEPT;
     void handle_error_message(char c) NOEXCEPT;
     void handle_error_data(char c) NOEXCEPT;
+
+    /// Visitors - unquoted values.
+    /// -----------------------------------------------------------------------
+    void handle_error_start(char c) NOEXCEPT;
+    void handle_error_code(char c) NOEXCEPT;
 
     /// Comsuming.
     /// -----------------------------------------------------------------------
