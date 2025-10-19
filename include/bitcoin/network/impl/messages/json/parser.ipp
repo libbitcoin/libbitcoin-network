@@ -198,6 +198,7 @@ void CLASS::finalize() NOEXCEPT
         }
     }
 
+    // Close out state following an assignment above.
     if (state_ == state::object_start)
         state_ = state::complete;
 }
