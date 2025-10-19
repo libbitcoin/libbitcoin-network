@@ -88,7 +88,7 @@ void CLASS::handle_params(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume_char(value_, c);
+        consume_char(value_);
     }
     else if (c == '[' || c == '{')
     {
