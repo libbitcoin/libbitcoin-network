@@ -73,6 +73,9 @@ struct BCT_API request_t
     string_t method{};
     value_option params{};
     id_t id{};
+
+    bool result{};
+    bool error{};
 };
 
 struct BCT_API response_t
@@ -81,6 +84,9 @@ struct BCT_API response_t
     value_option result{};
     error_option error{};
     id_t id{};
+
+    bool method{};
+    bool params{};
 };
 
 using error_code = error::boost_code;

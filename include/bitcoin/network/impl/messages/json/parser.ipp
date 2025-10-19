@@ -59,6 +59,14 @@ const typename CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
 // Methods.
 // ----------------------------------------------------------------------------
 
+// private
+TEMPLATE
+const typename CLASS::parsed_it CLASS::add_remote_procedure_call() NOEXCEPT
+{
+    batch_.emplace_back();
+    return std::prev(batch_.end());
+}
+
 TEMPLATE
 void CLASS::reset() NOEXCEPT
 {
@@ -78,10 +86,11 @@ void CLASS::reset() NOEXCEPT
 TEMPLATE
 size_t CLASS::write(std::string_view data, error_code& ec) NOEXCEPT
 {
-    for (auto char_ = data.begin(); char_ != data.end(); ++char_)
+    for (char_ = data.begin(); char_ != data.end(); ++char_)
     {
         parse_character(*char_);
 
+        // Capture the last object before the logical close.
         if (is_closed())
             finalize();
 
@@ -111,8 +120,9 @@ void CLASS::validate() NOEXCEPT
     if (batch_.empty())
         state_ = state::error_state;
 
-    if constexpr (require_jsonrpc_v2)
+    if constexpr (require_jsonrpc_element_in_version2)
     {
+        // This needs to be relaxed for stratum_v1.
         if (is_version2() && parsed_->jsonrpc.empty())
             state_ = state::error_state;
     }
@@ -167,8 +177,8 @@ void CLASS::finalize() NOEXCEPT
         }
         case state::id:
         {
-            // BUGBUG: no quoting context.
-            assign_value(parsed_->id, to_id(value_));
+            // Quoted ids cannot land here, always assigned by handle_id.
+            assign_unquoted_id(parsed_->id, value_);
             break;
         }
 

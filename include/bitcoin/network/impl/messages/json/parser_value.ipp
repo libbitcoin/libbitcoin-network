@@ -88,7 +88,7 @@ void CLASS::handle_params(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume_char(value_, c);
+        consume_char(value_);
     }
     else if (c == '[' || c == '{')
     {
@@ -139,17 +139,9 @@ void CLASS::handle_id(char c) NOEXCEPT
     else if (c == ',')
     {
         if (is_one(depth_))
-        {
-            int64_t out{};
-            if (to_number(out, value_))
-                assign_value(parsed_->id, out);
-            else
-                state_ = state::error_state;
-        }
+            assign_numeric_id(parsed_->id, value_);
         else
-        {
             state_ = state::error_state;
-        }
     }
     else if (!is_whitespace(c))
     {
@@ -301,18 +293,9 @@ void CLASS::handle_error_code(char c) NOEXCEPT
     }
     else if (c == ',' || c == '}')
     {
-        int64_t out{};
-        if (to_number(out, value_))
-        {
-            assign_value(error_.code, out);
-
-            if (c == '}')
-                decrement(depth_, state_);
-        }
-        else
-        {
-            state_ = state::error_state;
-        }
+        assign_numeric_id(error_.code, value_);
+        if (c == '}')
+            decrement(depth_, state_);
     }
     else if (!is_whitespace(c))
     {

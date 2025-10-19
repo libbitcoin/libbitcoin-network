@@ -84,9 +84,9 @@ public:
 protected:
     using state = parser_state;
     using view = std::string_view;
-    using rpc_iterator = batch_t::iterator;
+    using parsed_it = batch_t::iterator;
     using char_iterator = view::const_iterator;
-    static constexpr auto require_jsonrpc_v2 = Strict;
+    static constexpr auto require_jsonrpc_element_in_version2 = Strict;
 
     /// Statics.
     /// -----------------------------------------------------------------------
@@ -96,8 +96,8 @@ protected:
     static inline bool is_whitespace(char c) NOEXCEPT;
     static inline bool is_nullic(view token, char c) NOEXCEPT;
     static inline bool is_error(const result_t& error) NOEXCEPT;
-    static inline bool to_number(int64_t& out, view token) NOEXCEPT;
-    static inline id_t to_id(view token) NOEXCEPT;
+    static inline bool to_signed(code_t& out, view token) NOEXCEPT;
+    static inline bool to_double(double& out, view token) NOEXCEPT;
     static inline bool toggle(bool& quoted) NOEXCEPT;
     static inline bool increment(size_t& depth, state& status) NOEXCEPT;
     static inline bool decrement(size_t& depth, state& status) NOEXCEPT;
@@ -149,11 +149,16 @@ protected:
 
     /// Assignment.
     /// -----------------------------------------------------------------------
+    inline void assign_unquoted_id(auto& to, const auto& from) NOEXCEPT;
+    inline void assign_numeric_id(auto& to, const auto& from) NOEXCEPT;
     inline bool assign_response(auto& to, const auto& from) NOEXCEPT;
     inline bool assign_request(auto& to, const auto& from) NOEXCEPT;
     inline void assign_value(auto& to, const auto& from) NOEXCEPT;
 
 private:
+    // Add a new parsed element to the batch and return its iterator.
+    const parsed_it add_remote_procedure_call() NOEXCEPT;
+
     // These are not thread safe.
     bool batched_{};
     bool escaped_{};
@@ -167,7 +172,7 @@ private:
 
     batch_t batch_{};
     result_t error_{};
-    rpc_iterator parsed_{};
+    parsed_it parsed_{};
 
     // This is thread safe.
     const json::protocol protocol_;
