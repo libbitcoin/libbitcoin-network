@@ -74,17 +74,9 @@ inline void CLASS::assign_string_id(id_t& to, view_t& from) NOEXCEPT
 TEMPLATE
 inline void CLASS::assign_numeric_id(code_t& to, view_t& from) NOEXCEPT
 {
-    code_t number{};
-
-    if (to_signed(number, from))
-    {
+    state_ = state::error_state;
+    if (to_signed(to, from))
         state_ = state::object_start;
-        to = number;
-    }
-    else
-    {
-        state_ = state::error_state;
-    }
 
     from = {};
 }
@@ -106,22 +98,11 @@ inline void CLASS::assign_null_id(id_t& to, view_t& from) NOEXCEPT
 TEMPLATE
 inline void CLASS::assign_unquoted_id(id_t& to, view_t& from) NOEXCEPT
 {
-    code_t number{};
-
+    state_ = state::object_start;
     if (from == "null")
-    {
-        state_ = state::object_start;
         to = null_t{};
-    }
-    else if (to_signed(number, from))
-    {
-        state_ = state::object_start;
-        to = number;
-    }
-    else
-    {
+    else if (!to_signed(std::get<code_t>(to), from))
         state_ = state::error_state;
-    }
 
     from = {};
 }
