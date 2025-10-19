@@ -173,7 +173,7 @@ void CLASS::handle_key(char c) NOEXCEPT
             state_ = state::error_state;
         }
     }
-    else if constexpr (request)
+    else if constexpr (response)
     {
         if (key_ == "result")
         {
