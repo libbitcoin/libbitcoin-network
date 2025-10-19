@@ -33,7 +33,7 @@ void CLASS::handle_initialize(char c) NOEXCEPT
     if (c == '{')
     {
         batched_ = false;
-        parsed_ = batch_.emplace_back();
+        parsed_ = add_remote_procedure_call();
 
         state_ = state::object_start;
         increment(depth_, state_);
@@ -77,7 +77,7 @@ void CLASS::handle_object_start(char c) NOEXCEPT
         {
             if (is_one(depth_))
             {
-                parsed_ = batch_.emplace_back();
+                parsed_ = add_remote_procedure_call();
                 increment(depth_, state_);
             }
             else
