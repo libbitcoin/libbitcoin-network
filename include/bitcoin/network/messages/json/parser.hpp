@@ -86,7 +86,7 @@ protected:
     using view = std::string_view;
     using rpc_iterator = batch_t::iterator;
     using char_iterator = view::const_iterator;
-    static constexpr auto require_jsonrpc_v2 = Strict;
+    static constexpr auto require_jsonrpc_element_in_version2 = Strict;
 
     /// Statics.
     /// -----------------------------------------------------------------------

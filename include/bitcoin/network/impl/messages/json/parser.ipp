@@ -111,8 +111,9 @@ void CLASS::validate() NOEXCEPT
     if (batch_.empty())
         state_ = state::error_state;
 
-    if constexpr (require_jsonrpc_v2)
+    if constexpr (require_jsonrpc_element_in_version2)
     {
+        // This needs to be relaxed for stratum_v1.
         if (is_version2() && parsed_->jsonrpc.empty())
             state_ = state::error_state;
     }
