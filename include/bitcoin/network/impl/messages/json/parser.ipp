@@ -93,8 +93,6 @@ size_t CLASS::write(const std::string_view& data, error_code& ec) NOEXCEPT
             ++char_;
             break;
         }
-
-        std::cout << "[" << *char_ << "]<" << key_ << ">=|" << value_ << "|" << std::endl;
     }
 
     validate();
@@ -157,6 +155,7 @@ bool CLASS::done_parsing(char c) NOEXCEPT
             break;
     }
 
+    std::cout << "[" << *char_ << "]<" << key_ << ">=|" << value_ << "|" << std::endl;
     return is_done();
 }
 
