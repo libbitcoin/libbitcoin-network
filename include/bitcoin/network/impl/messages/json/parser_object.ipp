@@ -158,25 +158,35 @@ void CLASS::handle_key(char c) NOEXCEPT
     {
         state_ = state::value;
     }
-    else if (request && key_ == "method")
+    else if constexpr (request)
     {
-        state_ = state::value;
+        if (key_ == "method")
+        {
+            state_ = state::value;
+        }
+        else if (key_ == "params")
+        {
+            state_ = state::value;
+        }
+        else
+        {
+            state_ = state::error_state;
+        }
     }
-    else if (request && key_ == "params")
+    else if constexpr (request)
     {
-        state_ = state::value;
-    }
-    else if (response && key_ == "result")
-    {
-        state_ = state::value;
-    }
-    else if (response && key_ == "error")
-    {
-        state_ = state::value;
-    }
-    else
-    {
-        state_ = state::error_state;
+        if (key_ == "result")
+        {
+            state_ = state::value;
+        }
+        else if (key_ == "error")
+        {
+            state_ = state::value;
+        }
+        else
+        {
+            state_ = state::error_state;
+        }
     }
 }
 
@@ -186,6 +196,9 @@ void CLASS::handle_key(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_value(char c) NOEXCEPT
 {
+    if (is_whitespace(c))
+        return;
+
     if (c != ':')
     {
         state_ = state::error_state;
@@ -213,25 +226,35 @@ void CLASS::handle_value(char c) NOEXCEPT
     {
         state_ = state::error_data;
     }
-    else if (request && key_ == "method")
+    else if constexpr (request)
     {
-        state_ = state::method;
+        if (key_ == "method")
+        {
+            state_ = state::method;
+        }
+        else if (key_ == "params")
+        {
+            state_ = state::params;
+        }
+        else
+        {
+            state_ = state::error_state;
+        }
     }
-    else if (request && key_ == "params")
+    else if constexpr (response)
     {
-        state_ = state::params;
-    }
-    else if (response && key_ == "result")
-    {
-        state_ = state::result;
-    }
-    else if (response && key_ == "error")
-    {
-        state_ = state::error_start;
-    }
-    else
-    {
-        state_ = state::error_state;
+        if (key_ == "result")
+        {
+            state_ = state::result;
+        }
+        else if (key_ == "error")
+        {
+            state_ = state::error_start;
+        }
+        else
+        {
+            state_ = state::error_state;
+        }
     }
 }
 

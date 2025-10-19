@@ -28,24 +28,24 @@ namespace json {
 // protected
 
 TEMPLATE
-inline void CLASS::consume_char(view& token) NOEXCEPT
+inline size_t CLASS::consume_char(view_t& token) NOEXCEPT
 {
     // Token consumes character *char_ by incrementing its view over buffer.
-    if (token.empty())
-        token = { std::to_address(char_), one };
-    else
-        token = { token.data(), add1(token.size()) };
+    const auto size = add1(token.size());
+    const auto start = token.empty() ? std::to_address(char_) : token.data();
+    token = { start, size };
+    return size;
 }
 
 TEMPLATE
-inline void CLASS::consume_substitute(view& token, char /* c */) NOEXCEPT
+inline void CLASS::consume_substitute(view_t& token, char /* c */) NOEXCEPT
 {
-    // BUGBUG: view is not modifiable, requires dynamic token (vs. view).
+    // BUGBUG: view is not modifiable, requires dynamic token (vs. view_t).
     consume_char(token);
 }
 
 TEMPLATE
-inline void CLASS::consume_escaped(view& token, char c) NOEXCEPT
+inline void CLASS::consume_escaped(view_t& token, char c) NOEXCEPT
 {
     // BUGBUG: doesn't support \uXXXX, requires 4 character accumulation.
     switch (c)
@@ -71,7 +71,7 @@ inline void CLASS::consume_escaped(view& token, char c) NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::consume_escape(view& token, char c) NOEXCEPT
+inline bool CLASS::consume_escape(view_t& token, char c) NOEXCEPT
 {
     if (c == '\\' && !escaped_)
     {
