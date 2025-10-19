@@ -107,7 +107,7 @@ inline bool CLASS::to_double(double& out, view token) NOEXCEPT
 #if defined(HAVE_APPLE)
     errno = 0;
     char* end = nullptr;
-    double out = std::strtod(token.data(), &end);
+    out = std::strtod(token.data(), &end);
     return (errno != ERANGE) && (end == std::next(token.data(), token.size()));
 #else
     const auto end = std::next(token.data(), token.size());
