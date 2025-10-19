@@ -78,10 +78,11 @@ void CLASS::reset() NOEXCEPT
 TEMPLATE
 size_t CLASS::write(std::string_view data, error_code& ec) NOEXCEPT
 {
-    for (auto char_ = data.begin(); char_ != data.end(); ++char_)
+    for (char_ = data.begin(); char_ != data.end(); ++char_)
     {
         parse_character(*char_);
 
+        // Capture the last object before the logical close.
         if (is_closed())
             finalize();
 
