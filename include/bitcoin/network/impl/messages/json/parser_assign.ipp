@@ -19,40 +19,90 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_ASSIGN_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_ASSIGN_IPP
 
+#include <utility>
+
 namespace libbitcoin {
 namespace network {
 namespace json {
 
 // protected
 
+// Assign value_ after assignment, since 'from' may be a reference to value_.
+
 TEMPLATE
-inline void CLASS::assign_unquoted_id(auto& to, const auto& from) NOEXCEPT
+inline void CLASS::assign_error(error_option& to, result_t&& from) NOEXCEPT
+{
+    state_ = state::object_start;
+    to = error_option{ std::move(from) };
+    value_ = {};
+}
+
+TEMPLATE
+inline void CLASS::assign_value(value_option& to, value_t&& from) NOEXCEPT
+{
+    state_ = state::object_start;
+    to = value_option{ std::move(from) };
+    value_ = {};
+}
+
+TEMPLATE
+inline void CLASS::assign_string(string_t& to, view from) NOEXCEPT
+{
+    state_ = state::object_start;
+    to = string_t{ from };
+    value_ = {};
+}
+
+TEMPLATE
+inline void CLASS::assign_string_id(id_t& to, view from) NOEXCEPT
+{
+    std::get<string_t>(to) = string_t{ from };
+    value_ = {};
+}
+
+TEMPLATE
+inline void CLASS::assign_numeric_id(code_t& to, view from) NOEXCEPT
 {
     code_t number{};
+
     if (to_signed(number, from))
     {
         state_ = state::object_start;
         to = number;
     }
-    else if (from == "null")
+    else
+    {
+        state_ = state::error_state;
+    }
+
+    value_ = {};
+}
+
+TEMPLATE
+inline void CLASS::assign_numeric_id(id_t& to, view from) NOEXCEPT
+{
+    assign_numeric_id(std::get<code_t>(to), from);
+}
+
+TEMPLATE
+inline void CLASS::assign_null_id(id_t& to) NOEXCEPT
+{
+    state_ = state::object_start;
+    std::get<null_t>(to) = null_t{};
+    value_ = {};
+}
+
+TEMPLATE
+inline void CLASS::assign_unquoted_id(id_t& to, view from) NOEXCEPT
+{
+    code_t number{};
+
+    if (from == "null")
     {
         state_ = state::object_start;
         to = null_t{};
     }
-    else
-    {
-        state_ = state::error_state;
-    }
-
-    // Assign last, since 'from' may be a referece to value.
-    value_ = {};
-}
-
-TEMPLATE
-inline void CLASS::assign_numeric_id(auto& to, const auto& from) NOEXCEPT
-{
-    code_t number{};
-    if (to_signed(number, from))
+    else if (to_signed(number, from))
     {
         state_ = state::object_start;
         to = number;
@@ -62,47 +112,6 @@ inline void CLASS::assign_numeric_id(auto& to, const auto& from) NOEXCEPT
         state_ = state::error_state;
     }
 
-    // Assign last, since 'from' may be a referece to value.
-    value_ = {};
-}
-
-TEMPLATE
-inline bool CLASS::assign_response(auto& to, const auto& from) NOEXCEPT
-{
-    if constexpr (response)
-    {
-        assign_value(to, from);
-        return true;
-    }
-    else
-    {
-        state_ = state::error_state;
-        return false;
-    }
-}
-
-TEMPLATE
-inline bool CLASS::assign_request(auto& to, const auto& from) NOEXCEPT
-{
-    if constexpr (request)
-    {
-        assign_value(to, from);
-        return true;
-    }
-    else
-    {
-        state_ = state::error_state;
-        return false;
-    }
-}
-
-TEMPLATE
-inline void CLASS::assign_value(auto& to, const auto& from) NOEXCEPT
-{
-    state_ = state::object_start;
-    to = from;
-
-    // Assign last, since 'from' may be a referece to value.
     value_ = {};
 }
 

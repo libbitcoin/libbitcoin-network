@@ -39,7 +39,7 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
         if (toggle(quoted_))
         {
             if (is_version(value_))
-                assign_value(parsed_->jsonrpc, value_);
+                assign_string(parsed_->jsonrpc, value_);
             else
                 state_ = state::error_state;
         }
@@ -63,7 +63,7 @@ void CLASS::handle_method(char c) NOEXCEPT
     if (c == '"')
     {
         if (toggle(quoted_))
-            assign_request(parsed_->method, value_);
+            ASSIGN_REQUEST(string, parsed_->method, value_)
     }
     else if (quoted_)
     {
@@ -84,7 +84,7 @@ void CLASS::handle_params(char c) NOEXCEPT
     if (c == '"')
     {
         if (toggle(quoted_))
-            assign_request(parsed_->params, value_);
+            ASSIGN_REQUEST(value, parsed_->params, value_)
     }
     else if (quoted_)
     {
@@ -101,7 +101,7 @@ void CLASS::handle_params(char c) NOEXCEPT
     else if (c == ',')
     {
         if (is_one(depth_))
-            assign_request(parsed_->params, value_);
+            ASSIGN_REQUEST(value, parsed_->params, value_)
         else
             state_ = state::error_state;
     }
@@ -120,7 +120,7 @@ void CLASS::handle_id(char c) NOEXCEPT
     if (c == '"')
     {
         if (toggle(quoted_))
-            assign_value(parsed_->id, value_);
+            assign_string_id(parsed_->id, value_);
     }
     else if (quoted_)
     {
@@ -128,9 +128,8 @@ void CLASS::handle_id(char c) NOEXCEPT
     }
     else if (is_nullic(value_, c))
     {
-        consume_char(value_);
-        if (value_ == "null")
-            assign_value(parsed_->id, null_t{});
+        if (consume_char(value_) == null_size)
+            assign_null_id(parsed_->id);
     }
     else if (is_numeric(c))
     {
@@ -158,7 +157,7 @@ void CLASS::handle_result(char c) NOEXCEPT
     if (c == '"')
     {
         if (toggle(quoted_))
-            assign_response(parsed_->result, value_);
+            ASSIGN_RESPONSE(value, parsed_->result, value_)
     }
     else if (quoted_)
     {
@@ -175,7 +174,7 @@ void CLASS::handle_result(char c) NOEXCEPT
     else if (c == ',')
     {
         if (is_one(depth_))
-            assign_response(parsed_->result, value_);
+            ASSIGN_RESPONSE(value, parsed_->result, value_)
         else
             state_ = state::error_state;
     }
@@ -194,7 +193,7 @@ void CLASS::handle_error_message(char c) NOEXCEPT
     if (c == '"')
     {
         if (toggle(quoted_))
-            assign_value(error_.message, value_);
+            assign_string(error_.message, value_);
     }
     else if (quoted_)
     {
@@ -224,7 +223,7 @@ void CLASS::handle_error_data(char c) NOEXCEPT
     if (c == '"')
     {
         if (toggle(quoted_))
-            assign_response(error_.data, value_);
+            ASSIGN_RESPONSE(value, error_.data, value_)
     }
     else if (quoted_)
     {
@@ -242,7 +241,7 @@ void CLASS::handle_error_data(char c) NOEXCEPT
         if (c == '}')
         {
             if (is_one(depth_) && is_error(error_))
-                assign_response(parsed_->error, error_);
+                ASSIGN_RESPONSE(error, parsed_->error, error_)
             else
                 state_ = state::error_state;
         }
@@ -276,7 +275,7 @@ void CLASS::handle_error_start(char c) NOEXCEPT
     {
         consume_char(value_);
         if (value_ == "null")
-            assign_response(parsed_->error, result_t{});
+            ASSIGN_RESPONSE(error, parsed_->error, {})
     }
     else if (!is_whitespace(c))
     {

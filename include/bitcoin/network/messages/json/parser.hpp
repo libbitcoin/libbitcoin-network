@@ -137,7 +137,7 @@ protected:
     inline void consume_substitute(view& token, char c) NOEXCEPT;
     inline void consume_escaped(view& token, char c) NOEXCEPT;
     inline bool consume_escape(view& token, char c) NOEXCEPT;
-    inline void consume_char(view& token) NOEXCEPT;
+    inline size_t consume_char(view& token) NOEXCEPT;
 
     /// Versioning.
     /// -----------------------------------------------------------------------
@@ -149,13 +149,19 @@ protected:
 
     /// Assignment.
     /// -----------------------------------------------------------------------
-    inline void assign_unquoted_id(auto& to, const auto& from) NOEXCEPT;
-    inline void assign_numeric_id(auto& to, const auto& from) NOEXCEPT;
-    inline bool assign_response(auto& to, const auto& from) NOEXCEPT;
-    inline bool assign_request(auto& to, const auto& from) NOEXCEPT;
-    inline void assign_value(auto& to, const auto& from) NOEXCEPT;
+    inline void assign_error(error_option& to, result_t&& from) NOEXCEPT;
+    inline void assign_value(value_option& to, value_t&& from) NOEXCEPT;
+    inline void assign_string(string_t& to, view from) NOEXCEPT;
+    inline void assign_string_id(id_t& to, view from) NOEXCEPT;
+    inline void assign_numeric_id(code_t& to, view from) NOEXCEPT;
+    inline void assign_numeric_id(id_t& to, view from) NOEXCEPT;
+    inline void assign_unquoted_id(id_t& to, view from) NOEXCEPT;
+    inline void assign_null_id(id_t& to) NOEXCEPT;
 
 private:
+    // The length of the null token.
+    static constexpr auto null_size = std::string_view{ "null" }.length();
+
     // Add a new parsed element to the batch and return its iterator.
     const parsed_it add_remote_procedure_call() NOEXCEPT;
 
@@ -185,6 +191,18 @@ private:
 #define TEMPLATE template <bool Request, bool Strict>
 #define CLASS parser<Request, Strict>
 
+#define ASSIGN_REQUEST(kind, to, from) \
+{ \
+    if constexpr (request) { assign_##kind(to, from); } \
+    else { state_ = state::error_state; } \
+}
+
+#define ASSIGN_RESPONSE(kind, to, from) \
+{ \
+    if constexpr (response) { assign_##kind(to, from); } \
+    else { state_ = state::error_state; } \
+}
+
 #include <bitcoin/network/impl/messages/json/parser.ipp>
 #include <bitcoin/network/impl/messages/json/parser_assign.ipp>
 #include <bitcoin/network/impl/messages/json/parser_consume.ipp>
@@ -192,6 +210,9 @@ private:
 #include <bitcoin/network/impl/messages/json/parser_version.ipp>
 #include <bitcoin/network/impl/messages/json/parser_object.ipp>
 #include <bitcoin/network/impl/messages/json/parser_value.ipp>
+
+#undef ASSIGN_REQUEST
+#undef ASSIGN_RESPONSE
 
 #undef CLASS
 #undef TEMPLATE

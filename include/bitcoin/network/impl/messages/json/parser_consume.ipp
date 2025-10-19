@@ -28,13 +28,13 @@ namespace json {
 // protected
 
 TEMPLATE
-inline void CLASS::consume_char(view& token) NOEXCEPT
+inline size_t CLASS::consume_char(view& token) NOEXCEPT
 {
     // Token consumes character *char_ by incrementing its view over buffer.
-    if (token.empty())
-        token = { std::to_address(char_), one };
-    else
-        token = { token.data(), add1(token.size()) };
+    const auto size = add1(token.size());
+    const auto start = token.empty() ? std::to_address(char_) : token.data();
+    token = { start, size };
+    return size;
 }
 
 TEMPLATE

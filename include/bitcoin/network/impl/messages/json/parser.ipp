@@ -156,23 +156,47 @@ void CLASS::finalize() NOEXCEPT
         case state::jsonrpc:
         {
             if (is_version(value_))
-                assign_value(parsed_->jsonrpc, value_);
+                assign_string(parsed_->jsonrpc, value_);
             else
                 state_ = state::error_state;
         }
         case state::method:
         {
-            assign_request(parsed_->method, value_);
+            if constexpr (request)
+            {
+                assign_string(parsed_->method, value_);
+            }
+            else
+            {
+                state_ = state::error_state;
+            }
+
             break;
         }
         case state::params:
         {
-            assign_request(parsed_->params, value_);
+            if constexpr (request)
+            {
+                assign_value(parsed_->params, value_t{ string_t{ value_ } });
+            }
+            else
+            {
+                state_ = state::error_state;
+            }
+
             break;
         }
         case state::result:
         {
-            assign_response(parsed_->result, value_);
+            if constexpr (response)
+            {
+                assign_value(parsed_->result, value_);
+            }
+            else
+            {
+                state_ = state::error_state;
+            }
+
             break;
         }
         case state::id:
@@ -185,12 +209,12 @@ void CLASS::finalize() NOEXCEPT
         // Complete error object.
         case state::error_message:
         {
-            assign_value(error_.message, value_);
+            assign_string(error_.message, value_);
             break;
         }
         case state::error_data:
         {
-            assign_value(error_.data, value_);
+            assign_value(error_.data, value_t{ string_t{ value_ } });
             break;
         }
 
