@@ -78,14 +78,14 @@ public:
 
     /// Methods.
     /// -----------------------------------------------------------------------
-    size_t write(std::string_view data, error_code& ec) NOEXCEPT;
+    size_t write(const std::string_view& data, error_code& ec) NOEXCEPT;
     void reset() NOEXCEPT;
 
 protected:
     using state = parser_state;
-    using view = std::string_view;
-    using parsed_it = batch_t::iterator;
-    using char_iterator = view::const_iterator;
+    using view_t = std::string_view;
+    using parse_it = batch_t::iterator;
+    using char_it = view_t::const_iterator;
     static constexpr auto require_jsonrpc_element_in_version2 = Strict;
 
     /// Statics.
@@ -94,15 +94,15 @@ protected:
     static inline bool is_null(const id_t& id) NOEXCEPT;
     static inline bool is_numeric(char c) NOEXCEPT;
     static inline bool is_whitespace(char c) NOEXCEPT;
-    static inline bool is_nullic(view token, char c) NOEXCEPT;
+    static inline bool is_nullic(const view_t& token, char c) NOEXCEPT;
     static inline bool is_error(const result_t& error) NOEXCEPT;
-    static inline bool to_signed(code_t& out, view token) NOEXCEPT;
-    static inline bool to_double(double& out, view token) NOEXCEPT;
+    static inline bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
+    static inline bool to_double(double& out, const view_t& token) NOEXCEPT;
     static inline bool toggle(bool& quoted) NOEXCEPT;
     static inline bool increment(size_t& depth, state& status) NOEXCEPT;
     static inline bool decrement(size_t& depth, state& status) NOEXCEPT;
-    static inline size_t distance(const char_iterator& from,
-        const char_iterator& to) NOEXCEPT;
+    static inline size_t distance(const char_it& from,
+        const char_it& to) NOEXCEPT;
 
     /// Methods.
     /// -----------------------------------------------------------------------
@@ -134,14 +134,14 @@ protected:
 
     /// Comsuming.
     /// -----------------------------------------------------------------------
-    inline void consume_substitute(view& token, char c) NOEXCEPT;
-    inline void consume_escaped(view& token, char c) NOEXCEPT;
-    inline bool consume_escape(view& token, char c) NOEXCEPT;
-    inline size_t consume_char(view& token) NOEXCEPT;
+    inline void consume_substitute(view_t& token, char c) NOEXCEPT;
+    inline void consume_escaped(view_t& token, char c) NOEXCEPT;
+    inline bool consume_escape(view_t& token, char c) NOEXCEPT;
+    inline size_t consume_char(view_t& token) NOEXCEPT;
 
     /// Versioning.
     /// -----------------------------------------------------------------------
-    inline bool is_version(view token) const NOEXCEPT;
+    inline bool is_version(const view_t& token) const NOEXCEPT;
     inline bool is_version1() const NOEXCEPT;
     inline bool is_version2() const NOEXCEPT;
     inline bool is_terminal() const NOEXCEPT;
@@ -149,21 +149,23 @@ protected:
 
     /// Assignment.
     /// -----------------------------------------------------------------------
+    inline void assign_error(error_option& to, const result_t& from) NOEXCEPT;
     inline void assign_error(error_option& to, result_t&& from) NOEXCEPT;
+    inline void assign_value(value_option& to, const value_t& from) NOEXCEPT;
     inline void assign_value(value_option& to, value_t&& from) NOEXCEPT;
-    inline void assign_string(string_t& to, view from) NOEXCEPT;
-    inline void assign_string_id(id_t& to, view from) NOEXCEPT;
-    inline void assign_numeric_id(code_t& to, view from) NOEXCEPT;
-    inline void assign_numeric_id(id_t& to, view from) NOEXCEPT;
-    inline void assign_unquoted_id(id_t& to, view from) NOEXCEPT;
+    inline void assign_string(string_t& to, const view_t& from) NOEXCEPT;
+    inline void assign_string_id(id_t& to, const view_t& from) NOEXCEPT;
+    inline void assign_numeric_id(code_t& to, const view_t& from) NOEXCEPT;
+    inline void assign_numeric_id(id_t& to, const view_t& from) NOEXCEPT;
+    inline void assign_unquoted_id(id_t& to, const view_t& from) NOEXCEPT;
     inline void assign_null_id(id_t& to) NOEXCEPT;
 
 private:
     // The length of the null token.
-    static constexpr auto null_size = std::string_view{ "null" }.length();
+    static constexpr auto null_size = view_t{ "null" }.length();
 
     // Add a new parsed element to the batch and return its iterator.
-    const parsed_it add_remote_procedure_call() NOEXCEPT;
+    const parse_it add_remote_procedure_call() NOEXCEPT;
 
     // These are not thread safe.
     bool batched_{};
@@ -172,13 +174,13 @@ private:
     state state_{};
     size_t depth_{};
 
-    char_iterator char_{};
-    view key_{};
-    view value_{};
+    char_it char_{};
+    view_t key_{};
+    view_t value_{};
 
     batch_t batch_{};
     result_t error_{};
-    parsed_it parsed_{};
+    parse_it parsed_{};
 
     // This is thread safe.
     const json::protocol protocol_;

@@ -30,10 +30,26 @@ namespace json {
 // Assign value_ after assignment, since 'from' may be a reference to value_.
 
 TEMPLATE
+inline void CLASS::assign_error(error_option& to, const result_t& from) NOEXCEPT
+{
+    state_ = state::object_start;
+    to = error_option{ from };
+    value_ = {};
+}
+
+TEMPLATE
 inline void CLASS::assign_error(error_option& to, result_t&& from) NOEXCEPT
 {
     state_ = state::object_start;
     to = error_option{ std::move(from) };
+    value_ = {};
+}
+
+TEMPLATE
+inline void CLASS::assign_value(value_option& to, const value_t& from) NOEXCEPT
+{
+    state_ = state::object_start;
+    to = value_option{ from };
     value_ = {};
 }
 
@@ -46,7 +62,7 @@ inline void CLASS::assign_value(value_option& to, value_t&& from) NOEXCEPT
 }
 
 TEMPLATE
-inline void CLASS::assign_string(string_t& to, view from) NOEXCEPT
+inline void CLASS::assign_string(string_t& to, const view_t& from) NOEXCEPT
 {
     state_ = state::object_start;
     to = string_t{ from };
@@ -54,14 +70,14 @@ inline void CLASS::assign_string(string_t& to, view from) NOEXCEPT
 }
 
 TEMPLATE
-inline void CLASS::assign_string_id(id_t& to, view from) NOEXCEPT
+inline void CLASS::assign_string_id(id_t& to, const view_t& from) NOEXCEPT
 {
     std::get<string_t>(to) = string_t{ from };
     value_ = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_numeric_id(code_t& to, view from) NOEXCEPT
+inline void CLASS::assign_numeric_id(code_t& to, const view_t& from) NOEXCEPT
 {
     code_t number{};
 
@@ -79,7 +95,7 @@ inline void CLASS::assign_numeric_id(code_t& to, view from) NOEXCEPT
 }
 
 TEMPLATE
-inline void CLASS::assign_numeric_id(id_t& to, view from) NOEXCEPT
+inline void CLASS::assign_numeric_id(id_t& to, const view_t& from) NOEXCEPT
 {
     assign_numeric_id(std::get<code_t>(to), from);
 }
@@ -93,7 +109,7 @@ inline void CLASS::assign_null_id(id_t& to) NOEXCEPT
 }
 
 TEMPLATE
-inline void CLASS::assign_unquoted_id(id_t& to, view from) NOEXCEPT
+inline void CLASS::assign_unquoted_id(id_t& to, const view_t& from) NOEXCEPT
 {
     code_t number{};
 

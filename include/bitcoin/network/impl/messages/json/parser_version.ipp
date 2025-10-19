@@ -26,7 +26,7 @@ namespace json {
 // protected
 
 TEMPLATE
-inline bool CLASS::is_version(view token) const NOEXCEPT
+inline bool CLASS::is_version(const view_t& token) const NOEXCEPT
 {
     return (is_version1() && (token == "1.0" || token.empty()))
         || (is_version2() && (token == "2.0"));

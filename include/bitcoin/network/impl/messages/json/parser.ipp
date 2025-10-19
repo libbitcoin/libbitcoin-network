@@ -61,7 +61,7 @@ const typename CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
 
 // private
 TEMPLATE
-const typename CLASS::parsed_it CLASS::add_remote_procedure_call() NOEXCEPT
+const typename CLASS::parse_it CLASS::add_remote_procedure_call() NOEXCEPT
 {
     batch_.emplace_back();
     return std::prev(batch_.end());
@@ -84,7 +84,7 @@ void CLASS::reset() NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::write(std::string_view data, error_code& ec) NOEXCEPT
+size_t CLASS::write(const std::string_view& data, error_code& ec) NOEXCEPT
 {
     for (char_ = data.begin(); char_ != data.end(); ++char_)
     {
@@ -177,7 +177,7 @@ void CLASS::finalize() NOEXCEPT
         {
             if constexpr (request)
             {
-                assign_value(parsed_->params, value_t{ string_t{ value_ } });
+                assign_value(parsed_->params, value_);
             }
             else
             {
@@ -214,7 +214,7 @@ void CLASS::finalize() NOEXCEPT
         }
         case state::error_data:
         {
-            assign_value(error_.data, value_t{ string_t{ value_ } });
+            assign_value(error_.data, value_);
             break;
         }
 

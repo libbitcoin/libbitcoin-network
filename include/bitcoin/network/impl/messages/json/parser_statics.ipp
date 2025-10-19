@@ -65,7 +65,7 @@ bool CLASS::is_whitespace(char c) NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_nullic(view token, char c) NOEXCEPT
+bool CLASS::is_nullic(const view_t& token, char c) NOEXCEPT
 {
     return (token.empty()  && c == 'n')
         || (token == "n"   && c == 'u')
@@ -80,7 +80,7 @@ inline bool CLASS::is_error(const result_t& error) NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::to_signed(code_t& out, view token) NOEXCEPT
+inline bool CLASS::to_signed(code_t& out, const view_t& token) NOEXCEPT
 {
     const auto end = std::next(token.data(), token.size());
     return is_zero(std::from_chars(token.data(), end, out).ec);
@@ -90,7 +90,7 @@ inline bool CLASS::to_signed(code_t& out, view token) NOEXCEPT
 // In other words, numbers can contain fractional parts :[.
 
 TEMPLATE
-inline bool CLASS::to_double(double& out, view token) NOEXCEPT
+inline bool CLASS::to_double(double& out, const view_t& token) NOEXCEPT
 {
     static const std::regex json_number{
         R"(-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?$)" };
@@ -147,8 +147,8 @@ inline bool CLASS::decrement(size_t& depth, state& status) NOEXCEPT
 }
 
 TEMPLATE
-inline size_t CLASS::distance(const char_iterator& from,
-    const char_iterator& to) NOEXCEPT
+inline size_t CLASS::distance(const char_it& from,
+    const char_it& to) NOEXCEPT
 {
     using namespace system;
     return possible_narrow_and_sign_cast<size_t>(std::distance(from, to));

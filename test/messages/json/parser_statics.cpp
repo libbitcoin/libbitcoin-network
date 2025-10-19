@@ -28,7 +28,7 @@ using namespace network::json;
 struct accessor
   : parser<true, true>
 {
-    static bool to_double(double& out, view token) NOEXCEPT
+    static bool to_double(double& out, view_t token) NOEXCEPT
     {
         return parser<true, true>::to_double(out, token);
     }
