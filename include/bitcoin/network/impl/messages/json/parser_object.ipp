@@ -228,11 +228,11 @@ void CLASS::handle_value(char c) NOEXCEPT
     }
     else if constexpr (request)
     {
-        if (request && key_ == "method")
+        if (key_ == "method")
         {
             state_ = state::method;
         }
-        else if (request && key_ == "params")
+        else if (key_ == "params")
         {
             state_ = state::params;
         }
@@ -241,13 +241,13 @@ void CLASS::handle_value(char c) NOEXCEPT
             state_ = state::error_state;
         }
     }
-    else if constexpr (request)
+    else if constexpr (response)
     {
-        if (response && key_ == "result")
+        if (key_ == "result")
         {
             state_ = state::result;
         }
-        else if (response && key_ == "error")
+        else if (key_ == "error")
         {
             state_ = state::error_start;
         }
