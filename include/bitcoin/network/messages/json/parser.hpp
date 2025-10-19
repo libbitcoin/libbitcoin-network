@@ -48,7 +48,10 @@ enum class parser_state
 };
 
 /// A minimal-copy parser for boost asio JSON-RPC v1/v2 stream parsing.
-template <bool Request, bool Strict = true>
+template <
+    bool Request,
+    bool Strict = true,
+    json::protocol Version = json::protocol::any>
 class parser
 {
 public:
@@ -57,17 +60,11 @@ public:
 
     /// Parsed object type.
     /// -----------------------------------------------------------------------
+    static constexpr auto version = Version;
     static constexpr auto request = Request;
     static constexpr auto response = !request;
     using parsed_t = iif<request, request_t, response_t>;
     using batch_t = std::vector<parsed_t>;
-
-    /// Constructor.
-    /// -----------------------------------------------------------------------
-    explicit parser(json::protocol proto) NOEXCEPT
-      : protocol_{ proto }
-    {
-    }
 
     /// Properties.
     /// -----------------------------------------------------------------------
@@ -176,17 +173,14 @@ private:
     batch_t batch_{};
     result_t error_{};
     parse_it parsed_{};
-
-    // This is thread safe.
-    const json::protocol protocol_;
 };
 
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
 
-#define TEMPLATE template <bool Request, bool Strict>
-#define CLASS parser<Request, Strict>
+#define TEMPLATE template <bool Request, bool Strict, json::protocol Version>
+#define CLASS parser<Request, Strict, Version>
 
 #define ASSIGN_REQUEST(kind, to, from) \
 { \

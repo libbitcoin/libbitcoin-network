@@ -34,6 +34,9 @@ enum class protocol
     /// JSON-RPC 2.0 (electrum daemon, electrum protocol, stratum v1).
     v2,
 
+    /// Detemine the version from the jsonrpc element.
+    any,
+
     /// Undefined version.
     undefined
 };

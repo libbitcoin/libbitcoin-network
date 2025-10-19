@@ -35,13 +35,13 @@ inline bool CLASS::is_version(const view_t& token) const NOEXCEPT
 TEMPLATE
 inline bool CLASS::is_version1() const NOEXCEPT
 {
-    return protocol_ == protocol::v1;
+    return version == protocol::any || version == protocol::v1;
 }
 
 TEMPLATE
 inline bool CLASS::is_version2() const NOEXCEPT
 {
-    return protocol_ == protocol::v2;
+    return version == protocol::any || version == protocol::v2;
 }
 
 } // namespace json

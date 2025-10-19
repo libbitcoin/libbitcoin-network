@@ -24,16 +24,16 @@ BOOST_AUTO_TEST_SUITE(parser_tests)
 
 using namespace network::json;
 
-template <bool Request, bool Strict>
+template <bool Request, bool Strict, json::protocol Version>
 struct test_parser
-  : public parser<Request, Strict>
+  : public parser<Request, Strict, Version>
 {
-    using base = parser<Request, Strict>;
+    using base = parser<Request, Strict, Version>;
     using base::base;
 };
 
-using request_parser = test_parser<true, true>;
-using response_parser = test_parser<false, true>;
+using request_parser = test_parser<true, true, json::protocol::any>;
+using response_parser = test_parser<false, true, json::protocol::any>;
 static_assert(request_parser::request);
 static_assert(response_parser::response);
 static_assert(!request_parser::response);
@@ -48,8 +48,8 @@ static_assert(!response_parser::request);
 BOOST_AUTO_TEST_CASE(parser__write__whitespace__success)
 {
     error_code ec{};
+    request_parser parse{};
     string_t text{ R"({    "jsonrpc"    :    "2.0"    })" };
-    request_parser parse{ json::protocol::v2 };
     const auto size = parse.write(text, ec);
     BOOST_CHECK(!ec);
     BOOST_CHECK_EQUAL(size, text.size());
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(parser__write__whitespace__success)
 
 ////BOOST_AUTO_TEST_CASE(parser__write__valid_request__parses_correctly)
 ////{
-////    request_parser parse{ json::protocol::v2 };
+////    request_parser parse{};
 ////    string_t text{ R"({"jsonrpc": "2.0", "method": "getblock", "params": ["000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"], "id": 42})" };
 ////    error_code ec{};
 ////
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(parser__write__whitespace__success)
 ////
 ////BOOST_AUTO_TEST_CASE(parser__write__invalid_request__sets_error)
 ////{
-////    request_parser parse{ json::protocol::v1 };
+////    request_parser parse{};
 ////    string_t text{ R"({"method": "getblock", "params": { "block": "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f" }})" };
 ////    error_code ec{};
 ////
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(parser__write__whitespace__success)
 ////
 ////BOOST_AUTO_TEST_CASE(parser__write__batch_request__parses_correctly)
 ////{
-////    request_parser parse{ json::protocol::v2 };
+////    request_parser parse{};
 ////    string_t text{ R"([{"jsonrpc": "2.0", "method": "method1", "id": 1}, {"jsonrpc": "2.0", "method": "method2", "id": 2}])" };
 ////    error_code ec{};
 ////
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(parser__write__whitespace__success)
 ////
 ////BOOST_AUTO_TEST_CASE(parser__write__empty_batch__sets_error)
 ////{
-////    request_parser parse{ json::protocol::v2 };
+////    request_parser parse{};
 ////    string_t text{ R"([])" };
 ////    error_code ec{};
 ////
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(parser__write__whitespace__success)
 ////
 ////BOOST_AUTO_TEST_CASE(parser__write__malformed_json__sets_error)
 ////{
-////    request_parser parse{ json::protocol::v2 };
+////    request_parser parse{};
 ////    string_t text{ R"({"jsonrpc": "2.0", "method": "getblock" invalid})" };
 ////    error_code ec{};
 ////
