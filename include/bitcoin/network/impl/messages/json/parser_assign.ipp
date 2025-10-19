@@ -26,6 +26,47 @@ namespace json {
 // protected
 
 TEMPLATE
+inline void CLASS::assign_unquoted_id(auto& to, const auto& from) NOEXCEPT
+{
+    code_t number{};
+    if (to_signed(number, from))
+    {
+        state_ = state::object_start;
+        to = number;
+    }
+    else if (from == "null")
+    {
+        state_ = state::object_start;
+        to = null_t{};
+    }
+    else
+    {
+        state_ = state::error_state;
+    }
+
+    // Assign last, since 'from' may be a referece to value.
+    value_ = {};
+}
+
+TEMPLATE
+inline void CLASS::assign_numeric_id(auto& to, const auto& from) NOEXCEPT
+{
+    code_t number{};
+    if (to_signed(number, from))
+    {
+        state_ = state::object_start;
+        to = number;
+    }
+    else
+    {
+        state_ = state::error_state;
+    }
+
+    // Assign last, since 'from' may be a referece to value.
+    value_ = {};
+}
+
+TEMPLATE
 inline bool CLASS::assign_response(auto& to, const auto& from) NOEXCEPT
 {
     if constexpr (response)

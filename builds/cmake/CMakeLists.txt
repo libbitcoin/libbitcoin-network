@@ -381,6 +381,7 @@ if (with-tests)
         "../../test/messages/http/enums/target.cpp"
         "../../test/messages/json/body.cpp"
         "../../test/messages/json/parser.cpp"
+        "../../test/messages/json/parser_statics.cpp"
         "../../test/messages/peer/address.cpp"
         "../../test/messages/peer/address_item.cpp"
         "../../test/messages/peer/alert.cpp"

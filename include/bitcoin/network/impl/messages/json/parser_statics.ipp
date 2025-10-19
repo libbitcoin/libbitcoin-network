@@ -22,6 +22,7 @@
 #include <cctype>
 #include <charconv>
 #include <iterator>
+#include <regex>
 #include <variant>
 
 namespace libbitcoin {
@@ -79,32 +80,33 @@ inline bool CLASS::is_error(const result_t& error) NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::to_number(int64_t& out, view token) NOEXCEPT
+inline bool CLASS::to_signed(code_t& out, view token) NOEXCEPT
 {
-    // BUGBUG: accept/convert any valid json number and reject all others.
     const auto end = std::next(token.data(), token.size());
     return is_zero(std::from_chars(token.data(), end, out).ec);
 }
 
+// JSON-RPC 2.0: Numbers SHOULD NOT contain fractional parts.
+// In other words, numbers can contain fractional parts :[.
+
 TEMPLATE
-inline id_t CLASS::to_id(view token) NOEXCEPT
+inline bool CLASS::to_double(double& out, view token) NOEXCEPT
 {
-    int64_t out{};
-    if (to_number(out, token))
+    static const std::regex json_number{
+        R"(-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?$)" };
+
+    try
     {
-        // BUGBUG: conflates with quoted.
-        return out;
+        if (!std::regex_match(token.begin(), token.end(), json_number))
+            return false;
     }
-    else if (token == "null")
+    catch (...)
     {
-        // BUGBUG: conflates with quoted.
-        return null_t{};
     }
-    else
-    {
-        // BUGBUG: conflates with null/number.
-        return string_t{ token };
-    }
+
+    const auto end = std::next(token.data(), token.size());
+    const auto result = std::from_chars(token.data(), end, out);
+    return (is_zero(result.ec) && result.ptr == end);
 }
 
 TEMPLATE

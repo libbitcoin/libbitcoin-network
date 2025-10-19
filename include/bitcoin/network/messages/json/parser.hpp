@@ -96,8 +96,8 @@ protected:
     static inline bool is_whitespace(char c) NOEXCEPT;
     static inline bool is_nullic(view token, char c) NOEXCEPT;
     static inline bool is_error(const result_t& error) NOEXCEPT;
-    static inline bool to_number(int64_t& out, view token) NOEXCEPT;
-    static inline id_t to_id(view token) NOEXCEPT;
+    static inline bool to_signed(code_t& out, view token) NOEXCEPT;
+    static inline bool to_double(double& out, view token) NOEXCEPT;
     static inline bool toggle(bool& quoted) NOEXCEPT;
     static inline bool increment(size_t& depth, state& status) NOEXCEPT;
     static inline bool decrement(size_t& depth, state& status) NOEXCEPT;
@@ -149,6 +149,8 @@ protected:
 
     /// Assignment.
     /// -----------------------------------------------------------------------
+    inline void assign_unquoted_id(auto& to, const auto& from) NOEXCEPT;
+    inline void assign_numeric_id(auto& to, const auto& from) NOEXCEPT;
     inline bool assign_response(auto& to, const auto& from) NOEXCEPT;
     inline bool assign_request(auto& to, const auto& from) NOEXCEPT;
     inline void assign_value(auto& to, const auto& from) NOEXCEPT;

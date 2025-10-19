@@ -167,8 +167,8 @@ void CLASS::finalize() NOEXCEPT
         }
         case state::id:
         {
-            // BUGBUG: no quoting context.
-            assign_value(parsed_->id, to_id(value_));
+            // Quoted ids cannot land here, always assigned by handle_id.
+            assign_unquoted_id(parsed_->id, value_);
             break;
         }
 
