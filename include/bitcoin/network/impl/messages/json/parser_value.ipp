@@ -232,7 +232,7 @@ void CLASS::handle_error_data(char c) NOEXCEPT
     if (c == '"')
     {
         if (toggle(quoted_))
-            assign_response(error.data, value_);
+            assign_response(error_.data, value_);
     }
     else if (quoted_)
     {

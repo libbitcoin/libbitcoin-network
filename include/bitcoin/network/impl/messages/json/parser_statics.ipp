@@ -66,10 +66,10 @@ bool CLASS::is_whitespace(char c) NOEXCEPT
 TEMPLATE
 bool CLASS::is_nullic(view token, char c) NOEXCEPT
 {
-    return (value_.empty()  && c == 'n')
-        || (value_ == "n"   && c == 'u')
-        || (value_ == "nu"  && c == 'l')
-        || (value_ == "nul" && c == 'l');
+    return (token.empty()  && c == 'n')
+        || (token == "n"   && c == 'u')
+        || (token == "nu"  && c == 'l')
+        || (token == "nul" && c == 'l');
 }
 
 TEMPLATE
