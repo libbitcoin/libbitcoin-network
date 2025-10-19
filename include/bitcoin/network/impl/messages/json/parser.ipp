@@ -43,7 +43,7 @@ bool CLASS::is_done() const NOEXCEPT
 TEMPLATE
 error_code CLASS::get_error() const NOEXCEPT
 {
-    return has_error() ? parse_error() : error_code{};
+    return has_error() ? failure() : error_code{};
 }
 
 TEMPLATE
@@ -84,7 +84,7 @@ void CLASS::reset() NOEXCEPT
 }
 
 TEMPLATE
-size_t CLASS::write(const std::string_view& data, error_code& ec) NOEXCEPT
+size_t CLASS::write(const std::string_view& data) NOEXCEPT
 {
     for (char_ = data.begin(); char_ != data.end(); ++char_)
     {
@@ -95,8 +95,8 @@ size_t CLASS::write(const std::string_view& data, error_code& ec) NOEXCEPT
         }
     }
 
+    // Check object relationships if complete.
     validate();
-    ec = get_error();
 
     // Parse can successfully (or not) terminate before fully consuming data.
     return distance(data.begin(), char_);
@@ -162,25 +162,28 @@ bool CLASS::done_parsing(char c) NOEXCEPT
 TEMPLATE
 void CLASS::validate() NOEXCEPT
 {
-    // Validating but not done/successful parsing.
+    // Validation is only relevant to a successful/complete parse.
+    // Otherwise there is either an error or intermediate state.
     if (state_ != state::complete)
-        state_ = state::error_state;
+        return;
 
-    // Unbatched requires a single element, empty implies error.
+    // Unbatched requires a single request/response.
     if (batch_.empty())
         state_ = state::error_state;
 
-    if constexpr (require_jsonrpc_element_in_version2)
+    // This needs to be relaxed (!strict) for stratum_v1.
+    if constexpr (strict && require == version::v2)
     {
-        // This needs to be relaxed for stratum_v1.
-        if (is_version2() && parsed_->jsonrpc.empty())
+        // Undefined version means the jsonrpc element was not encountered.
+        if (parsed_->jsonrpc == version::undefined)
             state_ = state::error_state;
     }
 
     if constexpr (request)
     {
         // Non-null "id" required in version1.
-        if (is_version1() && is_null(parsed_->id))
+        if (parsed_->jsonrpc == version::v1 &&
+            is_null(parsed_->id))
             state_ = state::error_state;
     }
     else
@@ -207,9 +210,7 @@ void CLASS::validate() NOEXCEPT
 ////        case state::jsonrpc:
 ////        {
 ////            if (is_version(value_))
-////                assign_string(parsed_->jsonrpc, value_);
-////            else
-////                state_ = state::error_state;
+////                assign_version(parsed_->jsonrpc, value_);
 ////        }
 ////        case state::method:
 ////        {

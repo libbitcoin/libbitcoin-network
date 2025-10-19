@@ -271,8 +271,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\body.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\protocol.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\transport.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serializer.hpp" />

@@ -32,10 +32,19 @@ namespace json {
 // protected/static
 
 TEMPLATE
-inline json::error_code CLASS::parse_error() NOEXCEPT
+inline json::error_code CLASS::failure() NOEXCEPT
 {
+    // TODO: use network error codes.
     namespace errc = boost::system::errc;
     return errc::make_error_code(errc::invalid_argument);
+}
+
+TEMPLATE
+inline json::error_code CLASS::incomplete() NOEXCEPT
+{
+    // TODO: use network error codes.
+    namespace errc = boost::system::errc;
+    return errc::make_error_code(errc::interrupted);
 }
 
 TEMPLATE

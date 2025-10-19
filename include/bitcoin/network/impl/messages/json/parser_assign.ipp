@@ -27,41 +27,52 @@ namespace json {
 
 // protected
 
-// Assign value_ after assignment, since 'from' may be a reference to value_.
-
 TEMPLATE
-inline void CLASS::assign_error(error_option& to, const result_t& from) NOEXCEPT
+inline void CLASS::assign_error(error_option& to, result_t& from) NOEXCEPT
 {
     state_ = state::object_start;
     to = error_option{ from };
-    value_ = {};
+    from = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_value(value_option& to, const view_t& from) NOEXCEPT
+inline void CLASS::assign_value(value_option& to, view_t& from) NOEXCEPT
 {
     state_ = state::object_start;
     to = value_option{ value_t{ string_t{ from } } };
-    value_ = {};
+    from = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_string(string_t& to, const view_t& from) NOEXCEPT
+inline void CLASS::assign_string(string_t& to, view_t& from) NOEXCEPT
 {
     state_ = state::object_start;
     to = string_t{ from };
-    value_ = {};
+    from = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_string_id(id_t& to, const view_t& from) NOEXCEPT
+inline void CLASS::assign_version(version& to, view_t& from) NOEXCEPT
+{
+    state_ = state::object_start;
+    to = to_version(from);
+    if (to == version::invalid)
+        state_ = state::error_state;
+
+    from = {};
+}
+
+// id types
+
+TEMPLATE
+inline void CLASS::assign_string_id(id_t& to, view_t& from) NOEXCEPT
 {
     std::get<string_t>(to) = string_t{ from };
-    value_ = {};
+    from = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_numeric_id(code_t& to, const view_t& from) NOEXCEPT
+inline void CLASS::assign_numeric_id(code_t& to, view_t& from) NOEXCEPT
 {
     code_t number{};
 
@@ -75,25 +86,25 @@ inline void CLASS::assign_numeric_id(code_t& to, const view_t& from) NOEXCEPT
         state_ = state::error_state;
     }
 
-    value_ = {};
+    from = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_numeric_id(id_t& to, const view_t& from) NOEXCEPT
+inline void CLASS::assign_numeric_id(id_t& to, view_t& from) NOEXCEPT
 {
     assign_numeric_id(std::get<code_t>(to), from);
 }
 
 TEMPLATE
-inline void CLASS::assign_null_id(id_t& to) NOEXCEPT
+inline void CLASS::assign_null_id(id_t& to, view_t& from) NOEXCEPT
 {
     state_ = state::object_start;
     std::get<null_t>(to) = null_t{};
-    value_ = {};
+    from = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_unquoted_id(id_t& to, const view_t& from) NOEXCEPT
+inline void CLASS::assign_unquoted_id(id_t& to, view_t& from) NOEXCEPT
 {
     code_t number{};
 
@@ -112,7 +123,7 @@ inline void CLASS::assign_unquoted_id(id_t& to, const view_t& from) NOEXCEPT
         state_ = state::error_state;
     }
 
-    value_ = {};
+    from = {};
 }
 
 } // namespace json

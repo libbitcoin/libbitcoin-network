@@ -26,22 +26,28 @@ namespace json {
 // protected
 
 TEMPLATE
-inline bool CLASS::is_version(const view_t& token) const NOEXCEPT
+inline json::version CLASS::to_version(const view_t& token) const NOEXCEPT
 {
-    return (is_version1() && (token == "1.0" || token.empty()))
-        || (is_version2() && (token == "2.0"));
+    if (allow_version1() && (token == "1.0" || token.empty()))
+        return version::v1;
+
+    if (allow_version2() && token == "2.0")
+        return version::v2;
+
+    // assign_version() expects this in case of invalid value.
+    return version::invalid;
 }
 
 TEMPLATE
-inline bool CLASS::is_version1() const NOEXCEPT
+inline bool CLASS::allow_version1() const NOEXCEPT
 {
-    return version == protocol::any || version == protocol::v1;
+    return require == version::any || require == version::v1;
 }
 
 TEMPLATE
-inline bool CLASS::is_version2() const NOEXCEPT
+inline bool CLASS::allow_version2() const NOEXCEPT
 {
-    return version == protocol::any || version == protocol::v2;
+    return require == version::any || require == version::v2;
 }
 
 } // namespace json

@@ -24,42 +24,39 @@ BOOST_AUTO_TEST_SUITE(parser_tests)
 
 using namespace network::json;
 
-template <bool Request, bool Strict, json::protocol Version>
+template <bool Request, bool Strict, version Require>
 struct test_parser
-  : public parser<Request, Strict, Version>
+  : public parser<Request, Strict, Require>
 {
-    using base = parser<Request, Strict, Version>;
+    using base = parser<Request, Strict, Require>;
     using base::base;
 };
 
-using request_parser = test_parser<true, true, json::protocol::any>;
-using response_parser = test_parser<false, true, json::protocol::any>;
+using request_parser = test_parser<true, true, version::any>;
+using response_parser = test_parser<false, true, version::any>;
 static_assert(request_parser::request);
 static_assert(response_parser::response);
 static_assert(!request_parser::response);
 static_assert(!response_parser::request);
 
-////static error_code parse_error() NOEXCEPT
-////{
-////    namespace errc = boost::system::errc;
-////    return errc::make_error_code(errc::invalid_argument);
-////}
+using namespace boost::system::errc;
+static auto incomplete = make_error_code(interrupted);
+static auto failure = make_error_code(invalid_argument);
 
 BOOST_AUTO_TEST_CASE(parser__write__whitespace__success)
 {
-    error_code ec{};
     request_parser parse{};
     string_t text{ R"({    "jsonrpc"    :    "2.0"    })" };
-    const auto size = parse.write(text, ec);
-    BOOST_CHECK(!ec);
-    BOOST_CHECK_EQUAL(size, text.size());
+    const auto size = parse.write(text);
+    BOOST_CHECK(!parse.has_error());
     BOOST_CHECK(parse.is_done());
+    BOOST_CHECK_EQUAL(size, text.size());
     
     const auto& batch = parse.get_parsed();
-    BOOST_REQUIRE_EQUAL(batch.size(), one);
+    BOOST_CHECK(is_one(batch.size()));
     
     const auto& request = batch.front();
-    BOOST_CHECK_EQUAL(request.jsonrpc, "2.0");
+    BOOST_CHECK(request.jsonrpc == version::v2);
 }
 
 ////BOOST_AUTO_TEST_CASE(parser__write__valid_request__parses_correctly)
@@ -141,7 +138,7 @@ BOOST_AUTO_TEST_CASE(parser__write__whitespace__success)
 ////
 ////BOOST_AUTO_TEST_CASE(parser__write__response_with_error__parses_correctly)
 ////{
-////    response_parser parse{ json::protocol::v2 };
+////    response_parser parse{ json::version::v2 };
 ////    string_t text{ R"({"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": 42})" };
 ////    error_code ec{};
 ////

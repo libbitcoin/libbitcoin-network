@@ -51,7 +51,7 @@ enum class parser_state
 template <
     bool Request,
     bool Strict = true,
-    json::protocol Version = json::protocol::any>
+    json::version Require = json::version::any>
 class parser
 {
 public:
@@ -60,7 +60,8 @@ public:
 
     /// Parsed object type.
     /// -----------------------------------------------------------------------
-    static constexpr auto version = Version;
+    static constexpr auto strict = Strict;
+    static constexpr auto require = Require;
     static constexpr auto request = Request;
     static constexpr auto response = !request;
     using parsed_t = iif<request, request_t, response_t>;
@@ -68,14 +69,22 @@ public:
 
     /// Properties.
     /// -----------------------------------------------------------------------
+
+    /// Means that parse is successful and complete.
     bool is_done() const NOEXCEPT;
+
+    /// Implies that get_parsed() may be empty.
     bool has_error() const NOEXCEPT;
+
+    /// Returns success in case of incomplete parse.
     error_code get_error() const NOEXCEPT;
+
+    /// May be empty if !is_done().
     const batch_t& get_parsed() const NOEXCEPT;
 
     /// Methods.
     /// -----------------------------------------------------------------------
-    size_t write(const std::string_view& data, error_code& ec) NOEXCEPT;
+    size_t write(const std::string_view& data) NOEXCEPT;
     void reset() NOEXCEPT;
 
 protected:
@@ -83,11 +92,11 @@ protected:
     using view_t = std::string_view;
     using parse_it = batch_t::iterator;
     using char_it = view_t::const_iterator;
-    static constexpr auto require_jsonrpc_element_in_version2 = Strict;
 
     /// Statics.
     /// -----------------------------------------------------------------------
-    static inline error_code parse_error() NOEXCEPT;
+    static inline error_code failure() NOEXCEPT;
+    static inline error_code incomplete() NOEXCEPT;
     static inline bool is_null(const id_t& id) NOEXCEPT;
     static inline bool is_numeric(char c) NOEXCEPT;
     static inline bool is_whitespace(char c) NOEXCEPT;
@@ -137,20 +146,22 @@ protected:
 
     /// Versioning.
     /// -----------------------------------------------------------------------
-    inline bool is_version(const view_t& token) const NOEXCEPT;
-    inline bool is_version1() const NOEXCEPT;
-    inline bool is_version2() const NOEXCEPT;
+    inline version to_version(const view_t& token) const NOEXCEPT;
+    inline bool allow_version1() const NOEXCEPT;
+    inline bool allow_version2() const NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------
-    inline void assign_error(error_option& to, const result_t& from) NOEXCEPT;
-    inline void assign_value(value_option& to, const view_t& from) NOEXCEPT;
-    inline void assign_string(string_t& to, const view_t& from) NOEXCEPT;
-    inline void assign_string_id(id_t& to, const view_t& from) NOEXCEPT;
-    inline void assign_numeric_id(code_t& to, const view_t& from) NOEXCEPT;
-    inline void assign_numeric_id(id_t& to, const view_t& from) NOEXCEPT;
-    inline void assign_unquoted_id(id_t& to, const view_t& from) NOEXCEPT;
-    inline void assign_null_id(id_t& to) NOEXCEPT;
+    inline void assign_error(error_option& to, result_t& from) NOEXCEPT;
+    inline void assign_value(value_option& to, view_t& from) NOEXCEPT;
+    inline void assign_string(string_t& to, view_t& from) NOEXCEPT;
+    inline void assign_version(version& to, view_t& from) NOEXCEPT;
+
+    inline void assign_string_id(id_t& to, view_t& from) NOEXCEPT;
+    inline void assign_numeric_id(code_t& to, view_t& from) NOEXCEPT;
+    inline void assign_numeric_id(id_t& to, view_t& from) NOEXCEPT;
+    inline void assign_unquoted_id(id_t& to, view_t& from) NOEXCEPT;
+    inline void assign_null_id(id_t& to, view_t& from) NOEXCEPT;
 
 private:
     // The length of the null token.
@@ -179,8 +190,8 @@ private:
 } // namespace network
 } // namespace libbitcoin
 
-#define TEMPLATE template <bool Request, bool Strict, json::protocol Version>
-#define CLASS parser<Request, Strict, Version>
+#define TEMPLATE template <bool Request, bool Strict, json::version Require>
+#define CLASS parser<Request, Strict, Require>
 
 #define ASSIGN_REQUEST(kind, to, from) \
 { \

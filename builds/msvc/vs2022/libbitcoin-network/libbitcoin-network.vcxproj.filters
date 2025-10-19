@@ -557,10 +557,10 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\body.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\protocol.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\transport.hpp">
       <Filter>include\bitcoin\network\messages\json\enums</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\transport.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\version.hpp">
       <Filter>include\bitcoin\network\messages\json\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\messages.hpp">

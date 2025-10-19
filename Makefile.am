@@ -374,8 +374,8 @@ include_bitcoin_network_messages_json_HEADERS = \
 
 include_bitcoin_network_messages_json_enumsdir = ${includedir}/bitcoin/network/messages/json/enums
 include_bitcoin_network_messages_json_enums_HEADERS = \
-    include/bitcoin/network/messages/json/enums/protocol.hpp \
-    include/bitcoin/network/messages/json/enums/transport.hpp
+    include/bitcoin/network/messages/json/enums/transport.hpp \
+    include/bitcoin/network/messages/json/enums/version.hpp
 
 include_bitcoin_network_messages_peerdir = ${includedir}/bitcoin/network/messages/peer
 include_bitcoin_network_messages_peer_HEADERS = \

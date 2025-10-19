@@ -77,11 +77,12 @@ struct body
                 using namespace boost::asio;
                 const auto size = buffer_size(buffer);
                 const auto data = buffer_cast<const char_t*>(buffer);
-                added += parser_.write({ data, size }, ec);
-                if (ec || parser_.is_done())
+                added += parser_.write({ data, size });
+                if (parser_.is_done())
                     break;
             }
 
+            ec = parser_.get_error();
             return added;
         }
 

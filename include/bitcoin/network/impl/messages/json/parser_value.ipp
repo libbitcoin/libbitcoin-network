@@ -37,12 +37,7 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
     if (c == '"')
     {
         if (toggle(quoted_))
-        {
-            if (is_version(value_))
-                assign_string(parsed_->jsonrpc, value_);
-            else
-                state_ = state::error_state;
-        }
+            assign_version(parsed_->jsonrpc, value_);
     }
     else if (quoted_)
     {
@@ -129,7 +124,7 @@ void CLASS::handle_id(char c) NOEXCEPT
     else if (is_nullic(value_, c))
     {
         if (consume_char(value_) == null_size)
-            assign_null_id(parsed_->id);
+            assign_null_id(parsed_->id, value_);
     }
     else if (is_numeric(c))
     {

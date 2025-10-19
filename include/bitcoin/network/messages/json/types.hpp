@@ -24,7 +24,7 @@
 #include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
-#include <bitcoin/network/messages/json/enums/protocol.hpp>
+#include <bitcoin/network/messages/json/enums/version.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -69,7 +69,7 @@ using error_option = std::optional<result_t>;
 
 struct BCT_API request_t
 {
-    string_t jsonrpc{};
+    version jsonrpc{ version::undefined };
     string_t method{};
     value_option params{};
     id_t id{};
@@ -80,7 +80,7 @@ struct BCT_API request_t
 
 struct BCT_API response_t
 {
-    string_t jsonrpc{};
+    version jsonrpc{ version::undefined };
     value_option result{};
     error_option error{};
     id_t id{};
