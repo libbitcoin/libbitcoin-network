@@ -59,6 +59,10 @@ void CLASS::handle_object_start(char c) NOEXCEPT
         // state::key implies quoted.
         state_ = state::key;
     }
+    else if (c == ',')
+    {
+        state_ = state::object_start;
+    }
     else if (c == '}')
     {
         if (!decrement(depth_, state_))
@@ -209,6 +213,9 @@ void CLASS::handle_value(char c) NOEXCEPT
             state_ = state::error_state;
         }
     }
+
+    if (state_ != state::key)
+        key_ = {};
 }
 
 } // namespace json

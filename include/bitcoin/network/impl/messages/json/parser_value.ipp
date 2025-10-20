@@ -137,6 +137,21 @@ void CLASS::handle_id(char c) NOEXCEPT
         else
             state_ = state::error_state;
     }
+    else if (c == '}')
+    {
+        if (is_one(depth_))
+        {
+            if (!decrement(depth_, state_))
+                return;
+
+            if (assign_numeric_id(parsed_->id, value_))
+                state_ = state::complete;
+        }
+        else
+        {
+            state_ = state::error_state;
+        }
+    }
     else if (!is_whitespace(c))
     {
         state_ = state::error_state;
