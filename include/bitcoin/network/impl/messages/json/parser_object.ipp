@@ -34,6 +34,7 @@ void CLASS::handle_initialize(char c) NOEXCEPT
     }
     else if (c == '[')
     {
+        // BUGBUG: Batch init (?) - will presumably break depth assumptions.
         state_ = state::object_start;
         increment(depth_, state_);
     }
@@ -46,14 +47,16 @@ void CLASS::handle_initialize(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_object_start(char c) NOEXCEPT
 {
-
+    // key is terminated by its closing quote in handle_key.
     if (c == '"')
     {
-        // state::key implies quoted.
         state_ = state::key;
     }
+
+    // BUGBUG: terminal characters, ] unhandled.
     else if (c == ',')
     {
+        // BUGBUG: leading (prob not trailing) ',' is ignored.
         state_ = state::object_start;
     }
     else if (c == '}')
@@ -70,19 +73,18 @@ void CLASS::handle_object_start(char c) NOEXCEPT
     }
 }
 
-// TODO:
-// Shift to key-based parsing inside errors by adding error-specific key handling,
-// or route to error-specific handlers [if key_ == "code", go to handle_error_code].
 TEMPLATE
 void CLASS::handle_key(char c) NOEXCEPT
 {
+    // Initiated by quote [in handle_object_start] so no whitespace skipping.
+
     if (c != '"')
     {
         consume_quoted(key_);
         return;
     }
 
-    // In state::key, upon '"' state changes based on accumulated key.
+    // In state::key, upon '"' state changes based on accumulated key chars.
     if (key_ == "jsonrpc")
     {
         state_ = state::value;
@@ -109,9 +111,6 @@ void CLASS::handle_key(char c) NOEXCEPT
     }
 }
 
-// TODO:
-// Shift to key-based parsing inside errors by adding error-specific key handling,
-// or route to error-specific handlers [if key_ == "code", go to handle_error_code].
 TEMPLATE
 void CLASS::handle_value(char c) NOEXCEPT
 {

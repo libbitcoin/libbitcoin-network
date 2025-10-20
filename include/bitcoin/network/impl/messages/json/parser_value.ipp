@@ -26,6 +26,7 @@ namespace json {
 TEMPLATE
 void CLASS::handle_jsonrpc(char c) NOEXCEPT
 {
+    // string is terminated by its closing quote.
     if (c == '"')
     {
         if (toggle(quoted_))
@@ -44,6 +45,7 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_method(char c) NOEXCEPT
 {
+    // string is terminated by its closing quote.
     if (c == '"')
     {
         if (toggle(quoted_))
@@ -62,6 +64,7 @@ void CLASS::handle_method(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_params(char c) NOEXCEPT
 {
+    // string is terminated by its closing quote.
     if (c == '"')
     {
         if (toggle(quoted_))
@@ -71,6 +74,8 @@ void CLASS::handle_params(char c) NOEXCEPT
     {
         consume_quoted(value_);
     }
+
+    // BUGBUG: possible overlapping terminal chars and depth confusion.
     else if (c == '[' || c == '{')
     {
         increment(depth_, state_);
@@ -81,11 +86,14 @@ void CLASS::handle_params(char c) NOEXCEPT
     }
     else if (c == ',')
     {
+        // BUGBUG: depth assumption correct?
+        // BUGBUG: leading (prob not trailing) ',' is ignored.
         if (is_one(depth_))
             assign_value(request_->params, value_);
         else
             state_ = state::error_state;
     }
+
     else if (!is_whitespace(c))
     {
         state_ = state::error_state;
@@ -95,6 +103,7 @@ void CLASS::handle_params(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_id(char c) NOEXCEPT
 {
+    // string is terminated by its closing quote.
     if (c == '"')
     {
         if (toggle(quoted_))
@@ -104,17 +113,23 @@ void CLASS::handle_id(char c) NOEXCEPT
     {
         consume_quoted(value_);
     }
+
+    // null is terminated by its 4th character.
     else if (is_nullic(value_, c))
     {
         if (consume_char(value_) == null_size)
             assign_null_id(request_->id, value_);
     }
+
+    // BUGBUG: terminal characters, ] unhandled?
+    // numeric is terminated by a terminal character for its context.
     else if (is_numeric(c))
     {
         consume_char(value_);
     }
     else if (c == ',')
     {
+        // BUGBUG: depth assumption correct?
         if (is_one(depth_))
             assign_numeric_id(request_->id, value_);
         else
@@ -122,6 +137,7 @@ void CLASS::handle_id(char c) NOEXCEPT
     }
     else if (c == '}')
     {
+        // BUGBUG: depth assumption correct?
         if (is_one(depth_))
         {
             if (!decrement(depth_, state_))
