@@ -30,7 +30,7 @@ void CLASS::handle_initialize(char c) NOEXCEPT
     {
         state_ = state::object_start;
         request_ = add_request();
-        increment(depth_, state_);
+        ////increment(depth_, state_);
         trailing_ = false;
         expected_ = '}';
     }
@@ -55,7 +55,7 @@ void CLASS::handle_array_start(char c) NOEXCEPT
         reset_internal();
         state_ = state::object_start;
         request_ = add_request();
-        increment(depth_, state_);
+        ////increment(depth_, state_);
         trailing_ = false;
         expected_ = '}';
     }
@@ -88,11 +88,12 @@ void CLASS::handle_object_start(char c) NOEXCEPT
 
     else if (c == '}' && expected_ == '}')
     {
-        if (!decrement(depth_, state_))
-            return;
+        ////if (!decrement(depth_, state_))
+        ////    return;
 
-        state_ = is_zero(depth_) ? (batched_ ? state::array_start :
-            state::complete) : state::object_start;
+        ////state_ = is_zero(depth_) ? (batched_ ? state::array_start :
+        ////    state::complete) : state::object_start;
+        state_ = batched_ ? state::array_start : state::complete;
 
         // object close, so at least one element in current csv set.
         trailing_ = true;
@@ -100,7 +101,7 @@ void CLASS::handle_object_start(char c) NOEXCEPT
 
     else if (c == ']' && expected_ == ']')
     {
-        state_ = is_zero(depth_) ? state::complete : state::error_state;
+        state_ = state::complete;
     }
 
     else if (!is_whitespace(c))

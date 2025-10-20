@@ -131,29 +131,29 @@ inline bool CLASS::toggle(bool& quoted) NOEXCEPT
     return !((quoted = !quoted));
 }
 
-TEMPLATE
-inline bool CLASS::increment(size_t& depth, state& status) NOEXCEPT
-{
-    if (is_zero(++depth))
-    {
-        status = state::error_state;
-        return false;
-    }
-
-    return true;
-}
-
-TEMPLATE
-inline bool CLASS::decrement(size_t& depth, state& status) NOEXCEPT
-{
-    if (is_zero(depth--))
-    {
-        status = state::error_state;
-        return false;
-    }
-
-    return true;
-}
+////TEMPLATE
+////inline bool CLASS::increment(size_t& depth, state& status) NOEXCEPT
+////{
+////    if (is_zero(++depth))
+////    {
+////        status = state::error_state;
+////        return false;
+////    }
+////
+////    return true;
+////}
+////
+////TEMPLATE
+////inline bool CLASS::decrement(size_t& depth, state& status) NOEXCEPT
+////{
+////    if (is_zero(depth--))
+////    {
+////        status = state::error_state;
+////        return false;
+////    }
+////
+////    return true;
+////}
 
 TEMPLATE
 inline size_t CLASS::distance(const char_it& from,

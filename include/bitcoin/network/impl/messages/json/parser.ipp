@@ -83,7 +83,7 @@ void CLASS::reset_internal() NOEXCEPT
     quoted_ = {};
     expected_ = {};
     state_ = {};
-    depth_ = {};
+    ////depth_ = {};
     char_ = {};
     key_ = {};
     value_ = {};
