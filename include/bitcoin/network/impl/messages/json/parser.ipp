@@ -70,15 +70,22 @@ const typename CLASS::request_it CLASS::add_request() NOEXCEPT
 TEMPLATE
 void CLASS::reset() NOEXCEPT
 {
+    reset_internal();
+    batch_.clear();
     batched_ = {};
+}
+
+TEMPLATE
+void CLASS::reset_internal() NOEXCEPT
+{
+    trailing_ = {};
     escaped_ = {};
     quoted_ = {};
+    expected_ = {};
     state_ = {};
-    depth_ = {};
     char_ = {};
     key_ = {};
     value_ = {};
-    batch_ = {};
     request_ = {};
 }
 
@@ -112,6 +119,9 @@ bool CLASS::done_parsing(char c) NOEXCEPT
         case state::initial:
             handle_initialize(c);
             break;
+        case state::array_start:
+            handle_array_start(c);
+            break;
         case state::object_start:
             handle_object_start(c);
             break;
@@ -138,7 +148,8 @@ bool CLASS::done_parsing(char c) NOEXCEPT
             break;
     }
 
-    std::cout << "[" << *char_ << "]<" << key_ << ">=|" << value_ << "|" << std::endl;
+    // hack for testing.
+    ////std::cout << "[" << *char_ << "]<" << key_ << ">=|" << value_ << "|" << std::endl;
     return is_done();
 }
 

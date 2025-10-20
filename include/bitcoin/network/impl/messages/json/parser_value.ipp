@@ -75,24 +75,52 @@ void CLASS::handle_params(char c) NOEXCEPT
         consume_quoted(value_);
     }
 
-    // BUGBUG: possible overlapping terminal chars and depth confusion.
-    else if (c == '[' || c == '{')
-    {
-        increment(depth_, state_);
-    }
-    else if (c == ']' || c == '}')
-    {
-        decrement(depth_, state_);
-    }
-    else if (c == ',')
-    {
-        // BUGBUG: depth assumption correct?
-        // BUGBUG: leading (prob not trailing) ',' is ignored.
-        if (is_one(depth_))
-            assign_value(request_->params, value_);
-        else
-            state_ = state::error_state;
-    }
+    // TODO: use siliar to id processing, but use full precision json number.
+    // TODO: change value type to 
+
+    ////// array [positional] or object {named}.
+    ////else if (c == '[')
+    ////{
+    ////    // BUGBUG: depth conflict with {}.
+    ////    // BUGBUG: depth inconsistent within [], see batch.
+    ////    increment(depth_, state_);
+    ////    expected_ = ']';
+    ////}
+    ////else if (c == '{')
+    ////{
+    ////    // BUGBUG: depth conflict with [].
+    ////    increment(depth_, state_);
+    ////    expected_ = '}';
+    ////}
+    ////else if (c == ']' || c == '}')
+    ////{
+    ////    if ((c == ']' && expected_ != ']') ||
+    ////        (c == '}' && expected_ != '}'))
+    ////    {
+    ////        state_ = state::error_state;
+    ////        return;
+    ////    }
+    ////
+    ////    // BUGBUG: depth issues (above).
+    ////    if (!decrement(depth_, state_))
+    ////        return;
+    ////
+    ////    // BUGBUG: depth issues (above).
+    ////    // BUGBUG: string assignment only.
+    ////    if (is_one(depth_))
+    ////        assign_value(request_->params, value_);
+    ////    else
+    ////        state_ = state::error_state;
+    ////}
+    ////else if (c == ',' && trailing_)
+    ////{
+    ////    // BUGBUG: depth issues (above).
+    ////    // BUGBUG: string assignment only.
+    ////    if (is_one(depth_) && !value_.empty())
+    ////        assign_value(request_->params, value_);
+    ////    else
+    ////        state_ = state::error_state;
+    ////}
 
     else if (!is_whitespace(c))
     {
@@ -121,39 +149,27 @@ void CLASS::handle_id(char c) NOEXCEPT
             assign_null_id(request_->id, value_);
     }
 
-    // BUGBUG: terminal characters, ] unhandled?
-    // numeric is terminated by a terminal character for its context.
+    // number is terminated by the first non-number character.
     else if (is_numeric(c))
     {
         consume_char(value_);
     }
-    else if (c == ',')
+    else if (is_whitespace(c) && value_.empty())
     {
-        // BUGBUG: depth assumption correct?
-        if (is_one(depth_))
-            assign_numeric_id(request_->id, value_);
-        else
-            state_ = state::error_state;
+        // skip whitespace before first number character.
+        return;
     }
-    else if (c == '}')
+    else if (!assign_numeric_id(request_->id, value_))
     {
-        // BUGBUG: depth assumption correct?
-        if (is_one(depth_))
-        {
-            if (!decrement(depth_, state_))
-                return;
+        // empty string or other failures, state set by number parse.
+        return;
+    }
 
-            if (assign_numeric_id(request_->id, value_))
-                state_ = state::complete;
-        }
-        else
-        {
-            state_ = state::error_state;
-        }
-    }
-    else if (!is_whitespace(c))
+    // redispatch the terminating character.
+    else
     {
-        state_ = state::error_state;
+        state_ = state::object_start;
+        handle_object_start(c);
     }
 }
 

@@ -90,6 +90,7 @@ inline bool CLASS::is_error(const result_t& error) NOEXCEPT
 TEMPLATE
 inline bool CLASS::to_signed(code_t& out, const view_t& token) NOEXCEPT
 {
+    // TODO: unit test to ensure empty token always produces false (not zero).
     const auto end = std::next(token.data(), token.size());
     return is_zero(std::from_chars(token.data(), end, out).ec);
 }
@@ -128,30 +129,6 @@ TEMPLATE
 inline bool CLASS::toggle(bool& quoted) NOEXCEPT
 {
     return !((quoted = !quoted));
-}
-
-TEMPLATE
-inline bool CLASS::increment(size_t& depth, state& status) NOEXCEPT
-{
-    if (is_zero(++depth))
-    {
-        status = state::error_state;
-        return false;
-    }
-
-    return true;
-}
-
-TEMPLATE
-inline bool CLASS::decrement(size_t& depth, state& status) NOEXCEPT
-{
-    if (is_zero(depth--))
-    {
-        status = state::error_state;
-        return false;
-    }
-
-    return true;
 }
 
 TEMPLATE
