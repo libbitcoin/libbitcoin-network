@@ -32,17 +32,13 @@ void CLASS::handle_initialize(char c) NOEXCEPT
 
     if (c == '{')
     {
-        batched_ = false;
         parsed_ = add_remote_procedure_call();
-
         state_ = state::object_start;
         increment(depth_, state_);
         return;
     }
     else if (c == '[')
     {
-        batched_ = true;
-
         state_ = state::object_start;
         increment(depth_, state_);
         return;
@@ -70,49 +66,6 @@ void CLASS::handle_object_start(char c) NOEXCEPT
 
         if (is_zero(depth_))
             state_ = state::complete;
-    }
-    else if (batched_)
-    {
-        if (c == '{')
-        {
-            if (is_one(depth_))
-            {
-                parsed_ = add_remote_procedure_call();
-                increment(depth_, state_);
-            }
-            else
-            {
-                state_ = state::error_state;
-            }
-        }
-        else if (c == ']')
-        {
-            if (is_one(depth_))
-            {
-                state_ = state::complete;
-                decrement(depth_, state_);
-            }
-            else
-            {
-                state_ = state::error_state;
-            }
-        }
-        else if (c == ',')
-        {
-            if (is_one(depth_))
-            {
-                // no depth change.
-                state_ = state::object_start;
-            }
-            else
-            {
-                state_ = state::error_state;
-            }
-        }
-        else if (!is_whitespace(c))
-        {
-            state_ = state::error_state;
-        }
     }
     else if (!is_whitespace(c))
     {
