@@ -83,14 +83,9 @@ void CLASS::handle_object_start(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_key(char c) NOEXCEPT
 {
-    // terminating quote cannot be an escape or be escaped.
-    if (consume_escape(key_, c))
-        return;
-
-    // consume non-quote.
     if (c != '"')
     {
-        consume_char(key_);
+        consume_quoted(key_);
         return;
     }
 

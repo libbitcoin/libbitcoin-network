@@ -31,9 +31,6 @@ namespace json {
 TEMPLATE
 void CLASS::handle_jsonrpc(char c) NOEXCEPT
 {
-    if (consume_escape(value_, c))
-        return;
-
     if (c == '"')
     {
         if (toggle(quoted_))
@@ -41,7 +38,7 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume_char(value_);
+        consume_quoted(value_);
     }
     else if (!is_whitespace(c))
     {
@@ -52,9 +49,6 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_method(char c) NOEXCEPT
 {
-    if (consume_escape(value_, c))
-        return;
-
     if (c == '"')
     {
         if (toggle(quoted_))
@@ -62,7 +56,7 @@ void CLASS::handle_method(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume_char(value_);
+        consume_quoted(value_);
     }
     else if (!is_whitespace(c))
     {
@@ -73,9 +67,6 @@ void CLASS::handle_method(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_params(char c) NOEXCEPT
 {
-    if (consume_escape(value_, c))
-        return;
-
     if (c == '"')
     {
         if (toggle(quoted_))
@@ -83,7 +74,7 @@ void CLASS::handle_params(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume_char(value_);
+        consume_quoted(value_);
     }
     else if (c == '[' || c == '{')
     {
@@ -109,9 +100,6 @@ void CLASS::handle_params(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_id(char c) NOEXCEPT
 {
-    if (consume_escape(value_, c))
-        return;
-
     if (c == '"')
     {
         if (toggle(quoted_))
@@ -119,7 +107,7 @@ void CLASS::handle_id(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume_char(value_);
+        consume_quoted(value_);
     }
     else if (is_nullic(value_, c))
     {
@@ -161,9 +149,6 @@ void CLASS::handle_id(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_result(char c) NOEXCEPT
 {
-    if (consume_escape(value_, c))
-        return;
-
     if (c == '"')
     {
         if (toggle(quoted_))
@@ -171,7 +156,7 @@ void CLASS::handle_result(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume_char(value_);
+        consume_quoted(value_);
     }
     else if (c == '[' || c == '{')
     {
@@ -197,9 +182,6 @@ void CLASS::handle_result(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_error_message(char c) NOEXCEPT
 {
-    if (consume_escape(value_, c))
-        return;
-
     if (c == '"')
     {
         if (toggle(quoted_))
@@ -207,7 +189,7 @@ void CLASS::handle_error_message(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume_char(value_);
+        consume_quoted(value_);
     }
     else if (c == ',')
     {
@@ -227,9 +209,6 @@ void CLASS::handle_error_message(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_error_data(char c) NOEXCEPT
 {
-    if (consume_escape(value_, c))
-        return;
-
     if (c == '"')
     {
         if (toggle(quoted_))
@@ -237,7 +216,7 @@ void CLASS::handle_error_data(char c) NOEXCEPT
     }
     else if (quoted_)
     {
-        consume_char(value_);
+        consume_quoted(value_);
     }
     else if (c == '[' || c == '{')
     {
@@ -283,7 +262,7 @@ void CLASS::handle_error_start(char c) NOEXCEPT
     }
     else if (is_nullic(value_, c))
     {
-        consume_char(value_);
+        consume_quoted(value_);
         if (value_ == "null")
             ASSIGN_RESPONSE(error, parsed_->error, {})
     }
@@ -298,7 +277,7 @@ void CLASS::handle_error_code(char c) NOEXCEPT
 {
     if (is_numeric(c))
     {
-        consume_char(value_);
+        consume_quoted(value_);
     }
     else if (c == ',' || c == '}')
     {

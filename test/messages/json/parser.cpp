@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_no_id__error)
 BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_null_id__error)
 {
     request_parser parse{};
-    const string_t text{ R"({"jsonrpc":"1.0", "id":null})" };
+    const string_t text{ R"({"jsonrpc":"1.0","id":null})" };
     BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
@@ -173,7 +173,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_null_id__error)
 BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_numeric_id__expected)
 {
     request_parser parse{};
-    const string_t text{ R"({"jsonrpc":"1.0", "id":42})" };
+    const string_t text{ R"({"jsonrpc":"1.0","id":42})" };
     BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_numeric_id__expected)
 BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_string_id__expected)
 {
     request_parser parse{};
-    const string_t text{ R"({"jsonrpc":"1.0", "id":"foobar"})" };
+    const string_t text{ R"({"jsonrpc":"1.0","id":"foobar"})" };
     BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
@@ -196,26 +196,72 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_string_id__expected)
     BOOST_CHECK(request.jsonrpc == version::v1);
 }
 
+// whitespace
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(request_parser__write__whitespace_all__expected)
+{
+    request_parser parse{};
+    const string_t text
+    {
+        " \n\r\t { \n\r\t \"jsonrpc\" \n\r\t : \n\r\t \"2.0\" \n\r\t ,"
+        " \n\r\t \"id\" \n\r\t : \n\r\t \"foobar\" \n\r\t } \n\r\t "
+    };
+    BOOST_CHECK_EQUAL(parse.write(text), 76);
+
+    const auto request = parse.get_parsed().front();
+    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "foobar");
+    BOOST_CHECK(request.jsonrpc == version::v2);
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__whitespace_invalid_error)
+{
+    request_parser parse{};
+    const string_t text
+    {
+        " \n\r\t { \n\r\t \"jsonrpc\" \n\v\t : \n\r\t \"2.0\" \n\r\t ,"
+        " \n\r\t \"id\" \n\r\t : \n\r\t \"foobar\" \n\r\t } \n\r\t "
+    };
+    BOOST_CHECK_EQUAL(parse.write(text), 23);
+    BOOST_CHECK(parse.has_error());
+}
+
 // escape
 // ----------------------------------------------------------------------------
 
-// escapes are not yet supported
-BOOST_AUTO_TEST_CASE(request_parser__write__value_invalid_escape__error)
+BOOST_AUTO_TEST_CASE(request_parser__write__json_escape__not_implemented)
 {
     request_parser parse{};
-    const string_t text{ R"({"jsonrpc":"2.0", "id":"foo\tball"})" };
+    const string_t text{ R"({"jsonrpc":"2.0","id":"foo\\bar"})" };
     BOOST_CHECK_EQUAL(parse.write(text), text.size());
 
     const auto request = parse.get_parsed().front();
     BOOST_CHECK(std::holds_alternative<string_t>(request.id));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "foo\tball");
+
+    // Token escapes are not yet supported.
+    BOOST_CHECK_NE(std::get<string_t>(request.id), R"("foo\bar")");
+    BOOST_CHECK(request.jsonrpc == version::v2);
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__native_escape__expected)
+{
+    request_parser parse{};
+    const string_t text{ "{\"jsonrpc\":\"2.0\",\"id\":\"foo\\bar\"}" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+
+    const auto request = parse.get_parsed().front();
+    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
+
+    // Token escapes are not yet supported.
+    BOOST_CHECK_NE(std::get<string_t>(request.id), R"("foo\bar")");
     BOOST_CHECK(request.jsonrpc == version::v2);
 }
 
 ////BOOST_AUTO_TEST_CASE(parser__write__valid_request__parses_correctly)
 ////{
 ////    request_parser parse{};
-////    string_t text{ R"({"jsonrpc": "2.0", "method": "getblock", "params": ["000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"], "id": 42})" };
+////    string_t text{ R"({"jsonrpc": "2.0", "method": "getblock", "params": ["000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"],"id": 42})" };
 ////    error_code ec{};
 ////
 ////    const auto size = parse.write(text, ec);
@@ -254,7 +300,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__value_invalid_escape__error)
 ////BOOST_AUTO_TEST_CASE(parser__write__batch_request__parses_correctly)
 ////{
 ////    request_parser parse{};
-////    const string_t text{ R"([{"jsonrpc": "2.0", "method": "method1", "id": 1}, {"jsonrpc": "2.0", "method": "method2", "id": 2}])" };
+////    const string_t text{ R"([{"jsonrpc": "2.0", "method": "method1","id": 1}, {"jsonrpc": "2.0", "method": "method2","id": 2}])" };
 ////    error_code ec{};
 ////
 ////    const auto size = parse.write(text, ec);
@@ -292,7 +338,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__value_invalid_escape__error)
 ////BOOST_AUTO_TEST_CASE(parser__write__response_with_error__parses_correctly)
 ////{
 ////    response_parser parse{ json::version::v2 };
-////    const string_t text{ R"({"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}, "id": 42})" };
+////    const string_t text{ R"({"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"},"id": 42})" };
 ////    error_code ec{};
 ////
 ////    const auto size = parse.write(text, ec);

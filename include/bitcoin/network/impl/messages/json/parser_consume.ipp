@@ -28,16 +28,6 @@ namespace json {
 // protected
 
 TEMPLATE
-inline size_t CLASS::consume_char(view_t& token) NOEXCEPT
-{
-    // Token consumes character *char_ by incrementing its view over buffer.
-    const auto size = add1(token.size());
-    const auto start = token.empty() ? std::to_address(char_) : token.data();
-    token = { start, size };
-    return size;
-}
-
-TEMPLATE
 inline bool CLASS::consume_substitute(view_t&, char) NOEXCEPT
 {
     // BUGBUG: view is not modifiable, requires dynamic token (vs. view_t).
@@ -80,6 +70,23 @@ inline bool CLASS::consume_escape(view_t& token, char c) NOEXCEPT
         escaped_ = false;
         return false;
     }
+}
+
+TEMPLATE
+inline size_t CLASS::consume_quoted(view_t& token) NOEXCEPT
+{
+    // BUGBUG: escape sequences not yet supported.
+    return consume_char(token);
+}
+
+TEMPLATE
+inline size_t CLASS::consume_char(view_t& token) NOEXCEPT
+{
+    // Token consumes character *char_ by incrementing its view over buffer.
+    const auto size = add1(token.size());
+    const auto start = token.empty() ? std::to_address(char_) : token.data();
+    token = { start, size };
+    return size;
 }
 
 } // namespace json
