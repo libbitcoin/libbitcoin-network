@@ -97,9 +97,9 @@ protected:
     /// -----------------------------------------------------------------------
     static inline error_code failure() NOEXCEPT;
     static inline error_code incomplete() NOEXCEPT;
-    static inline bool is_null(const id_t& id) NOEXCEPT;
+    static constexpr bool is_whitespace(char c) NOEXCEPT;
+    static inline bool is_null_t(const id_t& id) NOEXCEPT;
     static inline bool is_numeric(char c) NOEXCEPT;
-    static inline bool is_whitespace(char c) NOEXCEPT;
     static inline bool is_nullic(const view_t& token, char c) NOEXCEPT;
     static inline bool is_error(const result_t& error) NOEXCEPT;
     static inline bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
