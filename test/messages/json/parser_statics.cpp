@@ -26,11 +26,11 @@ BOOST_AUTO_TEST_SUITE(parser_tests)
 using namespace network::json;
 
 struct accessor
-  : parser<true, true>
+  : parser<true, json::version::any>
 {
     static bool to_double(double& out, view_t token) NOEXCEPT
     {
-        return parser<true, true>::to_double(out, token);
+        return parser<true, json::version::any>::to_double(out, token);
     }
 };
 

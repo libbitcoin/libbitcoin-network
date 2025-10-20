@@ -23,25 +23,19 @@ namespace libbitcoin {
 namespace network {
 namespace json {
 
-// protected
-
 TEMPLATE
 void CLASS::handle_initialize(char c) NOEXCEPT
 {
-    // delimiters cannot be escaped.
-
     if (c == '{')
     {
-        parsed_ = add_remote_procedure_call();
+        request_ = add_request();
         state_ = state::object_start;
         increment(depth_, state_);
-        return;
     }
     else if (c == '[')
     {
         state_ = state::object_start;
         increment(depth_, state_);
-        return;
     }
     else if (!is_whitespace(c))
     {
@@ -52,7 +46,6 @@ void CLASS::handle_initialize(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_object_start(char c) NOEXCEPT
 {
-    // delimiters cannot be escaped.
 
     if (c == '"')
     {
@@ -98,47 +91,21 @@ void CLASS::handle_key(char c) NOEXCEPT
     {
         state_ = state::value;
     }
-    else if (key_ == "code")
-    {
-        state_ = state::value;
-    }
-    else if (key_ == "message")
-    {
-        state_ = state::value;
-    }
     else if (key_ == "data")
     {
         state_ = state::value;
     }
-    else if constexpr (request)
+    else if (key_ == "method")
     {
-        if (key_ == "method")
-        {
-            state_ = state::value;
-        }
-        else if (key_ == "params")
-        {
-            state_ = state::value;
-        }
-        else
-        {
-            state_ = state::error_state;
-        }
+        state_ = state::value;
     }
-    else if constexpr (response)
+    else if (key_ == "params")
     {
-        if (key_ == "result")
-        {
-            state_ = state::value;
-        }
-        else if (key_ == "error")
-        {
-            state_ = state::value;
-        }
-        else
-        {
-            state_ = state::error_state;
-        }
+        state_ = state::value;
+    }
+    else
+    {
+        state_ = state::error_state;
     }
 }
 
@@ -161,56 +128,28 @@ void CLASS::handle_value(char c) NOEXCEPT
     if (key_ == "jsonrpc")
     {
         state_ = state::jsonrpc;
+        key_ = {};
     }
     else if (key_ == "id")
     {
         state_ = state::id;
-    }
-    else if (key_ == "code")
-    {
-        state_ = state::error_code;
-    }
-    else if (key_ == "message")
-    {
-        state_ = state::error_message;
-    }
-    else if (key_ == "data")
-    {
-        state_ = state::error_data;
-    }
-    else if constexpr (request)
-    {
-        if (key_ == "method")
-        {
-            state_ = state::method;
-        }
-        else if (key_ == "params")
-        {
-            state_ = state::params;
-        }
-        else
-        {
-            state_ = state::error_state;
-        }
-    }
-    else if constexpr (response)
-    {
-        if (key_ == "result")
-        {
-            state_ = state::result;
-        }
-        else if (key_ == "error")
-        {
-            state_ = state::error_start;
-        }
-        else
-        {
-            state_ = state::error_state;
-        }
-    }
-
-    if (state_ != state::key)
         key_ = {};
+    }
+    else if (key_ == "method")
+    {
+        state_ = state::method;
+        key_ = {};
+    }
+    else if (key_ == "params")
+    {
+        state_ = state::params;
+        key_ = {};
+    }
+    else
+    {
+        state_ = state::error_state;
+        key_ = {};
+    }
 }
 
 } // namespace json

@@ -38,20 +38,12 @@ enum class parser_state
     method,
     params,
     id,
-    result,
-    error_start,
-    error_code,
-    error_message,
-    error_data,
     error_state,
     complete
 };
 
 /// A minimal-copy parser for boost asio JSON-RPC v1/v2 stream parsing.
-template <
-    bool Request,
-    bool Strict = true,
-    json::version Require = json::version::any>
+template <bool Strict = true, json::version Require = json::version::any>
 class parser
 {
 public:
@@ -62,10 +54,7 @@ public:
     /// -----------------------------------------------------------------------
     static constexpr auto strict = Strict;
     static constexpr auto require = Require;
-    static constexpr auto request = Request;
-    static constexpr auto response = !request;
-    using parsed_t = iif<request, request_t, response_t>;
-    using batch_t = std::vector<parsed_t>;
+    using batch_t = std::vector<request_t>;
 
     /// Properties.
     /// -----------------------------------------------------------------------
@@ -90,8 +79,8 @@ public:
 protected:
     using state = parser_state;
     using view_t = std::string_view;
-    using parse_it = batch_t::iterator;
     using char_it = view_t::const_iterator;
+    using request_it = batch_t::iterator;
 
     /// Statics.
     /// -----------------------------------------------------------------------
@@ -128,14 +117,6 @@ protected:
     void handle_method(char c) NOEXCEPT;
     void handle_params(char c) NOEXCEPT;
     void handle_id(char c) NOEXCEPT;
-    void handle_result(char c) NOEXCEPT;
-    void handle_error_message(char c) NOEXCEPT;
-    void handle_error_data(char c) NOEXCEPT;
-
-    /// Visitors - unquoted values.
-    /// -----------------------------------------------------------------------
-    void handle_error_start(char c) NOEXCEPT;
-    void handle_error_code(char c) NOEXCEPT;
 
     /// Comsuming.
     /// -----------------------------------------------------------------------
@@ -147,11 +128,9 @@ protected:
 
     /// Assignment.
     /// -----------------------------------------------------------------------
-    inline void assign_error(error_option& to, result_t& from) NOEXCEPT;
     inline void assign_value(value_option& to, view_t& from) NOEXCEPT;
     inline void assign_string(string_t& to, view_t& from) NOEXCEPT;
     inline bool assign_version(version& to, view_t& from) NOEXCEPT;
-
     inline void assign_string_id(id_t& to, view_t& from) NOEXCEPT;
     inline bool assign_numeric_id(code_t& to, view_t& from) NOEXCEPT;
     inline bool assign_numeric_id(id_t& to, view_t& from) NOEXCEPT;
@@ -162,8 +141,8 @@ private:
     static constexpr auto null_size = view_t{ "null" }.length();
     static version to_version(const view_t& token) NOEXCEPT;
 
-    // Add a new parsed element to the batch and return its iterator.
-    inline const parse_it add_remote_procedure_call() NOEXCEPT;
+    // Add a new request to the batch and return its iterator.
+    inline const request_it add_request() NOEXCEPT;
 
     // These are not thread safe.
     bool batched_{};
@@ -177,28 +156,15 @@ private:
     view_t value_{};
 
     batch_t batch_{};
-    result_t error_{};
-    parse_it parsed_{};
+    request_it request_{};
 };
 
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
 
-#define TEMPLATE template <bool Request, bool Strict, json::version Require>
-#define CLASS parser<Request, Strict, Require>
-
-#define ASSIGN_REQUEST(kind, to, from) \
-{ \
-    if constexpr (request) { assign_##kind(to, from); } \
-    else { state_ = state::error_state; } \
-}
-
-#define ASSIGN_RESPONSE(kind, to, from) \
-{ \
-    if constexpr (response) { assign_##kind(to, from); } \
-    else { state_ = state::error_state; } \
-}
+#define TEMPLATE template <bool Strict, json::version Require>
+#define CLASS parser<Strict, Require>
 
 #include <bitcoin/network/impl/messages/json/parser.ipp>
 #include <bitcoin/network/impl/messages/json/parser_assign.ipp>
@@ -206,9 +172,6 @@ private:
 #include <bitcoin/network/impl/messages/json/parser_statics.ipp>
 #include <bitcoin/network/impl/messages/json/parser_object.ipp>
 #include <bitcoin/network/impl/messages/json/parser_value.ipp>
-
-#undef ASSIGN_REQUEST
-#undef ASSIGN_RESPONSE
 
 #undef CLASS
 #undef TEMPLATE

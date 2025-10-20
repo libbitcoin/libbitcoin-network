@@ -42,6 +42,8 @@ using array_t = std::vector<value_t>;
 using object_t = std::unordered_map<string_t, value_t>;
 using id_t = std::variant<null_t, code_t, string_t>;
 
+using error_code = error::boost_code;
+
 struct BCT_API value_t
 {
     using type = std::variant
@@ -67,29 +69,21 @@ struct BCT_API result_t
 };
 using error_option = std::optional<result_t>;
 
-struct BCT_API request_t
-{
-    version jsonrpc{ version::undefined };
-    string_t method{};
-    value_option params{};
-    id_t id{};
-
-    bool result{};
-    bool error{};
-};
-
 struct BCT_API response_t
 {
     version jsonrpc{ version::undefined };
     value_option result{};
     error_option error{};
     id_t id{};
-
-    bool method{};
-    bool params{};
 };
 
-using error_code = error::boost_code;
+struct BCT_API request_t
+{
+    version jsonrpc{ version::undefined };
+    string_t method{};
+    value_option params{};
+    id_t id{};
+};
 
 } // namespace json
 } // namespace network

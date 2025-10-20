@@ -61,7 +61,7 @@ const typename CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
 
 // private
 TEMPLATE
-const typename CLASS::parse_it CLASS::add_remote_procedure_call() NOEXCEPT
+const typename CLASS::request_it CLASS::add_request() NOEXCEPT
 {
     batch_.emplace_back();
     return std::prev(batch_.end());
@@ -79,8 +79,7 @@ void CLASS::reset() NOEXCEPT
     key_ = {};
     value_ = {};
     batch_ = {};
-    error_ = {};
-    parsed_ = {};
+    request_ = {};
 }
 
 TEMPLATE
@@ -134,23 +133,7 @@ bool CLASS::done_parsing(char c) NOEXCEPT
         case state::id:
             handle_id(c);
             break;
-        case state::result:
-            handle_result(c);
-            break;
-        case state::error_start:
-            handle_error_start(c);
-            break;
-        case state::error_code:
-            handle_error_code(c);
-            break;
-        case state::error_message:
-            handle_error_message(c);
-            break;
-        case state::error_data:
-            handle_error_data(c);
-            break;
         case state::complete:
-            break;
         case state::error_state:
             break;
     }
@@ -171,29 +154,15 @@ void CLASS::validate() NOEXCEPT
     if (batch_.empty())
         state_ = state::error_state;
 
+    // Non-null "id" required in version1.
+    if (request_->jsonrpc == version::v1 && is_null_t(request_->id))
+        state_ = state::error_state;
+
     // This needs to be relaxed (!strict) for stratum_v1.
     if constexpr (strict && require == version::v2)
     {
         // Undefined version means the jsonrpc element was not encountered.
-        if (parsed_->jsonrpc == version::undefined)
-            state_ = state::error_state;
-    }
-
-    if constexpr (request)
-    {
-        // Non-null "id" required in version1.
-        if (parsed_->jsonrpc == version::v1 && is_null_t(parsed_->id))
-            state_ = state::error_state;
-    }
-    else
-    {
-        // Exactly one of "result" or "error" allowed in responses.
-        if (parsed_->result.has_value() == parsed_->error.has_value())
-            state_ = state::error_state;
-
-        // Enforce required error fields if error is present.
-        if (parsed_->error.has_value() && (is_zero(parsed_->error->code) ||
-            parsed_->error->message.empty()))
+        if (request_->jsonrpc == version::undefined)
             state_ = state::error_state;
     }
 }

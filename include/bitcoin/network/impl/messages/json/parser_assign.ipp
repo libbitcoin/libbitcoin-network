@@ -48,14 +48,6 @@ json::version CLASS::to_version(const view_t& token) NOEXCEPT
 // protected
 
 TEMPLATE
-inline void CLASS::assign_error(error_option& to, result_t& from) NOEXCEPT
-{
-    state_ = state::object_start;
-    to = error_option{ from };
-    from = {};
-}
-
-TEMPLATE
 inline void CLASS::assign_value(value_option& to, view_t& from) NOEXCEPT
 {
     state_ = state::object_start;

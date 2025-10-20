@@ -24,22 +24,20 @@ BOOST_AUTO_TEST_SUITE(parser_tests)
 
 using namespace network::json;
 
-template <bool Request, bool Strict, version Require>
+template <bool Strict, version Require>
 struct test_parser
-  : public parser<Request, Strict, Require>
+  : public parser<Strict, Require>
 {
-    using base = parser<Request, Strict, Require>;
+    using base = parser<Strict, Require>;
     using base::base;
 };
 
-using lax_request_parser = test_parser<true, false, version::any>;
-using request_parser = test_parser<true, true, version::any>;
-static_assert(request_parser::request);
-static_assert(!request_parser::response);
+using lax_request_parser = test_parser<false, version::any>;
+using request_parser = test_parser<true, version::any>;
 
-using namespace boost::system::errc;
-static auto incomplete = make_error_code(interrupted);
-static auto failure = make_error_code(invalid_argument);
+////using namespace boost::system::errc;
+////static auto incomplete = make_error_code(interrupted);
+////static auto failure = make_error_code(invalid_argument);
 
 // jsonrpc v1/v2
 // ----------------------------------------------------------------------------
