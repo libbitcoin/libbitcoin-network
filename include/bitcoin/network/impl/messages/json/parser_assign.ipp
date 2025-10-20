@@ -52,7 +52,7 @@ inline void CLASS::assign_string(string_t& to, view_t& from) NOEXCEPT
 }
 
 TEMPLATE
-inline void CLASS::assign_version(version& to, view_t& from) NOEXCEPT
+inline bool CLASS::assign_version(version& to, view_t& from) NOEXCEPT
 {
     state_ = state::object_start;
     to = to_version(from);
@@ -60,6 +60,7 @@ inline void CLASS::assign_version(version& to, view_t& from) NOEXCEPT
         state_ = state::error_state;
 
     from = {};
+    return state_ == state::object_start;
 }
 
 // id types
@@ -68,43 +69,45 @@ TEMPLATE
 inline void CLASS::assign_string_id(id_t& to, view_t& from) NOEXCEPT
 {
     state_ = state::object_start;
-    std::get<string_t>(to) = string_t{ from };
+    to.emplace<string_t>(from);
     from = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_numeric_id(code_t& to, view_t& from) NOEXCEPT
+inline bool CLASS::assign_numeric_id(code_t& to, view_t& from) NOEXCEPT
 {
     state_ = state::error_state;
     if (to_signed(to, from))
         state_ = state::object_start;
 
     from = {};
+    return state_ == state::object_start;
 }
 
 TEMPLATE
-inline void CLASS::assign_numeric_id(id_t& to, view_t& from) NOEXCEPT
+inline bool CLASS::assign_numeric_id(id_t& to, view_t& from) NOEXCEPT
 {
-    assign_numeric_id(std::get<code_t>(to), from);
+    to.emplace<code_t>();
+    return assign_numeric_id(std::get<code_t>(to), from);
+}
+
+TEMPLATE
+inline bool CLASS::assign_unquoted_id(id_t& to, view_t& from) NOEXCEPT
+{
+    if (from == "null")
+    {
+        assign_null_id(to, from);
+        return true;
+    }
+
+    return assign_numeric_id(to, from);
 }
 
 TEMPLATE
 inline void CLASS::assign_null_id(id_t& to, view_t& from) NOEXCEPT
 {
     state_ = state::object_start;
-    std::get<null_t>(to) = null_t{};
-    from = {};
-}
-
-TEMPLATE
-inline void CLASS::assign_unquoted_id(id_t& to, view_t& from) NOEXCEPT
-{
-    state_ = state::object_start;
-    if (from == "null")
-        to = null_t{};
-    else if (!to_signed(std::get<code_t>(to), from))
-        state_ = state::error_state;
-
+    to.emplace<null_t>();
     from = {};
 }
 

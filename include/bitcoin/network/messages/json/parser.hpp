@@ -155,12 +155,12 @@ protected:
     inline void assign_error(error_option& to, result_t& from) NOEXCEPT;
     inline void assign_value(value_option& to, view_t& from) NOEXCEPT;
     inline void assign_string(string_t& to, view_t& from) NOEXCEPT;
-    inline void assign_version(version& to, view_t& from) NOEXCEPT;
+    inline bool assign_version(version& to, view_t& from) NOEXCEPT;
 
     inline void assign_string_id(id_t& to, view_t& from) NOEXCEPT;
-    inline void assign_numeric_id(code_t& to, view_t& from) NOEXCEPT;
-    inline void assign_numeric_id(id_t& to, view_t& from) NOEXCEPT;
-    inline void assign_unquoted_id(id_t& to, view_t& from) NOEXCEPT;
+    inline bool assign_numeric_id(code_t& to, view_t& from) NOEXCEPT;
+    inline bool assign_numeric_id(id_t& to, view_t& from) NOEXCEPT;
+    inline bool assign_unquoted_id(id_t& to, view_t& from) NOEXCEPT;
     inline void assign_null_id(id_t& to, view_t& from) NOEXCEPT;
 
 private:
