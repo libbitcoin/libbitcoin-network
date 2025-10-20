@@ -31,6 +31,7 @@ namespace json {
 enum class parser_state
 {
     initial,
+    array_start,
     object_start,
     key,
     value,
@@ -107,6 +108,7 @@ protected:
     /// Visitors - object transitions.
     /// -----------------------------------------------------------------------
     void handle_initialize(char c) NOEXCEPT;
+    void handle_array_start(char c) NOEXCEPT;
     void handle_object_start(char c) NOEXCEPT;
     void handle_key(char c) NOEXCEPT;
     void handle_value(char c) NOEXCEPT;
@@ -142,18 +144,23 @@ private:
     static version to_version(const view_t& token) NOEXCEPT;
 
     // Add a new request to the batch and return its iterator.
-    inline const request_it add_request() NOEXCEPT;
+    const request_it add_request() NOEXCEPT;
+    void reset_internal() NOEXCEPT;
 
     // These are not thread safe.
+
     bool batched_{};
+    batch_t batch_{};
+
+    bool trailing_{};
     bool escaped_{};
     bool quoted_{};
+    char expected_{};
     state state_{};
     size_t depth_{};
     char_it char_{};
     view_t key_{};
     view_t value_{};
-    batch_t batch_{};
     request_it request_{};
 };
 

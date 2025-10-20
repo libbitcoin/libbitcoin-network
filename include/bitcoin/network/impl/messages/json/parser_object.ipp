@@ -28,18 +28,44 @@ void CLASS::handle_initialize(char c) NOEXCEPT
 {
     if (c == '{')
     {
-        request_ = add_request();
         state_ = state::object_start;
+        request_ = add_request();
         increment(depth_, state_);
+        trailing_ = false;
+        expected_ = '}';
     }
     else if (c == '[')
     {
-        // BUGBUG: Batch init (?) - will presumably break depth assumptions.
-        state_ = state::object_start;
-        increment(depth_, state_);
+        state_ = state::array_start;
+        trailing_ = false;
+        batched_ = true;
+        expected_ = ']';
     }
     else if (!is_whitespace(c))
     {
+        state_ = state::error_state;
+    }
+}
+
+TEMPLATE
+void CLASS::handle_array_start(char c) NOEXCEPT
+{
+    if (c == '{')
+    {
+        reset_internal();
+        state_ = state::object_start;
+        request_ = add_request();
+        increment(depth_, state_);
+        trailing_ = false;
+        expected_ = '}';
+    }
+    else if (c == ']' && expected_ == ']')
+    {
+        state_ = batch_.empty() ? state::error_state : state::complete;
+    }
+    else if (!is_whitespace(c))
+    {
+        // Leading batch array ',' and unexpected ']' are caught here.
         state_ = state::error_state;
     }
 }
@@ -50,25 +76,36 @@ void CLASS::handle_object_start(char c) NOEXCEPT
     // key is terminated by its closing quote in handle_key.
     if (c == '"')
     {
+        // nvp start (will close), so at least one element in current csv set.
+        trailing_ = true;
         state_ = state::key;
     }
 
-    // BUGBUG: terminal characters, ] unhandled.
-    else if (c == ',')
+    else if (c == ',' && trailing_)
     {
-        // BUGBUG: leading (prob not trailing) ',' is ignored.
         state_ = state::object_start;
     }
-    else if (c == '}')
+
+    else if (c == '}' && expected_ == '}')
     {
         if (!decrement(depth_, state_))
             return;
 
-        if (is_zero(depth_))
-            state_ = state::complete;
+        state_ = is_zero(depth_) ? (batched_ ? state::array_start :
+            state::complete) : state::object_start;
+
+        // object close, so at least one element in current csv set.
+        trailing_ = true;
     }
+
+    else if (c == ']' && expected_ == ']')
+    {
+        state_ = is_zero(depth_) ? state::complete : state::error_state;
+    }
+
     else if (!is_whitespace(c))
     {
+        // Leading object/array ',' and unexpected ']' and '}' are caught here.
         state_ = state::error_state;
     }
 }
