@@ -150,11 +150,9 @@ private:
     bool quoted_{};
     state state_{};
     size_t depth_{};
-
     char_it char_{};
     view_t key_{};
     view_t value_{};
-
     batch_t batch_{};
     request_it request_{};
 };
