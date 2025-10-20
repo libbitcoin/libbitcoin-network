@@ -83,7 +83,6 @@ void CLASS::reset_internal() NOEXCEPT
     quoted_ = {};
     expected_ = {};
     state_ = {};
-    ////depth_ = {};
     char_ = {};
     key_ = {};
     value_ = {};
@@ -149,7 +148,8 @@ bool CLASS::done_parsing(char c) NOEXCEPT
             break;
     }
 
-    std::cout << "[" << *char_ << "]<" << key_ << ">=|" << value_ << "|" << std::endl;
+    // hack for testing.
+    ////std::cout << "[" << *char_ << "]<" << key_ << ">=|" << value_ << "|" << std::endl;
     return is_done();
 }
 

@@ -30,14 +30,11 @@ void CLASS::handle_initialize(char c) NOEXCEPT
     {
         state_ = state::object_start;
         request_ = add_request();
-        ////increment(depth_, state_);
-        trailing_ = false;
         expected_ = '}';
     }
     else if (c == '[')
     {
         state_ = state::array_start;
-        trailing_ = false;
         batched_ = true;
         expected_ = ']';
     }
@@ -55,17 +52,16 @@ void CLASS::handle_array_start(char c) NOEXCEPT
         reset_internal();
         state_ = state::object_start;
         request_ = add_request();
-        ////increment(depth_, state_);
-        trailing_ = false;
         expected_ = '}';
     }
     else if (c == ']' && expected_ == ']')
     {
         state_ = batch_.empty() ? state::error_state : state::complete;
     }
+
+    // Leading batch array ',' and unexpected ']' are caught here.
     else if (!is_whitespace(c))
     {
-        // Leading batch array ',' and unexpected ']' are caught here.
         state_ = state::error_state;
     }
 }
@@ -74,9 +70,9 @@ TEMPLATE
 void CLASS::handle_object_start(char c) NOEXCEPT
 {
     // key is terminated by its closing quote in handle_key.
+    // nvp start (will close), so at least one element in current csv set.
     if (c == '"')
     {
-        // nvp start (will close), so at least one element in current csv set.
         trailing_ = true;
         state_ = state::key;
     }
@@ -86,17 +82,11 @@ void CLASS::handle_object_start(char c) NOEXCEPT
         state_ = state::object_start;
     }
 
+    // object close, so at least one element in current csv set.
     else if (c == '}' && expected_ == '}')
     {
-        ////if (!decrement(depth_, state_))
-        ////    return;
-
-        ////state_ = is_zero(depth_) ? (batched_ ? state::array_start :
-        ////    state::complete) : state::object_start;
-        state_ = batched_ ? state::array_start : state::complete;
-
-        // object close, so at least one element in current csv set.
         trailing_ = true;
+        state_ = batched_ ? state::array_start : state::complete;
     }
 
     else if (c == ']' && expected_ == ']')
@@ -104,9 +94,9 @@ void CLASS::handle_object_start(char c) NOEXCEPT
         state_ = state::complete;
     }
 
+    // Leading object/array ',' and unexpected ']' and '}' are caught here.
     else if (!is_whitespace(c))
     {
-        // Leading object/array ',' and unexpected ']' and '}' are caught here.
         state_ = state::error_state;
     }
 }

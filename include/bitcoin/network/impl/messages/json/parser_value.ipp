@@ -164,9 +164,10 @@ void CLASS::handle_id(char c) NOEXCEPT
         // empty string or other failures, state set by number parse.
         return;
     }
+
+    // redispatch the terminating character.
     else
     {
-        // redispatch the terminating character.
         state_ = state::object_start;
         handle_object_start(c);
     }

@@ -95,8 +95,6 @@ protected:
     static inline bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
     static inline bool to_double(double& out, const view_t& token) NOEXCEPT;
     static inline bool toggle(bool& quoted) NOEXCEPT;
-    ////static inline bool increment(size_t& depth, state& status) NOEXCEPT;
-    ////static inline bool decrement(size_t& depth, state& status) NOEXCEPT;
     static inline size_t distance(const char_it& from,
         const char_it& to) NOEXCEPT;
 
@@ -157,7 +155,6 @@ private:
     bool quoted_{};
     char expected_{};
     state state_{};
-    ////size_t depth_{};
     char_it char_{};
     view_t key_{};
     view_t value_{};
