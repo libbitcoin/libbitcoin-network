@@ -338,8 +338,7 @@ include_bitcoin_network_impl_messages_json_HEADERS = \
     include/bitcoin/network/impl/messages/json/parser_consume.ipp \
     include/bitcoin/network/impl/messages/json/parser_object.ipp \
     include/bitcoin/network/impl/messages/json/parser_statics.ipp \
-    include/bitcoin/network/impl/messages/json/parser_value.ipp \
-    include/bitcoin/network/impl/messages/json/parser_version.ipp
+    include/bitcoin/network/impl/messages/json/parser_value.ipp
 
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \
@@ -374,8 +373,8 @@ include_bitcoin_network_messages_json_HEADERS = \
 
 include_bitcoin_network_messages_json_enumsdir = ${includedir}/bitcoin/network/messages/json/enums
 include_bitcoin_network_messages_json_enums_HEADERS = \
-    include/bitcoin/network/messages/json/enums/protocol.hpp \
-    include/bitcoin/network/messages/json/enums/transport.hpp
+    include/bitcoin/network/messages/json/enums/transport.hpp \
+    include/bitcoin/network/messages/json/enums/version.hpp
 
 include_bitcoin_network_messages_peerdir = ${includedir}/bitcoin/network/messages/peer
 include_bitcoin_network_messages_peer_HEADERS = \

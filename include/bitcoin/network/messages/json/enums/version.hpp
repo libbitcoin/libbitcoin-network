@@ -16,33 +16,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_VERSION_IPP
-#define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_VERSION_IPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_ENUMS_VERSION_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_JSON_ENUMS_VERSION_HPP
+
+#include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace json {
 
-// protected
-
-TEMPLATE
-inline bool CLASS::is_version(const view_t& token) const NOEXCEPT
+/// Enumeration of JSON-RPC protocol versions.
+enum class version
 {
-    return (is_version1() && (token == "1.0" || token.empty()))
-        || (is_version2() && (token == "2.0"));
-}
+    /// Undefined version (not set).
+    undefined,
 
-TEMPLATE
-inline bool CLASS::is_version1() const NOEXCEPT
-{
-    return protocol_ == protocol::v1;
-}
+    /// JSON-RPC 1.0 (bitcoin core).
+    v1,
 
-TEMPLATE
-inline bool CLASS::is_version2() const NOEXCEPT
-{
-    return protocol_ == protocol::v2;
-}
+    /// JSON-RPC 2.0 (electrum daemon, electrum protocol, stratum v1).
+    v2,
+
+    /// Detemine the version from the jsonrpc element.
+    any,
+
+    /// The jsonrpc value is invalid.
+    invalid
+};
 
 } // namespace json
 } // namespace network

@@ -58,9 +58,9 @@ struct mock_parser
         return result;
     }
 
-    std::size_t write(std::string_view data, error::boost_code& ec) NOEXCEPT
+    std::size_t write(std::string_view data) NOEXCEPT
     {
-        if ((ec = result))
+        if (result)
             return {};
 
         result = second_write_result;

@@ -28,46 +28,28 @@ namespace json {
 // protected
 
 TEMPLATE
-inline size_t CLASS::consume_char(view_t& token) NOEXCEPT
-{
-    // Token consumes character *char_ by incrementing its view over buffer.
-    const auto size = add1(token.size());
-    const auto start = token.empty() ? std::to_address(char_) : token.data();
-    token = { start, size };
-    return size;
-}
-
-TEMPLATE
-inline void CLASS::consume_substitute(view_t& token, char /* c */) NOEXCEPT
+inline bool CLASS::consume_substitute(view_t&, char) NOEXCEPT
 {
     // BUGBUG: view is not modifiable, requires dynamic token (vs. view_t).
-    consume_char(token);
+    return false; ////consume_char(token);
 }
 
 TEMPLATE
-inline void CLASS::consume_escaped(view_t& token, char c) NOEXCEPT
+inline bool CLASS::consume_escaped(view_t& token, char c) NOEXCEPT
 {
     // BUGBUG: doesn't support \uXXXX, requires 4 character accumulation.
     switch (c)
     {
-        case 'b':
-            consume_substitute(token, '\b');
-            return;
-        case 'f':
-            consume_substitute(token, '\f');
-            return;
-        case 'n':
-            consume_substitute(token, '\n');
-            return;
-        case 'r':
-            consume_substitute(token, '\r');
-            return;
-        case 't':
-            consume_substitute(token, '\t');
-            return;
+        case 'b': c = '\b'; break;
+        case 'f': c = '\f'; break;
+        case 'n': c = '\n'; break;
+        case 'r': c = '\r'; break;
+        case 't': c = '\t'; break;
         default:
-            consume_char(token);
+            return false;
     }
+
+    return consume_substitute(token, c);
 }
 
 TEMPLATE
@@ -80,15 +62,31 @@ inline bool CLASS::consume_escape(view_t& token, char c) NOEXCEPT
     }
     else if (escaped_)
     {
-        consume_escaped(token, c);
         escaped_ = false;
-        return true;
+        return consume_escaped(token, c);
     }
     else
     {
         escaped_ = false;
         return false;
     }
+}
+
+TEMPLATE
+inline size_t CLASS::consume_quoted(view_t& token) NOEXCEPT
+{
+    // BUGBUG: escape sequences not yet supported.
+    return consume_char(token);
+}
+
+TEMPLATE
+inline size_t CLASS::consume_char(view_t& token) NOEXCEPT
+{
+    // Token consumes character *char_ by incrementing its view over buffer.
+    const auto size = add1(token.size());
+    const auto start = token.empty() ? std::to_address(char_) : token.data();
+    token = { start, size };
+    return size;
 }
 
 } // namespace json

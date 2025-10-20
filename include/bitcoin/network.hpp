@@ -73,8 +73,8 @@
 #include <bitcoin/network/messages/json/parser.hpp>
 #include <bitcoin/network/messages/json/serializer.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
-#include <bitcoin/network/messages/json/enums/protocol.hpp>
 #include <bitcoin/network/messages/json/enums/transport.hpp>
+#include <bitcoin/network/messages/json/enums/version.hpp>
 #include <bitcoin/network/messages/peer/address.hpp>
 #include <bitcoin/network/messages/peer/address_item.hpp>
 #include <bitcoin/network/messages/peer/alert.hpp>

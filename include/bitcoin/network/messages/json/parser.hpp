@@ -38,17 +38,12 @@ enum class parser_state
     method,
     params,
     id,
-    result,
-    error_start,
-    error_code,
-    error_message,
-    error_data,
     error_state,
     complete
 };
 
 /// A minimal-copy parser for boost asio JSON-RPC v1/v2 stream parsing.
-template <bool Request, bool Strict = true>
+template <bool Strict = true, json::version Require = json::version::any>
 class parser
 {
 public:
@@ -57,43 +52,43 @@ public:
 
     /// Parsed object type.
     /// -----------------------------------------------------------------------
-    static constexpr auto request = Request;
-    static constexpr auto response = !request;
-    using parsed_t = iif<request, request_t, response_t>;
-    using batch_t = std::vector<parsed_t>;
-
-    /// Constructor.
-    /// -----------------------------------------------------------------------
-    explicit parser(json::protocol proto) NOEXCEPT
-      : protocol_{ proto }
-    {
-    }
+    static constexpr auto strict = Strict;
+    static constexpr auto require = Require;
+    using batch_t = std::vector<request_t>;
 
     /// Properties.
     /// -----------------------------------------------------------------------
+
+    /// Means that parse is successful and complete.
     bool is_done() const NOEXCEPT;
+
+    /// Implies that get_parsed() may be empty.
     bool has_error() const NOEXCEPT;
+
+    /// Returns success in case of incomplete parse.
     error_code get_error() const NOEXCEPT;
+
+    /// May be empty if !is_done().
     const batch_t& get_parsed() const NOEXCEPT;
 
     /// Methods.
     /// -----------------------------------------------------------------------
-    size_t write(const std::string_view& data, error_code& ec) NOEXCEPT;
+    size_t write(const std::string_view& data) NOEXCEPT;
     void reset() NOEXCEPT;
 
 protected:
     using state = parser_state;
     using view_t = std::string_view;
-    using parse_it = batch_t::iterator;
     using char_it = view_t::const_iterator;
-    static constexpr auto require_jsonrpc_element_in_version2 = Strict;
+    using request_it = batch_t::iterator;
 
     /// Statics.
     /// -----------------------------------------------------------------------
-    static inline error_code parse_error() NOEXCEPT;
-    static inline bool is_null(const id_t& id) NOEXCEPT;
+    static inline error_code failure() NOEXCEPT;
+    static inline error_code incomplete() NOEXCEPT;
+    static constexpr bool is_whitespace(char c) NOEXCEPT;
+    static inline bool is_null_t(const id_t& id) NOEXCEPT;
     static inline bool is_numeric(char c) NOEXCEPT;
-    static inline bool is_whitespace(char c) NOEXCEPT;
     static inline bool is_nullic(const view_t& token, char c) NOEXCEPT;
     static inline bool is_error(const result_t& error) NOEXCEPT;
     static inline bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
@@ -122,45 +117,32 @@ protected:
     void handle_method(char c) NOEXCEPT;
     void handle_params(char c) NOEXCEPT;
     void handle_id(char c) NOEXCEPT;
-    void handle_result(char c) NOEXCEPT;
-    void handle_error_message(char c) NOEXCEPT;
-    void handle_error_data(char c) NOEXCEPT;
-
-    /// Visitors - unquoted values.
-    /// -----------------------------------------------------------------------
-    void handle_error_start(char c) NOEXCEPT;
-    void handle_error_code(char c) NOEXCEPT;
 
     /// Comsuming.
     /// -----------------------------------------------------------------------
-    inline void consume_substitute(view_t& token, char c) NOEXCEPT;
-    inline void consume_escaped(view_t& token, char c) NOEXCEPT;
+    inline bool consume_substitute(view_t& token, char c) NOEXCEPT;
+    inline bool consume_escaped(view_t& token, char c) NOEXCEPT;
     inline bool consume_escape(view_t& token, char c) NOEXCEPT;
+    inline size_t consume_quoted(view_t& token) NOEXCEPT;
     inline size_t consume_char(view_t& token) NOEXCEPT;
-
-    /// Versioning.
-    /// -----------------------------------------------------------------------
-    inline bool is_version(const view_t& token) const NOEXCEPT;
-    inline bool is_version1() const NOEXCEPT;
-    inline bool is_version2() const NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------
-    inline void assign_error(error_option& to, const result_t& from) NOEXCEPT;
-    inline void assign_value(value_option& to, const view_t& from) NOEXCEPT;
-    inline void assign_string(string_t& to, const view_t& from) NOEXCEPT;
-    inline void assign_string_id(id_t& to, const view_t& from) NOEXCEPT;
-    inline void assign_numeric_id(code_t& to, const view_t& from) NOEXCEPT;
-    inline void assign_numeric_id(id_t& to, const view_t& from) NOEXCEPT;
-    inline void assign_unquoted_id(id_t& to, const view_t& from) NOEXCEPT;
-    inline void assign_null_id(id_t& to) NOEXCEPT;
+    inline void assign_value(value_option& to, view_t& from) NOEXCEPT;
+    inline void assign_string(string_t& to, view_t& from) NOEXCEPT;
+    inline bool assign_version(version& to, view_t& from) NOEXCEPT;
+    inline void assign_string_id(id_t& to, view_t& from) NOEXCEPT;
+    inline bool assign_numeric_id(code_t& to, view_t& from) NOEXCEPT;
+    inline bool assign_numeric_id(id_t& to, view_t& from) NOEXCEPT;
+    inline bool assign_unquoted_id(id_t& to, view_t& from) NOEXCEPT;
+    inline void assign_null_id(id_t& to, view_t& from) NOEXCEPT;
 
 private:
-    // The length of the null token.
     static constexpr auto null_size = view_t{ "null" }.length();
+    static version to_version(const view_t& token) NOEXCEPT;
 
-    // Add a new parsed element to the batch and return its iterator.
-    const parse_it add_remote_procedure_call() NOEXCEPT;
+    // Add a new request to the batch and return its iterator.
+    inline const request_it add_request() NOEXCEPT;
 
     // These are not thread safe.
     bool batched_{};
@@ -168,48 +150,26 @@ private:
     bool quoted_{};
     state state_{};
     size_t depth_{};
-
     char_it char_{};
     view_t key_{};
     view_t value_{};
-
     batch_t batch_{};
-    result_t error_{};
-    parse_it parsed_{};
-
-    // This is thread safe.
-    const json::protocol protocol_;
+    request_it request_{};
 };
 
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
 
-#define TEMPLATE template <bool Request, bool Strict>
-#define CLASS parser<Request, Strict>
-
-#define ASSIGN_REQUEST(kind, to, from) \
-{ \
-    if constexpr (request) { assign_##kind(to, from); } \
-    else { state_ = state::error_state; } \
-}
-
-#define ASSIGN_RESPONSE(kind, to, from) \
-{ \
-    if constexpr (response) { assign_##kind(to, from); } \
-    else { state_ = state::error_state; } \
-}
+#define TEMPLATE template <bool Strict, json::version Require>
+#define CLASS parser<Strict, Require>
 
 #include <bitcoin/network/impl/messages/json/parser.ipp>
 #include <bitcoin/network/impl/messages/json/parser_assign.ipp>
 #include <bitcoin/network/impl/messages/json/parser_consume.ipp>
 #include <bitcoin/network/impl/messages/json/parser_statics.ipp>
-#include <bitcoin/network/impl/messages/json/parser_version.ipp>
 #include <bitcoin/network/impl/messages/json/parser_object.ipp>
 #include <bitcoin/network/impl/messages/json/parser_value.ipp>
-
-#undef ASSIGN_REQUEST
-#undef ASSIGN_RESPONSE
 
 #undef CLASS
 #undef TEMPLATE

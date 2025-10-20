@@ -271,8 +271,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\body.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\protocol.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\transport.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serializer.hpp" />
@@ -377,7 +377,6 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_object.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_statics.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_value.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_version.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

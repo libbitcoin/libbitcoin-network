@@ -19,8 +19,8 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_MESSAGES_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_MESSAGES_HPP
 
-#include <bitcoin/network/messages/json/enums/protocol.hpp>
 #include <bitcoin/network/messages/json/enums/transport.hpp>
+#include <bitcoin/network/messages/json/enums/version.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
 #include <bitcoin/network/messages/json/parser.hpp>
 #include <bitcoin/network/messages/json/serializer.hpp>

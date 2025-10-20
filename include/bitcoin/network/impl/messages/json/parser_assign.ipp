@@ -25,94 +25,102 @@ namespace libbitcoin {
 namespace network {
 namespace json {
 
-// protected
-
-// Assign value_ after assignment, since 'from' may be a reference to value_.
+// private
 
 TEMPLATE
-inline void CLASS::assign_error(error_option& to, const result_t& from) NOEXCEPT
+json::version CLASS::to_version(const view_t& token) NOEXCEPT
 {
-    state_ = state::object_start;
-    to = error_option{ from };
-    value_ = {};
+    if constexpr (require == version::any || require == version::v1)
+    {
+        if (token == "1.0" || token.empty())
+            return version::v1;
+    }
+
+    if constexpr (require == version::any || require == version::v2)
+    {
+        if (token == "2.0")
+            return version::v2;
+    }
+
+    return version::invalid;
 }
 
+// protected
+
 TEMPLATE
-inline void CLASS::assign_value(value_option& to, const view_t& from) NOEXCEPT
+inline void CLASS::assign_value(value_option& to, view_t& from) NOEXCEPT
 {
     state_ = state::object_start;
     to = value_option{ value_t{ string_t{ from } } };
-    value_ = {};
+    from = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_string(string_t& to, const view_t& from) NOEXCEPT
+inline void CLASS::assign_string(string_t& to, view_t& from) NOEXCEPT
 {
     state_ = state::object_start;
     to = string_t{ from };
-    value_ = {};
+    from = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_string_id(id_t& to, const view_t& from) NOEXCEPT
-{
-    std::get<string_t>(to) = string_t{ from };
-    value_ = {};
-}
-
-TEMPLATE
-inline void CLASS::assign_numeric_id(code_t& to, const view_t& from) NOEXCEPT
-{
-    code_t number{};
-
-    if (to_signed(number, from))
-    {
-        state_ = state::object_start;
-        to = number;
-    }
-    else
-    {
-        state_ = state::error_state;
-    }
-
-    value_ = {};
-}
-
-TEMPLATE
-inline void CLASS::assign_numeric_id(id_t& to, const view_t& from) NOEXCEPT
-{
-    assign_numeric_id(std::get<code_t>(to), from);
-}
-
-TEMPLATE
-inline void CLASS::assign_null_id(id_t& to) NOEXCEPT
+inline bool CLASS::assign_version(version& to, view_t& from) NOEXCEPT
 {
     state_ = state::object_start;
-    std::get<null_t>(to) = null_t{};
-    value_ = {};
+    to = to_version(from);
+    if (to == version::invalid)
+        state_ = state::error_state;
+
+    from = {};
+    return state_ == state::object_start;
+}
+
+// id types
+
+TEMPLATE
+inline void CLASS::assign_string_id(id_t& to, view_t& from) NOEXCEPT
+{
+    state_ = state::object_start;
+    to.emplace<string_t>(from);
+    from = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_unquoted_id(id_t& to, const view_t& from) NOEXCEPT
+inline bool CLASS::assign_numeric_id(code_t& to, view_t& from) NOEXCEPT
 {
-    code_t number{};
+    state_ = state::error_state;
+    if (to_signed(to, from))
+        state_ = state::object_start;
 
+    from = {};
+    return state_ == state::object_start;
+}
+
+TEMPLATE
+inline bool CLASS::assign_numeric_id(id_t& to, view_t& from) NOEXCEPT
+{
+    to.emplace<code_t>();
+    return assign_numeric_id(std::get<code_t>(to), from);
+}
+
+TEMPLATE
+inline bool CLASS::assign_unquoted_id(id_t& to, view_t& from) NOEXCEPT
+{
     if (from == "null")
     {
-        state_ = state::object_start;
-        to = null_t{};
-    }
-    else if (to_signed(number, from))
-    {
-        state_ = state::object_start;
-        to = number;
-    }
-    else
-    {
-        state_ = state::error_state;
+        assign_null_id(to, from);
+        return true;
     }
 
-    value_ = {};
+    return assign_numeric_id(to, from);
+}
+
+TEMPLATE
+inline void CLASS::assign_null_id(id_t& to, view_t& from) NOEXCEPT
+{
+    state_ = state::object_start;
+    to.emplace<null_t>();
+    from = {};
 }
 
 } // namespace json

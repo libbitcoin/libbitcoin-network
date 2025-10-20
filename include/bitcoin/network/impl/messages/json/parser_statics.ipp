@@ -32,16 +32,34 @@ namespace json {
 // protected/static
 
 TEMPLATE
-inline json::error_code CLASS::parse_error() NOEXCEPT
+inline json::error_code CLASS::failure() NOEXCEPT
 {
+    // TODO: use network error codes.
     namespace errc = boost::system::errc;
     return errc::make_error_code(errc::invalid_argument);
 }
 
 TEMPLATE
-bool CLASS::is_null(const id_t& id) NOEXCEPT
+inline json::error_code CLASS::incomplete() NOEXCEPT
+{
+    // TODO: use network error codes.
+    namespace errc = boost::system::errc;
+    return errc::make_error_code(errc::interrupted);
+}
+
+TEMPLATE
+bool CLASS::is_null_t(const id_t& id) NOEXCEPT
 {
     return std::holds_alternative<null_t>(id);
+}
+
+TEMPLATE
+constexpr bool CLASS::is_whitespace(char c) NOEXCEPT
+{
+    return c == ' '
+        || c == '\n'
+        || c == '\r'
+        || c == '\t';
 }
 
 TEMPLATE
@@ -54,16 +72,6 @@ bool CLASS::is_numeric(char c) NOEXCEPT
         || c == 'E'
         || c == '+';
 }
-
-TEMPLATE
-bool CLASS::is_whitespace(char c) NOEXCEPT
-{
-    return c == ' '
-        || c == '\n'
-        || c == '\r'
-        || c == '\t';
-}
-
 TEMPLATE
 bool CLASS::is_nullic(const view_t& token, char c) NOEXCEPT
 {

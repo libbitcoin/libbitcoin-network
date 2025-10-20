@@ -43,7 +43,7 @@ bool CLASS::is_done() const NOEXCEPT
 TEMPLATE
 error_code CLASS::get_error() const NOEXCEPT
 {
-    return has_error() ? parse_error() : error_code{};
+    return has_error() ? failure() : error_code{};
 }
 
 TEMPLATE
@@ -61,7 +61,7 @@ const typename CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
 
 // private
 TEMPLATE
-const typename CLASS::parse_it CLASS::add_remote_procedure_call() NOEXCEPT
+const typename CLASS::request_it CLASS::add_request() NOEXCEPT
 {
     batch_.emplace_back();
     return std::prev(batch_.end());
@@ -79,12 +79,11 @@ void CLASS::reset() NOEXCEPT
     key_ = {};
     value_ = {};
     batch_ = {};
-    error_ = {};
-    parsed_ = {};
+    request_ = {};
 }
 
 TEMPLATE
-size_t CLASS::write(const std::string_view& data, error_code& ec) NOEXCEPT
+size_t CLASS::write(const std::string_view& data) NOEXCEPT
 {
     for (char_ = data.begin(); char_ != data.end(); ++char_)
     {
@@ -95,8 +94,8 @@ size_t CLASS::write(const std::string_view& data, error_code& ec) NOEXCEPT
         }
     }
 
+    // Check object relationships if complete.
     validate();
-    ec = get_error();
 
     // Parse can successfully (or not) terminate before fully consuming data.
     return distance(data.begin(), char_);
@@ -134,23 +133,7 @@ bool CLASS::done_parsing(char c) NOEXCEPT
         case state::id:
             handle_id(c);
             break;
-        case state::result:
-            handle_result(c);
-            break;
-        case state::error_start:
-            handle_error_start(c);
-            break;
-        case state::error_code:
-            handle_error_code(c);
-            break;
-        case state::error_message:
-            handle_error_message(c);
-            break;
-        case state::error_data:
-            handle_error_data(c);
-            break;
         case state::complete:
-            break;
         case state::error_state:
             break;
     }
@@ -162,107 +145,27 @@ bool CLASS::done_parsing(char c) NOEXCEPT
 TEMPLATE
 void CLASS::validate() NOEXCEPT
 {
-    // Validating but not done/successful parsing.
+    // Validation is only relevant to a successful/complete parse.
+    // Otherwise there is either an error or intermediate state.
     if (state_ != state::complete)
-        state_ = state::error_state;
+        return;
 
-    // Unbatched requires a single element, empty implies error.
+    // Unbatched requires a single request/response.
     if (batch_.empty())
         state_ = state::error_state;
 
-    if constexpr (require_jsonrpc_element_in_version2)
-    {
-        // This needs to be relaxed for stratum_v1.
-        if (is_version2() && parsed_->jsonrpc.empty())
-            state_ = state::error_state;
-    }
+    // Non-null "id" required in version1.
+    if (request_->jsonrpc == version::v1 && is_null_t(request_->id))
+        state_ = state::error_state;
 
-    if constexpr (request)
+    // This needs to be relaxed (!strict) for stratum_v1.
+    if constexpr (strict && require == version::v2)
     {
-        // Non-null "id" required in version1.
-        if (is_version1() && is_null(parsed_->id))
-            state_ = state::error_state;
-    }
-    else
-    {
-        // Exactly one of "result" or "error" allowed in responses.
-        if (parsed_->result.has_value() == parsed_->error.has_value())
-            state_ = state::error_state;
-
-        // Enforce required error fields if error is present.
-        if (parsed_->error.has_value() && (is_zero(parsed_->error->code) ||
-            parsed_->error->message.empty()))
+        // Undefined version means the jsonrpc element was not encountered.
+        if (request_->jsonrpc == version::undefined)
             state_ = state::error_state;
     }
 }
-
-// TODO: get rid of this.
-////TEMPLATE
-////void CLASS::finalize() NOEXCEPT
-////{
-////    // Assign value to request or error based on state.
-////    switch (state_)
-////    {
-////        // Complete parsed object.
-////        case state::jsonrpc:
-////        {
-////            if (is_version(value_))
-////                assign_string(parsed_->jsonrpc, value_);
-////            else
-////                state_ = state::error_state;
-////        }
-////        case state::method:
-////        {
-////            ASSIGN_REQUEST(string, parsed_->method, value_)
-////            break;
-////        }
-////        case state::params:
-////        {
-////            ASSIGN_REQUEST(value, parsed_->params, value_)
-////            break;
-////        }
-////        case state::result:
-////        {
-////            ASSIGN_RESPONSE(value, parsed_->result, value_)
-////            break;
-////        }
-////        case state::id:
-////        {
-////            // Quoted ids cannot land here, always assigned by handle_id.
-////            assign_unquoted_id(parsed_->id, value_);
-////            break;
-////        }
-////
-////        // Complete error object.
-////        case state::error_message:
-////        {
-////            assign_string(error_.message, value_);
-////            break;
-////        }
-////        case state::error_data:
-////        {
-////            assign_value(error_.data, value_);
-////            break;
-////        }
-////
-////        // Invalid state.
-////        case state::initial:
-////        case state::object_start:
-////        case state::key:
-////        case state::value:
-////        case state::error_start:
-////        case state::error_code:
-////        case state::error_state:
-////        case state::complete:
-////        {
-////            state_ = state::error_state;
-////        }
-////    }
-////
-////    // Close out state following an assignment above.
-////    if (state_ == state::object_start)
-////        state_ = state::complete;
-////}
 
 } // namespace json
 } // namespace network
