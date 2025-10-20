@@ -871,9 +871,6 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_value.ipp">
       <Filter>include\bitcoin\network\impl\messages\json</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_version.ipp">
-      <Filter>include\bitcoin\network\impl\messages\json</Filter>
-    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

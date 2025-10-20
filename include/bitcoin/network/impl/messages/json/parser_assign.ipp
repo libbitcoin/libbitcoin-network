@@ -25,6 +25,26 @@ namespace libbitcoin {
 namespace network {
 namespace json {
 
+// private
+
+TEMPLATE
+json::version CLASS::to_version(const view_t& token) NOEXCEPT
+{
+    if constexpr (require == version::any || require == version::v1)
+    {
+        if (token == "1.0" || token.empty())
+            return version::v1;
+    }
+
+    if constexpr (require == version::any || require == version::v2)
+    {
+        if (token == "2.0")
+            return version::v2;
+    }
+
+    return version::invalid;
+}
+
 // protected
 
 TEMPLATE

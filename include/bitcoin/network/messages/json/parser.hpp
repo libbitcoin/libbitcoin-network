@@ -144,12 +144,6 @@ protected:
     inline bool consume_escape(view_t& token, char c) NOEXCEPT;
     inline size_t consume_char(view_t& token) NOEXCEPT;
 
-    /// Versioning.
-    /// -----------------------------------------------------------------------
-    inline version to_version(const view_t& token) const NOEXCEPT;
-    inline bool allow_version1() const NOEXCEPT;
-    inline bool allow_version2() const NOEXCEPT;
-
     /// Assignment.
     /// -----------------------------------------------------------------------
     inline void assign_error(error_option& to, result_t& from) NOEXCEPT;
@@ -164,11 +158,11 @@ protected:
     inline void assign_null_id(id_t& to, view_t& from) NOEXCEPT;
 
 private:
-    // The length of the null token.
     static constexpr auto null_size = view_t{ "null" }.length();
+    static version to_version(const view_t& token) NOEXCEPT;
 
     // Add a new parsed element to the batch and return its iterator.
-    const parse_it add_remote_procedure_call() NOEXCEPT;
+    inline const parse_it add_remote_procedure_call() NOEXCEPT;
 
     // These are not thread safe.
     bool batched_{};
@@ -209,7 +203,6 @@ private:
 #include <bitcoin/network/impl/messages/json/parser_assign.ipp>
 #include <bitcoin/network/impl/messages/json/parser_consume.ipp>
 #include <bitcoin/network/impl/messages/json/parser_statics.ipp>
-#include <bitcoin/network/impl/messages/json/parser_version.ipp>
 #include <bitcoin/network/impl/messages/json/parser_object.ipp>
 #include <bitcoin/network/impl/messages/json/parser_value.ipp>
 
