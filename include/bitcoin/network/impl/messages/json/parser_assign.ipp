@@ -67,6 +67,7 @@ inline void CLASS::assign_version(version& to, view_t& from) NOEXCEPT
 TEMPLATE
 inline void CLASS::assign_string_id(id_t& to, view_t& from) NOEXCEPT
 {
+    state_ = state::object_start;
     std::get<string_t>(to) = string_t{ from };
     from = {};
 }
