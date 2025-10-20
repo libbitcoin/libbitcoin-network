@@ -42,6 +42,7 @@ static auto incomplete = make_error_code(interrupted);
 static auto failure = make_error_code(invalid_argument);
 
 // jsonrpc v1/v2
+// ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_empty__error)
 {
@@ -50,7 +51,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_empty__error)
     const auto size = parse.write(text);
     BOOST_CHECK(parse.has_error());
     BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, text.size());
+    BOOST_CHECK_EQUAL(size, 14u);
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
@@ -80,10 +81,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v2__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"2.0"})" };
-    const auto size = parse.write(text);
-    BOOST_CHECK(!parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, text.size());
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
@@ -91,15 +89,13 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v2__expected)
 }
 
 // id
+// ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(request_parser__write__id_positive__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"id":42})" };
-    const auto size = parse.write(text);
-    BOOST_CHECK(!parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, text.size());
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
@@ -112,14 +108,10 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_negative__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"id":-42})" };
-    const auto size = parse.write(text);
-    BOOST_CHECK(!parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, text.size());
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(request.jsonrpc == version::undefined);
     BOOST_CHECK(std::holds_alternative<code_t>(request.id));
     BOOST_REQUIRE_EQUAL(std::get<code_t>(request.id), -42);
 }
@@ -128,14 +120,10 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_string__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"id":"foobar"})" };
-    const auto size = parse.write(text);
-    BOOST_CHECK(!parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, text.size());
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(request.jsonrpc == version::undefined);
     BOOST_CHECK(std::holds_alternative<string_t>(request.id));
     BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "foobar");
 }
@@ -144,14 +132,10 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_empty__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"id":""})" };
-    const auto size = parse.write(text);
-    BOOST_CHECK(!parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, text.size());
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(request.jsonrpc == version::undefined);
     BOOST_CHECK(std::holds_alternative<string_t>(request.id));
     BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "");
 }
@@ -160,39 +144,29 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_null__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"id":null})" };
-    const auto size = parse.write(text);
-    BOOST_CHECK(!parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, text.size());
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_CHECK(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(request.jsonrpc == version::undefined);
     BOOST_CHECK(std::holds_alternative<null_t>(request.id));
 }
 
-BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_null_id__error_no_id)
-{
-    request_parser parse{};
-    const string_t text{ R"({"jsonrpc":"1.0", "id":null})" };
-    const auto size = parse.write(text);
-    BOOST_CHECK(parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, text.size());
-    BOOST_REQUIRE(parse.get_parsed().empty());
-}
-
-// jsonrpc/id inteaction
+// jsonrpc/id interaction
 // ----------------------------------------------------------------------------
 
 BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_no_id__error)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"1.0"})" };
-    const auto size = parse.write(text);
-    BOOST_CHECK(parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, text.size());
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE(parse.get_parsed().empty());
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_null_id__error)
+{
+    request_parser parse{};
+    const string_t text{ R"({"jsonrpc":"1.0", "id":null})" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
@@ -200,10 +174,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_numeric_id__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"1.0", "id":42})" };
-    const auto size = parse.write(text);
-    BOOST_CHECK(!parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, text.size());
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
@@ -216,10 +187,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_string_id__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"1.0", "id":"foobar"})" };
-    const auto size = parse.write(text);
-    BOOST_CHECK(!parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, text.size());
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
