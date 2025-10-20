@@ -151,6 +151,75 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_null__expected)
     BOOST_CHECK(std::holds_alternative<null_t>(request.id));
 }
 
+// method
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(request_parser__write__method__expected)
+{
+    request_parser parse{};
+    const string_t text{ R"({"method":"foobar"})" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE(is_one(parse.get_parsed().size()));
+    BOOST_CHECK_EQUAL(parse.get_parsed().front().method, "foobar");
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v2_method__expected)
+{
+    request_parser parse{};
+    const string_t text{ R"({"jsonrpc":"2.0","method":"foobar"})" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE(is_one(parse.get_parsed().size()));
+
+    const auto request = parse.get_parsed().front();
+    BOOST_CHECK(request.jsonrpc == version::v2);
+    BOOST_CHECK_EQUAL(request.method, "foobar");
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_id_string_method__expected)
+{
+    request_parser parse{};
+    const string_t text{ R"({"jsonrpc":"1.0","id":"libbitcoin","method":"fast"})" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE(is_one(parse.get_parsed().size()));
+
+    const auto request = parse.get_parsed().front();
+    BOOST_CHECK(request.jsonrpc == version::v1);
+    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "libbitcoin");
+    BOOST_CHECK_EQUAL(request.method, "fast");
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__method_id_string_jsonrpc_v1__expected)
+{
+    request_parser parse{};
+    const string_t text{ R"({"method":"fast","id":"libbitcoin","jsonrpc":"1.0"})" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE(is_one(parse.get_parsed().size()));
+
+    const auto request = parse.get_parsed().front();
+    BOOST_CHECK(request.jsonrpc == version::v1);
+    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "libbitcoin");
+    BOOST_CHECK_EQUAL(request.method, "fast");
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__id_string_jsonrpc_v1_method__expected)
+{
+    request_parser parse{};
+    const string_t text{ R"({"id":"libbitcoin","jsonrpc":"1.0","method":"fast"})" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE(is_one(parse.get_parsed().size()));
+
+    const auto request = parse.get_parsed().front();
+    BOOST_CHECK(request.jsonrpc == version::v1);
+    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "libbitcoin");
+    BOOST_CHECK_EQUAL(request.method, "fast");
+}
+
+// params
+// ----------------------------------------------------------------------------
+
 // jsonrpc/id interaction
 // ----------------------------------------------------------------------------
 
