@@ -20,6 +20,7 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_IPP
 
 #include <string_view>
+#include <variant>
 
 namespace libbitcoin {
 namespace network {
@@ -183,7 +184,7 @@ void CLASS::validate() NOEXCEPT
     {
         // Non-null "id" required in version1.
         if (parsed_->jsonrpc == version::v1 &&
-            is_null(parsed_->id))
+            std::holds_alternative<null_t>(parsed_->id))
             state_ = state::error_state;
     }
     else
