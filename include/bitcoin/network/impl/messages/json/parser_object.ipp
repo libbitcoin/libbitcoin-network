@@ -127,28 +127,25 @@ void CLASS::handle_value(char c) NOEXCEPT
     if (key_ == "jsonrpc")
     {
         state_ = state::jsonrpc;
-        key_ = {};
     }
     else if (key_ == "id")
     {
         state_ = state::id;
-        key_ = {};
     }
     else if (key_ == "method")
     {
         state_ = state::method;
-        key_ = {};
     }
     else if (key_ == "params")
     {
         state_ = state::params;
-        key_ = {};
     }
     else
     {
         state_ = state::error_state;
-        key_ = {};
     }
+
+    key_ = {};
 }
 
 } // namespace json
