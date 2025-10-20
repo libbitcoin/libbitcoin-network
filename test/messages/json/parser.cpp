@@ -196,7 +196,21 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_string_id__expected)
     BOOST_CHECK(request.jsonrpc == version::v1);
 }
 
+// escape
 // ----------------------------------------------------------------------------
+
+// escapes are not yet supported
+BOOST_AUTO_TEST_CASE(request_parser__write__value_invalid_escape__error)
+{
+    request_parser parse{};
+    const string_t text{ R"({"jsonrpc":"2.0", "id":"foo\tball"})" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+
+    const auto request = parse.get_parsed().front();
+    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "foo\tball");
+    BOOST_CHECK(request.jsonrpc == version::v2);
+}
 
 ////BOOST_AUTO_TEST_CASE(parser__write__valid_request__parses_correctly)
 ////{

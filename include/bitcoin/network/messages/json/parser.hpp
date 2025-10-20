@@ -139,8 +139,8 @@ protected:
 
     /// Comsuming.
     /// -----------------------------------------------------------------------
-    inline void consume_substitute(view_t& token, char c) NOEXCEPT;
-    inline void consume_escaped(view_t& token, char c) NOEXCEPT;
+    inline bool consume_substitute(view_t& token, char c) NOEXCEPT;
+    inline bool consume_escaped(view_t& token, char c) NOEXCEPT;
     inline bool consume_escape(view_t& token, char c) NOEXCEPT;
     inline size_t consume_char(view_t& token) NOEXCEPT;
 
