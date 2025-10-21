@@ -40,9 +40,14 @@ using number_t = double;
 using string_t = std::string;
 using array_t = std::vector<value_t>;
 using object_t = std::unordered_map<string_t, value_t>;
-using id_t = std::variant<null_t, code_t, string_t>;
 
-using error_code = error::boost_code;
+using id_t = std::variant
+<
+    null_t,
+    code_t,
+    string_t
+>;
+using id_option = std::optional<id_t>;
 
 struct BCT_API value_t
 {
@@ -56,10 +61,16 @@ struct BCT_API value_t
         object_t
     >;
 
-    /// First type initialized by default (null_t).
-    type value{};
+    type inner{};
 };
 using value_option = std::optional<value_t>;
+
+using params_t = std::variant
+<
+    array_t,
+    object_t
+>;
+using params_option = std::optional<params_t>;
 
 struct BCT_API result_t
 {
@@ -74,16 +85,18 @@ struct BCT_API response_t
     version jsonrpc{ version::undefined };
     value_option result{};
     error_option error{};
-    id_t id{};
+    id_option id{};
 };
 
 struct BCT_API request_t
 {
     version jsonrpc{ version::undefined };
     string_t method{};
-    value_option params{};
-    id_t id{};
+    params_option params{};
+    id_option id{};
 };
+
+using error_code = error::boost_code;
 
 } // namespace json
 } // namespace network

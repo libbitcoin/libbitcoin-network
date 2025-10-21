@@ -78,7 +78,6 @@ void CLASS::reset() NOEXCEPT
 TEMPLATE
 void CLASS::reset_internal() NOEXCEPT
 {
-    trailing_ = {};
     escaped_ = {};
     quoted_ = {};
     expected_ = {};
@@ -119,11 +118,11 @@ bool CLASS::done_parsing(char c) NOEXCEPT
         case state::initial:
             handle_initialize(c);
             break;
-        case state::array_start:
-            handle_array_start(c);
+        case state::batch_start:
+            handle_batch_start(c);
             break;
-        case state::object_start:
-            handle_object_start(c);
+        case state::request_start:
+            handle_request_start(c);
             break;
         case state::key:
             handle_key(c);
@@ -137,11 +136,20 @@ bool CLASS::done_parsing(char c) NOEXCEPT
         case state::method:
             handle_method(c);
             break;
+        case state::id:
+            handle_id(c);
+            break;
         case state::params:
             handle_params(c);
             break;
-        case state::id:
-            handle_id(c);
+        case state::parameter:
+            handle_parameter(c);
+            break;
+        case state::parameter_key:
+            handle_parameter_key(c);
+            break;
+        case state::parameter_value:
+            handle_parameter_value(c);
             break;
         case state::complete:
         case state::error_state:
@@ -156,6 +164,8 @@ bool CLASS::done_parsing(char c) NOEXCEPT
 TEMPLATE
 void CLASS::validate() NOEXCEPT
 {
+    // TODO: request.params is array only in v1.
+
     // Validation is only relevant to a successful/complete parse.
     // Otherwise there is either an error or intermediate state.
     if (state_ != state::complete)
@@ -166,7 +176,8 @@ void CLASS::validate() NOEXCEPT
         state_ = state::error_state;
 
     // Non-null "id" required in version1.
-    if (request_->jsonrpc == version::v1 && is_null_t(request_->id))
+    if (request_->jsonrpc == version::v1 &&
+        (!request_->id.has_value() || is_null_t(request_->id.value())))
         state_ = state::error_state;
 
     // This needs to be relaxed (!strict) for stratum_v1.

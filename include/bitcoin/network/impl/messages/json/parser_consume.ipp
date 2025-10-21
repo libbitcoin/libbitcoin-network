@@ -27,6 +27,9 @@ namespace json {
 
 // protected
 
+// TODO: reject any quoted Unicode [U+0000 - U+001F] character, and maybe also
+// the delete character (U+007F) [though not required by JSON specification].
+
 TEMPLATE
 inline bool CLASS::consume_substitute(view_t&, char) NOEXCEPT
 {
@@ -87,6 +90,20 @@ inline size_t CLASS::consume_char(view_t& token) NOEXCEPT
     const auto start = token.empty() ? std::to_address(char_) : token.data();
     token = { start, size };
     return size;
+}
+
+TEMPLATE
+inline bool CLASS::consume_object(view_t&) NOEXCEPT
+{
+    // '{' iterates char_ to '}', assigns value, handles \\ and \" in "quoted".
+    return false;
+}
+
+TEMPLATE
+inline bool CLASS::consume_array(view_t&) NOEXCEPT
+{
+    // '[' iterates char_ to ']', assigns value, handles \\ and \" in "quoted".
+    return false;
 }
 
 } // namespace json

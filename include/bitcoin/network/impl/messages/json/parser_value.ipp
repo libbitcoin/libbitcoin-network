@@ -62,80 +62,15 @@ void CLASS::handle_method(char c) NOEXCEPT
 }
 
 TEMPLATE
-void CLASS::handle_params(char c) NOEXCEPT
-{
-    // string is terminated by its closing quote.
-    if (c == '"')
-    {
-        if (toggle(quoted_))
-            assign_value(request_->params, value_);
-    }
-    else if (quoted_)
-    {
-        consume_quoted(value_);
-    }
-
-    // TODO: use siliar to id processing, but use full precision json number.
-    // TODO: change value type to 
-
-    ////// array [positional] or object {named}.
-    ////else if (c == '[')
-    ////{
-    ////    // BUGBUG: depth conflict with {}.
-    ////    // BUGBUG: depth inconsistent within [], see batch.
-    ////    increment(depth_, state_);
-    ////    expected_ = ']';
-    ////}
-    ////else if (c == '{')
-    ////{
-    ////    // BUGBUG: depth conflict with [].
-    ////    increment(depth_, state_);
-    ////    expected_ = '}';
-    ////}
-    ////else if (c == ']' || c == '}')
-    ////{
-    ////    if ((c == ']' && expected_ != ']') ||
-    ////        (c == '}' && expected_ != '}'))
-    ////    {
-    ////        state_ = state::error_state;
-    ////        return;
-    ////    }
-    ////
-    ////    // BUGBUG: depth issues (above).
-    ////    if (!decrement(depth_, state_))
-    ////        return;
-    ////
-    ////    // BUGBUG: depth issues (above).
-    ////    // BUGBUG: string assignment only.
-    ////    if (is_one(depth_))
-    ////        assign_value(request_->params, value_);
-    ////    else
-    ////        state_ = state::error_state;
-    ////}
-    ////else if (c == ',' && trailing_)
-    ////{
-    ////    // BUGBUG: depth issues (above).
-    ////    // BUGBUG: string assignment only.
-    ////    if (is_one(depth_) && !value_.empty())
-    ////        assign_value(request_->params, value_);
-    ////    else
-    ////        state_ = state::error_state;
-    ////}
-
-    else if (!is_whitespace(c))
-    {
-        state_ = state::error_state;
-    }
-}
-
-TEMPLATE
 void CLASS::handle_id(char c) NOEXCEPT
 {
+    // id_t : variant<null_t, code_t, string_t>
+
     // string is terminated by its closing quote.
     if (c == '"')
     {
         if (toggle(quoted_))
-            assign_string_id(request_->id, value_);
+            assign_string(request_->id, value_);
     }
     else if (quoted_)
     {
@@ -143,10 +78,10 @@ void CLASS::handle_id(char c) NOEXCEPT
     }
 
     // null is terminated by its 4th character.
-    else if (is_nullic(value_, c))
+    else if (is_nully(value_, c))
     {
         if (consume_char(value_) == null_size)
-            assign_null_id(request_->id, value_);
+            assign_null(request_->id, value_);
     }
 
     // number is terminated by the first non-number character.
@@ -159,17 +94,171 @@ void CLASS::handle_id(char c) NOEXCEPT
         // skip whitespace before first number character.
         return;
     }
-    else if (!assign_numeric_id(request_->id, value_))
+    else if (!assign_number(request_->id, value_))
     {
         // empty string or other failures, state set by number parse.
         return;
     }
-
-    // redispatch the terminating character.
     else
     {
-        state_ = state::object_start;
-        handle_object_start(c);
+        // redispatch character that successfully terminated number.
+        state_ = state::request_start;
+        handle_request_start(c);
+    }
+}
+
+TEMPLATE
+void CLASS::handle_params(char c) NOEXCEPT
+{
+    // params_t : optional<variant<array_t, object_t>>
+
+    if (c == '[')
+    {
+        request_->params.emplace(array_t{});
+        state_ = state::parameter;
+    }
+    else if (c == '{')
+    {
+        ////request_->params.emplace(object_t{});
+        request_->params.emplace(array_t{});
+        state_ = state::parameter;
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+    }
+}
+
+// parameter
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+void CLASS::handle_parameter_key(char c) NOEXCEPT
+{
+    // Initiated by opening '"' [in named handle_parameter] so no ws skipping.
+    // In state::key, at trailing '"', state assigned based on accumulated key.
+
+    if (c != '"')
+    {
+        consume_quoted(key_);
+    }
+    else
+    {
+        state_ = state::parameter_value;
+    }
+}
+
+TEMPLATE
+void CLASS::handle_parameter_value(char c) NOEXCEPT
+{
+    // Initiated by trailing '"' [in handle_parameter_key] so yes ws skipping.
+    // In state::value, at first ':', state changes based on current key.
+
+    if (is_whitespace(c))
+    {
+        return;
+    }
+    else if (c != ':')
+    {
+        state_ = state::error_state;
+        return;
+    }
+    else
+    {
+        state_ = state::parameter;
+    }
+}
+
+TEMPLATE
+void CLASS::handle_parameter(char c) NOEXCEPT
+{
+    // TODO: utility to add new array/map element and return its value_t&.
+    // TODO: make this a method, hiding the array/map distinction.
+    // TODO: that will allow this method to work for both, only needing to also
+    // TODO: pass the key name for object values. will need another method to
+    // TODO: parse the arbitrary name key. setters can hide the application of
+    // TODO: key_, its clearance, and even the selection of the arr/obj based
+    // TODO: on the current request->params variant type. So we can pass in
+    // TODO: request->params, just as we do for jsonrpc, method, and id.
+
+    BC_ASSERT(request_->params.has_value());
+    auto& parameters = request_->params.value();
+    auto& arr = std::get<array_t>(parameters);
+    ////auto& obj = std::get<object_t>(parameters);
+
+    // Disallows empty params keys by using key_.empty() as a sentinel.
+    const auto key_required = [this]() NOEXCEPT
+    {
+        return key_.empty() && std::holds_alternative<object_t>(
+            request_->params.value());
+    };
+
+    // key (nvp only), as applicable, indicated by the first quote.
+    if (c == '"' && key_required())
+    {
+        state_ = state::parameter_key;
+    }
+
+    // value (nvp or arr).
+
+    // string value is terminated by its closing quote.
+    else if (c == '"')
+    {
+        if (toggle(quoted_))
+            assign_string(arr.at(42), value_);
+    }
+    else if (quoted_)
+    {
+        consume_quoted(value_);
+    }
+
+    else if (c == '{')
+    {
+        if (consume_object(value_))
+            assign_object(arr.at(42), value_);
+    }
+    else if (c == '[')
+    {
+        if (consume_array(value_))
+            assign_array(arr.at(42), value_);
+    }
+
+    else if (is_nully(value_, c))
+    {
+        if (consume_char(value_) == null_size)
+            assign_null(arr.at(42), value_);
+    }
+    else if (is_truthy(value_, c))
+    {
+        if (consume_char(value_) == true_size)
+            assign_true(arr.at(42), value_);
+    }
+    else if (is_falsy(value_, c))
+    {
+        if (consume_char(value_) == false_size)
+            assign_false(arr.at(42), value_);
+    }
+
+    // number is terminated by the first non-number character.
+    else if (is_numeric(c))
+    {
+        consume_char(value_);
+    }
+    else if (is_whitespace(c) && value_.empty())
+    {
+        // skip whitespace before first number character.
+        return;
+    }
+    else if (!assign_number(arr.at(42), value_))
+    {
+        // empty string or other failures, state set by number parse.
+        return;
+    }
+    else
+    {
+        // redispatch character that successfully terminated number.
+        state_ = state::request_start;
+        handle_request_start(c);
     }
 }
 

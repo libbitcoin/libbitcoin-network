@@ -45,81 +45,128 @@ json::version CLASS::to_version(const view_t& token) NOEXCEPT
     return version::invalid;
 }
 
-// protected
-
-TEMPLATE
-inline void CLASS::assign_value(value_option& to, view_t& from) NOEXCEPT
-{
-    state_ = state::object_start;
-    to = value_option{ value_t{ string_t{ from } } };
-    from = {};
-}
-
-TEMPLATE
-inline void CLASS::assign_string(string_t& to, view_t& from) NOEXCEPT
-{
-    state_ = state::object_start;
-    to = string_t{ from };
-    from = {};
-}
+// request.jsonrpc assign
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 inline bool CLASS::assign_version(version& to, view_t& from) NOEXCEPT
 {
-    state_ = state::object_start;
     to = to_version(from);
-    if (to == version::invalid)
-        state_ = state::error_state;
-
     from = {};
-    return state_ == state::object_start;
+    const auto ok = (to == version::invalid);
+    state_ = ok ? state::error_state : state::request_start;
+    return ok;
 }
 
-// id types
+// request.method assign
+// ----------------------------------------------------------------------------
 
 TEMPLATE
-inline void CLASS::assign_string_id(id_t& to, view_t& from) NOEXCEPT
+inline void CLASS::assign_string(string_t& to, view_t& from) NOEXCEPT
 {
-    state_ = state::object_start;
-    to.emplace<string_t>(from);
+    state_ = state::request_start;
+    to = string_t{ from };
+    from = {};
+}
+
+// request.id assigns
+// ----------------------------------------------------------------------------
+// id_option is std::optional<std::variant<null_t, code_t, string_t>>
+
+TEMPLATE
+inline bool CLASS::assign_number(id_option& to, view_t& from) NOEXCEPT
+{
+    to.emplace(code_t{});
+    auto& value = std::get<code_t>(to.value());
+    const auto ok = to_signed(value, from);
+    from = {};
+    state_ = ok ? state::error_state : state::request_start;
+    return ok;
+}
+
+TEMPLATE
+inline void CLASS::assign_string(id_option& to, view_t& from) NOEXCEPT
+{
+    state_ = state::request_start;
+    to.emplace(std::in_place_type<string_t>, from);
     from = {};
 }
 
 TEMPLATE
-inline bool CLASS::assign_numeric_id(code_t& to, view_t& from) NOEXCEPT
+inline void CLASS::assign_null(id_option& to, view_t& from) NOEXCEPT
 {
-    state_ = state::error_state;
-    if (to_signed(to, from))
-        state_ = state::object_start;
-
+    state_ = state::request_start;
+    to.emplace(null_t{});
     from = {};
-    return state_ == state::object_start;
+}
+
+// parameter types
+// ----------------------------------------------------------------------------
+// value_option is std::optional<value_t> where value_t.inner is of type:
+// std::variant<null_t, number_t, string_t, boolean_t, array_t, object_t>
+
+TEMPLATE
+inline void CLASS::assign_array(value_t& to, view_t& from) NOEXCEPT
+{
+    // single (unnamed) string blob in vector<variant<string, ...>>.
+    state_ = state::parameter;
+    to.inner.emplace<array_t>();
+    auto vector = std::get<array_t>(to.inner);
+    vector.emplace_back(string_t{ from });
+    from = {};
 }
 
 TEMPLATE
-inline bool CLASS::assign_numeric_id(id_t& to, view_t& from) NOEXCEPT
+inline void CLASS::assign_object(value_t& to, view_t& from) NOEXCEPT
 {
-    to.emplace<code_t>();
-    return assign_numeric_id(std::get<code_t>(to), from);
+    // single named string blob in unordered_map<string, variant<string, ...>>.
+    state_ = state::parameter;
+    to.inner.emplace<object_t>();
+    auto& map = std::get<object_t>(to.inner);
+    map.emplace(std::make_pair(string_t{ "blob" }, value_t{ string_t{ from } }));
+    from = {};
 }
 
 TEMPLATE
-inline bool CLASS::assign_unquoted_id(id_t& to, view_t& from) NOEXCEPT
+inline void CLASS::assign_string(value_t& to, view_t& from) NOEXCEPT
 {
-    if (from == "null")
-    {
-        assign_null_id(to, from);
-        return true;
-    }
-
-    return assign_numeric_id(to, from);
+    state_ = state::parameter;
+    to.inner.emplace<string_t>(from);
+    from = {};
 }
 
 TEMPLATE
-inline void CLASS::assign_null_id(id_t& to, view_t& from) NOEXCEPT
+inline bool CLASS::assign_number(value_t& to, view_t& from) NOEXCEPT
 {
-    state_ = state::object_start;
-    to.emplace<null_t>();
+    to.inner.emplace<number_t>();
+    auto& value = std::get<number_t>(to.inner);
+    const auto ok = to_number(value, from);
+    from = {};
+    state_ = ok ? state::error_state : state::parameter;
+    return ok;
+}
+
+TEMPLATE
+inline void CLASS::assign_true(value_t& to, view_t& from) NOEXCEPT
+{
+    state_ = state::parameter;
+    to.inner.emplace<boolean_t>(true);
+    from = {};
+}
+
+TEMPLATE
+inline void CLASS::assign_false(value_t& to, view_t& from) NOEXCEPT
+{
+    state_ = state::parameter;
+    to.inner.emplace<boolean_t>(false);
+    from = {};
+}
+
+TEMPLATE
+inline void CLASS::assign_null(value_t& to, view_t& from) NOEXCEPT
+{
+    state_ = state::parameter;
+    to.inner.emplace<null_t>();
     from = {};
 }
 
