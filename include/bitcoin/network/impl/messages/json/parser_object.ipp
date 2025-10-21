@@ -239,6 +239,7 @@ void CLASS::handle_parameter_value(char c) NOEXCEPT
         state_ = state::parameter;
     }
 }
+
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
