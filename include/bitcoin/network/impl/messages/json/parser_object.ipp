@@ -159,7 +159,7 @@ void CLASS::handle_value(char c) NOEXCEPT
     }
     else if (key_ == "params")
     {
-        state_ = state::params_start;
+        state_ = state::params;
     }
     else
     {
