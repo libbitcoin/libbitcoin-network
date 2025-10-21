@@ -161,7 +161,6 @@ void CLASS::handle_parameter_value(char c) NOEXCEPT
     else if (c != ':')
     {
         state_ = state::error_state;
-        return;
     }
     else
     {
