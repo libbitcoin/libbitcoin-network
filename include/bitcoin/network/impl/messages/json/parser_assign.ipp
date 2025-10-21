@@ -111,7 +111,7 @@ inline void CLASS::assign_array(value_t& to, view_t& from) NOEXCEPT
     // single (unnamed) string blob in vector<variant<string, ...>>.
     state_ = state::parameter;
     to.inner.emplace<array_t>();
-    auto vector = std::get<array_t>(to);
+    auto vector = std::get<array_t>(to.inner);
     vector.emplace_back(string_t{ from });
     from = {};
 }
@@ -122,7 +122,7 @@ inline void CLASS::assign_object(value_t& to, view_t& from) NOEXCEPT
     // single named string blob in unordered_map<string, variant<string, ...>>.
     state_ = state::parameter;
     to.inner.emplace<object_t>();
-    auto& map = std::get<object_t>(to);
+    auto& map = std::get<object_t>(to.inner);
     map.emplace(std::make_pair(string_t{ "blob" }, value_t{ string_t{ from } }));
     from = {};
 }
