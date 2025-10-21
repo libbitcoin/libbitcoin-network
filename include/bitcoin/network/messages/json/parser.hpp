@@ -31,14 +31,15 @@ namespace json {
 enum class parser_state
 {
     initial,
-    array_start,
-    object_start,
+    batch_start,
+    request_start,
     key,
     value,
     jsonrpc,
     method,
-    params,
     id,
+    params,
+    parameter,
     error_state,
     complete
 };
@@ -93,7 +94,7 @@ protected:
     static inline bool is_nullic(const view_t& token, char c) NOEXCEPT;
     static inline bool is_error(const result_t& error) NOEXCEPT;
     static inline bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
-    static inline bool to_double(double& out, const view_t& token) NOEXCEPT;
+    static inline bool to_number(double& out, const view_t& token) NOEXCEPT;
     static inline bool toggle(bool& quoted) NOEXCEPT;
     static inline size_t distance(const char_it& from,
         const char_it& to) NOEXCEPT;
@@ -106,36 +107,44 @@ protected:
     /// Visitors - object transitions.
     /// -----------------------------------------------------------------------
     void handle_initialize(char c) NOEXCEPT;
-    void handle_array_start(char c) NOEXCEPT;
-    void handle_object_start(char c) NOEXCEPT;
+    void handle_batch_start(char c) NOEXCEPT;
+    void handle_request_start(char c) NOEXCEPT;
     void handle_key(char c) NOEXCEPT;
     void handle_value(char c) NOEXCEPT;
+    void handle_params(char c) NOEXCEPT;
 
     /// Visitors - quoted values.
     /// -----------------------------------------------------------------------
     void handle_jsonrpc(char c) NOEXCEPT;
     void handle_method(char c) NOEXCEPT;
-    void handle_params(char c) NOEXCEPT;
     void handle_id(char c) NOEXCEPT;
+    void handle_parameter(char c) NOEXCEPT;
 
     /// Comsuming.
     /// -----------------------------------------------------------------------
     inline bool consume_substitute(view_t& token, char c) NOEXCEPT;
     inline bool consume_escaped(view_t& token, char c) NOEXCEPT;
     inline bool consume_escape(view_t& token, char c) NOEXCEPT;
+    inline size_t consume_buffer(view_t& token) NOEXCEPT;
     inline size_t consume_quoted(view_t& token) NOEXCEPT;
     inline size_t consume_char(view_t& token) NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------
-    inline void assign_value(value_option& to, view_t& from) NOEXCEPT;
-    inline void assign_string(string_t& to, view_t& from) NOEXCEPT;
     inline bool assign_version(version& to, view_t& from) NOEXCEPT;
-    inline void assign_string_id(id_t& to, view_t& from) NOEXCEPT;
-    inline bool assign_numeric_id(code_t& to, view_t& from) NOEXCEPT;
-    inline bool assign_numeric_id(id_t& to, view_t& from) NOEXCEPT;
-    inline bool assign_unquoted_id(id_t& to, view_t& from) NOEXCEPT;
-    inline void assign_null_id(id_t& to, view_t& from) NOEXCEPT;
+    inline void assign_string(string_t& to, view_t& from) NOEXCEPT;
+
+    inline bool assign_number(id_option& to, view_t& from) NOEXCEPT;
+    inline void assign_string(id_option& to, view_t& from) NOEXCEPT;
+    inline void assign_null(id_option& to, view_t& from) NOEXCEPT;
+
+    inline void assign_array(value_t& to, view_t& from) NOEXCEPT;
+    inline void assign_object(value_t& to, view_t& from) NOEXCEPT;
+    inline void assign_string(value_t& to, view_t& from) NOEXCEPT;
+    inline bool assign_number(value_t& to, view_t& from) NOEXCEPT;
+    inline void assign_true(value_t& to, view_t& from) NOEXCEPT;
+    inline void assign_false(value_t& to, view_t& from) NOEXCEPT;
+    inline void assign_null(value_t& to, view_t& from) NOEXCEPT;
 
 private:
     static constexpr auto null_size = view_t{ "null" }.length();
@@ -150,7 +159,6 @@ private:
     bool batched_{};
     batch_t batch_{};
 
-    bool trailing_{};
     bool escaped_{};
     bool quoted_{};
     char expected_{};

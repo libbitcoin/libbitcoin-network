@@ -62,80 +62,15 @@ void CLASS::handle_method(char c) NOEXCEPT
 }
 
 TEMPLATE
-void CLASS::handle_params(char c) NOEXCEPT
-{
-    // string is terminated by its closing quote.
-    if (c == '"')
-    {
-        if (toggle(quoted_))
-            assign_value(request_->params, value_);
-    }
-    else if (quoted_)
-    {
-        consume_quoted(value_);
-    }
-
-    // TODO: use siliar to id processing, but use full precision json number.
-    // TODO: change value type to 
-
-    ////// array [positional] or object {named}.
-    ////else if (c == '[')
-    ////{
-    ////    // BUGBUG: depth conflict with {}.
-    ////    // BUGBUG: depth inconsistent within [], see batch.
-    ////    increment(depth_, state_);
-    ////    expected_ = ']';
-    ////}
-    ////else if (c == '{')
-    ////{
-    ////    // BUGBUG: depth conflict with [].
-    ////    increment(depth_, state_);
-    ////    expected_ = '}';
-    ////}
-    ////else if (c == ']' || c == '}')
-    ////{
-    ////    if ((c == ']' && expected_ != ']') ||
-    ////        (c == '}' && expected_ != '}'))
-    ////    {
-    ////        state_ = state::error_state;
-    ////        return;
-    ////    }
-    ////
-    ////    // BUGBUG: depth issues (above).
-    ////    if (!decrement(depth_, state_))
-    ////        return;
-    ////
-    ////    // BUGBUG: depth issues (above).
-    ////    // BUGBUG: string assignment only.
-    ////    if (is_one(depth_))
-    ////        assign_value(request_->params, value_);
-    ////    else
-    ////        state_ = state::error_state;
-    ////}
-    ////else if (c == ',' && trailing_)
-    ////{
-    ////    // BUGBUG: depth issues (above).
-    ////    // BUGBUG: string assignment only.
-    ////    if (is_one(depth_) && !value_.empty())
-    ////        assign_value(request_->params, value_);
-    ////    else
-    ////        state_ = state::error_state;
-    ////}
-
-    else if (!is_whitespace(c))
-    {
-        state_ = state::error_state;
-    }
-}
-
-TEMPLATE
 void CLASS::handle_id(char c) NOEXCEPT
 {
+    // id_t : variant<null_t, code_t, string_t>
+
     // string is terminated by its closing quote.
     if (c == '"')
     {
         if (toggle(quoted_))
-            assign_string_id(request_->id, value_);
+            assign_string(request_->id, value_);
     }
     else if (quoted_)
     {
@@ -146,7 +81,7 @@ void CLASS::handle_id(char c) NOEXCEPT
     else if (is_nullic(value_, c))
     {
         if (consume_char(value_) == null_size)
-            assign_null_id(request_->id, value_);
+            assign_null(request_->id, value_);
     }
 
     // number is terminated by the first non-number character.
@@ -159,17 +94,105 @@ void CLASS::handle_id(char c) NOEXCEPT
         // skip whitespace before first number character.
         return;
     }
-    else if (!assign_numeric_id(request_->id, value_))
+    else if (!assign_number(request_->id, value_))
     {
         // empty string or other failures, state set by number parse.
         return;
     }
 
-    // redispatch the terminating character.
+    // redispatch character that successfully terminated number.
     else
     {
-        state_ = state::object_start;
-        handle_object_start(c);
+        state_ = state::request_start;
+        handle_request_start(c);
+    }
+}
+
+TEMPLATE
+void CLASS::handle_params(char c) NOEXCEPT
+{
+    // params_t : optional<variant<array_t, object_t>>
+
+    if (c == '[')
+    {
+        request_->params.emplace(array_t{});
+        state_ = state::parameter;
+    }
+    else if (c == '{')
+    {
+        request_->params.emplace(object_t{});
+        state_ = state::parameter;
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+    }
+}
+
+// parameter (collection of objects, not a value)
+// ----------------------------------------------------------------------------
+// if expected_ is ']' then key_ should already be empty.
+// if expected_ is '}' then key_ holds name for nvp (must use and clear).
+// reset open_[to_int(parameters_)] and parameters_ at either closure.
+
+TEMPLATE
+void CLASS::handle_parameter(char c) NOEXCEPT
+{
+    BC_ASSERT(request_->params.has_value());
+
+    auto& parameters = request_->params.value();
+    ////const auto name = std::holds_alternative<object_t>(parameters);
+    auto& obj = std::get<object_t>(parameters);
+    ////const auto anon = std::holds_alternative<array_t>(parameters);
+    auto& arr = std::get<array_t>(parameters);
+
+    // string is terminated by its closing quote.
+    if (c == '"')
+    {
+        if (toggle(quoted_))
+            assign_string(arr.at(0), value_);
+    }
+    else if (quoted_)
+    {
+        consume_quoted(value_);
+    }
+
+    // TODO: blobs.
+    else if (c == '{')
+    {
+    }
+    else if (c == '[')
+    {
+    }
+
+    // null is terminated by its 4th character.
+    else if (is_nullic(value_, c))
+    {
+        if (consume_char(value_) == null_size)
+            assign_null(obj.at("key..."), value_);
+    }
+
+    // number is terminated by the first non-number character.
+    else if (is_numeric(c))
+    {
+        consume_char(value_);
+    }
+    else if (is_whitespace(c) && value_.empty())
+    {
+        // skip whitespace before first number character.
+        return;
+    }
+    else if (!assign_number(arr.at(42), value_))
+    {
+        // empty string or other failures, state set by number parse.
+        return;
+    }
+
+    // redispatch character that successfully terminated number.
+    else
+    {
+        state_ = state::request_start;
+        handle_request_start(c);
     }
 }
 

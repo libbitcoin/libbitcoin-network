@@ -98,8 +98,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_positive__expected)
 
     const auto request = parse.get_parsed().front();
     BOOST_CHECK(request.jsonrpc == version::undefined);
-    BOOST_CHECK(std::holds_alternative<code_t>(request.id));
-    BOOST_REQUIRE_EQUAL(std::get<code_t>(request.id), 42);
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_REQUIRE(std::holds_alternative<code_t>(request.id.value()));
+    BOOST_CHECK_EQUAL(std::get<code_t>(request.id.value()), 42);
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__id_negative__expected)
@@ -110,8 +111,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_negative__expected)
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(std::holds_alternative<code_t>(request.id));
-    BOOST_REQUIRE_EQUAL(std::get<code_t>(request.id), -42);
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_REQUIRE(std::holds_alternative<code_t>(request.id.value()));
+    BOOST_CHECK_EQUAL(std::get<code_t>(request.id.value()), -42);
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__id_string__expected)
@@ -122,8 +124,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_string__expected)
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "foobar");
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "foobar");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__id_empty__expected)
@@ -134,8 +137,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_empty__expected)
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "");
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__id_null__expected)
@@ -146,7 +150,8 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_null__expected)
     BOOST_CHECK(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(std::holds_alternative<null_t>(request.id));
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_REQUIRE(std::holds_alternative<null_t>(request.id.value()));
 }
 
 // method
@@ -182,8 +187,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_id_string_method__expecte
 
     const auto request = parse.get_parsed().front();
     BOOST_CHECK(request.jsonrpc == version::v1);
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "libbitcoin");
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "libbitcoin");
     BOOST_CHECK_EQUAL(request.method, "fast");
 }
 
@@ -196,8 +202,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__method_id_string_jsonrpc_v1__expecte
 
     const auto request = parse.get_parsed().front();
     BOOST_CHECK(request.jsonrpc == version::v1);
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "libbitcoin");
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "libbitcoin");
     BOOST_CHECK_EQUAL(request.method, "fast");
 }
 
@@ -210,13 +217,11 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_string_jsonrpc_v1_method__expecte
 
     const auto request = parse.get_parsed().front();
     BOOST_CHECK(request.jsonrpc == version::v1);
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "libbitcoin");
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_CHECK(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "libbitcoin");
     BOOST_CHECK_EQUAL(request.method, "fast");
 }
-
-// params
-// ----------------------------------------------------------------------------
 
 // jsonrpc/id interaction
 // ----------------------------------------------------------------------------
@@ -245,8 +250,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_numeric_id__expected)
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(std::holds_alternative<code_t>(request.id));
-    BOOST_CHECK_EQUAL(std::get<code_t>(request.id), 42);
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_CHECK(std::holds_alternative<code_t>(request.id.value()));
+    BOOST_CHECK_EQUAL(std::get<code_t>(request.id.value()), 42);
     BOOST_CHECK(request.jsonrpc == version::v1);
 }
 
@@ -258,8 +264,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_string_id__expected)
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "foobar");
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_CHECK(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "foobar");
     BOOST_CHECK(request.jsonrpc == version::v1);
 }
 
@@ -277,8 +284,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__whitespace_all__expected)
     BOOST_CHECK_EQUAL(parse.write(text), 76);
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id), "foobar");
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_CHECK(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "foobar");
     BOOST_CHECK(request.jsonrpc == version::v2);
 }
 
@@ -304,10 +312,11 @@ BOOST_AUTO_TEST_CASE(request_parser__write__json_escape__not_implemented)
     BOOST_CHECK_EQUAL(parse.write(text), text.size());
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_CHECK(std::holds_alternative<string_t>(request.id.value()));
 
-    // Token escapes are not yet supported.
-    BOOST_CHECK_NE(std::get<string_t>(request.id), R"("foo\bar")");
+    // Escapes are not yet supported.
+    BOOST_CHECK_NE(std::get<string_t>(request.id.value()), R"("foo\bar")");
     BOOST_CHECK(request.jsonrpc == version::v2);
 }
 
@@ -318,11 +327,81 @@ BOOST_AUTO_TEST_CASE(request_parser__write__native_escape__expected)
     BOOST_CHECK_EQUAL(parse.write(text), text.size());
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id));
+    BOOST_REQUIRE(request.id.has_value());
+    BOOST_CHECK(std::holds_alternative<string_t>(request.id.value()));
 
-    // Token escapes are not yet supported.
-    BOOST_CHECK_NE(std::get<string_t>(request.id), R"("foo\bar")");
+    // Escapes are not yet supported.
+    BOOST_CHECK_NE(std::get<string_t>(request.id.value()), R"("foo\bar")");
     BOOST_CHECK(request.jsonrpc == version::v2);
 }
+
+// params
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(request_parser__write__params_null__error)
+{
+    request_parser parse{};
+    const string_t text{ R"({"params":null})" };
+    const auto size = parse.write(text);
+    BOOST_CHECK(parse.has_error());
+    BOOST_CHECK(parse.is_done());
+    BOOST_CHECK_EQUAL(size, 11u);
+    BOOST_REQUIRE(parse.get_parsed().empty());
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__params_string__error)
+{
+    request_parser parse{};
+    const string_t text{ R"({"params":"foobar"})" };
+    const auto size = parse.write(text);
+    BOOST_CHECK(parse.has_error());
+    BOOST_CHECK(parse.is_done());
+    BOOST_CHECK_EQUAL(size, 11u);
+    BOOST_REQUIRE(parse.get_parsed().empty());
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__params_number__error)
+{
+    request_parser parse{};
+    const string_t text{ R"({"params":42})" };
+    const auto size = parse.write(text);
+    BOOST_CHECK(parse.has_error());
+    BOOST_CHECK(parse.is_done());
+    BOOST_CHECK_EQUAL(size, 11u);
+    BOOST_REQUIRE(parse.get_parsed().empty());
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__params_boolean__error)
+{
+    request_parser parse{};
+    const string_t text{ R"({"params":true})" };
+    const auto size = parse.write(text);
+    BOOST_CHECK(parse.has_error());
+    BOOST_CHECK(parse.is_done());
+    BOOST_CHECK_EQUAL(size, 11u);
+    BOOST_REQUIRE(parse.get_parsed().empty());
+}
+
+////BOOST_AUTO_TEST_CASE(request_parser__write__params_empty_array__expected)
+////{
+////    request_parser parse{};
+////    const string_t text{ R"({"params":[]})" };
+////    const auto size = parse.write(text);
+////    BOOST_CHECK(parse.has_error());
+////    BOOST_CHECK(parse.is_done());
+////    BOOST_CHECK_EQUAL(size, 12u);
+////    BOOST_REQUIRE(parse.get_parsed().empty());
+////}
+////
+////BOOST_AUTO_TEST_CASE(request_parser__write__params_empty_object__expected)
+////{
+////    request_parser parse{};
+////    const string_t text{ R"({"params":{}})" };
+////    const auto size = parse.write(text);
+////    BOOST_CHECK(parse.has_error());
+////    BOOST_CHECK(parse.is_done());
+////    BOOST_CHECK_EQUAL(size, 12u);
+////    BOOST_REQUIRE(parse.get_parsed().empty());
+////}
 
 BOOST_AUTO_TEST_SUITE_END()

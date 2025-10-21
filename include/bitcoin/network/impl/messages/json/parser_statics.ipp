@@ -99,7 +99,7 @@ inline bool CLASS::to_signed(code_t& out, const view_t& token) NOEXCEPT
 // In other words, numbers can contain fractional parts :[.
 
 TEMPLATE
-inline bool CLASS::to_double(double& out, const view_t& token) NOEXCEPT
+inline bool CLASS::to_number(double& out, const view_t& token) NOEXCEPT
 {
     static const std::regex json_number{
         R"(-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?$)" };

@@ -26,17 +26,15 @@ namespace json {
 TEMPLATE
 void CLASS::handle_initialize(char c) NOEXCEPT
 {
-    if (c == '{')
+    if (c == '[')
     {
-        state_ = state::object_start;
-        request_ = add_request();
-        expected_ = '}';
-    }
-    else if (c == '[')
-    {
-        state_ = state::array_start;
         batched_ = true;
-        expected_ = ']';
+        state_ = state::batch_start;
+    }
+    else if (c == '{')
+    {
+        request_ = add_request();
+        state_ = state::request_start;
     }
     else if (!is_whitespace(c))
     {
@@ -45,75 +43,63 @@ void CLASS::handle_initialize(char c) NOEXCEPT
 }
 
 TEMPLATE
-void CLASS::handle_array_start(char c) NOEXCEPT
+void CLASS::handle_batch_start(char c) NOEXCEPT
 {
-    if (c == '{')
+    if (c == ',')
+    {
+        state_ = state::batch_start;
+    }
+    else if (c == '{')
     {
         reset_internal();
-        state_ = state::object_start;
         request_ = add_request();
-        expected_ = '}';
+        state_ = state::request_start;
     }
-    else if (c == ']' && expected_ == ']')
-    {
-        state_ = batch_.empty() ? state::error_state : state::complete;
-    }
-
-    // Leading batch array ',' and unexpected ']' are caught here.
-    else if (!is_whitespace(c))
-    {
-        state_ = state::error_state;
-    }
-}
-
-TEMPLATE
-void CLASS::handle_object_start(char c) NOEXCEPT
-{
-    // key is terminated by its closing quote in handle_key.
-    // nvp start (will close), so at least one element in current csv set.
-    if (c == '"')
-    {
-        trailing_ = true;
-        state_ = state::key;
-    }
-
-    else if (c == ',' && trailing_)
-    {
-        state_ = state::object_start;
-    }
-
-    // object close, so at least one element in current csv set.
-    else if (c == '}' && expected_ == '}')
-    {
-        trailing_ = true;
-        state_ = batched_ ? state::array_start : state::complete;
-    }
-
-    else if (c == ']' && expected_ == ']')
+    else if (c == ']')
     {
         state_ = state::complete;
     }
-
-    // Leading object/array ',' and unexpected ']' and '}' are caught here.
     else if (!is_whitespace(c))
     {
         state_ = state::error_state;
     }
 }
+
+TEMPLATE
+void CLASS::handle_request_start(char c) NOEXCEPT
+{
+    if (c == ',')
+    {
+        state_ = state::request_start;
+    }
+    else if (c == '"')
+    {
+        state_ = state::key;
+    }
+    else if (c == '}')
+    {
+        state_ = batched_ ? state::batch_start : state::complete;
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+    }
+}
+
+// key discovery to value type dispatch
+// ----------------------------------------------------------------------------
 
 TEMPLATE
 void CLASS::handle_key(char c) NOEXCEPT
 {
-    // Initiated by quote [in handle_object_start] so no whitespace skipping.
+    // Initiated by opening '"' [in handle_request_start] so no ws skipping.
+    // In state::key, at trailing '"', state assigned based on accumulated key.
 
     if (c != '"')
     {
         consume_quoted(key_);
-        return;
     }
-
-    // In state::key, upon '"' state changes based on accumulated key chars.
-    if (key_ == "jsonrpc")
+    else if (key_ == "jsonrpc")
     {
         state_ = state::value;
     }
@@ -142,17 +128,19 @@ void CLASS::handle_key(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_value(char c) NOEXCEPT
 {
-    if (is_whitespace(c))
-        return;
+    // Initiated by trailing '"' [in handle_key] so yes ws skipping.
+    // In state::value, at first ':', state changes based on current key.
 
-    if (c != ':')
+    if (is_whitespace(c))
+    {
+        return;
+    }
+    else if (c != ':')
     {
         state_ = state::error_state;
         return;
     }
-
-    // In state::value, upon ':' state changes based on current key.
-    if (key_ == "jsonrpc")
+    else if (key_ == "jsonrpc")
     {
         state_ = state::jsonrpc;
     }
