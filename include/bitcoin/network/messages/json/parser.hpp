@@ -40,6 +40,8 @@ enum class parser_state
     id,
     params,
     parameter,
+    parameter_key,
+    parameter_value,
     error_state,
     complete
 };
@@ -121,6 +123,8 @@ protected:
     void handle_method(char c) NOEXCEPT;
     void handle_id(char c) NOEXCEPT;
     void handle_parameter(char c) NOEXCEPT;
+    void handle_parameter_key(char c) NOEXCEPT;
+    void handle_parameter_value(char c) NOEXCEPT;
 
     /// Comsuming.
     /// -----------------------------------------------------------------------

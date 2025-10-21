@@ -145,6 +145,12 @@ bool CLASS::done_parsing(char c) NOEXCEPT
         case state::parameter:
             handle_parameter(c);
             break;
+        case state::parameter_key:
+            handle_parameter_key(c);
+            break;
+        case state::parameter_value:
+            handle_parameter_value(c);
+            break;
         case state::complete:
         case state::error_state:
             break;

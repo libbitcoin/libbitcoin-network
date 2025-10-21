@@ -129,11 +129,45 @@ void CLASS::handle_params(char c) NOEXCEPT
     }
 }
 
-// parameter (collection of objects, not a value)
+// parameter
 // ----------------------------------------------------------------------------
-// if expected_ is ']' then key_ should already be empty.
-// if expected_ is '}' then key_ holds name for nvp (must use and clear).
-// reset open_[to_int(parameters_)] and parameters_ at either closure.
+
+TEMPLATE
+void CLASS::handle_parameter_key(char c) NOEXCEPT
+{
+    // Initiated by opening '"' [in named handle_parameter] so no ws skipping.
+    // In state::key, at trailing '"', state assigned based on accumulated key.
+
+    if (c != '"')
+    {
+        consume_quoted(key_);
+    }
+    else
+    {
+        state_ = state::parameter_value;
+    }
+}
+
+TEMPLATE
+void CLASS::handle_parameter_value(char c) NOEXCEPT
+{
+    // Initiated by trailing '"' [in handle_parameter_key] so yes ws skipping.
+    // In state::value, at first ':', state changes based on current key.
+
+    if (is_whitespace(c))
+    {
+        return;
+    }
+    else if (c != ':')
+    {
+        state_ = state::error_state;
+        return;
+    }
+    else
+    {
+        state_ = state::parameter;
+    }
+}
 
 TEMPLATE
 void CLASS::handle_parameter(char c) NOEXCEPT
@@ -141,9 +175,9 @@ void CLASS::handle_parameter(char c) NOEXCEPT
     BC_ASSERT(request_->params.has_value());
 
     auto& parameters = request_->params.value();
-    ////const auto name = std::holds_alternative<object_t>(parameters);
+    const auto name = std::holds_alternative<object_t>(parameters);
     auto& obj = std::get<object_t>(parameters);
-    ////const auto anon = std::holds_alternative<array_t>(parameters);
+    const auto anon = std::holds_alternative<array_t>(parameters);
     auto& arr = std::get<array_t>(parameters);
 
     // TODO: utility to add new array/map element and return its value_t&.
@@ -155,8 +189,16 @@ void CLASS::handle_parameter(char c) NOEXCEPT
     // TODO: on the current request->params variant type. So we can pass in
     // TODO: request->params, just as we do for jsonrpc, method, and id.
 
-    // string is terminated by its closing quote.
-    if (c == '"')
+    // key (nvp) indicated by the first quote, disallows empty parameter names.
+    if (c == '"' && name && key_.empty())
+    {
+        state_ = state::parameter_key;
+    }
+
+    // value (nvp or arr).
+
+    // string value is terminated by its closing quote.
+    else if (c == '"')
     {
         if (toggle(quoted_))
             assign_string(arr.at(0), value_);
