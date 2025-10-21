@@ -53,8 +53,8 @@ inline bool CLASS::assign_version(version& to, view_t& from) NOEXCEPT
 {
     to = to_version(from);
     from = {};
-    const auto ok = (to == version::invalid);
-    state_ = ok ? state::error_state : state::request_start;
+    const auto ok = (to != version::invalid);
+    state_ = ok ? state::request_start : state::error_state;
     return ok;
 }
 
@@ -80,7 +80,7 @@ inline bool CLASS::assign_number(id_option& to, view_t& from) NOEXCEPT
     auto& value = std::get<code_t>(to.value());
     const auto ok = to_signed(value, from);
     from = {};
-    state_ = ok ? state::error_state : state::request_start;
+    state_ = ok ? state::request_start : state::error_state;
     return ok;
 }
 
@@ -109,7 +109,7 @@ TEMPLATE
 inline void CLASS::assign_array(value_t& to, view_t& from) NOEXCEPT
 {
     // single (unnamed) string blob in vector<variant<string, ...>>.
-    state_ = state::parameter;
+    state_ = state::params_start;
     to.inner.emplace<array_t>();
     auto vector = std::get<array_t>(to.inner);
     vector.emplace_back(string_t{ from });
@@ -120,7 +120,7 @@ TEMPLATE
 inline void CLASS::assign_object(value_t& to, view_t& from) NOEXCEPT
 {
     // single named string blob in unordered_map<string, variant<string, ...>>.
-    state_ = state::parameter;
+    state_ = state::params_start;
     to.inner.emplace<object_t>();
     auto& map = std::get<object_t>(to.inner);
     map.emplace(std::make_pair(string_t{ "blob" }, value_t{ string_t{ from } }));
@@ -130,7 +130,7 @@ inline void CLASS::assign_object(value_t& to, view_t& from) NOEXCEPT
 TEMPLATE
 inline void CLASS::assign_string(value_t& to, view_t& from) NOEXCEPT
 {
-    state_ = state::parameter;
+    state_ = state::params_start;
     to.inner.emplace<string_t>(from);
     from = {};
 }
@@ -142,14 +142,14 @@ inline bool CLASS::assign_number(value_t& to, view_t& from) NOEXCEPT
     auto& value = std::get<number_t>(to.inner);
     const auto ok = to_number(value, from);
     from = {};
-    state_ = ok ? state::error_state : state::parameter;
+    state_ = ok ? state::params_start : state::error_state;
     return ok;
 }
 
 TEMPLATE
 inline void CLASS::assign_true(value_t& to, view_t& from) NOEXCEPT
 {
-    state_ = state::parameter;
+    state_ = state::params_start;
     to.inner.emplace<boolean_t>(true);
     from = {};
 }
@@ -157,7 +157,7 @@ inline void CLASS::assign_true(value_t& to, view_t& from) NOEXCEPT
 TEMPLATE
 inline void CLASS::assign_false(value_t& to, view_t& from) NOEXCEPT
 {
-    state_ = state::parameter;
+    state_ = state::params_start;
     to.inner.emplace<boolean_t>(false);
     from = {};
 }
@@ -165,7 +165,7 @@ inline void CLASS::assign_false(value_t& to, view_t& from) NOEXCEPT
 TEMPLATE
 inline void CLASS::assign_null(value_t& to, view_t& from) NOEXCEPT
 {
-    state_ = state::parameter;
+    state_ = state::params_start;
     to.inner.emplace<null_t>();
     from = {};
 }
