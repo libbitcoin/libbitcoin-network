@@ -23,9 +23,14 @@ namespace libbitcoin {
 namespace network {
 namespace json {
 
+// startup
+// ----------------------------------------------------------------------------
+
 TEMPLATE
-void CLASS::handle_initialize(char c) NOEXCEPT
+void CLASS::handle_root(char c) NOEXCEPT
 {
+    // There is only one root element, so no comma processing.
+
     if (c == '[')
     {
         batched_ = true;
@@ -65,6 +70,9 @@ void CLASS::handle_batch_start(char c) NOEXCEPT
     }
 }
 
+// properties
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 void CLASS::handle_request_start(char c) NOEXCEPT
 {
@@ -85,9 +93,6 @@ void CLASS::handle_request_start(char c) NOEXCEPT
         state_ = state::error_state;
     }
 }
-
-// key discovery to value type dispatch
-// ----------------------------------------------------------------------------
 
 TEMPLATE
 void CLASS::handle_key(char c) NOEXCEPT
@@ -164,6 +169,77 @@ void CLASS::handle_value(char c) NOEXCEPT
     key_ = {};
 }
 
+// parameters
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+void CLASS::handle_params_start(char c) NOEXCEPT
+{
+    // Disallows empty params keys by using key_.empty() as a sentinel.
+    const auto key_required = [this]() NOEXCEPT
+    {
+        return key_.empty() && std::holds_alternative<object_t>(
+            request_->params.value());
+    };
+
+    if (c == ',')
+    {
+        state_ = state::params_start;
+    }
+    else if (c == '"' && key_required())
+    {
+        state_ = state::parameter_key;
+    }
+    else if (c == '}')
+    {
+        state_ = state::request_start;
+    }
+    else if (!is_whitespace(c))
+    {
+        state_ = state::error_state;
+    }
+}
+
+TEMPLATE
+void CLASS::handle_parameter_key(char c) NOEXCEPT
+{
+    // Initiated by opening '"' [in named handle_parameter] so no ws skipping.
+    // In state::key, at trailing '"', state assigned based on accumulated key.
+    // Empty key disallowed as service paramter, and is used as a sentinel.
+
+    if (c != '"')
+    {
+        consume_quoted(key_);
+    }
+    else if (key_.empty())
+    {
+        state_ = state::error_state;
+    }
+    else
+    {
+        state_ = state::parameter_value;
+    }
+}
+
+TEMPLATE
+void CLASS::handle_parameter_value(char c) NOEXCEPT
+{
+    // Initiated by trailing '"' [in handle_parameter_key] so yes ws skipping.
+    // In state::value, at first ':', state changes based on current key.
+
+    if (is_whitespace(c))
+    {
+        return;
+    }
+    else if (c != ':')
+    {
+        state_ = state::error_state;
+    }
+    else
+    {
+        state_ = state::parameter;
+    }
+}
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
