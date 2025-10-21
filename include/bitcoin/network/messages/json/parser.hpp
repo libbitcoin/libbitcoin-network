@@ -91,7 +91,9 @@ protected:
     static constexpr bool is_whitespace(char c) NOEXCEPT;
     static inline bool is_null_t(const id_t& id) NOEXCEPT;
     static inline bool is_numeric(char c) NOEXCEPT;
-    static inline bool is_nullic(const view_t& token, char c) NOEXCEPT;
+    static inline bool is_truthy(const view_t& token, char c) NOEXCEPT;
+    static inline bool is_falsy(const view_t& token, char c) NOEXCEPT;
+    static inline bool is_nully(const view_t& token, char c) NOEXCEPT;
     static inline bool is_error(const result_t& error) NOEXCEPT;
     static inline bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
     static inline bool to_number(double& out, const view_t& token) NOEXCEPT;
@@ -131,13 +133,19 @@ protected:
 
     /// Assignment.
     /// -----------------------------------------------------------------------
+
+    /// "jsonrpc"
     inline bool assign_version(version& to, view_t& from) NOEXCEPT;
+
+    /// "method"
     inline void assign_string(string_t& to, view_t& from) NOEXCEPT;
 
+    /// "id"
     inline bool assign_number(id_option& to, view_t& from) NOEXCEPT;
     inline void assign_string(id_option& to, view_t& from) NOEXCEPT;
     inline void assign_null(id_option& to, view_t& from) NOEXCEPT;
 
+    /// "params"
     inline void assign_array(value_t& to, view_t& from) NOEXCEPT;
     inline void assign_object(value_t& to, view_t& from) NOEXCEPT;
     inline void assign_string(value_t& to, view_t& from) NOEXCEPT;
@@ -147,6 +155,8 @@ protected:
     inline void assign_null(value_t& to, view_t& from) NOEXCEPT;
 
 private:
+    static constexpr auto false_size = view_t{ "false" }.length();
+    static constexpr auto true_size = view_t{ "true" }.length();
     static constexpr auto null_size = view_t{ "null" }.length();
     static version to_version(const view_t& token) NOEXCEPT;
 

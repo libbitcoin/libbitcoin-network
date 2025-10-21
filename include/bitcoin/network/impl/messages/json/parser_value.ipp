@@ -78,7 +78,7 @@ void CLASS::handle_id(char c) NOEXCEPT
     }
 
     // null is terminated by its 4th character.
-    else if (is_nullic(value_, c))
+    else if (is_nully(value_, c))
     {
         if (consume_char(value_) == null_size)
             assign_null(request_->id, value_);
@@ -146,6 +146,15 @@ void CLASS::handle_parameter(char c) NOEXCEPT
     ////const auto anon = std::holds_alternative<array_t>(parameters);
     auto& arr = std::get<array_t>(parameters);
 
+    // TODO: utility to add new array/map element and return its value_t&.
+    // TODO: make this a method, hiding the array/map distinction.
+    // TODO: that will allow this method to work for both, only needing to also
+    // TODO: pass the key name for object values. will need another method to
+    // TODO: parse the arbitrary name key. setters can hide the application of
+    // TODO: key_, its clearance, and even the selection of the arr/obj based
+    // TODO: on the current request->params variant type. So we can pass in
+    // TODO: request->params, just as we do for jsonrpc, method, and id.
+
     // string is terminated by its closing quote.
     if (c == '"')
     {
@@ -157,7 +166,8 @@ void CLASS::handle_parameter(char c) NOEXCEPT
         consume_quoted(value_);
     }
 
-    // TODO: blobs.
+    // TODO: blobs... light parse from c to terminator, handle \\ and \" in "".
+    // TODO: apply to value_ view, and assign obj|arr value to current element.
     else if (c == '{')
     {
     }
@@ -166,9 +176,23 @@ void CLASS::handle_parameter(char c) NOEXCEPT
     }
 
     // null is terminated by its 4th character.
-    else if (is_nullic(value_, c))
+    else if (is_nully(value_, c))
     {
         if (consume_char(value_) == null_size)
+            assign_null(obj.at("key..."), value_);
+    }
+
+    // true is terminated by its 4th character.
+    else if (is_truthy(value_, c))
+    {
+        if (consume_char(value_) == true_size)
+            assign_null(obj.at("key..."), value_);
+    }
+
+    // false is terminated by its 5th character.
+    else if (is_falsy(value_, c))
+    {
+        if (consume_char(value_) == false_size)
             assign_null(obj.at("key..."), value_);
     }
 

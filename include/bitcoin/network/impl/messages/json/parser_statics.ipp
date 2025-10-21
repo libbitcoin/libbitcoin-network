@@ -65,6 +65,7 @@ constexpr bool CLASS::is_whitespace(char c) NOEXCEPT
 TEMPLATE
 bool CLASS::is_numeric(char c) NOEXCEPT
 {
+    // 'e' is shared with true/false, those must be parsed first.
     return std::isdigit(c)
         || c == '-'
         || c == '.'
@@ -72,8 +73,32 @@ bool CLASS::is_numeric(char c) NOEXCEPT
         || c == 'E'
         || c == '+';
 }
+
 TEMPLATE
-bool CLASS::is_nullic(const view_t& token, char c) NOEXCEPT
+bool CLASS::is_truthy(const view_t& token, char c) NOEXCEPT
+{
+    // 'e' is shared with numeric, but since it is last here, it will always be
+    // unambiguous if accepted here first, but this must preceed is_numeric().
+    return (token.empty()  && c == 't')
+        || (token == "t"   && c == 'r')
+        || (token == "tr"  && c == 'u')
+        || (token == "tru" && c == 'e');
+}
+
+TEMPLATE
+bool CLASS::is_falsy(const view_t& token, char c) NOEXCEPT
+{
+    // 'e' is shared with numeric, but since it is last here, it will always be
+    // unambiguous if accepted here first, but this must preceed is_numeric().
+    return (token.empty()   && c == 'f')
+        || (token == "f"    && c == 'a')
+        || (token == "fa"   && c == 'l')
+        || (token == "fal"  && c == 's')
+        || (token == "fals" && c == 'e');
+}
+
+TEMPLATE
+bool CLASS::is_nully(const view_t& token, char c) NOEXCEPT
 {
     return (token.empty()  && c == 'n')
         || (token == "n"   && c == 'u')
