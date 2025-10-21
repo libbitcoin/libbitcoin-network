@@ -134,6 +134,8 @@ protected:
     inline size_t consume_buffer(view_t& token) NOEXCEPT;
     inline size_t consume_quoted(view_t& token) NOEXCEPT;
     inline size_t consume_char(view_t& token) NOEXCEPT;
+    inline bool consume_object(view_t& token) NOEXCEPT;
+    inline bool consume_array(view_t& token) NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------

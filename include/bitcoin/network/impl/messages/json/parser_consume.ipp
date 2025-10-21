@@ -92,6 +92,20 @@ inline size_t CLASS::consume_char(view_t& token) NOEXCEPT
     return size;
 }
 
+TEMPLATE
+inline bool CLASS::consume_object(view_t&) NOEXCEPT
+{
+    // '{' iterates char_ to '}', assigns value, handles \\ and \" in "quoted".
+    return false;
+}
+
+TEMPLATE
+inline bool CLASS::consume_array(view_t&) NOEXCEPT
+{
+    // '[' iterates char_ to ']', assigns value, handles \\ and \" in "quoted".
+    return false;
+}
+
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
