@@ -115,8 +115,8 @@ bool CLASS::done_parsing(char c) NOEXCEPT
 {
     switch (state_)
     {
-        case state::initial:
-            handle_initialize(c);
+        case state::root:
+            handle_root(c);
             break;
         case state::batch_start:
             handle_batch_start(c);
@@ -141,6 +141,9 @@ bool CLASS::done_parsing(char c) NOEXCEPT
             break;
         case state::params:
             handle_params(c);
+            break;
+        case state::params_start:
+            handle_params_start(c);
             break;
         case state::parameter:
             handle_parameter(c);

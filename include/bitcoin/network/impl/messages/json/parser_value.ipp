@@ -111,60 +111,21 @@ TEMPLATE
 void CLASS::handle_params(char c) NOEXCEPT
 {
     // params_t : optional<variant<array_t, object_t>>
+    // There is only one params element, so no comma processing.
 
     if (c == '[')
     {
         request_->params.emplace(array_t{});
-        state_ = state::parameter;
+        state_ = state::params_start;
     }
     else if (c == '{')
     {
-        ////request_->params.emplace(object_t{});
-        request_->params.emplace(array_t{});
-        state_ = state::parameter;
+        request_->params.emplace(object_t{});
+        state_ = state::params_start;
     }
     else if (!is_whitespace(c))
     {
         state_ = state::error_state;
-    }
-}
-
-// parameter
-// ----------------------------------------------------------------------------
-
-TEMPLATE
-void CLASS::handle_parameter_key(char c) NOEXCEPT
-{
-    // Initiated by opening '"' [in named handle_parameter] so no ws skipping.
-    // In state::key, at trailing '"', state assigned based on accumulated key.
-
-    if (c != '"')
-    {
-        consume_quoted(key_);
-    }
-    else
-    {
-        state_ = state::parameter_value;
-    }
-}
-
-TEMPLATE
-void CLASS::handle_parameter_value(char c) NOEXCEPT
-{
-    // Initiated by trailing '"' [in handle_parameter_key] so yes ws skipping.
-    // In state::value, at first ':', state changes based on current key.
-
-    if (is_whitespace(c))
-    {
-        return;
-    }
-    else if (c != ':')
-    {
-        state_ = state::error_state;
-    }
-    else
-    {
-        state_ = state::parameter;
     }
 }
 
@@ -185,23 +146,10 @@ void CLASS::handle_parameter(char c) NOEXCEPT
     auto& arr = std::get<array_t>(parameters);
     ////auto& obj = std::get<object_t>(parameters);
 
-    // Disallows empty params keys by using key_.empty() as a sentinel.
-    const auto key_required = [this]() NOEXCEPT
-    {
-        return key_.empty() && std::holds_alternative<object_t>(
-            request_->params.value());
-    };
-
-    // key (nvp only), as applicable, indicated by the first quote.
-    if (c == '"' && key_required())
-    {
-        state_ = state::parameter_key;
-    }
-
-    // value (nvp or arr).
+    // value (key-value pairs {} or array of values []).
 
     // string value is terminated by its closing quote.
-    else if (c == '"')
+    if (c == '"')
     {
         if (toggle(quoted_))
             assign_string(arr.at(42), value_);
@@ -256,8 +204,8 @@ void CLASS::handle_parameter(char c) NOEXCEPT
     else
     {
         // redispatch character that successfully terminated number.
-        state_ = state::request_start;
-        handle_request_start(c);
+        state_ = state::params_start;
+        handle_params_start(c);
     }
 }
 

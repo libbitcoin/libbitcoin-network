@@ -30,7 +30,7 @@ namespace json {
 /// Parser states (unconditional by template).
 enum class parser_state
 {
-    initial,
+    root,
     batch_start,
     request_start,
     key,
@@ -39,9 +39,10 @@ enum class parser_state
     method,
     id,
     params,
-    parameter,
+    params_start,
     parameter_key,
     parameter_value,
+    parameter,
     error_state,
     complete
 };
@@ -110,12 +111,15 @@ protected:
 
     /// Visitors - object transitions.
     /// -----------------------------------------------------------------------
-    void handle_initialize(char c) NOEXCEPT;
+    void handle_root(char c) NOEXCEPT;
     void handle_batch_start(char c) NOEXCEPT;
     void handle_request_start(char c) NOEXCEPT;
     void handle_key(char c) NOEXCEPT;
     void handle_value(char c) NOEXCEPT;
     void handle_params(char c) NOEXCEPT;
+    void handle_params_start(char c) NOEXCEPT;
+    void handle_parameter_key(char c) NOEXCEPT;
+    void handle_parameter_value(char c) NOEXCEPT;
 
     /// Visitors - quoted values.
     /// -----------------------------------------------------------------------
@@ -123,8 +127,6 @@ protected:
     void handle_method(char c) NOEXCEPT;
     void handle_id(char c) NOEXCEPT;
     void handle_parameter(char c) NOEXCEPT;
-    void handle_parameter_key(char c) NOEXCEPT;
-    void handle_parameter_value(char c) NOEXCEPT;
 
     /// Comsuming.
     /// -----------------------------------------------------------------------
