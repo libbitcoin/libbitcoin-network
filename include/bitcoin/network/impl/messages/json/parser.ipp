@@ -59,14 +59,6 @@ const typename CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
 // Methods.
 // ----------------------------------------------------------------------------
 
-// private
-TEMPLATE
-const typename CLASS::request_it CLASS::add_request() NOEXCEPT
-{
-    batch_.emplace_back();
-    return std::prev(batch_.end());
-}
-
 TEMPLATE
 void CLASS::reset() NOEXCEPT
 {

@@ -28,7 +28,7 @@
 namespace libbitcoin {
 namespace network {
 namespace json {
-    
+
 // protected/static
 
 TEMPLATE
@@ -115,16 +115,17 @@ inline bool CLASS::is_error(const result_t& error) NOEXCEPT
 TEMPLATE
 inline bool CLASS::to_signed(code_t& out, const view_t& token) NOEXCEPT
 {
+    // JSON-RPC 2.0: Numbers SHOULD NOT contain fractional parts.
+    // In other words, numbers can contain fractional parts :[. But we exclude
+    // that in the "id" field using this utility. "params" allows JSON numbers.
+
     // TODO: unit test to ensure empty token always produces false (not zero).
     const auto end = std::next(token.data(), token.size());
     return is_zero(std::from_chars(token.data(), end, out).ec);
 }
 
-// JSON-RPC 2.0: Numbers SHOULD NOT contain fractional parts.
-// In other words, numbers can contain fractional parts :[.
-
 TEMPLATE
-inline bool CLASS::to_number(double& out, const view_t& token) NOEXCEPT
+inline bool CLASS::to_number(number_t& out, const view_t& token) NOEXCEPT
 {
     static const std::regex json_number{
         R"(-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?$)" };

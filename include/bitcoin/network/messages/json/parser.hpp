@@ -99,7 +99,7 @@ protected:
     static inline bool is_nully(const view_t& token, char c) NOEXCEPT;
     static inline bool is_error(const result_t& error) NOEXCEPT;
     static inline bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
-    static inline bool to_number(double& out, const view_t& token) NOEXCEPT;
+    static inline bool to_number(number_t& out, const view_t& token) NOEXCEPT;
     static inline bool toggle(bool& quoted) NOEXCEPT;
     static inline size_t distance(const char_it& from,
         const char_it& to) NOEXCEPT;
@@ -107,6 +107,7 @@ protected:
     /// Methods.
     /// -----------------------------------------------------------------------
     bool done_parsing(char c) NOEXCEPT;
+    void reset_internal() NOEXCEPT;
     void validate() NOEXCEPT;
 
     /// Visitors - object transitions.
@@ -141,36 +142,43 @@ protected:
 
     /// Assignment.
     /// -----------------------------------------------------------------------
+    static inline const request_it add_request(batch_t& batch) NOEXCEPT;
+    static inline void add_array(params_option& params) NOEXCEPT;
+    static inline void add_object(params_option& params) NOEXCEPT;
+    static inline bool is_array(const params_option& params) NOEXCEPT;
 
     /// "jsonrpc"
-    inline bool assign_version(version& to, view_t& from) NOEXCEPT;
+    inline bool assign_version(version& to, view_t& value) NOEXCEPT;
 
     /// "method"
-    inline void assign_string(string_t& to, view_t& from) NOEXCEPT;
+    inline void assign_string(string_t& to, view_t& value) NOEXCEPT;
 
     /// "id"
-    inline bool assign_number(id_option& to, view_t& from) NOEXCEPT;
-    inline void assign_string(id_option& to, view_t& from) NOEXCEPT;
-    inline void assign_null(id_option& to, view_t& from) NOEXCEPT;
+    inline bool assign_number(id_option& to, view_t& value) NOEXCEPT;
+    inline void assign_string(id_option& to, view_t& value) NOEXCEPT;
+    inline void assign_null(id_option& to, view_t& value) NOEXCEPT;
 
     /// "params"
-    inline void assign_array(value_t& to, view_t& from) NOEXCEPT;
-    inline void assign_object(value_t& to, view_t& from) NOEXCEPT;
-    inline void assign_string(value_t& to, view_t& from) NOEXCEPT;
-    inline bool assign_number(value_t& to, view_t& from) NOEXCEPT;
-    inline void assign_true(value_t& to, view_t& from) NOEXCEPT;
-    inline void assign_false(value_t& to, view_t& from) NOEXCEPT;
-    inline void assign_null(value_t& to, view_t& from) NOEXCEPT;
+    template <class Type, class... Value>
+    inline bool push_param(params_option& to, const view_t& key,
+        Value&&... value) NOEXCEPT;
+    inline bool push_array(params_option& to, view_t& key,
+        view_t& value) NOEXCEPT;
+    inline bool push_object(params_option& to, view_t& key,
+        view_t& value) NOEXCEPT;
+    inline bool push_string(params_option& to, view_t& key,
+        view_t& value) NOEXCEPT;
+    inline bool push_number(params_option& to, view_t& key,
+        view_t& value) NOEXCEPT;
+    inline bool push_boolean(params_option& to, view_t& key,
+        view_t& value) NOEXCEPT;
+    inline bool push_null(params_option& to, view_t& key,
+        view_t& value) NOEXCEPT;
 
 private:
     static constexpr auto false_size = view_t{ "false" }.length();
     static constexpr auto true_size = view_t{ "true" }.length();
     static constexpr auto null_size = view_t{ "null" }.length();
-    static version to_version(const view_t& token) NOEXCEPT;
-
-    // Add a new request to the batch and return its iterator.
-    const request_it add_request() NOEXCEPT;
-    void reset_internal() NOEXCEPT;
 
     // These are not thread safe.
 
