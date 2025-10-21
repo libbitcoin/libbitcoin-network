@@ -175,22 +175,26 @@ void CLASS::handle_value(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_params_start(char c) NOEXCEPT
 {
-    // Disallows empty params keys by using key_.empty() as a sentinel.
-    const auto key_required = [this]() NOEXCEPT
-    {
-        return key_.empty() && std::holds_alternative<object_t>(
-            request_->params.value());
-    };
+    const auto& parameters = request_->params.value();
+    const auto named = std::holds_alternative<object_t>(parameters);
 
     if (c == ',')
     {
         state_ = state::params_start;
     }
-    else if (c == '"' && key_required())
+    else if (c == '"' && named)
     {
         state_ = state::parameter_key;
     }
-    else if (c == '}')
+    else if (c == '"' && !named)
+    {
+        state_ = state::parameter;
+    }
+    else if (c == '}' && named)
+    {
+        state_ = state::request_start;
+    }
+    else if (c == ']' && !named)
     {
         state_ = state::request_start;
     }
