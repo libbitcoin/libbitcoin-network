@@ -179,7 +179,6 @@ private:
 
     bool escaped_{};
     bool quoted_{};
-    char expected_{};
     state state_{};
     char_it char_{};
     view_t key_{};

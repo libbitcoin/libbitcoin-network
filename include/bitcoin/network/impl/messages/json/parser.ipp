@@ -80,7 +80,6 @@ void CLASS::reset_internal() NOEXCEPT
 {
     escaped_ = {};
     quoted_ = {};
-    expected_ = {};
     state_ = {};
     char_ = {};
     key_ = {};
