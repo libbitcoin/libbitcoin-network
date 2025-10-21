@@ -99,10 +99,9 @@ void CLASS::handle_id(char c) NOEXCEPT
         // empty string or other failures, state set by number parse.
         return;
     }
-
-    // redispatch character that successfully terminated number.
     else
     {
+        // redispatch character that successfully terminated number.
         state_ = state::request_start;
         handle_request_start(c);
     }
@@ -120,7 +119,8 @@ void CLASS::handle_params(char c) NOEXCEPT
     }
     else if (c == '{')
     {
-        request_->params.emplace(object_t{});
+        ////request_->params.emplace(object_t{});
+        request_->params.emplace(array_t{});
         state_ = state::parameter;
     }
     else if (!is_whitespace(c))
@@ -172,14 +172,6 @@ void CLASS::handle_parameter_value(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_parameter(char c) NOEXCEPT
 {
-    BC_ASSERT(request_->params.has_value());
-
-    auto& parameters = request_->params.value();
-    const auto name = std::holds_alternative<object_t>(parameters);
-    auto& obj = std::get<object_t>(parameters);
-    const auto anon = std::holds_alternative<array_t>(parameters);
-    auto& arr = std::get<array_t>(parameters);
-
     // TODO: utility to add new array/map element and return its value_t&.
     // TODO: make this a method, hiding the array/map distinction.
     // TODO: that will allow this method to work for both, only needing to also
@@ -189,8 +181,20 @@ void CLASS::handle_parameter(char c) NOEXCEPT
     // TODO: on the current request->params variant type. So we can pass in
     // TODO: request->params, just as we do for jsonrpc, method, and id.
 
-    // key (nvp) indicated by the first quote, disallows empty parameter names.
-    if (c == '"' && name && key_.empty())
+    BC_ASSERT(request_->params.has_value());
+    auto& parameters = request_->params.value();
+    auto& arr = std::get<array_t>(parameters);
+    ////auto& obj = std::get<object_t>(parameters);
+
+    // Disallows empty params keys by using key_.empty() as a sentinel.
+    const auto key_required = [this]() NOEXCEPT
+    {
+        return key_.empty() && std::holds_alternative<object_t>(
+            request_->params.value());
+    };
+
+    // key (nvp only), as applicable, indicated by the first quote.
+    if (c == '"' && key_required())
     {
         state_ = state::parameter_key;
     }
@@ -201,41 +205,38 @@ void CLASS::handle_parameter(char c) NOEXCEPT
     else if (c == '"')
     {
         if (toggle(quoted_))
-            assign_string(arr.at(0), value_);
+            assign_string(arr.at(42), value_);
     }
     else if (quoted_)
     {
         consume_quoted(value_);
     }
 
-    // TODO: blobs... light parse from c to terminator, handle \\ and \" in "".
-    // TODO: apply to value_ view, and assign obj|arr value to current element.
     else if (c == '{')
     {
+        if (consume_object(value_))
+            assign_object(arr.at(42), value_);
     }
     else if (c == '[')
     {
+        if (consume_array(value_))
+            assign_array(arr.at(42), value_);
     }
 
-    // null is terminated by its 4th character.
     else if (is_nully(value_, c))
     {
         if (consume_char(value_) == null_size)
-            assign_null(obj.at("key..."), value_);
+            assign_null(arr.at(42), value_);
     }
-
-    // true is terminated by its 4th character.
     else if (is_truthy(value_, c))
     {
         if (consume_char(value_) == true_size)
-            assign_null(obj.at("key..."), value_);
+            assign_true(arr.at(42), value_);
     }
-
-    // false is terminated by its 5th character.
     else if (is_falsy(value_, c))
     {
         if (consume_char(value_) == false_size)
-            assign_null(obj.at("key..."), value_);
+            assign_false(arr.at(42), value_);
     }
 
     // number is terminated by the first non-number character.
@@ -253,10 +254,9 @@ void CLASS::handle_parameter(char c) NOEXCEPT
         // empty string or other failures, state set by number parse.
         return;
     }
-
-    // redispatch character that successfully terminated number.
     else
     {
+        // redispatch character that successfully terminated number.
         state_ = state::request_start;
         handle_request_start(c);
     }
