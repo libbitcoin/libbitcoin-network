@@ -98,17 +98,17 @@ using error_option = std::optional<result_t>;
 struct BCT_API response_t
 {
     version jsonrpc{ version::undefined };
-    value_option result{};
-    error_option error{};
     id_option id{};
+    error_option error{};
+    value_option result{};
 };
 
 struct BCT_API request_t
 {
     version jsonrpc{ version::undefined };
+    id_option id{};
     string_t method{};
     params_option params{};
-    id_option id{};
 };
 
 using error_code = error::boost_code;
