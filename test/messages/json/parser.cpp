@@ -612,6 +612,15 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_array_empty__expected)
     BOOST_CHECK(params.empty());
 }
 
+// The "params" property is array only in v1.
+BOOST_AUTO_TEST_CASE(request_parser__write__params_object_jsonrpc_v1__error)
+{
+    request_parser parse{};
+    const string_t text{ R"({"jsonrpc":"1.0","params":{}})" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_CHECK(parse.has_error());
+}
+
 BOOST_AUTO_TEST_CASE(request_parser__write__params_object_empty__expected)
 {
     request_parser parse{};

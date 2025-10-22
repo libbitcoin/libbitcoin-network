@@ -182,8 +182,6 @@ bool CLASS::done_parsing(char c) NOEXCEPT
 TEMPLATE
 void CLASS::validate() NOEXCEPT
 {
-    // TODO: request.params is array only in v1.
-
     // Validation is only relevant to a successful/complete parse.
     // Otherwise there is either an error or intermediate state.
     if (state_ != state::complete)
@@ -191,19 +189,36 @@ void CLASS::validate() NOEXCEPT
 
     // Unbatched requires a single request/response.
     if (batch_.empty())
+    {
         state_ = state::error_state;
+        return;
+    }
 
     // Non-null "id" required in version1.
     if (request_->jsonrpc == version::v1 &&
         (!request_->id.has_value() || is_null_t(request_->id.value())))
+    {
         state_ = state::error_state;
+        return;
+    }
+
+    // The "params" property is array only in v1.
+    if (request_->jsonrpc == version::v1 && request_->params.has_value() &&
+        std::holds_alternative<object_t>(request_->params.value()))
+    {
+        state_ = state::error_state;
+        return;
+    }
 
     // This needs to be relaxed (!strict) for stratum_v1.
     if constexpr (strict && require == version::v2)
     {
         // Undefined version means the jsonrpc element was not encountered.
         if (request_->jsonrpc == version::undefined)
+        {
             state_ = state::error_state;
+            return;
+        }
     }
 }
 
