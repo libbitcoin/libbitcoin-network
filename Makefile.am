@@ -58,6 +58,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/log/reporter.cpp \
     src/messages/http/enums/mime_type.cpp \
     src/messages/http/enums/target.cpp \
+    src/messages/json/serializer.cpp \
     src/messages/peer/address.cpp \
     src/messages/peer/address_item.cpp \
     src/messages/peer/alert.cpp \
@@ -176,6 +177,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/json/body.cpp \
     test/messages/json/parser.cpp \
     test/messages/json/parser_statics.cpp \
+    test/messages/json/serializer.cpp \
     test/messages/peer/address.cpp \
     test/messages/peer/address_item.cpp \
     test/messages/peer/alert.cpp \

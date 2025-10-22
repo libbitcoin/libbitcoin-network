@@ -159,6 +159,9 @@
     <ClCompile Include="..\..\..\..\test\messages\json\parser_statics.cpp">
       <Filter>src\messages\json</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\json\serializer.cpp">
+      <Filter>src\messages\json</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\address.cpp">
       <Filter>src\messages\peer</Filter>
     </ClCompile>
