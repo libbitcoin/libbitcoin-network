@@ -70,6 +70,7 @@ void CLASS::reset() NOEXCEPT
 TEMPLATE
 void CLASS::reset_internal() NOEXCEPT
 {
+    after_ = {};
     escaped_ = {};
     quoted_ = {};
     state_ = {};

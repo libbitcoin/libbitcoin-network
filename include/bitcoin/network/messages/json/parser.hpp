@@ -146,6 +146,7 @@ protected:
     static inline void add_array(params_option& params) NOEXCEPT;
     static inline void add_object(params_option& params) NOEXCEPT;
     static inline bool is_array(const params_option& params) NOEXCEPT;
+    static inline bool is_empty(const params_option& params) NOEXCEPT;
 
     /// "jsonrpc"
     inline bool assign_version(version& to, view_t& value) NOEXCEPT;
@@ -185,6 +186,7 @@ private:
     bool batched_{};
     batch_t batch_{};
 
+    bool after_{};
     bool escaped_{};
     bool quoted_{};
     state state_{};

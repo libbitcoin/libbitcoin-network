@@ -57,6 +57,14 @@ inline bool CLASS::is_array(const params_option& params) NOEXCEPT
     return std::holds_alternative<array_t>(params.value());
 }
 
+TEMPLATE
+inline bool CLASS::is_empty(const params_option& params) NOEXCEPT
+{
+    return is_array(params) ?
+        std::get<array_t>(params.value()).empty() :
+        std::get<object_t>(params.value()).empty();
+}
+
 // request.jsonrpc assign
 // ----------------------------------------------------------------------------
 
@@ -106,6 +114,7 @@ inline bool CLASS::assign_number(id_option& to, view_t& value) NOEXCEPT
     const auto ok = to_signed(number, value);
     value = {};
     state_ = ok ? state::request_start : state::error_state;
+    after_ = true;
     return ok;
 }
 
@@ -113,6 +122,7 @@ TEMPLATE
 inline void CLASS::assign_string(id_option& to, view_t& value) NOEXCEPT
 {
     state_ = state::request_start;
+    after_ = true;
     to.emplace(std::in_place_type<string_t>, value);
     value = {};
 }
@@ -121,6 +131,7 @@ TEMPLATE
 inline void CLASS::assign_null(id_option& to, view_t& value) NOEXCEPT
 {
     state_ = state::request_start;
+    after_ = true;
     to.emplace(std::in_place_type<null_t>);
     value = {};
 }
@@ -165,6 +176,7 @@ inline bool CLASS::push_array(params_option& to, view_t& key,
         })
     };
     state_ = ok ? state::params_start : state::error_state;
+    after_ = true;
     value = {};
     key = {};
     return ok;
@@ -191,6 +203,7 @@ inline bool CLASS::push_object(params_option& to, view_t& key,
         })
     };
     state_ = ok ? state::params_start : state::error_state;
+    after_ = true;
     value = {};
     key = {};
     return ok;
@@ -202,6 +215,7 @@ inline bool CLASS::push_string(params_option& to, view_t& key,
 {
     const auto ok{ push_param<string_t>(to, key, value) };
     state_ = ok ? state::params_start : state::error_state;
+    after_ = true;
     value = {};
     key = {};
     return ok;
@@ -215,6 +229,7 @@ inline bool CLASS::push_number(params_option& to, view_t& key,
     const auto ok{ to_number(number, value) &&
         push_param<number_t>(to, key, number) };
     state_ = ok ? state::params_start : state::error_state;
+    after_ = true;
     value = {};
     key = {};
     return ok;
@@ -228,6 +243,7 @@ inline bool CLASS::push_boolean(params_option& to, view_t& key,
     const auto ok{ (truth || value == "false") &&
         push_param<boolean_t>(to, key, truth) };
     state_ = ok ? state::params_start : state::error_state;
+    after_ = true;
     value = {};
     key = {};
     return ok;
@@ -239,6 +255,7 @@ inline bool CLASS::push_null(params_option& to, view_t& key,
 {
     const auto ok{ (value == "null") && push_param<null_t>(to, key) };
     state_ = ok ? state::params_start : state::error_state;
+    after_ = true;
     value = {};
     key = {};
     return ok;

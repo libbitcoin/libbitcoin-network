@@ -382,26 +382,66 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_boolean__error)
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
-////BOOST_AUTO_TEST_CASE(request_parser__write__params_empty_array__expected)
-////{
-////    request_parser parse{};
-////    const string_t text{ R"({"params":[]})" };
-////    const auto size = parse.write(text);
-////    BOOST_CHECK(parse.has_error());
-////    BOOST_CHECK(parse.is_done());
-////    BOOST_CHECK_EQUAL(size, 12u);
-////    BOOST_REQUIRE(parse.get_parsed().empty());
-////}
-////
-////BOOST_AUTO_TEST_CASE(request_parser__write__params_empty_object__expected)
-////{
-////    request_parser parse{};
-////    const string_t text{ R"({"params":{}})" };
-////    const auto size = parse.write(text);
-////    BOOST_CHECK(parse.has_error());
-////    BOOST_CHECK(parse.is_done());
-////    BOOST_CHECK_EQUAL(size, 12u);
-////    BOOST_REQUIRE(parse.get_parsed().empty());
-////}
+BOOST_AUTO_TEST_CASE(request_parser__write__params_empty_array__expected)
+{
+    request_parser parse{};
+    const string_t text{ R"({"params":[]})" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+
+    const auto request = parse.get_parsed().front();
+    BOOST_REQUIRE(request.params.has_value());
+    BOOST_REQUIRE(std::holds_alternative<array_t>(request.params.value()));
+
+    const auto& value = std::get<array_t>(request.params.value());
+    BOOST_CHECK(value.empty());
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__params_empty_object__expected)
+{
+    request_parser parse{};
+    const string_t text{ R"({"params":{}})" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+
+    const auto request = parse.get_parsed().front();
+    BOOST_REQUIRE(request.params.has_value());
+    BOOST_REQUIRE(std::holds_alternative<object_t>(request.params.value()));
+
+    const auto& value = std::get<object_t>(request.params.value());
+    BOOST_CHECK(value.empty());
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__params_populated_array__expected)
+{
+    request_parser parse{};
+    const string_t text{ R"({"params":[42]})" };
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
+
+    const auto request = parse.get_parsed().front();
+    BOOST_REQUIRE(std::holds_alternative<array_t>(request.params.value()));
+
+    const auto& value = std::get<array_t>(request.params.value());
+    BOOST_REQUIRE_EQUAL(value.size(), one);
+
+    const auto& only = value.front();
+    BOOST_REQUIRE(std::holds_alternative<number_t>(only.inner));
+    BOOST_CHECK_EQUAL(std::get<number_t>(only.inner), 42);
+}
+
+BOOST_AUTO_TEST_CASE(request_parser__write__params_populated_object__expected)
+{
+    request_parser parse{};
+    const string_t text{ R"({"params":{"solution":42}})" };
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
+
+    const auto request = parse.get_parsed().front();
+    BOOST_REQUIRE(std::holds_alternative<object_t>(request.params.value()));
+
+    const auto& value = std::get<object_t>(request.params.value());
+    BOOST_REQUIRE_EQUAL(value.size(), one);
+
+    const auto& only = value.at("solution");
+    BOOST_REQUIRE(std::holds_alternative<number_t>(only.inner));
+    BOOST_CHECK_EQUAL(std::get<number_t>(only.inner), 42);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
