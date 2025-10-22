@@ -82,7 +82,7 @@ void CLASS::handle_request_start(char c) NOEXCEPT
     }
     else if (c == '"')
     {
-        state_ = state::key;
+        redispatch(state::key);
     }
     else if (c == '}')
     {
@@ -97,32 +97,24 @@ void CLASS::handle_request_start(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_key(char c) NOEXCEPT
 {
-    // Initiated by opening '"' [in handle_request_start] so no ws skipping.
-    // In state::key, at trailing '"', state assigned based on accumulated key.
-
-    if (c != '"')
+    if (c == '"')
+    {
+        if (toggle(quoted_))
+        {
+            if (key_ == "jsonrpc" || key_ == "id" ||
+                key_ == "method" || key_ == "params")
+            {
+                state_ = state::value;
+            }
+            else
+            {
+                state_ = state::error_state;
+            }
+        }
+    }
+    else if (quoted_)
     {
         consume_quoted(key_);
-    }
-    else if (key_ == "jsonrpc")
-    {
-        state_ = state::value;
-    }
-    else if (key_ == "id")
-    {
-        state_ = state::value;
-    }
-    else if (key_ == "data")
-    {
-        state_ = state::value;
-    }
-    else if (key_ == "method")
-    {
-        state_ = state::value;
-    }
-    else if (key_ == "params")
-    {
-        state_ = state::value;
     }
     else
     {
@@ -133,9 +125,6 @@ void CLASS::handle_key(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_value(char c) NOEXCEPT
 {
-    // Initiated by trailing '"' [in handle_key] so yes ws skipping.
-    // In state::value, at first ':', state changes based on current key.
-
     if (is_whitespace(c))
     {
         return;
@@ -143,7 +132,6 @@ void CLASS::handle_value(char c) NOEXCEPT
     else if (c != ':')
     {
         state_ = state::error_state;
-        return;
     }
     else if (key_ == "jsonrpc")
     {
@@ -185,11 +173,10 @@ void CLASS::handle_params_start(char c) NOEXCEPT
     }
     else if (c == '"' && !array)
     {
-        state_ = state::parameter_key;
+        redispatch(state::parameter_key);
     }
     else if (c == '"' && array)
     {
-        // first quote of array quoted value.
         redispatch(state::parameter);
     }
     else if (c == '}' && !array && (empty || after_))
@@ -214,30 +201,27 @@ void CLASS::handle_params_start(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_parameter_key(char c) NOEXCEPT
 {
-    // Initiated by opening '"' [in named handle_parameter] so no ws skipping.
-    // In state::key, at trailing '"', state assigned based on accumulated key.
-    // Empty key disallowed as service paramter, and is used as a sentinel.
-
-    if (c != '"')
+    if (c == '"')
+    {
+        if (toggle(quoted_))
+        {
+            state_ = key_.empty() ? state::error_state :
+                state::parameter_value;
+        }
+    }
+    else if (quoted_)
     {
         consume_quoted(key_);
     }
-    else if (key_.empty())
-    {
-        state_ = state::error_state;
-    }
     else
     {
-        state_ = state::parameter_value;
+        state_ = state::error_state;
     }
 }
 
 TEMPLATE
 void CLASS::handle_parameter_value(char c) NOEXCEPT
 {
-    // Initiated by trailing '"' [in handle_parameter_key] so yes ws skipping.
-    // In state::value, at first ':', state changes based on current key.
-
     if (is_whitespace(c))
     {
         return;

@@ -64,7 +64,7 @@ void CLASS::handle_method(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_id(char c) NOEXCEPT
 {
-    // id_t : variant<null_t, code_t, string_t>
+    // identity_t : variant<null_t, code_t, string_t>
 
     // string is terminated by its closing quote.
     if (c == '"')

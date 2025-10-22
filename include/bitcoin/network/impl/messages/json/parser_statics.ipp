@@ -48,9 +48,34 @@ inline json::error_code CLASS::incomplete() NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_null_t(const id_t& id) NOEXCEPT
+bool CLASS::is_null_t(const identity_t& id) NOEXCEPT
 {
     return std::holds_alternative<null_t>(id);
+}
+
+TEMPLATE
+constexpr bool CLASS::is_control(char c) NOEXCEPT
+{
+    // Quoted token characters in the range [0x00 - 0x1f].
+    if (0x00 <= c && c <= 0x1f)
+        return true;
+
+    // The delete character [0x7f] often included, but this is not specified.
+    if constexpr (strict)
+    {
+        return false;
+    }
+    else
+    {
+        return c == 0x7f;
+    }
+}
+
+TEMPLATE
+constexpr bool CLASS::is_prohibited(char c) NOEXCEPT
+{
+    // Reject non-whitespace control characters in all contexts.
+    return is_control(c) && !is_whitespace(c);
 }
 
 TEMPLATE

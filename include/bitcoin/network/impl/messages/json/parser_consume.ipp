@@ -27,9 +27,6 @@ namespace json {
 
 // protected
 
-// TODO: reject any quoted Unicode [U+0000 - U+001F] character, and maybe also
-// the delete character (U+007F) [though not required by JSON specification].
-
 TEMPLATE
 inline bool CLASS::consume_substitute(view_t&, char) NOEXCEPT
 {

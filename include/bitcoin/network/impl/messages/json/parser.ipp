@@ -29,6 +29,12 @@ namespace json {
 // ----------------------------------------------------------------------------
 
 TEMPLATE
+CLASS::operator bool() const NOEXCEPT
+{
+    return is_done() && !has_error() && !get_parsed().empty();
+}
+
+TEMPLATE
 bool CLASS::has_error() const NOEXCEPT
 {
     return state_ == state::error_state;
@@ -53,6 +59,16 @@ const typename CLASS::batch_t& CLASS::get_parsed() const NOEXCEPT
         return batch_;
 
     static const batch_t empty{};
+    return empty;
+}
+
+TEMPLATE
+const request_t& CLASS::get() const NOEXCEPT
+{
+    if (!batch_.empty())
+        return batch_.front();
+
+    static const request_t empty{};
     return empty;
 }
 
@@ -123,6 +139,12 @@ size_t CLASS::write(const std::string_view& data) NOEXCEPT
 TEMPLATE
 bool CLASS::done_parsing(char c) NOEXCEPT
 {
+    if (is_prohibited(c))
+    {
+        state_ = state::error_state;
+        return true;
+    }
+
     switch (state_)
     {
         case state::root:

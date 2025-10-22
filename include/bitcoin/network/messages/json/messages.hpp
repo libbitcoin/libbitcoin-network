@@ -23,7 +23,7 @@
 #include <bitcoin/network/messages/json/enums/version.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
 #include <bitcoin/network/messages/json/parser.hpp>
-#include <bitcoin/network/messages/json/serializer.hpp>
+#include <bitcoin/network/messages/json/serialize.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 
 #endif
