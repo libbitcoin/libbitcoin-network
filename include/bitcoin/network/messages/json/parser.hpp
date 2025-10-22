@@ -100,6 +100,8 @@ protected:
     /// -----------------------------------------------------------------------
     static inline error_code failure() NOEXCEPT;
     static inline error_code incomplete() NOEXCEPT;
+    static constexpr bool is_control(char c) NOEXCEPT;
+    static constexpr bool is_prohibited(char c) NOEXCEPT;
     static constexpr bool is_whitespace(char c) NOEXCEPT;
     static inline bool is_null_t(const id_t& id) NOEXCEPT;
     static inline bool is_numeric(char c) NOEXCEPT;

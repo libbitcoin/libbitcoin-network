@@ -139,6 +139,12 @@ size_t CLASS::write(const std::string_view& data) NOEXCEPT
 TEMPLATE
 bool CLASS::done_parsing(char c) NOEXCEPT
 {
+    if (is_prohibited(c))
+    {
+        state_ = state::error_state;
+        return true;
+    }
+
     switch (state_)
     {
         case state::root:
