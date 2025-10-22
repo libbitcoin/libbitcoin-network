@@ -64,8 +64,16 @@ public:
     static constexpr auto trace = Trace;
     using batch_t = std::vector<request_t>;
 
+    /// Methods.
+    /// -----------------------------------------------------------------------
+    size_t write(const std::string_view& data) NOEXCEPT;
+    void reset() NOEXCEPT;
+
     /// Properties.
     /// -----------------------------------------------------------------------
+
+    /// True implies is_done(), !has_error(), and get_parsed() non-empty.
+    operator bool() const NOEXCEPT;
 
     /// Means that parse is successful and complete.
     bool is_done() const NOEXCEPT;
@@ -79,10 +87,8 @@ public:
     /// May be empty if !is_done().
     const batch_t& get_parsed() const NOEXCEPT;
 
-    /// Methods.
-    /// -----------------------------------------------------------------------
-    size_t write(const std::string_view& data) NOEXCEPT;
-    void reset() NOEXCEPT;
+    /// The first parsed request (or default).
+    const request_t& get() const NOEXCEPT;
 
 protected:
     using state = parser_state;
