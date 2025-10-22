@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/json/serializer.hpp>
+#include <bitcoin/network/messages/json/serialize.hpp>
 
 #include <sstream>
 #include <bitcoin/network/define.hpp>
@@ -28,6 +28,9 @@ namespace network {
 namespace json {
     
 using stream = std::ostringstream;
+
+// local
+// ----------------------------------------------------------------------------
 
 // Project keys into sorted vector for predictable output.
 const std::vector<string_t> sorted_keys(const object_t& object) NOEXCEPT
@@ -80,14 +83,14 @@ void put_key(stream& out, const std::string_view& key) THROWS
     put_string(out, key) << ":";
 }
 
-stream& put_tag(stream& out, const std::string_view& tag) THROWS
+inline stream& put_tag(stream& out, const std::string_view& tag) THROWS
 {
     // tags are literal, so can bypass escaping.
     out << '\"' << tag << "\":";
     return out;
 }
 
-void put_comma(stream& out, bool condition) THROWS
+inline void put_comma(stream& out, bool condition) THROWS
 {
     if (condition) out << ",";
 }

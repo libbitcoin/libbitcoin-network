@@ -189,7 +189,7 @@
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp">
       <Filter>src\messages\http\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\json\serializer.cpp">
+    <ClCompile Include="..\..\..\..\src\messages\json\serialize.cpp">
       <Filter>src\messages\json</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\address.cpp">
@@ -575,7 +575,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serializer.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serialize.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\types.hpp">

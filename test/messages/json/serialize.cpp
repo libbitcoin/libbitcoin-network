@@ -20,11 +20,11 @@
 
 #include <variant>
 
-BOOST_AUTO_TEST_SUITE(serializer_tests)
+BOOST_AUTO_TEST_SUITE(serialize_tests)
 
 using namespace network::json;
 
-BOOST_AUTO_TEST_CASE(serializer__serialize__deserialized_request__expected)
+BOOST_AUTO_TEST_CASE(serialize__serialize__deserialized_request__expected)
 {
     const string_t text
     {
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(serializer__serialize__deserialized_request__expected)
     BOOST_REQUIRE_EQUAL(serialize(parse.get()), text);
 }
 
-BOOST_AUTO_TEST_CASE(response_serializer__serialize__simple_result__expected)
+BOOST_AUTO_TEST_CASE(serialize__serialize__simple_result__expected)
 {
     response_t response;
     response.jsonrpc = version::v2;
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(response_serializer__serialize__simple_result__expected)
     BOOST_CHECK_EQUAL(json, R"({"jsonrpc":"2.0","id":42,"result":100.5})");
 }
 
-BOOST_AUTO_TEST_CASE(response_serializer__serialize__error_response__expected)
+BOOST_AUTO_TEST_CASE(serialize__serialize__error_response__expected)
 {
     response_t response;
     response.jsonrpc = version::v2;
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(response_serializer__serialize__error_response__expected)
     BOOST_CHECK_EQUAL(json, R"({"jsonrpc":"2.0","id":"abc123","error":{"code":-32602,"message":"Invalid params"}})");
 }
 
-BOOST_AUTO_TEST_CASE(response_serializer__serialize__error_with_data__expected)
+BOOST_AUTO_TEST_CASE(serialize__serialize__error_with_data__expected)
 {
     response_t response;
     response.jsonrpc = version::v1;
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(response_serializer__serialize__error_with_data__expected)
     BOOST_CHECK_EQUAL(json, R"({"jsonrpc":"1.0","id":null,"error":{"code":-32700,"message":"Parse error","data":"Invalid JSON"}})");
 }
 
-BOOST_AUTO_TEST_CASE(response_serializer__serialize__empty_result__expected)
+BOOST_AUTO_TEST_CASE(serialize__serialize__empty_result__expected)
 {
     response_t response;
     response.jsonrpc = version::v2;
