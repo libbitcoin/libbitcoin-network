@@ -148,12 +148,12 @@ void CLASS::handle_parameter(char c) NOEXCEPT
 
     else if (c == '{')
     {
-        if (consume_object(value_))
+        if (consume_blob(value_))
             push_object(request_->params, key_, value_);
     }
     else if (c == '[')
     {
-        if (consume_array(value_))
+        if (consume_blob(value_))
             push_array(request_->params, key_, value_);
     }
 

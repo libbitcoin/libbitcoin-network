@@ -76,6 +76,7 @@ void CLASS::reset_internal() NOEXCEPT
     state_ = {};
     char_ = {};
     begin_ = {};
+    end_ = {};
     key_ = {};
     value_ = {};
     request_ = {};
@@ -97,9 +98,10 @@ void CLASS::redispatch(state transition) NOEXCEPT
 TEMPLATE
 size_t CLASS::write(const std::string_view& data) NOEXCEPT
 {
+    end_ = data.end();
     begin_ = data.begin();
 
-    for (char_ = data.begin(); char_ != data.end(); ++char_)
+    for (char_ = data.begin(); char_ != end_; ++char_)
     {
         if (done_parsing(*char_))
         {

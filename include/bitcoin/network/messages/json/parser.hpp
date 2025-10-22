@@ -138,11 +138,10 @@ protected:
     inline bool consume_substitute(view_t& token, char c) NOEXCEPT;
     inline bool consume_escaped(view_t& token, char c) NOEXCEPT;
     inline bool consume_escape(view_t& token, char c) NOEXCEPT;
-    inline size_t consume_buffer(view_t& token) NOEXCEPT;
+
     inline size_t consume_quoted(view_t& token) NOEXCEPT;
     inline size_t consume_char(view_t& token) NOEXCEPT;
-    inline bool consume_object(view_t& token) NOEXCEPT;
-    inline bool consume_array(view_t& token) NOEXCEPT;
+    inline bool consume_blob(view_t& token) NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------
@@ -196,6 +195,7 @@ private:
     state state_{};
     char_it char_{};
     char_it begin_{};
+    char_it end_{};
     view_t key_{};
     view_t value_{};
     request_it request_{};

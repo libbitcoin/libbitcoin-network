@@ -92,17 +92,61 @@ inline size_t CLASS::consume_char(view_t& token) NOEXCEPT
     return size;
 }
 
-TEMPLATE
-inline bool CLASS::consume_object(view_t&) NOEXCEPT
-{
-    // '{' iterates char_ to '}', assigns value, handles \\ and \" in "quoted".
-    return false;
-}
+// blobs
+// ----------------------------------------------------------------------------
 
 TEMPLATE
-inline bool CLASS::consume_array(view_t&) NOEXCEPT
+inline bool CLASS::consume_blob(view_t& token) NOEXCEPT
 {
-    // '[' iterates char_ to ']', assigns value, handles \\ and \" in "quoted".
+    if (char_ == end_ || (*char_ != '[' && *char_ != '{'))
+        return false;
+
+    const auto start = char_;
+    const auto open = *start;
+    const auto close = (open == '[') ? ']' : '}';
+
+    auto escaped = false;
+    auto quoted = false;
+    auto depth = one;
+
+    while (++char_ != end_)
+    {
+        const char ch = *char_;
+
+        if (escaped)
+        {
+            escaped = false;
+        }
+        else if (ch == '\\')
+        {
+            escaped = true;
+        }
+        else if (quoted)
+        {
+            if (ch == '"')
+                quoted = false;
+        }
+        else if (ch == '"')
+        {
+            quoted = true;
+        }
+        else if (ch == open)
+        {
+            ++depth;
+        }
+        else if (ch == close)
+        {
+            if (is_zero(--depth))
+            {
+                token =
+                {
+                    std::to_address(start), distance(start, std::next(char_))
+                };
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 
