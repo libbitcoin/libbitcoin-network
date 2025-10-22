@@ -246,7 +246,7 @@ void put_request(stream& out, const request_t& request) THROWS
 
     if (request.params.has_value())
     {
-        put_comma(out, !has_jsonrpc || request.id.has_value() ||
+        put_comma(out, has_jsonrpc || request.id.has_value() ||
             !request.method.empty());
         put_tag(out, "params");
 
