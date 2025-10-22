@@ -32,8 +32,8 @@ struct test_parser
     using base::base;
 };
 
-using lax_request_parser = test_parser<false, version::any, true>;
-using request_parser = test_parser<true, version::any, true>;
+using lax_request_parser = test_parser<false, version::any, false>;
+using request_parser = test_parser<true, version::any, false>;
 
 ////using namespace boost::system::errc;
 ////static auto incomplete = make_error_code(interrupted);
