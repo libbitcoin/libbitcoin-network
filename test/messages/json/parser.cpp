@@ -24,16 +24,16 @@ BOOST_AUTO_TEST_SUITE(parser_tests)
 
 using namespace network::json;
 
-template <bool Strict, version Require>
+template <bool Strict, version Require, bool Trace>
 struct test_parser
-  : public parser<Strict, Require>
+  : public parser<Strict, Require, Trace>
 {
-    using base = parser<Strict, Require>;
+    using base = parser<Strict, Require, Trace>;
     using base::base;
 };
 
-using lax_request_parser = test_parser<false, version::any>;
-using request_parser = test_parser<true, version::any>;
+using lax_request_parser = test_parser<false, version::any, true>;
+using request_parser = test_parser<true, version::any, true>;
 
 ////using namespace boost::system::errc;
 ////static auto incomplete = make_error_code(interrupted);

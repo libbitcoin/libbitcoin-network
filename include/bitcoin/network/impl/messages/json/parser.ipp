@@ -167,8 +167,13 @@ bool CLASS::done_parsing(char c) NOEXCEPT
             break;
     }
 
-    // hack for testing.
-    ////std::cout << "[" << *char_ << "]<" << key_ << ">=|" << value_ << "|" << std::endl;
+    if constexpr (trace)
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        std::cout << "|" << *char_ << "|" << key_ << "|" << value_ << "|" << std::endl;
+        BC_POP_WARNING()
+    }
+
     return is_done();
 }
 

@@ -48,7 +48,9 @@ enum class parser_state
 };
 
 /// A minimal-copy parser for boost asio JSON-RPC v1/v2 stream parsing.
-template <bool Strict = true, json::version Require = json::version::any>
+template <bool Strict = true,
+    json::version Require = json::version::any,
+    bool Trace = false>
 class parser
 {
 public:
@@ -59,6 +61,7 @@ public:
     /// -----------------------------------------------------------------------
     static constexpr auto strict = Strict;
     static constexpr auto require = Require;
+    static constexpr auto trace = Trace;
     using batch_t = std::vector<request_t>;
 
     /// Properties.
@@ -202,8 +205,8 @@ private:
 } // namespace network
 } // namespace libbitcoin
 
-#define TEMPLATE template <bool Strict, json::version Require>
-#define CLASS parser<Strict, Require>
+#define TEMPLATE template <bool Strict, json::version Require, bool Trace>
+#define CLASS parser<Strict, Require, Trace>
 
 #include <bitcoin/network/impl/messages/json/parser.ipp>
 #include <bitcoin/network/impl/messages/json/parser_assign.ipp>
