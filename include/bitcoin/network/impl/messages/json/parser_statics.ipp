@@ -48,7 +48,7 @@ inline json::error_code CLASS::incomplete() NOEXCEPT
 }
 
 TEMPLATE
-bool CLASS::is_null_t(const id_t& id) NOEXCEPT
+bool CLASS::is_null_t(const identity_t& id) NOEXCEPT
 {
     return std::holds_alternative<null_t>(id);
 }

@@ -42,13 +42,16 @@ using string_t = std::string;
 using array_t = std::vector<value_t>;
 using object_t = std::unordered_map<string_t, value_t>;
 
-using id_t = std::variant
+// linux and macos define id_t in the global namespace.
+// typedef __darwin_id_t id_t;
+// typedef __id_t id_t;
+using identity_t = std::variant
 <
     null_t,
     code_t,
     string_t
 >;
-using id_option = std::optional<id_t>;
+using id_option = std::optional<identity_t>;
 
 struct BCT_API value_t
 {

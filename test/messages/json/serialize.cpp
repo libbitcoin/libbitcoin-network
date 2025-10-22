@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(serialize__serialize__simple_result__expected)
 {
     response_t response;
     response.jsonrpc = version::v2;
-    response.id = id_t{ code_t{ 42 } };
+    response.id = identity_t{ code_t{ 42 } };
     response.result = value_t{ std::in_place_type<number_t>, number_t{ 100.5 } };
 
     const auto json = serialize(response);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(serialize__serialize__error_response__expected)
 {
     response_t response;
     response.jsonrpc = version::v2;
-    response.id = id_t{ string_t{ "abc123" } };
+    response.id = identity_t{ string_t{ "abc123" } };
     response.error = result_t{ -32602, "Invalid params", {} };
 
     const auto json = serialize(response);
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(serialize__serialize__error_with_data__expected)
 {
     response_t response;
     response.jsonrpc = version::v1;
-    response.id = id_t{ null_t{} };
+    response.id = identity_t{ null_t{} };
     response.error = result_t{ -32700, "Parse error", value_t{std::in_place_type<string_t>, string_t{ "Invalid JSON" }} };
 
     const auto json = serialize(response);
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(serialize__serialize__empty_result__expected)
 {
     response_t response;
     response.jsonrpc = version::v2;
-    response.id = id_t{ code_t{} };
+    response.id = identity_t{ code_t{} };
     response.result = value_t{ std::in_place_type<null_t>, null_t{} };
 
     const auto json = serialize(response);

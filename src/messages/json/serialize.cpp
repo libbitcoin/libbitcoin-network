@@ -95,7 +95,7 @@ inline void put_comma(stream& out, bool condition) THROWS
     if (condition) out << ",";
 }
 
-void put_id(stream& out, const id_t& id) THROWS
+void put_id(stream& out, const identity_t& id) THROWS
 {
     std::visit(overload
     {
