@@ -107,6 +107,7 @@ protected:
     /// Methods.
     /// -----------------------------------------------------------------------
     bool done_parsing(char c) NOEXCEPT;
+    void redispatch(state transition) NOEXCEPT;
     void reset_internal() NOEXCEPT;
     void validate() NOEXCEPT;
 
@@ -191,6 +192,7 @@ private:
     bool quoted_{};
     state state_{};
     char_it char_{};
+    char_it begin_{};
     view_t key_{};
     view_t value_{};
     request_it request_{};

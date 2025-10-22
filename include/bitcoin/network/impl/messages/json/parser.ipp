@@ -75,14 +75,30 @@ void CLASS::reset_internal() NOEXCEPT
     quoted_ = {};
     state_ = {};
     char_ = {};
+    begin_ = {};
     key_ = {};
     value_ = {};
     request_ = {};
 }
 
 TEMPLATE
+void CLASS::redispatch(state transition) NOEXCEPT
+{
+    if (char_ == begin_)
+    {
+        state_ = state::error_state;    
+        return;
+    }
+
+    state_ = transition;
+    --char_;
+}
+
+TEMPLATE
 size_t CLASS::write(const std::string_view& data) NOEXCEPT
 {
+    begin_ = data.begin();
+
     for (char_ = data.begin(); char_ != data.end(); ++char_)
     {
         if (done_parsing(*char_))
