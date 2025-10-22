@@ -189,9 +189,8 @@ void CLASS::handle_params_start(char c) NOEXCEPT
     }
     else if (c == '"' && array)
     {
-        // redispatch first quote of array quoted value.
-        --char_;
-        state_ = state::parameter;
+        // first quote of array quoted value.
+        redispatch(state::parameter);
     }
     else if (c == '}' && !array && (empty || after_))
     {
@@ -203,9 +202,8 @@ void CLASS::handle_params_start(char c) NOEXCEPT
     }
     else if (!is_whitespace(c) && array)
     {
-        // redispatch first character of array unquoted value.
-        --char_;
-        state_ = state::parameter;
+        // first character of array unquoted value.
+        redispatch(state::parameter);
     }
     else
     {

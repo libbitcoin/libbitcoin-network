@@ -48,7 +48,9 @@ enum class parser_state
 };
 
 /// A minimal-copy parser for boost asio JSON-RPC v1/v2 stream parsing.
-template <bool Strict = true, json::version Require = json::version::any>
+template <bool Strict = true,
+    json::version Require = json::version::any,
+    bool Trace = false>
 class parser
 {
 public:
@@ -59,6 +61,7 @@ public:
     /// -----------------------------------------------------------------------
     static constexpr auto strict = Strict;
     static constexpr auto require = Require;
+    static constexpr auto trace = Trace;
     using batch_t = std::vector<request_t>;
 
     /// Properties.
@@ -107,6 +110,7 @@ protected:
     /// Methods.
     /// -----------------------------------------------------------------------
     bool done_parsing(char c) NOEXCEPT;
+    void redispatch(state transition) NOEXCEPT;
     void reset_internal() NOEXCEPT;
     void validate() NOEXCEPT;
 
@@ -134,11 +138,10 @@ protected:
     inline bool consume_substitute(view_t& token, char c) NOEXCEPT;
     inline bool consume_escaped(view_t& token, char c) NOEXCEPT;
     inline bool consume_escape(view_t& token, char c) NOEXCEPT;
-    inline size_t consume_buffer(view_t& token) NOEXCEPT;
+
     inline size_t consume_quoted(view_t& token) NOEXCEPT;
     inline size_t consume_char(view_t& token) NOEXCEPT;
-    inline bool consume_object(view_t& token) NOEXCEPT;
-    inline bool consume_array(view_t& token) NOEXCEPT;
+    inline bool consume_blob(view_t& token) NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------
@@ -191,6 +194,8 @@ private:
     bool quoted_{};
     state state_{};
     char_it char_{};
+    char_it begin_{};
+    char_it end_{};
     view_t key_{};
     view_t value_{};
     request_it request_{};
@@ -200,8 +205,8 @@ private:
 } // namespace network
 } // namespace libbitcoin
 
-#define TEMPLATE template <bool Strict, json::version Require>
-#define CLASS parser<Strict, Require>
+#define TEMPLATE template <bool Strict, json::version Require, bool Trace>
+#define CLASS parser<Strict, Require, Trace>
 
 #include <bitcoin/network/impl/messages/json/parser.ipp>
 #include <bitcoin/network/impl/messages/json/parser_assign.ipp>

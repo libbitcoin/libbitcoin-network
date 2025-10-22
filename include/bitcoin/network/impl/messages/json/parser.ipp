@@ -75,15 +75,33 @@ void CLASS::reset_internal() NOEXCEPT
     quoted_ = {};
     state_ = {};
     char_ = {};
+    begin_ = {};
+    end_ = {};
     key_ = {};
     value_ = {};
     request_ = {};
 }
 
 TEMPLATE
+void CLASS::redispatch(state transition) NOEXCEPT
+{
+    if (char_ == begin_)
+    {
+        state_ = state::error_state;    
+        return;
+    }
+
+    state_ = transition;
+    --char_;
+}
+
+TEMPLATE
 size_t CLASS::write(const std::string_view& data) NOEXCEPT
 {
-    for (char_ = data.begin(); char_ != data.end(); ++char_)
+    end_ = data.end();
+    begin_ = data.begin();
+
+    for (char_ = data.begin(); char_ != end_; ++char_)
     {
         if (done_parsing(*char_))
         {
@@ -151,16 +169,19 @@ bool CLASS::done_parsing(char c) NOEXCEPT
             break;
     }
 
-    // hack for testing.
-    ////std::cout << "[" << *char_ << "]<" << key_ << ">=|" << value_ << "|" << std::endl;
+    if constexpr (trace)
+    {
+        BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+        std::cout << "|" << *char_ << "|" << key_ << "|" << value_ << "|" << std::endl;
+        BC_POP_WARNING()
+    }
+
     return is_done();
 }
 
 TEMPLATE
 void CLASS::validate() NOEXCEPT
 {
-    // TODO: request.params is array only in v1.
-
     // Validation is only relevant to a successful/complete parse.
     // Otherwise there is either an error or intermediate state.
     if (state_ != state::complete)
@@ -168,19 +189,36 @@ void CLASS::validate() NOEXCEPT
 
     // Unbatched requires a single request/response.
     if (batch_.empty())
+    {
         state_ = state::error_state;
+        return;
+    }
 
     // Non-null "id" required in version1.
     if (request_->jsonrpc == version::v1 &&
         (!request_->id.has_value() || is_null_t(request_->id.value())))
+    {
         state_ = state::error_state;
+        return;
+    }
+
+    // The "params" property is array only in v1.
+    if (request_->jsonrpc == version::v1 && request_->params.has_value() &&
+        std::holds_alternative<object_t>(request_->params.value()))
+    {
+        state_ = state::error_state;
+        return;
+    }
 
     // This needs to be relaxed (!strict) for stratum_v1.
     if constexpr (strict && require == version::v2)
     {
         // Undefined version means the jsonrpc element was not encountered.
         if (request_->jsonrpc == version::undefined)
+        {
             state_ = state::error_state;
+            return;
+        }
     }
 }
 

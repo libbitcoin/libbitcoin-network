@@ -101,9 +101,8 @@ void CLASS::handle_id(char c) NOEXCEPT
     }
     else
     {
-        // redispatch character that successfully terminated number.
-        --char_;
-        state_ = state::request_start;
+        // character that successfully terminated number.
+        redispatch(state::request_start);
     }
 }
 
@@ -149,12 +148,12 @@ void CLASS::handle_parameter(char c) NOEXCEPT
 
     else if (c == '{')
     {
-        if (consume_object(value_))
+        if (consume_blob(value_))
             push_object(request_->params, key_, value_);
     }
     else if (c == '[')
     {
-        if (consume_array(value_))
+        if (consume_blob(value_))
             push_array(request_->params, key_, value_);
     }
 
@@ -191,9 +190,8 @@ void CLASS::handle_parameter(char c) NOEXCEPT
     }
     else
     {
-        // redispatch character that successfully terminated number.
-        --char_;
-        state_ = state::params_start;
+        // character that successfully terminated number.
+        redispatch(state::params_start);
     }
 }
 
