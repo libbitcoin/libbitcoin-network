@@ -38,7 +38,7 @@ void CLASS::handle_root(char c) NOEXCEPT
     }
     else if (c == '{')
     {
-        request_ = add_request();
+        request_ = add_request(batch_);
         state_ = state::request_start;
     }
     else if (!is_whitespace(c))
@@ -57,7 +57,7 @@ void CLASS::handle_batch_start(char c) NOEXCEPT
     else if (c == '{')
     {
         reset_internal();
-        request_ = add_request();
+        request_ = add_request(batch_);
         state_ = state::request_start;
     }
     else if (c == ']')
@@ -175,30 +175,39 @@ void CLASS::handle_value(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_params_start(char c) NOEXCEPT
 {
-    const auto& parameters = request_->params.value();
-    const auto named = std::holds_alternative<object_t>(parameters);
+    const auto array = is_array(request_->params);
+    const auto empty = is_empty(request_->params);
 
-    if (c == ',')
+    if (c == ',' && after_)
     {
+        after_ = false;
         state_ = state::params_start;
     }
-    else if (c == '"' && named)
+    else if (c == '"' && !array)
     {
         state_ = state::parameter_key;
     }
-    else if (c == '"' && !named)
+    else if (c == '"' && array)
     {
+        // redispatch first quote of array quoted value.
+        --char_;
         state_ = state::parameter;
     }
-    else if (c == '}' && named)
+    else if (c == '}' && !array && (empty || after_))
     {
         state_ = state::request_start;
     }
-    else if (c == ']' && !named)
+    else if (c == ']' && array && (empty || after_))
     {
         state_ = state::request_start;
     }
-    else if (!is_whitespace(c))
+    else if (!is_whitespace(c) && array)
+    {
+        // redispatch first character of array unquoted value.
+        --char_;
+        state_ = state::parameter;
+    }
+    else
     {
         state_ = state::error_state;
     }
@@ -244,6 +253,7 @@ void CLASS::handle_parameter_value(char c) NOEXCEPT
         state_ = state::parameter;
     }
 }
+
 } // namespace json
 } // namespace network
 } // namespace libbitcoin

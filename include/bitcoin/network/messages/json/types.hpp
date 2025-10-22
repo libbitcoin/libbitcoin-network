@@ -21,6 +21,7 @@
 
 #include <optional>
 #include <unordered_map>
+#include <utility>
 #include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
@@ -54,14 +55,28 @@ struct BCT_API value_t
     using type = std::variant
     <
         null_t,
+        boolean_t,
         number_t,
         string_t,
-        boolean_t,
         array_t,
         object_t
     >;
 
     type inner{};
+
+    /// Forwarding constructors for in-place variant construction.
+
+    template <class Type, class... Args>
+    constexpr value_t(std::in_place_type_t<Type>, Args&&... args) NOEXCEPT
+      : inner(std::in_place_type<Type>, std::forward<Args>(args)...)
+    {
+    }
+
+    template <size_t Index, class... Args>
+    constexpr value_t(std::in_place_index_t<Index>, Args&&... args) NOEXCEPT
+      : inner(std::in_place_index<Index>, std::forward<Args>(args)...)
+    {
+    }
 };
 using value_option = std::optional<value_t>;
 
