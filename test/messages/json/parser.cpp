@@ -39,6 +39,222 @@ using request_parser = test_parser<true, version::any, true>;
 ////static auto incomplete = make_error_code(interrupted);
 ////static auto failure = make_error_code(invalid_argument);
 
+std::string_view to_string(version value) NOEXCEPT
+{
+    switch (value)
+    {
+        case version::v1:
+            return "1.0";
+        case version::v2:
+            return "2.0";
+        default:
+            return "";
+    }
+}
+
+// Escapes a string for JSON output.
+inline std::string escape_string(const string_t& str)
+{
+    std::ostringstream out{};
+    out << '"';
+    for (const char character : str)
+    {
+        switch (character)
+        {
+            case '"': out << '\\' << '"';
+                break;
+            case '\\': out << "\\\\";
+                break;
+            case '\b': out << "\\b";
+                break;
+            case '\f': out << "\\f";
+                break;
+            case '\n': out << "\\n";
+                break;
+            case '\r': out << "\\r";
+                break;
+            case '\t': out << "\\t";
+                break;
+            default:
+                out << character; break;
+        }
+    }
+
+    out << '"';
+    return out.str();
+}
+
+// Serializes value_t to JSON string, handling blobs as nested structures.
+inline std::string serialize_value(const value_t& value)
+{
+    std::ostringstream out{};
+    std::visit(overload
+    {
+        [&](null_t)
+        {
+            out << "null";
+        },
+        [&](boolean_t visit)
+        {
+            out << (visit ? "true" : "false");
+        },
+        [&](number_t visit)
+        {
+            out << visit;
+        },
+        [&](const string_t& visit)
+        {
+            out << escape_string(visit);
+        },
+        [&](const array_t& visit)
+        {
+            if (visit.empty())
+            {
+                out << "[-empty-array-]";
+                return;
+            }
+
+            const auto& first = visit.front().inner;
+            if (!std::holds_alternative<string_t>(first))
+            {
+                out << "[-non-string-array-value-]";
+                return;
+            }
+
+            out << std::get<string_t>(first);
+        },
+        [&](const object_t& visit)
+        {
+            if (visit.empty())
+            {
+                out << "{-empty-object-}";
+                return;
+            }
+
+            const auto& first = visit.begin()->second.inner;
+            if (!std::holds_alternative<string_t>(first))
+            {
+                out << "{-non-string-object-value-}";
+                return;
+            }
+
+            out << std::get<string_t>(first);
+        }
+    }, value.inner);
+
+    return out.str();
+}
+
+// Serializes the request_t to a compact JSON string for testing.
+// Handles flat blob strings in params structures as literal JSON.
+string_t to_string(const request_t& request)
+{
+    std::ostringstream out{};
+    out << '{';
+
+    const auto jsonrpc = to_string(request.jsonrpc);
+    const auto& method = request.method;
+
+    if (!jsonrpc.empty())
+        out << "\"jsonrpc\":\"" << jsonrpc << '"';
+
+    if (!jsonrpc.empty() && !method.empty())
+        out << ",";
+
+    if (!method.empty())
+        out << "\"method\":\"" << method << '"';
+
+    if (request.id.has_value())
+    {
+        if (!jsonrpc.empty() || !method.empty())
+            out << ",";
+
+        out << "\"id\":";
+
+        const auto& id = request.id.value();
+        std::visit(overload
+        {
+            [&](null_t)
+            {
+                out << "null";
+            },
+            [&](code_t visit)
+            {
+                out << visit;
+            },
+            [&](const string_t& visit)
+            {
+                out << escape_string(visit);
+            }
+        }, id);
+    }
+
+    if (request.params.has_value())
+    {
+        if (!jsonrpc.empty() || !method.empty() || request.id.has_value())
+            out << ",";
+
+        out << "\"params\":";
+
+        const auto& params = request.params.value();
+        if (std::holds_alternative<array_t>(params))
+        {
+            out << '[';
+
+            const auto& parameters = std::get<array_t>(params);
+            for (auto index = zero; index < parameters.size(); ++index)
+            {
+                if (!is_zero(index)) out << ',';
+                out << serialize_value(parameters.at(index));
+            }
+            out << ']';
+        }
+        else
+        {
+            out << '{';
+
+            auto first = true;
+            const auto& parameters = std::get<object_t>(params);
+
+            // Sort keys for predictable output.
+            std::vector<string_t> keys{};
+            keys.reserve(parameters.size());
+            for (const auto& pair: parameters)
+                keys.push_back(pair.first);
+
+            std::sort(keys.begin(), keys.end());
+
+            for (const auto& key: keys)
+            {
+                if (!first) out << ',';
+                out << escape_string(key);
+                out << ":" << serialize_value(parameters.at(key));
+                first = false;
+            }
+
+            out << '}';
+        }
+    }
+
+    out << '}';
+    return out.str();
+}
+
+// test the test tool
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(request_parser__to_string__request__expected)
+{
+    request_parser parse{};
+    const string_t text{ R"({"jsonrpc":"2.0","method":"random","id":-42,"params":{"array":[A],"false":false,"foo":"bar","null":null,"number":42,"object":{O},"true":true}})" };
+    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE(is_one(parse.get_parsed().size()));
+
+    const auto request = parse.get_parsed().front();
+    BOOST_CHECK(request.jsonrpc == version::v2);
+    BOOST_CHECK_EQUAL(to_string(request), text);
+}
+
 // jsonrpc v1/v2
 // ----------------------------------------------------------------------------
 
@@ -626,5 +842,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_object_single_object_empty__e
     const auto& blob = std::get<string_t>(first_value);
     BOOST_CHECK_EQUAL(blob, "{}");
 }
+
+// TODO: expand params tests using test serialization function.
 
 BOOST_AUTO_TEST_SUITE_END()
