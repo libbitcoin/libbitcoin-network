@@ -19,7 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_ASSIGN_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_ASSIGN_IPP
 
-#include <algorithm>
+#include <iterator>
 #include <utility>
 #include <variant>
 
@@ -66,111 +66,6 @@ inline bool CLASS::is_empty(const params_option& params) NOEXCEPT
         std::get<object_t>(params.value()).empty();
 }
 
-// Consumption.
-// ----------------------------------------------------------------------------
-
-// static
-TEMPLATE
-string_t CLASS::to_codepoint(const view_t& hex) NOEXCEPT
-{
-    using namespace system;
-    data_array<sizeof(char16_t)> bytes{};
-    return !decode_base16(bytes, hex) ? string_t {} :
-        to_utf8(from_big_endian<char32_t>(bytes));
-}
-
-TEMPLATE
-bool CLASS::unescape(view_t& value) NOEXCEPT
-{
-    // Shortcircuit if no escapes, preserving first position.
-    auto out = value.find('\\');
-    if (out == view_t::npos)
-        return true;
-
-    // Over-size output string to avoid reallocations.
-    unescaped_.resize(value.size());
-
-    // Copy unescaped prefix.
-    std::copy_n(value.begin(), out, unescaped_.begin());
-
-    // Copy chunks of unescaped data and process escapes.
-    for (auto in = out; in < value.size();)
-    {
-        // Iterate until escape found.
-        if (value[in] != '\\')
-        {
-            unescaped_[out++] = value[in++];
-            continue;
-        }
-
-        // Skip '\' and ensure at least an escape character.
-        if (++in == value.size())
-            return false;
-
-        // Skip escape character and process.
-        switch (value[in++])
-        {
-            // '/' is unique in that it must be unescaped but may be literal.
-            case '/' : unescaped_[out++] = '/';  break;
-            case '"' : unescaped_[out++] = '"';  break;
-            case '\\': unescaped_[out++] = '\\'; break;
-            case 'b' : unescaped_[out++] = '\b'; break;
-            case 'f' : unescaped_[out++] = '\f'; break;
-            case 'n' : unescaped_[out++] = '\n'; break;
-            case 'r' : unescaped_[out++] = '\r'; break;
-            case 't' : unescaped_[out++] = '\t'; break;
-            case 'u' :
-            {
-                constexpr size_t hex_length = 4;
-                if (in + hex_length >= value.size())
-                    return false;
-
-                const auto point = to_codepoint(value.substr(in, hex_length));
-                const auto size = point.size();
-                if (is_zero(size))
-                    return false;
-
-                if (size > 0u) unescaped_[out++] = point[0];
-                if (size > 1u) unescaped_[out++] = point[1];
-                if (size > 2u) unescaped_[out++] = point[2];
-                in += hex_length;
-                break;
-            }
-            default:
-                return false;
-        }
-
-        // Copy > 1 byte chunks of unescaped data.
-        if (const auto next = value.find('\\', in); next == view_t::npos)
-        {
-            // Copy remaining unescaped section (end of value).
-            const auto begin = std::next(value.begin(), in);
-            const auto end   = value.end();
-            const auto to    = std::next(unescaped_.data(), out);
-            std::copy(begin, end, to);
-            out += (value.size() - in);
-            break;
-        }
-        else if (next > in)
-        {
-            // Copy unescaped section before escape (inside value).
-            const auto begin = std::next(value.begin(), in);
-            const auto end   = std::next(value.begin(), next);
-            const auto to    = std::next(unescaped_.data(), out);
-            std::copy(begin, end, to);
-            out += next - in;
-            in = next;
-        }
-    }
-
-    // Caller should call unescaped_.clear() after assignment.
-    // This allows the buffer to remain at its maximum extent until reset.
-    // The view result of one unescape is not valid after another unescape.
-    unescaped_.resize(out);
-    value = view_t{ unescaped_ };
-    return true;
-}
-
 // request.jsonrpc assign
 // ----------------------------------------------------------------------------
 
@@ -178,7 +73,7 @@ TEMPLATE
 inline bool CLASS::assign_version(version& to, view_t& value) NOEXCEPT
 {
     state_ = state::error_state;
-    if (!unescape(value))
+    if (!unescape(unescaped_, value))
         return false;
 
     to = version::invalid;
@@ -208,7 +103,7 @@ TEMPLATE
 inline void CLASS::assign_string(string_t& to, view_t& value) NOEXCEPT
 {
     state_ = state::error_state;
-    if (!unescape(value))
+    if (!unescape(unescaped_, value))
         return;
 
     state_ = state::request_start;
@@ -237,7 +132,7 @@ TEMPLATE
 inline void CLASS::assign_string(id_option& to, view_t& value) NOEXCEPT
 {
     state_ = state::error_state;
-    if (!unescape(value))
+    if (!unescape(unescaped_, value))
         return;
 
     state_ = state::request_start;
@@ -334,12 +229,12 @@ inline bool CLASS::push_string(params_option& to, view_t& key,
     view_t& value) NOEXCEPT
 {
     state_ = state::error_state;
-    if (!unescape(key))
+    if (!unescape(unescaped_, key))
         return false;
 
     // Must copy key because unescaped_ buffer will be cleared.
     const string_t ununescaped_key{ key };
-    if (!unescape(value))
+    if (!unescape(unescaped_, value))
         return false;
 
     const auto ok{ push_param<string_t>(to, ununescaped_key, value) };

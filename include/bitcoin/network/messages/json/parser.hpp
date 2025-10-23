@@ -107,8 +107,6 @@ protected:
     static inline bool is_falsy(const view_t& token, char c) NOEXCEPT;
     static inline bool is_nully(const view_t& token, char c) NOEXCEPT;
     static inline bool is_error(const result_t& error) NOEXCEPT;
-    static inline bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
-    static inline bool to_number(number_t& out, const view_t& token) NOEXCEPT;
     static inline size_t distance(const char_it& from,
         const char_it& to) NOEXCEPT;
 
@@ -141,16 +139,22 @@ protected:
     inline size_t consume_char(view_t& token) NOEXCEPT;
     inline bool consume_text(view_t& token) NOEXCEPT;
     inline bool consume_span(view_t& token) NOEXCEPT;
-    bool unescape(view_t& value) NOEXCEPT;
+
+    /// Encoding.
+    /// -----------------------------------------------------------------------
+    static bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
+    static bool to_number(number_t& out, const view_t& token) NOEXCEPT;
+    static bool unescape(string_t& buffer, view_t& value) NOEXCEPT;
+    static string_t to_codepoint(const view_t& hi, const view_t& lo) NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------
+
     static inline const request_it add_request(batch_t& batch) NOEXCEPT;
     static inline void add_array(params_option& params) NOEXCEPT;
     static inline void add_object(params_option& params) NOEXCEPT;
     static inline bool is_array(const params_option& params) NOEXCEPT;
     static inline bool is_empty(const params_option& params) NOEXCEPT;
-    static inline string_t to_codepoint(const view_t& hex) NOEXCEPT;
 
     /// "jsonrpc"
     inline bool assign_version(version& to, view_t& value) NOEXCEPT;
@@ -211,6 +215,7 @@ private:
 #include <bitcoin/network/impl/messages/json/parser.ipp>
 #include <bitcoin/network/impl/messages/json/parser_assign.ipp>
 #include <bitcoin/network/impl/messages/json/parser_consume.ipp>
+#include <bitcoin/network/impl/messages/json/parser_encode.ipp>
 #include <bitcoin/network/impl/messages/json/parser_statics.ipp>
 #include <bitcoin/network/impl/messages/json/parser_object.ipp>
 #include <bitcoin/network/impl/messages/json/parser_value.ipp>

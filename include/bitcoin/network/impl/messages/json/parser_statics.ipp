@@ -19,10 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_STATICS_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_STATICS_IPP
 
-#include <cctype>
-#include <charconv>
 #include <iterator>
-#include <regex>
 #include <variant>
 
 namespace libbitcoin {
@@ -138,47 +135,7 @@ inline bool CLASS::is_error(const result_t& error) NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::to_signed(code_t& out, const view_t& token) NOEXCEPT
-{
-    // JSON-RPC 2.0: Numbers SHOULD NOT contain fractional parts.
-    // In other words, numbers can contain fractional parts :[. But we exclude
-    // that in the "id" field using this utility. "params" allows JSON numbers.
-
-    // TODO: unit test to ensure empty token always produces false (not zero).
-    const auto end = std::next(token.data(), token.size());
-    return is_zero(std::from_chars(token.data(), end, out).ec);
-}
-
-TEMPLATE
-inline bool CLASS::to_number(number_t& out, const view_t& token) NOEXCEPT
-{
-    static const std::regex json_number{
-        R"(-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?$)" };
-
-    try
-    {
-        if (!std::regex_match(token.begin(), token.end(), json_number))
-            return false;
-    }
-    catch (...)
-    {
-    }
-
-#if defined(HAVE_APPLE)
-    errno = 0;
-    char* end = nullptr;
-    out = std::strtod(token.data(), &end);
-    return (errno != ERANGE) && (end == std::next(token.data(), token.size()));
-#else
-    const auto end = std::next(token.data(), token.size());
-    const auto result = std::from_chars(token.data(), end, out);
-    return (is_zero(result.ec) && result.ptr == end);
-#endif
-}
-
-TEMPLATE
-inline size_t CLASS::distance(const char_it& from,
-    const char_it& to) NOEXCEPT
+inline size_t CLASS::distance(const char_it& from, const char_it& to) NOEXCEPT
 {
     using namespace system;
     return possible_narrow_and_sign_cast<size_t>(std::distance(from, to));
