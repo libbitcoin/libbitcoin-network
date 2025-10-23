@@ -18,8 +18,6 @@
  */
 #include "../../test.hpp"
 
-#include <variant>
-
 BOOST_AUTO_TEST_SUITE(serialize_tests)
 
 using namespace network::json;

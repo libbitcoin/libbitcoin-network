@@ -35,6 +35,9 @@ BCT_API string_t serialize(const request_t& request) NOEXCEPT;
 // Handles flat blob strings in result structure as literal JSON.
 BCT_API string_t serialize(const response_t& response) NOEXCEPT;
 
+////DECLARE_JSON_VALUE_CONVERTORS(request_t);
+////DECLARE_JSON_VALUE_CONVERTORS(response_t);
+
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
