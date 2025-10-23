@@ -24,6 +24,7 @@ using namespace network::json;
 
 BOOST_AUTO_TEST_CASE(serialize__serialize_request__deserialized__expected)
 {
+    // not valid json, testing blob parser.
     const string_t text
     {
         R"({)"
@@ -53,6 +54,7 @@ BOOST_AUTO_TEST_CASE(serialize__serialize_request__deserialized__expected)
 
 BOOST_AUTO_TEST_CASE(serialize__serialize_request__nested_terminators__expected)
 {
+    // not valid json, testing blob parser.
     const string_t text
     {
         R"({)"
@@ -73,6 +75,7 @@ BOOST_AUTO_TEST_CASE(serialize__serialize_request__nested_terminators__expected)
 
 BOOST_AUTO_TEST_CASE(serialize__serialize_request__nested_escapes__expected)
 {
+    // not valid json, testing blob parser.
     const string_t text
     {
         R"({)"
@@ -93,6 +96,7 @@ BOOST_AUTO_TEST_CASE(serialize__serialize_request__nested_escapes__expected)
 
 BOOST_AUTO_TEST_CASE(serialize__serialize_request__nested_containers__expected)
 {
+    // not valid json, testing blob parser.
     const string_t text
     {
         R"({)"
