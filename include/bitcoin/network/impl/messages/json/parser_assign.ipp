@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_ASSIGN_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_ASSIGN_IPP
 
+#include <algorithm>
 #include <utility>
 #include <variant>
 
@@ -65,14 +66,141 @@ inline bool CLASS::is_empty(const params_option& params) NOEXCEPT
         std::get<object_t>(params.value()).empty();
 }
 
+// Consumption.
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+bool CLASS::unescape(view_t& value) NOEXCEPT
+{
+    // Shortcircuit if no escapes, preserving first position.
+    auto out = value.find('\\');
+    if (out == view_t::npos)
+        return true;
+
+    // Over-size output string to avoid reallocations.
+    escaped_.resize(value.size());
+
+    // Copy unescaped prefix.
+    std::copy_n(value.begin(), out, escaped_.begin());
+
+    // Size of unicode escape.
+    constexpr size_t hex = 4;
+    auto in = out;
+
+    // TODO: copy in chunks between escapes for efficiency.
+    while (in < value.size())
+    {
+        if (value[in] != '\\')
+        {
+            escaped_[out++] = value[in++];
+            continue;
+        }
+
+        // Skip '\' and ensure at least an escape character.
+        if (++in == value.size())
+            return false;
+
+        // Skip escape character and process.
+        switch (value[in++])
+        {
+            // '/' is unique in that it must be unescaped but may be literal.
+            case '/' : escaped_[out++] = '/';  break;
+            case '"' : escaped_[out++] = '"';  break;
+            case '\\': escaped_[out++] = '\\'; break;
+            case 'b' : escaped_[out++] = '\b'; break;
+            case 'f' : escaped_[out++] = '\f'; break;
+            case 'n' : escaped_[out++] = '\n'; break;
+            case 'r' : escaped_[out++] = '\r'; break;
+            case 't' : escaped_[out++] = '\t'; break;
+            case 'u' :
+            {
+                if (in + hex >= value.size())
+                    return false;
+
+                // TODO: use system.
+                // Convert 4 input hex characters to integer.
+                size_t point{};
+                try
+                {
+                    size_t count{};
+                    constexpr int base = 16;
+                    const string_t snip{ value.substr(in, hex) };
+                    point = std::stoul(snip, &count, base);
+                    if (count != hex) return false;
+                    in += hex;
+                }
+                catch (...)
+                {
+                    return false;
+                }
+
+                // TODO: use system.
+                // Convert Unicode codepoint to UTF-8, maximum 3 output bytes.
+                if (point <= 0x7f)
+                {
+                    escaped_[out++] = (char)(point);
+                }
+                else if (point <= 0x7ff)
+                {
+                    escaped_[out++] = (char)(0xc0 | ((point >> 6) & 0x1f));
+                    escaped_[out++] = (char)(0x80 | (point & 0x3f));
+                }
+                else if (point <= 0xffff)
+                {
+                    escaped_[out++] = (char)(0xe0 | ((point >> 12) & 0x0f));
+                    escaped_[out++] = (char)(0x80 | ((point >> 6) & 0x3f));
+                    escaped_[out++] = (char)(0x80 | (point & 0x3f));
+                }
+                else
+                {
+                    return false;
+                }
+
+                break;
+            }
+            default: return false;
+        }
+
+        if (const auto next = value.find('\\', in); next == view_t::npos)
+        {
+            // Copy remaining unescaped section (end of value).
+            const auto begin = std::next(value.begin(), in);
+            const auto end   = value.end();
+            const auto to    = std::next(escaped_.data(), out);
+            std::copy(begin, end, to);
+            out += (value.size() - in);
+            break;
+        }
+        else if (next > in)
+        {
+            // Copy unescaped section before escape (inside value).
+            const auto begin = std::next(value.begin(), in);
+            const auto end   = std::next(value.begin(), next);
+            const auto to    = std::next(escaped_.data(), out);
+            std::copy(begin, end, to);
+            out += next - in;
+            in = next;
+        }
+    }
+
+    // Caller should call escaped_.clear() after assignment.
+    // This allows the buffer to remain at its maximum extent until reset.
+    escaped_.resize(out);
+    value = view_t{ escaped_ };
+    return true;
+}
+
 // request.jsonrpc assign
 // ----------------------------------------------------------------------------
 
 TEMPLATE
 inline bool CLASS::assign_version(version& to, view_t& value) NOEXCEPT
 {
-    to = version::invalid;
+    state_ = state::error_state;
+    if (!unescape(value))
+        return false;
 
+    to = version::invalid;
     if constexpr (require == version::any || require == version::v1)
     {
         if (value == "1.0" || value.empty())
@@ -85,9 +213,10 @@ inline bool CLASS::assign_version(version& to, view_t& value) NOEXCEPT
             to = version::v2;
     }
 
-    value = {};
     const auto ok = (to != version::invalid);
     state_ = ok ? state::request_start : state::error_state;
+    escaped_.clear();
+    value = {};
     return ok;
 }
 
@@ -97,8 +226,13 @@ inline bool CLASS::assign_version(version& to, view_t& value) NOEXCEPT
 TEMPLATE
 inline void CLASS::assign_string(string_t& to, view_t& value) NOEXCEPT
 {
+    state_ = state::error_state;
+    if (!unescape(value))
+        return;
+
     state_ = state::request_start;
     to = string_t{ value };
+    escaped_.clear();
     value = {};
 }
 
@@ -112,18 +246,23 @@ inline bool CLASS::assign_number(id_option& to, view_t& value) NOEXCEPT
     to.emplace(std::in_place_type<code_t>);
     auto& number = std::get<code_t>(to.value());
     const auto ok = to_signed(number, value);
-    value = {};
     state_ = ok ? state::request_start : state::error_state;
     after_ = true;
+    value = {};
     return ok;
 }
 
 TEMPLATE
 inline void CLASS::assign_string(id_option& to, view_t& value) NOEXCEPT
 {
+    state_ = state::error_state;
+    if (!unescape(value))
+        return;
+
     state_ = state::request_start;
-    after_ = true;
     to.emplace(std::in_place_type<string_t>, value);
+    after_ = true;
+    escaped_.clear();
     value = {};
 }
 
@@ -131,8 +270,8 @@ TEMPLATE
 inline void CLASS::assign_null(id_option& to, view_t& value) NOEXCEPT
 {
     state_ = state::request_start;
-    after_ = true;
     to.emplace(std::in_place_type<null_t>);
+    after_ = true;
     value = {};
 }
 
@@ -213,6 +352,10 @@ TEMPLATE
 inline bool CLASS::push_string(params_option& to, view_t& key,
     view_t& value) NOEXCEPT
 {
+    state_ = state::error_state;
+    if (!unescape(value))
+        return false;
+
     const auto ok{ push_param<string_t>(to, key, value) };
     state_ = ok ? state::params_start : state::error_state;
     after_ = true;

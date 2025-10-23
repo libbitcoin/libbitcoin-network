@@ -19,65 +19,16 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_CONSUME_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_CONSUME_IPP
 
+#include <iterator>
 #include <memory>
 
 namespace libbitcoin {
 namespace network {
 namespace json {
 
-// protected
-
-TEMPLATE
-inline bool CLASS::consume_substitute(view_t&, char) NOEXCEPT
-{
-    // BUGBUG: view is not modifiable, requires dynamic token (vs. view_t).
-    return false; ////consume_char(token);
-}
-
-TEMPLATE
-inline bool CLASS::consume_escaped(view_t& token, char c) NOEXCEPT
-{
-    // BUGBUG: doesn't support \uXXXX, requires 4 character accumulation.
-    switch (c)
-    {
-        case 'b': c = '\b'; break;
-        case 'f': c = '\f'; break;
-        case 'n': c = '\n'; break;
-        case 'r': c = '\r'; break;
-        case 't': c = '\t'; break;
-        default:
-            return false;
-    }
-
-    return consume_substitute(token, c);
-}
-
-TEMPLATE
-inline bool CLASS::consume_escape(view_t& token, char c) NOEXCEPT
-{
-    if (c == '\\' && !escaped_)
-    {
-        escaped_ = true;
-        return true;
-    }
-    else if (escaped_)
-    {
-        escaped_ = false;
-        return consume_escaped(token, c);
-    }
-    else
-    {
-        escaped_ = false;
-        return false;
-    }
-}
-
-TEMPLATE
-inline size_t CLASS::consume_quoted(view_t& token) NOEXCEPT
-{
-    // BUGBUG: escape sequences not yet supported.
-    return consume_char(token);
-}
+// consume_char
+// ----------------------------------------------------------------------------
+// Accumulate a single character into the token view.
 
 TEMPLATE
 inline size_t CLASS::consume_char(view_t& token) NOEXCEPT
@@ -89,7 +40,7 @@ inline size_t CLASS::consume_char(view_t& token) NOEXCEPT
     return size;
 }
 
-// spans
+// spans (consume_text/consume_span)
 // ----------------------------------------------------------------------------
 // These handle but do not substitute escape sequences. Escape sequences are
 // retained for processing after string object is constructed from the view.
@@ -107,17 +58,21 @@ inline bool CLASS::consume_text(view_t& token) NOEXCEPT
 
     while (++char_ != end_)
     {
-        const char ch = *char_;
+        const char c = *char_;
 
-        if (escaped)
+        if (is_prohibited(c))
+        {
+            return false;
+        }
+        else if (escaped)
         {
             escaped = false;
         }
-        else if (ch == '\\')
+        else if (c == '\\')
         {
             escaped = true;
         }
-        else if (ch == '"')
+        else if (c == '"')
         {
             token =
             {
@@ -146,17 +101,21 @@ inline bool CLASS::consume_span(view_t& token) NOEXCEPT
 
     while (++char_ != end_)
     {
-        const char ch = *char_;
+        const char c = *char_;
 
-        if (escaped)
+        if (is_prohibited(c))
+        {
+            return false;
+        }
+        else if (escaped)
         {
             escaped = false;
         }
-        else if (quoted && ch == '\\')
+        else if (quoted && c == '\\')
         {
             escaped = true;
         }
-        else if (ch == '"')
+        else if (c == '"')
         {
             quoted = !quoted;
         }
@@ -164,11 +123,11 @@ inline bool CLASS::consume_span(view_t& token) NOEXCEPT
         {
             // nop
         }
-        else if (ch == open)
+        else if (c == open)
         {
             ++depth;
         }
-        else if (ch == close)
+        else if (c == close)
         {
             --depth;
 

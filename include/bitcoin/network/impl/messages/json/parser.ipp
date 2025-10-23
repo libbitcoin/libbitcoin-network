@@ -81,13 +81,15 @@ void CLASS::reset() NOEXCEPT
     reset_internal();
     batch_.clear();
     batched_ = {};
+
+    // Escaping buffer capacity reduced to zero.
+    escaped_.shrink_to_fit();
 }
 
 TEMPLATE
 void CLASS::reset_internal() NOEXCEPT
 {
     after_ = {};
-    escaped_ = {};
     state_ = {};
     char_ = {};
     begin_ = {};
@@ -95,6 +97,9 @@ void CLASS::reset_internal() NOEXCEPT
     key_ = {};
     value_ = {};
     request_ = {};
+
+    // Escaping buffer retained at max extent.
+    escaped_.clear();
 }
 
 TEMPLATE
@@ -155,9 +160,6 @@ bool CLASS::done_parsing(char c) NOEXCEPT
         case state::request_start:
             handle_request_start(c);
             break;
-        ////case state::key:
-        ////    handle_key(c);
-        ////    break;
         case state::value:
             handle_value(c);
             break;
@@ -179,9 +181,6 @@ bool CLASS::done_parsing(char c) NOEXCEPT
         case state::parameter:
             handle_parameter(c);
             break;
-        ////case state::parameter_key:
-        ////    handle_parameter_key(c);
-        ////    break;
         case state::parameter_value:
             handle_parameter_value(c);
             break;

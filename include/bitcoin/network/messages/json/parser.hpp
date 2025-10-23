@@ -136,16 +136,12 @@ protected:
     void handle_id(char c) NOEXCEPT;
     void handle_parameter(char c) NOEXCEPT;
 
-    /// Comsuming.
+    /// Consumption.
     /// -----------------------------------------------------------------------
-    inline bool consume_substitute(view_t& token, char c) NOEXCEPT;
-    inline bool consume_escaped(view_t& token, char c) NOEXCEPT;
-    inline bool consume_escape(view_t& token, char c) NOEXCEPT;
-
-    inline size_t consume_quoted(view_t& token) NOEXCEPT;
     inline size_t consume_char(view_t& token) NOEXCEPT;
     inline bool consume_text(view_t& token) NOEXCEPT;
     inline bool consume_span(view_t& token) NOEXCEPT;
+    bool unescape(view_t& value) NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------
@@ -194,13 +190,13 @@ private:
     batch_t batch_{};
 
     bool after_{};
-    bool escaped_{};
     state state_{};
     char_it char_{};
     char_it begin_{};
     char_it end_{};
     view_t key_{};
     view_t value_{};
+    string_t escaped_{};
     request_it request_{};
 };
 
