@@ -354,12 +354,18 @@ inline bool CLASS::push_string(params_option& to, view_t& key,
     view_t& value) NOEXCEPT
 {
     state_ = state::error_state;
+    if (!unescape(key))
+        return false;
+
+    // Must copy key because unescaped_ buffer will be cleared.
+    const string_t ununescaped_key{ key };
     if (!unescape(value))
         return false;
 
     const auto ok{ push_param<string_t>(to, ununescaped_key, value) };
     state_ = ok ? state::params_start : state::error_state;
     after_ = true;
+    unescaped_.clear();
     value = {};
     key = {};
     return ok;
