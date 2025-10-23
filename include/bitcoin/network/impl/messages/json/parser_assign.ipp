@@ -130,9 +130,9 @@ bool CLASS::unescape(view_t& value) NOEXCEPT
                 if (is_zero(size))
                     return false;
 
-                if (size > 0u) unescaped_[out++] = point.at(0);
-                if (size > 1u) unescaped_[out++] = point.at(1);
-                if (size > 2u) unescaped_[out++] = point.at(2);
+                if (size > 0u) unescaped_[out++] = point[0];
+                if (size > 1u) unescaped_[out++] = point[1];
+                if (size > 2u) unescaped_[out++] = point[2];
                 in += hex_length;
                 break;
             }
