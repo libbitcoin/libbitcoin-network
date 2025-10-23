@@ -78,10 +78,10 @@ bool CLASS::unescape(view_t& value) NOEXCEPT
         return true;
 
     // Over-size output string to avoid reallocations.
-    escaped_.resize(value.size());
+    unescaped_.resize(value.size());
 
     // Copy unescaped prefix.
-    std::copy_n(value.begin(), out, escaped_.begin());
+    std::copy_n(value.begin(), out, unescaped_.begin());
 
     // Size of unicode escape.
     constexpr size_t hex = 4;
@@ -92,7 +92,7 @@ bool CLASS::unescape(view_t& value) NOEXCEPT
     {
         if (value[in] != '\\')
         {
-            escaped_[out++] = value[in++];
+            unescaped_[out++] = value[in++];
             continue;
         }
 
@@ -104,14 +104,14 @@ bool CLASS::unescape(view_t& value) NOEXCEPT
         switch (value[in++])
         {
             // '/' is unique in that it must be unescaped but may be literal.
-            case '/' : escaped_[out++] = '/';  break;
-            case '"' : escaped_[out++] = '"';  break;
-            case '\\': escaped_[out++] = '\\'; break;
-            case 'b' : escaped_[out++] = '\b'; break;
-            case 'f' : escaped_[out++] = '\f'; break;
-            case 'n' : escaped_[out++] = '\n'; break;
-            case 'r' : escaped_[out++] = '\r'; break;
-            case 't' : escaped_[out++] = '\t'; break;
+            case '/' : unescaped_[out++] = '/';  break;
+            case '"' : unescaped_[out++] = '"';  break;
+            case '\\': unescaped_[out++] = '\\'; break;
+            case 'b' : unescaped_[out++] = '\b'; break;
+            case 'f' : unescaped_[out++] = '\f'; break;
+            case 'n' : unescaped_[out++] = '\n'; break;
+            case 'r' : unescaped_[out++] = '\r'; break;
+            case 't' : unescaped_[out++] = '\t'; break;
             case 'u' :
             {
                 if (in + hex >= value.size())
@@ -138,18 +138,18 @@ bool CLASS::unescape(view_t& value) NOEXCEPT
                 // Convert Unicode codepoint to UTF-8, maximum 3 output bytes.
                 if (point <= 0x7f)
                 {
-                    escaped_[out++] = (char)(point);
+                    unescaped_[out++] = (char)(point);
                 }
                 else if (point <= 0x7ff)
                 {
-                    escaped_[out++] = (char)(0xc0 | ((point >> 6) & 0x1f));
-                    escaped_[out++] = (char)(0x80 | (point & 0x3f));
+                    unescaped_[out++] = (char)(0xc0 | ((point >> 6) & 0x1f));
+                    unescaped_[out++] = (char)(0x80 | (point & 0x3f));
                 }
                 else if (point <= 0xffff)
                 {
-                    escaped_[out++] = (char)(0xe0 | ((point >> 12) & 0x0f));
-                    escaped_[out++] = (char)(0x80 | ((point >> 6) & 0x3f));
-                    escaped_[out++] = (char)(0x80 | (point & 0x3f));
+                    unescaped_[out++] = (char)(0xe0 | ((point >> 12) & 0x0f));
+                    unescaped_[out++] = (char)(0x80 | ((point >> 6) & 0x3f));
+                    unescaped_[out++] = (char)(0x80 | (point & 0x3f));
                 }
                 else
                 {
@@ -166,7 +166,7 @@ bool CLASS::unescape(view_t& value) NOEXCEPT
             // Copy remaining unescaped section (end of value).
             const auto begin = std::next(value.begin(), in);
             const auto end   = value.end();
-            const auto to    = std::next(escaped_.data(), out);
+            const auto to    = std::next(unescaped_.data(), out);
             std::copy(begin, end, to);
             out += (value.size() - in);
             break;
@@ -176,17 +176,18 @@ bool CLASS::unescape(view_t& value) NOEXCEPT
             // Copy unescaped section before escape (inside value).
             const auto begin = std::next(value.begin(), in);
             const auto end   = std::next(value.begin(), next);
-            const auto to    = std::next(escaped_.data(), out);
+            const auto to    = std::next(unescaped_.data(), out);
             std::copy(begin, end, to);
             out += next - in;
             in = next;
         }
     }
 
-    // Caller should call escaped_.clear() after assignment.
+    // Caller should call unescaped_.clear() after assignment.
     // This allows the buffer to remain at its maximum extent until reset.
-    escaped_.resize(out);
-    value = view_t{ escaped_ };
+    // The view result of one unescape is not valid after another unescape.
+    unescaped_.resize(out);
+    value = view_t{ unescaped_ };
     return true;
 }
 
@@ -215,7 +216,7 @@ inline bool CLASS::assign_version(version& to, view_t& value) NOEXCEPT
 
     const auto ok = (to != version::invalid);
     state_ = ok ? state::request_start : state::error_state;
-    escaped_.clear();
+    unescaped_.clear();
     value = {};
     return ok;
 }
@@ -232,7 +233,7 @@ inline void CLASS::assign_string(string_t& to, view_t& value) NOEXCEPT
 
     state_ = state::request_start;
     to = string_t{ value };
-    escaped_.clear();
+    unescaped_.clear();
     value = {};
 }
 
@@ -262,7 +263,7 @@ inline void CLASS::assign_string(id_option& to, view_t& value) NOEXCEPT
     state_ = state::request_start;
     to.emplace(std::in_place_type<string_t>, value);
     after_ = true;
-    escaped_.clear();
+    unescaped_.clear();
     value = {};
 }
 
@@ -356,7 +357,7 @@ inline bool CLASS::push_string(params_option& to, view_t& key,
     if (!unescape(value))
         return false;
 
-    const auto ok{ push_param<string_t>(to, key, value) };
+    const auto ok{ push_param<string_t>(to, ununescaped_key, value) };
     state_ = ok ? state::params_start : state::error_state;
     after_ = true;
     value = {};

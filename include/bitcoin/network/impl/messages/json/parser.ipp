@@ -83,7 +83,7 @@ void CLASS::reset() NOEXCEPT
     batched_ = {};
 
     // Escaping buffer capacity reduced to zero.
-    escaped_.shrink_to_fit();
+    unescaped_.shrink_to_fit();
 }
 
 TEMPLATE
@@ -99,7 +99,7 @@ void CLASS::reset_internal() NOEXCEPT
     request_ = {};
 
     // Escaping buffer retained at max extent.
-    escaped_.clear();
+    unescaped_.clear();
 }
 
 TEMPLATE

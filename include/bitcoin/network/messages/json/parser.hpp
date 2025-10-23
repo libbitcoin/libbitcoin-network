@@ -196,7 +196,7 @@ private:
     char_it end_{};
     view_t key_{};
     view_t value_{};
-    string_t escaped_{};
+    string_t unescaped_{};
     request_it request_{};
 };
 
