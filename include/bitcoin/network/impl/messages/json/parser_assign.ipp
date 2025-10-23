@@ -69,6 +69,16 @@ inline bool CLASS::is_empty(const params_option& params) NOEXCEPT
 // Consumption.
 // ----------------------------------------------------------------------------
 
+// static
+TEMPLATE
+string_t CLASS::to_codepoint(const view_t& hex) NOEXCEPT
+{
+    using namespace system;
+    data_array<sizeof(char16_t)> bytes{};
+    return !decode_base16(bytes, hex) ? string_t {} :
+        to_utf8(from_big_endian<char32_t>(bytes));
+}
+
 TEMPLATE
 bool CLASS::unescape(view_t& value) NOEXCEPT
 {
@@ -83,13 +93,10 @@ bool CLASS::unescape(view_t& value) NOEXCEPT
     // Copy unescaped prefix.
     std::copy_n(value.begin(), out, unescaped_.begin());
 
-    // Size of unicode escape.
-    constexpr size_t hex = 4;
-    auto in = out;
-
-    // TODO: copy in chunks between escapes for efficiency.
-    while (in < value.size())
+    // Copy chunks of unescaped data and process escapes.
+    for (auto in = out; in < value.size();)
     {
+        // Iterate until escape found.
         if (value[in] != '\\')
         {
             unescaped_[out++] = value[in++];
@@ -114,53 +121,26 @@ bool CLASS::unescape(view_t& value) NOEXCEPT
             case 't' : unescaped_[out++] = '\t'; break;
             case 'u' :
             {
-                if (in + hex >= value.size())
+                constexpr size_t hex_length = 4;
+                if (in + hex_length >= value.size())
                     return false;
 
-                // TODO: use system.
-                // Convert 4 input hex characters to integer.
-                size_t point{};
-                try
-                {
-                    size_t count{};
-                    constexpr int base = 16;
-                    const string_t snip{ value.substr(in, hex) };
-                    point = std::stoul(snip, &count, base);
-                    if (count != hex) return false;
-                    in += hex;
-                }
-                catch (...)
-                {
+                const auto point = to_codepoint(value.substr(in, hex_length));
+                const auto size = point.size();
+                if (is_zero(size))
                     return false;
-                }
 
-                // TODO: use system.
-                // Convert Unicode codepoint to UTF-8, maximum 3 output bytes.
-                if (point <= 0x7f)
-                {
-                    unescaped_[out++] = (char)(point);
-                }
-                else if (point <= 0x7ff)
-                {
-                    unescaped_[out++] = (char)(0xc0 | ((point >> 6) & 0x1f));
-                    unescaped_[out++] = (char)(0x80 | (point & 0x3f));
-                }
-                else if (point <= 0xffff)
-                {
-                    unescaped_[out++] = (char)(0xe0 | ((point >> 12) & 0x0f));
-                    unescaped_[out++] = (char)(0x80 | ((point >> 6) & 0x3f));
-                    unescaped_[out++] = (char)(0x80 | (point & 0x3f));
-                }
-                else
-                {
-                    return false;
-                }
-
+                if (size > 0u) unescaped_[out++] = point.at(0);
+                if (size > 1u) unescaped_[out++] = point.at(1);
+                if (size > 2u) unescaped_[out++] = point.at(2);
+                in += hex_length;
                 break;
             }
-            default: return false;
+            default:
+                return false;
         }
 
+        // Copy > 1 byte chunks of unescaped data.
         if (const auto next = value.find('\\', in); next == view_t::npos)
         {
             // Copy remaining unescaped section (end of value).

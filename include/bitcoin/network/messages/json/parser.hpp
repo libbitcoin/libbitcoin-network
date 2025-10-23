@@ -150,6 +150,7 @@ protected:
     static inline void add_object(params_option& params) NOEXCEPT;
     static inline bool is_array(const params_option& params) NOEXCEPT;
     static inline bool is_empty(const params_option& params) NOEXCEPT;
+    static inline string_t to_codepoint(const view_t& hex) NOEXCEPT;
 
     /// "jsonrpc"
     inline bool assign_version(version& to, view_t& value) NOEXCEPT;
