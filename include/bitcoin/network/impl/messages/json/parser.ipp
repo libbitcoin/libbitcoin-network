@@ -88,7 +88,6 @@ void CLASS::reset_internal() NOEXCEPT
 {
     after_ = {};
     escaped_ = {};
-    quoted_ = {};
     state_ = {};
     char_ = {};
     begin_ = {};
@@ -156,9 +155,9 @@ bool CLASS::done_parsing(char c) NOEXCEPT
         case state::request_start:
             handle_request_start(c);
             break;
-        case state::key:
-            handle_key(c);
-            break;
+        ////case state::key:
+        ////    handle_key(c);
+        ////    break;
         case state::value:
             handle_value(c);
             break;
@@ -180,9 +179,9 @@ bool CLASS::done_parsing(char c) NOEXCEPT
         case state::parameter:
             handle_parameter(c);
             break;
-        case state::parameter_key:
-            handle_parameter_key(c);
-            break;
+        ////case state::parameter_key:
+        ////    handle_parameter_key(c);
+        ////    break;
         case state::parameter_value:
             handle_parameter_value(c);
             break;

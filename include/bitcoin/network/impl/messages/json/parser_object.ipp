@@ -82,41 +82,16 @@ void CLASS::handle_request_start(char c) NOEXCEPT
     }
     else if (c == '"')
     {
-        redispatch(state::key);
+        state_ = consume_text(key_) &&
+            (key_ == "jsonrpc" || key_ == "id" ||
+             key_ == "method"  || key_ == "params") ?
+            state::value : state::error_state;
     }
     else if (c == '}')
     {
         state_ = batched_ ? state::batch_start : state::complete;
     }
     else if (!is_whitespace(c))
-    {
-        state_ = state::error_state;
-    }
-}
-
-TEMPLATE
-void CLASS::handle_key(char c) NOEXCEPT
-{
-    if (c == '"')
-    {
-        if (toggle(quoted_))
-        {
-            if (key_ == "jsonrpc" || key_ == "id" ||
-                key_ == "method" || key_ == "params")
-            {
-                state_ = state::value;
-            }
-            else
-            {
-                state_ = state::error_state;
-            }
-        }
-    }
-    else if (quoted_)
-    {
-        consume_quoted(key_);
-    }
-    else
     {
         state_ = state::error_state;
     }
@@ -173,7 +148,8 @@ void CLASS::handle_params_start(char c) NOEXCEPT
     }
     else if (c == '"' && !array)
     {
-        redispatch(state::parameter_key);
+        state_ = consume_text(key_) && !key_.empty() ?
+            state::parameter_value : state::error_state;
     }
     else if (c == '"' && array)
     {
@@ -191,27 +167,6 @@ void CLASS::handle_params_start(char c) NOEXCEPT
     {
         // first character of array unquoted value.
         redispatch(state::parameter);
-    }
-    else
-    {
-        state_ = state::error_state;
-    }
-}
-
-TEMPLATE
-void CLASS::handle_parameter_key(char c) NOEXCEPT
-{
-    if (c == '"')
-    {
-        if (toggle(quoted_))
-        {
-            state_ = key_.empty() ? state::error_state :
-                state::parameter_value;
-        }
-    }
-    else if (quoted_)
-    {
-        consume_quoted(key_);
     }
     else
     {

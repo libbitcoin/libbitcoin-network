@@ -89,22 +89,21 @@ inline size_t CLASS::consume_char(view_t& token) NOEXCEPT
     return size;
 }
 
-// blobs
+// spans
 // ----------------------------------------------------------------------------
+// These handle but do not substitute escape sequences. Escape sequences are
+// retained for processing after string object is constructed from the view.
+// This allows parsing to remain non-allocating, eliminating reallocations from
+// the progressive accumulation of characters into a dynamic string object.
 
 TEMPLATE
-inline bool CLASS::consume_blob(view_t& token) NOEXCEPT
+inline bool CLASS::consume_text(view_t& token) NOEXCEPT
 {
-    if (char_ == end_ || (*char_ != '[' && *char_ != '{'))
+    if (char_ == end_ || *char_ != '"')
         return false;
 
     const auto start = char_;
-    const auto open = *start;
-    const auto close = (open == '[') ? ']' : '}';
-
     auto escaped = false;
-    auto quoted = false;
-    auto depth = one;
 
     while (++char_ != end_)
     {
@@ -118,14 +117,52 @@ inline bool CLASS::consume_blob(view_t& token) NOEXCEPT
         {
             escaped = true;
         }
-        else if (quoted)
+        else if (ch == '"')
         {
-            if (ch == '"')
-                quoted = false;
+            token =
+            {
+                std::next(std::to_address(start)), sub1(distance(start, char_))
+            };
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+TEMPLATE
+inline bool CLASS::consume_span(view_t& token) NOEXCEPT
+{
+    if (char_ == end_ || (*char_ != '[' && *char_ != '{'))
+        return false;
+
+    const auto start = char_;
+    const auto open = *start;
+    const auto close = (open == '[') ? ']' : '}';
+    auto escaped = false;
+    auto quoted = false;
+    auto depth = one;
+
+    while (++char_ != end_)
+    {
+        const char ch = *char_;
+
+        if (escaped)
+        {
+            escaped = false;
+        }
+        else if (quoted && ch == '\\')
+        {
+            escaped = true;
         }
         else if (ch == '"')
         {
-            quoted = true;
+            quoted = !quoted;
+        }
+        else if (quoted)
+        {
+            // nop
         }
         else if (ch == open)
         {
@@ -133,12 +170,15 @@ inline bool CLASS::consume_blob(view_t& token) NOEXCEPT
         }
         else if (ch == close)
         {
-            if (is_zero(--depth))
+            --depth;
+
+            if (is_zero(depth))
             {
                 token =
                 {
                     std::to_address(start), distance(start, std::next(char_))
                 };
+
                 return true;
             }
         }

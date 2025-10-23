@@ -177,12 +177,6 @@ inline bool CLASS::to_number(number_t& out, const view_t& token) NOEXCEPT
 }
 
 TEMPLATE
-inline bool CLASS::toggle(bool& quoted) NOEXCEPT
-{
-    return !((quoted = !quoted));
-}
-
-TEMPLATE
 inline size_t CLASS::distance(const char_it& from,
     const char_it& to) NOEXCEPT
 {

@@ -47,9 +47,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_empty__error)
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":""})" };
     const auto size = parse.write(text);
-    BOOST_CHECK(parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, 14u);
+    BOOST_REQUIRE(parse.has_error());
+    BOOST_REQUIRE(parse.is_done());
+    BOOST_REQUIRE_EQUAL(size, 14u);
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
@@ -58,9 +58,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_null__error)
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":null})" };
     const auto size = parse.write(text);
-    BOOST_CHECK(parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, 12u);
+    BOOST_REQUIRE(parse.has_error());
+    BOOST_REQUIRE(parse.is_done());
+    BOOST_REQUIRE_EQUAL(size, 12u);
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
@@ -69,9 +69,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_numeric__error)
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":42})" };
     const auto size = parse.write(text);
-    BOOST_CHECK(parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, 12u);
+    BOOST_REQUIRE(parse.has_error());
+    BOOST_REQUIRE(parse.is_done());
+    BOOST_REQUIRE_EQUAL(size, 12u);
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
@@ -79,11 +79,11 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v2__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"2.0"})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(request.jsonrpc == version::v2);
+    BOOST_REQUIRE(request.jsonrpc == version::v2);
 }
 
 // id
@@ -93,61 +93,61 @@ BOOST_AUTO_TEST_CASE(request_parser__write__id_positive__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"id":42})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(request.jsonrpc == version::undefined);
+    BOOST_REQUIRE(request.jsonrpc == version::undefined);
     BOOST_REQUIRE(request.id.has_value());
     BOOST_REQUIRE(std::holds_alternative<code_t>(request.id.value()));
-    BOOST_CHECK_EQUAL(std::get<code_t>(request.id.value()), 42);
+    BOOST_REQUIRE_EQUAL(std::get<code_t>(request.id.value()), 42);
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__id_negative__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"id":-42})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
     BOOST_REQUIRE(request.id.has_value());
     BOOST_REQUIRE(std::holds_alternative<code_t>(request.id.value()));
-    BOOST_CHECK_EQUAL(std::get<code_t>(request.id.value()), -42);
+    BOOST_REQUIRE_EQUAL(std::get<code_t>(request.id.value()), -42);
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__id_string__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"id":"foobar"})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
     BOOST_REQUIRE(request.id.has_value());
     BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "foobar");
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(request.id.value()), "foobar");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__id_empty__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"id":""})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
     BOOST_REQUIRE(request.id.has_value());
     BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "");
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(request.id.value()), "");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__id_null__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"id":null})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
-    BOOST_CHECK(is_one(parse.get_parsed().size()));
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
     BOOST_REQUIRE(request.id.has_value());
@@ -161,66 +161,66 @@ BOOST_AUTO_TEST_CASE(request_parser__write__method__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"method":"foobar"})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
-    BOOST_CHECK_EQUAL(parse.get_parsed().front().method, "foobar");
+    BOOST_REQUIRE_EQUAL(parse.get_parsed().front().method, "foobar");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v2_method__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"2.0","method":"foobar"})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(request.jsonrpc == version::v2);
-    BOOST_CHECK_EQUAL(request.method, "foobar");
+    BOOST_REQUIRE(request.jsonrpc == version::v2);
+    BOOST_REQUIRE_EQUAL(request.method, "foobar");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_id_string_method__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"1.0","id":"libbitcoin","method":"fast"})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(request.jsonrpc == version::v1);
+    BOOST_REQUIRE(request.jsonrpc == version::v1);
     BOOST_REQUIRE(request.id.has_value());
     BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "libbitcoin");
-    BOOST_CHECK_EQUAL(request.method, "fast");
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(request.id.value()), "libbitcoin");
+    BOOST_REQUIRE_EQUAL(request.method, "fast");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__method_id_string_jsonrpc_v1__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"method":"fast","id":"libbitcoin","jsonrpc":"1.0"})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(request.jsonrpc == version::v1);
+    BOOST_REQUIRE(request.jsonrpc == version::v1);
     BOOST_REQUIRE(request.id.has_value());
     BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "libbitcoin");
-    BOOST_CHECK_EQUAL(request.method, "fast");
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(request.id.value()), "libbitcoin");
+    BOOST_REQUIRE_EQUAL(request.method, "fast");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__id_string_jsonrpc_v1_method__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"id":"libbitcoin","jsonrpc":"1.0","method":"fast"})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
-    BOOST_CHECK(request.jsonrpc == version::v1);
+    BOOST_REQUIRE(request.jsonrpc == version::v1);
     BOOST_REQUIRE(request.id.has_value());
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id.value()));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "libbitcoin");
-    BOOST_CHECK_EQUAL(request.method, "fast");
+    BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(request.id.value()), "libbitcoin");
+    BOOST_REQUIRE_EQUAL(request.method, "fast");
 }
 
 // jsonrpc/id interaction
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_no_id__error)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"1.0"})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_null_id__error)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"1.0","id":null})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
@@ -246,28 +246,28 @@ BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_numeric_id__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"1.0","id":42})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
     BOOST_REQUIRE(request.id.has_value());
-    BOOST_CHECK(std::holds_alternative<code_t>(request.id.value()));
-    BOOST_CHECK_EQUAL(std::get<code_t>(request.id.value()), 42);
-    BOOST_CHECK(request.jsonrpc == version::v1);
+    BOOST_REQUIRE(std::holds_alternative<code_t>(request.id.value()));
+    BOOST_REQUIRE_EQUAL(std::get<code_t>(request.id.value()), 42);
+    BOOST_REQUIRE(request.jsonrpc == version::v1);
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__jsonrpc_v1_string_id__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"1.0","id":"foobar"})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(is_one(parse.get_parsed().size()));
 
     const auto request = parse.get_parsed().front();
     BOOST_REQUIRE(request.id.has_value());
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id.value()));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "foobar");
-    BOOST_CHECK(request.jsonrpc == version::v1);
+    BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(request.id.value()), "foobar");
+    BOOST_REQUIRE(request.jsonrpc == version::v1);
 }
 
 // whitespace
@@ -281,13 +281,13 @@ BOOST_AUTO_TEST_CASE(request_parser__write__whitespace_all__expected)
         " \n\r\t { \n\r\t \"jsonrpc\" \n\r\t : \n\r\t \"2.0\" \n\r\t ,"
         " \n\r\t \"id\" \n\r\t : \n\r\t \"foobar\" \n\r\t } \n\r\t "
     };
-    BOOST_CHECK_EQUAL(parse.write(text), 76);
+    BOOST_REQUIRE_EQUAL(parse.write(text), 76);
 
     const auto request = parse.get_parsed().front();
     BOOST_REQUIRE(request.id.has_value());
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id.value()));
-    BOOST_CHECK_EQUAL(std::get<string_t>(request.id.value()), "foobar");
-    BOOST_CHECK(request.jsonrpc == version::v2);
+    BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(request.id.value()), "foobar");
+    BOOST_REQUIRE(request.jsonrpc == version::v2);
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__whitespace_invalid_error)
@@ -298,8 +298,8 @@ BOOST_AUTO_TEST_CASE(request_parser__write__whitespace_invalid_error)
         " \n\r\t { \n\r\t \"jsonrpc\" \n\v\t : \n\r\t \"2.0\" \n\r\t ,"
         " \n\r\t \"id\" \n\r\t : \n\r\t \"foobar\" \n\r\t } \n\r\t "
     };
-    BOOST_CHECK_EQUAL(parse.write(text), 23);
-    BOOST_CHECK(parse.has_error());
+    BOOST_REQUIRE_EQUAL(parse.write(text), 23);
+    BOOST_REQUIRE(parse.has_error());
 }
 
 // escape
@@ -309,30 +309,30 @@ BOOST_AUTO_TEST_CASE(request_parser__write__json_escape__not_implemented)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"2.0","id":"foo\\bar"})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
 
     const auto request = parse.get_parsed().front();
     BOOST_REQUIRE(request.id.has_value());
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
 
     // Escapes are not yet supported.
-    BOOST_CHECK_NE(std::get<string_t>(request.id.value()), R"("foo\bar")");
-    BOOST_CHECK(request.jsonrpc == version::v2);
+    BOOST_REQUIRE_NE(std::get<string_t>(request.id.value()), R"("foo\bar")");
+    BOOST_REQUIRE(request.jsonrpc == version::v2);
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__native_escape__expected)
 {
     request_parser parse{};
     const string_t text{ "{\"jsonrpc\":\"2.0\",\"id\":\"foo\\bar\"}" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
 
     const auto request = parse.get_parsed().front();
     BOOST_REQUIRE(request.id.has_value());
-    BOOST_CHECK(std::holds_alternative<string_t>(request.id.value()));
+    BOOST_REQUIRE(std::holds_alternative<string_t>(request.id.value()));
 
     // Escapes are not yet supported.
-    BOOST_CHECK_NE(std::get<string_t>(request.id.value()), R"("foo\bar")");
-    BOOST_CHECK(request.jsonrpc == version::v2);
+    BOOST_REQUIRE_NE(std::get<string_t>(request.id.value()), R"("foo\bar")");
+    BOOST_REQUIRE(request.jsonrpc == version::v2);
 }
 
 // params
@@ -343,9 +343,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_null__error)
     request_parser parse{};
     const string_t text{ R"({"params":null})" };
     const auto size = parse.write(text);
-    BOOST_CHECK(parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, 11u);
+    BOOST_REQUIRE(parse.has_error());
+    BOOST_REQUIRE(parse.is_done());
+    BOOST_REQUIRE_EQUAL(size, 11u);
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
@@ -354,9 +354,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_string__error)
     request_parser parse{};
     const string_t text{ R"({"params":"foobar"})" };
     const auto size = parse.write(text);
-    BOOST_CHECK(parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, 11u);
+    BOOST_REQUIRE(parse.has_error());
+    BOOST_REQUIRE(parse.is_done());
+    BOOST_REQUIRE_EQUAL(size, 11u);
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
@@ -365,9 +365,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_number__error)
     request_parser parse{};
     const string_t text{ R"({"params":42})" };
     const auto size = parse.write(text);
-    BOOST_CHECK(parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, 11u);
+    BOOST_REQUIRE(parse.has_error());
+    BOOST_REQUIRE(parse.is_done());
+    BOOST_REQUIRE_EQUAL(size, 11u);
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
@@ -376,9 +376,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_boolean__error)
     request_parser parse{};
     const string_t text{ R"({"params":true})" };
     const auto size = parse.write(text);
-    BOOST_CHECK(parse.has_error());
-    BOOST_CHECK(parse.is_done());
-    BOOST_CHECK_EQUAL(size, 11u);
+    BOOST_REQUIRE(parse.has_error());
+    BOOST_REQUIRE(parse.is_done());
+    BOOST_REQUIRE_EQUAL(size, 11u);
     BOOST_REQUIRE(parse.get_parsed().empty());
 }
 
@@ -386,14 +386,14 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_array_empty__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"params":[]})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
 
     const auto request = parse.get_parsed().front();
     BOOST_REQUIRE(request.params.has_value());
     BOOST_REQUIRE(std::holds_alternative<array_t>(request.params.value()));
 
     const auto& params = std::get<array_t>(request.params.value());
-    BOOST_CHECK(params.empty());
+    BOOST_REQUIRE(params.empty());
 }
 
 // The "params" property is array only in v1.
@@ -401,22 +401,22 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_object_jsonrpc_v1__error)
 {
     request_parser parse{};
     const string_t text{ R"({"jsonrpc":"1.0","params":{}})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
-    BOOST_CHECK(parse.has_error());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE(parse.has_error());
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__params_object_empty__expected)
 {
     request_parser parse{};
     const string_t text{ R"({"params":{}})" };
-    BOOST_CHECK_EQUAL(parse.write(text), text.size());
+    BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
 
     const auto request = parse.get_parsed().front();
     BOOST_REQUIRE(request.params.has_value());
     BOOST_REQUIRE(std::holds_alternative<object_t>(request.params.value()));
 
     const auto& params = std::get<object_t>(request.params.value());
-    BOOST_CHECK(params.empty());
+    BOOST_REQUIRE(params.empty());
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__params_array_single_number__expected)
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_array_single_number__expected
 
     const auto& only = params.front().inner;
     BOOST_REQUIRE(std::holds_alternative<number_t>(only));
-    BOOST_CHECK_EQUAL(std::get<number_t>(only), 42);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(only), 42);
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__params_object_single_number__expected)
@@ -450,7 +450,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_object_single_number__expecte
 
     const auto& only = params.at("solution").inner;
     BOOST_REQUIRE(std::holds_alternative<number_t>(only));
-    BOOST_CHECK_EQUAL(std::get<number_t>(only), 42);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(only), 42);
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__params_array_multiple_number__expected)
@@ -467,9 +467,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_array_multiple_number__expect
     BOOST_REQUIRE(std::holds_alternative<number_t>(params.at(0).inner));
     BOOST_REQUIRE(std::holds_alternative<number_t>(params.at(1).inner));
     BOOST_REQUIRE(std::holds_alternative<number_t>(params.at(2).inner));
-    BOOST_CHECK_EQUAL(std::get<number_t>(params.at(0).inner), 4242);
-    BOOST_CHECK_EQUAL(std::get<number_t>(params.at(1).inner), -2424);
-    BOOST_CHECK_EQUAL(std::get<number_t>(params.at(2).inner), 0);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at(0).inner), 4242);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at(1).inner), -2424);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at(2).inner), 0);
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__params_object_multiple_number__expected)
@@ -486,9 +486,9 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_object_multiple_number__expec
     BOOST_REQUIRE(std::holds_alternative<number_t>(params.at("a").inner));
     BOOST_REQUIRE(std::holds_alternative<number_t>(params.at("b").inner));
     BOOST_REQUIRE(std::holds_alternative<number_t>(params.at("c").inner));
-    BOOST_CHECK_EQUAL(std::get<number_t>(params.at("a").inner), 4242);
-    BOOST_CHECK_EQUAL(std::get<number_t>(params.at("b").inner), -2424);
-    BOOST_CHECK_EQUAL(std::get<number_t>(params.at("c").inner), 0);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at("a").inner), 4242);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at("b").inner), -2424);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at("c").inner), 0);
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__params_array_mixed__expected)
@@ -509,12 +509,12 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_array_mixed__expected)
     BOOST_REQUIRE(std::holds_alternative<number_t>(params.at(4).inner));
     BOOST_REQUIRE(std::holds_alternative<string_t>(params.at(5).inner));
     BOOST_REQUIRE(std::holds_alternative<string_t>(params.at(6).inner));
-    BOOST_CHECK_EQUAL(std::get<boolean_t>(params.at(1).inner), true);
-    BOOST_CHECK_EQUAL(std::get<boolean_t>(params.at(2).inner), false);
-    BOOST_CHECK_EQUAL(std::get<number_t>(params.at(3).inner), 42);
-    BOOST_CHECK_EQUAL(std::get<number_t>(params.at(4).inner), -42);
-    BOOST_CHECK_EQUAL(std::get<string_t>(params.at(5).inner), "foo");
-    BOOST_CHECK_EQUAL(std::get<string_t>(params.at(6).inner), "bar");
+    BOOST_REQUIRE_EQUAL(std::get<boolean_t>(params.at(1).inner), true);
+    BOOST_REQUIRE_EQUAL(std::get<boolean_t>(params.at(2).inner), false);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at(3).inner), 42);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at(4).inner), -42);
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(params.at(5).inner), "foo");
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(params.at(6).inner), "bar");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__params_object_mixed__expected)
@@ -535,12 +535,12 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_object_mixed__expected)
     BOOST_REQUIRE(std::holds_alternative<number_t>(params.at("e").inner));
     BOOST_REQUIRE(std::holds_alternative<string_t>(params.at("f").inner));
     BOOST_REQUIRE(std::holds_alternative<string_t>(params.at("g").inner));
-    BOOST_CHECK_EQUAL(std::get<boolean_t>(params.at("b").inner), true);
-    BOOST_CHECK_EQUAL(std::get<boolean_t>(params.at("c").inner), false);
-    BOOST_CHECK_EQUAL(std::get<number_t>(params.at("d").inner), 42);
-    BOOST_CHECK_EQUAL(std::get<number_t>(params.at("e").inner), -42);
-    BOOST_CHECK_EQUAL(std::get<string_t>(params.at("f").inner), "foo");
-    BOOST_CHECK_EQUAL(std::get<string_t>(params.at("g").inner), "bar");
+    BOOST_REQUIRE_EQUAL(std::get<boolean_t>(params.at("b").inner), true);
+    BOOST_REQUIRE_EQUAL(std::get<boolean_t>(params.at("c").inner), false);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at("d").inner), 42);
+    BOOST_REQUIRE_EQUAL(std::get<number_t>(params.at("e").inner), -42);
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(params.at("f").inner), "foo");
+    BOOST_REQUIRE_EQUAL(std::get<string_t>(params.at("g").inner), "bar");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__params_array_single_array_empty__expected)
@@ -563,7 +563,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_array_single_array_empty__exp
     BOOST_REQUIRE(std::holds_alternative<string_t>(first_value));
 
     const auto& blob = std::get<string_t>(first_value);
-    BOOST_CHECK_EQUAL(blob, "[]");
+    BOOST_REQUIRE_EQUAL(blob, "[]");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__params_object_single_array_empty__expected)
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_object_single_array_empty__ex
     BOOST_REQUIRE(std::holds_alternative<string_t>(first_value));
 
     const auto& blob = std::get<string_t>(first_value);
-    BOOST_CHECK_EQUAL(blob, "[]");
+    BOOST_REQUIRE_EQUAL(blob, "[]");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__params_array_single_object_empty__expected)
@@ -609,7 +609,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_array_single_object_empty__ex
     BOOST_REQUIRE(std::holds_alternative<string_t>(first_value));
 
     const auto& blob = std::get<string_t>(first_value);
-    BOOST_CHECK_EQUAL(blob, "{}");
+    BOOST_REQUIRE_EQUAL(blob, "{}");
 }
 
 BOOST_AUTO_TEST_CASE(request_parser__write__params_object_single_object_empty__expected)
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(request_parser__write__params_object_single_object_empty__e
     BOOST_REQUIRE(std::holds_alternative<string_t>(first_value));
 
     const auto& blob = std::get<string_t>(first_value);
-    BOOST_CHECK_EQUAL(blob, "{}");
+    BOOST_REQUIRE_EQUAL(blob, "{}");
 }
 
 // TODO: expand params tests using test serialization function.

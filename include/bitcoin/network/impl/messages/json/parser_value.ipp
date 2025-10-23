@@ -26,15 +26,10 @@ namespace json {
 TEMPLATE
 void CLASS::handle_jsonrpc(char c) NOEXCEPT
 {
-    // string is terminated by its closing quote.
     if (c == '"')
     {
-        if (toggle(quoted_))
+        if (consume_text(value_))
             assign_version(request_->jsonrpc, value_);
-    }
-    else if (quoted_)
-    {
-        consume_quoted(value_);
     }
     else if (!is_whitespace(c))
     {
@@ -45,15 +40,10 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_method(char c) NOEXCEPT
 {
-    // string is terminated by its closing quote.
     if (c == '"')
     {
-        if (toggle(quoted_))
+        if (consume_text(value_))
             assign_string(request_->method, value_);
-    }
-    else if (quoted_)
-    {
-        consume_quoted(value_);
     }
     else if (!is_whitespace(c))
     {
@@ -64,20 +54,12 @@ void CLASS::handle_method(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_id(char c) NOEXCEPT
 {
-    // identity_t : variant<null_t, code_t, string_t>
-
-    // string is terminated by its closing quote.
     if (c == '"')
     {
-        if (toggle(quoted_))
+        if (consume_text(value_))
             assign_string(request_->id, value_);
     }
-    else if (quoted_)
-    {
-        consume_quoted(value_);
-    }
 
-    // null is terminated by its 4th character.
     else if (is_nully(value_, c))
     {
         if (consume_char(value_) == null_size)
@@ -109,7 +91,6 @@ void CLASS::handle_id(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_params(char c) NOEXCEPT
 {
-    // params_t : optional<variant<array_t, object_t>>
     // There is only one params element, so no comma processing.
 
     if (c == '[')
@@ -135,25 +116,20 @@ void CLASS::handle_parameter(char c) NOEXCEPT
 {
     // key_ is used for paramter{} but not parameter[].
 
-    // string value is terminated by its closing quote.
     if (c == '"')
     {
-        if (toggle(quoted_))
+        if (consume_text(value_))
             push_string(request_->params, key_, value_);
-    }
-    else if (quoted_)
-    {
-        consume_quoted(value_);
     }
 
     else if (c == '{')
     {
-        if (consume_blob(value_))
+        if (consume_span(value_))
             push_object(request_->params, key_, value_);
     }
     else if (c == '[')
     {
-        if (consume_blob(value_))
+        if (consume_span(value_))
             push_array(request_->params, key_, value_);
     }
 
