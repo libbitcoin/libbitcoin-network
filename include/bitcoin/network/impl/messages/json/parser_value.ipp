@@ -28,12 +28,8 @@ void CLASS::handle_jsonrpc(char c) NOEXCEPT
 {
     if (c == '"')
     {
-        if (toggle(quoted_))
+        if (consume_text(value_))
             assign_version(request_->jsonrpc, value_);
-    }
-    else if (quoted_)
-    {
-        consume_quoted(value_);
     }
     else if (!is_whitespace(c))
     {
@@ -46,12 +42,8 @@ void CLASS::handle_method(char c) NOEXCEPT
 {
     if (c == '"')
     {
-        if (toggle(quoted_))
+        if (consume_text(value_))
             assign_string(request_->method, value_);
-    }
-    else if (quoted_)
-    {
-        consume_quoted(value_);
     }
     else if (!is_whitespace(c))
     {
@@ -64,12 +56,8 @@ void CLASS::handle_id(char c) NOEXCEPT
 {
     if (c == '"')
     {
-        if (toggle(quoted_))
+        if (consume_text(value_))
             assign_string(request_->id, value_);
-    }
-    else if (quoted_)
-    {
-        consume_quoted(value_);
     }
 
     else if (is_nully(value_, c))
@@ -130,22 +118,18 @@ void CLASS::handle_parameter(char c) NOEXCEPT
 
     if (c == '"')
     {
-        if (toggle(quoted_))
+        if (consume_text(value_))
             push_string(request_->params, key_, value_);
-    }
-    else if (quoted_)
-    {
-        consume_quoted(value_);
     }
 
     else if (c == '{')
     {
-        if (consume_blob(value_))
+        if (consume_span(value_))
             push_object(request_->params, key_, value_);
     }
     else if (c == '[')
     {
-        if (consume_blob(value_))
+        if (consume_span(value_))
             push_array(request_->params, key_, value_);
     }
 

@@ -33,14 +33,12 @@ enum class parser_state
     root,
     batch_start,
     request_start,
-    key,
     value,
     jsonrpc,
     method,
     id,
     params,
     params_start,
-    parameter_key,
     parameter_value,
     parameter,
     error_state,
@@ -111,7 +109,6 @@ protected:
     static inline bool is_error(const result_t& error) NOEXCEPT;
     static inline bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
     static inline bool to_number(number_t& out, const view_t& token) NOEXCEPT;
-    static inline bool toggle(bool& quoted) NOEXCEPT;
     static inline size_t distance(const char_it& from,
         const char_it& to) NOEXCEPT;
 
@@ -127,11 +124,9 @@ protected:
     void handle_root(char c) NOEXCEPT;
     void handle_batch_start(char c) NOEXCEPT;
     void handle_request_start(char c) NOEXCEPT;
-    void handle_key(char c) NOEXCEPT;
     void handle_value(char c) NOEXCEPT;
     void handle_params(char c) NOEXCEPT;
     void handle_params_start(char c) NOEXCEPT;
-    void handle_parameter_key(char c) NOEXCEPT;
     void handle_parameter_value(char c) NOEXCEPT;
 
     /// Visitors - quoted values.
@@ -149,7 +144,8 @@ protected:
 
     inline size_t consume_quoted(view_t& token) NOEXCEPT;
     inline size_t consume_char(view_t& token) NOEXCEPT;
-    inline bool consume_blob(view_t& token) NOEXCEPT;
+    inline bool consume_text(view_t& token) NOEXCEPT;
+    inline bool consume_span(view_t& token) NOEXCEPT;
 
     /// Assignment.
     /// -----------------------------------------------------------------------
@@ -199,7 +195,6 @@ private:
 
     bool after_{};
     bool escaped_{};
-    bool quoted_{};
     state state_{};
     char_it char_{};
     char_it begin_{};
