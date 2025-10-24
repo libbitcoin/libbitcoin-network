@@ -419,7 +419,7 @@ display_configuration()
     display_message "BUILD_BOOST           : $BUILD_BOOST"
     display_message "BUILD_SECP256K1       : $BUILD_SECP256K1"
     display_message "BOOST_ROOT            : $BOOST_ROOT"
-    display_message "BUILD_SRC_DIR          : $BUILD_SRC_DIR"
+    display_message "BUILD_SRC_DIR         : $BUILD_SRC_DIR"
     display_message "PREFIX                : $PREFIX"
     display_message "DISABLE_SHARED        : $DISABLE_SHARED"
     display_message "DISABLE_STATIC        : $DISABLE_STATIC"
@@ -572,8 +572,6 @@ clone_from_github()
 
 create_from_github()
 {
-    push_directory "$BUILD_SRC_DIR"
-
     local ACCOUNT=$1
     local REPO=$2
     local BRANCH=$3
@@ -600,8 +598,6 @@ create_from_github()
         display_message "Cloning $FORK/$BRANCH..."
         clone_from_github "$FORK" "$BRANCH"
     fi
-
-    pop_directory
 }
 
 # Standard build from github.
