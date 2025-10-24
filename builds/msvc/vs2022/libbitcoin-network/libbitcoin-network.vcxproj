@@ -276,6 +276,8 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser_state.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser_track.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serialize.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address.hpp" />

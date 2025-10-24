@@ -111,7 +111,7 @@ inline bool CLASS::assign_version(version& to, view_t& value) NOEXCEPT
     return ok;
 }
 
-// request.method assign
+// request.method string assign
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -127,9 +127,8 @@ inline void CLASS::assign_string(string_t& to, view_t& value) NOEXCEPT
     value = {};
 }
 
-// request.id assigns
+// request.id variant<null_t, code_t, string_t> assign
 // ----------------------------------------------------------------------------
-// id_option is std::optional<std::variant<null_t, code_t, string_t>>
 
 TEMPLATE
 inline bool CLASS::assign_number(id_option& to, view_t& value) NOEXCEPT
@@ -138,7 +137,6 @@ inline bool CLASS::assign_number(id_option& to, view_t& value) NOEXCEPT
     auto& number = std::get<code_t>(to.value());
     const auto ok = to_signed(number, value);
     state_ = ok ? state::request_start : state::error_state;
-    after_ = true;
     value = {};
     return ok;
 }
@@ -152,7 +150,6 @@ inline void CLASS::assign_string(id_option& to, view_t& value) NOEXCEPT
 
     state_ = state::request_start;
     to.emplace(std::in_place_type<string_t>, value);
-    after_ = true;
     unescaped_.clear();
     value = {};
 }
@@ -162,11 +159,10 @@ inline void CLASS::assign_null(id_option& to, view_t& value) NOEXCEPT
 {
     state_ = state::request_start;
     to.emplace(std::in_place_type<null_t>);
-    after_ = true;
     value = {};
 }
 
-// parameter types
+// request.params variant<object_t, array_t> assigns
 // ----------------------------------------------------------------------------
 
 TEMPLATE
@@ -190,12 +186,15 @@ inline bool CLASS::push_param(params_option& to, const view_t& key,
     }
 }
 
+// parameter types
+// ----------------------------------------------------------------------------
+
 TEMPLATE
 inline bool CLASS::push_array(params_option& to, view_t& key,
     view_t& value) NOEXCEPT
 {
-    const auto ok
-    {
+    return finalize
+    (
         push_param<array_t>(to, key, array_t
         {
             // TODO: value is copied, could be moved.
@@ -203,21 +202,17 @@ inline bool CLASS::push_array(params_option& to, view_t& key,
             {
                 std::in_place_type<string_t>, value
             }
-        })
-    };
-    state_ = ok ? state::params_start : state::error_state;
-    after_ = true;
-    value = {};
-    key = {};
-    return ok;
+        }),
+        key, value
+    );
 }
 
 TEMPLATE
 inline bool CLASS::push_object(params_option& to, view_t& key,
     view_t& value) NOEXCEPT
 {
-    const auto ok
-    {
+    return finalize
+    (
         push_param<object_t>(to, key, object_t
         {
             {
@@ -230,13 +225,9 @@ inline bool CLASS::push_object(params_option& to, view_t& key,
                     std::in_place_type<string_t>, value
                 }
             }
-        })
-    };
-    state_ = ok ? state::params_start : state::error_state;
-    after_ = true;
-    value = {};
-    key = {};
-    return ok;
+        }),
+        key, value
+    );
 }
 
 TEMPLATE
@@ -252,13 +243,11 @@ inline bool CLASS::push_string(params_option& to, view_t& key,
     if (!unescape(unescaped_, value))
         return false;
 
-    const auto ok{ push_param<string_t>(to, ununescaped_key, value) };
-    state_ = ok ? state::params_start : state::error_state;
-    after_ = true;
-    unescaped_.clear();
-    value = {};
-    key = {};
-    return ok;
+    return finalize
+    (
+        push_param<string_t>(to, ununescaped_key, value),
+        key, value
+    );
 }
 
 TEMPLATE
@@ -266,13 +255,11 @@ inline bool CLASS::push_number(params_option& to, view_t& key,
     view_t& value) NOEXCEPT
 {
     number_t number{};
-    const auto ok{ to_number(number, value) &&
-        push_param<number_t>(to, key, number) };
-    state_ = ok ? state::params_start : state::error_state;
-    after_ = true;
-    value = {};
-    key = {};
-    return ok;
+    return finalize
+    (
+        to_number(number, value) && push_param<number_t>(to, key, number),
+        key, value
+    );
 }
 
 TEMPLATE
@@ -280,22 +267,31 @@ inline bool CLASS::push_boolean(params_option& to, view_t& key,
     view_t& value) NOEXCEPT
 {
     const auto truth{ value == "true" };
-    const auto ok{ (truth || value == "false") &&
-        push_param<boolean_t>(to, key, truth) };
-    state_ = ok ? state::params_start : state::error_state;
-    after_ = true;
-    value = {};
-    key = {};
-    return ok;
+    return finalize
+    (
+        (truth || value == "false") && push_param<boolean_t>(to, key, truth),
+        key, value
+    );
 }
 
 TEMPLATE
 inline bool CLASS::push_null(params_option& to, view_t& key,
     view_t& value) NOEXCEPT
 {
-    const auto ok{ (value == "null") && push_param<null_t>(to, key) };
+    return finalize
+    (
+        (value == "null") && push_param<null_t>(to, key),
+        key, value
+    );
+}
+
+// parameter helpers
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+inline bool CLASS::finalize(bool ok, view_t& key, view_t& value) NOEXCEPT
+{
     state_ = ok ? state::params_start : state::error_state;
-    after_ = true;
     value = {};
     key = {};
     return ok;

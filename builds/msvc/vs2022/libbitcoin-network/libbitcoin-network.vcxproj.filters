@@ -575,6 +575,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser_state.hpp">
+      <Filter>include\bitcoin\network\messages\json</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser_track.hpp">
+      <Filter>include\bitcoin\network\messages\json</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serialize.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>

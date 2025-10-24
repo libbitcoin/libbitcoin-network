@@ -383,6 +383,7 @@ if (with-tests)
         "../../test/messages/json/body.cpp"
         "../../test/messages/json/parser.cpp"
         "../../test/messages/json/parser_statics.cpp"
+        "../../test/messages/json/parser_track.cpp"
         "../../test/messages/json/serialize.cpp"
         "../../test/messages/peer/address.cpp"
         "../../test/messages/peer/address_item.cpp"

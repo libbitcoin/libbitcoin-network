@@ -71,6 +71,8 @@
 #include <bitcoin/network/messages/json/body.hpp>
 #include <bitcoin/network/messages/json/messages.hpp>
 #include <bitcoin/network/messages/json/parser.hpp>
+#include <bitcoin/network/messages/json/parser_state.hpp>
+#include <bitcoin/network/messages/json/parser_track.hpp>
 #include <bitcoin/network/messages/json/serialize.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 #include <bitcoin/network/messages/json/enums/transport.hpp>
