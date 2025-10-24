@@ -218,7 +218,18 @@ void CLASS::validate() NOEXCEPT
         return;
     }
 
-    // Non-null "id" required in version1.
+    // Strict for now until tests are modified.
+    if constexpr (strict)
+    {
+        // v1|v2: method must be present and non-empty.
+        if (request_->method.empty())
+        {
+            state_ = state::error_state;
+            return;
+        }
+    }
+
+    // v1: id must be present and non-null.
     if (request_->jsonrpc == version::v1 &&
         (!request_->id.has_value() || is_null_t(request_->id.value())))
     {
@@ -226,15 +237,16 @@ void CLASS::validate() NOEXCEPT
         return;
     }
 
-    // The "params" property is array only in v1.
-    if (request_->jsonrpc == version::v1 && request_->params.has_value() &&
+    // v1: params must be array.
+    if (request_->jsonrpc == version::v1 &&
+        request_->params.has_value() &&
         std::holds_alternative<object_t>(request_->params.value()))
     {
         state_ = state::error_state;
         return;
     }
 
-    // This needs to be relaxed (!strict) for stratum_v1.
+    // v2 (strict): jsonrpc required.
     if constexpr (strict && require == version::v2)
     {
         // Undefined version means the jsonrpc element was not encountered.

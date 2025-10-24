@@ -22,6 +22,9 @@ BOOST_AUTO_TEST_SUITE(serialize_tests)
 
 using namespace network::json;
 
+// non-strict until tests are updated for "method" non-empty required.
+using request_parser = parser<false, version::any, false>;
+
 BOOST_AUTO_TEST_CASE(serialize__serialize_request__deserialized__expected)
 {
     // not valid json, testing blob parser.
@@ -44,7 +47,7 @@ BOOST_AUTO_TEST_CASE(serialize__serialize_request__deserialized__expected)
         R"(})"
     };
 
-    parser parse{};
+    request_parser parse{};
     BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(parse);
 
@@ -67,7 +70,7 @@ BOOST_AUTO_TEST_CASE(serialize__serialize_request__nested_terminators__expected)
         R"(})"
     };
 
-    parser parse{};
+    request_parser parse{};
     BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(parse);
     BOOST_REQUIRE_EQUAL(serialize(parse.get()), text);
@@ -88,7 +91,7 @@ BOOST_AUTO_TEST_CASE(serialize__serialize_request__nested_escapes__expected)
         R"(})"
     };
 
-    parser parse{};
+    request_parser parse{};
     BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(parse);
     BOOST_REQUIRE_EQUAL(serialize(parse.get()), text);
@@ -109,7 +112,7 @@ BOOST_AUTO_TEST_CASE(serialize__serialize_request__nested_containers__expected)
         R"(})"
     };
 
-    parser parse{};
+    request_parser parse{};
     BOOST_REQUIRE_EQUAL(parse.write(text), text.size());
     BOOST_REQUIRE(parse);
     BOOST_REQUIRE_EQUAL(serialize(parse.get()), text);
