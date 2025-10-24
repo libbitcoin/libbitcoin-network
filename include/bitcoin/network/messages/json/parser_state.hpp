@@ -16,16 +16,33 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_MESSAGES_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_JSON_MESSAGES_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_STATE_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_STATE_HPP
 
-#include <bitcoin/network/messages/json/enums/transport.hpp>
-#include <bitcoin/network/messages/json/enums/version.hpp>
-#include <bitcoin/network/messages/json/body.hpp>
-#include <bitcoin/network/messages/json/parser.hpp>
-#include <bitcoin/network/messages/json/parser_state.hpp>
-#include <bitcoin/network/messages/json/parser_track.hpp>
-#include <bitcoin/network/messages/json/serialize.hpp>
-#include <bitcoin/network/messages/json/types.hpp>
+namespace libbitcoin {
+namespace network {
+namespace json {
+
+/// Request parser state machine.
+enum class parser_state
+{
+    root,
+    batch_start,
+    request_start,
+    value,
+    jsonrpc,
+    method,
+    id,
+    params,
+    params_start,
+    parameter_value,
+    parameter,
+    error_state,
+    complete
+};
+ 
+} // namespace json
+} // namespace network
+} // namespace libbitcoin
 
 #endif

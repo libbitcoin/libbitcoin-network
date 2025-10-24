@@ -95,13 +95,11 @@ void CLASS::handle_params(char c) NOEXCEPT
 
     if (c == '[')
     {
-        after_ = false;
         add_array(request_->params);
         state_ = state::params_start;
     }
     else if (c == '{')
     {
-        after_ = false;
         add_object(request_->params);
         state_ = state::params_start;
     }

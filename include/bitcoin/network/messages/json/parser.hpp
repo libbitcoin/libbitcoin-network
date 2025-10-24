@@ -22,32 +22,15 @@
 #include <string_view>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
+#include <bitcoin/network/messages/json/parser_state.hpp>
+#include <bitcoin/network/messages/json/parser_track.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace json {
 
-/// Parser states (unconditional by template).
-enum class parser_state
-{
-    root,
-    batch_start,
-    request_start,
-    value,
-    jsonrpc,
-    method,
-    id,
-    params,
-    params_start,
-    parameter_value,
-    parameter,
-    error_state,
-    complete
-};
-
 /// A minimal-copy parser for boost asio JSON-RPC v1/v2 stream parsing.
-template <bool Strict = true,
-    json::version Require = json::version::any,
+template <bool Strict = true, version Require = version::any,
     bool Trace = false>
 class parser
 {
@@ -93,6 +76,7 @@ protected:
     using view_t = std::string_view;
     using char_it = view_t::const_iterator;
     using request_it = batch_t::iterator;
+    using keys_t = system::string_list;
 
     /// Statics.
     /// -----------------------------------------------------------------------
@@ -125,6 +109,8 @@ protected:
     void handle_value(char c) NOEXCEPT;
     void handle_params(char c) NOEXCEPT;
     void handle_params_start(char c) NOEXCEPT;
+    void handle_array_params_start(char c) NOEXCEPT;
+    void handle_object_params_start(char c) NOEXCEPT;
     void handle_parameter_value(char c) NOEXCEPT;
 
     /// Visitors - quoted values.
@@ -155,6 +141,10 @@ protected:
     static inline void add_object(params_option& params) NOEXCEPT;
     static inline bool is_array(const params_option& params) NOEXCEPT;
     static inline bool is_empty(const params_option& params) NOEXCEPT;
+    inline bool finalize(bool to, view_t& key, view_t& value) NOEXCEPT;
+
+    /// fixed keys
+    inline bool is_contained(const keys_t& keys, view_t& key) NOEXCEPT;
 
     /// "jsonrpc"
     inline bool assign_version(version& to, view_t& value) NOEXCEPT;
@@ -194,11 +184,15 @@ private:
     bool batched_{};
     batch_t batch_{};
 
-    bool after_{};
+    track requests_{};
+    track properties_{};
+    track parameters_{};
+
     state state_{};
     char_it char_{};
     char_it begin_{};
     char_it end_{};
+
     view_t key_{};
     view_t value_{};
     string_t unescaped_{};

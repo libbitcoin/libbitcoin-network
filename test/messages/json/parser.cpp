@@ -35,9 +35,60 @@ struct test_parser
 using lax_request_parser = test_parser<false, version::any, false>;
 using request_parser = test_parser<true, version::any, false>;
 
-////using namespace boost::system::errc;
-////static auto incomplete = make_error_code(interrupted);
-////static auto failure = make_error_code(invalid_argument);
+BOOST_AUTO_TEST_CASE(parser__write__jsonrpc__success)
+{
+    request_parser parse{};
+    const string_t text{ R"({"jsonrpc":"2.0"})" };
+    const auto size = parse.write(text);
+    BOOST_REQUIRE_EQUAL(size, text.size());
+}
+
+BOOST_AUTO_TEST_CASE(parser__write__comma_jsonrpc__fail)
+{
+    request_parser parse{};
+    const string_t text{ R"({,"jsonrpc":"2.0"})" };
+    const auto size = parse.write(text);
+    BOOST_REQUIRE(parse.has_error());
+    BOOST_REQUIRE_EQUAL(size, 2u);
+}
+
+BOOST_AUTO_TEST_CASE(parser__write__jsonrpc_comma__fail)
+{
+    request_parser parse{};
+    const string_t text{ R"({"jsonrpc":"2.0",})" };
+    const auto size = parse.write(text);
+    BOOST_REQUIRE(parse.has_error());
+    BOOST_REQUIRE_EQUAL(size, 18u);
+}
+
+BOOST_AUTO_TEST_CASE(parser__write__jsonrpc_double_comma_method__fail)
+{
+    request_parser parse{};
+    const string_t text{ R"({"jsonrpc":"2.0",,"method":"test"})" };
+    const auto size = parse.write(text);
+    BOOST_REQUIRE(parse.has_error());
+    BOOST_REQUIRE_EQUAL(size, 18u);
+}
+
+BOOST_AUTO_TEST_CASE(parser__write__jsonrpc_no_comma_method__fail)
+{
+    request_parser parse{};
+    const string_t text{ R"({"jsonrpc":"2.0" "method":"test"})" };
+    const auto size = parse.write(text);
+    BOOST_REQUIRE(parse.has_error());
+    BOOST_REQUIRE_EQUAL(size, 18u);
+}
+
+BOOST_AUTO_TEST_CASE(parser__write__jsonrpc_comma_method__success)
+{
+    request_parser parse{};
+    const string_t text{ R"({"jsonrpc":"2.0","method":"test"})" };
+    const auto size = parse.write(text);
+    BOOST_REQUIRE(!parse.has_error());
+    BOOST_REQUIRE_EQUAL(size, text.size());
+}
+
+#if !defined(UNDEFINED)
 
 // jsonrpc v1/v2
 // ----------------------------------------------------------------------------
@@ -637,5 +688,7 @@ BOOST_AUTO_TEST_CASE(parser__write__params_object_single_object_empty__expected)
 }
 
 // TODO: expand params tests using test serialization function.
+
+#endif // UNDEFINED
 
 BOOST_AUTO_TEST_SUITE_END()

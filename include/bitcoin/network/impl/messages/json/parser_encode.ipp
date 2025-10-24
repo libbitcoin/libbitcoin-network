@@ -76,7 +76,6 @@ string_t CLASS::to_codepoint(const view_t& hi, const view_t& lo) NOEXCEPT
 {
     using namespace system;
     data_array<sizeof(char16_t)> bytes{};
-
     if (!decode_base16(bytes, hi))
         return {};
 
@@ -97,7 +96,7 @@ string_t CLASS::to_codepoint(const view_t& hi, const view_t& lo) NOEXCEPT
     return to_utf8(point);
 }
 
-// Caller should call unescaped_.clear() [buffer] after assignment.
+// Caller may call buffer.clear() after value is no longer required.
 // The view result of one unescape is not valid after another unescape.
 TEMPLATE
 bool CLASS::unescape(string_t& buffer, view_t& value) NOEXCEPT

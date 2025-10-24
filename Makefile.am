@@ -177,6 +177,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/json/body.cpp \
     test/messages/json/parser.cpp \
     test/messages/json/parser_statics.cpp \
+    test/messages/json/parser_track.cpp \
     test/messages/json/serialize.cpp \
     test/messages/peer/address.cpp \
     test/messages/peer/address_item.cpp \
@@ -371,6 +372,8 @@ include_bitcoin_network_messages_json_HEADERS = \
     include/bitcoin/network/messages/json/body.hpp \
     include/bitcoin/network/messages/json/messages.hpp \
     include/bitcoin/network/messages/json/parser.hpp \
+    include/bitcoin/network/messages/json/parser_state.hpp \
+    include/bitcoin/network/messages/json/parser_track.hpp \
     include/bitcoin/network/messages/json/serialize.hpp \
     include/bitcoin/network/messages/json/types.hpp
 

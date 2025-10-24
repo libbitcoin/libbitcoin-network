@@ -50,17 +50,21 @@ void CLASS::handle_root(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_batch_start(char c) NOEXCEPT
 {
-    if (c == ',')
+    if (c == ',' && requests_.allow_delimiter())
     {
+        requests_.delimiter();
         state_ = state::batch_start;
     }
-    else if (c == '{')
+    else if (c == '{' && requests_.allow_add())
     {
+        // reset before requests_.add.
         reset_internal();
+        requests_.add();
         request_ = add_request(batch_);
         state_ = state::request_start;
+
     }
-    else if (c == ']')
+    else if (c == ']' && requests_.allow_close())
     {
         state_ = state::complete;
     }
@@ -76,18 +80,20 @@ void CLASS::handle_batch_start(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_request_start(char c) NOEXCEPT
 {
-    if (c == ',')
+    static const keys_t keys{ "jsonrpc", "id", "method", "params" };
+
+    if (c == ',' && properties_.allow_delimiter())
     {
+        properties_.delimiter();
         state_ = state::request_start;
     }
-    else if (c == '"')
+    else if (c == '"' && properties_.allow_add())
     {
-        state_ = consume_text(key_) &&
-            (key_ == "jsonrpc" || key_ == "id" ||
-             key_ == "method"  || key_ == "params") ?
+        properties_.add();
+        state_ = consume_text(key_) && is_contained(keys, key_) ?
             state::value : state::error_state;
     }
-    else if (c == '}')
+    else if (c == '}' && properties_.allow_close())
     {
         state_ = batched_ ? state::batch_start : state::complete;
     }
@@ -138,35 +144,58 @@ void CLASS::handle_value(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_params_start(char c) NOEXCEPT
 {
-    const auto array = is_array(request_->params);
-    const auto empty = is_empty(request_->params);
+    if (is_array(request_->params))
+        handle_array_params_start(c);
+    else
+        handle_object_params_start(c);
+}
 
-    if (c == ',' && after_)
+TEMPLATE
+void CLASS::handle_array_params_start(char c) NOEXCEPT
+{
+    if (c == ',' && parameters_.allow_delimiter())
     {
-        after_ = false;
+        parameters_.delimiter();
         state_ = state::params_start;
     }
-    else if (c == '"' && !array)
+    else if (c == '"' && parameters_.allow_add())
     {
+        parameters_.add();
+        redispatch(state::parameter);
+    }
+    else if (c == ']' && parameters_.allow_close())
+    {
+        state_ = state::request_start;
+    }
+    else if (!is_whitespace(c) && parameters_.allow_add())
+    {
+        // first character of array unquoted value.
+        parameters_.add();
+        redispatch(state::parameter);
+    }
+    else
+    {
+        state_ = state::error_state;
+    }
+}
+
+TEMPLATE
+void CLASS::handle_object_params_start(char c) NOEXCEPT
+{
+    if (c == ',' && parameters_.allow_delimiter())
+    {
+        parameters_.delimiter();
+        state_ = state::params_start;
+    }
+    else if (c == '"' && parameters_.allow_add())
+    {
+        parameters_.add();
         state_ = consume_text(key_) && !key_.empty() ?
             state::parameter_value : state::error_state;
     }
-    else if (c == '"' && array)
-    {
-        redispatch(state::parameter);
-    }
-    else if (c == '}' && !array && (empty || after_))
+    else if (c == '}' && parameters_.allow_close())
     {
         state_ = state::request_start;
-    }
-    else if (c == ']' && array && (empty || after_))
-    {
-        state_ = state::request_start;
-    }
-    else if (!is_whitespace(c) && array)
-    {
-        // first character of array unquoted value.
-        redispatch(state::parameter);
     }
     else
     {

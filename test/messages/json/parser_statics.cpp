@@ -21,9 +21,12 @@
 ////#include <limits>
 ////constexpr double infinity = std::numeric_limits<double>::infinity();
 
-BOOST_AUTO_TEST_SUITE(parser_tests)
+BOOST_AUTO_TEST_SUITE(parser_statics_tests)
 
 using namespace network::json;
+
+// to_number
+// ----------------------------------------------------------------------------
 
 struct accessor
   : parser<true, json::version::any>
@@ -300,5 +303,10 @@ BOOST_AUTO_TEST_CASE(parse_json__to_number__huge_negative_integer__fails)
     BOOST_CHECK(!accessor::to_number(result, huge_negative));
     ////BOOST_CHECK_EQUAL(result, -infinity);
 }
+
+// to_number
+// ----------------------------------------------------------------------------
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
