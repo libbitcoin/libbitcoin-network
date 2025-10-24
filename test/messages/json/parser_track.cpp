@@ -22,18 +22,18 @@ BOOST_AUTO_TEST_SUITE(parser_track_tests)
 
 using namespace network::json;
 
-BOOST_AUTO_TEST_CASE(track__initial_state__empty_true_comma_false)
+BOOST_AUTO_TEST_CASE(parser_track__initial_state__empty_true_comma_false)
 {
-    track track{};
+    parser_track track{};
 
     BOOST_CHECK(track.allow_add());
     BOOST_CHECK(!track.allow_delimiter());
     BOOST_CHECK(track.allow_close());
 }
 
-BOOST_AUTO_TEST_CASE(track__reset__always__empty_true_comma_false)
+BOOST_AUTO_TEST_CASE(parser_track__reset__always__empty_true_comma_false)
 {
-    track track{};
+    parser_track track{};
     track.add();
     track.delimiter();
     track.reset();
@@ -43,9 +43,9 @@ BOOST_AUTO_TEST_CASE(track__reset__always__empty_true_comma_false)
     BOOST_CHECK(track.allow_close());
 }
 
-BOOST_AUTO_TEST_CASE(track__add__after_reset__empty_false_comma_false)
+BOOST_AUTO_TEST_CASE(parser_track__add__after_reset__empty_false_comma_false)
 {
-    track track{};
+    parser_track track{};
     track.reset();
     track.add();
 
@@ -54,9 +54,9 @@ BOOST_AUTO_TEST_CASE(track__add__after_reset__empty_false_comma_false)
     BOOST_CHECK(track.allow_close());
 }
 
-BOOST_AUTO_TEST_CASE(track__delimiter__after_add__comma_true)
+BOOST_AUTO_TEST_CASE(parser_track__delimiter__after_add__comma_true)
 {
-    track track{};
+    parser_track track{};
     track.reset();
     track.add();
     track.delimiter();
@@ -66,9 +66,9 @@ BOOST_AUTO_TEST_CASE(track__delimiter__after_add__comma_true)
     BOOST_CHECK(!track.allow_close());
 }
 
-BOOST_AUTO_TEST_CASE(tracker__add__after_delimiter__empty_false_comma_false)
+BOOST_AUTO_TEST_CASE(parser_tracker__add__after_delimiter__empty_false_comma_false)
 {
-    track track{};
+    parser_track track{};
     track.add();
     track.delimiter();
     track.add();
@@ -78,82 +78,82 @@ BOOST_AUTO_TEST_CASE(tracker__add__after_delimiter__empty_false_comma_false)
     BOOST_CHECK(track.allow_close());
 }
 
-BOOST_AUTO_TEST_CASE(track__allow_add__empty__true)
+BOOST_AUTO_TEST_CASE(parser_track__allow_add__empty__true)
 {
-    track track{};
+    parser_track track{};
     track.reset();
 
     BOOST_CHECK(track.allow_add());
 }
 
-BOOST_AUTO_TEST_CASE(track__allow_add__after_add__false)
+BOOST_AUTO_TEST_CASE(parser_track__allow_add__after_add__false)
 {
-    track track{};
+    parser_track track{};
     track.add();
 
     BOOST_CHECK(!track.allow_add());
 }
 
-BOOST_AUTO_TEST_CASE(track__allow_add__after_comma__true)
+BOOST_AUTO_TEST_CASE(parser_track__allow_add__after_comma__true)
 {
-    track track{};
+    parser_track track{};
     track.add();
     track.delimiter();
 
     BOOST_CHECK(track.allow_add());
 }
 
-BOOST_AUTO_TEST_CASE(track__allow_delimiter__empty__false)
+BOOST_AUTO_TEST_CASE(parser_track__allow_delimiter__empty__false)
 {
-    track track{};
+    parser_track track{};
 
     BOOST_CHECK(!track.allow_delimiter());
 }
 
-BOOST_AUTO_TEST_CASE(track__allow_delimiter__after_add__true)
+BOOST_AUTO_TEST_CASE(parser_track__allow_delimiter__after_add__true)
 {
-    track track{};
+    parser_track track{};
     track.add();
 
     BOOST_CHECK(track.allow_delimiter());
 }
 
-BOOST_AUTO_TEST_CASE(track__allow_delimiter__after_comma__false)
+BOOST_AUTO_TEST_CASE(parser_track__allow_delimiter__after_comma__false)
 {
-    track track{};
+    parser_track track{};
     track.add();
     track.delimiter();
 
     BOOST_CHECK(!track.allow_delimiter());
 }
 
-BOOST_AUTO_TEST_CASE(track__allow_close__empty__true)
+BOOST_AUTO_TEST_CASE(parser_track__allow_close__empty__true)
 {
-    track track{};
+    parser_track track{};
 
     BOOST_CHECK(track.allow_close());
 }
 
-BOOST_AUTO_TEST_CASE(track__allow_close__after_add__true)
+BOOST_AUTO_TEST_CASE(parser_track__allow_close__after_add__true)
 {
-    track track{};
+    parser_track track{};
     track.add();
 
     BOOST_CHECK(track.allow_close());
 }
 
-BOOST_AUTO_TEST_CASE(track__allow_close__after_comma__false)
+BOOST_AUTO_TEST_CASE(parser_track__allow_close__after_comma__false)
 {
-    track track{};
+    parser_track track{};
     track.add();
     track.delimiter();
 
     BOOST_CHECK(!track.allow_close());
 }
 
-BOOST_AUTO_TEST_CASE(track__sequence__add_comma_add__correct_states)
+BOOST_AUTO_TEST_CASE(parser_track__sequence__add_comma_add__correct_states)
 {
-    track track{};
+    parser_track track{};
 
     // First element
     BOOST_CHECK(track.allow_add());
@@ -171,42 +171,42 @@ BOOST_AUTO_TEST_CASE(track__sequence__add_comma_add__correct_states)
     BOOST_CHECK(track.allow_close());
 }
 
-BOOST_AUTO_TEST_CASE(track__sequence__comma_at_start__disallowed)
+BOOST_AUTO_TEST_CASE(parser_track__sequence__comma_at_start__disallowed)
 {
-    track track{};
+    parser_track track{};
 
     BOOST_CHECK(!track.allow_delimiter());
 }
 
-BOOST_AUTO_TEST_CASE(track__sequence__double_comma__disallowed)
+BOOST_AUTO_TEST_CASE(parser_track__sequence__double_comma__disallowed)
 {
-    track track{};
+    parser_track track{};
     track.add();
     track.delimiter();
 
     BOOST_CHECK(!track.allow_delimiter());
 }
 
-BOOST_AUTO_TEST_CASE(track__sequence__close_after_comma__disallowed)
+BOOST_AUTO_TEST_CASE(parser_track__sequence__close_after_comma__disallowed)
 {
-    track track{};
+    parser_track track{};
     track.add();
     track.delimiter();
 
     BOOST_CHECK(!track.allow_close());
 }
 
-BOOST_AUTO_TEST_CASE(track__sequence__close_after_add__allowed)
+BOOST_AUTO_TEST_CASE(parser_track__sequence__close_after_add__allowed)
 {
-    track track{};
+    parser_track track{};
     track.add();
 
     BOOST_CHECK(track.allow_close());
 }
 
-BOOST_AUTO_TEST_CASE(track__sequence__empty_container_close__allowed)
+BOOST_AUTO_TEST_CASE(parser_track__sequence__empty_container_close__allowed)
 {
-    track track{};
+    parser_track track{};
 
     BOOST_CHECK(track.allow_close());
 }

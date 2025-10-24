@@ -23,7 +23,7 @@ namespace libbitcoin {
 namespace network {
 namespace json {
 
-class BCT_API track
+class BCT_API parser_track
 {
 public:
     inline void delimiter() NOEXCEPT
