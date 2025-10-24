@@ -93,6 +93,7 @@ protected:
     using view_t = std::string_view;
     using char_it = view_t::const_iterator;
     using request_it = batch_t::iterator;
+    using keys_t = system::string_list;
 
     /// Statics.
     /// -----------------------------------------------------------------------
@@ -155,6 +156,9 @@ protected:
     static inline void add_object(params_option& params) NOEXCEPT;
     static inline bool is_array(const params_option& params) NOEXCEPT;
     static inline bool is_empty(const params_option& params) NOEXCEPT;
+
+    /// keys
+    inline bool is_contained(const keys_t& keys, view_t& key) NOEXCEPT;
 
     /// "jsonrpc"
     inline bool assign_version(version& to, view_t& value) NOEXCEPT;

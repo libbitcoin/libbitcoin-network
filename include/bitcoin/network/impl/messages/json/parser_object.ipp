@@ -76,15 +76,15 @@ void CLASS::handle_batch_start(char c) NOEXCEPT
 TEMPLATE
 void CLASS::handle_request_start(char c) NOEXCEPT
 {
+    static const keys_t keys{ "jsonrpc", "id", "method", "params" };
+
     if (c == ',')
     {
         state_ = state::request_start;
     }
     else if (c == '"')
     {
-        state_ = consume_text(key_) &&
-            (key_ == "jsonrpc" || key_ == "id" ||
-             key_ == "method"  || key_ == "params") ?
+        state_ = consume_text(key_) && is_contained(keys, key_) ?
             state::value : state::error_state;
     }
     else if (c == '}')

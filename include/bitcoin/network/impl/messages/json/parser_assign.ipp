@@ -66,7 +66,22 @@ inline bool CLASS::is_empty(const params_option& params) NOEXCEPT
         std::get<object_t>(params.value()).empty();
 }
 
-// request.jsonrpc assign
+// request.key comparison
+// ----------------------------------------------------------------------------
+
+TEMPLATE
+inline bool CLASS::is_contained(const keys_t& keys, view_t& key) NOEXCEPT
+{
+    const auto ok = unescape(unescaped_, key) && system::contains(keys, key);
+    state_ = ok ? state::request_start : state::error_state;
+
+    // This does not clear key_ as it is used in the next state.
+    ////unescaped_.clear();
+    ////key = {};
+    return ok;
+}
+
+// request.jsonrpc version string assign
 // ----------------------------------------------------------------------------
 
 TEMPLATE
