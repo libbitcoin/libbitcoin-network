@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_ASSIGN_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_ASSIGN_IPP
 
+#include <iterator>
 #include <utility>
 #include <variant>
 
@@ -71,8 +72,11 @@ inline bool CLASS::is_empty(const params_option& params) NOEXCEPT
 TEMPLATE
 inline bool CLASS::assign_version(version& to, view_t& value) NOEXCEPT
 {
-    to = version::invalid;
+    state_ = state::error_state;
+    if (!unescape(unescaped_, value))
+        return false;
 
+    to = version::invalid;
     if constexpr (require == version::any || require == version::v1)
     {
         if (value == "1.0" || value.empty())
@@ -85,9 +89,10 @@ inline bool CLASS::assign_version(version& to, view_t& value) NOEXCEPT
             to = version::v2;
     }
 
-    value = {};
     const auto ok = (to != version::invalid);
     state_ = ok ? state::request_start : state::error_state;
+    unescaped_.clear();
+    value = {};
     return ok;
 }
 
@@ -97,8 +102,13 @@ inline bool CLASS::assign_version(version& to, view_t& value) NOEXCEPT
 TEMPLATE
 inline void CLASS::assign_string(string_t& to, view_t& value) NOEXCEPT
 {
+    state_ = state::error_state;
+    if (!unescape(unescaped_, value))
+        return;
+
     state_ = state::request_start;
     to = string_t{ value };
+    unescaped_.clear();
     value = {};
 }
 
@@ -112,18 +122,23 @@ inline bool CLASS::assign_number(id_option& to, view_t& value) NOEXCEPT
     to.emplace(std::in_place_type<code_t>);
     auto& number = std::get<code_t>(to.value());
     const auto ok = to_signed(number, value);
-    value = {};
     state_ = ok ? state::request_start : state::error_state;
     after_ = true;
+    value = {};
     return ok;
 }
 
 TEMPLATE
 inline void CLASS::assign_string(id_option& to, view_t& value) NOEXCEPT
 {
+    state_ = state::error_state;
+    if (!unescape(unescaped_, value))
+        return;
+
     state_ = state::request_start;
-    after_ = true;
     to.emplace(std::in_place_type<string_t>, value);
+    after_ = true;
+    unescaped_.clear();
     value = {};
 }
 
@@ -131,8 +146,8 @@ TEMPLATE
 inline void CLASS::assign_null(id_option& to, view_t& value) NOEXCEPT
 {
     state_ = state::request_start;
-    after_ = true;
     to.emplace(std::in_place_type<null_t>);
+    after_ = true;
     value = {};
 }
 
@@ -213,9 +228,19 @@ TEMPLATE
 inline bool CLASS::push_string(params_option& to, view_t& key,
     view_t& value) NOEXCEPT
 {
-    const auto ok{ push_param<string_t>(to, key, value) };
+    state_ = state::error_state;
+    if (!unescape(unescaped_, key))
+        return false;
+
+    // Must copy key because unescaped_ buffer will be cleared.
+    const string_t ununescaped_key{ key };
+    if (!unescape(unescaped_, value))
+        return false;
+
+    const auto ok{ push_param<string_t>(to, ununescaped_key, value) };
     state_ = ok ? state::params_start : state::error_state;
     after_ = true;
+    unescaped_.clear();
     value = {};
     key = {};
     return ok;

@@ -107,8 +107,6 @@ protected:
     static inline bool is_falsy(const view_t& token, char c) NOEXCEPT;
     static inline bool is_nully(const view_t& token, char c) NOEXCEPT;
     static inline bool is_error(const result_t& error) NOEXCEPT;
-    static inline bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
-    static inline bool to_number(number_t& out, const view_t& token) NOEXCEPT;
     static inline size_t distance(const char_it& from,
         const char_it& to) NOEXCEPT;
 
@@ -136,19 +134,22 @@ protected:
     void handle_id(char c) NOEXCEPT;
     void handle_parameter(char c) NOEXCEPT;
 
-    /// Comsuming.
+    /// Consumption.
     /// -----------------------------------------------------------------------
-    inline bool consume_substitute(view_t& token, char c) NOEXCEPT;
-    inline bool consume_escaped(view_t& token, char c) NOEXCEPT;
-    inline bool consume_escape(view_t& token, char c) NOEXCEPT;
-
-    inline size_t consume_quoted(view_t& token) NOEXCEPT;
     inline size_t consume_char(view_t& token) NOEXCEPT;
     inline bool consume_text(view_t& token) NOEXCEPT;
     inline bool consume_span(view_t& token) NOEXCEPT;
 
+    /// Encoding.
+    /// -----------------------------------------------------------------------
+    static bool to_signed(code_t& out, const view_t& token) NOEXCEPT;
+    static bool to_number(number_t& out, const view_t& token) NOEXCEPT;
+    static bool unescape(string_t& buffer, view_t& value) NOEXCEPT;
+    static string_t to_codepoint(const view_t& hi, const view_t& lo) NOEXCEPT;
+
     /// Assignment.
     /// -----------------------------------------------------------------------
+
     static inline const request_it add_request(batch_t& batch) NOEXCEPT;
     static inline void add_array(params_option& params) NOEXCEPT;
     static inline void add_object(params_option& params) NOEXCEPT;
@@ -194,13 +195,13 @@ private:
     batch_t batch_{};
 
     bool after_{};
-    bool escaped_{};
     state state_{};
     char_it char_{};
     char_it begin_{};
     char_it end_{};
     view_t key_{};
     view_t value_{};
+    string_t unescaped_{};
     request_it request_{};
 };
 
@@ -214,6 +215,7 @@ private:
 #include <bitcoin/network/impl/messages/json/parser.ipp>
 #include <bitcoin/network/impl/messages/json/parser_assign.ipp>
 #include <bitcoin/network/impl/messages/json/parser_consume.ipp>
+#include <bitcoin/network/impl/messages/json/parser_encode.ipp>
 #include <bitcoin/network/impl/messages/json/parser_statics.ipp>
 #include <bitcoin/network/impl/messages/json/parser_object.ipp>
 #include <bitcoin/network/impl/messages/json/parser_value.ipp>

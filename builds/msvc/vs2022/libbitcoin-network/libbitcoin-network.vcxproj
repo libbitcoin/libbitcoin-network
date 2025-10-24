@@ -375,6 +375,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_assign.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_consume.ipp" />
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_encode.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_object.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_statics.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_value.ipp" />

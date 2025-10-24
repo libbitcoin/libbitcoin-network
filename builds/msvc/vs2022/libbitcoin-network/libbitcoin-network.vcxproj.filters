@@ -868,6 +868,9 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_consume.ipp">
       <Filter>include\bitcoin\network\impl\messages\json</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_encode.ipp">
+      <Filter>include\bitcoin\network\impl\messages\json</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_object.ipp">
       <Filter>include\bitcoin\network\impl\messages\json</Filter>
     </None>
