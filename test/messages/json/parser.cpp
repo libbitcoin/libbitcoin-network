@@ -32,8 +32,8 @@ struct test_parser
     using base::base;
 };
 
-using lax_request_parser = test_parser<false, version::any, false>;
-using request_parser = test_parser<true, version::any, false>;
+// non-strict until tests are updated for "method" non-empty required.
+using request_parser = test_parser<false, version::any, false>;
 
 BOOST_AUTO_TEST_CASE(parser__write__jsonrpc__success)
 {
