@@ -184,9 +184,9 @@ private:
     bool batched_{};
     batch_t batch_{};
 
-    track requests_{};
-    track properties_{};
-    track parameters_{};
+    parser_track requests_{};
+    parser_track properties_{};
+    parser_track parameters_{};
 
     state state_{};
     char_it char_{};
