@@ -89,9 +89,9 @@ void CLASS::reset() NOEXCEPT
 TEMPLATE
 void CLASS::reset_internal() NOEXCEPT
 {
-    requests_ = {};
-    properties_ = {};
-    parameters_ = {};
+    requests_.reset();
+    properties_.reset();
+    parameters_.reset();
 
     state_ = {};
     char_ = {};
