@@ -150,7 +150,10 @@
     <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
       <Filter>src\messages\http</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\json\body.cpp">
+    <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp">
+      <Filter>src\messages\json</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\json\body_writer.cpp">
       <Filter>src\messages\json</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\json\parser.cpp">

@@ -46,59 +46,11 @@ struct body
         {
         }
 
-        void init(std::optional<std::uint64_t> const&,
-            json::error_code& ec) NOEXCEPT
-        {
-            ////BC_ASSERT(parser_.is_done());
-            parser_.reset();
-            ec.clear();
-        }
-
         template <class Buffers>
-        std::size_t put(const Buffers& buffers, json::error_code& ec) NOEXCEPT
-        {
-            ////BC_ASSERT(!parser_.is_done());
+        size_t put(const Buffers& buffers, error_code& ec) NOEXCEPT;
 
-            // Prioritize existing parser error.
-            if ((ec = parser_.get_error()))
-                return {};
-
-            // Already complete implies an error.
-            if (parser_.is_done())
-            {
-                using namespace boost::system::errc;
-                ec = make_error_code(protocol_error);
-                return {};
-            }
-
-            std::size_t added{};
-            for (auto const& buffer: buffers)
-            {
-                using namespace boost::asio;
-                const auto size = buffer_size(buffer);
-                const auto data = buffer_cast<const char_t*>(buffer);
-                added += parser_.write({ data, size });
-                if (parser_.is_done())
-                    break;
-            }
-
-            ec = parser_.get_error();
-            return added;
-        }
-
-        void finish(json::error_code& ec) NOEXCEPT
-        {
-            // Prioritize existing parser error.
-            if ((ec = parser_.get_error()))
-                return;
-
-            // Premature completion implies an error.
-            if (!parser_.is_done())
-            {
-                using namespace boost::system::errc;
-                ec = make_error_code(protocol_error);
-            }
-        }
+        void init(std::optional<uint64_t> const&, error_code& ec) NOEXCEPT;
+        void finish(error_code& ec) NOEXCEPT;
 
     private:
         value_type& parser_;
@@ -110,48 +62,16 @@ struct body
         using buffer_t = typename Parser::buffer_t;
 
         template <bool Request>
-        explicit writer(http::header<Request>&) NOEXCEPT {}
-
-        void init(json::error_code& ec) NOEXCEPT
+        explicit writer(http::header<Request>&) NOEXCEPT
         {
-            buffer_.clear();
-            ec.clear();
         }
 
         template <class Buffers>
-        std::size_t put(const Buffers& buffers, json::error_code& ec) NOEXCEPT
-        {
-            using namespace boost::asio;
-            const auto increase = buffer_size(buffers);
-            buffer_.reserve(system::ceilinged_add(buffer_.size(), increase));
+        size_t put(const Buffers& buffers, error_code& ec) NOEXCEPT;
 
-            std::size_t added{};
-            for (auto const& buffer: buffers)
-            {
-                const auto size = buffer_size(buffer);
-                const auto data = buffer_cast<const char_t*>(buffer);
-                buffer_.append(data, size);
-                added += size;
-            }
-
-            ec.clear();
-            return added;
-        }
-
-        void finish(json::error_code& ec) NOEXCEPT
-        {
-            // Nothing written to the response implies an error.
-            if (buffer_.empty())
-            {
-                using namespace boost::system::errc;
-                ec = make_error_code(protocol_error);
-            }
-        }
-
-        buffer_t buffer() NOEXCEPT
-        {
-            return buffer_;
-        }
+        void init(error_code& ec) NOEXCEPT;
+        void finish(error_code& ec) NOEXCEPT;
+        buffer_t buffer() NOEXCEPT;
 
     private:
         buffer_t buffer_{};
@@ -161,5 +81,17 @@ struct body
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
+
+#define TEMPLATE template <class Parser>
+
+#define CLASS body<Parser>::reader
+#include <bitcoin/network/impl/messages/json/body_reader.ipp>
+#undef CLASS
+
+#define CLASS body<Parser>::writer
+#include <bitcoin/network/impl/messages/json/body_writer.ipp>
+#undef CLASS
+
+#undef TEMPLATE
 
 #endif

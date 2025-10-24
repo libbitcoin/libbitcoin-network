@@ -865,6 +865,12 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\body_reader.ipp">
+      <Filter>include\bitcoin\network\impl\messages\json</Filter>
+    </None>
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\body_writer.ipp">
+      <Filter>include\bitcoin\network\impl\messages\json</Filter>
+    </None>
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser.ipp">
       <Filter>include\bitcoin\network\impl\messages\json</Filter>
     </None>

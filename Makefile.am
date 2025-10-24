@@ -174,7 +174,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/http/enums/magic_numbers.cpp \
     test/messages/http/enums/mime_type.cpp \
     test/messages/http/enums/target.cpp \
-    test/messages/json/body.cpp \
+    test/messages/json/body_reader.cpp \
+    test/messages/json/body_writer.cpp \
     test/messages/json/parser.cpp \
     test/messages/json/parser_statics.cpp \
     test/messages/json/parser_track.cpp \
@@ -336,6 +337,8 @@ include_bitcoin_network_impl_async_races_HEADERS = \
 
 include_bitcoin_network_impl_messages_jsondir = ${includedir}/bitcoin/network/impl/messages/json
 include_bitcoin_network_impl_messages_json_HEADERS = \
+    include/bitcoin/network/impl/messages/json/body_reader.ipp \
+    include/bitcoin/network/impl/messages/json/body_writer.ipp \
     include/bitcoin/network/impl/messages/json/parser.ipp \
     include/bitcoin/network/impl/messages/json/parser_assign.ipp \
     include/bitcoin/network/impl/messages/json/parser_consume.ipp \
