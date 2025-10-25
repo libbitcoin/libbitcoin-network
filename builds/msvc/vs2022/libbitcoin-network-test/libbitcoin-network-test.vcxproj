@@ -153,11 +153,12 @@
     <ClCompile Include="..\..\..\..\test\messages\http\enums\mime_type.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\method.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\json\body.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\json\body_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json\parser.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json\parser_statics.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json\parser_track.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\json\serialize.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\json\serializer.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_address.obj</ObjectFileName>
     </ClCompile>

@@ -137,7 +137,8 @@ namespace network {
 
 // version        : <generated>
 // boost          : version
-// error          : boost
+// beast          : boost
+// error          : beast
 // define         : error
 
 // Other directory common includes are not internally chained.

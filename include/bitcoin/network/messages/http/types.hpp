@@ -16,29 +16,46 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_SERIALIZE_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_JSON_SERIALIZE_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_TYPES_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_TYPES_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/json/enums/version.hpp>
-#include <bitcoin/network/messages/json/types.hpp>
+#include <bitcoin/network/messages/json/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
+namespace http {
 namespace json {
 
-// Serializes the request_t to a compact JSON string (for testing).
-// Handles flat blob strings in params structures as literal JSON.
-BCT_API string_t serialize(const request_t& request) NOEXCEPT;
+// TODO: for non-rpc http json (REST) messages, define:
+// TODO: http::json::request
+// TODO: http::json::response.
 
-// Serializes the response_t to a compact JSON string.
-// Handles flat blob strings in result structure as literal JSON.
-BCT_API string_t serialize(const response_t& response) NOEXCEPT;
+namespace rpc {
 
-////DECLARE_JSON_VALUE_CONVERTORS(request_t);
-////DECLARE_JSON_VALUE_CONVERTORS(response_t);
+// TODO: need to split up the body to get request and response value_type.
 
+using request = boost::beast::http::request
+<
+    network::json::body
+    <
+        network::json::parser<true>,
+        network::json::serializer<network::json::request_t>
+    >
+>;
+
+using response = boost::beast::http::response
+<
+    network::json::body
+    <
+        network::json::parser<true>,
+        network::json::serializer<network::json::response_t>
+    >
+>;
+
+} // namespace rpc
 } // namespace json
+} // namespace http
 } // namespace network
 } // namespace libbitcoin
 

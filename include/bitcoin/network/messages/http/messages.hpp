@@ -25,5 +25,6 @@
 #include <bitcoin/network/messages/http/enums/target.hpp>
 #include <bitcoin/network/messages/http/enums/verb.hpp>
 #include <bitcoin/network/messages/http/method.hpp>
+#include <bitcoin/network/messages/http/types.hpp>
 
 #endif

@@ -25,7 +25,7 @@
 #include <bitcoin/network/messages/json/parser.hpp>
 #include <bitcoin/network/messages/json/parser_state.hpp>
 #include <bitcoin/network/messages/json/parser_track.hpp>
-#include <bitcoin/network/messages/json/serialize.hpp>
+#include <bitcoin/network/messages/json/serializer.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 
 #endif

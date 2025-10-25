@@ -21,145 +21,93 @@
 
 #include <optional>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/messages/json/parser.hpp>
+#include <bitcoin/network/messages/json/serializer.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace json {
 
-template <class Parser>
+/// boost::beast body template for JSON-RPC messages.
+template <class Parser, class Serializer>
 struct body
 {
-    /// value_type is required for boost integration.
-    using value_type = Parser;
-    using buffer_t = typename Parser::buffer_t;
-    using char_t = typename buffer_t::value_type;
+    /// Required by boost::beast.
+    using value_type = Parser::value_type;
 
+    /// Required: reader for incoming data.
     class reader
     {
     public:
-        template <bool Request>
-        explicit reader(http::header<Request>&, value_type& parser) NOEXCEPT
-          : parser_{ parser }
+        /// Called once per message, header is mutable.
+        template <bool IsRequest>
+        explicit reader(http::header<IsRequest>&, value_type& body) NOEXCEPT
+          : body_{ body }
         {
         }
 
-        void init(std::optional<std::uint64_t> const&,
-            json::error_code& ec) NOEXCEPT
-        {
-            ////BC_ASSERT(parser_.is_done());
-            parser_.reset();
-            ec.clear();
-        }
+        /// Called once at start of body deserialization.
+        void init(const std::optional<uint64_t>& length,
+            error_code& ec) NOEXCEPT;
 
-        template <class Buffers>
-        std::size_t put(const Buffers& buffers, json::error_code& ec) NOEXCEPT
-        {
-            ////BC_ASSERT(!parser_.is_done());
+        /// Bytes are consumed from buffers and parsed into json object.
+        /// Called zero or more times with incoming (from wire) buffers.
+        template <class ConstBufferSequence>
+        size_t put(const ConstBufferSequence& buffers, error_code& ec) NOEXCEPT;
 
-            // Prioritize existing parser error.
-            if ((ec = parser_.get_error()))
-                return {};
+        /// Called once at the end of body deserialization, signals completion.
+        void finish(error_code& ec) NOEXCEPT;
 
-            // Already complete implies an error.
-            if (parser_.is_done())
-            {
-                using namespace boost::system::errc;
-                ec = make_error_code(protocol_error);
-                return {};
-            }
-
-            std::size_t added{};
-            for (auto const& buffer: buffers)
-            {
-                using namespace boost::asio;
-                const auto size = buffer_size(buffer);
-                const auto data = buffer_cast<const char_t*>(buffer);
-                added += parser_.write({ data, size });
-                if (parser_.is_done())
-                    break;
-            }
-
-            ec = parser_.get_error();
-            return added;
-        }
-
-        void finish(json::error_code& ec) NOEXCEPT
-        {
-            // Prioritize existing parser error.
-            if ((ec = parser_.get_error()))
-                return;
-
-            // Premature completion implies an error.
-            if (!parser_.is_done())
-            {
-                using namespace boost::system::errc;
-                ec = make_error_code(protocol_error);
-            }
-        }
-
-    private:
-        value_type& parser_;
+    protected:
+        Parser parser_{};
+        value_type& body_;
     };
 
+    /// Required: writer for outgoing data.
     class writer
     {
     public:
-        using buffer_t = typename Parser::buffer_t;
-
-        template <bool Request>
-        explicit writer(http::header<Request>&) NOEXCEPT {}
-
-        void init(json::error_code& ec) NOEXCEPT
+        /// Called once per message, header is mutable.
+        template <bool IsRequest>
+        explicit writer(http::header<IsRequest>&,
+            const value_type& body) NOEXCEPT
+          : body_ { body }
         {
-            buffer_.clear();
-            ec.clear();
         }
 
-        template <class Buffers>
-        std::size_t put(const Buffers& buffers, json::error_code& ec) NOEXCEPT
-        {
-            using namespace boost::asio;
-            const auto increase = buffer_size(buffers);
-            buffer_.reserve(system::ceilinged_add(buffer_.size(), increase));
+        /// Called once at start of message serialization.
+        void init(error_code& ec) NOEXCEPT;
 
-            std::size_t added{};
-            for (auto const& buffer: buffers)
-            {
-                const auto size = buffer_size(buffer);
-                const auto data = buffer_cast<const char_t*>(buffer);
-                buffer_.append(data, size);
-                added += size;
-            }
+        /// Bytes are serialized from json object to local buffer.
+        /// Called once at the start of body serialization, after headers.
+        void finish(error_code& ec) NOEXCEPT;
 
-            ec.clear();
-            return added;
-        }
+        /// Called one or more times with outgoing (to wire) buffers.
+        template <class ConstBufferSequence>
+        size_t get(ConstBufferSequence& buffers, error_code& ec) NOEXCEPT;
 
-        void finish(json::error_code& ec) NOEXCEPT
-        {
-            // Nothing written to the response implies an error.
-            if (buffer_.empty())
-            {
-                using namespace boost::system::errc;
-                ec = make_error_code(protocol_error);
-            }
-        }
-
-        buffer_t buffer() NOEXCEPT
-        {
-            return buffer_;
-        }
-
-    private:
-        buffer_t buffer_{};
+    protected:
+        std::string buffer_{};
+        const value_type& body_;
     };
 };
+
 
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
+
+#define TEMPLATE template <class Parser, class Serializer>
+
+#define CLASS body<Parser, Serializer>::reader
+#include <bitcoin/network/impl/messages/json/body_reader.ipp>
+#undef CLASS
+
+#define CLASS body<Parser, Serializer>::writer
+#include <bitcoin/network/impl/messages/json/body_writer.ipp>
+#undef CLASS
+
+#undef TEMPLATE
 
 #endif

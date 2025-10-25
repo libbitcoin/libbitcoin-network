@@ -36,7 +36,7 @@ class parser
 {
 public:
     /// Required for body template.
-    using buffer_t = string_t;
+    using value_type = request_t;
 
     /// Parsed object type.
     /// -----------------------------------------------------------------------
