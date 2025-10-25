@@ -30,7 +30,7 @@ const error::boost_code real_error = make_error_code(protocol_error);
 struct mock_parser
 {
     // Required for body template.
-    using buffer_t = string_t;
+    using value_type = json::request_t;
 
     // Mocks.
     bool done{ false };
@@ -48,7 +48,7 @@ struct mock_parser
         written.clear();
     }
 
-    size_t write(std::string_view data) NOEXCEPT
+    size_t write(const std::string_view& data) NOEXCEPT
     {
         if (result)
             return {};
@@ -96,50 +96,79 @@ struct mock_parser
     }
 };
 
-// body<mock_parser>::reader tests.
-// ----------------------------------------------------------------------------
+struct mock_serializer
+{
+    static string_t write(const request_t&) NOEXCEPT
+    {
+        return {};
+    }
+    static string_t write(const response_t&) NOEXCEPT
+    {
+        return {};
+    }
+};
+
+template <class Parser, class Serializer>
+struct mock_body
+  : public json::body<Parser, Serializer>
+{
+    using value_type = mock_parser::value_type;
+
+    struct reader :
+      public json::body<Parser, Serializer>::reader
+    {
+        using base = json::body<Parser, Serializer>::reader;
+        using base::base;
+        Parser& parser()
+        {
+            return base::parser_;
+        }
+    };
+};
+
+using mock = mock_body<mock_parser, mock_serializer>;
 
 BOOST_AUTO_TEST_CASE(body_reader__init__done_parser__resets_parser_and_error)
 {
-    mock_parser parse{};
+    json::request_t request{};
     http::header<true> header{};
-    body<mock_parser>::reader reader{ header, parse };
+    mock::reader reader{ header, request };
 
-    parse.done = true;
-    parse.result = fake_error;
-    parse.written = "42";
+    reader.parser().done = true;
+    reader.parser().result = fake_error;
+    reader.parser().written = "42";
 
     error::boost_code ec{ fake_error };
     reader.init({}, ec);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!parse.done);
-    BOOST_REQUIRE(!parse.result);
-    BOOST_REQUIRE(parse.written.empty());
+    BOOST_REQUIRE(!reader.parser().done);
+    BOOST_REQUIRE(!reader.parser().result);
+    BOOST_REQUIRE(reader.parser().written.empty());
 }
 
 BOOST_AUTO_TEST_CASE(body_reader__init__not_done_parser__resets_parser_and_error)
 {
-    mock_parser parse{};
+    json::request_t request{};
     http::header<true> header{};
-    body<mock_parser>::reader reader{ header, parse };
+    mock::reader reader{ header, request };
 
-    parse.done = false;
-    parse.result = fake_error;
-    parse.written = "42";
+    reader.parser().done = false;
+    reader.parser().result = fake_error;
+    reader.parser().written = "42";
 
     error::boost_code ec{ fake_error };
     reader.init({}, ec);
     BOOST_REQUIRE(!ec);
-    BOOST_REQUIRE(!parse.done);
-    BOOST_REQUIRE(!parse.result);
-    BOOST_REQUIRE(parse.written.empty());
+    BOOST_REQUIRE(!reader.parser().done);
+    BOOST_REQUIRE(!reader.parser().result);
+    BOOST_REQUIRE(reader.parser().written.empty());
 }
 
 BOOST_AUTO_TEST_CASE(body_reader__put__valid_buffer__writes_clears_error_and_returns_size)
 {
-    mock_parser parse{};
+    json::request_t request{};
     http::header<true> header{};
-    body<mock_parser>::reader reader{ header, parse };
+    mock::reader reader{ header, request };
 
     const std::string value{ "{\"jsonrpc\": \"2.0\"}" };
     const asio::const_buffer buffer{ value.data(), value.size() };
@@ -148,14 +177,14 @@ BOOST_AUTO_TEST_CASE(body_reader__put__valid_buffer__writes_clears_error_and_ret
     const auto size = reader.put(std::array{ buffer }, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(size, value.size());
-    BOOST_REQUIRE_EQUAL(parse.written, value);
+    BOOST_REQUIRE_EQUAL(reader.parser().written, value);
 }
 
 BOOST_AUTO_TEST_CASE(body_reader__put__multiple_buffers__writes_clears_error_and_returns_size)
 {
-    mock_parser parse{};
+    json::request_t request{};
     http::header<true> header{};
-    body<mock_parser>::reader reader{ header, parse };
+    mock::reader reader{ header, request };
 
     const std::string value1{ "{\"jsonrpc\": \"2.0\", " };
     const std::string value2{ "\"method\": \"getbalance\"}" };
@@ -169,14 +198,14 @@ BOOST_AUTO_TEST_CASE(body_reader__put__multiple_buffers__writes_clears_error_and
     const auto size = reader.put(buffers, ec);
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE_EQUAL(size, value1.size() + value2.size());
-    BOOST_REQUIRE_EQUAL(parse.written, value1 + value2);
+    BOOST_REQUIRE_EQUAL(reader.parser().written, value1 + value2);
 }
 
 BOOST_AUTO_TEST_CASE(body_reader__put__multiple_buffers_second_write_fails__stops_and_returns_partial_size)
 {
-    mock_parser parse{};
+    json::request_t request{};
     http::header<true> header{};
-    body<mock_parser>::reader reader{ header, parse };
+    mock::reader reader{ header, request };
 
     const std::string value1{ "{\"jsonrpc\": \"2.0\", " };
     const std::string value2{ "\"method\": \"getbalance\"}" };
@@ -186,22 +215,22 @@ BOOST_AUTO_TEST_CASE(body_reader__put__multiple_buffers_second_write_fails__stop
         asio::const_buffer{ value2.data(), value2.size() }
     };
 
-    parse.second_write_result = fake_error;
+    reader.parser().second_write_result = fake_error;
 
     error::boost_code ec{};
     const auto size = reader.put(buffers, ec);
     BOOST_REQUIRE_EQUAL(ec, fake_error);
     BOOST_REQUIRE_EQUAL(size, value1.size());
-    BOOST_REQUIRE_EQUAL(parse.written, value1);
+    BOOST_REQUIRE_EQUAL(reader.parser().written, value1);
 }
 
 BOOST_AUTO_TEST_CASE(body_reader__put__parser_done___returns_real_error_and_zero)
 {
-    mock_parser parse{};
+    json::request_t request{};
     http::header<true> header{};
-    body<mock_parser>::reader reader{ header, parse };
+    mock::reader reader{ header, request };
 
-    parse.done = true;
+    reader.parser().done = true;
     const std::string value{ "{\"method\": \"getbalance\"}" };
     const asio::const_buffer buffer{ value.data(), value.size() };
 
@@ -209,35 +238,35 @@ BOOST_AUTO_TEST_CASE(body_reader__put__parser_done___returns_real_error_and_zero
     const auto size = reader.put(std::array{ buffer }, ec);
     BOOST_REQUIRE_EQUAL(ec, real_error);
     BOOST_REQUIRE_EQUAL(size, zero);
-    BOOST_REQUIRE(parse.written.empty());
+    BOOST_REQUIRE(reader.parser().written.empty());
 }
 
 BOOST_AUTO_TEST_CASE(body_reader__put__parser_error___returns_error_and_zero)
 {
-    mock_parser parse{};
+    json::request_t request{};
     http::header<true> header{};
-    body<mock_parser>::reader reader{ header, parse };
+    mock::reader reader{ header, request };
 
     // This buffer isn't acually parsed but we set the fake error.
     const std::string value{ "{\"invalid\": 1}" };
     const asio::const_buffer buffer{ value.data(), value.size() };
-    parse.result = fake_error;
+    reader.parser().result = fake_error;
 
     error::boost_code ec{};
     const auto size = reader.put(std::array{ buffer }, ec);
     BOOST_REQUIRE_EQUAL(ec, fake_error);
     BOOST_REQUIRE_EQUAL(size, zero);
-    BOOST_REQUIRE(parse.written.empty());
+    BOOST_REQUIRE(reader.parser().written.empty());
 }
 
 BOOST_AUTO_TEST_CASE(body_reader__finish__done_error__returns_error)
 {
-    mock_parser parse{};
+    json::request_t request{};
     http::header<true> header{};
-    body<mock_parser>::reader reader{ header, parse };
+    mock::reader reader{ header, request };
 
-    parse.done = true;
-    parse.result = fake_error;
+    reader.parser().done = true;
+    reader.parser().result = fake_error;
 
     error::boost_code ec{};
     reader.finish(ec);
@@ -246,11 +275,11 @@ BOOST_AUTO_TEST_CASE(body_reader__finish__done_error__returns_error)
 
 BOOST_AUTO_TEST_CASE(body_reader__finish__done_no_error__clears_error)
 {
-    mock_parser parse{};
+    json::request_t request{};
     http::header<true> header{};
-    body<mock_parser>::reader reader{ header, parse };
+    mock::reader reader{ header, request };
 
-    parse.done = true;
+    reader.parser().done = true;
 
     error::boost_code ec{ fake_error };
     reader.finish(ec);
@@ -259,12 +288,12 @@ BOOST_AUTO_TEST_CASE(body_reader__finish__done_no_error__clears_error)
 
 BOOST_AUTO_TEST_CASE(body_reader__finish__not_done_no_error__returns_real_error)
 {
-    mock_parser parse{};
+    json::request_t request{};
     http::header<true> header{};
-    body<mock_parser>::reader reader{ header, parse };
+    mock::reader reader{ header, request };
     error::boost_code ec{};
 
-    parse.done = false;
+    reader.parser().done = false;
 
     reader.finish(ec);
     BOOST_REQUIRE_EQUAL(ec, real_error);
@@ -272,12 +301,12 @@ BOOST_AUTO_TEST_CASE(body_reader__finish__not_done_no_error__returns_real_error)
 
 BOOST_AUTO_TEST_CASE(body_reader__finish__not_done_error__returns_error)
 {
-    mock_parser parse{};
+    json::request_t request{};
     http::header<true> header{};
-    body<mock_parser>::reader reader{ header, parse };
+    mock::reader reader{ header, request };
 
-    parse.done = false;
-    parse.result = fake_error;
+    reader.parser().done = false;
+    reader.parser().result = fake_error;
 
     error::boost_code ec{};
     reader.finish(ec);

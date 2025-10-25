@@ -19,57 +19,28 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_WRITER_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_WRITER_IPP
 
-#include <optional>
-#include <bitcoin/network/messages/json/parser.hpp>
+#include <bitcoin/network/messages/json/serializer.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace json {
-
+    
 TEMPLATE
-template <class Buffers>
-size_t CLASS::put(const Buffers& buffers, error_code& ec) NOEXCEPT
+template <class ConstBufferSequence>
+size_t CLASS::get(ConstBufferSequence&, error_code&) NOEXCEPT
 {
-    using namespace boost::asio;
-    const auto increase = buffer_size(buffers);
-    buffer_.reserve(system::ceilinged_add(buffer_.size(), increase));
-
-    size_t added{};
-    for (auto const& buffer: buffers)
-    {
-        const auto size = buffer_size(buffer);
-        const auto data = buffer_cast<const char_t*>(buffer);
-        buffer_.append(data, size);
-        added += size;
-    }
-
-    ec.clear();
-    return added;
+    return {};
 }
 
 TEMPLATE
-void CLASS::init(error_code& ec) NOEXCEPT
+void CLASS::init(error_code&) NOEXCEPT
 {
-    buffer_.clear();
-    ec.clear();
 }
 
 TEMPLATE
-void CLASS::finish(error_code& ec) NOEXCEPT
+void CLASS::finish(error_code&) NOEXCEPT
 {
-    // Nothing written to the response implies an error.
-    if (buffer_.empty())
-    {
-        using namespace boost::system::errc;
-        ec = make_error_code(protocol_error);
-    }
-}
-
-TEMPLATE
-CLASS::buffer_t CLASS::buffer() NOEXCEPT
-{
-    return buffer_;
 }
 
 } // namespace json

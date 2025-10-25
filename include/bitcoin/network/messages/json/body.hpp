@@ -21,74 +21,91 @@
 
 #include <optional>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/messages/json/parser.hpp>
+#include <bitcoin/network/messages/json/serializer.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace json {
 
-template <class Parser>
+/// boost::beast body template for JSON-RPC messages.
+template <class Parser, class Serializer>
 struct body
 {
-    /// value_type is required for boost integration.
-    using value_type = Parser;
-    using buffer_t = typename Parser::buffer_t;
-    using char_t = typename buffer_t::value_type;
+    /// Required by boost::beast.
+    using value_type = Parser::value_type;
 
+    /// Local.
+    using length_t = std::optional<uint64_t>;
+
+    /// Required: reader for incoming data.
     class reader
     {
     public:
-        template <bool Request>
-        explicit reader(http::header<Request>&, value_type& parser) NOEXCEPT
-          : parser_{ parser }
+        /// Called once per message, header is mutable.
+        template <bool IsRequest>
+        explicit reader(http::header<IsRequest>&, value_type& body) NOEXCEPT
+          : body_{ body }
         {
         }
 
-        template <class Buffers>
-        size_t put(const Buffers& buffers, error_code& ec) NOEXCEPT;
+        /// Called once at start of body deserialization.
+        void init(const length_t& length, error_code& ec) NOEXCEPT;
 
-        void init(std::optional<uint64_t> const&, error_code& ec) NOEXCEPT;
+        /// Bytes are consumed from buffers and parsed into json object.
+        /// Called zero or more times with incoming (from wire) buffers.
+        template <class ConstBufferSequence>
+        size_t put(const ConstBufferSequence& buffers, error_code& ec) NOEXCEPT;
+
+        /// Called once at the end of body deserialization, signals completion.
         void finish(error_code& ec) NOEXCEPT;
 
-    private:
-        value_type& parser_;
+    protected:
+        Parser parser_{};
+        value_type& body_;
     };
 
+    /// Required: writer for outgoing data.
     class writer
     {
     public:
-        using buffer_t = typename Parser::buffer_t;
-
-        template <bool Request>
-        explicit writer(http::header<Request>&) NOEXCEPT
+        /// Called once per message, header is mutable.
+        template <bool IsRequest>
+        explicit writer(http::header<IsRequest>&,
+            const value_type& body) NOEXCEPT
+          : body_ { body }
         {
         }
 
-        template <class Buffers>
-        size_t put(const Buffers& buffers, error_code& ec) NOEXCEPT;
-
+        /// Called once at start of message serialization.
         void init(error_code& ec) NOEXCEPT;
-        void finish(error_code& ec) NOEXCEPT;
-        buffer_t buffer() NOEXCEPT;
 
-    private:
-        buffer_t buffer_{};
+        /// Bytes are serialized from json object to local buffer.
+        /// Called once at the start of body serialization, after headers.
+        void finish(error_code& ec) NOEXCEPT;
+
+        /// Called one or more times with outgoing (to wire) buffers.
+        template <class ConstBufferSequence>
+        size_t get(ConstBufferSequence& buffers, error_code& ec) NOEXCEPT;
+
+    protected:
+        const value_type& body_;
     };
 };
+
 
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
 
-#define TEMPLATE template <class Parser>
+#define TEMPLATE template <class Parser, class Serializer>
 
-#define CLASS body<Parser>::reader
+#define CLASS body<Parser, Serializer>::reader
 #include <bitcoin/network/impl/messages/json/body_reader.ipp>
 #undef CLASS
 
-#define CLASS body<Parser>::writer
+#define CLASS body<Parser, Serializer>::writer
 #include <bitcoin/network/impl/messages/json/body_writer.ipp>
 #undef CLASS
 

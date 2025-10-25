@@ -189,7 +189,7 @@
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp">
       <Filter>src\messages\http\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\json\serialize.cpp">
+    <ClCompile Include="..\..\..\..\src\messages\json\serializer.cpp">
       <Filter>src\messages\json</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\address.cpp">
@@ -416,9 +416,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\beast.hpp">
-      <Filter>include\bitcoin\network\async</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp">
       <Filter>include\bitcoin\network\async</Filter>
     </ClInclude>
@@ -460,6 +457,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp">
       <Filter>include\bitcoin\network\async</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\beast.hpp">
+      <Filter>include\bitcoin\network</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp">
       <Filter>include\bitcoin\network</Filter>
@@ -560,6 +560,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp">
       <Filter>include\bitcoin\network\messages\http</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\types.hpp">
+      <Filter>include\bitcoin\network\messages\http</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\body.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>
@@ -581,7 +584,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser_track.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serialize.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serializer.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\types.hpp">

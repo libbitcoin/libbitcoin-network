@@ -158,7 +158,7 @@
     <ClCompile Include="..\..\..\..\test\messages\json\parser.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json\parser_statics.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\json\parser_track.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\json\serialize.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\json\serializer.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\peer\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_address.obj</ObjectFileName>
     </ClCompile>

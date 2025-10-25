@@ -144,7 +144,7 @@
     <ClCompile Include="..\..\..\..\src\memory.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\json\serialize.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\json\serializer.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\address.cpp">
       <ObjectFileName>$(IntDir)src_messages_peer_address.obj</ObjectFileName>
     </ClCompile>
@@ -223,7 +223,6 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\asio.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\async.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\async\beast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\desubscriber.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\enable_shared_from_base.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\handlers.hpp" />
@@ -238,6 +237,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\threadpool.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\time.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\async\unsubscriber.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\beast.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\boost.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\channels\channel_http.hpp" />
@@ -271,6 +271,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\verb.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\transport.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\version.hpp" />
@@ -278,7 +279,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser_state.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser_track.hpp" />
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serialize.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serializer.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address_item.hpp" />

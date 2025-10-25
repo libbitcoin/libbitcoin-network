@@ -20,7 +20,7 @@
 #define LIBBITCOIN_NETWORK_ERROR_HPP
 
 #include <system_error>
-#include <bitcoin/network/boost.hpp>
+#include <bitcoin/network/beast.hpp>
 
 namespace libbitcoin {
 namespace network {

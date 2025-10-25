@@ -58,7 +58,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/log/reporter.cpp \
     src/messages/http/enums/mime_type.cpp \
     src/messages/http/enums/target.cpp \
-    src/messages/json/serialize.cpp \
+    src/messages/json/serializer.cpp \
     src/messages/peer/address.cpp \
     src/messages/peer/address_item.cpp \
     src/messages/peer/alert.cpp \
@@ -179,7 +179,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/json/parser.cpp \
     test/messages/json/parser_statics.cpp \
     test/messages/json/parser_track.cpp \
-    test/messages/json/serialize.cpp \
+    test/messages/json/serializer.cpp \
     test/messages/peer/address.cpp \
     test/messages/peer/address_item.cpp \
     test/messages/peer/alert.cpp \
@@ -265,6 +265,7 @@ include_bitcoin_HEADERS = \
 
 include_bitcoin_networkdir = ${includedir}/bitcoin/network
 include_bitcoin_network_HEADERS = \
+    include/bitcoin/network/beast.hpp \
     include/bitcoin/network/boost.hpp \
     include/bitcoin/network/define.hpp \
     include/bitcoin/network/error.hpp \
@@ -277,7 +278,6 @@ include_bitcoin_network_asyncdir = ${includedir}/bitcoin/network/async
 include_bitcoin_network_async_HEADERS = \
     include/bitcoin/network/async/asio.hpp \
     include/bitcoin/network/async/async.hpp \
-    include/bitcoin/network/async/beast.hpp \
     include/bitcoin/network/async/desubscriber.hpp \
     include/bitcoin/network/async/enable_shared_from_base.hpp \
     include/bitcoin/network/async/handlers.hpp \
@@ -360,7 +360,8 @@ include_bitcoin_network_log_HEADERS = \
 include_bitcoin_network_messages_httpdir = ${includedir}/bitcoin/network/messages/http
 include_bitcoin_network_messages_http_HEADERS = \
     include/bitcoin/network/messages/http/messages.hpp \
-    include/bitcoin/network/messages/http/method.hpp
+    include/bitcoin/network/messages/http/method.hpp \
+    include/bitcoin/network/messages/http/types.hpp
 
 include_bitcoin_network_messages_http_enumsdir = ${includedir}/bitcoin/network/messages/http/enums
 include_bitcoin_network_messages_http_enums_HEADERS = \
@@ -377,7 +378,7 @@ include_bitcoin_network_messages_json_HEADERS = \
     include/bitcoin/network/messages/json/parser.hpp \
     include/bitcoin/network/messages/json/parser_state.hpp \
     include/bitcoin/network/messages/json/parser_track.hpp \
-    include/bitcoin/network/messages/json/serialize.hpp \
+    include/bitcoin/network/messages/json/serializer.hpp \
     include/bitcoin/network/messages/json/types.hpp
 
 include_bitcoin_network_messages_json_enumsdir = ${includedir}/bitcoin/network/messages/json/enums

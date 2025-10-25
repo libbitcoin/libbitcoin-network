@@ -19,8 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_READER_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_READER_IPP
 
-#include <optional>
-#include <bitcoin/network/messages/json/parser.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 
 namespace libbitcoin {
@@ -28,8 +26,8 @@ namespace network {
 namespace json {
 
 TEMPLATE
-template <class Buffers>
-size_t CLASS::put(const Buffers& buffers, error_code& ec) NOEXCEPT
+template <class ConstBufferSequence>
+size_t CLASS::put(const ConstBufferSequence& buffers, error_code& ec) NOEXCEPT
 {
     // Prioritize existing parser error.
     if ((ec = parser_.get_error()))
@@ -48,7 +46,7 @@ size_t CLASS::put(const Buffers& buffers, error_code& ec) NOEXCEPT
     {
         using namespace boost::asio;
         const auto size = buffer_size(buffer);
-        const auto data = buffer_cast<const char_t*>(buffer);
+        const auto data = buffer_cast<const char*>(buffer);
         added += parser_.write({ data, size });
         if (parser_.is_done())
             break;
@@ -59,7 +57,7 @@ size_t CLASS::put(const Buffers& buffers, error_code& ec) NOEXCEPT
 }
 
 TEMPLATE
-void CLASS::init(std::optional<uint64_t> const&,  error_code& ec) NOEXCEPT
+void CLASS::init(const length_t&, error_code& ec) NOEXCEPT
 {
     parser_.reset();
     ec.clear();
