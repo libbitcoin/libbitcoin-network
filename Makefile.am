@@ -345,7 +345,8 @@ include_bitcoin_network_impl_messages_json_HEADERS = \
     include/bitcoin/network/impl/messages/json/parser_encode.ipp \
     include/bitcoin/network/impl/messages/json/parser_object.ipp \
     include/bitcoin/network/impl/messages/json/parser_statics.ipp \
-    include/bitcoin/network/impl/messages/json/parser_value.ipp
+    include/bitcoin/network/impl/messages/json/parser_value.ipp \
+    include/bitcoin/network/impl/messages/json/serializer.ipp
 
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \

@@ -26,6 +26,13 @@ namespace network {
 namespace json {
 
 TEMPLATE
+void CLASS::init(const std::optional<uint64_t>&, error_code& ec) NOEXCEPT
+{
+    parser_.reset();
+    ec.clear();
+}
+
+TEMPLATE
 template <class ConstBufferSequence>
 size_t CLASS::put(const ConstBufferSequence& buffers, error_code& ec) NOEXCEPT
 {
@@ -44,9 +51,8 @@ size_t CLASS::put(const ConstBufferSequence& buffers, error_code& ec) NOEXCEPT
     size_t added{};
     for (auto const& buffer: buffers)
     {
-        using namespace boost::asio;
-        const auto size = buffer_size(buffer);
-        const auto data = buffer_cast<const char*>(buffer);
+        const auto size = boost::asio::buffer_size(buffer);
+        const auto data = boost::asio::buffer_cast<const char*>(buffer);
         added += parser_.write({ data, size });
         if (parser_.is_done())
             break;
@@ -54,13 +60,6 @@ size_t CLASS::put(const ConstBufferSequence& buffers, error_code& ec) NOEXCEPT
 
     ec = parser_.get_error();
     return added;
-}
-
-TEMPLATE
-void CLASS::init(const length_t&, error_code& ec) NOEXCEPT
-{
-    parser_.reset();
-    ec.clear();
 }
 
 TEMPLATE

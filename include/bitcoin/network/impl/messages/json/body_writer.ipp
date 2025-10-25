@@ -25,22 +25,41 @@
 namespace libbitcoin {
 namespace network {
 namespace json {
+
+TEMPLATE
+void CLASS::init(error_code& ec) NOEXCEPT
+{
+    ec.clear();
+}
+
+TEMPLATE
+void CLASS::finish(error_code& ec) NOEXCEPT
+{
+    // BUGBUG: only serializing request (parser::value_type).
+    buffer_ = json::serializer<value_type>::write(body_);
+    if (buffer_.empty())
+    {
+        using namespace boost::system::errc;
+        ec = make_error_code(protocol_error);
+        return;
+    }
+
+    ec.clear();
+}
     
 TEMPLATE
 template <class ConstBufferSequence>
-size_t CLASS::get(ConstBufferSequence&, error_code&) NOEXCEPT
+size_t CLASS::get(ConstBufferSequence& buffers, error_code& ec) NOEXCEPT
 {
-    return {};
-}
+    if (buffer_.empty())
+    {
+        ec.clear();
+        return {};
+    }
 
-TEMPLATE
-void CLASS::init(error_code&) NOEXCEPT
-{
-}
-
-TEMPLATE
-void CLASS::finish(error_code&) NOEXCEPT
-{
+    auto view = boost::asio::buffer(buffer_);
+    boost::asio::buffer_copy(buffers, view);
+    return view.size();
 }
 
 } // namespace json

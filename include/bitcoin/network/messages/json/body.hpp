@@ -36,9 +36,6 @@ struct body
     /// Required by boost::beast.
     using value_type = Parser::value_type;
 
-    /// Local.
-    using length_t = std::optional<uint64_t>;
-
     /// Required: reader for incoming data.
     class reader
     {
@@ -51,7 +48,8 @@ struct body
         }
 
         /// Called once at start of body deserialization.
-        void init(const length_t& length, error_code& ec) NOEXCEPT;
+        void init(const std::optional<uint64_t>& length,
+            error_code& ec) NOEXCEPT;
 
         /// Bytes are consumed from buffers and parsed into json object.
         /// Called zero or more times with incoming (from wire) buffers.
@@ -90,6 +88,7 @@ struct body
         size_t get(ConstBufferSequence& buffers, error_code& ec) NOEXCEPT;
 
     protected:
+        std::string buffer_{};
         const value_type& body_;
     };
 };

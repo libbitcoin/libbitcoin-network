@@ -40,7 +40,7 @@ using request = boost::beast::http::request
     network::json::body
     <
         network::json::parser<true>,
-        network::json::serializer
+        network::json::serializer<network::json::request_t>
     >
 >;
 
@@ -49,7 +49,7 @@ using response = boost::beast::http::response
     network::json::body
     <
         network::json::parser<true>,
-        network::json::serializer
+        network::json::serializer<network::json::response_t>
     >
 >;
 
