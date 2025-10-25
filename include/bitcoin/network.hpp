@@ -15,6 +15,7 @@
  */
 
 #include <bitcoin/system.hpp>
+#include <bitcoin/network/beast.hpp>
 #include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/error.hpp>
@@ -24,7 +25,6 @@
 #include <bitcoin/network/version.hpp>
 #include <bitcoin/network/async/asio.hpp>
 #include <bitcoin/network/async/async.hpp>
-#include <bitcoin/network/async/beast.hpp>
 #include <bitcoin/network/async/desubscriber.hpp>
 #include <bitcoin/network/async/enable_shared_from_base.hpp>
 #include <bitcoin/network/async/handlers.hpp>
@@ -63,6 +63,7 @@
 #include <bitcoin/network/log/tracker.hpp>
 #include <bitcoin/network/messages/http/messages.hpp>
 #include <bitcoin/network/messages/http/method.hpp>
+#include <bitcoin/network/messages/http/types.hpp>
 #include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/http/enums/mime_type.hpp>
 #include <bitcoin/network/messages/http/enums/status.hpp>
@@ -73,7 +74,7 @@
 #include <bitcoin/network/messages/json/parser.hpp>
 #include <bitcoin/network/messages/json/parser_state.hpp>
 #include <bitcoin/network/messages/json/parser_track.hpp>
-#include <bitcoin/network/messages/json/serialize.hpp>
+#include <bitcoin/network/messages/json/serializer.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 #include <bitcoin/network/messages/json/enums/transport.hpp>
 #include <bitcoin/network/messages/json/enums/version.hpp>

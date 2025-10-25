@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/json/serialize.hpp>
+#include <bitcoin/network/messages/json/serializer.hpp>
 
 #include <sstream>
 #include <bitcoin/network/define.hpp>
@@ -27,6 +27,7 @@ namespace libbitcoin {
 namespace network {
 namespace json {
     
+// TODO: change to system::ostream.
 using stream = std::ostringstream;
 
 // local
@@ -138,34 +139,22 @@ void put_value(stream& out, const value_t& value) THROWS
         [&](const array_t& visit)
         {
             if (visit.empty())
-            {
                 throw ostream_exception{ "empty-array" };
-                return;
-            }
 
             const auto& first = visit.front().inner;
             if (!std::holds_alternative<string_t>(first))
-            {
                 throw ostream_exception{ "non-string-array-value" };
-                return;
-            }
 
             out << std::get<string_t>(first);
         },
         [&](const object_t& visit)
         {
             if (visit.empty())
-            {
                 throw ostream_exception{ "empty-object" };
-                return;
-            }
 
             const auto& first = visit.begin()->second.inner;
             if (!std::holds_alternative<string_t>(first))
-            {
                 throw ostream_exception{ "non-string-object-value" };
-                return;
-            }
 
             out << std::get<string_t>(first);
         }
@@ -296,6 +285,53 @@ void put_response(stream& out, const response_t& response) THROWS
     out << '}';
 }
 
+// public
+// ----------------------------------------------------------------------------
+
+////boost::json::serialize(boost::json::value_from(request));
+string_t serializer::write(const request_t& request) NOEXCEPT
+{
+    stream out{};
+    try
+    {
+        put_request(out, request);
+        return out.str();
+    }
+    catch (const std::exception& e)
+    {
+        try
+        {
+            return e.what();
+        }
+        catch(...)
+        {
+            return "json request";
+        }
+    }
+}
+
+////boost::json::serialize(boost::json::value_from(response));
+string_t serializer::write(const response_t& response) NOEXCEPT
+{
+    stream out{};
+    try
+    {
+        put_response(out, response);
+        return out.str();
+    }
+    catch (const std::exception& e)
+    {
+        try
+        {
+            return e.what();
+        }
+        catch (...)
+        {
+            return "json response";
+        }
+    }
+}
+
 #if defined (UNDEFINED)
 
 // boost::json
@@ -310,9 +346,9 @@ void tag_invoke(value_from_tag, value& value, version instance) THROWS
 {
     switch (instance)
     {
-        case version::v1: value = "1.0"; break;
-        case version::v2: value = "2.0"; break;
-        default: value = {}; break;
+    case version::v1: value = "1.0"; break;
+    case version::v2: value = "2.0"; break;
+    default: value = {}; break;
     }
 }
 
@@ -335,7 +371,7 @@ void tag_invoke(value_from_tag, value& value, const value_t& instance) THROWS
 {
     std::visit(overload
     {
-        [&](null_t) NOEXCEPT
+        [&] (null_t) NOEXCEPT
         {
             value = nullptr;
         },
@@ -356,7 +392,7 @@ void tag_invoke(value_from_tag, value& value, const value_t& instance) THROWS
         {
             array array{};
             array.reserve(visit.size());
-            for (const auto& element: visit)
+            for (const auto& element : visit)
                 array.emplace_back(value_from(element));
 
             value = std::move(array);
@@ -365,7 +401,7 @@ void tag_invoke(value_from_tag, value& value, const value_t& instance) THROWS
         {
             object object{};
             object.reserve(visit.size());
-            for (const auto& key: sorted_keys(visit))
+            for (const auto& key : sorted_keys(visit))
                 object[key] = value_from(key);
 
             value = std::move(object);
@@ -396,7 +432,7 @@ value_t tag_invoke(value_to_tag<value_t>, const value& value) THROWS
         array_t array{};
         const auto& container = value.as_array();
         array.reserve(container.size());
-        for (const auto& element: container)
+        for (const auto& element : container)
             array.emplace_back(value_to<value_t>(element));
 
         return { std::in_place_type<array_t>, std::move(array) };
@@ -406,7 +442,7 @@ value_t tag_invoke(value_to_tag<value_t>, const value& value) THROWS
         object_t object{};
         const auto& container = value.as_object();
         object.reserve(container.size());
-        for (const auto& element: container)
+        for (const auto& element : container)
             object.emplace(element.key(), value_to<value_t>(element.value()));
 
         return { std::in_place_type<object_t>, std::move(object) };
@@ -422,7 +458,7 @@ void tag_invoke(value_from_tag, value& value, const identity_t& instance) THROWS
 {
     std::visit(overload
     {
-        [&](null_t) NOEXCEPT
+        [&] (null_t) NOEXCEPT
         {
             value = boost::json::value{};
         },
@@ -451,7 +487,7 @@ identity_t tag_invoke(value_to_tag<identity_t>, const value& value) THROWS
     {
         return { string_t{ value.as_string() } };
     }
-    
+
     throw ostream_exception{ "value_to_tag<identity_t>" };
 }
 
@@ -659,53 +695,6 @@ response_t tag_invoke(value_to_tag<response_t>, const value& value) NOEXCEPT
 }
 
 #endif // UNDEFINED
-
-// public
-// ----------------------------------------------------------------------------
-
-////return boost::json::serialize(boost::json::value_from(request));
-string_t serialize(const request_t& request) NOEXCEPT
-{
-    stream out{};
-    try
-    {
-        put_request(out, request);
-        return out.str();
-    }
-    catch (const std::exception& e)
-    {
-        try
-        {
-            return e.what();
-        }
-        catch(...)
-        {
-            return "json request";
-        }
-    }
-}
-
-////return boost::json::serialize(boost::json::value_from(response));
-string_t serialize(const response_t& response) NOEXCEPT
-{
-    stream out{};
-    try
-    {
-        put_response(out, response);
-        return out.str();
-    }
-    catch (const std::exception& e)
-    {
-        try
-        {
-            return e.what();
-        }
-        catch (...)
-        {
-            return "json response";
-        }
-    }
-}
 
 } // namespace json
 } // namespace network

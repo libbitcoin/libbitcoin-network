@@ -30,6 +30,9 @@ struct test_parser
 {
     using base = parser<Strict, Require, Trace>;
     using base::base;
+
+    // Required for body template.
+    using value_type = base::value_type;
 };
 
 // non-strict until tests are updated for "method" non-empty required.

@@ -16,18 +16,35 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_ASYNC_ASYNC_HPP
-#define LIBBITCOIN_NETWORK_ASYNC_ASYNC_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_WRITER_IPP
+#define LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_WRITER_IPP
 
-#include <bitcoin/network/async/asio.hpp>
-#include <bitcoin/network/async/desubscriber.hpp>
-#include <bitcoin/network/async/enable_shared_from_base.hpp>
-#include <bitcoin/network/async/handlers.hpp>
-#include <bitcoin/network/async/races/races.hpp>
-#include <bitcoin/network/async/subscriber.hpp>
-#include <bitcoin/network/async/thread.hpp>
-#include <bitcoin/network/async/threadpool.hpp>
-#include <bitcoin/network/async/time.hpp>
-#include <bitcoin/network/async/unsubscriber.hpp>
+#include <bitcoin/network/messages/json/serializer.hpp>
+#include <bitcoin/network/messages/json/types.hpp>
+
+namespace libbitcoin {
+namespace network {
+namespace json {
+    
+TEMPLATE
+template <class ConstBufferSequence>
+size_t CLASS::get(ConstBufferSequence&, error_code&) NOEXCEPT
+{
+    return {};
+}
+
+TEMPLATE
+void CLASS::init(error_code&) NOEXCEPT
+{
+}
+
+TEMPLATE
+void CLASS::finish(error_code&) NOEXCEPT
+{
+}
+
+} // namespace json
+} // namespace network
+} // namespace libbitcoin
 
 #endif

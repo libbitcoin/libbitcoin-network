@@ -116,6 +116,20 @@ struct BCT_API request_t
 
 using error_code = error::boost_code;
 
+// TODO: move all above into json::rpc namespace.
+namespace rpc {
+
+// TODO: for non-http rpc json (stratum v1, electrum) messages, define:
+// TODO: json::rpc::request
+// TODO: json::rpc::response.
+
+} // namespace rpc
+
+// TODO: prob move this into another directory.
+// TODO: for non-http non-rpc json (?) messages, define:
+// TODO: json::request
+// TODO: json::response.
+
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
