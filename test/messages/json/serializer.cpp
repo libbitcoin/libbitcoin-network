@@ -20,6 +20,183 @@
 
 BOOST_AUTO_TEST_SUITE(serializer_tests)
 
+// serializer
+// ----------------------------------------------------------------------------
+
+template <size_t Size>
+bool write_chunk(std::ostream& capture, boost::json::serializer& serial)
+{
+    size_t total{};
+    std::array<char, Size> buffer{};
+
+    // fill up the outgoing buffer.
+    while (total < Size && !serial.done())
+    {
+        const auto start = std::next(buffer.data(), total);
+        const auto bytes = Size - total;
+        total += serial.read(start, bytes).size();
+    }
+
+    // TODO: make these real.
+    boost::asio::io_context context{};
+    boost::asio::ip::tcp::socket socket{ context };
+    const boost::asio::const_buffer view{ buffer.data(), total };
+
+    // testing only, simulates async write.
+    ///////////////////////////////////////////////////////////////////////
+    capture.write(static_cast<const char*>(view.data()),
+        static_cast<std::streamsize>(total));
+    ///////////////////////////////////////////////////////////////////////
+
+    // TODO: async, partial write allowed.
+    // write the buffer to the socket.
+    ////boost::asio::write(socket, view);
+    return !capture.bad();
+}
+
+template <size_t Size>
+bool stream_chunk(std::ostream& out, boost::json::serializer& serial)
+{
+    size_t total{};
+    std::array<char, Size> buffer{};
+
+    // fill up the outgoing buffer.
+    while (total < Size && !serial.done())
+    {
+        const auto start = std::next(buffer.data(), total);
+        const auto bytes = Size - total;
+
+        // partial read allowed.
+        total += serial.read(start, bytes).size();
+    }
+
+    // write the buffer to the stream.
+    out.write(buffer.data(), static_cast<std::streamsize>(total));
+    return !out.bad();
+}
+
+BOOST_AUTO_TEST_CASE(serializer_chunk_test)
+{
+    const auto expected = R"({"name":"Boost.JSON","version":"1.86"})";
+
+    std::ostringstream out{};
+    boost::json::serializer serial{};
+    const auto model = boost::json::parse(expected);
+    ////const boost::json::value model
+    ////{
+    ////    { "name", "Boost.JSON" },
+    ////    { "version", "1.86" }
+    ////};
+
+    serial.reset(&model);
+    while (!serial.done())
+    {
+        BOOST_REQUIRE(stream_chunk<16>(out, serial));
+    }
+
+    BOOST_REQUIRE_EQUAL(out.str(), expected);
+
+    out.clear();
+    out.str({});
+    serial.reset(&model);
+    while (!serial.done())
+    {
+        BOOST_REQUIRE(write_chunk<16>(out, serial));
+    }
+
+    BOOST_REQUIRE_EQUAL(out.str(), expected);
+}
+
+// parser
+// ----------------------------------------------------------------------------
+
+template <size_t Size>
+bool read_chunk(std::istream& capture, boost::json::stream_parser& parse)
+{
+    size_t total{};
+    std::array<char, Size> buffer{};
+
+    // TODO: make these real.
+    boost::asio::io_context context{};
+    boost::asio::ip::tcp::socket socket{ context };
+
+    // fill up the buffer from the socket.
+    while (total < Size && !capture.eof())
+    {
+        const auto start = std::next(buffer.data(), total);
+        const auto bytes = Size - total;
+        const boost::asio::mutable_buffer view{ start, bytes };
+
+        // testing only, simulates async read.
+        ///////////////////////////////////////////////////////////////////////
+        capture.read(start, static_cast<std::streamsize>(bytes));
+        total += static_cast<size_t>(capture.gcount());
+        ///////////////////////////////////////////////////////////////////////
+
+        // TODO: async, partial read allowed.
+        ////total += boost::asio::read(socket, view);
+    }
+
+    // partial write allowed.
+    // parse the incoming buffer.
+    boost::system::error_code ec{};
+    parse.write_some(buffer.data(), total, ec);
+    return !ec && !capture.bad();
+}
+
+template <size_t Size>
+bool stream_chunk(std::istream& source, boost::json::stream_parser& parse)
+{
+    size_t total{};
+    std::array<char, Size> buffer{};
+
+    // fill up the buffer from the stream.
+    while (total < Size && !source.eof())
+    {
+        const auto start = buffer.data() + total;
+        const auto bytes = Size - total;
+        source.read(start, static_cast<std::streamsize>(bytes));
+        total += static_cast<size_t>(source.gcount());
+    }
+
+    // partial write allowed.
+    // parse the incoming buffer.
+    boost::system::error_code ec{};
+    parse.write_some(buffer.data(), total, ec);
+    return !ec && !source.bad();
+}
+
+BOOST_AUTO_TEST_CASE(parser_chunk_test)
+{
+    const auto text = R"({"name":"Boost.JSON","version":"1.86"})";
+    const auto expected = boost::json::parse(text);
+    ////const boost::json::value expected
+    ////{
+    ////    { "name", "Boost.JSON" },
+    ////    { "version", "1.86" }
+    ////};
+
+    std::istringstream in{ text };
+    boost::json::stream_parser parser{};
+
+    while (!parser.done())
+    {
+        BOOST_REQUIRE(stream_chunk<16>(in, parser));
+    }
+
+    BOOST_REQUIRE_EQUAL(parser.release(), expected);
+
+    in.clear();
+    in.str(text);
+    parser.reset();
+    while (!parser.done())
+    {
+        BOOST_REQUIRE(read_chunk<16>(in, parser));
+    }
+
+    BOOST_REQUIRE_EQUAL(parser.release(), expected);
+}
+
 using namespace network::json;
 
 // non-strict until tests are updated for "method" non-empty required.
