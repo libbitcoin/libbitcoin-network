@@ -96,7 +96,7 @@ void socket::do_stop() NOEXCEPT
     socket_.close(ignore);
 }
 
-// I/O.
+// TCP.
 // ----------------------------------------------------------------------------
 // Boost async functions are NOT THREAD SAFE for the same socket object.
 // This clarifies boost documentation: svn.boost.org/trac10/ticket/10009
@@ -157,47 +157,47 @@ void socket::write(const asio::const_buffer& in,
 // HTTP Readers.
 // ----------------------------------------------------------------------------
 
-void socket::http_read(http::flat_buffer& buffer, http::string_request& request,
-    count_handler&& handler) NOEXCEPT
+void socket::http_read(http::flat_buffer& buffer,
+    http::request& request, count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_read_string_buffered, shared_from_this(),
+        std::bind(&socket::do_http_read, shared_from_this(),
             std::ref(buffer), std::ref(request), std::move(handler)));
 }
 
-void socket::http_read(http::string_request& request,
-    count_handler&& handler) NOEXCEPT
+void socket::http_read(http::flat_buffer& buffer,
+    http::string_request& request, count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_http_read_string, shared_from_this(),
-            std::ref(request), std::move(handler)));
-}
-
-void socket::http_read(http::flat_buffer& buffer, http::json_request& request,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_read_json_buffered, shared_from_this(),
             std::ref(buffer), std::ref(request), std::move(handler)));
 }
 
-void socket::http_read(http::json_request& request,
-    count_handler&& handler) NOEXCEPT
+void socket::http_read(http::flat_buffer& buffer,
+    http::json_request& request, count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_http_read_json, shared_from_this(),
-            std::ref(request), std::move(handler)));
+            std::ref(buffer), std::ref(request), std::move(handler)));
 }
 
 // HTTP Writers.
 // ----------------------------------------------------------------------------
 
-void socket::http_write(const http::string_response& response,
+void socket::http_write(http::response& response,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_http_write, shared_from_this(),
+            std::ref(response), std::move(handler)));
+}
+
+void socket::http_write(http::string_response& response,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_http_write_string,
-            shared_from_this(), std::cref(response), std::move(handler)));
+            shared_from_this(), std::ref(response), std::move(handler)));
 }
 
 void socket::http_write(http::json_response& response,
@@ -208,20 +208,12 @@ void socket::http_write(http::json_response& response,
             shared_from_this(), std::ref(response), std::move(handler)));
 }
 
-void socket::http_write(http::flat_buffer& buffer,
-    http::json_response& response, count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::do_http_write_json_buffered, shared_from_this(),
-            std::ref(buffer), std::ref(response), std::move(handler)));
-}
-
-void socket::http_write(const http::data_response& response,
+void socket::http_write(http::data_response& response,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_http_write_data,
-            shared_from_this(), std::cref(response), std::move(handler)));
+            shared_from_this(), std::ref(response), std::move(handler)));
 }
 
 void socket::http_write(http::file_response& response,
@@ -232,7 +224,7 @@ void socket::http_write(http::file_response& response,
             shared_from_this(), std::ref(response), std::move(handler)));
 }
 
-// executors (private).
+// tcp (private).
 // ----------------------------------------------------------------------------
 // These execute on the strand to protect the member socket.
 
@@ -297,9 +289,9 @@ void socket::do_write(const asio::const_buffer& in,
 // http readers (private).
 // ----------------------------------------------------------------------------
 
-void socket::do_http_read_string_buffered(
+void socket::do_http_read(
     const std::reference_wrapper<http::flat_buffer>& buffer,
-    const std::reference_wrapper<http::string_request>& request,
+    const std::reference_wrapper<http::request>& request,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -322,31 +314,31 @@ void socket::do_http_read_string_buffered(
     }
     catch (const std::exception& LOG_ONLY(e))
     {
-        LOGF("Exception @ do_http_read_string_buffered: " << e.what());
+        LOGF("Exception @ do_http_read: " << e.what());
         handler(error::operation_failed, zero);
     }
 }
 
 void socket::do_http_read_string(
+    const std::reference_wrapper<http::flat_buffer>& buffer,
     const std::reference_wrapper<http::string_request>& request,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // Performance: a temporary buffer is allocated for each request.
-    // The buffer is zero-reserved and grows from zero on each request.
+    // The buffer is externally constructed, controlling its capacity.
+    // Providing the buffer also allows caller to prevent reallocations.
     // Each request is independent, so the full buffer is always consumed.
-    const auto buffer = std::make_shared<http::flat_buffer>();
     auto complete = [=](const code& ec, size_t size) NOEXCEPT
     {
-        buffer->consume(buffer->size());
+        buffer.get().consume(buffer.get().size());
         handler(ec, size);
     };
 
     try
     {
         // This operation posts handler to the strand.
-        boost::beast::http::async_read(socket_, *buffer, request.get(),
+        boost::beast::http::async_read(socket_, buffer.get(), request.get(),
             std::bind(&socket::handle_http,
                 shared_from_this(), _1, _2, std::move(complete)));
     }
@@ -357,7 +349,7 @@ void socket::do_http_read_string(
     }
 }
 
-void socket::do_http_read_json_buffered(
+void socket::do_http_read_json(
     const std::reference_wrapper<http::flat_buffer>& buffer,
     const std::reference_wrapper<http::json_request>& request,
     const count_handler& handler) NOEXCEPT
@@ -377,36 +369,6 @@ void socket::do_http_read_json_buffered(
     {
         // This operation posts handler to the strand.
         boost::beast::http::async_read(socket_, buffer.get(), request.get(),
-            std::bind(&socket::handle_http,
-                shared_from_this(), _1, _2, std::move(complete)));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_read_json_buffered: " << e.what());
-        handler(error::operation_failed, zero);
-    }
-}
-
-void socket::do_http_read_json(
-    const std::reference_wrapper<http::json_request>& request,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // Performance: a temporary buffer is allocated for each request.
-    // The buffer is zero-reserved and grows from zero on each request.
-    // Each request is independent, so the full buffer is always consumed.
-    const auto buffer = std::make_shared<http::flat_buffer>();
-    auto complete = [=](const code& ec, size_t size) NOEXCEPT
-    {
-        buffer->consume(buffer->size());
-        handler(ec, size);
-    };
-
-    try
-    {
-        // This operation posts handler to the strand.
-        boost::beast::http::async_read(socket_, *buffer, request.get(),
             std::bind(&socket::handle_http,
                 shared_from_this(), _1, _2, std::move(complete)));
     }
@@ -420,8 +382,30 @@ void socket::do_http_read_json(
 // http writers (private).
 // ----------------------------------------------------------------------------
 
+void socket::do_http_write(
+    const std::reference_wrapper<http::response>& response,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // TODO: set json 'buffer' onto body payload.
+
+    try
+    {
+        // This operation posts handler to the strand.
+        boost::beast::http::async_write(socket_, response.get(),
+            std::bind(&socket::handle_http,
+                shared_from_this(), _1, _2, handler));
+    }
+    catch (const std::exception& LOG_ONLY(e))
+    {
+        LOGF("Exception @ do_http_write: " << e.what());
+        handler(error::operation_failed, zero);
+    }
+}
+
 void socket::do_http_write_string(
-    const std::reference_wrapper<const http::string_response>& response,
+    const std::reference_wrapper<http::string_response>& response,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -446,8 +430,7 @@ void socket::do_http_write_json(
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // TODO: set local buffer onto body payload.
-    ////response.get().body().size = 42;
+    // TODO: set json 'buffer' onto body payload.
 
     try
     {
@@ -463,32 +446,8 @@ void socket::do_http_write_json(
     }
 }
 
-void socket::do_http_write_json_buffered(
-    const std::reference_wrapper<http::flat_buffer>& /* buffer */,
-    const std::reference_wrapper<http::json_response>& response,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT_MSG(stranded(), "strand");
-
-    // TODO: set 'buffer' onto body payload, ensure fully consumed.
-    ////response.get().body().size = 42;
-
-    try
-    {
-        // This operation posts handler to the strand.
-        boost::beast::http::async_write(socket_, response.get(),
-            std::bind(&socket::handle_http,
-                shared_from_this(), _1, _2, handler));
-    }
-    catch (const std::exception& LOG_ONLY(e))
-    {
-        LOGF("Exception @ do_http_write_json_buffered: " << e.what());
-        handler(error::operation_failed, zero);
-    }
-}
-
 void socket::do_http_write_data(
-    const std::reference_wrapper<const http::data_response>& response,
+    const std::reference_wrapper<http::data_response>& response,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -533,7 +492,7 @@ void socket::do_http_write_file(
     }
 }
 
-// handlers (private).
+// completion (private).
 // ----------------------------------------------------------------------------
 // These are invoked on strand upon failure, socket cancel, or completion.
 

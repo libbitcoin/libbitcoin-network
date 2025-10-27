@@ -330,6 +330,10 @@ include_bitcoin_network_impl_async_races_HEADERS = \
     include/bitcoin/network/impl/async/races/race_unity.ipp \
     include/bitcoin/network/impl/async/races/race_volume.ipp
 
+include_bitcoin_network_impl_messages_httpdir = ${includedir}/bitcoin/network/impl/messages/http
+include_bitcoin_network_impl_messages_http_HEADERS = \
+    include/bitcoin/network/impl/messages/http/body.ipp
+
 include_bitcoin_network_impl_messages_jsondir = ${includedir}/bitcoin/network/impl/messages/json
 include_bitcoin_network_impl_messages_json_HEADERS = \
     include/bitcoin/network/impl/messages/json/body.ipp
@@ -346,6 +350,7 @@ include_bitcoin_network_log_HEADERS = \
 
 include_bitcoin_network_messages_httpdir = ${includedir}/bitcoin/network/messages/http
 include_bitcoin_network_messages_http_HEADERS = \
+    include/bitcoin/network/messages/http/body.hpp \
     include/bitcoin/network/messages/http/messages.hpp \
     include/bitcoin/network/messages/http/method.hpp \
     include/bitcoin/network/messages/http/types.hpp

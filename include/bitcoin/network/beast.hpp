@@ -21,7 +21,9 @@
 
 #include <bitcoin/network/boost.hpp>
 
+#include <optional>
 #include <memory>
+#include <utility>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/websocket.hpp>
@@ -36,7 +38,10 @@ namespace http {
 constexpr int32_t version_1_1 = 11;
 constexpr int32_t version_1_0 = 10;
 
-/// beast::http::vector_body<uint8_t>
+/// beast::http::empty_body
+typedef boost::beast::http::empty_body empty_body;
+
+/// beast::http::data_body
 typedef boost::beast::http::vector_body<uint8_t> data_body;
 typedef boost::beast::http::request<data_body> data_request;
 typedef boost::beast::http::response<data_body> data_response;
@@ -58,18 +63,24 @@ typedef std::shared_ptr<string_request> string_request_ptr;
 typedef boost::beast::http::file_body file_body;
 typedef boost::beast::http::request<file_body> file_request;
 typedef boost::beast::http::response<file_body> file_response;
-typedef boost::beast::http::serializer<false, file_body> file_serializer;
 ////typedef boost::beast::http::request_parser<file_body> file_parser;
-////typedef std::shared_ptr<const file_request> file_request_cptr;
-////typedef std::shared_ptr<file_request> file_request_ptr;
+typedef boost::beast::http::serializer<false, file_body> file_serializer;
+typedef std::shared_ptr<const file_request> file_request_cptr;
+typedef std::shared_ptr<file_request> file_request_ptr;
 
-/// general purpose
+/// Required types for custom beast::http::body definition.
 template <bool IsRequest, class Fields>
 using header = boost::beast::http::header<IsRequest, Fields>;
+template <class Buffer>
+using get_buffer = boost::optional<std::pair<Buffer, bool>>;
+using length_type = boost::optional<uint64_t>;
+
+/// general purpose
 typedef file_body::value_type file;
 typedef boost::beast::http::field field;
 typedef boost::beast::http::fields fields;
 typedef boost::beast::flat_buffer flat_buffer;
+typedef boost::system::error_code error_code;
 
 /////// websockets
 ////using websocket = boost::beast::websocket::stream<asio::socket>;

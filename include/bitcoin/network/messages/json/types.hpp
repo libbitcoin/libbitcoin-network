@@ -24,7 +24,6 @@
 #include <utility>
 #include <variant>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/error.hpp>
 #include <bitcoin/network/messages/json/enums/version.hpp>
 
 namespace libbitcoin {
@@ -114,7 +113,7 @@ struct BCT_API request_t
     params_option params{};
 };
 
-using error_code = error::boost_code;
+typedef boost::system::error_code error_code;
 
 } // namespace json
 } // namespace network

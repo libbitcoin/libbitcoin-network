@@ -150,9 +150,8 @@ void proxy::do_subscribe_stop(const result_handler& handler,
     complete(error::success);
 }
 
-// Reads.
+// TCP.
 // ----------------------------------------------------------------------------
-// Method waiting() is invoked directly if read() is called from strand().
 
 void proxy::read(const asio::mutable_buffer& buffer,
     count_handler&& handler) NOEXCEPT
@@ -161,6 +160,27 @@ void proxy::read(const asio::mutable_buffer& buffer,
         std::bind(&proxy::waiting, shared_from_this()));
 
     socket_->read(buffer, std::move(handler));
+}
+
+void proxy::write(const asio::const_buffer& payload,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_write,
+            shared_from_this(), payload, std::move(handler)));
+}
+
+// HTTP Readers.
+// ----------------------------------------------------------------------------
+// Method waiting() is invoked directly if read() is called from strand().
+
+void proxy::read(http::flat_buffer& buffer, http::request& request,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::waiting, shared_from_this()));
+
+    socket_->http_read(buffer, request, std::move(handler));
 }
 
 void proxy::read(http::flat_buffer& buffer, http::string_request& request,
@@ -172,15 +192,6 @@ void proxy::read(http::flat_buffer& buffer, http::string_request& request,
     socket_->http_read(buffer, request, std::move(handler));
 }
 
-void proxy::read(http::string_request& request,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::waiting, shared_from_this()));
-
-    socket_->http_read(request, std::move(handler));
-}
-
 void proxy::read(http::flat_buffer& buffer, http::json_request& request,
     count_handler&& handler) NOEXCEPT
 {
@@ -190,20 +201,17 @@ void proxy::read(http::flat_buffer& buffer, http::json_request& request,
     socket_->http_read(buffer, request, std::move(handler));
 }
 
-void proxy::read(http::json_request& request,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::waiting, shared_from_this()));
-
-    socket_->http_read(request, std::move(handler));
-}
-
-// Writes.
+// HTTP Writers.
 // ----------------------------------------------------------------------------
 // Writes are composed but http is half duplex so there is no interleave risk.
 
-void proxy::write(const http::string_response& response,
+void proxy::write(http::response& response,
+    count_handler&& handler) NOEXCEPT
+{
+    socket_->http_write(response, std::move(handler));
+}
+
+void proxy::write(http::string_response& response,
     count_handler&& handler) NOEXCEPT
 {
     socket_->http_write(response, std::move(handler));
@@ -215,13 +223,7 @@ void proxy::write(http::json_response& response,
     socket_->http_write(response, std::move(handler));
 }
 
-void proxy::write(http::flat_buffer& buffer, http::json_response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    socket_->http_write(buffer, response, std::move(handler));
-}
-
-void proxy::write(const http::data_response& response,
+void proxy::write(http::data_response& response,
     count_handler&& handler) NOEXCEPT
 {
     socket_->http_write(response, std::move(handler));
@@ -237,14 +239,6 @@ void proxy::write(http::file_response& response,
 // ----------------------------------------------------------------------------
 // stackoverflow.com/questions/7754695/boost-asio-async-write-how-to-not-
 // interleaving-async-write-calls
-
-void proxy::write(const asio::const_buffer& payload,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), payload, std::move(handler)));
-}
 
 // private
 void proxy::do_write(const asio::const_buffer& payload,

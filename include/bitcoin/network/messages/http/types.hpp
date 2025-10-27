@@ -19,16 +19,28 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_TYPES_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_TYPES_HPP
 
+#include <memory>
+#include <variant>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/http/body.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace http {
 
-using json_body = json::body<json::parser, json::serializer>;
+/// http::json::request
+using json_parser = json::parser;
+using json_serializer = json::serializer;
+using json_body = json::body<json_parser, json_serializer>;
 using json_request = boost::beast::http::request<json_body>;
 using json_response = boost::beast::http::response<json_body>;
+using json_request_cptr = std::shared_ptr<const json_request>;
+using json_request_ptr = std::shared_ptr<json_response>;
+
+/// http::request (variant)
+using request = boost::beast::http::request<http::body>;
+using response = boost::beast::http::response<http::body>;
 
 } // namespace http
 } // namespace network
