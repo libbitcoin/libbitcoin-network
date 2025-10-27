@@ -150,22 +150,7 @@
     <ClCompile Include="..\..\..\..\test\messages\http\method.cpp">
       <Filter>src\messages\http</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp">
-      <Filter>src\messages\json</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\json\body_writer.cpp">
-      <Filter>src\messages\json</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\json\parser.cpp">
-      <Filter>src\messages\json</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\json\parser_statics.cpp">
-      <Filter>src\messages\json</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\json\parser_track.cpp">
-      <Filter>src\messages\json</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\test\messages\json\serializer.cpp">
+    <ClCompile Include="..\..\..\..\test\messages\json\body.cpp">
       <Filter>src\messages\json</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\address.cpp">

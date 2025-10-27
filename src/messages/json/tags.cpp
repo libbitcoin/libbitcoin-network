@@ -16,27 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <bitcoin/network/messages/json/serializer.hpp>
+#include <bitcoin/network/messages/json/tags.hpp>
 
+#include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/enums/version.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
+
+// TODO: boost::json parse/seralize is not exception safe.
 
 namespace libbitcoin {
 namespace network {
 namespace json {
 
-#if defined (UNDEFINED)
-
-using namespace boost::json;
-
-// Uses std::to_chars() for number formatting.
-// Also supports streaming and pretty print formatting.
-
 // version
 // ----------------------------------------------------------------------------
 
-void tag_invoke(value_from_tag, value& value, version instance) THROWS
+DEFINE_JSON_FROM_TAG(version)
 {
     switch (instance)
     {
@@ -46,7 +42,7 @@ void tag_invoke(value_from_tag, value& value, version instance) THROWS
     }
 }
 
-version tag_invoke(value_to_tag<version>, const value& value) NOEXCEPT
+DEFINE_JSON_TO_TAG(version)
 {
     if (value.is_string())
     {
@@ -61,19 +57,7 @@ version tag_invoke(value_to_tag<version>, const value& value) NOEXCEPT
 // value_t
 // ----------------------------------------------------------------------------
 
-// Project keys into sorted vector for predictable output.
-const std::vector<string_t> sorted_keys(const object_t& object) NOEXCEPT
-{
-    std::vector<string_t> keys{};
-    keys.reserve(object.size());
-    for (const auto& pair : object)
-        keys.push_back(pair.first);
-
-    std::sort(keys.begin(), keys.end());
-    return keys;
-}
-
-void tag_invoke(value_from_tag, value& value, const value_t& instance) THROWS
+DEFINE_JSON_FROM_TAG(value_t)
 {
     std::visit(overload
     {
@@ -87,36 +71,24 @@ void tag_invoke(value_from_tag, value& value, const value_t& instance) THROWS
         },
         [&](number_t visit) NOEXCEPT
         {
-            // This may serialize to scientific notation.
-            // Number conversion is not controlled (boost default behavior).
             value = visit;
         },
-        [&](const string_t& visit) THROWS
+        [&](const string_t& visit) NOEXCEPT
         {
             value = visit;
         },
-        [&](const array_t& visit) THROWS
+        [&](const array_t& visit) NOEXCEPT
         {
-            array array{};
-            array.reserve(visit.size());
-            for (const auto& element : visit)
-                array.emplace_back(value_from(element));
-
-            value = std::move(array);
+            value = value_from(visit);
         },
-        [&](const object_t& visit) THROWS
+        [&](const object_t& visit) NOEXCEPT
         {
-            object object{};
-            object.reserve(visit.size());
-            for (const auto& key: sorted_keys(visit))
-                object[key] = value_from(key);
-
-            value = std::move(object);
+            value = value_from(visit);
         }
     }, instance.inner);
 }
 
-value_t tag_invoke(value_to_tag<value_t>, const value& value) THROWS
+DEFINE_JSON_TO_TAG(value_t)
 {
     if (value.is_null())
     {
@@ -128,7 +100,6 @@ value_t tag_invoke(value_to_tag<value_t>, const value& value) THROWS
     }
     else if (value.is_number())
     {
-        // Number conversion is not controlled (boost default behavior).
         return { std::in_place_type<number_t>, value.to_number<number_t>() };
     }
     else if (value.is_string())
@@ -137,32 +108,20 @@ value_t tag_invoke(value_to_tag<value_t>, const value& value) THROWS
     }
     else if (value.is_array())
     {
-        array_t array{};
-        const auto& container = value.as_array();
-        array.reserve(container.size());
-        for (const auto& element : container)
-            array.emplace_back(value_to<value_t>(element));
-
-        return { std::in_place_type<array_t>, std::move(array) };
+        return { std::in_place_type<array_t>, value_to<array_t>(value) };
     }
     else if (value.is_object())
     {
-        object_t object{};
-        const auto& container = value.as_object();
-        object.reserve(container.size());
-        for (const auto& element : container)
-            object.emplace(element.key(), value_to<value_t>(element.value()));
-
-        return { std::in_place_type<object_t>, std::move(object) };
+        return { std::in_place_type<object_t>, value_to<object_t>(value) };
     }
 
-    throw ostream_exception{ "value_to_tag<value_t>" };
+    throw ostream_exception{ "value_t" };
 }
 
 // identity_t
 // ----------------------------------------------------------------------------
 
-void tag_invoke(value_from_tag, value& value, const identity_t& instance) THROWS
+DEFINE_JSON_FROM_TAG(identity_t)
 {
     std::visit(overload
     {
@@ -172,17 +131,16 @@ void tag_invoke(value_from_tag, value& value, const identity_t& instance) THROWS
         },
         [&](code_t visit) NOEXCEPT
         {
-            // Number conversion is not controlled (boost default behavior).
             value = visit;
         },
-        [&](const string_t& visit) THROWS
+        [&](const string_t& visit) NOEXCEPT
         {
             value = visit;
         }
     }, instance);
 }
 
-identity_t tag_invoke(value_to_tag<identity_t>, const value& value) THROWS
+DEFINE_JSON_TO_TAG(identity_t)
 {
     if (value.is_null())
     {
@@ -190,7 +148,6 @@ identity_t tag_invoke(value_to_tag<identity_t>, const value& value) THROWS
     }
     else if (value.is_number())
     {
-        // Number conversion is not controlled (boost default behavior).
         return { code_t{ value.to_number<code_t>() } };
     }
     else if (value.is_string())
@@ -198,36 +155,35 @@ identity_t tag_invoke(value_to_tag<identity_t>, const value& value) THROWS
         return { string_t{ value.as_string() } };
     }
 
-    throw ostream_exception{ "value_to_tag<identity_t>" };
+    throw ostream_exception{ "identity_t" };
 }
 
 // request_t
 // ----------------------------------------------------------------------------
 
-void tag_invoke(value_from_tag, value& value, const request_t& request) NOEXCEPT
+DEFINE_JSON_FROM_TAG(request_t)
 {
-    boost::json::object object{};
+    json_object object{};
 
-    if (request.jsonrpc != version::undefined)
+    if (instance.jsonrpc != version::undefined)
     {
-        object["jsonrpc"] = value_from(request.jsonrpc);
+        object["jsonrpc"] = value_from(instance.jsonrpc);
     }
 
-    if (request.id.has_value())
+    if (instance.id.has_value())
     {
-        object["id"] = value_from(request.id.value());
+        object["id"] = value_from(instance.id.value());
     }
 
-    if (!request.method.empty())
+    if (!instance.method.empty())
     {
-        object["method"] = value_from(request.method);
+        object["method"] = value_from(instance.method);
     }
 
-    if (request.params.has_value())
+    if (instance.params.has_value())
     {
-        const auto& params = request.params.value();
-
-        if (std::holds_alternative<array_t>(params))
+        if (const auto& params = instance.params.value();
+            std::holds_alternative<array_t>(params))
         {
             object["params"] = value_from(std::get<array_t>(params));
         }
@@ -240,7 +196,10 @@ void tag_invoke(value_from_tag, value& value, const request_t& request) NOEXCEPT
     value = object;
 }
 
-request_t tag_invoke(value_to_tag<request_t>, const value& value) NOEXCEPT
+// Bogus warnings on `it` not checked.
+BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
+
+DEFINE_JSON_TO_TAG(request_t)
 {
     request_t request{};
     const auto& object = value.as_object();
@@ -266,8 +225,7 @@ request_t tag_invoke(value_to_tag<request_t>, const value& value) NOEXCEPT
     // params
     if (const auto it = object.find("params"); it != object.end())
     {
-        const auto& params = it->value();
-        if (params.is_array())
+        if (const auto& params = it->value(); params.is_array())
         {
             request.params = params_t
             {
@@ -289,44 +247,45 @@ request_t tag_invoke(value_to_tag<request_t>, const value& value) NOEXCEPT
 // response_t
 // ----------------------------------------------------------------------------
 
-void tag_invoke(value_from_tag, value& value, const response_t& response) NOEXCEPT
+DEFINE_JSON_FROM_TAG(response_t)
 {
-    boost::json::object object{};
+    json_object object{};
 
-    if (response.jsonrpc != version::undefined)
+    if (instance.jsonrpc != version::undefined)
     {
-        object["jsonrpc"] = value_from(response.jsonrpc);
+        object["jsonrpc"] = value_from(instance.jsonrpc);
     }
 
-    if (response.id.has_value())
+    if (instance.id.has_value())
     {
-        object["id"] = value_from(response.id.value());
+        object["id"] = value_from(instance.id.value());
     }
 
-    if (response.error.has_value())
+    if (instance.error.has_value())
     {
-        const auto& result = response.error.value();
-        boost::json::object error{};
-        error["code"] = result.code;
-        error["message"] = result.message;
+        const auto& result = instance.error.value();
+
+        object["error"] =
+        {
+            { "code", result.code },
+            { "message", result.message }
+        };
 
         if (result.data.has_value())
         {
-            error["data"] = value_from(result.data.value());
+            object["data"] = value_from(result.data.value());
         }
-
-        object["error"] = error;
     }
 
-    if (response.result.has_value())
+    if (instance.result.has_value())
     {
-        object["result"] = value_from(response.result.value());
+        object["result"] = value_from(instance.result.value());
     }
 
     value = object;
 }
 
-response_t tag_invoke(value_to_tag<response_t>, const value& value) NOEXCEPT
+DEFINE_JSON_TO_TAG(response_t)
 {
     response_t response{};
     const auto& object = value.as_object();
@@ -340,14 +299,12 @@ response_t tag_invoke(value_to_tag<response_t>, const value& value) NOEXCEPT
     // id
     if (const auto it = object.find("id"); it != object.end())
     {
-        const auto& id = it->value();
-        if (id.is_null())
+        if (const auto& id = it->value(); id.is_null())
         {
             response.id = { null_t{} };
         }
         else if (id.is_number())
         {
-            // int64_t conversion is not controlled (boost default behavior).
             response.id = { id.to_number<code_t>() };
         }
         else if (id.is_string())
@@ -365,7 +322,6 @@ response_t tag_invoke(value_to_tag<response_t>, const value& value) NOEXCEPT
         if (const auto code_it = error.find("code");
             code_it != error.end())
         {
-            // int64_t conversion is not controlled (boost default behavior).
             result.code = code_it->value().to_number<code_t>();
         }
 
@@ -393,7 +349,7 @@ response_t tag_invoke(value_to_tag<response_t>, const value& value) NOEXCEPT
     return response;
 }
 
-#endif // UNDEFINED
+BC_POP_WARNING()
 
 } // namespace json
 } // namespace network

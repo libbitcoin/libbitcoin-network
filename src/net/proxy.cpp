@@ -55,6 +55,7 @@ proxy::~proxy() NOEXCEPT
 
 // Pause (proxy is created paused).
 // ----------------------------------------------------------------------------
+// public
 
 void proxy::pause() NOEXCEPT
 {
@@ -74,6 +75,7 @@ bool proxy::paused() const NOEXCEPT
     return paused_;
 }
 
+// protected
 // override to update timers.
 void proxy::waiting() NOEXCEPT
 {
@@ -103,6 +105,7 @@ void proxy::stop(const code& ec) NOEXCEPT
         std::bind(&proxy::stopping, shared_from_this(), ec));
 }
 
+// protected
 // This should not be called internally, as derived rely on stop() override.
 void proxy::stopping(const code& ec) NOEXCEPT
 {
@@ -116,6 +119,7 @@ void proxy::stopping(const code& ec) NOEXCEPT
     stop_subscriber_.stop(ec);
 }
 
+// protected
 void proxy::subscribe_stop(result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
@@ -137,6 +141,7 @@ void proxy::subscribe_stop(result_handler&& handler,
             shared_from_this(), std::move(handler), std::move(complete)));
 }
 
+// private
 void proxy::do_subscribe_stop(const result_handler& handler,
     const result_handler& complete) NOEXCEPT
 {
@@ -176,6 +181,24 @@ void proxy::read(http::string_request& request,
     socket_->http_read(request, std::move(handler));
 }
 
+void proxy::read(http::flat_buffer& buffer, http::json_request& request,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::waiting, shared_from_this()));
+
+    socket_->http_read(buffer, request, std::move(handler));
+}
+
+void proxy::read(http::json_request& request,
+    count_handler&& handler) NOEXCEPT
+{
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::waiting, shared_from_this()));
+
+    socket_->http_read(request, std::move(handler));
+}
+
 // Writes.
 // ----------------------------------------------------------------------------
 // Writes are composed but http is half duplex so there is no interleave risk.
@@ -184,6 +207,18 @@ void proxy::write(const http::string_response& response,
     count_handler&& handler) NOEXCEPT
 {
     socket_->http_write(response, std::move(handler));
+}
+
+void proxy::write(http::json_response& response,
+    count_handler&& handler) NOEXCEPT
+{
+    socket_->http_write(response, std::move(handler));
+}
+
+void proxy::write(http::flat_buffer& buffer, http::json_response& response,
+    count_handler&& handler) NOEXCEPT
+{
+    socket_->http_write(buffer, response, std::move(handler));
 }
 
 void proxy::write(const http::data_response& response,
