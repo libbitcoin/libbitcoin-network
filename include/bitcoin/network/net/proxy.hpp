@@ -90,17 +90,23 @@ public:
 protected:
     proxy(const socket::ptr& socket) NOEXCEPT;
 
-    /// Stranded handler invoked from stop().
-    virtual void stopping(const code& ec) NOEXCEPT;
-
     /// Stranded event, allows timer reset.
     virtual void waiting() NOEXCEPT;
 
-    /// Read fixed-size message from the remote endpoint.
+    /// Stranded handler invoked from stop().
+    virtual void stopping(const code& ec) NOEXCEPT;
+
+    /// Subscribe to stop notification (requires strand).
+    void subscribe_stop(result_handler&& handler) NOEXCEPT;
+
+    /// Readers.
+    /// -----------------------------------------------------------------------
+
+    /// Read fixed-size message from the remote endpoint into buffer.
     virtual void read(const asio::mutable_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
-    /// Read full http string request from the socket.
+    /// Read full http string request from the socket, using provided buffer.
     virtual void read(http::flat_buffer& buffer, http::string_request& request,
         count_handler&& handler) NOEXCEPT;
 
@@ -108,9 +114,28 @@ protected:
     virtual void read(http::string_request& request,
         count_handler&& handler) NOEXCEPT;
 
+    /// Read full http json request from the socket, using provided buffer.
+    virtual void read(http::flat_buffer& buffer, http::json_request& request,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Read full http json request from the socket.
+    virtual void read(http::json_request& request,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Writers.
+    /// -----------------------------------------------------------------------
+
     /// Write full http string response to the socket.
     virtual void write(const http::string_response& response,
         count_handler&& handler) NOEXCEPT;
+
+    /// Write full http json response to the socket.
+    virtual void write(http::json_response& response,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write full http json response to the socket, using provided buffer.
+    virtual void write(http::flat_buffer& buffer,
+        http::json_response& response, count_handler&& handler) NOEXCEPT;
 
     /// Write full http data response to the socket.
     virtual void write(const http::data_response& response,
@@ -123,9 +148,6 @@ protected:
     /// Send a complete message to the remote endpoint.
     virtual void write(const asio::const_buffer& payload,
         count_handler&& handler) NOEXCEPT;
-
-    /// Subscribe to stop notification (requires strand).
-    void subscribe_stop(result_handler&& handler) NOEXCEPT;
 
 private:
     typedef std::deque<std::pair<asio::const_buffer, count_handler>> queue;

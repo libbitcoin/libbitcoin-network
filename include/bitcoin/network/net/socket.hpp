@@ -25,6 +25,8 @@
 #include <bitcoin/network/config/config.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
+#include <bitcoin/network/messages/http/messages.hpp>
+#include <bitcoin/network/messages/json/messages.hpp>
 
 namespace libbitcoin {
 namespace network {
@@ -82,20 +84,39 @@ public:
     virtual void write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
-    /// HTTP I/O.
+    /// HTTP Readers.
     /// -----------------------------------------------------------------------
 
-    /// Read full http string request from the socket, reusing provided buffer.
+    /// Read full http string request from the socket, using provided buffer.
     virtual void http_read(http::flat_buffer& buffer,
         http::string_request& request, count_handler&& handler) NOEXCEPT;
 
-    /// Read full http string request from the socket, using temporary buffer.
+    /// Read full http string request from the socket.
     virtual void http_read(http::string_request& request,
         count_handler&& handler) NOEXCEPT;
+
+    /// Read full http json request from the socket, using provided buffer.
+    virtual void http_read(http::flat_buffer& buffer,
+        http::json_request& request, count_handler&& handler) NOEXCEPT;
+
+    /// Read full http json request from the socket.
+    virtual void http_read(http::json_request& request,
+        count_handler&& handler) NOEXCEPT;
+
+    /// HTTP Writers.
+    /// -----------------------------------------------------------------------
 
     /// Write full http string response to the socket.
     virtual void http_write(const http::string_response& response,
         count_handler&& handler) NOEXCEPT;
+
+    /// Write full http json response to the socket.
+    virtual void http_write(http::json_response& response,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write full http json response to the socket, using provided buffer.
+    virtual void http_write(http::flat_buffer& buffer,
+        http::json_response& response, count_handler&& handler) NOEXCEPT;
 
     /// Write full http data response to the socket.
     virtual void http_write(const http::data_response& response,
@@ -138,13 +159,12 @@ private:
     void do_connect(const asio::endpoints& range,
         const result_handler& handler) NOEXCEPT;
 
-    ////void do_read_some(const asio::mutable_buffer& out,
-    ////    const count_handler& handler) NOEXCEPT;
     void do_read(const asio::mutable_buffer& out,
         const count_handler& handler) NOEXCEPT;
     void do_write(const asio::const_buffer& in,
         const count_handler& handler) NOEXCEPT;
 
+    // http readers
     void do_http_read_string_buffered(
         const std::reference_wrapper<http::flat_buffer>& buffer,
         const std::reference_wrapper<http::string_request>& request,
@@ -152,8 +172,24 @@ private:
     void do_http_read_string(
         const std::reference_wrapper<http::string_request>& request,
         const count_handler& handler) NOEXCEPT;
+    void do_http_read_json_buffered(
+        const std::reference_wrapper<http::flat_buffer>& buffer,
+        const std::reference_wrapper<http::json_request>& request,
+        const count_handler& handler) NOEXCEPT;
+    void do_http_read_json(
+        const std::reference_wrapper<http::json_request>& request,
+        const count_handler& handler) NOEXCEPT;
+
+    // http writers
     void do_http_write_string(
         const std::reference_wrapper<const http::string_response>& response,
+        const count_handler& handler) NOEXCEPT;
+    void do_http_write_json_buffered(
+        const std::reference_wrapper<http::flat_buffer>& buffer,
+        const std::reference_wrapper<http::json_response>& response,
+        const count_handler& handler) NOEXCEPT;
+    void do_http_write_json(
+        const std::reference_wrapper<http::json_response>& response,
         const count_handler& handler) NOEXCEPT;
     void do_http_write_data(
         const std::reference_wrapper<const http::data_response>& response,
