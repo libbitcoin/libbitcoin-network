@@ -388,8 +388,7 @@ void socket::do_http_write(
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // TODO: set 'buffer' onto body payload, ensure fully consumed.
-    ////response.get().body().size = 42;
+    // TODO: set json 'buffer' onto body payload.
 
     try
     {
@@ -431,8 +430,7 @@ void socket::do_http_write_json(
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // TODO: set local buffer onto body payload.
-    ////response.get().body().size = 42;
+    // TODO: set json 'buffer' onto body payload.
 
     try
     {
