@@ -33,13 +33,45 @@ struct payload
     /// JSON DOM.
     json_value model{};
 
-    /// writer: buffer size, reader: bytes read.
-    size_t size{ 1024 };
+    /// Writer serialization buffer (max size, allocated on write).
+    mutable http::flat_buffer buffer{ 4096 };
 
-    /////// Not so efficient.
-    ////static uint64_t size(const payload& self) NOEXCEPT
+    // size() must be defined to produce content_length, otherwise chunked.
+    ////static uint64_t size(const payload&) NOEXCEPT
     ////{
-    ////    return boost::json::serialize(self.model).size();
+    ////    // Not so efficient for serialized parse.
+    ////    return {};
+    ////}
+
+    ////template<bool isRequest, class Body, class Fields>
+    ////void message<isRequest, Body, Fields>::
+    ////prepare_payload(std::true_type)
+    ////{
+    ////    auto const n = payload_size();
+    ////    if (method() == verb::trace && (!n || *n > 0))
+    ////    {
+    ////        BOOST_THROW_EXCEPTION(std::invalid_argument
+    ////            { "invalid request body" });
+    ////    }
+    ////
+    ////    if(n)
+    ////    {
+    ////        if(*n > 0 ||
+    ////            method() == verb::options ||
+    ////            method() == verb::put ||
+    ////            method() == verb::post)
+    ////        {
+    ////            content_length(n);
+    ////        }
+    ////        else
+    ////        {
+    ////            chunked(false);
+    ////        }
+    ////    }
+    ////    else
+    ////    {
+    ////        chunked(version() == 11);
+    ////    }
     ////}
 };
 
@@ -80,9 +112,8 @@ struct body
 
         template <bool IsRequest, class Fields>
         explicit writer(http::header<IsRequest, Fields>&,
-            const value_type& payload) NOEXCEPT
+          const value_type& payload) NOEXCEPT
           : payload_{ payload },
-            buffer_{ payload.size },
             serializer_{ payload.model.storage() }
         {
         }
@@ -92,7 +123,6 @@ struct body
 
     private:
         const value_type& payload_;
-        http::flat_buffer buffer_;
         Serializer serializer_;
     };
 };
