@@ -47,54 +47,38 @@ struct payload
 template <class Parser, class Serializer>
 struct body
 {
-    /// Required by boost::beast.
     using value_type = payload;
 
-    /// Required: reader for incoming data.
     class reader
     {
     public:
-        /// MUST be boost::optional.
-        using length_t = boost::optional<uint64_t>;
+        using buffer_type = asio::const_buffer;
 
-        /// Called once per message, header is mutable.
-        template <bool IsRequest, class Fields = http::fields>
+        template <bool IsRequest, class Fields>
         explicit reader(http::header<IsRequest, Fields>&,
             value_type& payload) NOEXCEPT
           : payload_{ payload }
         {
         }
 
-        /// Called once at start of body deserialization.
-        void init(length_t content_length, error_code& ec) NOEXCEPT;
-
-        /// Called zero or more times with incoming (from wire) buffers.
-        /// Bytes are consumed from buffers and parsed into json object.
-        /// Fails if not all characters are consumed by the logical parse.
-        size_t put(asio::const_buffer buffer, error_code& ec) NOEXCEPT;
-
-        /// Called once at the end of body deserialization, signals completion.
+        void init(const http::length_type& length, error_code& ec) NOEXCEPT;
+        size_t put(const buffer_type& buffer, error_code& ec) NOEXCEPT;
         void finish(error_code& ec) NOEXCEPT;
 
     private:
         value_type& payload_;
-        length_t expected_{};
         size_t total_{};
         Parser parser_{};
+        http::length_type expected_{};
     };
 
-    /// Required: writer for outgoing data.
     class writer
     {
     public:
-        /// Required by boost::beast.
         using const_buffers_type = asio::const_buffer;
+        using out_buffer = http::get_buffer<const_buffers_type>;
 
-        /// MUST be boost::optional.
-        using buffers_t = boost::optional<std::pair<const_buffers_type, bool>>;
-
-        /// Called once per message, header is mutable.
-        template <bool IsRequest, class Fields = http::fields>
+        template <bool IsRequest, class Fields>
         explicit writer(http::header<IsRequest, Fields>&,
             const value_type& payload) NOEXCEPT
           : payload_{ payload },
@@ -103,11 +87,8 @@ struct body
         {
         }
 
-        /// Called once at start of message serialization.
         void init(error_code& ec) NOEXCEPT;
-
-        /// Called one or more times to get outgoing (to wire) buffers.
-        buffers_t get(error_code& ec) NOEXCEPT;
+        out_buffer get(error_code& ec) NOEXCEPT;
 
     private:
         const value_type& payload_;

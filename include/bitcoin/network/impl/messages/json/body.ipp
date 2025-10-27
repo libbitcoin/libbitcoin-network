@@ -37,23 +37,24 @@ inline error_code make_protocol_error() NOEXCEPT
 // ----------------------------------------------------------------------------
 
 TEMPLATE
-void CLASS::reader::init(length_t content_length, error_code& ec) NOEXCEPT
+void CLASS::reader::init(const http::length_type& length,
+    error_code& ec) NOEXCEPT
 {
-    const auto length = content_length.get_value_or(zero);
-    if (system::is_limited<size_t>(length))
+    const auto value = length.get_value_or(zero);
+    if (system::is_limited<size_t>(value))
     {
         ec = make_protocol_error();
         return;
     }
 
-    expected_ = system::possible_narrow_cast<size_t>(length);
+    expected_ = system::possible_narrow_cast<size_t>(value);
     parser_.reset();
     total_ = zero;
     ec.clear();
 }
 
 TEMPLATE
-size_t CLASS::reader::put(asio::const_buffer buffer, error_code& ec) NOEXCEPT
+size_t CLASS::reader::put(const buffer_type& buffer, error_code& ec) NOEXCEPT
 {
     try
     {
@@ -93,7 +94,7 @@ void CLASS::writer::init(error_code& ec) NOEXCEPT
 }
 
 TEMPLATE
-CLASS::writer::buffers_t CLASS::writer::get(error_code& ec) NOEXCEPT
+CLASS::writer::out_buffer CLASS::writer::get(error_code& ec) NOEXCEPT
 {
     ec.clear();
     if (serializer_.done())
@@ -106,7 +107,7 @@ CLASS::writer::buffers_t CLASS::writer::get(error_code& ec) NOEXCEPT
         const auto view = serializer_.read(data, buff.size());
         const auto done = serializer_.done();
         buffer_.commit(view.size());
-        return buffers_t{ std::make_pair(boost::asio::buffer(view), !done) };
+        return out_buffer{ std::make_pair(boost::asio::buffer(view), !done) };
     }
     catch (...)
     {
