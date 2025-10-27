@@ -189,7 +189,7 @@
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp">
       <Filter>src\messages\http\enums</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\messages\json\serializer.cpp">
+    <ClCompile Include="..\..\..\..\src\messages\json\tags.cpp">
       <Filter>src\messages\json</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\peer\address.cpp">
@@ -566,25 +566,13 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\body.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\transport.hpp">
-      <Filter>include\bitcoin\network\messages\json\enums</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\version.hpp">
       <Filter>include\bitcoin\network\messages\json\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\messages.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser.hpp">
-      <Filter>include\bitcoin\network\messages\json</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser_state.hpp">
-      <Filter>include\bitcoin\network\messages\json</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\parser_track.hpp">
-      <Filter>include\bitcoin\network\messages\json</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\serializer.hpp">
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\tags.hpp">
       <Filter>include\bitcoin\network\messages\json</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\types.hpp">
@@ -868,34 +856,7 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp">
       <Filter>include\bitcoin\network\impl\async</Filter>
     </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\body_reader.ipp">
-      <Filter>include\bitcoin\network\impl\messages\json</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\body_writer.ipp">
-      <Filter>include\bitcoin\network\impl\messages\json</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser.ipp">
-      <Filter>include\bitcoin\network\impl\messages\json</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_assign.ipp">
-      <Filter>include\bitcoin\network\impl\messages\json</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_consume.ipp">
-      <Filter>include\bitcoin\network\impl\messages\json</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_encode.ipp">
-      <Filter>include\bitcoin\network\impl\messages\json</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_object.ipp">
-      <Filter>include\bitcoin\network\impl\messages\json</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_statics.ipp">
-      <Filter>include\bitcoin\network\impl\messages\json</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\parser_value.ipp">
-      <Filter>include\bitcoin\network\impl\messages\json</Filter>
-    </None>
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\serializer.ipp">
+    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\body.ipp">
       <Filter>include\bitcoin\network\impl\messages\json</Filter>
     </None>
     <None Include="packages.config" />

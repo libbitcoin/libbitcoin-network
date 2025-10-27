@@ -20,41 +20,16 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_TYPES_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/json/messages.hpp>
+#include <bitcoin/network/messages/json/body.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace http {
-namespace json {
 
-// TODO: for non-rpc http json (REST) messages, define:
-// TODO: http::json::request
-// TODO: http::json::response.
+using json_body = json::body<json::parser, json::serializer>;
+using json_request = boost::beast::http::request<json_body>;
+using json_response = boost::beast::http::response<json_body>;
 
-namespace rpc {
-
-// TODO: need to split up the body to get request and response value_type.
-
-using request = boost::beast::http::request
-<
-    network::json::body
-    <
-        network::json::parser<true>,
-        network::json::serializer<network::json::request_t>
-    >
->;
-
-using response = boost::beast::http::response
-<
-    network::json::body
-    <
-        network::json::parser<true>,
-        network::json::serializer<network::json::response_t>
-    >
->;
-
-} // namespace rpc
-} // namespace json
 } // namespace http
 } // namespace network
 } // namespace libbitcoin

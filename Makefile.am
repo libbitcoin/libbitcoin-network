@@ -58,7 +58,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/log/reporter.cpp \
     src/messages/http/enums/mime_type.cpp \
     src/messages/http/enums/target.cpp \
-    src/messages/json/serializer.cpp \
+    src/messages/json/tags.cpp \
     src/messages/peer/address.cpp \
     src/messages/peer/address_item.cpp \
     src/messages/peer/alert.cpp \
@@ -174,12 +174,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/messages/http/enums/magic_numbers.cpp \
     test/messages/http/enums/mime_type.cpp \
     test/messages/http/enums/target.cpp \
-    test/messages/json/body_reader.cpp \
-    test/messages/json/body_writer.cpp \
-    test/messages/json/parser.cpp \
-    test/messages/json/parser_statics.cpp \
-    test/messages/json/parser_track.cpp \
-    test/messages/json/serializer.cpp \
+    test/messages/json/body.cpp \
     test/messages/peer/address.cpp \
     test/messages/peer/address_item.cpp \
     test/messages/peer/alert.cpp \
@@ -337,16 +332,7 @@ include_bitcoin_network_impl_async_races_HEADERS = \
 
 include_bitcoin_network_impl_messages_jsondir = ${includedir}/bitcoin/network/impl/messages/json
 include_bitcoin_network_impl_messages_json_HEADERS = \
-    include/bitcoin/network/impl/messages/json/body_reader.ipp \
-    include/bitcoin/network/impl/messages/json/body_writer.ipp \
-    include/bitcoin/network/impl/messages/json/parser.ipp \
-    include/bitcoin/network/impl/messages/json/parser_assign.ipp \
-    include/bitcoin/network/impl/messages/json/parser_consume.ipp \
-    include/bitcoin/network/impl/messages/json/parser_encode.ipp \
-    include/bitcoin/network/impl/messages/json/parser_object.ipp \
-    include/bitcoin/network/impl/messages/json/parser_statics.ipp \
-    include/bitcoin/network/impl/messages/json/parser_value.ipp \
-    include/bitcoin/network/impl/messages/json/serializer.ipp
+    include/bitcoin/network/impl/messages/json/body.ipp
 
 include_bitcoin_network_logdir = ${includedir}/bitcoin/network/log
 include_bitcoin_network_log_HEADERS = \
@@ -376,15 +362,11 @@ include_bitcoin_network_messages_jsondir = ${includedir}/bitcoin/network/message
 include_bitcoin_network_messages_json_HEADERS = \
     include/bitcoin/network/messages/json/body.hpp \
     include/bitcoin/network/messages/json/messages.hpp \
-    include/bitcoin/network/messages/json/parser.hpp \
-    include/bitcoin/network/messages/json/parser_state.hpp \
-    include/bitcoin/network/messages/json/parser_track.hpp \
-    include/bitcoin/network/messages/json/serializer.hpp \
+    include/bitcoin/network/messages/json/tags.hpp \
     include/bitcoin/network/messages/json/types.hpp
 
 include_bitcoin_network_messages_json_enumsdir = ${includedir}/bitcoin/network/messages/json/enums
 include_bitcoin_network_messages_json_enums_HEADERS = \
-    include/bitcoin/network/messages/json/enums/transport.hpp \
     include/bitcoin/network/messages/json/enums/version.hpp
 
 include_bitcoin_network_messages_peerdir = ${includedir}/bitcoin/network/messages/peer

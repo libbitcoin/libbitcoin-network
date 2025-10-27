@@ -16,53 +16,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_TRACK_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_JSON_PARSER_TRACK_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_TAGS_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_JSON_TAGS_HPP
+
+#include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/json/enums/version.hpp>
+#include <bitcoin/network/messages/json/types.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace json {
 
-class BCT_API parser_track
-{
-public:
-    inline void delimiter() NOEXCEPT
-    {
-        comma_ = true;
-    }
+DECLARE_JSON_TAG_INVOKE(version);
+DECLARE_JSON_TAG_INVOKE(value_t);
+DECLARE_JSON_TAG_INVOKE(identity_t);
+DECLARE_JSON_TAG_INVOKE(request_t);
+DECLARE_JSON_TAG_INVOKE(response_t);
 
-    inline void add() NOEXCEPT
-    {
-        empty_ = false;
-        comma_ = false;
-    }
-
-    inline bool allow_add() const NOEXCEPT
-    {
-        return empty_ || comma_;
-    }
-
-    inline bool allow_delimiter() const NOEXCEPT
-    {
-        return !allow_add();
-    }
-
-    inline bool allow_close() const NOEXCEPT
-    {
-        return !comma_;
-    }
-
-    inline void reset() NOEXCEPT
-    {
-        empty_ = true;
-        comma_ = false;
-    }
-
-private:
-    bool empty_{ true };
-    bool comma_{ false };
-};
- 
 } // namespace json
 } // namespace network
 } // namespace libbitcoin

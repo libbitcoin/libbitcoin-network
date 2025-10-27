@@ -40,8 +40,8 @@ constexpr int32_t version_1_0 = 10;
 typedef boost::beast::http::vector_body<uint8_t> data_body;
 typedef boost::beast::http::request<data_body> data_request;
 typedef boost::beast::http::response<data_body> data_response;
-typedef boost::beast::http::request_parser<data_body> data_parser;
-typedef boost::beast::http::serializer<false, data_body> data_serializer;
+////typedef boost::beast::http::request_parser<data_body> data_parser;
+////typedef boost::beast::http::serializer<false, data_body> data_serializer;
 typedef std::shared_ptr<const data_request> data_request_cptr;
 typedef std::shared_ptr<data_request> data_request_ptr;
 
@@ -49,8 +49,8 @@ typedef std::shared_ptr<data_request> data_request_ptr;
 typedef boost::beast::http::string_body string_body;
 typedef boost::beast::http::request<string_body> string_request;
 typedef boost::beast::http::response<string_body> string_response;
-typedef boost::beast::http::request_parser<string_body> string_parser;
-typedef boost::beast::http::serializer<false, string_body> string_serializer;
+////typedef boost::beast::http::request_parser<string_body> string_parser;
+////typedef boost::beast::http::serializer<false, string_body> string_serializer;
 typedef std::shared_ptr<const string_request> string_request_cptr;
 typedef std::shared_ptr<string_request> string_request_ptr;
 
@@ -64,14 +64,12 @@ typedef boost::beast::http::serializer<false, file_body> file_serializer;
 ////typedef std::shared_ptr<file_request> file_request_ptr;
 
 /// general purpose
+template <bool IsRequest, class Fields>
+using header = boost::beast::http::header<IsRequest, Fields>;
 typedef file_body::value_type file;
 typedef boost::beast::http::field field;
 typedef boost::beast::http::fields fields;
 typedef boost::beast::flat_buffer flat_buffer;
-
-/// http
-template <bool Request>
-using header = boost::beast::http::header<Request, http::fields>;
 
 /////// websockets
 ////using websocket = boost::beast::websocket::stream<asio::socket>;
