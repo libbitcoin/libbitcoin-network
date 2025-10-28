@@ -33,31 +33,31 @@ enum service: uint64_t
     node_none = 0,
 
     /// The node is capable of serving the block chain (full node).
-    node_network = system::bit_right<uint32_t>(0),
+    node_network = system::bit_right<uint64_t>(0),
 
     /// Requires version.value >= level::bip64 (BIP64 is obsolete).
     /// The node is capable of responding to the getutxo protocol request.
-    node_utxo = system::bit_right<uint32_t>(1),
+    node_utxo = system::bit_right<uint64_t>(1),
 
     /// Requires version.value >= level::bip111
     /// The node is capable and willing to handle bloom-filtered connections.
-    node_bloom = system::bit_right<uint32_t>(2),
+    node_bloom = system::bit_right<uint64_t>(2),
 
     /// Independent of network protocol level.
     /// The node is capable of responding to witness inventory requests.
-    node_witness = system::bit_right<uint32_t>(3),
+    node_witness = system::bit_right<uint64_t>(3),
 
     /// Independent of network protocol level.
     /// The node is capable of responding to getcfilters, getcfheaders,
     /// and getcfcheckpt protocol requests.
-    node_client_filters = system::bit_right<uint32_t>(6),
+    node_client_filters = system::bit_right<uint64_t>(6),
 
     /// Serves only the last 288 (2 day) blocks.
-    node_network_limited = system::bit_right<uint32_t>(10),
+    node_network_limited = system::bit_right<uint64_t>(10),
 
     /// Independent of network protocol level.
     /// Opportunistic encryption of net protocol (no intent to support).
-    node_encrypted_transport = system::bit_right<uint32_t>(11),
+    node_encrypted_transport = system::bit_right<uint64_t>(11),
 
     /// The minimum supported capability.
     minimum_services = node_none,

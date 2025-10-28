@@ -337,4 +337,60 @@ BOOST_AUTO_TEST_CASE(mime_type__file_mime_type__mixed_case_exist__expected)
     BOOST_REQUIRE(file_mime_type("foo/bar.CSS") == mime_type::text_css);
 }
 
+// content_mime_type
+// ----------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(mime_type__content_mime_type__not_found__default)
+{
+    BOOST_REQUIRE(content_mime_type("") == mime_type::unknown);
+    BOOST_REQUIRE(content_mime_type("invalid/type") == mime_type::unknown);
+    BOOST_REQUIRE(content_mime_type("text/invalid") == mime_type::unknown);
+    BOOST_REQUIRE(content_mime_type(";charset=utf-8") == mime_type::unknown);
+}
+
+BOOST_AUTO_TEST_CASE(mime_type__content_mime_type__not_found_default__default)
+{
+    BOOST_REQUIRE(content_mime_type("", mime_type::font_woff) == mime_type::font_woff);
+    BOOST_REQUIRE(content_mime_type("invalid/type", mime_type::font_woff) == mime_type::font_woff);
+    BOOST_REQUIRE(content_mime_type("text/invalid", mime_type::font_woff) == mime_type::font_woff);
+    BOOST_REQUIRE(content_mime_type(";charset=utf-8", mime_type::font_woff) == mime_type::font_woff);
+}
+
+BOOST_AUTO_TEST_CASE(mime_type__content_mime_type__lower_case_exist__expected)
+{
+    BOOST_REQUIRE(content_mime_type("application/javascript") == mime_type::application_javascript);
+    BOOST_REQUIRE(content_mime_type("application/json") == mime_type::application_json);
+    BOOST_REQUIRE(content_mime_type("application/octet-stream") == mime_type::application_octet);
+    BOOST_REQUIRE(content_mime_type("application/pdf") == mime_type::application_pdf);
+    BOOST_REQUIRE(content_mime_type("application/xml") == mime_type::application_xml);
+    BOOST_REQUIRE(content_mime_type("application/zip") == mime_type::application_zip);
+    BOOST_REQUIRE(content_mime_type("audio/mpeg") == mime_type::audio_mpeg);
+    BOOST_REQUIRE(content_mime_type("font/woff") == mime_type::font_woff);
+    BOOST_REQUIRE(content_mime_type("font/woff2") == mime_type::font_woff2);
+    BOOST_REQUIRE(content_mime_type("image/gif") == mime_type::image_gif);
+    BOOST_REQUIRE(content_mime_type("image/jpeg") == mime_type::image_jpeg);
+    BOOST_REQUIRE(content_mime_type("image/png") == mime_type::image_png);
+    BOOST_REQUIRE(content_mime_type("image/svg+xml") == mime_type::image_svg_xml);
+    BOOST_REQUIRE(content_mime_type("image/x-icon") == mime_type::image_x_icon);
+    BOOST_REQUIRE(content_mime_type("text/css") == mime_type::text_css);
+    BOOST_REQUIRE(content_mime_type("text/html") == mime_type::text_html);
+    BOOST_REQUIRE(content_mime_type("text/plain") == mime_type::text_plain);
+    BOOST_REQUIRE(content_mime_type("video/mp4") == mime_type::video_mp4);
+}
+
+BOOST_AUTO_TEST_CASE(mime_type__content_mime_type__mixed_case_exist__expected)
+{
+    BOOST_REQUIRE(content_mime_type("APPLICATION/JAVASCRIPT") == mime_type::application_javascript);
+    BOOST_REQUIRE(content_mime_type("application/JSON") == mime_type::application_json);
+    BOOST_REQUIRE(content_mime_type("TEXT/PLAIN") == mime_type::text_plain);
+}
+
+BOOST_AUTO_TEST_CASE(mime_type__content_mime_type__with_parameters__expected)
+{
+    BOOST_REQUIRE(content_mime_type("application/json; charset=utf-8") == mime_type::application_json);
+    BOOST_REQUIRE(content_mime_type("text/plain; charset=iso-8859-1") == mime_type::text_plain);
+    BOOST_REQUIRE(content_mime_type("application/octet-stream; boundary=abc") == mime_type::application_octet);
+    BOOST_REQUIRE(content_mime_type("text/html; charset=utf-8; other=param") == mime_type::text_html);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

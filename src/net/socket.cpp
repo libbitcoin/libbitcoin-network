@@ -296,21 +296,12 @@ void socket::do_http_read(
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // The buffer is externally constructed, controlling its capacity.
-    // Providing the buffer also allows caller to prevent reallocations.
-    // Each request is independent, so the full buffer is always consumed.
-    auto complete = [=](const code& ec, size_t size) NOEXCEPT
-    {
-        buffer.get().consume(buffer.get().size());
-        handler(ec, size);
-    };
-
     try
     {
         // This operation posts handler to the strand.
         boost::beast::http::async_read(socket_, buffer.get(), request.get(),
-            std::bind(&socket::handle_http,
-                shared_from_this(), _1, _2, std::move(complete)));
+            std::bind(&socket::handle_http_read,
+                shared_from_this(), _1, _2, buffer, handler));
     }
     catch (const std::exception& LOG_ONLY(e))
     {
@@ -326,21 +317,12 @@ void socket::do_http_read_string(
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // The buffer is externally constructed, controlling its capacity.
-    // Providing the buffer also allows caller to prevent reallocations.
-    // Each request is independent, so the full buffer is always consumed.
-    auto complete = [=](const code& ec, size_t size) NOEXCEPT
-    {
-        buffer.get().consume(buffer.get().size());
-        handler(ec, size);
-    };
-
     try
     {
         // This operation posts handler to the strand.
         boost::beast::http::async_read(socket_, buffer.get(), request.get(),
-            std::bind(&socket::handle_http,
-                shared_from_this(), _1, _2, std::move(complete)));
+            std::bind(&socket::handle_http_read,
+                shared_from_this(), _1, _2, buffer, handler));
     }
     catch (const std::exception& LOG_ONLY(e))
     {
@@ -356,21 +338,12 @@ void socket::do_http_read_json(
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
-    // The buffer is externally constructed, controlling its capacity.
-    // Providing the buffer also allows caller to prevent reallocations.
-    // Each request is independent, so the full buffer is always consumed.
-    auto complete = [=](const code& ec, size_t size) NOEXCEPT
-    {
-        buffer.get().consume(buffer.get().size());
-        handler(ec, size);
-    };
-
     try
     {
         // This operation posts handler to the strand.
         boost::beast::http::async_read(socket_, buffer.get(), request.get(),
-            std::bind(&socket::handle_http,
-                shared_from_this(), _1, _2, std::move(complete)));
+            std::bind(&socket::handle_http_read,
+                shared_from_this(), _1, _2, buffer, handler));
     }
     catch (const std::exception& LOG_ONLY(e))
     {
@@ -394,7 +367,7 @@ void socket::do_http_write(
     {
         // This operation posts handler to the strand.
         boost::beast::http::async_write(socket_, response.get(),
-            std::bind(&socket::handle_http,
+            std::bind(&socket::handle_http_write,
                 shared_from_this(), _1, _2, handler));
     }
     catch (const std::exception& LOG_ONLY(e))
@@ -414,7 +387,7 @@ void socket::do_http_write_string(
     {
         // This operation posts handler to the strand.
         boost::beast::http::async_write(socket_, response.get(),
-            std::bind(&socket::handle_http,
+            std::bind(&socket::handle_http_write,
                 shared_from_this(), _1, _2, handler));
     }
     catch (const std::exception& LOG_ONLY(e))
@@ -436,7 +409,7 @@ void socket::do_http_write_json(
     {
         // This operation posts handler to the strand.
         boost::beast::http::async_write(socket_, response.get(),
-            std::bind(&socket::handle_http,
+            std::bind(&socket::handle_http_write,
                 shared_from_this(), _1, _2, handler));
     }
     catch (const std::exception& LOG_ONLY(e))
@@ -456,7 +429,7 @@ void socket::do_http_write_data(
     {
         // This operation posts handler to the strand.
         boost::beast::http::async_write(socket_, response.get(),
-            std::bind(&socket::handle_http,
+            std::bind(&socket::handle_http_write,
                 shared_from_this(), _1, _2, handler));
     }
     catch (const std::exception& LOG_ONLY(e))
@@ -482,7 +455,7 @@ void socket::do_http_write_file(
     {
         // This operation posts handler to the strand.
         boost::beast::http::async_write(socket_, *writer,
-            std::bind(&socket::handle_http,
+            std::bind(&socket::handle_http_write,
                 shared_from_this(), _1, _2, std::move(complete)));
     }
     catch (const std::exception& LOG_ONLY(e))
@@ -576,7 +549,34 @@ void socket::handle_io(const error::boost_code& ec, size_t size,
     handler(code, size);
 }
 
-void socket::handle_http(const error::boost_code& ec, size_t size,
+void socket::handle_http_read(const error::boost_code& ec, size_t size,
+    const std::reference_wrapper<http::flat_buffer>& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT_MSG(stranded(), "strand");
+
+    // Always consume all of the buffer as the request is fully read.
+    buffer.get().consume(buffer.get().size());
+
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::channel_stopped, size);
+        return;
+    }
+
+    // Translate other beast error codes and invoke caller handler.
+    const auto code = error::beast_to_error_code(ec);
+
+    if (code == error::unknown)
+    {
+        LOGX("Raw beast code (" << ec.value() << ") " << ec.category().name()
+            << ":" << ec.message());
+    }
+
+    handler(code, size);
+}
+
+void socket::handle_http_write(const error::boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
