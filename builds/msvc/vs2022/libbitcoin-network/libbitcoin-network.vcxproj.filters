@@ -560,6 +560,9 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\verb.hpp">
       <Filter>include\bitcoin\network\messages\http\enums</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\field.hpp">
+      <Filter>include\bitcoin\network\messages\http</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\messages.hpp">
       <Filter>include\bitcoin\network\messages\http</Filter>
     </ClInclude>

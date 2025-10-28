@@ -23,17 +23,11 @@
 #include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/enums/mime_type.hpp>
+#include <bitcoin/network/messages/http/field.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace http {
-
-inline bool is_attachment(auto& head) NOEXCEPT
-{
-    const auto& disposition = head[field::content_disposition];
-    const auto content = system::ascii_to_lower(disposition);
-    return content.find("filename=") != std::string::npos;
-}
 
 // reader
 // ----------------------------------------------------------------------------
@@ -66,7 +60,7 @@ inline reader_variant to_reader(auto& head, variant_payload& pay) NOEXCEPT
         }
         case mime_type::application_octet:
         {
-            if (is_attachment(head))
+            if (has_attachment(head))
             {
                 pay.inner = file_value{};
                 return reader_from_body<file_body>(head, pay);

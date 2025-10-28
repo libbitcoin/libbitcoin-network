@@ -16,17 +16,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_MESSAGES_HPP
-#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_MESSAGES_HPP
+#ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_FIELD_HPP
+#define LIBBITCOIN_NETWORK_MESSAGES_HTTP_FIELD_HPP
 
-#include <bitcoin/network/messages/http/body.hpp>
-#include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
-#include <bitcoin/network/messages/http/enums/mime_type.hpp>
-#include <bitcoin/network/messages/http/enums/status.hpp>
-#include <bitcoin/network/messages/http/enums/target.hpp>
+#include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/enums/verb.hpp>
-#include <bitcoin/network/messages/http/field.hpp>
-#include <bitcoin/network/messages/http/method.hpp>
-#include <bitcoin/network/messages/http/types.hpp>
+
+/// Type-differentiation for request message distribution.
+
+namespace libbitcoin {
+namespace network {
+namespace http {
+
+inline bool has_attachment(http::fields& head) NOEXCEPT
+{
+    const auto& disposition = head[field::content_disposition];
+    const auto content = system::ascii_to_lower(disposition);
+    return content.find("filename=") != std::string::npos;
+}
+
+} // namespace http
+} // namespace network
+} // namespace libbitcoin
 
 #endif
