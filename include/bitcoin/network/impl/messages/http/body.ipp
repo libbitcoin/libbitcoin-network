@@ -42,6 +42,7 @@ template <class Body>
 inline reader_variant reader_from_body(auto& head,
     variant_payload& pay) NOEXCEPT
 {
+    BC_ASSERT(pay.inner.has_value());
     using reader = typename Body::reader;
     using value = typename Body::value_type;
     return reader_variant{ std::in_place_type<reader>, head,
@@ -155,6 +156,7 @@ template <class Body>
 inline writer_variant writer_from_body(auto& head,
     const variant_payload& pay) NOEXCEPT
 {
+    BC_ASSERT(pay.inner.has_value());
     using writer = typename Body::writer;
     using value = typename Body::value_type;
     return writer_variant{ std::in_place_type<writer>, head,
