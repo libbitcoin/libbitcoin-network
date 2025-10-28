@@ -66,19 +66,21 @@ const mime_bimap& mime_map() NOEXCEPT
     return types;
 }
 
-mime_type to_mime_type(const std::string& accept, mime_type default_) NOEXCEPT
+mime_type to_mime_type(const std::string_view& accept, mime_type default_) NOEXCEPT
 {
     const auto type = mime_map().right.find(system::ascii_to_lower(accept));
     return type == mime_map().right.end() ? default_ : type->second;
 };
 
-std::string from_mime_type(mime_type type, const std::string& default_) NOEXCEPT
+std::string from_mime_type(mime_type type,
+    const std::string_view& default_) NOEXCEPT
 {
     const auto text = mime_map().left.find(type);
-    return text == mime_map().left.end() ? default_ : text->second;
+    return text == mime_map().left.end() ? std::string{ default_ } :
+        text->second;
 };
 
-mime_types to_mime_types(const std::string& accepts,
+mime_types to_mime_types(const std::string_view& accepts,
     mime_type default_) NOEXCEPT
 {
     using namespace system;
@@ -96,7 +98,7 @@ mime_types to_mime_types(const std::string& accepts,
 }
 
 std::string from_mime_types(const mime_types& types,
-    const std::string& default_) NOEXCEPT
+    const std::string_view& default_) NOEXCEPT
 {
     using namespace system;
     string_list out{};
@@ -110,7 +112,7 @@ std::string from_mime_types(const mime_types& types,
     return join(out, ",");
 }
 
-mime_type extension_mime_type(const std::string& extension,
+mime_type extension_mime_type(const std::string_view& extension,
     mime_type default_) NOEXCEPT
 {
     static const std::unordered_map<std::string, mime_type> types
@@ -149,6 +151,21 @@ mime_type file_mime_type(const std::filesystem::path& path,
 
     const auto extension = system::cast_to_string(path.extension().u8string());
     return extension_mime_type(extension, default_);
+}
+
+mime_type content_mime_type(const std::string_view& content_type,
+    mime_type default_) NOEXCEPT
+{
+    if (content_type.empty())
+        return default_;
+
+    const auto parts = system::split(content_type, ";");
+    if (parts.empty())
+        return default_;
+
+    const auto type = system::ascii_to_lower(parts.front());
+    const auto found = mime_map().right.find(type);
+    return found == mime_map().right.end() ? default_ : found->second;
 }
 
 BC_POP_WARNING()

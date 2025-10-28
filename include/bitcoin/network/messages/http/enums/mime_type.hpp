@@ -52,19 +52,21 @@ enum class mime_type
 
 using mime_types = std::vector<mime_type>;
 
-BCT_API mime_type to_mime_type(const std::string& accept,
+BCT_API mime_type to_mime_type(const std::string_view& accept,
     mime_type default_=mime_type::unknown) NOEXCEPT;
 BCT_API std::string from_mime_type(mime_type type,
-    const std::string& default_="unknown") NOEXCEPT;
+    const std::string_view& default_="unknown") NOEXCEPT;
 
-BCT_API mime_types to_mime_types(const std::string& accepts,
+BCT_API mime_types to_mime_types(const std::string_view& accepts,
     mime_type default_=mime_type::unknown) NOEXCEPT;
 BCT_API std::string from_mime_types(const mime_types& types,
-    const std::string& default_="unknown") NOEXCEPT;
+    const std::string_view& default_="unknown") NOEXCEPT;
 
-BCT_API mime_type extension_mime_type(const std::string& extension,
+BCT_API mime_type extension_mime_type(const std::string_view& extension,
     mime_type default_=mime_type::unknown) NOEXCEPT;
 BCT_API mime_type file_mime_type(const std::filesystem::path& path,
+    mime_type default_=mime_type::unknown) NOEXCEPT;
+BCT_API mime_type content_mime_type(const std::string_view& content_type,
     mime_type default_=mime_type::unknown) NOEXCEPT;
 
 } // namespace http
