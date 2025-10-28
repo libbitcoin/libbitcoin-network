@@ -27,12 +27,6 @@ namespace libbitcoin {
 namespace network {
 namespace json {
 
-inline error_code make_protocol_error() NOEXCEPT
-{
-    using namespace boost::system::errc;
-    return make_error_code(protocol_error);
-}
-
 // reader
 // ----------------------------------------------------------------------------
 
@@ -43,7 +37,7 @@ void CLASS::reader::init(const http::length_type& length,
     const auto value = length.get_value_or(zero);
     if (system::is_limited<size_t>(value))
     {
-        ec = make_protocol_error();
+        ec = error::to_boost_code(error::boost_error_t::protocol_error);
         return;
     }
 
@@ -63,13 +57,13 @@ size_t CLASS::reader::put(const buffer_type& buffer, error_code& ec) NOEXCEPT
 
         total_ = system::ceilinged_add(total_, parsed);
         if (!ec && total_ > expected_.value_or(max_size_t))
-            ec = make_protocol_error();
+            ec = error::to_boost_code(error::boost_error_t::protocol_error);
 
         return parsed;
     }
     catch (...)
     {
-        ec = make_protocol_error();
+        ec = error::to_boost_code(error::boost_error_t::protocol_error);
         return {};
     }
 }
@@ -123,7 +117,7 @@ CLASS::writer::out_buffer CLASS::writer::get(error_code& ec) NOEXCEPT
     }
     catch (...)
     {
-        ec = make_protocol_error();
+        ec = error::to_boost_code(error::boost_error_t::protocol_error);
         return boost::none;
     }
 }

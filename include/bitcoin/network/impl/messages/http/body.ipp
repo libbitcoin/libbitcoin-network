@@ -96,7 +96,17 @@ inline void body::reader::init(const length_type& length,
 {
     std::visit(overload
     {
-        [&](auto& read) NOEXCEPT { read.init(length, ec); }
+        [&](auto& read) NOEXCEPT
+        {
+            try
+            {
+                read.init(length, ec);
+            }
+            catch (...)
+            {
+                ec = error::to_boost_code(error::boost_error_t::io_error);
+            }
+        }
     }, reader_);
 }
 
@@ -105,7 +115,18 @@ inline size_t body::reader::put(const buffer_type& buffer,
 {
     return std::visit(overload
     {
-        [&](auto& read) NOEXCEPT { return read.put(buffer, ec); }
+        [&](auto& read) NOEXCEPT
+        {
+            try
+            {
+                return read.put(buffer, ec);
+            }
+            catch (...)
+            {
+                ec = error::to_boost_code(error::boost_error_t::io_error);
+                return size_t{};
+            }
+        }
     }, reader_);
 }
 
@@ -113,7 +134,17 @@ inline void body::reader::finish(error_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
-        [&](auto& read) NOEXCEPT { return read.finish(ec); }
+        [&](auto& read) NOEXCEPT
+        {
+            try
+            {
+                return read.finish(ec);
+            }
+            catch (...)
+            {
+                ec = error::to_boost_code(error::boost_error_t::io_error);
+            }
+        }
     }, reader_);
 }
 
@@ -174,7 +205,17 @@ inline void body::writer::init(error_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
-        [&](auto& write) NOEXCEPT { write.init(ec); }
+        [&] (auto& write) NOEXCEPT
+        {
+            try
+            {
+                write.init(ec);
+            }
+            catch (...)
+            {
+                ec = error::to_boost_code(error::boost_error_t::io_error);
+            }
+        }
     }, writer_);
 }
 
@@ -182,7 +223,18 @@ inline body::writer::out_buffer body::writer::get(error_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
-        [&](auto& write) NOEXCEPT { return write.get(ec); }
+        [&](auto& write) NOEXCEPT
+        {
+            try
+            {
+                return write.get(ec);
+            }
+            catch (...)
+            {
+                ec = error::to_boost_code(error::boost_error_t::io_error);
+                return out_buffer{};
+            }
+        }
     }, writer_);
 }
 
