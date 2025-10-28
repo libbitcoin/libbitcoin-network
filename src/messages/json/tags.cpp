@@ -23,7 +23,7 @@
 #include <bitcoin/network/messages/json/enums/version.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 
-// TODO: boost::json parse/seralize is not exception safe.
+// boost::json parse/seralize is not exception safe.
 
 namespace libbitcoin {
 namespace network {
@@ -46,9 +46,9 @@ DEFINE_JSON_TO_TAG(version)
 {
     if (value.is_string())
     {
-        const auto& str = value.get_string();
-        if (str == "1.0") return version::v1;
-        if (str == "2.0") return version::v2;
+        const auto& text = value.as_string();
+        if (text == "1.0") return version::v1;
+        if (text == "2.0") return version::v2;
     }
 
     return version::invalid;
@@ -213,7 +213,7 @@ DEFINE_JSON_TO_TAG(request_t)
     // method
     if (const auto it = object.find("method"); it != object.end())
     {
-        request.method = it->value().get_string();
+        request.method = it->value().as_string();
     }
 
     // id
