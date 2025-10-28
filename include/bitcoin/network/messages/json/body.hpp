@@ -28,6 +28,9 @@ namespace network {
 namespace json {
 
 /// Content passed to/from reader/writer via request/response.
+/// static uint64_t size(const payload&) must be defined for beast to produce
+/// content_length, otherwise the response is chunked. Predetermining size
+/// would have the effect of eliminating the benefit of streaming serialize.
 struct payload
 {
     /// JSON DOM.
@@ -35,44 +38,6 @@ struct payload
 
     /// Writer serialization buffer (max size, allocated on write).
     mutable http::flat_buffer_ptr buffer{};
-
-    // size() must be defined to produce content_length, otherwise chunked.
-    ////static uint64_t size(const payload&) NOEXCEPT
-    ////{
-    ////    // Not so efficient for serialized parse.
-    ////    return {};
-    ////}
-    ////
-    ////template<bool isRequest, class Body, class Fields>
-    ////void message<isRequest, Body, Fields>::
-    ////prepare_payload(std::true_type)
-    ////{
-    ////    auto const n = payload_size();
-    ////    if (method() == verb::trace && (!n || *n > 0))
-    ////    {
-    ////        BOOST_THROW_EXCEPTION(std::invalid_argument
-    ////            { "invalid request body" });
-    ////    }
-    ////
-    ////    if(n)
-    ////    {
-    ////        if(*n > 0 ||
-    ////            method() == verb::options ||
-    ////            method() == verb::put ||
-    ////            method() == verb::post)
-    ////        {
-    ////            content_length(n);
-    ////        }
-    ////        else
-    ////        {
-    ////            chunked(false);
-    ////        }
-    ////    }
-    ////    else
-    ////    {
-    ////        chunked(version() == 11);
-    ////    }
-    ////}
 };
 
 /// boost::beast::http body template for JSON messages.
