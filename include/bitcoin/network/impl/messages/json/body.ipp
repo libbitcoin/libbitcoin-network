@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_IPP
 
+#include <memory>
 #include <utility>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
