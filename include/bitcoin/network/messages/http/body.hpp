@@ -104,7 +104,6 @@ struct body
         inline void finish(error_code& ec) NOEXCEPT;
 
     private:
-        value_type& payload_;
         reader_variant reader_;
     };
 
@@ -122,7 +121,6 @@ struct body
         inline out_buffer get(error_code& ec) NOEXCEPT;
 
     private:
-        const value_type& payload_;
         writer_variant writer_;
     };
 };

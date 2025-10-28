@@ -87,8 +87,7 @@ inline reader_variant to_reader(auto& head, variant_payload& pay) NOEXCEPT
 template <bool IsRequest, class Fields>
 inline body::reader::reader(header<IsRequest, Fields>& header,
     value_type& payload) NOEXCEPT
-  : payload_{ payload },
-    reader_{ to_reader(header, payload) }
+  : reader_{ to_reader(header, payload) }
 {
 }
 
@@ -167,8 +166,7 @@ inline writer_variant to_writer(auto& head,
 template <bool IsRequest, class Fields>
 inline body::writer::writer(header<IsRequest, Fields>& header,
     const value_type& payload) NOEXCEPT
-  : payload_{ payload },
-    writer_{ to_writer(header, payload) }
+  : writer_{ to_writer(header, payload) }
 {
 }
 
