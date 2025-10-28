@@ -32,7 +32,7 @@ namespace http {
 /// http::json::request
 using json_parser = json::parser;
 using json_serializer = json::serializer;
-using json_body = json::body<json_parser, json_serializer>;
+////using json_body = json::body<json_parser, json_serializer>;
 using json_request = boost::beast::http::request<json_body>;
 using json_response = boost::beast::http::response<json_body>;
 using json_request_cptr = std::shared_ptr<const json_request>;

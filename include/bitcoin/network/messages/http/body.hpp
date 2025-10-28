@@ -19,21 +19,76 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_HPP
 
+#include <optional>
+#include <variant>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/json/body.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace http {
 
-/// Content passed to/from reader/writer via request/response.
-struct payload
+using json_body = json::body<json::parser, json::serializer>;
+
+using empty_value = empty_body::value_type;
+using json_value = json_body::value_type;
+using data_value = data_body::value_type;
+using file_value = file_body::value_type;
+using string_value = string_body::value_type;
+
+using empty_reader = empty_body::reader;
+using json_reader = json_body::reader;
+using data_reader = data_body::reader;
+using file_reader = file_body::reader;
+using string_reader = string_body::reader;
+
+using empty_writer = empty_body::writer;
+using json_writer = json_body::writer;
+using data_writer = data_body::writer;
+using file_writer = file_body::writer;
+using string_writer = string_body::writer;
+
+using value_variant = std::variant
+<
+    empty_value,
+    json_value,
+    data_value,
+    file_value,
+    string_value
+>;
+
+using reader_variant = std::variant
+<
+    empty_reader,
+    json_reader,
+    data_reader,
+    file_reader,
+    string_reader
+>;
+
+using writer_variant = std::variant
+<
+    empty_writer,
+    json_writer,
+    data_writer,
+    file_writer,
+    string_writer
+>;
+
+/// No size(), forces chunked encoding for all types.
+/// The pass-thru body(), reader populates in construct.
+/// Mutable allows writer to default the variant if it has not been assigned.
+struct variant_payload
 {
+    mutable std::optional<value_variant> inner{};
 };
 
 /// boost::beast::http body template for all message types.
+/// This encapsulates a variant of supported body types, selects a type upon
+/// reader or writer construction, and then passes all calls through to it.
 struct body
 {
-    using value_type = payload;
+    using value_type = variant_payload;
 
     class reader
     {
@@ -48,8 +103,9 @@ struct body
         inline size_t put(const buffer_type& buffer, error_code& ec) NOEXCEPT;
         inline void finish(error_code& ec) NOEXCEPT;
 
-    ////private:
-    ////    value_type& payload_;
+    private:
+        value_type& payload_;
+        reader_variant reader_;
     };
 
     class writer
@@ -65,8 +121,9 @@ struct body
         inline void init(error_code& ec) NOEXCEPT;
         inline out_buffer get(error_code& ec) NOEXCEPT;
 
-    ////private:
-    ////    const value_type& payload_;
+    private:
+        const value_type& payload_;
+        writer_variant writer_;
     };
 };
 

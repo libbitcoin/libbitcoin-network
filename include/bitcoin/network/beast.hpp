@@ -80,6 +80,7 @@ typedef file_body::value_type file;
 typedef boost::beast::http::field field;
 typedef boost::beast::http::fields fields;
 typedef boost::beast::flat_buffer flat_buffer;
+typedef std::shared_ptr<flat_buffer> flat_buffer_ptr;
 typedef boost::system::error_code error_code;
 
 /////// websockets

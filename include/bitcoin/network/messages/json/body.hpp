@@ -34,7 +34,7 @@ struct payload
     json_value model{};
 
     /// Writer serialization buffer (max size, allocated on write).
-    mutable http::flat_buffer buffer{ 4096 };
+    mutable http::flat_buffer_ptr buffer{};
 
     // size() must be defined to produce content_length, otherwise chunked.
     ////static uint64_t size(const payload&) NOEXCEPT
@@ -42,7 +42,7 @@ struct payload
     ////    // Not so efficient for serialized parse.
     ////    return {};
     ////}
-
+    ////
     ////template<bool isRequest, class Body, class Fields>
     ////void message<isRequest, Body, Fields>::
     ////prepare_payload(std::true_type)
