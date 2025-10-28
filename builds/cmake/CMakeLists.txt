@@ -376,6 +376,7 @@ if (with-tests)
         "../../test/distributors/distributor_peer.cpp"
         "../../test/log/timer.cpp"
         "../../test/log/tracker.cpp"
+        "../../test/messages/http/fields.cpp"
         "../../test/messages/http/method.cpp"
         "../../test/messages/http/enums/magic_numbers.cpp"
         "../../test/messages/http/enums/mime_type.cpp"
