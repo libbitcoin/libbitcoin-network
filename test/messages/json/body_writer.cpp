@@ -20,9 +20,77 @@
 
 BOOST_AUTO_TEST_SUITE(json_body_writer_tests)
 
-BOOST_AUTO_TEST_CASE(json_body_writer_test)
+using namespace network::http;
+using namespace network::json;
+using namespace network::error;
+using body = json::body<parser, serializer>;
+using value = boost::json::value;
+using object = boost::json::object;
+
+bool operator==(const asio::const_buffer& left, const asio::const_buffer& right)
 {
-    BOOST_REQUIRE(true);
+    return left.size() == right.size() &&
+        is_zero(std::memcmp(left.data(), right.data(), left.size()));
+}
+
+bool operator!=(const asio::const_buffer& left, const asio::const_buffer& right)
+{
+    return !(left == right);
+}
+
+BOOST_AUTO_TEST_CASE(json_body_writer__constructor__default__null_model)
+{
+    payload body{};
+    response_header header{};
+    body::writer writer(header, body);
+    BOOST_REQUIRE(boost::get<value>(body.model).is_null());
+}
+
+BOOST_AUTO_TEST_CASE(json_body_writer__init__default__success)
+{
+    payload body{};
+    response_header header{};
+    body::writer writer(header, body);
+    error_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+}
+
+BOOST_AUTO_TEST_CASE(json_body_writer__get__null_model__success_expected_no_more)
+{
+    const std::string_view expected{ "null" };
+    const asio::const_buffer out{ expected.data(), expected.size() };
+    payload body{};
+    response_header header{};
+    body::writer writer(header, body);
+    error_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer.has_value());
+    BOOST_REQUIRE(buffer.get().first == out);
+    BOOST_REQUIRE(!buffer.get().second);
+}
+
+BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_more)
+{
+    const std::string_view expected{ R"({"key":"value"})" };
+    const asio::const_buffer out{ expected.data(), expected.size() };
+    payload body{};
+    body.model = object{ { "key", "value" } };
+    response_header header{};
+    body::writer writer(header, body);
+    error_code ec{};
+    writer.init(ec);
+    BOOST_REQUIRE(!ec);
+
+    const auto buffer = writer.get(ec);
+    BOOST_REQUIRE(!ec);
+    BOOST_REQUIRE(buffer.has_value());
+    BOOST_REQUIRE(buffer.get().first == out);
+    BOOST_REQUIRE(!buffer.get().second);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
