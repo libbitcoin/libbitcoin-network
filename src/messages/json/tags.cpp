@@ -163,7 +163,7 @@ DEFINE_JSON_TO_TAG(identity_t)
 
 DEFINE_JSON_FROM_TAG(request_t)
 {
-    json_object object{};
+    boost::json::object object{};
 
     if (instance.jsonrpc != version::undefined)
     {
@@ -249,7 +249,7 @@ DEFINE_JSON_TO_TAG(request_t)
 
 DEFINE_JSON_FROM_TAG(response_t)
 {
-    json_object object{};
+    boost::json::object object{};
 
     if (instance.jsonrpc != version::undefined)
     {

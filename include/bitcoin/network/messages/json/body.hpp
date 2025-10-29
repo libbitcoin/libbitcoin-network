@@ -34,7 +34,7 @@ namespace json {
 struct payload
 {
     /// JSON DOM.
-    json_value model{};
+    boost::json::value model{};
 
     /// Writer serialization buffer (max size, allocated on write).
     mutable http::flat_buffer_ptr buffer{};
