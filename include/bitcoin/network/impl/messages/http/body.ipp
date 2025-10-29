@@ -35,7 +35,7 @@ namespace http {
 // ----------------------------------------------------------------------------
     
 template <class Body, class Fields>
-inline reader_variant reader_from_body(Fields& header,
+reader_variant body::reader::reader_from_body(Fields& header,
     variant_payload& payload) NOEXCEPT
 {
     BC_ASSERT(payload.inner.has_value());
@@ -47,7 +47,7 @@ inline reader_variant reader_from_body(Fields& header,
 
 /// Select reader based on content-type header.
 template <class Fields>
-inline reader_variant to_reader(Fields& header,
+reader_variant body::reader::to_reader(Fields& header,
     variant_payload& payload) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -86,7 +86,7 @@ inline reader_variant to_reader(Fields& header,
 }
 
 template <bool IsRequest, class Fields>
-inline body::reader::reader(header<IsRequest, Fields>& header,
+body::reader::reader(header<IsRequest, Fields>& header,
     value_type& payload) NOEXCEPT
   : reader_{ to_reader(header, payload) }
 {
@@ -96,7 +96,7 @@ inline body::reader::reader(header<IsRequest, Fields>& header,
 // ----------------------------------------------------------------------------
 
 template <class Body, class Fields>
-inline writer_variant writer_from_body(Fields& header,
+writer_variant body::writer::writer_from_body(Fields& header,
     const variant_payload& payload) NOEXCEPT
 {
     BC_ASSERT(payload.inner.has_value());
@@ -108,7 +108,7 @@ inline writer_variant writer_from_body(Fields& header,
 
 /// Create writer matching the caller-defined body.inner (variant) type.
 template <class Fields>
-inline writer_variant to_writer(Fields& header,
+writer_variant body::writer::to_writer(Fields& header,
     const variant_payload& payload) NOEXCEPT
 {
     // Caller should have set inner, otherwise set it to empty (it's mutable).
@@ -141,7 +141,7 @@ inline writer_variant to_writer(Fields& header,
 }
 
 template <bool IsRequest, class Fields>
-inline body::writer::writer(header<IsRequest, Fields>& header,
+body::writer::writer(header<IsRequest, Fields>& header,
     const value_type& payload) NOEXCEPT
   : writer_{ to_writer(header, payload) }
 {

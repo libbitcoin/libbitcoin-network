@@ -97,12 +97,21 @@ struct body
         using buffer_type = asio::const_buffer;
 
         template <bool IsRequest, class Fields>
-        inline explicit reader(header<IsRequest, Fields>& header,
+        explicit reader(header<IsRequest, Fields>& header,
             value_type& payload) NOEXCEPT;
 
-        inline void init(const length_type& length, error_code& ec) NOEXCEPT;
-        inline size_t put(const buffer_type& buffer, error_code& ec) NOEXCEPT;
-        inline void finish(error_code& ec) NOEXCEPT;
+        void init(const length_type& length, error_code& ec) NOEXCEPT;
+        size_t put(const buffer_type& buffer, error_code& ec) NOEXCEPT;
+        void finish(error_code& ec) NOEXCEPT;
+
+    protected:
+        template <class Body, class Fields>
+        reader_variant reader_from_body(Fields& header,
+            variant_payload& payload) NOEXCEPT;
+
+        template <class Fields>
+        reader_variant to_reader(Fields& header,
+            variant_payload& payload) NOEXCEPT;
 
     private:
         reader_variant reader_;
@@ -115,11 +124,20 @@ struct body
         using out_buffer = get_buffer<const_buffers_type>;
 
         template <bool IsRequest, class Fields>
-        inline explicit writer(header<IsRequest, Fields>& header,
+        explicit writer(header<IsRequest, Fields>& header,
             const value_type& payload) NOEXCEPT;
 
-        inline void init(error_code& ec) NOEXCEPT;
-        inline out_buffer get(error_code& ec) NOEXCEPT;
+        void init(error_code& ec) NOEXCEPT;
+        out_buffer get(error_code& ec) NOEXCEPT;
+
+    protected:
+        template <class Body, class Fields>
+        writer_variant writer_from_body(Fields& header,
+            const variant_payload& payload) NOEXCEPT;
+
+        template <class Fields>
+        writer_variant to_writer(Fields& header,
+            const variant_payload& payload) NOEXCEPT;
 
     private:
         writer_variant writer_;
