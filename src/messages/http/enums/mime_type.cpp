@@ -40,7 +40,7 @@ static mime_bimap construct_mime_bimap() NOEXCEPT
     mime_bimap bimap{};
     bimap.insert({ mime_type::application_javascript, "application/javascript" });
     bimap.insert({ mime_type::application_json, "application/json" });
-    bimap.insert({ mime_type::application_octet, "application/octet-stream" });
+    bimap.insert({ mime_type::application_octet_stream, "application/octet-stream" });
     bimap.insert({ mime_type::application_pdf, "application/pdf" });
     bimap.insert({ mime_type::application_xml, "application/xml" });
     bimap.insert({ mime_type::application_zip, "application/zip" });
@@ -118,7 +118,7 @@ mime_type extension_mime_type(const std::string_view& extension,
     static const std::unordered_map<std::string, mime_type> types
     {
         { ".js",    mime_type::application_javascript },
-        ////{ "",   mime_type::application_octet },
+        ////{ "",   mime_type::application_octet_stream },
         { ".json",  mime_type::application_json },
         { ".pdf",   mime_type::application_pdf },
         { ".zip",   mime_type::application_zip },

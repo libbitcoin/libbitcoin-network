@@ -68,13 +68,6 @@ typedef boost::beast::http::serializer<false, file_body> file_serializer;
 typedef std::shared_ptr<const file_request> file_request_cptr;
 typedef std::shared_ptr<file_request> file_request_ptr;
 
-/// Required types for custom beast::http::body definition.
-template <bool IsRequest, class Fields>
-using header = boost::beast::http::header<IsRequest, Fields>;
-template <class Buffer>
-using get_buffer = boost::optional<std::pair<Buffer, bool>>;
-using length_type = boost::optional<uint64_t>;
-
 /// general purpose
 typedef file_body::value_type file;
 typedef boost::beast::http::field field;
@@ -83,8 +76,16 @@ typedef boost::beast::flat_buffer flat_buffer;
 typedef std::shared_ptr<flat_buffer> flat_buffer_ptr;
 typedef boost::system::error_code error_code;
 
-/////// websockets
-////using websocket = boost::beast::websocket::stream<asio::socket>;
+/// Required types for custom beast::http::body definition.
+template <bool IsRequest, class Fields>
+using header = boost::beast::http::header<IsRequest, Fields>;
+template<class Fields>
+using request_header = header<true, Fields>;
+template<class Fields>
+using response_header = header<false, Fields>;
+template <class Buffer>
+using get_buffer = boost::optional<std::pair<Buffer, bool>>;
+using length_type = boost::optional<uint64_t>;
 
 } // namespace http
 } // namespace network

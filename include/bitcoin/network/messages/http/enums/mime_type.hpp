@@ -31,7 +31,7 @@ enum class mime_type
 {
     application_javascript,
     application_json,
-    application_octet,
+    application_octet_stream,
     application_pdf,
     application_xml,
     application_zip,

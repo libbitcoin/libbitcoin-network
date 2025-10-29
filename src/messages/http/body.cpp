@@ -93,7 +93,7 @@ void body::writer::init(error_code& ec) NOEXCEPT
 {
     return std::visit(overload
     {
-        [&] (auto& write) NOEXCEPT
+        [&](auto& write) NOEXCEPT
         {
             try
             {

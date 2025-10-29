@@ -19,7 +19,6 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_IPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_IPP
 
-#include <utility>
 #include <variant>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/enums/mime_type.hpp>
@@ -33,21 +32,11 @@ namespace http {
 
 // reader
 // ----------------------------------------------------------------------------
-    
-template <class Body, class Fields>
-reader_variant body::reader::reader_from_body(Fields& header,
-    variant_payload& payload) NOEXCEPT
-{
-    BC_ASSERT(payload.inner.has_value());
-    using reader = typename Body::reader;
-    using value = typename Body::value_type;
-    return reader_variant{ std::in_place_type<reader>, header,
-        std::get<value>(payload.inner.value()) };
-}
 
-/// Select reader based on content-type header.
-template <class Fields>
-reader_variant body::reader::to_reader(Fields& header,
+// static
+// Select reader based on content-type header.
+template <class Header>
+variant_reader body::reader::to_reader(Header& header,
     variant_payload& payload) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -55,34 +44,47 @@ reader_variant body::reader::to_reader(Fields& header,
     BC_POP_WARNING()
     {
         case mime_type::application_json:
-        {
             payload.inner = json_value{};
-            return reader_from_body<json_body>(header, payload);
-        }
+            break;
         case mime_type::text_plain:
-        {
             payload.inner = string_value{};
-            return reader_from_body<string_body>(header, payload);
-        }
-        case mime_type::application_octet:
-        {
+            break;
+        case mime_type::application_octet_stream:
             if (has_attachment(header))
-            {
                 payload.inner = file_value{};
-                return reader_from_body<file_body>(header, payload);
-            }
             else
-            {
                 payload.inner = data_value{};
-                return reader_from_body<data_body>(header, payload);
-            }
-        }
+            break;
         default:
-        {
             payload.inner = empty_value{};
-            return reader_from_body<empty_body>(header, payload);
-        }
     }
+
+    return std::visit(overload
+    {
+        [&](empty_value& value) NOEXCEPT
+        {
+            return variant_reader{ empty_reader{ header, value } };
+        },
+        [&](json_value& value) NOEXCEPT
+        {
+            // json_reader is not copy or assignable (by contained parser).
+            // So *requires* in-place construction for variant population.
+            return variant_reader{ std::in_place_type<json_reader>,
+                header, value };
+        },
+        [&](data_value& value) NOEXCEPT
+        {
+            return variant_reader{ data_reader{ header, value } };
+        },
+        [&](file_value& value) NOEXCEPT
+        {
+            return variant_reader{ file_reader{ header, value } };
+        },
+        [&](string_value& value) NOEXCEPT
+        {
+            return variant_reader{ string_reader{ header, value } };
+        }
+    }, payload.inner.value());
 }
 
 template <bool IsRequest, class Fields>
@@ -95,54 +97,47 @@ body::reader::reader(header<IsRequest, Fields>& header,
 // writer
 // ----------------------------------------------------------------------------
 
-template <class Body, class Fields>
-writer_variant body::writer::writer_from_body(Fields& header,
-    const variant_payload& payload) NOEXCEPT
+// static
+// Create writer matching the caller-defined body.inner (variant) type.
+template <class Header>
+variant_writer body::writer::to_writer(Header& header,
+    variant_payload& payload) NOEXCEPT
 {
-    BC_ASSERT(payload.inner.has_value());
-    using writer = typename Body::writer;
-    using value = typename Body::value_type;
-    return writer_variant{ std::in_place_type<writer>, header,
-        std::get<value>(payload.inner.value()) };
-}
-
-/// Create writer matching the caller-defined body.inner (variant) type.
-template <class Fields>
-writer_variant body::writer::to_writer(Fields& header,
-    const variant_payload& payload) NOEXCEPT
-{
-    // Caller should have set inner, otherwise set it to empty (it's mutable).
+    // Caller should have set inner, otherwise set it to empty.
     if (!payload.inner.has_value())
         payload.inner = empty_value{};
 
     return std::visit(overload
     {
-        [&](const json_value&) NOEXCEPT
+        [&](empty_value& value) NOEXCEPT
         {
-            return writer_from_body<json_body>(header, payload);
+            return variant_writer{ empty_writer{ header, value } };
         },
-        [&](const string_value&) NOEXCEPT
+        [&](json_value& value) NOEXCEPT
         {
-            return writer_from_body<string_body>(header, payload);
+            // json_writer is not movable (by contained serializer).
+            // So *requires* in-place construction for variant population.
+            return variant_writer{ std::in_place_type<json_writer>,
+                header, value };
         },
-        [&](const data_value&) NOEXCEPT
+        [&](data_value& value) NOEXCEPT
         {
-            return writer_from_body<data_body>(header, payload);
+            return variant_writer{ data_writer{ header, value } };
         },
-        [&](const file_value&) NOEXCEPT
+        [&](file_value& value) NOEXCEPT
         {
-            return writer_from_body<file_body>(header, payload);
+            return variant_writer{ file_writer{ header, value } };
         },
-        [&](const empty_value&) NOEXCEPT
+        [&](string_value& value) NOEXCEPT
         {
-            return writer_from_body<empty_body>(header, payload);
+            return variant_writer{ string_writer{ header, value } };
         }
     }, payload.inner.value());
 }
 
 template <bool IsRequest, class Fields>
 body::writer::writer(header<IsRequest, Fields>& header,
-    const value_type& payload) NOEXCEPT
+    value_type& payload) NOEXCEPT
   : writer_{ to_writer(header, payload) }
 {
 }
