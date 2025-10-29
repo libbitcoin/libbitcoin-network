@@ -36,7 +36,7 @@ namespace http {
 // static
 // Select reader based on content-type header.
 template <class Header>
-reader_variant body::reader::to_reader(Header& header,
+variant_reader body::reader::to_reader(Header& header,
     variant_payload& payload) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
@@ -63,26 +63,26 @@ reader_variant body::reader::to_reader(Header& header,
     {
         [&](empty_value& value) NOEXCEPT
         {
-            return reader_variant{ empty_reader{ header, value } };
+            return variant_reader{ empty_reader{ header, value } };
         },
         [&](json_value& value) NOEXCEPT
         {
             // json_reader is not copy or assignable (by contained parser).
             // So *requires* in-place construction for variant population.
-            return reader_variant{ std::in_place_type<json_reader>,
+            return variant_reader{ std::in_place_type<json_reader>,
                 header, value };
         },
         [&](data_value& value) NOEXCEPT
         {
-            return reader_variant{ data_reader{ header, value } };
+            return variant_reader{ data_reader{ header, value } };
         },
         [&](file_value& value) NOEXCEPT
         {
-            return reader_variant{ file_reader{ header, value } };
+            return variant_reader{ file_reader{ header, value } };
         },
         [&](string_value& value) NOEXCEPT
         {
-            return reader_variant{ string_reader{ header, value } };
+            return variant_reader{ string_reader{ header, value } };
         }
     }, payload.inner.value());
 }
@@ -100,7 +100,7 @@ body::reader::reader(header<IsRequest, Fields>& header,
 // static
 // Create writer matching the caller-defined body.inner (variant) type.
 template <class Header>
-writer_variant body::writer::to_writer(Header& header,
+variant_writer body::writer::to_writer(Header& header,
     variant_payload& payload) NOEXCEPT
 {
     // Caller should have set inner, otherwise set it to empty.
@@ -111,26 +111,26 @@ writer_variant body::writer::to_writer(Header& header,
     {
         [&](empty_value& value) NOEXCEPT
         {
-            return writer_variant{ empty_writer{ header, value } };
+            return variant_writer{ empty_writer{ header, value } };
         },
         [&](json_value& value) NOEXCEPT
         {
             // json_writer is not movable (by contained serializer).
             // So *requires* in-place construction for variant population.
-            return writer_variant{ std::in_place_type<json_writer>,
+            return variant_writer{ std::in_place_type<json_writer>,
                 header, value };
         },
         [&](data_value& value) NOEXCEPT
         {
-            return writer_variant{ data_writer{ header, value } };
+            return variant_writer{ data_writer{ header, value } };
         },
         [&](file_value& value) NOEXCEPT
         {
-            return writer_variant{ file_writer{ header, value } };
+            return variant_writer{ file_writer{ header, value } };
         },
         [&](string_value& value) NOEXCEPT
         {
-            return writer_variant{ string_writer{ header, value } };
+            return variant_writer{ string_writer{ header, value } };
         }
     }, payload.inner.value());
 }

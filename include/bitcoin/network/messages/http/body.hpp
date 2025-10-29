@@ -49,7 +49,7 @@ using data_writer = data_body::writer;
 using file_writer = file_body::writer;
 using string_writer = string_body::writer;
 
-using value_variant = std::variant
+using variant_value = std::variant
 <
     empty_value,
     json_value,
@@ -58,7 +58,7 @@ using value_variant = std::variant
     string_value
 >;
 
-using reader_variant = std::variant
+using variant_reader = std::variant
 <
     empty_reader,
     json_reader,
@@ -67,7 +67,7 @@ using reader_variant = std::variant
     string_reader
 >;
 
-using writer_variant = std::variant
+using variant_writer = std::variant
 <
     empty_writer,
     json_writer,
@@ -80,7 +80,7 @@ using writer_variant = std::variant
 /// The pass-thru body(), reader populates in construct.
 struct variant_payload
 {
-    std::optional<value_variant> inner{};
+    std::optional<variant_value> inner{};
 };
 
 /// boost::beast::http body template for all message types.
@@ -105,11 +105,11 @@ struct body
 
     protected:
         template <class Header>
-        static reader_variant to_reader(Header& header,
+        static variant_reader to_reader(Header& header,
             variant_payload& payload) NOEXCEPT;
 
     private:
-        reader_variant reader_;
+        variant_reader reader_;
     };
 
     class writer
@@ -127,11 +127,11 @@ struct body
 
     protected:
         template <class Header>
-        static writer_variant to_writer(Header& header,
+        static variant_writer to_writer(Header& header,
             variant_payload& payload) NOEXCEPT;
 
     private:
-        writer_variant writer_;
+        variant_writer writer_;
     };
 };
 
