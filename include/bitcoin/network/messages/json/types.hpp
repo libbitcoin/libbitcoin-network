@@ -33,7 +33,7 @@ namespace json {
 /// Forward declaration for array_t/object_t. 
 struct value_t;
 
-struct BCT_API null_t {};
+struct null_t {};
 using code_t = int64_t;
 using boolean_t = bool;
 using number_t = double;
@@ -52,9 +52,9 @@ using identity_t = std::variant
 >;
 using id_option = std::optional<identity_t>;
 
-struct BCT_API value_t
+struct value_t
 {
-    using type = std::variant
+    using inner_t = std::variant
     <
         null_t,
         boolean_t,
@@ -64,21 +64,10 @@ struct BCT_API value_t
         object_t
     >;
 
-    type inner{};
-
     /// Forwarding constructors for in-place variant construction.
+    FORWARD_VARIANT_CONSTRUCT(value_t, inner)
 
-    template <class Type, class... Args>
-    constexpr value_t(std::in_place_type_t<Type>, Args&&... args) NOEXCEPT
-      : inner(std::in_place_type<Type>, std::forward<Args>(args)...)
-    {
-    }
-
-    template <size_t Index, class... Args>
-    constexpr value_t(std::in_place_index_t<Index>, Args&&... args) NOEXCEPT
-      : inner(std::in_place_index<Index>, std::forward<Args>(args)...)
-    {
-    }
+    inner_t inner{};
 };
 using value_option = std::optional<value_t>;
 
@@ -89,7 +78,7 @@ using params_t = std::variant
 >;
 using params_option = std::optional<params_t>;
 
-struct BCT_API result_t
+struct result_t
 {
     code_t code{};
     string_t message{};
@@ -97,7 +86,7 @@ struct BCT_API result_t
 };
 using error_option = std::optional<result_t>;
 
-struct BCT_API response_t
+struct response_t
 {
     version jsonrpc{ version::undefined };
     id_option id{};
@@ -105,7 +94,7 @@ struct BCT_API response_t
     value_option result{};
 };
 
-struct BCT_API request_t
+struct request_t
 {
     version jsonrpc{ version::undefined };
     id_option id{};
