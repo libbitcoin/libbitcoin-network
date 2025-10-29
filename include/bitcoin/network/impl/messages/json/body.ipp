@@ -83,7 +83,7 @@ void CLASS::reader::finish(error_code& ec) NOEXCEPT
         parser_.finish(ec);
 
         if (!ec)
-            payload_.model = parser_.release();
+            value_.model = parser_.release();
     }
     catch (...)
     {
@@ -97,19 +97,19 @@ void CLASS::reader::finish(error_code& ec) NOEXCEPT
 TEMPLATE
 void CLASS::writer::init(error_code& ec) NOEXCEPT
 {
-    if (!payload_.buffer)
+    if (!value_.buffer)
     {
         // Caller controls max_size and other buffer behavior by assigning it.
-        payload_.buffer = std::make_shared<http::flat_buffer>(4096);
+        value_.buffer = std::make_shared<http::flat_buffer>(4096);
     }
     else
     {
         // Caller has assigned the buffer (or just reused the response).
-        payload_.buffer->consume(payload_.buffer->size());
+        value_.buffer->consume(value_.buffer->size());
     }
 
     ec.clear();
-    serializer_.reset(&payload_.model);
+    serializer_.reset(&value_.model);
 }
 
 TEMPLATE
@@ -122,12 +122,12 @@ CLASS::writer::out_buffer CLASS::writer::get(error_code& ec) NOEXCEPT
     try
     {
         // Always prepares the configured max_size.
-        const auto size = payload_.buffer->max_size();
-        const auto buff = payload_.buffer->prepare(size);
+        const auto size = value_.buffer->max_size();
+        const auto buff = value_.buffer->prepare(size);
         const auto data = system::pointer_cast<char>(buff.data());
         const auto view = serializer_.read(data, buff.size());
         const auto done = serializer_.done();
-        payload_.buffer->commit(view.size());
+        value_.buffer->commit(view.size());
         return out_buffer{ std::make_pair(boost::asio::buffer(view), !done) };
     }
     catch (...)

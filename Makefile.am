@@ -359,6 +359,7 @@ include_bitcoin_network_messages_http_HEADERS = \
     include/bitcoin/network/messages/http/fields.hpp \
     include/bitcoin/network/messages/http/messages.hpp \
     include/bitcoin/network/messages/http/method.hpp \
+    include/bitcoin/network/messages/http/payload.hpp \
     include/bitcoin/network/messages/http/types.hpp
 
 include_bitcoin_network_messages_http_enumsdir = ${includedir}/bitcoin/network/messages/http/enums
@@ -373,6 +374,7 @@ include_bitcoin_network_messages_jsondir = ${includedir}/bitcoin/network/message
 include_bitcoin_network_messages_json_HEADERS = \
     include/bitcoin/network/messages/json/body.hpp \
     include/bitcoin/network/messages/json/messages.hpp \
+    include/bitcoin/network/messages/json/payload.hpp \
     include/bitcoin/network/messages/json/tags.hpp \
     include/bitcoin/network/messages/json/types.hpp
 

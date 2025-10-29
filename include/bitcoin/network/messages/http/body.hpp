@@ -19,31 +19,14 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_BODY_HPP
 
-#include <optional>
 #include <variant>
-#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
+#include <bitcoin/network/messages/http/payload.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace http {
-
-using json_body = json::body<json::parser, json::serializer>;
-
-using empty_value = empty_body::value_type;
-using json_value = json_body::value_type;
-using data_value = data_body::value_type;
-using file_value = file_body::value_type;
-using string_value = string_body::value_type;
-using variant_value = std::variant
-<
-    empty_value,
-    json_value,
-    data_value,
-    file_value,
-    string_value
->;
 
 using empty_reader = empty_body::reader;
 using json_reader = json_body::reader;
@@ -73,17 +56,10 @@ using variant_writer = std::variant
     string_writer
 >;
 
-/// No size(), forces chunked encoding for all types.
-/// The pass-thru body(), reader populates in construct.
-struct payload
-{
-    std::optional<variant_value> inner{};
-};
-
-/// boost::beast::http body template for all message types.
+/// boost::beast::http body template for all known message types.
 /// This encapsulates a variant of supported body types, selects a type upon
 /// reader or writer construction, and then passes all calls through to it.
-struct body
+struct BCT_API body
 {
     using value_type = payload;
 

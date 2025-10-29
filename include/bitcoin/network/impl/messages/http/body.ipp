@@ -23,6 +23,7 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/enums/mime_type.hpp>
 #include <bitcoin/network/messages/http/fields.hpp>
+#include <bitcoin/network/messages/http/body.hpp>
 
 namespace libbitcoin {
 namespace network {
