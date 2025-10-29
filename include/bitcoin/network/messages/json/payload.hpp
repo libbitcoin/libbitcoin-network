@@ -38,7 +38,6 @@ struct payload
     mutable http::flat_buffer_ptr buffer{};
 };
 
-
 } // namespace json
 } // namespace network
 } // namespace libbitcoin
