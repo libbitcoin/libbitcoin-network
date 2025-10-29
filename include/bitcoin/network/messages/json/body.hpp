@@ -19,26 +19,14 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_BODY_HPP
 
-#include <utility>
+#include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
+#include <bitcoin/network/messages/json/payload.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace json {
-
-/// Content passed to/from reader/writer via request/response.
-/// `static uint64_t size(const payload&)` must be defined for beast to produce
-/// `content_length`, otherwise the response is chunked. Predetermining size
-/// would have the effect of eliminating the benefit of streaming serialize.
-struct payload
-{
-    /// JSON DOM.
-    boost::json::value model{};
-
-    /// Writer serialization buffer (max size, allocated on write).
-    mutable http::flat_buffer_ptr buffer{};
-};
 
 /// boost::beast::http body template for JSON messages.
 /// Because of the parser and serializer members, neither the reader nor writer
@@ -55,8 +43,8 @@ struct body
 
         template <bool IsRequest, class Fields>
         explicit reader(http::header<IsRequest, Fields>&,
-            value_type& payload) NOEXCEPT
-          : payload_{ payload }
+            value_type& value) NOEXCEPT
+          : value_{ value }
         {
         }
 
@@ -65,7 +53,7 @@ struct body
         void finish(error_code& ec) NOEXCEPT;
 
     private:
-        value_type& payload_;
+        value_type& value_;
         size_t total_{};
         Parser parser_{};
         http::length_type expected_{};
@@ -79,9 +67,9 @@ struct body
 
         template <bool IsRequest, class Fields>
         explicit writer(http::header<IsRequest, Fields>&,
-            value_type& payload) NOEXCEPT
-          : payload_{ payload },
-            serializer_{ payload.model.storage() }
+            value_type& value) NOEXCEPT
+          : value_{ value },
+            serializer_{ value.model.storage() }
         {
         }
 
@@ -89,7 +77,7 @@ struct body
         out_buffer get(error_code& ec) NOEXCEPT;
 
     private:
-        const value_type& payload_;
+        const value_type& value_;
         Serializer serializer_;
     };
 };

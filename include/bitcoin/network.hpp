@@ -65,6 +65,7 @@
 #include <bitcoin/network/messages/http/fields.hpp>
 #include <bitcoin/network/messages/http/messages.hpp>
 #include <bitcoin/network/messages/http/method.hpp>
+#include <bitcoin/network/messages/http/payload.hpp>
 #include <bitcoin/network/messages/http/types.hpp>
 #include <bitcoin/network/messages/http/enums/magic_numbers.hpp>
 #include <bitcoin/network/messages/http/enums/mime_type.hpp>
@@ -73,6 +74,7 @@
 #include <bitcoin/network/messages/http/enums/verb.hpp>
 #include <bitcoin/network/messages/json/body.hpp>
 #include <bitcoin/network/messages/json/messages.hpp>
+#include <bitcoin/network/messages/json/payload.hpp>
 #include <bitcoin/network/messages/json/tags.hpp>
 #include <bitcoin/network/messages/json/types.hpp>
 #include <bitcoin/network/messages/json/enums/version.hpp>

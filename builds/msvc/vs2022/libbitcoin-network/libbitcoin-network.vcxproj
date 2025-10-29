@@ -274,10 +274,12 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\fields.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\payload.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\body.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\enums\version.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\messages.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\payload.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\tags.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\json\types.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\peer\address.hpp" />
