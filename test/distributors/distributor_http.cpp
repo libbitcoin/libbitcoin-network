@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(distributor_http__notify__get_message__expected_method)
     // Notify with get request.
     boost::asio::post(strand, [&]() NOEXCEPT
     {
-        instance.notify(std::make_shared<string_request>(verb::get, "/", 11));
+        instance.notify(std::make_shared<request>(verb::get, "/", 11));
     });
 
     boost::asio::post(strand, [&]() NOEXCEPT

@@ -108,7 +108,7 @@ protected:
 private:
     void do_stop(const code& ec) NOEXCEPT;
     void handle_read_request(const code& ec, size_t bytes_read,
-        const http::string_request_cptr& request) NOEXCEPT;
+        const http::request_cptr& request) NOEXCEPT;
 
     // These are protected by strand.
     http::flat_buffer request_buffer_;

@@ -135,8 +135,8 @@ void protocol_http::handle_receive_unknown(const code& ec,
 // ----------------------------------------------------------------------------
 
 // Closes channel.
-void protocol_http::send_method_not_allowed(
-    const string_request& request, const code& ec) NOEXCEPT
+void protocol_http::send_method_not_allowed(const request& request,
+    const code& ec) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     if (stopped(ec))
@@ -146,88 +146,83 @@ void protocol_http::send_method_not_allowed(
     details += request.method_string();
     const auto code = status::method_not_allowed;
     const auto mime = to_mime_type(request[field::accept]);
-    string_response response{ status::bad_request, request.version() };
-    add_common_headers(response, request, true);
-    response.body() = format_status(code, response.reason(), mime, details);
-    response.prepare_payload();
-    SEND(std::move(response), handle_complete, _1, error::method_not_allowed);
+    response out{ status::bad_request, request.version() };
+    add_common_headers(out, request, true);
+    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::method_not_allowed);
 }
 
-void protocol_http::send_not_implemented(
-    const string_request& request) NOEXCEPT
+void protocol_http::send_not_implemented(const request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     std::string details{ "server configuration" };
     const auto code = status::not_implemented;
     const auto mime = to_mime_type(request[field::accept]);
-    string_response response{ code, request.version() };
-    add_common_headers(response, request);
-    response.body() = format_status(code, response.reason(), mime, details);
-    response.prepare_payload();
-    SEND(std::move(response), handle_complete, _1, error::not_implemented);
+    response out{ code, request.version() };
+    add_common_headers(out, request);
+    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::not_implemented);
 }
 
-void protocol_http::send_not_found(
-    const string_request& request) NOEXCEPT
+void protocol_http::send_not_found(const request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     std::string details{ "path:" };
     details += request.target();
     const auto code = status::not_found;
     const auto mime = to_mime_type(request[field::accept]);
-    string_response response{ code, request.version() };
-    add_common_headers(response, request);
-    response.body() = format_status(code, response.reason(), mime, details);
-    response.prepare_payload();
-    SEND(std::move(response), handle_complete, _1, error::success);
+    response out{ code, request.version() };
+    add_common_headers(out, request);
+    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::success);
 }
 
 // Closes channel.
-void protocol_http::send_forbidden(
-    const string_request& request) NOEXCEPT
+void protocol_http::send_forbidden(const request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     std::string details{ "origin:" };
     details += request[field::origin];
     const auto code = status::forbidden;
     const auto mime = to_mime_type(request[field::accept]);
-    string_response response{ code, request.version() };
-    add_common_headers(response, request, true);
-    response.body() = format_status(code, response.reason(), mime, details);
-    response.prepare_payload();
-    SEND(std::move(response), handle_complete, _1, error::forbidden);
+    response out{ code, request.version() };
+    add_common_headers(out, request, true);
+    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::forbidden);
 }
 
 // Closes channel.
-void protocol_http::send_bad_host(
-    const string_request& request) NOEXCEPT
+void protocol_http::send_bad_host(const request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     std::string details{ "host=" };
     details += request[field::host];
     const auto code = status::bad_request;
     const auto mime = to_mime_type(request[field::accept]);
-    string_response response{ status::bad_request, request.version() };
-    add_common_headers(response, request, true);
-    response.body() = format_status(code, response.reason(), mime, details);
-    response.prepare_payload();
-    SEND(std::move(response), handle_complete, _1, error::bad_request);
+    response out{ status::bad_request, request.version() };
+    add_common_headers(out, request, true);
+    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::bad_request);
 }
 
 // Closes channel.
-void protocol_http::send_bad_target(
-    const string_request& request) NOEXCEPT
+void protocol_http::send_bad_target(const request& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
     std::string details{ "target=" };
     details += request.target();
     const auto code = status::bad_request;
     const auto mime = to_mime_type(request[field::accept]);
-    string_response response{ status::bad_request, request.version() };
-    add_common_headers(response, request, true);
-    response.body() = format_status(code, response.reason(), mime, details);
-    response.prepare_payload();
-    SEND(std::move(response), handle_complete, _1, error::bad_request);
+    response out{ status::bad_request, request.version() };
+    add_common_headers(out, request, true);
+    out.body().inner = string_status(code, out.reason(), mime, details);
+    out.prepare_payload();
+    SEND(std::move(out), handle_complete, _1, error::bad_request);
 }
 
 // Handle sends.
@@ -270,7 +265,7 @@ bool protocol_http::is_allowed_host(const std::string& host,
 
 // TODO: pass and set response mime_type.
 void protocol_http::add_common_headers(fields& fields,
-    const string_request& request, bool closing) const NOEXCEPT
+    const request& request, bool closing) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
@@ -316,7 +311,7 @@ void protocol_http::add_common_headers(fields& fields,
 // status.reason text is only available on non-polymorphic response types, so
 // so it's dereferenced before calling and passed along with status enum value.
 
-std::string protocol_http::format_status(const http::status /*status*/,
+std::string protocol_http::string_status(const http::status /*status*/,
     const std::string& reason, const http::mime_type& /*type*/,
     const std::string& details) const NOEXCEPT
 {
