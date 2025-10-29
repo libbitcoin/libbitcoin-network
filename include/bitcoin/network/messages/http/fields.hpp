@@ -20,9 +20,6 @@
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_FIELDS_HPP
 
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/http/enums/verb.hpp>
-
-/// Type-differentiation for request message distribution.
 
 namespace libbitcoin {
 namespace network {
