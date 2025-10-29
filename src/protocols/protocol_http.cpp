@@ -249,13 +249,14 @@ void protocol_http::handle_complete(const code& ec,
 // Utilities.
 // ----------------------------------------------------------------------------
 
-bool protocol_http::is_allowed_host(const std::string& host,
+bool protocol_http::is_allowed_host(const fields& fields,
     size_t version) const NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 
     // Disallow unspecified host.
     // Host header field is mandatory at http 1.1.
+    const auto host = fields[field::host];
     if (host.empty() && version >= version_1_1)
         return false;
 

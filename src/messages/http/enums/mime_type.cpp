@@ -20,7 +20,6 @@
 
 #include <algorithm>
 #include <unordered_map>
-#include <bitcoin/network/boost.hpp>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -166,6 +165,12 @@ mime_type content_mime_type(const std::string_view& content_type,
     const auto type = system::ascii_to_lower(parts.front());
     const auto found = mime_map().right.find(type);
     return found == mime_map().right.end() ? default_ : found->second;
+}
+
+mime_type content_mime_type(const http::fields& fields,
+    mime_type default_) NOEXCEPT
+{
+    return content_mime_type(fields[field::content_type], default_);
 }
 
 BC_POP_WARNING()
