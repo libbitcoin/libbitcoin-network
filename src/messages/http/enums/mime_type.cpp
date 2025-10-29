@@ -167,8 +167,7 @@ mime_type content_mime_type(const std::string_view& content_type,
     return found == mime_map().right.end() ? default_ : found->second;
 }
 
-mime_type content_mime_type(const http::fields& fields,
-    mime_type default_) NOEXCEPT
+mime_type content_mime_type(const fields& fields, mime_type default_) NOEXCEPT
 {
     return content_mime_type(fields[field::content_type], default_);
 }
