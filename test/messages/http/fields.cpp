@@ -110,6 +110,18 @@ BOOST_AUTO_TEST_CASE(fields__has_attachment__no_equals__false)
 {
     http::fields head{};
     head.set(field::content_disposition, "attachment; filename");
+
+    // It's a simple test for trimmed leading "filename" assumes not other token
+    // starts with "filename" unless also an attachment (such as "filename*").
+    // Otherwise the request is not valid anyway, so can assume it has attachment.
+    ////BOOST_REQUIRE(!has_attachment(head));
+    BOOST_REQUIRE(has_attachment(head));
+}
+
+BOOST_AUTO_TEST_CASE(fields__has_attachment__filename_equals_as_name_value__false)
+{
+    http::fields head{};
+    head.set(field::content_disposition, "form-data; name=\"filename=\"");
     BOOST_REQUIRE(!has_attachment(head));
 }
 

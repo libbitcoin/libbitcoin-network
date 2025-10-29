@@ -19,6 +19,7 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_HTTP_FIELDS_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_HTTP_FIELDS_HPP
 
+#include <algorithm>
 #include <bitcoin/network/define.hpp>
 
 namespace libbitcoin {
@@ -26,15 +27,25 @@ namespace network {
 namespace http {
 
 /// Does the request have an attachment.
-inline bool has_attachment(http::fields& header) NOEXCEPT
+/// Simple test for leading "filename" assumes not other token starts with
+/// "filename" unless it is also an attachment (such as "filename*"). Otherwise
+/// the request is not valid anyway, so we can assume it has an attachment.
+inline bool has_attachment(const http::fields& header) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     const auto disposition = header[field::content_disposition];
     BC_POP_WARNING()
 
-    const auto content = system::ascii_to_lower(disposition);
-    return content.find("filename=") != std::string::npos ||
-        content.find("filename*=") != std::string::npos;
+    const auto lower = system::ascii_to_lower(disposition);
+
+    // http header fields: OWS is SP and HTAB (less than ascii).
+    return std::ranges::any_of(system::split(lower, { ";" }, { " ", "\t" }),
+        [](auto& token) NOEXCEPT
+        {
+            return token.starts_with("filename");
+        });
+
+    return false;
 }
 
 } // namespace http
