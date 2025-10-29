@@ -147,8 +147,12 @@
     <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\http\body_reader.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\http\body_writer.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_http_body_writer.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\http\enums\magic_numbers.cpp">
       <ObjectFileName>$(IntDir)test_messages_http_enums_magic_numbers.obj</ObjectFileName>
     </ClCompile>
@@ -156,7 +160,12 @@
     <ClCompile Include="..\..\..\..\test\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\fields.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\method.cpp" />
-    <ClCompile Include="..\..\..\..\test\messages\json\body.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\json\body_reader.cpp">
+      <ObjectFileName>$(IntDir)test_messages_json_body_reader.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\json\body_writer.cpp">
+      <ObjectFileName>$(IntDir)test_messages_json_body_writer.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\peer\address.cpp">
       <ObjectFileName>$(IntDir)test_messages_peer_address.obj</ObjectFileName>
     </ClCompile>

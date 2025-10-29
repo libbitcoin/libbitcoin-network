@@ -35,14 +35,20 @@ TEMPLATE
 void CLASS::reader::init(const http::length_type& length,
     error_code& ec) NOEXCEPT
 {
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     const auto value = length.get_value_or(zero);
+    BC_POP_WARNING()
+
     if (system::is_limited<size_t>(value))
     {
         ec = error::to_boost_code(error::boost_error_t::protocol_error);
         return;
     }
 
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     expected_ = system::possible_narrow_cast<size_t>(value);
+    BC_POP_WARNING()
+
     parser_.reset();
     total_ = zero;
     ec.clear();
@@ -72,9 +78,17 @@ size_t CLASS::reader::put(const buffer_type& buffer, error_code& ec) NOEXCEPT
 TEMPLATE
 void CLASS::reader::finish(error_code& ec) NOEXCEPT
 {
-    parser_.finish(ec);
-    if (!ec)
-        payload_.model = parser_.release();
+    try
+    {
+        parser_.finish(ec);
+
+        if (!ec)
+            payload_.model = parser_.release();
+    }
+    catch (...)
+    {
+        ec = error::to_boost_code(error::boost_error_t::protocol_error);
+    }
 }
 
 // writer
@@ -119,7 +133,7 @@ CLASS::writer::out_buffer CLASS::writer::get(error_code& ec) NOEXCEPT
     catch (...)
     {
         ec = error::to_boost_code(error::boost_error_t::protocol_error);
-        return boost::none;
+        return {};
     }
 }
 
