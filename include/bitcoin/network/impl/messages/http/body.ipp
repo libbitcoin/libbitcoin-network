@@ -29,52 +29,58 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
+// These are the templated construction methods, for passthrough see body.cpp.
+
 // reader
 // ----------------------------------------------------------------------------
-
-template <class Body>
-inline reader_variant reader_from_body(auto& head,
-    variant_payload& pay) NOEXCEPT
+    
+template <class Body, class Fields>
+inline reader_variant reader_from_body(Fields& header,
+    variant_payload& payload) NOEXCEPT
 {
-    BC_ASSERT(pay.inner.has_value());
+    BC_ASSERT(payload.inner.has_value());
     using reader = typename Body::reader;
     using value = typename Body::value_type;
-    return reader_variant{ std::in_place_type<reader>, head,
-        std::get<value>(pay.inner.value()) };
+    return reader_variant{ std::in_place_type<reader>, header,
+        std::get<value>(payload.inner.value()) };
 }
 
 /// Select reader based on content-type header.
-inline reader_variant to_reader(auto& head, variant_payload& pay) NOEXCEPT
+template <class Fields>
+inline reader_variant to_reader(Fields& header,
+    variant_payload& payload) NOEXCEPT
 {
-    switch (content_mime_type(head[field::content_type]))
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    switch (content_mime_type(header[field::content_type]))
+    BC_POP_WARNING()
     {
         case mime_type::application_json:
         {
-            pay.inner = json_value{};
-            return reader_from_body<json_body>(head, pay);
+            payload.inner = json_value{};
+            return reader_from_body<json_body>(header, payload);
         }
         case mime_type::text_plain:
         {
-            pay.inner = string_value{};
-            return reader_from_body<string_body>(head, pay);
+            payload.inner = string_value{};
+            return reader_from_body<string_body>(header, payload);
         }
         case mime_type::application_octet:
         {
-            if (has_attachment(head))
+            if (has_attachment(header))
             {
-                pay.inner = file_value{};
-                return reader_from_body<file_body>(head, pay);
+                payload.inner = file_value{};
+                return reader_from_body<file_body>(header, payload);
             }
             else
             {
-                pay.inner = data_value{};
-                return reader_from_body<data_body>(head, pay);
+                payload.inner = data_value{};
+                return reader_from_body<data_body>(header, payload);
             }
         }
         default:
         {
-            pay.inner = empty_value{};
-            return reader_from_body<empty_body>(head, pay);
+            payload.inner = empty_value{};
+            return reader_from_body<empty_body>(header, payload);
         }
     }
 }
@@ -86,108 +92,52 @@ inline body::reader::reader(header<IsRequest, Fields>& header,
 {
 }
 
-inline void body::reader::init(const length_type& length,
-    error_code& ec) NOEXCEPT
-{
-    std::visit(overload
-    {
-        [&](auto& read) NOEXCEPT
-        {
-            try
-            {
-                read.init(length, ec);
-            }
-            catch (...)
-            {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
-            }
-        }
-    }, reader_);
-}
-
-inline size_t body::reader::put(const buffer_type& buffer,
-    error_code& ec) NOEXCEPT
-{
-    return std::visit(overload
-    {
-        [&](auto& read) NOEXCEPT
-        {
-            try
-            {
-                return read.put(buffer, ec);
-            }
-            catch (...)
-            {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
-                return size_t{};
-            }
-        }
-    }, reader_);
-}
-
-inline void body::reader::finish(error_code& ec) NOEXCEPT
-{
-    return std::visit(overload
-    {
-        [&](auto& read) NOEXCEPT
-        {
-            try
-            {
-                return read.finish(ec);
-            }
-            catch (...)
-            {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
-            }
-        }
-    }, reader_);
-}
-
 // writer
 // ----------------------------------------------------------------------------
 
-template <class Body>
-inline writer_variant writer_from_body(auto& head,
-    const variant_payload& pay) NOEXCEPT
+template <class Body, class Fields>
+inline writer_variant writer_from_body(Fields& header,
+    const variant_payload& payload) NOEXCEPT
 {
-    BC_ASSERT(pay.inner.has_value());
+    BC_ASSERT(payload.inner.has_value());
     using writer = typename Body::writer;
     using value = typename Body::value_type;
-    return writer_variant{ std::in_place_type<writer>, head,
-        std::get<value>(pay.inner.value()) };
+    return writer_variant{ std::in_place_type<writer>, header,
+        std::get<value>(payload.inner.value()) };
 }
 
 /// Create writer matching the caller-defined body.inner (variant) type.
-inline writer_variant to_writer(auto& head,
-    const variant_payload& pay) NOEXCEPT
+template <class Fields>
+inline writer_variant to_writer(Fields& header,
+    const variant_payload& payload) NOEXCEPT
 {
     // Caller should have set inner, otherwise set it to empty (it's mutable).
-    if (!pay.inner.has_value())
-        pay.inner = empty_value{};
+    if (!payload.inner.has_value())
+        payload.inner = empty_value{};
 
     return std::visit(overload
     {
         [&](const json_value&) NOEXCEPT
         {
-            return writer_from_body<json_body>(head, pay);
+            return writer_from_body<json_body>(header, payload);
         },
         [&](const string_value&) NOEXCEPT
         {
-            return writer_from_body<string_body>(head, pay);
+            return writer_from_body<string_body>(header, payload);
         },
         [&](const data_value&) NOEXCEPT
         {
-            return writer_from_body<data_body>(head, pay);
+            return writer_from_body<data_body>(header, payload);
         },
         [&](const file_value&) NOEXCEPT
         {
-            return writer_from_body<file_body>(head, pay);
+            return writer_from_body<file_body>(header, payload);
         },
         [&](const empty_value&) NOEXCEPT
         {
-            return writer_from_body<empty_body>(head, pay);
+            return writer_from_body<empty_body>(header, payload);
         }
-    }, pay.inner.value());
+    }, payload.inner.value());
 }
 
 template <bool IsRequest, class Fields>
@@ -195,43 +145,6 @@ inline body::writer::writer(header<IsRequest, Fields>& header,
     const value_type& payload) NOEXCEPT
   : writer_{ to_writer(header, payload) }
 {
-}
-
-inline void body::writer::init(error_code& ec) NOEXCEPT
-{
-    return std::visit(overload
-    {
-        [&] (auto& write) NOEXCEPT
-        {
-            try
-            {
-                write.init(ec);
-            }
-            catch (...)
-            {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
-            }
-        }
-    }, writer_);
-}
-
-inline body::writer::out_buffer body::writer::get(error_code& ec) NOEXCEPT
-{
-    return std::visit(overload
-    {
-        [&](auto& write) NOEXCEPT
-        {
-            try
-            {
-                return write.get(ec);
-            }
-            catch (...)
-            {
-                ec = error::to_boost_code(error::boost_error_t::io_error);
-                return out_buffer{};
-            }
-        }
-    }, writer_);
 }
 
 } // namespace http
