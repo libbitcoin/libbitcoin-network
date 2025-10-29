@@ -28,8 +28,8 @@ namespace network {
 namespace json {
 
 /// Content passed to/from reader/writer via request/response.
-/// static uint64_t size(const payload&) must be defined for beast to produce
-/// content_length, otherwise the response is chunked. Predetermining size
+/// `static uint64_t size(const payload&)` must be defined for beast to produce
+/// `content_length`, otherwise the response is chunked. Predetermining size
 /// would have the effect of eliminating the benefit of streaming serialize.
 struct payload
 {
@@ -41,6 +41,8 @@ struct payload
 };
 
 /// boost::beast::http body template for JSON messages.
+/// Because of the parser and serializer members, neither the reader nor writer
+/// is movable and as such must be in-place contructed (e.g. variant contruct).
 template <class Parser, class Serializer>
 struct body
 {
@@ -77,7 +79,7 @@ struct body
 
         template <bool IsRequest, class Fields>
         explicit writer(http::header<IsRequest, Fields>&,
-          const value_type& payload) NOEXCEPT
+            value_type& payload) NOEXCEPT
           : payload_{ payload },
             serializer_{ payload.model.storage() }
         {

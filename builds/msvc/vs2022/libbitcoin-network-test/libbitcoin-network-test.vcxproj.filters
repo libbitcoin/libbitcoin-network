@@ -138,6 +138,12 @@
     <ClCompile Include="..\..\..\..\test\memory.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\body_reader.cpp">
+      <Filter>src\messages\http</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\test\messages\http\body_writer.cpp">
+      <Filter>src\messages\http</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\test\messages\http\enums\magic_numbers.cpp">
       <Filter>src\messages\http\enums</Filter>
     </ClCompile>

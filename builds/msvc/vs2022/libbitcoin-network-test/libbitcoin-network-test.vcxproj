@@ -147,6 +147,8 @@
     <ClCompile Include="..\..\..\..\test\log\tracker.cpp" />
     <ClCompile Include="..\..\..\..\test\main.cpp" />
     <ClCompile Include="..\..\..\..\test\memory.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\body_reader.cpp" />
+    <ClCompile Include="..\..\..\..\test\messages\http\body_writer.cpp" />
     <ClCompile Include="..\..\..\..\test\messages\http\enums\magic_numbers.cpp">
       <ObjectFileName>$(IntDir)test_messages_http_enums_magic_numbers.obj</ObjectFileName>
     </ClCompile>

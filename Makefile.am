@@ -171,6 +171,8 @@ test_libbitcoin_network_test_SOURCES = \
     test/distributors/distributor_peer.cpp \
     test/log/timer.cpp \
     test/log/tracker.cpp \
+    test/messages/http/body_reader.cpp \
+    test/messages/http/body_writer.cpp \
     test/messages/http/fields.cpp \
     test/messages/http/method.cpp \
     test/messages/http/enums/magic_numbers.cpp \

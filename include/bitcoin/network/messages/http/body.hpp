@@ -78,10 +78,9 @@ using writer_variant = std::variant
 
 /// No size(), forces chunked encoding for all types.
 /// The pass-thru body(), reader populates in construct.
-/// Mutable allows writer to default the variant if it has not been assigned.
 struct variant_payload
 {
-    mutable std::optional<value_variant> inner{};
+    std::optional<value_variant> inner{};
 };
 
 /// boost::beast::http body template for all message types.
@@ -105,12 +104,8 @@ struct body
         void finish(error_code& ec) NOEXCEPT;
 
     protected:
-        template <class Body, class Fields>
-        reader_variant reader_from_body(Fields& header,
-            variant_payload& payload) NOEXCEPT;
-
-        template <class Fields>
-        reader_variant to_reader(Fields& header,
+        template <class Header>
+        static reader_variant to_reader(Header& header,
             variant_payload& payload) NOEXCEPT;
 
     private:
@@ -125,19 +120,15 @@ struct body
 
         template <bool IsRequest, class Fields>
         explicit writer(header<IsRequest, Fields>& header,
-            const value_type& payload) NOEXCEPT;
+            value_type& payload) NOEXCEPT;
 
         void init(error_code& ec) NOEXCEPT;
         out_buffer get(error_code& ec) NOEXCEPT;
 
     protected:
-        template <class Body, class Fields>
-        writer_variant writer_from_body(Fields& header,
-            const variant_payload& payload) NOEXCEPT;
-
-        template <class Fields>
-        writer_variant to_writer(Fields& header,
-            const variant_payload& payload) NOEXCEPT;
+        template <class Header>
+        static writer_variant to_writer(Header& header,
+            variant_payload& payload) NOEXCEPT;
 
     private:
         writer_variant writer_;
