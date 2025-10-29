@@ -79,9 +79,9 @@ typedef boost::system::error_code error_code;
 /// Required types for custom beast::http::body definition.
 template <bool IsRequest, class Fields>
 using header = boost::beast::http::header<IsRequest, Fields>;
-template<class Fields>
+template<class Fields = fields>
 using request_header = header<true, Fields>;
-template<class Fields>
+template<class Fields = fields>
 using response_header = header<false, Fields>;
 template <class Buffer>
 using get_buffer = boost::optional<std::pair<Buffer, bool>>;

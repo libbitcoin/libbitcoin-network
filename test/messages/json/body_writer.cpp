@@ -18,9 +18,9 @@
  */
 #include "../../test.hpp"
 
-BOOST_AUTO_TEST_SUITE(json_body_tests)
+BOOST_AUTO_TEST_SUITE(json_body_writer_tests)
 
-BOOST_AUTO_TEST_CASE(json_body_test)
+BOOST_AUTO_TEST_CASE(json_body_writer_test)
 {
     BOOST_REQUIRE(true);
 }
