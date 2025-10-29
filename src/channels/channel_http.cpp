@@ -72,7 +72,7 @@ void channel_http::read_request() NOEXCEPT
 
     // HTTP is half duplex.
     reading_ = true;
-    const auto request = to_shared<http::string_request>();
+    const auto request = to_shared<http::request>();
 
     // Post handle_read_request to strand upon stop, error, or buffer full.
     read(request_buffer_, *request,
@@ -81,7 +81,7 @@ void channel_http::read_request() NOEXCEPT
 }
 
 void channel_http::handle_read_request(const code& ec, size_t,
-    const http::string_request_cptr& request) NOEXCEPT
+    const http::request_cptr& request) NOEXCEPT
 {
     BC_ASSERT_MSG(stranded(), "strand");
 

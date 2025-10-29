@@ -70,8 +70,7 @@ public:
     }
 
     /// Relay a message instance to each subscriber of the request method.
-    virtual void notify(
-        const http::string_request_cptr& request) const NOEXCEPT;
+    virtual void notify(const http::request_cptr& request) const NOEXCEPT;
 
     /// Stop all subscribers, prevents subsequent subscription (idempotent).
     /// The subscriber is stopped regardless of the error code, however by

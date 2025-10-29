@@ -77,12 +77,12 @@ protected:
         const http::method::unknown& request) NOEXCEPT;
 
     /// Senders.
-    virtual void send_bad_host(const http::string_request& request) NOEXCEPT;
-    virtual void send_not_found(const http::string_request& request) NOEXCEPT;
-    virtual void send_forbidden(const http::string_request& request) NOEXCEPT;
-    virtual void send_bad_target(const http::string_request& request) NOEXCEPT;
-    virtual void send_not_implemented(const http::string_request& request) NOEXCEPT;
-    virtual void send_method_not_allowed(const http::string_request& request,
+    virtual void send_bad_host(const http::request& request) NOEXCEPT;
+    virtual void send_not_found(const http::request& request) NOEXCEPT;
+    virtual void send_forbidden(const http::request& request) NOEXCEPT;
+    virtual void send_bad_target(const http::request& request) NOEXCEPT;
+    virtual void send_not_implemented(const http::request& request) NOEXCEPT;
+    virtual void send_method_not_allowed(const http::request& request,
         const code& ec) NOEXCEPT;
 
     /// Request handler MUST invoke this once unless stopped.
@@ -91,11 +91,11 @@ protected:
 
     /// Override to replace status response headers.
     virtual void add_common_headers(http::fields& fields,
-        const http::string_request& request,
+        const http::request& request,
         bool closing = false) const NOEXCEPT;
 
-    /// Override to replace status response message.
-    virtual std::string format_status(const http::status status,
+    /// Override to replace string status response message.
+    virtual std::string string_status(const http::status status,
         const std::string& reason, const http::mime_type& type,
         const std::string& details = {}) const NOEXCEPT;
 

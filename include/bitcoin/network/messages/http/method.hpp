@@ -21,6 +21,7 @@
 
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/messages/http/enums/verb.hpp>
+#include <bitcoin/network/messages/http/types.hpp>
 
 /// Type-differentiation for request message distribution.
 
@@ -32,13 +33,13 @@ namespace method {
 struct BCT_API method_ptr
 {
     /// Overload structure -> to obtain .ptr.
-    const string_request* operator->() const NOEXCEPT
+    const request* operator->() const NOEXCEPT
     {
         return ptr.get();
     }
 
     /// Overload structure * to obtain *ptr.
-    const string_request& operator*() const NOEXCEPT
+    const request& operator*() const NOEXCEPT
     {
         return *ptr;
     }
@@ -49,11 +50,12 @@ struct BCT_API method_ptr
         return !!ptr;
     }
 
-    string_request_cptr ptr{};
+    request_cptr ptr{};
 };
 
 template <verb Verb>
-struct method_alias : public method_ptr
+struct method_alias
+  : public method_ptr
 {
     /// May differ from from ptr->method() (e.g. verb::unknown).
     static constexpr verb method = Verb;

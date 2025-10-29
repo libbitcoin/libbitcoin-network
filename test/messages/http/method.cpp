@@ -45,14 +45,14 @@ BOOST_AUTO_TEST_CASE(method__bool_operator__default__null_and_false)
 BOOST_AUTO_TEST_CASE(method__arrow_operator__non_null__expected)
 {
     constexpr auto expected_method = http::verb::get;
-    const get instance{ std::make_shared<http::string_request>(expected_method, "/", 11) };
+    const get instance{ std::make_shared<http::request>(expected_method, "/", 11) };
     BOOST_REQUIRE(instance->method() == expected_method);
 }
 
 BOOST_AUTO_TEST_CASE(method__asterisk_operator__non_null__expected)
 {
     constexpr auto expected_method = http::verb::post;
-    const get instance{ std::make_shared<http::string_request>(expected_method, "/", 11) };
+    const get instance{ std::make_shared<http::request>(expected_method, "/", 11) };
     BOOST_REQUIRE((*instance).method() == expected_method);
 }
 
