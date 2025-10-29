@@ -36,19 +36,6 @@ using json_value = json_body::value_type;
 using data_value = data_body::value_type;
 using file_value = file_body::value_type;
 using string_value = string_body::value_type;
-
-using empty_reader = empty_body::reader;
-using json_reader = json_body::reader;
-using data_reader = data_body::reader;
-using file_reader = file_body::reader;
-using string_reader = string_body::reader;
-
-using empty_writer = empty_body::writer;
-using json_writer = json_body::writer;
-using data_writer = data_body::writer;
-using file_writer = file_body::writer;
-using string_writer = string_body::writer;
-
 using variant_value = std::variant
 <
     empty_value,
@@ -58,6 +45,11 @@ using variant_value = std::variant
     string_value
 >;
 
+using empty_reader = empty_body::reader;
+using json_reader = json_body::reader;
+using data_reader = data_body::reader;
+using file_reader = file_body::reader;
+using string_reader = string_body::reader;
 using variant_reader = std::variant
 <
     empty_reader,
@@ -67,6 +59,11 @@ using variant_reader = std::variant
     string_reader
 >;
 
+using empty_writer = empty_body::writer;
+using json_writer = json_body::writer;
+using data_writer = data_body::writer;
+using file_writer = file_body::writer;
+using string_writer = string_body::writer;
 using variant_writer = std::variant
 <
     empty_writer,
@@ -78,7 +75,7 @@ using variant_writer = std::variant
 
 /// No size(), forces chunked encoding for all types.
 /// The pass-thru body(), reader populates in construct.
-struct variant_payload
+struct payload
 {
     std::optional<variant_value> inner{};
 };
@@ -88,7 +85,7 @@ struct variant_payload
 /// reader or writer construction, and then passes all calls through to it.
 struct body
 {
-    using value_type = variant_payload;
+    using value_type = payload;
 
     class reader
     {
@@ -106,7 +103,7 @@ struct body
     protected:
         template <class Header>
         static variant_reader to_reader(Header& header,
-            variant_payload& payload) NOEXCEPT;
+            http::payload& value) NOEXCEPT;
 
     private:
         variant_reader reader_;
@@ -120,7 +117,7 @@ struct body
 
         template <bool IsRequest, class Fields>
         explicit writer(header<IsRequest, Fields>& header,
-            value_type& payload) NOEXCEPT;
+            value_type& value) NOEXCEPT;
 
         void init(error_code& ec) NOEXCEPT;
         out_buffer get(error_code& ec) NOEXCEPT;
@@ -128,7 +125,7 @@ struct body
     protected:
         template <class Header>
         static variant_writer to_writer(Header& header,
-            variant_payload& payload) NOEXCEPT;
+            http::payload& value) NOEXCEPT;
 
     private:
         variant_writer writer_;

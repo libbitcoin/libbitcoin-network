@@ -37,26 +37,26 @@ namespace http {
 // Select reader based on content-type header.
 template <class Header>
 variant_reader body::reader::to_reader(Header& header,
-    variant_payload& payload) NOEXCEPT
+    payload& value) NOEXCEPT
 {
     BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
     switch (content_mime_type(header[field::content_type]))
     BC_POP_WARNING()
     {
         case mime_type::application_json:
-            payload.inner = json_value{};
+            value.inner = json_value{};
             break;
         case mime_type::text_plain:
-            payload.inner = string_value{};
+            value.inner = string_value{};
             break;
         case mime_type::application_octet_stream:
             if (has_attachment(header))
-                payload.inner = file_value{};
+                value.inner = file_value{};
             else
-                payload.inner = data_value{};
+                value.inner = data_value{};
             break;
         default:
-            payload.inner = empty_value{};
+            value.inner = empty_value{};
     }
 
     return std::visit(overload
@@ -84,13 +84,13 @@ variant_reader body::reader::to_reader(Header& header,
         {
             return variant_reader{ string_reader{ header, value } };
         }
-    }, payload.inner.value());
+    }, value.inner.value());
 }
 
 template <bool IsRequest, class Fields>
 body::reader::reader(header<IsRequest, Fields>& header,
-    value_type& payload) NOEXCEPT
-  : reader_{ to_reader(header, payload) }
+    value_type& value) NOEXCEPT
+  : reader_{ to_reader(header, value) }
 {
 }
 
@@ -101,11 +101,11 @@ body::reader::reader(header<IsRequest, Fields>& header,
 // Create writer matching the caller-defined body.inner (variant) type.
 template <class Header>
 variant_writer body::writer::to_writer(Header& header,
-    variant_payload& payload) NOEXCEPT
+    payload& value) NOEXCEPT
 {
     // Caller should have set inner, otherwise set it to empty.
-    if (!payload.inner.has_value())
-        payload.inner = empty_value{};
+    if (!value.inner.has_value())
+        value.inner = empty_value{};
 
     return std::visit(overload
     {
@@ -132,13 +132,13 @@ variant_writer body::writer::to_writer(Header& header,
         {
             return variant_writer{ string_writer{ header, value } };
         }
-    }, payload.inner.value());
+    }, value.inner.value());
 }
 
 template <bool IsRequest, class Fields>
 body::writer::writer(header<IsRequest, Fields>& header,
-    value_type& payload) NOEXCEPT
-  : writer_{ to_writer(header, payload) }
+    value_type& value) NOEXCEPT
+  : writer_{ to_writer(header, value) }
 {
 }
 

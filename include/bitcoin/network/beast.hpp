@@ -39,42 +39,78 @@ constexpr int32_t version_1_1 = 11;
 constexpr int32_t version_1_0 = 10;
 
 /// beast::http::empty_body
-typedef boost::beast::http::empty_body empty_body;
+using empty_body = boost::beast::http::empty_body;
+using empty_request = boost::beast::http::request<empty_body>;
+using empty_response = boost::beast::http::response<empty_body>;
+using empty_parser = boost::beast::http::request_parser<empty_body>;
+using empty_serializer = boost::beast::http::serializer<false, empty_body>;
+using empty_response_cptr = std::shared_ptr<const empty_response>;
+using empty_request_cptr = std::shared_ptr<const empty_request>;
+using empty_response_ptr = std::shared_ptr<empty_response>;
+using empty_request_ptr = std::shared_ptr<empty_request>;
 
 /// beast::http::data_body
-typedef boost::beast::http::vector_body<uint8_t> data_body;
-typedef boost::beast::http::request<data_body> data_request;
-typedef boost::beast::http::response<data_body> data_response;
-////typedef boost::beast::http::request_parser<data_body> data_parser;
-////typedef boost::beast::http::serializer<false, data_body> data_serializer;
-typedef std::shared_ptr<const data_request> data_request_cptr;
-typedef std::shared_ptr<data_request> data_request_ptr;
+using data_body = boost::beast::http::vector_body<uint8_t>;
+using data_request = boost::beast::http::request<data_body>;
+using data_response = boost::beast::http::response<data_body>;
+using data_parser = boost::beast::http::request_parser<data_body>;
+using data_serializer = boost::beast::http::serializer<false, data_body>;
+using data_response_cptr = std::shared_ptr<const data_response>;
+using data_request_cptr = std::shared_ptr<const data_request>;
+using data_response_ptr = std::shared_ptr<data_response>;
+using data_request_ptr = std::shared_ptr<data_request>;
 
 /// beast::http::string_body
-typedef boost::beast::http::string_body string_body;
-typedef boost::beast::http::request<string_body> string_request;
-typedef boost::beast::http::response<string_body> string_response;
-////typedef boost::beast::http::request_parser<string_body> string_parser;
-////typedef boost::beast::http::serializer<false, string_body> string_serializer;
-typedef std::shared_ptr<const string_request> string_request_cptr;
-typedef std::shared_ptr<string_request> string_request_ptr;
+using string_body = boost::beast::http::string_body;
+using string_request = boost::beast::http::request<string_body>;
+using string_response = boost::beast::http::response<string_body>;
+using string_parser = boost::beast::http::request_parser<string_body>;
+using string_serializer = boost::beast::http::serializer<false, string_body>;
+using string_request_cptr = std::shared_ptr<const string_request>;
+using string_response_cptr = std::shared_ptr<const string_response>;
+using string_response_ptr = std::shared_ptr<string_response>;
+using string_request_ptr = std::shared_ptr<string_request>;
 
 /// beast::http::file_body
-typedef boost::beast::http::file_body file_body;
-typedef boost::beast::http::request<file_body> file_request;
-typedef boost::beast::http::response<file_body> file_response;
-////typedef boost::beast::http::request_parser<file_body> file_parser;
-typedef boost::beast::http::serializer<false, file_body> file_serializer;
-typedef std::shared_ptr<const file_request> file_request_cptr;
-typedef std::shared_ptr<file_request> file_request_ptr;
+using file_body = boost::beast::http::file_body;
+using file_request = boost::beast::http::request<file_body>;
+using file_response = boost::beast::http::response<file_body>;
+using file_parser = boost::beast::http::request_parser<file_body>;
+using file_serializer = boost::beast::http::serializer<false, file_body>;
+using file_response_cptr = std::shared_ptr<const file_response>;
+using file_request_cptr = std::shared_ptr<const file_request>;
+using file_response_ptr = std::shared_ptr<file_response>;
+using file_request_ptr = std::shared_ptr<file_request>;
+
+/////// http::json::body
+////using json_request = boost::beast::http::request<json_body>;
+////using json_response = boost::beast::http::response<json_body>;
+////using json_parser = boost::beast::http::request_parser<json_body>;
+////using json_serializer = boost::beast::http::serializer<false, json_body>;
+////using json_response_cptr = std::shared_ptr<const json_response>;
+////using json_request_cptr = std::shared_ptr<const json_request>;
+////using json_response_ptr = std::shared_ptr<json_response>;
+////using json_request_ptr = std::shared_ptr<json_request>;
+
+// Defined in types.hpp.
+/////// http::body (variant)
+////using request = boost::beast::http::request<body>;
+////using response = boost::beast::http::response<body>;
+////using parser = boost::beast::http::request_parser<body>;
+////using serializer = boost::beast::http::serializer<false, body>;
+////using response_cptr = std::shared_ptr<const response>;
+////using request_cptr = std::shared_ptr<const request>;
+////using response_ptr = std::shared_ptr<response>;
+////using request_ptr = std::shared_ptr<request>;
 
 /// general purpose
-typedef file_body::value_type file;
-typedef boost::beast::http::field field;
-typedef boost::beast::http::fields fields;
-typedef boost::beast::flat_buffer flat_buffer;
-typedef std::shared_ptr<flat_buffer> flat_buffer_ptr;
-typedef boost::system::error_code error_code;
+using file = file_body::value_type;
+using field = boost::beast::http::field;
+using fields = boost::beast::http::fields;
+using flat_buffer = boost::beast::flat_buffer;
+using flat_buffer_ptr = std::shared_ptr<flat_buffer>;
+using flat_buffer_cptr = std::shared_ptr<const flat_buffer>;
+using error_code = boost::system::error_code;
 
 /// Required types for custom beast::http::body definition.
 template <bool IsRequest, class Fields>

@@ -33,45 +33,45 @@ BOOST_AUTO_TEST_SUITE(http_body_writer_tests)
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__undefined__constructs_empty_writer)
 {
     header<false, fields> header{};
-    variant_payload payload{};
-    ///payload.inner = empty_body::value_type{};
-    const auto variant = accessor::to_writer(header, payload);
+    payload value{};
+    ///value.inner = empty_body::value_type{};
+    const auto variant = accessor::to_writer(header, value);
     BOOST_REQUIRE(std::holds_alternative<empty_writer>(variant));
 }
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__empty__constructs_empty_writer)
 {
     header<false, fields> header{};
-    variant_payload payload{};
-    payload.inner = empty_body::value_type{};
-    const auto variant = accessor::to_writer(header, payload);
+    payload value{};
+    value.inner = empty_body::value_type{};
+    const auto variant = accessor::to_writer(header, value);
     BOOST_REQUIRE(std::holds_alternative<empty_writer>(variant));
 }
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__json__constructs_json_writer)
 {
     header<false, fields> header{};
-    variant_payload payload{};
-    payload.inner = json_body::value_type{};
-    const auto variant = accessor::to_writer(header, payload);
+    payload value{};
+    value.inner = json_body::value_type{};
+    const auto variant = accessor::to_writer(header, value);
     BOOST_REQUIRE(std::holds_alternative<json_writer>(variant));
 }
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__data__constructs_data_writer)
 {
     header<false, fields> header{};
-    variant_payload payload{};
-    payload.inner = data_body::value_type{};
-    const auto variant = accessor::to_writer(header, payload);
+    payload value{};
+    value.inner = data_body::value_type{};
+    const auto variant = accessor::to_writer(header, value);
     BOOST_REQUIRE(std::holds_alternative<data_writer>(variant));
 }
 
 BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__string__constructs_string_writer)
 {
     header<false, fields> header{};
-    variant_payload payload{};
-    payload.inner = string_body::value_type{};
-    const auto variant = accessor::to_writer(header, payload);
+    payload value{};
+    value.inner = string_body::value_type{};
+    const auto variant = accessor::to_writer(header, value);
     BOOST_REQUIRE(std::holds_alternative<string_writer>(variant));
 }
 
@@ -89,9 +89,9 @@ BOOST_AUTO_TEST_CASE(http_body_writer__to_writer__file__constructs_file_writer)
     BOOST_REQUIRE(!ec);
 
     header<false, fields> header{};
-    variant_payload payload{};
-    payload.inner = std::move(file);
-    const auto variant = accessor::to_writer(header, payload);
+    payload value{};
+    value.inner = std::move(file);
+    const auto variant = accessor::to_writer(header, value);
     BOOST_REQUIRE(std::holds_alternative<file_writer>(variant));
 }
 
