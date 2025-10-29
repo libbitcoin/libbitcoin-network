@@ -142,6 +142,7 @@
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
     <ClCompile Include="..\..\..\..\src\memory.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http\body.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\json\tags.cpp" />
@@ -270,6 +271,7 @@
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\status.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\target.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\verb.hpp" />
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\fields.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\messages.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\method.hpp" />
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\types.hpp" />

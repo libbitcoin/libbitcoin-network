@@ -186,6 +186,9 @@
     <ClCompile Include="..\..\..\..\src\memory.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\messages\http\body.cpp">
+      <Filter>src\messages\http</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp">
       <Filter>src\messages\http\enums</Filter>
     </ClCompile>
@@ -559,6 +562,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\enums\verb.hpp">
       <Filter>include\bitcoin\network\messages\http\enums</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\fields.hpp">
+      <Filter>include\bitcoin\network\messages\http</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\include\bitcoin\network\messages\http\messages.hpp">
       <Filter>include\bitcoin\network\messages\http</Filter>

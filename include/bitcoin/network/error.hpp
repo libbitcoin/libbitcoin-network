@@ -198,6 +198,13 @@ enum error_t : uint8_t
 // No current need for error_code equivalence mapping.
 DECLARE_ERROR_T_CODE_CATEGORY(error);
 
+/// Construct a boost_code object from a boost system errc_t.
+/// Unfortunately boost_code does not have this std::error_code construction.
+inline boost_code to_boost_code(boost_error_t ec) NOEXCEPT
+{
+    return boost_code{ ec, boost::system::generic_category() };
+}
+
 /// Shortcircuit common boost code mapping.
 BCT_API bool asio_is_canceled(const error::boost_code& ec) NOEXCEPT;
 

@@ -62,6 +62,7 @@
 #include <bitcoin/network/log/timer.hpp>
 #include <bitcoin/network/log/tracker.hpp>
 #include <bitcoin/network/messages/http/body.hpp>
+#include <bitcoin/network/messages/http/fields.hpp>
 #include <bitcoin/network/messages/http/messages.hpp>
 #include <bitcoin/network/messages/http/method.hpp>
 #include <bitcoin/network/messages/http/types.hpp>

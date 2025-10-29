@@ -56,6 +56,7 @@ src_libbitcoin_network_la_SOURCES = \
     src/log/capture.cpp \
     src/log/logger.cpp \
     src/log/reporter.cpp \
+    src/messages/http/body.cpp \
     src/messages/http/enums/mime_type.cpp \
     src/messages/http/enums/target.cpp \
     src/messages/json/tags.cpp \
@@ -170,6 +171,7 @@ test_libbitcoin_network_test_SOURCES = \
     test/distributors/distributor_peer.cpp \
     test/log/timer.cpp \
     test/log/tracker.cpp \
+    test/messages/http/fields.cpp \
     test/messages/http/method.cpp \
     test/messages/http/enums/magic_numbers.cpp \
     test/messages/http/enums/mime_type.cpp \
@@ -351,6 +353,7 @@ include_bitcoin_network_log_HEADERS = \
 include_bitcoin_network_messages_httpdir = ${includedir}/bitcoin/network/messages/http
 include_bitcoin_network_messages_http_HEADERS = \
     include/bitcoin/network/messages/http/body.hpp \
+    include/bitcoin/network/messages/http/fields.hpp \
     include/bitcoin/network/messages/http/messages.hpp \
     include/bitcoin/network/messages/http/method.hpp \
     include/bitcoin/network/messages/http/types.hpp
