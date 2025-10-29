@@ -100,7 +100,7 @@ protected:
         const std::string& details = {}) const NOEXCEPT;
 
     /// Utilities.
-    bool is_allowed_host(const std::string& host,
+    bool is_allowed_host(const http::fields& fields,
         size_t version) const NOEXCEPT;
 
     /// Properties.

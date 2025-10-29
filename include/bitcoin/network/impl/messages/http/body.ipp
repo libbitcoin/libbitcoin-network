@@ -40,9 +40,7 @@ template <class Header>
 variant_reader body::reader::to_reader(Header& header,
     payload& value) NOEXCEPT
 {
-    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-    switch (content_mime_type(header[field::content_type]))
-    BC_POP_WARNING()
+    switch (content_mime_type(header))
     {
         case mime_type::application_json:
             value.inner = json_value{};

@@ -66,8 +66,10 @@ BCT_API mime_type extension_mime_type(const std::string_view& extension,
     mime_type default_=mime_type::unknown) NOEXCEPT;
 BCT_API mime_type file_mime_type(const std::filesystem::path& path,
     mime_type default_=mime_type::unknown) NOEXCEPT;
-BCT_API mime_type content_mime_type(const std::string_view& content_type,
+BCT_API mime_type content_mime_type(const std::string& content_type,
     mime_type default_=mime_type::unknown) NOEXCEPT;
+BCT_API mime_type content_mime_type(const http::fields& fields,
+    mime_type default_ = mime_type::unknown) NOEXCEPT;
 
 } // namespace http
 } // namespace network

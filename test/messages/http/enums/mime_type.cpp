@@ -393,4 +393,20 @@ BOOST_AUTO_TEST_CASE(mime_type__content_mime_type__with_parameters__expected)
     BOOST_REQUIRE(content_mime_type("text/html; charset=utf-8; other=param") == mime_type::text_html);
 }
 
+BOOST_AUTO_TEST_CASE(mime_type__content_mime_type__fields__expected)
+{
+    http::fields fields{};
+    fields.set(http::field::accept, "text/plain");
+    fields.set(http::field::content_type, "application/json; charset=utf-8");
+    BOOST_REQUIRE(content_mime_type(fields) == mime_type::application_json);
+}
+
+BOOST_AUTO_TEST_CASE(mime_type__content_mime_type__fields_defaults__expected)
+{
+    http::fields fields{};
+    fields.set(http::field::accept, "text/plain");
+    BOOST_REQUIRE(content_mime_type(fields) == mime_type::unknown);
+    BOOST_REQUIRE(content_mime_type(fields, mime_type::application_json) == mime_type::application_json);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
