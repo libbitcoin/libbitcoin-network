@@ -49,6 +49,7 @@ BOOST_AUTO_TEST_CASE(fields__has_attachment__filename_equals__true)
     BOOST_REQUIRE(has_attachment(head));
 }
 
+// filename*= is valid (rfc7230), indicates unicode.
 BOOST_AUTO_TEST_CASE(fields__has_attachment__filename_star__true)
 {
     http::fields head{};

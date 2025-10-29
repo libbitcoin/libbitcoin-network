@@ -28,11 +28,16 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
-inline bool has_attachment(http::fields& head) NOEXCEPT
+/// Does the request have an attachment.
+inline bool has_attachment(http::fields& header) NOEXCEPT
 {
-    const auto& disposition = head[field::content_disposition];
+    BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
+    const auto disposition = header[field::content_disposition];
+    BC_POP_WARNING()
+
     const auto content = system::ascii_to_lower(disposition);
-    return content.find("filename=") != std::string::npos;
+    return content.find("filename=") != std::string::npos ||
+        content.find("filename*=") != std::string::npos;
 }
 
 } // namespace http
