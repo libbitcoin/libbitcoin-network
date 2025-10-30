@@ -49,8 +49,9 @@ using empty_request_cptr = std::shared_ptr<const empty_request>;
 using empty_response_ptr = std::shared_ptr<empty_response>;
 using empty_request_ptr = std::shared_ptr<empty_request>;
 
-/// beast::http::data_body
-using data_body = boost::beast::http::vector_body<uint8_t>;
+// TODO: rename to chunk_body etc., to highlight the allocator.
+/// beast::http::vector_body<uint8_t, bc::allocator<uint8_t>>
+using data_body = boost::beast::http::vector_body<uint8_t, allocator<uint8_t>>;
 using data_request = boost::beast::http::request<data_body>;
 using data_response = boost::beast::http::response<data_body>;
 using data_parser = boost::beast::http::request_parser<data_body>;
