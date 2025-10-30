@@ -241,6 +241,7 @@ add_library( ${CANONICAL_LIB_NAME}
     "../../src/messages/http/body.cpp"
     "../../src/messages/http/enums/mime_type.cpp"
     "../../src/messages/http/enums/target.cpp"
+    "../../src/messages/json/body.cpp"
     "../../src/messages/json/rpc.cpp"
     "../../src/messages/peer/address.cpp"
     "../../src/messages/peer/address_item.cpp"

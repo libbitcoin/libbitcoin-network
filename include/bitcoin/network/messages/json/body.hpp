@@ -21,23 +21,32 @@
 
 #include <bitcoin/network/async/async.hpp>
 #include <bitcoin/network/define.hpp>
-#include <bitcoin/network/messages/json/payload.hpp>
 
 namespace libbitcoin {
 namespace network {
 namespace json {
 
-using parser = boost::json::stream_parser;
-using serializer = boost::json::serializer;
 using error_code = boost::system::error_code;
 
-/// boost::beast::http body template for JSON messages.
+/// boost::beast::http body for JSON messages.
 /// Because of the parser and serializer members, neither the reader nor writer
 /// is movable and as such must be in-place contructed (e.g. variant contruct).
-template <class Parser, class Serializer>
-struct body
+struct BCT_API body
 {
-    using value_type = payload;
+    
+    /// Content passed to/from reader/writer via request/response.
+    /// `static uint64_t size(const value_type&)` must be defined for beast to 
+    /// produce `content_length`, otherwise the response is chunked. Predeter-
+    /// mining size would have the effect of eliminating the benefit of
+    /// streaming serialize.
+    struct value_type
+    {
+        /// JSON DOM.
+        boost::json::value model{};
+
+        /// Writer serialization buffer (max size, allocated on write).
+        mutable http::flat_buffer_ptr buffer{};
+    };
 
     class reader
     {
@@ -45,7 +54,7 @@ struct body
         using buffer_type = asio::const_buffer;
 
         template <bool IsRequest, class Fields>
-        explicit reader(http::header<IsRequest, Fields>&,
+        inline explicit reader(http::header<IsRequest, Fields>&,
             value_type& value) NOEXCEPT
           : value_{ value }
         {
@@ -58,8 +67,8 @@ struct body
     private:
         value_type& value_;
         size_t total_{};
-        Parser parser_{};
         http::length_type expected_{};
+        boost::json::stream_parser parser_{};
     };
 
     class writer
@@ -69,7 +78,7 @@ struct body
         using out_buffer = http::get_buffer<const_buffers_type>;
 
         template <bool IsRequest, class Fields>
-        explicit writer(http::header<IsRequest, Fields>&,
+        inline explicit writer(http::header<IsRequest, Fields>&,
             value_type& value) NOEXCEPT
           : value_{ value },
             serializer_{ value.model.storage() }
@@ -82,7 +91,7 @@ struct body
     private:
         static constexpr size_t default_buffer = 4096;
         const value_type& value_;
-        Serializer serializer_;
+        boost::json::serializer serializer_;
     };
 };
 
@@ -90,12 +99,14 @@ struct body
 } // namespace network
 } // namespace libbitcoin
 
-#define TEMPLATE template <class Parser, class Serializer>
-#define CLASS body<Parser, Serializer>
+namespace libbitcoin {
+namespace network {
+namespace http {
+    
+using json_body = json::body;
 
-#include <bitcoin/network/impl/messages/json/body.ipp>
-
-#undef CLASS
-#undef TEMPLATE
+} // namespace http
+} // namespace network
+} // namespace libbitcoin
 
 #endif

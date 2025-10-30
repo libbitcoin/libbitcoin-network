@@ -19,26 +19,9 @@
 #ifndef LIBBITCOIN_NETWORK_MESSAGES_JSON_PAYLOAD_HPP
 #define LIBBITCOIN_NETWORK_MESSAGES_JSON_PAYLOAD_HPP
 
-#include <bitcoin/network/define.hpp>
-
-// TODO: rename to value_type.
-
 namespace libbitcoin {
 namespace network {
 namespace json {
-
-/// Content passed to/from reader/writer via request/response.
-/// `static uint64_t size(const payload&)` must be defined for beast to produce
-/// `content_length`, otherwise the response is chunked. Predetermining size
-/// would have the effect of eliminating the benefit of streaming serialize.
-struct payload
-{
-    /// JSON DOM.
-    boost::json::value model{};
-
-    /// Writer serialization buffer (max size, allocated on write).
-    mutable http::flat_buffer_ptr buffer{};
-};
 
 } // namespace json
 } // namespace network

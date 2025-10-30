@@ -142,9 +142,14 @@
     <ClCompile Include="..\..\..\..\src\log\logger.cpp" />
     <ClCompile Include="..\..\..\..\src\log\reporter.cpp" />
     <ClCompile Include="..\..\..\..\src\memory.cpp" />
-    <ClCompile Include="..\..\..\..\src\messages\http\body.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\http\body.cpp">
+      <ObjectFileName>$(IntDir)src_messages_http_body.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\http\enums\mime_type.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\http\enums\target.cpp" />
+    <ClCompile Include="..\..\..\..\src\messages\json\body.cpp">
+      <ObjectFileName>$(IntDir)src_messages_json_body.obj</ObjectFileName>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\messages\json\rpc.cpp" />
     <ClCompile Include="..\..\..\..\src\messages\peer\address.cpp">
       <ObjectFileName>$(IntDir)src_messages_peer_address.obj</ObjectFileName>
@@ -376,7 +381,6 @@
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\subscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\async\unsubscriber.ipp" />
     <None Include="..\..\..\..\include\bitcoin\network\impl\messages\http\body.ipp" />
-    <None Include="..\..\..\..\include\bitcoin\network\impl\messages\json\body.ipp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

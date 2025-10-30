@@ -30,8 +30,6 @@ namespace libbitcoin {
 namespace network {
 namespace http {
 
-using json_body = json::body<json::parser, json::serializer>;
-
 using empty_value = empty_body::value_type;
 using json_value = json_body::value_type;
 using data_value = data_body::value_type;

@@ -23,7 +23,6 @@ BOOST_AUTO_TEST_SUITE(json_body_writer_tests)
 using namespace network::http;
 using namespace network::json;
 using namespace network::error;
-using body = json::body<json::parser, json::serializer>;
 using value = boost::json::value;
 using object = boost::json::object;
 
@@ -40,17 +39,17 @@ bool operator!=(const asio::const_buffer& left, const asio::const_buffer& right)
 
 BOOST_AUTO_TEST_CASE(json_body_writer__constructor__default__null_model)
 {
-    json::payload body{};
     response_header header{};
-    body::writer writer(header, body);
+    json::body::value_type body{};
+    json::body::writer writer(header, body);
     BOOST_REQUIRE(boost::get<value>(body.model).is_null());
 }
 
 BOOST_AUTO_TEST_CASE(json_body_writer__init__default__success)
 {
-    json::payload body{};
     response_header header{};
-    body::writer writer(header, body);
+    json::body::value_type body{};
+    json::body::writer writer(header, body);
     error_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
@@ -60,9 +59,9 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__null_model__success_expected_no_more
 {
     const std::string_view expected{ "null" };
     const asio::const_buffer out{ expected.data(), expected.size() };
-    json::payload body{};
     response_header header{};
-    body::writer writer(header, body);
+    json::body::value_type body{};
+    json::body::writer writer(header, body);
     error_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
@@ -78,10 +77,10 @@ BOOST_AUTO_TEST_CASE(json_body_writer__get__simple_object__success_expected_no_m
 {
     const std::string_view expected{ R"({"key":"value"})" };
     const asio::const_buffer out{ expected.data(), expected.size() };
-    json::payload body{};
-    body.model = object{ { "key", "value" } };
     response_header header{};
-    body::writer writer(header, body);
+    json::body::value_type body{};
+    body.model = object{ { "key", "value" } };
+    json::body::writer writer(header, body);
     error_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
